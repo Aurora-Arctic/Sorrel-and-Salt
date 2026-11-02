@@ -66,6 +66,12 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M14.5 10h3.5M14.5 13.5h3.5" />
     </>
   ),
+  support: (
+    <>
+      <path d="M4 5h16v11H9l-5 4z" />
+      <path d="M8.5 9.5h7M8.5 12.5h4" />
+    </>
+  ),
   // The More button's mark: three dots, each a zero-length stroke the round
   // caps swell into a dot.
   more: <path strokeWidth="3" d="M6 12h.01M12 12h.01M18 12h.01" />,

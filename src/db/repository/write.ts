@@ -15,6 +15,7 @@ import { invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
+import { supportWrites } from './support';
 import { workingWrites } from './workings';
 import { existsIn, selectFrom } from './select';
 import { StaleWrite } from '@/lib/errors';
@@ -150,6 +151,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
           : { curatorReviewedAt: null, curatorReviewedBy: null },
         inCompendiumById(ingredients, id),
       ),
+    setShownInCompendium: (_curator, id, shown) =>
+      update(ingredients, { shown }, inCompendiumById(ingredients, id)),
     touchByIdInCompendium: (_curator, table, id) =>
       touch(table, inCompendiumById(table, id)) as never,
     touchByIdInWorkspace: (membership, table, id) =>
@@ -217,6 +220,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...membershipWrites(context),
     ...spellStepWrites(context),
     ...stockWrites(context),
+    ...supportWrites(context),
     ...workingWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {

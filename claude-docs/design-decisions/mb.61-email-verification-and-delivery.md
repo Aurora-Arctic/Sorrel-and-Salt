@@ -34,7 +34,7 @@ is beside it as [`mb.61-plan.md`](mb.61-plan.md).
 
 ## Where things stand
 
-Everything below was read from the installed Better Auth, `1.7.5`, in
+Everything below was read from the installed Better Auth, in
 `node_modules/better-auth/dist` and `node_modules/@better-auth/core/dist`, not
 from its documentation.
 
@@ -331,7 +331,7 @@ ignored.
 ## What an unverified account can and cannot do
 
 It can sign in, reach the email page, change the address, resend the mail, and
-sign out. It cannot accept a workspace or admin invitation, be promoted to
+sign out. It cannot accept a workspace or admin invitation or an invitation card (M15.17; a card admits any verified account, and an unverified one is sent to the email page), be promoted to
 admin, create a workspace, or hold its address past one window without
 verifying. It is not listed as verified on `/admin/users`, which MB.52 already
 shows.

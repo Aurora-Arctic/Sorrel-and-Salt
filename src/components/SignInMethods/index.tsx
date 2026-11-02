@@ -4,7 +4,9 @@ import { type ReactElement, useEffect, useId, useState } from 'react';
 import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import {
-  ACCOUNT_PATH,
+  ACCOUNT_PASSKEYS_PATH,
+  ACCOUNT_PASSWORD_PATH,
+  ACCOUNT_SIGN_IN_PATH,
   GENERIC_LINK_ERROR,
   signInPath,
   unlinkErrorMessage,
@@ -17,15 +19,18 @@ import { useClickFeedback } from '../ClickFeedback';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import Notice from '../Notice';
 import { ProviderRow } from './provider-row';
+import { SectionRow } from './section-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
 
 // The account page's list of the ways into this account: each roster provider, linked or addable,
-// removable while another is left. Adding is Better Auth's /link-social, removing /unlink-account.
+// removable while another is left, then the password and the passkeys, each linking to its section. Adding is Better Auth's /link-social, removing /unlink-account.
 // A session too old to remove one is offered a fresh sign-in in place of every Remove. The heading
 // and intro are the page's (claude-docs/components/sign-in-methods.md).
 
 const SignInMethods = ({
+  passwordHeld,
+  passkeyCount,
   linked,
   configured,
   error,
@@ -67,10 +72,10 @@ const SignInMethods = ({
       try {
         return await linkSocial({
           provider: providerId,
-          callbackURL: ACCOUNT_PATH,
+          callbackURL: ACCOUNT_SIGN_IN_PATH,
           // The provider rides back on the failure, so the page can put the
           // sentence in this row (claude-docs/components/sign-in-methods.md).
-          errorCallbackURL: `${ACCOUNT_PATH}?provider=${providerId}`,
+          errorCallbackURL: `${ACCOUNT_SIGN_IN_PATH}?provider=${providerId}`,
         });
       } catch (thrown) {
         return { error: thrown };
@@ -120,7 +125,7 @@ const SignInMethods = ({
       signInAgain.report(GENERIC_FAILURE);
       return;
     }
-    window.location.assign(signInPath(ACCOUNT_PATH));
+    window.location.assign(signInPath(ACCOUNT_SIGN_IN_PATH));
   };
 
   const removal: ProviderRemoval = accounts.length < 2 ? 'last' : fresh ? 'offered' : 'withheld';
@@ -157,6 +162,8 @@ const SignInMethods = ({
       <ul className="sign-in-methods__list">
         {SOCIAL_PROVIDERS.map((provider) => {
           const account = accounts.find((candidate) => candidate.providerId === provider.id);
+          // A hidden provider is not offered, but a link already made is still listed so it can be removed.
+          if (provider.hidden && !account) return null;
           return (
             <ProviderRow
               key={provider.id}
@@ -173,6 +180,22 @@ const SignInMethods = ({
             />
           );
         })}
+        <SectionRow
+          label="Password"
+          status={passwordHeld ? 'Set' : 'Not Set'}
+          href={ACCOUNT_PASSWORD_PATH}
+          linkLabel={passwordHeld ? 'Manage Password' : 'Set Password'}
+        />
+        <SectionRow
+          label="Passkeys"
+          status={
+            passkeyCount === 0
+              ? 'None Added'
+              : `${passkeyCount} ${passkeyCount === 1 ? 'passkey' : 'passkeys'}`
+          }
+          href={ACCOUNT_PASSKEYS_PATH}
+          linkLabel="Manage Passkeys"
+        />
       </ul>
     </div>
   );

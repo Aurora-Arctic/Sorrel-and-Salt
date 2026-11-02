@@ -4,7 +4,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { emptyList } from '../../lib/text';
-import { inUtc } from '../../lib/utc';
+import LocalTime from '../LocalTime';
 import RemoveControl from './remove-control';
 import RevokeControl from './revoke-control';
 import type { PendingInvitationsProps } from './types';
@@ -35,11 +35,11 @@ const PendingInvitations = ({
               declinedAt ? (
                 <>
                   <span className="pending-invitations__declined">Declined</span>
-                  <time dateTime={declinedAt.toISOString()}>{inUtc(declinedAt)}</time>
+                  <LocalTime at={declinedAt} long />
                 </>
               ) : (
                 <>
-                  Expires <time dateTime={expiresAt.toISOString()}>{inUtc(expiresAt)}</time>
+                  Expires <LocalTime at={expiresAt} long />
                 </>
               ),
           },

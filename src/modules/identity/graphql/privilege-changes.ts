@@ -22,7 +22,7 @@ const PrivilegeChangeKindEnum = builder.enumType('PrivilegeChangeKind', {
 
 const PrivilegeRouteEnum = builder.enumType('PrivilegeRoute', {
   description:
-    "How a change came about: the primary admin's bootstrap, an admin's act, an invitation accepted, or a declared manual fix.",
+    "How a change came about: the primary admin's bootstrap, an admin's act, an invitation or a card accepted, or a declared manual fix.",
   values: userPrivilegeRoute.enumValues,
 });
 

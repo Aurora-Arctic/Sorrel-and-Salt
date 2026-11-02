@@ -12,7 +12,7 @@ export interface UserRow {
 }
 
 /** What a null session gets: an answer, a refusal at the field, or, for a null sent where the SDL requires an id, a refusal before any resolver runs. */
-export type Outcome = 'answers' | 'refuses' | 'invalid';
+export type Outcome = 'answers' | 'nulls' | 'refuses' | 'invalid';
 
 /** A `Query` or `Mutation` field's probe, and what it gives a null session. */
 export interface ScopeProbe {
@@ -23,6 +23,7 @@ export interface ScopeProbe {
 
 /** What an admin write changes: the closed list of what a site admin governs (CLAUDE.md, "Admins curate …"), so a write outside it is a new entry a reviewer reads. A coven's contents are never on it. */
 export type Governed =
+  | 'support'
   | 'compendium'
   | 'references'
   | 'categories'

@@ -332,6 +332,22 @@ describe('SpellPreview', () => {
       expect(sign()?.getAttribute('aria-pressed')).toBe('true');
     });
 
+    it('keeps the sign on the page while the lock is asked for again', async () => {
+      const { asked } = fakeWakeLock();
+      render(onPage());
+      press(opener());
+      await settle();
+      press(sign() as HTMLElement);
+      await settle();
+      const turnedOff = sign();
+      expect(turnedOff?.getAttribute('aria-pressed')).toBe('false');
+      press(turnedOff as HTMLElement);
+      expect(sign()).toBe(turnedOff);
+      await settle();
+      expect(asked).toHaveBeenCalledTimes(2);
+      expect(sign()).toBe(turnedOff);
+    });
+
     it('tips the sign with what a press will do, and changes it when pressed', async () => {
       fakeWakeLock();
       render(onPage());

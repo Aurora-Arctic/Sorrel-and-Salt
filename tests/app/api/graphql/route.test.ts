@@ -30,7 +30,7 @@ function routeIn(nodeEnv: string): () => Route {
 function post(body: unknown, headers: Record<string, string> = {}) {
   return new Request(ENDPOINT, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...headers },
+    headers: { 'content-type': 'application/json', 'x-sorrel-client': 'web', ...headers },
     body: JSON.stringify(body),
   });
 }

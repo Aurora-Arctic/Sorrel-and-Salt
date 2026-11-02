@@ -104,6 +104,7 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     seedKey: null,
     revision: 1,
     seedContentHash: null,
+    shown: true,
     ...STAMPS,
     ...overrides,
   };
@@ -162,10 +163,13 @@ function cited(
       modified: null,
       accessed: url ? '2026-01-01' : null,
       note: null,
+      scholarly: false,
       seedKey: null,
       ...STAMPS,
     },
     locator,
+    nameBasis: null,
+    supports: null,
   };
 }
 
@@ -407,6 +411,26 @@ describe('IngredientEntry', () => {
 
     const substitutes = screen.getByRole('list', { name: 'Substitutes' });
     expect(within(substitutes).queryAllByRole('link')).toHaveLength(0);
+  });
+
+  it('links the disclaimer beside the safety notes of the details and of every form, notes or none', () => {
+    const { container } = renderEntry();
+
+    // Preconditions: the ingredient and the root form carry no notes, the oil does.
+    expect(detail().entry.safetyNotes).toBeNull();
+    const details = screen.getByRole('region', { name: 'Details' });
+    expect(within(details).queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
+    const root = container.querySelector('#form-testroot') as HTMLElement;
+    const oil = container.querySelector('#form-testoil') as HTMLElement;
+    expect(within(root).queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
+    expect(within(oil).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+
+    for (const section of [details, root, oil]) {
+      expect(within(section).getByRole('link', { name: 'Read the Disclaimer' })).toHaveAttribute(
+        'href',
+        '/disclaimer',
+      );
+    }
   });
 
   it('gives each form a section anchored on its slug, headed by the form, after the details', () => {
@@ -721,7 +745,7 @@ describe('IngredientEntry references', () => {
 
   it('gives a source its own note for each locator it is cited with in one section', () => {
     const herbal = cited('A Herbal of Testing', 'p. 12');
-    const again = { reference: herbal.reference, locator: 'p. 99' };
+    const again = { ...herbal, locator: 'p. 99' };
     renderEntry({ detail: detail({ references: [herbal, again], variants: [] }) });
 
     const items = within(notes()).getAllByRole('listitem');
@@ -754,7 +778,7 @@ describe('IngredientEntry references', () => {
         variants: [
           {
             ...variantRow('testoil'),
-            references: [mid, { reference: zeta.reference, locator: null }],
+            references: [mid, { ...zeta, locator: null }],
           },
         ],
       }),
@@ -786,7 +810,7 @@ describe('IngredientEntry references', () => {
         variants: [
           {
             ...variantRow('testoil'),
-            references: [{ reference: herbal.reference, locator: 'p. 2' }],
+            references: [{ ...herbal, locator: 'p. 2' }],
           },
         ],
       }),
@@ -951,7 +975,7 @@ describe('IngredientEntry edit', () => {
       fireEvent.click(screen.getByRole('link', { name: 'Edit in Compendium Testwort' }));
     });
 
-    expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
+    expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`, { scroll: false });
     expect(within(dialog()!).getByRole('status')).toBeInTheDocument();
     expect(screen.queryByRole('form', { name: 'Fixture Form' })).not.toBeInTheDocument();
   });
@@ -984,7 +1008,9 @@ describe('IngredientEntry edit', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Save' }));
 
-    expect(router.replace).toHaveBeenCalledWith('/compendium/ingredients/testwort-renamed?edit');
+    expect(router.replace).toHaveBeenCalledWith('/compendium/ingredients/testwort-renamed?edit', {
+      scroll: false,
+    });
     expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
@@ -994,7 +1020,7 @@ describe('IngredientEntry edit', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Save' }));
 
-    expect(router.replace).toHaveBeenCalledWith(savedHref);
+    expect(router.replace).toHaveBeenCalledWith(savedHref, { scroll: false });
     expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
@@ -1003,7 +1029,7 @@ describe('IngredientEntry edit', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Delete' }));
 
-    expect(router.replace).toHaveBeenCalledWith('/compendium');
+    expect(router.replace).toHaveBeenCalledWith('/compendium', { scroll: false });
   });
 
   // A coven's own entry: the same dialog, writing to the coven.
@@ -1079,7 +1105,7 @@ describe('IngredientEntry edit', () => {
 
       fireEvent.click(within(covenDialog()).getByRole('button', { name: 'Fixture Save' }));
 
-      expect(router.replace).toHaveBeenCalledWith(OWN);
+      expect(router.replace).toHaveBeenCalledWith(OWN, { scroll: false });
       expect(router.refresh).toHaveBeenCalledTimes(1);
     });
   });

@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { expireStep } from '@/modules/identity/jobs/provisional-expiry-steps';
 import {
   ORIGIN,
   cookieHeader,
@@ -17,11 +18,15 @@ import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProvisionalUserRow } from './types';
 
 // Through Better Auth's real endpoints: an unverified account lapses
-// one verification lifetime after its last mail, and the next OAuth callback
-// sweeps it (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
+// one verification lifetime after its last mail, and the job started at its
+// sign-up removes it (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
+// The job's step is called directly, as the run's sleeps are the SDK's to keep.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
+
+const startJob = vi.hoisted(() => vi.fn<(job: unknown, args: unknown[]) => Promise<string>>());
+vi.mock('@/lib/jobs', () => ({ startJob }));
 
 const DOMAIN = '@provisional-accounts.test';
 const OWNER = `owner${DOMAIN}`;
@@ -67,6 +72,8 @@ beforeEach(async () => {
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 
   send.mockReset();
+  startJob.mockReset();
+  startJob.mockResolvedValue('run-id');
 });
 
 afterEach(() => {
@@ -113,7 +120,7 @@ async function squat(email: string, sub = 'fb-squatter') {
   const response = await signIn('facebook', { sub, email, verified: true });
   expectSignedIn(response);
   const row = await userRow(email);
-  // The preconditions every sweep assertion below could otherwise be explained by.
+  // The preconditions every expiry assertion below could otherwise be explained by.
   expect(row?.email_verified).toBe(false);
   expect(await linkedRows(row!.id)).toEqual({ users: 1, accounts: 1, sessions: 1 });
   return { row: row!, cookie: cookieHeader(response) };
@@ -128,9 +135,10 @@ async function sessionUser(cookie: string): Promise<string | undefined> {
 }
 
 describe('Story 58: an unverified account lapses so the address owner can sign in', () => {
-  it('lets a verified Google sign-in into a fresh account once the squat has expired', async () => {
+  it('lets a verified Google sign-in into a fresh account once the expiry job has removed the squat', async () => {
     const squatter = await squat(OWNER);
     await backdate(squatter.row.id, EXPIRED);
+    expect(await expireStep(squatter.row.id)).toBeNull();
 
     const response = await signIn('google', { sub: 'g-owner', email: OWNER, verified: true });
 
@@ -144,6 +152,8 @@ describe('Story 58: an unverified account lapses so the address owner can sign i
   it('refuses the same sign-in as account_not_linked while the squat is inside its window', async () => {
     const squatter = await squat(OWNER);
     await backdate(squatter.row.id, INSIDE);
+    // The job looks, finds minutes left and waits them out: it removes nothing.
+    expect(await expireStep(squatter.row.id)).toBeGreaterThan(0);
 
     const response = await signIn('google', { sub: 'g-owner', email: OWNER, verified: true });
 
@@ -155,31 +165,74 @@ describe('Story 58: an unverified account lapses so the address owner can sign i
   });
 });
 
-describe('Story 58: what the sweep removes', () => {
+describe('Story 58: the job starts at an unverified sign-up', () => {
+  it('starts one expiry run for the new account, named by its id', async () => {
+    const squatter = await squat(OWNER);
+
+    expect(startJob).toHaveBeenCalledTimes(1);
+    // The auth module is imported afresh, so the job is named rather than compared by identity.
+    const [job, args] = startJob.mock.calls[0];
+    expect((job as { name: string }).name).toBe('provisionalAccountExpiry');
+    expect(args).toEqual([squatter.row.id]);
+  });
+
+  it('starts none for a sign-up whose provider verified the address', async () => {
+    // Precondition: the same call that started a run above is made on this path too.
+    expectSignedIn(await signIn('google', { sub: 'g-owner', email: OWNER, verified: true }));
+
+    expect((await userRow(OWNER))?.email_verified).toBe(true);
+    expect(startJob).not.toHaveBeenCalled();
+  });
+
+  it('completes the sign-up when the run cannot be started', async () => {
+    startJob.mockRejectedValue(new Error('queue down'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const response = await signIn('facebook', { sub: 'fb-squatter', email: OWNER, verified: true });
+
+    expectSignedIn(response);
+    expect((await userRow(OWNER))?.email_verified).toBe(false);
+    expect(startJob).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Story 58: what the expiry job removes', () => {
   it("removes the expired row's accounts and sessions with it, so its cookie signs nobody in", async () => {
     const squatter = await squat(OWNER);
     expect(await sessionUser(squatter.cookie)).toBe(squatter.row.id);
     await backdate(squatter.row.id, EXPIRED);
 
-    // Any callback sweeps; this one is for an unrelated address.
-    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+    expect(await expireStep(squatter.row.id)).toBeNull();
 
     expect(await linkedRows(squatter.row.id)).toEqual({ users: 0, accounts: 0, sessions: 0 });
     expect(await sessionUser(squatter.cookie)).toBeUndefined();
   });
 
-  it('never sweeps a verified row, however old', async () => {
+  it('changes nothing when a step is re-run after it succeeded', async () => {
+    const squatter = await squat(OWNER);
+    await backdate(squatter.row.id, EXPIRED);
+    const bystander = await squat(BYSTANDER, 'fb-bystander');
+    expect(await expireStep(squatter.row.id)).toBeNull();
+    const after = await linkedRows(bystander.row.id);
+
+    expect(await expireStep(squatter.row.id)).toBeNull();
+
+    expect(await linkedRows(squatter.row.id)).toEqual({ users: 0, accounts: 0, sessions: 0 });
+    expect(await linkedRows(bystander.row.id)).toEqual(after);
+  });
+
+  it('never removes a verified row, however old', async () => {
     expectSignedIn(await signIn('google', { sub: 'g-owner', email: OWNER, verified: true }));
     const verified = (await userRow(OWNER))!;
     expect(verified.email_verified).toBe(true);
     await backdate(verified.id, '10 years');
 
-    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+    expect(await expireStep(verified.id)).toBeNull();
 
     expect(await linkedRows(verified.id)).toMatchObject({ users: 1, accounts: 1 });
   });
 
-  it('never sweeps a row no provider can sign in to, like the seeded bootstrap user', async () => {
+  it('never removes a row no provider can sign in to, like the seeded bootstrap user', async () => {
     const [bootstrap] = await sql`
       select email_verified from users where id = ${BOOTSTRAP_USER_ID}
     `;
@@ -189,48 +242,30 @@ describe('Story 58: what the sweep removes', () => {
     const squatter = await squat(OWNER);
     await backdate(squatter.row.id, EXPIRED);
 
-    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+    expect(await expireStep(BOOTSTRAP_USER_ID)).toBeNull();
+    expect(await expireStep(squatter.row.id)).toBeNull();
 
     expect((await linkedRows(BOOTSTRAP_USER_ID)).users).toBe(1);
-    // The same callback did sweep, so the bootstrap row was not skipped by accident.
+    // The same step did remove the squat, so the bootstrap row was not skipped by accident.
     expect((await linkedRows(squatter.row.id)).users).toBe(0);
   });
 
-  it('sweeps only at an OAuth callback', async () => {
+  it('is not done by a sign-in, a session read or any other request', async () => {
     const squatter = await squat(OWNER);
     await backdate(squatter.row.id, EXPIRED);
 
     await auth.handler(new Request(`${ORIGIN}/api/auth/ok`));
     await sessionUser(squatter.cookie);
+    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
 
     expect((await linkedRows(squatter.row.id)).users).toBe(1);
-  });
-
-  it('logs a sweep that fails and still completes the sign-in', async () => {
-    const squatter = await squat(OWNER);
-    await backdate(squatter.row.id, EXPIRED);
-    // A row that names the squatter makes its delete a foreign-key violation.
-    await asTouch(
-      sql,
-      (tx) => tx`update users set updated_by = ${squatter.row.id} where id = ${BOOTSTRAP_USER_ID}`,
-    );
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const response = await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true });
-
-    expectSignedIn(response);
-    expect((await linkedRows(squatter.row.id)).users).toBe(1);
-    expect(error).toHaveBeenCalledWith(
-      expect.stringContaining('provisional-account sweep failed'),
-      expect.anything(),
-    );
   });
 });
 
 // An admin may approve an unverified account or make it an
 // admin, and the ledger row that writes references the account with a
-// plain foreign key, so the sweep keeps it rather than fail on it.
-describe('Story 58: an account an admin has vouched for is not swept', () => {
+// plain foreign key, so the job keeps it rather than fail on it.
+describe('Story 58: an account an admin has vouched for is not removed', () => {
   const VOUCHED = `vouched${DOMAIN}`;
 
   async function ledgerRows(userId: string): Promise<number> {
@@ -263,27 +298,24 @@ describe('Story 58: an account an admin has vouched for is not swept', () => {
     return { kept: kept.row.id, beside: beside.row.id };
   }
 
-  it('keeps a lapsed account holding a privilege change, and sweeps the one beside it in the same run', async () => {
+  it('keeps a lapsed account holding a privilege change, and removes the one beside it', async () => {
     const { kept, beside } = await lapsedPair(true);
-    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+    // Nothing is left to wait for on the vouched row, so its run ends.
+    expect(await expireStep(kept)).toBeNull();
+    expect(await expireStep(beside)).toBeNull();
 
-    // The sweep ran and did not fail on the ledger's foreign key.
-    expect(error).not.toHaveBeenCalledWith(
-      expect.stringContaining('provisional-account sweep failed'),
-      expect.anything(),
-    );
     expect((await linkedRows(beside)).users).toBe(0);
     // The kept account is otherwise untouched.
     expect(await linkedRows(kept)).toEqual({ users: 1, accounts: 1, sessions: 1 });
     expect(await ledgerRows(kept)).toBe(1);
   });
 
-  it('sweeps that same account when nothing vouches for it, so the row is what kept it', async () => {
+  it('removes that same account when nothing vouches for it, so the row is what kept it', async () => {
     const { kept, beside } = await lapsedPair(false);
 
-    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+    expect(await expireStep(kept)).toBeNull();
+    expect(await expireStep(beside)).toBeNull();
 
     expect(await linkedRows(kept)).toEqual({ users: 0, accounts: 0, sessions: 0 });
     expect((await linkedRows(beside)).users).toBe(0);
@@ -331,7 +363,8 @@ describe('Story 58: a resend restarts the window', () => {
     expect(touched.updated_at.getTime()).toBeGreaterThan(before.updated_at.getTime());
     expect(touched.updated_by).toBe(id);
 
-    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+    // The run wakes at the old expiry, finds a fresh window and sleeps again.
+    expect(await expireStep(id)).toBeGreaterThan(0);
     expect((await linkedRows(id)).users).toBe(1);
   });
 
@@ -346,26 +379,29 @@ describe('Story 58: a resend restarts the window', () => {
       const before = (await userRow(OWNER))!;
       const resent = await resend(cookieHeader(response), OWNER);
       expect(resent.status, await resent.clone().text()).toBe(200);
-      // The resend restarted the hour, so only the cap can sweep it now.
+      // The resend restarted the hour, so only the cap can remove it now.
       expect((await userRow(OWNER))!.updated_at.getTime()).toBeGreaterThan(
         before.updated_at.getTime(),
       );
       return id;
     }
 
-    it('sweeps a row three hours after sign-up, however recently it resent', async () => {
+    it('removes a row three hours after sign-up, however recently it resent', async () => {
       const id = await resentSignUp(PAST_CAP);
 
-      expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+      expect(await expireStep(id)).toBeNull();
 
       expect(await linkedRows(id)).toEqual({ users: 0, accounts: 0, sessions: 0 });
     });
 
-    it('keeps a row that resent inside the cap', async () => {
+    it('keeps a row that resent inside the cap, and says how long the cap leaves', async () => {
       const id = await resentSignUp(INSIDE_CAP);
 
-      expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+      const left = await expireStep(id);
 
+      // Ten minutes of the cap remain, fewer than the hour a resend restarted.
+      expect(left).toBeGreaterThan(0);
+      expect(left).toBeLessThanOrEqual(10 * 60);
       expect((await linkedRows(id)).users).toBe(1);
     });
   });
@@ -378,7 +414,7 @@ describe('Story 58: a resend restarts the window', () => {
     expect(response.status).toBe(401);
     expect(send).not.toHaveBeenCalled();
     expect(await userRow(OWNER)).toEqual(before);
-    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+    expect(await expireStep(id)).toBeNull();
     expect((await linkedRows(id)).users).toBe(0);
   });
 });

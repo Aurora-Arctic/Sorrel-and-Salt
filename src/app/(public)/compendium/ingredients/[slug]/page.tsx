@@ -1,34 +1,53 @@
 import type { Metadata, Route } from 'next';
+import { cache } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
 import IngredientEntry from '../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../components/IngredientEntry/types';
 import { Forbidden, NotFound } from '../../../../../lib/errors';
 import { getSession } from '../../../../../lib/request-session';
+import ShownToggle from '../../../../../components/IngredientEntry/shown-toggle';
 import ReviewMark from '../../../../../components/IngredientEntry/review-mark';
+import { cardName } from '../../../../../components/IngredientCard/card-name';
+import { curates } from '../../../../../lib/site-roles';
 import { entryJsonLd } from '../../../../../lib/json-ld';
 import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
 import { entryValues } from '@/app/entry-values';
-import { readCompendiumEntry, readCompendiumReview } from '@/modules/ingredients';
+import {
+  getIngredient,
+  readCompendiumEntry,
+  readCompendiumEntryAsCurator,
+  readCompendiumReview,
+  readSourcingScore,
+} from '@/modules/ingredients';
 import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
 // One compendium entry at its public address, readable signed out. The read is cached and sessionless,
-// but the page is drawn per request for a signed-in viewer's Edit and cupboard choices. An unknown or
+// but a curator also reaches a hidden entry, uncached. The page is drawn per request for a signed-in viewer's Edit and cupboard choices. An unknown or
 // coven slug answers 404; a moved slug answers 308.
 
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
-async function entryAt(slug: string) {
+// The public read first: cached, with no session. Only when it finds nothing is a session asked for, and
+// only a curator or admin gets a second, uncached read that reaches a hidden entry. Everyone else gets the 404.
+const entryAt = cache(async (slug: string) => {
   try {
     return await readCompendiumEntry(slug);
   } catch (error) {
-    if (error instanceof NotFound) return null;
+    if (!(error instanceof NotFound)) throw error;
+  }
+  const session = await getSession();
+  if (!session || !curates(session.role)) return null;
+  try {
+    return await readCompendiumEntryAsCurator(session, slug);
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return null;
     throw error;
   }
-}
+});
 
 // Title (the formal name tells two entries with one label apart), description and
 // canonical link. A missing or moved address gets none, as it renders no page.
@@ -37,11 +56,13 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
   if (found?.kind !== 'entry') return {};
   const { entry } = found.detail;
   const title = pageTitleOf(entry);
-  return publicPageMetadata(
+  const metadata = publicPageMetadata(
     title,
     entryDescription(title, entry.description),
     addressOf(entry.slug),
   );
+  // A hidden entry is a curator's to see here, and is never indexed.
+  return entry.shown ? metadata : { ...metadata, robots: { index: false, follow: false } };
 }
 
 // A coven entry cannot be read here, so a link to one has no page to go to.
@@ -54,7 +75,22 @@ async function reviewOf(id: string) {
   if (!curator) return undefined;
   try {
     const found = await readCompendiumReview(curator, id);
-    return { reviewedAt: found?.reviewedAt ?? null };
+    // A curator's read reaches a hidden entry too, so the switch starts from the row's own flag.
+    const row = await getIngredient(curator, id);
+    return { reviewedAt: found?.reviewedAt ?? null, shown: row.shown };
+  } catch (error) {
+    if (error instanceof Forbidden || error instanceof NotFound) return undefined;
+    throw error;
+  }
+}
+
+// The curator's sourcing score, from its own guarded, uncached read: never part of the cached public
+// read above. A refusal or a missing entry means no score, never an error page.
+async function sourcingOf(id: string) {
+  const curator = await getSession();
+  if (!curator) return undefined;
+  try {
+    return await readSourcingScore(curator, id);
   } catch (error) {
     if (error instanceof Forbidden || error instanceof NotFound) return undefined;
     throw error;
@@ -92,6 +128,8 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // The review switch's read, for a curator or admin only: per viewer, never in the cached read
   // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
   const review = canEdit ? await reviewOf(entry.id) : undefined;
+  // Beside it, the sourcing score: the head shows it, and the edit form's Sources opens with it.
+  const sourcing = canEdit ? await sourcingOf(entry.id) : undefined;
 
   return (
     <>
@@ -111,6 +149,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
                 closeHref: own,
                 deletedHref: '/compendium' as Route,
                 opened,
+                sourcing,
                 ...(review && {
                   review: {
                     reviewed: review.reviewedAt !== null,
@@ -125,9 +164,18 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
             <ReviewMark
               ingredientId={entry.id}
               reviewedAt={review.reviewedAt?.toISOString() ?? null}
+              alongside={
+                <ShownToggle
+                  ingredientId={entry.id}
+                  shown={review.shown}
+                  name={cardName(entry.name, entry.canonicalName)}
+                  accessibleName="Shown in Compendium"
+                />
+              }
             />
           )
         }
+        hiddenFromPublic={!entry.shown}
         covens={covens}
         heldInCovens={holding.length > 0}
         movedAway={

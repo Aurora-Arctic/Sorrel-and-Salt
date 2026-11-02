@@ -26,8 +26,10 @@ import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
 import Combobox from '../Combobox';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
-import { FieldError, FieldShell, fieldDescription } from '../Field';
+import { FieldError, FieldShell, SelectField, fieldDescription } from '../Field';
+import { MultiSelectField } from './fields';
 import { EditIcon, RemoveIcon, SourceEditIcon } from './icons';
+import { ENTRY_SUPPORT_OPTIONS, NAME_BASIS_OPTIONS, VARIANT_SUPPORT_OPTIONS } from './options';
 import ReferencePanel from './reference-panel';
 import { RemoveQuestion } from './remove-question';
 import { useLookup } from './suggestions';
@@ -48,9 +50,10 @@ import { draftOf, sourceTierOf } from './values';
 /**
  * What the form holds of a source: its id and tier, its full citation, and the fields its short
  * form is made from. One fragment for the search and the panel's two saves. Defined before its
- * first use, as codegen reads the documents in order.
+ * first use, as codegen reads the documents in order. Called bare: codegen reads the text, and the
+ * queries spread it by name.
  */
-export const ReferenceRowFragment = graphql(`
+graphql(`
   fragment ReferenceRow on Reference {
     id
     citation
@@ -90,6 +93,10 @@ const useReferenceSuggestions = (workspaceId: string | null, text: string, activ
 /** What a locator is, behind the tip beside each row's Locator. */
 const LOCATOR_HINT =
   'Where in the source this ingredient is written about, so a reader can turn to it: a page, p. 112; pages, pp. 12–19; a chapter, chap. 13; an entry, under "Hecate". Cited in several places? Give them all here: pp. 12–19, 40; chap. 3. Leave it empty to cite the whole work.';
+
+/** What a name basis is, behind the tip beside each compendium row's Name Basis. */
+const NAME_BASIS_HINT =
+  'How this source names the ingredient. Stated: it prints this formal name. Resolved: it heads a common name that another source maps to this formal name alone. Unresolved: a common name not yet matched. Unaudited: not yet checked.';
 
 /** Enter with nothing picked adds nothing: a search is not a source. */
 const IGNORE_ENTER = () => {};
@@ -165,9 +172,11 @@ export function ReferencesField({
     return { ...found, options: found.options.filter((option) => !ids.has(option.link.id)) };
   }, [found, listed]);
 
-  // A locator in error is shown, open or not, so its box can take the focus.
-  const locatorErrors = fields.map(
-    (_, index): boolean => get(errors, `${list}.${index}.locator`) !== undefined,
+  // A row with a field in error is shown, open or not, so that field can take the focus.
+  const locatorErrors = fields.map((_, index): boolean =>
+    (['locator', 'nameBasis', 'supports'] as const).some(
+      (part) => get(errors, `${list}.${index}.${part}`) !== undefined,
+    ),
   );
   const rowErrors = fields.map(
     (_, index): string | undefined =>
@@ -200,7 +209,10 @@ export function ReferencesField({
   };
   const add = (citation: string, link: ReferenceLink) => {
     // Not focused by the field array: the row opens, and its Locator takes the focus.
-    append({ value: citation, link, locator: '' }, { shouldFocus: false });
+    append(
+      { value: citation, link, locator: '', nameBasis: '', supports: [] },
+      { shouldFocus: false },
+    );
     focusLocator.current = true;
     setOpensAt(fields.length + 1);
     setAnnouncement(`Added ${shortCitationText(link)}`);
@@ -464,6 +476,30 @@ export function ReferencesField({
                       })}
                     />
                   </FieldShell>
+                  {/* A compendium citation's own attributes, which a coven's carries none of:
+                      absent from a coven's form, not hidden. */}
+                  {workspaceId === null && (
+                    <>
+                      <SelectField<IngredientFormValues>
+                        name={`${list}.${index}.nameBasis`}
+                        label="Name Basis"
+                        hint={NAME_BASIS_HINT}
+                        placeholder="Choose one"
+                        options={NAME_BASIS_OPTIONS}
+                      />
+                      <MultiSelectField
+                        name={`${list}.${index}.supports`}
+                        label="Supports"
+                        hint={
+                          at
+                            ? 'The fields of this form that this source backs.'
+                            : 'The fields of this entry that this source backs.'
+                        }
+                        placeholder="Add a field"
+                        options={at ? VARIANT_SUPPORT_OPTIONS : ENTRY_SUPPORT_OPTIONS}
+                      />
+                    </>
+                  )}
                 </div>
               </li>
             );

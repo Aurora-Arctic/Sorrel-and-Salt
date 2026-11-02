@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import {
   COMPENDIUM_CACHE_DATABASE,
   CONFIGURED_PROVIDERS_DATABASE,
@@ -39,6 +40,10 @@ const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
 
+// Answers the server's breached-password checks, so no e2e run calls the real Have I Been Pwned service.
+// Resolved from the repository root, where Playwright and `npm run e2e:servers` both start.
+const PWNED_RANGE_PRELOAD = resolve('tests/e2e/pwned-range-preload.mjs');
+
 const serverEnv = (
   port: number,
   database: string,
@@ -61,6 +66,8 @@ const serverEnv = (
   // CI's placeholder, here too, so a developer's own address in `.env.local` never names the primary
   // admin a spec signs in as.
   ADMIN_BOOTSTRAP_EMAIL: PRIMARY_ADMIN_EMAIL,
+  // Set, not appended to: a developer's own NODE_OPTIONS has no place in a test server.
+  NODE_OPTIONS: `--import ${PWNED_RANGE_PRELOAD}`,
   // And held in no memory either, but on the compendium-cache server: a slot's
   // database is reseeded under its server, which a cache would not follow
   // (claude-docs/db/compendium-cache.md, "In tests").

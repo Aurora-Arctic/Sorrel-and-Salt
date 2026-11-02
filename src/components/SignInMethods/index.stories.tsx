@@ -41,10 +41,20 @@ const Section = ({ id, children }: { id?: string; children: ReactNode }) => (
   </section>
 );
 
-const Page = (props: SignInMethodsProps) => (
+type StoryProps = Omit<SignInMethodsProps, 'passwordHeld' | 'passkeyCount'> &
+  Partial<SignInMethodsProps>;
+
+// The password and passkey counts default to the common case; a story names its own.
+const withDefaults = (props: StoryProps) => ({
+  passwordHeld: true,
+  passkeyCount: 1,
+  ...props,
+});
+
+const Page = (props: StoryProps) => (
   <main className="page-frame page-frame--narrow">
     <Section>
-      <SignInMethods {...props} />
+      <SignInMethods {...withDefaults(props)} />
     </Section>
   </main>
 );
@@ -84,7 +94,7 @@ const someUnavailableNode = <Page linked={[DISCORD]} configured={['discord']} />
 const WholeAccountPage = ({
   methods = { linked: [DISCORD], configured: ALL_PROVIDERS },
 }: {
-  methods?: SignInMethodsProps;
+  methods?: StoryProps;
 }) => (
   <main className="page-frame page-frame--narrow page-with-nav">
     <h1>Your Account</h1>
@@ -119,7 +129,7 @@ const WholeAccountPage = ({
       <EmailForm embedded email="ada@example.test" verified landing="/coven" />
     </section>
     <Section id="account-sign-in-methods">
-      <SignInMethods {...methods} />
+      <SignInMethods {...withDefaults(methods)} />
     </Section>
     <section
       id="account-invitations"

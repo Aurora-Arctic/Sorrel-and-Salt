@@ -1,6 +1,7 @@
 @use '../../scss/variables' as *;
+@use 'switch-size' as *;
 
-// The Reviewed switch on one line: the label beside a smaller track, with no padding of its own, so it fits a head's row and the form's first row. Tokens only, before the section's design review.
+// The Reviewed switch on one line: the label beside a track the eye switch's size, with no padding of its own, so it fits a head's row and the form's first row. Tokens only, before the section's design review.
 // Under `body`, as the primitives are, so it outweighs the `.switch` rules it adjusts.
 body .review-mark {
   display: flex;
@@ -22,11 +23,42 @@ body .review-mark {
       min-block-size: 0;
     }
 
-    // Four fifths of the track's size, drawn from its inner edge so the label stays close.
+    // The eye switch's size (_switch-size.scss), with a plain thumb: the primitive's track and thumb, resized.
     input {
-      scale: 0.8;
-      transform-origin: right center;
-      margin-inline-start: calc(#{$switch-width} * -0.2);
+      inline-size: $track-width;
+      block-size: $track-height;
+      transition:
+        background-color $slide,
+        border-color $slide;
+
+      // The input has a 1px border and its pseudo-element sits inside it, so the offset drops the border to land where the eye switch's thumb does.
+      &::before {
+        inset-block-start: calc(#{$inset} - 1px);
+        inset-inline-start: calc(#{$inset} - 1px);
+        inline-size: $thumb-size;
+        block-size: $thumb-size;
+        transition:
+          translate $slide,
+          inline-size $slide,
+          background-color $slide;
+      }
+
+      &:checked::before {
+        translate: $travel 0;
+      }
+    }
+
+    // Pressed, the thumb stretches by the primitive's step, from the end it sits at.
+    &:not(:has(input:disabled, input[aria-disabled='true'])) {
+      &:has(> .field__label:is(:active, [data-pressed]), input:is(:active, [data-pressed])) input {
+        &::before {
+          inline-size: calc(#{$thumb-size} + #{space(1)});
+        }
+
+        &:checked::before {
+          translate: calc(#{$travel} - #{space(1)}) 0;
+        }
+      }
     }
   }
 }
@@ -47,18 +79,25 @@ body .review-row__line {
   gap: space(2);
 }
 
+// The switches at the end of the row, side by side.
+body .review-row__switches {
+  display: flex;
+  align-items: center;
+  gap: space(4);
+}
+
 body .review-row__standing {
   display: flex;
   align-items: center;
 }
 
-// The busy ring in place of the thumb, at four fifths of its size and travel, as the track is.
+// The busy ring in place of the thumb, at its size and travel.
 body .review-mark .switch .switch__spinner {
-  inline-size: calc(#{$glyph-size} * 0.8);
-  block-size: calc(#{$glyph-size} * 0.8);
-  inset-inline-start: calc(((#{$icon-size} - 2px - #{$glyph-size}) / 2 + 1px) * 0.8);
+  inline-size: $thumb-size;
+  block-size: $thumb-size;
+  inset-inline-start: $inset;
 }
 
 body .review-mark .switch input:checked ~ .switch__spinner {
-  translate: calc((#{$switch-width} - #{$icon-size}) * 0.8) -50%;
+  translate: $travel -50%;
 }

@@ -1,0 +1,2 @@
+ALTER TABLE "ingredients" ADD COLUMN "shown" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+CREATE INDEX "ingredients_tier_shown" ON "ingredients" USING btree ("workspace_id","shown") WHERE "ingredients"."deleted_at" is null;

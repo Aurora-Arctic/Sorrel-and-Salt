@@ -47,11 +47,17 @@
     .spell-recipe__actions,
     .spell-recipe__aside,
     .spell-workings,
+    .site-footer,
     .last-edit,
     .icon-tip__look,
     [role='dialog'],
     [role='tooltip'] {
       display: none !important;
+    }
+
+    // The footer is off the sheet, so the window-high frame around the page need not fill a window.
+    .site-frame {
+      min-height: 0;
     }
 
     .app-shell__main {

@@ -1,6 +1,7 @@
 import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+import type { supportRequests } from '../../modules/support/schema/support-requests';
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
@@ -10,6 +11,8 @@ import type { ingredientDeities } from '../../modules/ingredients/schema/ingredi
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type {
   CategoryMode,
+  CompendiumOrder,
+  CompendiumSort,
   IngredientElement,
   NomenclatureKind,
 } from '../../modules/ingredients/schema/ingredient-enums';
@@ -26,6 +29,7 @@ import type { spellWorkings } from '../../modules/grimoire/schema/spell-workings
 import type { GRIMOIRE_ORDERS, spells } from '../../modules/grimoire/schema/spells';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
+import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
@@ -96,8 +100,8 @@ export type WritableInWorkspace<TTable extends PgTable> = Omit<Writable<TTable>,
 export type SortColumn = AnyPgColumn<{ notNull: true }>;
 
 /**
- * One part of a page's sort, always ascending: a column, or an expression and the type its cursor text casts back to.
- * An expression that can be NULL is the caller's bug (see `SortColumn`); a descending part is written negated.
+ * One part of a page's sort, ascending unless the whole key is `descending`: a column, or an expression and the type its cursor text casts back to.
+ * An expression that can be NULL is the caller's bug (see `SortColumn`); one descending part among ascending ones is written negated.
  */
 export type SortPart = SortColumn | { expression: SQL; type: string };
 
@@ -105,6 +109,8 @@ export type SortPart = SortColumn | { expression: SQL; type: string };
 export interface KeyOrder {
   sort: readonly SortPart[];
   id: AnyPgColumn;
+  /** The whole key, `(...sort, id)`, read in reverse: the exact reverse of the ascending list, ties included. */
+  descending?: boolean;
   /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
   join?: { source: SQL; on: SQL };
   /**
@@ -416,6 +422,11 @@ export interface AuditWriter {
    */
   setReviewInCompendium(curator: Curator, id: string, reviewed: boolean): Promise<IngredientRow[]>;
   /**
+   * Sets whether the one live compendium entry is shown on the public compendium. A real change to the row, so its audit stamps move.
+   * The only writer of the column.
+   */
+  setShownInCompendium(curator: Curator, id: string, shown: boolean): Promise<IngredientRow[]>;
+  /**
    * Moves the one live compendium row's `updated_at` with no column changed, for a parent whose child rows just changed.
    * The `set_updated_at()` trigger ignores an UPDATE that changed nothing, so this publishes `app.touch_row` to say the touch is meant.
    * Compendium tier only.
@@ -557,6 +568,42 @@ export interface AuditWriter {
    */
   lockCovenStock(membership: Membership): Promise<void>;
   /**
+   * Takes the account's support-send lock until the transaction ends, then reads what a send decides on: the account's requests
+   * in the last `windowSeconds` and the end of its active time-out. Taken first, so two sends from one account queue and the
+   * second counts the first; another account's send is not held up.
+   */
+  lockSupportSender(
+    userId: string,
+    windowSeconds: number,
+  ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  /**
+   * Counts one signed-out send against an email address and a client address, each in its own row of `support_send_counts`,
+   * and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
+   * starts over at one. Takes a lock per key until the transaction ends, so sends racing each other all count.
+   */
+  countSignedOutSend(
+    address: string,
+    client: string,
+    now: Date,
+    windowSeconds: number,
+  ): Promise<{ address: number; client: number }>;
+  /**
+   * Moves a support request from one of `from` to `values.status` in a single guarded update, and returns the row, or none when
+   * its status is no longer one of `from` (or, given `ownerId`, it is not that sender's): the guard is in the `where`, so two
+   * moves racing cannot both win.
+   */
+  moveSupportRequest(
+    id: string,
+    ownerId: string | null,
+    from: readonly SupportRequestStatus[],
+    values: SupportRequestMove,
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Closes every resolved request whose `resolved_at` is at or before `cutoff`, stamping `closed_at`; returns the rows closed. */
+  closeIdleResolvedSupportRequests(
+    cutoff: Date,
+    closedAt: Date,
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
    * form-id order, read in the transaction so they include the ones this write
    * has just made. None for an ingredient that is not the coven's.
@@ -637,9 +684,22 @@ export interface AuditWriter {
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
   /**
+   * Insert a batch of cards (a whole number of sheets) in one statement, on the site tier's proof: one row per token, hashed here, sharing the batch id and the
+   * expiry, with no address, coven or role.
+   */
+  insertInvitationCards(admin: SiteAdmin, values: CardInvitationValues): Promise<InvitationRow[]>;
+  /** Revoke every pending card of the batch. An accepted card is the record of an arrival and is left untouched. */
+  revokeInvitationCardBatch(admin: SiteAdmin, batchId: string): Promise<InvitationRow[]>;
+  /**
+   * Record one refused open of the card `invitationId` by the session's user for `reason`: a new row, or the live row's `attempts` plus one and a later `last_attempted_at`.
+   * Under no proof, since the account is signed in and nothing here reads the card; the service has decided it is a recordable refusal.
+   */
+  recordCardAttempt(invitationId: string, reason: CardAttemptReason): Promise<CardAttemptRow[]>;
+  /**
    * Accept the pending invitation a link's token names, on either tier, as the session's user: stamps `accepted_at` and `accepted_by`.
    * Under no proof, since the invitee holds neither membership nor site role yet; the token admits, and the user must hold the invited address, verified.
    * No row comes back for a token naming no pending invitation, or a user whose live row holds another address or holds it unverified.
+   * A card names no address: any verified account is admitted, once.
    */
   acceptInvitation(token: string): Promise<InvitationRow[]>;
   /**
@@ -762,6 +822,20 @@ export interface IngredientFilter {
    */
   reviewed?: boolean;
   /**
+   * The compendium's only: which entries by their shown flag. Absent or 'shown' keeps the shown ones, 'hidden' the hidden ones and 'all' both.
+   * A coven's cupboard read ignores it and keeps a hidden entry it names. The service lets only a curator set anything but shown.
+   */
+  listing?: 'shown' | 'hidden' | 'all';
+  /**
+   * The column the list sorts on, overriding best match under a query: `name` A to Z, or the compendium's `sourcing_score`, lowest first, then name.
+   * Absent orders by name, or by best match under a query. A coven's cupboard read ignores the sourcing score. The service lets only a curator set it.
+   */
+  sort?: CompendiumSort;
+  /** `desc` reads `sort`'s whole key in reverse, name and id included; ignored without a `sort`. */
+  order?: CompendiumOrder;
+  /** The compendium's only: carry each entry's sourcing score as `sourcingScore`, read in the page's own query. The service lets only a curator set it. */
+  withSourcingScore?: boolean;
+  /**
    * The compendium only: keep an entry when a live cupboard row of any one of these covens names it. A proof each, so a coven the caller is not in
    * cannot be named; an empty list is no filter.
    */
@@ -826,6 +900,11 @@ export type ReviewFacetValue = 'reviewed' | 'needs_review';
  */
 export interface CompendiumScore {
   score: number | null;
+}
+
+/** A compendium page entry's carried values, with its sourcing score when the filter asks for it (`withSourcingScore`). */
+export interface CompendiumListEdge extends CompendiumScore {
+  sourcingScore?: number;
 }
 
 /** Which of the substitute picker's two groups an entry is listed in. */
@@ -1017,6 +1096,9 @@ export interface SlugRedirect {
 /** An `invitations` row, either tier, as a finder or a write returns it. */
 export type InvitationRow = typeof invitations.$inferSelect;
 
+/** An `address` invitation, either tier: `invitations_kind_shape` gives it the address a card lacks. */
+export type AddressInvitationRow = InvitationRow & { email: string };
+
 /** The live coven a workspace invitation names, as the invited account may be told it: two fields, never the row. */
 export interface InvitedCoven {
   name: string;
@@ -1043,7 +1125,7 @@ export type InvitableSiteRole = Exclude<NonNullable<InvitationRow['siteRole']>, 
  * A site-tier invitation, which grants the site role it names: the workspace and the coven role both null, as the `invitations_tier` CHECK makes them
  * together, and the site role set, as `invitations_site_role_tier` makes it.
  */
-export type SiteInvitationRow = InvitationRow & {
+export type SiteInvitationRow = AddressInvitationRow & {
   workspaceId: null;
   role: null;
   siteRole: InvitableSiteRole;
@@ -1060,6 +1142,74 @@ type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expires
 
 /** What a site-tier invitation starts with: the same, and the site role it grants. */
 export type SiteInvitationValues = InvitationValues & { siteRole: InvitableSiteRole };
+
+/** What a batch of cards starts with: a token each, never stored, and the batch and expiry they share. */
+export interface CardInvitationValues {
+  tokens: string[];
+  batchId: string;
+  expiresAt: Date;
+  /** Written on every card of the batch; null for none. */
+  note: string | null;
+}
+
+/** A card's place in its batch, from 1; null for a card minted before places were kept. */
+export type CardPosition = { id: string; position: number | null };
+
+/** One batch of cards counted: all of them, the accepted ones, those still pending, and the refused opens of its links. */
+export type CardBatchTotal = {
+  batchId: string;
+  cards: number;
+  accepted: number;
+  pending: number;
+  /** Refused opens of the batch's cards, all accounts and reasons added. */
+  attempts: number;
+};
+
+/** Where a batch of cards stands, as the admin Invitation Cards table words it. */
+export type CardBatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
+
+/** What the admin batch list is narrowed by. Each part is optional, and absent means no filter. */
+export interface CardBatchFilter {
+  /** The start of the batch number, or text anywhere in its note; case-insensitive. */
+  batch?: string;
+  status?: CardBatchStatus;
+  /** Days as `YYYY-MM-DD` in UTC, both ends included. */
+  mintedFrom?: string;
+  mintedTo?: string;
+  expiresFrom?: string;
+  expiresTo?: string;
+}
+
+/** What the admin card sign-up list and its CSV are narrowed by. */
+export interface CardArrivalFilter {
+  /** Part of the account's name or address, or the start of the batch number; case-insensitive. */
+  query?: string;
+}
+
+/** A card in any state: always in a batch. */
+export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
+
+/** Why a card's link was refused to a signed-in account: the reasons a refused open is recorded under. */
+export type CardAttemptReason = 'revoked' | 'expired' | 'accepted';
+
+/** One account's refused opens of one card for one reason. */
+export type CardAttemptRow = {
+  id: string;
+  invitationId: string;
+  userId: string;
+  reason: CardAttemptReason;
+  attempts: number;
+  lastAttemptedAt: Date;
+  createdAt: Date;
+};
+
+/** A card some account accepted: who, when, and the batch it came from. */
+export type CardArrivalRow = InvitationRow & {
+  kind: 'card';
+  acceptedAt: Date;
+  acceptedBy: string;
+  batchId: string;
+};
 
 /** What a workspace invitation starts with: the same, and the coven role it grants. */
 export type WorkspaceInvitationValues = InvitationValues & { role: InvitableRole };
@@ -1209,4 +1359,57 @@ export interface CompendiumSlugEntry {
   description: string | null;
   /** When the entry last really changed: its `updated_at`. */
   lastModified: Date;
+}
+
+/**
+ * Who reads the support list, as the finder narrows it: an admin reads every request, a curator only those marked for curators or
+ * assigned to them. The proof is the service's `assertSiteAdmin` or `assertCurator`.
+ */
+export type SupportReader =
+  { role: 'admin'; proof: SiteAdmin } | { role: 'curator'; proof: Curator };
+
+/** Whoever is reading a request's replies: a sender reads their own requests', a curator or admin those they may see. */
+export interface SupportViewer {
+  userId: string;
+  role: 'user' | 'curator' | 'admin';
+}
+
+export type SupportRequestStatus = 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
+
+/** What a status move writes with the new status: the activity stamps and the resolved and closed marks. */
+export interface SupportRequestMove {
+  status: SupportRequestStatus;
+  resolvedAt?: Date | null;
+  resolvedBy?: string | null;
+  closedAt?: Date | null;
+  lastSenderActivityAt?: Date;
+  lastStaffActivityAt?: Date;
+}
+
+/** The admin list's narrowing; an absent part is no narrowing. */
+export interface SupportRequestFilter {
+  about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
+  status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
+  errorCode?: number;
+  /** One of the admin page’s views; it narrows by status and assignment, and orders the queue views by oldest sender activity. */
+  view?: SupportView;
+  /** Only requests whose sender is in this group; left out, every sender. */
+  senderGroup?: SupportSenderGroup;
+}
+
+/** How many requests each view holds. */
+export type SupportViewCounts = Record<SupportView, number>;
+
+/** What the account menu counts for one viewer. */
+export interface SupportMenuCounts {
+  /** Open requests assigned to them. */
+  assignedOpen: number;
+  /** Their own requests waiting on their answer. */
+  waitingOnMe: number;
+}
+
+/** How many of a sender's requests are still open and how many are done. */
+export interface SupportStatusCounts {
+  open: number;
+  closed: number;
 }

@@ -74,7 +74,7 @@ const declinedAtOf = async (id: string) =>
 
 let coven: string;
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
   coven = await insertCoven(`Fixture Coven ${Math.random().toString(36).slice(2)}`);
 });
 

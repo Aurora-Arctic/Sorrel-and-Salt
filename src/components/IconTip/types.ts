@@ -24,6 +24,13 @@ export interface EditLinkProps {
   ref?: Ref<HTMLAnchorElement>;
 }
 
+export interface LiddedEyeIconProps {
+  /** Open draws the Quick Look eye; shut lays the lid down with its lashes. A change moves the lid. */
+  open: boolean;
+  /** The class its user sizes it by. */
+  className?: string;
+}
+
 export interface ChevronIconProps {
   /** The class its user styles it by: `chevron-icon`, which the combobox and the step row style, when none is given. */
   className?: string;

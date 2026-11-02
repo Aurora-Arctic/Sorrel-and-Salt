@@ -1,13 +1,16 @@
 'use client';
 
-import { type ReactElement, useEffect, useState, useSyncExternalStore } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { type ReactElement, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { getLastUsedLoginMethod, signIn } from '../../lib/auth-client';
 import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
+import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
+import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
 import type { SignInPanelProps } from './types';
 import './index.scss';
@@ -24,19 +27,64 @@ const getLastUsedProvider = (): ProviderId | null => {
   return SOCIAL_PROVIDERS.find((provider) => provider.id === value)?.id ?? null;
 };
 
+// The same cookie, for the password form: Better Auth's lastLoginMethod writes `email` for it.
+const getLastUsedPassword = (): boolean => getLastUsedLoginMethod() === 'email';
+// Whether the cookie names a passkey sign-in, which is not a roster provider.
+const getLastUsedPasskey = (): boolean => getLastUsedLoginMethod() === 'passkey';
+
+// The query parameter that opens the email view; each view is its own history entry, so the
+// browser's Back button returns from the email form to the provider buttons.
+export const EMAIL_VIEW_PARAM = 'method';
+export const EMAIL_VIEW = 'email';
+const PUSHED_MARK = 'signInEmailViewPushed';
+
 const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
   // The server-rendered callback error, the page's own, until a press starts
   // a new attempt. A failure of that press is said under its own button
   // instead (./provider-button.tsx).
   const [message, setMessage] = useState(error);
+  // The code step has one job, so it stands alone in the card.
+  const [codeStep, setCodeStep] = useState(false);
   // Better Auth's documented read, taken after hydration: the server has no
   // `document`, so rendering the mark there and here would disagree
   // (claude-docs/components/sign-in-panel.md, "Last used").
   const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
+  const lastUsedPassword = useSyncExternalStore(noSubscription, getLastUsedPassword, () => false);
+  const passkeyLastUsed = useSyncExternalStore(noSubscription, getLastUsedPasskey, () => false);
 
   // The provider whose hop is under way. The page is left for the provider's own, so on
   // success it stays set until the browser goes; a return from the back-forward cache (the
   // page restored as it was left) clears it.
+  const searchParams = useSearchParams();
+  const emailView = searchParams.get(EMAIL_VIEW_PARAM) === EMAIL_VIEW;
+  // Held here, not in the form, so the address survives a trip back to the buttons.
+  const [email, setEmail] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
+  const shown = useRef(emailView);
+  // On a switch of view, focus moves to the new view's heading; the first render leaves focus alone.
+  useEffect(() => {
+    if (shown.current === emailView) return;
+    shown.current = emailView;
+    panelRef.current?.querySelector<HTMLElement>('[data-view-heading]')?.focus();
+  }, [emailView]);
+
+  const showView = (toEmail: boolean): void => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (toEmail) params.set(EMAIL_VIEW_PARAM, EMAIL_VIEW);
+    else params.delete(EMAIL_VIEW_PARAM);
+    const query = params.toString();
+    const url = query ? `?${query}` : window.location.pathname;
+    if (toEmail) {
+      // The mark lets Back undo this push. Next adds its own state keys; copying them in would make its patched pushState skip the sync.
+      window.history.pushState({ [PUSHED_MARK]: true }, '', url);
+    } else if (window.history.state?.[PUSHED_MARK]) {
+      window.history.back();
+    } else {
+      // Opened straight on the email view: there is no earlier entry of this page to return to.
+      window.history.replaceState(null, '', url);
+    }
+  };
+
   const [signingIn, setSigningIn] = useState<ProviderId | null>(null);
   useEffect(() => {
     const restored = (event: PageTransitionEvent) => {
@@ -72,25 +120,48 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   return (
     // Its own card ground, `.panel`, rather than the page's: /sign-in holds
     // nothing else (claude-docs/components/sign-in-panel.md, "Styling").
-    <div className="panel sign-in-panel">
-      <PageHeader
-        className="sign-in-panel__header"
-        title="Sign In"
-        lede="Sign in, or create your account, with one of these."
-      />
+    <div
+      className={codeStep ? 'panel sign-in-panel sign-in-panel--code' : 'panel sign-in-panel'}
+      ref={panelRef}
+    >
       {message && <Notice kind="error">{message}</Notice>}
-      <div className="sign-in-panel__providers">
-        {SOCIAL_PROVIDERS.map((provider) => (
-          <ProviderButton
-            key={provider.id}
-            provider={provider}
-            available={configured.includes(provider.id)}
-            lastUsed={provider.id === lastUsed}
-            signingIn={signingIn}
-            onSignIn={signInWith}
+      {emailView ? (
+        <PasswordForm
+          next={next}
+          lastUsed={lastUsedPassword}
+          email={email}
+          onEmailChange={setEmail}
+          onBack={() => showView(false)}
+          onStart={() => setMessage(undefined)}
+          onCodeStep={setCodeStep}
+        />
+      ) : (
+        <>
+          <PageHeader
+            className="sign-in-panel__header"
+            headingClassName="auth-title"
+            focusable
+            title="Sign In"
+            lede="Sign in or create an account."
           />
-        ))}
-      </div>
+          <div className="sign-in-panel__providers">
+            {SOCIAL_PROVIDERS.filter((provider) => !provider.hidden).map((provider) => (
+              <ProviderButton
+                key={provider.id}
+                provider={provider}
+                available={configured.includes(provider.id)}
+                lastUsed={provider.id === lastUsed}
+                signingIn={signingIn}
+                onSignIn={signInWith}
+              />
+            ))}
+            <PasskeyButton next={next} lastUsed={passkeyLastUsed} />
+            <button type="button" className="btn btn--solid" onClick={() => showView(true)}>
+              Continue with Email
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

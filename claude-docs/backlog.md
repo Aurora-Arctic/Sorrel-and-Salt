@@ -8,7 +8,7 @@
       Yes, because a root can still have multiple forms and some things have different names for different parts.
 - [x] Ivy tried to click on the ingredient name itself instead of edit. Should go to the page where it can be edited? Or modal?
       It should open a modal.
-- [x] Define password policies and create enforcement.
+- [x] Define password policies and create enforcement. The policy is DESIGN.md §8, "Passwords"; Wave 16 (M16.2–M16.5) builds the enforcement.
 - [x] Icons for forms?
       Yes, one per form group, with a generic salt spoon for a form no group
       covers. The spoon also replaces the flask as the Forms tab mark. Minted
@@ -35,8 +35,18 @@
 
 ### V Fast Follow
 
-- [ ] Closed practice warning.
-- [ ] Ethical warnings around ingredients.
+- [ ] Closed practice warning, scoped by M17.2. When it is built, update the Code of Ethics
+      (`src/app/(public)/code-of-ethics/page.tsx`) in the same PR: the Short
+      Version's closed-practices line and the list in "Closed Practices and
+      Where Lore Comes From" say no entry is marked yet and the warning is
+      planned. Say what the warning shows instead, and add the promise that an
+      entry from a closed practice says so, names the people it belongs to and
+      does not describe the ceremony. The data is gathered in
+      `compendium/ethics/` (M14.29).
+- [ ] Ethical warnings around ingredients, scoped by M17.3. When it is built, update the Code
+      of Ethics in the same PR: the "planned" item in "Closed Practices and
+      Where Lore Comes From" and the paragraph in "Ethical and Sustainable
+      Sourcing" that says IUCN and CITES status are planned.
 - [ ] Draft and approval ingredients process.
 - [ ] Versioning and history tracking for items.
 - [ ] Allow curators to view some of other curators/admins info so they can collaborate.
@@ -45,6 +55,34 @@
       `src/modules/identity/services/email.ts` (MB.54), one deliberately
       loose function that nothing else reads, so the swap is one import
       and its tests in `tests/modules/identity/services/email.test.ts`.
+      The same task covers the signed-out support form, where the library
+      also stops the form being used to mail strangers:
+
+      1. **Count sends by the normalised address.**
+         `sendSignedOutSupportRequest`
+         (`src/modules/support/services/signed-out.ts`) allows 10 sends per
+         address in 24 hours, but counts the address as typed, only trimmed
+         and lowercased (`src/modules/support/validation/support.ts`). So
+         `name+1@gmail.com`, `name+2@gmail.com` and `n.ame@gmail.com` each
+         get their own 10. Count by the library's normalised address
+         instead. For Gmail and Googlemail that drops dots and `+tag`; other
+         providers follow the library's own rules, since RFC 5321 leaves the
+         part before the @ to the receiving provider.
+      2. **Cap the "received" email across the whole site.** Nothing limits
+         the total today, so many IP addresses can mail many victims. Past a
+         daily ceiling, skip only the email and still store the request: the
+         request is stored before the email is sent, so a cap on the email
+         cannot be used to block someone reporting an accessibility barrier.
+      3. **Update the privacy page.** `src/app/(public)/privacy/page.tsx`
+         says a signed-out request "is counted by network address and by
+         email for twenty-four hours"; it gains the daily ceiling on the
+         "received" email.
+
+      Whether the form also needs a captcha is undecided. Research on
+      2026-11-02 found self-hosted ALTCHA (a puzzle the browser solves with
+      no cookie and no third party) the only option that leaves the privacy
+      page true; Turnstile, hCaptcha, reCAPTCHA and Vercel BotID each add a
+      third party, a cookie, or both.
 
 ### V2
 

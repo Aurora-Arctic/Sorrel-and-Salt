@@ -11,6 +11,8 @@ import type {
   StockRow,
   WorkspaceIngredientFacets,
 } from '../../db/repository';
+import type { NameBasis } from './schema/ingredient-enums';
+import type { SOURCING_FACTS } from './schema/sourcing-weights';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
@@ -174,10 +176,45 @@ export interface SubstituteRow {
   variantId: string | null;
 }
 
-/** One reference as `Ingredient.references` reads it (DESIGN.md §7, `ReferenceLink`): the source and the locator such as "p. 112", or null. */
+/**
+ * One reference as `Ingredient.references` reads it (DESIGN.md §7, `ReferenceLink`): the source and the locator such as "p. 112", or null,
+ * and on a compendium citation how it names the ingredient and the fields it supports, each null when nobody recorded it.
+ */
 export interface CitedReference {
   reference: ReferenceRow;
   locator: string | null;
+  nameBasis: NameBasis | null;
+  supports: string[] | null;
+}
+
+/** One fact behind a sourcing score: which, how the list says it ("3 Sources"), and the points it adds or takes away. */
+export interface SourcingFact {
+  fact: (typeof SOURCING_FACTS)[number];
+  label: string;
+  points: number;
+}
+
+/** A compendium entry's sourcing score and every fact behind it, zero-point ones too; the facts' points sum to `score`. */
+export interface SourcingScore {
+  score: number;
+  facts: SourcingFact[];
+}
+
+/** What the sourcing score reads: the entry, whether a curator has reviewed it, its own live citations, and each live form with its own. */
+export interface SourcingInput {
+  entry: Pick<IngredientRow, 'workspaceId' | 'nomenclature' | 'safetyNotes'> & {
+    reviewed: boolean;
+  };
+  references: readonly CitedReference[];
+  forms: readonly { safetyNotes: string | null; references: readonly CitedReference[] }[];
+}
+
+/** Where the sourcing score's read loads an entry's forms and citations: the request's loaders, or one batch each without them. */
+export interface SourcingChildren {
+  variants: (entry: IngredientRow) => Promise<IngredientVariantRow[]>;
+  references: (entry: IngredientRow) => Promise<CitedReference[]>;
+  /** Each form's own citations, in the order given, read as one batch. */
+  variantReferences: (variants: readonly IngredientVariantRow[]) => Promise<CitedReference[][]>;
 }
 
 /** What the workspace service parses: the form's values, or the mutation's input. */
@@ -213,6 +250,23 @@ export type CompendiumAddress =
       movedAway: IngredientRow | null;
     }
   | { kind: 'moved'; slug: string };
+
+/** What a compendium entry's share card draws. */
+export interface CompendiumShareCard {
+  name: string;
+  /** The formal name, or null when there is none or it only repeats the name. */
+  formalName: string | null;
+  /** The entry's own categories, else its live forms', alphabetical, each in its group's dark-theme colour. */
+  categories: { name: string; color: string }[];
+  /** Each group's dark-theme colour, once, in the order its first category appears. */
+  groupColors: string[];
+}
+
+/** A category as a result card shows it: the row, and the stored forms that carry it when the ingredient itself does not (empty for its own). */
+export interface CardCategoryRow {
+  category: CategoryRow;
+  forms: string[];
+}
 
 /** A category as the entry page shows it: the row and the group whose colours its chip takes. */
 export interface CategoryDetail {

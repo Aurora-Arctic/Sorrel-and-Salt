@@ -4,6 +4,9 @@ import { compendiumFacetsHeldIn } from '../services/compendium-held-in';
 import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
   CategoryModeEnum,
+  CompendiumListingEnum,
+  CompendiumOrderEnum,
+  CompendiumSortEnum,
   IngredientElementEnum,
   IngredientRef,
   NomenclatureEnum,
@@ -78,14 +81,18 @@ builder.queryField('compendium', (t) =>
       withoutForms: t.arg.boolean({ required: false }),
       // The formal names still to look up are the `unknown` entries.
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark: FORBIDDEN to anyone else.
+      // A curator's review mark and hidden entries: FORBIDDEN to anyone else.
+      listing: t.arg({ type: CompendiumListingEnum, required: false }),
       reviewed: t.arg.boolean({
         required: false,
         description:
           'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
       }),
+      // The column to sort on; the sourcing score is FORBIDDEN to anyone but a curator, as the score is.
+      sort: t.arg({ type: CompendiumSortEnum, required: false }),
+      order: t.arg({ type: CompendiumOrderEnum, required: false }),
     },
-    // The session reaches the read for the Reviewed setting alone, a curator's.
+    // The session reaches the read for a curator's settings alone: Reviewed, the hidden listing and the sourcing sort.
     resolve: (_root, args, page, { session }) => listCompendium(filterOf(args), page, session),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
     count: (_root, args, start, { session }) => countCompendium(filterOf(args), start, session),
@@ -114,7 +121,8 @@ builder.queryField('compendiumFacets', (t) =>
       withoutReferences: t.arg.boolean({ required: false }),
       withoutForms: t.arg.boolean({ required: false }),
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark: FORBIDDEN to anyone else.
+      // A curator's review mark and hidden entries: FORBIDDEN to anyone else.
+      listing: t.arg({ type: CompendiumListingEnum, required: false }),
       reviewed: t.arg.boolean({
         required: false,
         description:
@@ -170,6 +178,9 @@ function filterOf({
   withoutForms,
   nomenclature,
   reviewed,
+  listing,
+  sort,
+  order,
 }: CompendiumFilterInput): CompendiumFilterInput {
   return {
     query,
@@ -185,5 +196,8 @@ function filterOf({
     withoutForms,
     nomenclature,
     reviewed,
+    listing,
+    sort,
+    order,
   };
 }

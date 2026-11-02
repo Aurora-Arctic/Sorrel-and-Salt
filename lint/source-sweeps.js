@@ -258,6 +258,11 @@ export const rules = {
           reason:
             'the focus going in, not back: the page Discard Changes dialog puts it on Keep Editing, the safe answer, as it opens; Modal has no initial-focus prop, and its own first-field focus keeps a focus its contents placed',
         },
+        'src/components/PasswordSection/two-factor.tsx': {
+          calls: 3,
+          reason:
+            'not a return to the opener: the print window takes the focus, the warning puts it on its safe answer as it opens, and after Stay, Go Back, Esc, Close or an outside click it goes to the two-factor section rather than to the button or link that opened the dialog',
+        },
         'src/components/UserList/confirmed-action.tsx': {
           calls: 1,
           reason:
@@ -300,6 +305,16 @@ export const rules = {
       const ALLOWED = {
         'src/components/NameForm/index.tsx': 'one short field, the account name (M13.14)',
         'src/components/EmailForm/index.tsx': 'one short field, the account address (M13.14)',
+        'src/components/SignInPanel/password-form.tsx':
+          'sign-in credentials, which the browser’s password manager holds: nothing typed is lost by leaving',
+        'src/components/SignInPanel/two-factor-step.tsx':
+          'a six-digit code that changes every 30 seconds: nothing typed outlasts leaving',
+        'src/components/ForgotPasswordForm/index.tsx':
+          'one short field, an address the browser fills: nothing typed is lost by leaving',
+        'src/components/ResetPasswordForm/index.tsx':
+          'a new password, which the browser’s password manager offers to save: nothing typed is lost by leaving',
+        'src/components/PasswordSection/index.tsx':
+          'passwords, which the browser’s password manager holds: nothing typed is lost by leaving',
         'src/components/FilterForm/index.tsx':
           'a list filter that applies as it changes: nothing typed waits on a Save',
         'src/components/IngredientForm/reference-panel.tsx':

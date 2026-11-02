@@ -1,0 +1,1 @@
+ALTER TABLE "sign_in_failures" ADD COLUMN "last_failed_at" timestamp DEFAULT now() NOT NULL;

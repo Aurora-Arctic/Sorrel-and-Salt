@@ -12,12 +12,13 @@ export const userPrivilegeChange = pgEnum('user_privilege_change', ['grant', 're
 
 // How a change came about: `bootstrap` is the primary admin's promotion by
 // ADMIN_BOOTSTRAP_EMAIL, `admin` an admin's act on `/admin/users`,
-// `invitation` an acceptance, and `manual` a `psql` fix that declared itself.
+// `invitation` an acceptance, `card` a card's, and `manual` a `psql` fix that declared itself.
 export const userPrivilegeRoute = pgEnum('user_privilege_route', [
   'bootstrap',
   'admin',
   'invitation',
   'manual',
+  'card',
 ]);
 
 // The one privilege ledger: one row per change to a privilege column on `users`, since the next update overwrites its `updated_by`.

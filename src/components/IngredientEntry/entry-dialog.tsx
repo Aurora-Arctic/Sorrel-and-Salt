@@ -5,6 +5,7 @@ import { useAnnounce } from '../ClickFeedback/status-region';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
+import CompendiumEntryForm from '../CompendiumEntryForm';
 import IngredientForm from '../IngredientForm';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
@@ -29,7 +30,7 @@ export default function EntryDialog({
 }): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const announce = useAnnounce();
-  const { opened, closeHref, deletedHref, savedHref, coven, review } = edit;
+  const { opened, closeHref, deletedHref, savedHref, coven, review, sourcing } = edit;
   // Annotate's press shares this page's skeleton; that belongs to it.
   const loading = useRouteModalOpener()?.loading?.title;
   if (loading === ANNOTATE_HEADING.title && !opened) {
@@ -52,14 +53,17 @@ export default function EntryDialog({
                 // A save closes the dialog: back to the page, fetched again so it shows what was
                 // saved.
                 onSaved={() => {
-                  navigate(savedHref ?? closeHref, { replace: true });
+                  navigate(savedHref ?? closeHref, { replace: true, scroll: false });
                   refresh();
                 }}
+                // An autosave keeps the dialog open: the page is fetched again so its heading shows the
+                // saved name. The coven's address names the id and stays.
+                onAutosaved={() => refresh()}
                 // A delete is said in the page's status region, which outlives the dialog, and leaves
                 // for `deletedHref`, fetched again; the focus goes to the page's heading (RouteModal).
                 onDeleted={() => {
                   announce(`${entry.name} deleted`);
-                  navigate(deletedHref, { replace: true });
+                  navigate(deletedHref, { replace: true, scroll: false });
                   refresh();
                 }}
                 duplicateHref={(match) => `${coven.ingredientsHref}/${match.id}`}
@@ -67,12 +71,11 @@ export default function EntryDialog({
                 entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
               />
             ) : (
-              <IngredientForm
+              <CompendiumEntryForm
                 // A fresh form per entry, inside the one modal.
                 key={opened.id}
-                workspaceId={null}
-                mayPromote
                 review={review}
+                sourcing={sourcing}
                 entry={opened}
                 // An edit has Save Ingredient alone, so a save is always 'open': the modal stays. A
                 // rename moves the public address, so the page follows it, `?edit` kept; the
@@ -80,11 +83,22 @@ export default function EntryDialog({
                 onSaved={(saved) => {
                   navigate(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route), {
                     replace: true,
+                    scroll: false,
                   });
                   refresh();
                 }}
+                // An autosave moves the address as Save does, but the dialog stays open.
+                onAutosaved={(saved) => {
+                  if (!savedHref) {
+                    navigate(`${publicAddress(saved.slug)}?edit` as Route, {
+                      replace: true,
+                      scroll: false,
+                    });
+                  }
+                  refresh();
+                }}
                 // Not `done`, which would go back to this page: it is gone.
-                onDeleted={() => navigate(deletedHref, { replace: true })}
+                onDeleted={() => navigate(deletedHref, { replace: true, scroll: false })}
                 duplicateHref={({ slug }) => publicAddress(slug)}
                 // A linked substitute's summary opens its entry in a new tab, every substitute here
                 // being a compendium entry.

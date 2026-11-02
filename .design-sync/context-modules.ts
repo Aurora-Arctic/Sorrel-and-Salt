@@ -28,6 +28,9 @@ import '../.storybook/typography.scss';
 import '../.storybook/layout.scss';
 import '../.storybook/primitives.scss';
 import './preview-host.scss';
+// Story-side sheets two stories lay their grid out with; the converter would compile them as empty.
+import '../src/components/MoonPhaseIcon/index.stories.scss';
+import '../src/components/SpellCard/index.stories.scss';
 
 // Marks a single-story page (`?story=`, what compare captures) so preview-host.scss can cancel the
 // preview frame's 24px body padding there only. A card's own page keeps its padding.

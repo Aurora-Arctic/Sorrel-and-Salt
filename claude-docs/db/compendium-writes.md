@@ -77,6 +77,8 @@ null, is a `ValidationError` on `nomenclature` from the parse, before
 `withAudit` opens; the column's `NOT NULL` would have answered with a driver
 error instead.
 
+**`shown` is optional, and rides with the entry** (M14.35). `CompendiumIngredientInput` and `CompendiumIngredientUpdateInput` carry it so a modal saves it in the entry's own write. Left out, a create takes the column's default (shown) and an update leaves the flag as it is; `setCompendiumEntryShown` stays for the list row and the details.
+
 **The form, celestial bodies, signs and deities are the curated rows'** (MB.162). A
 coven's write keeps what was typed; these two do not. After the parse,
 `inCuratedValues` checks the form and the deities by pick and the celestial bodies and

@@ -1,5 +1,7 @@
 ## Social providers (M2.4/M2.5, M2.6)
 
+Facebook is hidden from `/sign-in` and from the account page's offer to link it (`hidden: true` on its roster entry in `src/lib/social-providers.ts`). Its registration and icons are kept, and an account that already links it still lists it so it can be removed; removing the flag brings it back.
+
 The roster is `SOCIAL_PROVIDERS` in `src/lib/social-providers.ts`: Discord,
 Google, Facebook and Microsoft, re-scoped at M2.6 (GitHub was the original
 second provider and was dropped). `socialProviders()` in `src/lib/auth.ts`

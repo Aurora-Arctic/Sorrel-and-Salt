@@ -119,20 +119,29 @@ export {
   AnnotateLink,
   BinButton,
   BinIcon,
+  CauldronIcon,
   CheckIcon,
+  ChevronIcon,
+  CloseIcon,
   CompendiumEditLink,
+  CompleteIcon,
   CopyIcon,
+  CrossIcon,
   DotsIcon,
+  EditButton,
   EditLink,
   LinkIcon,
   MoreMenu,
   MysticEyeIcon,
   PencilIcon,
   PlusIcon,
+  PreviewButton,
+  PreviewIcon,
+  PrintIcon,
   QuickLookButton,
   QuickLookLink,
+  RecordButton,
   RedoIcon,
-  StockIcon,
   UndoIcon,
 } from '../src/components/IconTip';
 export type * from '../src/components/IconTip';
@@ -160,7 +169,13 @@ export { default as InviteDialog } from '../src/components/InviteDialog';
 export type * from '../src/components/InviteDialog';
 export { default as JarLines } from '../src/components/JarLines';
 export type * from '../src/components/JarLines';
-export { default as JarShelf } from '../src/components/JarShelf';
+export {
+  default as JarShelf,
+  JarDrawing,
+  pickJarShape,
+  ONE_OFF_HELD,
+  BANDS_FULL,
+} from '../src/components/JarShelf';
 export type * from '../src/components/JarShelf';
 export { default as LastEdit } from '../src/components/LastEdit';
 export type * from '../src/components/LastEdit';
@@ -247,7 +262,7 @@ export {
 export type * from '../src/components/SkeletonFade';
 export { default as Spinner } from '../src/components/Spinner';
 export type * from '../src/components/Spinner';
-export { StockBadge, StockTip, stockState } from '../src/components/StockBadge';
+export { StockBadge, StockIcon, StockTip, stockState } from '../src/components/StockBadge';
 export type * from '../src/components/StockBadge';
 export {
   default as StockDialog,
@@ -277,8 +292,53 @@ export { default as WorkspaceSwitcher } from '../src/components/WorkspaceSwitche
 export type * from '../src/components/WorkspaceSwitcher';
 export type * from '../scripts/library-tokens';
 
-// IconTip's glyph and StockBadge's component are both called StockIcon; a story imports the
-// glyph from the library, so it is the one the global carries. StockBadge's own is left out above.
+// IconTip's glyph and StockBadge's component are both called StockIcon. The library carries
+// StockBadge's, because a story-side module (SpellRecipe's aside) reaches it through the
+// library; IconTip's story imports the glyph from its own file, so it needs no library name.
 
 export * from './context-modules';
 export { default as __providers } from '../src/app/providers';
+
+// The grimoire: the spell list, card, builder, recipe, workings and the parts they share.
+export {
+  CollapsibleSection,
+  FoldAll,
+  FoldFlag,
+  useFoldIds,
+} from '../src/components/CollapsibleSection';
+export type * from '../src/components/CollapsibleSection';
+export { default as DateField } from '../src/components/DateField';
+export type * from '../src/components/DateField';
+export { default as GrimoireList } from '../src/components/GrimoireList';
+export type * from '../src/components/GrimoireList';
+export { default as JarLine } from '../src/components/JarLine';
+export type * from '../src/components/JarLine';
+export { default as MoonPhaseIcon } from '../src/components/MoonPhaseIcon';
+export type * from '../src/components/MoonPhaseIcon';
+export {
+  default as RecordWorking,
+  RecordWorkingDialog,
+  CompleteWorkingAction,
+} from '../src/components/RecordWorking';
+export type * from '../src/components/RecordWorking';
+export { default as SaveStatus, BURST_GAP_MS, RecoveryNotice } from '../src/components/SaveStatus';
+export type * from '../src/components/SaveStatus';
+export { default as SpellBuilder } from '../src/components/SpellBuilder';
+export type * from '../src/components/SpellBuilder';
+export {
+  default as SpellCard,
+  SpellCardFilters,
+  UNTITLED_SPELL,
+  SPELL_LOOK_PLACE,
+} from '../src/components/SpellCard';
+export type * from '../src/components/SpellCard';
+export { default as SpellMarks } from '../src/components/SpellMarks';
+export type * from '../src/components/SpellMarks';
+export { default as SpellPreview } from '../src/components/SpellPreview';
+export type * from '../src/components/SpellPreview';
+export { default as SpellRecipe } from '../src/components/SpellRecipe';
+export type * from '../src/components/SpellRecipe';
+export { default as SpellWorkings } from '../src/components/SpellWorkings';
+export type * from '../src/components/SpellWorkings';
+export { default as StepRow, amountOf } from '../src/components/StepRow';
+export type * from '../src/components/StepRow';

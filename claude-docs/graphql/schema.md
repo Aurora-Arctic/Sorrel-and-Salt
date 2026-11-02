@@ -178,6 +178,14 @@ is a `VALIDATION` error on `name`, and a provisional account is
 `FORBIDDEN` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The
 account page").
 
+`setPassword(newPassword: String!): Boolean!` is the account page's Password
+section for an account with no password yet: signed-in only, by scope, and
+`setPassword` in the identity module gives the session's own account a first
+password through Better Auth. A refused password, or an account that already
+has one, is a `VALIDATION` error on `newPassword`, and a provisional account is
+`FORBIDDEN` ([`auth/passwords.md`](../auth/passwords.md), "Setting a first
+password").
+
 `grantWorkspaceCreation(userId: ID!): User!` and
 `revokeWorkspaceCreation(userId: ID!): User!` are M5.8's approval and its
 undoing: each writes `canCreateWorkspace` on a live user and a row in MB.193's
@@ -617,6 +625,12 @@ thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
 **MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form (M11.22 later turned it into the `forms` list). The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
+### `compendiumSourcingScore` and the `sort` argument
+
+`compendiumSourcingScore(id: ID!): SourcingScore` is a curator's read of one compendium entry's sourcing score: `score`, an integer, and `facts`, each a `SourcingFact` with its `fact` (the `SourcingFactKind` enum), its Title Case `label` and its `points`. Every fact is listed, zero-point ones too, and the points add up to the score. The field carries the `curator` scope with an `unauthorizedResolver` that answers `null`, so a member, a viewer or a signed-out request reads `null` rather than an error, by direct id too. The resolver calls `readSourcingScore`, which checks the curator again (rule 1) and reads the entry's forms and citations through the per-request loaders. `Ingredient` has no score field, so a coven's ingredient, the public read, `llms.txt` and the `.well-known` files never carry one. `tests/modules/ingredients/services/compendium-sourcing.test.ts` and the `nulls` probe in `tests/db/graphql-query-scopes.test.ts` hold this.
+
+`compendium` takes an optional `sort: CompendiumSort` and `order: CompendiumOrder`. `sort` is `name` (A to Z, even under a search) or `sourcing_score` (lowest first); `order: desc` reverses either, and `asc` or no order keeps the first direction ([`../db/compendium-read.md`](../db/compendium-read.md), "The sourcing sort"). The score sort refuses anyone who is not a curator or admin with `Forbidden`. No edge carries the score itself: the admin list reads it through the service, beside its rows.
 
 ### The workspace ingredient mutations
 

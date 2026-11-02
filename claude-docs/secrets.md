@@ -117,6 +117,13 @@ existing session, which is free now and expensive after launch. **Do it before
 the site is public**, and while the sessions being thrown away are still only
 yours.
 
+**Regenerating it later is a rotation, not a replacement.** The two-factor
+secrets and the providers' tokens are encrypted under it, so a new value goes
+in `BETTER_AUTH_SECRETS` beside the old one, and `BETTER_AUTH_SECRET` keeps
+the old value until nothing is written under it
+([`auth/config.md`](auth/config.md), "Rotating the secret"). Unset, as it is
+today, `BETTER_AUTH_SECRETS` changes nothing.
+
 **`ADMIN_BOOTSTRAP_EMAIL` is required, and must be set before MB.60 deploys**
 — every build fails with `ADMIN_BOOTSTRAP_EMAIL is not set` without it, and
 `deploy.yml`'s pulled-environment assertion names it before `vercel build`

@@ -15,13 +15,17 @@ answer.
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
-  (MB.57); `/sign-in`; `/invite/*`; and `/email/*`, the one prefix under
+  (MB.57); `/sign-in`; `/forgot-password` and `/reset-password`, since a
+  person who has forgotten their password has no session
+  ([`passwords.md`](passwords.md)); `/invite/*`; and `/email/*`, the one prefix under
   `public/`, whose images and fonts a mail client fetches with no cookie
-  (MB.66, [`email.md`](../email.md)). MB.83 adds `/compendium`, `/compendium/*`,
+  (MB.66, [`email.md`](../email.md)). M15.29 adds `/support`, which shows a signed-out visitor Sign In in place of the form and holds no data. MB.83 adds `/compendium`, `/compendium/*`,
   `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*` (which covers
   `ai-catalog.json` and `ard.json`, [`../seo/ai-discovery.md`](../seo/ai-discovery.md)): the public
   compendium's pages and the files a crawler reads (MB.80), with the icon and
-  manifest files M11.16 will add, listed ahead of it. The `(public)` route
+  manifest files M11.16 will add, listed ahead of it. M12.34 adds `/opengraph-image`, the site's
+  share card that a link preview fetches with no cookie; the compendium's own cards sit under
+  `/compendium/*` ([`../share-card.md`](../share-card.md)). The `(public)` route
   group holds these pages, and its layout draws the chrome without redirecting
   ([`app-shell.md`](../components/app-shell.md), "Why a route group"). Off
   production (`VERCEL_ENV` not `production`) the proxy also sets

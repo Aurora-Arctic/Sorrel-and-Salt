@@ -137,7 +137,7 @@ head, both built by the page per row, as the other admin lists carry
   ([`modal.md`](modal.md), "Opening at once"). `userListHref` (`href.ts`)
   takes the user's id as an optional third argument, written after the
   cursor; the pager and the filter leave it out, so paging or filtering
-  closes the modal, as they drop `?edit=` elsewhere.
+  closes the modal, as they drop `?edit=` elsewhere. A fourth optional argument, `from`, names a screen in `USER_MODAL_ORIGINS` (`href.ts`): the Invitation Cards and Card Sign-Ups tabs. The page then sends Close back to that tab instead of the list; a value outside the set is ignored.
 - **The user modal is the page's, not the list's.** The page renders
   `UserDialog` (`src/app/(shell)/admin/(people)/users/user-dialog.tsx`), a
   `RouteModal` at one fixed place, whatever the address opens. Its head is
@@ -235,6 +235,9 @@ head, both built by the page per row, as the other admin lists carry
   renders as an `<output>`, a status, with the warning's look: an alert would
   be read a second time. The `id` the Approve names is the notice's `id`
   prop, and `.user-list__warning` its layout class. A verified user's Approve or promotion, and every Revoke and demotion, carries none. The control takes `emailVerified` from the row for it.
+- **Every role carries a tip saying what it may do**: the word is a
+  [`RoleTip`](role-tip.md), its text `SITE_ROLE_ACCESS[role]`, the same
+  sentence Change Role shows beside that role, so the two never drift.
 - **The Role cell holds one Change Role control** (MB.59, M11.20,
   [`auth/admin-users.md`](../auth/admin-users.md), "Changing a site role"),
   from `role-control.tsx`, beside the role it changes: one column

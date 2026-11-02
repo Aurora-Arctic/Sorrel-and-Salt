@@ -8,8 +8,14 @@ import {
   findWorkspaceRole,
   withAudit,
 } from '../../../db/repository';
-import type { AuditWriter, InvitationRow, SiteInvitationRow } from '../../../db/repository';
+import type {
+  AuditWriter,
+  CardAttemptReason,
+  InvitationRow,
+  SiteInvitationRow,
+} from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { looksLikeCardToken } from '../../../lib/invitation-token';
 import { RowId } from '../../../lib/validation';
 import { sameAddress } from '../../../lib/primary-admin';
 import type { Session } from '../../../lib/session';
@@ -30,6 +36,7 @@ import type {
 const MESSAGES: Record<InvitationRefusal, string> = {
   invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
   accepted: 'This invitation has already been accepted.',
+  'used-by-you': "You've already used this card. You can start a coven from your account.",
   declined:
     'This invitation was declined. If you change your mind, ask whoever sent it for a new one.',
   revoked: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
@@ -42,9 +49,23 @@ const MESSAGES: Record<InvitationRefusal, string> = {
   paused: "Admin changes are paused, so this invitation can't be accepted until they are resumed.",
 };
 
+const JOIN_BY_INVITATION = 'You can still join by invitation: ask a coven to invite you.';
+
+// A card has no email and no sender, so the three refusals that point at either are worded for a printed card.
+const CARD_MESSAGES: Partial<Record<InvitationRefusal, string>> = {
+  invalid: `That code doesn't match a card. Check the link or the QR code printed on the card and try again. ${JOIN_BY_INVITATION}`,
+  revoked: `This card has been withdrawn. ${JOIN_BY_INVITATION}`,
+  expired: `This card has expired. ${JOIN_BY_INVITATION}`,
+};
+
+/** The words for a refusal, a card's own where it has them. */
+function messageOf(reason: InvitationRefusal, card: boolean | undefined): string {
+  return (card && CARD_MESSAGES[reason]) || MESSAGES[reason];
+}
+
 /** A refusal, worded. */
-function refused(reason: InvitationRefusal): InvitationStanding {
-  return { acceptable: false, reason, message: MESSAGES[reason] };
+function refused(reason: InvitationRefusal, card?: boolean): InvitationStanding {
+  return { acceptable: false, reason, message: messageOf(reason, card) };
 }
 
 /** Why a link is dead, or `undefined` while live: accepted, declined, revoked, expired in that order, so a link in two states reports one reason. */
@@ -78,11 +99,22 @@ async function checkInvitation(
   invitation: InvitationRow | undefined,
 ): Promise<InvitationCheck> {
   if (!invitation) return { refusal: 'invalid' };
+  const card = invitation.kind === 'card';
   const dead = deadLink(invitation);
-  if (dead) return { refusal: dead };
+  // The account that accepted a card is told so, in place of the stranger's refusal.
+  if (dead === 'accepted' && card && invitation.acceptedBy === session.userId)
+    return { refusal: 'used-by-you', card };
+  if (dead) return { refusal: dead, card };
 
   const user = await findOneById(users, session.userId);
-  if (!user || !sameAddress(user.email, invitation.email)) return { refusal: 'different-address' };
+  // A card is bound to no address, so any verified account admits; every other kind is held by its address.
+  if (invitation.kind === 'card') {
+    if (!user) return { refusal: 'invalid', card };
+    if (!user.emailVerified) return { refusal: 'unverified', card };
+    return { tier: 'card', invitation, user };
+  }
+  if (!user || invitation.email === null || !sameAddress(user.email, invitation.email))
+    return { refusal: 'different-address' };
   if (!user.emailVerified) return { refusal: 'unverified' };
 
   if (isSiteTier(invitation)) {
@@ -98,7 +130,11 @@ async function checkInvitation(
 }
 
 async function standingOf(session: Session, token: string): Promise<InvitationCheck> {
-  return checkInvitation(session, await findInvitationByToken(token));
+  const standing = await checkInvitation(session, await findInvitationByToken(token));
+  // A token that names nothing is worded for a card when it has a card code's shape.
+  return standing.refusal === 'invalid' && looksLikeCardToken(token)
+    ? { refusal: 'invalid', card: true }
+    : standing;
 }
 
 /** The same checks over an id the account page listed; the read is the session's own, so any id that is not its own reads as none. */
@@ -115,7 +151,8 @@ export async function invitationStanding(
   token: string,
 ): Promise<InvitationStanding> {
   const standing = await standingOf(session, token);
-  if (standing.refusal) return refused(standing.refusal);
+  if (standing.refusal) return refused(standing.refusal, standing.card);
+  if (standing.tier === 'card') return { acceptable: true, tier: 'card' };
   return standing.tier === 'site'
     ? { acceptable: true, tier: 'site', siteRole: standing.invitation.siteRole }
     : { acceptable: true, tier: 'workspace', slug: standing.coven.slug, name: standing.coven.name };
@@ -124,9 +161,9 @@ export async function invitationStanding(
 // An id is not a link, so "open the whole link" would mislead.
 const INVALID_BY_ID = 'No invitation sent to you has this id.';
 
-function refusalError(reason: InvitationRefusal, byId = false): Error {
-  if (reason === 'invalid') return new NotFound(byId ? INVALID_BY_ID : MESSAGES.invalid);
-  return new Forbidden(MESSAGES[reason]);
+function refusalError(reason: InvitationRefusal, byId = false, card?: boolean): Error {
+  if (reason === 'invalid') return new NotFound(byId ? INVALID_BY_ID : messageOf(reason, card));
+  return new Forbidden(messageOf(reason, card));
 }
 
 /**
@@ -191,7 +228,7 @@ async function acceptChecked(
   recheck: () => Promise<InvitationCheck>,
   byId: boolean,
 ): Promise<InvitationRow> {
-  if (standing.refusal) throw refusalError(standing.refusal, byId);
+  if (standing.refusal) throw refusalError(standing.refusal, byId, standing.card);
   const { invitation, user } = standing;
   // Read before the transaction: a live seat is left as it is.
   const seated =
@@ -214,6 +251,14 @@ async function acceptChecked(
         }
         return stamped;
       }
+      if (standing.tier === 'card') {
+        // A card seats nobody and grants no role: the right to create a coven is all it gives.
+        if (!user.canCreateWorkspace) {
+          const [granted] = await write.updateById(users, user.id, { canCreateWorkspace: true });
+          if (!granted) throw new NotFound('No such user');
+        }
+        return stamped;
+      }
       const { workspaceId, role } = standing.invitation;
       if (!seated) {
         const [revived] = await write.reviveMembership(
@@ -230,11 +275,35 @@ async function acceptChecked(
       }
       return stamped;
     },
-    { via: 'invitation', note: invitation.note ?? undefined },
+    { via: standing.tier === 'card' ? 'card' : 'invitation', note: invitation.note ?? undefined },
   );
   if (!accepted) {
     const again = await recheck();
-    throw refusalError(again.refusal ?? 'invalid', byId);
+    throw refusalError(again.refusal ?? 'invalid', byId, again.refusal ? again.card : undefined);
   }
   return accepted;
+}
+
+// A refused card open the admin hears of: the card is dead for one of these reasons. A declined card cannot occur.
+function recordableReason(card: InvitationRow, userId: string): CardAttemptReason | undefined {
+  const dead = deadLink(card);
+  if (dead === 'revoked' || dead === 'expired') return dead;
+  // The account that accepted the card is the one it worked for, so its return to the link is no refusal.
+  if (dead === 'accepted' && card.acceptedBy !== userId) return dead;
+  return undefined;
+}
+
+/**
+ * Notes that the session's account opened a card link and was refused: a row per card, account and reason, counting.
+ * Works out the reason itself and records nothing for an unknown token, an address invitation, a pending card, an
+ * unverified account or the account that accepted the card; the caller names the token and nothing else.
+ */
+export async function recordCardAttempt(session: Session, token: string): Promise<void> {
+  const card = await findInvitationByToken(token);
+  if (!card || card.kind !== 'card') return;
+  const reason = recordableReason(card, session.userId);
+  if (!reason) return;
+  const user = await findOneById(users, session.userId);
+  if (!user?.emailVerified) return;
+  await withAudit(session, (write) => write.recordCardAttempt(card.id, reason));
 }

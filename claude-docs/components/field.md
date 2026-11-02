@@ -63,6 +63,7 @@ owner, 2026-10-20).
 | `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                          |
 | `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
 | `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row    |
+| `CharacterCount`    | The characters a field has left, in a polite live region, shown once it passes 75% of its limit               |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
 | `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
@@ -180,7 +181,7 @@ the chosen `value` held by the caller, and `onChange(value)`. A native radio
 group in a `.fieldset.radio-group`: each radio is a small ring whose centre dot, in the
 accent green, grows in with only a thin gap to the ring over the switch's `$motion-short` ease
 (none under reduced motion), the dot as well as the colour carrying the
-choice. The description is `aria-describedby`. An optional `note` (M7.4) is a line
+choice. The description is `aria-describedby`. `required` draws the `*` after the legend and sets `aria-required` on every radio, since a group has no one control to carry it. An optional `note` (M7.4) is a line
 for the whole group, such as the invite dialog's "an owner is made afterwards", set as the
 fieldset's own `aria-describedby` so it is read with the group. The group carries
 `margin-block: space(5)`, which is 1.5rem, where nothing else spaces it, as in
@@ -310,6 +311,14 @@ caller narrowing it to its own type reads it with `oneOf`
   reads the form state by the field's name.
 - **`disabled` is the attribute**, not react-hook-form's option, which would
   also drop the value from what is validated and sent.
+
+## Character count
+
+`CharacterCount` takes the field's `id`, the `length` and the `limit`. It always draws an `aria-live="polite"`
+paragraph, so the text is announced as it appears, and fills it only once the field is past 75% of the limit:
+"29 characters left", then "5 characters over" past the limit. It never stops typing and sets no `maxlength`;
+the service is the authority on the limit, and the form says the overrun on send. The caller puts its `id` in the
+field's `describedBy`.
 
 ## Errors wait for an edit and a leave
 
@@ -441,7 +450,7 @@ accent when pointed at or focused.
 
 [`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
 Field`: `States`, a grid of the text field in each shape (Plain, Required, Pending, With Hint, With Note, With Error, Multiline, Disabled, With Label Suffix, With Placeholder, Tall Multiline, Date Type, Number Type, With Action, With Content After The Error, Described By Another Element, Marked Invalid Without An Error) and the select in each (Select With Placeholder, With Option Icons, With A Disabled Option, Disabled, With Typeahead, Required With Hint), each in a `FormProvider`;
-`RadioStrip`, the radio group as a strip of icons, with `RadioGroup`, `RadioSegmented` and `RadioSegmentedDisabled`; `PlainShell`, the shell around a native input with an error; `Switch`,
+`RadioStrip`, the radio group as a strip of icons, with `RadioGroup`, `RadioSegmented`, `RadioSegmentedDisabled` and `RadioCards`; `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
 nothing to save, with something to save and Delete, saving, and renamed to
 Send Invitation; `ActionsInUse`, the row at work in a form of one field (Save wakes when the field
@@ -497,7 +506,7 @@ It listens through the form's `subscribe` (pass `useForm`'s), asking for `values
 
 `RadioGroupField` is one choice from a few, each with its own line of explanation: a native radio group in a `.fieldset`, its legend the group's name. It is native so the arrow keys move the choice and a screen reader hears "2 of 3". The explanation is the radio's description, read after its name. The caller holds the state, passed as `value`. A `note` is the group's own line, read with it, for what holds for every choice.
 
-`layout="strip"` draws the options as one bar of icon-only segments with the chosen name printed beneath, still a native radio underneath. `layout="segmented"` draws the same kind of bar with each choice's name in text and, if it has one, its count, as the compendium filter's Match and Toxic do.
+`layout="strip"` draws the options as one bar of icon-only segments with the chosen name printed beneath, still a native radio underneath. `layout="segmented"` draws the same kind of bar with each choice's name in text and, if it has one, its count, as the compendium filter's Match and Toxic do. `layout="cards"` draws each option as a compact bordered card, one per row at every width (the owner's call, 2026-10-31, from two columns): the whole card is the label, with the ring, the name and the description on one line, the description beside the name in the small muted size and wrapping under it on a phone, so every description is visible. The chosen card takes the accent edge and a faint accent wash, a card lifts to the hover surface, and the focus ring is drawn on the card. `value` may be `null`, which checks no radio, and `error` draws a field error under the choices and joins the group's `aria-describedby`. Story: `RadioCards`.
 
 ## Switch, search and select fields for filters
 

@@ -129,9 +129,8 @@ of the app shares, so it is not a token.
   overflow, which Chrome's device emulator lets the page pan to. The button's
   own box already holds the visible quarter, so containing the facet there
   changes nothing on screen (noticed during MB.53).
-- **`top: $top-inset`**, so on a touch screen, where the banner sits in the
-  page's flow at the very top, the toggle starts below it
-  ([`styling.md`](../styling.md), "The top inset").
+- **`top: 0`**, the window's top. On a touch screen the banner in the flow
+  scrolls away beneath it ([`styling.md`](../styling.md), "The top inset").
 
 ## Variants (MB.7)
 

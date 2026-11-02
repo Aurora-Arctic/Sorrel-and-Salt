@@ -1,0 +1,61 @@
+@use '../../scss/mixins' as *;
+@use '../IngredientEntry/switch-size' as *;
+
+// The lidded eye's lid moving open and shut, at the eye switch's `$slide` so it arrives with the
+// switch's thumb. The shapes are lidded-eye.tsx's, which the markup also carries as attributes.
+.lidded-eye {
+  $lid-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
+  $lid-shut: 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8';
+  $gap-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z';
+  $gap-shut: 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z';
+
+  overflow: visible;
+
+  // The lashes go at once as the lid lifts, and come back once it has come down.
+  .lidded-eye__lashes {
+    opacity: 1;
+    transition: opacity 120ms ease-out 140ms;
+  }
+
+  &.lidded-eye--open .lidded-eye__lashes {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  // Setting `d` from CSS is not Baseline (Safari cannot), so it sits in @supports: the lid then
+  // moves. Without it the shapes come from the markup's `d` and change at once.
+  @supports (d: path('M0 0')) {
+    .lidded-eye__lid,
+    .lidded-eye__gap {
+      transition: d $slide;
+    }
+
+    .lidded-eye__lid {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($lid-shut);
+    }
+
+    .lidded-eye__gap {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($gap-shut);
+    }
+
+    &.lidded-eye--open .lidded-eye__lid {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($lid-open);
+    }
+
+    &.lidded-eye--open .lidded-eye__gap {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($gap-open);
+    }
+  }
+
+  @include reduced-motion {
+    .lidded-eye__lashes,
+    .lidded-eye__lid,
+    .lidded-eye__gap {
+      transition: none;
+    }
+  }
+}

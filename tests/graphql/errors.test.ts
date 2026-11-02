@@ -3,7 +3,7 @@ import { createYoga } from 'graphql-yoga';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createBuilder } from '@/graphql/builder';
 import { maskedErrors } from '@/graphql/errors';
-import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
+import { Forbidden, NotFound, RateLimited, StaleWrite, ValidationError } from '@/lib/errors';
 
 // The route's mapping, run through a real Yoga instance so what is asserted is the response
 // body a browser receives. The schema is a throwaway, since no production field throws each
@@ -39,6 +39,11 @@ scratch.queryType({
     stale: t.boolean({
       resolve: () => {
         throw new StaleWrite(7, 'This was changed elsewhere');
+      },
+    }),
+    limited: t.boolean({
+      resolve: () => {
+        throw new RateLimited(86400, 'Too many today');
       },
     }),
     crashed: t.boolean({
@@ -80,7 +85,7 @@ async function run(query: string) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ query }),
   });
-  return { status: response.status, body: await response.json() };
+  return { status: response.status, headers: response.headers, body: await response.json() };
 }
 
 afterEach(() => {
@@ -91,7 +96,10 @@ describe('service errors over GraphQL', () => {
   // Why the refusals below could have been something else: the schema
   // answers, so an error is the resolver's and not a broken instance.
   it('answers a field that does not throw', async () => {
-    await expect(run('{ ok }')).resolves.toEqual({ status: 200, body: { data: { ok: true } } });
+    await expect(run('{ ok }')).resolves.toMatchObject({
+      status: 200,
+      body: { data: { ok: true } },
+    });
   });
 
   it('answers a ValidationError with VALIDATION and one field error per issue', async () => {
@@ -149,6 +157,15 @@ describe('service errors over GraphQL', () => {
         extensions: { code: 'STALE_WRITE', currentRevision: 7 },
       },
     ]);
+  });
+
+  it('answers a RateLimited with RATE_LIMITED, status 429 and the seconds to wait in Retry-After', async () => {
+    const { status, headers, body } = await run('{ limited }');
+
+    expect(status).toBe(429);
+    expect(headers.get('retry-after')).toBe('86400');
+    expect(body.errors[0].message).toBe('Too many today');
+    expect(body.errors[0].extensions.code).toBe('RATE_LIMITED');
   });
 
   it('masks anything else: no message, no stack, no constraint name', async () => {

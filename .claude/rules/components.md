@@ -35,7 +35,7 @@ The long form of `CLAUDE.md`'s components and styling convention. `CLAUDE.md` wi
 ## Destructive controls
 
 - **A thing's Delete or Remove lives in its edit dialog, where it has one**: nowhere on its row or card, and not in its Quick Look, as a bin or as a button beside Edit. A thing with no edit dialog keeps a lone bin that asks before it acts. The rule is about a lone bin on a row or card: a More menu that already holds other choices may still list Delete or Remove among them, asking in place (claude-docs/components/icon-tip.md, "The controls built on it"; claude-docs/components/coven-cards.md).
-- **A row's Remove or Revoke is drawn plain** (`btn btn--quiet btn--small`), as the row's other controls are. The red is the confirm's own: the button that carries the act out, in the question that names the thing (claude-docs/components/member-list.md). Red also marks a high-risk control that destroys nothing, and only two exist: Impersonate, on the row, in the user modal and on its confirm, and Pause Admin Changes, on Pause, on Resume and on its confirm.
+- **A row's Remove or Revoke is drawn plain** (`btn btn--quiet btn--small`), as the row's other controls are. The red is the confirm's own: the button that carries the act out, in the question that names the thing (claude-docs/components/member-list.md). Red also marks a high-risk control, and only three exist: Impersonate, on the row, in the user modal and on its confirm; Pause Admin Changes, on Pause, on Resume and on its confirm; and Revoke Batch on the invitation cards table, a whole red column like Impersonate's (`row-action-column`) with a red confirm, since a batch's revoke cannot be undone and reaches many cards at once.
 
 ## Copy
 

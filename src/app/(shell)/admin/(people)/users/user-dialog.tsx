@@ -13,10 +13,12 @@ export default function UserDialog({
   opened,
   canImpersonate,
   changesPaused,
+  place,
 }: UserDialogProps): ReactElement {
   return (
     <RouteModal
       closeHref={closeHref}
+      place={place}
       content={
         opened && {
           heading: opened.heading,
@@ -26,6 +28,7 @@ export default function UserDialog({
               key={opened.user.id}
               user={opened.user}
               memberships={opened.memberships}
+              timeouts={opened.timeouts}
               canImpersonate={canImpersonate}
               changesPaused={changesPaused}
             />

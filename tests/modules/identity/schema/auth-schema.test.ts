@@ -1,10 +1,14 @@
+import { randomUUID } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import type { BetterAuthOptions } from 'better-auth';
 import type { DBAdapter } from '@better-auth/core/db/adapter';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { tableFacts } from '../../../support/db/table-metadata';
-import { rateLimits } from '@/modules/identity/schema/auth';
+import { passkey } from '@better-auth/passkey';
+import { twoFactor } from 'better-auth/plugins';
+import { passkeys, rateLimits, signInFailures, twoFactors } from '@/modules/identity/schema/auth';
+import { users } from '@/modules/identity/schema/users';
 import { warmImport } from '../../../support/warm-import';
 
 warmImport(() => import('@/lib/auth'));
@@ -89,5 +93,179 @@ describe("rate_limits through Better Auth's adapter", () => {
       where: [{ field: 'key', value: key }],
     });
     expect(found).toMatchObject({ key, count: 1, lastRequest });
+  });
+});
+
+// The per-account counter behind the password lockout: one row an account, gone with the account.
+describe('sign_in_failures schema', () => {
+  const { columns, byName, foreignKeyByColumn } = tableFacts(signInFailures);
+
+  // No audit column: a failed sign-in has no session to take one from.
+  it('has the counter columns and nothing else', () => {
+    expect(columns.map((column) => column.name).sort()).toEqual([
+      'count',
+      'first_failed_at',
+      'last_failed_at',
+      'locked_until',
+      'user_id',
+    ]);
+  });
+
+  it('keys on the account, deleting with it', () => {
+    expect(byName.user_id.primary).toBe(true);
+    expect(foreignKeyByColumn.user_id).toMatchObject({ foreignTable: expect.anything() });
+    expect(foreignKeyByColumn.user_id.foreignColumnNames).toEqual(['id']);
+    expect(signInFailures.userId.notNull).toBe(true);
+  });
+
+  it('starts at zero, with no lock', () => {
+    expect(byName.count.default).toBe(0);
+    expect(byName.locked_until.notNull).toBe(false);
+  });
+});
+
+describe('sign_in_failures in the migrated database', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  it('cascades from users on delete', async () => {
+    const [{ delete_rule: rule }] = await sql<{ delete_rule: string }[]>`
+      select delete_rule from information_schema.referential_constraints
+      where constraint_name = 'sign_in_failures_user_id_users_id_fk'
+    `;
+    expect(rule).toBe('CASCADE');
+  });
+});
+
+// Better Auth's `passkey` model, `passkeys` under `usePlural`; the plugin is not registered, so only its declared fields bind the table.
+describe('passkeys schema', () => {
+  const { columns, indexes, foreignKeyByColumn, byName } = tableFacts(passkeys);
+
+  it('has a column for every field the plugin declares', () => {
+    const fields = Object.keys(passkey().schema.passkey.fields);
+    // The plugin spells one field `credentialID`; the column and its property are `credentialId`.
+    const properties = fields.map((field) => (field === 'credentialID' ? 'credentialId' : field));
+
+    // Precondition: the plugin declared its fields.
+    expect(properties).toHaveLength(10);
+    expect(properties.every((property) => property in passkeys)).toBe(true);
+    expect(columns.map((column) => column.name).sort()).toEqual([
+      'aaguid',
+      'backed_up',
+      'counter',
+      'created_at',
+      'credential_id',
+      'device_type',
+      'id',
+      'name',
+      'public_key',
+      'transports',
+      'user_id',
+    ]);
+  });
+
+  it('indexes the account and the credential id', () => {
+    expect(indexes.map((index) => index.config.name).sort()).toEqual([
+      'passkeys_credentialId_idx',
+      'passkeys_userId_idx',
+    ]);
+  });
+
+  it('belongs to an account and goes with it', () => {
+    expect(byName.user_id.notNull).toBe(true);
+    expect(foreignKeyByColumn.user_id.foreignColumnNames).toEqual(['id']);
+  });
+});
+
+describe('passkeys in the migrated database', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  it('cascades from users on delete', async () => {
+    const [{ delete_rule: rule }] = await sql<{ delete_rule: string }[]>`
+      select delete_rule from information_schema.referential_constraints
+      where constraint_name = 'passkeys_user_id_users_id_fk'
+    `;
+    expect(rule).toBe('CASCADE');
+  });
+
+  it('holds a credential id once, as sign-in looks a passkey up by it alone', async () => {
+    const id = randomUUID();
+    await sql`
+      insert into users (id, name, email, email_verified, role, created_by, updated_by)
+      values (${id}, 'Fixture Keyholder', ${`${id}@passkey-schema.test`}, true, 'user', ${id}, ${id})
+    `;
+    const insertKey = () => sql`
+      insert into passkeys (public_key, user_id, credential_id, counter, device_type, backed_up)
+      values ('fixture-key', ${id}, 'fixture-credential', 0, 'singleDevice', false)
+    `;
+    // Precondition: the first row is accepted.
+    await insertKey();
+
+    const error = await failureOf(insertKey());
+
+    expect(error.constraint_name).toBe('passkeys_credentialId_idx');
+  });
+});
+
+// Better Auth's `twoFactor` model, `two_factors` under `usePlural`; the plugin is not registered, so only its declared fields bind the table.
+describe('two_factors schema', () => {
+  const { columns, indexes, byName, foreignKeyByColumn } = tableFacts(twoFactors);
+  const { schema } = twoFactor();
+
+  it('has a column for every field the plugin declares, and the user flag', () => {
+    const fields = Object.keys(schema.twoFactor.fields);
+
+    // Precondition: the plugin declared its fields.
+    expect(fields).toEqual([
+      'secret',
+      'backupCodes',
+      'userId',
+      'verified',
+      'failedVerificationCount',
+      'lockedUntil',
+    ]);
+    expect(fields.every((field) => field in twoFactors)).toBe(true);
+    expect(columns.map((column) => column.name).sort()).toEqual([
+      'backup_codes',
+      'failed_verification_count',
+      'id',
+      'locked_until',
+      'secret',
+      'user_id',
+      'verified',
+    ]);
+    expect(Object.keys(schema.user.fields)).toEqual(['twoFactorEnabled']);
+    expect(tableFacts(users).byName.two_factor_enabled).toBeDefined();
+  });
+
+  it('indexes the account and starts a row verified, with no failures', () => {
+    expect(indexes.map((index) => index.config.name)).toEqual(['two_factors_userId_idx']);
+    expect(byName.verified.default).toBe(true);
+    expect(byName.failed_verification_count.default).toBe(0);
+  });
+
+  it('belongs to an account and goes with it', () => {
+    expect(byName.user_id.notNull).toBe(true);
+    expect(foreignKeyByColumn.user_id.foreignColumnNames).toEqual(['id']);
+  });
+});
+
+describe('two_factors in the migrated database', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  it('cascades from users on delete', async () => {
+    const [{ delete_rule: rule }] = await sql<{ delete_rule: string }[]>`
+      select delete_rule from information_schema.referential_constraints
+      where constraint_name = 'two_factors_user_id_users_id_fk'
+    `;
+    expect(rule).toBe('CASCADE');
   });
 });

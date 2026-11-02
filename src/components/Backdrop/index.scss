@@ -8,7 +8,7 @@
 .backdrop {
   position: fixed;
   z-index: -1;
-  width: calc(var(--backdrop-width, #{$ornament-width}) * var(--backdrop-scale, 1));
+  width: calc(var(--backdrop-width, clamp(8.75rem, 17.5vw, 13.75rem)) * var(--backdrop-scale, 1));
   pointer-events: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -57,11 +57,50 @@
   background-image: url('./salt-spoon.webp');
 }
 
+// The salt rises with the footer as it scrolls into view and stays above it, as the sorrel follows the bar
+// (the footer's view timeline is in SiteFooter/index.scss). Without scroll-driven animations the footer's
+// opaque fill covers the salt instead.
+@keyframes salt-rise {
+  from {
+    bottom: var(--salt-rest);
+  }
+
+  to {
+    bottom: calc(var(--salt-rest) + var(--salt-lift));
+  }
+}
+
+@supports (animation-timeline: view()) {
+  body {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: as above, not yet Baseline
+    timeline-scope: --site-footer;
+  }
+
+  .backdrop--salt {
+    // stylelint-disable-next-line length-zero-no-unit -- a unitless 0 is invalid inside calc()
+    --salt-rest: 0px;
+    --salt-lift: #{$footer-height};
+
+    @media (max-width: #{$shell-phone-width}) {
+      --salt-lift: #{$footer-height-phone};
+    }
+
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the salt stays put and the footer's fill covers it, not yet Baseline
+    animation: salt-rise linear both;
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: as above, not yet Baseline
+    animation-timeline: --site-footer;
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: as above, not yet Baseline
+    animation-range: entry 0% entry 100%;
+  }
+}
+
 // On a phone the section nav is a bar fixed along the bottom; the salt
 // sits above it rather than behind it.
 @media (max-width: #{$shell-phone-width}) {
   body:has(.section-nav) .backdrop--salt {
-    bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+    --salt-rest: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+
+    bottom: var(--salt-rest);
   }
 }
 
@@ -69,34 +108,4 @@
 // wrapper class is the hook, so the layout needs no route awareness.
 body:has(.welcome-page) .backdrop {
   --backdrop-width: clamp(20rem, 47.5vw, 45rem);
-}
-
-// On an entry page (a recipe, an ingredient) the ornaments leave their fixed corners for a band
-// kept empty at the page's foot, so no text ever passes beneath them; a recipe or entry inside a
-// dialog leaves the page behind it alone.
-body:has(.spell-recipe:not(dialog *), .ingredient-entry:not(dialog *)) {
-  position: relative;
-  padding-block-end: calc(#{$ornament-width} * 2 / 3 + #{space(4)});
-
-  .backdrop {
-    position: absolute;
-  }
-
-  .backdrop--sorrel {
-    top: auto;
-    bottom: 0;
-    animation: none;
-  }
-
-  .backdrop--salt {
-    bottom: 0;
-  }
-
-  // The section bar covers the body's last `$bottom-bar-height`; the band rises above it into the
-  // room the shell already keeps clear of it.
-  @media (max-width: #{$shell-phone-width}) {
-    &:has(.section-nav) :is(.backdrop--sorrel, .backdrop--salt) {
-      bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
-    }
-  }
 }

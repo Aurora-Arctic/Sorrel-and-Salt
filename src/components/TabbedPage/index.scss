@@ -33,6 +33,52 @@ $track-inset: calc(1px + 0.125rem);
   background-color: $segment-track;
 }
 
+// A framed page (the account) is its own frame, as no `.page-column` wraps it (the admin's and a coven's tabbed pages sit in one): it keeps the
+// frames' side gutter, so its head and sections never touch the window's edge on a phone.
+.tabbed-page--framed {
+  box-sizing: border-box;
+  padding-inline: space(4);
+}
+
+// A framed page (the account): its tabs hold a `.page-with-nav`, which centres a menu and a column of sections (_primitives.scss). The head
+// stands over that column of sections, and its tabs sit on a line of their own beneath the heading at every width, as the reflow below does for a narrow one.
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  // The pair of menu and sections is centred: the sections start half the menu and its gap right of the middle, less half their column.
+  .tabbed-page--framed > .page-header {
+    max-width: $narrow-column;
+    margin-inline-start: calc(50% + (#{space(8)} * 3 + #{space(6)} - #{$narrow-column}) / 2);
+  }
+}
+
+// From the width where the page-with-nav gains its third column the sections sit at the middle.
+@media (min-width: calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
+  .tabbed-page--framed > .page-header {
+    margin-inline-start: calc(50% - #{$narrow-column} / 2);
+  }
+}
+
+// No space() step is 2.5rem, so the head's gaps above and below are written out; the below replaces the primitive's.
+.tabbed-page--framed > .page-header {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+// A page that sets `tabsBelow` puts its row on a line of its own beneath the heading at every width, by the same forced break.
+.tabbed-page--framed > .page-header:not(:has(.add-action)),
+.tabbed-page--tabs-below > .page-header:not(:has(.add-action)) {
+  &::after {
+    content: '';
+    flex-basis: 100%;
+    order: 1;
+    height: 0;
+  }
+
+  > .tabbed-page__tabs.tabbed-page__tabs {
+    order: 2;
+    margin-top: calc(-1 * #{space(3)});
+  }
+}
+
 // The open tab's action, `.page-header`'s last item; a tab with none leaves it empty, which would still take a gap or a line.
 .tabbed-page__action {
   display: flex;
@@ -129,7 +175,7 @@ $track-inset: calc(1px + 0.125rem);
   cursor: not-allowed;
 }
 
-// A list, not bulleted: `typography-base`'s ◆ marker, indent and item margins cleared. The pills keep one line at their own widths and a wider row
+// A list, not bulleted: `typography-base`'s ✦ marker, indent and item margins cleared. The pills keep one line at their own widths and a wider row
 // scrolls inside the track with no scrollbar (claude-docs/components/tabbed-page.md, "The track and the pills").
 .tabbed-page__row {
   display: flex;
@@ -167,6 +213,8 @@ $track-inset: calc(1px + 0.125rem);
   display: flex;
   position: relative;
   align-items: center;
+  // The count's own leading space is dropped in a flex row, so this gap alone parts the label from the count.
+  gap: space(2);
   box-sizing: border-box;
   height: calc(#{$pill-height} - 2 * #{$track-inset});
   padding-inline: space(3);

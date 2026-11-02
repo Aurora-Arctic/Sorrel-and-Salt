@@ -10,6 +10,7 @@ export const NO_FILTER: CompendiumListFilter = {
   forms: [],
   withoutReferences: false,
   withoutForms: false,
+  hidden: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -20,6 +21,8 @@ export const NO_FILTER: CompendiumListFilter = {
   covensNot: false,
   toxic: '',
   reviewed: '',
+  sort: '',
+  order: '',
 };
 
 export const NO_FACETS: CompendiumFacetCounts = {

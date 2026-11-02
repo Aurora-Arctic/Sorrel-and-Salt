@@ -48,6 +48,11 @@
             "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
           },
           {
+            "group": ["workflow", "workflow/*", "@workflow/*"],
+            "allowTypeImports": true,
+            "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
+          },
+          {
             "group": [
               "@/modules/*/services",
               "@/modules/*/services/**",
@@ -238,6 +243,11 @@
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
               },
               {
+                "group": ["workflow", "workflow/*", "@workflow/*"],
+                "allowTypeImports": true,
+                "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
+              },
+              {
                 "group": [
                   "@/modules/*/services",
                   "@/modules/*/services/**",
@@ -300,6 +310,11 @@
                 "group": ["dataloader"],
                 "allowTypeImports": true,
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": ["workflow", "workflow/*", "@workflow/*"],
+                "allowTypeImports": true,
+                "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
               },
               {
                 "group": ["**/db", "**/db/*", "**/db/**"],
@@ -375,6 +390,11 @@
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
               },
               {
+                "group": ["workflow", "workflow/*", "@workflow/*"],
+                "allowTypeImports": true,
+                "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
+              },
+              {
                 "group": ["**/db", "**/db/*", "**/db/**"],
                 "allowTypeImports": true,
                 "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from a module's `@/modules/<name>` index, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql.md, \"The access boundary\")."
@@ -425,6 +445,65 @@
         "scripts/**/*.ts",
         "drizzle.config.ts"
       ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/db/connection",
+                  "**/db/connection.ts",
+                  "./connection",
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
+                ],
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["@/db/repository/*", "**/db/repository/*"],
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+              },
+              {
+                "group": ["dataloader"],
+                "allowTypeImports": true,
+                "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": ["workflow", "workflow/*", "@workflow/*"],
+                "allowTypeImports": true,
+                "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**",
+                  "@/modules/*/types"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+              }
+            ],
+            "paths": [
+              {
+                "name": "slugify",
+                "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["tests/workflows/**/*.ts", "vitest.config.mts"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -519,6 +598,11 @@
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
               },
               {
+                "group": ["workflow", "workflow/*", "@workflow/*"],
+                "allowTypeImports": true,
+                "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
+              },
+              {
                 "group": [
                   "@/modules/*/services",
                   "@/modules/*/services/**",
@@ -609,6 +693,11 @@
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
               },
               {
+                "group": ["workflow", "workflow/*", "@workflow/*"],
+                "allowTypeImports": true,
+                "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
+              },
+              {
                 "group": [
                   "@/modules/*/services",
                   "@/modules/*/services/**",
@@ -675,6 +764,11 @@
                 "group": ["dataloader"],
                 "allowTypeImports": true,
                 "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": ["workflow", "workflow/*", "@workflow/*"],
+                "allowTypeImports": true,
+                "message": "Start or sleep a job only through the adapter in src/lib/jobs/ — it is the one runtime importer of the Workflow SDK (CLAUDE.md rule 1, claude-docs/design-decisions/m15.49-job-mechanism.md). `import type` is allowed everywhere."
               },
               {
                 "group": [

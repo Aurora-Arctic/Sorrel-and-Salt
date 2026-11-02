@@ -1,0 +1,109 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The range button is a `.input` box with the calendar mark at its end and, while it holds a day,
+// a clear drawn inside the box before the mark; the calendar's own look is the day field's
+// (`DateField/calendar.scss`).
+
+.date-range-field {
+  position: relative;
+  min-inline-size: 0;
+}
+
+.input.date-range-field__button {
+  display: flex;
+  align-items: center;
+  gap: space(2);
+  inline-size: 100%;
+  // Room for the clear, which sits over the box's end.
+  padding-inline-end: calc(#{space(3)} + #{$glyph-size} + #{space(2)} + #{$glyph-size});
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+
+  .calendar-icon {
+    position: absolute;
+    inset-inline-end: space(3);
+  }
+}
+
+.date-range-field__text {
+  @include truncate;
+
+  flex: 1 1 auto;
+}
+
+.date-range-field__placeholder {
+  color: $text-muted;
+}
+
+.date-range-field__clear {
+  @include button-reset;
+
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: calc(#{space(3)} + #{$glyph-size} + #{space(1)});
+  display: inline-grid;
+  place-items: center;
+  inline-size: calc(#{$glyph-size} + #{space(2)});
+  margin-block: auto;
+  block-size: calc(#{$glyph-size} + #{space(2)});
+  border-radius: radius('control');
+  color: $text-muted;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The quick picks stand beside the months, and wrap into a row above them on a narrow window.
+.date-range-field__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+}
+
+.date-range-field__picks {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: start;
+  gap: space(1);
+
+  @media (min-width: 48rem) {
+    flex-flow: column nowrap;
+    min-inline-size: 8rem;
+  }
+}
+
+.date-range-field__pick {
+  @include button-reset;
+
+  padding: space(1) space(2);
+  border-radius: radius('control');
+  font-size: type-size('caption');
+  text-align: start;
+
+  &:hover {
+    background-color: $surface-card-hover;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // Told by its fill and weight, not colour alone.
+  &[aria-pressed='true'] {
+    background-color: $fill-quiet;
+    font-weight: 600;
+  }
+}
+
+.date-range-field__hint {
+  margin: space(3) 0 0;
+  color: $text-muted;
+  font-size: type-size('caption');
+}

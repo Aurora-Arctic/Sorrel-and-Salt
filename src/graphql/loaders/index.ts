@@ -5,7 +5,13 @@ import {
   stepsBySpell,
   workingCountBySpell,
 } from '@/modules/grimoire';
-import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identity';
+import {
+  cardPositionById,
+  cardTotalsByBatch,
+  providersByUser,
+  usersById,
+  usersByIdForAdmin,
+} from '@/modules/identity';
 import {
   categoriesByIngredient,
   categoriesByVariant,
@@ -20,6 +26,12 @@ import {
   substitutesByVariant,
   variantsByIngredient,
 } from '@/modules/ingredients';
+import {
+  repliesByRequest,
+  tierBySender,
+  timeoutsBySender,
+  usersOnRequests,
+} from '@/modules/support';
 import {
   categoryGroupsById,
   deityTraditionsById,
@@ -39,6 +51,12 @@ const LOADERS = {
   providersByUser,
   usersById,
   usersByIdForAdmin,
+  repliesByRequest,
+  tierBySender,
+  timeoutsBySender,
+  usersOnRequests,
+  cardPositionById,
+  cardTotalsByBatch,
   categoriesByIngredient,
   folkNamesByIngredient,
   ingredientsById,

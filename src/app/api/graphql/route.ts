@@ -1,6 +1,7 @@
 import { createYoga } from 'graphql-yoga';
 import { isBrowserNavigation, renderAltairPage } from '../../../graphql/altair';
 import { protections } from '../../../graphql/armor';
+import { refuseCrossSite } from '../../../graphql/csrf';
 import { createContext } from '../../../graphql/context';
 import { maskedErrors } from '../../../graphql/errors';
 import { schema } from '../../../graphql/schema';
@@ -32,6 +33,8 @@ async function handle(request: Request): Promise<Response> {
       headers: { 'content-type': 'text/html; charset=utf-8' },
     });
   }
+  const refusal = refuseCrossSite(request);
+  if (refusal) return refusal;
   return yoga.handleRequest(request, {});
 }
 

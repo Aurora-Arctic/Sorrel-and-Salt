@@ -179,6 +179,22 @@ export function RedoIcon(): ReactElement {
   );
 }
 
+/** An arrow down into a tray: save what is shown as a file; the backup codes wear it. */
+export function DownloadIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Two overlapping sheets: copy what another holds into this; Restore Original and Copy From Ingredient wear it. */
 export function CopyIcon(): ReactElement {
   return (
@@ -333,12 +349,244 @@ export function CompleteIcon(): ReactElement {
   );
 }
 
-/** A printer: print this page. */
+/** A printer: print this page; the recipe page's Print and the backup codes wear it. */
 export function PrintIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
         d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A solid speech bubble with a question mark cut out of it: report a problem or ask for help. The cut-out takes the colour in `--icon-ground`, the surface the bubble sits on. */
+export function SupportIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 1.75c3.85 0 7 2.5 7 5.6s-3.15 5.6-7 5.6c-.85 0-1.65-.1-2.4-.3L2 14.5l.8-2.9C1.6 10.5.9 9.1.9 7.35.9 4.25 4.15 1.75 8 1.75z"
+        fill="currentColor"
+      />
+      <path
+        d="M6.25 5.75a1.75 1.75 0 1 1 2.45 1.6c-.55.3-.7.55-.7 1.1"
+        fill="none"
+        stroke="var(--icon-ground, var(--surface-page))"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="10.15" r="0.85" fill="var(--icon-ground, var(--surface-page))" />
+    </svg>
+  );
+}
+
+/** A clock with an arrow curving back round it: what came before. */
+export function HistoryIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
+      <path
+        d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v3.2h3.2M8 5v3l2 1.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A sprout: a sender who joined by a printed card, a beta tester, as the admin Support page marks one. */
+export function SproutIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 14V8M8 8C8 5.2 6.2 3.5 3 3.5 3 6.3 4.8 8 8 8zM8 9.5c0-2.6 1.6-4.2 4.5-4.2 0 2.6-1.6 4.2-4.5 4.2z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A tick in a circle: a support request that is resolved, as the admin Support page marks one. */
+export function CircleCheckIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5.25 8.25l1.75 1.75 3.75-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A speech bubble with lines: the sender wrote last, as the admin Support page marks a request. */
+export function BubbleLinesIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3.5 3h9a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12.5 11H7l-3 2.5V11h-.5A1.5 1.5 0 0 1 2 9.5v-5A1.5 1.5 0 0 1 3.5 3z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 6h6M5 8.25h3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A person with a tick: the sender resolved the request themselves, as the admin Support page marks one. */
+export function PersonCheckIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle
+        cx="6"
+        cy="5.5"
+        r="2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.5 14a4.5 4.5 0 0 1 9 0"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10.5 9l1.5 1.5 3-3.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A person with a clock: a support request waiting on the sender, as the admin Support page marks one. */
+export function PersonClockIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle
+        cx="5.25"
+        cy="5.5"
+        r="2.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.25 14.25a4 4 0 0 1 5.5-3.7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="11.25"
+        cy="11.5"
+        r="3.75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.25 9.75v1.75l1.25.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A flag: a support request that is open, as the admin Support page marks one. */
+export function FlagIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3.5 14.5V2M3.5 2.5h8l-1.75 3 1.75 3h-8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** An archive box: a support request that is closed, as the admin Support page marks one. */
+export function ArchiveBoxIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <rect
+        x="2"
+        y="3"
+        width="12"
+        height="3"
+        rx=".75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3 6v6.5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.5 8.75h3"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"

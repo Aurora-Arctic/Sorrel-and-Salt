@@ -1,7 +1,7 @@
 # UserDetail
 
 `src/components/UserDetail/` is the body of the modal that opens over
-`/admin/users` when an admin presses a user's name (M9.19): the covens the user
+`/admin/users` when an admin presses a user's name (M9.19), and over `/admin/support` (`?user=<id>`, on top of an open request) when an admin presses a sender's name (see [`support-requests.md`](support-requests.md)): the covens the user
 belongs to, preceded by the facts the users table holds about them, and, where
 impersonation is registered, Impersonate. It is render-only and a server component. The page reads the memberships through the
 coven service and builds the modal around it; this draws only the body.
@@ -20,6 +20,8 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 `joinedAt`.
 
 ## Contracts
+
+- **Support Time-Out** (2026-10-31): when the page passes `timeouts`, a section after Covens and before Impersonate holds the same `TimeoutPanel` as the support request dialog (card, ledger and form), keyed by the user. This is the one place the ledger of earlier time-outs is drawn: each entry a date range with a "Lifted {date}" badge where lifted, the note, then "Set by {name}" and, where lifted, " · Lifted by {name}" (the lifter is the row's `updated_by`, the lift being the only write after insert), with no list marker. The request dialog links here instead. The page reads them with `readTimeoutsOf`, which returns nothing for a non-admin.
 
 - **Laid out as the ingredient modal is, not as a table** (the owner's call,
   2026-10-12): two sections, Account and Covens, each under a small title in
@@ -100,6 +102,6 @@ navigating.
 
 ## The modal body
 
-The component is the body of the modal that opens over `/admin/users` on a user. It shows the facts the users table holds about them, read-only, then the covens they belong to and, where impersonation is registered, the action to act as them. The row's Grant or Revoke and Approve or Revoke sit beside the facts they change, and each asks over this modal rather than opening another.
+The component is the body of the modal that opens over `/admin/users` on a user, or over `/admin/support` on a sender. It shows the facts the users table holds about them, read-only, then the covens they belong to and, where impersonation is registered, the action to act as them. The row's Grant or Revoke and Approve or Revoke sit beside the facts they change, and each asks over this modal rather than opening another.
 
 It is laid out as the ingredient modal is, in sections parted by hairlines, because a table's labels repeat on every card at a modal's width. It only renders: the page reads the memberships through the coven service.

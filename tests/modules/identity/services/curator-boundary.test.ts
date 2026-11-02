@@ -72,7 +72,7 @@ async function invite(email: string, by: string, workspaceId: string | null): Pr
 }
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
   await sql`truncate admin_role_change_pauses`;
   await sql`truncate user_privilege_changes`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;

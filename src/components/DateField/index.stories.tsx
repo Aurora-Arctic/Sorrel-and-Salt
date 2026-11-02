@@ -21,6 +21,7 @@ const Field = ({
   id,
   initial = DAY,
   max,
+  min,
   disabled = false,
   error,
   open = false,
@@ -28,6 +29,7 @@ const Field = ({
   id: string;
   initial?: string;
   max?: string;
+  min?: string;
   disabled?: boolean;
   error?: string;
   /** Pressed open once drawn, as a person would. */
@@ -45,6 +47,7 @@ const Field = ({
         labelledBy={field.labelId}
         value={value}
         max={max}
+        min={min}
         disabled={disabled}
         onChange={(day) => {
           onChange(day);
@@ -58,7 +61,8 @@ const Field = ({
 
 // The two open calendars come last, so each floats below its own cell with nothing beneath it.
 // With Max is open on the days that cannot be chosen: those after the 24th are faded and refused,
-// and the next-month step is faded too, stopped at October.
+// and the next-month step is faded too, stopped at October. With Min opens on its month, the days
+// before it faded and refused.
 export const States: Story = {
   render: () => (
     <StatesGrid
@@ -68,6 +72,7 @@ export const States: Story = {
         Disabled: <Field id="date-disabled" disabled />,
         Invalid: <Field id="date-invalid" error="Pick a day on or before today." />,
         Open: <Field id="date-open" open />,
+        'With Min': <Field id="date-min" initial="" min="2030-06-15" open />,
         'With Max': <Field id="date-max" initial="2026-10-20" max={DAY} open />,
       }}
     />

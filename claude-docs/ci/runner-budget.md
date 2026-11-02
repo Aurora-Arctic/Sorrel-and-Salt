@@ -158,12 +158,12 @@ M14.27 split `vitest.yml` from one job into four, so a PR that touches only
 the backend sees its answer sooner and a timeout in one kind of test no longer
 fails the others.
 
-| Job           | Runs                                  | Postgres service |
-| ------------- | ------------------------------------- | ---------------- |
-| `vitest-dom`  | `--project dom` (happy-dom)           | No               |
-| `vitest-node` | `--project unit --project rsc`        | No               |
-| `vitest-db`   | `--project db --project db-mocking`   | Yes              |
-| `vitest`      | Merges the three; applies the 80% bar | No               |
+| Job           | Runs                                                   | Postgres service |
+| ------------- | ------------------------------------------------------ | ---------------- |
+| `vitest-dom`  | `--project dom` (happy-dom)                            | No               |
+| `vitest-node` | `--project unit --project rsc`                         | No               |
+| `vitest-db`   | `--project db --project db-mocking --project workflow` | Yes              |
+| `vitest`      | Merges the three; applies the 80% bar                  | No               |
 
 - **Each part writes a blob.** `vitest run … --coverage --reporter=blob`
   writes the part's results and its coverage map to

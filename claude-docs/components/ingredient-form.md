@@ -49,6 +49,7 @@ foot, as the compendium's does, as the bin icon (`BinButton`, named and tipped "
 | `quickLookOf`   | Given, each near match in the duplicate warning offers its Quick Look, opening the details `{ href, heading }` it names over the form ("Quick Look in the warning", under ["The duplicate warning"](#the-duplicate-warning)). The admin compendium's form passes it; the public search's and the coven's leave it out.                                                                                                                                                                     |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
 | `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true, and a coven's edit when the member's role may promote (M8.17). It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                            |
+| `sourcesIntro`  | Content shown at the start of the Sources section, above the first source. The compendium edit dialog passes the entry's sourcing score; the form knows nothing of scores.                                                                                                                                                                                                                                                                                                                 |
 
 ## The fields
 
@@ -583,12 +584,25 @@ legend as a list's is.
   citation (MB.153), so nothing here moves them. Beside the tier, an open
   row whose source the form may change has **Edit Source**, which edits the
   source itself ([Editing a source](#editing-a-source)).
-- **Entries are a `useFieldArray` of `{ value, link, locator }`**: `value`
+- **On the compendium's form an open row also has Name Basis and Supports**
+  beneath its Locator: a select of `stated`, `resolved`, `unresolved` and
+  `unaudited` (how the source names the ingredient,
+  [`db/references.md`](../db/references.md), "Citation attributes"), and a
+  multi-pick of the fields the source backs, an entry's from
+  `CITED_ENTRY_FIELDS` and a form's from `CITED_VARIANT_FIELDS`, each by the
+  label the form gives it. Each has an info tip. A coven's form renders
+  neither, since a coven's citation carries neither and the service refuses
+  them. Neither is sent until chosen. A row with either in error stays open,
+  as one with its locator in error does. Copy From Ingredient brings a
+  citation's name basis to the form, and of its supports only the fields a
+  form has.
+- **Entries are a `useFieldArray` of `{ value, link, locator, nameBasis, supports }`**: `value`
   the citation, which describes the row and is never sent, `link` the
   source's id and tier and the four fields its short form is made of —
   `kind`, `authors`, `title`, `container` — which `referenceSuggestions`,
   `createReference` and the compendium entry's values (`entry-values.ts`)
-  each read beside the citation, and `locator` as typed. They are not one of `LIST_FIELDS`, which are
+  each read beside the citation, `locator` as typed, `nameBasis` `''` until
+  one is chosen, and `supports` the field names chosen. They are not one of `LIST_FIELDS`, which are
   free text. The box's text is `drafts.references`, and whether the panel is
   open is `referencePanelOpen`, both the form's own.
 - **A search left in the box stops the save**, as text left in any list's
@@ -622,6 +636,13 @@ provides them, and its errors render through `FieldError`.
   web page's address and day read. A printed work's online fields follow
   its publication: Read Through (`host`), Address, Last Modified, Accessed
   and Note. The two days are `<input type="date">`.
+- **Scholarly, on a compendium source alone**: an on-or-off switch after the
+  kind's fields, marking a work scholars edited or reviewed
+  (`references.scholarly`, rule in [`../db/references.md`](../db/references.md)), with an info tip. It shows where the source
+  is the compendium's, a new one on the compendium's form or an edited
+  compendium source, and is absent from a coven's, whose sources the service
+  refuses the mark. An edited source opens with its mark as stored, so Save
+  stays off until something changes.
 - **One How to Cite tip, in place of a hint per field** (the owner's call,
   2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"). It
   sits at the end of the panel's head, just before its ×, in New Reference
@@ -1095,7 +1116,7 @@ match a row (`.ingredient-form__matches`), then a Create Anyway button,
 medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
 2026-10-18, which took it off MB.115's quiet style). The rows' title links
 wear the body ink and the faded underline of the entry page's links, with
-a ◆ centred on the row: the `list-marker` shape (`_mixins.scss`), not
+a ✦ centred on the row: the `list-marker` shape (`_mixins.scss`), not
 typography-base's glyph, whose box sat its top rather than its middle on a
 centre line (M12.48).
 
@@ -1426,12 +1447,14 @@ parses the sent input with that schema to show it.
 The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Could not save." with Retry, or the conflict notice.
 
 - **A new ingredient is created at its first save, once it has a name.** The coven gate is the display name; a "none" or "unknown" entry has no formal name, so the name alone opens the gate. The create returns the row's id, slug and revision, the form keeps them, and every later save is an update that sends `expectedRevision`. The host moves the address (`onCreated`): see [`modal.md`](modal.md#add-ingredient) for the coven dialog and the compendium dialog.
+- **Save is disabled once an autosave has filed every edit.** There is nothing left to save, and that is the design: a test that edits and then waits for Save to enable depends on the autosave pause. The stories hold the form's save request until after the click on Save (`holdSaves`), so they do not depend on it.
 - **A new entry with near-duplicate matches showing is not autosaved** until the matches are dismissed or the name changes (`heldBack` in `values.ts`).
 - **An explicit Save also sends `expectedRevision`.** A stale Save hands over to the autosave's conflict notice. After a create by Save the form is clean, so Save waits for a change.
 - **Writes are serialised.** Save and the autosave share one write path, and each write waits for the one before it, so a create is never raced by a second create.
 - **An identical write is skipped once the row exists.** If the input matches the last one sent, the row exists and no revision was named, the write returns the earlier answer instead of sending. A compendium end-redirect save is never skipped.
 - **The blur flush is held while Save is submitting.** Pressing Save disables the button, which moves focus out of the form; the form stops that focusout reaching the autosave until the submit ends, so the autosave cannot create the row before Save has asked about duplicates.
 - **`persist` reads whether the write created the row.** The write itself records that it created the row, so the id is handed to `onCreated` only by the write that made it, even when a queued write ran first.
+- **An autosave of an existing ingredient tells the page (`onAutosaved`).** `persist` calls it with the saved row after any write that did not create the row, and not on Close. The admin compendium dialog replaces its address with the saved slug (`replace`, no scroll) and fetches the page again, so the heading shows the saved name. The coven entry dialog only fetches again, since its address names the id; the compendium entry dialog moves the address as Save does. The form is keyed by entry id and reads `entry` only for its starting values, so the fresh props do not reset it: what was typed after the autosave stays.
 - **Conflict.** Another tab's save makes this one's refused with "This ingredient was changed elsewhere." **Reload Latest** reloads the page (or calls `onReload`); **Keep My Version** sends the form over the newer revision.
 - **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Could not save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](save-status.md)), with Keep and Discard.
 - **No Discard question, and no Cancel.** The form no longer uses the unsaved-changes guard: Close saves first, so a Cancel beside the saves would only be a second Close, and the form draws none in any dialog ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
@@ -1650,7 +1673,7 @@ deities with their traditions, references with their citations, and its
 variants, each with its pick and group and its own categories, substitutes
 and references (MB.221), a linked substitute carrying the forms its second
 picker offers — so opening the modal sends no browser read
-(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, a
+(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, which draws the form through [`CompendiumEntryForm`](compendium-entry-form.md), a
 `RouteModal` ([`modal.md`](modal.md), "RouteModal"), in the default width, that closes back to the
 list, with a router of its own for what RouteModal does not do: Save
 Ingredient replaces the address with the saved entry's `?edit=`, at the

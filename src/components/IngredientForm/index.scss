@@ -136,7 +136,7 @@ $skeleton-fade: 300ms;
     }
 
     // Clear of the sentence above and the button below.
-    // The ◆ on the list's own edge and the title a step in, as typography-base
+    // The ✦ on the list's own edge and the title a step in, as typography-base
     // lays a list out.
     ul {
       display: grid;
@@ -151,7 +151,7 @@ $skeleton-fade: 300ms;
 
     // In a coven's form the matches come in two headed groups, each opening and closing by height (0fr to
     // 1fr) so a heading never stands alone over an emptied list. The gutter pull moves from the list onto
-    // the group, so the heading sits flush with the diamonds' edge.
+    // the group, so the heading sits flush with the stars' edge.
     .ingredient-form__group {
       display: grid;
       grid-template-rows: 0fr;
@@ -342,7 +342,7 @@ $skeleton-fade: 300ms;
       block-size: $icon-size-large;
     }
 
-    // The ◆ centred on the row, not on a line of text: a row is as tall as its control. The row is the li's
+    // The ✦ centred on the row, not on a line of text: a row is as tall as its control. The row is the li's
     // body, which after the first row starts space(1) down (the rule above), so the centre moves half that.
     li::before {
       top: 50%;
@@ -397,7 +397,7 @@ $skeleton-fade: 300ms;
   // quotation's bar rather than a box.
   border-left: $rule-medium solid $text-muted;
   background-color: $surface-card;
-  // A row, not a bulleted item: no margin or ◆ of typography-base's.
+  // A row, not a bulleted item: no margin or ✦ of typography-base's.
   margin: 0;
 
   &::before {
@@ -542,6 +542,16 @@ $panel-head-gap: space(3);
     align-items: center;
   }
 
+  // What an edit reaches, or that the source is loading: a caption's ink,
+  // as the tier's, above the fields. The 14rem basis is the head row's: a note squeezed under it drops
+  // the button group to its own line. Before the container query, so its `flex: none` wins.
+  .ingredient-form__panel-note {
+    flex: 1 1 14rem;
+    margin: 0;
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
   .ingredient-form__panel-end {
     display: flex;
     flex: none;
@@ -582,15 +592,12 @@ $panel-head-gap: space(3);
       // mark sits `space(1)` inside its target, so the rest is padding.
       padding-inline: 0 calc(#{$panel-head-gap} - #{space(1)});
     }
-  }
 
-  // What an edit reaches, or that the source is loading: a caption's ink,
-  // as the tier's, above the fields.
-  .ingredient-form__panel-note {
-    flex: 1 1 14rem;
-    margin: 0;
-    color: $text-muted;
-    font-size: type-size('caption');
+    // The head is no row here, so the note sits in the fieldset's column and takes only its own
+    // height: a 14rem basis there would be 14rem of height above the first field.
+    .ingredient-form__panel-note {
+      flex: none;
+    }
   }
 
   // Its buttons a little further from its fields than they are from each

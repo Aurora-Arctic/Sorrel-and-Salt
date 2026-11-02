@@ -276,6 +276,7 @@ inline; }`, for the HTML rendering section's inline elements.
     override from one test never leaks into the next.
     `tests/support/msw/graphql.test.ts` holds the loud failure, the one harness
     behaviour a test could otherwise pass without.
+- **`workflow`** — real runs of durable jobs, in process. `include`s `tests/workflows/**/*.test.ts`, on the `db` harness (a cloned database per file) with the Workflow SDK's Vitest plugin, which compiles the `"use workflow"` and `"use step"` files under the repo into bundles and runs them in its local world. A step runs from its bundle's own copy of the code, so a mock in a test never reaches it, and a test wakes a run's sleep with `waitForSleep` and `wakeUp` rather than waiting it out. A workflow that exists only for a test lives in `tests/workflows/fixtures/`, never in `src/`. Test files there may import the SDK; `src/` may not outside `src/lib/jobs/`.
 - **`db`** and **`db-mocking`** (MB.238) — one project split in two: the
   files that mock, stub or reset modules run isolated in `db-mocking`, the rest
   share a module registry per worker in `db`, chosen by a scan of each file's
@@ -440,7 +441,7 @@ loaded runner (#737). Every project's `testTimeout` is 20 s rather than Vitest's
 a 1.2 s test past 5 s ([Runner budget](../ci/runner-budget.md)).
 
 `npm run test` (`vitest run`, no coverage) and `npm run test:coverage`
-(`vitest run --coverage`) both run all five projects — and neither runs
+(`vitest run --coverage`) both run all six projects — and neither runs
 the story suite, which is Playwright (`tests/e2e/stories/`, `npm run test:stories`;
 ["Acceptance"](acceptance.md)). Neither is
 wired into `pre-commit` — CLAUDE.md's pre-commit list is unchanged by this task.

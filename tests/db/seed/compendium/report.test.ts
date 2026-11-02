@@ -10,11 +10,13 @@ const PENDING = 'ingredients/botanical/pending-wort.md';
 const RETIRED = 'ingredients/botanical/retired-wort.md';
 const ADOPTED = 'ingredients/botanical/adopted-wort.md';
 const REFUSED = 'ingredients/botanical/refused-wort.md';
+const KEPT = 'ingredients/botanical/kept-wort.md';
 
 /** One of each outcome, so every line the report can print is in play. */
 function fullReport(): SeedCompendiumReport {
   return {
     inserted: 3,
+    hidden: 2,
     skipped: 4,
     updated: [UPDATED],
     pending: [{ where: PENDING, differs: ['toxic'] }],
@@ -22,6 +24,10 @@ function fullReport(): SeedCompendiumReport {
     adopted: [{ where: ADOPTED, differs: ['description', 'variants'] }],
     refused: [
       { where: REFUSED, reason: 'curator-reviewed', differs: ['description', 'folkNames'] },
+    ],
+    kept: [
+      { where: KEPT, source: 'ahpa-safety', differs: ['nameBasis', 'supports'] },
+      { where: null, source: 'cunningham-herbs', differs: ['scholarly'] },
     ],
   };
 }
@@ -61,6 +67,17 @@ describe('formatReport', () => {
     expect(lines.some((line) => line.startsWith('  differs'))).toBe(false);
   });
 
+  it('prints a kept citation by entry and source, a kept source by source alone, each then what differs', () => {
+    const lines = formatReport(fullReport()).split('\n');
+
+    const link = lines.indexOf(`KEPT ${KEPT}: ahpa-safety (edited on the site)`);
+    expect(link).toBeGreaterThanOrEqual(0);
+    expect(lines[link + 1]).toBe('  differs: nameBasis, supports');
+    const source = lines.indexOf('KEPT cunningham-herbs (edited on the site)');
+    expect(source).toBeGreaterThanOrEqual(0);
+    expect(lines[source + 1]).toBe('  differs: scholarly');
+  });
+
   it('prints the adopted entries and what differs only when asked to adopt', () => {
     const quiet = formatReport(fullReport()).split('\n');
     expect(quiet.some((line) => line.startsWith('ADOPTED'))).toBe(false);
@@ -86,13 +103,13 @@ describe('formatReport', () => {
     const lines = formatReport(fullReport()).split('\n');
 
     expect(lines[lines.length - 1]).toBe(
-      'inserted 3, skipped 4, updated 1, pending 1, retired 1, adopted 1, refused 1',
+      'inserted 3, hidden 2, skipped 4, updated 1, pending 1, retired 1, adopted 1, refused 1',
     );
   });
 
   it('prints only the counts for a run that did nothing', () => {
     expect(formatReport(emptyReport())).toBe(
-      'inserted 0, skipped 0, updated 0, pending 0, retired 0, adopted 0, refused 0',
+      'inserted 0, hidden 0, skipped 0, updated 0, pending 0, retired 0, adopted 0, refused 0',
     );
   });
 });
@@ -102,7 +119,7 @@ describe('hasRefusals', () => {
     expect(hasRefusals(emptyReport())).toBe(false);
   });
 
-  it('is false when the only other outcomes are updates, pending, retired and adopted', () => {
+  it('is false when the only other outcomes are updates, pending, retired, adopted and kept', () => {
     const report = fullReport();
     report.refused = [];
 

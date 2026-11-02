@@ -47,6 +47,9 @@ async function expectOutcome(field: string, probe: ScopeProbe) {
   if (probe.outcome === 'answers') {
     expect(result.errors).toBeUndefined();
     expect(result.data?.[field]).not.toBeNull();
+  } else if (probe.outcome === 'nulls') {
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toHaveProperty(field, null);
   } else if (probe.outcome === 'refuses') {
     // The path is what shows the field was reached: a probe the SDL refused
     // would answer an error with none.
@@ -79,6 +82,30 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ privilegeChanges(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
   },
+  invitationCardBatches: {
+    source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
+    outcome: 'refuses',
+  },
+  invitationCardAttempts: {
+    source: `{ invitationCardAttempts(batchId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
+    outcome: 'refuses',
+  },
+  cardArrivals: {
+    source: '{ cardArrivals(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  cardArrivalsCsv: { source: '{ cardArrivalsCsv }', outcome: 'refuses' },
+  supportDialogState: { source: '{ supportDialogState { kind } }', outcome: 'answers' },
+  mySupportRequests: {
+    source: '{ mySupportRequests(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  mySupportRequest: { source: `{ mySupportRequest(id: "${NOWHERE}") { id } }`, outcome: 'refuses' },
+  supportRequests: {
+    source: '{ supportRequests(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  supportRequest: { source: `{ supportRequest(id: "${NOWHERE}") { id } }`, outcome: 'refuses' },
   compendium: {
     source: '{ compendium(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
@@ -91,6 +118,11 @@ const PROBES: Record<string, ScopeProbe> = {
   compendiumEntryUsers: {
     source: `{ compendiumEntryUsers(id: "${NOWHERE}") }`,
     outcome: 'refuses',
+  },
+  // A curator's read that answers null rather than refusing, so a page asking for it beside public fields still renders.
+  compendiumSourcingScore: {
+    source: `{ compendiumSourcingScore(id: "${NOWHERE}") { score } }`,
+    outcome: 'nulls',
   },
   ingredient: {
     source: 'query ($id: ID!) { ingredient(id: $id) { id } }',
@@ -364,6 +396,40 @@ const REFERENCE = '{ kind: book, title: "A Herbal of Fixture Covens" }';
 const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
+  setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
+  agreeToTerms: write('mutation { agreeToTerms { id } }'),
+  // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
+  sendSignedOutSupportRequest: {
+    source:
+      'mutation { sendSignedOutSupportRequest(input: { about: account, email: "fixture@example.org", subject: "Fixture", message: "Fixture", website: "filled" }) }',
+    outcome: 'answers',
+  },
+  sendSupportRequest: write(
+    'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
+  ),
+  replyToSupportRequest: write(
+    `mutation { replyToSupportRequest(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  sendSupportMessage: write(
+    `mutation { sendSupportMessage(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  resolveMySupportRequest: write(`mutation { resolveMySupportRequest(id: "${NOWHERE}\") { id } }`),
+  addSupportInternalNote: write(
+    `mutation { addSupportInternalNote(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  closeSupportRequest: write(`mutation { closeSupportRequest(id: "${NOWHERE}") { id } }`),
+  assignSupportRequest: write(`mutation { assignSupportRequest(id: "${NOWHERE}") { id } }`),
+  setSupportRequestCuratorVisible: write(
+    `mutation { setSupportRequestCuratorVisible(id: "${NOWHERE}", visible: true) { id } }`,
+  ),
+  resolveSupportRequest: write(`mutation { resolveSupportRequest(id: "${NOWHERE}") { id } }`),
+  setSupportRequestIssueUrl: write(
+    `mutation { setSupportRequestIssueUrl(id: "${NOWHERE}", issueUrl: null) { id } }`,
+  ),
+  timeOutSupportSender: write(
+    `mutation { timeOutSupportSender(userId: "${NOWHERE}", until: "2999-01-01T00:00:00Z") { id } }`,
+  ),
+  liftSupportTimeout: write(`mutation { liftSupportTimeout(id: "${NOWHERE}") { id } }`),
   grantWorkspaceCreation: write(`mutation { grantWorkspaceCreation(userId: "${NOWHERE}") { id } }`),
   revokeWorkspaceCreation: write(
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
@@ -377,6 +443,13 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     'mutation { createAdminInvitation(email: "not-an-address", siteRole: curator) { id } }',
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
+  createInvitationCards: write(
+    'mutation { createInvitationCards(sheets: 1, expiresAt: "2099-01-01T00:00:00Z") { batchId } }',
+  ),
+  revokeInvitationCardBatch: write(
+    `mutation { revokeInvitationCardBatch(batchId: "${NOWHERE}") { id } }`,
+  ),
+  recordCardAttempt: write('mutation { recordCardAttempt(token: "no-such-token") }'),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
   acceptInvitationById: write(`mutation { acceptInvitationById(id: "${NOWHERE}") { id } }`),
   declineInvitationById: write(`mutation { declineInvitationById(id: "${NOWHERE}") { id } }`),
@@ -457,6 +530,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   deleteCompendiumIngredient: write(`mutation { deleteCompendiumIngredient(id: "${NOWHERE}") }`),
   setCompendiumEntryReviewed: write(
     `mutation { setCompendiumEntryReviewed(id: "${NOWHERE}", reviewed: true) { id } }`,
+  ),
+  setCompendiumEntryShown: write(
+    `mutation { setCompendiumEntryShown(id: "${NOWHERE}", shown: false) { id } }`,
   ),
   createReference: write(
     `mutation { createReference(workspaceId: "${WORKSPACE_W_ID}", input: ${REFERENCE}) { id } }`,
@@ -553,6 +629,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   updateCompendiumIngredient: { governs: 'compendium' },
   deleteCompendiumIngredient: { governs: 'compendium' },
   setCompendiumEntryReviewed: { governs: 'compendium' },
+  setCompendiumEntryShown: { governs: 'compendium' },
   // A null `workspaceId` is the compendium's tier; a coven's is the
   // member's, below.
   createReference: {
@@ -584,6 +661,15 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   // Inviting an address to become an admin, and withdrawing it.
   createAdminInvitation: { governs: 'site role' },
   revokeAdminInvitation: { governs: 'site role' },
+  // Printed invitation cards: minting, withdrawing one or a batch.
+  createInvitationCards: { governs: 'site role' },
+  revokeInvitationCardBatch: { governs: 'site role' },
+  // A sender's requests and their sanctions: an admin's alone, so a curator is refused at the scope.
+  assignSupportRequest: { governs: 'support' },
+  setSupportRequestCuratorVisible: { governs: 'support' },
+  setSupportRequestIssueUrl: { governs: 'support' },
+  timeOutSupportSender: { governs: 'support' },
+  liftSupportTimeout: { governs: 'support' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -620,6 +706,10 @@ const OPEN_WRITES = [
   // The same address match decides a decline.
   'declineInvitationById',
   'setName',
+  // The session's own cookie names the account, which Better Auth reads.
+  'setPassword',
+  // The session names the account it records against, and the service records the version in force.
+  'agreeToTerms',
   // The flag decides who may, which the service reads.
   'createWorkspace',
   // The owner's `member: update` decides, which the service checks.
@@ -657,6 +747,21 @@ const OPEN_WRITES = [
   'duplicateSpell',
   // The coven's `working: create`, `update` and `delete` decide, which the working service checks; a change or a delete
   // also needs the recorder, or for a change someone named on the working.
+  // Any signed-in account may report a refused card open; the service records it only against a real card.
+  'recordCardAttempt',
+  // Open to anyone, signed in or not: the service allows two topics and counts the sends.
+  'sendSignedOutSupportRequest',
+  // Any verified session may send; the service reads the limit and any time-out.
+  'sendSupportRequest',
+  // Any verified session may write on a request; the service finds only the sender's own.
+  'sendSupportMessage',
+  // Any verified session may resolve a request; the service finds only the sender's own.
+  'resolveMySupportRequest',
+  // A curator's scope admits; the service decides which requests (an admin any, a curator one assigned to them).
+  'replyToSupportRequest',
+  'resolveSupportRequest',
+  'addSupportInternalNote',
+  'closeSupportRequest',
   'recordWorking',
   'updateWorking',
   'completeWorking',
@@ -715,7 +820,7 @@ describe('a signed-in non-admin at every admin write', () => {
 
 // The people page's writes are an admin's alone; every other admin write is curation, which a curator's scope admits.
 // A write added to ADMIN_WRITES lands on one side or the other.
-const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role'];
+const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role', 'support'];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);
 const CURATION_WRITES = Object.keys(ADMIN_WRITES).filter((field) => !governsPeople(field));

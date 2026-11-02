@@ -31,11 +31,16 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     ['Forms', '/admin/forms'],
     ['Deities', '/admin/deities'],
     ['Astrology', '/admin/celestial-bodies'],
+    ['Support', '/admin/support'],
     ['People', '/admin/users'],
   ];
   await expect(nav.getByRole('link')).toHaveCount(pages.length);
+  // A tab with a count is named "Support 0": its label, then its count.
   for (const [name, href] of pages) {
-    await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
+    await expect(nav.getByRole('link', { name: new RegExp(`^${name}( \\d+)?$`) })).toHaveAttribute(
+      'href',
+      href,
+    );
   }
 
   await assertNoAccessibilityViolations(page);
@@ -132,11 +137,18 @@ test('a curator reaches /admin and the curation pages, and is refused People and
     '/admin/deity-traditions',
     '/admin/celestial-bodies',
     '/admin/zodiac-signs',
+    '/admin/support',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(200);
   }
 
-  for (const path of ['/admin/users', '/admin/privilege-changes', '/admin/invitations']) {
+  for (const path of [
+    '/admin/users',
+    '/admin/privilege-changes',
+    '/admin/invitations',
+    '/admin/invitation-cards',
+    '/admin/card-sign-ups',
+  ]) {
     expect((await page.goto(path))?.status(), path).toBe(403);
   }
 

@@ -15,10 +15,15 @@ export const metadata: Metadata = {
 // The create-workspace page. It belongs to no one coven, so the coven guard does not run;
 // `isReservedCovenSlug` keeps `new` from being a slug. The right is read from the row, not the session,
 // and showing the form only to a holder is presentation, as `createWorkspace` is the gate.
-export default async function NewCovenPage() {
+export default async function NewCovenPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ card?: string }>;
+}) {
   const session = await requireSession();
   const me = await getMe(session);
   const { viewer, workspaces } = await viewerOf();
+  const fromCard = (await searchParams)?.card === 'accepted';
 
   return (
     <>
@@ -35,6 +40,11 @@ export default async function NewCovenPage() {
             title="Create Coven"
             lede="Start a coven of your own. You will be its owner."
           />
+          {fromCard && me.canCreateWorkspace && (
+            <Notice kind="success" quiet>
+              Your card is accepted: you can now start a coven.
+            </Notice>
+          )}
           {me.canCreateWorkspace ? (
             <CreateWorkspaceForm />
           ) : (

@@ -1,0 +1,1 @@
+Destructive DDL acknowledged: the migration drops `invitations_tier` and `invitations_site_role_tier` and adds both back in the same transaction with an extra `kind = 'card' or` branch, so every existing row (all `address`) is checked by the same rule as before and no constraint is ever missing; no column or data is dropped.

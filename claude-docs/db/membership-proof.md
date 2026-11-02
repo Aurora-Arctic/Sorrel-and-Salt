@@ -92,7 +92,7 @@ other, an admin's included.
 again: an address is claimed site-wide, so there is no workspace to hold a proof
 for. It answers the live row holding the address, compared lower-cased as
 `users_email_lower_case` holds every row to, and what a hit means is the calling
-service's decision — `setEmail` refuses an address a verified row holds and lets
+service's decision — `setEmail` mails no link to an address a verified row holds (and answers as if it had) and lets
 a provisional one be claimed over, and the `/verify-email` gate refuses one any
 other live row holds (`auth/admin-bootstrap.md`, "The email page").
 

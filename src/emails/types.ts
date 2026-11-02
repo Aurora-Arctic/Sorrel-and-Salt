@@ -52,3 +52,73 @@ export interface CovenInvitationProps extends BaseEmailProps {
   /** What the reader will be able to do there once they accept. */
   role: 'viewer' | 'member';
 }
+
+export interface AccountExistsProps extends BaseEmailProps {
+  /** The sign-in page, which the mail's one action opens. */
+  url: string;
+  /** The providers linked to the account, so the reader knows which one to sign in with. */
+  providers: readonly ProviderId[];
+  /** Whether the account already has a password. */
+  hasPassword: boolean;
+}
+
+export interface ResetPasswordProps extends BaseEmailProps {
+  /** Better Auth's reset link, which checks the token and opens `/reset-password` carrying it. */
+  url: string;
+}
+
+/** Which way a password was replaced: by a reset link, by a change on the account page, or set for the first time. */
+export type PasswordChange = 'reset' | 'change' | 'set';
+
+export interface PasswordChangedProps extends BaseEmailProps {
+  /** `/forgot-password`, which the mail's one action opens for a reader who made no change. */
+  url: string;
+  how: PasswordChange;
+}
+
+export interface PasswordLockedProps extends BaseEmailProps {
+  /** Better Auth's reset link, which checks the token and opens `/reset-password` carrying it. */
+  url: string;
+  /** How long the lock lasts, in minutes. */
+  minutes: number;
+  /** The providers linked to the account, so the mail names only the ways in it has. */
+  providers?: readonly ProviderId[];
+  /** Whether the account has a passkey. */
+  hasPasskey?: boolean;
+}
+
+/** A change of address asked for, or finished, told to the address the account is leaving. */
+export interface EmailChangeNoticeProps extends BaseEmailProps {
+  stage: 'requested' | 'completed';
+  /** The domain of the new address, never the address: this mail goes to a mailbox the new address's owner may not control. */
+  newDomain: string;
+  /** When the change was asked for, or finished. */
+  at: Date;
+}
+
+/** Told to a support request's sender that a reply is waiting. `url` opens that request on their support page; the reply itself is never in the mail. */
+export interface SupportReplyNoticeProps extends BaseEmailProps {
+  /** The subject of the request answered, as its sender wrote it; the template cuts it to length. */
+  requestSubject: string;
+}
+
+/** What the received, resolved and closing-soon mails take: the request they name, and whether its sender has an account. */
+export interface SupportStatusProps extends BaseEmailProps {
+  /** The subject of the request, as its sender wrote it; the template cuts it to length. */
+  requestSubject: string;
+  /** True for a sender with no account: `url` is then the support page, which asks for no sign-in. */
+  signedOut?: boolean;
+}
+
+/** Told a sender that their support request arrived. `url` opens the request, or the support page for a signed-out sender. */
+export type SupportReceivedProps = SupportStatusProps;
+/** Told a sender that their support request is resolved. */
+export type SupportResolvedProps = SupportStatusProps;
+/** Told a sender that their resolved support request is about to close. */
+export type SupportClosingSoonProps = SupportStatusProps;
+
+/** A staff reply to a signed-out visitor, whose only way to read it is this mail. `url` is the support page, for writing again. */
+export interface SupportEmailReplyProps extends BaseEmailProps {
+  /** What staff wrote. */
+  body: string;
+}

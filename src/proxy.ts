@@ -18,10 +18,18 @@ import { assertWorkshopAccess } from '@/modules/identity';
 const PUBLIC_ROUTES = [
   '/', // the entry page
   '/sign-in',
+  '/forgot-password', // asking for a password reset link
+  '/reset-password', // where the mailed reset link lands
   '/invite/*', // accepting an invitation
+  '/i/*', // a card's short link, accepting like /invite/*
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
   '/compendium', // the one public surface, read by anyone, indexed by search engines
   '/compendium/*',
+  '/support', // offers a signed-out visitor Sign In and holds no data
+  '/privacy', // a public document, holding no application data
+  '/disclaimer',
+  '/terms',
+  '/code-of-ethics',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
   // The icon and manifest files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.
@@ -34,6 +42,7 @@ const PUBLIC_ROUTES = [
   '/icon.svg',
   '/apple-icon.png',
   '/manifest.webmanifest',
+  '/opengraph-image', // the site share card for `/`; the compendium's cards sit under /compendium/*
 ];
 
 function isPublic(pathname: string): boolean {
@@ -150,11 +159,12 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 export const config = {
   // Everything except what is never a page: Next's own assets, and `/api/*`,
   // which answers for itself — Better Auth's handshake, and GraphQL refusing in
-  // its own error shape rather than redirecting a fetch. Nothing else is
+  // its own error shape rather than redirecting a fetch, and the Workflow SDK's generated
+  // `/.well-known/workflow/` routes, which take its queue calls and fail if this runs first. Nothing else is
   // exempt, so a file dropped into public/ is a protected page to this matcher
   // until it gets its own entry here — which is why the backdrop's images are
   // imported by their stylesheet and served under /_next/ instead. A named
   // prefix, never a file-extension pattern: what is public is listed, as in
   // PUBLIC_ROUTES. Must be a literal: Next reads it at build time.
-  matcher: ['/((?!api/|_next/).*)'],
+  matcher: ['/((?!api/|_next/|\\.well-known/workflow/).*)'],
 };

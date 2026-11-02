@@ -52,7 +52,7 @@ text link keeps the dot.
 
 - Renders `<span aria-hidden="true" class="link-hint">`, plus `is-pending`
   while the link is pending.
-- It always holds its space (`visibility: hidden`, `opacity: 0`), so showing it
+- It always holds its space (`opacity: 0`, never its own `visibility`, so a held page keeps it unseen), so showing it
   moves nothing.
 - When pending it appears after a 100ms delay, so a fast navigation never
   flashes it, then fades in and pulses.

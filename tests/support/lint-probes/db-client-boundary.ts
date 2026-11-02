@@ -6,13 +6,16 @@ import type { ProbeSet } from '../types';
 
 /**
  * Files whose import of the client is exempted by a disable comment: the
- * repository's three that run a query — its transaction, its select and its
- * one users delete — and three outside it that need a client, not a writer.
+ * repository's five that run a query — its transaction, its select, its
+ * one users delete, the sign-in failure counter and the guarded passkey
+ * removal — and three outside it that need a client, not a writer.
  */
 export const CLIENT_EXEMPT = [
   'src/db/repository/write.ts',
   'src/db/repository/select.ts',
   'src/db/repository/provisional-users.ts',
+  'src/db/repository/sign-in-failures.ts',
+  'src/db/repository/passkeys.ts',
   'src/lib/auth.ts',
   'scripts/db-seed.ts',
   'tests/db/test-database-isolation.test.ts',

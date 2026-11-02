@@ -49,6 +49,8 @@ vi.mock('@/app/compendium-reads', async (importOriginal) => ({
 const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();
+// The edited entry's sourcing score, none here: its own tests are the dialog's and the component's.
+const readSourcingScore = vi.fn(async () => null);
 const variantsOf = vi.fn();
 // The details modal's sections, read uncached with the curator's session.
 const ingredientDetailOf = vi.fn();
@@ -60,8 +62,12 @@ const compendiumFacets = vi.fn();
 const covensHoldingEntry = vi.fn();
 // The open entry's review mark, read uncached with the curator's session.
 const readCompendiumReview = vi.fn();
+// The entry the edit modal opens, read with the curator's session for its shown flag.
+const getIngredient = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  readSourcingScore,
   readCompendiumReview,
+  getIngredient,
   listCompendium,
   countCompendium,
   compendiumFacets,
@@ -186,12 +192,28 @@ async function readPage(params: Record<string, string | string[]> = {}) {
 
 const lastRequest = (): PageRequest => listCompendium.mock.lastCall?.[1] as PageRequest;
 
-/** The filter the list and its count were last read under, which must agree. */
+/** The filter the list and its count were last read under, which must agree, without the `listing` every admin read carries or the score every admin row carries. */
 function lastFilter(): unknown {
-  const listed: unknown = listCompendium.mock.lastCall?.[0];
+  const listed = (listCompendium.mock.lastCall?.[0] ?? {}) as {
+    listing?: string;
+    withSourcingScore?: boolean;
+  };
   expect(countCompendium.mock.lastCall?.[0]).toEqual(listed);
-  return listed;
+  expect(listed.withSourcingScore).toBe(true);
+  const { listing: _listing, withSourcingScore: _score, ...rest } = listed;
+  return rest;
 }
+
+/** The list's filter as the facets are read under it: the facets carry no score. */
+function facetFilter(): unknown {
+  const { withSourcingScore: _score, ...rest } = (listCompendium.mock.lastCall?.[0] ?? {}) as {
+    withSourcingScore?: boolean;
+  };
+  return rest;
+}
+
+const lastListing = () =>
+  ((listCompendium.mock.lastCall?.[0] ?? {}) as { listing?: string }).listing;
 
 // A blank is left out of the variables, so no filter is no variables.
 const NO_FILTER = {};
@@ -251,6 +273,8 @@ beforeEach(() => {
   resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: TESTWORT, movedAway: null });
   readCompendiumReview.mockReset();
   readCompendiumReview.mockResolvedValue(null);
+  getIngredient.mockReset();
+  getIngredient.mockResolvedValue({ ...TESTWORT, shown: true });
   ingredientDetailOf.mockReset();
   ingredientDetailOf.mockResolvedValue({
     ...entryDetail({ safetyNotes: 'Fixture admin caution.' }),
@@ -306,6 +330,8 @@ describe('the /admin/compendium page', () => {
     expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastFilter()).toEqual(NO_FILTER);
+    // A curator sees hidden entries too, so the admin list reads every entry unless asked otherwise.
+    expect(lastListing()).toBe('all');
     // The page's forms, read in one batch for the entries it lists.
     expect(variantsOf).toHaveBeenCalledExactlyOnceWith(null, [
       { id: TESTWORT.id, workspaceId: null },
@@ -347,7 +373,7 @@ describe('the /admin/compendium filter', () => {
   it('counts the facets under the same filter as the list and its count', async () => {
     await readPage({ query: 'test', forms: 'Fixture Oil', toxic: 'toxic' });
 
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(lastFilter(), ADMIN);
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(facetFilter(), ADMIN);
     expect(lastFilter()).toEqual({ query: 'test', forms: ['Fixture Oil'], toxic: 'toxic' });
   });
 
@@ -356,7 +382,10 @@ describe('the /admin/compendium filter', () => {
     await readPage({ reviewed: '1' });
     expect(lastFilter()).toEqual({ reviewed: true });
     expect(listCompendium.mock.lastCall?.[listCompendium.mock.lastCall.length - 1]).toEqual(ADMIN);
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ reviewed: true }, ADMIN);
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(
+      { reviewed: true, listing: 'all' },
+      ADMIN,
+    );
   });
 
   it('turns ?categories= slugs into the ids of the live categories, for the list and its count', async () => {
@@ -481,7 +510,7 @@ describe('the /admin/compendium modal', () => {
   it("opens an entry's form on ?edit=, handed its values, in a dialog named by the entry", async () => {
     await renderPage({ edit: TESTWORT.slug });
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug, expect.anything());
     expect(entryValues).toHaveBeenCalledWith(TESTWORT, null);
     const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
     expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
@@ -499,7 +528,7 @@ describe('the /admin/compendium modal', () => {
 
     await expect(renderPage({ ...FILTERED, edit: 'testwort-herb' })).rejects.toThrow(REDIRECTED);
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith('testwort-herb');
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith('testwort-herb', expect.anything());
     expect(redirect).toHaveBeenCalledExactlyOnceWith(`${FILTERED_HREF}&edit=testwort-root`);
     expect(entryValues).not.toHaveBeenCalled();
   });
@@ -525,7 +554,7 @@ describe('the /admin/compendium modal', () => {
 
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false });
   });
 });
 
@@ -540,7 +569,7 @@ describe('the /admin/compendium details modal', () => {
   it("opens an entry's details on ?entry=, with its full page and an Edit over them", async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug, expect.anything());
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(within(details()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
@@ -644,7 +673,7 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false });
   });
 
   it('opens the edit modal over the details on ?entry= with ?edit=, and its Close goes back to them', async () => {
@@ -656,7 +685,7 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(editing).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(ON_DETAILS);
+    expect(router.replace).toHaveBeenCalledWith(ON_DETAILS, { scroll: false });
   });
 
   // A form's duplicates warning opens a match's details over the form.
@@ -669,7 +698,9 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new=ingredient-compendium`);
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new=ingredient-compendium`, {
+      scroll: false,
+    });
   });
 
   it("opens the details over another entry's edit form with no Edit, closing back to that form", async () => {
@@ -679,7 +710,9 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`);
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`, {
+      scroll: false,
+    });
   });
 
   // The delete's confirm is tests/components/IngredientForm/compendium.test.tsx's; here only
@@ -690,7 +723,9 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(editing).getByRole('button', { name: 'Fixture Delete' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false }),
+    );
     expect(router.replace).not.toHaveBeenCalledWith(ON_DETAILS);
   });
 

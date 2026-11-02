@@ -213,7 +213,7 @@ describe('updateCompendiumIngredient', () => {
     expect(await categoriesOf(id)).toEqual(['Protection']);
   });
 
-  it('declares every field of its input required', () => {
+  it('declares every field of its input required, bar shown, which left out leaves the flag as it is', () => {
     const input = schema.getType('CompendiumIngredientUpdateInput');
     expect(input).toBeInstanceOf(GraphQLInputObjectType);
     const fields = Object.values((input as GraphQLInputObjectType).getFields());
@@ -223,7 +223,7 @@ describe('updateCompendiumIngredient', () => {
     );
 
     expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      [],
+      ['shown'],
     );
   });
 

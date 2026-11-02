@@ -8,7 +8,7 @@ export default async function AdminPage() {
 
   // A head with a lede, then a table of contents in the nav's own sections.
   return (
-    <main>
+    <main className="admin-index">
       <PageHeader
         title="Admin"
         lede={

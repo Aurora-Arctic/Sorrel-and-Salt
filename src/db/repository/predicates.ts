@@ -76,6 +76,11 @@ export function containsText(column: AnyPgColumn, query: string): SQL {
   return ilike(column, `%${query.replace(/[\\%_]/g, '\\$&')}%`);
 }
 
+/** `column` (cast to text) starts with `prefix`, case-insensitive, its `%` and `_` read literally. */
+export function startsWithText(column: AnyPgColumn, prefix: string): SQL {
+  return ilike(sql`${column}::text`, `${prefix.replace(/[\\%_]/g, '\\$&')}%`);
+}
+
 /**
  * Each entry of a `text[]` column, trimmed and lower-cased as the suggestions fold a value, as a subquery for `inArray`,
  * so a list holds a value whatever its spacing or case.

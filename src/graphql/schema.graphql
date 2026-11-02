@@ -141,6 +141,11 @@ input CompendiumIngredientInput {
   nomenclature: Nomenclature!
   references: [ReferenceLinkInput!]
   safetyNotes: String
+
+  """
+  Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.
+  """
+  shown: Boolean
   substitutes: [SubstituteInput!]
 
   """
@@ -173,6 +178,11 @@ input CompendiumIngredientUpdateInput {
   nomenclature: Nomenclature!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
+
+  """
+  Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.
+  """
+  shown: Boolean
   substitutes: [SubstituteInput!]!
 
   """Whether the ingredient is toxic; each form's flag is its own."""
@@ -183,6 +193,31 @@ input CompendiumIngredientUpdateInput {
   """
   variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]!
+}
+
+"""
+Which compendium entries a search reads: shown (the default), hidden, or all. Hidden and all are a curator or admin's alone.
+"""
+enum CompendiumListing {
+  all
+  hidden
+  shown
+}
+
+"""
+Which way a compendium sort runs: asc, its usual direction, or desc, the exact reverse, name and id ties included. Ignored without a sort.
+"""
+enum CompendiumOrder {
+  asc
+  desc
+}
+
+"""
+A column to sort the compendium list on, in place of its default of by name or by best match under a search: name, A to Z, or sourcing_score, the sourcing score lowest first, then name. The sourcing score is a curator or admin's alone.
+"""
+enum CompendiumSort {
+  name
+  sourcing_score
 }
 
 """A completed working, and the steps it took nothing for."""
@@ -426,6 +461,11 @@ type Ingredient {
   """
   revision: Int!
   safetyNotes: String
+
+  """
+  Whether the public compendium lists the entry; a coven's own entry is always shown.
+  """
+  shown: Boolean!
   slug: String!
 
   """
@@ -748,9 +788,119 @@ type Invitation {
 }
 
 """
+An invitation card bound to no address, coven or role. Its token is never answered.
+"""
+type InvitationCard {
+  acceptedAt: DateTime
+
+  """
+  The account that accepted it; null while it is unaccepted or the account is gone.
+  """
+  account: User
+  audit: AuditInfo!
+
+  """The mint that made it, shared by the whole batch."""
+  batchId: ID!
+  expiresAt: DateTime!
+  id: ID!
+
+  """
+  The covens the accepting account owns now; empty while the card is unaccepted.
+  """
+  ownedCovens: [Workspace!]!
+  revokedAt: DateTime
+  state: InvitationCardState!
+}
+
+"""One account's refused opens of one card for one reason."""
+type InvitationCardAttempt {
+  """The account that opened the link; null if it is gone."""
+  account: User
+
+  """How many times this account was refused for this reason."""
+  attempts: Int!
+
+  """
+  The card's place in its batch from 1, in the order the print PDF lays the fronts out; null for a card minted before places were kept.
+  """
+  cardPosition: Int
+  firstAttemptedAt: DateTime!
+  id: ID!
+  lastAttemptedAt: DateTime!
+  reason: InvitationCardAttemptReason!
+}
+
+"""
+Why a card link was refused: withdrawn, past its date, or used by another account.
+"""
+enum InvitationCardAttemptReason {
+  accepted
+  expired
+  revoked
+}
+
+"""
+The cards minted together: one sheet count, one expiry. Counts are summed in SQL.
+"""
+type InvitationCardBatch {
+  """How many of its cards were accepted."""
+  accepted: Int!
+  batchId: ID!
+
+  """How many cards the batch holds."""
+  cards: Int!
+  expiresAt: DateTime!
+  mintedAt: DateTime!
+
+  """The admin's note written when the batch was minted; null for none."""
+  note: String
+
+  """
+  How many of its cards can still be accepted: not accepted, revoked or expired.
+  """
+  pending: Int!
+
+  """
+  How many times signed-in accounts opened a link of the batch and were refused, all cards, accounts and reasons added.
+  """
+  refusedOpens: Int!
+}
+
+"""
+Where a batch stands: live while a card can still be accepted; else used up, expired or revoked.
+"""
+enum InvitationCardBatchStatus {
+  expired
+  live
+  revoked
+  usedUp
+}
+
+"""
+Where a card stands now: an accepted card stays accepted whatever became of its date.
+"""
+enum InvitationCardState {
+  accepted
+  expired
+  pending
+  revoked
+}
+
+"""
 A local date string (i.e., with no associated timezone) in `YYYY-MM-DD` format, e.g. `2020-01-01`.
 """
 scalar LocalDate
+
+"""
+A batch just minted. The tokens are answered this once, to the admin who minted it, and are stored nowhere.
+"""
+type MintedInvitationCards {
+  batchId: ID!
+  expiresAt: DateTime!
+
+  """One token per card, in no order that matters."""
+  tokens: [String!]!
+}
 
 type Mutation {
   """
@@ -774,6 +924,12 @@ type Mutation {
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
 
   """
+  Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.
+  """
+  addSupportInternalNote(body: String!, requestId: ID!): SupportReply!
+  agreeToTerms: User!
+
+  """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
   """
   annotateCupboardEntry(
@@ -785,6 +941,16 @@ type Mutation {
     input: CupboardEntryInput!
     workspaceId: ID!
   ): CupboardEntry!
+
+  """
+  Assigns a request to a curator or an admin, or to no one. Site admins only.
+  """
+  assignSupportRequest(assigneeId: ID, id: ID!): SupportRequest!
+
+  """
+  Closes an open, waiting or resolved request. An admin may on any request, a curator on one assigned to them.
+  """
+  closeSupportRequest(id: ID!): SupportRequest!
 
   """
   Completes a draft working, taking what the recipe used from the coven’s jars. Answers the steps it took nothing for.
@@ -819,6 +985,19 @@ type Mutation {
   Invites an address into a coven as a viewer or member, mailing it the link; answers the invitation, never the link. Owners only.
   """
   createInvitation(email: String!, role: InvitableRole!, workspaceId: ID!): Invitation!
+
+  """
+  Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.
+  """
+  createInvitationCards(
+    expiresAt: DateTime!
+
+    """
+    Plain text for the admins to track the batch by, at most 500 characters; blank is none.
+    """
+    note: String
+    sheets: Int!
+  ): MintedInvitationCards!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
@@ -911,6 +1090,9 @@ type Mutation {
   """
   leaveWorkspace(workspaceId: ID!): Boolean!
 
+  """Ends a time-out now. Site admins only."""
+  liftSupportTimeout(id: ID!): SupportTimeout!
+
   """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
@@ -920,6 +1102,11 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """
+  Notes that the signed-in account opened this card link and was refused. Takes the token alone: the account is the session's and the reason is worked out here. Answers true whether or not anything was recorded.
+  """
+  recordCardAttempt(token: String!): Boolean!
 
   """Records a working of a complete spell, as a draft."""
   recordWorking(input: WorkingInput!, spellId: ID!, workspaceId: ID!): SpellWorking!
@@ -933,6 +1120,29 @@ type Mutation {
   Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
   """
   removeMember(userId: ID!, workspaceId: ID!): Boolean!
+
+  """
+  Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.
+  """
+  replyToSupportRequest(
+    body: String!
+    requestId: ID!
+
+    """
+    Moves an open request to waiting on the sender; refused on any other status.
+    """
+    waitingOnSender: Boolean
+  ): SupportReply!
+
+  """
+  The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.
+  """
+  resolveMySupportRequest(id: ID!): SupportRequest!
+
+  """
+  Marks a request resolved. An admin may on any request, a curator on one assigned to them.
+  """
+  resolveSupportRequest(id: ID!): SupportRequest!
 
   """
   Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.
@@ -950,6 +1160,11 @@ type Mutation {
   revokeInvitation(id: ID!, workspaceId: ID!): Invitation!
 
   """
+  Withdraws every pending card of a batch, answering the cards it withdrew. Site admins only.
+  """
+  revokeInvitationCardBatch(batchId: ID!): [InvitationCard!]!
+
+  """
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
   """
   revokeWorkspaceCreation(note: String, userId: ID!): User!
@@ -960,16 +1175,50 @@ type Mutation {
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
 
   """
+  Sends a support request without an account, about accessibility or signing in. Open to anyone; refused after ten sends from one address or thirty from one client in 24 hours. Nothing is returned: replies come by email.
+  """
+  sendSignedOutSupportRequest(input: SignedOutSupportRequestInput!): Boolean!
+
+  """
+  The sender’s message on their own request. It reopens a waiting or resolved request; on a closed one it opens a new request linked to it, which is what is returned.
+  """
+  sendSupportMessage(body: String!, requestId: ID!): SupportRequest!
+
+  """
+  Sends a support request. Needs a verified address; refused while the sender is timed out or after ten requests in 24 hours.
+  """
+  sendSupportRequest(input: SupportRequestInput!): SupportRequest!
+
+  """
   Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.
   """
   setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
+
+  """
+  Shows the entry on the public compendium, or hides it. Curators and admins only.
+  """
+  setCompendiumEntryShown(id: ID!, shown: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
+  setPassword(newPassword: String!): Boolean!
+
+  """Shows a request to curators, or hides it from them. Site admins only."""
+  setSupportRequestCuratorVisible(id: ID!, visible: Boolean!): SupportRequest!
+
+  """
+  Links a request to an issue on the project’s GitHub repository, or clears the link with null. Site admins only.
+  """
+  setSupportRequestIssueUrl(id: ID!, issueUrl: String): SupportRequest!
 
   """
   Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
+
+  """
+  Bars a user from sending support requests until `until`. Site admins only.
+  """
+  timeOutSupportSender(note: String, until: DateTime!, userId: ID!): SupportTimeout!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
@@ -1054,6 +1303,16 @@ type Mutation {
 }
 
 """
+How a citation names the ingredient: prints the formal name (stated), heads a common name a cited authority maps to it (resolved), leaves doubt (unresolved), or was not checked (unaudited).
+"""
+enum NameBasis {
+  resolved
+  stated
+  unaudited
+  unresolved
+}
+
+"""
 A form, zodiac sign or celestial body, and how many entries it would list.
 """
 type NameFacetCount {
@@ -1130,16 +1389,42 @@ enum PrivilegeChangeKind {
 }
 
 """
-How a change came about: the primary admin's bootstrap, an admin's act, an invitation accepted, or a declared manual fix.
+How a change came about: the primary admin's bootstrap, an admin's act, an invitation or a card accepted, or a declared manual fix.
 """
 enum PrivilegeRoute {
   admin
   bootstrap
+  card
   invitation
   manual
 }
 
 type Query {
+  """
+  The accepted cards, newest first: each with the account that arrived by it, narrowed by every filter given. Site admins only.
+  """
+  cardArrivals(
+    after: String
+    before: String
+    first: Int
+    last: Int
+
+    """
+    Part of the account's name or email, or the start of the batch number, case-insensitively.
+    """
+    query: String
+  ): QueryCardArrivalsConnection!
+
+  """
+  Every arrival the filter keeps as CSV text: account name, email, accepted date, batch and the covens the account owns. Site admins only.
+  """
+  cardArrivalsCsv(
+    """
+    Part of the account's name or email, or the start of the batch number, case-insensitively.
+    """
+    query: String
+  ): String!
+
   """
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
@@ -1180,13 +1465,16 @@ type Query {
     """
     forms: [String!]
     last: Int
+    listing: CompendiumListing
     nomenclature: Nomenclature
+    order: CompendiumOrder
     query: String
 
     """
     Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.
     """
     reviewed: Boolean
+    sort: CompendiumSort
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
@@ -1242,6 +1530,7 @@ type Query {
     Keeps entries with a live form named any one of these, ignoring case and outer spaces.
     """
     forms: [String!]
+    listing: CompendiumListing
     nomenclature: Nomenclature
     query: String
 
@@ -1265,6 +1554,11 @@ type Query {
   The compendium entries whose name or formal name is exactly the typed one, case aside: what the Add Ingredient form asks about before it makes a second copy.
   """
   compendiumMatches(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryCompendiumMatchesConnection!
+
+  """
+  A compendium entry's sourcing score and the facts behind it. Curators and admins only; null for anyone else.
+  """
+  compendiumSourcingScore(id: ID!): SourcingScore
 
   """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
@@ -1307,7 +1601,44 @@ type Query {
     query: String
     workspaceId: ID!
   ): QueryIngredientSuggestionsConnection!
+
+  """A batch's refused opens, latest first. Site admins only."""
+  invitationCardAttempts(after: String, batchId: ID!, before: String, first: Int, last: Int): QueryInvitationCardAttemptsConnection!
+
+  """
+  The batches of cards, newest first, narrowed by every filter given. Site admins only.
+  """
+  invitationCardBatches(
+    after: String
+
+    """
+    The start of the batch number, or text anywhere in its note, case-insensitively.
+    """
+    batch: String
+    before: String
+
+    """First day of expiry, in UTC."""
+    expiresFrom: LocalDate
+
+    """Last day of expiry, in UTC."""
+    expiresTo: LocalDate
+    first: Int
+    last: Int
+
+    """First day minted, in UTC."""
+    mintedFrom: LocalDate
+
+    """Last day minted, in UTC."""
+    mintedTo: LocalDate
+    status: InvitationCardBatchStatus
+  ): QueryInvitationCardBatchesConnection!
   me: User!
+
+  """One of the signed-in account’s own support requests."""
+  mySupportRequest(id: ID!): SupportRequest!
+
+  """The signed-in account’s own support requests, newest first."""
+  mySupportRequests(after: String, before: String, first: Int, last: Int): QueryMySupportRequestsConnection!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
 
@@ -1332,6 +1663,19 @@ type Query {
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   spell(id: ID!, workspaceId: ID!): Spell!
+
+  """
+  Open to a signed-out caller. The answer is about the caller alone, read under their own session.
+  """
+  supportDialogState: SupportDialogState!
+
+  """One support request the viewer may read."""
+  supportRequest(id: ID!): SupportRequest!
+
+  """
+  The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
+  """
+  supportRequests(about: SupportAbout, after: String, before: String, errorCode: Int, first: Int, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
@@ -1459,6 +1803,16 @@ type Query {
   """
   zodiacSigns(after: String, before: String, first: Int, last: Int, query: String): QueryZodiacSignsConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryZodiacSuggestionsConnection!
+}
+
+type QueryCardArrivalsConnection {
+  edges: [QueryCardArrivalsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCardArrivalsConnectionEdge {
+  cursor: String!
+  node: InvitationCard!
 }
 
 type QueryCategoriesConnection {
@@ -1646,6 +2000,36 @@ type QueryIngredientSuggestionsConnectionEdge {
   node: Ingredient!
 }
 
+type QueryInvitationCardAttemptsConnection {
+  edges: [QueryInvitationCardAttemptsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryInvitationCardAttemptsConnectionEdge {
+  cursor: String!
+  node: InvitationCardAttempt!
+}
+
+type QueryInvitationCardBatchesConnection {
+  edges: [QueryInvitationCardBatchesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryInvitationCardBatchesConnectionEdge {
+  cursor: String!
+  node: InvitationCardBatch!
+}
+
+type QueryMySupportRequestsConnection {
+  edges: [QueryMySupportRequestsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryMySupportRequestsConnectionEdge {
+  cursor: String!
+  node: SupportRequest!
+}
+
 type QueryPossibleDuplicatesConnection {
   edges: [QueryPossibleDuplicatesConnectionEdge!]!
   pageInfo: PageInfo!
@@ -1679,6 +2063,16 @@ type QueryReferenceSuggestionsConnection {
 type QueryReferenceSuggestionsConnectionEdge {
   cursor: String!
   node: Reference!
+}
+
+type QuerySupportRequestsConnection {
+  edges: [QuerySupportRequestsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QuerySupportRequestsConnectionEdge {
+  cursor: String!
+  node: SupportRequest!
 }
 
 type QueryUsersConnection {
@@ -1758,6 +2152,11 @@ type Reference {
   place: String
   published: String
   publisher: String
+
+  """
+  Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Only a compendium source is marked; a coven's is always false.
+  """
+  scholarly: Boolean!
   series: String
   title: String!
   url: String
@@ -1780,6 +2179,11 @@ input ReferenceInput {
   place: String
   published: String
   publisher: String
+
+  """
+  Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles; left out is false. Refused on a coven's source.
+  """
+  scholarly: Boolean
   series: String
   title: String!
   url: String
@@ -1798,12 +2202,30 @@ enum ReferenceKind {
 type ReferenceLink {
   """Where in the source: "p. 112", "chap. 13"."""
   locator: String
+
+  """
+  A compendium citation's; null on a coven's, or when nobody recorded it.
+  """
+  nameBasis: NameBasis
   reference: Reference!
+
+  """
+  The fields of the cited entry or form this source backs, by name. A compendium citation's; null on a coven's, or when nobody recorded them.
+  """
+  supports: [String!]
 }
 
 input ReferenceLinkInput {
   locator: String
+
+  """The compendium's alone: refused on a coven's citation."""
+  nameBasis: NameBasis
   referenceId: ID!
+
+  """
+  The fields of the entry, or of the form, this source backs. The compendium's alone: refused on a coven's citation.
+  """
+  supports: [String!]
 }
 
 """A Reviewed setting, and how many entries it would list (M14.8)."""
@@ -1828,6 +2250,29 @@ input SaveStockInput {
   update: [UpdateJarInput!]!
 }
 
+"""A support request from a visitor who is not signed in."""
+input SignedOutSupportRequestInput {
+  """Only ACCESSIBILITY, ACCOUNT, BUG, PRIVACY and QUESTION are accepted."""
+  about: SupportAbout!
+
+  """Where the reply is mailed."""
+  email: String!
+  errorCode: Int
+  errorReference: String
+
+  """1 to 4000 characters."""
+  message: String!
+  path: String
+
+  """1 to 120 characters."""
+  subject: String!
+
+  """
+  A trap for bots: the form hides it, so any value means the send is dropped.
+  """
+  website: String
+}
+
 """A source, local or compendium, and how many entries it would list."""
 type SourceFacetCount {
   """
@@ -1837,6 +2282,36 @@ type SourceFacetCount {
 
   """local or compendium, as source takes it."""
   value: IngredientSource!
+}
+
+"""
+One fact behind a sourcing score, and the points it adds or takes away.
+"""
+type SourcingFact {
+  fact: SourcingFactKind!
+
+  """How the list says it, such as "3 Sources"."""
+  label: String!
+  points: Int!
+}
+
+enum SourcingFactKind {
+  bestSource
+  curatorReviewed
+  formCitesNothing
+  nameBacked
+  noLocator
+  nomenclatureUnknown
+  safetyUnsourced
+  sources
+}
+
+"""
+How well a compendium entry is sourced, and every fact behind it; the facts sum to the score.
+"""
+type SourcingScore {
+  facts: [SourcingFact!]!
+  score: Int!
 }
 
 """A coven's working: what it intends, and the recipe that makes it."""
@@ -2055,6 +2530,157 @@ enum SuggestionGroup {
   yours
 }
 
+"""What a support request is about."""
+enum SupportAbout {
+  accessibility
+  account
+  bug
+  compendium
+  feedback
+  privacy
+  question
+}
+
+"""What the Support dialog offers a visitor."""
+enum SupportDialogKind {
+  form
+  signedOut
+  timedOut
+  unverified
+}
+
+"""What the asking visitor may do in the Support dialog."""
+type SupportDialogState {
+  kind: SupportDialogKind!
+
+  """When the time-out ends; set only for timedOut."""
+  until: DateTime
+}
+
+"""
+A message on a support request: a reply from staff, a note only staff read, or a message from the sender.
+"""
+type SupportReply {
+  audit: AuditInfo!
+
+  """Who wrote the reply; null if no live account holds the id."""
+  author: User
+  authorRole: SupportReplyAuthorRole!
+  body: String!
+  id: ID!
+  visibility: SupportReplyVisibility!
+}
+
+"""Whether the sender or staff wrote a message."""
+enum SupportReplyAuthorRole {
+  sender
+  staff
+}
+
+"""
+Whether the sender reads a message (`public`) or only staff do (`internal`).
+"""
+enum SupportReplyVisibility {
+  internal
+  public
+}
+
+"""
+A request for help from the support form. A sender reads their own; a curator reads those marked for curators or assigned to them; an admin reads all.
+"""
+type SupportRequest {
+  about: SupportAbout!
+  assignedTo: User
+  audit: AuditInfo!
+  closedAt: DateTime
+  curatorVisible: Boolean!
+  errorCode: Int
+
+  """
+  The digest of the error page the sender came from, to match the server log. Staff only.
+  """
+  errorReference: String
+  id: ID!
+
+  """The linked issue’s address. Staff only."""
+  issueUrl: String
+  lastSenderActivityAt: DateTime
+  lastStaffActivityAt: DateTime
+
+  """
+  The closed request this one follows on from, when the sender wrote on a closed request.
+  """
+  linkedFromId: ID
+  message: String!
+
+  """
+  The page the sender was on, with a coven’s slug replaced; null when none was sent.
+  """
+  path: String
+
+  """Oldest first."""
+  replies: [SupportReply!]!
+  resolvedAt: DateTime
+  resolvedBy: User
+  sender: User
+
+  """The sender’s tier. Staff only."""
+  senderTier: SupportSenderTier!
+  status: SupportStatus!
+  subject: String!
+
+  """
+  The sender’s time-outs, past and active, newest first. Site admins only.
+  """
+  timeouts: [SupportTimeout!]!
+}
+
+input SupportRequestInput {
+  about: SupportAbout!
+
+  """The HTTP status of the error page, if any."""
+  errorCode: Int
+
+  """The digest of the error page, if any."""
+  errorReference: String
+
+  """1 to 4000 characters."""
+  message: String!
+
+  """
+  The page the sender was on, at most 500 characters; a coven's slug is replaced when it is stored.
+  """
+  path: String
+
+  """1 to 120 characters."""
+  subject: String!
+}
+
+"""Derived from the invitation the sender accepted; never stored."""
+enum SupportSenderTier {
+  beta_tester
+  standard
+}
+
+enum SupportStatus {
+  closed
+  open
+  resolved
+  waiting_on_sender
+}
+
+"""
+A bar on a user sending support requests until `until`, unless lifted sooner.
+"""
+type SupportTimeout {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+  note: String
+  until: DateTime!
+  userId: ID!
+}
+
 """A toxic setting other than any, and how many entries it would list."""
 type ToxicFacetCount {
   """
@@ -2132,6 +2758,7 @@ type User {
   """The sign-in providers linked to the account, by id, sorted."""
   providers: [String!]!
   role: UserRole!
+  termsVersion: String
 }
 
 """

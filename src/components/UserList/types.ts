@@ -95,6 +95,8 @@ export interface ConfirmedActionProps {
   /** The modal's confirm, when it says something other than the row's button does. */
   confirmLabel?: string;
   openClass: string;
+  /** The row's button is off, for a form whose answer is not yet complete. */
+  disabled?: boolean;
   /** The modal's heading, in title case. */
   title: string;
   /** The modal's question, the user's name in bold. */
@@ -114,7 +116,7 @@ export interface ConfirmedActionProps {
    * The sentence a refusal shows; absent, the service's own, read from the
    * GraphQL error.
    */
-  refusal?: string;
+  refusal?: string | ((error: unknown) => string);
   /**
    * Said in the page's status region after a success, for a screen reader:
    * the result the page then shows, in words. Absent for a control whose

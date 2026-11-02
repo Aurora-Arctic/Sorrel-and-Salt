@@ -4,8 +4,13 @@ import { is } from 'drizzle-orm';
 import { PgTable, getTableConfig } from 'drizzle-orm/pg-core';
 import { useTestDatabase } from '../support/db/database';
 import { tableFacts } from '../support/db/table-metadata';
+import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-attempts';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaces from '@/modules/coven/schema/workspaces';
+import * as supportRequests from '@/modules/support/schema/support-requests';
+import * as supportReplies from '@/modules/support/schema/support-replies';
+import * as supportSendCounts from '@/modules/support/schema/support-send-counts';
+import * as supportTimeouts from '@/modules/support/schema/support-timeouts';
 import * as spellCategories from '@/modules/grimoire/schema/spell-categories';
 import * as spellSteps from '@/modules/grimoire/schema/spell-steps';
 import * as spellWorkingDeductions from '@/modules/grimoire/schema/spell-working-deductions';
@@ -54,8 +59,13 @@ const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) 
   );
 
 const MODULES = [
+  cardInvitationAttempts,
   invitations,
   workspaces,
+  supportRequests,
+  supportReplies,
+  supportSendCounts,
+  supportTimeouts,
   spellCategories,
   spellSteps,
   spellWorkingDeductions,

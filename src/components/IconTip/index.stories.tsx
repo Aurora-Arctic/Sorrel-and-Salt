@@ -30,9 +30,11 @@ import {
   QuickLookButton,
   QuickLookLink,
   RedoIcon,
-  StockIcon,
   UndoIcon,
 } from '.';
+// From its own file, not the index: the design sync's library carries StockBadge's StockIcon
+// under this name, so an index import would reach the wrong one in the sync's previews.
+import { StockIcon } from './icons';
 
 // Render-only; behaviour is asserted in tests/components/IconTip. Hover or focus
 // a pencil to open its tip; Escape closes it. The rows are a list's banded table,

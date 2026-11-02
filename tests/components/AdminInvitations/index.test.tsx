@@ -64,7 +64,9 @@ describe('AdminInvitations', () => {
     expect(within(first).getByText('Curator')).toBeInTheDocument();
     expect(within(second).getByText('Admin')).toBeInTheDocument();
     expect(within(first).getByText('Curates the resins')).toBeInTheDocument();
-    expect(within(first).getByText('17 October 2026, 20:05 UTC')).toBeInTheDocument();
+    expect(
+      within(first).getByText(/^\d{1,2} October \d{4}, \d{1,2}:\d{2} (am|pm)$/),
+    ).toBeInTheDocument();
     expect(within(second).getByText('brook@example.test')).toBeInTheDocument();
   });
 
@@ -116,7 +118,9 @@ describe('AdminInvitations', () => {
     expect(calls).toEqual([
       { email: 'cass@example.test', siteRole: 'curator', note: 'Knows the celestial bodies' },
     ]);
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/admin/invitations'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/admin/invitations', { scroll: false }),
+    );
     expect(router.refresh).toHaveBeenCalled();
 
     // Back at the tab, the form's address gone: the notice outlasts it.
@@ -161,7 +165,7 @@ describe('AdminInvitations', () => {
         target: { value: 'Knows the celestial bodies' },
       }),
     );
-    expect(router.replace).toHaveBeenCalledWith('/admin/invitations');
+    expect(router.replace).toHaveBeenCalledWith('/admin/invitations', { scroll: false });
   });
 
   it('says a refused address beside the field and keeps the form open', async () => {
@@ -328,6 +332,9 @@ describe('AdminInvitations filter', () => {
       '/admin/invitations?email=fern&expiring&after=c25&invite',
     );
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
-    expect(router.replace).toHaveBeenCalledWith('/admin/invitations?email=fern&expiring&after=c25');
+    expect(router.replace).toHaveBeenCalledWith(
+      '/admin/invitations?email=fern&expiring&after=c25',
+      { scroll: false },
+    );
   });
 });

@@ -19,6 +19,8 @@ export interface ReviewRowProps {
   onChange: (next: boolean) => void;
   /** A change is in flight: the switch is `aria-busy` and a spinner takes the thumb's place. */
   busy?: boolean;
+  /** Drawn at the end of the row, after the Reviewed switch: the form's Shown in Compendium switch. */
+  alongside?: ReactNode;
   /** Drawn under the row, such as a refusal. */
   children?: ReactNode;
 }
@@ -29,6 +31,7 @@ export default function ReviewRow({
   checked,
   onChange,
   busy = false,
+  alongside,
   children,
 }: ReviewRowProps): ReactElement {
   return (
@@ -48,15 +51,18 @@ export default function ReviewRow({
             <output className="badge badge--local">Reviewed By Curator</output>
           )}
         </span>
-        <span className="review-mark">
-          <SwitchField
-            label="Reviewed"
-            name="reviewed"
-            value="1"
-            checked={checked}
-            onChange={onChange}
-            busy={busy}
-          />
+        <span className="review-row__switches">
+          <span className="review-mark">
+            <SwitchField
+              label="Reviewed"
+              name="reviewed"
+              value="1"
+              checked={checked}
+              onChange={onChange}
+              busy={busy}
+            />
+          </span>
+          {alongside}
         </span>
       </div>
       {children}

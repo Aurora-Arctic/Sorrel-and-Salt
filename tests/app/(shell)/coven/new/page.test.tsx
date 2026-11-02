@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
@@ -26,6 +26,7 @@ const SESSION: Session = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role:
 async function renderPage(
   canCreateWorkspace: boolean,
   workspaces: { slug: string; name: string }[] = [],
+  searchParams?: { card?: string },
 ) {
   requireSession.mockResolvedValue(SESSION);
   viewerOf.mockResolvedValue({
@@ -39,7 +40,9 @@ async function renderPage(
   });
   getMe.mockResolvedValue({ name: 'Ada Fixture', canCreateWorkspace });
   render(
-    <QueryClientProvider client={makeQueryClient()}>{await NewCovenPage()}</QueryClientProvider>,
+    <QueryClientProvider client={makeQueryClient()}>
+      {await NewCovenPage({ searchParams: searchParams && Promise.resolve(searchParams) })}
+    </QueryClientProvider>,
   );
 }
 
@@ -81,10 +84,23 @@ describe('the /coven/new page', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
+  it('says what an accepted card gave, only to one who arrived by it and can create', async () => {
+    await renderPage(true, [], { card: 'accepted' });
+    expect(screen.getByRole('status')).toHaveTextContent('Your card is accepted');
+
+    cleanup();
+    await renderPage(true);
+    expect(screen.queryByRole('status')).toBeNull();
+
+    cleanup();
+    await renderPage(false, [], { card: 'accepted' });
+    expect(screen.getByRole('status')).not.toHaveTextContent('Your card is accepted');
+  });
+
   it('renders nothing when there is no session', async () => {
     requireSession.mockRejectedValue(new Error('redirect'));
 
-    await expect(NewCovenPage()).rejects.toThrow('redirect');
+    await expect(NewCovenPage({})).rejects.toThrow('redirect');
     expect(getMe).not.toHaveBeenCalled();
   });
 });

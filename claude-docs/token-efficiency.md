@@ -59,11 +59,10 @@ Playwright run to a log as above.
 
 ## When a full suite is worth running
 
-Run one spec while iterating: it is fast and its output is small. Run the full
-coverage, stories and e2e suites once, at the end of a task, because the 80%
-threshold and cross-file breakage only show there. Run them sooner when the
-owner asks, or when a change reaches shared code and a narrower run would hide
-a failure; saving tokens never justifies a thinner test.
+Run one spec at a time while working: it is fast and its output is small. Run
+the full coverage, stories and e2e suites only when the owner says so, because
+the 80% threshold and cross-file breakage only show there. Saving tokens never
+justifies a thinner test.
 
 ## At a task boundary
 

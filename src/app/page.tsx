@@ -6,6 +6,7 @@ import { websiteJsonLd } from '../lib/json-ld';
 import { emailPagePath } from '../lib/account-email';
 import { signedInLanding } from '../lib/landing';
 import { SITE_NAME, siteUrl } from '../lib/site';
+import { TWITTER_CARD } from '../lib/page-metadata';
 
 // The one public page that reads the session, with getSession() as requireSession() would redirect the
 // signed-out visitors it exists for. It offers a signed-in visitor their landing, or sign-in; an
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     type: 'website',
   },
-  twitter: { card: 'summary', title: SITE_NAME, description: DESCRIPTION },
+  twitter: { card: TWITTER_CARD, title: SITE_NAME, description: DESCRIPTION },
 };
 
 async function continueTarget(session: Session): Promise<Route> {
@@ -37,18 +38,20 @@ export default async function HomePage() {
   const session = await getSession();
 
   return (
-    // `page-frame` is the layout. `welcome-page` styles nothing: it stays as
-    // the hook Backdrop's `body:has(.welcome-page)` reads to draw its larger
-    // front-door art, so the root layout needs no route awareness.
-    <main className="page-frame welcome-page">
-      {!session && (
-        <script
-          type="application/ld+json"
-          // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
-          dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
-        />
-      )}
-      <Welcome landing={session ? await continueTarget(session) : undefined} />
-    </main>
+    <>
+      {/* `page-frame` is the layout. `welcome-page` styles nothing: it stays as the hook Backdrop's
+          `body:has(.welcome-page)` reads to draw its larger front-door art, so the root layout needs no
+          route awareness. */}
+      <main className="page-frame welcome-page">
+        {!session && (
+          <script
+            type="application/ld+json"
+            // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
+            dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
+          />
+        )}
+        <Welcome landing={session ? await continueTarget(session) : undefined} />
+      </main>
+    </>
   );
 }

@@ -2,15 +2,17 @@ import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { type CovenMembership, membershipBySlug } from '@/modules/coven';
-import { assertCurator, assertSiteAdmin } from '@/modules/identity';
+import { assertCurator, assertSiteAdmin, hasAgreedToTerms } from '@/modules/identity';
 import { auth } from './auth';
 import { Forbidden } from './errors';
 import type { Session, SessionState } from './session';
+import { isTermsPage, termsPagePath } from './account-terms';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
 import { isRosterProvider } from './social-providers';
 import { toUserRole } from './session-role';
-import type { LinkedAccount } from './types';
+import { isFreshSession } from './session-fresh';
+import type { AccountPasskey, LinkedAccount } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
@@ -23,14 +25,13 @@ import type { LinkedAccount } from './types';
  * tests/lib/auth.test.ts); 0 turns the check off, as there.
  */
 async function isFresh(createdAt: Date | string): Promise<boolean> {
-  const { freshAge } = (await auth.$context).sessionConfig;
-  if (freshAge === 0) return true;
-  return Date.now() - new Date(createdAt).getTime() < freshAge * 1000;
+  return isFreshSession(createdAt, (await auth.$context).sessionConfig.freshAge);
 }
 
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
-  if (!result) return { session: null, emailVerified: false, sessionFresh: false };
+  if (!result)
+    return { session: null, emailVerified: false, termsAgreed: false, sessionFresh: false };
   // Present only while the `admin` plugin is registered and this session is
   // an impersonation; the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
@@ -38,9 +39,13 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
     session: {
       userId: result.user.id,
       role: toUserRole(result.user.role),
+      ...(result.user.emailVerified !== true && { emailUnverified: true as const }),
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,
+    termsAgreed: hasAgreedToTerms(
+      Reflect.get(result.user, 'termsVersion') as string | null | undefined,
+    ),
     sessionFresh: await isFresh(result.session.createdAt),
   };
 }
@@ -97,15 +102,20 @@ export async function requireSignedIn(): Promise<Session> {
 
 /**
  * The signed-in user, or a redirect to `/sign-in` with the page's path as `?next=`, or to the email page while the address is
- * unverified (a provisional account can do nothing else). Every protected page calls it before reading anything
+ * unverified (a provisional account can do nothing else), or to the acceptance page until it has agreed to the current terms. Every protected page calls it before reading anything
  * (claude-docs/auth/admin-bootstrap.md, "The email page").
  */
 export async function requireSession(): Promise<Session> {
   const session = await requireSignedIn();
-  const { emailVerified } = await getSessionState();
+  const { emailVerified, termsAgreed } = await getSessionState();
   const returnPath = await forwardedReturnPath();
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));
+  }
+  // After the address check, so an unverified account proves its address first and agrees second; the acceptance page is exempt
+  // from this check as the email page is from the one above.
+  if (!termsAgreed && !isTermsPage(returnPath) && !isEmailPage(returnPath)) {
+    redirect(termsPagePath(safeReturnPath(returnPath)));
   }
   return session;
 }
@@ -158,14 +168,36 @@ export async function requireCovenMembership(slug: string): Promise<CovenMembers
   }
 }
 
+/** Every account row Better Auth holds for the signed-in user, provider and password alike. */
+const userAccounts = cache(async () => auth.api.listUserAccounts({ headers: await headers() }));
+
 /**
  * The signed-in user's provider accounts, asked of Better Auth, whose table
  * they are. For the account page, after `requireSession()`; Better Auth
  * refuses a request with no session.
  */
 export const linkedAccounts = cache(async (): Promise<LinkedAccount[]> => {
-  const accounts = await auth.api.listUserAccounts({ headers: await headers() });
+  const accounts = await userAccounts();
   return accounts.flatMap(({ id, providerId }) =>
     isRosterProvider(providerId) ? [{ id, providerId }] : [],
   );
+});
+
+/** Whether the signed-in account has a password, which the account page then changes rather than sets. */
+export const hasPassword = cache(async (): Promise<boolean> => {
+  const accounts = await userAccounts();
+  return accounts.some(({ providerId }) => providerId === 'credential');
+});
+
+/**
+ * The signed-in user's passkeys, asked of the passkey plugin, whose table they are, and cut to what the account page
+ * shows. For the account page, after `requireSession()`.
+ */
+export const accountPasskeys = cache(async (): Promise<AccountPasskey[]> => {
+  const passkeys = await auth.api.listPasskeys({ headers: await headers() });
+  return passkeys.map(({ id, name, createdAt }) => ({
+    id,
+    name: name ?? null,
+    createdAt: new Date(createdAt).toISOString(),
+  }));
 });

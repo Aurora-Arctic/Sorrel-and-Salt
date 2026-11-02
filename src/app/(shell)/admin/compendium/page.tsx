@@ -8,6 +8,7 @@ import { editHeading } from '../../../../components/CompendiumList/heading';
 import { cardName } from '../../../../components/IngredientCard/card-name';
 import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
+import ShownToggle from '../../../../components/IngredientEntry/shown-toggle';
 import ReviewMark from '../../../../components/IngredientEntry/review-mark';
 import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import type { ListDialog } from '../../../../lib/types';
@@ -23,6 +24,7 @@ import { DEFAULT_PAGE_SIZE } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import {
+  getIngredient,
   ingredientDetailOf,
   readCompendiumReview,
   resolveCompendiumSlug,
@@ -70,17 +72,25 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
     deities: new Map(deities.map(({ slug, id }) => [slug, id])),
   };
-  const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
+  // The admin list holds hidden entries beside shown ones; the Hidden switch narrows it to them.
+  const asked = COMPENDIUM_PARAMS.variables(filter, lookups);
+  const variables = JSON.stringify({ ...asked, listing: asked.listing ?? 'all' });
+  // The page's rows carry each entry's sourcing score for its column, read in the list's own query; the facets need none.
+  const pageVariables = JSON.stringify({
+    ...asked,
+    listing: asked.listing ?? 'all',
+    withSourcingScore: true,
+  });
 
   // The entry whose details are open over the list, `?entry=`.
   const entrySlug = single(params.entry);
   const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
     // The session, for the Reviewed filter and its counts, a curator's alone.
-    readCompendium(variables, after, before, DEFAULT_PAGE_SIZE, session),
+    readCompendium(pageVariables, after, before, DEFAULT_PAGE_SIZE, session),
     readFacets(variables, session),
     readFormIcons(),
-    readEditPlace(place, readCompendiumEntry),
-    entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug)) : undefined,
+    readEditPlace(place, (slug) => readCompendiumEntry(slug, session)),
+    entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug, session)) : undefined,
   ]);
   const facets = compendiumFacetCounts(counts, {
     formIcons,
@@ -114,6 +124,10 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const editReview = editing
     ? await readOrMissing(() => readCompendiumReview(session, editing.id))
     : undefined;
+  // Whether the entry the modal edits is shown, for the form's own switch; a hidden entry is a curator's to read.
+  const editShown = editing
+    ? await readOrMissing(() => getIngredient(session, editing.id))
+    : undefined;
   // The plus beside the pencil, for the covens the admin or curator is a member of and may add in:
   // none for one in no coven, so neither the plus nor its check shows.
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
@@ -129,7 +143,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     page.edges.map(({ node }) => node),
   );
   const chipRows = await readCardCategories(page.edges.map(({ node }) => node.id));
-  const entries = page.edges.map(({ node }, i): CompendiumListEntry => ({
+  const entries = page.edges.map(({ node, sourcingScore }, i): CompendiumListEntry => ({
     ...stamps[i],
     id: node.id,
     slug: node.slug,
@@ -142,6 +156,8 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       href: compendiumHref({ ...list, entry: node.slug }),
       heading: detailsHeading(node),
     },
+    shown: node.shown,
+    sourcingScore,
     editHref: compendiumHref(list, { edit: node.slug }),
     editHeading: editHeading(node),
   }));
@@ -184,6 +200,14 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                 <ReviewMark
                   ingredientId={detailed.id}
                   reviewedAt={review?.reviewedAt.toISOString() ?? null}
+                  alongside={
+                    <ShownToggle
+                      ingredientId={detailed.id}
+                      shown={detailed.shown}
+                      name={cardName(detailed.name, detailed.canonicalName)}
+                      accessibleName="Shown in Compendium"
+                    />
+                  }
                 />
               ),
             }),
@@ -218,10 +242,12 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                   revision: editing.revision,
                   updatedAt: editing.updatedAt,
                 },
+                sourcing: editing.sourcing,
                 ...(editReview !== undefined && {
                   review: {
                     reviewed: editReview !== null,
                     reviewedAt: editReview?.reviewedAt.toISOString() ?? null,
+                    ...(editShown !== undefined && { shown: editShown.shown }),
                   },
                 }),
               }

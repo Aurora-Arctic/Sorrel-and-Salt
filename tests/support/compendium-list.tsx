@@ -85,6 +85,8 @@ export const ENTRIES: CompendiumListEntry[] = [
       { category: { id: 'c-tc', name: 'Testcraft' }, group: WARDS },
       { category: { id: 'c-tb', name: 'Testbane' }, group: WARDS },
     ],
+    shown: true,
+    sourcingScore: 36,
     editHref: compendiumHref({}, { edit: 'testwort' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
     details: {
@@ -102,6 +104,8 @@ export const ENTRIES: CompendiumListEntry[] = [
     canonicalName: null,
     forms: [],
     categories: [],
+    shown: true,
+    sourcingScore: -5,
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
     details: {
@@ -123,6 +127,7 @@ export const NO_FILTER: CompendiumListFilter = {
   forms: [],
   withoutReferences: false,
   withoutForms: false,
+  hidden: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -131,6 +136,8 @@ export const NO_FILTER: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   reviewed: '',
+  sort: '',
+  order: '',
   covens: [],
   covensNot: false,
 };
@@ -141,6 +148,7 @@ export const SHOWN: CompendiumListFilter = {
   forms: ['Fixture Oil'],
   withoutReferences: true,
   withoutForms: false,
+  hidden: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -149,6 +157,8 @@ export const SHOWN: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   reviewed: '',
+  sort: '',
+  order: '',
   covens: [],
   covensNot: false,
 };

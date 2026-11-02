@@ -365,7 +365,7 @@ test('at a desktop width, once fitted, the admin row shows every tab and draws n
   await page.goto('/admin');
 
   const nav = await fittedAdminNav(page);
-  await expect(rowLinks(nav)).toHaveCount(6);
+  await expect(rowLinks(nav)).toHaveCount(7);
   await expect(nav.getByRole('button')).toHaveCount(0);
   expect(await rowOverflows(nav)).toBe(false);
 });
@@ -391,7 +391,7 @@ test('before the script runs, a desktop admin row shows every tab and no More', 
 
   const admin = page.getByRole('navigation', { name: 'Admin' });
   await expect(admin).toBeVisible();
-  await expect(admin.getByRole('link')).toHaveCount(6);
+  await expect(admin.getByRole('link')).toHaveCount(7);
   for (const link of await admin.getByRole('link').all()) await expect(link).toBeVisible();
   await expect(admin.getByRole('button')).toHaveCount(0);
 
@@ -399,7 +399,7 @@ test('before the script runs, a desktop admin row shows every tab and no More', 
   const hrefs = await admin
     .getByRole('link')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
-  expect(new Set(hrefs).size).toBe(6);
+  expect(new Set(hrefs).size).toBe(7);
   release();
 });
 

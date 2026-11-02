@@ -179,7 +179,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.173 | Refuse a migration older than its base's newest                                                                          | Wave 8   | —                      |
 | MB.174 | Stop the list fields offering or adding a repeat                                                                         | Wave 8   | M5.5                   |
 | MB.175 | Help and FAQ articles                                                                                                    | Wave 15  | —                      |
-| MB.176 | Bug reports                                                                                                              | Wave 15  | M11.8                  |
+| MB.176 | ~~Bug reports~~ — **retired into M15.1**                                                                                 | —        | —                      |
 | MB.177 | Every admin holds `canCreateWorkspace`                                                                                   | Wave 8   | M5.8, M6.7             |
 | MB.178 | Search and filter the admin categories list                                                                              | Wave 8   | —                      |
 | MB.179 | Keep the test suite inside Postgres's connection limit                                                                   | Wave 8   | —                      |
@@ -278,6 +278,16 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.274 | Seeded Compendium Content Stays Stale After a Deploy                                                                     | Bugfixes | —                      |
 | MB.275 | Lint Warnings Pile Up Because Nothing Fails on Them                                                                      | Bugfixes | —                      |
 | MB.276 | An Admin's Compendium Edit Saves Whatever the Autosave Timing                                                            | Bugfixes | —                      |
+| MB.277 | The Unused Code Check Finds Nothing Left to Clear                                                                        | Bugfixes | —                      |
+| MB.278 | The Gitflow Check Reads Pull Request Values Safely                                                                       | Bugfixes | —                      |
+| MB.279 | Pages Carry Security Headers                                                                                             | Bugfixes | —                      |
+| MB.280 | Invitation Mail Is Limited per Sender                                                                                    | Bugfixes | —                      |
+| MB.281 | An Unverified Account Reaches No Workspace Data Through the API                                                          | Bugfixes | —                      |
+| MB.282 | The GraphQL Endpoint Refuses Cross-Site Requests                                                                         | Bugfixes | —                      |
+| MB.283 | An Email Change Needs a Recent Sign-in and Tells the Old Address                                                         | Bugfixes | —                      |
+| MB.284 | Changing an Email Address Answers the Same Whether or Not It Is Taken                                                    | Bugfixes | —                      |
+| MB.285 | Compendium Entries Stay Pending After the Citation Wording Changed                                                       | Bugfixes | —                      |
+| MB.286 | Seven Cosmetic Faults in Loading, Spell Preview and Quick Look                                                           | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -2168,7 +2178,7 @@ _Story (retired):_ As a developer, I want `npm audit` clean of the standing `dri
 
 `npm audit` reports a moderate advisory (GHSA-67mh-4wv8-2f99, CVSS 5.3 — esbuild's dev server accepts cross-origin requests) reached only through `drizzle-kit@0.31.10` → `@esbuild-kit/esm-loader@2.6.5` → `@esbuild-kit/core-utils@3.3.2`, which pins its own nested `esbuild` to `~0.18.20` regardless of the `esbuild@^0.25.4` `drizzle-kit` depends on directly. `@esbuild-kit` is archived upstream — folded into `tsx`, which `drizzle-kit@0.31.10` already depends on separately but does not yet use to replace the esm-loader. `0.31.10` is the newest version on the stable dist-tag; there is no patched `0.3x` release to move to; M0.17's audit workflow does not catch this because it only fails CI on a high-severity advisory.
 
-The only version line that drops `@esbuild-kit` is `drizzle-kit`'s `1.0.0-rc.*` prerelease, which depends directly on `esbuild@^0.25.10` via `jiti` instead. `drizzle-orm` has a matching `1.0.0-rc.*` line that must move with it — confirmed compatible with what's installed here: `@better-auth/drizzle-adapter@1.7.4`'s own peer range is already `^0.45.2 || >=1.0.0-rc.1 <2.0.0`, so `src/lib/auth.ts`'s `drizzleAdapter` accepts either. `drizzle-orm@1.0.0-rc.1`'s release notes carry one breaking change relevant to a Postgres/Drizzle Kit project — the `casing: "camel"` config option was replaced by `snakeCase`/`camelCase` table wrappers — which does not apply here: `drizzle.config.ts` sets no `casing` key (confirmed by grep) and no schema file uses it either.
+The only version line that drops `@esbuild-kit` is `drizzle-kit`'s `1.0.0-rc.*` prerelease, which depends directly on `esbuild@^0.25.10` via `jiti` instead. `drizzle-orm` has a matching `1.0.0-rc.*` line that must move with it — confirmed compatible with what's installed here: `@better-auth/drizzle-adapter`'s own peer range is already `^0.45.2 || >=1.0.0-rc.1 <2.0.0`, so `src/lib/auth.ts`'s `drizzleAdapter` accepts either. `drizzle-orm@1.0.0-rc.1`'s release notes carry one breaking change relevant to a Postgres/Drizzle Kit project — the `casing: "camel"` config option was replaced by `snakeCase`/`camelCase` table wrappers — which does not apply here: `drizzle.config.ts` sets no `casing` key (confirmed by grep) and no schema file uses it either.
 
 An `overrides` entry forcing `esbuild` up inside `@esbuild-kit/core-utils` without touching `drizzle-kit`'s version was considered and rejected: `@esbuild-kit/core-utils` is unmaintained and pins `~0.18.20` deliberately, so overriding it to `^0.25` would run its code against an esbuild two majors newer than anything it was tested against, with no upstream fix if that broke — trading a documented, understood advisory for an undocumented one.
 
@@ -3378,7 +3388,7 @@ _Acceptance criteria:_
 
 **MB.71 — Link a second sign-in method from the account page** · 3h
 
-_Story 1 — Sign in with an account I already have, so I don't manage another password: here a second account I already have, added to the same Sorrel & Salt account so either signs me in._
+_Story 1 — Sign in with an account I already have, so I can start without setting up a new way to sign in: here a second account I already have, added to the same Sorrel & Salt account so either signs me in._
 
 Minted during MB.66, on the question of what it would take for an admin who signed up through Discord to sign in through Microsoft ([`design-decisions/mb.71-plan.md`](../design-decisions/mb.71-plan.md)). First-party verification does not help, and cannot: Better Auth's implicit link at sign-in (`oauth2/link-account.mjs`) needs the _provider_ to vouch for the address, and Microsoft is pinned unverified against nOAuth (MB.60), so the row being verified is the wrong side of the equation. What works is an explicit link from a signed-in session, which Better Auth ships as `/link-social`; after it the provider signs in by its account id and its address claim is never consulted again. The link branch does not check `requireLocalEmailVerified`, so an unverified row can link too. The mechanism as built is [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Linking a second provider".
 
@@ -3431,7 +3441,7 @@ _Story:_ As the site owner, I want each of Better Auth's plugins weighed against
 
 _Decided:_ [`design-decisions/mb.74-better-auth-plugins.md`](../design-decisions/mb.74-better-auth-plugins.md), with the approved plan beside it as [`design-decisions/mb.74-plan.md`](../design-decisions/mb.74-plan.md). Follow-ups MB.75 through MB.78.
 
-**Scoping task in M2.9's own shape: a decision doc and follow-up tasks, no code.** The site signs in through four OAuth providers and is invite-gated, so most of the roster has nothing to do here (DESIGN.md §14, "Which Better Auth plugins?"). The review read the installed `1.7.5` rather than its documentation and found three things that were not known: the rate limiter is already on in every deploy and counts per function instance, with a fallback that puts every visitor in one bucket when the client IP cannot be resolved; OAuth tokens sit in `accounts` in plaintext; and two-factor never challenges an OAuth sign-in. Passkeys become the v2 first-party credential in §13, in place of email and password.
+**Scoping task in M2.9's own shape: a decision doc and follow-up tasks, no code.** The site signs in through four OAuth providers and is invite-gated, so most of the roster has nothing to do here (DESIGN.md §14, "Which Better Auth plugins?"). The review read the installed Better Auth rather than its documentation and found three things that were not known: the rate limiter is already on in every deploy and counts per function instance, with a fallback that puts every visitor in one bucket when the client IP cannot be resolved; OAuth tokens sit in `accounts` in plaintext; and two-factor never challenges an OAuth sign-in. Passkeys become the v2 first-party credential in §13, in place of email and password.
 
 _Acceptance criteria:_
 
@@ -3594,7 +3604,7 @@ Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` 
 
 **Amended by MB.155 (2026-10-17), at the owner's ask:** both entry pages already title themselves `Name (Formal Name)` whenever the entry has a formal name that differs from its name, and the name alone otherwise, through `pageTitleOf` in `src/components/IngredientEntry/page-title.ts`. That meets the criterion that two entries sharing a label are told apart by the formal name. This task adds the site to that title and keeps the helper, rather than building the title again.
 
-**Amended at the owner's call (2026-10-19):** structured data and the home page are folded in; re-estimated from 4h to 7h (2h for the JSON-LD and the Open Graph and Twitter tags, 1h for the home page, its robots rule and its markup). (1) Each public page carries schema.org JSON-LD rendered into the server HTML through one serialiser, `src/lib/json-ld.ts`, which escapes `<`: an entry page is a `DefinedTerm` (name, the formal and folk names as `alternateName`, description, URL, `inDefinedTermSet`) with a `BreadcrumbList` back to the compendium; the list page is a `CollectionPage` whose `mainEntity` is a `DefinedTermSet`. Filtered list views and the in-app detail page carry none. Entry sources are not marked up as citations. This supersedes MB.80's "no structured data beyond WebPage" line. (2) Every page's title takes the template `%s | Sorrel & Salt` from the root layout, and the public pages carry `og:title`, `og:description`, `og:url`, `og:site_name`, `og:type` `website` and a `summary` Twitter card, with no image (M11.16's). (3) The home page `/` becomes crawlable on production so Google can read a site name from it: robots allows it with `/$`, because a bare `/` would match every path (RFC 9309, 2.2.3 ends a pattern at `$`; Google's robots.txt page documents `/$` as matching only the root). The home page carries the site name alone as an absolute, untemplated title, a description, canonical `/`, and `WebSite` JSON-LD (`name`, `url`) shown to a signed-out visitor only, and the sitemap lists it. (4) `robots.ts` is read per request (`dynamic = 'force-dynamic'`), so the runtime's `VERCEL_ENV` decides and no build setting matters. (5) Lighthouse is a dev dependency run by hand, since it only means anything against a production-env server (off production the noindex header correctly fails "is crawlable", as on a Vercel preview); the devcontainer has no Chrome and no DevTools port on its remote browser could be reached (a debugging-port launch option sent through the Playwright server was refused from the other container), so the owner runs it from a machine with Chrome.
+**Amended at the owner's call (2026-10-19):** structured data and the home page are folded in; re-estimated from 4h to 7h (2h for the JSON-LD and the Open Graph and Twitter tags, 1h for the home page, its robots rule and its markup). (1) Each public page carries schema.org JSON-LD rendered into the server HTML through one serialiser, `src/lib/json-ld.ts`, which escapes `<`: an entry page is a `DefinedTerm` (name, the formal and folk names as `alternateName`, description, URL, `inDefinedTermSet`) with a `BreadcrumbList` back to the compendium; the list page is a `CollectionPage` whose `mainEntity` is a `DefinedTermSet`. Filtered list views and the in-app detail page carry none. Entry sources are not marked up as citations. This supersedes MB.80's "no structured data beyond WebPage" line. (2) Every page's title takes the template `%s | Sorrel & Salt` from the root layout, and the public pages carry `og:title`, `og:description`, `og:url`, `og:site_name`, `og:type` `website` and a `summary` Twitter card, with no image (M11.16's). (3) The home page `/` becomes crawlable on production so Google can read a site name from it: robots allows it with `/$`, because a bare `/` would match every path (RFC 9309, 2.2.3 ends a pattern at `$`; Google's robots.txt page documents `/$` as matching only the root). The home page carries the site name alone as an absolute, untemplated title, a description, canonical `/`, and `WebSite` JSON-LD (`name`, `url`) shown to a signed-out visitor only, and the sitemap lists it. **Amended 2026-10-31, the owner's call:** the site footer is drawn on `/` for everyone, signed in or out; the page still shows no workspace data. (4) `robots.ts` is read per request (`dynamic = 'force-dynamic'`), so the runtime's `VERCEL_ENV` decides and no build setting matters. (5) Lighthouse is a dev dependency run by hand, since it only means anything against a production-env server (off production the noindex header correctly fails "is crawlable", as on a Vercel preview); the devcontainer has no Chrome and no DevTools port on its remote browser could be reached (a debugging-port launch option sent through the Playwright server was refused from the other container), so the owner runs it from a machine with Chrome.
 
 _Acceptance criteria:_
 
@@ -4392,6 +4402,7 @@ _Acceptance criteria:_
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The 403, 404 and 500 pages share one design, and a thrown one looks the same drawn by the browser as the unmatched 404 drawn by the server
 - Every skeleton matches the layout it stands in for
+- In the dark theme, the two-factor set-up QR code (drawn light-on-dark) scans in common authenticator apps (for example Google Authenticator, Microsoft Authenticator, 1Password)
 - Every finding of the whole-site read is fixed or minted
 
 **MB.125 — Categories on the ingredient writes** · 2h
@@ -5145,7 +5156,9 @@ _Acceptance criteria:_
 - The five build tasks are minted with estimates, placed after this one, and each names its prerequisite
 - Nothing is built in this task
 
-**MB.176 — Bug reports** · 1h
+**MB.176 — ~~Bug reports~~** · **RETIRED 2026-10-31, not done**
+
+> **Folded into M15.1, not done on its own.** The owner's call (2026-10-31): one table and one form serve bug reports and support requests. What survives is recorded in [`design-decisions/m15.1-support-form.md`](../design-decisions/m15.1-support-form.md), "MB.176 folded in". The ID is kept, and its issue is closed as not planned.
 
 _Story:_ As a signed-in user, I want to report a bug from the page I hit it on and follow what happens to it, so that a problem reaches someone who can fix it and I can see when it has been.
 
@@ -5599,7 +5612,7 @@ _Acceptance criteria:_
 - The Playwright admin spec covers approving an unverified user through the warning, with `@axe-core/playwright` clean, run against the e2e container
 - `components/user-list.md` describes the warning
 
-**MB.276 — An Admin's Compendium Edit Saves Whatever the Autosave Timing** · 3h
+**MB.276 — An Admin's Compendium Edit Saves Whatever the Autosave Timing** · 4h
 
 _Story:_ As a site admin editing a compendium entry, I want the Save Ingredient button to reflect what is unsaved whatever the autosave timing, so that the edit flow behaves the same on a slow machine as on a fast one and story 18 passes first time.
 
@@ -5615,9 +5628,274 @@ Found on 2026-10-30 on the PR gate's stories job: flaky (failed, then passed on 
 
 Actual: Save Ingredient stays disabled for 60 s and the story times out; on a fast run it passes, so the story is flaky. Expected: Save Ingredient is enabled while the form holds unsaved changes, and the story passes first time on every runner.
 
+_Chosen (story 18 and story 30):_ the form keeps its behaviour: once an autosave has filed the edits there is nothing left to save, so Save Ingredient is disabled, and that is correct. The stories change instead: each holds the form's own save request with `page.route` (`holdSaves` in `tests/e2e/stories/ingredient-dialogs.ts`) until after the click on Save, so the autosave cannot land first on any runner. The story changes landed on `staging` through #1383, as `52cd4902c` (story 30's accessibility scan), `be54fd8d9` (story 18's) and `0e7017f57` (the hold). A longer wait would only move the race, and changing the form would make Save enabled over nothing.
+
+_Also in scope:_
+
+- The dialog heading and address after a save the form makes by itself. The heading came from the page's data, which only Save and the create updated, so an autosave that renamed an entry left the old name in the heading. The form now calls a new `onAutosaved(row)` after an autosave that updates an existing ingredient. The admin compendium dialog replaces its address with the saved slug and fetches the page again; the coven entry dialog only fetches again.
+- The Playwright report and trace upload on a test that failed and then passed on retry. The upload ran only when the run failed, so a flaky pass left no trace to read. The summarisers now write a `flaky` output and the upload step runs on it.
+
 _Acceptance criteria:_
 
-- A regression test that fails before the fix: a test under `tests/components/IngredientForm/` (or the story itself under a forced autosave pause) that shows Save Ingredient disabled with the user's edits already autosaved, and the chosen behaviour afterwards
+- The form's behaviour is unchanged: Save Ingredient is disabled once a save the form made by itself has filed every edit. The fault was in stories 30 and 18, and their proof is those stories holding back the save request until after the click on Save. No component test is added for unchanged behaviour
 - Story 18 passes first time on CI's runner in two consecutive PR-gate runs, with no retry
 - The chosen behaviour is stated in `claude-docs/components/ingredient-form.md` ("Autosave") and, if the form changes, in that doc's form save rules
 - No other story's timing is changed to make it pass
+- After an autosave renames an existing ingredient, the dialog heading shows the saved name and the admin compendium dialog's address names the saved slug, and what was typed after the autosave is kept: a component test under `tests/app/(shell)/admin/compendium/` that failed before the fix
+- A run where a test failed and then passed on retry uploads the Playwright report and traces, and a clean run still does not
+
+**MB.277 — The Unused Code Check Finds Nothing Left to Clear** · 4h
+
+_Story:_ As a developer, I want `npm run lint:unused` (knip, the tool that finds unused code) to pass on a clean checkout, so that the non-blocking `checks / unused` comment on a pull request only ever reports what that pull request introduced.
+
+Knip's first run on CI reported its config could not load `drizzle.config.ts` and `playwright.config.ts` (both throw when `DATABASE_URL` is unset, and the `unused` job sets none), which also made four files look unused. It also reported an unused development dependency, one unlisted dependency, three environment names in `.github/workflows/deploy.yml` read as imports, unused exports and unused exported types, mostly re-exports from the module barrels and `src/db/repository/index.ts`.
+
+Found on 2026-10-30 on the `checks / unused` job of PR #1365, which exited 2; it is on `staging` too. A wrong result, every time, under Admin & Compendium (tooling). Steps to reproduce:
+
+1. Check out `staging` with no `DATABASE_URL` set, as the CI job has none
+2. Run `npm run lint:unused`
+
+Actual: exit code 2 with config-load errors and findings. Expected: exit code 0 with no findings.
+
+_Acceptance criteria:_
+
+- `npm run lint:unused` exits 0 on a checkout with no `DATABASE_URL` set, and on the same checkout with one
+- Each genuinely unused file, export, type and dependency is removed, after a search for dynamic and string references; each false positive is recorded in `knip.json` with a narrow entry and a reason, and no blanket ignore is added
+- The tests for what changed pass, and `npm run typecheck` and `npm run lint` are clean
+- `claude-docs/commands.md` names the false positives `knip.json` skips and drops the sentence saying the repo still has findings
+
+**MB.278 — The Gitflow Check Reads Pull Request Values Safely** · 1h
+
+_Story:_ As a maintainer, I want the Gitflow check to receive a pull request's branch names and author as environment variables, so that the text of a branch name can never be run as part of the check's shell script.
+
+`.github/workflows/gitflow.yml` writes `github.event.pull_request.head.ref`, `.base.ref` and `.user.login` straight into the text of a `run:` script, so the shell sees whatever those values contain. `.github/workflows/close-task-on-merge.yml` already passes its values through the step's `env:` and reads them as quoted shell variables; this task does the same here and sweeps `.github/workflows/` for any other `${{ github.event.* }}` written inside a `run:` script.
+
+Found on 2026-10-30 in a security review of the repository. A wrong design, always, under Admin & Compendium (tooling). Steps to reproduce: not applicable; this is a code-reading finding.
+
+Actual: the check's script is built from pull request text. Expected: the script is fixed text, and the values arrive as data.
+
+_Acceptance criteria:_
+
+- A regression test under `tests/guards/` that fails before the fix: it reads every file in `.github/workflows/` and fails when a `run:` script contains `${{ github.event.`
+- `gitflow.yml` passes the three values through the step's `env:` and reads them as quoted shell variables
+- Any other `run:` script found by the sweep gets the same change, and the pull request body lists each one
+- The Gitflow check still passes a valid pull request and still refuses an invalid one, with the same messages
+
+**MB.279 — Pages Carry Security Headers** · 3h
+
+_Story:_ As a visitor, I want the site to tell my browser which scripts may run, who may frame it and that it must be reached over HTTPS, so that the browser blocks a whole class of mistakes before they reach me.
+
+The site sends none of these headers outside the workshop, which keeps its own. This task adds a Content Security Policy (a list of the places a page may load scripts, styles and images from), `frame-ancestors` (which refuses framing by another site), HTTP Strict Transport Security (HSTS: tells the browser to use HTTPS only), `X-Content-Type-Options` and `Referrer-Policy`. Whether Vercel already sends HSTS for the production domain is unconfirmed; the task checks the live response first and sets the header only where it is missing.
+
+Found on 2026-10-30 in a security review of the repository. A wrong result, always, under Public Facing. Steps to reproduce: not applicable; this is a finding from reading the configuration.
+
+Actual: pages carry none of these headers. Expected: every page outside the workshop carries them, and nothing the site needs is blocked by them.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: the header configuration in `next.config` (or the proxy) returns each of the five headers for an application path, and none of them for the workshop
+- The policy is checked in a browser: a Playwright spec loads the home page, `/compendium` and a signed-in page, and records no policy violation in the console
+- The policy names its sources explicitly, with no blanket `*` and no `unsafe-eval`; each `unsafe-inline` that remains is explained in a comment beside it
+- The task states whether the production response already carried HSTS, and the header is added only if it did not
+- `claude-docs/` records the policy and how to relax it for a new third-party source
+
+**MB.280 — Invitation Mail Is Limited per Sender** · 3h
+
+_Story:_ As the site's operator, I want each person's invitation mail limited over time, so that a coven owner cannot send unlimited mail through the site's mail provider.
+
+Coven invitations and their resends each send one mail from the site's address through the mail provider (MB.65). Nothing limits how many one sender may cause, so a single account can use up the provider's allowance or harm the sender reputation of the site's domain. The limit counts per sending account, covers both new invitations and resends, and answers with an explaining error that says when the sender may try again.
+
+Found on 2026-10-30 in a security review of the repository. A wrong result, always, under Coven & Grimoire, as a coven owner. Steps to reproduce: not applicable; this is a finding from reading the invitation service.
+
+Actual: there is no limit. Expected: a sender who passes the limit is refused until the window passes, and other senders are unaffected.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: a sender who has sent the limit's number of invitations in the window is refused the next, whether a new invitation or a resend, and the refusal names when to try again
+- The same test shows the guard is what refuses: a sender under the limit succeeds, and a second sender is not affected by the first sender's count
+- The count is kept in the database, so it holds across server instances, and the limit and window are named constants in one place
+- A refused attempt sends no mail and creates no invitation row
+- `claude-docs/` states the limit and its window beside the invitation rules
+
+**MB.281 — An Unverified Account Reaches No Workspace Data Through the API** · 3h
+
+_Story:_ As a coven owner, I want an account whose email address is unverified to be refused every workspace operation on the API as well as on the pages, so that the rule that such an account reaches only `/account/email` and the public pages cannot be sidestepped by calling `/api/graphql` directly.
+
+`CLAUDE.md` ("An address changes only at verification") says an unverified account reaches `/account/email` and the public pages and nothing else. `requireSession()` enforces that for pages, but the GraphQL endpoint builds its session without that check, so the rule holds on one of the two access paths only.
+
+Found on 2026-10-30 in a security review of the repository. A wrong result, always, under Sign-in & Account. Steps to reproduce: not applicable; this is a finding from reading the two session paths.
+
+Actual: the pages refuse an unverified account and the API does not. Expected: both refuse it, with the same explaining error, and the operations an unverified account legitimately needs (changing its email address, reading its own account) still work (`me`, `setEmail` and sign-out at least).
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: a session whose email is unverified is refused a workspace-scoped query and a workspace-scoped mutation by direct id, while the same user with a verified address succeeds on the same ids (the precondition that the access could have succeeded)
+- The refusal is made in one place that every workspace-scoped operation passes through, not copied per resolver
+- An unverified session can still call the operations behind `/account/email`
+- A Playwright spec shows an unverified account signed in on the email page and unable to read a coven it belongs to
+- `claude-docs/auth/admin-bootstrap.md` ("The email page") states that the rule covers the API
+
+**MB.282 — The GraphQL Endpoint Refuses Cross-Site Requests** · 3h
+
+_Story:_ As a signed-in user, I want `/api/graphql` to accept a request only when it plainly came from this site's own pages, so that another website cannot cause my browser to change my data using my session.
+
+The session cookie is `SameSite=Lax`, which already stops most cross-site sends, but it is one line of defence and depends on the browser. This task adds a second one at the endpoint, chosen to fit GraphQL Yoga (the GraphQL server library): refuse mutations that do not arrive as `application/json`, and additionally require either a custom request header the site's own client sends or a matching `Origin` header. The task states which it chose and why, and checks that Altair (the in-browser query tool at `/api/graphql` in development) and the generated client still work (`me`, `setEmail` and sign-out at least).
+
+Found on 2026-10-30 in a security review of the repository. A wrong result, always, under Sign-in & Account. Steps to reproduce: not applicable; this is a finding from reading the endpoint's configuration.
+
+Actual: the endpoint relies on the cookie's `SameSite` attribute alone. Expected: a request that does not meet the second check is refused before any resolver runs.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: a mutation sent with a form content type, and one sent without the required header or `Origin`, are each refused with no resolver run and no row written, while the same mutation sent as the site's client sends it succeeds
+- Queries made by server components and by the generated client are unaffected, shown by the existing tests passing
+- Altair still works in development
+- `claude-docs/` records the choice, the alternatives and the reason in `claude-docs/design-decisions/`
+
+**MB.283 — An Email Change Needs a Recent Sign-in and Tells the Old Address** · 4h
+
+_Story:_ As an account holder, I want changing my email address to need a recent sign-in, and the old address to be told when a change is requested, so that a session left open on a borrowed device cannot quietly move my account to another address.
+
+`setEmail` mails the new address a verification link and swaps the address when the link is followed (`claude-docs/auth/admin-bootstrap.md`). It does not ask whether the session is recent, and it does not tell the current address. This task refuses the change when the session was created longer ago than a stated window (Better Auth's `freshAge` setting is the likely tool) with an explaining error that sends the person to sign in again, and mails the current address when a change is requested and again when it completes.
+
+Found on 2026-10-30 in a security review of the repository. A wrong result, always, under Sign-in & Account. Steps to reproduce: not applicable; this is a finding from reading `setEmail`.
+
+Actual: an old session can request a change and the old address hears nothing. Expected: an old session is refused, and the old address is mailed on request and on completion.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: `setEmail` on a session older than the window is refused with an explaining error, and the same call on a fresh session succeeds (the precondition that the change could have gone through)
+- A request mails the current address once, naming the time and the new address's domain only, and the mail contains no link that completes or cancels the change by itself
+- Completion mails the old address once
+- The window is a named constant, stated in `claude-docs/auth/admin-bootstrap.md`, and the account page's email section tells the person to sign in again when the error is returned
+- The mail follows the mail design rules in `claude-docs/`
+
+**MB.284 — Changing an Email Address Answers the Same Whether or Not It Is Taken** · 2h
+
+_Story:_ As an account holder, I want `setEmail` to give the same answer for any new address, so that the form cannot be used to learn which addresses already belong to an account.
+
+Today `setEmail` answers differently when the requested address already belongs to a verified account. This task makes the visible answer identical in both cases ("If that address can be used, a link is on its way"), and does the real difference silently: a free address gets the verification mail, and an address that is held by a verified account gets nothing, or a short mail to that address's owner saying a change to it was attempted (the task chooses and states which). The time taken to answer should not differ noticeably either.
+
+Found on 2026-10-30 in a security review of the repository. A wrong result, always, under Sign-in & Account. Steps to reproduce: not applicable; this is a finding from reading `setEmail`.
+
+Actual: the answers differ. Expected: they match.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: `setEmail` with an address that is held by a verified account and with a free address return the same result shape and message
+- The same test shows the difference is real: the free address received the verification mail and the held one did not
+- No mail is sent to the held address's owner containing a link
+- `claude-docs/auth/admin-bootstrap.md` states that the two cases answer alike
+
+**MB.285 — Compendium Entries Stay Pending After the Citation Wording Changed** · 4h
+
+_Story:_ As a curator, I want each Wikipedia source in the compendium stored once, under the key the seed builds today, so that the deploy's seed run reports only real changes and no entry cites the same source twice.
+
+The compendium seed finds an existing source by its `seed_key`: the source's citation rendered as text by `citationText` (`src/lib/citation.ts`). Commit 2aa282b51 changed a Wikipedia citation's wording from `Wikipedia, s.v. "X."` to `Wikipedia, under "X."`, and no migration rewrote the stored keys. Since then every seed run fails to find a source stored under the old wording and treats it as missing. On staging, 25 approved entry files that nobody marked for update (`seedUpdate`) show `differs: references` and are reported as pending on every run. Wherever an entry was marked for update, and wherever the vocabulary sources seed (`src/db/seed/sources.ts`) ran, a second "under" copy of the source was inserted beside the old one. That leaves old `s.v.` rows with no links, sources whose links are split across both rows (Asafoetida, Beryl), and deities whose sources (Agwu Nsi, for example) have two linked rows, so each such deity cites the same source twice. The commit is on `main`, so production very likely holds the same rows.
+
+The fix is a forward data migration over compendium `references` rows (those with no workspace) whose `seed_key` holds the old wording. Where no live row already has the new key, it rewrites the key in place. Where one does (a twin), it moves the old row's live links to the twin, soft-deletes (marks deleted rather than removes) any link that would then be a duplicate, and soft-deletes the old row.
+
+Found on 2026-10-30, in the staging Deploy workflow's seed output and with read-only queries on staging; wrong result, every run. Steps to reproduce:
+
+1. Push any change to `staging`.
+2. The Deploy workflow's `migrate` job runs the reference seed.
+3. Read the seed's output.
+
+Actual: 25 entries are reported as pending with `differs: references` on every run.
+Expected: an unchanged entry file is skipped.
+
+_Acceptance criteria:_
+
+- Regression tests in `tests/db/`, written first and failing before the fix, cover the three cases the migration handles for a compendium source whose `seed_key` has the old wording: with no twin, the key is rewritten in place and the row keeps its id and links; with a twin and no links on the old row, the old row is soft-deleted; with links on both rows, the old row's links move to the twin, a link that would duplicate one already there is soft-deleted, and the old row is soft-deleted.
+- After the migration, the seed decides `skip`, not `pending`, for an approved, unmarked entry whose only difference was the old wording.
+- No live compendium source has `, s.v. ` in its `seed_key`, and the partial unique index on `seed_key` holds.
+- Links from `needs-review` entries follow the source they point to.
+- Workspace references are not touched.
+- Docs: `claude-docs/db/references.md` says that a change to the citation wording needs a migration that rewrites the stored keys.
+
+**MB.286 — Seven Cosmetic Faults in Loading, Spell Preview and Quick Look** · 7h
+
+_Story:_ As a coven member, I want each screen to show only what belongs to it, in full, so that a loading page, the spell preview pane and Quick Look never show stale or clipped things.
+
+Seven cosmetic faults, reported together:
+
+- A. Clicking an ingredient card leaves the card's green pending dot (`LinkHint`, `src/components/LinkHint/`) pulsing over the ingredients loading skeleton.
+- B. In the spell preview pane on a phone, the Screen Awake eye's tip opens under the camera cutout.
+- C. The Quick Look eye in the spell page's In the Cupboard panel is too small to read or press easily.
+- D. After a switch from the demo coven to another coven, the demo warning stays on screen while the other coven loads.
+- E. The loading skeleton for the spells page (the Grimoire) does not match the page it stands in for.
+- F. The loading skeleton for a single spell's page, and the Grimoire skeleton's filter row, do not match the pages they stand in for.
+- G. On the list pages (the Grimoire and the Ingredients list at least), the loading skeleton's filter row sits lower than the loaded page's.
+
+Found on 2026-10-31 on staging; cosmetic, every time. Steps to reproduce:
+
+A. Phantom dot
+
+1. Sign in as a coven member.
+2. Open the coven's Ingredients list.
+3. Click an ingredient card.
+
+Actual: the card's green pending dot shows, pulsing, over the loading skeleton.
+Expected: the dot goes with the card; the skeleton shows alone.
+
+B. Eye tip under the cutout
+
+1. On a phone with a camera cutout, open a spell and press Preview.
+2. Touch the Screen Awake eye (assumed: the pane is full screen).
+
+Actual: the tip opens under the camera cutout.
+Expected: the tip shows in full, clear of the cutout.
+
+C. Quick Look eye too small
+
+1. Open a spell's page in a coven that holds stock.
+2. Look at the Quick Look eye on a line of the In the Cupboard panel.
+
+Actual: the eye is drawn smaller than the Quick Look eye elsewhere.
+Expected: the eye is the Quick Look eye's usual size, and the panel's lines stay aligned.
+
+D. Demo warning while switching
+
+1. Sign in with seats in the demo coven and another coven.
+2. Open the demo coven.
+3. Switch to the other coven with the coven switcher.
+
+Actual: the demo warning stays on screen while the other coven loads.
+Expected: the warning goes as soon as the switch starts.
+
+E. Grimoire skeleton
+
+1. Open a coven's Grimoire from another section of the coven.
+2. Watch the skeleton while the page loads, and again on switching from Spells to Drafts.
+
+Actual: the skeleton draws the Ingredients cards placeholder: each card is about 204px tall with an ingredient card's bars, where a loaded spell card is about 157px.
+Expected: the skeleton has the loaded page's shape.
+
+F. Spell page skeleton and the Compact switch
+
+1. Open a spell from the Grimoire list.
+2. Watch the skeleton while the spell's page loads.
+3. Open the Grimoire from another section and look at the skeleton's filter row.
+
+Actual: the spell page shows the generic page skeleton, three plain blocks (assumed: found from the code, not yet seen in a browser). The Grimoire skeleton's filter row has no Compact switch.
+Expected: the spell page skeleton has the loaded page's shape: the back link, the title row, the Workings menu and both columns. The filter row has the Compact switch's place.
+
+G. Filter row lower in the skeleton
+
+1. Open a coven's Grimoire, or its Ingredients list, from another section of the coven.
+2. Compare the skeleton's filter row with the loaded page's.
+
+Actual: the skeleton's filter row sits lower than the loaded row: about 24px lower at 1280px wide and about 80px lower at 375px on the Grimoire, measured in Playwright.
+Expected: the skeleton's filter row sits where the loaded row does.
+
+_Acceptance criteria:_
+
+- Each of the seven has a regression test that fails before its fix and passes after.
+- A: while a page is held under the loading skeleton, the pending dot is not visible.
+- B: on a phone viewport, the Screen Awake tip's box lies inside the visible area, clear of the safe-area insets.
+- C: the Quick Look eye in the In the Cupboard panel renders at the Quick Look eye's usual size, set from the tokens, at desktop and phone widths.
+- D: once a switch away from the demo coven starts, the demo warning is not shown; a switch into the demo coven shows no stale state from the coven left behind.
+- E: the skeleton shown while the Grimoire loads has the loaded page's shape: its placeholder cards match the real cards' size and the grid's columns, at desktop and phone widths.
+- F: the skeleton shown while a spell's page loads has the loaded page's regions in their places, and the Grimoire skeleton's filter row holds a Compact switch placeholder, at desktop and phone widths.
+- G: on every list page whose skeleton draws a filter row, the row sits where the loaded page's row does, at desktop and phone widths.
+- Docs: `claude-docs/components/link-hint.md`, `claude-docs/components/spell-preview.md` and the Quick Look and demo coven docs describe the behaviour after the fix.

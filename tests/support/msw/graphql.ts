@@ -6,7 +6,7 @@ import {
 } from 'msw/graphql';
 import { HttpResponse } from 'msw/http';
 import { maskError } from '@/graphql/errors';
-import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
+import { Forbidden, NotFound, RateLimited, StaleWrite, ValidationError } from '@/lib/errors';
 import { server } from './server';
 import type { MockedError } from './types';
 
@@ -36,7 +36,13 @@ export function mockGraphQLMutation<
   );
 }
 
-function thrownFor({ code, fieldErrors = [], currentRevision = 1, message }: MockedError): Error {
+function thrownFor({
+  code,
+  fieldErrors = [],
+  currentRevision = 1,
+  retryAfterSeconds = 60,
+  message,
+}: MockedError): Error {
   switch (code) {
     case 'VALIDATION':
       return new ValidationError(fieldErrors, message);
@@ -46,6 +52,8 @@ function thrownFor({ code, fieldErrors = [], currentRevision = 1, message }: Moc
       return new NotFound(message);
     case 'STALE_WRITE':
       return new StaleWrite(currentRevision, message);
+    case 'RATE_LIMITED':
+      return new RateLimited(retryAfterSeconds, message);
   }
 }
 

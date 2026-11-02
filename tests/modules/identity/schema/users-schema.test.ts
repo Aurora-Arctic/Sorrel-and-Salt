@@ -24,9 +24,24 @@ describe('users schema', () => {
         'role',
         'can_create_workspace',
         'verification_sent_at',
+        'two_factor_enabled',
+        'terms_version',
+        'terms_accepted_at',
         ...AUDIT_COLUMNS,
       ].sort(),
     );
+  });
+
+  // Null until the account agrees: the terms gate reads null as 'not agreed to the terms in force'.
+  it('leaves the agreement columns empty until an account agrees', () => {
+    expect(byName.terms_version.notNull).toBe(false);
+    expect(byName.terms_accepted_at.notNull).toBe(false);
+  });
+
+  // The `twoFactor` plugin's flag, off until an authenticator is confirmed.
+  it('starts every account with two-factor off', () => {
+    expect(byName.two_factor_enabled.notNull).toBe(true);
+    expect(byName.two_factor_enabled.default).toBe(false);
   });
 });
 

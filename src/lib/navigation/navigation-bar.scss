@@ -14,7 +14,7 @@
 // for `/` and only a little high elsewhere.
 .navigation-bar {
   position: fixed;
-  top: $top-inset;
+  top: 0;
   // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
   right: var(--scrollbar-width, 0);
   left: 0;
@@ -41,7 +41,7 @@
 
   // A page with a site bar (AppShell's or PublicFrame's): the strip sits on its bottom edge.
   :root:has(.app-shell__bar, .public-frame__bar) & {
-    top: calc(#{$top-inset} + #{$shell-bar-height} - 3px);
+    top: calc(#{$shell-bar-height} - 3px);
   }
 
   // Fading out: `hidden` and `data-leaving` together. `hidden` alone would

@@ -17,6 +17,7 @@ import InfoTip from '../InfoTip';
 import FormalName from './formal-name';
 import LinkHint, { LinkIconHint } from '../LinkHint';
 import SafetyNote, { ToxicMark } from '../SafetyNote';
+import DisclaimerNotice from '../DisclaimerNotice';
 import { slugify } from '../../lib/slugify';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { SubstituteDetail, VariantDetail } from '@/modules/ingredients';
@@ -39,6 +40,7 @@ import OwnEntryActions from './own-actions';
 import StockSection from './stock-section';
 import { reviewedAtOf } from './review-date';
 import { cardName } from '../IngredientCard/card-name';
+import SourcingScore from '../SourcingScore';
 import type { IngredientEntryProps } from './types';
 import {
   blockOf,
@@ -124,6 +126,7 @@ function FormSection({
           <p className="ingredient-entry__description">{variant.description}</p>
         )}
         <SafetyNote safetyNotes={variant.safetyNotes} level={4} />
+        <DisclaimerNotice />
         {addsNothing && (
           <p className="ingredient-entry__empty">
             {variant.toxic
@@ -233,6 +236,7 @@ const IngredientEntry = ({
   heldInCovens = false,
   stock,
   reviewControl,
+  hiddenFromPublic = false,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use; `shown` lays the
@@ -351,6 +355,11 @@ const IngredientEntry = ({
             />
           </div>
         )}
+        {hiddenFromPublic && (
+          <Notice kind="warn" quiet block>
+            Hidden in the Compendium. Only curators and admins can see this page.
+          </Notice>
+        )}
         {movedAway && (
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
@@ -426,6 +435,7 @@ const IngredientEntry = ({
               <p className="ingredient-entry__empty">No description recorded.</p>
             )}
             <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
+            <DisclaimerNotice />
             <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
           </div>
         </section>
@@ -484,7 +494,10 @@ const IngredientEntry = ({
         )}
 
         {/* Last, so v2's notes section, appended beneath it, moves nothing. */}
-        <ReferencesSection model={notes} />
+        <ReferencesSection model={notes}>
+          {/* The curator's sourcing score ends the section; the page reads it for a curator or admin alone. */}
+          {edit?.sourcing && <SourcingScore sourcing={edit.sourcing} headingLevel={3} />}
+        </ReferencesSection>
       </div>
     </article>
   );

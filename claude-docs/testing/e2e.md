@@ -240,7 +240,9 @@ goes", below).
   `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
   the newest message to that address and returns its sender, recipients,
   subject, text and HTML, polling up to ten seconds because the app sends in
-  the background of the request that caused it. The address goes in quoted:
+  the background of the request that caused it. An optional third argument
+  narrows the search to one subject, for a flow that mails one address twice
+  (story 71: the verification link, then the reset link). The address goes in quoted:
   unquoted, Mailpit's query language splits it at a `+`. A spec that follows
   a mailed link gives its recipient a fresh address, so a retry or a parallel
   worker cannot read another's message;
@@ -374,6 +376,75 @@ and WebKit and their system libraries, and pulling it was the largest fixed
 cost of every e2e job. The browsers sit in `/ms-playwright`
 (`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
 container job sets `HOME` to a directory the image never saw.
+
+#### A password sign-in in the browser
+
+A password sign-up or sign-in is a real browser post to Better Auth, unlike
+the provider flows above, so two things about the e2e servers make it work.
+
+- **The breached-password check never reaches the real service.** Every e2e
+  server starts with `NODE_OPTIONS=--import tests/e2e/pwned-range-preload.mjs`
+  (an absolute path, set in `tests/e2e/servers.ts`). The preload wraps the
+  server's `fetch` for `https://api.pwnedpasswords.com/range/` alone and answers
+  from `tests/e2e/pwned-range.mjs`: `BREACHED_PASSWORD` is on its list, and every
+  other password is not. Every other request passes through. The check names
+  the service's URL itself (`src/lib/breached-password.ts`), so the fetch is
+  wrapped rather than an address switched by an environment variable in
+  production code.
+- **The browser's origin is trusted.** A production build trusts only the
+  deployed hosts, so Better Auth refuses a post from `localhost:<port>` or
+  `devcontainer:<port>` as "Invalid origin". Under the same
+  `E2E_PLAIN_SESSION_COOKIE` flag as the cookie name above,
+  `e2eTrustedOrigins()` (`src/lib/e2e-session-cookie.ts`) adds those two
+  origins for the server's own `PORT` as `trustedOrigins`. It gives none
+  wherever `VERCEL_ENV` is set, or without the flag; `tests/lib/e2e-session-cookie.test.ts`
+  pins both.
+- **A mailed reset link redirects to the production host.** Better Auth
+  builds the redirect from its `baseURL`, which falls back to the production
+  host for an origin it does not know, such as `devcontainer:<port>`. Story
+  71 therefore follows the link with `maxRedirects: 0`, reads the
+  `Location` header, and opens its path and query on the slot's own server.
+
+The flow, story 70, is `tests/e2e/stories/16-password.spec.ts`
+([`auth/passwords.md`](../auth/passwords.md)).
+
+#### Passkeys
+
+A browser offers WebAuthn only in a secure context, and the one plain-http
+host that counts as one is `localhost`. Every other spec reaches its slot
+server at `devcontainer:<port>` when the browser is remote, where
+`PublicKeyCredential` is undefined. So the passkey stories (`73-passkeys.spec.ts`
+and `74-passkeys-on-the-account-page.spec.ts`, sharing `passkeys-setup.ts`)
+reach their slot server at `localhost` in two ways:
+
+- **The browser.** Each spec connects to the browser server with
+  `exposeNetwork: '<loopback>'`, which routes the remote browser's
+  `localhost` back to the runner, and overrides the `baseURL` fixture with
+  `serverUrl(slotPort(slot))`.
+- **The server.** The passkey plugin takes its relying party (rpID) and its
+  expected origin from the base URL, and a production build resolves its base
+  URL across the deployed hosts, falling back to `https://sorrelandsalt.com`.
+  So `baseURL()` in `src/lib/auth.ts` gives an e2e server the fixed
+  `http://localhost:<PORT>` that `next dev` uses, under
+  `plainSessionCookie()`: the same `E2E_PLAIN_SESSION_COOKIE` switch, which
+  does nothing wherever `VERCEL_ENV` is set, so no deploy takes it. A
+  `next start` left running from before this change keeps the old base URL;
+  stop it first.
+
+The passkey itself is held by Chromium's virtual authenticator, added
+through a CDP session (`WebAuthn.enable`, then
+`WebAuthn.addVirtualAuthenticator` with a resident-key, user-verifying
+internal authenticator that answers every prompt). The spec writes a
+`passkeys` row by SQL and gives the authenticator the matching private key
+with `WebAuthn.addCredential`, rpID `localhost`, so the sign-in is the
+browser's own ceremony against the server's own verification. CDP is
+Chromium's alone, so these stories do not run in the audit's WebKit and
+Firefox projects.
+
+Story 74 signs in that way, then clears the authenticator's credentials
+(`WebAuthn.clearCredentials`) before Add a Passkey: a registration lists the
+account's existing keys as excluded, and an authenticator holding one of them
+refuses to make another.
 
 #### The audit runs the suite in WebKit, Firefox and as a phone, on demand
 

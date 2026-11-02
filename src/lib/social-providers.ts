@@ -6,7 +6,8 @@ import type { ProviderId, SocialProvider } from './types';
 export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
   { id: 'discord', label: 'Discord' },
   { id: 'google', label: 'Google' },
-  { id: 'facebook', label: 'Facebook' },
+  // Hidden from the sign-in screens for now; claude-docs/auth/social-providers.md says why and how it returns.
+  { id: 'facebook', label: 'Facebook', hidden: true },
   { id: 'microsoft', label: 'Microsoft' },
 ];
 

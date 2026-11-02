@@ -19,8 +19,11 @@ $preview-foot: 2.5rem;
   max-width: none;
   max-height: none;
   margin: 0;
-  padding: $preview-edge;
+  // Kept clear of a camera cutout or rounded corner where the pane fills the screen; `env()` is 0 where the window has none.
   padding-bottom: $preview-foot;
+  padding-top: calc(#{$preview-edge} + env(safe-area-inset-top, 0px));
+  padding-inline: calc(#{$preview-edge} + env(safe-area-inset-left, 0px))
+    calc(#{$preview-edge} + env(safe-area-inset-right, 0px));
   border: 0;
   // The dialog paints nothing: the face layer is the page colour everywhere but the burn, where
   // the backdrop, the table under the page, shows through ("The background", below).
@@ -39,7 +42,9 @@ $preview-foot: 2.5rem;
 
   // The page's side gutter on a phone.
   @media (max-width: $shell-phone-width) {
-    padding: $preview-edge-phone;
+    padding-top: calc(#{$preview-edge-phone} + env(safe-area-inset-top, 0px));
+    padding-inline: calc(#{$preview-edge-phone} + env(safe-area-inset-left, 0px))
+      calc(#{$preview-edge-phone} + env(safe-area-inset-right, 0px));
     padding-bottom: $preview-foot;
   }
 }
@@ -63,8 +68,9 @@ $preview-foot: 2.5rem;
   margin-inline: auto;
 }
 
-// The eye, held on, wears the accent and blinks now and then: still for most of the cycle, the lid
-// closing and opening once; still under reduced motion.
+// The eye opens as the lock is held and shuts as it is let go (lidded-eye.scss). Held, it wears the
+// accent and blinks now and then: still for most of the cycle, closing and opening once; still under
+// reduced motion.
 .spell-preview__awake {
   svg {
     transform-origin: center;

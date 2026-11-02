@@ -33,6 +33,7 @@ const NO_FILTER: CompendiumListFilter = {
   forms: [],
   withoutReferences: false,
   withoutForms: false,
+  hidden: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -41,6 +42,8 @@ const NO_FILTER: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   reviewed: '',
+  sort: '',
+  order: '',
   covens: [],
   covensNot: false,
 };

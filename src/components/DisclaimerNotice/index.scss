@@ -1,0 +1,9 @@
+@use '../../scss/variables' as *;
+
+// A small muted line, read after the notes it qualifies; the link keeps the body's link colour.
+.disclaimer-notice {
+  margin: space(2) 0 0;
+  color: $text-muted;
+  font-size: type-size('small');
+  line-height: 1.5;
+}

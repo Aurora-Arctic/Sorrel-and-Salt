@@ -132,8 +132,7 @@ $page-gutter: space(4);
 // (claude-docs/components/ingredient-search.md, "Scroll margin").
 html:has(:is(.app-shell, .public-frame) .ingredient-search) {
   scroll-padding-top: calc(
-    #{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{space(2)} +
-      #{space(4)}
+    #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{space(2)} + #{space(4)}
   );
 }
 
@@ -142,8 +141,8 @@ html:has(:is(.app-shell, .public-frame) .ingredient-search) {
 @media (max-width: calc(#{$narrow-column} + 2 * #{space(4)})) {
   html:has(:is(.app-shell, .public-frame) .ingredient-search) {
     scroll-padding-top: calc(
-      #{$top-inset} + #{$shell-bar-height} + 2 * #{$control-height} + #{space(3)} + #{$stuck-pad} +
-        #{space(2)} + #{space(4)}
+      #{$shell-bar-height} + 2 * #{$control-height} + #{space(3)} + #{$stuck-pad} + #{space(2)} +
+        #{space(4)}
     );
   }
 }

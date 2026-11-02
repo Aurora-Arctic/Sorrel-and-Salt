@@ -48,6 +48,21 @@ describe('CompendiumList', () => {
     expect(within(rows[2]).getByRole('link', { name: 'Fixture Salt' })).toBeInTheDocument();
   });
 
+  it('gives each row a switch set to whether it is shown', () => {
+    const [shown, hidden] = props().entries;
+    render(<CompendiumList {...props({ entries: [shown, { ...hidden, shown: false }] })} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    expect(
+      within(rows[1]).getByRole('switch', {
+        name: 'Shown in Compendium: Testwort, Fixtura testalis',
+      }),
+    ).toBeChecked();
+    expect(
+      within(rows[2]).getByRole('switch', { name: 'Shown in Compendium: Fixture Salt' }),
+    ).not.toBeChecked();
+  });
+
   // Categories column: the card's chips, the first few shown and the rest behind +N.
   it("shows each entry's categories as chips, the rest behind a +N button", () => {
     render(<CompendiumList {...props()} />);
@@ -55,7 +70,7 @@ describe('CompendiumList', () => {
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
     expect(heads.indexOf('Categories')).toBe(heads.indexOf('Form') + 1);
-    expect(heads.indexOf('Updated')).toBe(heads.indexOf('Categories') + 1);
+    expect(heads.indexOf('Sourcing Score')).toBe(heads.indexOf('Categories') + 1);
     const list = within(rows[1]).getByRole('list', { name: 'Categories' });
     expect(within(list).getByText('Testward')).toBeInTheDocument();
     expect(within(list).getByText('Testcraft')).toBeInTheDocument();
@@ -224,6 +239,97 @@ describe('CompendiumList', () => {
   it('bolds nothing when the filter is empty and the compendium itself is', () => {
     const { container } = render(<CompendiumList {...props({ entries: [] })} />);
     expect(container.querySelectorAll('strong')).toHaveLength(0);
+  });
+});
+
+describe('the sort', () => {
+  const heading = (name: string) =>
+    screen.getAllByRole('columnheader').find((th) => th.textContent?.startsWith(name))!;
+
+  it('sorts from the Name and Sourcing Score headings alone, by name A to Z while nothing else is asked', () => {
+    render(<CompendiumList {...props()} />);
+
+    const sortable = screen
+      .getAllByRole('columnheader')
+      .filter((th) => within(th).queryByRole('link'));
+    expect(sortable.map((th) => th.textContent)).toEqual([
+      expect.stringMatching(/^Name/),
+      expect.stringMatching(/^Sourcing Score/),
+    ]);
+    expect(heading('Name')).toHaveAttribute('aria-sort', 'ascending');
+    expect(heading('Sourcing Score')).not.toHaveAttribute('aria-sort');
+    // Sorted already, so Name leads to its reverse; the score to its first direction, lowest first.
+    expect(
+      within(heading('Name')).getByRole('link', { name: 'Name, Sorted A to Z' }),
+    ).toHaveAttribute('href', '/admin/compendium?sort=name&order=desc');
+    expect(
+      within(heading('Sourcing Score')).getByRole('link', { name: 'Sourcing Score' }),
+    ).toHaveAttribute('href', '/admin/compendium?sort=sourcing_score');
+  });
+
+  it("reverses the sourcing score from its heading once sorted by it, and shows each entry's score", () => {
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, sort: 'sourcing_score' } })} />);
+
+    expect(heading('Sourcing Score')).toHaveAttribute('aria-sort', 'ascending');
+    expect(heading('Name')).not.toHaveAttribute('aria-sort');
+    expect(
+      within(heading('Sourcing Score')).getByRole('link', {
+        name: 'Sourcing Score, Sorted Lowest First',
+      }),
+    ).toHaveAttribute('href', '/admin/compendium?sort=sourcing_score&order=desc');
+    expect(within(heading('Name')).getByRole('link', { name: 'Name' })).toHaveAttribute(
+      'href',
+      '/admin/compendium',
+    );
+    expect(
+      within(screen.getByRole('row', { name: /Testwort/ })).getByRole('cell', { name: '36' }),
+    ).toBeInTheDocument();
+  });
+
+  it('marks the reverse direction and leads back to the first', () => {
+    render(
+      <CompendiumList
+        {...props({ filter: { ...NO_FILTER, sort: 'sourcing_score', order: 'desc' } })}
+      />,
+    );
+
+    expect(heading('Sourcing Score')).toHaveAttribute('aria-sort', 'descending');
+    expect(
+      within(heading('Sourcing Score')).getByRole('link', {
+        name: 'Sourcing Score, Sorted Highest First',
+      }),
+    ).toHaveAttribute('href', '/admin/compendium?sort=sourcing_score');
+  });
+
+  it("marks no heading under a search's Best Match, and sorts the search by name from Name", () => {
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, query: 'wort' } })} />);
+
+    expect(heading('Name')).not.toHaveAttribute('aria-sort');
+    expect(heading('Sourcing Score')).not.toHaveAttribute('aria-sort');
+    expect(within(heading('Name')).getByRole('link', { name: 'Name' })).toHaveAttribute(
+      'href',
+      '/admin/compendium?query=wort&sort=name',
+    );
+  });
+
+  it('offers every column and direction in the Sort By select, Best Match first under a search, and navigates on a choice', () => {
+    router.push.mockReset();
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, query: 'wort' } })} />);
+
+    const select = screen.getByRole('combobox', { name: 'Sort By' });
+    expect(select).toHaveTextContent('Best Match');
+    fireEvent.click(select);
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'Best Match',
+      'Name, A to Z',
+      'Name, Z to A',
+      'Sourcing Score, Lowest First',
+      'Sourcing Score, Highest First',
+    ]);
+    fireEvent.click(screen.getByRole('option', { name: 'Sourcing Score, Highest First' }));
+    expect(router.push).toHaveBeenCalledWith(
+      '/admin/compendium?query=wort&sort=sourcing_score&order=desc',
+    );
   });
 });
 

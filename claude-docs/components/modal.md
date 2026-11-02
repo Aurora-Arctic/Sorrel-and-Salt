@@ -85,6 +85,7 @@ is the wrapper every admin page opens it through (below).
 - **The focus trap, Escape and the inert page are the platform's.**
   `showModal()` puts the dialog in the top layer and makes the rest of the
   document inert. Nothing in the component traps focus by hand.
+- **A dialog can take the focus on its title instead**: `ModalHeading.focusTitle` makes the title focusable (`tabindex="-1"`, no outline) and the open, and a route modal's contents arriving, focus it in place of the first field. The support request dialog uses it, so a screen reader hears the subject first.
 - **The focus goes to the first field as it opens**, not where the platform
   puts it. `showModal()` focuses the first thing in the dialog that takes the
   focus, which is the header's Close button, so every dialog opened on Close.
@@ -247,7 +248,9 @@ the tab, reloading, and on a page form a link (see the last point below).
   consulted once the modal is closing. A slot rather than a prop because the
   form sits inside the modal's render prop, out of its owner's reach. Outside
   a modal there is no slot: the guard covers the form's Cancel, and leaving
-  the page as below.
+  the page as below. The slot holds a set: several forms in one modal (the
+  support request's Issue Address and Time-Out forms) each put a guard, and
+  the close goes ahead only when every guard lets it.
 - **Saving and deleting never ask.** They close through `children(close)`,
   the modal's own close, which nothing guards, since a form just saved still
   reads as changed until it resets.
@@ -329,9 +332,18 @@ the tab, reloading, and on a page form a link (see the last point below).
     ask after a save, or ask again after Discard.
   - **A page form busy saving does not ask.** `CreateWorkspaceForm` passes
     `!empty && !busy`, so its own navigation to the new coven goes unheld.
-  - **Back, Forward and an address-bar edit are not covered.** Next 16 gives
-    no way to cancel a history move, and patching `history.pushState` is
-    fragile; autosave (M13.16, M13.17) protects the spell builder there.
+  - **Back and Forward are held where the browser has the Navigation API**
+    (`holdTraversals` in `leave-guard.tsx`, mounted by `NavigationProvider`;
+    Chrome and Edge 102, Firefox 147, Safari 26.2). While any guard has changes,
+    a `traverse` `navigate` event is cancelled and the guards ask as a link
+    does; on yes it calls `navigation.traverseTo` with an `info` marker, so the
+    release is not asked about again. Per the HTML standard the event is
+    cancelable only in a top-level document, for a same-document move, and, for
+    the browser's own Back and Forward buttons, only after the person has used
+    the page (history-action activation, spent by each cancel); the hook reads
+    `event.cancelable` and lets anything else through. Other browsers keep the
+    old behaviour. An address-bar edit is a document load, so only
+    `beforeunload` asks. Autosave (M13.16, M13.17) protects the spell builder.
   - **`onHide`**, an option of `useLeaveGuard`, is called when the tab
     becomes hidden (`visibilitychange` to `hidden`), the one moment phones
     report reliably, where `beforeunload` often never fires. Nothing passes it
@@ -726,6 +738,7 @@ skipped the fade.
 | `size`        | As `Modal`'s                                                                                                                                                                                                   |
 | `readingBody` | As `Modal`'s                                                                                                                                                                                                   |
 | `place`       | Which of the page's modal places this is, where it has two ([Two places on one page](#opening-at-once)); absent on a page with one                                                                             |
+| `loadingBody` | Optional: what the body shows while the address's contents are on its way; absent, `ModalLoading`'s form skeleton. The support page passes the `detail` skeleton                                               |
 | `content`     | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
 | `returnTo`    | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
 
@@ -776,6 +789,7 @@ The form arrives in the same dialog.
   opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
   So does Edit on an ingredient's own page, which opens the edit modal over
   that page ([`ingredient-entry.md`](ingredient-entry.md), "Edit").
+- **Opening and closing leave the page where it is.** A modal opens and closes by changing the address, and a navigation scrolls to the top unless told not to. So `open` and `RouteModal`'s close navigate with `scroll: false`, as does every save that closes the modal in place, and every link that opens a modal is a `ModalLink` (`src/components/Modal/modal-link.tsx`), a `next/link` with `scroll={false}`. `tests/guards/modal-links.test.ts` fails a file that opens a modal and imports `next/link` itself. A link to another page, such as the one in the Support dialog to Your Email, stays a plain link.
 - **The heading is known before the form.** The page builds each row's
   `editHeading` on the server, with the same builder the loaded modal uses,
   and hands it to the row beside `editHref`. So the head does not change when

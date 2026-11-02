@@ -5,6 +5,7 @@ import { ProviderLogo } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';
 import RoleControl from '../UserList/role-control';
 import { roleLabel } from '../UserList/roles';
+import TimeoutPanel from '../SupportRequests/timeout-panel';
 import ImpersonateAction from './impersonate-action';
 import { workspaceRoleLabel, workspaceRoleRank } from './roles';
 import type { UserCoven, UserDetailProps } from './types';
@@ -45,6 +46,7 @@ const Answer = ({ value, children }: { value: boolean; children: ReactNode }): R
 const UserDetail = ({
   user,
   memberships,
+  timeouts,
   canImpersonate = false,
   changesPaused = false,
 }: UserDetailProps): ReactElement => (
@@ -150,6 +152,11 @@ const UserDetail = ({
         </ul>
       )}
     </section>
+    {timeouts && (
+      <section aria-label="Support Time-Out" className="user-detail__section">
+        <TimeoutPanel userId={user.id} name={user.name} timeouts={timeouts} />
+      </section>
+    )}
     {/* Not on an admin: the endpoint refuses one. */}
     {canImpersonate && user.role !== 'admin' && <ImpersonateAction user={user} />}
   </div>

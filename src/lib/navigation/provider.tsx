@@ -6,11 +6,12 @@ import {
   type ReactNode,
   createContext,
   startTransition,
+  useEffect,
   useMemo,
   useOptimistic,
   useState,
 } from 'react';
-import { LeaveGuardContext, leaveGuardSlot } from './leave-guard';
+import { LeaveGuardContext, holdTraversals, leaveGuardSlot } from './leave-guard';
 import type { NavigateOptions, NavigationTarget } from './types';
 
 /** The navigation on its way: who started it, and where it is headed. */
@@ -34,6 +35,7 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
   const router = useRouter();
   const [active, setActive] = useOptimistic<ActiveNavigation | undefined>(undefined);
   const [guards] = useState(leaveGuardSlot);
+  useEffect(() => holdTraversals(guards), [guards]);
 
   const actions = useMemo<NavigationActions>(
     () => ({

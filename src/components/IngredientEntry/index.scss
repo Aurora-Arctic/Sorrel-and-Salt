@@ -50,6 +50,11 @@ $jump-link-line: 1.25;
   padding-block-start: space(4);
 }
 
+// A notice in the head fills its column, as the review row's line does; `.notice`'s own 66ch cap is the notice's own font, so it can fall short of the column.
+.ingredient-entry__head > .notice {
+  max-width: none;
+}
+
 // The `.back-bar` holding the back link (left) and the New / Updated marker (right), raised into the
 // page's top padding (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-entry__bar {
@@ -215,11 +220,11 @@ $formal-line: $icon-size;
 .ingredient-entry__section {
   // A jump from the menu lands clear of the top inset, and of the shell's
   // sticky bar where there is one, as `.page-frame__section` does.
-  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+  scroll-margin-top: #{space(4)};
 }
 
 :is(.app-shell, .public-frame) .ingredient-entry__section {
-  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+  scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
 // Details' h2, or a form's h3.
@@ -395,7 +400,7 @@ $formal-line: $icon-size;
 .ingredient-entry__references {
   @include stack(4);
 
-  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+  scroll-margin-top: #{space(4)};
 
   > h2 {
     @include entry-heading-rule;
@@ -404,8 +409,16 @@ $formal-line: $icon-size;
   }
 }
 
+// Past a tablet's width References keeps to the text column, as Stock and Details do; the forms
+// above it span both columns.
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .ingredient-entry__body > .ingredient-entry__references {
+    grid-column: 1;
+  }
+}
+
 :is(.app-shell, .public-frame) .ingredient-entry__references {
-  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+  scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
 // Bibliography entries run to two or three lines, so they stand a clear step
@@ -452,7 +465,7 @@ $formal-line: $icon-size;
 .ingredient-entry__marks a,
 .ingredient-entry__note,
 .ingredient-entry__reference {
-  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(8)});
+  scroll-margin-top: calc(#{$shell-bar-height} + #{space(8)});
 }
 
 .ingredient-entry__chips {
@@ -626,4 +639,12 @@ $replaces-gap: space(5);
   &--icons {
     flex-wrap: nowrap;
   }
+}
+
+// The sourcing score ends the References section, which spaces it from the list above; the panel's
+// own bottom divider and margin are dropped, as nothing follows it.
+.ingredient-entry__references .sourcing-score {
+  margin-block: 0;
+  padding-block-end: 0;
+  border-block-end: 0;
 }

@@ -1249,3 +1249,50 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
   await page.goBack();
   await expect(page).not.toHaveURL(/withoutForms/);
 });
+
+test('the Sourcing Score heading sorts lowest first, then highest first, and each row shows the score its edit dialog does', async ({
+  page,
+}) => {
+  await signInAs(page, 'sort-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  const nameHead = page.getByRole('columnheader', { name: /^Name/ });
+  const scoreHead = page.getByRole('columnheader', { name: /^Sourcing Score/ });
+  // The precondition: the list starts in its default order, by name, with the score unsorted.
+  await expect(nameHead).toHaveAttribute('aria-sort', 'ascending');
+  await expect(scoreHead).not.toHaveAttribute('aria-sort');
+
+  await scoreHead.getByRole('link').click();
+  await expect(page).toHaveURL(/[?&]sort=sourcing_score(&|$)/);
+  await expect(scoreHead).toHaveAttribute('aria-sort', 'ascending');
+  await expect(nameHead).not.toHaveAttribute('aria-sort');
+
+  const scoreColumn = async () =>
+    (await page.getByRole('columnheader').allTextContents()).findIndex((text) =>
+      text.startsWith('Sourcing Score'),
+    );
+  const cellScore = async (index: number): Promise<number> => {
+    const column = await scoreColumn();
+    const cell = page.getByRole('table').getByRole('row').nth(index).getByRole('cell').nth(column);
+    return Number(await cell.textContent());
+  };
+  // The first row's score, read from its edit dialog, matches its cell.
+  const row = page.getByRole('table').getByRole('row').nth(1);
+  await row.getByRole('link', { name: /^Edit / }).click();
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, / });
+  // The score sits in the Sources section, which hides its content while closed.
+  await dialog.getByRole('button', { name: 'Sources', exact: true }).click();
+  const heading = dialog.getByRole('heading', { name: /^Sourcing Score: -?\d+$/ });
+  await expect(heading).toBeVisible();
+  const fromDialog = Number((await heading.textContent())!.replace('Sourcing Score: ', ''));
+  await page.goBack();
+  await expect(dialog).toHaveCount(0);
+  expect(await cellScore(1)).toBe(fromDialog);
+  expect(await cellScore(1)).toBeLessThanOrEqual(await cellScore(2));
+
+  // The heading already sorted reverses the order.
+  await scoreHead.getByRole('link').click();
+  await expect(page).toHaveURL(/[?&]order=desc(&|$)/);
+  await expect(scoreHead).toHaveAttribute('aria-sort', 'descending');
+  expect(await cellScore(1)).toBeGreaterThanOrEqual(await cellScore(2));
+  await assertNoAccessibilityViolations(page);
+});

@@ -30,6 +30,12 @@
     line-height: 1.15;
   }
 
+  // The title of a sign-in card page, an h1 set at the h2 size so a long title fits the narrow card.
+  .auth-title {
+    font-size: heading-size(2);
+    line-height: 1.15;
+  }
+
   h3 {
     font-size: heading-size(3);
     line-height: 1.2;
@@ -110,7 +116,7 @@
       position: relative;
       margin: space(1) 0;
 
-      // The ◆, drawn as a shape so it sits centred on the first line at any
+      // The ✦, drawn as a shape so it sits centred on the first line at any
       // size, as the duplicates list's does. An item that draws a ::before of its
       // own clears it with `list-marker-cleared` (_mixins.scss).
       &::before {

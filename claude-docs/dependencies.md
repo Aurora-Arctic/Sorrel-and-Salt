@@ -41,3 +41,15 @@ From a clean checkout, in this order:
 - **esbuild up to 0.24.2, GHSA-67mh-4wv8-2f99**, under `drizzle-kit` and its deprecated `@esbuild-kit/esm-loader`. Accepted in [`db/orm-version.md`](db/orm-version.md); `drizzle-kit@1.0.0-rc` drops `@esbuild-kit`, so it clears with the ORM move above.
 - `tsconfck`, under `vite-tsconfig-paths`, is deprecated as "unmaintained" (seen 2026-10-30). It is upstream's to fix; **revisit when** `vite-tsconfig-paths` moves to another resolver.
 - `node-domexception` is deprecated and reached through `@graphql-codegen/cli` and `sync-fetch` to `node-fetch@3`. It is upstream's to fix.
+
+## Added since the audit
+
+The invitation card print sheets (M15.19, [`invitation-cards/print.md`](invitation-cards/print.md)) added four packages, so the repo has 80 direct dependencies, 38 runtime and 42 dev:
+
+- `qrcode` supplies the QR module matrix (`QRCode.create`); the card draws the SVG itself, because the package draws square modules only. It runs in the browser, where the admin page renders each card and builds the batch PDF, and takes no part in any server path. `@types/qrcode` (dev) types it.
+- `pdf-lib` builds the print PDF in the browser. Its `latest` is 1.17.1, published in November 2021, and it has no open advisory; it is small, has no native code, and the format it writes has not changed. **Revisit when** an advisory names it, or a browser change breaks a sheet.
+- `@pdf-lib/fontkit` lets `pdf-lib` embed and subset the cards' TrueType fonts.
+
+## `jsqr` reads a code back in story 88
+
+`jsqr` (dev) decodes a QR code from pixels. Story 88 draws a minted card's code onto a canvas and decodes it, to prove the code holds the card's link. It runs in the test runner only and ships in no bundle.

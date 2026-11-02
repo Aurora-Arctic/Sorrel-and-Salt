@@ -10,6 +10,7 @@ export {
   QuickLookButton,
   RecordButton,
 } from './icon-button';
+export { LiddedEyeIcon } from './lidded-eye';
 export {
   BinIcon,
   CauldronIcon,
@@ -19,6 +20,7 @@ export {
   CompleteIcon,
   CopyIcon,
   CrossIcon,
+  DownloadIcon,
   DotsIcon,
   LinkIcon,
   MysticEyeIcon,
@@ -28,6 +30,13 @@ export {
   PreviewIcon,
   PrintIcon,
   RedoIcon,
+  SproutIcon,
+  CircleCheckIcon,
+  BubbleLinesIcon,
+  PersonCheckIcon,
+  PersonClockIcon,
+  FlagIcon,
+  ArchiveBoxIcon,
   StockIcon,
   UndoIcon,
 } from './icons';

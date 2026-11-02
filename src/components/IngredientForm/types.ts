@@ -11,6 +11,7 @@ import type {
 } from '../../gql/graphql';
 import type {
   INGREDIENT_ELEMENTS,
+  NameBasis,
   NomenclatureKind,
   ReferenceKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
@@ -44,6 +45,12 @@ interface IngredientFormCallbacks {
    */
   onCreated?: (ingredient: SavedIngredient) => void;
   /**
+   * Called when an autosave has written to an ingredient that already existed, with the saved row:
+   * the page brings its heading and address up to the saved name. Not called for the autosave that
+   * creates one (`onCreated`), nor by Save or Close.
+   */
+  onAutosaved?: (ingredient: SavedIngredient) => void;
+  /**
    * Reload, after another save changed the ingredient: the form is replaced with what the server
    * holds. Left out, the page reloads.
    */
@@ -73,6 +80,8 @@ interface IngredientFormCallbacks {
    * curator or admin only. A flip changes the form, Save sends it after the entry, Cancel drops it.
    */
   review?: ReviewOffer;
+  /** Shown at the start of the Sources section, above the first source: the compendium edit dialog's sourcing score. */
+  sourcesIntro?: ReactNode;
 }
 
 /** The Reviewed switch as the page found it: `reviewed` is whether a curator has marked the entry. */
@@ -80,6 +89,8 @@ export interface ReviewOffer {
   reviewed: boolean;
   /** When, as an ISO moment, if the page has it; an add has none. */
   reviewedAt?: string | null;
+  /** Whether the public compendium lists the entry, as saved; left out on an add, which starts from its categories. */
+  shown?: boolean;
 }
 
 /** Where a linked ingredient's page is, by its address and its tier, or undefined for none. */
@@ -204,11 +215,15 @@ export interface ReferenceLink extends ShortCitationFields {
 /**
  * One reference: the source's citation, which the row is described
  * by and is never sent, the source it links, and the locator typed beside
- * it, "p. 112".
+ * it, "p. 112". On the compendium's form, also how the source names the
+ * ingredient (`''` until chosen) and the fields it supports; a coven's
+ * form leaves both empty, as a coven's citation carries neither.
  */
 export interface ReferenceListEntry extends ListEntry {
   link: ReferenceLink;
   locator: string;
+  nameBasis: NameBasis | '';
+  supports: string[];
 }
 
 /** A source the references' search offers: its citation, and the source a pick links. */
@@ -337,6 +352,8 @@ export interface IngredientSend {
   input: IngredientFormInput;
   endRedirect: boolean;
   revision?: number;
+  /** The compendium's Shown in Compendium switch, written with the entry; left out where the form has none. */
+  shown?: boolean;
 }
 
 /** A save the server asked to confirm: what it said, and the input to send again. */
@@ -371,8 +388,12 @@ export interface ToggleFieldProps {
   hint?: string;
 }
 
-/** A closed set holding several values: an entry's elements, or a variant's. */
-export type MultiSelectFieldName = 'elements' | `${VariantPath}.elements`;
+/** A closed set holding several values: an entry's elements, or a variant's, or the fields a citation supports. */
+export type MultiSelectFieldName =
+  'elements' | `${VariantPath}.elements` | `${ReferenceListName}.${number}.supports`;
+
+/** A references list: the ingredient's, or a variant's. */
+export type ReferenceListName = 'references' | `${VariantPath}.references`;
 
 /** The ingredient's own lists that take entries in a box. */
 export type IngredientListName = (typeof LIST_FIELDS)[number];
@@ -485,13 +506,15 @@ export interface ReferenceFormValues {
   modified: string;
   accessed: string;
   note: string;
+  /** Marked as an academic work; offered on a compendium source alone. */
+  scholarly: boolean;
 }
 
 /** What the panel sends: its values as the shared schema and the mutation take them, unparsed. */
 export type ReferenceSendInput = z.input<typeof ReferenceInput>;
 
 /** A panel field other than the kind. */
-export type ReferenceFieldName = Exclude<keyof ReferenceFormValues, 'kind'>;
+export type ReferenceFieldName = Exclude<keyof ReferenceFormValues, 'kind' | 'scholarly'>;
 
 /**
  * One field a kind shows: what it writes and what it is called there. No

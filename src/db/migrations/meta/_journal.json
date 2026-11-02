@@ -666,6 +666,167 @@
       "when": 1793379183819,
       "tag": "0094_workspaces-demo-flag",
       "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1793404900226,
+      "tag": "0095_rekey-citation-seed-keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1793405000000,
+      "tag": "0096_invitation-cards",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1793405060000,
+      "tag": "0097_card-privilege-route",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1793405120000,
+      "tag": "0098_card-invitation-attempts",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1793405180000,
+      "tag": "0099_card-position",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1793411379488,
+      "tag": "0100_card-expiry-end-of-day",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1793415305515,
+      "tag": "0101_card-batch-note",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1793420712893,
+      "tag": "0102_support-requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1793420782747,
+      "tag": "0103_support-replies-timeouts",
+      "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1793424588410,
+      "tag": "0104_sign-in-failures",
+      "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1793424595197,
+      "tag": "0105_passkeys",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1793424596037,
+      "tag": "0106_two-factor",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1793424597326,
+      "tag": "0107_sign-in-failures-last-failed-at",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1793457117602,
+      "tag": "0108_compendium-shown-flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1793461415216,
+      "tag": "0109_compendium-hide-uncategorised",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1793467342777,
+      "tag": "0110_support-about",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1793467343777,
+      "tag": "0111_support-lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1793467344777,
+      "tag": "0112_support-sender-email",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1793467345777,
+      "tag": "0113_support-send-counts",
+      "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1793584892499,
+      "tag": "0114_terms-agreement",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1793585000000,
+      "tag": "0115_citation-columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1793586332455,
+      "tag": "0116_print-encyclopedia-entries",
+      "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1793586951144,
+      "tag": "0117_compendium-hide-uncategorised-live",
+      "breakpoints": true
     }
   ]
 }

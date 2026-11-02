@@ -36,7 +36,18 @@
 // own: the heading bar, and where the page has an Add a button-sized block at
 // the end (the title bar is the page shape's). `.page-header` brings every
 // child but the h1 down 0.25rem for a button; the heading bar sits level.
-.skeleton__shapes .skeleton__header > .skeleton__title {
+// The column's gap spaces the heading from the filter row, so the heading's own bottom margin (the
+// space the page lays out with) would be a second gap on top of it.
+.skeleton__shapes .skeleton__header {
+  margin-bottom: 0;
+}
+
+// The heading bar sits in a row of its own that takes no box until the header narrows (below).
+.skeleton__title-row {
+  display: contents;
+}
+
+.skeleton__shapes .skeleton__header .skeleton__title {
   top: 0;
   height: calc(heading-size(1) * 1.1);
 }
@@ -56,6 +67,51 @@
   > .skeleton__action {
     margin-inline-start: auto;
   }
+}
+
+// Narrow, the page header (a size container, so only what is inside it can change) puts the heading on a
+// line of its own, the action beneath it at the line's start and, on a tabbed page, the tab track last, as
+// the pages do under the labelled Add's width (primitives, `.tabbed-page`). The line gap alone spaces them.
+@container page-header (max-width: #{$add-below-width}) {
+  .skeleton__header > .skeleton__title-row {
+    display: block;
+    flex-basis: 100%;
+  }
+
+  .skeleton__shapes .skeleton__header > .skeleton__action {
+    top: 0;
+    margin-inline-start: 0;
+  }
+
+  .skeleton__shapes .skeleton__header:has(> .skeleton__tabs) > .skeleton__action {
+    margin-inline-start: 0;
+  }
+
+  .skeleton__shapes .skeleton__header > .skeleton__tabs {
+    flex-basis: 100%;
+    order: 1;
+  }
+}
+
+// Six pills on a line of their own, as `.tabbed-page--tabs-below` lays them: a zero-height break after the heading
+// and the track ordered after it, giving back the row gap the break takes.
+.skeleton__header--tabs-below {
+  &::after {
+    content: '';
+    flex-basis: 100%;
+    order: 1;
+    height: 0;
+  }
+
+  > .skeleton__tabs {
+    order: 2;
+    margin-top: calc(-1 * #{space(3)});
+  }
+}
+
+.skeleton__shapes .skeleton__tabs--wide {
+  width: 36rem;
+  max-width: 100%;
 }
 
 .skeleton__shapes .skeleton__tabs {
@@ -93,6 +149,25 @@
   flex: 0 0 5.75rem;
 }
 
+// The Compact switch the coven's card lists end the row with: its label over its track, a label
+// wide, as the switch field is.
+.skeleton__switch {
+  @include stack(2);
+
+  flex: 0 0 auto;
+  width: calc(#{$switch-width} + #{space(4)});
+
+  > span:nth-child(1) {
+    width: 100%;
+    height: calc(type-size('small') * 1.3);
+  }
+
+  > span:nth-child(2) {
+    width: $switch-width;
+    height: $control-height;
+  }
+}
+
 // The count line ("9 ingredients") between the filter row and the cards, a body
 // line tall as the real one is, its bar sat in the line.
 .skeleton__count {
@@ -125,6 +200,19 @@
 
 .skeleton__row:nth-child(odd) {
   background-color: $surface-card;
+}
+
+// A table with more columns than the default three: equal columns, the bars at the start of each.
+.skeleton__table--columns {
+  .skeleton__head,
+  .skeleton__row {
+    grid-template-columns: repeat(var(--skeleton-columns), minmax(0, 1fr));
+  }
+
+  .skeleton__row > span:nth-child(n) {
+    width: 70%;
+    justify-self: start;
+  }
 }
 
 // Uneven lengths, so the rows read as text rather than a grid of bricks.
@@ -178,6 +266,29 @@
   > span:nth-child(3) {
     width: 75%;
     margin-block-start: auto;
+  }
+}
+
+// The Grimoire's spell card: a title bar, the edited line set a step below it, and a row of the card's
+// actions at its foot (SpellCard), in place of the Ingredients card's caption and chips. It has no minimum
+// height: its three bars stand where the real card's title, edited line and action row do.
+.skeleton__card--spell {
+  min-height: 0;
+
+  > span:nth-child(1) {
+    width: 60%;
+    height: calc(heading-size(3) * 1.15);
+  }
+
+  > span:nth-child(2) {
+    width: 35%;
+    margin-block-start: space(5);
+  }
+
+  > span:nth-child(3) {
+    width: 100%;
+    height: $control-height;
+    margin-block-start: 0;
   }
 }
 
@@ -235,6 +346,14 @@
     height: 2rem;
     justify-self: stretch;
   }
+
+  .skeleton__table--columns .skeleton__row {
+    grid-template-columns: 1fr;
+  }
+
+  .skeleton__table--columns .skeleton__row > span:nth-child(n) {
+    width: 70%;
+  }
 }
 
 // Under the forms' column the filter's fields stack full width, as the real
@@ -242,6 +361,22 @@
 @container skeleton (max-width: #{$narrow-column}) {
   .skeleton__filter > span {
     flex-basis: 100%;
+  }
+
+  // With the Compact switch after it, the Filters button shares the second line with the switch,
+  // whose label then stands beside its track.
+  .skeleton__filter > .skeleton__field--button:not(:last-child) {
+    flex: 1 1 0;
+  }
+
+  .skeleton__switch {
+    flex-direction: row;
+    align-items: center;
+    width: calc(#{$switch-width} * 2 + #{space(4)} + #{space(2)});
+
+    > span:nth-child(1) {
+      flex: 1;
+    }
   }
 }
 
@@ -289,6 +424,24 @@
 
   > span:nth-child(2) {
     width: 60%;
+  }
+}
+
+// A list page's lede is longer than the line on a phone, so it takes a third line there.
+.skeleton__shapes .skeleton__lede-more {
+  display: none;
+}
+
+@media (max-width: $shell-phone-width) {
+  .skeleton__shapes .skeleton__lede:has(> .skeleton__lede-more) {
+    > span:nth-child(2) {
+      width: auto;
+    }
+
+    > .skeleton__lede-more {
+      display: block;
+      width: 40%;
+    }
   }
 }
 
@@ -558,4 +711,175 @@
 .skeleton__shapes .skeleton__button {
   width: 8rem;
   height: $control-height;
+}
+
+// The Support Requests tab (SupportList): a column of one gap (4) holding the heading line (a heading-width bar and a
+// small button-sized box at the right), then the rows 3 apart. A row is 3 above and below, 4 either
+// side, its two lines 2 apart: the subject, then the badge and three short words.
+.skeleton__requests {
+  @include stack(4);
+}
+
+.skeleton__requests-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(3);
+
+  > span:first-child {
+    inline-size: 11rem;
+    block-size: 0.75rem;
+  }
+
+  > span:last-child {
+    inline-size: 7.5rem;
+    block-size: 2rem;
+    border-radius: radius('control');
+  }
+}
+
+.skeleton__requests-rows {
+  @include stack(3);
+}
+
+.skeleton__request {
+  @include stack(2);
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
+}
+
+.skeleton__request-subject {
+  inline-size: 60%;
+  block-size: 1.25rem;
+}
+
+.skeleton__request-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1) space(3);
+
+  > span {
+    inline-size: 4rem;
+    block-size: 0.75rem;
+  }
+
+  > .skeleton__request-badge {
+    inline-size: 4.5rem;
+    block-size: 1.25rem;
+    border-radius: radius('pill');
+  }
+}
+
+// A spell's page, in the recipe's own grid (`.spell-recipe--with-nav`): the head, the Workings
+// menu left of it from a phone's width up, then the main and side columns. Written here as well
+// as in SpellRecipe's stylesheet, since a route loads a component's stylesheet only when it
+// draws the component.
+.skeleton__recipe {
+  @include stack(2);
+  @include entry-nav-grid;
+
+  column-gap: space(6);
+
+  > .page-nav {
+    grid-row: 2 / span 2;
+  }
+
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    row-gap: 0;
+
+    > .skeleton__recipe-columns {
+      margin-block: space(2);
+    }
+
+    > .skeleton__recipe-head {
+      margin-block-end: space(2);
+    }
+
+    > .page-nav {
+      margin-block-start: space(2);
+    }
+  }
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    > .skeleton__recipe-head {
+      max-width: $measure;
+    }
+  }
+}
+
+.skeleton__recipe-head {
+  @include stack(2);
+}
+
+.skeleton__recipe-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: space(3);
+}
+
+.skeleton__shapes .skeleton__recipe-back {
+  width: 6rem;
+  height: 1.125rem;
+  margin-block-end: space(3);
+}
+
+// The Edited line stands a step off the back link, as `.meta.last-edit` does.
+.skeleton__shapes .skeleton__recipe-edited {
+  width: 10rem;
+  height: calc(type-size('caption') * 1.65);
+  margin-block: space(5) space(2);
+}
+
+.skeleton__shapes .skeleton__recipe-title {
+  width: 60%;
+  height: calc(heading-size(1) * 1.1);
+}
+
+// On a phone the title takes two lines, as a spell's usually does, and the side column stands over
+// the main one, as the page stacks them.
+@media (max-width: $shell-phone-width) {
+  .skeleton__shapes .skeleton__recipe-title {
+    height: calc(heading-size(1) * 1.1 * 2);
+  }
+
+  .skeleton__recipe > .page-nav {
+    margin-block-start: space(5);
+  }
+
+  .skeleton__recipe-columns {
+    margin-block-start: space(5);
+  }
+
+  .skeleton__recipe-aside {
+    order: -1;
+  }
+}
+
+.skeleton__recipe-actions {
+  display: flex;
+  gap: space(2);
+  flex: 0 0 auto;
+
+  > span {
+    width: $icon-size-large;
+    height: $icon-size-large;
+  }
+}
+
+.skeleton__recipe-columns {
+  @include entry-section;
+}
+
+.skeleton__recipe-main {
+  @include stack(4);
+
+  min-width: 0;
+}
+
+.skeleton__recipe-aside {
+  @include entry-side;
 }

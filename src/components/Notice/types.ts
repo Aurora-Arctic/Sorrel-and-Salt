@@ -29,6 +29,11 @@ export interface NoticeProps {
   inRegion?: boolean;
   /** For a control that names the notice in its `aria-describedby`. */
   id?: string;
+  /**
+   * The message a form's submit produced: focusable by script, and the target `useResultFocus` moves
+   * focus to, so a keyboard or screen-reader user lands on the answer.
+   */
+  result?: boolean;
   /** A layout class from the caller, added after the notice's own. */
   className?: string;
   children: ReactNode;

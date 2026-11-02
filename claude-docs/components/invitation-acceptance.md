@@ -15,8 +15,9 @@ and sends the accept. The rules it shows are
 - **`refused`** — the accept service's own reason, in its words, from
   `invitationStanding`: a dead link, a different address, a pause, or an
   address not yet verified. Only the last carries `emailHref`, the email
-  page with the link as its `next`, offered as **Confirm Your Email**. No
-  message names a workspace.
+  page with the link as its `next`, offered as **Confirm Your Email**. An account
+  that already used the card carries `startCovenHref` (`/coven/new`), offered as
+  **Start a Coven**. No message names a workspace.
 - **`acceptable`** — what the invitation grants, by tier, and **Accept
   Invitation**. A site invitation names its role, `siteRole`, curator or
   admin (M11.20). The click sends `acceptInvitation`, which checks everything

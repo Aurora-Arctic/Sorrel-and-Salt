@@ -20,13 +20,14 @@ const IngredientSearch = ({
   position,
   className,
   shape,
+  card,
 }: IngredientSearchProps): ReactElement => (
   <ListFrame className={className ? `ingredient-search ${className}` : 'ingredient-search'}>
     <StuckMark />
     {search}
     {action && <div className="ingredient-search__action">{action}</div>}
 
-    <ListBody shape={shape}>
+    <ListBody shape={shape} card={card}>
       {children}
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

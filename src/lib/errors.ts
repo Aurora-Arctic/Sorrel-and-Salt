@@ -67,3 +67,17 @@ export class StaleWrite extends Error {
     this.currentRevision = currentRevision;
   }
 }
+
+/**
+ * The caller has sent more than a path allows in its window. Carries the seconds to wait, which the transport sends as
+ * `Retry-After`. Neither a refusal of the actor nor bad input: the same call passes once the window has moved on.
+ */
+export class RateLimited extends Error {
+  readonly retryAfterSeconds: number;
+
+  constructor(retryAfterSeconds: number, message = 'Too many requests') {
+    super(message);
+    this.name = 'RateLimited';
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}

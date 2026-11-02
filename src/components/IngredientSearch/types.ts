@@ -43,6 +43,8 @@ export interface IngredientSearchProps extends Partial<PagerHrefs<Route>> {
   className?: string;
   /** The shape the results take while a page loads: a table (the default) or cards. */
   shape?: 'table' | 'cards';
+  /** With `cards`: the card the list draws, so its skeleton does too: the grimoire's spell card. */
+  card?: 'spell';
 }
 
 export interface IngredientSearchFormProps {
@@ -105,6 +107,7 @@ export type SearchSentenceFacet =
   | 'nomenclature'
   | 'withoutReferences'
   | 'withoutForms'
+  | 'hidden'
   | 'reviewed';
 
 /** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
@@ -146,6 +149,8 @@ export interface SearchSentenceFilter {
   withoutReferences?: boolean;
   /** Admin lists only. */
   withoutForms?: boolean;
+  /** Admin lists only. */
+  hidden?: boolean;
   /** Admin lists only: `reviewed`, `needs_review`, or left out for either. */
   reviewed?: 'reviewed' | 'needs_review' | null;
 }

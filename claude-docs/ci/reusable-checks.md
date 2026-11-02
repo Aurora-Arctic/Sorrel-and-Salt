@@ -206,7 +206,7 @@
   hold monocart's raw data too, for the `playwright-coverage` job below. The run step carries `continue-on-error: true`
   for stories, since a job that calls a workflow cannot, so a red story never
   fails the job; the comment reads the real result from `steps.run.outcome`,
-  and so does the report upload. It is never a required check, which keeps red
+  and so does the report upload, which also runs when the summariser reports a test that failed and passed on retry (its `flaky` output). It is never a required check, which keeps red
   scaffolds off the merge path, and nothing waits on it, which keeps the
   gate's time down (`claude-docs/testing/acceptance.md`).
 - **`playwright-coverage.yml`** (M14.28) — the two Playwright suites'
@@ -244,7 +244,7 @@
   `inputs.db-image`/`services: postgres:` shape
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
   build, shared by both — see `vitest.yml`'s entry above). Uploads
-  `.reports/playwright-report/`/`.reports/test-results/` on failure and
+  `.reports/playwright-report/`/`.reports/test-results/` on failure or a flaky pass and
   `.reports/coverage-e2e/` always (named `playwright-coverage`; parallel to `vitest.yml`'s
   `.reports/coverage/` upload). Its reporters (`list`, `json`, `html`) come
   from `playwright.config.ts` under `CI`, not from the command line: a CLI

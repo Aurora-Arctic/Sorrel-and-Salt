@@ -4,6 +4,9 @@ import {
   CATEGORY_MODES,
   INGREDIENT_ELEMENTS,
   INGREDIENT_SOURCES,
+  COMPENDIUM_LISTINGS,
+  COMPENDIUM_ORDERS,
+  COMPENDIUM_SORTS,
   NOMENCLATURE_KINDS,
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
@@ -21,6 +24,21 @@ import type {
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return: every correspondence field, the tier as `isGlobal`,
 // and the six children through the request's loaders, its forms as `variants`. `identityKey` and `workspaceId` stay off the wire.
 
+export const CompendiumListingEnum = builder.enumType('CompendiumListing', {
+  values: COMPENDIUM_LISTINGS,
+  description:
+    "Which compendium entries a search reads: shown (the default), hidden, or all. Hidden and all are a curator or admin's alone.",
+});
+export const CompendiumSortEnum = builder.enumType('CompendiumSort', {
+  values: COMPENDIUM_SORTS,
+  description:
+    "A column to sort the compendium list on, in place of its default of by name or by best match under a search: name, A to Z, or sourcing_score, the sourcing score lowest first, then name. The sourcing score is a curator or admin's alone.",
+});
+export const CompendiumOrderEnum = builder.enumType('CompendiumOrder', {
+  values: COMPENDIUM_ORDERS,
+  description:
+    'Which way a compendium sort runs: asc, its usual direction, or desc, the exact reverse, name and id ties included. Ignored without a sort.',
+});
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
 // A search's toxic setting, an argument rather than a field.
 export const ToxicFilterEnum = builder.enumType('ToxicFilter', {
@@ -185,6 +203,10 @@ IngredientRef.implement({
       description: 'The formal name: null for none, set for a named kind, either for unknown.',
     }),
     nomenclature: t.expose('nomenclature', { type: NomenclatureEnum }),
+    shown: t.exposeBoolean('shown', {
+      description:
+        "Whether the public compendium lists the entry; a coven's own entry is always shown.",
+    }),
     description: t.exposeString('description', { nullable: true }),
     elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
     celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),

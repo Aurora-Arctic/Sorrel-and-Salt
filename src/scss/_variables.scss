@@ -158,6 +158,10 @@ $dismiss-ink-dark: #fff;
 // text.
 $card-more-ink-dark: #fff;
 
+// The ✦ list marker in dark, pure white; light draws it in $iron-gall, its body text, since white
+// would vanish on parchment.
+$list-marker-ink-dark: #fff;
+
 // Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
   @if not list.index((dark, light), $theme) {
@@ -481,6 +485,7 @@ $preview-ember-char: var(--preview-ember-char);
 $preview-ash: var(--preview-ash);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
+$list-marker-ink: var(--list-marker-ink);
 // The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in
 // light, where the placeholder mix is 4.22:1 on the page and falls short.
 $last-edit-ink: var(--last-edit-ink);
@@ -494,8 +499,6 @@ $notice-button-ink: var(--notice-button-ink);
 // "$ornament-screen").
 $ornament-screen: var(--ornament-screen);
 $ornament-multiply: var(--ornament-multiply);
-// The salt ornament's width before a page's `--backdrop-width`; the sorrel draws three quarters of it.
-$ornament-width: clamp(8.75rem, 17.5vw, 13.75rem);
 
 // The label on a solid fill — the selected chip, the safety badge. An alias for
 // the page surface: on dark the fill is the light thing and the label goes
@@ -800,7 +803,7 @@ $filter-search-basis: 16rem;
 // (`Modal/index.scss`), well past WCAG 2.2's 24px minimum.
 $close-target: 2rem;
 
-// The day picker's calendar (`DateField`). The previous and next steps are as high as the compact
+// The day picker's calendar (`DateField`, `DateRangeField`). The previous and next steps are as high as the compact
 // month and year pickers beside them, and the caption is a little taller than both. The caption keeps
 // room at its end for the two steps, the 0.25rem gap between them and as much again before its text.
 $day-picker-step: $control-height-compact;
@@ -810,8 +813,10 @@ $day-picker-nav-room: $day-picker-step * 2 + 0.5rem;
 // select's end padding, rounded up.
 $day-picker-indicator: 1.25rem;
 $day-picker-sizer-end: 1.75rem;
-// A day's square button: 36px, over WCAG 2.2's 24px target.
+// A day's round button: 36px, over WCAG 2.2's 24px target.
 $day-picker-day: 2.25rem;
+// The band a day range's middle days sit on: the accent 22% into the card, under the body ink.
+$day-picker-band: color-mix(in srgb, $accent 22%, transparent);
 // A step past the allowed months, and a day that cannot be chosen, fade as any control that
 // cannot be used does.
 $day-picker-step-disabled-opacity: $opacity-disabled;
@@ -902,6 +907,19 @@ $arrive-duration: 200ms;
 // the bottom bar's height clear beneath its content.
 $shell-bar-height: 3.25rem;
 $bottom-bar-height: 4rem;
+
+// The footer's height, fixed so the salt can rise by exactly it as the footer comes into view
+// (Backdrop/index.scss). Its parts: the row's padding (2 x space(4) = 2rem), the row (the 2rem icon button, taller
+// than the 1.8rem brand line, 1.5rem x 1.2), the gap to the tagline (space(2) = 0.5rem) and the tagline's lines (0.8125rem x 1.5 each).
+// At a phone's width the row stacks (brand 1.8rem, gap 0.5rem, button 2rem) and the tagline wraps to two lines.
+$footer-brand-line: 1.5rem * 1.2;
+$footer-tagline-line: 0.8125rem * 1.5;
+$footer-height: 2rem + 2rem + 0.5rem + $footer-tagline-line;
+$footer-height-phone: 2rem + $footer-brand-line + 0.5rem + 2rem + 0.5rem + 2 * $footer-tagline-line;
+// What the footer takes under a centred page frame: its row plus the step of air above it.
+// The step of air is space(8), spelled in rem because the steps are defined further down.
+$footer-space: $footer-height + 4rem;
+$footer-space-phone: $footer-height-phone + 4rem;
 
 // The width at or under which the shell takes its phone shape (the switcher
 // on its own row, the section nav along the bottom, the account button an

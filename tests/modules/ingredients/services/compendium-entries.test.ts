@@ -636,3 +636,37 @@ describe('a deleted entry', () => {
     });
   });
 });
+
+// The shown flag rides in the entry's own create and update, so a modal saves both in one write.
+describe('the shown flag on the compendium entry writes', () => {
+  const shownOf = async (id: string) => {
+    const [row] = await sql<{ shown: boolean }[]>`select shown from ingredients where id = ${id}`;
+    return row.shown;
+  };
+  const admin = () => asUser(E);
+
+  it('a create stores the shown it is given, and is shown when it gives none', async () => {
+    const hidden = await createCompendiumEntry(admin(), { ...entry(), shown: false });
+    expect(await shownOf(hidden.id)).toBe(false);
+
+    const left = await createCompendiumEntry(admin(), {
+      ...entry({ name: 'Mockwort', canonicalName: 'Mocka testalis' }),
+    });
+    expect(await shownOf(left.id)).toBe(true);
+  });
+
+  it('an update stores the shown it is given, and leaves the flag when it gives none', async () => {
+    const created = await createCompendiumEntry(admin(), entry());
+    // Why the assertions below mean something: the entry starts shown.
+    expect(await shownOf(created.id)).toBe(true);
+
+    await updateCompendiumEntry(admin(), created.id, { ...entry(), shown: false });
+    expect(await shownOf(created.id)).toBe(false);
+
+    await updateCompendiumEntry(admin(), created.id, { ...entry(), description: 'Changed' });
+    expect(await shownOf(created.id)).toBe(false);
+
+    await updateCompendiumEntry(admin(), created.id, { ...entry(), shown: true });
+    expect(await shownOf(created.id)).toBe(true);
+  });
+});

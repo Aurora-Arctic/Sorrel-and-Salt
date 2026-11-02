@@ -50,7 +50,7 @@ async function query(source: string, variables?: Record<string, unknown>) {
   const response = await POST(
     new Request(ENDPOINT, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'x-sorrel-client': 'web' },
       body: JSON.stringify({ query: source, variables }),
     }),
   );

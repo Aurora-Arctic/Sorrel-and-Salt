@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ModalHeading } from '../../../../../components/Modal/types';
+import type { SupportTimeoutEntry } from '../../../../../components/SupportRequests/types';
 import type { UserCoven, UserDetailUser } from '../../../../../components/UserDetail/types';
 
 export interface AdminUsersPageProps {
@@ -17,6 +18,8 @@ export interface UsersSearchParams {
   before?: string | string[];
   /** The id of the user whose modal is open over the list. */
   user?: string | string[];
+  /** The screen that opened the modal, where Close goes back to; none for the list itself. */
+  from?: string | string[];
 }
 
 /** The user `?user=` opens, as the page read them: the modal's head and its body's props. */
@@ -24,6 +27,7 @@ export interface OpenedUser {
   heading: ModalHeading;
   user: UserDetailUser;
   memberships: readonly UserCoven[];
+  timeouts: SupportTimeoutEntry[];
 }
 
 export interface UserDialogProps {
@@ -35,4 +39,6 @@ export interface UserDialogProps {
   canImpersonate: boolean;
   /** Whether admin changes are locked for this admin, as the list's controls read it. */
   changesPaused: boolean;
+  /** The modal place it shows in, where the page has another modal; unnamed on the Users page. */
+  place?: string;
 }

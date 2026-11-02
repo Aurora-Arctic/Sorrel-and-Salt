@@ -7,7 +7,7 @@ import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import type { ListBodyProps } from '../ListFrame/types';
 import StackTable, { GroupChip } from '.';
-import type { StackColumn } from './types';
+import type { ColumnSort, SortDirection, StackColumn } from './types';
 
 // Render-only; the lists that hold it assert its behaviour, each in its own
 // test. A table sits in its list's ListFrame, as every admin list holds it;
@@ -113,11 +113,58 @@ const footActionNode = (
   </Frame>
 );
 
+/** A column's sort in the workshop: each direction's address a query the story never follows. */
+const sortOf = (
+  key: string,
+  labels: ColumnSort['labels'],
+  current?: SortDirection,
+): ColumnSort => ({
+  current,
+  href: { ascending: `?sort=${key}` as Route, descending: `?sort=${key}&order=desc` as Route },
+  labels,
+});
+
+// Name sorts and is sorted, A to Z, its arrow beside it; Description sorts too and is not; Edit does not sort.
+const SORTED_COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
+  {
+    ...COLUMNS[0],
+    sort: sortOf('name', { ascending: 'A to Z', descending: 'Z to A' }, 'ascending'),
+  },
+  {
+    ...COLUMNS[1],
+    sort: sortOf('description', { ascending: 'A to Z', descending: 'Z to A' }),
+  },
+  COLUMNS[2],
+];
+
+const sortedNode = (
+  <Frame>
+    <StackTable columns={SORTED_COLUMNS} rows={ROWS} rowKey={(row) => row.id} empty="" />
+  </Frame>
+);
+
+// The same table in a phone's width: the headings hidden, the Sort By select above the cards, with an order no heading gives.
+const sortedPhoneNode = (
+  <div style={{ inlineSize: '24rem' }}>
+    <Frame>
+      <StackTable
+        columns={SORTED_COLUMNS}
+        rows={ROWS}
+        rowKey={(row) => row.id}
+        empty=""
+        otherOrders={[{ label: 'Best Match', href: '?' as Route, current: false }]}
+      />
+    </Frame>
+  </div>
+);
+
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Roomy: roomyNode,
   Empty: emptyNode,
   'Foot Action And Icon Chip': footActionNode,
+  Sorted: sortedNode,
+  'Sorted At Phone Width': sortedPhoneNode,
 };
 
 export const States: Story = {

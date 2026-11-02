@@ -8,6 +8,9 @@ export * from './services/ingredient-children';
 export * from './services/ingredient-detail';
 export * from './services/workspace-ingredients';
 export * from './services/compendium';
+export * from './services/sourcing-score';
+export * from './services/compendium-sourcing';
+export * from './services/share-card';
 export * from './services/compendium-held-in';
 export * from './services/compendium-slugs';
 export * from './services/references';
@@ -37,33 +40,27 @@ export * from './graphql/workspace-ingredient-list';
 export * from './graphql/stock';
 export * from './graphql/cupboard-entries';
 export { unitConvert } from './units/convert';
-export type { ConversionRefusal, UnitConversion } from './units/types';
 export type {
   CategoryDetail,
-  CategoryRow,
   CitedReference,
-  CompendiumAddress,
-  CompendiumEntryPage,
   CompendiumFacets,
-  ReviewFacetValue,
-  CompendiumReview,
+  CompendiumShareCard,
   CompendiumSlugEntry,
   CovenPick,
-  CupboardEntryKey,
   CupboardEntryRow,
   DeityDetail,
   FacetCount,
   HoldingCoven,
-  IngredientDeityRow,
   IngredientDetail,
   IngredientFacets,
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
   LastEdit,
-  CompendiumMatches,
-  ReplacedCompendiumEntry,
   SaveStockValues,
+  SourcingFact,
+  SourcingInput,
+  SourcingScore,
   StockKey,
   StockRow,
   StockValues,

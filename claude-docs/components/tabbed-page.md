@@ -13,12 +13,15 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 
 `TabbedPageProps` (`types.ts`):
 
-| Prop       | What it is                                                                                               |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
-| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                 |
-| `tabs`     | Each tab's `href`, short label ("Groups", "Traditions"), `filtered`, `shape` and `density`, in row order |
-| `action`   | Optional: the open tab's one action, at the end of the heading's line                                    |
-| `children` | The open tab's content                                                                                   |
+| Prop        | What it is                                                                                                                                                                         |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`     | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                                                                                           |
+| `open`      | Optional: the open tab's `href`, for tabs told apart by query rather than path                                                                                                     |
+| `tabs`      | Each tab's `href`, short label ("Groups", "Traditions"), optional `count` (shown after the label as a `FacetCount`, 99+ from 100), `filtered`, `shape` and `density`, in row order |
+| `action`    | Optional: the open tab's one action, at the end of the heading's line                                                                                                              |
+| `tabsBelow` | Optional: the row sits on a line of its own beneath the heading at every width (the admin support page), by the same forced break the framed page uses                             |
+| `framed`    | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"                                                                                 |
+| `children`  | The open tab's content                                                                                                                                                             |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
@@ -30,7 +33,7 @@ shared [`Skeleton`](skeleton.md) that the content area shows while a pressed tab
 to draw a filter row. A list reuses it, with no filter row, while a filter
 or a pager press is on its way ([`list-frame.md`](list-frame.md)), so it
 imports its own stylesheet, `index.scss`, and its shapes are drawn wherever
-it renders. A tab's `shape`, `table` by default, is the skeleton's shape while that tab is on its way: the Grimoire's Spells and Drafts tabs set `cards` (M10.11), so a pressed tab shows cards under the filter rather than a table, and `density: 'compact'`, so those cards are the compact ones the list opens at.
+it renders. A tab's `shape`, `table` by default, is the skeleton's shape while that tab is on its way: the Grimoire's Spells and Drafts tabs set `cards` (M10.11), so a pressed tab shows cards under the filter rather than a table, `density: 'compact'` and `card: 'spell'`, so those cards are the compact spell-sized ones the list opens at.
 
 ## Contracts
 
@@ -304,7 +307,9 @@ The row is a `nav` named for the page, not a `role="tablist"`. Each tab is a nav
 
 There is no client directive on the page. The links, which must know which tab is open, and the switch they share with the action and the panel are the client parts, and the action and the content pass through them from the server. The open tab is the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match, and the first would mark Spells.
 
-`filtered` on a tab says its list opens with a filter, so its loading skeleton draws a filter row above the table. `cards` is for the grimoire's tabs.
+`filtered` on a tab says its list opens with a filter, so its loading skeleton draws a filter row above the table. `cards` is for the grimoire's tabs. `sections` is for the account's tabs, whose content is a jump menu beside stacked panels rather than a list: the skeleton draws the menu and `sections` panels (3 on Account, 4 on Sign-In; the Support Requests tab is a `table`) in the page's own `.page-with-nav` grid, with no head of its own, as the heading above stays put.
+
+A tab's `columns` and `fields` size its table skeleton when the table has more than three columns or the filter more than two controls; the admin Support views set both, and `shape: 'table'`.
 
 ## Pressing a tab
 
@@ -328,7 +333,7 @@ A row too wide for its column scrolls sideways inside its track. When the page l
 
 The track is a faint grey wash edged by a hairline, fainter than `$fill-quiet` so the green pill stands apart from it (a green track sat too close to the pill). The open tab is a pill inside it: the accent thinned into the card and edged in the accent itself, since the fill alone sits under WCAG 1.4.11's 3:1 against the track. The others are plain muted text. The pill's and the track's mixes are this row's alone, so local rather than tokens. The track spends a 1px edge and 0.125rem of air on each side, as its own padding, so the row inside carries none.
 
-The row is a list, not bulleted: `typography-base`'s ◆ marker, indent and item margins are cleared, and since that mixin positions every list item for its marker, the items are set to stand clear of the track the links measure from. The pills keep to one line at their own widths at every width. A row wider than its line scrolls inside the track rather than wrapping or squeezing, with no scrollbar, which would cross the open pill's foot inside a track this thin. The label cut off at the track's edge says there is more. The row is positioned so the pill and the links measure their place from it, and its scroll padding clears the edge when a keyboard focus or the open tab scrolls into view.
+The row is a list, not bulleted: `typography-base`'s ✦ marker, indent and item margins are cleared, and since that mixin positions every list item for its marker, the items are set to stand clear of the track the links measure from. The pills keep to one line at their own widths at every width. A row wider than its line scrolls inside the track rather than wrapping or squeezing, with no scrollbar, which would cross the open pill's foot inside a track this thin. The label cut off at the track's edge says there is more. The row is positioned so the pill and the links measure their place from it, and its scroll padding clears the edge when a keyboard focus or the open tab scrolls into view.
 
 A pill is 2.25rem less the track's edge and air, in the caption size, its label on one line. The row is smaller than a control, so each pill's hit area is padded back to `$control-height` by a transparent box above and below it. The row is a control tall, centred on the track and overflowing it by the same amount above and below, and its scrollport is what the hit area fills. A scrolling box clips whatever sticks out of it, so the hit area has to be inside the row, not outside it.
 
@@ -337,6 +342,8 @@ Pressed, for as long as the pointer is down (`src/lib/press-feedback.ts` marks a
 While a tab is on its way every tab takes the muted, faded look a disabled control has, without a button's edge to dash, and hover changes nothing. The pill, on the pressed tab by then, fades with them with its colour taken out. `tab-links.tsx` ignores a press meanwhile.
 
 ## The header at narrow widths
+
+A `framed` page (the account) differs at every width. Its tabs hold a `.page-with-nav`, which centres a menu and a column of sections, so the head stands over the sections' column: its start is offset by the same arithmetic as the grid (half the menu and its gap right of the middle, less half the column; at the three-column width the column is simply centred), up to `$narrow-column` wide. Its pills sit on a line of their own beneath the heading at every width, by the forced break described below for a labelled action. Phone widths need no offset, as the page-with-nav is then a single column. A framed page is its own frame, as no `.page-column` wraps it (the admin's and a coven's tabbed pages sit in one), so `.tabbed-page--framed` carries the frames' side gutter, `space(4)` a side, at every width.
 
 The primitives' `.page-header` spreads its children to the two ends and nudges every non-heading item down to the heading's baseline. Here the heading is followed by its tabs, only the action is pushed to the end, and the tabs are centred on the line. The selector is doubled to outweigh the primitives' narrow-width rules, which would stretch the row across its line as they do an action. A row at a phone's width drops under the heading at its own size instead. The track sits 0.125rem lower than the nudge's cancelling, where it was found level with the heading's text, and it shrinks below its pills' width rather than overflow the line, so the row inside scrolls.
 
@@ -347,3 +354,7 @@ From `$tabbed-reflow-width-labelled` down the wide line is too short for the hea
 A header whose action keeps its label (People's Pause Admin Changes) works differently from the same width down: the heading and the action keep the line and the pills drop beneath at their own size. A flex box cannot put an item on a line of its own at its own width, so a line break is forced by a pseudo-element the width of the line and no height, ordered between the action and the pills. The line it makes would take a row gap above and below (a flex line is never shorter than nothing), so the pills give one back. Under the forms' column the primitive gives the heading the line to itself; a tabbed page with a labelled action keeps the two on one line down to `$tabbed-action-below-width`, where the action goes beneath the heading at the line's start, the auto margin cancelled.
 
 From `$tabbed-reflow-width` down the pills drop beneath the heading and its plus: the heading takes the line less the plus, and the pills, first in the markup, are ordered after the action. This is apart from the plus's own switch at `$tabbed-plus-width`, on purpose. At `$add-below-width` and under, the Add is the labelled button again and goes beneath the heading, which has the line to itself (the reflow rule gave it the line less the plus), and the pills follow. The labelled Add and the pills would share a line, so the same forced break as under a labelled action keeps the pills on their own, and the pills give back the row gap it takes twice.
+
+## Tabs told apart by query
+
+The admin support page's views share one path and differ by query, so the pathname match cannot find the open one. `TabbedPage` takes `open`, the open tab's `href`, which replaces the pathname match, and a tab's `count` shows after its label. That page also sets `tabsBelow`, so its row sits beneath the Support heading rather than on its line.

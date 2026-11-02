@@ -5,6 +5,7 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import {
   acceptInvitation,
   invitationStanding,
+  mintInvitationCards,
   pauseAdminRoleChanges,
   resumeAdminRoleChanges,
 } from '@/modules/identity';
@@ -15,6 +16,7 @@ import {
   AS_GRANTEE,
   AS_PRIMARY,
   AS_STRANGER,
+  CARD_BATCH,
   GRANTEE,
   INVITED,
   PRIMARY,
@@ -518,5 +520,145 @@ describe('while admin changes are paused', () => {
       acceptedAt: expect.any(Date),
     });
     expect(await roleOf(GRANTEE)).toMatchObject({ role: 'admin' });
+  });
+});
+
+// A card is bound to no address, coven or site role: it admits any verified account once, and the account gains the right to create a coven and nothing else.
+describe('acceptInvitation, on a card', () => {
+  const seats = async (id: string) =>
+    (await sql`select 1 from workspace_members where user_id = ${id}`).length;
+
+  it('admits a verified account at any address, granting the creation flag via the card and no seat or site role', async () => {
+    const id = await invite({ card: true });
+    expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toEqual({
+      acceptable: true,
+      tier: 'card',
+    });
+    expect(await roleOf(STRANGER)).toMatchObject({ role: 'user', can_create_workspace: false });
+
+    const accepted = await acceptInvitation(asUser(AS_STRANGER), TOKEN);
+
+    expect(accepted).toMatchObject({ id, kind: 'card', acceptedBy: STRANGER });
+    expect(await roleOf(STRANGER)).toMatchObject({ role: 'user', can_create_workspace: true });
+    expect(await seats(STRANGER)).toBe(0);
+    expect(await ledger()).toEqual([
+      expect.objectContaining({
+        user_id: STRANGER,
+        privilege: 'create_workspace',
+        change: 'grant',
+        via: 'card',
+        created_by: STRANGER,
+      }),
+    ]);
+    // The permanent record of the arrival: who, when, and which batch.
+    expect(await invitation()).toMatchObject({ accepted_by: STRANGER });
+    expect((await sql`select batch_id from invitations`)[0]).toMatchObject({
+      batch_id: CARD_BATCH,
+    });
+  });
+
+  it('records the note the batch was minted with in the privilege ledger', async () => {
+    const minted = await mintInvitationCards(
+      asUser(E),
+      1,
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      'Handed out at the autumn fair',
+    );
+    // The precondition: the minted card is pending and the note was stored on its row.
+    expect(
+      (await sql`select note from invitations where batch_id = ${minted.batchId}`)[0],
+    ).toMatchObject({
+      note: 'Handed out at the autumn fair',
+    });
+
+    await acceptInvitation(asUser(AS_STRANGER), minted.tokens[0]!);
+
+    expect(await ledger()).toEqual([
+      expect.objectContaining({ via: 'card', note: 'Handed out at the autumn fair' }),
+    ]);
+  });
+
+  it('points an unverified account at the email page, while the card stays pending', async () => {
+    await sql`update users set email_verified = false where id = ${STRANGER}`;
+    await invite({ card: true });
+
+    expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toMatchObject({
+      acceptable: false,
+      reason: 'unverified',
+    });
+    await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
+    expect((await invitation()).accepted_at).toBeNull();
+    expect(await roleOf(STRANGER)).toMatchObject({ can_create_workspace: false });
+  });
+
+  // The second account is verified and the card pending until the first use, so only the single-use stamp refuses.
+  it('refuses a second use as already accepted, whoever asks', async () => {
+    await invite({ card: true });
+    await acceptInvitation(asUser(AS_STRANGER), TOKEN);
+
+    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+      reason: 'accepted',
+    });
+    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
+    expect(await roleOf(GRANTEE)).toMatchObject({ can_create_workspace: false });
+    expect((await invitation()).accepted_by).toBe(STRANGER);
+  });
+
+  it('tells the account that accepted the card so, apart from a stranger refused as already accepted', async () => {
+    await invite({ card: true });
+    await acceptInvitation(asUser(AS_STRANGER), TOKEN);
+
+    const own = await invitationStanding(asUser(AS_STRANGER), TOKEN);
+    expect(own).toMatchObject({ acceptable: false, reason: 'used-by-you' });
+    expect(JSON.stringify(own)).toContain("You've already used this card");
+    await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
+    // The precondition: the card is accepted by this very account, and another account still sees the stranger's refusal.
+    expect((await invitation()).accepted_by).toBe(STRANGER);
+    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+      reason: 'accepted',
+    });
+  });
+
+  it.each([
+    ['expired', { expired: true }, 'This card has expired.'],
+    ['revoked', { revoked: true }, 'This card has been withdrawn.'],
+  ] as const)(
+    'refuses one %s with its own reason, in words for a card, and names no batch',
+    async (reason, state, words) => {
+      await invite({ card: true, ...state });
+
+      const standing = await invitationStanding(asUser(AS_STRANGER), TOKEN);
+      expect(standing).toMatchObject({ acceptable: false, reason });
+      expect(standing).toMatchObject({ message: expect.stringContaining(words) });
+      expect(JSON.stringify(standing)).not.toMatch(/email|sent it|sender/i);
+      expect(JSON.stringify(standing)).not.toContain(CARD_BATCH);
+      await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
+      expect(await ledger()).toEqual([]);
+    },
+  );
+
+  // A card's code is 16 symbols and an address invitation's token is longer, so the shape alone tells which kind was mistyped.
+  it('words a token naming nothing for a card when it has a card code’s shape, and for an email otherwise', async () => {
+    await invite({ card: true });
+
+    const card = await invitationStanding(asUser(AS_STRANGER), 'AAAAAAAAAAAAAAAA');
+    expect(card).toMatchObject({ acceptable: false, reason: 'invalid' });
+    expect(JSON.stringify(card)).toContain("That code doesn't match a card");
+    expect(JSON.stringify(card)).not.toMatch(/email|sent it/i);
+    const link = await invitationStanding(asUser(AS_STRANGER), 'no-such-token-at-all');
+    expect(JSON.stringify(link)).toContain('from the email');
+  });
+
+  it('leaves the flag as it was for an account that already holds it, recording no second grant', async () => {
+    await asManualFix(sql, async (tx) => {
+      await tx`update users set can_create_workspace = true where id = ${STRANGER}`;
+    });
+    await sql`truncate user_privilege_changes`;
+    await invite({ card: true });
+
+    await acceptInvitation(asUser(AS_STRANGER), TOKEN);
+
+    expect(await ledger()).toEqual([]);
+    expect((await invitation()).accepted_by).toBe(STRANGER);
   });
 });

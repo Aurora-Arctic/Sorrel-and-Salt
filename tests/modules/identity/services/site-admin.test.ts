@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
+import { E, F, asUser } from '../../../support/as-user';
 
 // The site role's checks, and the proofs the compendium-tier writes and the people page demand (claude-docs/db/site-admin-proof.md, "The SiteAdmin proof").
 // Each reads the session's role and nothing else: a workspace role is a different axis.
@@ -37,5 +38,19 @@ describe('assertCurator', () => {
     expect(() => assertCurator({ userId: USER_ID, role: 'user' }, 'Not yours to curate')).toThrow(
       new Forbidden('Not yours to curate'),
     );
+  });
+});
+
+// An unverified account reaches the email page and nothing else, so the site roles are refused on the API as a coven is. The verified
+// session of the same user passes, so the refusal is the mark and not the role.
+describe('an unverified site role', () => {
+  it.each([
+    ['assertSiteAdmin, an admin', assertSiteAdmin, E],
+    ['assertCurator, an admin', assertCurator, E],
+    ['assertCurator, a curator', assertCurator, F],
+  ] as const)('%s is refused, and admitted once verified', (_name, check, user) => {
+    const verified = asUser(user);
+    expect(() => check(verified)).not.toThrow();
+    expect(() => check({ ...verified, emailUnverified: true })).toThrow(Forbidden);
   });
 });

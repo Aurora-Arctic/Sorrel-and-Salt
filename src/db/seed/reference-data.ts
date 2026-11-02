@@ -28,7 +28,7 @@ export interface SeedReferenceDataOptions extends Pick<
 
 /**
  * Checks the compendium files, then runs the seven seeds in one transaction and
- * returns the compendium seed's report. A dry run rolls all seven back at once;
+ * returns the compendium seed's report, with the sources seed's KEPT sources first. A dry run rolls all seven back at once;
  * `force` reaches the compendium seed only, the one seed that refuses.
  */
 export async function seedReferenceData(
@@ -48,8 +48,9 @@ export async function seedReferenceData(
       await seedFormVocabulary(tx);
       await seedAstrologyVocabularies(tx);
       await seedDeityVocabulary(tx);
-      await seedVocabularySources(tx);
+      const sourcesKept = await seedVocabularySources(tx);
       const report = await seedCompendiumContent(tx, compendium, { manifest, force });
+      report.kept.unshift(...sourcesKept.map((source) => ({ where: null, ...source })));
       await seedDemoCovenSeats(tx);
       const demoCovenContent = await seedDemoCovenContent(tx);
       return { ...report, demoCovenContent };

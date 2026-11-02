@@ -190,8 +190,14 @@ function BibliographyItem({ entry }: { entry: Entry }): ReactElement {
   );
 }
 
-/** The foot of the page: the notes, then the bibliography, or the say-so that there are none. */
-export function ReferencesSection({ model }: { model: ReferenceNotes }): ReactElement {
+/** The foot of the page: the notes, then the bibliography, or the say-so that there are none, then `children` (the curator's score). */
+export function ReferencesSection({
+  model,
+  children,
+}: {
+  model: ReferenceNotes;
+  children?: ReactNode;
+}): ReactElement {
   const { notes, bibliography } = model;
   return (
     <section
@@ -222,6 +228,7 @@ export function ReferencesSection({ model }: { model: ReferenceNotes }): ReactEl
           </div>
         </>
       )}
+      {children}
     </section>
   );
 }

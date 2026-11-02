@@ -25,7 +25,8 @@ export const InvitationRef = builder.objectRef<InvitationRow>('Invitation').impl
     'An invitation, pending or not. Its link is mailed to the address and never answered.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    email: t.exposeString('email'),
+    // An address row always has one (`invitations_kind_shape`), and a card is never answered as this type.
+    email: t.string({ resolve: (row) => row.email as string }),
     note: t.exposeString('note', {
       nullable: true,
       description: 'Why the person is invited, where the inviter gave a reason.',

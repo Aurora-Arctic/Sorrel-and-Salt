@@ -18,7 +18,7 @@ const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
 function targetOf(path: string): NavigationTarget {
   if (path === NEW_COVEN_PATH) return { region: 'main', shape: 'form', frame: 'narrow' };
-  return covenTarget(path);
+  return { ...covenTarget(path), coven: covenSlugOf(path) ?? undefined };
 }
 
 // Set when a switch starts and read once by the next switcher to mount, so focus survives the

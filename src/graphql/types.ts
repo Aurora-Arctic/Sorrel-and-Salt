@@ -6,7 +6,8 @@ import type {
   ObjectRef,
 } from '@pothos/core';
 import type { FieldAuthScopes } from '@pothos/plugin-scope-auth';
-import type { EmailVerificationSender, InvitationSender } from '@/modules/identity';
+import type { EmailVerificationSender, InvitationSender, PasswordSetter } from '@/modules/identity';
+import type { SupportNotifier } from '@/modules/support';
 import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
 import type { Loaders } from './loaders';
@@ -20,6 +21,12 @@ export interface Context {
   emailVerification: EmailVerificationSender;
   /** Bound to this request's host: an admin invitation's link goes out through it. */
   invitations: InvitationSender;
+  /** Bound to this request's cookie: the account page's first password is set through it. */
+  passwords: PasswordSetter;
+  /** Bound to this request's host: a reply's notice to the sender goes out through it. */
+  support: SupportNotifier;
+  /** The caller's address from the platform's forwarded-for header; `null` when there is none. Only the signed-out support send reads it. */
+  clientIp: string | null;
 }
 
 export interface SchemaTypes {
@@ -49,7 +56,7 @@ export interface SchemaTypes {
   };
 }
 
-export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND' | 'STALE_WRITE';
+export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
 
 /**
  * What a mapped error carries under `extensions`: `fieldErrors` only on
@@ -59,6 +66,8 @@ export interface ErrorExtensions {
   code: ErrorCode;
   fieldErrors?: ValidationIssue[];
   currentRevision?: number;
+  /** Set with `RATE_LIMITED`: the HTTP status and the Retry-After header Yoga sends. */
+  http?: { status: number; headers: Record<string, string> };
 }
 
 /**

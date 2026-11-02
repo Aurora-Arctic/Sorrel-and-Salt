@@ -19,6 +19,7 @@ function setOutput(name, value) {
 if (!fs.existsSync(RESULTS_PATH)) {
   setOutput('summary', 'no checklist was written');
   setOutput('details', '');
+  setOutput('flaky', 'false');
   process.exit(0);
 }
 
@@ -80,3 +81,5 @@ const details = lines.join('\n');
 
 setOutput('summary', summary);
 setOutput('details', details);
+// Read by the report upload: a story that failed and then passed on retry has a trace worth keeping.
+setOutput('flaky', stories.some((story) => story.flaky) ? 'true' : 'false');

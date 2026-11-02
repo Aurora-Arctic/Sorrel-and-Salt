@@ -31,7 +31,7 @@ html {
 // Inside either frame (the shell, or the public frame) a scroll that brings a focused control into view lands
 // it below the sticky bar, and on a phone above the fixed section bar.
 html:has(:is(.app-shell, .public-frame)) {
-  scroll-padding-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+  scroll-padding-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
 @media (max-width: $shell-phone-width) {

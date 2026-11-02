@@ -1,0 +1,91 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The score bar's height: no token sizes a meter, so this is the one value past them.
+$bar-height: 0.5rem;
+
+// A hairline closes the panel off from the References field beneath, as the form's sections are ruled.
+// The padding above the line equals the section body's gap beneath it, so the line sits midway; the
+// bare `section` rule's bottom margin is cleared so it does not add to that gap. Its stack gap is cleared
+// too, so the key can sit under the bar; each part spaces itself below.
+.sourcing-score {
+  margin-block-end: 0;
+  gap: 0;
+  padding-block-end: space(5);
+  border-block-end: 1px solid $hairline;
+}
+
+.sourcing-score__head {
+  display: flex;
+  align-items: center;
+  gap: space(1);
+  margin-block-end: space(5);
+}
+
+.sourcing-score__heading {
+  margin: 0;
+  // The h4 size at any level, so the panel looks the same under the dialog's h3 and the page's h1.
+  font-size: heading-size(4);
+  line-height: 1.25;
+}
+
+.sourcing-score__bar {
+  display: flex;
+  block-size: $bar-height;
+  overflow: hidden;
+  border-radius: radius('sharp');
+  background: $fill-quiet;
+}
+
+.sourcing-score__gain {
+  background: $accent;
+}
+
+.sourcing-score__cost {
+  background: $warning;
+}
+
+.sourcing-score__key {
+  margin: space(1) 0 space(5);
+  // Tight leading, so the line sits under the bar it reads out rather than a paragraph's height away.
+  line-height: 1.2;
+  font-size: type-size('caption');
+  color: $text-muted;
+}
+
+.sourcing-score__facts {
+  display: grid;
+  gap: space(1);
+  // Not a bulleted list: the global `ul li::before` draws a ✦ marker, which in a grid would be a cell.
+  @include list-reset;
+}
+
+.sourcing-score__fact {
+  display: grid;
+  grid-template-columns: $glyph-size minmax(0, 1fr) auto;
+  align-items: center;
+  gap: space(2);
+  font-size: type-size('small');
+}
+
+.sourcing-score__glyph {
+  inline-size: $glyph-size;
+  block-size: $glyph-size;
+}
+
+.sourcing-score__points {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.sourcing-score__fact--gain .sourcing-score__glyph {
+  color: $accent;
+}
+
+.sourcing-score__fact--cost .sourcing-score__glyph {
+  color: $warning;
+}
+
+.sourcing-score__fact--none .sourcing-score__glyph {
+  color: $text-muted;
+}

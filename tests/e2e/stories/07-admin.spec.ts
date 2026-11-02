@@ -6,6 +6,7 @@ import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { test, expect } from '../fixtures';
+import { holdSaves } from './ingredient-dialogs';
 import { signInAgainAs, signInAs } from '../session';
 
 // What a site admin curates and how, what everyone else is refused, and what an admin does not reach (a
@@ -83,6 +84,9 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
     'a coven owner who is not an admin meets the 403 page on every admin page an admin opens',
     { tag: '@story-17' },
     async ({ page }) => {
+      // A longer limit for this flow, which opens every admin page twice and signs in twice: 27 loads at
+      // about a second each ran 28.5s to 32.2s in CI against the default 30s.
+      test.setTimeout(60_000);
       // Why each refusal below is the guard's: the same addresses answer an admin.
       await signInAs(page, 'admin@story-17.test', ['discord'], 'admin');
       for (const path of ADMIN_ROUTES) {
@@ -388,6 +392,8 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await editing.getByRole('button', { name: 'Open All' }).click();
       const save = editing.getByRole('button', { name: 'Save Ingredient' });
       await expect(save).toBeDisabled();
+      // The form's own saves are held until after the click on Save, so the autosave cannot file the edits first.
+      const saves = await holdSaves(page, ['UpdateCompendiumIngredient']);
       await editing
         .getByRole('textbox', { name: 'Name', exact: true })
         .fill('Aaa Testwort Renamed');
@@ -395,9 +401,10 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await addForm(editing, 'Oil');
       const oil = editing.getByRole('group', { name: 'Oil', exact: true });
       await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
-      await expect(save).toBeEnabled();
       await assertNoAccessibilityViolations(page);
+      await expect(save).toBeEnabled();
       await save.click();
+      saves.release();
       const renamed = page.getByRole('dialog', {
         name: 'Edit Ingredient, Aaa Testwort Renamed',
         exact: true,
@@ -1148,6 +1155,50 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page).toHaveURL(/\/admin\/deities\?query=Aaa\+Testri$/);
       await expect(page.getByRole('link', { name: 'Add Deity' })).toBeVisible();
       await expect(page.getByRole('row', { name: /Aaa Testri/ })).toHaveCount(0);
+    },
+  );
+
+  test(
+    'a curator hides a compendium entry from the public and shows it again',
+    { tag: '@story-18' },
+    async ({ page, browser, baseURL }) => {
+      const { userId } = await signInAs(page, 'shown@story-18.test', ['discord'], 'curator');
+      const name = 'Fixture Hidewort';
+      const slug = slugify(name);
+      await withSql((sql) =>
+        insertIngredient(
+          sql,
+          makeIngredient({ name, nomenclature: 'none', variants: [makeVariant()] }),
+          userId,
+        ),
+      );
+      const entryPage = `/compendium/ingredients/${slug}`;
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+
+      await page.goto('/admin/compendium');
+      const row = page.getByRole('row').filter({ hasText: name });
+      const shown = row.getByRole('switch', { name: `Shown in Compendium: ${name}`, exact: true });
+      await expect(shown).toBeChecked();
+      await shown.click();
+      await expect(shown).not.toBeChecked();
+
+      // A visitor with no account no longer finds it, in the list or at its address.
+      const visitor = await browser.newContext({ baseURL });
+      const visitorPage = await visitor.newPage();
+      expect((await visitorPage.goto(entryPage))?.status()).toBe(404);
+      await visitorPage.goto('/compendium');
+      await expect(visitorPage.getByRole('link', { name })).toHaveCount(0);
+      await visitor.close();
+
+      // The curator still reaches the page, told that it is hidden.
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+      await expect(page.getByText(/^Hidden in the Compendium\./)).toBeVisible();
+
+      await page.goto('/admin/compendium');
+      await shown.click();
+      await expect(shown).toBeChecked();
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+      await expect(page.getByText(/^Hidden in the Compendium\./)).toHaveCount(0);
     },
   );
 });

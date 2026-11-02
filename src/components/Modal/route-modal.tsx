@@ -44,6 +44,7 @@ export default function RouteModal({
   content,
   place,
   returnTo,
+  loadingBody,
 }: RouteModalProps): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const opener = useRouteModalOpener();
@@ -55,7 +56,7 @@ export default function RouteModal({
     // A close while it loads forgets the press; the navigation back
     // supersedes the one on its way, which Next then discards.
     opener?.cancel();
-    navigate(closeHref, { replace: true });
+    navigate(closeHref, { replace: true, scroll: false });
     refresh();
   };
   // Modal gives the focus back to what opened it while that is in the page; otherwise a link to the
@@ -75,7 +76,7 @@ export default function RouteModal({
       onClose={close}
       returnTo={backTo}
     >
-      {(done) => (content ? content.body(done) : <ModalLoading />)}
+      {(done) => (content ? content.body(done) : (loadingBody ?? <ModalLoading />))}
     </Modal>
   );
 }

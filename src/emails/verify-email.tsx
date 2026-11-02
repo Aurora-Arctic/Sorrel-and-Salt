@@ -1,4 +1,3 @@
-import { SOCIAL_PROVIDERS } from '../lib/social-providers';
 import {
   Action,
   EmailLayout,
@@ -7,7 +6,7 @@ import {
   actionVerb,
   defineMessage,
 } from './parts/layout';
-import type { ProviderId } from '../lib/types';
+import { providerList } from './parts/providers';
 import type { VerifyEmailProps } from './types';
 
 const SUBJECT = 'Confirm Your Email Address';
@@ -17,15 +16,6 @@ const PREVIEW = {
   'sign-up': 'Confirm the address you signed up with. The link works for one hour.',
   change: 'Confirm this address for your account. The link works for one hour.',
 };
-
-function providerList(providers: readonly ProviderId[]): string {
-  const labels = SOCIAL_PROVIDERS.filter((provider) => providers.includes(provider.id)).map(
-    (provider) => provider.label,
-  );
-  return labels.length > 1
-    ? `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
-    : (labels[0] ?? '');
-}
 
 // No greeting by name, unlike the invitations: the address is not yet proved, and a
 // mistyped one would hand a stranger the account's name.

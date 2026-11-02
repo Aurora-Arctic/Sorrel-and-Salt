@@ -139,7 +139,8 @@ this is the shape.
   ("Linking a second provider" below); it writes nothing to the row.
 - **Offered, never required for a session.** `emailVerification.sendOnSignUp`
   is on, so an OAuth sign-up whose address is unverified is created, mailed
-  and signed in. No provider sets `requireEmailVerification`; what needs a
+  and signed in. No provider sets `requireEmailVerification`, and email and
+  password leaves it off ([`passwords.md`](passwords.md)); what needs a
   verified address checks the column. `requireLocalEmailVerified` stays at
   its default, so a provider cannot link into an unverified row, and the
   owner of a squatted address is refused with `account_not_linked` until
@@ -241,7 +242,7 @@ stale session signs in again"). Removal
 hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
-**The page.** The Sign-In Methods section of the account page
+**The page.** The Sign-In Methods section of the Sign-In tab, `/account/sign-in`
 (["The account page"](#the-account-page-mb88) below), which calls
 `requireSession()`, so an unverified account never reaches it, though
 Better Auth itself would link to an unverified row. The page reads
@@ -251,7 +252,7 @@ renders `SignInMethods`
 ([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
 link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
 and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
-account page, `/account`, with `?error=` and `?provider=` when it failed, so
+Sign-In tab, `/account/sign-in`, with `?error=` and `?provider=` when it failed, so
 the page can put the sentence in the row of the provider that failed.
 
 **The sign-in page's side.** `account_not_linked` has one sentence
@@ -266,7 +267,7 @@ sentence. The link-only codes (`email_does_not_match`,
 An unverified account cannot hold an address against its owner past one
 verification window, and three hours at most. The argument is
 [`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
-"Provisional accounts and the sweep"; this is the shape.
+"Provisional accounts and the sweep" (written when a callback hook did the removing; a job does it now); this is the shape.
 
 - **What is provisional.** A `users` row with `emailVerified` false that
   holds at least one provider `accounts` row. It has lapsed once its
@@ -292,27 +293,32 @@ verification window, and three hours at most. The argument is
   `/send-verification-email`, answers 401 unless the session holds the
   address posted, so nobody can mail someone else, or keep a row alive by
   posting its address.
-- **The sweep.** `hooks.before` on `/callback/:id` deletes every lapsed row
-  in one statement, before the code exchange, so a lapsed row holding the
-  arriving address is gone before Better Auth looks it up; `gateEmailChange`
-  runs it too ("The email page" below). The rows' `accounts` and `sessions`
-  go with them by `ON DELETE CASCADE`, so the squatter's cookie signs nobody
-  in and its provider account resolves to nothing. Two partial indexes,
+- **The expiry job.** Creating an unverified account starts one run of the
+  `provisionalAccountExpiry` job (`src/modules/identity/jobs/`), from the
+  `user.create.after` hook in `src/lib/auth.ts` through
+  `scheduleProvisionalExpiry`. The run sleeps one verification window and
+  then calls its step, which deletes the row if it has lapsed. If the row
+  has not (a resend moved the window), the step answers the seconds left
+  and the run sleeps again; it ends when the row is gone, verified, or
+  vouched for. The rows' `accounts` and `sessions` go with the delete by
+  `ON DELETE CASCADE`, so the squatter's cookie signs nobody in and its
+  provider account resolves to nothing. The step is idempotent: run again
+  after it succeeded it finds no row and changes nothing. No request sweeps
+  any more: the OAuth callback, `gateEmailChange` and the sign-up route
+  read the table as it is. Two partial indexes,
   `users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
-  hold only unverified rows, one for each half of the predicate, which
-  keeps the usual empty sweep cheap. The swept ids go to the server log at
-  `info`.
-- **A failed sweep never fails a sign-in.** It is logged at `error` and the
-  callback carries on. One lapsed row that another row references makes the
-  whole statement fail, because every audit foreign key is `NO ACTION`.
-  Nothing in v1 lets an unverified account write beyond its own row, so
-  this needs a bug or a hand edit; the one row others write about it, a
-  privilege change, the sweep steps around (next).
-- **An account an admin has vouched for is not swept** (MB.204). Approving
+  hold only unverified rows, one for each half of the predicate. The
+  mechanism is [`design-decisions/m15.49-job-mechanism.md`](../design-decisions/m15.49-job-mechanism.md).
+- **A run that is lost leaves its account in place.** A failed start is
+  logged at `error` and the sign-up carries on. That account then holds its
+  address until an admin removes it, as the callback sweep this job replaced would have removed it
+  at the next callback. The job runs the delete as its own step with
+  retries, so a step that fails is tried again rather than lost.
+- **An account an admin has vouched for is not removed** (MB.204). Approving
   an unverified account for coven creation (M5.8) or making it an admin
   (MB.59) writes a `user_privilege_changes` row naming it with a plain
-  foreign key, and the sweep skips any account holding one. Deleted, it
-  would fail the whole statement on that key, and so every sweep after, and
+  foreign key, and the job skips any account holding one. Deleted, it
+  would fail on that key, and
   the ledger keeps its history: `forbid_rewrite` refuses deleting the row,
   and letting the rows go with the user would erase what the ledger is for.
   Revoking the privilege adds a row rather than removing one, so the account
@@ -322,10 +328,10 @@ verification window, and three hours at most. The argument is
 - **Hard delete, outside `withAudit`.** A tombstone would go on blocking
   the owner, since Better Auth looks a user up by address without our
   `deleted_at` filter, and no row survives to carry a stamp. The delete is
-  the repository's one named `deleteProvisionalUsers`
+  the repository's one named `deleteLapsedProvisionalUser`
   ([`db/provisional-account-delete.md`](../db/provisional-account-delete.md)),
   since `write.delete` rejects a table carrying `deleted_at` by design.
-- **Seeded rows are never swept.** They hold no `accounts` row, so nobody
+- **Seeded rows are never removed.** They hold no `accounts` row, so nobody
   can sign in to them. The seeded bootstrap user stays unverified on
   purpose: verified, it would take an implicit link from any provider
   vouching for its address, into a row that is an admin until MB.58
@@ -338,7 +344,7 @@ verification window, and three hours at most. The argument is
 - **A change never unverifies a row.** An established account asking for a
   new address keeps its verified row until the new one is proven ("The
   email page" below); marked unverified, an account older than the cap
-  would go in the next sweep.
+  would go in the next run.
 
 ### The email page (MB.54)
 
@@ -349,16 +355,39 @@ proved. Stories 58 and 59; the plan is
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
+- **The API refuses an unverified account too.** The session built from the
+  request headers carries `emailUnverified` while the address is unverified,
+  and `assertMembership` refuses such a session with an explaining
+  `Forbidden`, and `membershipsOf` answers an empty list, so no coven data or name is reachable through `/api/graphql` by
+  skipping the page redirect. `me`, `setEmail` and sign-out take no
+  membership and still work. `assertSiteAdmin` and `assertCurator` refuse it too, so an unverified admin or curator reaches no
+  curation or people operation either (the `usersById` loader batch is left as it is), and the GraphQL `admin` and `curator` scopes are false for it, so `selfOrAdmin` falls back to `self`. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
   `src/modules/identity/services/email.ts` writes nothing to `users.email`.
   It normalises and validates the address (`ValidationError` on `email`),
-  refuses one a live _verified_ account holds — a provisional holder lapses
-  first — stamps the row as mailed (`recordVerificationSent`, which is also
+  refuses a change from a session created more than
+  `EMAIL_CHANGE_WINDOW_SECONDS` ago (a day, as Better Auth's `freshAge` is for
+  unlinking a provider) with a `ValidationError` on `email` that says to
+  sign in again, which the form shows under the field; resending the row's own
+  link asks no such thing. A taken address is not refused: held (by a live _verified_ account;
+  a provisional holder lapses first) or free, the call stamps, notifies and
+  answers alike, and only a free address is mailed a link, so the response
+  does not say which it was. Both mails are handed to `sender.defer` (Next's
+  `after`), so the call does not wait for either and a free address does not
+  take longer to answer than a taken one. It tells the address being left that a
+  change was asked for (`sender.notifyChangeRequested`: when, and the new
+  address's domain only, with no link in it), stamps the row as mailed (`recordVerificationSent`, which is also
   what restarts a provisional caller's window), and asks the sender to mail
   the new address a change link. The row's own, still-unverified address is
   mailed again instead; verified, there is nothing to do. Either way `next`
   is handed to the sender as given, for the link's landing.
+- **The address being left is told twice.** `src/emails/email-change-notice.tsx`
+  goes to the old address when the change is asked for and again when
+  `afterEmailVerification` runs on a change link (`noticeCompletedChange` in
+  `src/lib/auth.ts`, which reads the old address from the link's token). The
+  mail carries no action: a link in it would be one a thief could press.
+  Nothing is sent to a `.invalid` placeholder.
 - **One verification mail a minute per account.** `users.verification_sent_at`
   is set by every mail sent for the row's own account, and `setEmail`
   refuses the next within `RESEND_COOLDOWN_SECONDS` with a `VALIDATION`
@@ -411,7 +440,7 @@ the tests [`tests.md`](tests.md).
   `src/lib/auth.ts`, decodes the token's claims (not verified: it only ever
   refuses, and the endpoint verifies the signature after), refuses unless
   the session holds the row named by `email` (`?error=SIGN_IN_TO_VERIFY`,
-  or 403 with no `callbackURL`), runs the provisional sweep, refuses while
+  or 403 with no `callbackURL`), refuses while
   another live row holds `updateTo` (`?error=EMAIL_TAKEN`, which the unique
   index would otherwise 500 on), and records the acting user so the write
   is stamped and `afterEmailVerification` runs — so a change to the
@@ -493,31 +522,66 @@ the tests [`tests.md`](tests.md).
   the session and the services refuse what a provisional account may not
   do, which is everything but `me` and `setEmail`.
 
+### The terms page (M15.57)
+
+`/account/terms`, protected, is where an account agrees to the terms of use
+(the text is the public page `/terms`). It shows the version and date, links
+the text, and has one Agree & Continue button.
+
+- **The version is one constant.** `TERMS_VERSION` in
+  `src/lib/terms-version.ts` is printed by `/terms` and compared by the gate.
+  Raising it sends every account back through the acceptance page.
+- **The record is two nullable columns on `users`.** `terms_version` and
+  `terms_accepted_at` are null until an account agrees. `agreeToTerms`
+  (`src/modules/identity/services/terms.ts`) writes both for the caller's own
+  row through `withAudit`, and takes no version: it records the one in force,
+  so a caller cannot record another. The GraphQL mutation of the same name
+  returns the row.
+- **The gate is in `requireSession()`, after the email check.** An account
+  whose stored version is not the current one is redirected to
+  `/account/terms?next=<path>`, the path coming from the same
+  proxy-forwarded header and the same `safeReturnPath` guard the email page
+  uses. An unverified account proves its address first and agrees second; the
+  email page and the acceptance page are each exempt, so the two redirects
+  never chase each other. `requireAdminSession()` goes through
+  `requireSession()`, so admin pages are gated too.
+- **After agreeing the browser makes a full navigation** to `next`, or to the
+  signed-in landing page when there is none, so the router does not reuse the
+  cached redirect.
+- **Not gated:** signed-out visitors, `/terms`, the other document pages and
+  the public compendium.
+- **The API is not gated the same way.** `/api/graphql` does not refuse an
+  account that has not agreed; the gate covers pages only, as the entry for
+  M15.57 specifies.
+- **Fixtures have agreed.** The seeded fixture cast and the e2e `signInAs`
+  helper record the current version, so a spec lands where it asks; pass
+  `termsAgreed: false` to walk the gate.
+
 ### The account page (MB.88)
 
-`/account` is the one account page: the name the site shows, the address it
-writes to, the ways in, and the coven invitations waiting for that address,
-in one place. Stories 1, 2, 6 and 59; the
+`/account` holds the name the site shows, the address it writes to, and the
+coven invitations waiting for that address; the ways in are the Sign-In tab,
+`/account/sign-in`, below. Stories 1, 2, 6 and 59; the
 component docs are [`components/name-form.md`](../components/name-form.md),
 [`components/email-form.md`](../components/email-form.md),
-[`components/sign-in-methods.md`](../components/sign-in-methods.md) and
+[`components/sign-in-methods.md`](../components/sign-in-methods.md),
+[`components/password-section.md`](../components/password-section.md) and
 [`components/received-invitations.md`](../components/received-invitations.md).
 
 - **The page.** `src/app/(shell)/account/page.tsx` calls `requireSession()`, so an
   unverified account is sent to the email page instead, and reads `getMe`,
   `linkedAccounts()`, `sessionIsFresh()` and one page of
   `listReceivedInvitations`. Under its `<h1>` "Your
-  Account" are four sections, each a region named by its own `<h2>`, which
+  Account" are three sections, each a region named by its own `<h2>`, which
   the page writes in a `.header` with the section's intro as its `.lede`:
   Name ("The name Sorrel & Salt shows for you.", then `NameForm`), Email
   (`EmailForm`, embedded, whose own status line says what the section is
-  for) and Sign-In Methods ("You can sign in to this account with any of
-  these.", then `SignInMethods`) and Invitations ("Covens that have invited
+  for) and Invitations ("Covens that have invited
   this email address to join them.", then `ReceivedInvitations`, M10.32). It
   carries no link to `/account/email`.
   Under the heading, a nav labelled "On This Page"
-  links to each section by its prefixed id (`#account-name`,
-  `#account-email`, `#account-sign-in-methods`, `#account-invitations`).
+  (the Sign-In tab has one too, to its four sections) links to each section by its prefixed id (`#account-name`,
+  `#account-email`, `#account-invitations`).
   The Invitations section is always shown, with the table's empty state when
   none wait. It pages with `?after=` and `?before=`, and its pager links keep
   `#account-invitations`. Its id, `ACCOUNT_INVITATIONS_ID`, and the link to it,
@@ -529,13 +593,24 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   sections and the panels are primitives
   (`.page-frame--narrow`, `.page-frame__section`, `.panel`;
   [`styling.md`](../styling.md), "The page frame"), so the page has no stylesheet of its own beyond `.page-with-nav` in `_primitives.scss`, shared with the coven index: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
-  lands back with `?error=` and `?provider=`: the page turns the code into
+  lands back on the Sign-In tab with `?error=` and `?provider=`: that page turns the code into
   a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
   the provider, when it is one on the roster, so the sentence shows in that
   provider's row. The heading stands alone; Sign Out is in the shell's account menu
   (`SignOutButton`,
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
+- **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one `TabbedPage` titled Account, with the tabs Account, Sign-In and Support Requests (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH`, `ACCOUNT_TWO_FACTOR_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
+- **Two-Factor Sign-In (M16.10, Story 75).** Its own section; for an account with no password it says so and links to the Password section, since two-factor guards password sign-ins alone. The page writes its heading and intro and hands `TwoFactorSettings` (`components/PasswordSection/two-factor.tsx`) whether it is on ([`components/password-section.md`](../components/password-section.md), "Two-factor").
+- **Sign-In Methods lists the password and the passkeys too.** After the providers come a Password row (Set or Not Set, linking to the Password section) and a Passkeys row (how many, linking to the Passkeys section), so the list matches its sentence ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
+- **Passkeys (M16.8, Story 74).** A Passkeys section follows Password and Two-Factor Sign-In, at `/account/sign-in#passkeys`. Its intro says a passkey is tied
+  to this website's address and to the device or password manager that holds
+  it; that a passkey made on one Sorrel & Salt site, such as staging, does not
+  work on another is in the plugin's notes, not on the page ([`plugins.md`](plugins.md), "Passkeys"). The page reads the
+  list with `accountPasskeys()` in `src/lib/request-session.ts`, the plugin's
+  `listPasskeys` cut to id, name and day added, and hands it to `Passkeys`
+  ([`components/passkeys.md`](../components/passkeys.md)), whose Add a
+  Passkey, Rename and Remove call the plugin's own routes.
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only protected page a
   provisional account can reach, a mailed link lands on its confirmed view,
@@ -665,3 +740,38 @@ tasks that build the rest:
   registered: nothing soft-deletes a user through Better Auth.
 - **No `user.fields` mapping.** `name`/`image` keep Better Auth's own
   column names ([`tables.md`](tables.md) has the reverted rename).
+
+## Invitation cards (M15.17–M15.19)
+
+An invitation card is a printed QR code that admits one signed-in account. It is a row in `invitations`
+with `kind = 'card'`: no email, workspace or role, a `batch_id` shared by the batch it was minted in, and
+only the token's hash. Accepting a card follows the invitation-token rules in CLAUDE.md: the link is
+`/i/<token>`, and nothing but the mint ever holds the token.
+
+- **Who may.** Only a site admin. Every service in `src/modules/identity/services/invitation-cards.ts`
+  opens with `assertSiteAdmin`, so a curator, a member and an owner are refused by direct call, and the
+  GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
+  `requireAdminSession()`, which answers a curator with the styled not-authorized page.
+- **Minting.** `createInvitationCards(sheets, expiresAt, note)` makes nine cards per sheet in one transaction under
+  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (55 sheets, 495 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). The
+  mutation returns each token once, in that response; no query or type but `MintedInvitationCards.tokens`
+  has a token, hash or link field, and a test fails if one appears.
+- **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a
+  card already accepted stays accepted. A single card is never revoked on its own.
+- **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, cards, accepted, pending),
+  counted in SQL. The Invitation Cards tab at `/admin/invitation-cards` shows it; the QR codes cannot be
+  redrawn from it.
+- **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
+  account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
+  CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
+  would read as a formula. The Card Sign-Ups tab at `/admin/card-sign-ups` offers it as a download.
+- **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
+  expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
+  and the service writes one row per card, account and reason, counting repeats
+  ([`db/invitations.md`](../db/invitations.md), "Card attempts"). The mutation takes the token alone;
+  the account comes from the session. A signed-out visitor, an unverified account, an unknown token,
+  a pending card and the account that accepted the card record nothing, and the signed-out page reads
+  nothing of the link. `invitationCardAttempts(batchId)` lists a batch's refused opens and
+  `InvitationCardBatch.refusedOpens` counts them; both are admin only, like every card field.
+
+The component is described in [`components/admin-cards.md`](../components/admin-cards.md).

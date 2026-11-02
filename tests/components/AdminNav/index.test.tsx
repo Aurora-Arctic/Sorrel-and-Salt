@@ -26,6 +26,7 @@ const PAGES = [
   '/admin/deities',
   '/admin/celestial-bodies',
   '/admin/users',
+  '/admin/support',
 ];
 
 beforeEach(() => {
@@ -39,12 +40,13 @@ describe('AdminNav', () => {
     expect(hrefs(row())).toEqual(PAGES);
   });
 
-  // A curator is shown the curation pages and not People, which every
+  // A curator is shown the curation pages and no People, which every
   // page beneath refuses them anyway (claude-docs/auth/admin-guard.md).
   it('leaves People out for a curator, who manages no one', () => {
     render(<AdminNav managesPeople={false} />);
 
     expect(hrefs(row())).toEqual(PAGES.filter((href) => href !== '/admin/users'));
+    expect(hrefs(row())).toContain('/admin/support');
   });
 
   it.each([
@@ -59,5 +61,19 @@ describe('AdminNav', () => {
     render(<AdminNav managesPeople />);
 
     expect(currentHrefs(row())).toEqual(expected);
+  });
+});
+
+describe('AdminNav support count', () => {
+  it('carries the requests waiting on staff in the Support link’s text', () => {
+    render(<AdminNav managesPeople needsStaff={3} />);
+
+    expect(within(nav()).getByRole('link', { name: /Support/ })).toHaveTextContent('Support 3');
+  });
+
+  it('says only Support where no count is given', () => {
+    render(<AdminNav managesPeople />);
+
+    expect(within(nav()).getByRole('link', { name: /Support/ })).toHaveTextContent(/^Support$/);
   });
 });

@@ -25,3 +25,13 @@ describe('Skeleton', () => {
     },
   );
 });
+
+describe('Skeleton for the support pages', () => {
+  it('renders one status for the detail shape, with and without the side column', () => {
+    for (const side of [true, false]) {
+      const { unmount } = render(<Skeleton shape="detail" side={side} />);
+      expect(screen.getAllByRole('status')).toHaveLength(1);
+      unmount();
+    }
+  });
+});

@@ -1,0 +1,3 @@
+ALTER TABLE "invitations" ADD COLUMN "position" smallint;--> statement-breakpoint
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_position_card_only" CHECK ("invitations"."position" is null or "invitations"."kind" = 'card');--> statement-breakpoint
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_position_positive" CHECK ("invitations"."position" is null or "invitations"."position" >= 1);

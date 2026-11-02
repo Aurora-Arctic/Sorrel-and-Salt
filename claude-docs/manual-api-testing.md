@@ -63,7 +63,7 @@ reached from the live schema by hand:
   window's Altair or from a terminal:
 
   ```sh
-  curl -s localhost:8000/api/graphql -H 'content-type: application/json' \
+  curl -s localhost:8000/api/graphql -H 'content-type: application/json' -H 'x-sorrel-client: web' \
     -d '{"query":"{ me { id } }"}'
   ```
 

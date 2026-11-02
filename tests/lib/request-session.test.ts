@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
+import { TERMS_VERSION } from '@/lib/terms-version';
 
 // The helper turns Better Auth's session into the service-level `Session` and nothing more.
 // Better Auth is mocked: whether a cookie is a real session is its job, and
@@ -37,6 +38,7 @@ vi.mock('@/modules/coven', () => ({ membershipBySlug: membershipBySlugMock }));
 
 const {
   getSession,
+  hasPassword,
   linkedAccounts,
   requireAdminSession,
   requireCuratorSession,
@@ -52,10 +54,22 @@ const { Forbidden } = await import('@/lib/errors');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
-function betterAuthSession(role: unknown, emailVerified = true, createdAt = new Date()) {
+function betterAuthSession(
+  role: unknown,
+  emailVerified = true,
+  createdAt = new Date(),
+  termsVersion: string | null = TERMS_VERSION,
+) {
   return {
     session: { id: 's', token: 't', userId: USER_ID, expiresAt: new Date(), createdAt },
-    user: { id: USER_ID, email: 'fixture@example.test', name: 'Fixture', role, emailVerified },
+    user: {
+      id: USER_ID,
+      email: 'fixture@example.test',
+      name: 'Fixture',
+      role,
+      emailVerified,
+      termsVersion,
+    },
   };
 }
 
@@ -94,6 +108,16 @@ describe('getSession', () => {
 
 // The proxy has no `headers()` to call; it hands over the request's own.
 describe('sessionFromHeaders', () => {
+  it('marks the session of an unverified account, and leaves a verified one unmarked', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', false));
+    await expect(sessionFromHeaders(new Headers())).resolves.toMatchObject({
+      emailUnverified: true,
+    });
+
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true));
+    await expect(sessionFromHeaders(new Headers())).resolves.not.toHaveProperty('emailUnverified');
+  });
+
   it('asks Better Auth with the headers it is given, not the ambient request', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('admin'));
     const given = new Headers({ cookie: 'better-auth.session_token=other.s' });
@@ -110,7 +134,11 @@ describe('requireSignedIn', () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user', false));
     requestHeaders.set(RETURN_PATH_HEADER, '/coven');
 
-    await expect(requireSignedIn()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+    await expect(requireSignedIn()).resolves.toEqual({
+      userId: USER_ID,
+      role: 'user',
+      emailUnverified: true,
+    });
     // The same request is one `requireSession()` sends away, so it is the
     // missing email check, not the path, that let it through.
     await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
@@ -164,8 +192,70 @@ describe('requireSession', () => {
     it('reaches the email page itself, whatever its query', async () => {
       requestHeaders.set(RETURN_PATH_HEADER, '/account/email?next=%2Fcoven&error=TOKEN_EXPIRED');
 
+      await expect(requireSession()).resolves.toEqual({
+        userId: USER_ID,
+        role: 'user',
+        emailUnverified: true,
+      });
+    });
+  });
+
+  // An account that has not agreed to the terms in force reaches the acceptance page and nothing else; the same account, having
+  // agreed, passes the same page, so the redirect is the guard's doing and nothing else's.
+  describe.each([
+    ['never agreed', null],
+    ['agreed to an earlier version', '2020-01-01'],
+  ])('an account that %s', (_label, stored) => {
+    beforeEach(() => {
+      getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), stored));
+    });
+
+    it('is sent to the acceptance page with the return path the proxy forwarded', async () => {
+      requestHeaders.set(RETURN_PATH_HEADER, '/coven/hearth?tab=mine');
+
+      await expect(requireSession()).rejects.toThrow(
+        `redirect:/account/terms?next=${encodeURIComponent('/coven/hearth?tab=mine')}`,
+      );
+    });
+
+    it('passes that page once it has agreed to the current version', async () => {
+      requestHeaders.set(RETURN_PATH_HEADER, '/coven/hearth?tab=mine');
+      getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), TERMS_VERSION));
+
       await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     });
+
+    it('reaches the acceptance page itself, whatever its query', async () => {
+      requestHeaders.set(RETURN_PATH_HEADER, '/account/terms?next=%2Fcoven');
+
+      await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+    });
+
+    it('is sent there by the admin guard too', async () => {
+      getSessionMock.mockResolvedValue(betterAuthSession('admin', true, new Date(), stored));
+
+      await expect(requireAdminSession()).rejects.toThrow('redirect:/account/terms');
+    });
+  });
+
+  it('lets an unverified, unagreed account reach the email page, so the two redirects never chase each other', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', false, new Date(), null));
+    requestHeaders.set(RETURN_PATH_HEADER, '/account/email?next=%2Fcoven');
+
+    await expect(requireSession()).resolves.toEqual({
+      userId: USER_ID,
+      role: 'user',
+      emailUnverified: true,
+    });
+  });
+
+  it('asks an unverified account for its address first, then the terms', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', false, new Date(), null));
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
+
+    await expect(requireSession()).rejects.toThrow(
+      `redirect:/account/email?next=${encodeURIComponent('/coven')}`,
+    );
   });
 });
 
@@ -221,17 +311,17 @@ describe('requireCuratorSession', () => {
 
 // What the account page lists: Better Auth's own account rows, by the row id
 // /unlink-account takes and the provider they sign in through.
-describe('linkedAccounts', () => {
-  const row = (id: string, providerId: string) => ({
-    id,
-    providerId,
-    accountId: `${providerId}-account`,
-    userId: USER_ID,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    scopes: [],
-  });
+const row = (id: string, providerId: string) => ({
+  id,
+  providerId,
+  accountId: `${providerId}-account`,
+  userId: USER_ID,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  scopes: [],
+});
 
+describe('linkedAccounts', () => {
   it('asks Better Auth with the request headers and keeps the row id and provider', async () => {
     listUserAccountsMock.mockResolvedValue([row('a-1', 'discord'), row('a-2', 'microsoft')]);
 
@@ -242,11 +332,27 @@ describe('linkedAccounts', () => {
     expect(listUserAccountsMock).toHaveBeenCalledWith({ headers: requestHeaders });
   });
 
-  // Nothing registers one today; a row the roster cannot name has no line on the page.
-  it('leaves out a provider outside the roster', async () => {
+  // A password has its own section, and a provider the roster cannot name no line on the page.
+  it('leaves out the password and a provider outside the roster', async () => {
     listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);
 
     await expect(linkedAccounts()).resolves.toEqual([{ id: 'a-1', providerId: 'google' }]);
+  });
+});
+
+// The account page changes a password the account holds and sets one it does not.
+describe('hasPassword', () => {
+  it('is true when Better Auth holds a password row for the account', async () => {
+    listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);
+
+    await expect(hasPassword()).resolves.toBe(true);
+    expect(listUserAccountsMock).toHaveBeenCalledWith({ headers: requestHeaders });
+  });
+
+  it('is false for an account with providers alone', async () => {
+    listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'discord')]);
+
+    await expect(hasPassword()).resolves.toBe(false);
   });
 });
 

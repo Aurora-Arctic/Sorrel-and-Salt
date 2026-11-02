@@ -28,11 +28,15 @@ export default function SectionBody({
         title={target.title}
         action={target.action}
         tabs={target.tabs}
+        tabsBelow={target.tabsBelow}
+        columns={target.columns}
+        fields={target.fields}
         filter={target.filter}
         menu={target.frame === 'with-nav' || target.frame === 'entry'}
         entry={target.frame === 'entry'}
         head={target.head}
         density={target.density}
+        card={target.card}
       />
     ) : null;
   // When the wait ends the skeleton stays over the arrived page and fades

@@ -103,7 +103,7 @@ The bar's inner row, brand, initials, end group and their narrow-window rules ar
 
 Measurements come from the signed-off mock-up, as tokens
 ([`styling.md`](../styling.md), "The application shell and the layers"). The
-bar is `position: sticky; top: $top-inset` at `layer('shell')`, exactly
+bar is `position: sticky; top: 0` at `layer('shell')`, exactly
 `$shell-bar-height` tall, with `margin-bottom: 0` (the layout layer gives every `header` a bottom margin; zeroed, so a context row meets the bar edge to edge and a page that fits the window does not scroll by it), on `$surface-card` with a `$hairline` bottom edge,
 and its inner column is `$wide-column` wide, centred. The site links fill the
 bar's height, square, and the current one is told by weight and the

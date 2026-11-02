@@ -193,8 +193,9 @@ describe('compendium', () => {
         toxic: 'not_toxic',
         withoutReferences: true,
         withoutForms: true,
+        listing: 'shown',
       },
-      {},
+      { listing: 'shown' },
     ]);
   });
 
@@ -206,9 +207,9 @@ describe('compendium', () => {
     await nodesOf({ categoryIds: ids });
 
     expect(repository.findCompendiumPage.mock.calls.map(([filter]) => filter)).toEqual([
-      { categoryIds: ids, categoryMode: 'any' },
-      { categoryIds: ids },
-      { categoryIds: ids },
+      { categoryIds: ids, categoryMode: 'any', listing: 'shown' },
+      { categoryIds: ids, listing: 'shown' },
+      { categoryIds: ids, listing: 'shown' },
     ]);
 
     const refused = await run(null, { categoryIds: ids, categoryMode: 'some' });
@@ -222,8 +223,8 @@ describe('compendium', () => {
     await nodesOf({ elements: [] });
 
     expect(repository.findCompendiumPage.mock.calls.map(([filter]) => filter)).toEqual([
-      { elements: ['fire', 'water'] },
-      {},
+      { elements: ['fire', 'water'], listing: 'shown' },
+      { listing: 'shown' },
     ]);
 
     const refused = await run(null, { elements: ['fixture'] });

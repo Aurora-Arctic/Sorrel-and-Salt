@@ -126,3 +126,38 @@ describe('CategoryChips', () => {
     expect(more()).toBeNull();
   });
 });
+
+describe('a category only a form carries', () => {
+  const own = (name: string) => ({ category: { id: name, name }, group: GROUP });
+  const carried = (name: string, forms: string[]) => ({ ...own(name), forms });
+
+  it('follows the own chips, and is a button whose tip names each form that carries it', () => {
+    render(
+      <CategoryChips
+        categories={[own('Testward'), carried('Testcharm', ['Testoil', 'Dried Testleaf'])]}
+        label="Testwort"
+      />,
+    );
+
+    const items = within(screen.getByRole('list', { name: 'Categories' })).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    // The own chip comes first, as plain text; the form's follows, a button carrying its tip.
+    expect(within(items[0]).getByText('Testward')).toBeInTheDocument();
+    expect(within(items[0]).queryByRole('button')).toBeNull();
+    const chip = within(items[1]).getByRole('button', { name: 'Testcharm' });
+    expect(chip).toHaveAccessibleDescription(expect.stringContaining('Testoil, Dried Testleaf'));
+  });
+
+  it('keeps its tip behind the +N button', () => {
+    render(
+      <CategoryChips
+        categories={[...many(CATEGORY_CHIP_LIMIT + 1), carried('Testcharm', ['Testoil'])]}
+        label="Testwort"
+      />,
+    );
+    fireEvent.click(more()!);
+
+    const chip = within(panel()!).getByRole('button', { name: 'Testcharm' });
+    expect(chip).toHaveAccessibleDescription(expect.stringContaining('Testoil'));
+  });
+});

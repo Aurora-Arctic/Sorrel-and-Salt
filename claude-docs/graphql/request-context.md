@@ -15,3 +15,7 @@
   service: a service may not import `auth`, so the Better Auth side of the email
   page reaches it this way
   ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page").
+- **`passwords`**, `src/lib/password-setter.ts`'s `passwordSetter` bound to
+  this request's headers, which the `setPassword` resolver passes to its
+  service, for the same reason
+  ([`auth/passwords.md`](../auth/passwords.md), "Setting a first password").

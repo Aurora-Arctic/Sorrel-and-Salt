@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { RowId, optionalText } from '../../../lib/validation';
 import {
   CATEGORY_MODES,
+  COMPENDIUM_LISTINGS,
+  COMPENDIUM_ORDERS,
+  COMPENDIUM_SORTS,
   INGREDIENT_ELEMENTS,
   INGREDIENT_SOURCES,
   NOMENCLATURE_KINDS,
@@ -87,6 +90,25 @@ export const CompendiumFilter = z.object({
     .boolean()
     .nullish()
     .transform((reviewed) => reviewed ?? undefined),
+  // Which entries a curator's list reads: shown (the default, and the public's only view), hidden or all. The service refuses any other
+  // setting without a curator's session, so the coven list never picks it.
+  listing: z
+    .enum(COMPENDIUM_LISTINGS)
+    .nullish()
+    .transform((listing) => listing ?? 'shown'),
+  // The column the list sorts on: name, or the sourcing score. Null or missing is the default order, by name or best match. The
+  // service refuses the sourcing score without a curator's session, as the score is a curator's alone.
+  sort: z
+    .enum(COMPENDIUM_SORTS)
+    .nullish()
+    .transform((sort) => sort ?? undefined),
+  // Which way the sort runs; `desc` reverses it. Read only beside a sort, so it never reverses best match.
+  order: z
+    .enum(COMPENDIUM_ORDERS)
+    .nullish()
+    .transform((order) => order ?? undefined),
+  // Carry each entry's sourcing score: the admin list's alone, which the service refuses without a curator's session.
+  withSourcingScore: z.boolean().optional(),
   // How the entries are classified; `unknown` is the formal names still to look up.
   nomenclature: z
     .enum(NOMENCLATURE_KINDS)

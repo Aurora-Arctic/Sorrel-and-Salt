@@ -1,6 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { countUsers, listUsers, providersOf } from '@/modules/identity';
 import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
@@ -52,7 +54,7 @@ beforeAll(async () => {
 async function listableUsers(): Promise<ListedUserRow[]> {
   return sql<ListedUserRow[]>`
     select id, name from users
-    where deleted_at is null and id <> ${BOOTSTRAP_USER_ID}
+    where deleted_at is null and id not in (${BOOTSTRAP_USER_ID}, ${SIGNED_OUT_SENDER_ID}, ${SYSTEM_ACTOR_ID})
     order by name, id
   `;
 }
@@ -94,6 +96,25 @@ describe('listUsers', () => {
     expect(await names({ query: 'Seed System' })).toEqual([]);
   });
 
+  it('leaves out the signed-out support sender, though it is a live row', async () => {
+    const [row] = await sql`select deleted_at from users where id = ${SIGNED_OUT_SENDER_ID}`;
+    expect(row).toEqual({ deleted_at: null });
+
+    const page = await listUsers(asUser(E), {}, PAGE);
+
+    expect(page.map((entry) => entry.node.id)).not.toContain(SIGNED_OUT_SENDER_ID);
+    expect(await names({ query: 'signed out' })).toEqual([]);
+  });
+
+  it('leaves out the job actor, though it is a live row', async () => {
+    const [row] = await sql`select deleted_at from users where id = ${SYSTEM_ACTOR_ID}`;
+    expect(row).toEqual({ deleted_at: null });
+
+    const page = await listUsers(asUser(E), {}, PAGE);
+
+    expect(page.map((entry) => entry.node.id)).not.toContain(SYSTEM_ACTOR_ID);
+  });
+
   it('filters by a substring of the name or the email, whatever its case', async () => {
     expect(await names({ query: 'fixturewort' })).toEqual(['Pending Fixturewort']);
     expect(await names({ query: 'PENDING@USERS' })).toEqual(['Pending Fixturewort']);
@@ -108,7 +129,7 @@ describe('listUsers', () => {
   it('narrows to the users awaiting approval, alone or beside a query', async () => {
     const [{ count }] = await sql<{ count: number }[]>`
       select count(*)::int as count from users
-      where deleted_at is null and can_create_workspace = false and id <> ${BOOTSTRAP_USER_ID}
+      where deleted_at is null and can_create_workspace = false and id not in (${BOOTSTRAP_USER_ID}, ${SIGNED_OUT_SENDER_ID}, ${SYSTEM_ACTOR_ID})
     `;
     // Both kinds are live, or the filter narrowing nothing would pass.
     expect(count).toBeGreaterThan(0);
@@ -128,7 +149,7 @@ describe('listUsers', () => {
 
   it('narrows to one role, alone or beside the other filters', async () => {
     const live = await sql<{ id: string; role: string }[]>`
-      select id, role::text from users where deleted_at is null and id <> ${BOOTSTRAP_USER_ID}
+      select id, role::text from users where deleted_at is null and id not in (${BOOTSTRAP_USER_ID}, ${SIGNED_OUT_SENDER_ID}, ${SYSTEM_ACTOR_ID})
     `;
     const of = (role: string) => live.filter((row) => row.role === role).map((row) => row.id);
     // Every role is live, or a filter narrowing nothing would pass.

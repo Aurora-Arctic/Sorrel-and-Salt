@@ -10,6 +10,7 @@ import {
 import { single } from '../../lib/search-params';
 import {
   type CategoryMode,
+  COMPENDIUM_SORTS,
   INGREDIENT_ELEMENTS,
   type ToxicFilter,
 } from '@/modules/ingredients/schema/ingredient-enums';
@@ -43,6 +44,15 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
     read: (raw) => single(raw) === '1',
     write: (on: boolean) => (on ? '1' : undefined),
     toVariable: (on) => on || undefined,
+  }),
+  // Only the hidden entries, `?hidden=1`; the admin list otherwise shows hidden and shown together.
+  // The compendium read takes it as its `listing` and refuses it to anyone but a curator.
+  hidden: searchParam({
+    name: 'hidden',
+    variable: 'listing',
+    read: (raw) => single(raw) === '1',
+    write: (on: boolean) => (on ? '1' : undefined),
+    toVariable: (on) => (on ? ('hidden' as const) : undefined),
   }),
   // Entries with no live form, `?withoutForms=1`, as withoutReferences is written.
   // Only the admin list offers it.
@@ -96,6 +106,11 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
       setting === 'reviewed' ? '1' : setting === 'needs_review' ? '0' : undefined,
     toVariable: (setting) => (setting === '' ? undefined : setting === 'reviewed'),
   }),
+  // The column the admin list sorts on, `?sort=name` or `?sort=sourcing_score`, each in its first direction: A to Z, lowest first.
+  // Absent is the default, by name or by best match under a query. The read refuses the sourcing score without a curator's session.
+  sort: choiceParam('sort', COMPENDIUM_SORTS, 'sort'),
+  // `?order=desc` beside a sort reverses it; absent is the sort's first direction, so a sort's address needs no second parameter.
+  order: choiceParam('order', ['desc'] as const, 'order'),
   // Entries held in any of these covens of the viewer's, `?covens=<id>&covens=<id>`. Ids, not slugs, as
   // a shared address should not spell a coven out. Only the public compendium offers it, and the read
   // proves each id by membership, so a coven the viewer is not in filters nothing.

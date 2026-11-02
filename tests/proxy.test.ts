@@ -48,6 +48,7 @@ describe('the proxy matcher', () => {
     '/',
     '/sign-in',
     '/invite/2b7c5e2f8a',
+    '/i/Xk7pQ2mR9tVw3nBc',
     '/compendium',
     '/coven/hearth/grimoire/new?from=draft',
     '/admin/compendium',
@@ -77,6 +78,25 @@ describe('the proxy matcher', () => {
   ])('stays off %s', (path) => {
     expect(matches(path)).toBe(false);
   });
+
+  // The Workflow SDK's generated routes receive its own queue calls, which carry no cookie and a
+  // body the proxy must not touch (it fails on a detached buffer when the proxy runs first).
+  it.each(['/.well-known/workflow/v1/flow', '/.well-known/workflow/v1/step'])(
+    'stays off the SDK route %s',
+    (path) => {
+      expect(matches(path)).toBe(false);
+    },
+  );
+
+  // Only that one prefix is exempt: every other path under /.well-known/ still reaches the proxy.
+  it.each([
+    '/.well-known/other',
+    '/.well-known/ai-catalog.json',
+    '/.well-known/workflowx/v1/flow',
+    '/.well-known/workflow',
+  ])('still runs on %s', (path) => {
+    expect(matches(path)).toBe(true);
+  });
 });
 
 describe('public routes', () => {
@@ -86,6 +106,10 @@ describe('public routes', () => {
     '/sign-in',
     '/sign-in?next=%2Fcoven%2Fhearth&error=access_denied',
     '/invite/2b7c5e2f8a',
+    // Asking for a reset link, and the page the mailed link opens.
+    '/forgot-password',
+    '/reset-password?token=abc',
+    '/reset-password?error=INVALID_TOKEN',
     // A mail client fetches the mail's images and fonts with no cookie.
     '/email/images/salt-dark.png',
     '/email/fonts/lexend-latin.woff2',
@@ -93,6 +117,14 @@ describe('public routes', () => {
     '/compendium',
     '/compendium?category=herbs',
     '/compendium/ingredients/x',
+    // The support page offers a signed-out visitor Sign In and holds no data.
+    '/support',
+    '/support?support=bug&error=404',
+    // The public documents carry no application data.
+    '/privacy',
+    '/disclaimer',
+    '/terms',
+    '/code-of-ethics',
     '/robots.txt',
     '/sitemap.xml',
     '/llms.txt',
@@ -100,6 +132,9 @@ describe('public routes', () => {
     '/.well-known/ard.json',
     '/favicon.ico',
     '/manifest.webmanifest',
+    // The site share card a link preview fetches for `/`, at the address Next gives it.
+    '/opengraph-image',
+    '/opengraph-image?1c801e44ee73c51d',
   ])('lets a signed-out request to %s through', async (path) => {
     const response = await proxy(request(path));
 
@@ -112,13 +147,21 @@ describe('public routes', () => {
   it.each([
     '/sign-in-help',
     '/sign-in/elsewhere',
+    '/forgot-password/x',
+    '/reset-password/abc',
     '/invites',
     '/invite',
+    '/i',
+    '/icards/x',
     '/emails/x.png',
     '/compendiums',
     '/compendium-admin',
+    '/support/other',
+    '/supports',
+    '/account/support',
     '/robots.txt.bak',
     '/llms.txt/x',
+    '/opengraph-image/x',
     '/.well-known',
     '/coven/hearth',
     '/coven/hearth/ingredients',

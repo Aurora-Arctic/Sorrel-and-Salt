@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
@@ -11,7 +12,8 @@ const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
 // The rows' Approval controls hold the router, which only a mounted app provides.
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+const replace = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), replace }) }));
 
 const listUsers = vi.fn();
 const countUsers = vi.fn();
@@ -19,10 +21,12 @@ const providersOf = vi.fn();
 const isPrimaryAdmin = vi.fn();
 const adminRoleChangePauseState = vi.fn();
 const usersForAdmin = vi.fn();
+const ensureProvisionalCleanup = vi.fn(async () => null);
 const listedOnUserList = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countUsers,
+  ensureProvisionalCleanup,
   isPrimaryAdmin,
   listedOnUserList,
   listUsers,
@@ -32,6 +36,9 @@ vi.mock('@/modules/identity', () => ({
 
 const membershipsOf = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipsOf }));
+
+// The modal also reads the user's support time-outs, which are the support page tests' to prove; none here.
+vi.mock('@/app/(shell)/admin/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
 
 const { default: AdminUsersPage } = await import('@/app/(shell)/admin/(people)/users/page');
 const { default: UsersAction } = await import('@/app/(shell)/admin/(people)/@action/users/page');
@@ -89,6 +96,8 @@ function lastRequest(): PageRequest {
 }
 
 beforeEach(() => {
+  replace.mockReset();
+  ensureProvisionalCleanup.mockClear();
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   listUsers.mockReset();
@@ -122,6 +131,13 @@ describe('the /admin/users page', () => {
     expect(countUsers).not.toHaveBeenCalled();
     expect(adminRoleChangePauseState).not.toHaveBeenCalled();
     expect(providersOf).not.toHaveBeenCalled();
+    expect(ensureProvisionalCleanup).not.toHaveBeenCalled();
+  });
+
+  it('makes sure the daily provisional cleanup is running once an admin has been let in', async () => {
+    await renderPage();
+
+    expect(ensureProvisionalCleanup).toHaveBeenCalledOnce();
   });
 
   it("reads the first page of 25 and its count as the guard's session, with no filter", async () => {
@@ -284,6 +300,21 @@ describe('the /admin/users page, the user modal', () => {
       'href',
       `/admin/users?query=listed&role=user&user=${user(2).id}`,
     );
+  });
+
+  // Opened from a cards screen, Close goes back to that screen; from the list, or a `from` outside the set, back to the list.
+  it.each([
+    ['invitation-cards', '/admin/invitation-cards'],
+    [undefined, '/admin/users?query=listed'],
+    ['https://elsewhere.test', '/admin/users?query=listed'],
+  ])('closes a modal opened from %s to %s', async (from, closeTo) => {
+    await renderPage({ query: 'listed', user: user(1).id, ...(from && { from }) });
+
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }),
+    );
+
+    expect(replace).toHaveBeenCalledWith(closeTo, { scroll: false });
   });
 
   // Hand-edited, or copied wrong: the list beneath is still the page asked for.

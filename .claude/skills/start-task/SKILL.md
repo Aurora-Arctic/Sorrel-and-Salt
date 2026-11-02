@@ -43,7 +43,7 @@ The id prefix does **not** decide this: an `MB.*` id holds new work, ordinary bu
    - The branch exists and the task is `In Progress`. Pull the full issue — `gh issue view <number> --json body,title,milestone,labels` for the complete body (user story, description, acceptance criteria) — and read the `DESIGN.md` §section it references, the task's entry — from its `**<ID> — ` heading to the next — in `claude-docs/tasks/<milestone>.md` (`m0` … `m11`, `m7a`, `mb` or `mw`), and its wave's `claude-docs/waves/wave-<NN>.md`, plus any `claude-docs/design-decisions/` record for a prior task it builds on. Never the whole milestone file: `mb.md` alone is 400 KB.
    - Implement it following [`CLAUDE.md`](../../../CLAUDE.md): TDD (write the failing test first, watch it fail, then the minimum), **one task per PR** — do only this task, not adjacent ones — and document as you go in `claude-docs/`.
    - Comment progress as work proceeds: `node scripts/task-board.mjs comment <ID> "<text>"`. **Names, never values**, as [`CLAUDE.md`](../../../CLAUDE.md) spells out: a comment may name an env var, a file or a provider, never what it holds. Do **not** move the status past `In Progress`: `/create-pr` sets `In Review`, and `Done` is the merge's.
-   - Stop when every acceptance criterion is demonstrably met and the checks named in [`CLAUDE.md`](../../../CLAUDE.md) for what you touched pass. Tell the user it's ready; opening the PR is a separate, explicit `/create-pr`.
+   - Stop when every acceptance criterion is demonstrably met and the tests you touched pass. Full suites wait until the owner says so ([`CLAUDE.md`](../../../CLAUDE.md), "Commands"). Tell the user it's ready; opening the PR is a separate, explicit `/create-pr`.
 
 ## Notes
 

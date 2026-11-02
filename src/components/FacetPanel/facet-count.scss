@@ -1,0 +1,8 @@
+@use '../../scss/variables' as *;
+
+// A count after a name (Filters, an option, a switch): small, in the muted ink, the same font,
+// with no brackets round it.
+.facet-panel__count {
+  color: $text-muted;
+  font-size: type-size('caption');
+}

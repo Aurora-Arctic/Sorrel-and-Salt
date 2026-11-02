@@ -403,13 +403,13 @@ for (const [name, size] of [
     expect(await noteTop()).toBe(before);
 
     // The calendar's box is whole: inside the window, and its far corner is the calendar, not the dialog's edge.
-    const box = (await page.locator('.date-field__panel').boundingBox())!;
+    const box = (await page.locator('.calendar-panel').boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(size.width);
     expect(box.y + box.height).toBeLessThanOrEqual(size.height);
     const corner = await page.evaluate(
-      ([x, y]) => document.elementFromPoint(x, y)?.closest('.date-field__panel') !== null,
+      ([x, y]) => document.elementFromPoint(x, y)?.closest('.calendar-panel') !== null,
       [box.x + box.width - 3, box.y + box.height - 3],
     );
     expect(corner).toBe(true);

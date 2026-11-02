@@ -54,12 +54,14 @@ import {
 } from './predicates';
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
+import { sourcingScoreExpression } from './sourcing-score';
 import { curated, inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 import type {
   SearchField,
   WeightedSearch,
   CompendiumReviewRow,
+  CompendiumListEdge,
   CompendiumScore,
   CupboardEntryRow,
   IngredientFilter,
@@ -271,13 +273,17 @@ export function findSimilarIngredients(
 /**
  * One page of the compendium under `filter`: the public list, so no proof (claude-docs/db/compendium-read.md, "The compendium read").
  * A search pages `(score DESC, position, name, id)` and carries each row's score; a list without one pages `(name, id)` with a null score.
+ * `withSourcingScore` carries each row's sourcing score too, read in the same statement.
  */
 export function findCompendiumPage(
   filter: IngredientFilter,
   page: PageRequest,
-): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
+): Promise<PageEntry<IngredientRow, CompendiumListEdge>[]> {
   const list = compendiumList(filter);
-  return findPageInTiers([], ingredients, list.order, page, list.arms);
+  const order: ListOrder<CompendiumListEdge> = filter.withSourcingScore
+    ? { ...list.order, carry: { ...list.order.carry!, sourcingScore: sourcingScoreExpression } }
+    : list.order;
+  return findPageInTiers([], ingredients, order, page, list.arms);
 }
 
 /**
@@ -441,7 +447,10 @@ export async function findIngredientSuggestions(
       )
     ).map(({ node }) => node.id);
   const ids = (
-    await Promise.all([top(yours), top(and(inCompendium(ingredients), not(held)) as SQL)])
+    await Promise.all([
+      top(yours),
+      top(and(inCompendium(ingredients), eq(ingredients.shown, true), not(held)) as SQL),
+    ])
   ).flat();
   if (ids.length === 0) return [];
   return findPageInTiers(
@@ -607,7 +616,6 @@ export function compendiumList(
 } {
   const columns = listColumns(cupboardOf);
   const match = searchMatch(filter.query, cupboardOf);
-  const leftJoined = columns.leftJoined && { leftJoined: columns.leftJoined };
   return {
     arms: and(
       ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
@@ -622,27 +630,54 @@ export function compendiumList(
       filter.withoutForms ? hasNoForm() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
       reviewArm(filter.reviewed),
+      // A coven's read keeps a hidden entry it names.
+      cupboardOf ? undefined : listingArm(filter.listing),
       filter.heldIn?.length ? heldInAnyOf(filter.heldIn) : undefined,
       filter.notHeldIn?.length ? heldInNoneOf(filter.notHeldIn) : undefined,
     ),
-    order: match
-      ? {
-          sort: [
-            { expression: sql`-${match.score}`, type: 'real' },
-            { expression: match.position, type: 'integer' },
-            columns.name,
-          ],
-          wordMatch: true,
-          join: match.join,
-          ...leftJoined,
-          carry: { score: match.score },
-        }
-      : {
-          sort: [columns.name],
-          ...leftJoined,
-          carry: { score: sql<number | null>`null` },
-        },
+    order: listOrder(filter, cupboardOf, columns, match),
   };
+}
+
+/**
+ * The compendium list's order: a curator's sourcing sort, lowest score first and then by name, when asked for and the list is the compendium's
+ * own; a name sort when asked for; otherwise best match first under a query, and by name without one. A query still narrows a sort to the
+ * entries it matches, and `order: desc` reverses a sort's whole key.
+ */
+function listOrder(
+  filter: IngredientFilter,
+  cupboardOf: Membership | undefined,
+  columns: ReturnType<typeof listColumns>,
+  match: ReturnType<typeof searchMatch>,
+): ListOrder<CompendiumScore> {
+  const leftJoined = columns.leftJoined && { leftJoined: columns.leftJoined };
+  const searched = match && { wordMatch: true, join: match.join, carry: { score: match.score } };
+  const descending = filter.order === 'desc' && { descending: true };
+  const sorted = (sort: SortPart[]): ListOrder<CompendiumScore> => ({
+    sort,
+    ...descending,
+    ...leftJoined,
+    ...(searched || { carry: { score: sql<number | null>`null` } }),
+  });
+  if (filter.sort === 'sourcing_score' && !cupboardOf) {
+    return sorted([{ expression: sourcingScoreExpression, type: 'integer' }, columns.name]);
+  }
+  if (filter.sort === 'name') return sorted([columns.name]);
+  return match
+    ? {
+        sort: [
+          { expression: sql`-${match.score}`, type: 'real' },
+          { expression: match.position, type: 'integer' },
+          columns.name,
+        ],
+        ...leftJoined,
+        ...searched,
+      }
+    : {
+        sort: [columns.name],
+        ...leftJoined,
+        carry: { score: sql<number | null>`null` },
+      };
 }
 
 /**
@@ -942,6 +977,12 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
     ),
   ) as SQL;
   return toxic === 'toxic' ? flagged : not(flagged);
+}
+
+/** The shown flag: the shown entries unless the filter asks for the hidden ones or both. */
+export function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
+  if (listing === 'all') return undefined;
+  return eq(ingredients.shown, listing !== 'hidden');
 }
 
 /**

@@ -1,0 +1,16 @@
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import RoleTip from '.';
+import { SITE_ROLE_ACCESS } from '../UserList/roles';
+import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
+
+// Render-only; behaviour is asserted in tests/components/RoleTip.
+const meta = { title: 'Lists / Role Tip', component: RoleTip } satisfies Meta<typeof RoleTip>;
+export default meta;
+
+export const SiteAdmin: StoryObj<typeof RoleTip> = {
+  args: { label: 'Admin', description: SITE_ROLE_ACCESS.admin, emphasis: true },
+};
+
+export const CovenViewer: StoryObj<typeof RoleTip> = {
+  args: { label: 'Viewer', description: WORKSPACE_ROLE_ACCESS.viewer },
+};

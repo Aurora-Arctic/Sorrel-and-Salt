@@ -1,6 +1,6 @@
 # SignInPanel
 
-`src/components/SignInPanel/` — the `/sign-in` page's heading, OAuth buttons,
+`src/components/SignInPanel/` — the `/sign-in` page's heading, OAuth buttons, email and password form,
 error state and unavailable-provider treatment, on a card ground. Server component `src/app/sign-in/page.tsx`
 reads `?next=`/`?error=` and the environment, and hands the results down as
 props; this component does the rendering and the click.
@@ -203,6 +203,93 @@ A failure before the redirect always says `GENERIC_SIGN_IN_ERROR`
 provider- or Better-Auth-internal and unreviewed, the same reasoning
 `signInErrorMessage()` applies to `error_description`.
 
+## Two views
+
+The card shows one of two views. The first holds the provider buttons and a "Continue with Email" button, and no text field. The second holds the email and password form, with a "Back" button above it that wears the ingredient page's back-link look (`.back-link` and `BackChevron`, from `IngredientEntry/back-link`) at `caption` size. "Continue with Email" adds a browser-history entry with `window.history.pushState`, marked in `history.state`, and Next ties the address to `useSearchParams`: the email view is `/sign-in?method=email`, the buttons are `/sign-in`, and `next` and `error` are carried along. The card's "Back" button calls `history.back()` when the form's entry carries that mark, so the browser's Back button does not land on the form again. When the form was opened directly (a link to `?method=email`, or a reload) there is no mark, and "Back" uses `history.replaceState` to the address without `method` instead of adding an entry. The panel holds the typed email address, so it is still there after a trip back and forth; the name and password are not kept.
+
+When the view changes, focus moves to its heading: the `h1` of each view carries `tabIndex={-1}` and `data-view-heading`. Each `h1` also carries `.auth-title` (`_typography.scss`), the h1 set at the `h2` heading size so a long title fits the narrow card; the forgot-password and reset-password pages use the same class. The first render leaves focus alone. The two-factor code step shows alone, so its "Enter Your Code" is the page's `h1`, drawn by `PageHeader` with the same classes but no focus move.
+
+## Email and password
+
+`password-form.tsx` is the second view: "Sign In With Email",
+with a quiet "Create an Account" button that switches the same form to
+sign-up and back ("Sign In Instead"). Sign-up adds a Name field; both have
+Email Address and a [`PasswordField`](password-field.md), `current` for
+sign-in and `new`, with the strength meter, for sign-up. The wiring behind it
+is [`auth/passwords.md`](../auth/passwords.md).
+
+- **The submit is disabled until every field has something in it**, and is
+  a `BusyButton` ("Signing In", "Creating Account") while the request is out.
+  The form is `noValidate`, so every refusal is the server's.
+- **Each refusal is said where it belongs.** A length or address code goes
+  under its field; the breached-list refusal goes under the password with the
+  server's own sentence, which says why. A 401 at sign-in is one sentence,
+  `WRONG_CREDENTIALS`, the same for a wrong password and an unknown address.
+  A 429 is `TOO_MANY_ATTEMPTS`; a 500 at sign-up, the breached-password check
+  unable to answer, is `SIGN_UP_UNAVAILABLE`. Anything else is a generic
+  sentence, never Better Auth's message. Alerts are the shared `Notice`.
+- **A sign-up is signed in.** The form asks `getSession` and, with a session, does the same full load as a sign-in. With none the address was held, and one sentence says a mail was sent to it; the form is not reset. The result of every submit takes focus (`useResultFocus`).
+- **A sign-in does a full load of `/sign-in?next=…`**, after
+  `reportLeaving()`, and the page's own server redirect sends the account on
+  (the top of this page), an unverified one to the email page first.
+- **Forgot Password?** In sign-in mode, a link under the form goes
+  to `/forgot-password` ([`forgot-password-form.md`](forgot-password-form.md)).
+- **Last used.** `lastLoginMethod` writes `email` to the same cookie the
+  provider buttons read, so the heading carries the "Last Used" badge when
+  this browser last signed in with a password.
+- **A submit clears the panel's callback error**, through `onStart`, as a
+  provider press does.
+
+`tests/components/SignInPanel/password-form.test.tsx` (which stands in for the address bar with `search-params.ts`) covers the two views, the disabled and busy submit, each refusal, the sign-up notice, the full load carrying `next`, the last-used mark, and that no password hint or security question exists; story 70 walks it in the browser.
+
+## Two-factor
+
+When the account has two-factor on, a right password does not sign in: the
+answer carries `twoFactorRedirect`, and the form clears the password and
+shows `two-factor-step.tsx` in its place ([`auth/two-factor.md`](../auth/two-factor.md)).
+
+- **The step** is "Enter Your Code", with "Code From Your App"
+  (`autocomplete="one-time-code"`, spaces dropped) focused, a "Trust This
+  Device for 30 Days" switch, and Verify (`twoFactor.verifyTotp`). "Use a
+  Backup Code" swaps the field for "Backup Code" (`twoFactor.verifyBackupCode`)
+  and back. "Start Again" returns to the password; it and the method switch
+  share one row. The step replaces the email view's form, which is the only place it shows;
+  the card holds the step alone, and the Back button is hidden with the form. The field
+  carries the placeholder "Add a code".
+- **Refusals.** A wrong code is `WRONG_CODE` under the field. The plugin's
+  lock is `CODE_LOCKED` in the alert region. An expired challenge, or one
+  that has had too many codes, returns to the password with
+  `CHALLENGE_EXPIRED` as the alert, since only a new password step starts a
+  new challenge. Anything else is `GENERIC_CODE_ERROR`.
+- **Success** leaves the way a password sign-in does: `reportLeaving()`, then
+  a full load of `/sign-in?next=…`.
+
+`tests/components/SignInPanel/two-factor-step.test.tsx` covers each of these;
+story 75 walks it in the browser.
+
+## Passkey
+
+Below the provider buttons, "Sign In with a Passkey" (`passkey-button.tsx`)
+asks the browser for a passkey saved for this site and signs in with the one
+chosen (`signIn.passkey()`, from the passkey client plugin;
+[`auth/plugins.md`](../auth/plugins.md), "Passkeys"). It is a `BusyButton`
+like the provider buttons, but the plain green-outline `.btn` with its label centred (`.sign-in-panel__button--passkey`), with the same busy state and its own click
+feedback. A cancelled prompt, a refused passkey or a dropped connection says
+`PASSKEY_SIGN_IN_ERROR` in a callout under the button and leaves the page
+where it was. A sign-in that succeeds leaves for `/sign-in` carrying `next`
+with a full navigation, so the server reads the new session cookie and sends
+it where any sign-in goes. It carries the "Last Used" badge when the
+`lastLoginMethod` cookie says `passkey`. It is always offered, configured
+providers or not, because a passkey needs no provider.
+
+**Started only by the button.** The passkey request starts only when someone
+presses "Sign In with a Passkey". The panel makes no request as the page loads
+and offers no saved passkeys in the email field's autofill (WebAuthn
+conditional mediation): the owner decided an automatic request was
+obnoxious. The email field's `autocomplete` is `username` and carries no
+`webauthn` token. `passkey-sign-in.ts` holds what the button uses: the
+error text and the navigation after a sign-in.
+
 ## Styling
 
 The page's `main` is the page frame, `.page-frame.page-frame--narrow`
@@ -219,11 +306,11 @@ it bigger there at the sign-off. The rule is
 buttons sit `space(4)` apart, the room the last-used badge needs and no more. The panel is `border-box`, so the padding
 stays inside the column.
 
-Its children stretch to the column. The head is a `PageHeader` ([`page-header.md`](page-header.md)), centred by its `sign-in-panel__header` class: the
+Its children stretch to the column. The head is a `PageHeader` ([`page-header.md`](page-header.md)), centred by its `sign-in-panel__header` class (the email view's heading, `.sign-in-panel__password-heading`, is left-aligned): the
 `h1` and a `lede` saying what the buttons are for, "Sign in, or create your
 account, with one of these.", since the first sign-in is also how an account
 is made. The buttons are one `max-content` grid column, centred, so every
-button is as wide as the widest label. Gaps are `space(4)` between the head,
+button is as wide as the widest label. The panel itself is one column the width of the card's content, so the email and password form below fills it and is wider than the buttons. Gaps are `space(4)` between the head,
 the notice and the buttons, and `space(1)` between a button and its
 unavailable note.
 

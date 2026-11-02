@@ -34,4 +34,10 @@ export interface PageHeaderProps {
   action?: ReactNode;
   /** A class for the head's outer element, for the one place that lays it out further. */
   className?: string;
+  /** A class for the `h1` itself, for a head that sets its size apart (the sign-in cards' `auth-title`). */
+  headingClassName?: string;
+  /** Makes the `h1` take focus by script and marks it `data-view-heading`, for a view that moves focus to its heading when it opens. */
+  focusable?: boolean;
+  /** A mark after the title inside the `h1`, on its line (the sign-in email view's Last Used badge). */
+  suffix?: ReactNode;
 }

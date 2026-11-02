@@ -255,6 +255,15 @@ export function buildSearchSentence({
     });
   }
 
+  if (admin && filter.hidden) {
+    clause({
+      kind: 'value',
+      text: 'hidden from the public',
+      facet: 'hidden',
+      value: 'true',
+    });
+  }
+
   if (admin && (filter.reviewed === 'reviewed' || filter.reviewed === 'needs_review')) {
     clause({
       kind: 'value',

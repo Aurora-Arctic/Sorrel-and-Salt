@@ -65,6 +65,9 @@ export const ingredients = pgTable(
     // When a curator last reviewed the entry and who, both set or both null; the seed never overwrites a reviewed entry.
     curatorReviewedAt: timestamp('curator_reviewed_at', { withTimezone: true }),
     curatorReviewedBy: uuid('curator_reviewed_by').references(() => users.id),
+    // Whether the public compendium shows the entry. A hidden entry is kept, never deleted; a coven's own entry is always shown.
+    // Nothing reads or writes it yet (claude-docs/db/identity-model.md, "Ingredient table details").
+    shown: boolean('shown').notNull().default(true),
     // Substitutes and deities are child tables, not text lists, because a list of text cannot hold a link
     // (claude-docs/db/identity-model.md, "The ingredient identity model").
 
@@ -115,6 +118,11 @@ export const ingredients = pgTable(
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
     liveUnique('ingredients_workspace_slug_unique', table, table.workspaceId, table.slug),
     seedKeyUnique('ingredients_seed_key_unique', table),
+
+    // The public read's gate: live rows by tier and flag. Partial so a deleted row costs the index nothing.
+    index('ingredients_tier_shown')
+      .on(table.workspaceId, table.shown)
+      .where(sql`${table.deletedAt} is null`),
 
     // One multicolumn trigram index serves either column alone. Write a match as `name % $1` under a per-transaction
     // `pg_trgm.similarity_threshold`, never `similarity(...) > 0.4`, which no trigram index answers

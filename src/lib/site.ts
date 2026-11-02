@@ -7,6 +7,10 @@ export const SITE_ORIGIN = 'https://sorrelandsalt.com';
 /** The site's name, which the title templates append to every page title. */
 export const SITE_NAME = 'Sorrel & Salt';
 
+/** The one line under the footer's row: what the site is and what its reference is not. */
+export const SITE_TAGLINE =
+  'A grimoire for covens. The compendium is folklore and reference, not advice.';
+
 /**
  * A layout's `title.template`: the page's own title, then each scope (a coven's name, Admin), then the site's name,
  * joined by the one separator. Each layout writes the whole chain, as Next does not chain a template through its parent's.

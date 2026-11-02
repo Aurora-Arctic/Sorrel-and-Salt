@@ -7,7 +7,7 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
-import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
+import type { IngredientDetail, IngredientRow, SourcingScore } from '@/modules/ingredients';
 import type { EditedIngredient, ReviewOffer } from '../IngredientForm/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
@@ -31,6 +31,8 @@ export interface IngredientEntryEdit {
   opened?: EditedIngredient;
   /** The Reviewed switch as a field of the compendium's edit form: Save carries it; left out for a coven's entry and for anyone who cannot curate. */
   review?: ReviewOffer;
+  /** The compendium entry's sourcing score, shown at the head of the form's Sources and on the page's head; read for a curator or admin only, so left out for anyone else and for a coven's entry. */
+  sourcing?: SourcingScore | null;
   /** A coven's own entry: the form writes to this coven and its near matches open in it; `mayPromote` is the role's answer to making a folk name the display name; left out, the entry is the compendium's. */
   coven?: {
     workspaceId: string;
@@ -47,6 +49,8 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
+  /** Set on the public entry page when a curator or admin is reading an entry hidden from the compendium: a notice under the heading says so. */
+  hiddenFromPublic?: boolean;
   /** The Reviewed switch as the last row of the page's head, built for a curator or admin from the uncached review read; it saves on flip. */
   reviewControl?: ReactNode;
   /** Who last edited the entry in this coven and when, from `lastEditsOf`; none draws no line. */
@@ -307,4 +311,19 @@ export interface SummaryJar {
 export interface ReviewMarkProps {
   ingredientId: string;
   reviewedAt: string | null;
+  /** Drawn beside the Reviewed switch at the row's end: the Shown in Compendium switch. */
+  alongside?: ReactNode;
+}
+
+/** The shown-in-the-compendium switch on an entry (`shown-toggle.tsx`): the entry, whether the public compendium lists it now, its name for the switch's name, and a visible label where the switch has room for one. */
+export interface ShownToggleProps {
+  /** The entry whose flag the switch writes; left out where the switch is a field of a form, which saves it. */
+  ingredientId?: string;
+  shown: boolean;
+  /** Given where the switch is a form field: a flip reports here and writes nothing, and `shown` is the form's own value. */
+  onChange?: (next: boolean) => void;
+  name: string;
+  label?: string;
+  /** The switch's name where there is no visible label; left out, "Shown in Compendium: <name>". */
+  accessibleName?: string;
 }

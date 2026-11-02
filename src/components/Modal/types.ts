@@ -23,6 +23,8 @@ export interface ModalHeading {
   aboveName?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
   under?: ReactNode;
+  /** The open lands the focus on the title, not the body's first field: a dialog that reads a record before it asks for anything. */
+  focusTitle?: boolean;
 }
 
 export interface ModalProps extends ModalHeading {
@@ -87,6 +89,8 @@ export interface RouteModalProps {
   readingBody?: ModalProps['readingBody'];
   /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
   content?: RouteModalContent;
+  /** What the body shows while its contents are on its way; a form's skeleton when absent. */
+  loadingBody?: ReactNode;
   /** Which of a page's modal places this is, where it has more than one: a press shows only in the place it names. Unnamed, as every one-place page leaves it. */
   place?: string;
   /** Where the focus goes as it closes when neither its opener nor a link to its address is in the page: a menu's button, when the pressed link was one of the menu's items. */
