@@ -78,9 +78,8 @@ export default function TermsOfUsePage() {
       <p>
         A spell marked private is shown to you alone. Once a spell is complete and shared with your
         coven, it cannot be made private again, because the people who have seen it may already rely
-        on it. To have a private version of a shared spell again, or to change it, use Duplicate: it
-        makes a private draft copy that only you can see and edit, and the shared spell stays as it
-        was.
+        on it. To have a private version of a shared spell again, use Duplicate: it makes a private
+        draft copy that only you can see and edit, and the shared spell stays as it was.
       </p>
       <p>
         A coven's owner may delete the coven, and may remove any member from it. Any member may
@@ -99,9 +98,8 @@ export default function TermsOfUsePage() {
       <p>
         The <Link href="/code-of-ethics">Code of Ethics</Link> says what the site stands for. Its
         section "What Everyone Agrees To" binds every account, and agreeing to these terms is
-        agreeing to it. In short: no bigotry, in any form, towards anyone; no claiming a closed
-        practice as your own; taking only what can be spared; and honesty about what you know and
-        where you learned it.
+        agreeing to it. In short: no bigotry, in any form, towards anyone; taking only what can be
+        spared; and honesty about what you know and where you learned it.
       </p>
       <p>
         The Code of Ethics goes on to ask more of the people who run the site. Its sections for
