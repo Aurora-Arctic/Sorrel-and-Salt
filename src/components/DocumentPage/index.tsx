@@ -21,8 +21,9 @@ const DocumentPage = ({
   updatedOn,
   body,
   history,
+  placeholders,
 }: DocumentPageProps): ReactElement => {
-  const { content, entries } = renderMarkdown(body);
+  const { content, entries } = renderMarkdown(body, placeholders);
   return (
     <article className="document-page page-with-nav" aria-labelledby="document-title">
       <div className="document-page__head">

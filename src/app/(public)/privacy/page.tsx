@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 import { currentDocumentPage } from '../_documents';
+import { PRIVACY_PLACEHOLDERS } from './placeholders';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -12,5 +13,5 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default function Page() {
-  return currentDocumentPage('privacy');
+  return currentDocumentPage('privacy', PRIVACY_PLACEHOLDERS);
 }

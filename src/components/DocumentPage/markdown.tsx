@@ -9,6 +9,7 @@ import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 import { slugify } from '../../lib/slugify';
 import type { PageNavEntry } from '../PageNav/types';
+import type { DocumentPlaceholders } from './types';
 
 // A document's markdown, drawn on the server. Raw HTML in a body is turned into text before it
 // reaches an element (there is no rehype-raw), a link is kept only for an address the site opens,
@@ -49,11 +50,35 @@ const markdownProcessor = unified()
     footnoteLabelProperties: {},
   });
 
-const reactProcessor = unified().use(rehypeReact, {
-  Fragment: runtime.Fragment,
-  jsx: runtime.jsx,
-  jsxs: runtime.jsxs,
-});
+/** The tag a placeholder paragraph becomes, so the React step can swap it for the node the page mapped. */
+const PLACEHOLDER_TAG = 'document-placeholder';
+
+const PLACEHOLDER_TEXT = /^\{([^{}\s]+)\}$/;
+
+/** Turns each top-level paragraph that is only `{name}` into a placeholder for a name the page mapped; any other stays a paragraph. */
+function markPlaceholders(
+  children: ElementContent[],
+  placeholders: DocumentPlaceholders,
+): ElementContent[] {
+  return children.map((child) => {
+    if (!isElement(child) || child.tagName !== 'p') return child;
+    const text = child.children.length === 1 ? textOf(child).trim() : '';
+    const name = PLACEHOLDER_TEXT.exec(text)?.[1];
+    if (name === undefined || !Object.hasOwn(placeholders, name)) return child;
+    return { type: 'element', tagName: PLACEHOLDER_TAG, properties: { name }, children: [] };
+  });
+}
+
+function reactProcessorFor(placeholders: DocumentPlaceholders) {
+  return unified().use(rehypeReact, {
+    Fragment: runtime.Fragment,
+    jsx: runtime.jsx,
+    jsxs: runtime.jsxs,
+    components: {
+      [PLACEHOLDER_TAG]: ({ name }: { name: string }) => placeholders[name],
+    },
+  });
+}
 
 function textOf(node: RootContent | ElementContent | Root): string {
   if (node.type === 'text') return node.value;
@@ -186,11 +211,15 @@ function sectionsOf(tree: Root): PageNavEntry[] {
   return entries;
 }
 
-export function renderMarkdown(body: string): { content: ReactNode; entries: PageNavEntry[] } {
+export function renderMarkdown(
+  body: string,
+  placeholders: DocumentPlaceholders = {},
+): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
+  tree.children = markPlaceholders(tree.children as ElementContent[], placeholders) as RootContent[];
   tree.children = frameTables(tree.children as ElementContent[]) as RootContent[];
   visitElements(tree, shapeFootnotes);
   const entries = sectionsOf(tree);
-  return { content: reactProcessor.stringify(tree) as ReactNode, entries };
+  return { content: reactProcessorFor(placeholders).stringify(tree) as ReactNode, entries };
 }

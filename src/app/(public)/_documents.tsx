@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import DocumentPage from '@/components/DocumentPage';
+import type { DocumentPlaceholders } from '@/components/DocumentPage/types';
 import { NotFound } from '@/lib/errors';
 import { listDocumentVersions, readDocument, readDocumentVersion } from '@/modules/documents';
 import type { DocumentKey } from '@/modules/documents';
@@ -22,7 +23,10 @@ async function orNotFound<T>(read: () => Promise<T>): Promise<T> {
   }
 }
 
-export async function currentDocumentPage(key: DocumentKey): Promise<ReactElement> {
+export async function currentDocumentPage(
+  key: DocumentKey,
+  placeholders?: DocumentPlaceholders,
+): Promise<ReactElement> {
   const current = await orNotFound(() => readDocument(key));
   const versions = await listDocumentVersions(key, { limit: HISTORY_LENGTH + 1, inverted: false });
   return (
@@ -31,6 +35,7 @@ export async function currentDocumentPage(key: DocumentKey): Promise<ReactElemen
       lede={current.lede}
       updatedOn={current.publishedAt}
       body={current.body}
+      placeholders={placeholders}
       history={versions
         .filter(({ node }) => node.number !== current.number)
         .map(({ node }) => ({
@@ -46,6 +51,7 @@ export async function currentDocumentPage(key: DocumentKey): Promise<ReactElemen
 export async function versionDocumentPage(
   key: DocumentKey,
   params: Promise<{ number: string }>,
+  placeholders?: DocumentPlaceholders,
 ): Promise<ReactElement> {
   const { number: address } = await params;
   if (!/^[1-9]\d*$/.test(address)) notFound();
@@ -56,6 +62,7 @@ export async function versionDocumentPage(
       lede={version.lede}
       updatedOn={version.publishedAt}
       body={version.body}
+      placeholders={placeholders}
     />
   );
 }

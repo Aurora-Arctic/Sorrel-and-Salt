@@ -1,3 +1,8 @@
+import type { ReactNode } from 'react';
+
+/** What a page draws where the text holds a paragraph that is only `{name}`, by name. */
+export type DocumentPlaceholders = Readonly<Record<string, ReactNode>>;
+
 export interface DocumentHistoryEntry {
   /** The version's number. */
   number: number;
@@ -18,4 +23,6 @@ export interface DocumentPageProps {
   body: string;
   /** The earlier published versions, newest first, each linked beneath the text. */
   history?: DocumentHistoryEntry[];
+  /** Parts of the page that depend on code, by the name the text gives them. A name the text uses and this omits prints as text. */
+  placeholders?: DocumentPlaceholders;
 }
