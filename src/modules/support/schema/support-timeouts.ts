@@ -17,6 +17,7 @@ export const supportTimeouts = pgTable(
     until: timestamp('until'),
     // Why it was set, for staff: every time-out has one.
     note: text('note').notNull(),
+    message: text('message'),
     liftedAt: timestamp('lifted_at'),
     ...auditColumns,
   },

@@ -1,7 +1,6 @@
-import type { PasswordSetter } from '@/modules/identity';
+import { scheduleAccountNotice, type PasswordSetter } from '@/modules/identity';
 import { withBreachedCheck } from './breached-password';
 import { ValidationError } from './errors';
-import { mailPasswordChanged } from './password-notice';
 import { PASSWORD_CHECK_UNAVAILABLE, newPasswordRefusal } from './password-refusals';
 import { requestOrigin } from './request-origin';
 import { isFreshSession } from './session-fresh';
@@ -45,7 +44,12 @@ export function passwordSetter(request: Request): PasswordSetter {
       }
       const session = await auth.api.getSession({ headers: request.headers });
       if (session) {
-        await mailPasswordChanged(session.user.email, await requestOrigin(request, ''), 'set');
+        await scheduleAccountNotice({
+          kind: 'password-changed',
+          userId: session.user.id,
+          origin: await requestOrigin(request, ''),
+          how: 'set',
+        });
       }
     },
   };

@@ -483,6 +483,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "lifted_at": {
           "name": "lifted_at",
           "type": "timestamp",
@@ -552,66 +558,66 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"workspace_member_pauses\".\"lifted_at\" is null and \"workspace_member_pauses\".\"deleted_at\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "workspace_member_pauses_workspace_id_workspaces_id_fk": {
           "name": "workspace_member_pauses_workspace_id_workspaces_id_fk",
           "tableFrom": "workspace_member_pauses",
-          "columnsFrom": ["workspace_id"],
           "tableTo": "workspaces",
+          "columnsFrom": ["workspace_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "workspace_member_pauses_user_id_users_id_fk": {
           "name": "workspace_member_pauses_user_id_users_id_fk",
           "tableFrom": "workspace_member_pauses",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "workspace_member_pauses_lifted_by_users_id_fk": {
           "name": "workspace_member_pauses_lifted_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
-          "columnsFrom": ["lifted_by"],
           "tableTo": "users",
+          "columnsFrom": ["lifted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "workspace_member_pauses_created_by_users_id_fk": {
           "name": "workspace_member_pauses_created_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
-          "columnsFrom": ["created_by"],
           "tableTo": "users",
+          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "workspace_member_pauses_updated_by_users_id_fk": {
           "name": "workspace_member_pauses_updated_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
-          "columnsFrom": ["updated_by"],
           "tableTo": "users",
+          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "workspace_member_pauses_deleted_by_users_id_fk": {
           "name": "workspace_member_pauses_deleted_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
-          "columnsFrom": ["deleted_by"],
           "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3303,6 +3309,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "lifted_at": {
           "name": "lifted_at",
           "type": "timestamp",
@@ -3366,57 +3378,57 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"user_access_pauses\".\"lifted_at\" is null and \"user_access_pauses\".\"deleted_at\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "user_access_pauses_user_id_users_id_fk": {
           "name": "user_access_pauses_user_id_users_id_fk",
           "tableFrom": "user_access_pauses",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "user_access_pauses_lifted_by_users_id_fk": {
           "name": "user_access_pauses_lifted_by_users_id_fk",
           "tableFrom": "user_access_pauses",
-          "columnsFrom": ["lifted_by"],
           "tableTo": "users",
+          "columnsFrom": ["lifted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "user_access_pauses_created_by_users_id_fk": {
           "name": "user_access_pauses_created_by_users_id_fk",
           "tableFrom": "user_access_pauses",
-          "columnsFrom": ["created_by"],
           "tableTo": "users",
+          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "user_access_pauses_updated_by_users_id_fk": {
           "name": "user_access_pauses_updated_by_users_id_fk",
           "tableFrom": "user_access_pauses",
-          "columnsFrom": ["updated_by"],
           "tableTo": "users",
+          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "user_access_pauses_deleted_by_users_id_fk": {
           "name": "user_access_pauses_deleted_by_users_id_fk",
           "tableFrom": "user_access_pauses",
-          "columnsFrom": ["deleted_by"],
           "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3619,6 +3631,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "pending_email": {
+          "name": "pending_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "former_email": {
+          "name": "former_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "two_factor_enabled": {
           "name": "two_factor_enabled",
           "type": "boolean",
@@ -3635,12 +3659,6 @@
         "terms_accepted_at": {
           "name": "terms_accepted_at",
           "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "agreed_terms_version": {
-          "name": "agreed_terms_version",
-          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -3681,6 +3699,12 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
+        },
+        "agreed_terms_version": {
+          "name": "agreed_terms_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -3695,10 +3719,10 @@
             }
           ],
           "isUnique": true,
-          "with": {},
-          "method": "btree",
           "where": "\"users\".\"deleted_at\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "users_provisional_updated_at_idx": {
           "name": "users_provisional_updated_at_idx",
@@ -3711,10 +3735,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"users\".\"email_verified\" = false",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "users_provisional_created_at_idx": {
           "name": "users_provisional_created_at_idx",
@@ -3727,39 +3751,39 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"users\".\"email_verified\" = false",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "users_created_by_users_id_fk": {
           "name": "users_created_by_users_id_fk",
           "tableFrom": "users",
-          "columnsFrom": ["created_by"],
           "tableTo": "users",
+          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "users_updated_by_users_id_fk": {
           "name": "users_updated_by_users_id_fk",
           "tableFrom": "users",
-          "columnsFrom": ["updated_by"],
           "tableTo": "users",
+          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "users_deleted_by_users_id_fk": {
           "name": "users_deleted_by_users_id_fk",
           "tableFrom": "users",
-          "columnsFrom": ["deleted_by"],
           "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -6584,6 +6608,12 @@
           "notNull": true,
           "default": "'public'"
         },
+        "notice_sent_at": {
+          "name": "notice_sent_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -6641,48 +6671,48 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"support_replies\".\"deleted_at\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "support_replies_request_id_support_requests_id_fk": {
           "name": "support_replies_request_id_support_requests_id_fk",
           "tableFrom": "support_replies",
-          "columnsFrom": ["request_id"],
           "tableTo": "support_requests",
+          "columnsFrom": ["request_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_replies_created_by_users_id_fk": {
           "name": "support_replies_created_by_users_id_fk",
           "tableFrom": "support_replies",
-          "columnsFrom": ["created_by"],
           "tableTo": "users",
+          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_replies_updated_by_users_id_fk": {
           "name": "support_replies_updated_by_users_id_fk",
           "tableFrom": "support_replies",
-          "columnsFrom": ["updated_by"],
           "tableTo": "users",
+          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_replies_deleted_by_users_id_fk": {
           "name": "support_replies_deleted_by_users_id_fk",
           "tableFrom": "support_replies",
-          "columnsFrom": ["deleted_by"],
           "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -6790,6 +6820,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "closing_notice_sent_at": {
+          "name": "closing_notice_sent_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "linked_from": {
           "name": "linked_from",
           "type": "uuid",
@@ -6865,10 +6901,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"support_requests\".\"deleted_at\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "support_requests_status_sender_activity_idx": {
           "name": "support_requests_status_sender_activity_idx",
@@ -6887,10 +6923,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"support_requests\".\"deleted_at\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         },
         "support_requests_closed_at_idx": {
           "name": "support_requests_closed_at_idx",
@@ -6903,65 +6939,65 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "support_requests_assigned_to_users_id_fk": {
           "name": "support_requests_assigned_to_users_id_fk",
           "tableFrom": "support_requests",
-          "columnsFrom": ["assigned_to"],
           "tableTo": "users",
+          "columnsFrom": ["assigned_to"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_requests_resolved_by_users_id_fk": {
           "name": "support_requests_resolved_by_users_id_fk",
           "tableFrom": "support_requests",
-          "columnsFrom": ["resolved_by"],
           "tableTo": "users",
+          "columnsFrom": ["resolved_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_requests_linked_from_support_requests_id_fk": {
           "name": "support_requests_linked_from_support_requests_id_fk",
           "tableFrom": "support_requests",
-          "columnsFrom": ["linked_from"],
           "tableTo": "support_requests",
+          "columnsFrom": ["linked_from"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_requests_created_by_users_id_fk": {
           "name": "support_requests_created_by_users_id_fk",
           "tableFrom": "support_requests",
-          "columnsFrom": ["created_by"],
           "tableTo": "users",
+          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_requests_updated_by_users_id_fk": {
           "name": "support_requests_updated_by_users_id_fk",
           "tableFrom": "support_requests",
-          "columnsFrom": ["updated_by"],
           "tableTo": "users",
+          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_requests_deleted_by_users_id_fk": {
           "name": "support_requests_deleted_by_users_id_fk",
           "tableFrom": "support_requests",
-          "columnsFrom": ["deleted_by"],
           "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -7142,6 +7178,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "lifted_at": {
           "name": "lifted_at",
           "type": "timestamp",
@@ -7205,48 +7247,48 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"support_timeouts\".\"lifted_at\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
         "support_timeouts_user_id_users_id_fk": {
           "name": "support_timeouts_user_id_users_id_fk",
           "tableFrom": "support_timeouts",
-          "columnsFrom": ["user_id"],
           "tableTo": "users",
+          "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         },
         "support_timeouts_created_by_users_id_fk": {
           "name": "support_timeouts_created_by_users_id_fk",
           "tableFrom": "support_timeouts",
-          "columnsFrom": ["created_by"],
           "tableTo": "users",
+          "columnsFrom": ["created_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_timeouts_updated_by_users_id_fk": {
           "name": "support_timeouts_updated_by_users_id_fk",
           "tableFrom": "support_timeouts",
-          "columnsFrom": ["updated_by"],
           "tableTo": "users",
+          "columnsFrom": ["updated_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         },
         "support_timeouts_deleted_by_users_id_fk": {
           "name": "support_timeouts_deleted_by_users_id_fk",
           "tableFrom": "support_timeouts",
-          "columnsFrom": ["deleted_by"],
           "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},

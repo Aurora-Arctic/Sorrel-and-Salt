@@ -17,11 +17,11 @@ run as a test.
 
 - **`database.ts` — `useTestDatabase(bind)` and `failureOf(work)`.**
   `useTestDatabase` registers a `beforeAll` that opens one `postgres` client
-  (reading `DATABASE_URL` inside the hook, after `db-setup.ts` has pointed it
+  (reading `DATABASE_URL` inside the hook, after `db-runner.ts` has pointed it
   at the worker's clone) and an `afterAll` that ends it, and returns the
   catalogue reads — `columnNames(table)` and `indexRow(table, name)` —
   closing over that client. **It is per file, not
-  per worker, and that is not a style choice:** `db-setup.ts` re-clones the
+  per worker, and that is not a style choice:** `db-runner.ts` re-clones the
   worker's database `WITH (FORCE)` before every test file, which terminates
   any session still open on it, so a connection shared across files would be
   killed by the next file's clone. The sessions it ends include an autovacuum
@@ -177,8 +177,8 @@ what a file does to the worker it runs in.
   hundred modules again (the repository, the services, the GraphQL schema,
   Better Auth): Vitest's hint on CI read "387 modules were evaluated 16,386
   times", about a third of the run's tracked time. The database still does
-  not carry over: `db-setup.ts` runs before every file either way and
-  re-clones the worker's database, so no row outlives the file that wrote it.
+  not carry over: the runner, `db-runner.ts`, re-clones the worker's
+  database before every file in every run mode, so no row outlives the file that wrote it.
 - **`db-mocking`** runs with `isolate: true`, as every file did before. A file
   lands here when its source calls `vi.mock`, `vi.doMock`, `vi.unmock`,
   `vi.hoisted`, `vi.stubGlobal`, `vi.stubEnv`, `vi.resetModules` or
@@ -217,7 +217,7 @@ saying why.
   `tests/support/next-data-cache.ts`, is reached only through `vi.mock`, so
   every file using it is in `db-mocking`.
 - **`revalidateTag`'s record of calls** in `next-cache.ts` would carry one
-  file's writes into the next, so `db-setup.ts` clears it before every file.
+  file's writes into the next, so `db-runner.ts` clears it before every file.
 - **Module-level `Map`s and `Set`s** in `src/` are constants: lookup tables
   built from a fixed list, never written after load.
 
@@ -225,7 +225,7 @@ saying why.
 `globalSetup` in turn, so both would build the template and clone every slot.
 `db-global-setup.ts` keeps the first build on `globalThis`, keyed by the run's
 Vitest instance, and the second project awaits it; the first owns the teardown.
-`maxWorkers`, the `boundedPostgres()` plugin and `setupFiles` come from
+`maxWorkers`, the `boundedPostgres()` plugin and `runner` come from
 `dbHarness` for both, and coverage is the root config's, so the 80% threshold
 still counts every file. The acceptance config spreads `dbHarness` too and is
 unchanged: it is one isolated project of its own.

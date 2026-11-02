@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { idColumn } from '../../../db/schema-parts';
 import { auditColumns } from '../../identity/schema/users';
 import { supportRequests } from './support-requests';
@@ -20,6 +20,8 @@ export const supportReplies = pgTable(
     authorRole: supportReplyAuthorRole('author_role').notNull().default('staff'),
     // An internal note is staff-only: never read by the sender and never mailed.
     visibility: supportReplyVisibility('visibility').notNull().default('public'),
+    // When the transport took the mail telling the sender of this staff reply; null until then, and for a reply never mailed.
+    noticeSentAt: timestamp('notice_sent_at'),
     ...auditColumns,
   },
   (table) => [

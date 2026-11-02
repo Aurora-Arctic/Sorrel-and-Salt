@@ -2,6 +2,7 @@ import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { UserRef } from '../../identity';
+import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import { supportReplyAuthorRole, supportReplyVisibility } from '../schema/support-replies';
 import { supportRequestAbout, supportRequestStatus } from '../schema/support-requests';
 import {
@@ -70,8 +71,10 @@ const SupportReplyRef = builder.objectRef<SupportReplyRow>('SupportReply').imple
     author: t.field({
       type: UserRef,
       nullable: true,
-      description: 'Who wrote the reply; null if no live account holds the id.',
-      resolve: (row, _args, { loaders }) => loaders.usersOnRequests.load(row.createdBy),
+      description:
+        'Who wrote the reply; null if no live account holds the id, or for an anonymised sender reply, which the System account holds.',
+      resolve: (row, _args, { loaders }) =>
+        row.createdBy === SYSTEM_ACTOR_ID ? null : loaders.usersOnRequests.load(row.createdBy),
     }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
@@ -115,7 +118,10 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
     sender: t.field({
       type: UserRef,
       nullable: true,
-      resolve: (row, _args, { loaders }) => loaders.usersOnRequests.load(row.createdBy),
+      description:
+        'Who sent it; null if no live account holds the id, or for an anonymised request, which the System account holds.',
+      resolve: (row, _args, { loaders }) =>
+        row.createdBy === SYSTEM_ACTOR_ID ? null : loaders.usersOnRequests.load(row.createdBy),
     }),
     assignedTo: t.field({
       type: UserRef,
@@ -440,10 +446,14 @@ builder.mutationField('timeOutSupportSender', (t) =>
       userId: t.arg.id({ required: true }),
       until: t.arg({ type: 'DateTime', required: false }),
       note: t.arg.string({ required: true }),
+      message: t.arg.string({
+        required: true,
+        description: 'What the user is emailed, 1 to 500 characters; the note is never mailed.',
+      }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { userId, until, note }, context) =>
-      timeOutSupportSender(sessionOf(context), userId, until, note),
+    resolve: (_root, { userId, until, note, message }, context) =>
+      timeOutSupportSender(sessionOf(context), userId, until, note, context.pauses, message),
   }),
 );
 

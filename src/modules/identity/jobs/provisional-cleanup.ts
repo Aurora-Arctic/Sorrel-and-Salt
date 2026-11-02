@@ -1,22 +1,25 @@
-import { createHook, sleep, start } from '@/lib/jobs/runtime';
-import { PROVISIONAL_CLEANUP_TOKEN } from './provisional-cleanup-token';
-import { sweepStep } from './provisional-cleanup-steps';
+import { start } from '@/lib/jobs/runtime';
+import { CLEANUP_PAGE_SIZE } from './provisional-cleanup-pages';
+import { lapsedPageStep } from './provisional-cleanup-steps';
+import { provisionalCleanupBatch } from './provisional-cleanup-batch';
 
 /**
- * Removes lapsed unverified accounts once a day, backing up the per-sign-up expiry run for an
- * account whose run was lost. It holds a hook token while it works, so a second start finds the
- * first and ends at once, and it releases the token before starting its successor.
+ * One day's cleanup of lapsed unverified accounts, backing up the per-sign-up expiry run for an account whose run was lost: it
+ * reads the lapsed ids a page at a time and starts a batch run for each page, then ends. It never sleeps and starts no successor,
+ * as the daily cron starts the next day's run. Returns how many batches it started.
  */
-export async function provisionalCleanup(): Promise<'duplicate' | 'continued'> {
+export async function provisionalCleanup(): Promise<number> {
   'use workflow';
-  {
-    using owner = createHook({ token: PROVISIONAL_CLEANUP_TOKEN });
-    if (await owner.getConflict()) return 'duplicate';
-    await sweepStep();
-    await sleep('1d');
+  let batches = 0;
+  let after: string | null = null;
+  for (;;) {
+    const ids: string[] = await lapsedPageStep(after);
+    if (ids.length === 0) break;
+    // Recorded as a step, so a replay of the coordinator starts each batch once.
+    await start(provisionalCleanupBatch, [ids]);
+    batches += 1;
+    if (ids.length < CLEANUP_PAGE_SIZE) break;
+    after = ids[ids.length - 1] ?? null;
   }
-  // Recorded as a step, so a replay or retry of this hand-off starts one run; a stray second would
-  // end as a duplicate on the token. `latest` makes the next day's run use the newest code.
-  await start(provisionalCleanup, [], { deploymentId: 'latest' });
-  return 'continued';
+  return batches;
 }

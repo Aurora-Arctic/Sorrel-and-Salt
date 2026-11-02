@@ -21,6 +21,9 @@ export const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'none', label: 'No End Date' },
 ];
 
+/** What the message field says about itself, beneath it. */
+const MESSAGE_HINT = 'Emailed to them, up to 500 characters.';
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** The instant a pause of this span ends: counted from `now`, the end of the picked day in the viewer's own zone, or none. */
@@ -71,6 +74,10 @@ export const PauseFields = ({
   noteHint,
   notePlaceholder,
   noteRequired = false,
+  message,
+  onMessage,
+  messageLabel,
+  messagePlaceholder,
 }: PauseFieldsProps): ReactElement => {
   const spanId = useId();
   const dayId = useId();
@@ -78,6 +85,11 @@ export const PauseFields = ({
   const { aria: spanAria, ...spanField } = fieldDescription({ id: spanId });
   const { aria: dayAria, ...dayField } = fieldDescription({ id: dayId });
   const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId, hint: noteHint });
+  const messageId = useId();
+  const { aria: messageAria, ...messageField } = fieldDescription({
+    id: messageId,
+    hint: MESSAGE_HINT,
+  });
   return (
     <>
       <FieldShell label="For" {...spanField}>
@@ -121,6 +133,25 @@ export const PauseFields = ({
           onChange={(event) => onNote(event.target.value)}
         />
       </FieldShell>
+      <FieldShell
+        label={messageLabel}
+        hint={MESSAGE_HINT}
+        required={noteRequired}
+        {...messageField}
+      >
+        <input
+          id={messageField.controlId}
+          className="input"
+          type="text"
+          autoComplete="off"
+          placeholder={messagePlaceholder}
+          maxLength={500}
+          aria-required={noteRequired || undefined}
+          {...messageAria}
+          value={message}
+          onChange={(event) => onMessage(event.target.value)}
+        />
+      </FieldShell>
     </>
   );
 };
@@ -154,8 +185,10 @@ export const Ledger = ({
             </span>
             {pause.liftedAt && (
               <span className="badge badge--muted">
-                {'Lifted '}
-                <LocalDay at={pause.liftedAt} year={false} />
+                {/* One inline run: the badge is a flex box, which drops a space between two flex items. */}
+                <span>
+                  Lifted <LocalDay at={pause.liftedAt} year={false} />
+                </span>
               </span>
             )}
           </span>

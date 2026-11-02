@@ -3,6 +3,7 @@ import { withAudit } from '../../../db/repository';
 import { Forbidden, RateLimited } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
+import { addressCountKey, clientCountKey } from '../../../lib/send-count-key';
 import { parseInput } from '../../../lib/validation';
 import { supportRequests } from '../schema/support-requests';
 import type { SupportNotifier, SupportRequestRow } from '../types';
@@ -52,8 +53,8 @@ export async function sendSignedOutSupportRequest(
   const now = context.now ?? new Date();
   const counts = await withAudit(SIGNED_OUT_SESSION, (write) =>
     write.countSignedOutSend(
-      values.email,
-      context.clientIp ?? 'unknown',
+      addressCountKey(values.email),
+      clientCountKey(context.clientIp ?? 'unknown'),
       now,
       SIGNED_OUT_WINDOW_SECONDS,
     ),

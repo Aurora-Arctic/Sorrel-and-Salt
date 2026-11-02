@@ -174,7 +174,7 @@
   run for both.
   `DATABASE_URL` is `postgres://sorrel:sorrel@postgres:5432/sorrel`, the same
   credentials `Docker/docker-compose.yaml`'s `app` service uses locally;
-  `tests/support/db-global-setup.ts`/`db-setup.ts` rewrite the database name per
+  `tests/support/db-global-setup.ts`/`db-runner.ts` rewrite the database name per
   worker from there. Coverage JSON (`--reporter=json`) and the `vitest`
   project's `json-summary` coverage reporter feed
   `.github/scripts/summarize-vitest.mjs` (ported from resume-2026, alongside

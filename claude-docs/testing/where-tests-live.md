@@ -9,7 +9,7 @@ tests/
   app/ components/ lib/ db/   # mirror the src/ path of the code under test
   rsc/                        # what can only be seen from inside a server render, mirroring src/ below it
   guards/                     # the sweeps lint cannot carry (below)
-  support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
+  support/                    # the harness: as-user, db-runner, seeded-database, msw, paths
   e2e/                        # Playwright specs and their harness (database, fixtures, axe, coverage)
   e2e/stories/                # one browser flow per user story, tagged @story-N — npm run test:stories
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
@@ -343,14 +343,16 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
       seed cost ~1 s once per run against a 30 ms clone, and a template built
       from the checkout cannot disagree with it, whereas a baked one silently
       would after a `git pull` without `make docker-rebuild`.
-  - **`setupFiles: ['./tests/support/db-setup.ts']`** runs once per **test
-    file** inside the worker process, and does two things in order. It
-    re-clones the worker's `sorrel_test_${VITEST_POOL_ID}` from
-    `sorrel_test_template` (M1.27) — `WITH (FORCE)`, so a previous file that
-    never ended its pool cannot block it — and then points `DATABASE_URL` at
-    that clone before any test file imports `connection.ts` (it can read the
-    slot variable at all because `setupFiles`, unlike `globalSetup`, run
-    inside the worker). Every file under `tests/db/` therefore starts from
+  - **`runner: './tests/support/db-runner.ts'`** runs `onBeforeCollect` once per **test
+    file** inside the worker process, before the file imports anything, and
+    does two things in order. It re-clones the worker's
+    `sorrel_test_${VITEST_POOL_ID}` from `sorrel_test_template` (M1.27) —
+    `WITH (FORCE)`, so a previous file that never ended its pool cannot block
+    it — and then points `DATABASE_URL` at that clone before any test file
+    imports `connection.ts` (it can read the slot variable at all because the
+    runner, unlike `globalSetup`, runs
+    inside the worker). A setup file would not do: its top level runs once per
+    worker in some runs (`--changed`), not once per file. Every file under `tests/db/` therefore starts from
     the full schema and the `standard` scenario exactly as `globalSetup`
     built them, whatever the previous file in that worker inserted, deleted,
     truncated or dropped: a file owes the next one no restoring and no

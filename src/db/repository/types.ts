@@ -1,6 +1,7 @@
 import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+import type { supportReplies } from '../../modules/support/schema/support-replies';
 import type { supportRequests } from '../../modules/support/schema/support-requests';
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -229,6 +230,8 @@ export interface Aggregate<TRow extends Record<string, unknown>> {
   joins?: readonly AggregateJoin[];
   groupBy?: readonly (SQL | AnyPgColumn)[];
   orderBy?: readonly (SQL | AnyPgColumn)[];
+  /** The most rows read, after `orderBy`; every row without. */
+  limit?: number;
 }
 
 /** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table too. */
@@ -675,13 +678,13 @@ export interface AuditWriter {
     windowSeconds: number,
   ): Promise<{ recent: number; timedOut: StandingTimeout | undefined }>;
   /**
-   * Counts one signed-out send against an email address and a client address, each in its own row of `support_send_counts`,
-   * and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
+   * Counts one signed-out send against the keys of an email address and of a client address (`src/lib/send-count-key.ts`, never
+   * the addresses themselves), each in its own row of `support_send_counts`, and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
    * starts over at one. Takes a lock per key until the transaction ends, so sends racing each other all count.
    */
   countSignedOutSend(
-    address: string,
-    client: string,
+    addressKey: string,
+    clientKey: string,
     now: Date,
     windowSeconds: number,
   ): Promise<{ address: number; client: number }>;
@@ -696,10 +699,34 @@ export interface AuditWriter {
     from: readonly SupportRequestStatus[],
     values: SupportRequestMove,
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
-  /** Closes every resolved request whose `resolved_at` is at or before `cutoff`, stamping `closed_at`; returns the rows closed. */
+  /**
+   * Closes those of requests `ids` still resolved with `resolved_at` at or before `cutoff`, stamping `closed_at` as the
+   * day its seven days ended; returns the rows closed.
+   */
   closeIdleResolvedSupportRequests(
     cutoff: Date,
-    closedAt: Date,
+    ids: readonly string[],
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Stamps the closing-soon notice on request `id` while it is still resolved and unstamped; none when it was not. */
+  markClosingNoticeSent(id: string, sentAt: Date): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Clears account `userId`'s pending address while the row is still stamped `sentAt`, the change mailed then; none when a later change or the swap moved it. */
+  lapseEmailChange(userId: string, sentAt: Date): Promise<(typeof users.$inferSelect)[]>;
+  /** Clears account `userId`'s former address while it is still `formerEmail` and the row still at `email`, the move its notice named; none when either changed. */
+  clearFormerEmail(
+    userId: string,
+    formerEmail: string,
+    email: string,
+  ): Promise<(typeof users.$inferSelect)[]>;
+  /** Stamps the sender's notice of staff reply `id` while it is unstamped; none when it already was. */
+  markReplyNoticeSent(id: string, sentAt: Date): Promise<(typeof supportReplies.$inferSelect)[]>;
+  /**
+   * Strips those of requests `ids` still closed with `closed_at` at or before `cutoff` of what each holds of its
+   * sender: subject, message, path, address and sender id, and its replies' text. Topic, status, dates and the rows stay, so the
+   * counts do. A request already stripped is left alone; returns the rows stripped.
+   */
+  anonymiseClosedSupportRequests(
+    cutoff: Date,
+    ids: readonly string[],
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
@@ -1180,6 +1207,8 @@ export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 export interface UserAccessPauseInput {
   until: Date | null;
   note: string;
+  /** What the user is mailed, or `null`/absent for none. */
+  message?: string | null;
 }
 
 /** One `workspace_member_pauses` row. */
@@ -1189,6 +1218,8 @@ export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 export interface WorkspaceMemberPauseInput {
   until: Date | null;
   note: string | null;
+  /** What the member is mailed, or `null`/absent for none. */
+  message?: string | null;
 }
 
 export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
@@ -1526,6 +1557,7 @@ export interface SupportRequestMove {
   resolvedAt?: Date | null;
   resolvedBy?: string | null;
   closedAt?: Date | null;
+  closingNoticeSentAt?: null;
   lastSenderActivityAt?: Date;
   lastStaffActivityAt?: Date;
 }

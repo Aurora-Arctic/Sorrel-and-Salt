@@ -1,6 +1,6 @@
 {
   "id": "76127e5c-da06-40ff-a1c7-bf650f870a3c",
-  "prevId": "60d3398d-7fbe-4ada-a636-4248307a2c29",
+  "prevId": "88e3ef8f-99a9-42e2-a6b7-ede6c7871d92",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -479,6 +479,12 @@
         },
         "note": {
           "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message": {
+          "name": "message",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3303,6 +3309,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "lifted_at": {
           "name": "lifted_at",
           "type": "timestamp",
@@ -3619,6 +3631,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "pending_email": {
+          "name": "pending_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "former_email": {
+          "name": "former_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "two_factor_enabled": {
           "name": "two_factor_enabled",
           "type": "boolean",
@@ -3635,12 +3659,6 @@
         "terms_accepted_at": {
           "name": "terms_accepted_at",
           "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "agreed_terms_version": {
-          "name": "agreed_terms_version",
-          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -3679,6 +3697,12 @@
         "deleted_by": {
           "name": "deleted_by",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agreed_terms_version": {
+          "name": "agreed_terms_version",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         }
@@ -6584,6 +6608,12 @@
           "notNull": true,
           "default": "'public'"
         },
+        "notice_sent_at": {
+          "name": "notice_sent_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -6786,6 +6816,12 @@
         },
         "closed_at": {
           "name": "closed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "closing_notice_sent_at": {
+          "name": "closing_notice_sent_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
@@ -7141,6 +7177,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "lifted_at": {
           "name": "lifted_at",

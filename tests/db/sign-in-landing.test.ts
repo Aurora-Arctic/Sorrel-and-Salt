@@ -20,6 +20,8 @@ import type { AuthInstance, Profile } from '../support/types';
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
+// A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
+vi.stubEnv('MAIL_TRANSPORT', '');
 
 const DOMAIN = '@sign-in-landing.test';
 const PRIMARY = `primary${DOMAIN}`;

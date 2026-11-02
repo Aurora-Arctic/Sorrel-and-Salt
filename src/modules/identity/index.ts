@@ -18,6 +18,8 @@ export * from './services/profile';
 export * from './services/provisional-accounts';
 export * from './services/provisional-cleanup';
 export * from './services/provisional-expiry';
+export { scheduleAccountNotice } from './services/account-notice-start';
+export { scheduleSecretLinkMail } from './services/secret-link-start';
 export * from './services/received-invitations';
 export * from './services/sign-in-lockout';
 export * from './services/site-admin';
@@ -38,6 +40,8 @@ export * from './loaders/providers-by-user';
 export * from './loaders/users-by-id';
 export * from './loaders/users-by-id-for-admin';
 export type {
+  AccessPauseMail,
+  AccessPauseNotifier,
   AdminInvitationFilter,
   CardArrivalFilter,
   CardBatchFilter,
@@ -46,6 +50,8 @@ export type {
   MintedCards,
   AdminRoleChangePauseState,
   EmailVerificationSender,
+  SecretLink,
+  AccountNotice,
   InvitationRefusal,
   InvitationSender,
   InvitationStanding,

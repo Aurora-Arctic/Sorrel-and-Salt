@@ -16,7 +16,7 @@ import type { NamedWrites } from '@/db/types';
 
 // A site admin's pause on a user's access, one row per pause so each keeps who set it, who lifted it and when.
 
-const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'lifted_at', 'lifted_by'];
+const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'message', 'lifted_at', 'lifted_by'];
 const LIFTED_TOGETHER = 'user_access_pauses_lifted_together';
 const ONE_LIVE = 'user_access_pauses_one_live';
 const NOTE_NOT_BLANK = 'user_access_pauses_note_not_blank';
@@ -30,9 +30,10 @@ describe('user_access_pauses schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  it('declares until and the lifted pair nullable, and the note required', () => {
+  it('declares until, the message and the lifted pair nullable, and the note required', () => {
     expect(byName.until.notNull).toBe(false);
     expect(byName.note.notNull).toBe(true);
+    expect(byName.message.notNull).toBe(false);
     expect(byName.lifted_at.notNull).toBe(false);
     expect(byName.lifted_by.notNull).toBe(false);
   });
@@ -91,7 +92,25 @@ describe('user_access_pauses table', () => {
   it('accepts an open-ended pause with a note, not lifted', async () => {
     const [row] = await livePause();
 
-    expect(row).toMatchObject({ until: null, note: 'Testnote', lifted_at: null, lifted_by: null });
+    expect(row).toMatchObject({
+      until: null,
+      note: 'Testnote',
+      message: null,
+      lifted_at: null,
+      lifted_by: null,
+    });
+  });
+
+  it('holds a nullable message text column, kept as written', async () => {
+    const [column] = await sql`
+      select data_type, is_nullable from information_schema.columns
+       where table_name = 'user_access_pauses' and column_name = 'message'`;
+    const [row] = await sql`
+      insert into user_access_pauses (user_id, note, message, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', 'Paused while we look into a report.', ${ADMIN}, ${ADMIN}) returning message`;
+
+    expect(column).toEqual({ data_type: 'text', is_nullable: 'YES' });
+    expect(row.message).toBe('Paused while we look into a report.');
   });
 
   it('refuses a pause with no note, and one whose note is blank', async () => {

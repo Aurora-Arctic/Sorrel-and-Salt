@@ -1,20 +1,11 @@
 import 'server-only';
-/* oxlint-disable no-console -- the log is how a failed start is seen */
-import { jobTokenActive, startJob } from '@/lib/jobs';
+import { startJob } from '@/lib/jobs';
 import { provisionalCleanup } from '../jobs/provisional-cleanup';
-import { PROVISIONAL_CLEANUP_TOKEN } from '../jobs/provisional-cleanup-token';
 
 /**
- * Starts the daily cleanup unless a run already holds its token, and never throws: a failed start
- * is logged, as the sign-up or the page it rides on stands either way and the next visit retries.
- * Returns the new run's id, or null when one is already going or the start failed.
+ * Starts one day's cleanup of lapsed unverified accounts and returns its run id. Only the daily cron route calls it; the run reads
+ * the lapsed ids itself, so it carries no arguments.
  */
-export async function ensureProvisionalCleanup(): Promise<string | null> {
-  try {
-    if (await jobTokenActive(PROVISIONAL_CLEANUP_TOKEN)) return null;
-    return await startJob(provisionalCleanup, []);
-  } catch (error) {
-    console.error('provisional cleanup not started', error);
-    return null;
-  }
+export async function startProvisionalCleanup(): Promise<string> {
+  return startJob(provisionalCleanup, []);
 }

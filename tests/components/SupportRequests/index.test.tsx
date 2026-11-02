@@ -5,7 +5,6 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
 import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import TabbedPage from '@/components/TabbedPage';
-import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type {
   SupportRequestDetailEntry,
   SupportRequestEntry,
@@ -41,6 +40,7 @@ const ROW: SupportRequestEntry = {
   status: 'open',
   sender: { id: 'u1', name: 'Ada Wortley', email: 'ada@example.test' },
   signedOut: false,
+  anonymised: false,
   assignee: null,
   curatorVisible: false,
   errorCode: 500,
@@ -278,6 +278,11 @@ describe('Time-Out', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Note/ }), {
       target: { value: note },
     });
+  const MESSAGE = 'Please keep each request to one problem.';
+  const writeMessage = (message = MESSAGE) =>
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Message to User/ }), {
+      target: { value: message },
+    });
   const timeOutSent = () => {
     const sent: TimeOutSupportSenderMutationVariables[] = [];
     mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
@@ -293,6 +298,7 @@ describe('Time-Out', () => {
   it('marks the note required, and is off until one is written', () => {
     open(ADMIN);
     openTimeOut();
+    writeMessage();
     const note = within(dialog()).getByRole('textbox', { name: /^Note/ });
     expect(note).toHaveAttribute('aria-required', 'true');
     expect(timeOutSubmit()).toBeDisabled();
@@ -307,6 +313,7 @@ describe('Time-Out', () => {
     open(ADMIN);
     openTimeOut();
     writeNote();
+    writeMessage();
     expect(timeOutSubmit()).toBeEnabled();
 
     fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
@@ -319,12 +326,63 @@ describe('Time-Out', () => {
     openTimeOut();
     fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'none' } });
     writeNote();
+    writeMessage();
     fireEvent.click(timeOutSubmit());
     expect(sent).toHaveLength(0);
     confirmTimeOut();
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(sent).toEqual([{ userId: 'u1', until: null, note: 'Repeated sends' }]);
+    expect(sent).toEqual([{ userId: 'u1', until: null, note: 'Repeated sends', message: MESSAGE }]);
+  });
+
+  it('marks the message required, and sends nothing until one is written', () => {
+    const sent = timeOutSent();
+    open(ADMIN);
+    openTimeOut();
+    writeNote();
+
+    expect(timeOutSubmit()).toBeDisabled();
+    writeMessage('   ');
+    expect(timeOutSubmit()).toBeDisabled();
+    fireEvent.click(timeOutSubmit());
+    expect(screen.queryByRole('button', { name: 'Time Out' })).toBeNull();
+    expect(sent).toHaveLength(0);
+
+    // Why it could have been sent: with a message written, the same form is ready.
+    writeMessage();
+    expect(timeOutSubmit()).toBeEnabled();
+  });
+
+  it('offers a Message to User, said to be emailed to them, beside a note said to be seen by staff only', () => {
+    open(ADMIN);
+    openTimeOut();
+
+    const message = within(dialog()).getByRole('textbox', { name: /^Message to User/ });
+    expect(message).toHaveAttribute('aria-required', 'true');
+    expect(message).toHaveAccessibleDescription(/email/i);
+    expect(within(dialog()).getByRole('textbox', { name: /^Note/ })).toHaveAccessibleDescription(
+      /Seen by staff only/,
+    );
+  });
+
+  it('sends the message to the user, trimmed, with the time-out, after asking', async () => {
+    const sent = timeOutSent();
+    open(ADMIN);
+    openTimeOut();
+    writeNote();
+    writeMessage(`  ${MESSAGE}  `);
+    fireEvent.click(timeOutSubmit());
+    // Precondition: nothing goes before the confirmation.
+    expect(sent).toHaveLength(0);
+    confirmTimeOut();
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      userId: 'u1',
+      note: 'Repeated sends',
+      message: 'Please keep each request to one problem.',
+    });
   });
 
   it('sends the sender and an end a day on, after asking', async () => {
@@ -332,6 +390,7 @@ describe('Time-Out', () => {
     open(ADMIN);
     openTimeOut();
     writeNote();
+    writeMessage();
     fireEvent.click(timeOutSubmit());
     expect(sent).toHaveLength(0);
     confirmTimeOut();
@@ -480,6 +539,83 @@ describe('The sender', () => {
   });
 });
 
+describe('An anonymised request', () => {
+  // Its sender is the System account: the server sends no sender, and the screens show no Sender field.
+  const ANONYMISED: SupportRequestEntry = {
+    ...ROW,
+    id: 'r2',
+    subject: 'Anonymised support request.',
+    status: 'closed',
+    sender: null,
+    anonymised: true,
+  };
+  const senderCell = (row: HTMLElement) => {
+    const column = screen
+      .getAllByRole('columnheader')
+      .findIndex((header) => header.textContent === 'Sender');
+    expect(column).toBeGreaterThan(-1);
+    return within(row).getAllByRole('cell')[column];
+  };
+
+  it('leaves the Sender cell empty in its row, and names the link by the subject alone', () => {
+    render(<SupportRequests requests={[ROW, ANONYMISED]} viewer={ADMIN} />);
+    const ordinary = screen.getByRole('row', { name: /moon icon/ });
+    const anonymised = screen.getByRole('row', { name: /Anonymised support request/ });
+    expect(senderCell(ordinary)).not.toBeEmptyDOMElement();
+    expect(senderCell(anonymised)).toBeEmptyDOMElement();
+    expect(
+      within(anonymised).getByRole('link', { name: 'Anonymised support request.' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows no From fact and no message from the sender in the request', () => {
+    const thread = (subject: RegExp) =>
+      within(screen.getByRole('dialog', { name: subject })).getByRole('region', { name: 'Thread' });
+    open(ADMIN);
+    const terms = (subject: RegExp) =>
+      within(screen.getByRole('dialog', { name: subject }))
+        .getAllByRole('term')
+        .map((term) => term.textContent);
+    expect(terms(/moon icon/)).toContain('From');
+    expect(within(thread(/moon icon/)).getAllByRole('listitem')).toHaveLength(1);
+    cleanup();
+    render(
+      <SupportRequests
+        requests={[ANONYMISED]}
+        viewer={ADMIN}
+        opened={{
+          ...DETAIL,
+          ...ANONYMISED,
+          message: '',
+          path: null,
+          replies: [
+            {
+              id: 'p1',
+              body: '',
+              author: null,
+              createdAt: new Date('2026-10-30T10:00:00Z'),
+              internal: false,
+              fromSender: true,
+            },
+            {
+              id: 'p2',
+              body: 'Fixed in the next release.',
+              author: { id: 'admin-1', name: 'Esme' },
+              createdAt: new Date('2026-10-30T11:00:00Z'),
+              internal: false,
+              fromSender: false,
+            },
+          ],
+        }}
+      />,
+    );
+    expect(terms(/Anonymised support request/)).not.toContain('From');
+    const items = within(thread(/Anonymised support request/)).getAllByRole('listitem');
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent('Fixed in the next release.');
+  });
+});
+
 describe('A linked issue', () => {
   it('shows the address with an edit control, and opens the field when it is used', () => {
     open(ADMIN, { issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' });
@@ -552,11 +688,35 @@ describe('What a viewer is shown', () => {
     unmount();
     open(ADMIN, {
       status: 'closed',
-      sender: { id: SYSTEM_ACTOR_ID, name: 'System', email: null },
+      anonymised: true,
+      sender: null,
     });
     expect(within(dialog()).queryByLabelText(/^Your (Note|Reply)/)).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: /Send/ })).toBeNull();
     expect(within(dialog()).getByText(/anonymised/)).toBeInTheDocument();
+  });
+
+  it('lets an admin change no setting of an anonymised request, showing its issue as a link, and does on another', () => {
+    const ISSUE = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12';
+    const { unmount } = open(ADMIN, { issueUrl: ISSUE });
+    expect(within(dialog()).getByLabelText('Assignee')).toBeInTheDocument();
+    expect(
+      within(dialog()).getByRole('switch', { name: 'Shared With Curators' }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog()).getByRole('button', { name: 'Change Issue Address' }),
+    ).toBeInTheDocument();
+    unmount();
+    open(ADMIN, { status: 'closed', anonymised: true, sender: null, issueUrl: ISSUE });
+    expect(within(dialog()).queryByLabelText('Assignee')).toBeNull();
+    expect(within(dialog()).queryByRole('switch', { name: 'Shared With Curators' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Change Issue Address' })).toBeNull();
+    expect(within(dialog()).queryByLabelText('GitHub Issue')).toBeNull();
+    expect(
+      within(within(dialog()).getByRole('region', { name: 'Issue' })).getByRole('link', {
+        name: /#12$/,
+      }),
+    ).toHaveAttribute('href', ISSUE);
   });
 
   it('gives an admin every control', () => {

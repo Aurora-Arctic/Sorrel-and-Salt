@@ -12,20 +12,24 @@ import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired
 import { fold, inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
 import { adminRoleWrites } from './admin-roles';
 import { documentWrites } from './documents';
-import { invitationWrites } from './invitations';
+import { invitationTokenRotation, invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
 import { supportWrites } from './support';
 import { userAccessPauseWrites } from './user-access-pauses';
+import { userWrites } from './users';
 import { workingWrites } from './workings';
 import { workspaceMemberPauseWrites } from './workspace-member-pauses';
 import { existsIn, selectFrom } from './select';
 import { StaleWrite } from '@/lib/errors';
+import { newToken } from '../../lib/invitation-token';
+import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import type { Membership } from '@/modules/coven';
 import type {
   AuditWriter,
   ColumnMatch,
+  InvitationRow,
   Identified,
   Revisioned,
   TwoTier,
@@ -34,6 +38,10 @@ import type {
 } from './types';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Each writer's context, kept here so a write that is no method of `AuditWriter` still runs on withAudit's transaction and
+// stamps, and no caller outside this file can reach the context.
+const contexts = new WeakMap<AuditWriter, WriterContext>();
 
 // Drizzle types `.values()`/`.set()` against the table's own insert model, which
 // `applyAudit` widens by exactly that table's audit columns; the cast is
@@ -111,7 +119,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
   const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
     and(inCompendium(table), eq(table.id, id));
 
-  return {
+  const writer: AuditWriter = {
     insert,
     // `workspaceId` last, though `values` is typed without it: the column
     // answers to the proof even if a cast smuggled one in.
@@ -225,6 +233,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...spellStepWrites(context),
     ...stockWrites(context),
     ...supportWrites(context),
+    ...userWrites(context),
     ...userAccessPauseWrites(context),
     ...workingWrites(context),
     ...workspaceMemberPauseWrites(context),
@@ -234,6 +243,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       return where ? (tx.delete(table).where(where).returning() as never) : Promise.resolve([]);
     },
   };
+  contexts.set(writer, context);
+  return writer;
 }
 
 /**
@@ -287,4 +298,20 @@ export async function withAudit<T>(
     });
     return fn(writerFor(tx, session));
   });
+}
+
+/**
+ * Gives the pending address invitation `invitationId` a fresh token, storing only its hash, and returns the token, or null
+ * when the invitation is accepted, declined, revoked, expired, a card, or in a deleted coven. Takes no proof: the invitation
+ * mail's step holds the id alone, so it writes as the System account. Only that step's service may call it, which
+ * tests/guards/invitation-token-rotation.test.ts holds (CLAUDE.md rule 5).
+ */
+export async function rotateInvitationToken(
+  invitationId: string,
+): Promise<{ token: string; invitation: InvitationRow } | null> {
+  const token = newToken();
+  const [invitation] = await withAudit({ userId: SYSTEM_ACTOR_ID }, (write) =>
+    invitationTokenRotation(contexts.get(write)!)(invitationId, token),
+  );
+  return invitation ? { token, invitation } : null;
 }

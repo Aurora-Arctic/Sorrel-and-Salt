@@ -2,7 +2,7 @@
 // `db` is not re-exported, so `withAudit`'s `AuditWriter` is the sole write mechanism. Rule 4: every exported finder applies `deleted_at IS NULL`
 // bar the named `…IncludingSoftDeleted` hatches and the internal ones, which tests/guards/soft-delete-finder-guard.test.ts holds. Import this file, never a sibling.
 
-export { withAudit } from './write';
+export { rotateInvitationToken, withAudit } from './write';
 export {
   findMany,
   findManyByIds,
@@ -114,6 +114,9 @@ export {
 export { findDemoWorkspace } from './workspaces';
 export {
   findCoMemberNamesIncludingSoftDeleted,
+  findHoldsPasskey,
+  findNewestResetToken,
+  findOwnProviderIds,
   findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,
@@ -154,6 +157,11 @@ export {
   findSupportMenuCounts,
   findOwnSupportRequestPage,
   findCardAcceptorIds,
+  findClosingNoticesDue,
+  findClosingNoticesDueAmong,
+  findSupportRequestsDueToAnonymise,
+  findSupportRequestsDueToClose,
+  findReplyAwaitingNotice,
   findSupportRepliesFor,
   findSupportRequestCount,
   findSupportViewCounts,
@@ -161,6 +169,7 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  RESOLVED_CLOSES_AFTER_DAYS,
   findStandingSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
@@ -180,6 +189,7 @@ export {
 } from './user-access-pauses';
 export {
   findStandingWorkspaceMemberPause,
+  findWorkspaceMemberPauseForMail,
   findStandingWorkspaceMemberPauses,
   findWorkspaceMemberPausePage,
 } from './workspace-member-pauses';

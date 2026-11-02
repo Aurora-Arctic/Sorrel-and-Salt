@@ -13,7 +13,6 @@ import { oneOf, single } from '../../../../../lib/search-params';
 import type { Session, UserRole } from '../../../../../lib/session';
 import {
   countUsers,
-  ensureProvisionalCleanup,
   isPrimaryAdmin,
   listUsers,
   providersOf,
@@ -115,8 +114,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   // Where the modal was opened from, so Close goes back there; a value outside the set is the list.
   const from = oneOf(Object.keys(USER_MODAL_ORIGINS) as UserModalOrigin[], single(params.from));
 
-  // A restart point for the daily cleanup that does not depend on a sign-up; it never throws.
-  const cleanup = ensureProvisionalCleanup();
   const [{ users, pageInfo, position }, adminChanges, opened] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, timedOut, paused, after, before),
     // The pause on admin changes and whether this admin may flip it, which the switch beside the
@@ -124,7 +121,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
     readPauseState(session),
     userParam ? readOpenedUser(session, userParam) : undefined,
   ]);
-  await cleanup;
   const canImpersonate = impersonationEnabled();
   // The pause as the list's controls read it, for the modal's own.
   const changesPaused = Boolean(adminChanges && changesLocked(adminChanges));

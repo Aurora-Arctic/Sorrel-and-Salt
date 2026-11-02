@@ -22,6 +22,8 @@ import type { AuthInstance } from '../support/types';
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
+// A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
+vi.stubEnv('MAIL_TRANSPORT', '');
 
 const DOMAIN = '@password-sign-in.test';
 const OWNER = `owner${DOMAIN}`;
@@ -274,9 +276,12 @@ describe('Story 70: signing up', () => {
       sql,
       (tx) => tx`update users set created_at = now() - interval '4 hours' where id = ${squat!.id}`,
     );
-    // The sign-up no longer sweeps; the cleanup job does (claude-docs/db/write-path.md, "Sweeping provisional accounts").
-    const { sweepLapsedProvisionalAccounts } = await import('@/modules/identity');
-    expect(await sweepLapsedProvisionalAccounts()).toBeGreaterThanOrEqual(1);
+    // The sign-up no longer sweeps; the cleanup job does (claude-docs/db/write-path.md, "Removing a lapsed provisional account").
+    const { deleteLapsedProvisionalAccounts, findLapsedProvisionalPage } =
+      await import('@/modules/identity');
+    const lapsed = await findLapsedProvisionalPage(null);
+    expect(lapsed).toContain(squat!.id);
+    expect(await deleteLapsedProvisionalAccounts(lapsed)).toBeGreaterThanOrEqual(1);
     expect(await userRow(OWNER)).toBeUndefined();
     send.mockReset();
 

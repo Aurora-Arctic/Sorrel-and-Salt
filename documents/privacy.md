@@ -2,7 +2,7 @@
 key: privacy
 title: Privacy Policy
 lede: What Sorrel & Salt keeps about you, who processes it, how long it is kept and who can see it.
-published: 2026-11-01
+published: 2026-11-02
 ---
 
 ## The Short Version
@@ -52,6 +52,10 @@ A printed invitation card is bound to no email. When someone opens a card's link
 
 A support request keeps what you chose to write (its subject and message), the page you sent it from, the error code if you sent it from an error page, its status, who it is assigned to and any replies. A request sent without an account keeps the email you gave so that a reply can reach you. A time-out an admin sets on a requestor is kept as history. Before a request is saved, the page address is cleaned: an invitation code in it is replaced and anything after a "?" is dropped. A curator sees only requests an admin marked for curators or assigned to them, without the requestor's email or the coven named in the page address. An admin sees them with the requestor's email.
 
+### Time-Outs and Pauses
+
+When an admin times you out of support, pauses your access to the site, or a coven owner pauses your access to their coven, a record is kept about you. It holds the end date if there is one, who set it, the note they wrote, and the message they wrote to you, where they wrote one. You are emailed once when one is set, at the address on your account. The email carries the message and the end date, never the note, which only staff or the coven's owners see. Lifting one sends no email.
+
 ## Who Sees It
 
 ### Who Can See What
@@ -79,9 +83,11 @@ Most tables use a soft delete: a deleted row is marked with who deleted it and w
 
 It works this way for two reasons: a spell keeps showing what went into it even after one of those ingredients is deleted, and a later version of the site can offer to bring back something deleted by mistake. That second feature does not exist yet.
 
+A support request closes by itself seven days after it is resolved. Twelve months after it closes, a job that runs once a day anonymises it, within a day: its subject is replaced with “Anonymised support request.”, its message, page address and the text of every reply are emptied, and the email and account it was sent from are removed from it. Its topic, status and dates are kept, so the site can still count requests by topic and month.
+
 Some rows are removed outright:
 
-- An account that signed in through a provider but never verified its email lapses an hour after its last verification mail, or three hours after it was created, whichever comes first. The next sign-in on the site removes every lapsed account, with its sessions and provider rows.
+- An account that signed in through a provider but never verified its email lapses an hour after its last verification mail, or three hours after it was created, whichever comes first. A background job started at sign-up removes the account, with its sessions and provider rows, once it lapses, and a daily check removes any lapsed account that job missed.
 - A row that only pairs two things, an ingredient with a category or a spell with a category, is removed when the pairing is removed.
 - A passkey you remove is removed.
 - The counters that slow down repeated sign-in attempts are removed once they are out of date.

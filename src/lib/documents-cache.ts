@@ -1,5 +1,5 @@
 import 'server-only';
-import { unstable_cache } from 'next/cache';
+import { revalidateTag, unstable_cache } from 'next/cache';
 import superjson from 'superjson';
 
 export const DOCUMENTS_TAG = 'documents';
@@ -24,4 +24,9 @@ export function cachedDocumentRead<A extends unknown[], R>(
     { tags: [DOCUMENTS_TAG], revalidate: DOCUMENTS_REVALIDATE_SECONDS },
   );
   return async (...args: A) => superjson.parse<R>(await cached(...args));
+}
+
+// A publish expires the tag at once, so the next read sees the new version.
+export function expireDocuments(): void {
+  revalidateTag(DOCUMENTS_TAG, { expire: 0 });
 }

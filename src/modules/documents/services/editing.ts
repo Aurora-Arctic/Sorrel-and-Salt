@@ -1,5 +1,4 @@
 import 'server-only';
-import { revalidateTag } from 'next/cache';
 import {
   findDocumentByKey,
   findDocumentDraft,
@@ -8,7 +7,7 @@ import {
   withAudit,
 } from '@/db/repository';
 import { documents } from '../schema/documents';
-import { DOCUMENTS_TAG } from '@/lib/documents-cache';
+import { expireDocuments } from '@/lib/documents-cache';
 import { NotFound, StaleWrite } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { parseInput } from '@/lib/validation';
@@ -18,9 +17,14 @@ import { DocumentInput } from '../validation/documents';
 
 // The admin's editing of the site's documents. Every call is an admin's alone: a curator curates the compendium and reaches none of it.
 
-const expire = () => revalidateTag(DOCUMENTS_TAG, { expire: 0 });
+const expire = expireDocuments;
 
-function toDraft(row: { id: string; number: number; body: string; revision: number }): DocumentDraft {
+function toDraft(row: {
+  id: string;
+  number: number;
+  body: string;
+  revision: number;
+}): DocumentDraft {
   return { id: row.id, number: row.number, body: row.body, revision: row.revision };
 }
 
@@ -46,10 +50,9 @@ export async function readDocumentForEditing(
     key: document.key,
     title: document.title,
     lede: document.lede,
-    published:
-      version?.publishedAt
-        ? { number: version.number, body: version.body, publishedAt: version.publishedAt }
-        : null,
+    published: version?.publishedAt
+      ? { number: version.number, body: version.body, publishedAt: version.publishedAt }
+      : null,
     draft: draft ? toDraft(draft) : null,
   };
 }
@@ -125,7 +128,9 @@ export async function updateDocument(
 ): Promise<{ id: string; title: string; lede: string }> {
   const admin = assertSiteAdmin(session);
   const values = parseInput(DocumentInput, input);
-  const [row] = await withAudit(session, (write) => write.updateDocument(admin, documentId, values));
+  const [row] = await withAudit(session, (write) =>
+    write.updateDocument(admin, documentId, values),
+  );
   if (!row) throw new NotFound('Document not found');
   expire();
   return { id: row.id, title: row.title, lede: row.lede };

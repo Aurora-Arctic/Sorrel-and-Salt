@@ -21,6 +21,7 @@ export function FilterSelectField({
   defaultValue,
   onChange,
   typeahead,
+  fit,
 }: FilterSelectFieldProps): ReactElement {
   const field = fieldDescription({ id: useId() });
   const hydrated = useHydrated();
@@ -29,6 +30,7 @@ export function FilterSelectField({
   // The select-only box's blank is a choice, "All Roles", as the native
   // select's first option is; the type-ahead's is its placeholder and clear.
   const choices = useMemo(() => [{ value: '', label: all }, ...options], [all, options]);
+  const className = fit ? 'filter-row__choice filter-row__choice--fit' : 'filter-row__choice';
   /** Applies a choice other than the one shown. */
   const settle = (settled: string) => {
     if (settled !== defaultValue) onChange(settled);
@@ -36,7 +38,7 @@ export function FilterSelectField({
 
   if (hydrated) {
     return (
-      <FieldShell label={label} className="filter-row__choice" {...field}>
+      <FieldShell label={label} className={className} {...field}>
         {typeahead ? (
           // A choice settled on the one shown, the box left unchanged say,
           // applies nothing.
@@ -63,6 +65,7 @@ export function FilterSelectField({
             }}
             choices={choices}
             placeholder={all}
+            fit={fit}
           />
         )}
         <input type="hidden" name={name} value={chosen} />
@@ -73,7 +76,7 @@ export function FilterSelectField({
   // Before hydration, and in the render that hydrates: a change applies
   // nothing, since no script runs; the search's magnifier sends it.
   return (
-    <FieldShell label={label} className="filter-row__choice" {...field}>
+    <FieldShell label={label} className={className} {...field}>
       <select id={field.controlId} className="select" name={name} defaultValue={defaultValue}>
         <option value="">{all}</option>
         {options.map((option) => (

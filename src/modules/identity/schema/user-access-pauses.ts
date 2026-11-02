@@ -19,6 +19,7 @@ export const userAccessPauses = namedWrites(
       until: timestamp('until'),
       // Why the pause was set, for staff; every pause has one.
       note: text('note').notNull(),
+      message: text('message'),
       liftedAt: timestamp('lifted_at'),
       liftedBy: uuid('lifted_by').references(() => users.id),
       ...auditColumns,

@@ -4,7 +4,9 @@
   branching Neon's `main` branch as `snapshot-<short sha>` through the Neon
   API. That branch is the known-good point
   [`db/snapshot-and-restore.md`](../db/snapshot-and-restore.md)'s restore
-  runbook promotes back to if a migration corrupts data. Preview never
+  runbook promotes back to if a migration corrupts data. A rerun of the same
+  commit finds that branch already there and keeps it, because it holds the
+  database from before the first attempt migrated it. Preview never
   snapshots — a staging or hotfix database is already disposable. The step is
   guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` and warns rather than fails
   while they are unset (`claude-docs/secrets.md`).

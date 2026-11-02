@@ -44,11 +44,9 @@ import { toUserRole } from './session-role';
 import { requiredInProduction } from './env';
 import { authSecrets } from './auth-secrets';
 import { SITE_NAME } from './site';
-import { send } from './mail';
 import { runInBackground } from './background-tasks';
-import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
+import { emailPagePath, returnPathOf } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
-import { sendEmailChangeNotice } from './email-change-notice';
 import { signedInLanding } from './landing';
 import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
@@ -56,11 +54,6 @@ import { breachedPasswordCheck } from './breached-password';
 import { HELD_PASSWORD_FIELDS } from './held-password-paths';
 import { isFreshSession } from './session-fresh';
 import { primaryAdminEmail } from './primary-admin';
-import { verifyEmailMessage } from '../emails/verify-email';
-import { accountExistsMessage } from '../emails/account-exists';
-import { resetPasswordMessage } from '../emails/reset-password';
-import { passwordLockedMessage } from '../emails/password-locked';
-import { mailPasswordChanged } from './password-notice';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
@@ -71,14 +64,17 @@ import {
   VERIFICATION_LIFETIME_SECONDS,
   recordVerificationSent,
   verificationWaitFor,
+  addressBeingLeft,
+  emailChangeStanding,
   isEmailHeldByAnother,
   isPlaceholderEmail,
   placeholderEmail,
-  ensureProvisionalCleanup,
   scheduleProvisionalExpiry,
   clearFailedPasswordSignIns,
   isPasswordSignInLocked,
   recordFailedPasswordSignIn,
+  scheduleSecretLinkMail,
+  scheduleAccountNotice,
 } from '@/modules/identity';
 import type { ProviderId } from './types';
 
@@ -335,6 +331,14 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   if (session.user.email.toLowerCase() !== claims.email.toLowerCase()) {
     throw refuseWrongAccount(ctx);
   }
+  // Only the newest change's link is honoured: a later change replaced the row's pending address, and a lapsed one cleared it.
+  const standing = await emailChangeStanding(session.user.id, claims.updateTo);
+  if (standing === 'replaced') {
+    throw refuseVerification(ctx, 'CHANGE_REPLACED', 'A newer change link replaced this one.');
+  }
+  if (standing === 'lapsed') {
+    throw refuseVerification(ctx, 'TOKEN_EXPIRED', 'This change link has expired.');
+  }
   if (await isEmailHeldByAnother(claims.updateTo, session.user.id)) {
     throw refuseVerification(ctx, 'EMAIL_TAKEN', 'That address is held by another account.');
   }
@@ -349,24 +353,16 @@ const PASSWORD_BREACHED_MESSAGE =
 
 /**
  * Mails the holder of an address a sign-up arrived with, in place of the second account Better Auth does not
- * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken.
+ * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken. The job's step reads the
+ * address and the ways in from the rows, so the run carries the account id and the origin alone.
  */
-async function mailExistingHolder({ user }: { user: { id: string; email: string } }) {
-  if (isPlaceholderEmail(user.email)) return;
-  const ctx = getCurrentAuthEndpointContext();
-  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
-  await send(
-    await accountExistsMessage({
-      to: user.email,
-      url: `${new URL(ctx.context.baseURL).origin}/sign-in`,
-      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
-      hasPassword: accounts.some((account) => account.providerId === 'credential'),
-    }),
-  );
+async function mailExistingHolder({ user }: { user: { id: string } }) {
+  await scheduleAccountNotice({
+    kind: 'account-exists',
+    userId: user.id,
+    origin: endpointOrigin(),
+  });
 }
-
-/** The page a reset link opens, whatever page the request for it named. */
-const RESET_PASSWORD_PAGE = '/reset-password';
 
 /** How long a reset link lasts. Short, because Better Auth stores the reset token unhashed in `verifications`. */
 const RESET_TOKEN_SECONDS = 15 * 60;
@@ -378,20 +374,18 @@ function endpointOrigin(): string {
 
 /**
  * Mails a reset link to a verified address. An unverified one gets nothing, so a reset never reaches an
- * inbox the account has not proved; the request answers the same either way. The link always opens the
- * reset page, so a request cannot point it anywhere else.
+ * inbox the account has not proved; the request answers the same either way. The mail's job reads the token
+ * Better Auth just stored when it sends, so the run carries the account id alone, and the link always opens
+ * the reset page, so a request cannot point it anywhere else.
  */
 async function mailResetLink({
   user,
-  url,
 }: {
-  user: { email: string; emailVerified: boolean };
-  url: string;
+  user: { id: string; email: string; emailVerified: boolean };
 }) {
   if (!user.emailVerified || isPlaceholderEmail(user.email)) return;
-  const link = new URL(url);
-  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
-  await send(await resetPasswordMessage({ to: user.email, url: link.toString() }));
+  const authBase = getCurrentAuthEndpointContext().context.baseURL;
+  await scheduleSecretLinkMail({ kind: 'reset', userId: user.id, authBase });
 }
 
 const PASSWORD_SIGN_IN_PAUSED = {
@@ -478,31 +472,23 @@ async function mailLockNotice(ctx: HookContext, userId: string, length: number) 
     identifier: `reset-password:${token}`,
     expiresAt: new Date(Date.now() + RESET_TOKEN_SECONDS * 1000),
   });
-  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
-  const passkeys = await ctx.context.adapter.findMany({
-    model: 'passkey',
-    where: [{ field: 'userId', value: user.id }],
-    limit: 1,
+  // The job reads this token back when it sends, so the run carries the account id alone.
+  await scheduleSecretLinkMail({
+    kind: 'lockout',
+    userId: user.id,
+    authBase: ctx.context.baseURL,
+    minutes: length / 60_000,
   });
-  const link = new URL(`${ctx.context.baseURL}/reset-password/${token}`);
-  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
-  await send(
-    await passwordLockedMessage({
-      to: user.email,
-      url: link.toString(),
-      minutes: length / 60_000,
-      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
-      hasPasskey: passkeys.length > 0,
-    }),
-  );
 }
 
 /** Tells the account a change on its account page replaced its password. */
 async function mailChangeNotice(ctx: HookContext) {
   const returned = ctx.context.returned;
   if (isAPIError(returned) || returned instanceof Response) return;
-  const email = ctx.context.session?.user.email;
-  if (email) await mailPasswordChanged(email, new URL(ctx.context.baseURL).origin, 'change');
+  const userId = ctx.context.session?.user.id;
+  if (!userId) return;
+  const origin = new URL(ctx.context.baseURL).origin;
+  await scheduleAccountNotice({ kind: 'password-changed', userId, origin, how: 'change' });
 }
 
 function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
@@ -521,7 +507,12 @@ function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
     sendResetPassword: mailResetLink,
     onPasswordReset: async ({ user }) => {
       await clearFailedPasswordSignIns(user.id);
-      await mailPasswordChanged(user.email, endpointOrigin(), 'reset');
+      await scheduleAccountNotice({
+        kind: 'password-changed',
+        userId: user.id,
+        origin: endpointOrigin(),
+        how: 'reset',
+      });
     },
   };
 }
@@ -579,11 +570,12 @@ async function countPasswordSignIn(ctx: HookContext) {
   if (userId && !locked) await countFailure(ctx, userId);
 }
 
-// The change link's token names the address being left and the one taken; the left one is told once the swap is written.
-async function noticeCompletedChange(request: Request | undefined): Promise<void> {
+// Once a change link's swap is written, the address it left is told. The swap held that address in `former_email`, so the
+// notice's job carries the account id alone and its step reads the address when it sends.
+async function noticeCompletedChange(userId: string, request: Request | undefined): Promise<void> {
   const claims = tokenClaims(request && new URL(request.url).searchParams.get('token'));
-  if (!request || !claims?.email || !claims.updateTo) return;
-  await sendEmailChangeNotice(request, claims.email, claims.updateTo, 'completed');
+  if (!claims?.email || !claims.updateTo) return;
+  await scheduleAccountNotice({ kind: 'change-completed', userId, origin: endpointOrigin() });
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
@@ -680,14 +672,13 @@ export const auth = betterAuth({
       const next = (await asksNoReturnPath())
         ? undefined
         : returnPathOf(link.searchParams.get('callbackURL'));
-      link.searchParams.set('callbackURL', verifiedLanding(next));
-      await send(
-        await verifyEmailMessage({
-          to: user.email,
-          url: link.href,
-          providers: await linkedProviderIds(ctx.context, user.id),
-        }),
-      );
+      // The job signs a link of its own when it sends, so the run carries the account id and the destination alone.
+      await scheduleSecretLinkMail({
+        kind: 'verification',
+        userId: user.id,
+        authBase: ctx.context.baseURL,
+        next: next ?? null,
+      });
     },
     // Only from a browser signed in to this very account. Without it, a
     // stranger's sign-up carrying your address is verified by your click on a
@@ -703,7 +694,7 @@ export const auth = betterAuth({
     // a change link, which Better Auth calls it on without the check above.
     afterEmailVerification: async (user, request) => {
       if (!(await hasRequestState()) || (await actingUser.get()) !== user.id) return;
-      await noticeCompletedChange(request);
+      await noticeCompletedChange(user.id, request);
       // The adapter returns the whole row; the hook's type omits additionalFields.
       const role = toUserRole(Reflect.get(user, 'role'));
       await promotePrimaryAdminAtVerification(
@@ -755,11 +746,15 @@ export const auth = betterAuth({
       canCreateWorkspace: { type: 'boolean', input: false },
       // The terms the account agreed to: read into the session so the page gate can compare it with the terms version in force,
       // written only by the `agreeToTerms` service. `termsVersion` is the older text form, still written until it is dropped.
-      agreedTermsVersion: { type: "number", required: false, input: false },
+      agreedTermsVersion: { type: 'number', required: false, input: false },
       termsVersion: { type: 'string', required: false, input: false },
       termsAcceptedAt: { type: 'date', required: false, input: false, returned: false },
       // Declared so the update hook below can clear it; nothing reads it here.
       verificationSentAt: { type: 'date', required: false, input: false, returned: false },
+      // Declared so the update hook below can clear it at the swap; the email service writes it.
+      pendingEmail: { type: 'string', required: false, input: false, returned: false },
+      // Declared so the update hook below can set it at the swap; the account notice job clears it.
+      formerEmail: { type: 'string', required: false, input: false, returned: false },
       // NOT NULL with no database default, so every insert must supply these.
       createdBy: { type: 'string', input: false, returned: false },
       updatedBy: { type: 'string', input: false, returned: false },
@@ -868,8 +863,6 @@ export const auth = betterAuth({
                 error,
               );
             }
-            // The daily cleanup backs up a lost run; it starts one chain at most and logs its own failure.
-            await ensureProvisionalCleanup();
           }
           try {
             const demo = await findDemoWorkspace();
@@ -898,10 +891,23 @@ export const auth = betterAuth({
           const actor =
             ((await hasRequestState()) ? await actingUser.get() : undefined) ??
             ctx?.context.session?.user.id;
-          const data: { updatedBy?: string; verificationSentAt?: null } = {};
+          const data: {
+            updatedBy?: string;
+            verificationSentAt?: null;
+            pendingEmail?: null;
+            formerEmail?: string;
+          } = {};
           if (actor) data.updatedBy = actor;
           // The mail was answered: the clock that spaces mails to the row starts over.
           if (patch.emailVerified === true) data.verificationSentAt = null;
+          // The change link's swap: the pending address is now the row's, cleared in the same write.
+          if (typeof patch.email === 'string') data.pendingEmail = null;
+          // And the address being left is held for its notice, which reads it from the row.
+          const leaving =
+            typeof patch.email === 'string' && actor
+              ? await addressBeingLeft(actor, patch.email)
+              : null;
+          if (leaving) data.formerEmail = leaving;
           if (Object.keys(data).length === 0) return;
           return { data };
         },

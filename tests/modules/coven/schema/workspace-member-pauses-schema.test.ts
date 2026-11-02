@@ -17,7 +17,16 @@ import type { NamedWrites } from '@/db/types';
 
 // A coven owner's pause on one member's access to that coven, one row per pause so each keeps who set it, who lifted it and when.
 
-const OWN_COLUMNS = ['id', 'workspace_id', 'user_id', 'until', 'note', 'lifted_at', 'lifted_by'];
+const OWN_COLUMNS = [
+  'id',
+  'workspace_id',
+  'user_id',
+  'until',
+  'note',
+  'message',
+  'lifted_at',
+  'lifted_by',
+];
 const LIFTED_TOGETHER = 'workspace_member_pauses_lifted_together';
 const ONE_LIVE = 'workspace_member_pauses_one_live';
 const OWNER = A.id;
@@ -30,11 +39,12 @@ describe('workspace_member_pauses schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  it('declares until, note and the lifted pair nullable, and the coven and user not', () => {
+  it('declares until, note, message and the lifted pair nullable, and the coven and user not', () => {
     expect(byName.workspace_id.notNull).toBe(true);
     expect(byName.user_id.notNull).toBe(true);
     expect(byName.until.notNull).toBe(false);
     expect(byName.note.notNull).toBe(false);
+    expect(byName.message.notNull).toBe(false);
     expect(byName.lifted_at.notNull).toBe(false);
     expect(byName.lifted_by.notNull).toBe(false);
   });
@@ -98,7 +108,25 @@ describe('workspace_member_pauses table', () => {
   it('accepts an open-ended pause with no note, not lifted', async () => {
     const [row] = await livePause();
 
-    expect(row).toMatchObject({ until: null, note: null, lifted_at: null, lifted_by: null });
+    expect(row).toMatchObject({
+      until: null,
+      note: null,
+      message: null,
+      lifted_at: null,
+      lifted_by: null,
+    });
+  });
+
+  it('holds a nullable message text column, kept as written', async () => {
+    const [column] = await sql`
+      select data_type, is_nullable from information_schema.columns
+       where table_name = 'workspace_member_pauses' and column_name = 'message'`;
+    const [row] = await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, message, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${PAUSED}, 'A short break while we talk.', ${OWNER}, ${OWNER}) returning message`;
+
+    expect(column).toEqual({ data_type: 'text', is_nullable: 'YES' });
+    expect(row.message).toBe('A short break while we talk.');
   });
 
   it('refuses a second live pause for the same user in the same coven', async () => {

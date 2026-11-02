@@ -293,12 +293,15 @@ runs in this order, and the order is the point:
    `findMemberByEmail(membership, email)`: one SQL `EXISTS` over `users`,
    case-insensitive, live rows only, so a member who was removed can be invited
    back and the roll is never fetched to be searched.
-5. **The token** comes from `newToken()`, goes to `insertInvitation(membership,
-{ email, role, token })` inside `withAudit`, and only then to
-   `sender.workspaceInvitation(email, token, { name, role, inviterName })`: after
-   the commit, so a mailed link always names a row. `inviterName` is the
-   inviting owner's name, read from their `users` row, since the session holds
-   the id alone.
+5. **The row** goes to `insertInvitation(membership, { email, role, token })`
+   inside `withAudit`, holding the hash of a `newToken()` that nobody is told,
+   and only then is `sender.invitation(row.id)` called: after the commit, so a
+   mailed link always names a row. The sender starts the secret-link job with
+   the invitation id and the origin alone; its step gives the invitation a fresh
+   token through `rotateInvitationToken`, reads the coven, the role and the
+   inviter's name from the database, and mails the link. Each attempt mints
+   again, so only the newest mailed link works
+   ([m15.50-invitation-token-rotation.md](../design-decisions/m15.50-invitation-token-rotation.md)).
 
 **Each sender's mail is limited** (MB.280). Every new invitation and every repeat one sends a mail from the site's address, so
 `createInvitation` counts the sender's own coven invitations created in the last hour, revoked or replaced ones included, and refuses
@@ -317,19 +320,17 @@ the one that applies, and the old link is refused as revoked. The address is
 matched in any case. Only a pending row in this coven is touched: another
 coven's, the site tier's, and an accepted, declined or lapsed one stay as they
 are. A new invitation that fails its checks revokes nothing. **A failed send leaves the
-invitation pending**: `send` in `src/lib/mail.ts` never throws and logs with
-`console.error`, so the mutation succeeds and the owner can revoke and
-re-invite. The test for it runs the real `send` over a `fetch` that answers
-500, not a double that pretends to have failed.
+invitation pending**: the job retries the step, and a step that runs out of
+attempts logs the invitation id, never the address or the token, so the
+mutation succeeds and the owner can revoke and re-invite.
 
-**The mail** is `src/emails/coven-invitation.tsx`, rendered twice by
+**The mail** is `src/emails/coven-invitation.ts`, rendered twice by
 `renderParts` as HTML and plain text. The plain-text part carries the
 `/invite/<token>` link, because story 4's browser flow reads the token from
-the mailed message. `InvitationSender` (`identity/types.ts`) gained
-`workspaceInvitation(to, token, { name, role, inviterName })` beside
-`siteInvitation(to, token, { name })`; the
-real one is built in `src/lib/invitation-mail.ts` and shares the admin one's
-link, whose origin Better Auth resolves from the request.
+the mailed message. `InvitationSender` (`identity/types.ts`) is one method,
+`invitation(invitationId)`, for both tiers; the real one is built in
+`src/lib/invitation-mail.ts`, and the link's origin is Better Auth's,
+resolved from the request.
 
 **In GraphQL**, `coven` adds what `identity` cannot name to `Invitation`: an
 `InvitableRole` enum (`viewer`, `member`), `Invitation.role` and

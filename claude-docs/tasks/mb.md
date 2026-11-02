@@ -288,6 +288,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.284 | Changing an Email Address Answers the Same Whether or Not It Is Taken                                                    | Bugfixes | —                      |
 | MB.285 | Compendium Entries Stay Pending After the Citation Wording Changed                                                       | Bugfixes | —                      |
 | MB.286 | Seven Cosmetic Faults in Loading, Spell Preview and Quick Look                                                           | Bugfixes | —                      |
+| MB.287 | A Production Deploy Rerun Fails at the Neon Snapshot                                                                     | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -5899,3 +5900,26 @@ _Acceptance criteria:_
 - F: the skeleton shown while a spell's page loads has the loaded page's regions in their places, and the Grimoire skeleton's filter row holds a Compact switch placeholder, at desktop and phone widths.
 - G: on every list page whose skeleton draws a filter row, the row sits where the loaded page's row does, at desktop and phone widths.
 - Docs: `claude-docs/components/link-hint.md`, `claude-docs/components/spell-preview.md` and the Quick Look and demo coven docs describe the behaviour after the fix.
+
+**MB.287 — A Production Deploy Rerun Fails at the Neon Snapshot** · 2h
+
+_Story:_ As the owner deploying a release, I want a rerun of a production deploy to get past the snapshot step, so that I can retry a deploy without the snapshot blocking it.
+
+Before migrating production, `.github/workflows/migrate.yml` ("Snapshot production before migrating") branches Neon's `main` branch as `snapshot-<short sha>`. Rerunning a deploy runs the same commit, so the step tries to create a branch that the first attempt already made. Neon refuses, and because the call uses `curl -sf`, the step exits with code 22 and the log never shows Neon's error message. The migration and the deploy are then skipped.
+
+Found on 2026-11-02, on run 41414386584 (the push to `main` for release 0.11.0, commit 1566b6d). Steps to reproduce:
+
+1. Merge a release PR into `main` (PR #1473).
+2. The Deploy workflow runs. Attempt 1 passes, and its snapshot step creates `snapshot-1566b6d`.
+3. Rerun the same Deploy run.
+
+Actual: attempts 2, 3 and 4 fail at the snapshot step with exit code 22, the log has no Neon error message, and the deploy job is skipped.
+Expected: the rerun keeps `snapshot-1566b6d`, then migrates and deploys. Any Neon call that is refused logs Neon's error message.
+
+_Acceptance criteria:_
+
+- A regression test runs the snapshot step's script from `migrate.yml` against a stub `curl` whose branch list already holds `snapshot-<short sha>`. It fails before the fix and passes after it.
+- When `snapshot-<short sha>` already exists, the step exits 0, creates no branch, and the job summary says the snapshot was kept.
+- When no snapshot branch exists, the step creates `snapshot-<short sha>` from `main`, as it does today.
+- When a Neon call is refused, the step fails and the log carries Neon's response body.
+- `claude-docs/ci/neon-snapshots.md` describes what a rerun does.

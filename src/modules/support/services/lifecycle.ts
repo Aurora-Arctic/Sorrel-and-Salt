@@ -18,15 +18,10 @@ import { getSupportRequest, refuseAnonymised } from './staff';
 //   open, waiting      -> resolved           the sender, on their own request              (resolveMySupportRequest)
 //   open, waiting, res -> closed             staff                                         (closeSupportRequest)
 //   waiting, resolved  -> open               the sender's public message; keeps the assignee
-//   resolved           -> closed             closeResolvedRequests, after seven idle days
+//   resolved           -> closed             the request’s job, seven days after resolving (retention.ts)
 //   closed             -> (new request)      the sender's message opens one linked to it
 //
 // Staff replies and internal notes change nothing else. Each move is one guarded update, so a refused move writes nothing.
-
-/** How long a resolved request sits before it closes, in days. */
-export const CLOSE_AFTER_DAYS = 7;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * The sender's message on one of their own requests. On an open request it is added to the thread; on a waiting or resolved one
@@ -59,7 +54,13 @@ export async function sendSenderMessage(
       id,
       session.userId,
       ['open', 'waiting_on_sender', 'resolved'],
-      { status: 'open', resolvedAt: null, resolvedBy: null, lastSenderActivityAt: new Date() },
+      {
+        status: 'open',
+        resolvedAt: null,
+        resolvedBy: null,
+        closingNoticeSentAt: null,
+        lastSenderActivityAt: new Date(),
+      },
     );
     if (moved) {
       await write.insert(supportReplies, {
@@ -147,18 +148,6 @@ export async function addSupportInternalNote(
     });
     return row as SupportReplyRow;
   });
-}
-
-/**
- * Closes every resolved request that has sat resolved for seven days as of `now`, and returns them. The job that calls it is
- * its own task; `actor` is the account the audit columns name.
- */
-export async function closeResolvedRequests(
-  actor: Session,
-  now: Date,
-): Promise<SupportRequestRow[]> {
-  const cutoff = new Date(now.getTime() - CLOSE_AFTER_DAYS * DAY_MS);
-  return withAudit(actor, (write) => write.closeIdleResolvedSupportRequests(cutoff, now));
 }
 
 export type SupportSenderTier = 'beta_tester' | 'standard';

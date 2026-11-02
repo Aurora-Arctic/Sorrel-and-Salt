@@ -72,6 +72,9 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   // An open-ended pause with a note, asked before it is sent.
   await access.getByRole('combobox', { name: 'For' }).selectOption({ label: 'No End Date' });
   await access.getByRole('textbox', { name: 'Note' }).fill('Shared password');
+  await access
+    .getByRole('textbox', { name: /^Message to User/ })
+    .fill('Your access is paused for now.');
   await access.getByRole('button', { name: 'Pause Access', exact: true }).click();
   const confirmPause = page.getByRole('button', { name: 'Pause', exact: true });
   await expect(confirmPause).toBeVisible();

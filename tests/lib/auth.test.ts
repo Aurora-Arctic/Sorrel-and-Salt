@@ -303,13 +303,11 @@ describe('sign-up hook seat', () => {
 
   async function afterHookWithJobs() {
     vi.resetModules();
-    const ensureProvisionalCleanup = vi.fn(async () => null);
     const scheduleProvisionalExpiry = vi.fn(async () => 'run-1');
     const realIdentity =
       await vi.importActual<typeof import('@/modules/identity')>('@/modules/identity');
     vi.doMock('@/modules/identity', () => ({
       ...realIdentity,
-      ensureProvisionalCleanup,
       scheduleProvisionalExpiry,
     }));
     vi.doMock('@/db/repository', async (importActual) => ({
@@ -319,19 +317,17 @@ describe('sign-up hook seat', () => {
     const { auth } = await import('@/lib/auth');
     const hook = auth.options.databaseHooks?.user?.create?.after;
     if (!hook) throw new Error('databaseHooks.user.create.after is not configured');
-    return { hook, ensureProvisionalCleanup, scheduleProvisionalExpiry };
+    return { hook, scheduleProvisionalExpiry };
   }
 
-  it('starts the daily cleanup for an unverified sign-up, and not for a verified one', async () => {
-    const { hook, ensureProvisionalCleanup, scheduleProvisionalExpiry } = await afterHookWithJobs();
+  it('schedules the expiry run for an unverified sign-up, and not for a verified one', async () => {
+    const { hook, scheduleProvisionalExpiry } = await afterHookWithJobs();
 
     await hook({ id: 'verified-user', emailVerified: true } as never, null);
-    expect(ensureProvisionalCleanup).not.toHaveBeenCalled();
+    expect(scheduleProvisionalExpiry).not.toHaveBeenCalled();
 
     await hook({ id: 'new-user', emailVerified: false } as never, null);
-    // The expiry run is scheduled for the same sign-up, so the verified case above was refused by the flag alone.
-    expect(scheduleProvisionalExpiry).toHaveBeenCalledWith('new-user');
-    expect(ensureProvisionalCleanup).toHaveBeenCalledOnce();
+    expect(scheduleProvisionalExpiry).toHaveBeenCalledExactlyOnceWith('new-user');
   });
 });
 
