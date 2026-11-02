@@ -137,7 +137,7 @@ export default function TermsOfUsePage() {
         </li>
         <li>
           <strong>Up to what point:</strong> the site charges nothing, so the most the people who
-          run it will owe you for any claim about it is what you paid them for it, which is nothing.
+          run it will owe you for any claim about it is what you paid them for it.
         </li>
         <li>
           <strong>What this cannot remove:</strong> any liability the law does not let a site
