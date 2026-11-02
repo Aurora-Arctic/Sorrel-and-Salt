@@ -1,4 +1,6 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { longMinuteInZone } from '@/lib/utc';
+import { printed } from '../../../../../support/printed-text';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
@@ -23,19 +25,26 @@ const adminRoleChangePauseState = vi.fn();
 const usersForAdmin = vi.fn();
 const ensureProvisionalCleanup = vi.fn(async () => null);
 const listedOnUserList = vi.fn();
+const listUserAccessPauses = vi.fn();
+const standingAccessPausesOf = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countUsers,
   ensureProvisionalCleanup,
   isPrimaryAdmin,
   listedOnUserList,
+  listUserAccessPauses,
   listUsers,
   providersOf,
+  standingAccessPausesOf,
   usersForAdmin,
 }));
 
 const membershipsOf = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipsOf }));
+
+const standingTimeoutsOf = vi.fn();
+vi.mock('@/modules/support', () => ({ standingTimeoutsOf }));
 
 // The modal also reads the user's support time-outs, which are the support page tests' to prove; none here.
 vi.mock('@/app/(shell)/admin/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
@@ -91,6 +100,13 @@ async function renderPage(params: Record<string, string> = {}) {
   );
 }
 
+/** The cell in a user's row under the column with this heading. */
+function cellUnder(name: string, heading: string): HTMLElement {
+  const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
+  const row = screen.getByRole('row', { name: new RegExp(name) });
+  return within(row).getAllByRole('cell')[headings.indexOf(heading)] as HTMLElement;
+}
+
 function lastRequest(): PageRequest {
   return listUsers.mock.calls[listUsers.mock.calls.length - 1]?.[2] as PageRequest;
 }
@@ -118,6 +134,16 @@ beforeEach(() => {
   );
   listedOnUserList.mockReset();
   listedOnUserList.mockReturnValue(true);
+  listUserAccessPauses.mockReset();
+  standingAccessPausesOf.mockReset();
+  standingAccessPausesOf.mockImplementation(async (_session, ids: string[]) =>
+    ids.map(() => undefined),
+  );
+  standingTimeoutsOf.mockReset();
+  standingTimeoutsOf.mockImplementation(async (_session, ids: string[]) =>
+    ids.map(() => undefined),
+  );
+  listUserAccessPauses.mockResolvedValue([]);
   membershipsOf.mockReset();
   membershipsOf.mockImplementation(async (_session, ids: string[]) => ids.map(() => [COVEN_ROW]));
 });
@@ -165,15 +191,38 @@ describe('the /admin/users page', () => {
   it('shows each user with the providers read for them', async () => {
     await renderPage();
 
-    // The providers are the fifth cell; none linked leaves it empty.
-    const linked = within(screen.getByRole('row', { name: /Listed Fixture 01/ })).getAllByRole(
-      'cell',
+    // None linked leaves the cell empty.
+    expect(cellUnder('Listed Fixture 01', 'Logins')).toHaveTextContent('Google');
+    expect(cellUnder('Listed Fixture 02', 'Logins')).toHaveTextContent(/^$/);
+  });
+
+  it('reads the page’s standing time-outs and pauses in one batch each, as the guard’s session, and marks each row', async () => {
+    const until = new Date('2026-11-20T09:30:00Z');
+    standingTimeoutsOf.mockImplementation(async (_session, ids: string[]) =>
+      ids.map((id) => ({ userId: id, until: id === user(1).id ? until : null })),
     );
-    expect(linked[4]).toHaveTextContent('Google');
-    const none = within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getAllByRole(
-      'cell',
+    standingAccessPausesOf.mockImplementation(async (_session, ids: string[]) =>
+      ids.map((id) => (id === user(2).id ? { userId: id, until: null } : undefined)),
     );
-    expect(none[4]).toHaveTextContent(/^$/);
+    await renderPage();
+
+    const ids = [user(1).id, user(2).id];
+    expect(standingTimeoutsOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
+    expect(standingAccessPausesOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
+    expect(
+      within(cellUnder('Listed Fixture 01', 'Support')).getByText(
+        `Timed out until ${printed(longMinuteInZone(until))}`,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Listed Fixture 01', 'Access')).getByText('Not paused'),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Listed Fixture 02', 'Support')).getByText('Timed out with no end date'),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Listed Fixture 02', 'Access')).getByText('Paused with no end date'),
+    ).toBeInTheDocument();
   });
 
   // Whether a row is the primary admin's is the identity service's
@@ -208,6 +257,16 @@ describe('the /admin/users page', () => {
     expect(countUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
     expect(screen.getByLabelText('Name or Email')).toHaveValue('fixture');
     expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
+  });
+
+  it('reads ?timed-out and ?paused as the time-out and pause filters', async () => {
+    await renderPage({ 'timed-out': '', paused: '' });
+
+    const filter = { query: undefined, awaitingApproval: false, timedOut: true, paused: true };
+    expect(listUsers.mock.calls[0]?.[1]).toEqual(filter);
+    expect(countUsers.mock.calls[0]?.[1]).toEqual(filter);
+    expect(screen.getByRole('switch', { name: 'Support Timed Out' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Access Paused' })).toBeChecked();
   });
 
   // A flag by presence: an older link's `awaiting=1` reads as the bare one.
@@ -251,10 +310,12 @@ describe('the /admin/users page', () => {
       query: 'listed',
       awaiting: '',
       role: 'user',
+      'timed-out': '',
+      paused: '',
       after: encodeCursor(entry(0).cursor),
     });
 
-    const filter = '/admin/users?query=listed&awaiting&role=user';
+    const filter = '/admin/users?query=listed&awaiting&role=user&timed-out&paused';
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
       `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
@@ -281,6 +342,61 @@ describe('the /admin/users page, the user modal', () => {
       within(within(dialog).getByRole('list', { name: 'Covens' })).getByRole('listitem'),
     ).toHaveTextContent('Fixture Coven');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('reads the newest 25 of the user’s access pauses as the guard’s session, and names who set and lifted each', async () => {
+    const ash = { ...user(3), name: 'Ash Warden' };
+    const ivy = { ...user(4), name: 'Ivy Keeper' };
+    listUserAccessPauses.mockResolvedValue([
+      {
+        node: {
+          id: 'p1',
+          userId: user(1).id,
+          until: null,
+          note: null,
+          createdAt: new Date('2026-08-01T00:00:00Z'),
+          createdBy: ash.id,
+          liftedAt: new Date('2026-08-02T00:00:00Z'),
+          liftedBy: ivy.id,
+        },
+        cursor: { key: [0], id: 'p1' },
+      },
+    ]);
+    usersForAdmin.mockImplementation(async (_session, ids: string[]) =>
+      ids.map((id) => [user(1), ash, ivy].find((found) => found.id === id) ?? null),
+    );
+    await renderPage({ user: user(1).id });
+
+    expect(listUserAccessPauses).toHaveBeenCalledExactlyOnceWith(ADMIN, user(1).id, {
+      limit: 25,
+      inverted: false,
+    });
+    const access = within(screen.getByRole('dialog', { name: VIEWING_01 })).getByRole('region', {
+      name: 'Site Access',
+    });
+    fireEvent.click(within(access).getByRole('button', { name: 'Site Access', expanded: false }));
+    expect(within(access).getByRole('button', { name: 'Pause Access' })).toBeInTheDocument();
+    expect(
+      within(within(access).getByRole('list', { name: 'Earlier Pauses' })).getByRole('listitem'),
+    ).toHaveTextContent('Set by Ash Warden · Lifted by Ivy Keeper');
+  });
+
+  it('draws no Site Access section, and reads no pauses, on the primary admin', async () => {
+    isPrimaryAdmin.mockReturnValue(true);
+    await renderPage({ user: user(1).id });
+
+    expect(screen.getByRole('dialog', { name: VIEWING_01 })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Site Access' })).toBeNull();
+    expect(listUserAccessPauses).not.toHaveBeenCalled();
+  });
+
+  it('draws no Site Access section, and reads no pauses, on the admin’s own account', async () => {
+    requireAdminSession.mockResolvedValue({ ...ADMIN, userId: user(1).id });
+    await renderPage({ user: user(1).id });
+
+    expect(screen.getByRole('dialog', { name: VIEWING_01 })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Site Access' })).toBeNull();
+    expect(listUserAccessPauses).not.toHaveBeenCalled();
   });
 
   it('opens no modal, and reads no user, without ?user=', async () => {

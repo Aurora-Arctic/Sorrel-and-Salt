@@ -17,7 +17,9 @@ import {
   isPrimaryAdmin,
   listUsers,
   providersOf,
+  standingAccessPausesOf,
 } from '@/modules/identity';
+import { standingTimeoutsOf } from '@/modules/support';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { readListPlace } from '../../list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
@@ -41,20 +43,32 @@ const readUsers = cache(
     query: string,
     awaitingApproval: boolean,
     role: UserRole | undefined,
+    timedOut: boolean,
+    paused: boolean,
     after: string | undefined,
     before: string | undefined,
   ) => {
-    const filter = { query: query || undefined, awaitingApproval, role };
-    const here = { query, awaitingApproval, role };
+    // An unset switch is no filter, left out rather than sent false.
+    const filter = {
+      query: query || undefined,
+      awaitingApproval,
+      role,
+      timedOut: timedOut || undefined,
+      paused: paused || undefined,
+    };
+    const here = { query, awaitingApproval, role, timedOut, paused };
     const page = await readNumberedPage(
       { after, before },
       (request) => listUsers(session, filter, request),
       (start) => countUsers(session, filter, start),
     );
-    const providers = await providersOf(
-      session,
-      page.edges.map((edge) => edge.node.id),
-    );
+    // One batch each for the page, never a read per row (rules 7 and 9).
+    const ids = page.edges.map((edge) => edge.node.id);
+    const [providers, timeouts, pauses] = await Promise.all([
+      providersOf(session, ids),
+      standingTimeoutsOf(session, ids),
+      standingAccessPausesOf(session, ids),
+    ]);
     const users = page.edges.map(({ node }, index): UserListEntry => {
       const linked = providers[index];
       // An admin's batch answers every slot; a refusal here is the guard's bug.
@@ -63,6 +77,8 @@ const readUsers = cache(
       return {
         ...node,
         providers: linked,
+        supportTimeout: timeouts[index] ? { until: timeouts[index].until } : undefined,
+        accessPause: pauses[index] ? { until: pauses[index].until } : undefined,
         primaryAdmin: isPrimaryAdmin(node),
         // Its modal over this page, the filter and cursor kept, under the head the loaded modal
         // carries.
@@ -90,6 +106,8 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   // A flag by presence: `?awaiting`, a native submit's `awaiting=`, or an
   // older link's `awaiting=1`.
   const awaitingApproval = params.awaiting !== undefined;
+  const timedOut = params['timed-out'] !== undefined;
+  const paused = params.paused !== undefined;
   // Either role, or none: a hand-edited value is no filter rather than an error.
   const role = oneOf(ROLES, single(params.role));
   // Blank is no modal, as a blank `?edit=` is.
@@ -100,7 +118,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   // A restart point for the daily cleanup that does not depend on a sign-up; it never throws.
   const cleanup = ensureProvisionalCleanup();
   const [{ users, pageInfo, position }, adminChanges, opened] = await Promise.all([
-    readUsers(session, query, awaitingApproval, role, after, before),
+    readUsers(session, query, awaitingApproval, role, timedOut, paused, after, before),
     // The pause on admin changes and whether this admin may flip it, which the switch beside the
     // heading reads too (`@action/users`).
     readPauseState(session),
@@ -119,11 +137,12 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         query={query}
         awaitingApproval={awaitingApproval}
         role={role}
+        timedOut={timedOut}
+        paused={paused}
         canImpersonate={canImpersonate}
-        adminChanges={adminChanges}
         position={position}
         {...pagerHrefs(pageInfo, (cursor) =>
-          userListHref({ query, awaitingApproval, role }, cursor),
+          userListHref({ query, awaitingApproval, role, timedOut, paused }, cursor),
         )}
       />
       {/* Rendered whatever the address opens, so a press on a name opens it at
@@ -132,7 +151,10 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         closeHref={
           userParam && from
             ? USER_MODAL_ORIGINS[from]
-            : userListHref({ query, awaitingApproval, role }, cursorOf(after, before))
+            : userListHref(
+                { query, awaitingApproval, role, timedOut, paused },
+                cursorOf(after, before),
+              )
         }
         opened={opened}
         canImpersonate={canImpersonate}

@@ -5,6 +5,7 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
 import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import TabbedPage from '@/components/TabbedPage';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type {
   SupportRequestDetailEntry,
   SupportRequestEntry,
@@ -187,13 +188,13 @@ describe('A timed-out sender', () => {
   const standing = (until: Date, liftedAt: Date | null = null) => ({
     id: 't1',
     until,
-    note: null,
+    note: 'Repeated sends',
     liftedAt,
     createdAt: new Date('2026-10-01T00:00:00Z'),
     setBy: { id: 'admin-1', name: 'Ash Warden' },
     liftedBy: null,
   });
-  const NOTICE = 'The sender cannot answer until 2999-01-01 00:00 UTC.';
+  const NOTICE = /The sender cannot answer until/;
 
   const replySent = () => {
     const sent: ReplyToSupportRequestMutationVariables[] = [];
@@ -218,7 +219,15 @@ describe('A timed-out sender', () => {
   it('is told to staff replying, with the end time', () => {
     open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
     chooseReply();
-    expect(within(dialog()).getByText(NOTICE)).toBeInTheDocument();
+    expect(within(dialog()).getByText(NOTICE)).toHaveTextContent(/1 January 2999/);
+  });
+
+  it('is told to staff replying when the time-out has no end date', () => {
+    open(ADMIN, { timeouts: [{ ...standing(new Date()), until: null }] });
+    chooseReply();
+    expect(
+      within(dialog()).getByText('The sender cannot answer while timed out with no end date.'),
+    ).toBeInTheDocument();
   });
 
   it('asks staff before a reply goes, and sends it on Send Reply', async () => {
@@ -246,7 +255,7 @@ describe('A timed-out sender', () => {
   it('is not told to staff when no time-out stands: none, lifted or past', () => {
     open(ADMIN);
     chooseReply();
-    expect(within(dialog()).queryByText(/cannot answer until/)).toBeNull();
+    expect(within(dialog()).queryByText(/cannot answer/)).toBeNull();
     cleanup();
     open(ADMIN, {
       timeouts: [
@@ -255,7 +264,7 @@ describe('A timed-out sender', () => {
       ],
     });
     chooseReply();
-    expect(within(dialog()).queryByText(/cannot answer until/)).toBeNull();
+    expect(within(dialog()).queryByText(/cannot answer/)).toBeNull();
   });
 
   it('is not told to staff writing an internal note', () => {
@@ -265,16 +274,11 @@ describe('A timed-out sender', () => {
 });
 
 describe('Time-Out', () => {
-  it('is off while Until a Date has no date, and on for a span', () => {
-    open(ADMIN);
-    openTimeOut();
-    expect(timeOutSubmit()).toBeEnabled();
-
-    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
-    expect(timeOutSubmit()).toBeDisabled();
-  });
-
-  it('sends the sender and an end a day on, after asking', async () => {
+  const writeNote = (note = 'Repeated sends') =>
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Note/ }), {
+      target: { value: note },
+    });
+  const timeOutSent = () => {
     const sent: TimeOutSupportSenderMutationVariables[] = [];
     mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
       'TimeOutSupportSender',
@@ -283,8 +287,51 @@ describe('Time-Out', () => {
         return { timeOutSupportSender: { __typename: 'SupportTimeout', id: 't' } };
       },
     );
+    return sent;
+  };
+
+  it('marks the note required, and is off until one is written', () => {
     open(ADMIN);
     openTimeOut();
+    const note = within(dialog()).getByRole('textbox', { name: /^Note/ });
+    expect(note).toHaveAttribute('aria-required', 'true');
+    expect(timeOutSubmit()).toBeDisabled();
+
+    writeNote('   ');
+    expect(timeOutSubmit()).toBeDisabled();
+    writeNote();
+    expect(timeOutSubmit()).toBeEnabled();
+  });
+
+  it('is off while Until a Date has no date, and on for a span', () => {
+    open(ADMIN);
+    openTimeOut();
+    writeNote();
+    expect(timeOutSubmit()).toBeEnabled();
+
+    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
+    expect(timeOutSubmit()).toBeDisabled();
+  });
+
+  it('sends no end for No End Date, with the note, after asking', async () => {
+    const sent = timeOutSent();
+    open(ADMIN);
+    openTimeOut();
+    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'none' } });
+    writeNote();
+    fireEvent.click(timeOutSubmit());
+    expect(sent).toHaveLength(0);
+    confirmTimeOut();
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(sent).toEqual([{ userId: 'u1', until: null, note: 'Repeated sends' }]);
+  });
+
+  it('sends the sender and an end a day on, after asking', async () => {
+    const sent = timeOutSent();
+    open(ADMIN);
+    openTimeOut();
+    writeNote();
     fireEvent.click(timeOutSubmit());
     expect(sent).toHaveLength(0);
     confirmTimeOut();
@@ -294,6 +341,28 @@ describe('Time-Out', () => {
     const ahead = new Date(sent[0]?.until as string).getTime() - Date.now();
     expect(ahead).toBeGreaterThan(23 * 60 * 60 * 1000);
     expect(ahead).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+    expect(sent[0]?.note).toBe('Repeated sends');
+  });
+
+  it('shows a standing time-out with no end date as having none, with Lift in place of the form', () => {
+    open(ADMIN, {
+      timeouts: [
+        {
+          id: 't3',
+          until: null,
+          note: 'Spam',
+          liftedAt: null,
+          createdAt: new Date('2026-10-01T00:00:00Z'),
+          setBy: { id: 'admin-1', name: 'Ash Warden' },
+          liftedBy: null,
+        },
+      ],
+    });
+    openTimeOut();
+    const panel = within(dialog());
+    expect(panel.getAllByText(/with no end date/).length).toBeGreaterThan(0);
+    expect(panel.getByRole('button', { name: 'Lift' })).toBeInTheDocument();
+    expect(panel.queryByLabelText('For')).toBeNull();
   });
 
   it('shows the standing time-out with Lift in place of the form, and a history link to the earlier ones', () => {
@@ -468,6 +537,28 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
   });
 
+  it('offers an admin no Time-Out for a signed-out sender, and does for a signed-in one', () => {
+    const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    const { unmount } = open(ADMIN);
+    expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
+    unmount();
+    open(ADMIN, { sender: visitor, signedOut: true });
+    expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
+  });
+
+  it('offers no note or reply on an anonymised request, which the System account owns, and does on another', () => {
+    const { unmount } = open(ADMIN);
+    expect(within(dialog()).getByLabelText(/^Your Note/)).toBeInTheDocument();
+    unmount();
+    open(ADMIN, {
+      status: 'closed',
+      sender: { id: SYSTEM_ACTOR_ID, name: 'System', email: null },
+    });
+    expect(within(dialog()).queryByLabelText(/^Your (Note|Reply)/)).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /Send/ })).toBeNull();
+    expect(within(dialog()).getByText(/anonymised/)).toBeInTheDocument();
+  });
+
   it('gives an admin every control', () => {
     open(ADMIN);
     for (const name of ['Assignee', 'GitHub Issue', 'For', /^Your Note/]) {
@@ -603,7 +694,7 @@ describe('Unsaved input in the dialog', () => {
   it.each([
     ['GitHub Issue', 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9'],
     ['For', 'week'],
-    ['Note', 'Warned twice'],
+    [/^Note/, 'Warned twice'],
   ])('asks before closing with %s typed, though the reply is untouched', async (label, value) => {
     open(ADMIN);
     fireEvent.change(within(dialog()).getByLabelText(label), { target: { value } });

@@ -71,6 +71,35 @@ describe('membershipsOf', () => {
   });
 });
 
+describe('membershipsOf: the pause on each seat', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  // The shell marks a paused coven and hides its writes from this answer, so each membership carries the pause standing on it.
+  it("carries a standing pause on the caller's own seat, and none where none stands", async () => {
+    const [before] = await membershipsOf(asUser(B), [B.id]);
+    expect(before).toEqual([expect.objectContaining({ workspaceId: WORKSPACE_W_ID, pause: null })]);
+
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${B.id}, '2099-01-01T00:00:00Z', ${A.id}, ${A.id})
+    `;
+    try {
+      const [paused] = await membershipsOf(asUser(B), [B.id]);
+      expect(paused).toEqual([
+        expect.objectContaining({
+          workspaceId: WORKSPACE_W_ID,
+          pause: { until: new Date('2099-01-01T00:00:00Z') },
+        }),
+      ]);
+    } finally {
+      await sql`delete from workspace_member_pauses where user_id = ${B.id}`;
+    }
+  });
+});
+
 describe('firstCovenSlugOf', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {
@@ -101,6 +130,28 @@ describe('firstCovenSlugOf', () => {
     ).toBeLessThan(0);
 
     expect(await firstCovenSlugOf(asUser(A))).toBe(await slugOf(WORKSPACE_W_ID));
+  });
+
+  it('passes over a coven whose access is paused, for the next one the user can open', async () => {
+    await seatInDemo(B.id, 'viewer');
+    // Why W could have been the answer: W is B's own coven, and the demo coven sorts last.
+    expect(await firstCovenSlugOf(asUser(B))).toBe(await slugOf(WORKSPACE_W_ID));
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${B.id}, null, ${A.id}, ${A.id})
+    `;
+
+    expect(await firstCovenSlugOf(asUser(B))).toBe('sorrel-salt-demo');
+  });
+
+  it('answers the paused coven when it is the only one, whose paused page offers Leave', async () => {
+    // D's one coven is X.
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${WORKSPACE_X_ID}, ${D.id}, null, ${D.id}, ${D.id})
+    `;
+
+    expect(await firstCovenSlugOf(asUser(D))).toBe(await slugOf(WORKSPACE_X_ID));
   });
 
   it('answers the demo coven when it is the only one', async () => {

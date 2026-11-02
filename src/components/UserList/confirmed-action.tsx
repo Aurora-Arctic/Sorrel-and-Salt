@@ -21,6 +21,7 @@ const ConfirmedAction = ({
   confirmLabel,
   openClass,
   disabled = false,
+  confirmDisabled = false,
   title,
   question,
   warning,
@@ -130,6 +131,7 @@ const ConfirmedAction = ({
     confirmClass,
     describedBy: warning ? warningId : undefined,
     sending,
+    disabled: confirmDisabled,
     confirmRef,
     cancelRef,
     onConfirm: () => void confirm(),
@@ -189,6 +191,7 @@ function Answers({
   confirmClass,
   describedBy,
   sending,
+  disabled = false,
   confirmRef,
   cancelRef,
   onConfirm,
@@ -202,7 +205,7 @@ function Answers({
         ref={confirmRef}
         className={confirmClass}
         aria-describedby={describedBy}
-        disabled={sending}
+        disabled={sending || disabled}
         busy={sending}
         busyLabel={busy}
         onClick={onConfirm}

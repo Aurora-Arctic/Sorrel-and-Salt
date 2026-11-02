@@ -3,6 +3,7 @@ import {
   findManyByIds,
   findSupportRepliesFor,
   findSupportTimeoutsFor,
+  findStandingSupportTimeoutsFor,
 } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -45,6 +46,24 @@ export async function timeoutsForSenders(
   const rows = await findSupportTimeoutsFor(userIds);
   const sorted = [...rows].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return userIds.map((id) => sorted.filter((timeout) => timeout.userId === id));
+}
+
+/**
+ * The time-out standing on each sender, in the order asked, undefined where none stands: one query for a page of the user
+ * list. To a site admin alone. Of several, one with no end date is shown, else the one ending last.
+ */
+/** A time-out's end for sorting, with no end date as the latest of all. */
+const endsAt = (row: SupportTimeoutRow): number => row.until?.getTime() ?? Number.POSITIVE_INFINITY;
+
+export async function standingTimeoutsOf(
+  session: Session,
+  userIds: readonly string[],
+): Promise<(SupportTimeoutRow | undefined)[]> {
+  const admin = assertSiteAdmin(session, 'Only a site admin may read a sender’s time-outs');
+  const rows = await findStandingSupportTimeoutsFor(admin, userIds);
+  return userIds.map(
+    (id) => rows.filter((row) => row.userId === id).sort((a, b) => endsAt(b) - endsAt(a))[0],
+  );
 }
 
 /**

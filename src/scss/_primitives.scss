@@ -823,6 +823,7 @@
   // claude-docs/auth/admin-bootstrap.md, "The account page".
   .page-with-nav {
     @include stack(6);
+    @include page-with-nav-grid;
   }
 
   .page-with-nav > * {
@@ -831,12 +832,6 @@
   }
 
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-    .page-with-nav {
-      display: grid;
-      grid-template-columns: calc(#{space(8)} * 3) minmax(0, $narrow-column);
-      place-content: start center;
-    }
-
     .page-with-nav > :not(.page-nav) {
       grid-column: 2;
     }
@@ -853,17 +848,6 @@
     // A page with no head of its own, such as a tab inside `TabbedPage` whose heading stands above: the menu starts on the first row.
     .page-with-nav--headless > .page-nav {
       grid-row: 1 / span 3;
-    }
-  }
-
-  // On a wide screen the sections sit at the window's centre, the menu hanging to their left: an empty
-  // third column the menu's width balances the first. Not from a tablet up, which lacks the room for
-  // three columns and the frame's padding; below this the pair is centred instead.
-  @media (min-width: calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
-    .page-with-nav {
-      grid-template-columns:
-        calc(#{space(8)} * 3) minmax(0, $narrow-column)
-        calc(#{space(8)} * 3);
     }
   }
 

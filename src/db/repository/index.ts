@@ -109,6 +109,7 @@ export {
   findMemberPage,
   findMembershipsOfUsers,
   findWorkspaceRole,
+  findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
 export {
@@ -145,7 +146,7 @@ export {
   findPendingSiteInvitationPage,
 } from './invitations';
 export {
-  findActiveSupportTimeoutEnd,
+  findStandingSupportTimeout,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
@@ -160,8 +161,19 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  findStandingSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
+export {
+  findStandingUserAccessPause,
+  findStandingUserAccessPausesFor,
+  findUserAccessPausePage,
+} from './user-access-pauses';
+export {
+  findStandingWorkspaceMemberPause,
+  findStandingWorkspaceMemberPauses,
+  findWorkspaceMemberPausePage,
+} from './workspace-member-pauses';
 export {
   deleteLapsedProvisionalUser,
   findLapsedProvisionalUserIds,
@@ -178,6 +190,7 @@ export {
 export type { SignInFailureRow } from './sign-in-failures';
 export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
+  StandingTimeout,
   WorkingDeductionRow,
   WorkingParticipantRow,
   WorkingRow,

@@ -20,6 +20,8 @@ export interface LeaveWorkspaceButtonProps {
    * turns the confirmation into the guided exit; absent, Leave is the plain confirmation.
    */
   successors?: readonly Successor[];
+  /** Draw Leave Coven quiet (`btn--quiet`), where leaving is a page's secondary action; its confirm stays red. */
+  quiet?: boolean;
 }
 
 export interface OwnerExitProps extends Pick<LeaveWorkspaceButtonProps, 'workspaceId' | 'name'> {

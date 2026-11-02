@@ -8,11 +8,11 @@ import { categoryGroupsById } from '@/modules/vocabulary';
 // The query count, observed at the repository: the one read each batch makes
 // is wrapped so the test counts calls without changing what they answer, and
 // the role lookup is wrapped to show a public read never makes one.
-const repository = vi.hoisted(() => ({ findManyByIds: vi.fn(), findWorkspaceRole: vi.fn() }));
+const repository = vi.hoisted(() => ({ findManyByIds: vi.fn(), findWorkspaceSeat: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
   repository.findManyByIds.mockImplementation(actual.findManyByIds);
-  repository.findWorkspaceRole.mockImplementation(actual.findWorkspaceRole);
+  repository.findWorkspaceSeat.mockImplementation(actual.findWorkspaceSeat);
   return { ...actual, ...repository };
 });
 
@@ -25,7 +25,7 @@ useTestDatabase((client) => (sql = client));
 
 beforeEach(() => {
   repository.findManyByIds.mockClear();
-  repository.findWorkspaceRole.mockClear();
+  repository.findWorkspaceSeat.mockClear();
 });
 
 async function seededIds(table: 'category_groups' | 'ingredient_form_groups'): Promise<string[]> {
@@ -53,6 +53,6 @@ describe('the categoryGroupsById loader', () => {
       reason: expect.any(NotFound),
     });
     expect(repository.findManyByIds).toHaveBeenCalledTimes(1);
-    expect(repository.findWorkspaceRole).not.toHaveBeenCalled();
+    expect(repository.findWorkspaceSeat).not.toHaveBeenCalled();
   });
 });

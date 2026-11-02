@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import { findStandingSupportTimeoutsFor } from '@/db/repository';
+import { assertSiteAdmin } from '@/modules/identity';
+import { asUser } from '../../../support/as-user';
 import { supportTimeouts } from '@/modules/support/schema/support-timeouts';
 
 const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'lifted_at'];
@@ -18,10 +21,10 @@ describe('support_timeouts schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  it('declares nullable note and lifted_at, and a required until', () => {
-    expect(byName.note.notNull).toBe(false);
+  it('declares a required note, and nullable until and lifted_at', () => {
+    expect(byName.note.notNull).toBe(true);
+    expect(byName.until.notNull).toBe(false);
     expect(byName.lifted_at.notNull).toBe(false);
-    expect(byName.until.notNull).toBe(true);
   });
 
   it('declares its index over rows not yet lifted', () => {
@@ -42,19 +45,69 @@ useTestDatabase((client) => (sql = client));
 describe('support_timeouts table', () => {
   it('refuses a time-out for no user', async () => {
     const error = await failureOf(
-      sql`insert into support_timeouts (user_id, until, created_by, updated_by)
-          values (pg_catalog.gen_random_uuid(), now() + interval '1 day', ${ADMIN}, ${ADMIN})`,
+      sql`insert into support_timeouts (user_id, until, note, created_by, updated_by)
+          values (pg_catalog.gen_random_uuid(), now() + interval '1 day', 'Spam', ${ADMIN}, ${ADMIN})`,
     );
 
     expect(error.code).toBe('23503');
   });
 
-  it('accepts a time-out with no note and not lifted', async () => {
+  it('accepts a time-out with no end date, a note and not lifted', async () => {
     const [row] = await sql`
-      insert into support_timeouts (user_id, until, created_by, updated_by)
-      values (${SENDER}, now() + interval '1 day', ${ADMIN}, ${ADMIN}) returning *`;
+      insert into support_timeouts (user_id, until, note, created_by, updated_by)
+      values (${SENDER}, null, 'Spam', ${ADMIN}, ${ADMIN}) returning *`;
 
-    expect(row.note).toBeNull();
+    expect(row.until).toBeNull();
+    expect(row.note).toBe('Spam');
     expect(row.lifted_at).toBeNull();
+  });
+
+  it('refuses a time-out with no note', async () => {
+    const error = await failureOf(
+      sql`insert into support_timeouts (user_id, until, created_by, updated_by)
+          values (${SENDER}, now() + interval '1 day', ${ADMIN}, ${ADMIN})`,
+    );
+
+    expect(error.code).toBe('23502');
+  });
+
+  it('refuses a time-out whose note is blank', async () => {
+    const error = await failureOf(
+      sql`insert into support_timeouts (user_id, until, note, created_by, updated_by)
+          values (${SENDER}, null, '   ', ${ADMIN}, ${ADMIN})`,
+    );
+
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe('support_timeouts_note_not_blank');
+  });
+});
+
+describe('the repository', () => {
+  const { A, B, C, D, E, F } = FIXTURE_USERS;
+  const admin = assertSiteAdmin(asUser(E));
+
+  beforeEach(async () => {
+    await sql`truncate support_timeouts`;
+  });
+
+  it('reads the standing time-outs of the users asked for, and no expired, lifted, deleted or unasked one', async () => {
+    // A standing, B run out, C lifted, D soft-deleted, F standing but not asked for; E has none.
+    await sql`
+      insert into support_timeouts (user_id, until, note, lifted_at, deleted_at, deleted_by, created_by, updated_by)
+      values (${A.id}, now() + interval '1 day', 'Spam', null, null, null, ${ADMIN}, ${ADMIN}),
+             (${B.id}, now() - interval '1 minute', 'Spam', null, null, null, ${ADMIN}, ${ADMIN}),
+             (${C.id}, now() + interval '1 day', 'Spam', now(), null, null, ${ADMIN}, ${ADMIN}),
+             (${D.id}, now() + interval '1 day', 'Spam', null, now(), ${ADMIN}, ${ADMIN}, ${ADMIN}),
+             (${F.id}, now() + interval '1 day', 'Spam', null, null, null, ${ADMIN}, ${ADMIN})
+    `;
+
+    const asked = await findStandingSupportTimeoutsFor(admin, [A.id, B.id, C.id, D.id, E.id]);
+
+    expect(asked.map((row) => row.userId)).toEqual([A.id]);
+    // The precondition: F's time-out stands, so its absence above is the id filter's doing.
+    expect((await findStandingSupportTimeoutsFor(admin, [F.id])).map((row) => row.userId)).toEqual([
+      F.id,
+    ]);
+    expect(await findStandingSupportTimeoutsFor(admin, [])).toEqual([]);
   });
 });

@@ -1090,13 +1090,33 @@ type Mutation {
   """
   leaveWorkspace(workspaceId: ID!): Boolean!
 
+  """
+  Lifts the pause standing on a member’s access to a coven now, and answers it. Owners only.
+  """
+  liftMemberAccessPause(userId: ID!, workspaceId: ID!): WorkspaceMemberPause!
+
   """Ends a time-out now. Site admins only."""
   liftSupportTimeout(id: ID!): SupportTimeout!
+
+  """
+  Lifts the pause standing on a user’s access now, and answers it. Site admins only.
+  """
+  liftUserAccessPause(userId: ID!): UserAccessPause!
 
   """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
   pauseAdminRoleChanges: Boolean!
+
+  """
+  Pauses a member’s access to a coven until `until`, or with no end when it is left out. Owners only; an owner cannot be paused.
+  """
+  pauseMemberAccess(note: String, until: DateTime, userId: ID!, workspaceId: ID!): WorkspaceMemberPause!
+
+  """
+  Pauses a user’s access until `until`, or with no end when it is left out, with a note saying why, and ends every session they hold. Site admins only.
+  """
+  pauseUserAccess(note: String!, until: DateTime, userId: ID!): UserAccessPause!
 
   """
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
@@ -1216,9 +1236,9 @@ type Mutation {
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
   """
-  Bars a user from sending support requests until `until`. Site admins only.
+  Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.
   """
-  timeOutSupportSender(note: String, until: DateTime!, userId: ID!): SupportTimeout!
+  timeOutSupportSender(note: String!, until: DateTime, userId: ID!): SupportTimeout!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
@@ -1676,7 +1696,26 @@ type Query {
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
   """
   supportRequests(about: SupportAbout, after: String, before: String, errorCode: Int, first: Int, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
-  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+
+  """
+  Every pause set on a user’s access, standing, run out and lifted alike, newest first. Site admins only.
+  """
+  userAccessPauses(after: String, before: String, first: Int, last: Int, userId: ID!): QueryUserAccessPausesConnection!
+  users(
+    after: String
+    awaitingApproval: Boolean
+    before: String
+    first: Int
+    last: Int
+
+    """Only the users a site access pause stands on."""
+    paused: Boolean
+    query: String
+    role: UserRole
+
+    """Only the users a support time-out stands on."""
+    timedOut: Boolean
+  ): QueryUsersConnection!
 
   """
   What completing a working of this spell would take from the coven’s jars now: the plan completion follows, read and not applied.
@@ -2073,6 +2112,16 @@ type QuerySupportRequestsConnection {
 type QuerySupportRequestsConnectionEdge {
   cursor: String!
   node: SupportRequest!
+}
+
+type QueryUserAccessPausesConnection {
+  edges: [QueryUserAccessPausesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryUserAccessPausesConnectionEdge {
+  cursor: String!
+  node: UserAccessPause!
 }
 
 type QueryUsersConnection {
@@ -2670,14 +2719,14 @@ enum SupportStatus {
 }
 
 """
-A bar on a user sending support requests until `until`, unless lifted sooner.
+A bar on a user sending support requests until `until`, or with no end when `until` is null, unless lifted sooner.
 """
 type SupportTimeout {
   audit: AuditInfo!
   id: ID!
   liftedAt: DateTime
-  note: String
-  until: DateTime!
+  note: String!
+  until: DateTime
   userId: ID!
 }
 
@@ -2759,6 +2808,19 @@ type User {
   providers: [String!]!
   role: UserRole!
   termsVersion: String
+}
+
+"""
+A pause on a user’s access to the site: nothing but support until `until`, or with no end when `until` is null, unless lifted sooner. `note` says why, for staff.
+"""
+type UserAccessPause {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+  liftedBy: ID
+  note: String!
+  until: DateTime
+  userId: ID!
 }
 
 """
@@ -2865,6 +2927,11 @@ type Workspace {
   id: ID!
 
   """
+  Every pause set on one member of the coven, standing, run out and lifted alike, newest first. Owners only.
+  """
+  memberPauses(after: String, before: String, first: Int, last: Int, userId: ID!): WorkspaceMemberPausesConnection!
+
+  """
   The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.
   """
   members(after: String, before: String, first: Int, last: Int, query: String): WorkspaceMembersConnection!
@@ -2884,6 +2951,37 @@ type WorkspaceMember {
   role: WorkspaceRole!
   user: CoMember!
   workspace: Workspace!
+}
+
+"""
+A pause on one member’s access to a coven: every read and write in it is refused until `until`, or with no end when `until` is null, unless lifted sooner. The member keeps their seat.
+"""
+type WorkspaceMemberPause {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+
+  """
+  The owner who lifted the pause; null while it stands or after it ran out by itself.
+  """
+  liftedBy: CoMember
+  note: String
+
+  """The owner who set the pause."""
+  setBy: CoMember!
+  until: DateTime
+  userId: ID!
+  workspaceId: ID!
+}
+
+type WorkspaceMemberPausesConnection {
+  edges: [WorkspaceMemberPausesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WorkspaceMemberPausesConnectionEdge {
+  cursor: String!
+  node: WorkspaceMemberPause!
 }
 
 type WorkspaceMembersConnection {

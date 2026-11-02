@@ -1,5 +1,6 @@
 import type { ObjectRef } from '@pothos/core';
-import { Forbidden } from '../lib/errors';
+import { AccessPaused, Forbidden } from '../lib/errors';
+import { ACCESS_PAUSED_MESSAGE } from '../lib/access-paused';
 import type { Session } from '../lib/session';
 import { builder } from './builder';
 import type { BuilderTypes, Context, Defined, Suggest } from './types';
@@ -10,10 +11,14 @@ import type { BuilderTypes, Context, Defined, Suggest } from './types';
 // "Resolver helpers"). None of it decides who may: that is the service's.
 
 /**
- * The request's session, or `Forbidden` for a signed-out caller. A narrowing for the type, not a gate.
- * `.oxlintrc.json` refuses the inline copy in a resolver.
+ * The request's session, or `Forbidden` for a signed-out caller and `AccessPaused` for a paused one. A narrowing for the
+ * type, not a gate. `.oxlintrc.json` refuses the inline copy in a resolver.
  */
-export function sessionOf({ session }: Pick<Context, 'session'>): Session {
+export function sessionOf({
+  session,
+  accessPause,
+}: Pick<Context, 'session' | 'accessPause'>): Session {
+  if (accessPause) throw new AccessPaused(accessPause.until, ACCESS_PAUSED_MESSAGE);
   if (!session) throw new Forbidden();
   return session;
 }

@@ -9,7 +9,7 @@ import type { SupportReplyRow, SupportRequestRow } from '../types';
 import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
 import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
-import { getSupportRequest } from './staff';
+import { getSupportRequest, refuseAnonymised } from './staff';
 
 // The request lifecycle. The transitions, and who may make each:
 //
@@ -50,13 +50,10 @@ export async function sendSenderMessage(
   if (!request) throw new NotFound('No such support request');
 
   return withAudit(session, async (write) => {
-    const { recent, timedOutUntil } = await write.lockSupportSender(
-      session.userId,
-      SEND_WINDOW_SECONDS,
-    );
+    const { recent, timedOut } = await write.lockSupportSender(session.userId, SEND_WINDOW_SECONDS);
     // A closed request's message opens a new request, so it is refused in the new-request wording.
-    if (request.status === 'closed') refuseTimedOut(timedOutUntil);
-    else refuseTimedOutReply(timedOutUntil);
+    if (request.status === 'closed') refuseTimedOut(timedOut);
+    else refuseTimedOutReply(timedOut);
 
     const [moved] = await write.moveSupportRequest(
       id,
@@ -129,7 +126,7 @@ export async function resolveMySupportRequest(
  * Adds a note only staff read. It never changes the request's status and is never mailed. An admin may on any request, a
  * curator on any request they can read, assigned to them or not.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin.
+ * @throws {Forbidden} the session is neither a curator nor an admin, or the request is anonymised.
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.
  */
@@ -139,6 +136,7 @@ export async function addSupportInternalNote(
   body: string,
 ): Promise<SupportReplyRow> {
   const request = await getSupportRequest(session, requestId);
+  refuseAnonymised(request);
   const text = parseInput(SupportMessage, body);
   return withAudit(session, async (write) => {
     const [row] = await write.insert(supportReplies, {

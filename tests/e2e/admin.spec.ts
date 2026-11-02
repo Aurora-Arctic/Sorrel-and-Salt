@@ -86,7 +86,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   const admin = page.getByRole('row', {
     name: /Fixture Person Verified an-admin@admin-users\.test/,
   });
-  // The name, the address, the role, the creation flag, both sign-in
+  // The name, the address, the role, the creation flag, no standing time-out or pause, both sign-in
   // methods and the joining date: the account's state as the row carries it.
   await expect(admin.getByRole('cell')).toHaveText([
     /Fixture Person$/,
@@ -95,6 +95,8 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     // A mark alone: every admin may create a workspace, and the users CHECK
     // says so, so the cell offers no control.
     'Yes',
+    'Not timed out',
+    'Not paused',
     /Discord.*Google/,
     /\d/,
   ]);
@@ -107,10 +109,55 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   // So does each sign-in logo's.
   const discord = admin
     .getByRole('cell')
-    .nth(4)
+    .nth(6)
     .locator('.user-list__hint:has(.provider-mark--discord)');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+});
+
+// The Support Timed Out and Access Paused switches narrow the list in SQL to the users a time-out or a pause stands on.
+test('an admin narrows the users to those timed out of support, and to those whose access is paused', async ({
+  page,
+}) => {
+  const timed = await signInAs(page, 'timed-out@admin-filters.test');
+  const paused = await signInAs(page, 'paused@admin-filters.test');
+  await signInAs(page, 'neither@admin-filters.test');
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    await sql`
+      insert into support_timeouts (user_id, until, note, created_by, updated_by)
+      values (${timed.userId}, now() + interval '2 days', 'Testnote', ${timed.userId}, ${timed.userId})
+    `;
+    await sql`
+      insert into user_access_pauses (user_id, note, created_by, updated_by)
+      values (${paused.userId}, 'Testnote', ${paused.userId}, ${paused.userId})
+    `;
+  } finally {
+    await sql.end();
+  }
+  await signInAs(page, 'an-admin@admin-filters.test', ['discord'], 'admin');
+
+  await page.goto('/admin/users?query=admin-filters.test');
+  const filter = page.getByRole('search');
+  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
+  // The three users and the admin, before either switch narrows them.
+  await expect(rows).toHaveCount(4);
+
+  const timedOut = filter.getByRole('switch', { name: 'Support Timed Out' });
+  await timedOut.click();
+  await expect(page).toHaveURL(/\/admin\/users\?query=admin-filters\.test&timed-out$/);
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('timed-out@admin-filters.test');
+  await timedOut.click();
+  await expect(page).toHaveURL(/\/admin\/users\?query=admin-filters\.test$/);
+  await expect(rows).toHaveCount(4);
+
+  const accessPaused = filter.getByRole('switch', { name: 'Access Paused' });
+  await accessPaused.click();
+  await expect(page).toHaveURL(/\/admin\/users\?query=admin-filters\.test&paused$/);
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('paused@admin-filters.test');
   await assertNoAccessibilityViolations(page);
 });
 

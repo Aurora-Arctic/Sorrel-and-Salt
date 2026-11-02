@@ -151,3 +151,37 @@
     border-inline-start-color: $surface-card;
   }
 }
+
+// The paused viewer's notice above the page, in the wide column's edges so it lines up with the page beneath, and filling
+// that column as the demo coven's notice does, since `.notice`'s own measure would end it short of the page.
+.app-shell__pause {
+  box-sizing: border-box;
+  max-width: $wide-column;
+  margin-inline: auto;
+  padding: space(4) space(4) 0;
+
+  .notice {
+    max-width: none;
+  }
+}
+
+// Over a page that narrows its column the notice takes that column, by the page's own grid: `.page-with-nav`'s (Support,
+// the account's tabs) and a document page's. Where `:has()` is missing the notice keeps the wide column.
+.app-shell__main:has(.page-with-nav) .app-shell__pause {
+  column-gap: space(6);
+  @include page-with-nav-grid;
+
+  > * {
+    grid-column: 2;
+  }
+}
+
+.app-shell__main:has(.document-page) .app-shell__pause {
+  @include page-with-nav-grid($document-menu-column, $measure);
+}
+
+// An ingredient entry draws the notice in its own text column, which the band cannot follow: the entry's menu column
+// grows to its longest label. Its copy takes the band's place.
+.app-shell__main:has(.ingredient-entry__pause) .app-shell__pause {
+  display: none;
+}

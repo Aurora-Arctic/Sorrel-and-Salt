@@ -21,6 +21,10 @@ export interface UserListEntry {
   openHref: Route;
   /** The modal’s head, shown at once on a press: the one the loaded modal carries. */
   heading: ModalHeading;
+  /** The support time-out standing on them, `until` null for one with no end; absent when none stands. */
+  supportTimeout?: { until: Date | null };
+  /** The pause standing on their site access, `until` null for one with no end; absent when none stands. */
+  accessPause?: { until: Date | null };
 }
 
 export interface UserListProps extends Partial<PagerHrefs<Route>> {
@@ -32,17 +36,15 @@ export interface UserListProps extends Partial<PagerHrefs<Route>> {
   awaitingApproval: boolean;
   /** The role the list is narrowed to, absent for every role. */
   role?: UserRole;
+  /** Whether the list is narrowed to the users a support time-out stands on. */
+  timedOut?: boolean;
+  /** Whether the list is narrowed to the users a site access pause stands on. */
+  paused?: boolean;
 
   /** Where this page stands, the pager's "Page X of Y"; none when left out. */
   position?: PagePosition;
   /** Whether impersonation is registered here, so each non-admin row offers it. */
   canImpersonate?: boolean;
-  /**
-   * The pause on admin changes and whether this admin may flip it:
-   * while paused, a viewer who may not has every Change Role locked. The
-   * switch itself is the page's, beside its heading.
-   */
-  adminChanges?: PauseControlProps;
 }
 
 /** The filter the page shows, which the form starts from and compares against. */
@@ -50,6 +52,8 @@ export interface UserListFilterProps {
   query: string;
   awaitingApproval: boolean;
   role?: UserRole;
+  timedOut?: boolean;
+  paused?: boolean;
 }
 
 /** The filter as the address carries it: what `userListHref` writes. */
@@ -97,6 +101,8 @@ export interface ConfirmedActionProps {
   openClass: string;
   /** The row's button is off, for a form whose answer is not yet complete. */
   disabled?: boolean;
+  /** The modal's confirm is off, for a choice inside the modal whose answer is not yet complete. */
+  confirmDisabled?: boolean;
   /** The modal's heading, in title case. */
   title: string;
   /** The modal's question, the user's name in bold. */
@@ -147,6 +153,8 @@ export interface ConfirmAnswersProps {
   /** The warning's id, which the confirm is described by; none without one. */
   describedBy?: string;
   sending: boolean;
+  /** The confirm is off though nothing is being sent. */
+  disabled?: boolean;
   confirmRef: RefObject<HTMLButtonElement | null>;
   cancelRef: RefObject<HTMLButtonElement | null>;
   onConfirm: () => void;
@@ -207,16 +215,25 @@ export interface LockedControlProps {
   reason: string;
 }
 
-/** A linked sign-in provider in the Sign-In Methods cell, by its roster id. */
+/** A linked sign-in provider in the Logins cell, by its roster id. */
 export interface ProviderLogoProps {
   id: string;
 }
 
 /** A yes-or-no drawn as a check or a cross, with its word for a screen reader. */
+export interface UntilMarkProps {
+  /** What stands, opening the hidden text: "Timed out" or "Paused". */
+  standing: string;
+  /** When it ends; null for none. */
+  until: Date | null;
+}
+
 export interface MarkProps {
   value: boolean;
   /** The word the mark stands for: "Verified", "Yes". */
   label: string;
   /** Whether a tip bubble shows the word on hover too, where the heading does not say it. */
   hint?: boolean;
+  /** The tip bubble's own words, where they differ from `label`; a bubble shows them on hover. */
+  tip?: string;
 }

@@ -6,6 +6,7 @@ import type { EntryRecency } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { CupboardPlace } from '../IngredientEntry/types';
 import type { SafetyVariant } from '../SafetyNote/types';
+import type { MyCoven } from '../FacetPanel/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
 /**
@@ -125,7 +126,7 @@ export interface CompendiumCardsProps extends Pick<
    * Every coven the viewer belongs to, any role, for the filter's In My Covens.
    * Left out, or empty, the field does not show.
    */
-  myCovens?: readonly { id: string; name: string }[];
+  myCovens?: readonly MyCoven[];
 }
 
 export type { CompendiumCoven };

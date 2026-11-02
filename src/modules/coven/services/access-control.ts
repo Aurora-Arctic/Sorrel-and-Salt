@@ -19,9 +19,9 @@ const statements = {
   working: ['read', 'create', 'update', 'delete'],
   /**
    * Members and invitations. Owners and members read the roll (`read`); a member's address (`readEmail`), inviting, changing a
-   * role and removing stay with owners. The address is its own action since a member reads the roll but only an owner needs it to tell two people apart.
+   * role, removing and pausing a member's access (`pause`) stay with owners. The address is its own action since a member reads the roll but only an owner needs it to tell two people apart.
    */
-  member: ['read', 'readEmail', 'invite', 'update', 'remove'],
+  member: ['read', 'readEmail', 'invite', 'update', 'remove', 'pause'],
   /** The coven itself: renaming it, and deleting it. */
   workspace: ['read', 'update', 'delete'],
 } as const;
@@ -47,13 +47,13 @@ const member = ac.newRole({
   workspace: ['read'],
 });
 
-/** The member's, plus the membership roll with its addresses, and the workspace row itself. */
+/** The member's, plus the membership roll with its addresses and its writes, and the workspace row itself. */
 const owner = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
   working: ['read', 'create', 'update', 'delete'],
-  member: ['read', 'readEmail', 'invite', 'update', 'remove'],
+  member: ['read', 'readEmail', 'invite', 'update', 'remove', 'pause'],
   workspace: ['read', 'update', 'delete'],
 });
 

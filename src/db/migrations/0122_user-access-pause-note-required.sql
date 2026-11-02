@@ -1,0 +1,2 @@
+ALTER TABLE "user_access_pauses" ALTER COLUMN "note" SET NOT NULL;--> statement-breakpoint
+ALTER TABLE "user_access_pauses" ADD CONSTRAINT "user_access_pauses_note_not_blank" CHECK ("user_access_pauses"."note" ~ '[^[:space:]]');

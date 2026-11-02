@@ -105,9 +105,21 @@ builder.queryField('users', (t) =>
       query: t.arg.string({ required: false }),
       awaitingApproval: t.arg.boolean({ required: false }),
       role: t.arg({ type: UserRoleEnum, required: false }),
+      timedOut: t.arg.boolean({
+        required: false,
+        description: 'Only the users a support time-out stands on.',
+      }),
+      paused: t.arg.boolean({
+        required: false,
+        description: 'Only the users a site access pause stands on.',
+      }),
     },
-    resolve: (_root, { query, awaitingApproval, role }, page, context) =>
-      listUsers(sessionOf(context), definedArgs({ query, awaitingApproval, role }), page),
+    resolve: (_root, { query, awaitingApproval, role, timedOut, paused }, page, context) =>
+      listUsers(
+        sessionOf(context),
+        definedArgs({ query, awaitingApproval, role, timedOut, paused }),
+        page,
+      ),
   }),
 );
 

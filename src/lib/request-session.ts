@@ -2,9 +2,15 @@ import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { type CovenMembership, membershipBySlug } from '@/modules/coven';
-import { assertCurator, assertSiteAdmin, hasAgreedToTerms } from '@/modules/identity';
+import {
+  assertCurator,
+  assertSiteAdmin,
+  hasAgreedToTerms,
+  standingAccessPause,
+} from '@/modules/identity';
 import { auth } from './auth';
-import { Forbidden } from './errors';
+import { ACCESS_PAUSED_PATH, covenPausedPath, isPausedViewPage } from './access-paused';
+import { AccessPaused, Forbidden } from './errors';
 import type { Session, SessionState } from './session';
 import { isTermsPage, termsPagePath } from './account-terms';
 import { emailPagePath, isEmailPage } from './account-email';
@@ -28,13 +34,28 @@ async function isFresh(createdAt: Date | string): Promise<boolean> {
   return isFreshSession(createdAt, (await auth.$context).sessionConfig.freshAge);
 }
 
-async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
+/**
+ * The pause standing on a session's user, which is the one check of a paused session: every page but support's sends it to
+ * the paused page, and every API call but support's refuses it. Asked of every session, an impersonation's included, since
+ * a paused account still signs in.
+ */
+async function accessPauseOf(userId: string): Promise<SessionState['accessPause']> {
+  const pause = await standingAccessPause(userId);
+  return pause && { until: pause.until };
+}
+
+/**
+ * Everything Better Auth knows of the request's session, the standing pause included, read from the headers given. For
+ * the GraphQL context, which has no `headers()`; a page reads it through the guards below.
+ */
+export async function sessionStateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
   if (!result)
     return { session: null, emailVerified: false, termsAgreed: false, sessionFresh: false };
   // Present only while the `admin` plugin is registered and this session is
   // an impersonation; the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
+  const accessPause = await accessPauseOf(result.user.id);
   return {
     session: {
       userId: result.user.id,
@@ -47,7 +68,13 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
       Reflect.get(result.user, 'termsVersion') as string | null | undefined,
     ),
     sessionFresh: await isFresh(result.session.createdAt),
+    ...(accessPause && { accessPause }),
   };
+}
+
+/** The session a public page or the proxy acts as: none while a pause stands, so a paused session reads as signed out. */
+function actingSession({ session, accessPause }: SessionState): Session | null {
+  return accessPause ? null : session;
 }
 
 /**
@@ -55,15 +82,34 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
  * forged cookie is `null` though the proxy's cookie check passed it. For the proxy, which has no `headers()`; a page calls `getSession()`.
  */
 export async function sessionFromHeaders(requestHeaders: Headers): Promise<Session | null> {
-  return (await stateFromHeaders(requestHeaders)).session;
+  return actingSession(await sessionStateFromHeaders(requestHeaders));
 }
 
 // Cached per request: a layout and a page asking both cost one query.
-const getSessionState = cache(async (): Promise<SessionState> => stateFromHeaders(await headers()));
+const getSessionState = cache(async (): Promise<SessionState> =>
+  sessionStateFromHeaders(await headers()),
+);
 
-/** The signed-in user, or `null`. */
+/** The signed-in user, or `null`, as a paused session is too on every page but support's. */
 export async function getSession(): Promise<Session | null> {
-  return (await getSessionState()).session;
+  const state = await getSessionState();
+  if (state.accessPause && isPausedViewPage((await forwardedReturnPath()) ?? '')) {
+    return state.session;
+  }
+  return actingSession(state);
+}
+
+/**
+ * The signed-in user with the pause standing on them, or `null` signed out: for the shell, which a paused account is drawn
+ * on every page it reaches, with the notice that it is paused, while the page itself reads it as `getSession()` does.
+ */
+export async function getShellSession(): Promise<{
+  session: Session;
+  accessPause?: { until: Date | null };
+} | null> {
+  const { session, accessPause } = await getSessionState();
+  if (!session) return null;
+  return accessPause ? { session, accessPause } : { session };
 }
 
 /**
@@ -90,13 +136,18 @@ async function forwardedReturnPath(): Promise<string | undefined> {
 }
 
 /**
- * The signed-in user or a redirect to `/sign-in` carrying the page's path as `?next=`: `requireSession()` without its email
+ * The signed-in user or a redirect to `/sign-in` carrying the page's path as `?next=`, or to the paused page while a pause
+ * stands on the session's user, from every page but support's: `requireSession()` without its email
  * check, for the shell layout only. The shell is drawn round the email page, and a layout throwing the email redirect there
  * loops the router (claude-docs/auth/route-protection.md, "Where the email redirect is thrown").
  */
 export async function requireSignedIn(): Promise<Session> {
-  const { session } = await getSessionState();
-  if (!session) redirect(signInPath(await forwardedReturnPath()));
+  const { session, accessPause } = await getSessionState();
+  const returnPath = await forwardedReturnPath();
+  if (accessPause && !isPausedViewPage(returnPath ?? '')) {
+    redirect(ACCESS_PAUSED_PATH);
+  }
+  if (!session) redirect(signInPath(returnPath));
   return session;
 }
 
@@ -107,14 +158,15 @@ export async function requireSignedIn(): Promise<Session> {
  */
 export async function requireSession(): Promise<Session> {
   const session = await requireSignedIn();
-  const { emailVerified, termsAgreed } = await getSessionState();
+  const { emailVerified, termsAgreed, accessPause } = await getSessionState();
   const returnPath = await forwardedReturnPath();
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));
   }
   // After the address check, so an unverified account proves its address first and agrees second; the acceptance page is exempt
-  // from this check as the email page is from the one above.
-  if (!termsAgreed && !isTermsPage(returnPath) && !isEmailPage(returnPath)) {
+  // from this check as the email page is from the one above. A paused account, which reaches only the support pages here, is
+  // not sent: it cannot agree while paused, as the API refuses the agreement, so the acceptance page would send it back.
+  if (!termsAgreed && !accessPause && !isTermsPage(returnPath) && !isEmailPage(returnPath)) {
     redirect(termsPagePath(safeReturnPath(returnPath)));
   }
   return session;
@@ -157,12 +209,15 @@ const covenOf = cache(async (slug: string) => membershipBySlug(await requireSess
 /**
  * `requireSession()`, then the workspace the `/coven/[slug]` address names and the proof the user is a member. A refusal is
  * Next's 404, not 403: an unknown slug and a coven the user is not in must look the same (claude-docs/auth/coven-guard.md,
- * "The coven guard"). The layout and every page beneath it call it.
+ * "The coven guard"). A member whose access to the coven is paused holds a seat, so is sent to the coven's paused page
+ * instead. The layout and every page beneath it call it.
  */
 export async function requireCovenMembership(slug: string): Promise<CovenMembership> {
   try {
     return await covenOf(slug);
   } catch (error) {
+    // First, since AccessPaused is a Forbidden too.
+    if (error instanceof AccessPaused) redirect(covenPausedPath(slug));
     if (error instanceof Forbidden) notFound();
     throw error;
   }

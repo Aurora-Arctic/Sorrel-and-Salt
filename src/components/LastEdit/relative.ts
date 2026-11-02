@@ -1,6 +1,8 @@
 // How long ago an instant was, as a phrase ("3 days ago"). Worked out against the
 // reader's clock, so it only ever runs in the browser (last-edit-tip.tsx).
 
+import { TIME_PERIOD_SPACE } from '../../lib/utc';
+
 const UNITS: readonly (readonly [Intl.RelativeTimeFormatUnit, number])[] = [
   ['year', 365 * 24 * 60 * 60 * 1000],
   ['month', 30 * 24 * 60 * 60 * 1000],
@@ -29,5 +31,8 @@ export function relativePhrase(at: Date, now: Date = new Date()): string {
  * this sitting (SaveStatus's "Saved 2:02 pm"), where a date would be noise; browser only.
  */
 export function clockTime(at: Date): string {
-  return at.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true });
+  // The locale picks its own space before am or pm; this one never breaks.
+  return at
+    .toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
+    .replace(/\s+(?=[ap]m$)/, TIME_PERIOD_SPACE);
 }

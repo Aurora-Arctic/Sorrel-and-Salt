@@ -3,7 +3,8 @@ import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { ORIGIN, cookieHeader } from '../support/oauth';
-import { A, B, E, F } from '../support/as-user';
+import { liftUserAccessPause, pauseUserAccess } from '@/modules/identity';
+import { A, B, E, F, asUser } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
@@ -199,5 +200,113 @@ describe('stopping', () => {
     const asB = await signedInAs(B.id);
 
     expect((await post('/admin/stop-impersonating', asB)).status).toBe(400);
+  });
+});
+
+// A paused user is shown to the admin as the paused user sees the site: every signed-in page goes to the paused page and every
+// signed-in API call is refused with the pause's code (claude-docs/auth/impersonation.md, "Impersonation").
+describe('impersonating a paused user', () => {
+  /** The user a cookie signs in, read back through get-session; `undefined` when it signs in nobody. */
+  async function sessionOf(cookie: string) {
+    const response = await auth.handler(
+      new Request(`${ORIGIN}/api/auth/get-session`, { headers: { cookie } }),
+    );
+    const body = (await response.json()) as { user?: { id: string } } | null;
+    return body?.user?.id;
+  }
+
+  /** One GraphQL operation through the real route, as the browser sends it with `cookie`. */
+  async function graphql(cookie: string, query: string) {
+    const { POST } = await import('@/app/api/graphql/route');
+    const response = await POST(
+      new Request(`${ORIGIN}/api/graphql`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-sorrel-client': 'web', cookie },
+        body: JSON.stringify({ query }),
+      }),
+    );
+    return (await response.json()) as {
+      data?: Record<string, unknown> | null;
+      errors?: { extensions?: { code?: string; pausedUntil?: string | null } }[];
+    };
+  }
+
+  const ME = 'query { me { id } }';
+
+  async function impersonatingPaused(until: Date | null) {
+    const target = await insertUser('user');
+    const asE = await signedInAs(E.id);
+    await pauseUserAccess(asUser(E), target, until, 'A fixture pause');
+    const response = await impersonate(asE, target);
+    return { target, asE, response, cookie: cookieHeader(response) };
+  }
+
+  it('hands the paused user over, recording the admin on the session', async () => {
+    const { target, response, cookie } = await impersonatingPaused(null);
+
+    expect(response.status).toBe(200);
+    expect(await sessionOf(cookie)).toBe(target);
+    const rows = await sql`select impersonated_by from sessions where user_id = ${target}`;
+    expect(rows).toEqual([{ impersonated_by: E.id }]);
+  });
+
+  it('reads the session as paused, with the pause’s end, where an unpaused impersonation reads as signed in', async () => {
+    const until = new Date(Date.now() + 86_400_000);
+    const unpaused = cookieHeader(await impersonate(await signedInAs(E.id), B.id));
+    const open = await requestSession.sessionStateFromHeaders(new Headers({ cookie: unpaused }));
+    expect(open.session).toMatchObject({ userId: B.id, impersonatedBy: E.id });
+    expect(open.accessPause).toBeUndefined();
+
+    const { target, cookie } = await impersonatingPaused(until);
+    const paused = await requestSession.sessionStateFromHeaders(new Headers({ cookie }));
+
+    expect(paused.session).toMatchObject({ userId: target, impersonatedBy: E.id });
+    expect(paused.accessPause).toEqual({ until });
+    // Every reader that gives a page or the proxy its session sees nobody signed in.
+    expect(await requestSession.sessionFromHeaders(new Headers({ cookie }))).toBeNull();
+  });
+
+  it('answers a signed-in API call with the pause’s code and end, where the same call answers the unpaused user', async () => {
+    const unpaused = cookieHeader(await impersonate(await signedInAs(E.id), B.id));
+    expect((await graphql(unpaused, ME)).data).toEqual({ me: { id: B.id } });
+
+    const { cookie } = await impersonatingPaused(null);
+    const answer = await graphql(cookie, ME);
+
+    expect(answer.errors?.[0]?.extensions).toEqual({ code: 'ACCESS_PAUSED', pausedUntil: null });
+  });
+
+  it('answers a public read as it answers anyone signed out', async () => {
+    const { cookie } = await impersonatingPaused(null);
+
+    const answer = await graphql(cookie, 'query { compendium(first: 1) { totalCount } }');
+
+    expect(answer.errors).toBeUndefined();
+    expect(answer.data).toMatchObject({ compendium: { totalCount: expect.any(Number) } });
+  });
+
+  it('stops back into the admin’s own session', async () => {
+    const { cookie } = await impersonatingPaused(null);
+
+    const stopped = await post('/admin/stop-impersonating', cookie);
+
+    expect(stopped.status).toBe(200);
+    const state = await requestSession.sessionStateFromHeaders(
+      new Headers({ cookie: cookieHeader(stopped) }),
+    );
+    expect(state.session).toEqual({ userId: E.id, role: 'admin' });
+    expect(state.accessPause).toBeUndefined();
+  });
+
+  it('reads as signed in once the pause is lifted, with the same impersonation', async () => {
+    const { target, cookie } = await impersonatingPaused(null);
+    expect((await graphql(cookie, ME)).errors?.[0]?.extensions?.code).toBe('ACCESS_PAUSED');
+
+    await liftUserAccessPause(asUser(E), target);
+
+    const state = await requestSession.sessionStateFromHeaders(new Headers({ cookie }));
+    expect(state.session).toMatchObject({ userId: target, impersonatedBy: E.id });
+    expect(state.accessPause).toBeUndefined();
+    expect((await graphql(cookie, ME)).data).toEqual({ me: { id: target } });
   });
 });

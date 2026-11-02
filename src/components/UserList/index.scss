@@ -119,12 +119,17 @@
 }
 
 // The table above the stacking width: rows a step taller than the primitive's, since a row holds
-// buttons, and the facts no control changes (Sign-In Methods, Signed Up) muted at caption size.
+// buttons, and the facts no control changes (Logins, Signed Up) muted at caption size.
 // Scoped here because a card already labels each fact.
 @container data-table (width > #{$table-stack-width}) {
   .user-list .user-list__fact {
     color: $text-muted;
     font-size: type-size('caption');
+  }
+
+  // The mark columns (Can Create, Support, Access) and Logins: each heading centred over its marks or logos.
+  .user-list .user-list__mark-column {
+    text-align: center;
   }
 }
 
@@ -135,18 +140,13 @@
   @include row-action-column($sticky-column-layer);
 }
 
-// The creation cell: the Yes or No on the left, the control that changes it
-// on the right, centred on one line, as the role cell holds its own.
-.user-list__creation {
-  @include value-and-control;
+// A refusal's callout is drawn inside its own cell, so the cell's layer caps it: lifted to the tip's
+// layer while it holds one, or the later rows' sticky cells paint over the callout.
+.user-list__impersonate:has(.click-feedback__callout) {
+  z-index: $tip-layer;
 }
 
-// The role cell: the role and the primary admin's crown on the left, the
-// control that changes it on the right, centred on one line.
-.user-list__role {
-  @include value-and-control;
-}
-
+// The role cell: the role and the primary admin's crown, side by side.
 .user-list__role-name {
   display: inline-flex;
   align-items: center;

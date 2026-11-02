@@ -4,6 +4,7 @@
 export * from './services/access-control';
 export * from './services/invitations';
 export * from './services/last-owner';
+export * from './services/member-pause';
 export * from './services/member-removal';
 export * from './services/member-role';
 export * from './services/membership';
@@ -16,5 +17,13 @@ export * from './services/workspace-by-slug';
 export * from './loaders/member-emails';
 export * from './loaders/memberships-by-user';
 export * from './graphql/invitations';
+export * from './graphql/member-pause';
 export * from './graphql/workspace';
-export type { CovenMembership, WorkspaceRole, WorkspaceRow } from './types';
+export type {
+  CovenMembership,
+  PausedCoven,
+  WorkspaceMemberPauseRow,
+  WorkspaceRole,
+  WorkspaceRow,
+  WorkspaceSeat,
+} from './types';

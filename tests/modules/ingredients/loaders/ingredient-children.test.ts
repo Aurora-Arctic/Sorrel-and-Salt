@@ -32,7 +32,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
 
 // The query count, observed at the repository: every read the path reaches is
-// wrapped so the test counts calls without changing what they answer. A role
+// wrapped so the test counts calls without changing what they answer. A seat
 // lookup is `assertMembership`'s one query; the rest are the reads themselves.
 const repository = vi.hoisted(() => ({
   findManyOfIngredients: vi.fn(),
@@ -40,7 +40,7 @@ const repository = vi.hoisted(() => ({
   findManyByIds: vi.fn(),
   findSubstitutesIncludingSoftDeleted: vi.fn(),
   findReferencesOf: vi.fn(),
-  findWorkspaceRole: vi.fn(),
+  findWorkspaceSeat: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -203,7 +203,7 @@ describe('the categoriesByIngredient loader', () => {
       findManyByIds: 1,
       findSubstitutesIncludingSoftDeleted: 0,
       findReferencesOf: 0,
-      findWorkspaceRole: 1,
+      findWorkspaceSeat: 1,
     });
   });
 
@@ -235,7 +235,7 @@ describe('the categoriesByIngredient loader', () => {
       findManyByIds: 1,
       findSubstitutesIncludingSoftDeleted: 0,
       findReferencesOf: 0,
-      findWorkspaceRole: 0,
+      findWorkspaceSeat: 0,
     });
   });
 });
@@ -257,7 +257,7 @@ describe('the folkNamesByIngredient loader', () => {
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 0,
       findReferencesOf: 0,
-      findWorkspaceRole: 1,
+      findWorkspaceSeat: 1,
     });
   });
 
@@ -300,7 +300,7 @@ describe('the substitutesByIngredient loader', () => {
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 1,
       findReferencesOf: 0,
-      findWorkspaceRole: 1,
+      findWorkspaceSeat: 1,
     });
   });
 });
@@ -326,7 +326,7 @@ describe('the variantsByIngredient loader', () => {
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 0,
       findReferencesOf: 0,
-      findWorkspaceRole: 1,
+      findWorkspaceSeat: 1,
     });
   });
 });
@@ -356,7 +356,7 @@ describe("a variant's child loaders", () => {
       findManyByIds: 1,
       findSubstitutesIncludingSoftDeleted: 1,
       findReferencesOf: 1,
-      findWorkspaceRole: 3,
+      findWorkspaceSeat: 3,
     });
   });
 });

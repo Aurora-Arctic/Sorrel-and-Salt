@@ -2,7 +2,7 @@ import type { supportReplies } from './schema/support-replies';
 import type { supportRequests } from './schema/support-requests';
 import type { supportTimeouts } from './schema/support-timeouts';
 
-export type { SupportRequestFilter, SupportViewCounts } from '../../db/repository';
+export type { StandingTimeout, SupportRequestFilter, SupportViewCounts } from '../../db/repository';
 
 export type SupportRequestRow = typeof supportRequests.$inferSelect;
 export type SupportReplyRow = typeof supportReplies.$inferSelect;
@@ -28,7 +28,7 @@ export interface SupportNotifier {
   signedOutReply(to: string, body: string): Promise<void>;
 }
 
-/** What the Support dialog offers a visitor: `until` is set only for `timedOut`. */
+/** What the Support dialog offers a visitor: `until` is set only for a dated `timedOut`, and null for one with no end date. */
 export interface SupportDialogAnswer {
   kind: 'signedOut' | 'unverified' | 'timedOut' | 'form';
   until: Date | null;

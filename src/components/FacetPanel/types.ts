@@ -54,8 +54,11 @@ export interface FacetPanelProps {
   onClear?: () => void;
   /** Joins the dialog's class. */
   className?: string;
-  /** The viewer's covens, which In My Covens offers by name; left out or empty (signed out, in no coven, the admin and coven lists), the field is not drawn. */
-  covens?: readonly { id: string; name: string }[];
+  /**
+   * The viewer's covens, which In My Covens offers by name; left out or empty (signed out, in no coven, the admin and coven lists), the field is not drawn.
+   * A coven whose `paused` is set is listed disabled, with when the pause ends: the filter cannot read what it holds.
+   */
+  covens?: readonly MyCoven[];
 }
 
 /** The Filters shell: the button, Clear All and the panel, around a list's own filters. */
@@ -93,4 +96,11 @@ export interface CategoryLineProps {
   /** The counts are still being read. */
   loading?: boolean;
   onChange: (patch: { categories?: string[]; categoryMode?: CategoryMode }) => void;
+}
+
+/** One of the viewer's covens as In My Covens offers it: its id, its name, and the pause standing on the viewer's seat there, or null. `until` null is open-ended. */
+export interface MyCoven {
+  id: string;
+  name: string;
+  paused: { until: Date | null } | null;
 }

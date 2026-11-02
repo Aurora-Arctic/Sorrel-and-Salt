@@ -280,6 +280,10 @@ const ROWS: Record<string, PartialIndexRow> = {
   references_seed_key_unique: { row: reference },
   spell_steps_spell_id_custom_name_unique: { row: () => spellStep(false) },
   spell_steps_spell_id_position_unique: { row: () => spellStep(true) },
+  // One live pause per user: a fresh pause on A, whatever it holds.
+  user_access_pauses_one_live: {
+    row: async () => stamped({ user_id: AUTHOR, note: 'Fixture pause' }),
+  },
   users_email_unique: { row: async () => stamped({ name: 'Fixture Person', email: address() }) },
   workspaces_demo_unique: {
     row: async () => {
@@ -299,6 +303,10 @@ const ROWS: Record<string, PartialIndexRow> = {
   workspace_compendium_entries_workspace_label_unique: {
     row: async () => ({ ...(await cupboardEntry()), label: `Testleaf ${token()}` }),
     clash: ['workspace_id', 'label'],
+  },
+  // One live pause per member per coven: a fresh pause on B in W, whatever it holds.
+  workspace_member_pauses_one_live: {
+    row: async () => stamped({ workspace_id: WORKSPACE_W_ID, user_id: FIXTURE_USERS.B.id }),
   },
   zodiac_signs_seed_key_unique: { row: zodiacSign },
   zodiac_signs_slug_unique: { row: zodiacSign },

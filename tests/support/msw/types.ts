@@ -9,6 +9,8 @@ export interface MockedError {
   currentRevision?: number;
   /** RATE_LIMITED only; the seconds a Retry-After header names, 60 when omitted. */
   retryAfterSeconds?: number;
+  /** ACCESS_PAUSED only; when the pause ends, `null` (the default) for none. */
+  pausedUntil?: Date | null;
   /** The service's message; the thrown type's default when omitted. */
   message?: string;
 }

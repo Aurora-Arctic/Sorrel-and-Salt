@@ -7,6 +7,7 @@ import { Forbidden } from '@/lib/errors';
 
 const requireSignedIn = vi.fn();
 const getSession = vi.fn();
+const getShellSession = vi.fn();
 const getMe = vi.fn();
 const countReceivedInvitations = vi.fn();
 const membershipsOf = vi.fn();
@@ -15,7 +16,7 @@ const getMySupportCounts = vi.fn();
 const rolePermits = vi.fn((role: string, statement?: { member?: string[] }) =>
   statement?.member?.includes('invite') ? role === 'owner' : role !== 'viewer',
 );
-vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession }));
+vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession, getShellSession }));
 vi.mock('@/modules/support', () => ({ getMySupportCounts }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 // The switcher's order is the coven module's too; stood in for by the rule it states.
@@ -25,16 +26,30 @@ vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
 const { covenRolesIfSignedIn, viewerIfSignedIn, viewerOf } = await import('@/lib/viewer');
 
+/** The viewer for a shell session, read the way viewerIfSignedIn reads it, without the request cache. */
+async function viewerFor(shell: { session: typeof SESSION | { userId: string; role: 'admin' } }) {
+  getShellSession.mockResolvedValueOnce(shell);
+  return (await viewerIfSignedIn())!;
+}
+
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
-const membership = (slug: string, name: string, role = 'member', demo = false) => ({
+const membership = (
+  slug: string,
+  name: string,
+  role = 'member',
+  demo = false,
+  pause: { until: Date | null } | null = null,
+) => ({
   role,
+  pause,
   workspace: { id: `id-${slug}`, slug, name, demo },
 });
 
 beforeEach(() => {
   requireSignedIn.mockResolvedValue(SESSION);
   getSession.mockResolvedValue(SESSION);
+  getShellSession.mockResolvedValue({ session: SESSION });
   getMe.mockResolvedValue(ME);
   membershipsOf.mockResolvedValue([[]]);
   getMySupportCounts.mockReset().mockResolvedValue({ assignedOpen: 0, waitingOnMe: 0 });
@@ -121,6 +136,7 @@ describe('viewerOf', () => {
         canReadMembers: true,
         canInvite: false,
         canWrite: true,
+        paused: null,
       },
       {
         id: 'id-testwort-circle',
@@ -129,6 +145,56 @@ describe('viewerOf', () => {
         canReadMembers: false,
         canInvite: false,
         canWrite: false,
+        paused: null,
+      },
+    ]);
+  });
+
+  it('marks a paused coven, and takes away everything its role would offer there', async () => {
+    const until = new Date('2099-01-01T00:00:00Z');
+    membershipsOf.mockResolvedValue([
+      [
+        membership('own-coven', 'Own Coven', 'owner', false, { until }),
+        membership('open-ended', 'Open Ended', 'member', false, { until: null }),
+        membership('fixture-coven', 'Fixture Coven', 'owner'),
+      ],
+    ]);
+
+    const { workspaces } = await viewerOf();
+
+    // Why the paused covens could have offered all three: the same owner role unpaused does.
+    expect(workspaces.find(({ slug }) => slug === 'fixture-coven')).toEqual(
+      expect.objectContaining({
+        canReadMembers: true,
+        canInvite: true,
+        canWrite: true,
+        paused: null,
+      }),
+    );
+    expect(
+      workspaces
+        .filter(({ slug }) => slug !== 'fixture-coven')
+        .map(({ slug, canReadMembers, canInvite, canWrite, paused }) => ({
+          slug,
+          canReadMembers,
+          canInvite,
+          canWrite,
+          paused,
+        })),
+    ).toEqual([
+      {
+        slug: 'open-ended',
+        canReadMembers: false,
+        canInvite: false,
+        canWrite: false,
+        paused: { until: null },
+      },
+      {
+        slug: 'own-coven',
+        canReadMembers: false,
+        canInvite: false,
+        canWrite: false,
+        paused: { until },
       },
     ]);
   });
@@ -171,7 +237,7 @@ describe('viewerOf', () => {
 // The public frame's read: the same viewer, or nothing, and never a redirect.
 describe('viewerIfSignedIn', () => {
   it('is null for a signed-out visitor, without asking for the viewer or redirecting', async () => {
-    getSession.mockResolvedValue(null);
+    getShellSession.mockResolvedValue(null);
 
     expect(await viewerIfSignedIn()).toBeNull();
     expect(getMe).not.toHaveBeenCalled();
@@ -185,6 +251,51 @@ describe('viewerIfSignedIn', () => {
 
     expect(shell).toEqual(await viewerOf());
     expect(shell?.workspaces).toHaveLength(1);
+  });
+});
+
+// A paused viewer's shell: support and the pause, and nothing the pause closes.
+describe('a paused viewer', () => {
+  const until = new Date('2027-01-02T03:04:00Z');
+
+  it('draws no coven, no curation, no creation and no invitations, carrying the pause and the support count', async () => {
+    requireSignedIn.mockResolvedValue({ ...SESSION, role: 'admin' });
+    getShellSession.mockResolvedValue({
+      session: { ...SESSION, role: 'admin' },
+      accessPause: { until },
+    });
+    membershipsOf.mockResolvedValue([[membership('fixture-coven', 'Fixture Coven', 'owner')]]);
+    countReceivedInvitations.mockResolvedValue({ totalCount: 2, countBefore: null });
+    getMySupportCounts.mockResolvedValue({ assignedOpen: 3, waitingOnMe: 1 });
+    // The precondition: unpaused, the same viewer draws the coven, curation and the counts.
+    const open = (await viewerFor({ session: { ...SESSION, role: 'admin' } })).viewer;
+    expect(open).toMatchObject({
+      canCurate: true,
+      canCreate: true,
+      pendingInvitations: 2,
+      assignedSupport: 3,
+    });
+
+    for (const shell of [await viewerOf(), await viewerIfSignedIn()]) {
+      expect(shell?.workspaces).toEqual([]);
+      expect(shell?.viewer).toEqual({
+        id: 'u1',
+        name: 'Fixture Member',
+        canCurate: false,
+        canCreate: false,
+        verified: true,
+        pendingInvitations: 0,
+        assignedSupport: 0,
+        waitingSupport: 1,
+        accessPause: { until },
+      });
+    }
+  });
+
+  it('carries an open-ended pause as a null end', async () => {
+    getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until: null } });
+
+    expect((await viewerIfSignedIn())?.viewer.accessPause).toEqual({ until: null });
   });
 });
 

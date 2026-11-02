@@ -2,7 +2,14 @@ import { describe, expect, it, vi, afterAll, beforeAll } from 'vitest';
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
-vi.mock('@/lib/request-session', () => ({ sessionFromHeaders: async () => null }));
+vi.mock('@/lib/request-session', () => ({
+  sessionStateFromHeaders: async () => ({
+    session: null,
+    emailVerified: false,
+    termsAgreed: false,
+    sessionFresh: false,
+  }),
+}));
 
 // The real schema is one `ok` field, one level deep, so no query against it can reach a depth or cost limit.
 // The route is loaded over a schema that nests without end and pages without running out of rows, so the limits are the only thing that can refuse a query here.

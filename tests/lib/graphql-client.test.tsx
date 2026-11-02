@@ -138,6 +138,42 @@ describe('graphqlRequest', () => {
     expect((error as StaleWriteError).currentRevision).toBe(7);
   });
 
+  it("leaves a coven page for that coven's paused page when the answer is ACCESS_PAUSED, and still throws", async () => {
+    mockGraphQLError('Ok', { code: 'ACCESS_PAUSED', pausedUntil: null });
+    const assign = vi.fn();
+    vi.stubGlobal('location', {
+      origin: window.location.origin,
+      href: `${window.location.origin}/coven/whitethorn-coven/grimoire`,
+      assign,
+    });
+
+    const error = await graphqlRequest(OkDocument).catch((caught: unknown) => caught);
+
+    expect(assign).toHaveBeenCalledWith('/coven-paused/whitethorn-coven');
+    expect(error).toBeInstanceOf(GraphQLClientError);
+  });
+
+  it('stays put on ACCESS_PAUSED outside a coven, and on any other refusal inside one', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', {
+      origin: window.location.origin,
+      href: `${window.location.origin}/account`,
+      assign,
+    });
+    mockGraphQLError('Ok', { code: 'ACCESS_PAUSED', pausedUntil: null });
+    await graphqlRequest(OkDocument).catch(() => undefined);
+
+    vi.stubGlobal('location', {
+      origin: window.location.origin,
+      href: `${window.location.origin}/coven/whitethorn-coven/grimoire`,
+      assign,
+    });
+    refuseOk();
+    await graphqlRequest(OkDocument).catch(() => undefined);
+
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it('refuses to run outside the browser, where no session cookie rides along', async () => {
     vi.stubGlobal('window', undefined);
 

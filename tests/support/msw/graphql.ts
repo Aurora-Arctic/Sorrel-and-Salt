@@ -6,7 +6,14 @@ import {
 } from 'msw/graphql';
 import { HttpResponse } from 'msw/http';
 import { maskError } from '@/graphql/errors';
-import { Forbidden, NotFound, RateLimited, StaleWrite, ValidationError } from '@/lib/errors';
+import {
+  AccessPaused,
+  Forbidden,
+  NotFound,
+  RateLimited,
+  StaleWrite,
+  ValidationError,
+} from '@/lib/errors';
 import { server } from './server';
 import type { MockedError } from './types';
 
@@ -41,11 +48,14 @@ function thrownFor({
   fieldErrors = [],
   currentRevision = 1,
   retryAfterSeconds = 60,
+  pausedUntil = null,
   message,
 }: MockedError): Error {
   switch (code) {
     case 'VALIDATION':
       return new ValidationError(fieldErrors, message);
+    case 'ACCESS_PAUSED':
+      return new AccessPaused(pausedUntil, message);
     case 'FORBIDDEN':
       return new Forbidden(message);
     case 'NOT_FOUND':

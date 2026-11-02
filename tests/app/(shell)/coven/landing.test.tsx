@@ -21,7 +21,7 @@ const { default: CovenLandingPage } = await import('@/app/(shell)/coven/page');
 
 function asViewer(
   canCreate: boolean,
-  workspaces: { slug: string; name: string }[] = [],
+  workspaces: { slug: string; name: string; paused?: { until: Date | null } | null }[] = [],
   pendingInvitations = 0,
 ) {
   viewerOf.mockResolvedValue({
@@ -53,6 +53,16 @@ describe('the /coven landing', () => {
 
     await expect(CovenLandingPage()).rejects.toBe(REDIRECTED);
     expect(redirect).toHaveBeenCalledWith('/coven/fixture-coven');
+  });
+
+  it('sends a member past a coven whose access is paused, into the next one they can open', async () => {
+    asViewer(true, [
+      { slug: 'fixture-coven', name: 'Fixture Coven', paused: { until: null } },
+      { slug: 'testwort-circle', name: 'Testwort Circle', paused: null },
+    ]);
+
+    await expect(CovenLandingPage()).rejects.toBe(REDIRECTED);
+    expect(redirect).toHaveBeenCalledWith('/coven/testwort-circle');
   });
 
   it('offers someone with no coven who may create one the create page', async () => {

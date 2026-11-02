@@ -82,7 +82,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The coven guard (M6.10)
 
-`requireCovenMembership(slug)`, called by the `/coven/[slug]` layout and every page under it, is `requireSession()` then the coven service's `membershipBySlug`, which finds the workspace by the slug in the URL and checks the user is a member. An unknown slug and a coven the user is not in both get the same 404 through Next's `notFound()`, never a 403, because a coven's existence is private. [`auth/coven-guard.md`](auth/coven-guard.md)
+`requireCovenMembership(slug)`, called by the `/coven/[slug]` layout and every page under it, is `requireSession()` then the coven service's `membershipBySlug`, which finds the workspace by the slug in the URL and checks the user is a member. An unknown slug and a coven the user is not in both get the same 404 through Next's `notFound()`, never a 403, because a coven's existence is private. A member whose access to that coven is paused is sent to `/coven-paused/<slug>` instead. [`auth/coven-guard.md`](auth/coven-guard.md)
 
 ## The coven index page (M9.15)
 
