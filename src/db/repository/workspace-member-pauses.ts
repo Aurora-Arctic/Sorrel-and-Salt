@@ -1,11 +1,11 @@
-import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
 import { applyAudit } from '../audit';
 import { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { Membership } from '@/modules/coven';
 import { notSoftDeleted, scopedTo } from './predicates';
 import { findPageInWorkspace } from './finders';
-import { selectOne } from './select';
+import { selectFrom, selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { AuditWriter, SortPart, WorkspaceMemberPauseRow, WriterContext } from './types';
 
@@ -40,6 +40,27 @@ export function findStandingWorkspaceMemberPause(
   return selectOne(
     workspaceMemberPauses,
     and(notSoftDeleted(workspaceMemberPauses), liveFor(membership, userId), notRunOut),
+  );
+}
+
+/**
+ * The pauses standing on any of `userIds` in the proof's coven, one read for a page of the members list: live and not run out,
+ * at most one per member.
+ */
+export function findStandingWorkspaceMemberPauses(
+  membership: Membership,
+  userIds: readonly string[],
+): Promise<WorkspaceMemberPauseRow[]> {
+  if (userIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    workspaceMemberPauses,
+    and(
+      notSoftDeleted(workspaceMemberPauses),
+      scopedTo(membership, workspaceMemberPauses),
+      inArray(workspaceMemberPauses.userId, [...userIds]),
+      isNull(workspaceMemberPauses.liftedAt),
+      notRunOut,
+    ),
   );
 }
 

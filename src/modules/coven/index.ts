@@ -21,6 +21,7 @@ export * from './graphql/member-pause';
 export * from './graphql/workspace';
 export type {
   CovenMembership,
+  PausedCoven,
   WorkspaceMemberPauseRow,
   WorkspaceRole,
   WorkspaceRow,

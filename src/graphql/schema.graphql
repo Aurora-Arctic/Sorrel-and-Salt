@@ -2913,6 +2913,11 @@ type Workspace {
   id: ID!
 
   """
+  Every pause set on one member of the coven, standing, run out and lifted alike, newest first. Owners only.
+  """
+  memberPauses(after: String, before: String, first: Int, last: Int, userId: ID!): WorkspaceMemberPausesConnection!
+
+  """
   The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.
   """
   members(after: String, before: String, first: Int, last: Int, query: String): WorkspaceMembersConnection!
@@ -2941,11 +2946,28 @@ type WorkspaceMemberPause {
   audit: AuditInfo!
   id: ID!
   liftedAt: DateTime
-  liftedBy: ID
+
+  """
+  The owner who lifted the pause; null while it stands or after it ran out by itself.
+  """
+  liftedBy: CoMember
   note: String
+
+  """The owner who set the pause."""
+  setBy: CoMember!
   until: DateTime
   userId: ID!
   workspaceId: ID!
+}
+
+type WorkspaceMemberPausesConnection {
+  edges: [WorkspaceMemberPausesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WorkspaceMemberPausesConnectionEdge {
+  cursor: String!
+  node: WorkspaceMemberPause!
 }
 
 type WorkspaceMembersConnection {

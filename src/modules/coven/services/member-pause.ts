@@ -1,11 +1,14 @@
 import 'server-only';
 import {
   findStandingWorkspaceMemberPause,
+  findStandingWorkspaceMemberPauses,
+  findWorkspaceMemberPausePage,
   findWorkspaceRole,
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId } from '../../../lib/validation';
 import type { WorkspaceMemberPauseRow } from '../types';
 import { assertMembership } from './membership';
@@ -94,4 +97,39 @@ export async function liftMemberAccessPause(
   );
   if (!row) throw new NotFound('No pause stands on this member');
   return row;
+}
+
+/**
+ * The pauses standing on any of `userIds` in the coven, at most one each: what the members page reads to show each row's
+ * state. Owners only, as setting one is. An id that cannot name a user is left out.
+ *
+ * @throws {Forbidden} the caller is not an owner of the coven.
+ * @throws {AccessPaused} the caller's own access to the coven is paused.
+ */
+export async function standingMemberPauses(
+  session: Session,
+  workspaceId: string,
+  userIds: readonly string[],
+): Promise<WorkspaceMemberPauseRow[]> {
+  const membership = await assertMembership(session, workspaceId, { member: ['pause'] });
+  const ids = userIds.filter((id) => RowId.safeParse(id).success);
+  return findStandingWorkspaceMemberPauses(membership, ids);
+}
+
+/**
+ * One page of every pause set on a member of the coven, standing, run out and lifted alike, newest first. Owners only. A
+ * removed member's pauses are still answered, since the rows stay.
+ *
+ * @throws {Forbidden} the caller is not an owner of the coven, or `userId` cannot name a user.
+ * @throws {AccessPaused} the caller's own access to the coven is paused.
+ */
+export async function listMemberPauses(
+  session: Session,
+  workspaceId: string,
+  userId: string,
+  page: PageRequest,
+): Promise<PageEntry<WorkspaceMemberPauseRow>[]> {
+  const membership = await assertMembership(session, workspaceId, { member: ['pause'] });
+  if (!RowId.safeParse(userId).success) throw new Forbidden();
+  return findWorkspaceMemberPausePage(membership, page, userId);
 }

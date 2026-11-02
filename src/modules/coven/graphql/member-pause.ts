@@ -1,7 +1,13 @@
+import { CoMemberRef } from '@/modules/identity';
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { liftMemberAccessPause, pauseMemberAccess } from '../services/member-pause';
+import {
+  liftMemberAccessPause,
+  listMemberPauses,
+  pauseMemberAccess,
+} from '../services/member-pause';
+import { WorkspaceRef } from './workspace';
 import type { WorkspaceMemberPauseRow } from '../types';
 
 const WorkspaceMemberPauseRef = builder
@@ -16,7 +22,19 @@ const WorkspaceMemberPauseRef = builder
       until: t.expose('until', { type: 'DateTime', nullable: true }),
       note: t.exposeString('note', { nullable: true }),
       liftedAt: t.expose('liftedAt', { type: 'DateTime', nullable: true }),
-      liftedBy: t.exposeID('liftedBy', { nullable: true }),
+      // Named through `usersById` as a member's name is: one read for every pause on the page.
+      setBy: t.field({
+        type: CoMemberRef,
+        description: 'The owner who set the pause.',
+        resolve: (row) => ({ id: row.createdBy }),
+      }),
+      liftedBy: t.field({
+        type: CoMemberRef,
+        nullable: true,
+        description:
+          'The owner who lifted the pause; null while it stands or after it ran out by itself.',
+        resolve: (row) => (row.liftedBy ? { id: row.liftedBy } : null),
+      }),
       audit: t.field({ type: AuditInfo, resolve: (row) => row }),
     }),
   });
@@ -50,5 +68,17 @@ builder.mutationField('liftMemberAccessPause', (t) =>
     authScopes: { signedIn: true },
     resolve: (_root, { workspaceId, userId }, context) =>
       liftMemberAccessPause(sessionOf(context), workspaceId, userId),
+  }),
+);
+
+// On `Workspace`, as its members are: the members page's dialog asks for one member's pauses through the coven it already holds.
+builder.objectField(WorkspaceRef, 'memberPauses', (t) =>
+  t.pagedConnection({
+    type: WorkspaceMemberPauseRef,
+    description:
+      'Every pause set on one member of the coven, standing, run out and lifted alike, newest first. Owners only.',
+    args: { userId: t.arg.id({ required: true }) },
+    resolve: (workspace, { userId }, page, context) =>
+      listMemberPauses(sessionOf(context), workspace.id, userId, page),
   }),
 );

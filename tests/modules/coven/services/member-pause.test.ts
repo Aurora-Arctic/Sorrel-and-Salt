@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { AccessPaused, Forbidden, NotFound, ValidationError } from '@/lib/errors';
-import { assertMembership, liftMemberAccessPause, pauseMemberAccess } from '@/modules/coven';
+import {
+  assertMembership,
+  liftMemberAccessPause,
+  listMemberPauses,
+  pauseMemberAccess,
+  pausedCovenBySlug,
+  standingMemberPauses,
+} from '@/modules/coven';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
@@ -337,5 +344,141 @@ describe('liftMemberAccessPause', () => {
     );
     const [row] = await pausesOf(covenId, C.id);
     expect(row?.lifted_at).toBeNull();
+  });
+});
+
+describe('standingMemberPauses', () => {
+  it('answers the pause standing on each asked member, and none for a lifted, run-out or unasked one', async () => {
+    const covenId = await insertCoven('Fixture Standing Coven', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+      [C.id, 'viewer'],
+    ]);
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
+    await pauseMemberAccess(asUser(A), covenId, C.id, null, null);
+    await liftMemberAccessPause(asUser(A), covenId, C.id);
+    // A run-out pause on C, written straight in, since the service refuses a past end.
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${covenId}, ${C.id}, now() - interval '1 minute', ${A.id}, ${A.id})`;
+
+    const rows = await standingMemberPauses(asUser(A), covenId, [B.id, C.id, 'not-an-id']);
+    expect(rows.map(({ userId, until }) => ({ userId, until }))).toEqual([
+      { userId: B.id, until: LATER },
+    ]);
+    // Only the asked ids: B stands, but is not asked here.
+    await expect(standingMemberPauses(asUser(A), covenId, [C.id])).resolves.toEqual([]);
+  });
+
+  it("reads only the proof's coven: a pause in another coven is not answered", async () => {
+    const covenId = await insertCoven('Fixture Standing Here', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+    ]);
+    const otherId = await insertCoven('Fixture Standing There', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+    ]);
+    await pauseMemberAccess(asUser(A), otherId, B.id, LATER, null);
+    // Why the empty answer is the coven filter's: B does stand paused, in the other coven.
+    await expect(standingMemberPauses(asUser(A), otherId, [B.id])).resolves.toHaveLength(1);
+    await expect(standingMemberPauses(asUser(A), covenId, [B.id])).resolves.toEqual([]);
+  });
+
+  it('refuses a member and a viewer, who hold no member: pause', async () => {
+    const covenId = await insertCoven('Fixture Standing Refused', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+      [C.id, 'viewer'],
+    ]);
+    await expect(standingMemberPauses(asUser(A), covenId, [B.id])).resolves.toEqual([]);
+    await expect(standingMemberPauses(asUser(B), covenId, [C.id])).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    await expect(standingMemberPauses(asUser(C), covenId, [B.id])).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+  });
+});
+
+describe('listMemberPauses', () => {
+  it("answers one member's pauses, newest first, lifted and standing alike, and no other member's", async () => {
+    const covenId = await insertCoven('Fixture History Coven', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+      [C.id, 'viewer'],
+    ]);
+    await pauseMemberAccess(asUser(A), covenId, B.id, null, 'First');
+    await liftMemberAccessPause(asUser(A), covenId, B.id);
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'Second');
+    await pauseMemberAccess(asUser(A), covenId, C.id, LATER, 'Other');
+
+    const page = await listMemberPauses(asUser(A), covenId, B.id, { limit: 25, inverted: false });
+    expect(page.map(({ node }) => [node.note, node.liftedBy])).toEqual([
+      ['Second', null],
+      ['First', A.id],
+    ]);
+  });
+
+  it('refuses a member, a viewer and an owner of another coven by direct id', async () => {
+    const covenId = await insertCoven('Fixture History Refused', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+      [C.id, 'viewer'],
+    ]);
+    const otherId = await insertCoven('Fixture History Elsewhere', [[D.id, 'owner']]);
+    await pauseMemberAccess(asUser(A), covenId, C.id, LATER, null);
+    const page = { limit: 25, inverted: false };
+    // Why each refusal is the guard's: the owner reads the pause, and D is an owner, of another coven.
+    await expect(listMemberPauses(asUser(A), covenId, C.id, page)).resolves.toHaveLength(1);
+    await expect(listMemberPauses(asUser(D), otherId, D.id, page)).resolves.toEqual([]);
+    await expect(listMemberPauses(asUser(B), covenId, C.id, page)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    await expect(listMemberPauses(asUser(D), covenId, C.id, page)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    await expect(listMemberPauses(asUser(E), covenId, C.id, page)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+    await expect(listMemberPauses(asUser(A), covenId, 'not-an-id', page)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+  });
+});
+
+describe('pausedCovenBySlug', () => {
+  async function slugOf(workspaceId: string): Promise<string> {
+    const [row] = await sql`select slug from workspaces where id = ${workspaceId}`;
+    return row.slug as string;
+  }
+
+  it("names the coven and the end of the pause standing on the caller's seat", async () => {
+    const covenId = await insertCoven('Fixture Paused Page Coven', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+    ]);
+    const slug = await slugOf(covenId);
+    // Why the answer below is the pause's: before it, B holds a seat with nothing standing on it.
+    await expect(pausedCovenBySlug(asUser(B), slug)).resolves.toBeNull();
+
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
+    await expect(pausedCovenBySlug(asUser(B), slug)).resolves.toEqual({
+      name: 'Fixture Paused Page Coven',
+      until: LATER,
+    });
+
+    await liftMemberAccessPause(asUser(A), covenId, B.id);
+    await expect(pausedCovenBySlug(asUser(B), slug)).resolves.toBeNull();
+  });
+
+  it('refuses a non-member and an unknown slug alike with a bare Forbidden', async () => {
+    const covenId = await insertCoven('Fixture Paused Page Stranger', [[A.id, 'owner']]);
+    const slug = await slugOf(covenId);
+    await expect(pausedCovenBySlug(asUser(A), slug)).resolves.toBeNull();
+    await expect(pausedCovenBySlug(asUser(D), slug)).rejects.toEqual(new Forbidden());
+    await expect(pausedCovenBySlug(asUser(D), 'no-such-coven-anywhere')).rejects.toEqual(
+      new Forbidden(),
+    );
   });
 });
