@@ -288,7 +288,7 @@ export type ReferenceInput = {
   place?: string | null | undefined;
   published?: string | null | undefined;
   publisher?: string | null | undefined;
-  /** A peer-reviewed journal or a university or academic press; left out is false. Refused on a coven's source. */
+  /** Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles; left out is false. Refused on a coven's source. */
   scholarly?: boolean | null | undefined;
   series?: string | null | undefined;
   title: string;

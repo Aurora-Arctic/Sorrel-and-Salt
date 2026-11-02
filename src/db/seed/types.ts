@@ -237,7 +237,7 @@ export interface SeedSourceDeity {
  * reaches every deity filed under it as well.
  */
 export interface SeedSource {
-  reference: CitationFields;
+  reference: SeedWork;
   traditions?: string[];
   deities?: SeedSourceDeity[];
   celestialBodies?: string[];
@@ -261,10 +261,16 @@ export type SourceTargetTable = (typeof SOURCED)[Exclude<
 // its citations name.
 
 /**
- * A source as the seed writes it: its citation's fields and, for a peer-reviewed journal's article or a university or academic press's book,
+ * A source as the seed writes it: its citation's fields and, for a work scholars edited or reviewed (`references.scholarly`'s rule),
  * `scholarly`, which lands on its `references` row when written and, while no person edits the row, on every compendium seed run.
  */
 export type SeedWork = CitationFields & { scholarly?: true };
+
+/** A vocabulary source whose `scholarly` mark a person edited, kept as they left it: named by its citation, with what the list says differently. */
+export interface VocabularySourceKept {
+  source: string;
+  differs: string[];
+}
 
 /** A compendium entry's fields a citation may support, by the column's own names. */
 export type CompendiumEntryField = CitedEntryField;

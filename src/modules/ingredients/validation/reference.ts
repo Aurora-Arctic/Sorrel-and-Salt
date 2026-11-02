@@ -60,7 +60,7 @@ export const ReferenceInput = z
     url,
     modified: optionalDay('modified'),
     accessed: optionalDay('accessed'),
-    // A peer-reviewed journal or a university or academic press; left out is not, as an update replaces the row.
+    // A work scholars edited or reviewed (the column's rule, in schema/references.ts); left out is not, as an update replaces the row.
     // Only a compendium source is marked, which the service holds a coven's to.
     scholarly: z
       .boolean()

@@ -636,8 +636,8 @@ provides them, and its errors render through `FieldError`.
   its publication: Read Through (`host`), Address, Last Modified, Accessed
   and Note. The two days are `<input type="date">`.
 - **Scholarly, on a compendium source alone**: an on-or-off switch after the
-  kind's fields, marking a peer-reviewed journal or a university or academic
-  press (`references.scholarly`), with an info tip. It shows where the source
+  kind's fields, marking a work scholars edited or reviewed
+  (`references.scholarly`, rule in [`../db/references.md`](../db/references.md)), with an info tip. It shows where the source
   is the compendium's, a new one on the compendium's form or an edited
   compendium source, and is absent from a coven's, whose sources the service
   refuses the mark. An edited source opens with its mark as stored, so Save
