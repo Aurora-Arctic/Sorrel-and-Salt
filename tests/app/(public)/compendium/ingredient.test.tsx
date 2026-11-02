@@ -25,10 +25,13 @@ const readCompendiumEntry = vi.fn();
 const readCompendiumReview = vi.fn();
 // The row itself, for the form's shown switch.
 const getIngredient = vi.fn();
+// The sourcing score's read, for a curator or admin; its tests are slug-page.test.tsx's.
+const readSourcingScore = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumEntry,
   readCompendiumReview,
   getIngredient,
+  readSourcingScore,
 }));
 const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
@@ -83,6 +86,7 @@ beforeEach(() => {
   entryValues.mockResolvedValue(EMPTY_VALUES);
   getSession.mockResolvedValue(SESSION);
   readCompendiumReview.mockResolvedValue(null);
+  readSourcingScore.mockResolvedValue(undefined);
   getIngredient.mockResolvedValue({ shown: true });
 });
 
