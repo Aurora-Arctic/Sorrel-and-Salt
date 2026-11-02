@@ -30,6 +30,8 @@ export interface Session extends AuditSession {
 export interface SessionState {
   session: Session | null;
   emailVerified: boolean;
+  /** The account's recorded terms version is the one in force; `false` with no session. */
+  termsAgreed: boolean;
   /** Younger than Better Auth's `freshAge`, so `/unlink-account` would take it. */
   sessionFresh: boolean;
 }

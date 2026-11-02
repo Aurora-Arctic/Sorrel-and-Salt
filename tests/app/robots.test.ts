@@ -34,6 +34,7 @@ describe('robots', () => {
       '/sign-in',
       '/privacy',
       '/disclaimer',
+      '/terms',
       '/code-of-ethics',
       '/llms.txt',
       '/robots.txt',

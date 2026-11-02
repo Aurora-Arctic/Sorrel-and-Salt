@@ -24,6 +24,9 @@ const SiteFooter = (): ReactElement => (
           <Link href="/disclaimer" className="site-footer__link">
             Disclaimer
           </Link>
+          <Link href="/terms" className="site-footer__link">
+            Terms
+          </Link>
           <Link href="/code-of-ethics" className="site-footer__link">
             Code of Ethics
           </Link>

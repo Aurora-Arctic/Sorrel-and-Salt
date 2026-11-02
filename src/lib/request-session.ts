@@ -2,10 +2,11 @@ import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { type CovenMembership, membershipBySlug } from '@/modules/coven';
-import { assertCurator, assertSiteAdmin } from '@/modules/identity';
+import { assertCurator, assertSiteAdmin, hasAgreedToTerms } from '@/modules/identity';
 import { auth } from './auth';
 import { Forbidden } from './errors';
 import type { Session, SessionState } from './session';
+import { isTermsPage, termsPagePath } from './account-terms';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
 import { isRosterProvider } from './social-providers';
@@ -29,7 +30,8 @@ async function isFresh(createdAt: Date | string): Promise<boolean> {
 
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
-  if (!result) return { session: null, emailVerified: false, sessionFresh: false };
+  if (!result)
+    return { session: null, emailVerified: false, termsAgreed: false, sessionFresh: false };
   // Present only while the `admin` plugin is registered and this session is
   // an impersonation; the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
@@ -41,6 +43,9 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,
+    termsAgreed: hasAgreedToTerms(
+      Reflect.get(result.user, 'termsVersion') as string | null | undefined,
+    ),
     sessionFresh: await isFresh(result.session.createdAt),
   };
 }
@@ -97,15 +102,20 @@ export async function requireSignedIn(): Promise<Session> {
 
 /**
  * The signed-in user, or a redirect to `/sign-in` with the page's path as `?next=`, or to the email page while the address is
- * unverified (a provisional account can do nothing else). Every protected page calls it before reading anything
+ * unverified (a provisional account can do nothing else), or to the acceptance page until it has agreed to the current terms. Every protected page calls it before reading anything
  * (claude-docs/auth/admin-bootstrap.md, "The email page").
  */
 export async function requireSession(): Promise<Session> {
   const session = await requireSignedIn();
-  const { emailVerified } = await getSessionState();
+  const { emailVerified, termsAgreed } = await getSessionState();
   const returnPath = await forwardedReturnPath();
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));
+  }
+  // After the address check, so an unverified account proves its address first and agrees second; the acceptance page is exempt
+  // from this check as the email page is from the one above.
+  if (!termsAgreed && !isTermsPage(returnPath) && !isEmailPage(returnPath)) {
+    redirect(termsPagePath(safeReturnPath(returnPath)));
   }
   return session;
 }
