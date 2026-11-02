@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import SupportLink from '../../../components/SupportLink';
 import DocumentPage, { SourceItem, SourceMarks } from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 
@@ -150,7 +151,7 @@ export default function CodeOfEthicsPage() {
         </li>
         <li>
           If you belong to a tradition the compendium describes and it gets your tradition wrong,
-          tell us through the <Link href="/support?support=compendium">support form</Link>. Your
+          tell us through the <SupportLink about="compendium">support form</SupportLink>. Your
           account of your own practice outranks any book on our shelf.
         </li>
       </ul>
@@ -232,9 +233,8 @@ export default function CodeOfEthicsPage() {
         accessibility bugs first.
       </p>
       <p>
-        <Link href="/support?support=accessibility">Report an accessibility bug</Link>. The link
-        opens the support form with Accessibility already chosen; you can send one without an
-        account.
+        <SupportLink about="accessibility">Report an accessibility bug</SupportLink>. The link opens
+        the support form with Accessibility already chosen; you can send one without an account.
       </p>
 
       <h2>For Curators</h2>
@@ -258,8 +258,9 @@ export default function CodeOfEthicsPage() {
           has not been checked, and you never soften a hazard.
         </li>
         <li>
-          A support request shows you what a sender chose to write, with their address hidden. You
-          read it only to help, and you repeat nothing from it outside the request.
+          A support request shows you what a requestor chose to write, without the requestor's email
+          or the coven named in the page address. You read it only to help, and you repeat nothing
+          from it outside the request.
         </li>
         <li>
           Your curator role gives you nothing in any coven but your own. You do not use it, or ask
@@ -271,7 +272,7 @@ export default function CodeOfEthicsPage() {
       <p>
         An admin can do everything a curator can, and also manages who uses the site: an admin sees
         which covens a person belongs to, by name and role, grants and revokes the right to create
-        covens, changes site roles, times out a support sender, mints invitations and holds an
+        covens, changes site roles, times out a support requestor, mints invitations and holds an
         owner's seat in the demo coven. An admin agrees to everything above, and to this:
       </p>
       <ul>
@@ -285,12 +286,12 @@ export default function CodeOfEthicsPage() {
           write a note saying why wherever the screen offers one.
         </li>
         <li>
-          You see a sender's email address and which covens a person belongs to. You use neither for
+          You see a requestor's email and which covens a person belongs to. You use neither for
           anything but the request in front of you, and you share neither.
         </li>
         <li>
-          A time-out on a support sender is the site's one sanction today, and you use it for abuse
-          of the support form, not for disagreement.
+          A time-out on a support requestor is the site's one sanction today, and you use it for
+          abuse of the support form, not for disagreement.
         </li>
         <li>
           Your owner's seat in the demo coven is for showing people the site. The demo coven is a
@@ -315,17 +316,13 @@ export default function CodeOfEthicsPage() {
           so, in writing, before it does.
         </li>
         <li>
-          The owner reaches the database by hand only to do what a person has asked for, such as an
-          erasure, or to fix a fault, and says so when it is done.
+          The owner reaches the database only to do what a person has asked for, such as an erasure,
+          or to fix a fault, and says so when it is done.
         </li>
         <li>
           Every rule on this page, and every change to the terms, applies to the owner as to anyone
           else, and a change to the terms is published as a new version that everyone agrees to
           again.
-        </li>
-        <li>
-          The owner keeps the site's code public, so that anyone can check that these pages describe
-          what it does.
         </li>
         <li>
           If the site must end, the owner says so ahead of time. The owner commits to building a way

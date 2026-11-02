@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import SupportLink from '../../../components/SupportLink';
 import AccessCards from '../../../components/AccessCards';
 import type { AccessRole, AccessRow } from '../../../components/AccessCards/types';
 import DocumentPage from '../../../components/DocumentPage';
@@ -166,7 +166,7 @@ export default function PrivacyPolicyPage() {
         </li>
         <li>
           What you delete is marked deleted rather than erased. To have something erased, ask
-          through the <Link href="/support?support=privacy">support form</Link>.
+          through the <SupportLink about="privacy">support form</SupportLink>.
         </li>
         <li>Who can see what is set out at the end, one card per kind of data, role by role.</li>
       </ul>
@@ -174,12 +174,12 @@ export default function PrivacyPolicyPage() {
       <h2>What Is Stored</h2>
       <h3>Your Account</h3>
       <p>
-        Signing in creates an account holding your name, your email address, whether that email is
-        verified, and a link to the picture your sign-in provider shared (if it shared one).
+        Signing in creates an account holding your name, your email, whether that email is verified,
+        and a link to the picture your sign-in provider shared (if it shared one).
       </p>
       <p>
-        Your email address changes only when you verify the new one. Until then the old email stays,
-        and the new one appears only in the verification link the site sends.
+        Your email changes only when you verify the new one. Until then the old email stays, and the
+        new one appears only in the verification link the site sends.
       </p>
 
       <h3>How You Sign In</h3>
@@ -190,8 +190,8 @@ export default function PrivacyPolicyPage() {
           provider issues to the site.
         </li>
         <li>
-          <strong>A password:</strong> the site keeps a scrambled form of it (a hash, made with
-          scrypt), never the password itself.
+          <strong>A password:</strong> the site keeps a locked form of it, which can never be turned
+          back into the password, and never the password itself.
         </li>
         <li>
           <strong>A passkey:</strong> the site keeps the key's public half, its name, the kind of
@@ -200,7 +200,7 @@ export default function PrivacyPolicyPage() {
         </li>
         <li>
           <strong>An authenticator app:</strong> the site keeps the shared secret and your backup
-          codes in an encrypted form.
+          codes in a locked form.
         </li>
       </ul>
 
@@ -216,7 +216,7 @@ export default function PrivacyPolicyPage() {
       <p>
         To slow down malicious actors, the sign-in routes count requests by network address and
         route. A support request sent without an account is counted by network address and by email
-        address for twenty-four hours.
+        for twenty-four hours.
       </p>
 
       <h3>Who Wrote What</h3>
@@ -251,11 +251,12 @@ export default function PrivacyPolicyPage() {
       <p>
         A support request keeps what you chose to write (its subject and message), the page you sent
         it from, the error code if you sent it from an error page, its status, who it is assigned to
-        and any replies. A request sent without an account keeps the email address you gave so that
-        a reply can reach you. A time-out an admin sets on a sender is kept as history. Before a
-        request is saved, the page address is cleaned: an invitation code in it is replaced and
-        anything after a "?" is dropped. A curator reading a request never sees the sender's email
-        address or the coven named in the page address; an admin sees both.
+        and any replies. A request sent without an account keeps the email you gave so that a reply
+        can reach you. A time-out an admin sets on a requestor is kept as history. Before a request
+        is saved, the page address is cleaned: an invitation code in it is replaced and anything
+        after a "?" is dropped. A curator sees only requests an admin marked for curators or
+        assigned to them, without the requestor's email or the coven named in the page address. An
+        admin sees them with the requestor's email.
       </p>
 
       <h2>Who Processes It</h2>
@@ -338,9 +339,9 @@ export default function PrivacyPolicyPage() {
       <p>
         There is no "delete my account" button yet, and no self-service export. Until those are
         built, write to the site admins through the{' '}
-        <Link href="/support?support=privacy">support form</Link>, choosing Privacy &amp; Data. You
-        can send one without an account. Say what you want erased, and the site's admin will do it
-        and tell you when it is done.
+        <SupportLink about="privacy">support form</SupportLink>. You can send one without an
+        account. Say what you want erased, and the site's admin will do it and tell you when it is
+        done.
       </p>
       <p>
         You can leave a coven yourself from the coven's page, and a coven's owner can delete the

@@ -77,7 +77,7 @@ function Dialog(): ReactElement | null {
         ? { kind: 'form', support: supportAboutOf(asked), errorCode, errorReference }
         : state.kind === 'timed-out'
           ? state
-          : { kind: 'signed-out' };
+          : { kind: 'signed-out', support: supportAboutOf(asked) };
   return (
     <RouteModal
       closeHref={closeHref}

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import SupportLink from '../../../components/SupportLink';
 import DocumentPage, { SourceItem, SourceMarks } from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 
@@ -127,8 +127,8 @@ export default function DisclaimerPage() {
       <h2>Questions</h2>
       <p>
         If a page is wrong, incomplete or dangerous, tell us through the{' '}
-        <Link href="/support?support=compendium">support form</Link>, choosing Compendium. A
-        correction with a source is the most useful thing you can send.
+        <SupportLink about="compendium">support form</SupportLink>. A correction with a source is
+        the most useful thing you can send.
       </p>
 
       <h2>Sources</h2>
