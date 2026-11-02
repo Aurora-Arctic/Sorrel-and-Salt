@@ -81,6 +81,11 @@
   }
 }
 
+// The anonymised notice stands where the reply form would, across the column, not at the notice's measure.
+.support-detail__anonymised {
+  max-width: none;
+}
+
 .support-detail__side {
   padding-inline-start: space(5);
   border-inline-start: 1px solid $hairline;
@@ -341,8 +346,10 @@
   }
 }
 
-// Closed wears the disabled look (muted ink at the disabled opacity) on the icon alone, so the focus ring keeps full strength.
-.support-requests__mark--closed {
+// Closed wears the body ink, the mark's own colour; anonymised, the same box, wears the faded one below.
+
+// Anonymised wears the disabled look (muted ink at the disabled opacity) on the icon alone, so the focus ring keeps full strength.
+.support-requests__mark--anonymised {
   color: $text-muted;
 
   &:hover {

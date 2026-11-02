@@ -154,6 +154,16 @@ const SupportRequests = ({
                           <FlagIcon />
                         </button>
                       </IconTip>
+                    ) : request.anonymised ? (
+                      <IconTip tip="Anonymised" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark support-requests__mark--anonymised"
+                          aria-label="Anonymised"
+                        >
+                          <ArchiveBoxIcon />
+                        </button>
+                      </IconTip>
                     ) : request.status === 'closed' ? (
                       <IconTip tip="Closed" opensOnPress>
                         <button

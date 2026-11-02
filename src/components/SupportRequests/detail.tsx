@@ -147,7 +147,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
         {request.anonymised ? (
           // An anonymised request is owned by the System account, and the service refuses any change to it.
-          <Notice kind="plain">
+          <Notice kind="caution" quiet className="support-detail__anonymised">
             This request is anonymised. It takes no notes or replies, and its settings cannot be
             changed.
           </Notice>
