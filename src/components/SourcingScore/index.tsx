@@ -1,11 +1,15 @@
-import { useId, type ReactElement } from 'react';
+'use client';
+
+import { useId, useState, type ReactElement } from 'react';
 import InfoTip from '../InfoTip';
+import { ChevronIcon } from '../IconTip/icons';
 import type { SourcingScoreProps } from './types';
 import './index.scss';
 
 // A compendium entry's sourcing score for a curator: the total as the heading, a bar of what was
 // gained and what it cost out of the maximum, then each fact that made it with its points, so the
-// sum can be checked by eye (claude-docs/components/sourcing-score.md).
+// sum can be checked by eye. The `head` variant is the entry page's: the total, and the facts behind
+// a disclosure (claude-docs/components/sourcing-score.md).
 
 /** The most an entry can score, which the bar is drawn out of (`sourcing-weights.ts`). */
 const MAXIMUM = 100;
@@ -38,19 +42,81 @@ const Glyph = ({ kind }: { kind: Kind }): ReactElement => (
   </svg>
 );
 
-export default function SourcingScore({ sourcing }: SourcingScoreProps): ReactElement {
+/** The facts as rows: gains, then costs, then the zeros. */
+function Facts({
+  sourcing,
+  className,
+}: {
+  sourcing: SourcingScoreProps['sourcing'];
+  className: string;
+}): ReactElement {
+  const facts = KIND_ORDER.flatMap((kind) =>
+    sourcing.facts.filter(({ points }) => kindOf(points) === kind),
+  );
+  return (
+    <ul className={className}>
+      {facts.map(({ fact, label, points }) => (
+        <li key={fact} className={`sourcing-score__fact sourcing-score__fact--${kindOf(points)}`}>
+          <Glyph kind={kindOf(points)} />
+          <span>{label}</span>
+          <span className="sourcing-score__points">{signed(points)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const TIP = (
+  <>
+    How well the entry is sourced, out of {MAXIMUM}. Each fact&rsquo;s points are capped on their
+    own, so the list adds up to the total.
+  </>
+);
+
+// The entry page's head row: the total always shown, the facts behind a native disclosure.
+function HeadScore({ sourcing }: SourcingScoreProps): ReactElement {
   const heading = useId();
   const tip = useId();
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="sourcing-score-head">
+      <div className="sourcing-score__head">
+        <h2 id={heading} className="sourcing-score-head__heading">
+          Sourcing Score: {sourcing.score}
+        </h2>
+        <InfoTip id={tip} label="Sourcing Score">
+          {TIP}
+        </InfoTip>
+      </div>
+      <details
+        className="sourcing-score-head__details"
+        onToggle={(e) => setOpen(e.currentTarget.open)}
+      >
+        <summary className="sourcing-score-head__summary">
+          <span className="sourcing-score-head__chevron" aria-hidden="true">
+            <ChevronIcon />
+          </span>
+          {open ? 'Hide the Facts' : 'Show the Facts'}
+        </summary>
+        <Facts sourcing={sourcing} className="sourcing-score-head__facts" />
+      </details>
+    </div>
+  );
+}
+
+export default function SourcingScore({
+  sourcing,
+  variant = 'panel',
+}: SourcingScoreProps): ReactElement {
+  const heading = useId();
+  const tip = useId();
+  if (variant === 'head') return <HeadScore sourcing={sourcing} />;
 
   const gained = sourcing.facts.reduce((sum, { points }) => sum + Math.max(points, 0), 0);
   const cost = sourcing.facts.reduce((sum, { points }) => sum - Math.min(points, 0), 0);
   // The bar never passes its track: gains stop at the maximum and costs take only what is left.
   const gainShare = Math.min(gained, MAXIMUM);
   const costShare = Math.min(cost, MAXIMUM - gainShare);
-
-  const facts = KIND_ORDER.flatMap((kind) =>
-    sourcing.facts.filter(({ points }) => kindOf(points) === kind),
-  );
 
   return (
     <section aria-labelledby={heading} className="sourcing-score">
@@ -59,8 +125,7 @@ export default function SourcingScore({ sourcing }: SourcingScoreProps): ReactEl
           Sourcing Score: {sourcing.score}
         </h4>
         <InfoTip id={tip} label="Sourcing Score">
-          How well the entry is sourced, out of {MAXIMUM}. Each fact&rsquo;s points are capped on
-          their own, so the list adds up to the total.
+          {TIP}
         </InfoTip>
       </div>
       <div
@@ -75,15 +140,7 @@ export default function SourcingScore({ sourcing }: SourcingScoreProps): ReactEl
       <p className="sourcing-score__key" aria-hidden="true">
         Gained +{gained} · Cost −{cost} · Out of {MAXIMUM}
       </p>
-      <ul className="sourcing-score__facts">
-        {facts.map(({ fact, label, points }) => (
-          <li key={fact} className={`sourcing-score__fact sourcing-score__fact--${kindOf(points)}`}>
-            <Glyph kind={kindOf(points)} />
-            <span>{label}</span>
-            <span className="sourcing-score__points">{signed(points)}</span>
-          </li>
-        ))}
-      </ul>
+      <Facts sourcing={sourcing} className="sourcing-score__facts" />
     </section>
   );
 }
