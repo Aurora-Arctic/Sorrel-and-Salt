@@ -38,9 +38,10 @@ describe('document_mailings schema', () => {
     expect(byName.status.default).toBe('sending');
   });
 
-  // `replaced` marks a mailing a newer mailing of the same document stopped before it finished.
-  it('takes a status of sending, sent or replaced', () => {
-    expect(documentMailings.status.enumValues).toEqual(['sending', 'sent', 'replaced']);
+  // `replaced` marks a mailing a newer mailing of the same document stopped before it finished; `paused` one the mail provider's
+  // monthly quota stopped, until an admin resumes it.
+  it('takes a status of sending, sent, replaced or paused', () => {
+    expect(documentMailings.status.enumValues).toEqual(['sending', 'sent', 'replaced', 'paused']);
   });
 
   it('declares its one-per-version index, unique and partial', () => {
@@ -141,7 +142,7 @@ describe('document_mailings table', () => {
     expect(mailing).toMatchObject({ status: 'sending', finished_at: null, recipient_count: 3 });
   });
 
-  it('takes a mailing replaced by a newer one, finished, and refuses a status outside the three', async () => {
+  it('takes a mailing replaced by a newer one, finished, and refuses a status outside the four', async () => {
     const versionId = await aPublishedVersion();
 
     const [replaced] = await sql`
@@ -158,6 +159,24 @@ describe('document_mailings table', () => {
     expect(replaced.finished_at).toBeInstanceOf(Date);
     // 22P02 is invalid_text_representation: the enum refuses the value.
     expect(error.code).toBe('22P02');
+  });
+
+  // The migrated database holds what the schema declares, so the migration adding `paused` has run.
+  it('holds the four statuses in the database, in the schema’s order', async () => {
+    const [row] = await sql`select enum_range(null::document_mailing_status)::text[] as statuses`;
+
+    expect(row.statuses).toEqual(documentMailings.status.enumValues);
+    expect(row.statuses).toContain('paused');
+  });
+
+  it('takes a mailing paused, unfinished', async () => {
+    const [paused] = await sql`
+      insert into document_mailings (document_version_id, summary, status, recipient_count, created_by, updated_by)
+      values (${await aPublishedVersion()}, 'Testwort.', 'paused', 3, ${ADMIN}, ${ADMIN})
+      returning *
+    `;
+
+    expect(paused).toMatchObject({ status: 'paused', finished_at: null });
   });
 
   it('refuses a mailing of no version', async () => {
