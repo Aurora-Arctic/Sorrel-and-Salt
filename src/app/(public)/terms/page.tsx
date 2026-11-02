@@ -160,10 +160,19 @@ export default function TermsOfUsePage() {
         governed by the law of that state. Nothing in them takes away a protection that the law of
         the place you live gives you and does not let you give up.
       </p>
+
+      <h2>Settling a Dispute</h2>
       <p>
-        If a dispute about these terms or the site has to go to court, it goes to the state courts
-        of Washington in Spokane County, where the Spokane County Superior Court sits, and you and
-        the site's owner each agree to that court hearing it.
+        If you and the site's owner have a dispute about these terms or the site, each of you first
+        tries arbitration: a neutral person hears both sides and gives a decision. The arbitration
+        is non-binding, which means the decision is advice, not an order, and either of you may
+        reject it. Nobody gives up the right to go to court, or the right to bring a claim together
+        with other people, by agreeing to these terms.
+      </p>
+      <p>
+        If arbitration does not settle the dispute, either of you may take it to the state courts of
+        Washington in Spokane County, where the Spokane County Superior Court sits, and you and the
+        site's owner each agree to that court hearing it.
       </p>
 
       <h2>Leaving</h2>
@@ -178,25 +187,46 @@ export default function TermsOfUsePage() {
 
       <h2>Agreeing to These Terms</h2>
       <p>
-        The first time you sign in after these terms are published, the site shows you this text and
-        asks you to agree before it shows you any other page that needs an account. It records which
-        version you agreed to and when. The public pages, this one included, need no agreement to
-        read.
-      </p>
-      <p>
-        When the terms change, the version at the top changes, and the site asks you to agree to the
-        new version the same way. You can read the new version before you agree to it, and you can
-        come back to this page at any time.
+        Right after you sign up, and again whenever the version you last agreed to is not the
+        current one, the site sends you to its acceptance page, at /account/terms, before it shows
+        you any other page that needs an account. There you read the terms and agree to them with a
+        click, and the site records which version you agreed to and when. The public pages, this one
+        included, need no agreement to read.
       </p>
 
-      <h2>Changes to These Terms</h2>
+      <h2>Updates to These Terms</h2>
       <p>
-        These terms change only by a new version, never quietly. The site's code is public, so
-        anyone can check that the terms describe what the code does.
+        These terms are refreshed from time to time, and only ever by a new version with a new date
+        at the top, never quietly. When that happens, each account is asked to agree again at its
+        next page that needs an account, on the same acceptance page. Anything an account does on
+        the site after an update is bound by the updated terms. You can read the new version before
+        you agree to it, and you can come back to this page at any time. The site's code is public,
+        so anyone can check that the terms describe what the code does.
       </p>
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
+        <li>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 7.04A.030, "When
+          chapter applies", and 7.04A.060, "Validity of agreement to arbitrate" (Uniform Arbitration
+          Act). Accessed 2 November 2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030
+          </a>
+          ,{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060
+          </a>
+          .
+        </li>
+        <li>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 7.06.050, "Decision and
+          award—Appeals—Trial—Judgment" (Arbitration of Civil Actions). Accessed 2 November 2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050
+          </a>
+          .
+        </li>
         <li>
           Washington State Legislature. <em>Revised Code of Washington</em>, 19.86.020, "Unfair
           competition, practices, declared unlawful", and 19.86.090, "Civil action for damages".
