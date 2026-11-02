@@ -611,7 +611,7 @@ async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
   await declaringBootstrapPrivileges(tx, E.id, () => insertMissingFixtureUsers(tx, [E]));
 }
 
-async function insertMissingFixtureUsers(
+export async function insertMissingFixtureUsers(
   tx: SeedTransaction,
   wanted: readonly FixtureUser[],
 ): Promise<void> {

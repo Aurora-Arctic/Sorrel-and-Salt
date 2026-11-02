@@ -17,7 +17,9 @@ import {
   isPrimaryAdmin,
   listUsers,
   providersOf,
+  standingAccessPausesOf,
 } from '@/modules/identity';
+import { standingTimeoutsOf } from '@/modules/support';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { readListPlace } from '../../list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
@@ -51,10 +53,13 @@ const readUsers = cache(
       (request) => listUsers(session, filter, request),
       (start) => countUsers(session, filter, start),
     );
-    const providers = await providersOf(
-      session,
-      page.edges.map((edge) => edge.node.id),
-    );
+    // One batch each for the page, never a read per row (rules 7 and 9).
+    const ids = page.edges.map((edge) => edge.node.id);
+    const [providers, timeouts, pauses] = await Promise.all([
+      providersOf(session, ids),
+      standingTimeoutsOf(session, ids),
+      standingAccessPausesOf(session, ids),
+    ]);
     const users = page.edges.map(({ node }, index): UserListEntry => {
       const linked = providers[index];
       // An admin's batch answers every slot; a refusal here is the guard's bug.
@@ -63,6 +68,8 @@ const readUsers = cache(
       return {
         ...node,
         providers: linked,
+        supportTimeoutUntil: timeouts[index]?.until,
+        accessPause: pauses[index] ? { until: pauses[index].until } : undefined,
         primaryAdmin: isPrimaryAdmin(node),
         // Its modal over this page, the filter and cursor kept, under the head the loaded modal
         // carries.

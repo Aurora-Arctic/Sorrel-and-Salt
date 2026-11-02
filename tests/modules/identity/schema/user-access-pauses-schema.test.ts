@@ -3,8 +3,13 @@ import postgres from 'postgres';
 import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { A, B, E, asUser } from '../../../support/as-user';
-import { findStandingUserAccessPause, findUserAccessPausePage, withAudit } from '@/db/repository';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
+import {
+  findStandingUserAccessPause,
+  findStandingUserAccessPausesFor,
+  findUserAccessPausePage,
+  withAudit,
+} from '@/db/repository';
 import { assertSiteAdmin } from '@/modules/identity';
 import { userAccessPauses } from '@/modules/identity/schema/user-access-pauses';
 import type { NamedWrites } from '@/db/types';
@@ -336,6 +341,27 @@ describe('the repository', () => {
     `;
 
     expect(await historyOf(PAUSED)).toEqual([]);
+  });
+
+  it('reads the standing pauses of the users asked for, and no expired, lifted, deleted or unasked one', async () => {
+    // A standing, B run out, C lifted, D soft-deleted, F standing but not asked for; E has none.
+    await sql`
+      insert into user_access_pauses (user_id, until, lifted_at, lifted_by, deleted_at, deleted_by, created_by, updated_by)
+      values (${A.id}, null, null, null, null, null, ${ADMIN}, ${ADMIN}),
+             (${B.id}, now() - interval '1 minute', null, null, null, null, ${ADMIN}, ${ADMIN}),
+             (${C.id}, null, now(), ${ADMIN}, null, null, ${ADMIN}, ${ADMIN}),
+             (${D.id}, null, null, null, now(), ${ADMIN}, ${ADMIN}, ${ADMIN}),
+             (${F.id}, now() + interval '1 day', null, null, null, null, ${ADMIN}, ${ADMIN})
+    `;
+
+    const asked = await findStandingUserAccessPausesFor(admin, [A.id, B.id, C.id, D.id, E.id]);
+
+    expect(asked.map((row) => row.userId)).toEqual([A.id]);
+    // The precondition: F's pause stands, so its absence above is the id filter's doing.
+    expect((await findStandingUserAccessPausesFor(admin, [F.id])).map((row) => row.userId)).toEqual(
+      [F.id],
+    );
+    expect(await findStandingUserAccessPausesFor(admin, [])).toEqual([]);
   });
 
   it('adds no property to the table for drizzle-kit to see', () => {

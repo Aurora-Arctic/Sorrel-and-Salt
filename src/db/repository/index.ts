@@ -161,9 +161,14 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  findStandingSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
-export { findStandingUserAccessPause, findUserAccessPausePage } from './user-access-pauses';
+export {
+  findStandingUserAccessPause,
+  findStandingUserAccessPausesFor,
+  findUserAccessPausePage,
+} from './user-access-pauses';
 export {
   findStandingWorkspaceMemberPause,
   findStandingWorkspaceMemberPauses,

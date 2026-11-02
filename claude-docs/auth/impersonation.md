@@ -70,6 +70,12 @@ an admin looks.
 - **An admin cannot impersonate another admin**, the primary admin included.
   `allowImpersonatingAdmins` stays at its default, off, and the default `admin`
   role lacks `impersonate-admins`.
+- **A user whose site access is paused cannot be impersonated** while the pause stands. The
+  session hook that refuses their own sign-in (`refusePausedSession` in `src/lib/auth.ts`) refuses
+  the impersonation session too, answering 403 with `ACCESS_PAUSED` and the pause's end; the
+  admin's own session is left as it was, and the list and the modal name the pause under
+  Impersonate (`impersonationRefusal`). Once the pause is lifted or runs out it works again
+  (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
 - **An impersonation lasts an hour**, Better Auth's default. The session row
   expires on its own if Stop is never pressed.
 - **No target check beyond the role.** Better Auth looks the target up by id
@@ -129,7 +135,8 @@ name and address, and carries Stop Impersonating, at the top of every page
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-admin is
   refused, an admin target is refused, and the impersonation session is B's
   with E recorded. B's coven is what the session sees, and `/admin`'s check
-  refuses it. Stop restores E's own session. The file builds Better Auth once,
+  refuses it. Stop restores E's own session. A paused user is refused with the pause's code and
+  no session, E still signed in as E, and handed over once the pause is lifted. The file builds Better Auth once,
   with the flags on, in its `beforeAll` (MB.188).
 - `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
   under an impersonation stamped as the user acted as — the session above is

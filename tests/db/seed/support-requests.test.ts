@@ -5,15 +5,21 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
 import { beginSeedTransaction } from '@/db/seed/idempotent';
+import { SANCTIONED_USERS, seedSanctionedUsers } from '@/db/seed/sanctioned-users';
 import { seedSupportRequests } from '@/db/seed/support-requests';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 
-// The fake support requests the `demo` scenario seeds for the admin Support tab and the account's own requests, run against the `standard` cast.
+// The fake support requests the `demo` scenario seeds for the admin Support tab and the account's own requests, run against the `standard` cast
+// and the held-back accounts the demo seeds before it.
 
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-const run = () => beginSeedTransaction(drizzle(sql), seedSupportRequests);
+const run = () =>
+  beginSeedTransaction(drizzle(sql), async (tx) => {
+    await seedSanctionedUsers(tx);
+    await seedSupportRequests(tx);
+  });
 
 const counts = async () => {
   const [row] = await sql<{ requests: number; replies: number; timeouts: number }[]>`
@@ -169,7 +175,7 @@ describe('the support request seed', () => {
       expect(bad).toHaveLength(0);
     });
 
-    it('seeds one sender with an active time-out and one whose time-out has expired', async () => {
+    it('seeds D and I with a time-out in force and another sender with one that has expired', async () => {
       const rows = await sql<{ user_id: string; active: boolean; expired: boolean }[]>`
         select user_id, (until > now() and lifted_at is null) as active,
                (until <= now() and lifted_at is null) as expired
@@ -177,9 +183,11 @@ describe('the support request seed', () => {
       `;
       const active = rows.filter((r) => r.active);
       const expired = rows.filter((r) => r.expired);
-      expect(active).toHaveLength(1);
+      expect(active.map((r) => r.user_id).sort()).toEqual(
+        [FIXTURE_USERS.D.id, SANCTIONED_USERS.I.id].sort(),
+      );
       expect(expired.length).toBeGreaterThanOrEqual(1);
-      expect(active[0].user_id).not.toBe(expired[0].user_id);
+      expect(active.map((r) => r.user_id)).not.toContain(expired[0].user_id);
     });
 
     it('sets every time-out by an admin on a sender who has sent a request', async () => {
