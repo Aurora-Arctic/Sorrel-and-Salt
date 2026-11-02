@@ -48,8 +48,11 @@ The mail jobs:
   ([`design-decisions/m15.50-invitation-token-rotation.md`](design-decisions/m15.50-invitation-token-rotation.md)).
   A printed card is never mailed.
 - `accountNoticeMail` (`src/modules/identity/jobs/account-notice-mail.ts`): the
-  change-requested notice, the account-exists mail and the password-changed
-  notice, each by the account's id.
+  change-requested and change-completed notices, the account-exists mail and
+  the password-changed notice, each by the account's id. The change-completed
+  notice goes to `users.former_email`, which the swap filled, and its step
+  clears that column once the transport took the mail or every attempt failed
+  ([`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "The email page").
 - `supportStatusMail` (`src/modules/support/jobs/support-status-mail.ts`): the
   support received and resolved mails, by the request's id. The step reads the
   sender's address from the request, or from the account that sent it, and
@@ -57,10 +60,9 @@ The mail jobs:
 - The support closing-soon notice and a staff reply's mail, each sent by its
   request's or reply's own job.
 
-**What is sent once, with no job.** The email-change notice sent when a change
-completes goes to the address being left, and after the swap no row holds that
-address, so a run would have to carry it. It is sent once through `send`
-(`src/lib/mail.ts`), which delivers once and never throws. The record is
+**Every mail has a job.** `send` (`src/lib/mail.ts`), which delivers once and
+never throws, is only what a job falls back to when `MAIL_TRANSPORT` is unset or
+its run cannot be started. The record is
 [`design-decisions/m15.50-mail-through-a-retried-job.md`](design-decisions/m15.50-mail-through-a-retried-job.md).
 
 **A "sent" marker.** A caller that records a mail as sent does it in its own job
@@ -313,7 +315,7 @@ the owner reads them in the clients.
 | Template                                          | Sent by                                                                                                                                                                                                                                                                                                                             | Carries                                                                                                                                                                                                                                                                                              |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/emails/verify-email.ts`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                                                                                                                                                                                                                                                                    | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it; never the account's name, since a mistyped address would hand it to a stranger                                                                                    |
-| `src/emails/email-change-notice.ts`               | `src/lib/email-change-notice.ts`, from `setEmail` (`stage: 'requested'`) and `afterEmailVerification` (`'completed'`)                                                                                                                                                                                                               | The time (UTC) and the new address's domain, never the address; no link but the site's wordmark, and no name                                                                                                                                                                                         |
+| `src/emails/email-change-notice.ts`               | `src/lib/email-change-notice.ts`, through the account-notice job, from `setEmail` (`stage: 'requested'`) and `afterEmailVerification` (`'completed'`, to `users.former_email`)                                                                                                                                                      | The time (UTC) and the new address's domain, never the address; no link but the site's wordmark, and no name                                                                                                                                                                                         |
 | `src/emails/verify-email.ts`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail`                                                                                                                                                                                                                                                 | The same link with a change token, to the _new_ address, again with no name: its first sentence says an existing account asked for this address, since the reader did not sign up                                                                                                                    |
 | `src/emails/account-exists.ts`                    | `src/lib/auth.ts`'s `mailExistingHolder`, the `before` hook's `answerHeldSignUp`, at a password sign-up to an address that already has an account, through `scheduleAccountNotice` (`kind: 'account-exists'`) and the `accountNoticeMail` job, whose step renders it with `accountExistsNotice` in `src/lib/account-notice-mail.ts` | That someone tried to make an account with the address and none was made, a link to `/sign-in`, and how the account signs in (its password, its linked providers, or both); never a name, since whoever made the sign-up need not be the holder                                                      |
 | `src/emails/reset-password.ts`                    | `src/lib/auth.ts`'s `mailResetLink`, Better Auth's `sendResetPassword`, from `/forgot-password`, to a verified address only                                                                                                                                                                                                         | The single-use `/reset-password` link that lasts 15 minutes, that a new password signs the account out everywhere, and that a reader who did not ask can ignore it; never a name, since anyone can ask for it for any address                                                                        |

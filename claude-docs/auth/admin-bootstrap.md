@@ -385,12 +385,25 @@ the tests [`tests.md`](tests.md).
   sent to it. The row's own, still-unverified address is
   mailed again instead; verified, there is nothing to do. Either way `next`
   is handed to the sender as given, for the link's landing.
-- **The address being left is told twice.** `src/emails/email-change-notice.tsx`
-  goes to the old address when the change is asked for and again when
-  `afterEmailVerification` runs on a change link (`noticeCompletedChange` in
-  `src/lib/auth.ts`, which reads the old address from the link's token). The
-  mail carries no action: a link in it would be one a thief could press.
-  Nothing is sent to a `.invalid` placeholder.
+- **The address being left is told twice.** `src/emails/email-change-notice.ts`
+  goes to the old address when the change is asked for and again once the
+  change completes. The swap's own write holds the old address in
+  `users.former_email`, and `afterEmailVerification` starts the account-notice
+  job (`kind: 'change-completed'`) with the account id and the origin alone
+  (`noticeCompletedChange` in `src/lib/auth.ts`). Its step reads
+  `former_email` when it sends, and clears it as the System account once the
+  transport took the mail, or once every attempt failed, since nothing sends
+  it again; with no run started, the one try in the request clears it after.
+  The clear matches the address mailed and the address the mail named, so a
+  move made while the notice was going out is still told. A second change that
+  completes before the first notice is sent keeps the first address left,
+  which is the one the notice is owed to, and that notice names the address
+  the account holds when it is sent. `former_email` has no unique index, so the
+  address is free for another account to sign up with or change to the moment
+  the change completes: the sign-up and the `EMAIL_TAKEN` gate read
+  `users.email` alone. The mail carries no action: a link in it would be one a
+  thief could press. Nothing is sent to a `.invalid` placeholder, and none is
+  held.
 - **One verification mail a minute per account.** `users.verification_sent_at`
   is set by every mail sent for the row's own account, and `setEmail`
   refuses the next within `RESEND_COOLDOWN_SECONDS` with a `VALIDATION`
