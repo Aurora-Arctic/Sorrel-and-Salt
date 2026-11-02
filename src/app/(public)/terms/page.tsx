@@ -31,8 +31,8 @@ export default function TermsOfUsePage() {
       <h2>The Short Version</h2>
       <ul>
         <li>
-          The site is free, carries no advertising and sells nothing about you. That is a promise,
-          not a description of today.
+          The site carries no advertising and sells nothing about you. That is a promise, not a
+          description of today.
         </li>
         <li>
           What you write stays yours. The site shows it only to the people you chose to share it
@@ -114,8 +114,8 @@ export default function TermsOfUsePage() {
 
       <h2>What the Site Promises, and What It Does Not</h2>
       <p>
-        The site is offered free and as it is. The people who run it do their best to keep it up and
-        to keep your data safe, and they describe plainly what it keeps in the{' '}
+        The site is offered as it is. The people who run it do their best to keep it up and to keep
+        your data safe, and they describe plainly what it keeps in the{' '}
         <Link href="/privacy">Privacy Policy</Link>. They cannot promise that it will always be
         available, that it will never lose anything, or that every entry in the compendium is
         correct and complete.
