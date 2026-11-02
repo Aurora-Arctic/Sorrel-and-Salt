@@ -548,6 +548,8 @@ test(
   'an admin reads every privilege change newest first, with who, how, when and why, narrows it to one user, and a user meets the 403',
   { tag: '@story-61' },
   async ({ page }) => {
+    // A longer limit for this flow, which signs in four times and runs axe checks: it ran past the default 30s on CI.
+    test.setTimeout(60_000);
     const subjectEmail = address('ledger-subject');
     const { userId: subject } = await signInAs(page, subjectEmail);
     await rename(subject, 'Ledger Fixturewort');
