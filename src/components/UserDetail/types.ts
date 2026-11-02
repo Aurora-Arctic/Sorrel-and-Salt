@@ -68,3 +68,20 @@ export interface AccessPauseEntry {
   /** The admin who lifted it; null while it stands, or if no live account holds the id. */
   liftedBy: AccessPausePerson | null;
 }
+
+/** How long a pause is set for: a day, a week or a month from now, until a picked day, or with no end date. */
+export type PauseSpan = 'day' | 'week' | 'month' | 'date' | 'none';
+
+/** The fields that set a pause, held by the form that draws them. */
+export interface PauseFieldsProps {
+  span: PauseSpan;
+  onSpan: (span: PauseSpan) => void;
+  /** The picked day, `YYYY-MM-DD`, read only when `span` is `date`. */
+  day: string;
+  onDay: (day: string) => void;
+  note: string;
+  onNote: (note: string) => void;
+  /** Who reads the note, beneath the field. */
+  noteHint: string;
+  notePlaceholder: string;
+}

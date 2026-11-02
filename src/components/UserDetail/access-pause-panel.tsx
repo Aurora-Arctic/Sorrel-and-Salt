@@ -1,19 +1,16 @@
 'use client';
 
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { longMinuteInZone } from '../../lib/utc';
 import { CollapsibleSection } from '../CollapsibleSection';
-import DateField from '../DateField';
-import { today } from '../DateField/day';
-import { FieldShell, fieldDescription } from '../Field';
-import LocalTime from '../LocalTime';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import { LocalDay } from '../SupportRequests/day-range';
 import ConfirmedAction from '../UserList/confirmed-action';
-import type { AccessPauseEntry } from './types';
+import { Ledger, PauseFields, Until, endOf, endReady, stands } from './access-pause-parts';
+import type { AccessPauseEntry, PauseSpan } from './types';
 import '../SupportRequests/timeout-panel.scss';
 
 // An admin's pause on a user's access to the site: no sign-in by any method until an end, or with no end date, until
@@ -38,47 +35,6 @@ const LiftDocument = graphql(`
 
 const NOTE_HINT = 'Seen by staff only, up to 500 characters.';
 
-type Span = 'day' | 'week' | 'month' | 'date' | 'none';
-
-const SPANS: readonly { value: Span; label: string }[] = [
-  { value: 'day', label: '1 Day' },
-  { value: 'week', label: '1 Week' },
-  { value: 'month', label: '1 Month' },
-  { value: 'date', label: 'Until a Date' },
-  { value: 'none', label: 'No End Date' },
-];
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** The instant a pause of this span ends: counted from `now`, the end of the picked day in the admin's own zone, or none. */
-function endOf(span: Span, day: string, now: Date): Date | null | undefined {
-  if (span === 'none') return null;
-  if (span === 'day') return new Date(now.getTime() + DAY_MS);
-  if (span === 'week') return new Date(now.getTime() + 7 * DAY_MS);
-  if (span === 'month') {
-    const end = new Date(now);
-    end.setMonth(end.getMonth() + 1);
-    return end;
-  }
-  if (!day) return undefined;
-  const end = new Date(`${day}T23:59:59.999`);
-  return Number.isNaN(end.getTime()) ? undefined : end;
-}
-
-/** Whether a pause still stands: not lifted, and with no end or an end still ahead. */
-const stands = (pause: AccessPauseEntry, now: number): boolean =>
-  pause.liftedAt === null && (pause.until === null || pause.until.getTime() > now);
-
-/** A pause's end as words: the end in the viewer's zone, or that it has none. */
-const Until = ({ pause }: { pause: AccessPauseEntry }): ReactElement =>
-  pause.until ? (
-    <>
-      until <LocalTime at={pause.until} long />
-    </>
-  ) : (
-    <>with no end date</>
-  );
-
 /** The pause that stands: a badge, its end, the note, who set it and when, and Lift Pause. */
 const StandingCard = ({
   pause,
@@ -93,7 +49,7 @@ const StandingCard = ({
     <p className="timeout-panel__head">
       <span className="badge badge--caution">Paused</span>
       <span>
-        <Until pause={pause} />
+        <Until until={pause.until} />
       </span>
     </p>
     {pause.note && <p className="timeout-panel__muted">{pause.note}</p>}
@@ -121,102 +77,30 @@ const StandingCard = ({
   </div>
 );
 
-/** Earlier pauses, each as when it was set, its end, who set it and, where lifted, who lifted it and when. */
-const Ledger = ({ pauses }: { pauses: AccessPauseEntry[] }): ReactElement => (
-  <div className="timeout-panel__ledger">
-    <h4 className="timeout-panel__ledger-title">Earlier Pauses</h4>
-    <ul className="timeout-panel__list" aria-label="Earlier Pauses">
-      {pauses.map((pause) => (
-        <li key={pause.id}>
-          <span className="timeout-panel__ledger-line">
-            <span className="timeout-panel__range">
-              <LocalDay at={pause.createdAt} />{' '}
-              {pause.until ? (
-                <>
-                  – <LocalDay at={pause.until} />
-                </>
-              ) : (
-                '· No End Date'
-              )}
-            </span>
-            {pause.liftedAt && (
-              <span className="badge badge--muted">
-                {'Lifted '}
-                <LocalDay at={pause.liftedAt} year={false} />
-              </span>
-            )}
-          </span>
-          {pause.note && <span className="timeout-panel__muted">{pause.note}</span>}
-          <span className="timeout-panel__muted">
-            {pause.setBy ? `Set by ${pause.setBy.name}` : 'Set'}
-            {pause.liftedAt && ` · Lifted by ${pause.liftedBy?.name ?? 'a removed account'}`}
-          </span>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
-
 /** The form that sets a pause: how long, the note, and a confirm before it is sent. */
 const PauseForm = ({ userId, name }: { userId: string; name: string }): ReactElement => {
   const { refresh } = usePendingNavigation();
-  const [span, setSpan] = useState<Span>('day');
+  const [span, setSpan] = useState<PauseSpan>('day');
   const [day, setDay] = useState('');
   const [note, setNote] = useState('');
-  const spanId = useId();
-  const dayId = useId();
-  const noteId = useId();
-  const { aria: spanAria, ...spanField } = fieldDescription({ id: spanId });
-  const { aria: dayAria, ...dayField } = fieldDescription({ id: dayId });
-  const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId, hint: NOTE_HINT });
   const discard = useDiscardGuard(span !== 'day' || day !== '' || note.trim() !== '');
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
-  const ready = end === null || (end?.getTime() ?? 0) > Date.now();
+  const ready = endReady(end);
 
   return (
     <div className="form">
-      <FieldShell label="For" {...spanField}>
-        <select
-          id={spanField.controlId}
-          className="select"
-          {...spanAria}
-          value={span}
-          onChange={(event) => setSpan(event.target.value as Span)}
-        >
-          {SPANS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </FieldShell>
-      {span === 'date' && (
-        <FieldShell label="Until" {...dayField}>
-          <DateField
-            id={dayField.controlId}
-            labelledBy={dayField.labelId}
-            value={day}
-            min={today()}
-            onChange={setDay}
-            {...dayAria}
-          />
-        </FieldShell>
-      )}
-      <FieldShell label="Note" hint={NOTE_HINT} {...noteField}>
-        <input
-          id={noteField.controlId}
-          className="input"
-          type="text"
-          autoComplete="off"
-          placeholder="Why, for staff"
-          maxLength={500}
-          {...noteAria}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </FieldShell>
+      <PauseFields
+        span={span}
+        onSpan={setSpan}
+        day={day}
+        onDay={setDay}
+        note={note}
+        onNote={setNote}
+        noteHint={NOTE_HINT}
+        notePlaceholder="Why, for staff"
+      />
       <div className="form__actions">
         <ConfirmedAction
           label="Pause Access"
@@ -285,7 +169,7 @@ const AccessPausePanel = ({
             <span className="timeout-panel__muted">
               {standing ? (
                 <>
-                  · <Until pause={standing} />
+                  · <Until until={standing.until} />
                 </>
               ) : (
                 '· none'
