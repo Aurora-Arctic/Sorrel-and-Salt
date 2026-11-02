@@ -22,8 +22,8 @@ export interface SupportSenderRequestEntry {
   replies: readonly SupportSenderReply[];
   /** The request opened as a follow-up to this one once it closed, if any. */
   followUpId: string | null;
-  /** When the sender's time-out ends, or null with none in force. */
-  timedOutUntil: Date | null;
+  /** The sender's standing time-out and its end, null for one with no end date; null with none in force. */
+  timedOut: { until: Date | null } | null;
 }
 
 export interface SupportSenderRequestProps {
@@ -32,5 +32,5 @@ export interface SupportSenderRequestProps {
 
 export interface SupportSenderReplyBoxProps {
   requestId: string;
-  timedOutUntil: Date | null;
+  timedOut: { until: Date | null } | null;
 }

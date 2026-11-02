@@ -3,7 +3,8 @@ import ComplexityPlugin from '@pothos/plugin-complexity';
 import RelayPlugin from '@pothos/plugin-relay';
 import ScopeAuthPlugin from '@pothos/plugin-scope-auth';
 import { DateTimeISOResolver, LocalDateResolver } from 'graphql-scalars';
-import { Forbidden } from '../lib/errors';
+import { ACCESS_PAUSED_MESSAGE } from '../lib/access-paused';
+import { AccessPaused, Forbidden } from '../lib/errors';
 import { pageSize } from '../lib/pagination';
 import { curates } from '../lib/site-roles';
 // For its side effect: `t.pagedConnection` on every field builder.
@@ -55,7 +56,11 @@ export function createBuilder() {
       }),
       // A service's own refusal type, so the transport maps one shape
       // whichever check said no.
-      unauthorizedError: () => new Forbidden(),
+      // A paused session is refused with the pause, which the browser reads as the paused page.
+      unauthorizedError: (_parent, context) =>
+        context.accessPause
+          ? new AccessPaused(context.accessPause.until, ACCESS_PAUSED_MESSAGE)
+          : new Forbidden(),
     },
   });
   created.addScalarType('DateTime', DateTimeISOResolver);

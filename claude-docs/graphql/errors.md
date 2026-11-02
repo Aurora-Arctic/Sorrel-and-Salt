@@ -10,7 +10,8 @@ revisioned write named a revision the row has since moved past
 (`components/autosave.md`, "The server's half"). `AccessPaused` (M15.55) is a
 `Forbidden` with its own code: the member holds a seat in the coven, but an
 owner has paused their access to it, until `pausedUntil` or with no end when it
-is `null`. A client tells it from a stranger's bare `FORBIDDEN` by the code:
+is `null`. It also answers a session whose site access is paused (M15.52), on any call
+outside the signed-in support form. A client tells it from a stranger's bare `FORBIDDEN` by the code:
 
 | Thrown            | `extensions.code` | Also carries                                         |
 | ----------------- | ----------------- | ---------------------------------------------------- |

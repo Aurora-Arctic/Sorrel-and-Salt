@@ -95,13 +95,18 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Support',
     className: 'user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    // A green check while they may send support requests; a red cross while a time-out stands, its end in the tip.
-    cell: (user) =>
-      user.supportTimeoutUntil ? (
+    // A green check while they may send support requests; a red cross while a time-out stands, its end or that it has
+    // none in the tip.
+    cell: ({ supportTimeout }) =>
+      supportTimeout ? (
         <Mark
           value={false}
-          label={`Timed out until ${inUtc(user.supportTimeoutUntil)}`}
-          tip={`Until ${inUtc(user.supportTimeoutUntil)}`}
+          label={
+            supportTimeout.until
+              ? `Timed out until ${inUtc(supportTimeout.until)}`
+              : 'Timed out with no end date'
+          }
+          tip={supportTimeout.until ? `Until ${inUtc(supportTimeout.until)}` : 'No end date'}
         />
       ) : (
         <Mark value label="Not timed out" />

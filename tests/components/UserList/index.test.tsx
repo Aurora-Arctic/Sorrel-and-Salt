@@ -1,5 +1,3 @@
-import { ACCESS_PAUSED_CODE } from '@/lib/access-paused';
-import { inUtc } from '@/lib/utc';
 import type { ReactNode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -88,21 +86,22 @@ function cellUnder(name: string, heading: string): HTMLElement {
 
 describe('UserList, standing support time-outs and access pauses', () => {
   const AT = new Date('2026-11-20T09:30:00Z');
-  // Bo stands timed out and paused until AT, Cy paused with no end, Ada neither: the page passes only what stands.
+  // Bo stands timed out and paused until AT, Cy timed out and paused with no end, Ada neither: the page passes only what
+  // stands.
   const rows = () =>
     render(
       <UserList
         {...props({
           users: [
             ADA,
-            { ...BO, supportTimeoutUntil: AT, accessPause: { until: AT } },
-            { ...CY, accessPause: { until: null } },
+            { ...BO, supportTimeout: { until: AT }, accessPause: { until: AT } },
+            { ...CY, supportTimeout: { until: null }, accessPause: { until: null } },
           ],
         })}
       />,
     );
 
-  it('marks a standing time-out with its end in UTC under Support, and a user with none as not timed out', () => {
+  it('marks a standing time-out with its end in UTC or none under Support, and a user with none as not timed out', () => {
     rows();
     expect(screen.getByRole('columnheader', { name: 'Support' })).toBeInTheDocument();
     expect(
@@ -110,9 +109,12 @@ describe('UserList, standing support time-outs and access pauses', () => {
         'Timed out until 20 November 2026, 09:30 UTC',
       ),
     ).toBeInTheDocument();
-    for (const name of ['Ada Fixturewort', 'Cy Fixturewort']) {
-      expect(within(cellUnder(name, 'Support')).getByText('Not timed out')).toBeInTheDocument();
-    }
+    expect(
+      within(cellUnder('Cy Fixturewort', 'Support')).getByText('Timed out with no end date'),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Ada Fixturewort', 'Support')).getByText('Not timed out'),
+    ).toBeInTheDocument();
   });
 
   it('marks a standing pause with its end in UTC or none under Access, and a user with none as not paused', () => {
@@ -310,26 +312,6 @@ describe('UserList impersonation', () => {
       'Impersonate Bo Fixturewort',
     );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(assignMock).not.toHaveBeenCalled();
-  });
-
-  it('names the pause’s end when the user’s site access is paused, and stays on the page', async () => {
-    const until = new Date('2026-12-01T09:30:00Z');
-    impersonateUserMock.mockResolvedValue({
-      data: null,
-      error: { status: 403, code: ACCESS_PAUSED_CODE, until: until.toISOString() },
-    });
-    stubLocationAssign(assignMock);
-    render(<UserList {...props({ canImpersonate: true })} />);
-
-    openFor(BO.name);
-    fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
-
-    const said = await expectRefusalUnder(
-      screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }),
-      'Impersonate Bo Fixturewort',
-    );
-    expect(said).toContain(inUtc(until));
     expect(assignMock).not.toHaveBeenCalled();
   });
 });

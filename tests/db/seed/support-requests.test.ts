@@ -175,9 +175,9 @@ describe('the support request seed', () => {
       expect(bad).toHaveLength(0);
     });
 
-    it('seeds D and I with a time-out in force and another sender with one that has expired', async () => {
+    it("seeds D and I with a time-out in force, I's with no end date, and another sender with one that has expired", async () => {
       const rows = await sql<{ user_id: string; active: boolean; expired: boolean }[]>`
-        select user_id, (until > now() and lifted_at is null) as active,
+        select user_id, ((until is null or until > now()) and lifted_at is null) as active,
                (until <= now() and lifted_at is null) as expired
         from support_timeouts
       `;
@@ -187,6 +187,10 @@ describe('the support request seed', () => {
         [FIXTURE_USERS.D.id, SANCTIONED_USERS.I.id].sort(),
       );
       expect(expired.length).toBeGreaterThanOrEqual(1);
+      const [open] = await sql<{ user_id: string }[]>`
+        select user_id from support_timeouts where until is null and lifted_at is null
+      `;
+      expect(open?.user_id).toBe(SANCTIONED_USERS.I.id);
       expect(active.map((r) => r.user_id)).not.toContain(expired[0].user_id);
     });
 

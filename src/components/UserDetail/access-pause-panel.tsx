@@ -8,12 +8,12 @@ import { stands } from './access-pause-parts';
 import PausePanel from './pause-panel';
 import type { AccessPauseEntry, PausePanelCopy } from './types';
 
-// An admin's pause on a user's access to the site: no sign-in by any method until an end, or with no end date, until
-// lifted (claude-docs/components/user-detail.md, "Site Access"). Laid out on the support time-out panel's classes, so
+// An admin's pause on a user's access to the site: nothing but support until an end, or with no end date, until lifted,
+// with a note saying why (claude-docs/components/user-detail.md, "Site Access"). Laid out on the support time-out panel's classes, so
 // the two sections of the user modal read alike.
 
 const PauseDocument = graphql(`
-  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String) {
+  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!) {
     pauseUserAccess(userId: $userId, until: $until, note: $note) {
       id
     }
@@ -34,11 +34,11 @@ const copyFor = (name: string): PausePanelCopy => ({
   notePlaceholder: 'Why, for staff',
   pauseQuestion: (end) =>
     end
-      ? `They cannot sign in until ${longMinuteInZone(end)}, and are signed out now. You can lift it sooner.`
-      : 'They cannot sign in until you lift the pause, and are signed out now.',
+      ? `They can reach only Support until ${longMinuteInZone(end)}, and are signed out now. You can lift it sooner.`
+      : 'They can reach only Support until you lift the pause, and are signed out now.',
   liftQuestion: () => (
     <>
-      <strong>{name}</strong> will be able to sign in again once you confirm.
+      <strong>{name}</strong> will reach the whole site again once you confirm.
     </>
   ),
   paused: 'Access paused.',
@@ -68,8 +68,14 @@ const AccessPausePanel = ({
       standing={standing}
       earlier={pauses.filter((pause) => pause !== standing)}
       copy={copyFor(name)}
+      noteRequired
+      // Pause Access is held until the note has text, so the empty string is never sent.
       pause={(until, note) =>
-        graphqlRequest(PauseDocument, { userId, until: until?.toISOString() ?? null, note })
+        graphqlRequest(PauseDocument, {
+          userId,
+          until: until?.toISOString() ?? null,
+          note: note ?? '',
+        })
       }
       lift={() => graphqlRequest(LiftDocument, { userId })}
     />

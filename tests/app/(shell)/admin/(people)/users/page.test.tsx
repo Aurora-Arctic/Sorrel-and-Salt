@@ -197,7 +197,7 @@ describe('the /admin/users page', () => {
   it('reads the page’s standing time-outs and pauses in one batch each, as the guard’s session, and marks each row', async () => {
     const until = new Date('2026-11-20T09:30:00Z');
     standingTimeoutsOf.mockImplementation(async (_session, ids: string[]) =>
-      ids.map((id) => (id === user(1).id ? { userId: id, until } : undefined)),
+      ids.map((id) => ({ userId: id, until: id === user(1).id ? until : null })),
     );
     standingAccessPausesOf.mockImplementation(async (_session, ids: string[]) =>
       ids.map((id) => (id === user(2).id ? { userId: id, until: null } : undefined)),
@@ -216,7 +216,7 @@ describe('the /admin/users page', () => {
       within(cellUnder('Listed Fixture 01', 'Paused')).getByText('Not paused'),
     ).toBeInTheDocument();
     expect(
-      within(cellUnder('Listed Fixture 02', 'Time-Out')).getByText('Not timed out'),
+      within(cellUnder('Listed Fixture 02', 'Time-Out')).getByText('Timed out with no end date'),
     ).toBeInTheDocument();
     expect(
       within(cellUnder('Listed Fixture 02', 'Paused')).getByText('Paused with no end date'),

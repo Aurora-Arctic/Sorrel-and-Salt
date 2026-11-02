@@ -6,7 +6,7 @@ import {
   assignSupportRequest,
   getMySupportRequest,
   countMySupportRequestsByStatus,
-  getMySupportTimeoutEnd,
+  getMySupportTimeout,
   getSupportRequest,
   liftSupportTimeout,
   listMySupportRequests,
@@ -166,12 +166,22 @@ describe('sendSupportRequest', () => {
 
   it('refuses a send during a time-out, naming its end, and allows it once lifted', async () => {
     const until = new Date(Date.now() + 7_200_000);
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam');
     const refusal = await failureOf(send(C));
     expect(refusal).toBeInstanceOf(Forbidden);
     expect((refusal as Forbidden).message).toContain(
       until.toISOString().slice(0, 16).replace('T', ' '),
     );
+
+    await liftSupportTimeout(asUser(E), timeout.id);
+    expect(await send(C)).toBeDefined();
+  });
+
+  it('refuses a send during a time-out with no end date, saying so, and allows it once lifted', async () => {
+    const timeout = await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    const refusal = await failureOf(send(C));
+    expect(refusal).toBeInstanceOf(Forbidden);
+    expect((refusal as Forbidden).message).toContain('timed out with no end date');
 
     await liftSupportTimeout(asUser(E), timeout.id);
     expect(await send(C)).toBeDefined();
@@ -501,7 +511,7 @@ describe('admin-only changes', () => {
 
   it('times a sender out and lifts it, refusing a curator both', async () => {
     expect(asUser(F).role).toBe('curator');
-    expect(await failureOf(timeOutSupportSender(asUser(F), C.id, FUTURE(), null))).toBeInstanceOf(
+    expect(await failureOf(timeOutSupportSender(asUser(F), C.id, FUTURE(), 'Spam'))).toBeInstanceOf(
       Forbidden,
     );
     const timeout = await timeOutSupportSender(asUser(E), C.id, FUTURE(), ' spam ');
@@ -511,14 +521,65 @@ describe('admin-only changes', () => {
     expect((await liftSupportTimeout(asUser(E), timeout.id)).liftedAt).toBeInstanceOf(Date);
   });
 
+  it('times a sender out with no end date, and the time-out stands until lifted', async () => {
+    const timeout = await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    expect(timeout).toMatchObject({ userId: C.id, until: null, note: 'Spam', liftedAt: null });
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(timeout.id);
+
+    await liftSupportTimeout(asUser(E), timeout.id);
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeUndefined();
+  });
+
+  it('lists the open-ended time-out for a sender who also holds a dated one', async () => {
+    await timeOutSupportSender(asUser(E), C.id, new Date(Date.now() + 86_400_000), 'Spam');
+    const open = await timeOutSupportSender(asUser(E), C.id, null, 'Spam again');
+    await timeOutSupportSender(asUser(E), C.id, new Date(Date.now() + 2 * 86_400_000), 'Spam');
+
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(open.id);
+  });
+
+  it.each([
+    ['no note', undefined],
+    ['a null note', null],
+    ['a blank note', '   '],
+  ])('refuses a time-out with %s, in its own sentence, and sets none', async (_what, note) => {
+    const refusal = await failureOf(
+      timeOutSupportSender(asUser(E), C.id, null, note as unknown as string),
+    );
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as Error).message).toBe('Write a note saying why');
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeUndefined();
+  });
+
+  it('refuses a note over 500 characters, in its own sentence', async () => {
+    const refusal = await failureOf(timeOutSupportSender(asUser(E), C.id, null, 'x'.repeat(501)));
+    expect((refusal as Error).message).toBe('Keep the note to 500 characters');
+  });
+
+  it.each([
+    ['a curator', F],
+    ['a plain user', B],
+  ])('refuses %s setting or lifting a time-out by direct id', async (_who, caller) => {
+    // The precondition: an admin may set the same open-ended time-out on the same sender, and lift it.
+    const set = await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    expect(set.userId).toBe(C.id);
+
+    expect(
+      await failureOf(timeOutSupportSender(asUser(caller), C.id, null, 'Spam')),
+    ).toBeInstanceOf(Forbidden);
+    expect(await failureOf(liftSupportTimeout(asUser(caller), set.id))).toBeInstanceOf(Forbidden);
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(set.id);
+    expect((await liftSupportTimeout(asUser(E), set.id)).liftedAt).toBeInstanceOf(Date);
+  });
+
   it('refuses a time-out that ends in the past', async () => {
     expect(
-      await failureOf(timeOutSupportSender(asUser(E), C.id, new Date(Date.now() - 1000), null)),
+      await failureOf(timeOutSupportSender(asUser(E), C.id, new Date(Date.now() - 1000), 'Spam')),
     ).toBeInstanceOf(ValidationError);
   });
 
   it('reads a sender’s time-outs for an admin alone', async () => {
-    await timeOutSupportSender(asUser(E), C.id, FUTURE(), null);
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
     expect((await timeoutsForSenders(asUser(E), [C.id]))[0]).toHaveLength(1);
     expect((await timeoutsForSenders(asUser(F), [C.id]))[0]).toBeInstanceOf(Forbidden);
   });
@@ -526,7 +587,7 @@ describe('admin-only changes', () => {
 
 describe('standingTimeoutsOf', () => {
   it('answers each sender’s standing time-out in the order asked, and none where none stands', async () => {
-    const standing = await timeOutSupportSender(asUser(E), C.id, FUTURE(), null);
+    const standing = await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
 
     const answered = await standingTimeoutsOf(asUser(E), [D.id, C.id]);
 
@@ -537,7 +598,7 @@ describe('standingTimeoutsOf', () => {
     ['a curator', F],
     ['a plain user', B],
   ])('refuses %s with Forbidden', async (_who, caller) => {
-    await timeOutSupportSender(asUser(E), C.id, FUTURE(), null);
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
     // The precondition: the same read by an admin answers the time-out.
     expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeDefined();
 
@@ -581,21 +642,32 @@ describe('the cursor', () => {
   });
 });
 
-describe('getMySupportTimeoutEnd', () => {
+describe('getMySupportTimeout', () => {
   it('names when the sender’s live time-out ends, and nothing once it is lifted', async () => {
-    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+    expect(await getMySupportTimeout(asUser(C))).toBeNull();
     const until = FUTURE();
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
-    expect((await getMySupportTimeoutEnd(asUser(C)))?.getTime()).toBe(until.getTime());
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam');
+    expect((await getMySupportTimeout(asUser(C)))?.until?.getTime()).toBe(until.getTime());
     // Another sender's time-out is outside the query.
-    expect(await getMySupportTimeoutEnd(asUser(B))).toBeNull();
+    expect(await getMySupportTimeout(asUser(B))).toBeNull();
     await liftSupportTimeout(asUser(E), timeout.id);
-    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+    expect(await getMySupportTimeout(asUser(C))).toBeNull();
+  });
+
+  it('answers a time-out with no end date as standing, with no end', async () => {
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    expect(await getMySupportTimeout(asUser(C))).toEqual({ until: null });
+  });
+
+  it('answers no end when a dated and an open-ended time-out both stand', async () => {
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam again');
+    expect(await getMySupportTimeout(asUser(C))).toEqual({ until: null });
   });
 
   it('refuses an unverified account', async () => {
     const unverified = { ...asUser(C), emailUnverified: true as const };
-    expect(await failureOf(getMySupportTimeoutEnd(unverified))).toBeInstanceOf(Forbidden);
-    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+    expect(await failureOf(getMySupportTimeout(unverified))).toBeInstanceOf(Forbidden);
+    expect(await getMySupportTimeout(asUser(C))).toBeNull();
   });
 });

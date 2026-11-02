@@ -34,6 +34,29 @@ afterEach(() => {
 });
 
 describe('Sign In with a Passkey', () => {
+  it('disables the providers and Continue with Email while the passkey prompt is open, and frees them when it fails', async () => {
+    let refuse: (answer: typeof REFUSED) => void = () => {};
+    passkeyMock.mockReturnValue(new Promise((resolve) => (refuse = resolve)));
+    render(<SignInPanel configured={['google']} />);
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
+    const email = screen.getByRole('button', { name: 'Continue with Email' });
+    // Pressable before the prompt opens, so only the prompt disables them.
+    expect(google).toBeEnabled();
+    expect(email).toBeEnabled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', BUTTON));
+    });
+
+    expect(google).toBeDisabled();
+    expect(email).toBeDisabled();
+
+    await act(async () => refuse(REFUSED));
+
+    expect(google).toBeEnabled();
+    expect(email).toBeEnabled();
+  });
+
   it('signs in with the browser prompt and lands through /sign-in carrying next', async () => {
     passkeyMock.mockResolvedValue(SIGNED_IN);
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);
@@ -44,21 +67,6 @@ describe('Sign In with a Passkey', () => {
 
     expect(passkeyMock).toHaveBeenCalledWith();
     expect(assignMock).toHaveBeenCalledWith('/sign-in?next=%2Fcoven%2Fhearth');
-  });
-
-  it('leaves for the paused page with no end when the passkey signs in an account paused with no end date', async () => {
-    passkeyMock.mockResolvedValue({
-      data: null,
-      error: { status: 403, code: 'ACCESS_PAUSED', until: null },
-    });
-    render(<SignInPanel next="/coven/hearth" configured={['google']} />);
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', BUTTON));
-    });
-
-    expect(assignMock).toHaveBeenCalledWith('/access-paused');
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('stays on the page and says so under the button when the passkey does not sign in', async () => {

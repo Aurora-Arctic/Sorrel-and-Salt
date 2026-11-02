@@ -95,13 +95,15 @@ head, both built by the page per row, as the other admin lists carry
   end or an end still to come, the services' own rule, so a time-out or pause
   that has run out is a check again and nothing is written to end it. A
   cross's hidden word carries the end, "Timed out until <instant>" or "Paused
-  until <instant>" (`inUtc`), or "Paused with no end date"; its bubble says
+  until <instant>" (`inUtc`), or "Timed out with no end date" or "Paused with no end
+  date"; its bubble says
   "Until <instant>" or "No end date", the heading saying the rest. A check
-  says "Not timed out" or "Not paused" and has no bubble. The page reads both for the whole page of users in one query each,
+  says "Not timed out" or "Not paused" and has no bubble.
+  The page reads both for the whole page of users in one query each,
   `standingTimeoutsOf` (support) and `standingAccessPausesOf` (identity), both
   under `assertSiteAdmin`, beside `providersOf`, and hands each row
-  `supportTimeoutUntil` and `accessPause` (`{ until }`), absent when none
-  stands.
+  `supportTimeout` and `accessPause` (each `{ until }`, `until` null for no
+  end date), absent when none stands.
   An admin's or a curator's role is bold, on the owner's call. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the shared provider mark, `ProviderMark`
@@ -477,7 +479,7 @@ the history link before every name and its address; each name a link to its
 `openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
-while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back, a paused user's naming the pause's end; no Change Role, Approve or Revoke on any row, a user awaiting approval included; the
+while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back; no Change Role, Approve or Revoke on any row, a user awaiting approval included; the
 switch on admin changes (MB.63): no notice while on and one while paused,
 Pause asking first with Cancel sending nothing, Pause's confirm and Resume
 busy until the refresh and then said in the status region, a refusal under the button pressed, Resume's included, and another

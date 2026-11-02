@@ -70,11 +70,13 @@ an admin looks.
 - **An admin cannot impersonate another admin**, the primary admin included.
   `allowImpersonatingAdmins` stays at its default, off, and the default `admin`
   role lacks `impersonate-admins`.
-- **A user whose site access is paused cannot be impersonated** while the pause stands. The
-  session hook that refuses their own sign-in (`refusePausedSession` in `src/lib/auth.ts`) refuses
-  the impersonation session too, answering 403 with `ACCESS_PAUSED` and the pause's end; the
-  admin's own session is left as it was, and the list and the modal name the pause under
-  Impersonate (`impersonationRefusal`). Once the pause is lifted or runs out it works again
+- **A user whose site access is paused is impersonated into what they see while paused.**
+  `sessionStateFromHeaders` in `src/lib/request-session.ts` records the standing pause on the
+  impersonation session as on the user's own: support's pages and API calls act as the user, every
+  other signed-in page redirects to `/access-paused`, another public page draws the signed-out view
+  under the shell's paused notice, and every other signed-in GraphQL call answers `ACCESS_PAUSED`.
+  The banner, drawn by the root layout, stays on every page, so Stop still works. Once the pause is
+  lifted or runs out the same impersonation reaches the normal pages
   (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
 - **An impersonation lasts an hour**, Better Auth's default. The session row
   expires on its own if Stop is never pressed.
@@ -135,8 +137,9 @@ name and address, and carries Stop Impersonating, at the top of every page
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-admin is
   refused, an admin target is refused, and the impersonation session is B's
   with E recorded. B's coven is what the session sees, and `/admin`'s check
-  refuses it. Stop restores E's own session. A paused user is refused with the pause's code and
-  no session, E still signed in as E, and handed over once the pause is lifted. The file builds Better Auth once,
+  refuses it. Stop restores E's own session. A paused user is handed over, the session reads as paused, a
+  signed-in GraphQL call through the real route answers `ACCESS_PAUSED` while a public read answers, Stop restores E, and
+  the same impersonation reads as signed in once the pause is lifted. The file builds Better Auth once,
   with the flags on, in its `beforeAll` (MB.188).
 - `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
   under an impersonation stamped as the user acted as — the session above is

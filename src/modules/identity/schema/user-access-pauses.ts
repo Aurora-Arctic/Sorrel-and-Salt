@@ -17,12 +17,14 @@ export const userAccessPauses = namedWrites(
         .references(() => users.id, { onDelete: 'cascade' }),
       // Null for a pause with no end date.
       until: timestamp('until'),
-      note: text('note'),
+      // Why the pause was set, for staff; every pause has one.
+      note: text('note').notNull(),
       liftedAt: timestamp('lifted_at'),
       liftedBy: uuid('lifted_by').references(() => users.id),
       ...auditColumns,
     },
     (table) => [
+      check('user_access_pauses_note_not_blank', sql`${table.note} ~ '[^[:space:]]'`),
       check(
         'user_access_pauses_lifted_together',
         sql`(${table.liftedAt} is null) = (${table.liftedBy} is null)`,

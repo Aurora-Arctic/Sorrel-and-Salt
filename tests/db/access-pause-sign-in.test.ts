@@ -1,14 +1,13 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import { ACCESS_PAUSED_CODE, ACCESS_PAUSED_PATH, accessPausedPath } from '@/lib/access-paused';
 import type { Message } from '@/lib/types';
 import { liftUserAccessPause, pauseUserAccess } from '@/modules/identity';
+import { timeOutSupportSender } from '@/modules/support';
 import {
   ORIGIN,
   PROVIDER_CREDENTIALS,
   cookieHeader,
-  landingOf,
   signIn as signInThrough,
 } from '../support/oauth';
 import { importAuth } from '../support/auth-module';
@@ -20,10 +19,10 @@ import { softKey } from '../support/passkey-authenticator';
 import { enrol, signInWithPasskey } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
 
-// A paused account signs in by no method while the pause stands, and by every method once it runs out or is lifted,
-// through Better Auth's real endpoints (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access"). The refusal is the
-// session hook in src/lib/auth.ts, which every method's session passes through; the two-factor step's session is made by
-// the same call, after a password this file already shows refused.
+// A paused account signs in by every method, through Better Auth's real endpoints, into a view of the site with support in it
+// and nothing else: the support form sends, and every other signed-in API call answers ACCESS_PAUSED, through the real
+// GraphQL route (claude-docs/design-decisions/m15.52-site-access-pause.md, "A paused user may sign in to reach support"). Pages
+// are request-session.test.ts's. The two-factor step's session is made by the same call as a password's.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
@@ -53,6 +52,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await sql`truncate user_access_pauses`;
+  await sql`truncate support_replies, support_requests, support_timeouts, support_send_counts cascade`;
   await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
@@ -88,12 +88,6 @@ async function idOf(email: string): Promise<string> {
   return id;
 }
 
-async function sessionCount(userId: string): Promise<number> {
-  const [{ count }] =
-    await sql`select count(*)::int as count from sessions where user_id = ${userId}`;
-  return count as number;
-}
-
 /** A verified password account, signed in once, so a refusal later is not the address or the password. */
 async function passwordAccount(): Promise<string> {
   const response = await post(auth, '/sign-up/email', {
@@ -122,61 +116,112 @@ async function passkeyAccount() {
   return { id, key };
 }
 
-/** A refused fetch's body: the pause's code and end. */
-async function refusalOf(response: Response) {
-  return (await response.json()) as { code?: string; until?: string | null };
+/** One GraphQL operation through the real route, as the browser sends it with `cookie`. */
+async function graphql(cookie: string, query: string, variables: Record<string, unknown> = {}) {
+  const { POST } = await import('@/app/api/graphql/route');
+  const response = await POST(
+    new Request(`${ORIGIN}/api/graphql`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-sorrel-client': 'web', cookie },
+      body: JSON.stringify({ query, variables }),
+    }),
+  );
+  return (await response.json()) as {
+    data?: Record<string, unknown> | null;
+    errors?: { message: string; extensions?: { code?: string; pausedUntil?: string | null } }[];
+  };
 }
 
-describe('a paused account signs in by no method', () => {
-  it('by a provider: ends the session it held, and the callback lands on the paused page with the end date and no session', async () => {
+const ME = 'query { me { id } }';
+const SEND =
+  'mutation Send($input: SupportRequestInput!) { sendSupportRequest(input: $input) { id } }';
+const REQUEST = {
+  about: 'question',
+  subject: 'Why is my access paused?',
+  message: 'I cannot open my coven.',
+};
+
+async function requestsFrom(userId: string): Promise<number> {
+  const [{ count }] =
+    await sql`select count(*)::int as count from support_requests where created_by = ${userId}`;
+  return count as number;
+}
+
+/**
+ * The paused view, for a cookie that signs in `userId`: the session stands with the pause beside it, the signed-in support
+ * form sends, and a call outside support answers ACCESS_PAUSED with the pause's end.
+ */
+async function expectPausedView(cookie: string, userId: string, until: Date | null) {
+  const { sessionStateFromHeaders } = await import('@/lib/request-session');
+  const state = await sessionStateFromHeaders(new Headers({ cookie }));
+  expect(state.session?.userId).toBe(userId);
+  expect(state.accessPause).toEqual({ until });
+
+  const sent = await graphql(cookie, SEND, { input: REQUEST });
+  expect(sent.errors).toBeUndefined();
+  expect(await requestsFrom(userId)).toBe(1);
+
+  const refused = await graphql(cookie, ME);
+  expect(refused.data).toBeNull();
+  expect(refused.errors?.[0]?.extensions).toEqual({
+    code: 'ACCESS_PAUSED',
+    pausedUntil: until?.toISOString() ?? null,
+  });
+}
+
+/** An unpaused view, for the precondition and the ended pause: the session stands alone, and `me` answers. */
+async function expectOpenView(cookie: string, userId: string) {
+  const { sessionStateFromHeaders } = await import('@/lib/request-session');
+  const state = await sessionStateFromHeaders(new Headers({ cookie }));
+  expect(state.session?.userId).toBe(userId);
+  expect(state.accessPause).toBeUndefined();
+  expect((await graphql(cookie, ME)).data).toEqual({ me: { id: userId } });
+}
+
+describe('a paused account signs in by every method, into support alone', () => {
+  it('by a provider: ends the session it held, then signs in again to the paused view with the end date', async () => {
     const first = await signInWithProvider(PROVIDER_USER);
     const id = await idOf(PROVIDER_USER);
-    // The precondition: the account signs in through the provider.
-    expect(await signedInAs(cookieHeader(first))).toBe(id);
+    // The precondition: the account signs in through the provider, and its session reaches the signed-in API.
+    await expectOpenView(cookieHeader(first), id);
     const until = inADay();
 
-    await pauseUserAccess(asUser(E), id, until, null);
+    await pauseUserAccess(asUser(E), id, until, 'A fixture pause');
 
     expect(await signedInAs(cookieHeader(first))).toBeUndefined();
-    const refused = await signInWithProvider(PROVIDER_USER);
-    expect(refused.status).toBe(302);
-    expect(landingOf(refused)).toBe(accessPausedPath(until));
-    expect(cookieHeader(refused)).not.toMatch(/session_token=/);
-    expect(await sessionCount(id)).toBe(0);
+    const again = await signInWithProvider(PROVIDER_USER);
+    expect(again.status).toBe(302);
+    expect(await signedInAs(cookieHeader(again))).toBe(id);
+    await expectPausedView(cookieHeader(again), id, until);
   });
 
-  it('by a provider, paused with no end: lands on the paused page carrying no date', async () => {
+  it('by a provider, paused with no end: the paused view carries no date', async () => {
     await signInWithProvider(PROVIDER_USER);
-    await pauseUserAccess(asUser(E), await idOf(PROVIDER_USER), null, null);
+    const id = await idOf(PROVIDER_USER);
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
 
-    const refused = await signInWithProvider(PROVIDER_USER);
+    const again = await signInWithProvider(PROVIDER_USER);
 
-    expect(refused.status).toBe(302);
-    expect(landingOf(refused)).toBe(ACCESS_PAUSED_PATH);
+    await expectPausedView(cookieHeader(again), id, null);
   });
 
-  it('by a password: answers 403 with the pause code and its end, sets no session, and counts no failure', async () => {
+  it('by a password: signs in, counts no failure, and reaches the paused view', async () => {
     const id = await passwordAccount();
     const until = inADay();
-    await pauseUserAccess(asUser(E), id, until, null);
+    await pauseUserAccess(asUser(E), id, until, 'A fixture pause');
 
-    const refused = await signInWithPassword();
+    const signedIn = await signInWithPassword();
 
-    expect(refused.status).toBe(403);
-    expect(await refusalOf(refused)).toMatchObject({
-      code: ACCESS_PAUSED_CODE,
-      until: until.toISOString(),
-    });
-    expect(cookieHeader(refused)).not.toMatch(/session_token=/);
-    expect(await sessionCount(id)).toBe(0);
+    expect(signedIn.status).toBe(200);
     const [{ count }] =
       await sql`select count(*)::int as count from sign_in_failures where user_id = ${id}`;
     expect(count).toBe(0);
+    await expectPausedView(cookieHeader(signedIn), id, until);
   });
 
-  it('by a wrong password: still answers as a wrong password, so the refusal tells nobody the account is paused', async () => {
+  it('by a wrong password: still answers as a wrong password', async () => {
     const id = await passwordAccount();
-    await pauseUserAccess(asUser(E), id, null, null);
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
 
     const wrong = await post(auth, '/sign-in/email', {
       email: PASSWORD_USER,
@@ -184,85 +229,93 @@ describe('a paused account signs in by no method', () => {
     });
 
     expect(wrong.status).toBe(401);
-    expect((await refusalOf(wrong)).code).not.toBe(ACCESS_PAUSED_CODE);
+    expect(cookieHeader(wrong)).not.toMatch(/session_token=/);
   });
 
-  it('by a passkey: answers 403 with the pause code, an open-ended pause carrying no end, and sets no session', async () => {
+  it('by a passkey: signs in to the paused view, an open-ended pause carrying no end', async () => {
     const { id, key } = await passkeyAccount();
-    await pauseUserAccess(asUser(E), id, null, null);
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
 
-    const refused = await signInWithPasskey(auth, key);
+    const signedIn = await signInWithPasskey(auth, key);
 
-    expect(refused.status).toBe(403);
-    expect(await refusalOf(refused)).toMatchObject({ code: ACCESS_PAUSED_CODE, until: null });
-    expect(cookieHeader(refused)).not.toMatch(/session_token=/);
-    expect(await sessionCount(id)).toBe(0);
+    expect(signedIn.status).toBe(200);
+    await expectPausedView(cookieHeader(signedIn), id, null);
+  });
+
+  it('is refused the send by a support time-out, with the time-out’s own sentence', async () => {
+    const id = await passwordAccount();
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    const cookie = cookieHeader(await signInWithPassword());
+    // The precondition: the paused session sends, so the time-out, not the pause, refuses the next.
+    expect((await graphql(cookie, SEND, { input: REQUEST })).errors).toBeUndefined();
+
+    await timeOutSupportSender(asUser(E), id, inADay(), 'A fixture time-out');
+
+    const refused = await graphql(cookie, SEND, { input: REQUEST });
+    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect(refused.errors?.[0]?.message).toMatch(/^You cannot send support requests until /);
+    expect(await requestsFrom(id)).toBe(1);
   });
 });
 
 describe('a pause that has ended', () => {
-  it('lets every method sign in once until has passed, writing nothing to the pause', async () => {
+  it('signs a password in to the whole site once until has passed, writing nothing to the pause', async () => {
     const id = await passwordAccount();
-    await pauseUserAccess(asUser(E), id, inADay(), null);
-    expect((await signInWithPassword()).status).toBe(403);
+    await pauseUserAccess(asUser(E), id, inADay(), 'A fixture pause');
     await sql`update user_access_pauses set until = now() - interval '1 minute' where user_id = ${id}`;
     const [before] = await sql`select * from user_access_pauses where user_id = ${id}`;
 
     const signedIn = await signInWithPassword();
 
     expect(signedIn.status).toBe(200);
-    expect(await signedInAs(cookieHeader(signedIn))).toBe(id);
+    await expectOpenView(cookieHeader(signedIn), id);
     expect(await sql`select * from user_access_pauses where user_id = ${id}`).toEqual([before]);
   });
 
-  it('lets a provider sign in once until has passed', async () => {
+  it('signs a provider in to the whole site once until has passed', async () => {
     await signInWithProvider(PROVIDER_USER);
     const id = await idOf(PROVIDER_USER);
-    await pauseUserAccess(asUser(E), id, inADay(), null);
+    await pauseUserAccess(asUser(E), id, inADay(), 'A fixture pause');
     await sql`update user_access_pauses set until = now() - interval '1 minute' where user_id = ${id}`;
 
     const signedIn = await signInWithProvider(PROVIDER_USER);
 
-    expect(await signedInAs(cookieHeader(signedIn))).toBe(id);
+    await expectOpenView(cookieHeader(signedIn), id);
   });
 
-  it('lets a passkey sign in once the pause is lifted', async () => {
+  it('opens a passkey’s session to the whole site once the pause is lifted, without signing in again', async () => {
     const { id, key } = await passkeyAccount();
-    await pauseUserAccess(asUser(E), id, null, null);
-    expect((await signInWithPasskey(auth, key)).status).toBe(403);
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    const cookie = cookieHeader(await signInWithPasskey(auth, key));
+    expect((await graphql(cookie, ME)).errors?.[0]?.extensions?.code).toBe('ACCESS_PAUSED');
 
     await liftUserAccessPause(asUser(E), id);
 
-    const signedIn = await signInWithPasskey(auth, key);
-    expect(await signedInAs(cookieHeader(signedIn))).toBe(id);
+    await expectOpenView(cookie, id);
   });
 });
 
 describe('a paused account at the compendium', () => {
-  it('is a signed-out visitor: its old cookie reads as no session, and the proxy lets /compendium through', async () => {
-    const first = await signInWithProvider(PROVIDER_USER);
-    const cookie = cookieHeader(first);
-    const { sessionFromHeaders } = await import('@/lib/request-session');
+  it('reads as signed out to the proxy and the public pages, and the proxy lets /compendium through', async () => {
+    await signInWithProvider(PROVIDER_USER);
+    const id = await idOf(PROVIDER_USER);
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    const cookie = cookieHeader(await signInWithProvider(PROVIDER_USER));
+    const { sessionFromHeaders, sessionStateFromHeaders } = await import('@/lib/request-session');
     const { proxy } = await import('@/proxy');
     // Imported here, not at the top: with Next's server module loaded first, the password endpoints fail Next's
     // "AsyncLocalStorage accessed in runtime where it is not available" invariant.
     const { NextRequest } = await import('next/server');
     const { getRedirectUrl } = await import('next/experimental/testing/server');
-    // The precondition: before the pause, the page's own session read answers the account.
-    expect((await sessionFromHeaders(new Headers({ cookie })))?.userId).toBe(
-      await idOf(PROVIDER_USER),
-    );
+    // The precondition: the cookie signs the account in.
+    expect((await sessionStateFromHeaders(new Headers({ cookie }))).session?.userId).toBe(id);
 
-    await pauseUserAccess(asUser(E), await idOf(PROVIDER_USER), null, null);
-
-    // What every page reads the viewer through, so the compendium draws its sessionless view
+    // What a public page reads the viewer through, so the compendium draws its sessionless view
     // (tests/app/(public)/compendium/page.test.tsx, "a visitor with no account").
     expect(await sessionFromHeaders(new Headers({ cookie }))).toBeNull();
     for (const path of ['/compendium', '/compendium/ingredients/testwort']) {
       const passed = await proxy(new NextRequest(`${ORIGIN}${path}`, { headers: { cookie } }));
       expect(getRedirectUrl(passed)).toBeNull();
-      const signedOut = await proxy(new NextRequest(`${ORIGIN}${path}`));
-      expect(getRedirectUrl(signedOut)).toBeNull();
     }
   });
 });

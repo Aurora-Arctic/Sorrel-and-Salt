@@ -1,6 +1,6 @@
 import 'server-only';
 import {
-  findActiveSupportTimeoutEnd,
+  findStandingSupportTimeout,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
@@ -12,7 +12,7 @@ import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
-import type { SupportDialogAnswer, SupportRequestRow } from '../types';
+import type { StandingTimeout, SupportDialogAnswer, SupportRequestRow } from '../types';
 import { requireVerified } from './access';
 
 // The sender's reads, behind `/account/support`. The finders AND `created_by` themselves, so what another sender wrote is
@@ -90,13 +90,14 @@ export async function getMySupportFollowUpId(session: Session, id: string): Prom
 }
 
 /**
- * When the signed-in sender's time-out ends, or `null` when none is in force: for `/support`, which shows the end instead of the form.
+ * The time-out standing on the signed-in sender, `until` null when it has no end date, or `null` when none stands: for
+ * `/support`, which shows it instead of the form.
  *
  * @throws {Forbidden} the address is unverified.
  */
-export async function getMySupportTimeoutEnd(session: Session): Promise<Date | null> {
+export async function getMySupportTimeout(session: Session): Promise<StandingTimeout | null> {
   requireVerified(session);
-  return (await findActiveSupportTimeoutEnd(session.userId)) ?? null;
+  return (await findStandingSupportTimeout(session.userId)) ?? null;
 }
 
 /**
@@ -108,8 +109,8 @@ export async function getMySupportDialogState(
 ): Promise<SupportDialogAnswer> {
   if (!session) return { kind: 'signedOut', until: null };
   if (session.emailUnverified) return { kind: 'unverified', until: null };
-  const until = await getMySupportTimeoutEnd(session);
-  return until ? { kind: 'timedOut', until } : { kind: 'form', until: null };
+  const timedOut = await getMySupportTimeout(session);
+  return timedOut ? { kind: 'timedOut', until: timedOut.until } : { kind: 'form', until: null };
 }
 
 /**

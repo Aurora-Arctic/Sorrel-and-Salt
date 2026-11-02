@@ -12,7 +12,7 @@ import {
   errorReferenceOf,
   supportAboutOf,
 } from '../../../lib/support-path';
-import { getMySupportTimeoutEnd } from '../../../modules/support';
+import { getMySupportTimeout } from '../../../modules/support';
 import type { SupportPageProps } from './types';
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 // Open to a signed-out visitor, who is offered Sign In in place of the form. An unverified account is
-// sent to confirm its address; a timed-out sender is told when that ends.
+// sent to confirm its address; a timed-out sender is told when that ends, or that it has no end date.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);
   let state: SupportPanelState;
@@ -28,10 +28,10 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
     state = { kind: 'signed-out', support: supportAboutOf(single(params.support) ?? null) };
   } else {
     if (!(await sessionIsVerified())) redirect(emailPagePath(undefined));
-    const until = await getMySupportTimeoutEnd(session);
+    const timedOut = await getMySupportTimeout(session);
     const asked = single(params.support);
-    state = until
-      ? { kind: 'timed-out', until }
+    state = timedOut
+      ? { kind: 'timed-out', until: timedOut.until }
       : {
           kind: 'form',
           support: supportAboutOf(asked ?? null),

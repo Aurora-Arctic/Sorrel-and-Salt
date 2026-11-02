@@ -256,6 +256,8 @@ export interface ShellViewer {
   assignedSupport: number;
   /** Their own support requests waiting on them; 0 unless verified. */
   waitingSupport: number;
+  /** The site access pause standing on them, its end `null` when it has none: the shell says so, and offers nothing it closes. */
+  accessPause?: { until: Date | null };
 }
 
 /** One coven the viewer belongs to, as the shell's switcher and brand link need it. */

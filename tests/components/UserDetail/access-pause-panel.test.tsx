@@ -75,6 +75,11 @@ const pausesSent = (): PauseUserAccessMutationVariables[] => {
   return sent;
 };
 
+const writeNote = () =>
+  fireEvent.change(within(section()).getByRole('textbox', { name: 'Note' }), {
+    target: { value: 'Shared password' },
+  });
+
 describe('UserDetail, Site Access', () => {
   it('draws no Site Access section when no pauses are given, as for the primary admin and the admin’s own account', () => {
     renderDetail();
@@ -111,16 +116,37 @@ describe('UserDetail, Site Access', () => {
     fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
       target: { value: 'none' },
     });
+    writeNote();
     fireEvent.click(within(section()).getByRole('button', { name: 'Pause Access' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-    expect(sent).toEqual([{ userId: BO.id, until: null }]);
+    expect(sent).toEqual([{ userId: BO.id, until: null, note: 'Shared password' }]);
   });
+
+  it.each([['day'], ['none']])(
+    'marks the note required and holds Pause Access until it has text, for a %s pause',
+    (span) => {
+      renderDetail({ pauses: [] });
+      unfold();
+      fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
+        target: { value: span },
+      });
+      const note = within(section()).getByRole('textbox', { name: 'Note' });
+      const pauseButton = within(section()).getByRole('button', { name: 'Pause Access' });
+      expect(note).toBeRequired();
+      expect(pauseButton).toBeDisabled();
+      fireEvent.change(note, { target: { value: '   ' } });
+      expect(pauseButton).toBeDisabled();
+      fireEvent.change(note, { target: { value: 'Shared password' } });
+      expect(pauseButton).toBeEnabled();
+    },
+  );
 
   it('holds Pause Access until a date is picked, when the pause runs until a date', () => {
     renderDetail({ pauses: [] });
     unfold();
+    writeNote();
     const pauseButton = within(section()).getByRole('button', { name: 'Pause Access' });
     expect(pauseButton).toBeEnabled();
     fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {

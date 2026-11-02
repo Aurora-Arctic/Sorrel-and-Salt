@@ -68,9 +68,13 @@ const StandingCard = ({
 const PauseForm = ({
   name,
   copy,
+  noteRequired = false,
   pause,
   onChanged,
-}: Pick<PausePanelProps, 'name' | 'copy' | 'pause' | 'onChanged'>): ReactElement => {
+}: Pick<
+  PausePanelProps,
+  'name' | 'copy' | 'noteRequired' | 'pause' | 'onChanged'
+>): ReactElement => {
   const { refresh } = usePendingNavigation();
   const [span, setSpan] = useState<PauseSpan>('day');
   const [day, setDay] = useState('');
@@ -79,7 +83,7 @@ const PauseForm = ({
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
-  const ready = pauseReady(span, day);
+  const ready = pauseReady(span, day) && (!noteRequired || note.trim() !== '');
 
   return (
     <div className="form">
@@ -90,6 +94,7 @@ const PauseForm = ({
         onDay={setDay}
         note={note}
         onNote={setNote}
+        noteRequired={noteRequired}
         noteHint={copy.noteHint}
         notePlaceholder={copy.notePlaceholder}
       />
@@ -133,6 +138,7 @@ const PausePanel = ({
   standing,
   earlier,
   copy,
+  noteRequired,
   pause,
   lift,
   onChanged,
@@ -162,7 +168,13 @@ const PausePanel = ({
         {standing ? (
           <StandingCard pause={standing} copy={copy} lift={lift} onChanged={onChanged} />
         ) : (
-          <PauseForm name={name} copy={copy} pause={pause} onChanged={onChanged} />
+          <PauseForm
+            name={name}
+            copy={copy}
+            noteRequired={noteRequired}
+            pause={pause}
+            onChanged={onChanged}
+          />
         )}
         {earlier.length > 0 && <Ledger pauses={earlier} />}
       </CollapsibleSection>

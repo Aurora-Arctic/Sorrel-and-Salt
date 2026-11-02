@@ -10,12 +10,12 @@ import type { UserAccessPauseRow } from '../types';
 
 const UserAccessPauseRef = builder.objectRef<UserAccessPauseRow>('UserAccessPause').implement({
   description:
-    'A pause on a user’s access to the site: no sign-in by any method until `until`, or with no end when `until` is null, unless lifted sooner.',
+    'A pause on a user’s access to the site: nothing but support until `until`, or with no end when `until` is null, unless lifted sooner. `note` says why, for staff.',
   fields: (t) => ({
     id: t.exposeID('id'),
     userId: t.exposeID('userId'),
     until: t.expose('until', { type: 'DateTime', nullable: true }),
-    note: t.exposeString('note', { nullable: true }),
+    note: t.exposeString('note'),
     liftedAt: t.expose('liftedAt', { type: 'DateTime', nullable: true }),
     liftedBy: t.exposeID('liftedBy', { nullable: true }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
@@ -26,11 +26,11 @@ builder.mutationField('pauseUserAccess', (t) =>
   t.field({
     type: UserAccessPauseRef,
     description:
-      'Pauses a user’s access until `until`, or with no end when it is left out, and ends every session they hold. Site admins only.',
+      'Pauses a user’s access until `until`, or with no end when it is left out, with a note saying why, and ends every session they hold. Site admins only.',
     args: {
       userId: t.arg.id({ required: true }),
       until: t.arg({ type: 'DateTime', required: false }),
-      note: t.arg.string({ required: false }),
+      note: t.arg.string({ required: true }),
     },
     authScopes: { admin: true },
     resolve: (_root, { userId, until, note }, context) =>

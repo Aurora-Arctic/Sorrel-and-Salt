@@ -3,7 +3,7 @@ import { cache } from 'react';
 import { byCovenName, membershipsOf, rolePermits, type WorkspaceRole } from '@/modules/coven';
 import { countReceivedInvitations, getMe } from '@/modules/identity';
 import { getMySupportCounts } from '@/modules/support';
-import { getSession, requireSignedIn } from './request-session';
+import { getSession, getShellSession, requireSignedIn } from './request-session';
 import type { Session } from './session';
 import { curates } from './site-roles';
 import type { ShellContext } from './types';
@@ -24,7 +24,30 @@ const ownMemberships = cache(async (session: Session) => {
   return memberships;
 });
 
-async function viewerFor(session: Session): Promise<ShellContext> {
+async function viewerFor(
+  session: Session,
+  accessPause?: { until: Date | null },
+): Promise<ShellContext> {
+  // A paused viewer reaches support and nothing else, so the shell reads no coven, curation or invitation for them, and
+  // keeps the count of their own requests waiting on them.
+  if (accessPause) {
+    const me = await getMe(session);
+    const support = me.emailVerified ? await getMySupportCounts(session) : { waitingOnMe: 0 };
+    return {
+      viewer: {
+        id: session.userId,
+        name: me.name,
+        canCurate: false,
+        canCreate: false,
+        verified: me.emailVerified,
+        pendingInvitations: 0,
+        assignedSupport: 0,
+        waitingSupport: support.waitingOnMe,
+        accessPause,
+      },
+      workspaces: [],
+    };
+  }
   const [me, memberships] = await Promise.all([getMe(session), ownMemberships(session)]);
   // Only a verified address has invitations it may read, so an unverified
   // account costs no count; one statement otherwise, on every shell page.
@@ -63,17 +86,18 @@ async function viewerFor(session: Session): Promise<ShellContext> {
   };
 }
 
-export const viewerOf = cache(async (): Promise<ShellContext> =>
-  viewerFor(await requireSignedIn()),
-);
+export const viewerOf = cache(async (): Promise<ShellContext> => {
+  const session = await requireSignedIn();
+  return viewerFor(session, (await getShellSession())?.accessPause);
+});
 
 /**
  * `viewerOf()` for a page a signed-out visitor may open: `null` instead of
  * the redirect to sign in. For the public frame and nothing else.
  */
 export const viewerIfSignedIn = cache(async (): Promise<ShellContext | null> => {
-  const session = await getSession();
-  return session ? viewerFor(session) : null;
+  const shell = await getShellSession();
+  return shell ? viewerFor(shell.session, shell.accessPause) : null;
 });
 
 /**

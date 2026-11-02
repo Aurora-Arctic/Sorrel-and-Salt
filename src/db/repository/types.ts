@@ -603,13 +603,13 @@ export interface AuditWriter {
   lockCovenStock(membership: Membership): Promise<void>;
   /**
    * Takes the account's support-send lock until the transaction ends, then reads what a send decides on: the account's requests
-   * in the last `windowSeconds` and the end of its active time-out. Taken first, so two sends from one account queue and the
+   * in the last `windowSeconds` and the end of the time-out standing on it. Taken first, so two sends from one account queue and the
    * second counts the first; another account's send is not held up.
    */
   lockSupportSender(
     userId: string,
     windowSeconds: number,
-  ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  ): Promise<{ recent: number; timedOut: StandingTimeout | undefined }>;
   /**
    * Counts one signed-out send against an email address and a client address, each in its own row of `support_send_counts`,
    * and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
@@ -1088,17 +1088,20 @@ export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredie
 /** One `user_access_pauses` row. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
-/** What a site access pause is set with: `until` null for no end date. */
+/** What a site access pause is set with: `until` null for no end date, and always a note saying why. */
 export interface UserAccessPauseInput {
   until: Date | null;
-  note: string | null;
+  note: string;
 }
 
 /** One `workspace_member_pauses` row. */
 export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 
-/** What a coven pause is set with: the same as a site access pause's. */
-export type WorkspaceMemberPauseInput = UserAccessPauseInput;
+/** What a coven pause is set with: `until` null for no end date, and a note or none. */
+export interface WorkspaceMemberPauseInput {
+  until: Date | null;
+  note: string | null;
+}
 
 export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
   ? IngredientRow
@@ -1448,6 +1451,11 @@ export interface SupportRequestFilter {
 
 /** How many requests each view holds. */
 export type SupportViewCounts = Record<SupportView, number>;
+
+/** The end of the time-out standing on a sender: `until` null when it has no end date. */
+export interface StandingTimeout {
+  until: Date | null;
+}
 
 /** What the account menu counts for one viewer. */
 export interface SupportMenuCounts {

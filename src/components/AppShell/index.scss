@@ -151,3 +151,11 @@
     border-inline-start-color: $surface-card;
   }
 }
+
+// The paused viewer's notice above the page, in the wide column's edges so it lines up with the page beneath.
+.app-shell__pause {
+  box-sizing: border-box;
+  max-width: $wide-column;
+  margin-inline: auto;
+  padding: space(4) space(4) 0;
+}

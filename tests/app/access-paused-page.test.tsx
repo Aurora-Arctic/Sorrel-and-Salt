@@ -1,51 +1,77 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { longMinuteInZone } from '@/lib/utc';
 
-// /access-paused says what its own `?until=` says and nothing else: a pause with an end, one with none, and one whose end
-// has passed, which offers Sign In again.
+// /access-paused reads the viewer's own standing pause, as the shell does, and says when it ends: a pause with an end and
+// one with none. Signed out it sends the visitor to Sign In, and with no pause standing, lifted or ended, to the entry page.
+// Its Support link opens the Support dialog over the page, as the footer's does.
+
+vi.mock('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`redirect:${url}`);
+  },
+  usePathname: () => '/access-paused',
+  useSearchParams: () => new URLSearchParams(),
+}));
+const getShellSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ getShellSession }));
 
 const { default: AccessPausedPage, metadata } = await import('@/app/access-paused/page');
 
-const NOW = new Date('2026-11-02T12:00:00.000Z');
+const SESSION = { userId: 'u', role: 'user' };
 
-const visit = async (until?: string | string[]) => {
-  vi.useFakeTimers({ now: NOW, toFake: ['Date'] });
-  render(await AccessPausedPage({ searchParams: Promise.resolve(until ? { until } : {}) }));
-};
+const visit = async () => render(await AccessPausedPage());
 
-afterEach(() => {
-  vi.useRealTimers();
-  cleanup();
+beforeEach(() => {
+  getShellSession.mockReset();
 });
 
+afterEach(cleanup);
+
 describe('/access-paused', () => {
-  it('names the end of a pause that has one, in UTC, and offers no Sign In yet', async () => {
-    await visit('2026-12-01T09:30:00.000Z');
+  it('names the end of the viewer’s standing pause, as the site prints a date', async () => {
+    const until = new Date('2026-12-01T09:30:00.000Z');
+    getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until } });
+    await visit();
 
     expect(screen.getByRole('heading', { name: 'Access Paused' })).toBeInTheDocument();
-    expect(screen.getByText(/paused until 1 December 2026, 09:30 UTC/)).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
+    expect(screen.getByText(/Access to this account is paused until/)).toHaveTextContent(
+      `Access to this account is paused until ${longMinuteInZone(until)}.`,
+    );
   });
 
-  it.each([
-    ['no end', undefined],
-    ['a malformed end', 'not-a-date'],
-    ['a repeated end', ['2026-12-01T09:30:00.000Z', '2026-12-02T09:30:00.000Z']],
-  ])('says a pause with %s has no end date', async (_, until) => {
-    await visit(until);
+  it('says a pause with no end lasts until an admin lifts it', async () => {
+    getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until: null } });
+    await visit();
 
     expect(screen.getByText(/paused, with no end date/)).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Sign In' })).not.toBeInTheDocument();
   });
 
-  it('says a pause whose end has passed is over, and links to Sign In', async () => {
-    await visit('2026-11-01T09:30:00.000Z');
+  it('sends a signed-out visitor to Sign In', async () => {
+    getShellSession.mockResolvedValue(null);
 
-    expect(screen.getByText(/ended at 1 November 2026, 09:30 UTC/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
+    await expect(AccessPausedPage()).rejects.toThrow('redirect:/sign-in');
   });
 
-  it('links to the compendium, which a paused account still reads signed out', async () => {
+  it('sends a signed-in viewer with no pause standing to the entry page', async () => {
+    // Signed in, so only the missing pause sends them on.
+    getShellSession.mockResolvedValue({ session: SESSION });
+
+    await expect(AccessPausedPage()).rejects.toThrow(/^redirect:\/$/);
+  });
+
+  it('opens the Support dialog over the page from its Support link', async () => {
+    getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until: null } });
+    await visit();
+
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
+      'href',
+      '/access-paused?support=',
+    );
+  });
+
+  it('links to the compendium, which a paused account still reads', async () => {
+    getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until: null } });
     await visit();
 
     expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute('href', '/compendium');

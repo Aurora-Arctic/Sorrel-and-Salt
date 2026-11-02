@@ -8,7 +8,6 @@ import BusyButton from '../BusyButton';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
-import { leaveIfPaused } from './paused';
 import type { TwoFactorStepProps } from './types';
 
 // The second step of a password sign-in with two-factor on: a code from an authenticator app, or a
@@ -73,8 +72,6 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
     const { error } = await verify({ code: entered, trustDevice }).catch(() => ({
       error: {} as Failure,
     }));
-    // A pause set after the password was checked refuses the session the code would make.
-    if (error && leaveIfPaused(error)) return;
     if (error) {
       setPending(false);
       const answer = refusal(error);
