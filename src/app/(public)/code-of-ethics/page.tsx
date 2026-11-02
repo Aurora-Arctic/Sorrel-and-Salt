@@ -307,8 +307,8 @@ export default function CodeOfEthicsPage() {
           abuse of the support form, not for disagreement.
         </li>
         <li>
-          Your owner's seat in the demo coven is for showing people the site. The demo coven is a
-          coven like any other to the people in it, and you treat what they write there as theirs.
+          Your owner's seat in the demo coven is for showing people the site. Everyone who signs in
+          can see what you write there, so keep it suitable for everyone who signs in.
         </li>
         <li>
           An admin's role gives you nothing in any other coven. The site's code refuses it, and so
