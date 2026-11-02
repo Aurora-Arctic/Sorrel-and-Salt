@@ -28,7 +28,7 @@ const ACCESS_ROWS: AccessRow[] = [
     ],
   },
   {
-    data: 'Your email address',
+    data: 'Your email',
     cells: [
       { mark: 'yes', text: 'Yes, for everyone in the coven' },
       { mark: 'no', text: 'No' },
