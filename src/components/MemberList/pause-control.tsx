@@ -12,7 +12,7 @@ import {
   PauseFields,
   Until,
   endOf,
-  endReady,
+  pauseReady,
   stands,
 } from '../UserDetail/access-pause-parts';
 import type { AccessPauseEntry, PauseSpan } from '../UserDetail/types';
@@ -70,8 +70,6 @@ const MemberPausesDocument = graphql(`
 
 const NOTE_HINT = "Seen by the coven's owners only, up to 500 characters.";
 
-const NO_END = 'Choose a day for the pause to end.';
-
 /** A person on a pause, named; a withheld name reads as Unknown. */
 const person = (who: { id: string; name?: string | null } | null | undefined) =>
   who ? { id: who.id, name: who.name ?? 'Unknown' } : null;
@@ -110,6 +108,7 @@ const PauseAction = ({ workspaceId, userId, name }: Omit<PauseControlProps, 'sta
       accessibleName={`${label} for ${name}`}
       openClass="btn btn--quiet btn--small"
       confirmLabel="Pause"
+      confirmDisabled={!pauseReady(span, day)}
       title={`Pause Access for ${name}?`}
       question={
         <>
@@ -137,7 +136,7 @@ const PauseAction = ({ workspaceId, userId, name }: Omit<PauseControlProps, 'sta
       announcement={`${name}'s access is paused.`}
       send={() => {
         const until = endOf(span, day, new Date());
-        if (until === undefined || !endReady(until)) return Promise.reject(new Error(NO_END));
+        if (until === undefined) return Promise.reject(new Error('No end chosen'));
         return graphqlRequest(PauseMemberDocument, {
           workspaceId,
           userId,
@@ -145,11 +144,7 @@ const PauseAction = ({ workspaceId, userId, name }: Omit<PauseControlProps, 'sta
           note: note.trim() || undefined,
         });
       }}
-      refusal={(error) =>
-        error instanceof Error && error.message === NO_END
-          ? NO_END
-          : (readGraphqlFailure(error).alert ?? GENERIC_FAILURE)
-      }
+      refusal={(error) => readGraphqlFailure(error).alert ?? GENERIC_FAILURE}
       onSent={() => {
         setSpan('day');
         setDay('');

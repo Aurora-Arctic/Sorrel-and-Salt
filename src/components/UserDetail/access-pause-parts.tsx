@@ -42,6 +42,10 @@ export function endOf(span: PauseSpan, day: string, now: Date): Date | null | un
 export const endReady = (end: Date | null | undefined): boolean =>
   end === null || (end?.getTime() ?? 0) > Date.now();
 
+/** Whether a pause of this span can be confirmed: the rule both pause screens hold their confirm by. */
+export const pauseReady = (span: PauseSpan, day: string): boolean =>
+  endReady(endOf(span, day, new Date()));
+
 /** Whether a pause still stands: not lifted, and with no end or an end still ahead. */
 export const stands = (pause: AccessPauseEntry, now: number): boolean =>
   pause.liftedAt === null && (pause.until === null || pause.until.getTime() > now);

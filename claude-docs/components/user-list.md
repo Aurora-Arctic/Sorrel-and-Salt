@@ -491,6 +491,8 @@ The creation control, the role control, Impersonate, the pause switch and the in
 
 A refusal closes the modal, gives the focus back to the button that opened it, and says why in a callout under that button (`useClickFeedback`). The callout floats rather than taking room in a row.
 
+An answer not yet complete is held, never refused. `disabled` holds the opening button, for a form whose fields sit outside the modal. `confirmDisabled` holds the modal's confirm, for a choice asked inside the modal, such as the members page's Pause while Until a Date has no day.
+
 ### Inside a modal
 
 Drawn inside a modal already, the user's, an action asks over that modal's body through `ConfirmOverlay`, as the forms' questions do, rather than open a second modal on top. A refusal stays in that dialog, in one of two forms:

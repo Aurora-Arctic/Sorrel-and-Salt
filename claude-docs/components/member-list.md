@@ -89,7 +89,7 @@ success is said in the page's status region: "<name> is now <role>." or
 An owner can pause one member's or viewer's access to the coven, for a span or with no end date, and lift it (M15.56). The pause itself, and who may set it, is the coven service's (claude-docs/design-decisions/m15.55-coven-access-pause.md).
 
 - **The control is `PauseControl`** (`pause-control.tsx`), passed as `accessAction`. With no pause standing it is **Pause Access**: a `ConfirmedAction` whose dialog asks For (1 Day, 1 Week, 1 Month, Until a Date, No End Date), Until (the day, for Until a Date) and a Note, and confirms with a red **Pause**. With a pause standing it is a **Paused** badge, the pause's end, and **Lift Pause**, which confirms with a red **Lift**. Either way the page is read again afterwards, so the row shows the state the action leaves.
-- **Until a Date with no day picked sends nothing**: the dialog closes and says "Choose a day for the pause to end." under the button.
+- **Pause is held while Until a Date has no future day picked**: the confirm is disabled and the dialog stays open, as the admin's Pause Access is held. Both screens read the one rule, `pauseReady` in `access-pause-parts.tsx`, and the dialog holds its confirm through `ConfirmedAction`'s `confirmDisabled`.
 - **Each dialog lists the member's earlier pauses** under Earlier Pauses, each with its dates, note, and "Set by X · Lifted by Y". The list is read through `Workspace.memberPauses` (a paged list) only once a dialog opens, so the page itself makes no read per row.
 - **The fields, the end and the list are shared** with the admin's site-wide pause, from `UserDetail/access-pause-parts.tsx`, so the two ask and list alike (claude-docs/components/user-detail.md, "Site Access").
 - **The page passes it to owners alone** (`member: pause`), and returns nothing on an owner's row, since an owner's access is never paused. The pauses standing on the page's members are read in one query, `standingMemberPauses`.
@@ -123,7 +123,7 @@ on the own row only, and the address only under
 `showEmail`. `tests/components/MemberList/remove-control.test.tsx`
 and `role-control.test.tsx` hold each control's refusal, said under the button
 as the service's sentence alone and the focus on the button, the badge bringing it back,
-and its success said in the status region. `pause-control.test.tsx` holds the pause each sends (open-ended with its note, and one day), nothing sent for Until a Date with no day, the lift, and the earlier pauses each dialog lists. `tests/e2e/coven-access-pause.spec.ts` walks pause, the paused page, lift and access restored, with axe on the dialog and on the paused page.
+and its success said in the status region. `pause-control.test.tsx` holds the pause each sends (open-ended with its note, and one day), the Pause confirm held, with the dialog open and nothing sent, while Until a Date has no day, the lift, and the earlier pauses each dialog lists. `tests/e2e/coven-access-pause.spec.ts` walks pause, the paused page, lift and access restored, with axe on the dialog and on the paused page.
 
 ## Columns
 

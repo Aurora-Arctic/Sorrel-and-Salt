@@ -105,17 +105,26 @@ describe('PauseControl, while access stands open', () => {
     expect(until - Date.now()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
   });
 
-  it('sends nothing for Until a Date with no day picked, and says to choose one', async () => {
+  it('holds the Pause confirm, with the dialog open, while Until a Date has no day picked', () => {
     const sent = serve();
     renderOpen();
 
     fireEvent.click(screen.getByRole('button', { name: 'Pause Access for Testwort' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'For' }), { target: { value: 'date' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
+    const dialog = screen.getByRole('dialog', { name: 'Pause Access for Testwort?' });
+    const confirm = within(dialog).getByRole('button', { name: 'Pause' });
+    // Why it could have been sent: the default span, a day, is ready.
+    expect(confirm).toBeEnabled();
 
-    expect(await screen.findByText('Choose a day for the pause to end.')).toBeInTheDocument();
+    const span = within(dialog).getByRole('combobox', { name: 'For' });
+    fireEvent.change(span, { target: { value: 'date' } });
+    expect(confirm).toBeDisabled();
+    fireEvent.click(confirm);
+    expect(screen.getByRole('dialog', { name: 'Pause Access for Testwort?' })).toBeInTheDocument();
     expect(sent).toEqual([]);
     expect(refresh).not.toHaveBeenCalled();
+
+    fireEvent.change(span, { target: { value: 'none' } });
+    expect(confirm).toBeEnabled();
   });
 });
 

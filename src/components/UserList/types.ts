@@ -97,6 +97,8 @@ export interface ConfirmedActionProps {
   openClass: string;
   /** The row's button is off, for a form whose answer is not yet complete. */
   disabled?: boolean;
+  /** The modal's confirm is off, for a choice inside the modal whose answer is not yet complete. */
+  confirmDisabled?: boolean;
   /** The modal's heading, in title case. */
   title: string;
   /** The modal's question, the user's name in bold. */
@@ -147,6 +149,8 @@ export interface ConfirmAnswersProps {
   /** The warning's id, which the confirm is described by; none without one. */
   describedBy?: string;
   sending: boolean;
+  /** The confirm is off though nothing is being sent. */
+  disabled?: boolean;
   confirmRef: RefObject<HTMLButtonElement | null>;
   cancelRef: RefObject<HTMLButtonElement | null>;
   onConfirm: () => void;

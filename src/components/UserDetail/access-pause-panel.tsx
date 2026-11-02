@@ -9,7 +9,7 @@ import { CollapsibleSection } from '../CollapsibleSection';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import { LocalDay } from '../SupportRequests/day-range';
 import ConfirmedAction from '../UserList/confirmed-action';
-import { Ledger, PauseFields, Until, endOf, endReady, stands } from './access-pause-parts';
+import { Ledger, PauseFields, Until, endOf, pauseReady, stands } from './access-pause-parts';
 import type { AccessPauseEntry, PauseSpan } from './types';
 import '../SupportRequests/timeout-panel.scss';
 
@@ -87,7 +87,7 @@ const PauseForm = ({ userId, name }: { userId: string; name: string }): ReactEle
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
-  const ready = endReady(end);
+  const ready = pauseReady(span, day);
 
   return (
     <div className="form">
