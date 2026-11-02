@@ -36,3 +36,11 @@ export function isAccessPaused(
     (failure as { code?: unknown }).code === ACCESS_PAUSED_CODE
   );
 }
+
+/**
+ * Where a member whose access to one coven is paused is sent from that coven's pages. Outside `/coven/[slug]`, whose layout
+ * refuses them, and keyed by the slug so the page reads the pause itself rather than trusting the address.
+ */
+export function covenPausedPath(slug: string): Route {
+  return `/coven-paused/${encodeURIComponent(slug)}` as Route;
+}

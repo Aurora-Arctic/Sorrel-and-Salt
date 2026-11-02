@@ -50,7 +50,7 @@ const {
   sessionIsVerified,
 } = await import('@/lib/request-session');
 const { auth } = await import('@/lib/auth');
-const { Forbidden } = await import('@/lib/errors');
+const { AccessPaused, Forbidden } = await import('@/lib/errors');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
@@ -410,6 +410,17 @@ describe('requireCovenMembership', () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
     membershipBySlugMock.mockRejectedValue(new Forbidden());
 
+    await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow('not-found');
+  });
+
+  it('sends a member whose access to the coven is paused to its paused page, where a stranger at the same slug gets the 404', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    membershipBySlugMock.mockRejectedValueOnce(new AccessPaused(new Date('2099-01-01T00:00:00Z')));
+    await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow(
+      'redirect:/coven-paused/whitethorn-coven',
+    );
+
+    membershipBySlugMock.mockRejectedValueOnce(new Forbidden());
     await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow('not-found');
   });
 

@@ -4,7 +4,8 @@ import { cache } from 'react';
 import { type CovenMembership, membershipBySlug } from '@/modules/coven';
 import { assertCurator, assertSiteAdmin, hasAgreedToTerms } from '@/modules/identity';
 import { auth } from './auth';
-import { Forbidden } from './errors';
+import { covenPausedPath } from './access-paused';
+import { AccessPaused, Forbidden } from './errors';
 import type { Session, SessionState } from './session';
 import { isTermsPage, termsPagePath } from './account-terms';
 import { emailPagePath, isEmailPage } from './account-email';
@@ -157,12 +158,15 @@ const covenOf = cache(async (slug: string) => membershipBySlug(await requireSess
 /**
  * `requireSession()`, then the workspace the `/coven/[slug]` address names and the proof the user is a member. A refusal is
  * Next's 404, not 403: an unknown slug and a coven the user is not in must look the same (claude-docs/auth/coven-guard.md,
- * "The coven guard"). The layout and every page beneath it call it.
+ * "The coven guard"). A member whose access to the coven is paused holds a seat, so is sent to the coven's paused page
+ * instead. The layout and every page beneath it call it.
  */
 export async function requireCovenMembership(slug: string): Promise<CovenMembership> {
   try {
     return await covenOf(slug);
   } catch (error) {
+    // First, since AccessPaused is a Forbidden too.
+    if (error instanceof AccessPaused) redirect(covenPausedPath(slug));
     if (error instanceof Forbidden) notFound();
     throw error;
   }
