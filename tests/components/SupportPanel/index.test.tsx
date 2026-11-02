@@ -34,6 +34,12 @@ describe('SupportPanel', () => {
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
+  it('tells a sender timed out with no end date that it has none, in place of the form', () => {
+    render(<SupportPanel state={{ kind: 'timed-out', until: null }} path="/support" />);
+    expect(screen.getByRole('status')).toHaveTextContent('timed out with no end date');
+    expect(screen.queryByRole('textbox')).toBeNull();
+  });
+
   it('shows the form to a sender who may write, with the about and error asked for', () => {
     render(<SupportPanel state={{ kind: 'form', support: 'bug', errorCode: 404 }} path="/gone" />);
     expect(screen.getByRole('textbox', { name: /Subject/ })).toBeInTheDocument();

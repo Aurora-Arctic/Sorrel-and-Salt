@@ -10,16 +10,15 @@ the hrefs of the pages either side
 
 `UserListProps` (`types.ts`):
 
-| Prop               | What it is                                                                         |
-| ------------------ | ---------------------------------------------------------------------------------- |
-| `users`            | This page's `UserListEntry` rows, in the list's order                              |
-| `query`            | The name-or-email filter as asked, blank for none                                  |
-| `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false`                       |
-| `previousHref`     | The page before this one, absent on the first                                      |
-| `nextHref`         | The page after this one, absent on the last                                        |
-| `position`         | Where this page stands, `{ page, pages }`, the pager's "Page X of Y" (MB.115)      |
-| `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default                   |
-| `adminChanges`     | `{ paused, canToggle }`, the pause on admin changes (MB.63); no switch when absent |
+| Prop               | What it is                                                                    |
+| ------------------ | ----------------------------------------------------------------------------- |
+| `users`            | This page's `UserListEntry` rows, in the list's order                         |
+| `query`            | The name-or-email filter as asked, blank for none                             |
+| `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false`                  |
+| `previousHref`     | The page before this one, absent on the first                                 |
+| `nextHref`         | The page after this one, absent on the last                                   |
+| `position`         | Where this page stands, `{ page, pages }`, the pager's "Page X of Y" (MB.115) |
+| `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default              |
 
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
 `createdAt` and `emailVerified`, plus `providers`, the provider ids the service
@@ -63,17 +62,22 @@ head, both built by the page per row, as the other admin lists carry
   `awaiting=1`, and opens it softly. Before
   hydration the form submits natively, with the switch as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
-- **Eight columns, in the owner's order**: Name, Email, Role, Coven Creation,
-  Support Time-Out, Site Access Paused, Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
+- **Eight columns, in the owner's order**: Name, Email, Role, Can Create,
+  Time-Out, Paused, Logins and Signed Up, each heading in title case (DESIGN.md §9).
+  The headings are short so the table needs less width (the owner's call,
+  2026-11-02); each cell's hidden text still says the whole fact, "Not timed
+  out" or "Paused with no end date", so a screen reader loses nothing.
   The table is [`StackTable`](data-table.md), so each heading is also the
   `data-label` its cells carry as a card at phone width, and the table writes
   out its roles (MB.115, "Tables at phone width" in
   [`styling.md`](../styling.md)). Admin and User are `ROLE_LABELS`
   (`roles.ts`), the one option list the role filter, the Role column and the
   page's reading of `?role` share.
-  The two columns with a control, Role and Coven Creation, sit together, and
-  the two facts read rather than changed follow them (reordered during MB.59,
-  on the owner's call). The Email
+  Role and Can Create sit together, and the facts follow them (ordered during
+  MB.59, on the owner's call). No row holds a control but Impersonate: Change
+  Role and coven creation's Approve or Revoke are the user modal's alone
+  ([`user-detail.md`](user-detail.md)), so a row is an index into the modal
+  (the owner's call, 2026-11-02). The Email
   cell leads with whether the address is verified, then the address, so the
   two are one column. Sign-in methods and the verified mark are what an admin changing a role judges a person by (MB.59, M11.20). A yes-or-no is a mark, on the
   owner's call: a green check (`$accent`) or a red cross (`$secondary`), the
@@ -84,18 +88,18 @@ head, both built by the page per row, as the other admin lists carry
   native `title` showed too late to be seen, on the owner's review. The bubble
   is `aria-hidden`, the reader having the hidden word. The creation flag's
   says Yes or No, which its heading asks, and has no bubble.
-  Support Time-Out and Site Access Paused mark whether one stands: not
+  Time-Out and Paused mark whether one stands: not
   lifted, not deleted, and with no end or an end still to come, the services'
   own rule, so a time-out or pause that has run out is a cross and nothing is
   written to end it. A check's hidden word carries the end, "Timed out until
-  <instant>" or "Paused until <instant>" (`inUtc`), or "Paused with no end
-  date"; its bubble says "Until <instant>" or "No end date", the heading
+  <instant>" or "Paused until <instant>" (`inUtc`), or "Timed out with no
+  end date" or "Paused with no end date"; its bubble says "Until <instant>" or "No end date", the heading
   saying the rest. A cross says "Not timed out" or "Not paused" and has no
   bubble. The page reads both for the whole page of users in one query each,
   `standingTimeoutsOf` (support) and `standingAccessPausesOf` (identity), both
   under `assertSiteAdmin`, beside `providersOf`, and hands each row
-  `supportTimeoutUntil` and `accessPause` (`{ until }`), absent when none
-  stands.
+  `supportTimeout` and `accessPause` (each `{ until }`, `until` null for no
+  end date), absent when none stands.
   An admin's or a curator's role is bold, on the owner's call. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the shared provider mark, `ProviderMark`
@@ -166,12 +170,12 @@ head, both built by the page per row, as the other admin lists carry
   `MissingNotice` over the list and no dialog, never an error or a 404, as
   a stale `?edit=` is on the other admin lists. Closing returns to
   `userListHref(filter, cursor)`, the list as it stood, with no `?user=`.
-- **Impersonate is a seventh column, only where impersonation is registered**
+- **Impersonate is a ninth column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
   column does not exist. Each non-admin row holds an Impersonate button named
   "Impersonate <name>", from `impersonate-button.tsx`, a client file. An admin's row holds none, because the endpoint refuses to
-  impersonate an admin. It asks first, as every other row action does
+  impersonate an admin. It asks first, as every action in the table and the modal does
   (MB.115, on the owner's call): a `ConfirmedAction` (below) whose `Modal` is
   titled "Impersonate User" and says "Impersonate <name>? You will see the
   site as they do, and act as them, until you press Stop Impersonating at the
@@ -194,7 +198,12 @@ head, both built by the page per row, as the other admin lists carry
   `$sticky-column-layer` plus one): a tip reaches into its own row, whose
   Impersonate cell comes later in the DOM, and at the same layer the cell
   painted over the tip's corner (fixed in MB.63's PR; presentation, so
-  no test pins the layers). The table's
+  no test pins the layers). The refusal's callout is drawn inside the
+  Impersonate cell, so the cell's layer caps it, and the sticky cells of the
+  rows after it painted over the callout. While a cell holds a callout it is
+  lifted to `$tip-layer` (`.user-list__impersonate:has(.click-feedback__callout)`),
+  so the callout sits over the later rows (measured in a browser, 2026-11-02:
+  6 of 15 points of the callout covered before, none after). The table's
   borders are separate rather than the primitive's collapsed ones, so each
   rule belongs to its cell and the headings' hairline scrolls beneath the red
   one rather than being drawn across it. No cell wraps: the table scrolls
@@ -202,15 +211,12 @@ head, both built by the page per row, as the other admin lists carry
   Its
   button is `.btn--destructive`, on the owner's call: it is the one control
   that acts as someone else.
-- **Coven Creation holds its control** (M5.8,
+- **Approve and Revoke are the user modal's** (M5.8,
   [`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
-  creation"), from `creation-control.tsx`, beside the mark it changes: one
-  column rather than a second saying the same thing, on the owner's review,
-  and the heading says what is approved so the buttons stay one word. A user
-  who may not yet create a coven has Approve, quiet, named "Approve <name>";
-  one who may has the mark alone, since Revoke is the user modal's only
-  ([`user-detail.md`](user-detail.md)), so the row is an index into the modal
-  (the owner's call, MB.123 D38). There, Revoke is quiet, as Approve is, named "Revoke approval
+  creation"), from `creation-control.tsx`, beside the Can Create fact they
+  change ([`user-detail.md`](user-detail.md)); the row's Can Create cell is the
+  mark alone. A user who may not yet create a coven has Approve, quiet, named
+  "Approve <name>"; one who may has Revoke, quiet too, named "Revoke approval
   for <name>"; the red is its confirmation's Revoke (MB.123). A curator's or an admin's row has the mark alone, since each holds the flag (MB.177, M11.20): the control shows for a `user` only. Each asks first, in a
   `Modal` ([`modal.md`](modal.md)) titled "Approve Coven Creation" or "Revoke
   Coven Creation", on the owner's call, the name in bold: "Let <name> create
@@ -222,8 +228,7 @@ head, both built by the page per row, as the other admin lists carry
   Approve `.btn--solid`. Every button in the table, Impersonate included, is
   `.btn--small`, so a row is no taller than its text. The modal's action sends
   the mutation and stays busy, spinner and "Approving" or "Revoking", until
-  `router.refresh()` re-reads the page. The row's Approve then goes; in the
-  user modal the control is keyed by its action, so the refreshed modal mounts
+  `router.refresh()` re-reads the page. The control is keyed by its action, so the refreshed modal mounts
   the other one fresh, without the confirmation, rather than keeping the busy
   state. Once the
   action has worked, the page's status region says so: "<name> may now
@@ -233,7 +238,7 @@ head, both built by the page per row, as the other admin lists carry
   under that button ([`click-feedback.md`](click-feedback.md)), and offers the action again. The service is the
   guard.
 - **Approving or promoting an unverified address warns first** (MB.205,
-  MB.59). When the row's `emailVerified` is false, the Approve modal says,
+  MB.59). When the user's `emailVerified` is false, the Approve question says,
   under its question, in a quiet warning `Notice`: "Nobody has confirmed this
   email address yet. Approving also keeps the account from lapsing." A promotion's says the same with "Promoting": the
   one sentence is `warning.ts`'s `unverifiedWarning(verb)`, and a grant's
@@ -246,16 +251,16 @@ head, both built by the page per row, as the other admin lists carry
   lands there on opening. It is quiet, `<Notice kind="warn" quiet>`, so it
   renders as an `<output>`, a status, with the warning's look: an alert would
   be read a second time. The `id` the Approve names is the notice's `id`
-  prop, and `.user-list__warning` its layout class. A verified user's Approve or promotion, and every Revoke and demotion, carries none. The control takes `emailVerified` from the row for it.
+  prop, and `.user-list__warning` its layout class. A verified user's Approve or promotion, and every Revoke and demotion, carries none. The control takes `emailVerified` from the user for it.
 - **Every role carries a tip saying what it may do**: the word is a
   [`RoleTip`](role-tip.md), its text `SITE_ROLE_ACCESS[role]`, the same
   sentence Change Role shows beside that role, so the two never drift.
-- **The Role cell holds one Change Role control** (MB.59, M11.20,
+- **Change Role is the user modal's** (MB.59, M11.20,
   [`auth/admin-users.md`](../auth/admin-users.md), "Changing a site role"),
-  from `role-control.tsx`, beside the role it changes: one column
-  rather than a second saying the same thing, as Coven Creation holds its
-  own. It replaces the Promote and Revoke pair the row had before the curator
-  role: every row has one quiet button, named "Change Role for <name>". It
+  from `role-control.tsx`, beside the Role fact it changes; the row's Role
+  cell holds the role and, on the primary admin's row, the crown. It
+  replaces the Promote and Revoke pair the row had before the curator role:
+  one quiet button, named "Change Role for <name>". It
   opens a `Modal` titled "Change Role", with the question "Choose a role for
   <name>." (the name in bold) over a "New Role" radio group of every role but
   the one the user holds, in the order user, curator, admin (`SITE_ROLES`),
@@ -330,7 +335,7 @@ head, both built by the page per row, as the other admin lists carry
   an alert.
 - **While paused, an admin the pause binds cannot use Change Role, nor coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
-  and every row's role and creation control, for a viewer who is not the primary admin
+  and the user modal's role and creation controls, for a viewer who is not the primary admin
   (`canToggle`), is locked as the primary admin's Change Role is. That reading,
   paused and not the primary admin, is `changesLocked` (`lock.ts`), which the
   Invitations tab's lock reads too. Locked means in view,
@@ -344,8 +349,8 @@ head, both built by the page per row, as the other admin lists carry
   (`primary-admin-mark.tsx`), a button named "Primary Admin" with a tip
   saying so, as InfoTip's ⓘ is a button with its tip, and through the same
   `useTip`: opened by hover, focus or a tap, kept open while the pointer is on
-  it, closed on Escape (on the owner's call, in place of an outlined tag). Its
-  Revoke stays in view but is `aria-disabled` rather than `disabled`, so it
+  it, closed on Escape (on the owner's call, in place of an outlined tag). In the
+  user modal, its Change Role stays in view but is `aria-disabled` rather than `disabled`, so it
   keeps its place in the tab order and a click still lands. The reason is in a
   tip on the button, opening as the crown's does: the service's own refusal in
   the same words (`PRIMARY_ADMIN_REFUSAL`, `src/lib/primary-admin.ts`, one
@@ -377,7 +382,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
 - **Above the stacking width** (a container query on the table's frame,
   MB.115 on the owner's call) each row's cells take `space(3)` above and
   below (`data-table--roomy`), a step more than the primitive's, since a row holds buttons as well
-  as text, and the two facts no control changes, Sign-In Methods and Signed
+  as text, and the two facts, Logins and Signed
   Up (`.user-list__fact`), are `$text-muted` at the caption size, so the eye
   goes to what can be acted on. Every control sits at the end of its cell. A
   card already leads each fact with its muted label, so the cards keep the
@@ -404,7 +409,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   row's `$surface-card`, since at 6% the dark card leaves the wax label at
   4.48:1, under the text floor (`tests/scss/tokens.test.ts` holds both). It
   is sticky at the table's right edge (above). The ground stays with the admin
-  column at 80rem, since the seven columns need about 77rem of frame before
+  column at 80rem, since the columns need about 77rem of frame before
   they stop scrolling, so any window narrower than that, above the stacking
   width, still scrolls them beneath it.
 - **At phone width each row is a card.** Under `$table-stack-width` (40rem)
@@ -417,9 +422,8 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   first line and every other cell spans both. The grid places it, not the
   markup, so the columns and the keyboard order stay the desktop's. An
   admin's card, with no Impersonate, hides the empty cell.
-- **The role and creation cells** each hold the value or mark on the left and
-  the control on the right, centred on one line (MB.59, MB.63, on the
-  owner's call). **The pause** is a row, `.user-list__pause`, centred with a
+- **The role cell** holds the role and the primary admin's crown side by side
+  (`.user-list__role-name`). **The pause** is a row, `.user-list__pause`, centred with a
   `space(3)` gap.
 - **`controls.scss`** holds the rules of the controls that also stand outside
   the table: the confirmation's warning and its Reason field's room (a step
@@ -441,14 +445,12 @@ context row above the column) and the People page with its Users tab open:
 - **States**, one story with a control that chooses: Without Filters, the page as a signed-in admin who is not the primary one sees it (the site's resting state: Pause Admin Changes dashed and locked, in the app shell); Primary Admin, the same page with a usable Pause Admin Changes and each row's Impersonate opening their
   confirmations; Awaiting Approval And Query; Role Filter; No Matches, with every filter set, so the
   sentence names all three; Without Impersonation, where impersonation is
-  not registered; Unverified Approval, Admin Roles, Admin Changes Paused
+  not registered; Admin Roles, Admin Changes Paused
   and Admin Changes Not Primary, each name led by its privilege changes icon,
   whose tip shows on hover or focus; the list holds an admin, a user awaiting
-  approval and an approved user, whose Yes stands alone, since Revoke is the user modal's;
-  Impersonate is red, in its red-ruled column at the right. Unverified Approval
-  holds two users awaiting approval, one unverified and one verified, so the
-  first's Approve opens the warning (MB.205) and the second's does not.
-  Admin Roles holds the primary admin, its Change Role unusable with the reason beside it, a second admin, a curator (bold, with no coven-creation control) and users, each Change Role opening its modal, Bo's with the warning on a promotion (MB.59, M11.20). Admin Changes Paused
+  approval and an approved user, each Can Create a mark alone, since Approve, Revoke and Change Role are the user modal's;
+  Impersonate is red, in its red-ruled column at the right.
+  Admin Roles holds the primary admin with its crown, a second admin, a curator (bold) and users. Admin Changes Paused
   shows the switch paused with the primary admin's Resume, and
   Admin Changes Not Primary the switch on, unusable, with its reason (MB.63).
   Middle Page is a middle page of 25, both pager ends live and
@@ -470,19 +472,13 @@ the history link before every name and its address; each name a link to its
 `openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
-while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back; the creation cell: Approve on rows awaiting approval, and nothing on approved rows or on a curator's or an admin's, each modal naming the user and its
-focus, Cancel sending nothing, each call with its reason and its busy state
-until the refresh, the success said in the status region, and the refusal under the button; the unverified warning
-describing Approve for an unverified user, who is still approved; the role cell (MB.59, M11.20): Change Role on every row, offering every role but the one held, Promote or Demote by the ladder with a demotion styled destructive, the chosen role and the reason sent trimmed or not at all, Cancel sending nothing, the warning on a promotion of an unverified user and on no demotion, the promotion said in the status region, the refusal under the button, and the primary admin's crown and its `aria-disabled` Change Role, described by the
-reason and raising an alert each time it is tried, sending nothing; the
+while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back; no Change Role, Approve or Revoke on any row, a user awaiting approval included; the
 switch on admin changes (MB.63): no notice while on and one while paused,
 Pause asking first with Cancel sending nothing, Pause's confirm and Resume
 busy until the refresh and then said in the status region, a refusal under the button pressed, Resume's included, and another
 admin's locked switch, described by its reason and raising an alert when
-tried; and, while paused, every Change Role and Approve locked for another admin and described by the pause, the primary admin's
-Approve usable, nothing locked while changes are on, and the primary admin's
-Change Role kept on its own reason — which of the two reasons won is told by
-which of the two strings describes it. It also covers the time-out and pause columns: a check with its end, dated or open, and a cross for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
+tried. The role and creation controls' tests are the user modal's
+(`tests/components/UserDetail/role-and-creation.test.tsx`, [`user-detail.md`](user-detail.md)). It also covers the time-out and pause columns: a check with its end, dated or open, and a cross for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
 are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, `awaiting` read by its presence, and the count behind the
@@ -491,16 +487,15 @@ their covens as the guard's session into a dialog, each name's link keeping the
 filter, and the notice with no dialog, and no read, for an id that is not one,
 and the notice for a user the service finds none of or the list leaves out.
 The batched finders' own tests, in `tests/modules/identity/schema/user-access-pauses-schema.test.ts` and `tests/modules/support/schema/support-timeouts-schema.test.ts`, return only a standing row of a user asked for, never one run out, lifted, deleted or another user's; the services' tests keep the ids' order and refuse a curator and a plain user.
-`tests/e2e/admin.spec.ts` approves and revokes a user against the built
-server, and changes a role through the dialog with a reason, with axe over each open
-modal; and, tagged `@story-19`, opens a user's modal from their name, finds
+`tests/e2e/stories/08-email-and-admin.spec.ts` approves a user and changes roles through the user modal against the built
+server, with a reason, axe over each question, the primary admin's and a paused admin's locked Change Role, and a refused demotion said in the modal. `tests/e2e/admin.spec.ts` reads a row's cells; and `tests/e2e/stories/07-admin.spec.ts`, tagged `@story-19`, opens a user's modal from their name, finds
 their coven and role in it, no link to the coven and no Impersonate (the run
 registers none), axe over it, and Close back to the filtered list, then
 `?user=not-an-id` showing the notice and no dialog.
 
 ## Actions that ask first
 
-The creation control, the role control, Impersonate, the pause switch and the invitations' Revoke share one kind of action: it asks in a modal first. The modal's confirm sends the write and stays busy until the page is read again, or left. A success says its `announcement` in the page's status region, for a screen reader, beside the result the page shows. The service is the guard. This only puts the question where an admin looks.
+The creation control and the role control (both in the user modal), Impersonate, the pause switch and the invitations' Revoke share one kind of action: it asks in a modal first. The modal's confirm sends the write and stays busy until the page is read again, or left. A success says its `announcement` in the page's status region, for a screen reader, beside the result the page shows. The service is the guard. This only puts the question where an admin looks.
 
 A refusal closes the modal, gives the focus back to the button that opened it, and says why in a callout under that button (`useClickFeedback`). The callout floats rather than taking room in a row.
 
@@ -521,7 +516,7 @@ Before vouching for an unverified address the action shows a warning. An admin's
 
 ## Locked controls
 
-A control that cannot be used says why. This covers the primary admin's Change Role, every Change Role while admin changes are paused to an admin the pause binds, and the pause switch itself to any admin but the primary one.
+A control that cannot be used says why. This covers the primary admin's Change Role in the user modal, every Change Role and Approve or Revoke while admin changes are paused to an admin the pause binds, and the pause switch itself to any admin but the primary one.
 
 - It is `aria-disabled` rather than `disabled`, so it keeps its place in the tab order and a click still lands, which says why rather than doing nothing.
 - The reason is the button's description, in a tip that opens on hover, focus and a tap, stays open while the pointer is on it and closes on Escape (WCAG 1.4.13), through InfoTip's `useTip`. Each attempt also mounts the tip afresh as an alert, so a screen reader hears the reason again.
@@ -543,6 +538,6 @@ The filter sits in the shared `FilterForm`. Only the search text is held in the 
 
 ## The list's stylesheet
 
-The user list's own rules cover its cells' alignment, the marks and logos with their tips, the history link, the role and creation cells, the sticky Impersonate column and how it gives way when the table stacks into cards, and the pause beside the page's heading. The column, filter, table and pager are primitives (`.list-frame`, `.filter-row`, `.data-table` with `--stack`, `.pager`). Above the stacking width the seven columns keep their order, restyled: rows a step taller, the read-only facts muted at the caption size, every control at the end of its cell.
+The user list's own rules cover its cells' alignment, the marks and logos with their tips, the history link, the role cell, the sticky Impersonate column and how it gives way when the table stacks into cards, and the pause beside the page's heading. The column, filter, table and pager are primitives (`.list-frame`, `.filter-row`, `.data-table` with `--stack`, `.pager`). Above the stacking width the columns keep their order, restyled: rows a step taller, the read-only facts muted at the caption size, every control at the end of its cell.
 
 No cell wraps, heading or body, since the table scrolls inside its frame. A row stays one line however narrow the screen, and its rows are a step taller (`.data-table--nowrap` and `--roomy`, through DataTable). Borders are separate, not the primitive's collapsed ones, so each rule belongs to its own cell. A collapsed rule belongs to the table's grid, and the headings' muted hairline was drawn across the sticky Impersonate heading's red one as the columns scrolled beneath it.

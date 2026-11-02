@@ -8,12 +8,13 @@ import { SUPPORT_VIEWS } from '../../lib/support-path';
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
-import { notSoftDeleted } from './predicates';
+import { noEndOrAhead, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
   AuditWriter,
   SortPart,
+  StandingTimeout,
   SupportReader,
   SupportMenuCounts,
   SupportStatusCounts,
@@ -258,18 +259,30 @@ export function findOwnSupportFollowUp(userId: string, id: string) {
   );
 }
 
-/** When the sender's latest live time-out ends, or `undefined` with none in force. */
-export async function findActiveSupportTimeoutEnd(userId: string): Promise<Date | undefined> {
+/**
+ * The end of the time-out standing on the sender, latest first, `until` null when one has no end date; `undefined` when none
+ * stands.
+ */
+export async function findStandingSupportTimeout(
+  userId: string,
+): Promise<StandingTimeout | undefined> {
   const rows = await selectFrom(
     supportTimeouts,
     and(
       notSoftDeleted(supportTimeouts),
       eq(supportTimeouts.userId, userId),
       isNull(supportTimeouts.liftedAt),
-      sql`${supportTimeouts.until} > now()`,
+      noEndOrAhead(supportTimeouts.until),
     ),
   );
-  return rows.map((row) => row.until).sort((x, y) => y.getTime() - x.getTime())[0];
+  return latestEnd(rows);
+}
+
+/** The latest end among standing time-outs: none at all wins over any date. */
+function latestEnd(rows: readonly { until: Date | null }[]): StandingTimeout | undefined {
+  if (rows.length === 0) return undefined;
+  if (rows.some((row) => row.until === null)) return { until: null };
+  return { until: new Date(Math.max(...rows.map((row) => row.until?.getTime() ?? 0))) };
 }
 
 /** A time-out by id, for an admin to lift. */
@@ -361,7 +374,7 @@ export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: reado
       notSoftDeleted(supportTimeouts),
       inArray(supportTimeouts.userId, [...userIds]),
       isNull(supportTimeouts.liftedAt),
-      sql`${supportTimeouts.until} > now()`,
+      noEndOrAhead(supportTimeouts.until),
     ),
   );
 }
@@ -464,15 +477,10 @@ export function supportWrites({
             notSoftDeleted(supportTimeouts),
             eq(supportTimeouts.userId, userId),
             isNull(supportTimeouts.liftedAt),
-            sql`${supportTimeouts.until} > now()`,
+            noEndOrAhead(supportTimeouts.until),
           ),
         );
-      return {
-        recent: recent.length,
-        timedOutUntil: timeouts
-          .map((row) => row.until)
-          .sort((x, y) => y.getTime() - x.getTime())[0],
-      };
+      return { recent: recent.length, timedOut: latestEnd(timeouts) };
     },
   };
 }

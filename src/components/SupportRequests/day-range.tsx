@@ -22,13 +22,3 @@ export const LocalDay = ({ at, year = true }: { at: Date; year?: boolean }): Rea
   );
   return <time dateTime={at.toISOString()}>{text}</time>;
 };
-
-/** Two days as `3 Oct – 10 Oct 2026`; the first carries its year only when it differs from the second's. */
-export const DayRange = ({ from, to }: { from: Date; to: Date }): ReactElement => {
-  const sameYear = from.getUTCFullYear() === to.getUTCFullYear();
-  return (
-    <>
-      <LocalDay at={from} year={!sameYear} /> – <LocalDay at={to} />
-    </>
-  );
-};

@@ -6,7 +6,7 @@ import {
   findUserAccessPausePage,
   withAudit,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { Forbidden, NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -28,10 +28,6 @@ const PAST_END = 'Choose a time in the future';
 const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
 const NO_NOTE = 'Write a note saying why';
 const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
-
-// Each sentence is also the error's message, which is what the admin's form shows, since it names no field.
-const refusal = (path: string, message: string) =>
-  new ValidationError([{ path: [path], message }], message);
 
 /**
  * Pauses a user's access until `until`, or with no end when `until` is `null`, and ends every session they hold. Pausing
@@ -56,11 +52,11 @@ export async function pauseUserAccess(
     until != null &&
     (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
   ) {
-    throw refusal('until', PAST_END);
+    throw fieldRefusal('until', PAST_END);
   }
-  if (!trimmed) throw refusal('note', NO_NOTE);
+  if (!trimmed) throw fieldRefusal('note', NO_NOTE);
   if (trimmed.length > NOTE_MAX_LENGTH) {
-    throw refusal('note', LONG_NOTE);
+    throw fieldRefusal('note', LONG_NOTE);
   }
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
@@ -68,7 +64,7 @@ export async function pauseUserAccess(
   if (user.id === session.userId) throw new Forbidden(SELF_REFUSAL);
   if (user.role === 'admin') await assertChangesOpen(session, admin);
   if (await findStandingUserAccessPause(user.id)) {
-    throw refusal('userId', ALREADY_PAUSED);
+    throw fieldRefusal('userId', ALREADY_PAUSED);
   }
   return withAudit(session, async (write) => {
     const [row] = await write.setUserAccessPause(admin, user.id, {

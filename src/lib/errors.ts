@@ -55,6 +55,10 @@ export class ValidationError extends Error {
   }
 }
 
+/** A refusal of one field whose sentence is also the error's message, for a form that shows the message rather than the field. */
+export const fieldRefusal = (path: string, message: string): ValidationError =>
+  new ValidationError([{ path: [path], message }], message);
+
 /**
  * A pagination cursor that names no position in the list: malformed, forged, or from a list sorted on another column. The input is
  * wrong, not the actor refused, and never read as "from the start", which would hand back a page nobody asked for.

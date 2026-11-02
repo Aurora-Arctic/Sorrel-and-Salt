@@ -1,6 +1,6 @@
 import 'server-only';
 import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
@@ -10,34 +10,43 @@ import type { SupportTimeoutRow } from '../types';
 
 const REFUSAL = 'Only a site admin may time out or restore a support sender';
 const NOTE_MAX_LENGTH = 500;
+const PAST_END = 'Choose a time in the future';
+const NO_NOTE = 'Write a note saying why';
+const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
 
 /**
- * Stops a user sending support requests until `until`. Their earlier requests stay, and staff may still reply to them.
+ * Stops a user sending support requests until `until`, or with no end date when `until` is `null`, for the reason `note`
+ * gives. Their earlier requests stay, and staff may still reply to them. Each refusal's sentence is also the error's message,
+ * which is what the panel shows.
  *
  * @throws {Forbidden} the session is not an admin.
  * @throws {NotFound} no live user has this id.
- * @throws {ValidationError} `until` is not in the future, or the note is over 500 characters.
+ * @throws {ValidationError} `until` is not in the future, or the note is missing, blank or over 500 characters.
  */
 export async function timeOutSupportSender(
   session: Session,
   userId: string,
-  until: Date,
-  note: string | null | undefined,
+  until: Date | null | undefined,
+  note: string,
 ): Promise<SupportTimeoutRow> {
   assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
-  const trimmed = note?.trim() || null;
-  if (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now()) {
-    throw new ValidationError([{ path: ['until'], message: 'Choose a time in the future' }]);
+  const trimmed = typeof note === 'string' ? note.trim() : '';
+  if (
+    until != null &&
+    (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
+  ) {
+    throw fieldRefusal('until', PAST_END);
   }
-  if (trimmed && trimmed.length > NOTE_MAX_LENGTH) {
-    throw new ValidationError([
-      { path: ['note'], message: `Keep the note to ${NOTE_MAX_LENGTH} characters` },
-    ]);
-  }
+  if (!trimmed) throw fieldRefusal('note', NO_NOTE);
+  if (trimmed.length > NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
   if (!(await findOneById(users, id))) throw new NotFound('No such user');
   return withAudit(session, async (write) => {
-    const [row] = await write.insert(supportTimeouts, { userId: id, until, note: trimmed });
+    const [row] = await write.insert(supportTimeouts, {
+      userId: id,
+      until: until ?? null,
+      note: trimmed,
+    });
     return row as SupportTimeoutRow;
   });
 }

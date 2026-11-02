@@ -5,7 +5,7 @@ import type { Session } from '@/lib/session';
 import {
   getMySupportFollowUpId,
   getMySupportRequest,
-  getMySupportTimeoutEnd,
+  getMySupportTimeout,
   repliesForRequests,
 } from '@/modules/support';
 
@@ -22,10 +22,10 @@ export const readOpenedRequest = cache(
       if (error instanceof NotFound) return undefined;
       throw error;
     }
-    const [[replies], followUpId, timedOutUntil] = await Promise.all([
+    const [[replies], followUpId, timedOut] = await Promise.all([
       repliesForRequests(session, [row.id]),
       row.status === 'closed' ? getMySupportFollowUpId(session, row.id) : null,
-      getMySupportTimeoutEnd(session),
+      getMySupportTimeout(session),
     ]);
     return {
       id: row.id,
@@ -43,7 +43,7 @@ export const readOpenedRequest = cache(
         fromSender: authorRole === 'sender',
       })),
       followUpId,
-      timedOutUntil,
+      timedOut,
     };
   },
 );

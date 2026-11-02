@@ -1,12 +1,9 @@
 import type { ReactElement } from 'react';
 import UserListFilter from './filter';
-import CreationControl from './creation-control';
 import { Mark, ProviderLogo } from './marks';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
-import { changesLocked } from './lock';
 import PrimaryAdminMark from './primary-admin-mark';
-import RoleControl from './role-control';
 import UserLink from './user-link';
 import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import RoleTip from '../RoleTip';
@@ -41,13 +38,9 @@ function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string
 /**
  * The columns, in table order. Impersonate is last, and only
  * where impersonation is registered: an action, its cell unlabelled as a
- * card, at the card's top right beside the name. `changesPaused`: admin
- * changes are paused and the viewer is not the primary admin.
+ * card, at the card's top right beside the name.
  */
-const columns = (
-  canImpersonate: boolean,
-  changesPaused: boolean,
-): readonly (StackColumn<UserListEntry> | false)[] => [
+const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> | false)[] => [
   {
     heading: 'Name',
     // The way into their privilege history, then the name, on every
@@ -76,69 +69,46 @@ const columns = (
   },
   {
     heading: 'Role',
-    // An admin's or curator's role in bold, each role with the tip saying what it may do, with the
-    // control that changes it on the right: one column, as Coven Creation holds its own. The primary
-    // admin carries a crown with a tip, and its Change Role's tip says why it cannot be used.
+    // An admin's or curator's role in bold, each role with the tip saying what it may do. The primary
+    // admin carries a crown with a tip. Change Role is the user modal's, so the row is an index into it.
     cell: (user) => (
-      <div className="user-list__role">
-        <span className="user-list__role-name">
-          <RoleTip
-            label={roleLabel(user.role)}
-            description={SITE_ROLE_ACCESS[user.role]}
-            emphasis={user.role !== 'user'}
-          />
-          {user.primaryAdmin && <PrimaryAdminMark />}
-        </span>
-        {/* Keyed by the role, so the refresh after a change mounts a fresh
-            control offering the others rather than keeping this one's busy state. */}
-        <RoleControl
-          key={user.role}
-          userId={user.id}
-          name={user.name}
-          emailVerified={user.emailVerified}
-          primaryAdmin={user.primaryAdmin}
-          paused={changesPaused}
-          role={user.role}
+      <span className="user-list__role-name">
+        <RoleTip
+          label={roleLabel(user.role)}
+          description={SITE_ROLE_ACCESS[user.role]}
+          emphasis={user.role !== 'user'}
         />
-      </div>
+        {user.primaryAdmin && <PrimaryAdminMark />}
+      </span>
     ),
   },
   {
-    heading: 'Coven Creation',
-    // Whether they may, and Approve beside a No; Revoke is the user modal's alone, so the
-    // row is an index into it. None on an admin's or a curator's row, whom the users CHECK
-    // holds to the flag.
+    heading: 'Can Create',
+    // Whether they may create covens. Approve and Revoke are the user modal's.
     cell: (user) => (
-      <div className="user-list__creation">
-        <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
-        {user.role === 'user' && !user.canCreateWorkspace && (
-          <CreationControl
-            userId={user.id}
-            name={user.name}
-            emailVerified={user.emailVerified}
-            paused={changesPaused}
-            action="approve"
-          />
-        )}
-      </div>
+      <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
     ),
   },
   {
-    heading: 'Support Time-Out',
-    // Whether a time-out stands on them now, its end in the tip; one run out or lifted is a cross.
-    cell: (user) =>
-      user.supportTimeoutUntil ? (
+    heading: 'Time-Out',
+    // Whether a time-out stands on them now, its end or that it has none in the tip; one run out or lifted is a cross.
+    cell: ({ supportTimeout }) =>
+      supportTimeout ? (
         <Mark
           value
-          label={`Timed out until ${inUtc(user.supportTimeoutUntil)}`}
-          tip={`Until ${inUtc(user.supportTimeoutUntil)}`}
+          label={
+            supportTimeout.until
+              ? `Timed out until ${inUtc(supportTimeout.until)}`
+              : 'Timed out with no end date'
+          }
+          tip={supportTimeout.until ? `Until ${inUtc(supportTimeout.until)}` : 'No end date'}
         />
       ) : (
         <Mark value={false} label="Not timed out" />
       ),
   },
   {
-    heading: 'Site Access Paused',
+    heading: 'Paused',
     // Whether a pause stands on their access now, its end or that it has none in the tip.
     cell: ({ accessPause }) =>
       accessPause ? (
@@ -156,7 +126,7 @@ const columns = (
       ),
   },
   {
-    heading: 'Sign-In Methods',
+    heading: 'Logins',
     // Logos, empty when none: a blank reads as none.
     // This and Signed Up are facts no control changes, so muted (index.scss).
     className: 'user-list__fact',
@@ -198,7 +168,6 @@ const UserList = ({
   nextHref,
   position,
   canImpersonate = false,
-  adminChanges,
 }: UserListProps): ReactElement => (
   <ListFrame className="user-list">
     <UserListFilter
@@ -211,7 +180,7 @@ const UserList = ({
     <ListBody>
       {/* Roomy, and each cell on one line, the table scrolling in its frame. */}
       <StackTable
-        columns={columns(canImpersonate, Boolean(adminChanges && changesLocked(adminChanges)))}
+        columns={columns(canImpersonate)}
         rows={users}
         rowKey={(user) => user.id}
         empty={noMatch({ query, role, awaitingApproval })}

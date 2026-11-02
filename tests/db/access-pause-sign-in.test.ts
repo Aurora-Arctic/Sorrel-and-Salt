@@ -249,7 +249,7 @@ describe('a paused account signs in by every method, into support alone', () => 
     // The precondition: the paused session sends, so the time-out, not the pause, refuses the next.
     expect((await graphql(cookie, SEND, { input: REQUEST })).errors).toBeUndefined();
 
-    await timeOutSupportSender(asUser(E), id, inADay(), null);
+    await timeOutSupportSender(asUser(E), id, inADay(), 'A fixture time-out');
 
     const refused = await graphql(cookie, SEND, { input: REQUEST });
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');

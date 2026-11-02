@@ -33,6 +33,7 @@ const RoleControl = ({
   userId,
   name,
   currentRole,
+  inModal = false,
 }: RoleControlProps): ReactElement => {
   // Every role but the one held now: choosing it would change nothing.
   const options = ROLES.filter((candidate) => candidate !== currentRole);
@@ -71,6 +72,8 @@ const RoleControl = ({
         />
       )}
       closeOnSent
+      inModal={inModal}
+      refusalInModal="callout"
       busy={promoting ? 'Promoting' : 'Demoting'}
       confirmClass={promoting ? 'btn btn--solid' : 'btn btn--destructive'}
       announcement={`${name} is now ${workspaceRoleLabel(chosen)}.`}

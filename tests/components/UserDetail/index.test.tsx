@@ -331,6 +331,15 @@ describe('UserDetail, when the service refuses a change', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
       },
     },
+    {
+      control: 'Approve Bo Fixturewort',
+      operation: 'GrantWorkspaceCreation',
+      message: 'Fixture refusal of the approval.',
+      user: BO,
+      confirm: () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+      },
+    },
   ];
 
   for (const refusal of REFUSALS) {

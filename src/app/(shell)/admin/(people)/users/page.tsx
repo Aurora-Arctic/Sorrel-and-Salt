@@ -68,7 +68,7 @@ const readUsers = cache(
       return {
         ...node,
         providers: linked,
-        supportTimeoutUntil: timeouts[index]?.until,
+        supportTimeout: timeouts[index] ? { until: timeouts[index].until } : undefined,
         accessPause: pauses[index] ? { until: pauses[index].until } : undefined,
         primaryAdmin: isPrimaryAdmin(node),
         // Its modal over this page, the filter and cursor kept, under the head the loaded modal
@@ -127,7 +127,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         awaitingApproval={awaitingApproval}
         role={role}
         canImpersonate={canImpersonate}
-        adminChanges={adminChanges}
         position={position}
         {...pagerHrefs(pageInfo, (cursor) =>
           userListHref({ query, awaitingApproval, role }, cursor),

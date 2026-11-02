@@ -68,9 +68,9 @@ export const PauseFields = ({
   onDay,
   note,
   onNote,
-  noteRequired = false,
   noteHint,
   notePlaceholder,
+  noteRequired = false,
 }: PauseFieldsProps): ReactElement => {
   const spanId = useId();
   const dayId = useId();
@@ -125,11 +125,20 @@ export const PauseFields = ({
   );
 };
 
-/** Earlier pauses, each as when it was set, its end, who set it and, where lifted, who lifted it and when. */
-export const Ledger = ({ pauses }: { pauses: readonly AccessPauseEntry[] }): ReactElement => (
+/**
+ * Earlier pauses, each as when it was set, its end, who set it and, where lifted, who lifted it and when. A support
+ * time-out has the same shape, so its panel lists its earlier ones here under its own `title`.
+ */
+export const Ledger = ({
+  pauses,
+  title = 'Earlier Pauses',
+}: {
+  pauses: readonly AccessPauseEntry[];
+  title?: string;
+}): ReactElement => (
   <div className="timeout-panel__ledger">
-    <h4 className="timeout-panel__ledger-title">Earlier Pauses</h4>
-    <ul className="timeout-panel__list" aria-label="Earlier Pauses">
+    <h4 className="timeout-panel__ledger-title">{title}</h4>
+    <ul className="timeout-panel__list" aria-label={title}>
       {pauses.map((pause) => (
         <li key={pause.id}>
           <span className="timeout-panel__ledger-line">

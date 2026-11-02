@@ -1236,9 +1236,9 @@ type Mutation {
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
   """
-  Bars a user from sending support requests until `until`. Site admins only.
+  Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.
   """
-  timeOutSupportSender(note: String, until: DateTime!, userId: ID!): SupportTimeout!
+  timeOutSupportSender(note: String!, until: DateTime, userId: ID!): SupportTimeout!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
@@ -2705,14 +2705,14 @@ enum SupportStatus {
 }
 
 """
-A bar on a user sending support requests until `until`, unless lifted sooner.
+A bar on a user sending support requests until `until`, or with no end when `until` is null, unless lifted sooner.
 """
 type SupportTimeout {
   audit: AuditInfo!
   id: ID!
   liftedAt: DateTime
-  note: String
-  until: DateTime!
+  note: String!
+  until: DateTime
   userId: ID!
 }
 

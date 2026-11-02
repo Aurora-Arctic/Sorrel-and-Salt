@@ -369,8 +369,8 @@ describe('Story 58: an account under a support time-out is still removed, with i
   it('removes a lapsed account holding a standing support time-out, and the time-out with it', async () => {
     const squatter = await squat(OWNER);
     await sql`
-      insert into support_timeouts (user_id, until, created_by, updated_by)
-      values (${squatter.row.id}, now() + interval '1 day', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+      insert into support_timeouts (user_id, until, note, created_by, updated_by)
+      values (${squatter.row.id}, now() + interval '1 day', 'Spam', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
     `;
     await backdate(squatter.row.id, EXPIRED);
     // Why this could have been kept: the time-out row names the account.

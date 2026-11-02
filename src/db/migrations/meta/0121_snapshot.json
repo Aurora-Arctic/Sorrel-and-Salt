@@ -1,5 +1,5 @@
 {
-  "id": "f781f569-d82d-48b9-9974-7cdb3d28d881",
+  "id": "6fc8a6c9-d2fa-455e-8325-7c9e213501fb",
   "prevId": "eba70fc1-d622-4556-b382-b0291ea85994",
   "version": "7",
   "dialect": "postgresql",
@@ -2691,7 +2691,7 @@
           "name": "note",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "lifted_at": {
           "name": "lifted_at",
@@ -2813,10 +2813,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "user_access_pauses_note_not_blank": {
-          "name": "user_access_pauses_note_not_blank",
-          "value": "\"user_access_pauses\".\"note\" ~ '[^[:space:]]'"
-        },
         "user_access_pauses_lifted_together": {
           "name": "user_access_pauses_lifted_together",
           "value": "(\"user_access_pauses\".\"lifted_at\" is null) = (\"user_access_pauses\".\"lifted_by\" is null)"
@@ -6518,13 +6514,13 @@
           "name": "until",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "note": {
           "name": "note",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "lifted_at": {
           "name": "lifted_at",
@@ -6636,7 +6632,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "support_timeouts_note_not_blank": {
+          "name": "support_timeouts_note_not_blank",
+          "value": "btrim(\"support_timeouts\".\"note\") <> ''"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.celestial_bodies": {

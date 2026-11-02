@@ -348,8 +348,8 @@ const SUPPORT_REPLIES: readonly SeedReply[] = [
 interface SeedTimeout {
   id: string;
   userId: string;
-  /** Days from the first run: negative is in the past. */
-  untilInDays: number;
+  /** Days from the first run: negative is in the past, null for a time-out with no end date. */
+  untilInDays: number | null;
   /** Days before the first run. */
   daysAgo: number;
   liftedDaysAgo?: number;
@@ -357,7 +357,7 @@ interface SeedTimeout {
 }
 
 // D has a time-out in force and an earlier one an admin lifted, C one that has run out, B one an admin lifted early, and I
-// (seeded beside its site access pause, `sanctioned-users.ts`) one in force for a year: a time-out always has an end.
+// (seeded beside H's site access pause, `sanctioned-users.ts`) one with no end date.
 const SUPPORT_TIMEOUTS: readonly SeedTimeout[] = [
   {
     id: '00000000-0000-0000-0005-000000000201',
@@ -392,7 +392,7 @@ const SUPPORT_TIMEOUTS: readonly SeedTimeout[] = [
   {
     id: '00000000-0000-0000-0005-000000000205',
     userId: I.id,
-    untilInDays: 365,
+    untilInDays: null,
     daysAgo: 2,
     note: 'Sent a request every hour for a day.',
   },
@@ -505,7 +505,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
     () => E.id,
     (t) => ({
       userId: t.userId,
-      until: new Date(now + t.untilInDays * DAY),
+      until: t.untilInDays === null ? null : new Date(now + t.untilInDays * DAY),
       note: t.note,
       liftedAt: t.liftedDaysAgo === undefined ? null : ago(t.liftedDaysAgo),
     }),

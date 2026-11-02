@@ -21,7 +21,7 @@ const request = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderRe
   errorCode: null,
   replies: [],
   followUpId: null,
-  timedOutUntil: null,
+  timedOut: null,
   ...over,
 });
 
@@ -161,7 +161,7 @@ describe('SupportSenderRequest', () => {
   it('shuts the box and the button while timed out, with the end time in a notice above them', () => {
     render(
       <SupportSenderRequest
-        request={request({ timedOutUntil: new Date('2999-01-01T00:00:00Z') })}
+        request={request({ timedOut: { until: new Date('2999-01-01T00:00:00Z') } })}
       />,
     );
     const notice = screen.getByText('You cannot reply until 2999-01-01 00:00 UTC.');
@@ -169,6 +169,15 @@ describe('SupportSenderRequest', () => {
     expect(box).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
     expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shuts the box and the button while timed out with no end date, and says it has none', () => {
+    render(<SupportSenderRequest request={request({ timedOut: { until: null } })} />);
+    expect(
+      screen.getByText('You cannot reply: you are timed out with no end date.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Your Reply' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
   });
 
   it('shows no notice and an open box with no time-out', () => {
