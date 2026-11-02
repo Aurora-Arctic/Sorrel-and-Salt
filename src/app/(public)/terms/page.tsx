@@ -57,7 +57,7 @@ export default function TermsOfUsePage() {
       <p>
         Your account is yours alone. Keep your sign-in details to yourself, and tell us through the{' '}
         <SupportLink about="account">support form</SupportLink> if you think someone else has used
-        them.
+        them without your permission.
       </p>
 
       <h2>What Is Yours</h2>
