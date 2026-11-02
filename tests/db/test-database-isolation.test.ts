@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '@/db/connection';
 
-// db-setup.ts points this worker's DATABASE_URL at the clone made for its pool slot.
+// db-runner.ts points this worker's DATABASE_URL at the clone made for its pool slot.
 describe('per-worker test database', () => {
   it('connects to a database named for this worker, not sorrel or sorrel_template', async () => {
     const [{ current_database: name }] = await db.execute<{ current_database: string }>(

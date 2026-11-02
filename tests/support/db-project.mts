@@ -32,14 +32,14 @@ export const dbMaxWorkers = Math.max(
 
 /**
  * Each worker on its own `sorrel_test_${VITEST_POOL_ID}` clone of the seeded
- * template, re-cloned before every test file. Slot naming: worker-database.ts.
+ * template, re-cloned by the runner before every test file. Slot naming: worker-database.ts.
  */
 export const dbHarness = {
   environment: 'node',
   globals: true,
   maxWorkers: dbMaxWorkers,
   globalSetup: ['./tests/support/db-global-setup.ts'],
-  setupFiles: ['./tests/support/db-setup.ts'],
+  runner: './tests/support/db-runner.ts',
 } satisfies TestConfig;
 
 export const BOUNDED_POSTGRES_PLUGIN = 'sorrel:bounded-postgres';
