@@ -180,7 +180,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
   // in its address, so the default is the first the viewer may write in. A viewer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
-  const mine = viewer?.workspaces.map(({ id, name }) => ({ id, name })) ?? [];
+  const mine = viewer?.workspaces.map(({ id, name, paused }) => ({ id, name, paused })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];

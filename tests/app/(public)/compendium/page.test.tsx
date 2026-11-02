@@ -252,6 +252,29 @@ describe('the public compendium page, narrowed to the viewer’s covens', () => 
     readCompendium.mockClear();
   });
 
+  it("hands In My Covens each coven's pause as the shell read it, a paused coven out of reach", async () => {
+    const shell = shellOf(true, true);
+    viewerIfSignedIn.mockResolvedValue({
+      ...shell,
+      workspaces: [
+        { ...shell.workspaces[0]!, canWrite: false, paused: { until: null } },
+        { ...shell.workspaces[1]!, paused: null },
+      ],
+    });
+    await renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+    fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
+
+    const paused = screen.getByRole('option', { name: /Coven 0/ });
+    expect(paused).toHaveAccessibleName('Coven 0 Paused, with no end date');
+    expect(paused).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('option', { name: 'Coven 1' })).not.toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
   it('reads the list and the counts through the cached reads when no coven is picked', async () => {
     viewerIfSignedIn.mockResolvedValue(shellOf(true, false));
     await renderPage();

@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
-import { inUtc } from '../../lib/utc';
+import { pauseNote } from '../../lib/pause-note';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
 import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
@@ -41,9 +41,7 @@ export default function WorkspaceSwitcher({
   const choices = workspaces.map(({ slug, name, paused }) => ({
     value: slug,
     label: name,
-    ...(paused && {
-      note: paused.until ? `Paused until ${inUtc(paused.until)}` : 'Paused, with no end date',
-    }),
+    ...(paused && { note: pauseNote(paused) }),
   }));
 
   useEffect(() => {
