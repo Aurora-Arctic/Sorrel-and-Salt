@@ -1,10 +1,14 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The score bar's height: no token sizes a meter, so this is the one value past them.
 $bar-height: 0.5rem;
 
+// A hairline closes the panel off from the References field beneath, as the form's sections are ruled.
 .sourcing-score {
   margin-block-end: space(4);
+  padding-block-end: space(4);
+  border-block-end: 1px solid $hairline;
 }
 
 .sourcing-score__head {
@@ -43,9 +47,8 @@ $bar-height: 0.5rem;
 .sourcing-score__facts {
   display: grid;
   gap: space(1);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  // Not a bulleted list: the global `ul li::before` draws a ✦ marker, which in a grid would be a cell.
+  @include list-reset;
 }
 
 .sourcing-score__fact {
