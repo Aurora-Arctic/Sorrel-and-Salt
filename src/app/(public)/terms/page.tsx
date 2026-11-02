@@ -140,8 +140,8 @@ export default function TermsOfUsePage() {
           another.
         </li>
         <li>
-          <strong>Up to what point:</strong> the site charges nothing, so the most the people who
-          run it will owe you for any claim about it is what you paid them for it.
+          <strong>Up to what point:</strong> the most the people who run the site will owe you for
+          any claim about it is what you paid them for it.
         </li>
         <li>
           <strong>What this cannot remove:</strong> any liability the law does not let a site
