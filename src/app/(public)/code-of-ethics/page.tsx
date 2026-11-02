@@ -26,7 +26,7 @@ export default function CodeOfEthicsPage() {
       <p>
         This code is part of the <Link href="/terms">Terms of Use</Link>. Its section "What Everyone
         Agrees To" binds every account that agrees to the terms, and its sections for curators,
-        admins and the owner bind whoever holds that role.
+        admins, developers and the owner bind whoever holds that role.
       </p>
       <h2>The Short Version</h2>
       <ul>
@@ -313,6 +313,46 @@ export default function CodeOfEthicsPage() {
         <li>
           An admin's role gives you nothing in any other coven. The site's code refuses it, and so
           do you.
+        </li>
+      </ul>
+
+      <h2>For Developers</h2>
+      <p>
+        A developer writes and runs the site's code, and may be able to reach its database and
+        servers. A developer agrees to everything above, and to this:
+      </p>
+      <ul>
+        <li>
+          You look at people's data only to fix a problem with the site, and only as much of it as
+          the problem needs.
+        </li>
+        <li>
+          You keep private things private in the code itself: the site checks who may see something
+          before it fetches it, never after. When you change who can see what, you test that the
+          wrong person really can't reach it.
+        </li>
+        <li>
+          Every change to the site's data is recorded with the account that made it. You never add a
+          way around that record.
+        </li>
+        <li>
+          You add no advertising. Analytics run only on the site's own servers, never in a visitor's
+          browser, and the Privacy Policy names the analytics service and what each visit records
+          before it starts.
+        </li>
+        <li>
+          When a change alters what the site stores, who can see it or how long it is kept, you
+          update the Privacy Policy in the same change.
+        </li>
+        <li>
+          You fix accessibility bugs first, and you keep the automated accessibility checks passing.
+        </li>
+        <li>
+          The site's code and its task board are public. You never put a password, key, token or
+          anyone's personal details in the code, an issue or a comment.
+        </li>
+        <li>
+          When you find a security problem, you tell the owner at once and fix it before other work.
         </li>
       </ul>
 
