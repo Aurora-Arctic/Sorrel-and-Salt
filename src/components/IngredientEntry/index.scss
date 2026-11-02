@@ -409,6 +409,14 @@ $formal-line: $icon-size;
   }
 }
 
+// Past a tablet's width References keeps to the text column, as Stock and Details do; the forms
+// above it span both columns.
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .ingredient-entry__body > .ingredient-entry__references {
+    grid-column: 1;
+  }
+}
+
 :is(.app-shell, .public-frame) .ingredient-entry__references {
   scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
@@ -639,11 +647,4 @@ $replaces-gap: space(5);
   margin-block: 0;
   padding-block-end: 0;
   border-block-end: 0;
-}
-
-// Beside the side column the panel keeps to the text column, the width the body's grid gives it.
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
-  .ingredient-entry__references .sourcing-score {
-    max-inline-size: calc(100% - #{$side-column} - #{space(8)});
-  }
 }
