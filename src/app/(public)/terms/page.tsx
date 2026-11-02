@@ -43,10 +43,7 @@ export default function TermsOfUsePage() {
           The ingredient information here is a reference, not advice. Read the{' '}
           <Link href="/disclaimer">Disclaimer</Link> before you act on any of it.
         </li>
-        <li>
-          Today the site is run by people in their spare time. It may go down, change or end, and we
-          will say so plainly when it does.
-        </li>
+        <li>The site may go down, change or end, and we will say so plainly when it does.</li>
       </ul>
 
       <h2>Who May Use the Site</h2>
@@ -111,8 +108,8 @@ export default function TermsOfUsePage() {
         The tools the site has today for keeping to this are small, and we name them rather than
         promise more. A coven's owner may remove a member from the coven. A site admin may stop a
         person sending support requests for a time, and may take away the right to create covens.
-        There is no button that closes an account, so an admin who needs to close one does it by
-        hand in the database and says so.
+        There is no button that closes an account, so an admin who needs to close one does it and
+        says so.
       </p>
 
       <h2>What the Site Promises, and What It Does Not</h2>
@@ -206,8 +203,8 @@ export default function TermsOfUsePage() {
         You may stop using the site at any time. You can leave any coven from its page. To have your
         account or anything in it erased, ask through the{' '}
         <SupportLink about="privacy">support form</SupportLink>; until an erase-my-account button
-        exists, the site's admin does it by hand and tells you when it is done. What you delete
-        yourself is marked deleted rather than erased, as the Privacy Policy explains.
+        exists, the site's admin does it and tells you when it is done. What you delete yourself is
+        marked deleted rather than erased, as the Privacy Policy explains.
       </p>
 
       <h2>Agreeing to These Terms</h2>
@@ -226,8 +223,7 @@ export default function TermsOfUsePage() {
         at the top, never quietly. When that happens, each account is asked to agree again at its
         next page that needs an account, on the same acceptance page. Anything an account does on
         the site after an update is bound by the updated terms. You can read the new version before
-        you agree to it, and you can come back to this page at any time. The site's code is public,
-        so anyone can check that the terms describe what the code does.
+        you agree to it, and you can come back to this page at any time.
       </p>
 
       <h2>Sources</h2>
