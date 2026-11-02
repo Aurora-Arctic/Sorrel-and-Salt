@@ -341,8 +341,9 @@ export default function PrivacyPolicyPage() {
         <li>
           An account that signed in through a provider but never verified its email lapses an hour
           after its last verification mail, or three hours after it was created, whichever comes
-          first. The next sign-in on the site removes every lapsed account, with its sessions and
-          provider rows.
+          first. A background job started at sign-up removes the account, with its sessions and
+          provider rows, once it lapses, and a daily check removes any lapsed account that job
+          missed.
         </li>
         <li>
           A row that only pairs two things, an ingredient with a category or a spell with a
