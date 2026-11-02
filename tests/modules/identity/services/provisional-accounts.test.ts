@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { expireStep } from '@/modules/identity/jobs/provisional-expiry-steps';
 import {
   ORIGIN,
@@ -67,6 +68,8 @@ beforeEach(async () => {
   // The ledger goes before the users its rows name, and by truncate, since
   // `forbid_rewrite` refuses a delete.
   await sql`truncate user_privilege_changes`;
+  await sql`delete from user_access_pauses where user_id in (${mine})`;
+  await sql`delete from workspace_member_pauses where user_id in (${mine})`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
@@ -319,6 +322,39 @@ describe('Story 58: an account an admin has vouched for is not removed', () => {
 
     expect(await linkedRows(kept)).toEqual({ users: 0, accounts: 0, sessions: 0 });
     expect((await linkedRows(beside)).users).toBe(0);
+  });
+});
+
+// A pause names the account it stops and means nothing without it, so it goes with the account, as its sessions do, rather than
+// keeping a squat alive the way a privilege change does.
+describe('Story 58: a paused account is still removed, with its pauses', () => {
+  async function pauseRows(userId: string) {
+    const [{ site, coven }] = await sql`
+      select
+        (select count(*)::int from user_access_pauses where user_id = ${userId}) as site,
+        (select count(*)::int from workspace_member_pauses where user_id = ${userId}) as coven
+    `;
+    return { site, coven } as { site: number; coven: number };
+  }
+
+  it('removes a lapsed account holding a site pause and a coven pause, and the pauses with it', async () => {
+    const squatter = await squat(OWNER);
+    await sql`
+      insert into user_access_pauses (user_id, created_by, updated_by)
+      values (${squatter.row.id}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `;
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${squatter.row.id}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `;
+    await backdate(squatter.row.id, EXPIRED);
+    // Why this could have been kept: both pause rows name the account.
+    expect(await pauseRows(squatter.row.id)).toEqual({ site: 1, coven: 1 });
+
+    expect(await expireStep(squatter.row.id)).toBeNull();
+
+    expect(await linkedRows(squatter.row.id)).toEqual({ users: 0, accounts: 0, sessions: 0 });
+    expect(await pauseRows(squatter.row.id)).toEqual({ site: 0, coven: 0 });
   });
 });
 

@@ -323,7 +323,9 @@ list is tested, so adding another is a decision, not an edit.
 holding a provider `accounts` row, and either untouched for `lifetimeSeconds` or
 created more than `capSeconds` ago. The expiry job's step calls it. Both ages use the database's own clock, so a
 seeded row nobody can sign in to is never one. Its `accounts` and `sessions` rows
-go with it by `ON DELETE CASCADE`.
+go with it by `ON DELETE CASCADE`, and so do any pauses naming it, site (`user_access_pauses`) and coven
+(`workspace_member_pauses`) alike: a pause means nothing once its account is gone, and keeping the account
+for it would let a squat outlast its window.
 
 An account holding a `user_privilege_changes` row is kept, because an admin has
 vouched for it, and it is not deleted with its rows: the ledger refuses the

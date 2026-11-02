@@ -16,9 +16,10 @@ export const workspaceMemberPauses = namedWrites(
       workspaceId: uuid('workspace_id')
         .notNull()
         .references(() => workspaces.id),
+      // Goes with the user it names: a hard-deleted provisional account takes its pauses, as it takes its sessions.
       userId: uuid('user_id')
         .notNull()
-        .references(() => users.id),
+        .references(() => users.id, { onDelete: 'cascade' }),
       // Null for a pause with no end date.
       until: timestamp('until'),
       note: text('note'),
