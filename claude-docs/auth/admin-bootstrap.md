@@ -522,6 +522,41 @@ the tests [`tests.md`](tests.md).
   the session and the services refuse what a provisional account may not
   do, which is everything but `me` and `setEmail`.
 
+### The terms page (M15.57)
+
+`/account/terms`, protected, is where an account agrees to the terms of use
+(the text is the public page `/terms`). It shows the version and date, links
+the text, and has one Agree & Continue button.
+
+- **The version is one constant.** `TERMS_VERSION` in
+  `src/lib/terms-version.ts` is printed by `/terms` and compared by the gate.
+  Raising it sends every account back through the acceptance page.
+- **The record is two nullable columns on `users`.** `terms_version` and
+  `terms_accepted_at` are null until an account agrees. `agreeToTerms`
+  (`src/modules/identity/services/terms.ts`) writes both for the caller's own
+  row through `withAudit`, and takes no version: it records the one in force,
+  so a caller cannot record another. The GraphQL mutation of the same name
+  returns the row.
+- **The gate is in `requireSession()`, after the email check.** An account
+  whose stored version is not the current one is redirected to
+  `/account/terms?next=<path>`, the path coming from the same
+  proxy-forwarded header and the same `safeReturnPath` guard the email page
+  uses. An unverified account proves its address first and agrees second; the
+  email page and the acceptance page are each exempt, so the two redirects
+  never chase each other. `requireAdminSession()` goes through
+  `requireSession()`, so admin pages are gated too.
+- **After agreeing the browser makes a full navigation** to `next`, or to the
+  signed-in landing page when there is none, so the router does not reuse the
+  cached redirect.
+- **Not gated:** signed-out visitors, `/terms`, the other document pages and
+  the public compendium.
+- **The API is not gated the same way.** `/api/graphql` does not refuse an
+  account that has not agreed; the gate covers pages only, as the entry for
+  M15.57 specifies.
+- **Fixtures have agreed.** The seeded fixture cast and the e2e `signInAs`
+  helper record the current version, so a spec lands where it asks; pass
+  `termsAgreed: false` to walk the gate.
+
 ### The account page (MB.88)
 
 `/account` holds the name the site shows, the address it writes to, and the

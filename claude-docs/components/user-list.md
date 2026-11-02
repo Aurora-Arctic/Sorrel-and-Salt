@@ -235,6 +235,9 @@ head, both built by the page per row, as the other admin lists carry
   renders as an `<output>`, a status, with the warning's look: an alert would
   be read a second time. The `id` the Approve names is the notice's `id`
   prop, and `.user-list__warning` its layout class. A verified user's Approve or promotion, and every Revoke and demotion, carries none. The control takes `emailVerified` from the row for it.
+- **Every role carries a tip saying what it may do**: the word is a
+  [`RoleTip`](role-tip.md), its text `SITE_ROLE_ACCESS[role]`, the same
+  sentence Change Role shows beside that role, so the two never drift.
 - **The Role cell holds one Change Role control** (MB.59, M11.20,
   [`auth/admin-users.md`](../auth/admin-users.md), "Changing a site role"),
   from `role-control.tsx`, beside the role it changes: one column

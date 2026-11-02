@@ -3,6 +3,8 @@ import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { emptyList } from '../../lib/text';
 import { workspaceRoleLabel } from '../UserDetail/roles';
+import RoleTip from '../RoleTip';
+import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
 
@@ -44,14 +46,14 @@ const columns = (
     headingClassName: 'member-list__role-column',
     // An owner in bold, as the admin list sets an admin: the rows to notice.
     // The word differs for all three roles, so the column never relies on
-    // weight alone to tell them apart.
+    // weight alone to tell them apart. Each carries the tip saying what it may do.
     cell: (member) => (
       <div className="member-list__role">
-        {member.role === 'owner' ? (
-          <strong>{workspaceRoleLabel(member.role)}</strong>
-        ) : (
-          <span>{workspaceRoleLabel(member.role)}</span>
-        )}
+        <RoleTip
+          label={workspaceRoleLabel(member.role)}
+          description={WORKSPACE_ROLE_ACCESS[member.role]}
+          emphasis={member.role === 'owner'}
+        />
         {roleAction && <span className="member-list__actions">{roleAction(member)}</span>}
       </div>
     ),

@@ -175,7 +175,7 @@ $track-inset: calc(1px + 0.125rem);
   cursor: not-allowed;
 }
 
-// A list, not bulleted: `typography-base`'s ◆ marker, indent and item margins cleared. The pills keep one line at their own widths and a wider row
+// A list, not bulleted: `typography-base`'s ✦ marker, indent and item margins cleared. The pills keep one line at their own widths and a wider row
 // scrolls inside the track with no scrollbar (claude-docs/components/tabbed-page.md, "The track and the pills").
 .tabbed-page__row {
   display: flex;

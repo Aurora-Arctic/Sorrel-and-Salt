@@ -103,7 +103,7 @@
 .section-nav .section-nav__list > .section-nav__item--apart {
   margin-inline-start: space(3);
 
-  // A hairline, not typography-base's ◆: its shape cleared first, so the
+  // A hairline, not typography-base's ✦: its shape cleared first, so the
   // insets set the line's height.
   &::before {
     @include list-marker-cleared;

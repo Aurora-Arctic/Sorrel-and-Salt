@@ -542,7 +542,7 @@ describe('the /admin/compendium modal', () => {
 
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false });
   });
 });
 
@@ -661,7 +661,7 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
+    expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false });
   });
 
   it('opens the edit modal over the details on ?entry= with ?edit=, and its Close goes back to them', async () => {
@@ -673,7 +673,7 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(editing).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(ON_DETAILS);
+    expect(router.replace).toHaveBeenCalledWith(ON_DETAILS, { scroll: false });
   });
 
   // A form's duplicates warning opens a match's details over the form.
@@ -686,7 +686,9 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new=ingredient-compendium`);
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&new=ingredient-compendium`, {
+      scroll: false,
+    });
   });
 
   it("opens the details over another entry's edit form with no Edit, closing back to that form", async () => {
@@ -696,7 +698,9 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(details()).getByRole('button', { name: 'Close' }));
 
-    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`);
+    expect(router.replace).toHaveBeenCalledWith(`${FILTERED_HREF}&edit=fixture-other`, {
+      scroll: false,
+    });
   });
 
   // The delete's confirm is tests/components/IngredientForm/compendium.test.tsx's; here only
@@ -707,7 +711,9 @@ describe('the /admin/compendium details modal', () => {
 
     fireEvent.click(within(editing).getByRole('button', { name: 'Fixture Delete' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF, { scroll: false }),
+    );
     expect(router.replace).not.toHaveBeenCalledWith(ON_DETAILS);
   });
 

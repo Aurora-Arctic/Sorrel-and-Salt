@@ -118,7 +118,9 @@ describe('AdminInvitations', () => {
     expect(calls).toEqual([
       { email: 'cass@example.test', siteRole: 'curator', note: 'Knows the celestial bodies' },
     ]);
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/admin/invitations'));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith('/admin/invitations', { scroll: false }),
+    );
     expect(router.refresh).toHaveBeenCalled();
 
     // Back at the tab, the form's address gone: the notice outlasts it.
@@ -163,7 +165,7 @@ describe('AdminInvitations', () => {
         target: { value: 'Knows the celestial bodies' },
       }),
     );
-    expect(router.replace).toHaveBeenCalledWith('/admin/invitations');
+    expect(router.replace).toHaveBeenCalledWith('/admin/invitations', { scroll: false });
   });
 
   it('says a refused address beside the field and keeps the form open', async () => {
@@ -330,6 +332,9 @@ describe('AdminInvitations filter', () => {
       '/admin/invitations?email=fern&expiring&after=c25&invite',
     );
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
-    expect(router.replace).toHaveBeenCalledWith('/admin/invitations?email=fern&expiring&after=c25');
+    expect(router.replace).toHaveBeenCalledWith(
+      '/admin/invitations?email=fern&expiring&after=c25',
+      { scroll: false },
+    );
   });
 });

@@ -304,7 +304,7 @@
     justify-content: center;
     gap: space(3);
 
-    // Two controls, not a bulleted list: no typography-base ◆ marker.
+    // Two controls, not a bulleted list: no typography-base ✦ marker.
     @include list-reset;
   }
 
@@ -2189,7 +2189,7 @@
     margin-block-end: space(1);
   }
 
-  // The chip row is a list in the real card, so it drops the ◆ marker and indent.
+  // The chip row is a list in the real card, so it drops the ✦ marker and indent.
   .specimen__chips {
     @include list-reset;
   }

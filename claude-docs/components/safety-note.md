@@ -18,6 +18,8 @@ care (M8.13a, story 53). Four components share the directory:
   `ToxicMark` when the ingredient or a shown form is flagged, else `CautionMark`, else
   nothing. Toxic says more, so the two never share a row. It takes both marks' props.
 
+What the notes are not, the one line under each saying they are incomplete and linking `/disclaimer`, is [`DisclaimerNotice`](disclaimer-notice.md)'s, drawn by the entry page beside each `SafetyNote`.
+
 This directory owns safety presentation for the whole project. The card (M8.14),
 the entry page (M8.19) and the spell builder's toxic-ingredient warning (M10.18)
 each use these two as they are, and none of them draws a warning of its own. In a badge row, the card's and the entry page's head, they are drawn through `SafetyMark`: on the card by a second `EntryMarks` in its top-right corner, and on the entry page by `IngredientEntry` itself on the back row, after New or Updated and ending flush with the pencil, its `EntryMarks` row taking `safety={false}` ([`ingredient-entry.md`](ingredient-entry.md), "Structure") ([`entry-marks.md`](entry-marks.md), "The order").

@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -9,7 +8,7 @@ import { dayInUtc, printedDayOf } from '../../lib/utc';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
-import { useOpenModalClick } from '../Modal';
+import { ModalLink, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import ConfirmedAction from '../UserList/confirmed-action';
 import CardAttempts from './attempts';
@@ -37,9 +36,9 @@ export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
   const href = cardsHref(cursor, true, filter);
   const onClick = useOpenModalClick(href, { title: MINT_TITLE });
   return (
-    <Link className="btn btn--solid" href={href} onClick={onClick}>
+    <ModalLink className="btn btn--solid" href={href} onClick={onClick}>
       {MINT_TITLE}
-    </Link>
+    </ModalLink>
   );
 };
 

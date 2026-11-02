@@ -5156,7 +5156,7 @@ _Acceptance criteria:_
 - The five build tasks are minted with estimates, placed after this one, and each names its prerequisite
 - Nothing is built in this task
 
-**MB.176 — [RETIRED] Bug reports** · 1h
+**MB.176 — ~~Bug reports~~** · **RETIRED 2026-10-31, not done**
 
 > **Folded into M15.1, not done on its own.** The owner's call (2026-10-31): one table and one form serve bug reports and support requests. What survives is recorded in [`design-decisions/m15.1-support-form.md`](../design-decisions/m15.1-support-form.md), "MB.176 folded in". The ID is kept, and its issue is closed as not planned.
 

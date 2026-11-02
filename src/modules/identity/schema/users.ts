@@ -50,6 +50,10 @@ export const users = pgTable(
     verificationSentAt: timestamp('verification_sent_at'),
     // The `twoFactor` plugin's user flag: true once an authenticator is confirmed.
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+    // The terms of use the account agreed to, and when: both null until it does. A version other than `TERMS_VERSION` (src/lib/terms-version.ts)
+    // counts as not agreed (claude-docs/auth/admin-bootstrap.md, "The terms page").
+    termsVersion: text('terms_version'),
+    termsAcceptedAt: timestamp('terms_accepted_at'),
     ...auditColumns,
   },
   (table) => [
