@@ -31,6 +31,7 @@ describe('the / page metadata', () => {
     expect(metadata.title).toEqual({ absolute: 'Sorrel & Salt' });
     expect(metadata.alternates?.canonical).toBe('https://sorrelandsalt.com/');
     expect(metadata.description).toBeTruthy();
+    expect(metadata.robots).toBeUndefined();
   });
 
   it('marks a signed-out visitor’s page up as the website', async () => {
