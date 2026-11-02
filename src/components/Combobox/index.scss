@@ -314,7 +314,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   padding: space(2) space(3);
 }
 
-// A bucket and its rows: no typography-base ◆, no list margins.
+// A bucket and its rows: no typography-base ✦, no list margins.
 .combobox__group,
 .combobox__option {
   margin: 0;
