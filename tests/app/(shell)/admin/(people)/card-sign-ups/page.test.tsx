@@ -22,6 +22,8 @@ vi.mock('@/modules/identity', () => ({
   isPrimaryAdmin: () => false,
   listCardArrivals,
   listedOnUserList,
+  // The modal also reads the user's site access pauses, which the users page tests prove; none here.
+  listUserAccessPauses: vi.fn(async () => []),
   providersOf,
   usersForAdmin,
 }));
