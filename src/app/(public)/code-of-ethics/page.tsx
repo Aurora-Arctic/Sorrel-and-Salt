@@ -92,8 +92,9 @@ export default function CodeOfEthicsPage() {
           including trans women, are people whose knowledge, work and bodies are their own.
         </li>
         <li>
-          <strong>Community over profit.</strong> The site shows no advertising, sells no data and
-          charges nothing. It is run by people, for people, and the covens on it are run by their
+          <strong>Community over profit.</strong> The site shows no advertising and sells no data.
+          It will charge, fairly: enough to cover its costs and to pay the people who work on it a
+          fair, living wage. It is run by people, for people, and the covens on it are run by their
           own members. We would rather the site stayed small and honest than grew by exploiting
           anyone, and we hold that what is shared should be shared fairly and decided together.
         </li>
