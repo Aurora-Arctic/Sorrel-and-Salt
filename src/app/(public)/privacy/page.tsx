@@ -39,7 +39,14 @@ const ACCESS_ROWS: { data: string; cells: [string, string, string, string, strin
   },
   {
     data: 'Your password, passkey and authenticator secrets',
-    cells: ['No', 'No', 'No', 'No', 'No', 'Only in the scrambled form the site stores'],
+    cells: [
+      'No',
+      'No',
+      'No',
+      'No',
+      'No',
+      "Only in a locked form: your password can never be turned back into the original, the authenticator secrets cannot be read without a key kept outside the database, and a passkey's private half never reaches the site",
+    ],
   },
   {
     data: "A coven's ingredients and stock",
