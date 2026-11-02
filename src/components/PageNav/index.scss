@@ -39,7 +39,8 @@
     }
 
     &[aria-current='location'] {
-      font-weight: 500;
+      // Body ink, not a heavier weight: a bolder entry is wider and can wrap where the others do not.
+      color: $text-primary;
       box-shadow: inset $rule-heavy 0 0 0 var(--page-nav-bar);
     }
   }

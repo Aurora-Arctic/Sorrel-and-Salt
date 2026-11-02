@@ -60,7 +60,9 @@ The account page's sections are panels; the coven index's are plain
   on the right edge, facing the page. On a phone the text is left-aligned and
   the bar is on the left edge, in a muted mix of the accent and the card
   surface, echoing the bottom bar's rule.
-- The current entry is also weight 500, so hue is never the only sign.
+- The current entry is also set in the body ink rather than the muted one, so hue is never
+  the only sign. Its weight stays that of the other entries, since a bolder entry is wider
+  and could wrap onto another line only while it is current.
 - An entry too long for its column wraps with `text-wrap: balance`, as the headings do, so its lines come out an even length and none is left holding one word. It is an enhancement past the browser floor: an older browser wraps the entry in the ordinary way. A single-line entry is unaffected. A page whose entries are long, as a document's are, gives them more air and a looser line in its own stylesheet ([`document-page.md`](document-page.md), "The jump menu"); the menu itself keeps the tight row the short-entry pages were designed with.
 - A group's label is set as `.eyebrow` is (`overline` size, weight 500,
   uppercase, letter-spaced) but in the body ink, `$text-primary`, darker
