@@ -66,15 +66,15 @@ describe('renderCitation, per kind, against the seed doc', () => {
     expect(
       render({
         kind: 'chapter',
-        authors: 'Pope, Marvin H.',
-        title: 'Anath',
-        container: 'Encyclopaedia Judaica',
-        host: 'Encyclopedia.com',
+        authors: 'Smith, William, ed.',
+        title: 'Liber',
+        container: 'A Dictionary of Greek and Roman Biography and Mythology',
+        host: 'Perseus Digital Library',
         accessed: '2026-10-06',
-        url: 'https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath',
+        url: 'https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dliber-bio-1',
       }),
     ).toBe(
-      'Pope, Marvin H. "Anath." In _Encyclopaedia Judaica_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath.',
+      'Smith, William, ed. "Liber." In _A Dictionary of Greek and Roman Biography and Mythology_. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dliber-bio-1.',
     );
   });
 

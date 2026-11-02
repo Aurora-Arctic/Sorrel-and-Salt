@@ -314,7 +314,7 @@ drops each missing piece with its punctuation.
   Edition. Volume. Series. Place: Publisher, Published. Host. Last modified
   Modified. Accessed Accessed. URL. (Note) — the contributors as a chapter
   prints them, "edited by …", after its book.
-  - Pope, Marvin H. "Anath." In _Encyclopaedia Judaica_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath.
+  - Smith, William, ed. "Liber." In _A Dictionary of Greek and Roman Biography and Mythology_. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dliber-bio-1.
 - **`article`** — Authors. "Title." _Container_ Volume, no. Issue
   (Published): Pages. Host. Last modified Modified. Accessed Accessed. URL.
   (Note) — and without a volume, _Container_, Published, Pages.
@@ -324,6 +324,7 @@ drops each missing piece with its punctuation.
   Place: Publisher, Published. Host. Last modified Modified. Accessed
   Accessed. URL. (Note)
   - Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+  - Pope, Marvin H. _Encyclopaedia Judaica_, 2nd ed., under "Anath." Edited by Fred Skolnik and Michael Berenbaum. Detroit: Macmillan Reference USA in association with the Keter Publishing House, 2007. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath. (Print details from the Library of Congress catalogue record, LCCN 2006020426.)
   - _Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
 - **`web_page`** — Authors. "Title." Container. Publisher. Published; last
   modified Modified. Accessed Accessed. URL. (Note) — "Last modified" is
@@ -410,10 +411,13 @@ sources were recast in Chicago form from pages fetched again.
 
 **Keyed by `seed_key`** (MB.171). A reference the seed writes records the
 citation it rendered, so one an admin has since edited is still its own and
-is neither overwritten nor twinned. The one field a run restates on a present
-source is its `scholarly` mark, set or cleared to match `sources.ts`, unless
-a person edited the row: that one is kept, and `db:seed:sources` prints a
-`KEPT <citation> (edited on the site)` line for it without failing
+is neither overwritten nor twinned. A run restates a present source's fields
+and its `scholarly` mark, set or cleared, to match `sources.ts`, unless a
+person edited the row: that one is kept, and `db:seed:sources` prints a
+`KEPT <citation> (edited on the site)` line for it without failing. A row is
+found by its key, which is its citation, so the fields that differ are the ones
+the citation does not print, or all of them once a migration has rewritten the
+key to a source's new citation
 ([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
 attributes on a present entry"). A soft-deleted one is neither re-inserted
 nor linked anew. A live compendium reference nobody seeded whose citation is
@@ -434,6 +438,21 @@ key in place, and where a row already holds the new key it moves the old row's
 live links there, soft-deletes a link that would duplicate one already on it,
 and soft-deletes the old row
 (`tests/db/migrations/0095-rekey-citation-seed-keys.test.ts`).
+
+A change to a source's own fields changes its key the same way.
+`0115_print-encyclopedia-entries` did it for the 22 vocabulary sources read
+through Encyclopedia.com and the Jewish Virtual Library, which were chapters
+and are now entries in the print work (the _Encyclopedia of Religion_,
+_Encyclopaedia Judaica_, _Encyclopedia of India_ and _Contemporary American
+Religion_), with the editor, edition, place, publisher and year their Library
+of Congress catalogue records give and the record named in each note. It
+rewrites each compendium row's key from its old citation to its new one,
+soft-deleted rows included so a deleted source stays deleted, and leaves a row
+alone where another compendium row already holds the new key. The row keeps its
+id and its links, and the next `db:seed:sources` run writes the new fields
+onto it unless a person edited it
+(`tests/db/migrations/0115-print-encyclopedia-entries.test.ts`,
+`tests/db/seed/sources-print-entries.test.ts`).
 
 ### How the compendium seed cites its sources (MB.242)
 
@@ -465,8 +484,8 @@ mark. The links are written with the entry, as everything beneath an entry is.
 The three attributes say where content comes from; they are not content, so no
 `seedUpdate` mark and no person's work on the entry holds them back. Every run
 restates each present link's two attributes where they differ from its file,
-and each present source's `scholarly` mark, either way, where it differs from
-its work, unless a person edited that link or that source: a person's edit is
+and each present source's fields and `scholarly` mark, either way, where they
+differ from its work, unless a person edited that link or that source: a person's edit is
 kept, and the run prints a `KEPT` line for it without failing
 ([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
 attributes on a present entry").
