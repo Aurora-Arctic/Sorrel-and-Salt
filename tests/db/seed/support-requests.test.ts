@@ -242,7 +242,7 @@ describe('the support request seed', () => {
       const [anonymised] = await shape(ANONYMISED);
       const [swept] = await shape(DUE);
       expect(anonymised).toMatchObject({
-        subject: '',
+        subject: 'Anonymised support request.',
         message: '',
         path: '',
         created_by: SYSTEM_ACTOR_ID,

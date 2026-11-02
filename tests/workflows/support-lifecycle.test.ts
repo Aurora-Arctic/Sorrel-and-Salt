@@ -309,9 +309,9 @@ describe('anonymising', () => {
     expect(await run.returnValue).toEqual({ closed: 0, anonymised: 1 });
 
     const after = await rowOf(old);
-    // Gone: what the sender wrote, the page, and who they are.
+    // Gone: what the sender wrote, the page, and who they are. The subject becomes a fixed one, so the row still opens.
     expect(after).toMatchObject({
-      subject: '',
+      subject: 'Anonymised support request.',
       message: '',
       path: '',
       sender_email: null,
@@ -395,6 +395,6 @@ describe('anonymising', () => {
     await sql`update support_requests set closed_at = now() - interval '13 months' where id = ${id}`;
     await wake(run);
     expect(await run.returnValue).toBe('done');
-    expect((await rowOf(id)).subject).toBe('');
+    expect((await rowOf(id)).subject).toBe('Anonymised support request.');
   });
 });

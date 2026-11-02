@@ -2612,7 +2612,9 @@ A message on a support request: a reply from staff, a note only staff read, or a
 type SupportReply {
   audit: AuditInfo!
 
-  """Who wrote the reply; null if no live account holds the id."""
+  """
+  Who wrote the reply; null if no live account holds the id, or for an anonymised sender reply, which the System account holds.
+  """
   author: User
   authorRole: SupportReplyAuthorRole!
   body: String!
@@ -2671,6 +2673,10 @@ type SupportRequest {
   replies: [SupportReply!]!
   resolvedAt: DateTime
   resolvedBy: User
+
+  """
+  Who sent it; null if no live account holds the id, or for an anonymised request, which the System account holds.
+  """
   sender: User
 
   """The sender’s tier. Staff only."""

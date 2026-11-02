@@ -40,6 +40,7 @@ const ROW: SupportRequestEntry = {
   status: 'open',
   sender: { id: 'u1', name: 'Ada Wortley', email: 'ada@example.test' },
   signedOut: false,
+  anonymised: false,
   assignee: null,
   curatorVisible: false,
   errorCode: 500,
@@ -476,6 +477,83 @@ describe('The sender', () => {
     open(ADMIN, { sender: null });
     expect(within(dialog()).getAllByText('Deleted account').length).toBeGreaterThan(0);
     expect(within(dialog()).queryByRole('link', { name: 'Deleted account' })).toBeNull();
+  });
+});
+
+describe('An anonymised request', () => {
+  // Its sender is the System account: the server sends no sender, and the screens show no Sender field.
+  const ANONYMISED: SupportRequestEntry = {
+    ...ROW,
+    id: 'r2',
+    subject: 'Anonymised support request.',
+    status: 'closed',
+    sender: null,
+    anonymised: true,
+  };
+  const senderCell = (row: HTMLElement) => {
+    const column = screen
+      .getAllByRole('columnheader')
+      .findIndex((header) => header.textContent === 'Sender');
+    expect(column).toBeGreaterThan(-1);
+    return within(row).getAllByRole('cell')[column];
+  };
+
+  it('leaves the Sender cell empty in its row, and names the link by the subject alone', () => {
+    render(<SupportRequests requests={[ROW, ANONYMISED]} viewer={ADMIN} />);
+    const ordinary = screen.getByRole('row', { name: /moon icon/ });
+    const anonymised = screen.getByRole('row', { name: /Anonymised support request/ });
+    expect(senderCell(ordinary)).not.toBeEmptyDOMElement();
+    expect(senderCell(anonymised)).toBeEmptyDOMElement();
+    expect(
+      within(anonymised).getByRole('link', { name: 'Anonymised support request.' }),
+    ).toBeInTheDocument();
+  });
+
+  it('shows no From fact and no message from the sender in the request', () => {
+    const thread = (subject: RegExp) =>
+      within(screen.getByRole('dialog', { name: subject })).getByRole('region', { name: 'Thread' });
+    open(ADMIN);
+    const terms = (subject: RegExp) =>
+      within(screen.getByRole('dialog', { name: subject }))
+        .getAllByRole('term')
+        .map((term) => term.textContent);
+    expect(terms(/moon icon/)).toContain('From');
+    expect(within(thread(/moon icon/)).getAllByRole('listitem')).toHaveLength(1);
+    cleanup();
+    render(
+      <SupportRequests
+        requests={[ANONYMISED]}
+        viewer={ADMIN}
+        opened={{
+          ...DETAIL,
+          ...ANONYMISED,
+          message: '',
+          path: null,
+          replies: [
+            {
+              id: 'p1',
+              body: '',
+              author: null,
+              createdAt: new Date('2026-10-30T10:00:00Z'),
+              internal: false,
+              fromSender: true,
+            },
+            {
+              id: 'p2',
+              body: 'Fixed in the next release.',
+              author: { id: 'admin-1', name: 'Esme' },
+              createdAt: new Date('2026-10-30T11:00:00Z'),
+              internal: false,
+              fromSender: false,
+            },
+          ],
+        }}
+      />,
+    );
+    expect(terms(/Anonymised support request/)).not.toContain('From');
+    const items = within(thread(/Anonymised support request/)).getAllByRole('listitem');
+    expect(items).toHaveLength(1);
+    expect(items[0]).toHaveTextContent('Fixed in the next release.');
   });
 });
 

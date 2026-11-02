@@ -267,6 +267,14 @@
   }
 }
 
+// An anonymised request's Sender cell is empty: as a card, the cell goes, its label with it, rather than
+// a label over nothing.
+.data-table--stack > tbody > tr > .support-requests__sender-cell:empty {
+  @container data-table (max-width: #{$table-stack-width}) {
+    display: none;
+  }
+}
+
 // The sender's name and the sprout after it, centred on each other.
 .support-requests__sender {
   display: inline-flex;

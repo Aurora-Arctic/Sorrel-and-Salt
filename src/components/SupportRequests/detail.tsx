@@ -65,28 +65,31 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           errorCode={request.errorCode}
           errorReference={request.errorReference}
           lead={
-            <div className="support-detail__fact--wide">
-              <dt>From</dt>
-              <dd>
-                {request.sender ? (
-                  <>
-                    <SenderName
-                      sender={request.sender}
-                      signedOut={request.signedOut}
-                      userHref={userHref}
-                    />
-                    {request.sender.email && (
-                      <>
-                        {' '}
-                        <span className="support-detail__muted">{request.sender.email}</span>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  'Deleted account'
-                )}
-              </dd>
-            </div>
+            // An anonymised request has no sender to show.
+            !request.anonymised && (
+              <div className="support-detail__fact--wide">
+                <dt>From</dt>
+                <dd>
+                  {request.sender ? (
+                    <>
+                      <SenderName
+                        sender={request.sender}
+                        signedOut={request.signedOut}
+                        userHref={userHref}
+                      />
+                      {request.sender.email && (
+                        <>
+                          {' '}
+                          <span className="support-detail__muted">{request.sender.email}</span>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    'Deleted account'
+                  )}
+                </dd>
+              </div>
+            )
           }
           afterSent={
             request.resolvedBy &&
@@ -113,23 +116,30 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
         <SupportThread
           entries={[
-            {
-              id: request.id,
-              name: request.signedOut
-                ? 'Signed-out sender'
-                : (request.sender?.name ?? 'Deleted account'),
-              tag: 'Sender',
-              at: request.createdAt,
-              body: request.message,
-            },
-            ...request.replies.map((reply) => ({
-              id: reply.id,
-              name: reply.author?.name ?? 'Deleted account',
-              tag: reply.fromSender ? 'Sender' : 'Staff',
-              internal: !reply.fromSender && reply.internal,
-              at: reply.createdAt,
-              body: reply.body,
-            })),
+            // An anonymised request keeps only what staff wrote: the sender's message and follow-ups are emptied.
+            ...(request.anonymised
+              ? []
+              : [
+                  {
+                    id: request.id,
+                    name: request.signedOut
+                      ? 'Signed-out sender'
+                      : (request.sender?.name ?? 'Deleted account'),
+                    tag: 'Sender',
+                    at: request.createdAt,
+                    body: request.message,
+                  },
+                ]),
+            ...request.replies
+              .filter((reply) => !(request.anonymised && reply.fromSender))
+              .map((reply) => ({
+                id: reply.id,
+                name: reply.author?.name ?? 'Deleted account',
+                tag: reply.fromSender ? 'Sender' : 'Staff',
+                internal: !reply.fromSender && reply.internal,
+                at: reply.createdAt,
+                body: reply.body,
+              })),
           ]}
         />
 

@@ -6,6 +6,7 @@ import { supportSendCounts } from '../../modules/support/schema/support-send-cou
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { SUPPORT_VIEWS } from '../../lib/support-path';
 import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
+import { ANONYMISED_SUBJECT } from '../../lib/support-sender';
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
@@ -542,7 +543,7 @@ export function supportWrites({
       const rows = await tx
         .update(supportRequests)
         .set({
-          subject: '',
+          subject: ANONYMISED_SUBJECT,
           message: '',
           path: '',
           senderEmail: null,

@@ -14,6 +14,7 @@ import {
 import type { SupportRequestFilter, SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
 import { NotFound } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type { Session } from '@/lib/session';
 import type {
   SupportPerson,
@@ -36,8 +37,11 @@ const pick = ({ about, errorCode, senderGroup }: SupportRequestFilter) => ({
 
 type Names = Map<string, SupportSender>;
 
+// The System account is never named: it is an anonymised request's sender, which the screens do not show.
 async function namesOf(session: Session, ids: readonly (string | null)[]): Promise<Names> {
-  const wanted = [...new Set(ids.filter((id): id is string => id !== null))];
+  const wanted = [
+    ...new Set(ids.filter((id): id is string => id !== null && id !== SYSTEM_ACTOR_ID)),
+  ];
   const found = await usersNamedOnRequests(session, wanted);
   return new Map(
     found.flatMap((user) =>
@@ -72,6 +76,7 @@ function entryOf(row: SupportRequestRow, names: Names, betaTester: boolean): Sup
     status: row.status,
     sender: senderOf(row, names),
     signedOut: row.createdBy === SIGNED_OUT_SENDER_ID,
+    anonymised: row.createdBy === SYSTEM_ACTOR_ID,
     assignee: personOf(names, row.assignedTo),
     curatorVisible: row.curatorVisible,
     errorCode: row.errorCode,
@@ -154,7 +159,9 @@ export const readOpened = cache(
     const [replies] = await repliesForRequests(session, [row.id]);
     const [tier] = await tiersForSenders(session, [row.createdBy]);
     const [timeouts] =
-      session.role === 'admin' ? await timeoutsForSenders(session, [row.createdBy]) : [];
+      session.role === 'admin' && row.createdBy !== SYSTEM_ACTOR_ID
+        ? await timeoutsForSenders(session, [row.createdBy])
+        : [];
     const names = await namesOf(session, [
       row.createdBy,
       row.assignedTo,

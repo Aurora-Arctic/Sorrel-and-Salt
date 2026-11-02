@@ -4,6 +4,7 @@ import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { users } from '../../modules/identity/schema/users';
 import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
+import { ANONYMISED_SUBJECT } from '../../lib/support-sender';
 import { insertStamped } from './idempotent';
 import { SANCTIONED_USERS } from './sanctioned-users';
 import { FIXTURE_USERS } from './standard';
@@ -252,13 +253,13 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     path: '/support',
     daysAgo: 2.9,
   },
-  // Closed thirteen months ago and already anonymised, as `anonymiseClosedSupportRequests` leaves a row: no subject, message,
-  // path or sender; the topic, status, staff and dates kept.
+  // Closed thirteen months ago and already anonymised, as `anonymiseClosedSupportRequests` leaves a row: the fixed subject, no
+  // message, path or sender; the topic, status, staff and dates kept.
   {
     id: '00000000-0000-0000-0005-000000000018',
     sender: SYSTEM_ACTOR_ID,
     about: 'accessibility',
-    subject: '',
+    subject: ANONYMISED_SUBJECT,
     message: '',
     path: '',
     assignedTo: E.id,
