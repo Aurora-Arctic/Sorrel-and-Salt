@@ -305,9 +305,10 @@ export default function CodeOfEthicsPage() {
 
       <h2>For the Site's Owner</h2>
       <p>
-        The owner runs the site: its hosting, its database, its mail and its code, and holds the
-        primary admin account, which no one can revoke. The owner agrees to everything above, and to
-        this:
+        The owner holds the primary admin account, which no one can revoke. The site relies on
+        outside companies for things such as its hosting and its mail; the owner tries to choose
+        ethical ones, but cannot hold them to this page. The owner, and every admin, curator and
+        developer who helps run the site, agrees to everything above, and to this:
       </p>
       <ul>
         <li>
@@ -316,8 +317,8 @@ export default function CodeOfEthicsPage() {
           so, in writing, before it does.
         </li>
         <li>
-          The owner reaches the database only to do what a person has asked for, such as an erasure,
-          or to fix a fault, and says so when it is done.
+          Anyone who reaches the database does so only to do what a person has asked for, such as an
+          erasure, or to fix a fault, and says so when it is done.
         </li>
         <li>
           Every rule on this page, and every change to the terms, applies to the owner as to anyone
