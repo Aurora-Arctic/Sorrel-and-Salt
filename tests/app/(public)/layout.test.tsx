@@ -78,7 +78,7 @@ describe('the (public) layout', () => {
 
     const notice = screen.getByRole('status');
     expect(notice).toHaveTextContent(/Your site access is paused until 2 January 2027, 03:04 UTC/);
-    expect(screen.getByRole('link', { name: 'Why Access Is Paused' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
       'href',
       '/access-paused?until=2027-01-02T03%3A04%3A00.000Z',
     );
@@ -98,7 +98,7 @@ describe('the (public) layout', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       /Your site access is paused, with no end date/,
     );
-    expect(screen.getByRole('link', { name: 'Why Access Is Paused' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
       'href',
       '/access-paused',
     );
@@ -110,6 +110,6 @@ describe('the (public) layout', () => {
     await layout();
 
     expect(screen.queryByText(/site access is paused/)).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Why Access Is Paused' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'What This Means' })).not.toBeInTheDocument();
   });
 });

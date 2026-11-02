@@ -88,7 +88,7 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await expect(userPage).toHaveURL('/support');
   const notice = userPage.getByRole('complementary', { name: 'Site Access' });
   await expect(notice).toContainText('Your site access is paused, with no end date.');
-  await expect(notice.getByRole('link', { name: 'Why Access Is Paused' })).toHaveAttribute(
+  await expect(notice.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
     'href',
     '/access-paused',
   );

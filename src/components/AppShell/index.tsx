@@ -91,7 +91,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
               {viewer.accessPause.until
                 ? ` until ${inUtc(viewer.accessPause.until)}.`
                 : ', with no end date.'}{' '}
-              <Link href={accessPausedPath(viewer.accessPause.until)}>Why Access Is Paused</Link>
+              <Link href={accessPausedPath(viewer.accessPause.until)}>What This Means</Link>
             </Notice>
           </aside>
         )}

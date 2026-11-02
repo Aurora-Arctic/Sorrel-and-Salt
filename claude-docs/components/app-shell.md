@@ -103,7 +103,7 @@ requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in whil
   `AdminNav` ([`context-row.md`](context-row.md)).
 - **The paused notice.** For a paused viewer, a caution `Notice` above the page, in its own `aside` labelled
   `Site Access`, since the page owns `main`: "Your site access is paused until …" in UTC, or "with no end date",
-  then a Why Access Is Paused link to `/access-paused` carrying the pause's end. `.app-shell__pause` sets it in the
+  then a What This Means link to `/access-paused` carrying the pause's end. `.app-shell__pause` sets it in the
   wide column's edges.
 
 ## Styling
