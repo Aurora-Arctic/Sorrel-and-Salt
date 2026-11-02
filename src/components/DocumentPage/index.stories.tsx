@@ -15,11 +15,15 @@ export const Default: StoryObj<typeof DocumentPage> = {
     children: (
       <>
         <h2>What Is Kept</h2>
+        <h3>The Row</h3>
         <p>A fixture row, and the day it was written.</p>
+        <h3>The Details</h3>
         <ul>
           <li>The name the fixture gave.</li>
           <li>The address it was reached at.</li>
         </ul>
+        <h2>Who Reads It</h2>
+        <p>Only the fixture's owner.</p>
       </>
     ),
   },

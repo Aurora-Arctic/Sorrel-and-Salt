@@ -13,16 +13,36 @@ import './index.scss';
 // data, so a signed-out visitor reads the same page a member does
 // (claude-docs/components/document-page.md).
 
-// The menu is read from the `h2` children themselves, so a heading is written once and the menu and
-// the anchors cannot drift from it.
+// The menu is read from the `h2` and `h3` children themselves, so a heading is written once and the
+// menu and the anchors cannot drift from it. An `h2` followed by `h3`s is a group label: each `h3`
+// is an entry beneath it and the `h2` has none of its own, since a group label is not a link. An `h2`
+// with no `h3` after it is an entry itself.
 function withSections(children: ReactNode): { body: ReactNode[]; entries: PageNavEntry[] } {
-  const entries: PageNavEntry[] = [];
-  const body = Children.toArray(children).map((child) => {
-    if (!isValidElement<{ children?: ReactNode }>(child) || child.type !== 'h2') return child;
+  const items = Children.toArray(children);
+  const headingOf = (child: ReactNode): { tag: string; label: string; id: string } | null => {
+    if (!isValidElement<{ children?: ReactNode }>(child)) return null;
+    if (child.type !== 'h2' && child.type !== 'h3') return null;
     const label = Children.toArray(child.props.children).join('');
-    const id = slugify(label);
-    entries.push({ href: `#${id}`, label });
-    return cloneElement(child, { id } as object);
+    return { tag: child.type, label, id: slugify(label) };
+  };
+  const entries: PageNavEntry[] = [];
+  let group: string | null = null;
+  const body = items.map((child, index) => {
+    const heading = headingOf(child);
+    if (!heading || !isValidElement(child)) return child;
+    if (heading.tag === 'h2') {
+      const next = items.slice(index + 1).find((item) => headingOf(item) !== null);
+      const hasSubsections = next !== undefined && headingOf(next)?.tag === 'h3';
+      group = hasSubsections ? heading.label : null;
+      if (!hasSubsections) entries.push({ href: `#${heading.id}`, label: heading.label });
+    } else {
+      entries.push({
+        href: `#${heading.id}`,
+        label: heading.label,
+        ...(group === null ? {} : { group }),
+      });
+    }
+    return cloneElement(child, { id: heading.id } as object);
   });
   return { body, entries };
 }

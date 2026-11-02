@@ -259,7 +259,19 @@ export default function PrivacyPolicyPage() {
         admin sees them with the requestor's email.
       </p>
 
-      <h2>Who Processes It</h2>
+      <h2>Who Sees It</h2>
+
+      <h3>Who Can See What</h3>
+      <p>
+        Each line below comes from the rule the site enforces in its services, not from what a
+        screen happens to show. "Coven" means the coven in which you hold that role; every account
+        holds a viewer seat in the demo coven, and every site admin an owner seat there. A developer
+        with database access means a person who can read the database directly. Database access is
+        given to as few developers as possible, and only to those who need it to run the site.
+      </p>
+      <AccessCards roles={ROLES} rows={ACCESS_ROWS} />
+
+      <h3>Who Processes It</h3>
       <p>
         The site runs on other companies' services. Each one handles some of your data to do its
         job, and none is given it for any other purpose.
@@ -304,7 +316,9 @@ export default function PrivacyPolicyPage() {
         </table>
       </div>
 
-      <h2>How Long It Is Kept</h2>
+      <h2>Keeping and Removing It</h2>
+
+      <h3>How Long It Is Kept</h3>
       <p>
         Most tables use a soft delete: a deleted row is marked with who deleted it and when, and the
         site stops showing it, but the row stays in the database. So today, "deleted" does not mean
@@ -335,7 +349,7 @@ export default function PrivacyPolicyPage() {
         </li>
       </ul>
 
-      <h2>How to Ask for Removal</h2>
+      <h3>How to Ask for Removal</h3>
       <p>
         There is no "delete my account" button yet, and no self-service export. Until those are
         built, write to the site admins through the{' '}
@@ -347,16 +361,6 @@ export default function PrivacyPolicyPage() {
         You can leave a coven yourself from the coven's page, and a coven's owner can delete the
         coven. Both are soft deletes.
       </p>
-
-      <h2>Who Can See What</h2>
-      <p>
-        Each line below comes from the rule the site enforces in its services, not from what a
-        screen happens to show. "Coven" means the coven in which you hold that role; every account
-        holds a viewer seat in the demo coven, and every site admin an owner seat there. A developer
-        with database access means a person who can read the database directly. Database access is
-        given to as few developers as possible, and only to those who need it to run the site.
-      </p>
-      <AccessCards roles={ROLES} rows={ACCESS_ROWS} />
 
       <h2>What the Site Does Not Do</h2>
       <ul>

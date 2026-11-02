@@ -50,7 +50,9 @@ export default function TermsOfUsePage() {
         <li>The site may go down, change or end, and we will say so plainly when it does.</li>
       </ul>
 
-      <h2>Who May Use the Site</h2>
+      <h2>Using the Site</h2>
+
+      <h3>Who May Use the Site</h3>
       <p>
         Anyone may read the public compendium without an account. Signing in by any method gives you
         an account and a viewer's seat in the demo coven.
@@ -68,7 +70,7 @@ export default function TermsOfUsePage() {
         them without your permission.
       </p>
 
-      <h2>What Is Yours</h2>
+      <h3>What Is Yours</h3>
       <p>
         Everything you write in a coven stays yours: your ingredients, your stock, your spells,
         their steps and their workings. The site claims no ownership over any of it, and takes no
@@ -87,7 +89,7 @@ export default function TermsOfUsePage() {
         leave a coven at any time. The demo coven, where every account begins, cannot be deleted.
       </p>
 
-      <h2>The Compendium</h2>
+      <h3>The Compendium</h3>
       <p>
         The compendium is written and checked by the site's admins and curators. Every entry records
         where its information came from, and an entry with no source stays on the curators' list of
@@ -95,7 +97,7 @@ export default function TermsOfUsePage() {
         <Link href="/disclaimer">Disclaimer</Link> sets out.
       </p>
 
-      <h2>How to Treat Each Other</h2>
+      <h3>How to Treat Each Other</h3>
       <p>
         The <Link href="/code-of-ethics">Code of Ethics</Link> says what the site stands for. Its
         section "What Everyone Agrees To" binds every account, and agreeing to these terms is
@@ -114,7 +116,9 @@ export default function TermsOfUsePage() {
         an account does it by hand and says so.
       </p>
 
-      <h2>What the Site Promises, and What It Does Not</h2>
+      <h2>What the Site Owes You</h2>
+
+      <h3>What the Site Promises, and What It Does Not</h3>
       <p>
         The site is offered as it is. The people who run it do their best to keep it up and to keep
         your data safe, and they describe plainly what it keeps in the{' '}
@@ -128,7 +132,7 @@ export default function TermsOfUsePage() {
         take any right from you that the law gives you.
       </p>
 
-      <h2>What the Site Is Not Liable For</h2>
+      <h3>What the Site Is Not Liable For</h3>
       <p>
         This section limits what you could claim from the people who run the site. It is written to
         be read, not hidden, so here is what it does and what it does not do.
@@ -157,14 +161,16 @@ export default function TermsOfUsePage() {
         </li>
       </ul>
 
-      <h2>Which Law Applies</h2>
+      <h2>Disputes</h2>
+
+      <h3>Which Law Applies</h3>
       <p>
         The site is run from the State of Washington, in the United States, and these terms are
         governed by the law of that state. Nothing in them takes away a protection that the law of
         the place you live gives you and does not let you give up.
       </p>
 
-      <h2>Settling a Dispute</h2>
+      <h3>Settling a Dispute</h3>
       <p>
         If you and the site's owner have a dispute about these terms or the site, each of you first
         tries arbitration: a neutral person hears both sides and gives a decision. The arbitration
@@ -208,16 +214,9 @@ export default function TermsOfUsePage() {
         arbitrator.
       </p>
 
-      <h2>Leaving</h2>
-      <p>
-        You may stop using the site at any time. You can leave any coven from its page. To have your
-        account or anything in it erased, ask through the{' '}
-        <SupportLink about="privacy">support form</SupportLink>, and the site's admin does it and
-        tells you when it is done. What you delete yourself is marked deleted rather than erased, as
-        the Privacy Policy explains.
-      </p>
+      <h2>This Agreement</h2>
 
-      <h2>Agreeing to These Terms</h2>
+      <h3>Agreeing to These Terms</h3>
       <p>
         Right after you sign up, and again whenever the version you last agreed to is not the
         current one, the site sends you to its <Link href="/account/terms">acceptance page</Link>{' '}
@@ -226,13 +225,22 @@ export default function TermsOfUsePage() {
         pages, this one included, need no agreement to read.
       </p>
 
-      <h2>Updates to These Terms</h2>
+      <h3>Updates to These Terms</h3>
       <p>
         These terms are refreshed from time to time, and only ever by a new version with a new date
         at the top, never quietly. When that happens, each account is asked to agree again at its
         next page that needs an account, on the same acceptance page. Anything an account does on
         the site after an update is bound by the updated terms. You can read the new version before
         you agree to it, and you can come back to this page at any time.
+      </p>
+
+      <h3>Leaving</h3>
+      <p>
+        You may stop using the site at any time. You can leave any coven from its page. To have your
+        account or anything in it erased, ask through the{' '}
+        <SupportLink about="privacy">support form</SupportLink>, and the site's admin does it and
+        tells you when it is done. What you delete yourself is marked deleted rather than erased, as
+        the Privacy Policy explains.
       </p>
 
       <h2>Sources</h2>

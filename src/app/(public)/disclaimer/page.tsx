@@ -47,7 +47,9 @@ export default function DisclaimerPage() {
         </li>
       </ul>
 
-      <h2>Information, Not Advice</h2>
+      <h2>What the Compendium Is</h2>
+
+      <h3>Information, Not Advice</h3>
       <p>
         The compendium records what traditions, books and other sources say about ingredients: their
         correspondences, their folk names, the deities and festivals they are linked with, and what
@@ -61,7 +63,7 @@ export default function DisclaimerPage() {
         poisoned, contact your local poison centre or emergency service straight away.
       </p>
 
-      <h2>An Interpretation, Not an Authority</h2>
+      <h3>An Interpretation, Not an Authority</h3>
       <p>
         What the compendium says is its admins' and curators' understanding of the sources they have
         read. They choose which sources to cite and decide what each one means for an entry, and
@@ -73,7 +75,7 @@ export default function DisclaimerPage() {
         you read here, and they are yours to follow.
       </p>
 
-      <h2>No Warranty</h2>
+      <h3>No Warranty</h3>
       <p>
         The site is offered as it is. The people who run it do their best to cite a source for every
         claim and to mark what has not been checked, but they do not promise that any page is
@@ -81,7 +83,9 @@ export default function DisclaimerPage() {
         Where a page cites a source, the source is the authority, not the page.
       </p>
 
-      <h2>Safety Notes Are Not Complete</h2>
+      <h2>Safety</h2>
+
+      <h3>Safety Notes Are Not Complete</h3>
       <p>
         A safety note on an ingredient is what a cited source said about it, as far as the curators
         have read. It is not a toxicology report. A note may cover one hazard and miss another; it
@@ -95,7 +99,7 @@ export default function DisclaimerPage() {
         ingredient's notes, and under each form's, says so and links here.
       </p>
 
-      <h2>A Familiar Ingredient Can Still Harm</h2>
+      <h3>A Familiar Ingredient Can Still Harm</h3>
       <p>
         An ingredient that is safe in its usual use can be harmful in another. Changing the form,
         the dose or the route into the body changes the risk. Two documented cases, both of everyday

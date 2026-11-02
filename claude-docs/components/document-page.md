@@ -10,16 +10,16 @@ A document route is listed in three places beside its page: `PUBLIC_ROUTES` in `
 
 `DocumentPageProps` (`types.ts`):
 
-| Prop        | What it is                                                                                    |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| `title`     | The document's title: the page's one `h1`, title case                                         |
-| `lede`      | Optional: a sentence under the title saying what the document is for                          |
-| `updatedOn` | The day the text last changed, a `Date`; the page shows it in UTC, so no server zone moves it |
-| `children`  | The document's sections: `h2` headings, paragraphs, lists and tables                          |
+| Prop        | What it is                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------- |
+| `title`     | The document's title: the page's one `h1`, title case                                                   |
+| `lede`      | Optional: a sentence under the title saying what the document is for                                    |
+| `updatedOn` | The day the text last changed, a `Date`; the page shows it in UTC, so no server zone moves it           |
+| `children`  | The document's sections: `h2` headings (optionally with `h3` subsections), paragraphs, lists and tables |
 
 ## The jump menu
 
-The menu is read from `children`: each direct `h2` child becomes one entry, in page order, and is given an `id` that is the slug of its text (`src/lib/slugify.ts`), so a heading is written once and the menu cannot drift from it. An `h2` must therefore be a direct child of `DocumentPage` and hold plain text; a document with no `h2` draws no menu. Each `h2` keeps a scroll margin under the shell's bar.
+The menu is read from `children`: each direct `h2` and `h3` child is given an `id` that is the slug of its text (`src/lib/slugify.ts`), so a heading is written once and the menu cannot drift from it. An `h2` followed by one or more `h3`s is a group: each `h3` becomes an entry carrying the `h2`'s text as its `group` ([`PageNav`](page-nav.md)), so the menu nests the subsections under it, and the `h2` has no entry of its own because a group label is not a link. An `h2` with no `h3` after it is a top-level entry. A heading must therefore be a direct child of `DocumentPage` and hold plain text; a document with no `h2` or `h3` draws no menu. Each heading keeps a scroll margin under the shell's bar.
 
 The article is `.page-with-nav` ([`page-nav.md`](page-nav.md), "Where it stands"): from a tablet up the menu is a sticky column to the left of the sections, and on a wide screen an empty column of the menu's width balances it, so the text column sits at the window's centre; below that the pair is centred together. On a phone the menu stands above the sections. The column is the reading measure rather than `.page-with-nav`'s narrow column, and the menu's column is 18rem rather than its 12rem, with the breakpoints recomputed from those widths; text inside stays start-aligned. The rule that sets the columns names both classes (`.document-page.page-with-nav`), because the primitives are emitted under `body` and a lone class loses to them.
 
