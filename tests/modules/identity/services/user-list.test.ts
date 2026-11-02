@@ -26,6 +26,16 @@ const PAGE: PageRequest = { limit: 101, inverted: false };
 const PENDING = '00000000-0000-0000-0000-0000000000a1';
 const DELETED = '00000000-0000-0000-0000-0000000000a2';
 const WILDCARD = '00000000-0000-0000-0000-0000000000a3';
+// Invented accounts under support time-outs and site access pauses: one standing with no end date, one standing to a date,
+// one run out and one lifted of each. The last two hold a row each that no longer stands.
+const TIMED_OPEN = '00000000-0000-0000-0000-0000000000b1';
+const TIMED_DATED = '00000000-0000-0000-0000-0000000000b2';
+const TIMED_RUN_OUT = '00000000-0000-0000-0000-0000000000b3';
+const TIMED_LIFTED = '00000000-0000-0000-0000-0000000000b4';
+const PAUSED_OPEN = '00000000-0000-0000-0000-0000000000c1';
+const PAUSED_DATED = '00000000-0000-0000-0000-0000000000c2';
+const PAUSED_RUN_OUT = '00000000-0000-0000-0000-0000000000c3';
+const PAUSED_LIFTED = '00000000-0000-0000-0000-0000000000c4';
 
 beforeAll(async () => {
   // The wildcard account is inserted holding the creation flag, a privilege
@@ -41,6 +51,36 @@ beforeAll(async () => {
   await sql`
     insert into users (id, name, email, created_by, updated_by, deleted_at, deleted_by)
     values (${DELETED}, 'Lapsed Fixturewort', 'lapsed@users.test', ${DELETED}, ${DELETED}, now(), ${DELETED})
+  `;
+  const sanctioned: [string, string][] = [
+    [TIMED_OPEN, 'Timed Open Testwort'],
+    [TIMED_DATED, 'Timed Dated Testwort'],
+    [TIMED_RUN_OUT, 'Timed Run Out Testwort'],
+    [TIMED_LIFTED, 'Timed Lifted Testwort'],
+    [PAUSED_OPEN, 'Paused Open Testwort'],
+    [PAUSED_DATED, 'Paused Dated Testwort'],
+    [PAUSED_RUN_OUT, 'Paused Run Out Testwort'],
+    [PAUSED_LIFTED, 'Paused Lifted Testwort'],
+  ];
+  for (const [id, name] of sanctioned) {
+    await sql`
+      insert into users (id, name, email, created_by, updated_by)
+      values (${id}, ${name}, ${id.slice(-2) + '@users.test'}, ${id}, ${id})
+    `;
+  }
+  await sql`
+    insert into support_timeouts (user_id, until, note, lifted_at, created_by, updated_by)
+    values (${TIMED_OPEN}, null, 'Testnote', null, ${E.id}, ${E.id}),
+           (${TIMED_DATED}, now() + interval '1 day', 'Testnote', null, ${E.id}, ${E.id}),
+           (${TIMED_RUN_OUT}, now() - interval '1 minute', 'Testnote', null, ${E.id}, ${E.id}),
+           (${TIMED_LIFTED}, null, 'Testnote', now(), ${E.id}, ${E.id})
+  `;
+  await sql`
+    insert into user_access_pauses (user_id, until, note, lifted_at, lifted_by, created_by, updated_by)
+    values (${PAUSED_OPEN}, null, 'Testnote', null, null, ${E.id}, ${E.id}),
+           (${PAUSED_DATED}, now() + interval '1 day', 'Testnote', null, null, ${E.id}, ${E.id}),
+           (${PAUSED_RUN_OUT}, now() - interval '1 minute', 'Testnote', null, null, ${E.id}, ${E.id}),
+           (${PAUSED_LIFTED}, null, 'Testnote', now(), ${E.id}, ${E.id}, ${E.id})
   `;
   await sql`
     insert into accounts (account_id, provider_id, user_id, updated_at)
@@ -170,6 +210,38 @@ describe('listUsers', () => {
   });
 });
 
+describe('listUsers by support time-out and site access pause', () => {
+  async function ids(filter: UserFilter): Promise<string[]> {
+    return (await listUsers(asUser(E), filter, PAGE)).map((entry) => entry.node.id).sort();
+  }
+
+  it('narrows to the users a support time-out stands on, leaving out one run out and one lifted', async () => {
+    // Every kind holds a row, or a filter testing only that a row exists would pass.
+    const rows = await sql<{ user_id: string }[]>`select user_id from support_timeouts`;
+    expect(rows.map((row) => row.user_id)).toEqual(
+      expect.arrayContaining([TIMED_OPEN, TIMED_DATED, TIMED_RUN_OUT, TIMED_LIFTED]),
+    );
+
+    expect(await ids({ timedOut: true })).toEqual([TIMED_OPEN, TIMED_DATED].sort());
+    expect(await names({ timedOut: true, query: 'dated' })).toEqual(['Timed Dated Testwort']);
+    // Off is no filter.
+    expect(await ids({ timedOut: false })).toEqual(await ids({}));
+  });
+
+  it('narrows to the users a site access pause stands on, leaving out one run out and one lifted', async () => {
+    const rows = await sql<{ user_id: string }[]>`select user_id from user_access_pauses`;
+    expect(rows.map((row) => row.user_id)).toEqual(
+      expect.arrayContaining([PAUSED_OPEN, PAUSED_DATED, PAUSED_RUN_OUT, PAUSED_LIFTED]),
+    );
+
+    expect(await ids({ paused: true })).toEqual([PAUSED_OPEN, PAUSED_DATED].sort());
+    expect(await names({ paused: true, query: 'open' })).toEqual(['Paused Open Testwort']);
+    expect(await ids({ paused: false })).toEqual(await ids({}));
+    // Both at once is the users under both, none here.
+    expect(await ids({ paused: true, timedOut: true })).toEqual([]);
+  });
+});
+
 describe('countUsers', () => {
   // Each filter counts what the list pages under it: the bootstrap user and
   // the soft-deleted one are left out of both, and every arm narrows.
@@ -180,6 +252,8 @@ describe('countUsers', () => {
       { awaitingApproval: true },
       { role: 'admin' },
       { role: 'user', awaitingApproval: true, query: 'pending' },
+      { timedOut: true },
+      { paused: true },
     ];
     const listed = await Promise.all(filters.map((filter) => names(filter)));
     // Each filter keeps some and narrows, or a count ignoring it would pass.

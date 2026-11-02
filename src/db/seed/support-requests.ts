@@ -4,6 +4,7 @@ import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { users } from '../../modules/identity/schema/users';
 import { insertStamped } from './idempotent';
+import { SANCTIONED_USERS } from './sanctioned-users';
 import { FIXTURE_USERS } from './standard';
 import type { InsertStamps, SeedTransaction } from './types';
 
@@ -15,6 +16,7 @@ const DAY = 24 * 60 * 60 * 1000;
 const ISSUES = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues';
 
 const { A, B, C, D, E, F } = FIXTURE_USERS;
+const { I } = SANCTIONED_USERS;
 
 interface SeedRequest {
   id: string;
@@ -238,6 +240,16 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     linkedFrom: '00000000-0000-0000-0005-000000000015',
     daysAgo: 2.2,
   },
+  {
+    id: '00000000-0000-0000-0005-000000000017',
+    sender: I.id,
+    about: 'question',
+    subject: 'Why is my request not answered yet?',
+    message:
+      'I have written to you several times today about the same thing and nobody has answered. Is anyone reading these?',
+    path: '/support',
+    daysAgo: 2.9,
+  },
 ];
 
 interface SeedReply {
@@ -336,15 +348,16 @@ const SUPPORT_REPLIES: readonly SeedReply[] = [
 interface SeedTimeout {
   id: string;
   userId: string;
-  /** Days from the first run: negative is in the past. */
-  untilInDays: number;
+  /** Days from the first run: negative is in the past, null for a time-out with no end date. */
+  untilInDays: number | null;
   /** Days before the first run. */
   daysAgo: number;
   liftedDaysAgo?: number;
   note: string;
 }
 
-// D has a time-out in force and an earlier one an admin lifted, C one that has run out, and B one an admin lifted early.
+// D has a time-out in force and an earlier one an admin lifted, C one that has run out, B one an admin lifted early, and I
+// (seeded beside H's site access pause, `sanctioned-users.ts`) one with no end date.
 const SUPPORT_TIMEOUTS: readonly SeedTimeout[] = [
   {
     id: '00000000-0000-0000-0005-000000000201',
@@ -376,12 +389,19 @@ const SUPPORT_TIMEOUTS: readonly SeedTimeout[] = [
     liftedDaysAgo: 19,
     note: 'Asked the same question in three requests in one day.',
   },
+  {
+    id: '00000000-0000-0000-0005-000000000205',
+    userId: I.id,
+    untilInDays: null,
+    daysAgo: 2,
+    note: 'Sent a request every hour for a day.',
+  },
 ];
 
 /**
  * Writes the requests, their replies and the time-outs, each only when missing by its fixed id. A request is stamped by its
  * sender, a reply and a time-out by the staff member who wrote it, and then given a time in the past, since the stamp is "now".
- * Assumes the actor is published and the fixture users exist.
+ * Assumes the actor is published and the fixture users and `seedSanctionedUsers`' users exist.
  */
 export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
   const now = Date.now();
@@ -394,7 +414,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
   ];
   const people = await tx.select({ id: users.id }).from(users).where(inArray(users.id, wanted));
   if (people.length < new Set(wanted).size) {
-    throw new Error('The support seed needs the standard fixture users.');
+    throw new Error('The support seed needs the standard fixture users and the sanctioned users.');
   }
 
   // Each table is written once per author, since a stamp names one author, and the rows it inserts are dated afterwards.
@@ -485,7 +505,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
     () => E.id,
     (t) => ({
       userId: t.userId,
-      until: new Date(now + t.untilInDays * DAY),
+      until: t.untilInDays === null ? null : new Date(now + t.untilInDays * DAY),
       note: t.note,
       liftedAt: t.liftedDaysAgo === undefined ? null : ago(t.liftedDaysAgo),
     }),

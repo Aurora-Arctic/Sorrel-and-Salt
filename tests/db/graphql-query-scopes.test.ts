@@ -82,6 +82,10 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ privilegeChanges(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
   },
+  userAccessPauses: {
+    source: `{ userAccessPauses(userId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
+    outcome: 'refuses',
+  },
   invitationCardBatches: {
     source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
@@ -427,7 +431,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { setSupportRequestIssueUrl(id: "${NOWHERE}", issueUrl: null) { id } }`,
   ),
   timeOutSupportSender: write(
-    `mutation { timeOutSupportSender(userId: "${NOWHERE}", until: "2999-01-01T00:00:00Z") { id } }`,
+    `mutation { timeOutSupportSender(userId: "${NOWHERE}", note: "Spam") { id } }`,
   ),
   liftSupportTimeout: write(`mutation { liftSupportTimeout(id: "${NOWHERE}") { id } }`),
   grantWorkspaceCreation: write(`mutation { grantWorkspaceCreation(userId: "${NOWHERE}") { id } }`),
@@ -435,6 +439,10 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
   ),
   setUserRole: write(`mutation { setUserRole(userId: "${NOWHERE}", role: admin) { id } }`),
+  pauseUserAccess: write(
+    `mutation { pauseUserAccess(userId: "${NOWHERE}", note: "Testnote") { id } }`,
+  ),
+  liftUserAccessPause: write(`mutation { liftUserAccessPause(userId: "${NOWHERE}") { id } }`),
   pauseAdminRoleChanges: write('mutation { pauseAdminRoleChanges }'),
   resumeAdminRoleChanges: write('mutation { resumeAdminRoleChanges }'),
   // A malformed address, so an admin past the scope is refused by the service
@@ -459,6 +467,13 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   // A malformed person id, so a caller past the scope is refused by the service.
   updateMemberRole: write(
     `mutation { updateMemberRole(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id", role: member) { role } }`,
+  ),
+  // A malformed person id, so a caller past the scope is refused by the service before anything is written.
+  pauseMemberAccess: write(
+    `mutation { pauseMemberAccess(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id") { id } }`,
+  ),
+  liftMemberAccessPause: write(
+    `mutation { liftMemberAccessPause(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id") { id } }`,
   ),
   // A malformed id, so a caller past the scope is refused by the service
   // before anything is deleted.
@@ -655,6 +670,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   revokeWorkspaceCreation: { governs: 'workspace creation' },
   // Who is an admin or a curator, granted and revoked by an admin.
   setUserRole: { governs: 'site role' },
+  // A user's access to the site, paused and lifted by an admin.
+  pauseUserAccess: { governs: 'site access' },
+  liftUserAccessPause: { governs: 'site access' },
   // The primary admin's pause on those changes.
   pauseAdminRoleChanges: { governs: 'site role' },
   resumeAdminRoleChanges: { governs: 'site role' },
@@ -714,6 +732,9 @@ const OPEN_WRITES = [
   'createWorkspace',
   // The owner's `member: update` decides, which the service checks.
   'updateMemberRole',
+  // The owner's `member: pause` decides, which the service checks.
+  'pauseMemberAccess',
+  'liftMemberAccessPause',
   // The owner's `workspace: delete` decides, which the service checks.
   'deleteWorkspace',
   // `member: remove` decides removal, and leaving is the caller's own seat.
@@ -820,7 +841,12 @@ describe('a signed-in non-admin at every admin write', () => {
 
 // The people page's writes are an admin's alone; every other admin write is curation, which a curator's scope admits.
 // A write added to ADMIN_WRITES lands on one side or the other.
-const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role', 'support'];
+const PEOPLE_PAGE: readonly Governed[] = [
+  'workspace creation',
+  'site role',
+  'site access',
+  'support',
+];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);
 const CURATION_WRITES = Object.keys(ADMIN_WRITES).filter((field) => !governsPeople(field));
@@ -874,7 +900,7 @@ describe('a curator at every admin write, and at the people page’s reads', () 
     });
   });
 
-  it.each(['users', 'privilegeChanges'])(
+  it.each(['users', 'privilegeChanges', 'userAccessPauses'])(
     '%s refuses a curator, answering an admin',
     async (field) => {
       const { source } = PROBES[field];

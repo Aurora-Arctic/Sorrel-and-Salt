@@ -3,7 +3,14 @@ import { createYoga } from 'graphql-yoga';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createBuilder } from '@/graphql/builder';
 import { maskedErrors } from '@/graphql/errors';
-import { Forbidden, NotFound, RateLimited, StaleWrite, ValidationError } from '@/lib/errors';
+import {
+  AccessPaused,
+  Forbidden,
+  NotFound,
+  RateLimited,
+  StaleWrite,
+  ValidationError,
+} from '@/lib/errors';
 
 // The route's mapping, run through a real Yoga instance so what is asserted is the response
 // body a browser receives. The schema is a throwaway, since no production field throws each
@@ -39,6 +46,16 @@ scratch.queryType({
     stale: t.boolean({
       resolve: () => {
         throw new StaleWrite(7, 'This was changed elsewhere');
+      },
+    }),
+    paused: t.boolean({
+      resolve: () => {
+        throw new AccessPaused(new Date('2031-02-03T04:05:06.000Z'));
+      },
+    }),
+    pausedOpenEnded: t.boolean({
+      resolve: () => {
+        throw new AccessPaused(null);
       },
     }),
     limited: t.boolean({
@@ -157,6 +174,20 @@ describe('service errors over GraphQL', () => {
         extensions: { code: 'STALE_WRITE', currentRevision: 7 },
       },
     ]);
+  });
+
+  // Its own code rather than FORBIDDEN, so a client can tell a paused member, who holds a seat, from a stranger.
+  it('answers an AccessPaused with ACCESS_PAUSED and when the pause ends, or null for none', async () => {
+    const dated = await run('{ paused }');
+    const open = await run('{ pausedOpenEnded }');
+
+    expect(dated.body.data).toBeNull();
+    expect(dated.body.errors[0].extensions).toEqual({
+      code: 'ACCESS_PAUSED',
+      pausedUntil: '2031-02-03T04:05:06.000Z',
+    });
+    expect(dated.body.errors[0].message).toMatch(/paused/i);
+    expect(open.body.errors[0].extensions).toEqual({ code: 'ACCESS_PAUSED', pausedUntil: null });
   });
 
   it('answers a RateLimited with RATE_LIMITED, status 429 and the seconds to wait in Retry-After', async () => {

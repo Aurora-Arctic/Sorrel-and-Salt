@@ -262,7 +262,7 @@ describe('a sender’s message', () => {
       Forbidden,
     );
 
-    await timeOutSupportSender(asUser(E), C.id, new Date(Date.now() + 3_600_000), null);
+    await timeOutSupportSender(asUser(E), C.id, new Date(Date.now() + 3_600_000), 'Spam');
     const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'Hi.'));
     expect(refused).toBeInstanceOf(Forbidden);
     expect((refused as Error).message).toMatch(/until/);
@@ -275,7 +275,7 @@ describe('a timed-out sender’s reply', () => {
 
   it('is refused by direct request id with the reply wording, saves nothing, and works once the time-out is lifted', async () => {
     const request = await waiting();
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam');
 
     const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'The red one.'));
     expect(refused).toBeInstanceOf(Forbidden);
@@ -289,10 +289,22 @@ describe('a timed-out sender’s reply', () => {
     expect((await sendSenderMessage(asUser(C), request.id, 'The red one.')).status).toBe('open');
   });
 
+  it('is refused with the no-end wording during a time-out with no end date', async () => {
+    const request = await waiting();
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+
+    const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'The red one.'));
+    expect(refused).toBeInstanceOf(Forbidden);
+    expect((refused as Error).message).toBe(
+      'You cannot reply: you are timed out with no end date.',
+    );
+    expect(await statusOf(request.id)).toBe('waiting_on_sender');
+  });
+
   it('keeps the new-request wording for a closed request', async () => {
     const closed = await send();
     await closeSupportRequest(asUser(E), closed.id);
-    await timeOutSupportSender(asUser(E), C.id, until, null);
+    await timeOutSupportSender(asUser(E), C.id, until, 'Spam');
 
     const refused = await failureOf(sendSenderMessage(asUser(C), closed.id, 'Again.'));
     expect((refused as Error).message).toContain('You cannot send support requests until');

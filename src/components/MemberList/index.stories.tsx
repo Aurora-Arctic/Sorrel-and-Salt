@@ -6,9 +6,8 @@ import Notice from '../Notice';
 import type { MemberListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/MemberList. A member's
-// view leaves the addresses out; an owner's draws them. The controls are plain
-// buttons styled as the real controls: Change Role and Remove both quiet, the red
-// kept for the confirm in Remove's question.
+// view leaves the addresses out; an owner's draws them and the Access column, where the
+// viewer's row shows a standing pause. No row holds an action: the member modal does.
 const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;
@@ -50,24 +49,15 @@ const MEMBERS: readonly MemberListEntry[] = [
 
 const defaultNode = <MemberList members={MEMBERS} currentUserId="u-bo" />;
 
-const withActionsNode = (
-  <MemberList
-    members={MEMBERS}
-    currentUserId="u-ada"
-    showEmail
-    roleAction={() => (
-      <button type="button" className="btn btn--quiet btn--small">
-        Change Role
-      </button>
-    )}
-    removeAction={(member) =>
-      member.role === 'owner' ? null : (
-        <button type="button" className="btn btn--quiet btn--small">
-          Remove
-        </button>
-      )
-    }
-  />
+// An owner's view: the addresses, and the viewer's standing pause in the Access column. The rows hold no actions;
+// those are the member modal's (Coven / Member Detail).
+const OWNER_VIEW: readonly MemberListEntry[] = MEMBERS.map((member) => ({
+  ...member,
+  paused: member.role === 'viewer' ? { until: null } : null,
+}));
+
+const ownerViewNode = (
+  <MemberList members={OWNER_VIEW} currentUserId="u-ada" showEmail showAccess />
 );
 
 // The page's composition: the sole-owner note inside the list frame, ahead of
@@ -80,23 +70,7 @@ const SoleOwnerPage = () => (
       another member an owner to be safe.
     </Notice>
     <ListBody>
-      <MemberList
-        members={MEMBERS}
-        currentUserId="u-ada"
-        showEmail
-        roleAction={() => (
-          <button type="button" className="btn btn--quiet btn--small">
-            Change Role
-          </button>
-        )}
-        removeAction={(member) =>
-          member.role === 'owner' ? null : (
-            <button type="button" className="btn btn--quiet btn--small">
-              Remove
-            </button>
-          )
-        }
-      />
+      <MemberList members={OWNER_VIEW} currentUserId="u-ada" showEmail showAccess />
     </ListBody>
   </ListFrame>
 );
@@ -116,12 +90,12 @@ const gapsNode = (
   />
 );
 
-// An owner's view with the addresses but no controls, as a viewer's page draws it.
+// The addresses without the Access column.
 const addressesOnlyNode = <MemberList members={MEMBERS} currentUserId="u-cy" showEmail />;
 
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
-  'With Actions': withActionsNode,
+  'Owner View': ownerViewNode,
   'Sole Owner': soleOwnerNode,
   'Gaps In The Record': gapsNode,
   'Addresses Without Actions': addressesOnlyNode,

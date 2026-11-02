@@ -32,7 +32,13 @@ const SupportPanel = ({
   if (state.kind === 'timed-out') {
     return (
       <Notice kind="caution" quiet>
-        You cannot send a request until <LocalTime at={state.until} long />.
+        {state.until ? (
+          <>
+            You cannot send a request until <LocalTime at={state.until} long />.
+          </>
+        ) : (
+          'You cannot send a request: you are timed out with no end date.'
+        )}
       </Notice>
     );
   }

@@ -10,12 +10,12 @@ import type { Ask } from './types';
 // Flight renderer is running, so the dedupe cannot be seen from a plain call. A repository call is a
 // Postgres round trip (CLAUDE.md rule 2), so the repository is mocked and its calls are counted.
 
-const { findWorkspaceRole } = vi.hoisted(() => ({
-  findWorkspaceRole: vi.fn(async () => 'owner' as const),
+const { findWorkspaceSeat } = vi.hoisted(() => ({
+  findWorkspaceSeat: vi.fn(async () => ({ role: 'owner' as const, pause: null })),
 }));
 // The whole module, not `importOriginal`: the real one opens connection.ts,
 // and this project has no database.
-vi.mock('@/db/repository', () => ({ findWorkspaceRole }));
+vi.mock('@/db/repository', () => ({ findWorkspaceSeat }));
 
 const READ: WorkspacePermission = { workspace: ['read'] };
 
@@ -50,7 +50,7 @@ function count(text: string, needle: string): number {
 }
 
 beforeEach(() => {
-  findWorkspaceRole.mockClear();
+  findWorkspaceSeat.mockClear();
 });
 
 describe('assertMembership inside one server render', () => {
@@ -69,7 +69,7 @@ describe('assertMembership inside one server render', () => {
 
     // Why this could have passed: both components asked and were answered.
     expect(count(wire, `${WORKSPACE_W_ID}:owner`)).toBe(2);
-    expect(findWorkspaceRole).toHaveBeenCalledTimes(2);
+    expect(findWorkspaceSeat).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -81,6 +81,6 @@ describe('assertMembership outside a render', () => {
     await assertMembership(asUser(A), WORKSPACE_W_ID, READ);
     await assertMembership(asUser(A), WORKSPACE_W_ID, READ);
 
-    expect(findWorkspaceRole).toHaveBeenCalledTimes(2);
+    expect(findWorkspaceSeat).toHaveBeenCalledTimes(2);
   });
 });

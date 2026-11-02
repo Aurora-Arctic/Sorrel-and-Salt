@@ -180,7 +180,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
   // in its address, so the default is the first the viewer may write in. A viewer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
-  const mine = viewer?.workspaces.map(({ id, name }) => ({ id, name })) ?? [];
+  const mine = viewer?.workspaces.map(({ id, name, paused }) => ({ id, name, paused })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
@@ -188,10 +188,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // window: one read, per request, for both, and none for a visitor or a viewer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
   // Asked of every coven, not only the writable ones, for the holding count; read only where
-  // there is a plus or a check to count on.
+  // there is a plus or a check to count on. Not of a paused one: its read is refused, which
+  // would blank the count for every coven.
   const held = defaultCoven
     ? await heldEntryIds(
-        mine.map(({ id }) => id),
+        mine.filter(({ paused }) => !paused).map(({ id }) => id),
         page.edges.map(({ node }) => node.id),
       )
     : undefined;

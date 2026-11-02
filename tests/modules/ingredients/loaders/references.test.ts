@@ -10,10 +10,10 @@ import { insertReference, insertReferenceLink } from '../../../support/db/insert
 import { makeIngredient } from '../../../support/fixtures';
 
 // `Ingredient.references`' loader: a page of ingredients answered in one read, the citations in the order a bibliography files them, and refused per key as the other children's loaders are.
-// The query count is observed at the repository, wrapped so the test counts calls without changing what they answer; a role lookup is `assertMembership`'s one query.
+// The query count is observed at the repository, wrapped so the test counts calls without changing what they answer; a seat lookup is `assertMembership`'s one query.
 const repository = vi.hoisted(() => ({
   findReferencesOf: vi.fn(),
-  findWorkspaceRole: vi.fn(),
+  findWorkspaceSeat: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -81,7 +81,7 @@ describe('the referencesByIngredient loader', () => {
         `Zeta ${String(i).padStart(2, '0')}`,
       ]),
     );
-    expect(countOf()).toEqual({ findReferencesOf: 1, findWorkspaceRole: 1 });
+    expect(countOf()).toEqual({ findReferencesOf: 1, findWorkspaceSeat: 1 });
   });
 
   // Who it answers is the shared matrix in ingredient-children.test.ts, which

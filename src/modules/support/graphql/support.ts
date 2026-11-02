@@ -78,12 +78,13 @@ const SupportReplyRef = builder.objectRef<SupportReplyRow>('SupportReply').imple
 });
 
 const SupportTimeoutRef = builder.objectRef<SupportTimeoutRow>('SupportTimeout').implement({
-  description: 'A bar on a user sending support requests until `until`, unless lifted sooner.',
+  description:
+    'A bar on a user sending support requests until `until`, or with no end when `until` is null, unless lifted sooner.',
   fields: (t) => ({
     id: t.exposeID('id'),
     userId: t.exposeID('userId'),
-    until: t.expose('until', { type: 'DateTime' }),
-    note: t.exposeString('note', { nullable: true }),
+    until: t.expose('until', { type: 'DateTime', nullable: true }),
+    note: t.exposeString('note'),
     liftedAt: t.expose('liftedAt', { type: 'DateTime', nullable: true }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
@@ -434,11 +435,12 @@ builder.mutationField('setSupportRequestIssueUrl', (t) =>
 builder.mutationField('timeOutSupportSender', (t) =>
   t.field({
     type: SupportTimeoutRef,
-    description: 'Bars a user from sending support requests until `until`. Site admins only.',
+    description:
+      'Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.',
     args: {
       userId: t.arg.id({ required: true }),
-      until: t.arg({ type: 'DateTime', required: true }),
-      note: t.arg.string({ required: false }),
+      until: t.arg({ type: 'DateTime', required: false }),
+      note: t.arg.string({ required: true }),
     },
     authScopes: { admin: true },
     resolve: (_root, { userId, until, note }, context) =>

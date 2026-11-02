@@ -4,6 +4,8 @@ import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspa
 import { accounts, passkeys, verifications } from '../../modules/identity/schema/auth';
 import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
+import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
+import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import type { SiteAdmin } from '@/modules/identity';
 import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
@@ -12,6 +14,8 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import { findMany, findPage, findPageCount } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
+import { timeoutStands } from './support';
+import { pauseStands } from './user-access-pauses';
 import type {
   AuditWriter,
   LinkedProvider,
@@ -179,11 +183,24 @@ function privilegeChangeArms({
 }
 
 /** The filter's arms, each `undefined` when its part is absent. */
-function userArms({ query, awaitingApproval, role }: UserFilter): (SQL | undefined)[] {
+function userArms({
+  query,
+  awaitingApproval,
+  role,
+  timedOut,
+  paused,
+}: UserFilter): (SQL | undefined)[] {
   return [
     query ? nameOrEmailHolds(query) : undefined,
     awaitingApproval ? eq(users.canCreateWorkspace, false) : undefined,
     role ? eq(users.role, role) : undefined,
+    // Semi-joins by the column reads' own test, so the filter and the marks agree and paging stays in SQL.
+    timedOut
+      ? existsIn(supportTimeouts, and(eq(supportTimeouts.userId, users.id), timeoutStands))
+      : undefined,
+    paused
+      ? existsIn(userAccessPauses, and(eq(userAccessPauses.userId, users.id), pauseStands))
+      : undefined,
   ];
 }
 

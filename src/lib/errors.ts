@@ -18,6 +18,21 @@ export class Forbidden extends Error {
 /**
  * No such row — or none this reader may know about, which reads the same.
  */
+/**
+ * A member whose access to this coven an owner has paused: they hold a seat, so it is not the bare refusal a stranger gets.
+ * A `Forbidden` still, so every caller that maps a refusal to a 404 keeps doing so until it reads this one; `until` is when the
+ * pause ends, `null` for a pause with no end.
+ */
+export class AccessPaused extends Forbidden {
+  readonly until: Date | null;
+
+  constructor(until: Date | null, message = 'Your access to this coven is paused.') {
+    super(message);
+    this.name = 'AccessPaused';
+    this.until = until;
+  }
+}
+
 export class NotFound extends Error {
   constructor(message = 'Not found') {
     super(message);
@@ -39,6 +54,10 @@ export class ValidationError extends Error {
     this.issues = issues;
   }
 }
+
+/** A refusal of one field whose sentence is also the error's message, for a form that shows the message rather than the field. */
+export const fieldRefusal = (path: string, message: string): ValidationError =>
+  new ValidationError([{ path: [path], message }], message);
 
 /**
  * A pagination cursor that names no position in the list: malformed, forged, or from a list sorted on another column. The input is

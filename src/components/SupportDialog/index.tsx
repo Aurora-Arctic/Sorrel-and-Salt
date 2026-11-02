@@ -59,8 +59,8 @@ function Dialog(): ReactElement | null {
   const found = answer.data?.supportDialogState;
   const state: SupportDialogState | null = !found
     ? null
-    : found.kind === 'timedOut' && found.until
-      ? { kind: 'timed-out', until: new Date(found.until) }
+    : found.kind === 'timedOut'
+      ? { kind: 'timed-out', until: found.until ? new Date(found.until) : null }
       : found.kind === 'signedOut'
         ? { kind: 'signed-out' }
         : found.kind === 'unverified'

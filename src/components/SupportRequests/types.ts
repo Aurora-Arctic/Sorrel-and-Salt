@@ -55,8 +55,10 @@ export interface SupportReplyEntry {
 
 export interface SupportTimeoutEntry {
   id: string;
-  until: Date;
-  note: string | null;
+  /** When the time-out ends by itself; null for one with no end date. */
+  until: Date | null;
+  /** Why it was set, for staff: every time-out has one. */
+  note: string;
   liftedAt: Date | null;
   /** When it was set. */
   createdAt: Date;

@@ -446,8 +446,8 @@ describe('FacetPanel', () => {
 
   describe('In My Covens', () => {
     const COVENS = [
-      { id: 'coven-w', name: 'Testhollow' },
-      { id: 'coven-v', name: 'Testwren' },
+      { id: 'coven-w', name: 'Testhollow', paused: null },
+      { id: 'coven-v', name: 'Testwren', paused: null },
     ];
     const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
       stubViewport(true);
@@ -485,6 +485,32 @@ describe('FacetPanel', () => {
         screen.getByRole('button', { name: chipName }).closest('li')?.querySelector('.is-pending');
       expect(pending('Remove Element: Water')).not.toBeNull();
       expect(pending('Remove Coven: Testhollow')).toBeNull();
+    });
+
+    it('lists a coven whose access is paused, out of reach and saying when the pause ends', () => {
+      const onChange = vi.fn();
+      const covens = [
+        { ...COVENS[0]!, paused: { until: new Date('2099-01-01T00:00:00Z') } },
+        { ...COVENS[1]!, paused: { until: null } },
+        { id: 'coven-u', name: 'Testurn', paused: null },
+      ];
+      open({ covens: [] }, { covens, onChange });
+      fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
+
+      const dated = screen.getByRole('option', { name: /Testhollow/ });
+      expect(dated).toHaveAccessibleName('Testhollow Paused until 1 January 2099, 00:00 UTC');
+      expect(dated).toHaveAttribute('aria-disabled', 'true');
+      const open_ = screen.getByRole('option', { name: /Testwren/ });
+      expect(open_).toHaveAccessibleName('Testwren Paused, with no end date');
+      expect(open_).toHaveAttribute('aria-disabled', 'true');
+      // Why a paused row could have been picked: an unpaused one beside it is.
+      expect(screen.getByRole('option', { name: 'Testurn' })).not.toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
+
+      fireEvent.click(dated);
+      expect(onChange).not.toHaveBeenCalled();
     });
 
     it('reports a picked coven as a patch of only that part, by id', () => {

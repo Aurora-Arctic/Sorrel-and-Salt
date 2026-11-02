@@ -138,6 +138,46 @@ const noProvidersNode = inDialog(
   <UserDetail user={{ ...BO, providers: [] }} memberships={COVENS} />,
 );
 
+// Site Access with no pause standing: the form, and an earlier pause lifted.
+const accessOpenNode = inDialog(
+  BO,
+  <UserDetail
+    user={BO}
+    memberships={COVENS}
+    pauses={[
+      {
+        id: 'p1',
+        until: null,
+        note: 'Shared password',
+        createdAt: new Date('2026-08-01T09:00:00Z'),
+        liftedAt: new Date('2026-08-03T09:00:00Z'),
+        setBy: { id: 'a1', name: 'Ash Warden' },
+        liftedBy: { id: 'a2', name: 'Ivy Keeper' },
+      },
+    ]}
+  />,
+);
+
+// Site Access with an open-ended pause standing, and Lift Pause.
+const accessPausedNode = inDialog(
+  BO,
+  <UserDetail
+    user={BO}
+    memberships={COVENS}
+    pauses={[
+      {
+        id: 'p2',
+        until: null,
+        note: 'Shared password',
+        createdAt: new Date('2026-10-01T09:00:00Z'),
+        liftedAt: null,
+        setBy: { id: 'a1', name: 'Ash Warden' },
+        liftedBy: null,
+      },
+    ]}
+  />,
+);
+
 // Press the red Impersonate to see its question, with a red confirm, over the modal.
 export const InAModal: Story = {
   render: () => {
@@ -170,6 +210,8 @@ const STATES_STATES: Record<string, ReactNode> = {
   'May Create Covens': mayCreateCovensNode,
   'Other Admin': otherAdminNode,
   'No Providers': noProvidersNode,
+  'Access Open': accessOpenNode,
+  'Access Paused': accessPausedNode,
 };
 
 export const States: Story = {

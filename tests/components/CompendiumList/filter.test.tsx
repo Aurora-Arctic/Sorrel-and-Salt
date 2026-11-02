@@ -359,8 +359,8 @@ describe('CompendiumList filter', () => {
 
   describe('In My Covens on the public list', () => {
     const COVENS = [
-      { id: 'coven-w', name: 'Testhollow' },
-      { id: 'coven-v', name: 'Testwren' },
+      { id: 'coven-w', name: 'Testhollow', paused: null },
+      { id: 'coven-v', name: 'Testwren', paused: null },
     ];
     const publicFilter = (filter: CompendiumListFilter = NO_FILTER) =>
       render(<FilterRow {...props({ filter })} audience="public" covens={COVENS} />);

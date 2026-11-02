@@ -3,6 +3,7 @@
 // internal to the module.
 export * from './services/admin-invitations';
 export * from './services/admin-role';
+export * from './services/access-pause';
 export * from './services/admin-role-pause';
 export * from './services/display-names';
 export * from './services/editor-names';
@@ -28,6 +29,7 @@ export * from './services/user-role';
 export * from './services/workshop-access';
 export * from './services/workspace-creation';
 export * from './graphql/user';
+export * from './graphql/access-pause';
 export * from './graphql/co-member';
 export * from './graphql/invitations';
 export * from './graphql/invitation-cards';
@@ -57,6 +59,7 @@ export type {
   PrivilegeChangeRow,
   ReceivedInvitation,
   SignInProfile,
+  UserAccessPauseRow,
   UserFilter,
   UserRow,
 } from './types';

@@ -3,7 +3,8 @@ import type { SupportAboutParam } from '../../lib/support-path';
 /** What the Support dialog can offer this visitor. */
 export type SupportPanelState =
   | { kind: 'signed-out'; support?: SupportAboutParam }
-  | { kind: 'timed-out'; until: Date }
+  /** `until` is null for a time-out with no end date. */
+  | { kind: 'timed-out'; until: Date | null }
   | { kind: 'form'; support?: SupportAboutParam; errorCode?: number; errorReference?: string };
 
 export interface SupportPanelProps {

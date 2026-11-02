@@ -317,8 +317,8 @@ describe('CompendiumCards', () => {
   // writable ones the plus's menu lists; and each card's holding covens, counted on its mark.
   describe('the viewer’s covens', () => {
     const MINE = [
-      { id: 'coven-w', name: 'Testhollow' },
-      { id: 'coven-v', name: 'Testwren' },
+      { id: 'coven-w', name: 'Testhollow', paused: null },
+      { id: 'coven-v', name: 'Testwren', paused: null },
     ];
 
     it('offers In My Covens with every coven of the viewer’s', () => {

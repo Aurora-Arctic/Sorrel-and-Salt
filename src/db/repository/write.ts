@@ -16,8 +16,10 @@ import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
 import { supportWrites } from './support';
+import { userAccessPauseWrites } from './user-access-pauses';
 import { userWrites } from './users';
 import { workingWrites } from './workings';
+import { workspaceMemberPauseWrites } from './workspace-member-pauses';
 import { existsIn, selectFrom } from './select';
 import { StaleWrite } from '@/lib/errors';
 import { newToken } from '../../lib/invitation-token';
@@ -230,7 +232,9 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...stockWrites(context),
     ...supportWrites(context),
     ...userWrites(context),
+    ...userAccessPauseWrites(context),
     ...workingWrites(context),
+    ...workspaceMemberPauseWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);

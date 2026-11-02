@@ -16,6 +16,8 @@ import type { Loaders } from './loaders';
 export interface Context {
   /** `null` when signed out: the endpoint answers, and a scope or service refuses. */
   session: Session | null;
+  /** Set while a pause stands on the signed-in user: `session` is then `null`, and a refusal says the access is paused. */
+  accessPause?: { until: Date | null };
   loaders: Loaders;
   /** Bound to this request's host and cookie: the email page's mail goes out through it. */
   emailVerification: EmailVerificationSender;
@@ -56,7 +58,8 @@ export interface SchemaTypes {
   };
 }
 
-export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
+export type ErrorCode =
+  'VALIDATION' | 'FORBIDDEN' | 'ACCESS_PAUSED' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
 
 /**
  * What a mapped error carries under `extensions`: `fieldErrors` only on
@@ -66,6 +69,8 @@ export interface ErrorExtensions {
   code: ErrorCode;
   fieldErrors?: ValidationIssue[];
   currentRevision?: number;
+  /** Set with `ACCESS_PAUSED`: when the pause ends, as an ISO string, or `null` for a pause with no end. */
+  pausedUntil?: string | null;
   /** Set with `RATE_LIMITED`: the HTTP status and the Retry-After header Yoga sends. */
   http?: { status: number; headers: Record<string, string> };
 }

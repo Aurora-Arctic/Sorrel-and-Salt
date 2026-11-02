@@ -6,7 +6,9 @@ carrying `deleted_at`, and it is a named export rather than a loosening of
 holds at least one `accounts` row, and has an `updated_at` older than
 `now()` minus the lifetime or a `created_at` older than `now()` minus the
 cap, and answers whether it did. `accounts` and `sessions` follow by their
-`ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` over `accounts` is `existsIn`'s, so the delete builds no read
+`ON DELETE CASCADE`, as do the account's rows in `user_access_pauses`, `workspace_member_pauses` and `support_timeouts`, whose
+`user_id` cascades too. A pause or a support time-out sanctions the account it names and records nothing else, so unlike the privilege
+ledger below it neither keeps the account nor blocks the delete. `support_timeouts.user_id` was a plain foreign key until migration 0120, which re-adds it with `ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` over `accounts` is `existsIn`'s, so the delete builds no read
 of its own. `provisionalSecondsLeft(userId, ...)` is its read-only partner: how long until the row lapses, or null when it will not (it is verified, vouched for, has no provider account, or is gone). The expiry job's step calls the two in turn.
 
 It skips a row holding any `user_privilege_changes` row (MB.204), as

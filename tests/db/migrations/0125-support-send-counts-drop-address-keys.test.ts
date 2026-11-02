@@ -5,11 +5,11 @@ import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
 
-// A migration test, retired once `0120` is in production's journal. `0120` removes every send count written before the counts
+// A migration test, retired once `0125` is in production's journal. `0125` removes every send count written before the counts
 // were keyed by an HMAC, since those rows hold the addresses themselves. The test database is already migrated, so the
 // statements run again over rows the case writes.
 
-const FILE = fromRoot('src/db/migrations/0120_support-send-counts-drop-address-keys.sql');
+const FILE = fromRoot('src/db/migrations/0125_support-send-counts-drop-address-keys.sql');
 
 const STATEMENTS = readFileSync(FILE, 'utf8')
   .split('--> statement-breakpoint')
@@ -21,7 +21,7 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-describe('0120', () => {
+describe('0125', () => {
   it('leaves no send count that holds an address', async () => {
     const stamps = { created_by: SIGNED_OUT_SENDER_ID, updated_by: SIGNED_OUT_SENDER_ID };
     await sql`insert into support_send_counts ${sql([

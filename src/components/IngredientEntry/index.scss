@@ -55,6 +55,17 @@ $jump-link-line: 1.25;
   max-width: none;
 }
 
+// A paused viewer's notice (AppShell's PausedNotice) at the top of the text column, where the shell's band would stand:
+// raised by the page's top padding, and as far above the head's next row as the band is, the page's and the head's top
+// padding less the head's own gap.
+.ingredient-entry__pause {
+  margin-block: calc(-1 * #{space(6)}) calc(#{space(6)} + #{space(4)} - #{space(3)});
+
+  .notice {
+    max-width: none;
+  }
+}
+
 // The `.back-bar` holding the back link (left) and the New / Updated marker (right), raised into the
 // page's top padding (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-entry__bar {

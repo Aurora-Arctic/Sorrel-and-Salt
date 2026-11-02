@@ -119,12 +119,17 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
         )
       )
         continue;
-      // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin included, never a hatch),
-      // `readableSpells` or `readableWorkings` (with the visibility rule), `readableInTiers` (with the tier) or `curated` (with the group's).
+      // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin, or another the
+      // index exports and this guard holds, never a hatch), `readableSpells` or `readableWorkings` (with the visibility rule),
+      // `readableInTiers` (with the tier) or `curated` (with the group's).
+      const delegates = finders.some(
+        (sibling) => sibling !== finder && new RegExp(`\\b${sibling}\\(`).test(body),
+      );
       expect(
-        /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableWorkings\(|readableInTiers\(|\bcurated\(/.test(
-          body,
-        ),
+        delegates ||
+          /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableWorkings\(|readableInTiers\(|\bcurated\(/.test(
+            body,
+          ),
         `${finder} reaches the database without notSoftDeleted(...)`,
       ).toBe(true);
     }

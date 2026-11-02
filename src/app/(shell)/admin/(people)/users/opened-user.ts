@@ -3,10 +3,56 @@ import { cache } from 'react';
 import { RowId } from '../../../../../lib/validation';
 import type { Session } from '../../../../../lib/session';
 import { membershipsOf } from '@/modules/coven';
-import { isPrimaryAdmin, listedOnUserList, providersOf, usersForAdmin } from '@/modules/identity';
+import {
+  isPrimaryAdmin,
+  listedOnUserList,
+  listUserAccessPauses,
+  providersOf,
+  usersForAdmin,
+} from '@/modules/identity';
+import type { AccessPauseEntry } from '../../../../../components/UserDetail/types';
 import { readTimeoutsOf } from '../../support/reads';
 import { userHeading } from './user-heading';
 import type { OpenedUser } from './types';
+
+/** How many of a user's pauses the modal lists, newest first. */
+const PAUSES_SHOWN = 25;
+
+/**
+ * A user's pauses, newest first, with who set and lifted each named; none for the primary admin, whose access no one
+ * pauses, for the admin's own account, and for anyone but an admin, so the modal draws no Site Access section.
+ */
+async function readPausesOf(
+  session: Session,
+  userId: string,
+  primaryAdmin: boolean,
+): Promise<AccessPauseEntry[] | undefined> {
+  if (session.role !== 'admin' || primaryAdmin || userId === session.userId) return undefined;
+  const page = await listUserAccessPauses(session, userId, {
+    limit: PAUSES_SHOWN,
+    inverted: false,
+  });
+  const rows = page.map(({ node }) => node);
+  const ids = [...new Set(rows.flatMap((row) => [row.createdBy, row.liftedBy]))].filter(
+    (id): id is string => id !== null,
+  );
+  const named = new Map(
+    (ids.length > 0 ? await usersForAdmin(session, ids) : []).flatMap((user) =>
+      user && !(user instanceof Error)
+        ? [[user.id, { id: user.id, name: user.name }] as const]
+        : [],
+    ),
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    until: row.until,
+    note: row.note,
+    createdAt: row.createdAt,
+    liftedAt: row.liftedAt,
+    setBy: (row.createdBy && named.get(row.createdBy)) || null,
+    liftedBy: (row.liftedBy && named.get(row.liftedBy)) || null,
+  }));
+}
 
 /**
  * The user `?user=` names, with their covens; none when the list does not show them (not live, or
@@ -31,6 +77,7 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
   if (!memberships || memberships instanceof Error)
     throw memberships ?? new Error('No memberships read');
   if (!providers || providers instanceof Error) throw providers ?? new Error('No providers read');
+  const pauses = await readPausesOf(session, id, isPrimaryAdmin(found));
   return {
     heading: userHeading(found),
     // Every fact the list's row shows, so the modal holds them all.
@@ -53,5 +100,6 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
       joinedAt: row.joinedAt,
     })),
     timeouts,
+    pauses,
   } satisfies OpenedUser;
 });

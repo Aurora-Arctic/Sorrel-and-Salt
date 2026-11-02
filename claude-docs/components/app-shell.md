@@ -54,6 +54,11 @@ goes to the account menu, which shows it ([`account-menu.md`](account-menu.md)).
 covens are listed alphabetically by name. A refused lookup (impossible for
 one's own id) throws.
 
+A viewer whose site access is paused carries `accessPause`, its end `null` when it has none. `viewerOf()` and
+`viewerIfSignedIn()` read it through `getShellSession()` and then draw no coven, no curation, no creation and no
+invitation, reading neither the memberships nor the invitation count, and keep the count of the viewer's own support
+requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in while paused").
+
 ## Contracts
 
 - **The bar** has the brand, the site nav, then at the right Add Ingredient,
@@ -62,7 +67,7 @@ one's own id) throws.
   no theme switch.
 - **The brand** is a link to `/`, the front page, for every viewer, an unverified one included (`/` is public),
   now that Your Coven and Admin sit in the site nav; `/` reads the session
-  and offers a signed-in visitor their landing, without redirecting. `src/lib/shell-home.ts` holds `covenHome` (the Your Coven link): `/coven/<slug>` of the first coven the switcher lists, or the
+  and offers a signed-in visitor their landing, without redirecting. `src/lib/shell-home.ts` holds `covenHome` (the Your Coven link): `/coven/<slug>` of the first coven the switcher lists that the viewer can open (`firstReachable`, passing over a coven whose access is paused, or the first when every one is), or the
   `/coven` landing (M2.8) for someone in none, which offers the create page or
   explains the invitation. The links go into the coven themselves rather than
   to `/coven`, which would only redirect a member there and leave the browser
@@ -96,6 +101,17 @@ one's own id) throws.
 - **The context row** is the layouts' to render: the coven layout puts the
   switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
   `AdminNav` ([`context-row.md`](context-row.md)).
+- **The paused notice.** For a paused viewer, an error `Notice` (red, and `quiet`, so a status rather than an alert)
+  above the page, in its own `aside` labelled `Site Access`, since the page owns `main`: "Your site access is paused
+  until …" with the end in `LocalTime`, or "with no end date", then a What This Means link to `/access-paused`, which
+  reads the pause itself. `PausedNotice` (`paused-notice.tsx`) draws it, given the end and a class.
+  `.app-shell__pause` sets it in the wide column's edges and the notice fills that column. Over a page that narrows
+  its column the notice takes that column instead, through the page's own grid mixin, so the two cannot drift:
+  `page-with-nav-grid` for Support and the account's tabs, and the same mixin with `$document-menu-column` and the
+  measure for a document page. Each is a `:has()` rule, an enhancement: without it the notice keeps the wide column.
+  An ingredient entry is the exception: its menu column grows to the menu's longest label, which a grid outside the
+  entry cannot see, so the entry draws its own `PausedNotice` at the top of its text column (`accessPause`, in
+  [`ingredient-entry.md`](ingredient-entry.md)) and a `:has(.ingredient-entry__pause)` rule hides the shell's.
 
 ## Styling
 

@@ -26,12 +26,12 @@
   }
 }
 
-// The role and its change on one line, as the user list's role cell holds its own.
+// The role and its tip on one line, as the user list's role cell holds its own.
 .member-list__role {
   @include value-and-control;
 }
 
-// The role column takes only the room its word and controls need, rather than
+// The role column takes only the room its word and tip need, rather than
 // a share of the table; above the stacking width only, as a card is full width.
 @container data-table (width > #{$table-stack-width}) {
   .member-list .member-list__role-column {
@@ -40,16 +40,16 @@
   }
 }
 
-// The Change Role button, at the cell's right edge. Every row holds the one
-// button, so the buttons are the same width and line up without a minimum.
-.member-list__actions {
-  display: inline-flex;
-  gap: space(2);
-  margin-inline-start: auto;
+// The Access column's heading and mark centred over each other, above the stacking width only, as a card
+// leads the mark with its label.
+@container data-table (width > #{$table-stack-width}) {
+  .member-list .member-list__mark-column {
+    text-align: center;
+  }
 }
 
-// The Remove column, pinned right on the neutral rule (`sticky-action-column`): the red is the
-// confirm's own, so the column is drawn as Edit's is.
-.member-list__remove {
-  @include sticky-action-column;
+// The address under the name in the member modal's head. Lives here, not in Modal's sheet: the heading is built by the
+// page for this list's modal and shown at once on a press, before the body's stylesheet matters.
+.member-list__modal-email {
+  display: block;
 }

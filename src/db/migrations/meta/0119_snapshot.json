@@ -1,6 +1,6 @@
 {
-  "id": "cbbffaff-8c05-47e0-acb6-26d8339234f1",
-  "prevId": "3736cc7f-017d-4651-965e-13f2896f700f",
+  "id": "98ccd820-6f00-4c86-8f2b-b1fa9397650c",
+  "prevId": "b000fe3d-925c-4576-bba5-5aa25b25ba27",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -444,6 +444,183 @@
         "invitations_answered_once": {
           "name": "invitations_answered_once",
           "value": "num_nonnulls(\"invitations\".\"accepted_at\", \"invitations\".\"declined_at\") <= 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.workspace_member_pauses": {
+      "name": "workspace_member_pauses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "until": {
+          "name": "until",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lifted_at": {
+          "name": "lifted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lifted_by": {
+          "name": "lifted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "workspace_member_pauses_one_live": {
+          "name": "workspace_member_pauses_one_live",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"workspace_member_pauses\".\"lifted_at\" is null and \"workspace_member_pauses\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "workspace_member_pauses_workspace_id_workspaces_id_fk": {
+          "name": "workspace_member_pauses_workspace_id_workspaces_id_fk",
+          "tableFrom": "workspace_member_pauses",
+          "tableTo": "workspaces",
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "workspace_member_pauses_user_id_users_id_fk": {
+          "name": "workspace_member_pauses_user_id_users_id_fk",
+          "tableFrom": "workspace_member_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "workspace_member_pauses_lifted_by_users_id_fk": {
+          "name": "workspace_member_pauses_lifted_by_users_id_fk",
+          "tableFrom": "workspace_member_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["lifted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "workspace_member_pauses_created_by_users_id_fk": {
+          "name": "workspace_member_pauses_created_by_users_id_fk",
+          "tableFrom": "workspace_member_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "workspace_member_pauses_updated_by_users_id_fk": {
+          "name": "workspace_member_pauses_updated_by_users_id_fk",
+          "tableFrom": "workspace_member_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "workspace_member_pauses_deleted_by_users_id_fk": {
+          "name": "workspace_member_pauses_deleted_by_users_id_fk",
+          "tableFrom": "workspace_member_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "workspace_member_pauses_lifted_together": {
+          "name": "workspace_member_pauses_lifted_together",
+          "value": "(\"workspace_member_pauses\".\"lifted_at\" is null) = (\"workspace_member_pauses\".\"lifted_by\" is null)"
         }
       },
       "isRLSEnabled": false
@@ -2485,6 +2662,162 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_access_pauses": {
+      "name": "user_access_pauses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "until": {
+          "name": "until",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lifted_at": {
+          "name": "lifted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lifted_by": {
+          "name": "lifted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "user_access_pauses_one_live": {
+          "name": "user_access_pauses_one_live",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"user_access_pauses\".\"lifted_at\" is null and \"user_access_pauses\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_access_pauses_user_id_users_id_fk": {
+          "name": "user_access_pauses_user_id_users_id_fk",
+          "tableFrom": "user_access_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "user_access_pauses_lifted_by_users_id_fk": {
+          "name": "user_access_pauses_lifted_by_users_id_fk",
+          "tableFrom": "user_access_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["lifted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_access_pauses_created_by_users_id_fk": {
+          "name": "user_access_pauses_created_by_users_id_fk",
+          "tableFrom": "user_access_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_access_pauses_updated_by_users_id_fk": {
+          "name": "user_access_pauses_updated_by_users_id_fk",
+          "tableFrom": "user_access_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "user_access_pauses_deleted_by_users_id_fk": {
+          "name": "user_access_pauses_deleted_by_users_id_fk",
+          "tableFrom": "user_access_pauses",
+          "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "user_access_pauses_lifted_together": {
+          "name": "user_access_pauses_lifted_together",
+          "value": "(\"user_access_pauses\".\"lifted_at\" is null) = (\"user_access_pauses\".\"lifted_by\" is null)"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.user_privilege_changes": {
@@ -5631,12 +5964,6 @@
           "notNull": true,
           "default": "'public'"
         },
-        "notice_sent_at": {
-          "name": "notice_sent_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -5839,12 +6166,6 @@
         },
         "closed_at": {
           "name": "closed_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "closing_notice_sent_at": {
-          "name": "closing_notice_sent_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false

@@ -50,8 +50,8 @@ test('the sender’s request page is accessible in every status and while timed 
   const timeouts = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   try {
     await timeouts`
-        insert into support_timeouts (user_id, until, created_by, updated_by)
-        values (${userId}, now() + interval '2 days', ${userId}, ${userId})
+        insert into support_timeouts (user_id, until, note, created_by, updated_by)
+        values (${userId}, now() + interval '2 days', 'Spam', ${userId}, ${userId})
       `;
   } finally {
     await timeouts.end();

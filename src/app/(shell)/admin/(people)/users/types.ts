@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ModalHeading } from '../../../../../components/Modal/types';
+import type { AccessPauseEntry } from '../../../../../components/UserDetail/types';
 import type { SupportTimeoutEntry } from '../../../../../components/SupportRequests/types';
 import type { UserCoven, UserDetailUser } from '../../../../../components/UserDetail/types';
 
@@ -14,6 +15,8 @@ export interface UsersSearchParams {
   query?: string | string[];
   awaiting?: string | string[];
   role?: string | string[];
+  'timed-out'?: string | string[];
+  paused?: string | string[];
   after?: string | string[];
   before?: string | string[];
   /** The id of the user whose modal is open over the list. */
@@ -28,6 +31,8 @@ export interface OpenedUser {
   user: UserDetailUser;
   memberships: readonly UserCoven[];
   timeouts: SupportTimeoutEntry[];
+  /** The user's access pauses; undefined for the primary admin and the admin's own account, which no one pauses. */
+  pauses: AccessPauseEntry[] | undefined;
 }
 
 export interface UserDialogProps {

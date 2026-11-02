@@ -8,6 +8,7 @@ import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
 import MainBody from './main-body';
 import NewSpellElsewhere from './new-spell-elsewhere';
+import PausedNotice from './paused-notice';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
@@ -79,6 +80,10 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           click, and the next Tab would restart at the top of the page. */}
       <span id="main" className="skip-target" tabIndex={-1} />
       <div className="app-shell__main">
+        {/* A paused viewer is told so on every page they reach. */}
+        {viewer.accessPause && (
+          <PausedNotice until={viewer.accessPause.until} className="app-shell__pause" />
+        )}
         <ViewerIdProvider id={viewer.id}>
           <MainBody>{children}</MainBody>
         </ViewerIdProvider>

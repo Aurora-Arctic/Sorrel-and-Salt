@@ -16,8 +16,20 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: true },
+  {
+    slug: 'fixture-coven',
+    name: 'Fixture Coven',
+    canReadMembers: true,
+    canInvite: true,
+    paused: null,
+  },
+  {
+    slug: 'testwort-circle',
+    name: 'Testwort Circle',
+    canReadMembers: true,
+    canInvite: true,
+    paused: null,
+  },
 ];
 
 const SOLE = [WORKSPACES[0]];
@@ -76,6 +88,7 @@ export const States: Story = {
                       name: 'A Long Named Circle of Fixture Herbalists',
                       canReadMembers: true,
                       canInvite: true,
+                      paused: null,
                     },
                   ]}
                 />

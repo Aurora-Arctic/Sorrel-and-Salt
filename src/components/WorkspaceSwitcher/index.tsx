@@ -4,6 +4,8 @@ import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
+import { covenPausedPath, pausedCovenSlugOf } from '../../lib/access-paused';
+import { pauseNote } from '../../lib/pause-note';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
 import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
@@ -11,13 +13,16 @@ import type { WorkspaceSwitcherProps } from './types';
 import './index.scss';
 
 // A select over the viewer's workspaces (covens on screen); the current one is read off the
-// address, so two tabs do not interfere. A viewer who may create gets a last choice whose value is
+// address, a coven's own pages or its paused page, so two tabs do not interfere. A viewer who may create gets a last choice whose value is
 // the create page's path, which no slug can equal (claude-docs/components/workspace-switcher.md).
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
+// The create page and a paused coven's page are each one panel in the narrow column.
+const NARROW_PANEL: NavigationTarget = { region: 'main', shape: 'form', frame: 'narrow' };
+
 function targetOf(path: string): NavigationTarget {
-  if (path === NEW_COVEN_PATH) return { region: 'main', shape: 'form', frame: 'narrow' };
+  if (path === NEW_COVEN_PATH || pausedCovenSlugOf(path) !== undefined) return NARROW_PANEL;
   return { ...covenTarget(path), coven: covenSlugOf(path) ?? undefined };
 }
 
@@ -36,9 +41,11 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  const choices = workspaces.map(({ slug, name }) => ({
+  // A paused coven stays pickable: its layout sends the viewer on to the paused page, which says the same.
+  const choices = workspaces.map(({ slug, name, paused }) => ({
     value: slug,
     label: name,
+    ...(paused && { note: pauseNote(paused) }),
   }));
 
   useEffect(() => {
@@ -63,21 +70,29 @@ export default function WorkspaceSwitcher({
       <ComboboxSelect
         id={id}
         label="Coven"
-        value={(pending ? picked : undefined) ?? covenSlugOf(pathname) ?? ''}
+        value={
+          (pending ? picked : undefined) ??
+          covenSlugOf(pathname) ??
+          pausedCovenSlugOf(pathname) ??
+          ''
+        }
         busy={pending}
         inputRef={box}
         onChange={(value) => {
           const chosen = workspaces.find((workspace) => workspace.slug === value);
           // A page that said which covens it opens in is believed only at its own address.
           const opens = registration?.path === pathname ? registration.slugs : undefined;
+          // A paused coven goes straight to its paused page, the one page of it the guard would let through.
           const href =
             value === CREATE.value
               ? value
-              : pathInCoven(pathname, value, {
-                  canReadMembers: chosen?.canReadMembers,
-                  canInvite: chosen?.canInvite,
-                  opens,
-                });
+              : chosen?.paused
+                ? covenPausedPath(value)
+                : pathInCoven(pathname, value, {
+                    canReadMembers: chosen?.canReadMembers,
+                    canInvite: chosen?.canInvite,
+                    opens,
+                  });
           setPicked(value);
           focusAfterSwitch = value === CREATE.value ? undefined : value;
           navigate(href, { target: targetOf(href) });

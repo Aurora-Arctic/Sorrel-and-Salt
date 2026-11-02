@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { longMinuteInZone } from '@/lib/utc';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
@@ -34,6 +35,7 @@ const COVENS: ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: true,
     canWrite: true,
+    paused: null,
   },
   {
     id: 'w2',
@@ -42,6 +44,7 @@ const COVENS: ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: false,
     canWrite: true,
+    paused: null,
   },
 ];
 
@@ -160,5 +163,23 @@ describe('AppShell', () => {
     expect(skip.compareDocumentPosition(screen.getByRole('banner'))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+  });
+
+  it('tells a paused viewer their access is paused, in a landmark of its own', () => {
+    const until = new Date('2027-01-02T03:04:00Z');
+    shell({ ...MEMBER, accessPause: { until } }, []);
+
+    const pause = screen.getByRole('complementary', { name: 'Site Access' });
+    expect(pause).toHaveTextContent(`Your site access is paused until ${longMinuteInZone(until)}.`);
+    expect(screen.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
+      'href',
+      '/access-paused',
+    );
+  });
+
+  it('shows no pause notice to a viewer who is not paused', () => {
+    shell(MEMBER);
+
+    expect(screen.queryByRole('complementary', { name: 'Site Access' })).not.toBeInTheDocument();
   });
 });

@@ -46,13 +46,10 @@ export async function sendSenderMessage(
   if (!request) throw new NotFound('No such support request');
 
   return withAudit(session, async (write) => {
-    const { recent, timedOutUntil } = await write.lockSupportSender(
-      session.userId,
-      SEND_WINDOW_SECONDS,
-    );
+    const { recent, timedOut } = await write.lockSupportSender(session.userId, SEND_WINDOW_SECONDS);
     // A closed request's message opens a new request, so it is refused in the new-request wording.
-    if (request.status === 'closed') refuseTimedOut(timedOutUntil);
-    else refuseTimedOutReply(timedOutUntil);
+    if (request.status === 'closed') refuseTimedOut(timedOut);
+    else refuseTimedOutReply(timedOut);
 
     const [moved] = await write.moveSupportRequest(
       id,

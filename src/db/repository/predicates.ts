@@ -59,6 +59,11 @@ export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | und
   return deletedAt ? isNull(deletedAt) : undefined;
 }
 
+/** An end column that is null or still ahead: a time-out or pause with no end date, or one that has not run out. */
+export function noEndOrAhead(until: AnyPgColumn): SQL {
+  return or(isNull(until), gt(until, sql`now()`)) as SQL;
+}
+
 /**
  * An ingredient's own rows, `variant_id IS NULL`, or `undefined` for a table with no variant column. The union rule as a
  * predicate (DESIGN.md §5): an ingredient's lists are its own rows and a form's are its additions, never read as one.

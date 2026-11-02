@@ -23,7 +23,7 @@ const repository = vi.hoisted(() => ({
   findManyOfIngredients: vi.fn(),
   findManyByIds: vi.fn(),
   findSubstitutesIncludingSoftDeleted: vi.fn(),
-  findWorkspaceRole: vi.fn(),
+  findWorkspaceSeat: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -326,7 +326,7 @@ describe('compendium', () => {
     // Folk names and category links, then categories and their groups.
     expect(repository.findManyOfIngredients).toHaveBeenCalledTimes(2);
     expect(repository.findManyByIds).toHaveBeenCalledTimes(2);
-    expect(repository.findWorkspaceRole).not.toHaveBeenCalled();
+    expect(repository.findWorkspaceSeat).not.toHaveBeenCalled();
   });
 
   describe('page numbers', () => {

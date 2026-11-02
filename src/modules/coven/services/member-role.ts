@@ -1,6 +1,6 @@
 import 'server-only';
-import { findOneById, withAudit } from '../../../db/repository';
-import { Forbidden } from '../../../lib/errors';
+import { findOneById, findStandingWorkspaceMemberPause, withAudit } from '../../../db/repository';
+import { Forbidden, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import { workspaces } from '../schema/workspaces';
@@ -13,6 +13,9 @@ import { assertNotSystemSeat } from './system-seat';
 // It changes an existing member's row and nothing else — a pending invitation
 // is not a member, and ownership never comes through one (DESIGN.md §5).
 
+const PAUSED_PROMOTION =
+  "This member's access is paused; lift the pause first to make them an owner";
+
 /**
  * Sets `userId`'s role in the workspace. The caller needs `member: update`,
  * which only owners hold, and the person must be a live member already.
@@ -23,6 +26,7 @@ import { assertNotSystemSeat } from './system-seat';
  * @throws {Forbidden} the caller is not an owner of the workspace, or `userId`
  * is not a live member of it or is the system user.
  * @throws {LastOwner} the change would leave the workspace without an owner.
+ * @throws {ValidationError} the change makes an owner of a member whose access to the coven is paused.
  */
 export async function updateMemberRole(
   session: Session,
@@ -34,6 +38,10 @@ export async function updateMemberRole(
   // An id that cannot name a user is a stranger, as a wrong one is.
   if (!RowId.safeParse(userId).success) throw new Forbidden();
   assertNotSystemSeat(userId);
+  // An owner's access is never paused, so a paused member is lifted before being made one.
+  if (role === 'owner' && (await findStandingWorkspaceMemberPause(membership, userId))) {
+    throw new ValidationError([{ path: ['role'], message: PAUSED_PROMOTION }], PAUSED_PROMOTION);
+  }
 
   const updated = await withAudit(session, async (write) => {
     await assertNotLastOwner(write, membership, userId, role);

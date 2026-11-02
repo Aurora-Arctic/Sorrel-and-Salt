@@ -93,9 +93,9 @@ describe('relativePhrase', () => {
 });
 
 describe('clockTime', () => {
-  it('reads the time of day as hours and minutes on a 12-hour clock, with am or pm', () => {
-    expect(clockTime(new Date(2026, 9, 27, 14, 2, 59))).toBe('2:02 pm');
-    expect(clockTime(new Date(2026, 9, 27, 9, 5))).toBe('9:05 am');
-    expect(clockTime(new Date(2026, 9, 27, 0, 30))).toBe('12:30 am');
+  it('reads the time of day as hours and minutes on a 12-hour clock, with am or pm held to the time by a no-break space', () => {
+    expect(clockTime(new Date(2026, 9, 27, 14, 2, 59))).toBe('2:02\u00a0pm');
+    expect(clockTime(new Date(2026, 9, 27, 9, 5))).toBe('9:05\u00a0am');
+    expect(clockTime(new Date(2026, 9, 27, 0, 30))).toBe('12:30\u00a0am');
   });
 });

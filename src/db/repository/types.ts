@@ -6,6 +6,8 @@ import type { supportRequests } from '../../modules/support/schema/support-reque
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
+import type { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
+import type { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -506,6 +508,38 @@ export interface AuditWriter {
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
   /**
+   * Pause a user's access, stamped from the session: `until` null for no end date. The user's live pause, standing or run out, is
+   * lifted first from the session, so the one-live index takes the new row. No row comes back when a pause set alongside took the slot.
+   */
+  setUserAccessPause(
+    admin: SiteAdmin,
+    userId: string,
+    pause: UserAccessPauseInput,
+  ): Promise<UserAccessPauseRow[]>;
+  /**
+   * Lift the pause standing on a user's access, stamping `lifted_at` now and `lifted_by` from the session. No row comes back when
+   * none stands; a pause that has run out is left as it is.
+   */
+  liftUserAccessPause(admin: SiteAdmin, userId: string): Promise<UserAccessPauseRow[]>;
+  /**
+   * Pause a member's access to the proof's coven, stamped from the session: `until` null for no end date. The member's live pause
+   * there, standing or run out, is lifted first from the session, so the one-live index takes the new row. No row comes back when a
+   * pause set alongside took the slot. The permission the proof must carry is the service's to check.
+   */
+  setWorkspaceMemberPause(
+    membership: Membership,
+    userId: string,
+    pause: WorkspaceMemberPauseInput,
+  ): Promise<WorkspaceMemberPauseRow[]>;
+  /**
+   * Lift the pause standing on a member's access to the proof's coven, stamping `lifted_at` now and `lifted_by` from the session.
+   * No row comes back when none stands there; a pause that has run out is left as it is.
+   */
+  liftWorkspaceMemberPause(
+    membership: Membership,
+    userId: string,
+  ): Promise<WorkspaceMemberPauseRow[]>;
+  /**
    * Soft-delete the proof's own workspace, stamped from the session; the `workspaces` row is the proof's `workspaceId` (it has no `workspace_id` column).
    * Membership rows are untouched. An empty result means the workspace was already deleted.
    */
@@ -570,13 +604,13 @@ export interface AuditWriter {
   lockCovenStock(membership: Membership): Promise<void>;
   /**
    * Takes the account's support-send lock until the transaction ends, then reads what a send decides on: the account's requests
-   * in the last `windowSeconds` and the end of its active time-out. Taken first, so two sends from one account queue and the
+   * in the last `windowSeconds` and the end of the time-out standing on it. Taken first, so two sends from one account queue and the
    * second counts the first; another account's send is not held up.
    */
   lockSupportSender(
     userId: string,
     windowSeconds: number,
-  ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  ): Promise<{ recent: number; timedOut: StandingTimeout | undefined }>;
   /**
    * Counts one signed-out send against the keys of an email address and of a client address (`src/lib/send-count-key.ts`, never
    * the addresses themselves), each in its own row of `support_send_counts`, and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
@@ -1076,6 +1110,24 @@ export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredie
  * A row as the generic finders read it: the table's whole row, less any column `unread-columns.ts` keeps out of reads.
  * Writers' `returning()` still hold the whole row.
  */
+/** One `user_access_pauses` row. */
+export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
+
+/** What a site access pause is set with: `until` null for no end date, and always a note saying why. */
+export interface UserAccessPauseInput {
+  until: Date | null;
+  note: string;
+}
+
+/** One `workspace_member_pauses` row. */
+export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
+
+/** What a coven pause is set with: `until` null for no end date, and a note or none. */
+export interface WorkspaceMemberPauseInput {
+  until: Date | null;
+  note: string | null;
+}
+
 export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
   ? IngredientRow
   : TTable['$inferSelect'];
@@ -1298,6 +1350,10 @@ export interface UserFilter {
   awaitingApproval?: boolean;
   /** Only the users holding this site role. */
   role?: (typeof users.$inferSelect)['role'];
+  /** Only the users a support time-out stands on: not lifted, and with no end date or one still ahead. */
+  timedOut?: boolean;
+  /** Only the users a site access pause stands on: not lifted, and with no end date or one still ahead. */
+  paused?: boolean;
 }
 
 /** What the privilege ledger is narrowed by. Each part is optional, and absent means no filter. */
@@ -1425,6 +1481,11 @@ export interface SupportRequestFilter {
 
 /** How many requests each view holds. */
 export type SupportViewCounts = Record<SupportView, number>;
+
+/** The end of the time-out standing on a sender: `until` null when it has no end date. */
+export interface StandingTimeout {
+  until: Date | null;
+}
 
 /** What the account menu counts for one viewer. */
 export interface SupportMenuCounts {
