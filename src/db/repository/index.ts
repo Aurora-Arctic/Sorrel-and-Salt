@@ -158,6 +158,7 @@ export {
   findOwnSupportRequestPage,
   findCardAcceptorIds,
   findClosingNoticesDue,
+  findClosingNoticesDueAmong,
   findSupportRequestsDueToAnonymise,
   findSupportRequestsDueToClose,
   findReplyAwaitingNotice,

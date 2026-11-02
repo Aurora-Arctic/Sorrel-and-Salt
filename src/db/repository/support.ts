@@ -382,15 +382,33 @@ export function findClosingNoticesDue(
   after: string | null,
   limit: number,
 ): Promise<string[]> {
+  return retentionPage(closingNoticeDue(dueBy, lapsedBy), after, limit);
+}
+
+/**
+ * Those of `ids` still owed their closing-soon notice by the rule `findClosingNoticesDue` reads, in id order: what a notice batch
+ * mails, so an id not yet due, already noticed or reopened since its page was read gets nothing.
+ */
+export function findClosingNoticesDueAmong(
+  dueBy: Date,
+  lapsedBy: Date,
+  ids: readonly string[],
+): Promise<string[]> {
+  if (ids.length === 0) return Promise.resolve([]);
   return retentionPage(
-    and(
-      eq(supportRequests.status, 'resolved'),
-      isNull(supportRequests.closingNoticeSentAt),
-      lte(supportRequests.resolvedAt, dueBy),
-      gt(supportRequests.resolvedAt, lapsedBy),
-    ),
-    after,
-    limit,
+    and(closingNoticeDue(dueBy, lapsedBy), inArray(supportRequests.id, [...ids])),
+    null,
+    ids.length,
+  );
+}
+
+/** Resolved at or before `dueBy` and after `lapsedBy`, so inside the last days before the close, with no notice sent yet. */
+function closingNoticeDue(dueBy: Date, lapsedBy: Date): SQL | undefined {
+  return and(
+    eq(supportRequests.status, 'resolved'),
+    isNull(supportRequests.closingNoticeSentAt),
+    lte(supportRequests.resolvedAt, dueBy),
+    gt(supportRequests.resolvedAt, lapsedBy),
   );
 }
 

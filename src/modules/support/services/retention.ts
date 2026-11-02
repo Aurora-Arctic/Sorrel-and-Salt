@@ -2,6 +2,7 @@ import 'server-only';
 import {
   RESOLVED_CLOSES_AFTER_DAYS,
   findClosingNoticesDue,
+  findClosingNoticesDueAmong,
   findOneById,
   findSupportRequestsDueToAnonymise,
   findSupportRequestsDueToClose,
@@ -92,12 +93,7 @@ export function findRetentionDue(
   const lapsedBy = new Date(now - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
   switch (stage) {
     case 'notice':
-      return findClosingNoticesDue(
-        new Date(now - NOTICE_AFTER_DAYS * DAY_MS),
-        lapsedBy,
-        after,
-        RETENTION_PAGE_SIZE,
-      );
+      return findClosingNoticesDue(noticeDueBy(now), lapsedBy, after, RETENTION_PAGE_SIZE);
     case 'close':
       return findSupportRequestsDueToClose(lapsedBy, after, RETENTION_PAGE_SIZE);
     case 'anonymise':
@@ -109,10 +105,16 @@ export function findRetentionDue(
   }
 }
 
+/** The latest resolution a closing-soon notice is due for as of `now` (milliseconds). */
+function noticeDueBy(now: number): Date {
+  return new Date(now - NOTICE_AFTER_DAYS * DAY_MS);
+}
+
 /**
  * Takes one page of requests through its stage as of `batch.now` and returns how many it changed. The notice batch sends each
  * notice still owed, and when the transport refused any it throws once it has tried them all, so a retry of the batch sends
- * only those, the rest being stamped. The close and anonymise batches are one guarded write each.
+ * only those, the rest being stamped. Every stage reads its due rule again in SQL for the page's ids before it mails or writes:
+ * the notice batch mails only the ids still owed one, and the close and anonymise batches are one write each, guarded by the rule.
  *
  * @throws {MailNotSent} the transport refused at least one notice of the page.
  */
@@ -123,7 +125,9 @@ export async function runRetentionBatch(batch: RetentionBatch): Promise<number> 
     case 'notice': {
       let noticed = 0;
       let refused: MailNotSent | null = null;
-      for (const requestId of batch.ids) {
+      const lapsedBy = new Date(batch.now - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+      const due = await findClosingNoticesDueAmong(noticeDueBy(batch.now), lapsedBy, batch.ids);
+      for (const requestId of due) {
         try {
           if (await sendClosingNotice(requestId, batch.origin, now)) noticed += 1;
         } catch (error) {
