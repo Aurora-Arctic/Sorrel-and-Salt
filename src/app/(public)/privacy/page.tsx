@@ -157,7 +157,8 @@ export default function PrivacyPolicyPage() {
       <p>
         Each time you sign in, session info is stored: this includes the network address (IP
         address) you came from and the browser details your browser sent. The site stores these with
-        every session, for security purposes. No screen shows them to anyone.
+        every session, for security purposes. No screen shows them to anyone. A session stops
+        working when it expires.
       </p>
 
       <h3>Rate-Limit Counters</h3>
@@ -276,11 +277,11 @@ export default function PrivacyPolicyPage() {
           category, is removed when the pairing is removed.
         </li>
         <li>A passkey you remove is removed.</li>
+        <li>
+          The counters that slow down repeated sign-in attempts are removed once they are out of
+          date.
+        </li>
       </ul>
-      <p>
-        Sessions carry an expiry date, and the sign-in library writes and prunes the rate-limit
-        counters itself.
-      </p>
 
       <h2>How to Ask for Removal</h2>
       <p>
