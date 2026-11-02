@@ -664,10 +664,16 @@ async function bringReferencesTo(
     referenceLinks,
     current.filter((link) => !listed.has(link.referenceId)).map((link) => link.id),
   );
-  for (const { referenceId, locator } of entries) {
+  for (const { referenceId, ...columns } of entries) {
     const link = held.get(referenceId);
-    if (!link) await write.insert(referenceLinks, { referenceId, ...cites, locator });
-    else if (link.locator !== locator) await write.updateById(referenceLinks, link.id, { locator });
+    if (!link) await write.insert(referenceLinks, { referenceId, ...cites, ...columns });
+    else if (
+      link.locator !== columns.locator ||
+      link.nameBasis !== columns.nameBasis ||
+      JSON.stringify(link.supports) !== JSON.stringify(columns.supports)
+    ) {
+      await write.updateById(referenceLinks, link.id, columns);
+    }
   }
 }
 

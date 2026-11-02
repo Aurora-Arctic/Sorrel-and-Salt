@@ -49,6 +49,8 @@ vi.mock('@/app/compendium-reads', async (importOriginal) => ({
 const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();
+// The edited entry's sourcing score, none here: its own tests are the dialog's and the component's.
+const readSourcingScore = vi.fn(async () => null);
 const variantsOf = vi.fn();
 // The details modal's sections, read uncached with the curator's session.
 const ingredientDetailOf = vi.fn();
@@ -63,6 +65,7 @@ const readCompendiumReview = vi.fn();
 // The entry the edit modal opens, read with the curator's session for its shown flag.
 const getIngredient = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  readSourcingScore,
   readCompendiumReview,
   getIngredient,
   listCompendium,

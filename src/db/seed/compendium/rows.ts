@@ -11,7 +11,6 @@ import { categories } from '../../../modules/vocabulary/schema/categories';
 import { deities } from '../../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../../modules/vocabulary/schema/ingredient-forms';
 import { celestialBodies, zodiacSigns } from '../../../modules/vocabulary/schema/astrology';
-import type { CitationFields } from '../../../lib/types';
 import type { ingredientCategories } from '../../../modules/ingredients/schema/ingredient-categories';
 import type { ingredientDeities } from '../../../modules/ingredients/schema/ingredient-deities';
 import type { ingredientFolkNames } from '../../../modules/ingredients/schema/ingredient-folk-names';
@@ -21,6 +20,7 @@ import type {
   SeedCompendiumVariant,
   SeedSubstitute,
   SeedTransaction,
+  SeedWork,
 } from '../types';
 
 // The rows a compendium entry becomes: pure builders over an entry and its curated picks, shared by the insert and the update so they cannot drift.
@@ -327,15 +327,24 @@ export type LinkOwner = { ingredientId: string } | { ingredientVariantId: string
 /** A citation with the work it names, resolved, and the row it links. */
 export interface Citing {
   citation: SeedCitation<string>;
-  fields: CitationFields;
+  fields: SeedWork;
   text: string;
   owner: LinkOwner;
+}
+
+/** A citation's own columns on its link: where in the work, how it names the entry, and the fields it backs. */
+export function linkColumns(citation: SeedCitation<string>) {
+  return {
+    locator: citation.locator ?? null,
+    nameBasis: citation.nameBasis ?? null,
+    supports: [...citation.supports],
+  };
 }
 
 /** Each citation of `owner`, its handle resolved against `sources`; a handle no work declares throws. */
 export function citing(
   citations: readonly SeedCitation<string>[],
-  sources: Record<string, CitationFields>,
+  sources: Record<string, SeedWork>,
   owner: LinkOwner,
 ): Citing[] {
   const registered = new Map(Object.entries(sources));

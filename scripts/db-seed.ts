@@ -33,7 +33,7 @@ import { seedDemoCoven } from '../src/db/seed/demo-coven.ts';
 import { formatContentReport } from '../src/db/seed/demo-coven-content.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
 import { seedReferenceData } from '../src/db/seed/reference-data.ts';
-import { formatReport, hasRefusals } from '../src/db/seed/compendium/report.ts';
+import { formatReport, hasRefusals, keptLines } from '../src/db/seed/compendium/report.ts';
 import { dropSchema } from '../src/db/seed/reset.ts';
 
 const target = process.argv[2] ?? 'scenario';
@@ -82,7 +82,11 @@ try {
     await seedDeities(db, { dryRun });
     done('the deity traditions and deities');
   } else if (target === 'sources') {
-    await seedSources(db, { dryRun });
+    // A source a person edited keeps their mark and prints a KEPT line, which never fails the run.
+    const kept = await seedSources(db, { dryRun });
+    for (const line of keptLines(kept.map((source) => ({ where: null, ...source })))) {
+      console.log(line);
+    }
     done("the vocabularies' sources and their links");
   } else if (target === 'demo-coven') {
     const contents = await seedDemoCoven(db, { dryRun });

@@ -159,6 +159,8 @@ export const reference = (id: string, title: string, locator: string) => ({
   value: title,
   link: { id, isGlobal: true, kind: 'book' as const, title, authors: null, container: null },
   locator,
+  nameBasis: '' as const,
+  supports: [],
 });
 export const COPIED = [
   'Description',

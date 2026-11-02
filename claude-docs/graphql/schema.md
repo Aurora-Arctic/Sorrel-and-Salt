@@ -626,6 +626,12 @@ refused are their services' tests' (MB.187).
 
 **MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form (M11.22 later turned it into the `forms` list). The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
+### `compendiumSourcingScore` and the `sort` argument
+
+`compendiumSourcingScore(id: ID!): SourcingScore` is a curator's read of one compendium entry's sourcing score: `score`, an integer, and `facts`, each a `SourcingFact` with its `fact` (the `SourcingFactKind` enum), its Title Case `label` and its `points`. Every fact is listed, zero-point ones too, and the points add up to the score. The field carries the `curator` scope with an `unauthorizedResolver` that answers `null`, so a member, a viewer or a signed-out request reads `null` rather than an error, by direct id too. The resolver calls `readSourcingScore`, which checks the curator again (rule 1) and reads the entry's forms and citations through the per-request loaders. `Ingredient` has no score field, so a coven's ingredient, the public read, `llms.txt` and the `.well-known` files never carry one. `tests/modules/ingredients/services/compendium-sourcing.test.ts` and the `nulls` probe in `tests/db/graphql-query-scopes.test.ts` hold this.
+
+`compendium` takes an optional `sort: CompendiumSort`, whose one value `sourcing_score` orders the list by that score, lowest first ([`../db/compendium-read.md`](../db/compendium-read.md), "The sourcing sort"). Anyone who is not a curator or admin is refused with `Forbidden`.
+
 ### The workspace ingredient mutations
 
 Stories 15, 25 and 34's writes (M8.8, the delete M5.3), registered by

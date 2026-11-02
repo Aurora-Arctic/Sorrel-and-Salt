@@ -246,6 +246,7 @@ describe('the whole table', () => {
       celestialBodies: [],
       toxic: '',
       reviewed: '',
+      sort: '',
       covens: [],
       covensNot: false,
     });

@@ -7,7 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound } from '../../../lib/errors';
+import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId, parseInput } from '../../../lib/validation';
 import { references } from '../schema/references';
@@ -41,10 +41,23 @@ const NOTHING = {
 };
 
 /**
+ * Refuses a coven's source marked scholarly: the mark ranks the compendium's sources, so a coven's is never marked.
+ *
+ * @throws {ValidationError} pathed to `scholarly`.
+ */
+function refuseScholarlyInCoven(values: { scholarly: boolean }): void {
+  if (values.scholarly) {
+    throw new ValidationError([
+      { path: ['scholarly'], message: 'Only a compendium source is marked scholarly' },
+    ]);
+  }
+}
+
+/**
  * Creates a reference in the compendium (`workspaceId` null) or in this coven.
  *
  * @throws {Forbidden} a compendium reference and the caller is not a site admin, or a coven's and the caller may not write its ingredients.
- * @throws {ValidationError} the input breaks `ReferenceInput`, pathed to the field.
+ * @throws {ValidationError} the input breaks `ReferenceInput`, pathed to the field, or marks a coven's source scholarly.
  */
 export async function createReference(
   session: Session,
@@ -64,6 +77,7 @@ export async function createReference(
 
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
   const values = parseInput(ReferenceInput, input);
+  refuseScholarlyInCoven(values);
   return withAudit(session, async (write) => {
     const [row] = await write.insertInWorkspace(membership, references, values);
     return row;
@@ -88,6 +102,7 @@ export async function updateReference(
       ? { curator: assertCurator(session) }
       : { membership: await assertMembership(session, workspaceId, { ingredient: ['update'] }) };
   const values = { ...NOTHING, ...parseInput(ReferenceInput, input) };
+  if ('membership' in proof) refuseScholarlyInCoven(values);
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such source');
 

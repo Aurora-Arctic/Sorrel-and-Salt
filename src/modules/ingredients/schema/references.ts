@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, date, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, date, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { REFERENCE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
@@ -54,6 +54,10 @@ export const references = pgTable(
     modified: date('modified'),
     accessed: date('accessed'),
     note: text('note'),
+    // Scholars edited or reviewed the work, in print or online (claude-docs/db/references.md, "Citation attributes"): a peer-reviewed journal; a university,
+    // its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Never a
+    // trade press, a wiki, a site republishing others' works or an unsigned site. Set by the seed's works and a curator; a coven's source is never marked.
+    scholarly: boolean('scholarly').notNull().default(false),
     seedKey: seedKeyColumn(),
     ...auditColumns,
   },

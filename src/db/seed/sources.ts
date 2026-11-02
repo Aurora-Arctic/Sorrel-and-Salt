@@ -1,6 +1,6 @@
 import { isNotNull } from 'drizzle-orm';
 import { beginSeedTransaction, insertMissingBy, requireFrom } from './idempotent';
-import { insertMissingReferences } from './reference-rows';
+import { insertMissingReferences, restateWorks } from './reference-rows';
 import { DEITIES } from './deities';
 import { citationText } from '../../lib/citation';
 import { slugify } from '../../lib/slugify';
@@ -14,6 +14,7 @@ import type {
   SeedSourceLink,
   SeedTransaction,
   SourceTargetTable,
+  VocabularySourceKept,
 } from './types';
 
 // The sources the vocabulary seed docs record, as compendium-tier `references` rows linked to the curated rows each supports.
@@ -111,6 +112,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Oxford University Press',
       published: '2012',
       note: 'Existence and details confirmed through Bryn Mawr Classical Review 2012.08.34, https://bmcr.brynmawr.edu/2012/2012.08.34/',
+      scholarly: true,
     },
     traditions: ['Greek', 'Roman'],
   },
@@ -560,6 +562,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Theoi Classical Texts Library',
       url: 'https://www.theoi.com/Text/OvidFasti6.html',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -727,6 +730,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Perseus Digital Library',
       url: 'https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0053',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -828,6 +832,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'University of California Press',
       published: '1999',
       note: 'Confirmed through Bryn Mawr Classical Review 2001.09.17, https://bmcr.brynmawr.edu/2001/2001.09.17, and Open Library, https://openlibrary.org/books/OL360560M/In_search_of_god_the_mother',
+      scholarly: true,
     },
     traditions: ['Anatolian'],
   },
@@ -1051,6 +1056,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Penn Museum',
       url: 'https://www.penn.museum/sites/bulletin/3283/',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -1098,6 +1104,7 @@ export const SOURCES: SeedSource[] = [
       place: 'London',
       publisher: 'British Museum Press; Austin: University of Texas Press',
       published: '1992',
+      scholarly: true,
     },
     traditions: ['Sumerian', 'Akkadian & Babylonian'],
   },
@@ -1157,14 +1164,19 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       title: 'Lilith',
-      container: 'Encyclopaedia Judaica',
+      container: '_Encyclopaedia Judaica_',
       edition: '2nd ed.',
+      contributors: 'Edited by Fred Skolnik and Michael Berenbaum',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA in association with the Keter Publishing House',
       published: '2007',
       host: 'Jewish Virtual Library',
       url: 'https://www.jewishvirtuallibrary.org/lilith',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2006020426',
+      scholarly: true,
     },
     traditions: ['Akkadian & Babylonian'],
     deities: [
@@ -1221,13 +1233,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Pope, Marvin H.',
       title: 'Anath',
-      container: 'Encyclopaedia Judaica',
+      container: '_Encyclopaedia Judaica_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Fred Skolnik and Michael Berenbaum',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA in association with the Keter Publishing House',
+      published: '2007',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2006020426',
+      scholarly: true,
     },
     traditions: ['Canaanite & Phoenician'],
     deities: [
@@ -1246,6 +1265,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.iranicaonline.org/articles/anahid-i',
       modified: '2018-08-07',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Persian'],
     deities: [
@@ -1264,6 +1284,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.iranicaonline.org/articles/mithra-i',
       modified: '2018-05-14',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Persian'],
   },
@@ -1311,6 +1332,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.iranicaonline.org/articles/mithraism',
       modified: '2012-11-15',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -1326,6 +1348,7 @@ export const SOURCES: SeedSource[] = [
       place: 'New York',
       publisher: 'Oxford University Press',
       published: '2002',
+      scholarly: true,
     },
     traditions: ['Norse'],
   },
@@ -1338,6 +1361,7 @@ export const SOURCES: SeedSource[] = [
       place: 'Cambridge',
       publisher: 'D. S. Brewer',
       published: '1993',
+      scholarly: true,
     },
     traditions: ['Norse', 'Anglo-Saxon & Continental Germanic'],
     deities: [
@@ -1435,6 +1459,7 @@ export const SOURCES: SeedSource[] = [
       place: 'Liverpool',
       publisher: 'Liverpool University Press',
       published: '1999',
+      scholarly: true,
     },
     traditions: ['Anglo-Saxon & Continental Germanic'],
     deities: [
@@ -1558,6 +1583,7 @@ export const SOURCES: SeedSource[] = [
       place: 'Oxford',
       publisher: 'Oxford University Press',
       published: '1998',
+      scholarly: true,
     },
     traditions: ['Irish', 'Welsh'],
   },
@@ -1573,6 +1599,7 @@ export const SOURCES: SeedSource[] = [
       host: 'CELT: Corpus of Electronic Texts, University College Cork',
       url: 'https://celt.ucc.ie/published/T300010.html',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Irish'],
     deities: [
@@ -1646,6 +1673,7 @@ export const SOURCES: SeedSource[] = [
       place: 'Berkeley',
       publisher: 'University of California Press',
       published: '2019',
+      scholarly: true,
     },
     traditions: ['Welsh'],
     deities: [
@@ -1781,13 +1809,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Gimbutas, Marija',
       title: 'Slavic Religion',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/slavic-religion',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Slavic'],
     deities: [
@@ -1798,13 +1833,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Gimbutas, Marija',
       title: 'Perun',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/perun',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Slavic'],
     deities: [
@@ -1815,13 +1857,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Gimbutas, Marija',
       title: 'Veles-Volos',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/veles-volos',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Slavic'],
   },
@@ -1835,6 +1884,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CM%5CY%5CMythology.htm',
       accessed: '2026-10-06',
       note: 'Originally published in _Encyclopedia of Ukraine_, vol. 3 (1993)',
+      scholarly: true,
     },
     traditions: ['Slavic'],
   },
@@ -1846,6 +1896,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Canadian Institute of Ukrainian Studies',
       url: 'https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CM%5CO%5CMokosh.htm',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Slavic'],
     deities: [
@@ -1862,6 +1913,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Canadian Institute of Ukrainian Studies',
       url: 'https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CV%5CE%5CVeles.htm',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Slavic'],
   },
@@ -1874,6 +1926,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'ABC-CLIO',
       published: '1998',
       note: 'Existence confirmed at Open Library, https://openlibrary.org/books/OL360283M/Encyclopedia_of_Russian_Slavic_myth_and_legend, and the Internet Archive catalogue record',
+      scholarly: true,
     },
     traditions: ['Slavic'],
   },
@@ -1885,6 +1938,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Canadian Institute of Ukrainian Studies',
       url: 'https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CL%5CA%5CLada.htm',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -1924,25 +1978,39 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Biezais, Haralds, and Sigma Ankrava',
       title: 'Baltic Religion: An Overview',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/baltic-religion-overview',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Baltic'],
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Kursīte, Janīna',
       title: 'Baltic Religion: History of Study',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/baltic-religion-history-study',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Baltic'],
   },
@@ -2075,13 +2143,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Siikala, Anna-Leena',
       title: 'Ukko',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/ukko',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Finnish'],
     deities: [
@@ -2092,13 +2167,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Pentikäinen, Juha',
       title: 'Finnish Religions',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/finnish-religions',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Finnish'],
   },
@@ -2136,6 +2218,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Oxford University Press',
       published: '2009',
       note: "Existence confirmed through the Internet Archive catalogue record, https://archive.org/details/dictionaryofhind0000john, and Oxford University Press's product listing, https://global.oup.com/academic/product/a-dictionary-of-hinduism-9780198610250",
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2149,13 +2232,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Brereton, Joel P.',
       title: 'Soma',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/philosophy-and-religion/eastern-religions/hinduism/soma',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2166,13 +2256,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Findly, Ellison Banks',
       title: 'Agni',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/philosophy-and-religion/eastern-religions/hinduism/agni',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2183,13 +2280,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Lorenzen, David N.',
       title: 'Durgā: Hinduism',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/durga-hinduism',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2206,6 +2310,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/religion/dictionaries-thesauruses-pictures-and-press-releases/dhanvantari',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2295,13 +2400,19 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Knipe, David M.',
       title: 'Agni',
-      container: 'Encyclopedia of India',
+      container: '_Encyclopedia of India_',
+      contributors: 'Edited by Stanley A. Wolpert',
+      place: 'Detroit',
+      publisher: "Charles Scribner's Sons/Thomson Gale",
+      published: '2006',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/international/encyclopedias-almanacs-transcripts-and-maps/agni',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2005019616',
+      scholarly: true,
     },
     deities: [
       {
@@ -2317,6 +2428,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/religion/dictionaries-thesauruses-pictures-and-press-releases/agni',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -2491,6 +2603,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Kokugakuin University',
       url: 'https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9440',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Japanese'],
     deities: [
@@ -2508,6 +2621,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Kokugakuin University',
       url: 'https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9136',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Japanese'],
     deities: [
@@ -2525,6 +2639,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Kokugakuin University',
       url: 'https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9742',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Japanese'],
     deities: [
@@ -2542,6 +2657,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Kokugakuin University',
       url: 'https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9027',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Japanese'],
     deities: [
@@ -2559,6 +2675,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Kokugakuin University',
       url: 'https://d-museum.kokugakuin.ac.jp/eos/detail/?id=9974',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Japanese'],
     deities: [
@@ -2624,18 +2741,26 @@ export const SOURCES: SeedSource[] = [
       publisher: 'ABC-CLIO',
       published: '2003',
       note: 'Existence confirmed through Google Books, https://books.google.com/books/about/Handbook_of_Japanese_Mythology.html?id=GGFrygAACAAJ, and the _Education About Asia_ review, https://www.asianstudies.org/publications/eaa/archives/handbook-of-japanese-mythology-2/',
+      scholarly: true,
     },
     traditions: ['Japanese'],
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Gilbert, Michelle',
       title: 'Akan Religion',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/akan-religion',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Akan'],
     deities: [
@@ -2654,6 +2779,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'SAGE Publications',
       published: '2009',
       note: 'Existence and the entries "Nyame" and "Asase Yaa" confirmed on the publisher\'s page, https://www.sagepub.com/en-us/nam/encyclopedia-of-african-religion/book228941, and the Open Library record; the entries themselves sit behind SAGE\'s sign-in and were not read',
+      scholarly: true,
     },
     traditions: ['Akan'],
     deities: [
@@ -2721,13 +2847,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Arinze, Francis A., and Ogbu Kalu',
       title: 'Igbo Religion',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/igbo-religion',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Igbo'],
     deities: [
@@ -2859,13 +2992,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Gilbert, Michelle',
       title: 'Fon and Ewe Religion',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Fon & Ewe'],
     deities: [
@@ -2891,13 +3031,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Thayer, James S.',
       title: 'Mawu-Lisa',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/mawu-lisa',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Fon & Ewe'],
     deities: [
@@ -2934,6 +3081,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'University of Chicago Press',
       published: '1995',
       note: 'Existence, place, year and ISBN 0-226-05858-1 confirmed on the Open Library record, https://openlibrary.org/books/OL1078882M/African_vodun; the text was not read',
+      scholarly: true,
     },
     traditions: ['Fon & Ewe'],
     deities: [
@@ -3267,13 +3415,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Janzen, John M.',
       title: 'Kongo Religion',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/kongo-religion',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Kongo'],
     deities: [
@@ -3287,13 +3442,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Ogungbile, David',
       title: 'God: African Supreme Beings',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/god-african-supreme-beings',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Kongo'],
     deities: [
@@ -3311,6 +3473,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'University of Chicago Press',
       published: '1986',
       note: "Existence confirmed at https://searchworks.stanford.edu/view/1215388 and in Louis Brenner's review, _Bulletin of SOAS_ 51, no. 2 (1988): 399, https://www.cambridge.org/core/services/aop-cambridge-core/content/view/S0041977X00115356; text not read (see Notes)",
+      scholarly: true,
     },
     traditions: ['Kongo'],
   },
@@ -3324,6 +3487,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'University of Kansas',
       published: '1974',
       note: 'Existence confirmed at https://opac.aua.ac.ke/cgi-bin/koha/opac-ISBDdetail.pl?biblionumber=7803; text not read',
+      scholarly: true,
     },
     traditions: ['Kongo'],
     deities: [
@@ -3366,6 +3530,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Cambridge University Press',
       published: '2012',
       note: 'Existence confirmed in Gwendolyn Midlo Hall\'s review, _American Historical Review_ 119, no. 2 (2014): 530–31, https://academic.oup.com/ahr/article-abstract/119/2/530/44946; read through Wells, Alexis S. "Spirits of the Landscape Rediscovered: Ras Michael Brown\'s _African-Atlantic Cultures and the South Carolina Lowcountry_." _Southern Spaces_, August 26, 2013. https://southernspaces.org/2013/spirits-landscape-rediscovered-ras-michael-browns-african-atlantic-cultures-and-south-carolina-lowcountry/',
+      scholarly: true,
     },
     traditions: ['Kongo'],
     deities: [
@@ -3511,13 +3676,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Preston-Whyte, Eleanor M.',
       title: 'Zulu Religion',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/zulu-religion',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Zulu'],
     deities: [
@@ -3531,13 +3703,20 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Thayer, James S.',
       title: 'Unkulunkulu',
-      container: 'Encyclopedia of Religion',
+      container: '_Encyclopedia of Religion_',
+      edition: '2nd ed.',
+      contributors: 'Edited by Lindsay Jones',
+      place: 'Detroit',
+      publisher: 'Macmillan Reference USA',
+      published: '2005',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/unkulunkulu',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 2004017052',
+      scholarly: true,
     },
     traditions: ['Zulu'],
     deities: [
@@ -3815,13 +3994,19 @@ export const SOURCES: SeedSource[] = [
   },
   {
     reference: {
-      kind: 'chapter',
+      kind: 'entry',
       authors: 'Michel, Claudine',
       title: 'Vodun (Voodoo)',
-      container: 'Contemporary American Religion',
+      container: '_Contemporary American Religion_',
+      contributors: 'Edited by Wade Clark Roof',
+      place: 'New York',
+      publisher: 'Macmillan Reference USA',
+      published: '2000',
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/religion/legal-and-political-magazines/vodun-voodoo',
       accessed: '2026-10-06',
+      note: 'Print details from the Library of Congress catalogue record, LCCN 99046712',
+      scholarly: true,
     },
     traditions: ['Haitian Vodou'],
     deities: [
@@ -3876,6 +4061,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'University of North Carolina Press',
       published: '1992',
       note: 'Confirmed through Open Library, https://openlibrary.org/works/OL4321480W',
+      scholarly: true,
     },
     traditions: ['Haitian Vodou'],
   },
@@ -3888,6 +4074,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'UCLA Fowler Museum of Cultural History',
       published: '1995',
       note: 'Confirmed through Open Library, https://openlibrary.org/books/OL792534M/Sacred_arts_of_Haitian_vodou',
+      scholarly: true,
     },
     traditions: ['Haitian Vodou'],
   },
@@ -3902,6 +4089,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Praeger',
       published: '2010',
       note: "The set confirmed through Open Library, https://openlibrary.org/works/OL35706227W; the chapter's volume and pages were not verified, see Notes",
+      scholarly: true,
     },
     traditions: ['Haitian Vodou'],
     deities: [
@@ -4188,6 +4376,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'University of Hawaii Press',
       published: '1970',
       note: 'First published 1940 by Yale University Press. Record confirmed at Ulukau, https://www.ulukau.org/ulukau-books/?a=d&d=EBOOK-BECKWIT1&l=en, and the Internet Archive; chapters "The God Lono," "The Kane Worship," "The Pele Myth," "The Pele Sisters," "Pele Legends," "Hina Myths" from the table of contents at https://books.google.com/books/about/Hawaiian_Mythology.html?id=BqElGaH4DiIC; text read in the 1940 scan at https://archive.org/details/hawaiianmytholog00beck_0',
+      scholarly: true,
     },
     traditions: ['Hawaiian'],
     deities: [
@@ -4235,6 +4424,7 @@ export const SOURCES: SeedSource[] = [
       pages: '41–87',
       url: 'https://hbs.bishopmuseum.org/pubs-online/pdf/op30p41.pdf',
       note: 'Listed in the series index at https://hbs.bishopmuseum.org/pubs-online/bmop.html. "Pele, volcano goddess of Hawaiʻi"; Lono "associated with agriculture, rain, and peace ... the central god in the Makahiki harvest festival"; Kane "the god of procreation"; Ku and Hina the male-female godhead',
+      scholarly: true,
     },
     traditions: ['Hawaiian'],
   },
@@ -4262,6 +4452,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Oxford University Press',
       published: '1999',
       note: "Confirmed through the Cambridge Core record of Alec Ryrie's review, _Journal of Ecclesiastical History_ 53, no. 2 (2002), and the Internet Archive, https://archive.org/details/triumphofmoonhis00hutt",
+      scholarly: true,
     },
     traditions: ['Wicca', 'English folklore', 'Italian folk witchcraft'],
     deities: [
@@ -4282,6 +4473,7 @@ export const SOURCES: SeedSource[] = [
       published: '2021',
       pages: '157–78',
       note: 'Record at https://www.cambridge.org/core/books/abs/manifestations-of-male-image-in-the-worlds-cultures/horned-god-divine-male-principle-in-british-traditional-wicca/06791E7F8D0F4385DE388972509A5D3C',
+      scholarly: true,
     },
     traditions: ['Wicca'],
     deities: [
@@ -4305,6 +4497,7 @@ export const SOURCES: SeedSource[] = [
       pages: '45–57',
       url: 'https://doi.org/10.1080/0015587X.1939.9718148',
       note: 'Verified through its Crossref record',
+      scholarly: true,
     },
     traditions: ['English folklore'],
     deities: [
@@ -4344,6 +4537,7 @@ export const SOURCES: SeedSource[] = [
       published: '1997',
       pages: '25–33',
       url: 'https://doi.org/10.1080/0015587X.1997.9715933',
+      scholarly: true,
     },
     deities: [
       {
@@ -4395,6 +4589,7 @@ export const SOURCES: SeedSource[] = [
       pages: '5–22',
       url: 'https://doi.org/10.1558/pome.v13i10.5',
       note: 'Verified through its Crossref record',
+      scholarly: true,
     },
     traditions: ['Italian folk witchcraft'],
     deities: [
@@ -5930,19 +6125,23 @@ export const SOURCES: SeedSource[] = [
 ];
 
 /**
- * Seeds the references, then their links, in a transaction of its own. Writes
- * go through the handle the caller gives, not `withAudit` — see minimal.ts.
+ * Seeds the references, then their links, in a transaction of its own, and returns the sources whose fields or `scholarly` mark a
+ * person's edit kept. Writes go through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedSources(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
-  await beginSeedTransaction(db, seedVocabularySources, options);
+export async function seedSources(
+  db: SeedDatabase,
+  options: SeedRunOptions = {},
+): Promise<VocabularySourceKept[]> {
+  return beginSeedTransaction(db, seedVocabularySources, options);
 }
 
 /**
  * The same seed inside the caller's transaction, after the vocabularies it links. A reference is known by its `seed_key` (the citation
  * as rendered when seeded), so an edited one is never twinned; a target row by its own `seed_key`, so a renamed deity keeps its sources.
- * Nothing present is updated, nothing soft-deleted is re-inserted. Assumes the GUC is published and the bootstrap user exists.
+ * Nothing present is updated bar a source's fields and `scholarly` mark, which follow this list unless a person edited the row; that one
+ * is kept and returned, named by its citation. Nothing soft-deleted is re-inserted. Assumes the GUC is published and the bootstrap user exists.
  */
-export async function seedVocabularySources(tx: SeedTransaction): Promise<void> {
+export async function seedVocabularySources(tx: SeedTransaction): Promise<VocabularySourceKept[]> {
   const referenceIds = await insertMissingReferences(
     tx,
     SOURCES.map((source) => source.reference),
@@ -5964,6 +6163,11 @@ export async function seedVocabularySources(tx: SeedTransaction): Promise<void> 
     columns: ['referenceId', ...SOURCED_KEYS],
     toRow: (link) => link,
   });
+
+  return restateWorks(
+    tx,
+    SOURCES.map(({ reference }) => [citationText(reference), reference] as const),
+  );
 }
 
 /** A vocabulary's seeded rows by `seed_key`: the id, or `null` when soft-deleted. */

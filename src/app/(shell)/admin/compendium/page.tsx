@@ -235,6 +235,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                   revision: editing.revision,
                   updatedAt: editing.updatedAt,
                 },
+                sourcing: editing.sourcing,
                 ...(editReview !== undefined && {
                   review: {
                     reviewed: editReview !== null,

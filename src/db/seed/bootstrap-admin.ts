@@ -42,6 +42,20 @@ export const SYSTEM_ACTOR: SeedUser = {
 /** The bootstrap user acts for every seed, including its own insert. */
 export const BOOTSTRAP_SESSION: AuditSession = { userId: BOOTSTRAP_USER_ID };
 
+/** A row a person wrote, changed or deleted: anyone but the bootstrap user on any stamp. The seed's own soft delete is not a person's. */
+export function touched(row: {
+  createdBy: string;
+  updatedBy: string;
+  deletedAt?: Date | null;
+  deletedBy?: string | null;
+}): boolean {
+  return (
+    row.createdBy !== BOOTSTRAP_USER_ID ||
+    row.updatedBy !== BOOTSTRAP_USER_ID ||
+    ((row.deletedAt ?? null) !== null && row.deletedBy !== BOOTSTRAP_USER_ID)
+  );
+}
+
 /**
  * A seeded user, created by the bootstrap user — the bootstrap user itself
  * included. Idempotent by fixed id: a re-run adds nothing and overwrites

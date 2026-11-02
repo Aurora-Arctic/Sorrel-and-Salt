@@ -11,7 +11,14 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
+import {
+  FormProvider,
+  type Resolver,
+  useController,
+  useForm,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 
@@ -27,6 +34,7 @@ import {
   FormHistoryButtons,
   FormHistoryContext,
   SelectField,
+  SwitchField,
   TextField,
   useFormHistory,
 } from '../Field';
@@ -89,6 +97,7 @@ export const ReferenceDocument = graphql(`
       modified
       accessed
       note
+      scholarly
     }
   }
 `);
@@ -112,6 +121,7 @@ export const EMPTY_REFERENCE: ReferenceFormValues = {
   modified: '',
   accessed: '',
   note: '',
+  scholarly: false,
 };
 
 /** The kinds as a reader would name them, in the enum's order. */
@@ -281,7 +291,7 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
 };
 
 const FIELD_NAMES = Object.keys(EMPTY_REFERENCE).filter(
-  (name): name is ReferenceFieldName => name !== 'kind',
+  (name): name is ReferenceFieldName => name !== 'kind' && name !== 'scholarly',
 );
 
 /** The fields the chosen kind shows; the title alone before one is chosen. */
@@ -299,12 +309,21 @@ export function toReferenceInput(values: ReferenceFormValues): ReferenceSendInpu
     const blankDay = (name === 'modified' || name === 'accessed') && values[name] === '';
     input[name] = shown.has(name) && !blankDay ? values[name] : null;
   }
-  return { ...input, kind: values.kind as ReferenceKind, title: values.title };
+  return {
+    ...input,
+    kind: values.kind as ReferenceKind,
+    title: values.title,
+    scholarly: values.scholarly,
+  };
 }
 
 /** A source as the panel edits it: each field as stored, an empty one blank. */
 export function referenceValuesOf(source: ReferenceQuery['reference']): ReferenceFormValues {
-  const values: ReferenceFormValues = { ...EMPTY_REFERENCE, kind: source.kind };
+  const values: ReferenceFormValues = {
+    ...EMPTY_REFERENCE,
+    kind: source.kind,
+    scholarly: source.scholarly,
+  };
   for (const name of FIELD_NAMES) values[name] = source[name] ?? '';
   return values;
 }
@@ -435,6 +454,22 @@ function EditSourcePanel({ editing, ...props }: EditSourcePanelProps): ReactElem
         </button>
       </div>
     </fieldset>
+  );
+}
+
+/** Whether the source is an academic work: a compendium source's mark, which a coven's carries none of. */
+function ScholarlyField(): ReactElement {
+  const { control } = useFormContext<ReferenceFormValues>();
+  const { field } = useController({ control, name: 'scholarly' });
+  return (
+    <SwitchField
+      label="Scholarly"
+      name={field.name}
+      value="1"
+      checked={field.value}
+      onChange={field.onChange}
+      hint="Edited or reviewed by scholars: a peer-reviewed journal, a university, its press or museum, an academic press, a learned society's series, or a reference work with signed articles. Not a trade press, a wiki, a site that republishes others' works, or an unsigned site."
+    />
   );
 }
 
@@ -575,6 +610,8 @@ function PanelForm({
               format={FORMAT_OF[spec.name]}
             />
           ))}
+          {/* A compendium source's alone: absent from a coven's, not hidden. */}
+          {(editing ? editing.isGlobal : workspaceId === null) && <ScholarlyField />}
           {/* Held down from the press to the answer, as the ingredient's saves are, so a source
             being written is never left half-added; Save is off until something is entered or
             changed, and Cancel is quiet. */}

@@ -44,6 +44,48 @@ export const REFERENCE_KINDS = ['book', 'chapter', 'article', 'entry', 'web_page
 
 export type ReferenceKind = (typeof REFERENCE_KINDS)[number];
 
+// How a citation names the ingredient it supports: `stated` prints the formal name, `resolved` maps a common name to one formal name by a cited authority,
+// `unresolved` could not be mapped, and `unaudited` has not been checked. Null on a link means no answer was recorded.
+export const NAME_BASES = ['stated', 'resolved', 'unresolved', 'unaudited'] as const;
+
+export type NameBasis = (typeof NAME_BASES)[number];
+
+// Not a column: the fields a compendium citation may say it supports, on an entry and on a form, by the column's own names.
+// Deities and folk names are the entry's alone. The seed's files spell `colours` and map it to `colors` as they are read.
+export const CITED_ENTRY_FIELDS = [
+  'name',
+  'canonicalName',
+  'nomenclature',
+  'description',
+  'elements',
+  'celestialBodies',
+  'zodiacSigns',
+  'colors',
+  'safetyNotes',
+  'toxic',
+  'folkNames',
+  'deities',
+  'categories',
+  'substitutes',
+] as const;
+
+export type CitedEntryField = (typeof CITED_ENTRY_FIELDS)[number];
+
+export const CITED_VARIANT_FIELDS = [
+  'form',
+  'description',
+  'safetyNotes',
+  'toxic',
+  'elements',
+  'celestialBodies',
+  'zodiacSigns',
+  'colors',
+  'categories',
+  'substitutes',
+] as const;
+
+export type CitedVariantField = (typeof CITED_VARIANT_FIELDS)[number];
+
 // Not a column: the toxic setting a search takes, kept here so the
 // GraphQL enum, the filter's Zod schema and the facet screen read one list.
 // `any` is no filter; `toxic` keeps an entry flagged on itself or on a live
@@ -70,3 +112,7 @@ export type IngredientSource = (typeof INGREDIENT_SOURCES)[number];
 /** Which of the compendium's entries a curator's list reads: the shown ones (the public's only view), the hidden ones, or both. */
 export const COMPENDIUM_LISTINGS = ['shown', 'hidden', 'all'] as const;
 export type CompendiumListing = (typeof COMPENDIUM_LISTINGS)[number];
+
+/** The orders a curator's compendium list may take besides its default, by name or by best match: the sourcing score, lowest first. */
+export const COMPENDIUM_SORTS = ['sourcing_score'] as const;
+export type CompendiumSort = (typeof COMPENDIUM_SORTS)[number];

@@ -134,6 +134,7 @@ export const NO_FILTER: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   reviewed: '',
+  sort: '',
   covens: [],
   covensNot: false,
 };
@@ -153,6 +154,7 @@ export const SHOWN: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   reviewed: '',
+  sort: '',
   covens: [],
   covensNot: false,
 };

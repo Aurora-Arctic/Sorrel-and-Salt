@@ -84,6 +84,9 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
     'a coven owner who is not an admin meets the 403 page on every admin page an admin opens',
     { tag: '@story-17' },
     async ({ page }) => {
+      // A longer limit for this flow, which opens every admin page twice and signs in twice: 27 loads at
+      // about a second each ran 28.5s to 32.2s in CI against the default 30s.
+      test.setTimeout(60_000);
       // Why each refusal below is the guard's: the same addresses answer an admin.
       await signInAs(page, 'admin@story-17.test', ['discord'], 'admin');
       for (const path of ADMIN_ROUTES) {
