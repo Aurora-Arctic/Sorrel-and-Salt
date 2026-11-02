@@ -53,7 +53,7 @@ The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9
 
 **5. Two authorization layers, deliberately: the service check, and the `Membership` proof it returns.** `assertMembership(session, workspaceId, permission)` returns a branded `Membership` only the membership service can build, and every workspace-scoped finder and writer takes it first and ANDs its `workspace_id` itself. `assertSiteAdmin` does the same for the compendium tier. A `permission` is a per-role statement, never a rank. RLS is deferred, not rejected (MB.29).
 
-**6. Never cache anything not keyed by viewer identity.** The compendium, categories and the admin-curated vocabularies are cacheable (`unstable_cache`, tag `compendium`, `revalidateTag` on every admin mutation). Anything workspace-scoped is not.
+**6. Never cache anything not keyed by viewer identity.** The compendium, categories and the admin-curated vocabularies are cacheable (`unstable_cache`, tag `compendium`, `revalidateTag` on every admin mutation), and so are the site's published documents (tag `documents`, `src/lib/documents-cache.ts`). Anything workspace-scoped is not.
 
 **7. Filter in SQL, not after fetching.** A private spell must never reach a resolver. Same for cross-workspace rows.
 
