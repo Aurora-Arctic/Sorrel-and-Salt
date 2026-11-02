@@ -254,7 +254,7 @@ export default function CodeOfEthicsPage() {
         you are unsure.
       </p>
 
-      <h2>For the People Who Run the Site</h2>
+      <h2>Running the Site</h2>
 
       <h3>Curators</h3>
       <p>
