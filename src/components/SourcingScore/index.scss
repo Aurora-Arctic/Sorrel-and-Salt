@@ -45,6 +45,8 @@ $bar-height: 0.5rem;
 
 .sourcing-score__key {
   margin: 0 0 space(2);
+  // Tight leading, so the line sits under the bar it reads out rather than a paragraph's height away.
+  line-height: 1.2;
   font-size: type-size('caption');
   color: $text-muted;
 }
