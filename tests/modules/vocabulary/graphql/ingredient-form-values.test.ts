@@ -21,11 +21,11 @@ import type {
 
 // The reads a page makes, counted at the repository: one for the groups of a
 // whole page, and never a role lookup.
-const repository = vi.hoisted(() => ({ findManyByIds: vi.fn(), findWorkspaceRole: vi.fn() }));
+const repository = vi.hoisted(() => ({ findManyByIds: vi.fn(), findWorkspaceSeat: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
   repository.findManyByIds.mockImplementation(actual.findManyByIds);
-  repository.findWorkspaceRole.mockImplementation(actual.findWorkspaceRole);
+  repository.findWorkspaceSeat.mockImplementation(actual.findWorkspaceSeat);
   return { ...actual, ...repository };
 });
 
@@ -35,7 +35,7 @@ useTestDatabase((client) => (sql = client));
 
 beforeEach(() => {
   repository.findManyByIds.mockClear();
-  repository.findWorkspaceRole.mockClear();
+  repository.findWorkspaceSeat.mockClear();
 });
 
 const run = (session: Session | null, variables: Record<string, unknown> = {}) =>
@@ -81,7 +81,7 @@ describe('ingredientFormValues', () => {
     await run(null);
 
     expect(repository.findManyByIds).toHaveBeenCalledTimes(1);
-    expect(repository.findWorkspaceRole).not.toHaveBeenCalled();
+    expect(repository.findWorkspaceSeat).not.toHaveBeenCalled();
   });
 });
 

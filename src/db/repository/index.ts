@@ -109,6 +109,7 @@ export {
   findMemberPage,
   findMembershipsOfUsers,
   findWorkspaceRole,
+  findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
 export {

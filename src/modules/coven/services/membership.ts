@@ -1,7 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
-import { findWorkspaceRole } from '../../../db/repository';
-import { Forbidden } from '../../../lib/errors';
+import { findWorkspaceSeat } from '../../../db/repository';
+import { AccessPaused, Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import { type WorkspacePermission, rolePermits } from './access-control';
@@ -17,7 +17,7 @@ declare const brand: unique symbol;
 // One lookup per (user, workspace) per server render, whatever permission each caller asks for; the check stays uncached. Keyed by
 // the two ids because `cache()` compares a session by identity. Outside a render, the GraphQL handler included, it is the plain
 // finder (claude-docs/graphql/two-transports.md, "The two transports").
-const workspaceRole = cache(findWorkspaceRole);
+const workspaceSeat = cache(findWorkspaceSeat);
 
 /**
  * Proof that `assertMembership` admitted this user to this workspace at this role. Finders and `AuditWriter` methods demand one,
@@ -46,6 +46,7 @@ export type Membership = {
  * @throws {Forbidden} the session's email address is unverified, with a message that says to verify it; or the user holds no live membership of `workspaceId` —
  * an id that is not a uuid included — or holds one whose role does not carry
  * `permission`.
+ * @throws {AccessPaused} the user holds a seat in `workspaceId` and an owner has paused it; carries when the pause ends.
  */
 export async function assertMembership(
   session: Session,
@@ -67,11 +68,16 @@ export async function assertMembership(
   // An id is whatever string the client sent: one that cannot name a workspace is refused as a stranger, not sent to the driver.
   if (!RowId.safeParse(workspaceId).success) throw new Forbidden();
 
-  const role = await workspaceRole(session.userId, workspaceId);
+  const seat = await workspaceSeat(session.userId, workspaceId);
 
   // Bare, and deliberately the same refusal a wrong id earns: whether a
   // workspace exists is itself private (claude-docs/auth/service-session.md).
-  if (!role) throw new Forbidden();
+  if (!seat) throw new Forbidden();
+  const { role } = seat;
+
+  // Before the role's check, so a paused member is told of the pause whatever they asked for. Its own refusal rather than a bare
+  // Forbidden: the user holds the seat and knows the coven exists, so the page can say why and until when.
+  if (seat.pause) throw new AccessPaused(seat.pause.until);
 
   // Said to a real member, and shown as the alert beside the button they pressed (a stale page after a demotion, say). It names
   // neither the role nor the permission, which are the service's to decide.

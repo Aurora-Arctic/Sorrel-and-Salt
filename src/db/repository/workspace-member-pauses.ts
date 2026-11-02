@@ -9,8 +9,11 @@ import { selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { AuditWriter, SortPart, WorkspaceMemberPauseRow, WriterContext } from './types';
 
-/** A live pause's `until` is still ahead, or it has none: whether the pause stands rather than having run out. */
-const notRunOut = or(
+/**
+ * A live pause's `until` is still ahead, or it has none: whether the pause stands rather than having run out. Exported for
+ * `findWorkspaceSeat`, which reads the pause in the same query as the role.
+ */
+export const notRunOut = or(
   isNull(workspaceMemberPauses.until),
   gt(workspaceMemberPauses.until, sql`now()`),
 );

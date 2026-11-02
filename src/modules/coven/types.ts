@@ -4,6 +4,12 @@ import type { Membership } from './services/membership';
 /** `'viewer' | 'member' | 'owner'`, read off the column rather than restated. */
 export type WorkspaceRole = (typeof workspaceMembers.$inferSelect)['role'];
 
+/** A user's seat in one workspace: the role it holds, and the pause standing on it, if any. `until` null is open-ended. */
+export type WorkspaceSeat = {
+  role: WorkspaceRole;
+  pause: { until: Date | null } | null;
+};
+
 export type WorkspaceRow = typeof workspaces.$inferSelect;
 
 /** One membership, carrying the workspace it is of. */

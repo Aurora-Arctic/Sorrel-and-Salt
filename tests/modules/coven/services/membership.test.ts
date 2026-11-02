@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { Forbidden } from '@/lib/errors';
+import { AccessPaused, Forbidden } from '@/lib/errors';
 import {
   type Membership,
   type WorkspacePermission,
@@ -144,6 +144,132 @@ describe('assertMembership', () => {
          where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}
       `;
     }
+  });
+
+  describe('a paused member', () => {
+    /** A pause on B in W, written as the seed would, and closed again by the caller. */
+    async function pauseB(until: string | null) {
+      const [row] = await sql`
+        insert into workspace_member_pauses (workspace_id, user_id, until, note, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${B.id}, ${until}, 'Fixture pause', ${A.id}, ${A.id})
+        returning id
+      `;
+      return row!.id as string;
+    }
+
+    async function clearPauses() {
+      await sql`delete from workspace_member_pauses where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}`;
+    }
+
+    it('is refused every read and write by direct id, with AccessPaused rather than a bare Forbidden', async () => {
+      // Why this could have succeeded: B is admitted to W for both a read and a
+      // write before the pause, so the refusal below is the pause alone.
+      await expect(
+        assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
+      ).resolves.toMatchObject({ role: 'member' });
+      await expect(
+        assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['create'] }),
+      ).resolves.toMatchObject({ role: 'member' });
+
+      await pauseB('2099-01-01T00:00:00Z');
+      try {
+        for (const permission of [{ spell: ['read'] }, { spell: ['create'] }] as const) {
+          const refusal = assertMembership(asUser(B), WORKSPACE_W_ID, permission);
+          await expect(refusal).rejects.toBeInstanceOf(AccessPaused);
+          await expect(refusal).rejects.toMatchObject({ until: new Date('2099-01-01T00:00:00Z') });
+        }
+        // An open-ended pause carries no end.
+        await clearPauses();
+        await pauseB(null);
+        await expect(
+          assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
+        ).rejects.toMatchObject({ name: 'AccessPaused', until: null });
+        // The seat stays: the row is live and keeps its role.
+        const [seat] = await sql`
+          select role, deleted_at from workspace_members
+           where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}
+        `;
+        expect(seat).toEqual({ role: 'member', deleted_at: null });
+      } finally {
+        await clearPauses();
+      }
+    });
+
+    it('is admitted again once the pause is lifted', async () => {
+      const id = await pauseB(null);
+      try {
+        await expect(
+          assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
+        ).rejects.toBeInstanceOf(AccessPaused);
+
+        await sql`update workspace_member_pauses set lifted_at = now(), lifted_by = ${A.id} where id = ${id}`;
+
+        await expect(
+          assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['create'] }),
+        ).resolves.toMatchObject({ role: 'member' });
+      } finally {
+        await clearPauses();
+      }
+    });
+
+    it('is admitted again once the pause has run out, with no write', async () => {
+      const id = await pauseB('2099-01-01T00:00:00Z');
+      try {
+        await expect(
+          assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
+        ).rejects.toBeInstanceOf(AccessPaused);
+
+        // Time passes: the end moves behind now, and the row stays unlifted.
+        await sql`update workspace_member_pauses set until = now() - interval '1 minute' where id = ${id}`;
+
+        await expect(
+          assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['create'] }),
+        ).resolves.toMatchObject({ role: 'member' });
+        const [row] = await sql`select lifted_at from workspace_member_pauses where id = ${id}`;
+        expect(row?.lifted_at).toBeNull();
+      } finally {
+        await clearPauses();
+      }
+    });
+
+    it('keeps every other coven: a pause in W does not reach the same user elsewhere', async () => {
+      const [other] = await sql`
+        insert into workspaces (name, slug, created_by, updated_by)
+        values ('Fixture Coven Unpaused', 'fixture-coven-unpaused', ${A.id}, ${A.id})
+        returning id
+      `;
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${other!.id}, ${B.id}, 'member', ${A.id}, ${A.id})
+      `;
+      await pauseB(null);
+      try {
+        await expect(
+          assertMembership(asUser(B), WORKSPACE_W_ID, { spell: ['read'] }),
+        ).rejects.toBeInstanceOf(AccessPaused);
+        await expect(
+          assertMembership(asUser(B), other!.id, { spell: ['create'] }),
+        ).resolves.toMatchObject({ workspaceId: other!.id, role: 'member' });
+      } finally {
+        await clearPauses();
+      }
+    });
+
+    it('answers a non-member with a bare Forbidden, never AccessPaused, so the two stay apart', async () => {
+      // D holds no seat in W; a pause row naming D there (which no service
+      // writes) still leaves D a stranger rather than a paused member.
+      await sql`
+        insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${D.id}, ${A.id}, ${A.id})
+      `;
+      try {
+        const refusal = assertMembership(asUser(D), WORKSPACE_W_ID, { spell: ['read'] });
+        await expect(refusal).rejects.toBeInstanceOf(Forbidden);
+        await expect(refusal).rejects.not.toBeInstanceOf(AccessPaused);
+      } finally {
+        await sql`delete from workspace_member_pauses where user_id = ${D.id}`;
+      }
+    });
   });
 
   it('refuses a request in the connector form the same way', async () => {

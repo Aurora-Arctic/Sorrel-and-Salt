@@ -5,6 +5,7 @@ import {
   findMemberPage,
   findMembershipsOfUsers,
   findWorkspaceRole,
+  findWorkspaceSeat,
   withAudit,
 } from '@/db/repository';
 import type { Cursor } from '@/lib/types';
@@ -54,6 +55,82 @@ describe('the Membership proof', () => {
       `;
       expect(member?.deleted_at).toBeNull();
       await expect(findWorkspaceRole(A.id, workspace.id)).resolves.toBeUndefined();
+    });
+  });
+
+  describe('findWorkspaceSeat, the role and any standing pause in one read', () => {
+    async function pause(values: { until?: string | null; lifted?: boolean; deleted?: boolean }) {
+      await sql`
+        insert into workspace_member_pauses
+          (workspace_id, user_id, until, lifted_at, lifted_by, deleted_at, deleted_by, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${B.id}, ${values.until ?? null},
+                ${values.lifted ? sql`now()` : null}, ${values.lifted ? A.id : null},
+                ${values.deleted ? sql`now()` : null}, ${values.deleted ? A.id : null},
+                ${A.id}, ${A.id})
+      `;
+    }
+    const clear = () =>
+      sql`delete from workspace_member_pauses where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}`;
+
+    it('answers the role with no pause when none stands', async () => {
+      await expect(findWorkspaceSeat(B.id, WORKSPACE_W_ID)).resolves.toEqual({
+        role: 'member',
+        pause: null,
+      });
+      await expect(findWorkspaceSeat(A.id, WORKSPACE_X_ID)).resolves.toBeUndefined();
+    });
+
+    it('answers the standing pause beside the role, and the role alone through findWorkspaceRole', async () => {
+      await pause({ until: '2099-01-01T00:00:00Z' });
+      try {
+        await expect(findWorkspaceSeat(B.id, WORKSPACE_W_ID)).resolves.toEqual({
+          role: 'member',
+          pause: { until: new Date('2099-01-01T00:00:00Z') },
+        });
+        // A paused member still holds the seat: invitations count it as taken.
+        await expect(findWorkspaceRole(B.id, WORKSPACE_W_ID)).resolves.toBe('member');
+        // Another member of the same coven is untouched.
+        await expect(findWorkspaceSeat(C.id, WORKSPACE_W_ID)).resolves.toEqual({
+          role: 'viewer',
+          pause: null,
+        });
+      } finally {
+        await clear();
+      }
+    });
+
+    it('answers an open-ended pause with no end', async () => {
+      await pause({ until: null });
+      try {
+        await expect(findWorkspaceSeat(B.id, WORKSPACE_W_ID)).resolves.toEqual({
+          role: 'member',
+          pause: { until: null },
+        });
+      } finally {
+        await clear();
+      }
+    });
+
+    it.each([
+      ['run out', { until: '2000-01-01T00:00:00Z' }],
+      ['lifted', { lifted: true }],
+      ['deleted', { deleted: true }],
+    ] as const)('reads a %s pause as none', async (_label, values) => {
+      await pause(values);
+      try {
+        // Why this could have answered a pause: the row is there, naming B in W.
+        const [row] = await sql`
+          select count(*)::int as n from workspace_member_pauses
+           where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}
+        `;
+        expect(row?.n).toBe(1);
+        await expect(findWorkspaceSeat(B.id, WORKSPACE_W_ID)).resolves.toEqual({
+          role: 'member',
+          pause: null,
+        });
+      } finally {
+        await clear();
+      }
     });
   });
 
