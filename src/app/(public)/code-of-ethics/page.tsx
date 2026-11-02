@@ -136,8 +136,7 @@ export default function CodeOfEthicsPage() {
       </ul>
       <p>
         We ask you not to claim a closed practice as your own, and not to share what belongs to a
-        people you are not part of. This is advice, not a rule of your account, and the site does
-        not enforce it.
+        people you are not part of.
       </p>
       <p>Here is what the site does today, and what it commits to:</p>
       <ul>
@@ -165,8 +164,7 @@ export default function CodeOfEthicsPage() {
       <h2>Ethical and Sustainable Sourcing</h2>
       <p>
         An ingredient that is sacred, scarce or both is not a commodity. The site asks every coven
-        to take only what can be spared. This is advice, not a rule of your account, and the site
-        does not enforce it. Three plants sold for burning show why it matters.
+        to take only what can be spared. Three plants sold for burning show why it matters.
       </p>
       <ul>
         <li>
@@ -234,8 +232,7 @@ export default function CodeOfEthicsPage() {
       </p>
       <p>
         We ask the same of you: be honest about what you know and where you learned it, and say when
-        you are unsure. This is advice, not a rule of your account, and the site does not enforce
-        it.
+        you are unsure.
       </p>
 
       <h2>Accessibility</h2>
