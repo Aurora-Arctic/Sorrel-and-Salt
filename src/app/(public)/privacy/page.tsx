@@ -176,8 +176,8 @@ export default function PrivacyPolicyPage() {
       <p>
         Every change to a site role or to the right to create covens is also written to a ledger
         that nobody can edit through the site: who changed it, how, when and any note the admin
-        wrote. The ledger exists so that every admin action can be clearly tracked, to prevent admin
-        abuse.
+        wrote. The ledger exists so that every change an admin makes to these rights can be clearly
+        tracked, to prevent admin abuse.
       </p>
 
       <h3>What a Coven Holds</h3>
