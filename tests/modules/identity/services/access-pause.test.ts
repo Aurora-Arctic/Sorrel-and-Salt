@@ -7,6 +7,7 @@ import {
   pauseAdminRoleChanges,
   pauseUserAccess,
   standingAccessPause,
+  standingAccessPausesOf,
 } from '@/modules/identity';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -336,6 +337,29 @@ describe('listUserAccessPauses', () => {
   it('refuses a malformed id', async () => {
     expect(await refusalOf(listUserAccessPauses(asUser(E), 'not-an-id', firstPage))).toBeInstanceOf(
       ValidationError,
+    );
+  });
+});
+
+describe('standingAccessPausesOf', () => {
+  it('answers each user’s standing pause in the order asked, and none where none stands', async () => {
+    const standing = await pauseUserAccess(asUser(E), A.id, null, null);
+
+    const answered = await standingAccessPausesOf(asUser(E), [B.id, A.id]);
+
+    expect(answered.map((row) => row?.id)).toEqual([undefined, standing.id]);
+  });
+
+  it.each([
+    ['a curator', F],
+    ['a plain user', B],
+  ])('refuses %s with Forbidden', async (_who, caller) => {
+    await pauseUserAccess(asUser(E), A.id, null, null);
+    // The precondition: the same read by an admin answers the pause.
+    expect((await standingAccessPausesOf(asUser(E), [A.id]))[0]).toBeDefined();
+
+    expect(await refusalOf(standingAccessPausesOf(asUser(caller), [A.id]))).toBeInstanceOf(
+      Forbidden,
     );
   });
 });

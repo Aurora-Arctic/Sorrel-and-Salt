@@ -20,6 +20,7 @@ import {
   setSupportRequestIssueUrl,
   timeOutSupportSender,
   timeoutsForSenders,
+  standingTimeoutsOf,
   usersNamedOnRequests,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
@@ -520,6 +521,27 @@ describe('admin-only changes', () => {
     await timeOutSupportSender(asUser(E), C.id, FUTURE(), null);
     expect((await timeoutsForSenders(asUser(E), [C.id]))[0]).toHaveLength(1);
     expect((await timeoutsForSenders(asUser(F), [C.id]))[0]).toBeInstanceOf(Forbidden);
+  });
+});
+
+describe('standingTimeoutsOf', () => {
+  it('answers each sender’s standing time-out in the order asked, and none where none stands', async () => {
+    const standing = await timeOutSupportSender(asUser(E), C.id, FUTURE(), null);
+
+    const answered = await standingTimeoutsOf(asUser(E), [D.id, C.id]);
+
+    expect(answered.map((row) => row?.id)).toEqual([undefined, standing.id]);
+  });
+
+  it.each([
+    ['a curator', F],
+    ['a plain user', B],
+  ])('refuses %s with Forbidden', async (_who, caller) => {
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), null);
+    // The precondition: the same read by an admin answers the time-out.
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeDefined();
+
+    expect(await failureOf(standingTimeoutsOf(asUser(caller), [C.id]))).toBeInstanceOf(Forbidden);
   });
 });
 

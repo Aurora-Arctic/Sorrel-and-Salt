@@ -5,6 +5,7 @@ import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportSendCounts } from '../../modules/support/schema/support-send-counts';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { SUPPORT_VIEWS } from '../../lib/support-path';
+import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
 import { notSoftDeleted } from './predicates';
@@ -345,6 +346,23 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
   return selectFrom(
     supportTimeouts,
     and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.userId, [...userIds])),
+  );
+}
+
+/**
+ * The time-out standing on each of these senders, not lifted and not yet ended, in one query: the user list's Support
+ * Time-Out column for a page of users. Under the `SiteAdmin` proof: who is timed out is an admin's to read.
+ */
+export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: readonly string[]) {
+  if (userIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    supportTimeouts,
+    and(
+      notSoftDeleted(supportTimeouts),
+      inArray(supportTimeouts.userId, [...userIds]),
+      isNull(supportTimeouts.liftedAt),
+      sql`${supportTimeouts.until} > now()`,
+    ),
   );
 }
 

@@ -1,11 +1,11 @@
-import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
 import { applyAudit } from '../audit';
 import { sessions } from '../../modules/identity/schema/auth';
 import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
 import type { SiteAdmin } from '@/modules/identity';
 import { notSoftDeleted } from './predicates';
 import { findPage } from './finders';
-import { selectOne } from './select';
+import { selectFrom, selectOne } from './select';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import type { AuditWriter, SortPart, UserAccessPauseRow, WriterContext } from './types';
 
@@ -26,6 +26,26 @@ export function findStandingUserAccessPause(
   return selectOne(
     userAccessPauses,
     and(notSoftDeleted(userAccessPauses), liveFor(userId), notRunOut),
+  );
+}
+
+/**
+ * The pause standing on each of these users, by the same test as `findStandingUserAccessPause`, in one query: the user
+ * list's Site Access Paused column for a page of users. Under the `SiteAdmin` proof: who is paused is an admin's to read.
+ */
+export function findStandingUserAccessPausesFor(
+  _admin: SiteAdmin,
+  userIds: readonly string[],
+): Promise<UserAccessPauseRow[]> {
+  if (userIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    userAccessPauses,
+    and(
+      notSoftDeleted(userAccessPauses),
+      inArray(userAccessPauses.userId, [...userIds]),
+      isNull(userAccessPauses.liftedAt),
+      notRunOut,
+    ),
   );
 }
 
