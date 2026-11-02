@@ -211,11 +211,10 @@ export default function TermsOfUsePage() {
       <h2>Agreeing to These Terms</h2>
       <p>
         Right after you sign up, and again whenever the version you last agreed to is not the
-        current one, the site sends you to its acceptance page, at{' '}
-        <Link href="/account/terms">/account/terms</Link>, before it shows you any other page that
-        needs an account. There you read the terms and agree to them with a click, and the site
-        records which version you agreed to and when. The public pages, this one included, need no
-        agreement to read.
+        current one, the site sends you to its <Link href="/account/terms">acceptance page</Link>{' '}
+        before it shows you any other page that needs an account. There you read the terms and agree
+        to them with a click, and the site records which version you agreed to and when. The public
+        pages, this one included, need no agreement to read.
       </p>
 
       <h2>Updates to These Terms</h2>
