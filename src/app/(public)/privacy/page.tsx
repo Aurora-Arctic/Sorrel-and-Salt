@@ -346,10 +346,7 @@ export default function PrivacyPolicyPage() {
       </ul>
 
       <h2>Changes to This Policy</h2>
-      <p>
-        When the text changes, the date at the top changes with it. The site's code is public, so
-        anyone can check that the policy describes what the code does.
-      </p>
+      <p>When the text changes, the date at the top changes with it.</p>
     </DocumentPage>
   );
 }
