@@ -173,8 +173,10 @@ export default function CodeOfEthicsPage() {
           incense sticks and cones. Over-harvesting is reducing its wild population and range,
           illegal harvest is believed to be happening on public land, and in 2018 four people were
           arrested for taking 400 pounds of it. It is not on the United States' endangered species
-          list, but conservationists are concerned for its survival. Grow your own, or buy from an
-          ethical grower, never from a wild harvest you cannot trace.
+          list, but conservationists are concerned for its survival. Smudging with it is one of the
+          closed ceremonies described above, and many Native Americans have asked non-Native people
+          not to use it at all. <SourceMarks cite="sacred" numbers={[1, 2]} /> If you use it anyway,
+          grow your own, or buy from an ethical grower, never from a wild harvest you cannot trace.
           <SourceMarks cite="sourcing" numbers={[1, 2]} />
         </li>
         <li>
@@ -347,14 +349,14 @@ export default function CodeOfEthicsPage() {
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
-        <SourceItem number={1} cites={['sourcing']}>
+        <SourceItem number={1} cites={['sacred', 'sourcing']}>
           Wikipedia. "Salvia apiana." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Salvia_apiana">
             https://en.wikipedia.org/wiki/Salvia_apiana
           </a>
           .
         </SourceItem>
-        <SourceItem number={2} cites={['borrowing', 'sourcing']}>
+        <SourceItem number={2} cites={['borrowing', 'sacred', 'sourcing']}>
           Wikipedia. "Smudging." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Smudging">
             https://en.wikipedia.org/wiki/Smudging
