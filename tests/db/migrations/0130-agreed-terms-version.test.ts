@@ -5,11 +5,11 @@ import { useTestDatabase } from '../../support/db/database';
 import { asManualFix } from '../../support/db/privileges';
 import { fromRoot } from '../../support/paths';
 
-// A migration test, retired once `0129` is in production's journal. `0129` records the terms an account agreed to as the number of the
+// A migration test, retired once `0130` is in production's journal. `0130` records the terms an account agreed to as the number of the
 // published version, 1 for every account that agreed to the terms dated 2026-11-02, the text that version 1 seeds from. It is the
 // expand step alone: `terms_version` stays. The test database is already migrated, so the statements run again over rows each case writes.
 
-const FILE = fromRoot('src/db/migrations/0129_agreed-terms-version.sql');
+const FILE = fromRoot('src/db/migrations/0130_agreed-terms-version.sql');
 const AGREED_DATE = '2026-11-02';
 
 const STATEMENTS = readFileSync(FILE, 'utf8')
@@ -58,7 +58,7 @@ describe('users.agreed_terms_version', () => {
   });
 });
 
-describe('0129 backfill', () => {
+describe('0130 backfill', () => {
   let agreed: string;
 
   beforeEach(async () => {
