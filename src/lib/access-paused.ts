@@ -9,22 +9,8 @@ export const ACCESS_PAUSED_CODE = 'ACCESS_PAUSED';
 /** The refusal's sentence, for a client that reads the message rather than the code. */
 export const ACCESS_PAUSED_MESSAGE = 'Access to this account is paused.';
 
-/** The page a paused account's other pages send it to. */
+/** The page a paused account's other pages send it to; it reads the pause itself, so the address carries nothing. */
 export const ACCESS_PAUSED_PATH = '/access-paused' satisfies Route;
-
-/** The paused page, carrying the pause's end as `?until=` when it has one; an open-ended pause carries nothing. */
-export function accessPausedPath(until: Date | string | null | undefined): Route {
-  const at = until == null ? undefined : new Date(until);
-  if (!at || Number.isNaN(at.getTime())) return ACCESS_PAUSED_PATH;
-  return `${ACCESS_PAUSED_PATH}?${new URLSearchParams({ until: at.toISOString() })}` as Route;
-}
-
-/** The end a paused page's `?until=` names, or `undefined` for none or a malformed one. */
-export function pausedUntil(raw: string | string[] | undefined): Date | undefined {
-  if (typeof raw !== 'string' || raw === '') return undefined;
-  const at = new Date(raw);
-  return Number.isNaN(at.getTime()) ? undefined : at;
-}
 
 /** The pages a paused account reaches signed in, with everything beneath them: support, where it may ask about the pause. */
 const PAUSED_VIEW_PAGES = ['/support', '/account/support'];

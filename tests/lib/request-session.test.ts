@@ -158,7 +158,7 @@ describe('requireSignedIn', () => {
 // "A paused user may sign in to reach support"); an admin impersonating them is shown the same.
 describe('a paused session', () => {
   const UNTIL = new Date('2030-01-01T00:00:00.000Z');
-  const PAUSED_PAGE = `redirect:/access-paused?until=${encodeURIComponent(UNTIL.toISOString())}`;
+  const PAUSED_PAGE = /^redirect:\/access-paused$/;
 
   function paused() {
     standingAccessPauseMock.mockResolvedValue({ userId: USER_ID, until: UNTIL });

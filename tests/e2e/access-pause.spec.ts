@@ -83,9 +83,22 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await assertNoAccessibilityViolations(userPage);
   expect(await sessionsOf(userId)).toHaveLength(1);
 
-  // Support opens signed in, under the notice that access is paused, and the request sends.
+  // The page's Support link opens the Support dialog over it, as the footer's does, and the request sends signed in.
   await userPage.getByRole('main').getByRole('link', { name: 'Support', exact: true }).click();
-  await expect(userPage).toHaveURL('/support');
+  await expect(userPage).toHaveURL('/access-paused?support=');
+  const dialog = userPage.getByRole('dialog');
+  await dialog.getByRole('radio', { name: /^Account & Sign-In/ }).check();
+  await dialog.getByLabel(/^Subject/).fill('Why is my access paused?');
+  await dialog.getByLabel(/^Message/).fill('I cannot open my coven.');
+  await dialog.getByRole('button', { name: 'Send Request', exact: true }).click();
+  await expect(dialog.getByRole('status').filter({ hasText: 'was received' })).toBeVisible();
+  const sent = await withSql(
+    (sql) => sql`select 1 from support_requests where created_by = ${userId}`,
+  );
+  expect(sent).toHaveLength(1);
+
+  // The support page opens signed in, under the notice that access is paused.
+  await userPage.goto('/support');
   const notice = userPage.getByRole('complementary', { name: 'Site Access' });
   await expect(notice).toContainText('Your site access is paused, with no end date.');
   await expect(notice.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
@@ -93,15 +106,6 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
     '/access-paused',
   );
   await assertNoAccessibilityViolations(userPage);
-  await userPage.getByRole('radio', { name: /^Account & Sign-In/ }).check();
-  await field(userPage, 'Subject').fill('Why is my access paused?');
-  await field(userPage, 'Message').fill('I cannot open my coven.');
-  await userPage.getByRole('button', { name: 'Send Request', exact: true }).click();
-  await expect(userPage.getByRole('status').filter({ hasText: 'was received' })).toBeVisible();
-  const sent = await withSql(
-    (sql) => sql`select 1 from support_requests where created_by = ${userId}`,
-  );
-  expect(sent).toHaveLength(1);
 
   // The compendium reads as signed out beneath the notice; a coven or account page sends the user to the paused page.
   await userPage.goto('/compendium');
@@ -128,6 +132,9 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await userPage.goto('/account');
   await expect(userPage).toHaveURL(/\/account/);
   await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toHaveCount(0);
+  // With no pause standing, the paused page sends the session on.
+  await userPage.goto('/access-paused');
+  await expect(userPage).not.toHaveURL(/\/access-paused/);
 
   await user.close();
 });

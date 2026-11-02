@@ -2,9 +2,9 @@ import { PendingLink } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
 import Link from 'next/link';
-import { accessPausedPath } from '../../lib/access-paused';
-import { inUtc } from '../../lib/utc';
+import { ACCESS_PAUSED_PATH } from '../../lib/access-paused';
 import AccountMenu from '../AccountMenu';
+import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import ThemeToggle from '../ThemeToggle';
 import { ViewerIdProvider } from '../../lib/viewer-id';
@@ -86,12 +86,17 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
         {/* A paused viewer is told so on every page they reach; a landmark of its own, as the page owns `main`. */}
         {viewer.accessPause && (
           <aside className="app-shell__pause" aria-label="Site Access">
-            <Notice kind="caution" quiet>
+            <Notice kind="error" quiet>
               Your site access is paused
-              {viewer.accessPause.until
-                ? ` until ${inUtc(viewer.accessPause.until)}.`
-                : ', with no end date.'}{' '}
-              <Link href={accessPausedPath(viewer.accessPause.until)}>What This Means</Link>
+              {viewer.accessPause.until ? (
+                <>
+                  {' '}
+                  until <LocalTime at={viewer.accessPause.until} long />.
+                </>
+              ) : (
+                ', with no end date.'
+              )}{' '}
+              <Link href={ACCESS_PAUSED_PATH}>What This Means</Link>
             </Notice>
           </aside>
         )}

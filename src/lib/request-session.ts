@@ -9,7 +9,7 @@ import {
   standingAccessPause,
 } from '@/modules/identity';
 import { auth } from './auth';
-import { accessPausedPath, covenPausedPath, isPausedViewPage } from './access-paused';
+import { ACCESS_PAUSED_PATH, covenPausedPath, isPausedViewPage } from './access-paused';
 import { AccessPaused, Forbidden } from './errors';
 import type { Session, SessionState } from './session';
 import { isTermsPage, termsPagePath } from './account-terms';
@@ -145,7 +145,7 @@ export async function requireSignedIn(): Promise<Session> {
   const { session, accessPause } = await getSessionState();
   const returnPath = await forwardedReturnPath();
   if (accessPause && !isPausedViewPage(returnPath ?? '')) {
-    redirect(accessPausedPath(accessPause.until));
+    redirect(ACCESS_PAUSED_PATH);
   }
   if (!session) redirect(signInPath(returnPath));
   return session;

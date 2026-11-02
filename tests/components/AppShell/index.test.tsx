@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { longMinuteInZone } from '@/lib/utc';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
@@ -167,10 +168,10 @@ describe('AppShell', () => {
     shell({ ...MEMBER, accessPause: { until } }, []);
 
     const pause = screen.getByRole('complementary', { name: 'Site Access' });
-    expect(pause).toHaveTextContent('Your site access is paused until 2 January 2027, 03:04 UTC.');
+    expect(pause).toHaveTextContent(`Your site access is paused until ${longMinuteInZone(until)}.`);
     expect(screen.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
       'href',
-      '/access-paused?until=2027-01-02T03%3A04%3A00.000Z',
+      '/access-paused',
     );
   });
 

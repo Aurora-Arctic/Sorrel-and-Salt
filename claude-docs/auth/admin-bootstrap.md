@@ -740,14 +740,16 @@ pause on every session, an impersonation's included, as `accessPause`. From ther
   public field answers as signed out and the rest answer `ACCESS_PAUSED` with `pausedUntil`.
 - **Support time-outs.** A paused user who is also timed out is refused the send by the time-out, with its own sentence.
 
-The paused page's address carries `?until=` for a dated pause and nothing for an open-ended one (`accessPausedPath`).
-An admin impersonating a paused user is shown all of this as the user is
+The paused page's address carries nothing: the page reads the pause itself. An admin impersonating a paused user is shown all of this as the user is
 (`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
 
-**The paused page.** `/access-paused` is public (`src/proxy.ts`), outside the app shell, and not indexed. It reads only its
-own `?until=`: a future end is named in UTC, a past one is said to have ended with a link to Sign In, and none or a
-malformed one reads as no end date. It links to Support, which a paused account reaches signed in, and to the compendium,
-which it reads as any signed-out visitor.
+**The paused page.** `/access-paused` is public in the proxy (`src/proxy.ts`), since the proxy reads a paused session as
+signed out, and it sits outside the app shell and is not indexed. It reads the viewer's own standing pause through
+`getShellSession()`, as the shell does: a dated pause names its end with `LocalTime`, the format the site prints an end in,
+and an open-ended one says it has no end date. A visitor with no session is sent to `/sign-in`, and a session with no pause
+standing, lifted or ended, to `/`. Its Support link is a `SupportLink`, so it opens the Support dialog over the page as the
+footer's does; a paused account sends from it signed in. It also links to the compendium, which it reads as any signed-out
+visitor.
 
 **Ending.** A dated pause ends by itself once `until` passes, with no write, and a lift stamps `lifted_at` and `lifted_by`.
 Either way the next request of a session signed in while paused reaches the whole site.

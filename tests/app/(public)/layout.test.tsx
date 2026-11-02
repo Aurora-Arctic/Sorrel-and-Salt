@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { longMinuteInZone } from '@/lib/utc';
 import type { ShellContext } from '@/lib/types';
 
 // The public frame's layout: the session decides which chrome, and
@@ -67,7 +68,7 @@ describe('the (public) layout', () => {
     );
   });
 
-  it('tells a paused viewer their access is paused until its end, in UTC, and links to the paused page', async () => {
+  it('tells a paused viewer their access is paused until its end, as the site prints a date, and links to the paused page', async () => {
     const until = new Date('2027-01-02T03:04:00Z');
     viewerIfSignedIn.mockResolvedValue({
       ...MEMBER,
@@ -77,10 +78,12 @@ describe('the (public) layout', () => {
     await layout();
 
     const notice = screen.getByRole('status');
-    expect(notice).toHaveTextContent(/Your site access is paused until 2 January 2027, 03:04 UTC/);
+    expect(notice).toHaveTextContent(
+      `Your site access is paused until ${longMinuteInZone(until)}.`,
+    );
     expect(screen.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
       'href',
-      '/access-paused?until=2027-01-02T03%3A04%3A00.000Z',
+      '/access-paused',
     );
     expect(screen.getByRole('main')).toContainElement(
       screen.getByRole('heading', { name: 'The compendium' }),

@@ -101,9 +101,10 @@ requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in whil
 - **The context row** is the layouts' to render: the coven layout puts the
   switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
   `AdminNav` ([`context-row.md`](context-row.md)).
-- **The paused notice.** For a paused viewer, a caution `Notice` above the page, in its own `aside` labelled
-  `Site Access`, since the page owns `main`: "Your site access is paused until …" in UTC, or "with no end date",
-  then a What This Means link to `/access-paused` carrying the pause's end. `.app-shell__pause` sets it in the
+- **The paused notice.** For a paused viewer, an error `Notice` (red, and `quiet`, so a status rather than an alert)
+  above the page, in its own `aside` labelled `Site Access`, since the page owns `main`: "Your site access is paused
+  until …" with the end in `LocalTime`, or "with no end date", then a What This Means link to `/access-paused`, which
+  reads the pause itself. `.app-shell__pause` sets it in the
   wide column's edges.
 
 ## Styling
