@@ -93,8 +93,8 @@ describe('timeOutSupportSender starts the mail', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('stores the message on the time-out, trimmed, and a blank one as none', async () => {
-    const first = await timeOutSupportSender(
+  it('stores the message on the time-out, trimmed', async () => {
+    const row = await timeOutSupportSender(
       asUser(E),
       C.id,
       UNTIL,
@@ -102,11 +102,29 @@ describe('timeOutSupportSender starts the mail', () => {
       notifier,
       `  ${MESSAGE}  `,
     );
-    await liftSupportTimeout(asUser(E), first.id);
-    await timeOutSupportSender(asUser(E), C.id, UNTIL, NOTE, notifier, '   ');
 
-    expect((await timeoutsOf(C.id)).map((row) => row.message)).toEqual([MESSAGE, null]);
-    expect(first.message).toBe(MESSAGE);
+    expect((await timeoutsOf(C.id)).map((stored) => stored.message)).toEqual([MESSAGE]);
+    expect(row.message).toBe(MESSAGE);
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['empty', ''],
+    ['only spaces', '   '],
+  ])('refuses a time-out whose message is %s, writing and starting nothing', async (_, message) => {
+    const error = await failureOf(
+      timeOutSupportSender(asUser(E), C.id, UNTIL, NOTE, notifier, message as string),
+    );
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect(error).toMatchObject({ issues: [{ path: ['message'] }] });
+    expect(await timeoutsOf(C.id)).toEqual([]);
+    expect(timeoutRuns()).toEqual([]);
+
+    // Why it could have been written: the same call with a message sets the time-out and starts its mail.
+    await timeOutSupportSender(asUser(E), C.id, UNTIL, NOTE, notifier, MESSAGE);
+    expect(await timeoutsOf(C.id)).toHaveLength(1);
+    expect(timeoutRuns()).toHaveLength(1);
   });
 
   it('refuses a message of 501 characters, writing and starting nothing, and takes one of 500', async () => {
@@ -141,7 +159,7 @@ describe('timeOutSupportSender starts nothing when it writes nothing', () => {
 
 describe('liftSupportTimeout', () => {
   it('starts no run and sends nothing', async () => {
-    const timeout = await timeOutSupportSender(asUser(E), C.id, null, NOTE, notifier);
+    const timeout = await timeOutSupportSender(asUser(E), C.id, null, NOTE, notifier, MESSAGE);
     // Precondition: setting it started its one run.
     expect(timeoutRuns()).toHaveLength(1);
 
@@ -208,8 +226,8 @@ describe("the time-out mail's step", () => {
     expect(`${mail!.text}${mail!.html}`).not.toContain(NOTE);
   });
 
-  it('says a time-out with no end date has none, and carries no message when none was written', async () => {
-    await timeOutSupportSender(asUser(E), C.id, null, NOTE, notifier);
+  it('says a time-out with no end date has none', async () => {
+    await timeOutSupportSender(asUser(E), C.id, null, NOTE, notifier, MESSAGE);
 
     const [mail] = await sendTimeoutRuns();
 

@@ -158,6 +158,21 @@ describe('Mutation.pauseMemberAccess', () => {
     expect(startJob.mock.calls.filter(([job]) => job === memberPauseMail)).toHaveLength(1);
   });
 
+  it('declares the message an optional String, unlike the time-out and the site pause', async () => {
+    const answer = await run<{
+      __type: { fields: { name: string; args: { name: string; type: object }[] }[] };
+    }>(
+      asUser(A),
+      `{ __type(name: "Mutation") { fields { name args { name type { kind name } } } } }`,
+    );
+
+    const field = answer.data?.__type.fields.find(({ name }) => name === 'pauseMemberAccess');
+    expect(field?.args.find(({ name }) => name === 'message')?.type).toEqual({
+      kind: 'SCALAR',
+      name: 'String',
+    });
+  });
+
   it('takes a pause with no message, storing none', async () => {
     const id = await covenWithHistory('Fixture Pause No Message');
     await sql`update workspace_member_pauses set lifted_at = now(), lifted_by = ${A.id} where workspace_id = ${id}`;

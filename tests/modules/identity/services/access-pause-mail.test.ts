@@ -93,13 +93,31 @@ describe('pauseUserAccess starts the mail', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('stores the message on the pause, trimmed, and a blank one as none', async () => {
-    const first = await pauseUserAccess(asUser(E), A.id, UNTIL, NOTE, notifier, `  ${MESSAGE}  `);
-    await liftUserAccessPause(asUser(E), A.id);
-    await pauseUserAccess(asUser(E), A.id, UNTIL, NOTE, notifier, '   ');
+  it('stores the message on the pause, trimmed', async () => {
+    const row = await pauseUserAccess(asUser(E), A.id, UNTIL, NOTE, notifier, `  ${MESSAGE}  `);
 
-    expect((await pausesOf(A.id)).map((row) => row.message)).toEqual([MESSAGE, null]);
-    expect(first.message).toBe(MESSAGE);
+    expect((await pausesOf(A.id)).map((stored) => stored.message)).toEqual([MESSAGE]);
+    expect(row.message).toBe(MESSAGE);
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['empty', ''],
+    ['only spaces', '   '],
+  ])('refuses a pause whose message is %s, writing and starting nothing', async (_, message) => {
+    const error = await failureOf(
+      pauseUserAccess(asUser(E), A.id, UNTIL, NOTE, notifier, message as string),
+    );
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect(error).toMatchObject({ issues: [{ path: ['message'] }] });
+    expect(await pausesOf(A.id)).toEqual([]);
+    expect(pauseRuns()).toEqual([]);
+
+    // Why it could have been written: the same call with a message sets the pause and starts its mail.
+    await pauseUserAccess(asUser(E), A.id, UNTIL, NOTE, notifier, MESSAGE);
+    expect(await pausesOf(A.id)).toHaveLength(1);
+    expect(pauseRuns()).toHaveLength(1);
   });
 
   it('refuses a message of 501 characters, writing and starting nothing, and takes one of 500', async () => {
@@ -134,7 +152,7 @@ describe('pauseUserAccess starts nothing when it writes nothing', () => {
 
 describe('liftUserAccessPause', () => {
   it('starts no run and sends nothing', async () => {
-    await pauseUserAccess(asUser(E), A.id, null, NOTE, notifier);
+    await pauseUserAccess(asUser(E), A.id, null, NOTE, notifier, MESSAGE);
     // Precondition: setting it started its one run.
     expect(pauseRuns()).toHaveLength(1);
 
@@ -201,8 +219,8 @@ describe("the access pause mail's step", () => {
     expect(`${mail!.text}${mail!.html}`).not.toContain(NOTE);
   });
 
-  it('says a pause with no end date has none, and carries no message when none was written', async () => {
-    await pauseUserAccess(asUser(E), A.id, null, NOTE, notifier);
+  it('says a pause with no end date has none', async () => {
+    await pauseUserAccess(asUser(E), A.id, null, NOTE, notifier, MESSAGE);
 
     const [mail] = await sendPauseRuns();
 

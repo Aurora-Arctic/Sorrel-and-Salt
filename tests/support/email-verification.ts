@@ -38,3 +38,6 @@ export const noSupportNotifier: SupportNotifier = {
 export const noPauseNotifier: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier = {
   origin: async () => 'http://localhost:3000',
 };
+
+/** The message to the user that a time-out or site access pause must carry, for a test that does not look at the mail. */
+export const PAUSE_MESSAGE = 'A fixture message to the user.';

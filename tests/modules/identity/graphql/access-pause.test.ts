@@ -6,7 +6,7 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
-// The transport's half of `pauseUserAccess`: the message to the user is an optional argument, handed to the service and stored
+// The transport's half of `pauseUserAccess`: the message to the user is a required argument, handed to the service and stored
 // on the pause beside the note. What the mail says, and who may pause, is the service's
 // (tests/modules/identity/services/access-pause-mail.test.ts).
 
@@ -17,9 +17,42 @@ vi.mock('@/lib/jobs', () => ({ startJob }));
 vi.mock('@/lib/mail', () => ({ send: async () => {} }));
 
 const PAUSE = /* GraphQL */ `
-  mutation ($userId: ID!, $until: DateTime, $note: String!, $message: String) {
+  mutation ($userId: ID!, $until: DateTime, $note: String!, $message: String!) {
     pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {
       id
+    }
+  }
+`;
+
+const WITHOUT_MESSAGE = /* GraphQL */ `
+  mutation ($userId: ID!, $note: String!) {
+    pauseUserAccess(userId: $userId, note: $note) {
+      id
+    }
+  }
+`;
+
+type Arg = {
+  name: string;
+  type: { kind: string; name: string | null; ofType: { name: string } | null };
+};
+
+const ARGUMENTS = /* GraphQL */ `
+  {
+    __type(name: "Mutation") {
+      fields {
+        name
+        args {
+          name
+          type {
+            kind
+            name
+            ofType {
+              name
+            }
+          }
+        }
+      }
     }
   }
 `;
@@ -57,15 +90,39 @@ describe('Mutation.pauseUserAccess', () => {
     expect(startJob.mock.calls.filter(([job]) => job === accessPauseMail)).toHaveLength(1);
   });
 
-  it('takes a pause with no message, storing none', async () => {
-    const answer = await run<Paused>(asUser(E), PAUSE, {
+  it('declares the message a required String', async () => {
+    const answer = await run<{ __type: { fields: { name: string; args: Arg[] }[] } }>(
+      asUser(E),
+      ARGUMENTS,
+    );
+
+    const field = answer.data?.__type.fields.find(({ name }) => name === 'pauseUserAccess');
+    expect(field?.args.find(({ name }) => name === 'message')?.type).toEqual({
+      kind: 'NON_NULL',
+      name: null,
+      ofType: { name: 'String' },
+    });
+  });
+
+  it('refuses a pause sent with no message, writing and starting nothing', async () => {
+    const answer = await run<Paused>(asUser(E), WITHOUT_MESSAGE, {
       userId: C.id,
-      until: null,
       note: 'Staff only: shared the account.',
     });
 
-    expect(answer.errors).toBeUndefined();
-    const [row] = await sql`select message from user_access_pauses where user_id = ${C.id}`;
-    expect(row).toEqual({ message: null });
+    expect(answer.errors?.length).toBeGreaterThan(0);
+    expect(answer.data?.pauseUserAccess ?? null).toBeNull();
+    expect(await sql`select id from user_access_pauses where user_id = ${C.id}`).toEqual([]);
+    expect(startJob.mock.calls.filter(([job]) => job === accessPauseMail)).toEqual([]);
+
+    // Why it could have been written: the same pause with a message is set.
+    const sent = await run<Paused>(asUser(E), PAUSE, {
+      userId: C.id,
+      until: null,
+      note: 'x',
+      message: 'A message.',
+    });
+    expect(sent.errors).toBeUndefined();
+    expect(await sql`select id from user_access_pauses where user_id = ${C.id}`).toHaveLength(1);
   });
 });

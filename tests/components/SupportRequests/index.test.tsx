@@ -278,6 +278,11 @@ describe('Time-Out', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Note/ }), {
       target: { value: note },
     });
+  const MESSAGE = 'Please keep each request to one problem.';
+  const writeMessage = (message = MESSAGE) =>
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Message to User/ }), {
+      target: { value: message },
+    });
   const timeOutSent = () => {
     const sent: TimeOutSupportSenderMutationVariables[] = [];
     mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
@@ -293,6 +298,7 @@ describe('Time-Out', () => {
   it('marks the note required, and is off until one is written', () => {
     open(ADMIN);
     openTimeOut();
+    writeMessage();
     const note = within(dialog()).getByRole('textbox', { name: /^Note/ });
     expect(note).toHaveAttribute('aria-required', 'true');
     expect(timeOutSubmit()).toBeDisabled();
@@ -307,6 +313,7 @@ describe('Time-Out', () => {
     open(ADMIN);
     openTimeOut();
     writeNote();
+    writeMessage();
     expect(timeOutSubmit()).toBeEnabled();
 
     fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
@@ -319,20 +326,39 @@ describe('Time-Out', () => {
     openTimeOut();
     fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'none' } });
     writeNote();
+    writeMessage();
     fireEvent.click(timeOutSubmit());
     expect(sent).toHaveLength(0);
     confirmTimeOut();
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(sent).toEqual([{ userId: 'u1', until: null, note: 'Repeated sends', message: null }]);
+    expect(sent).toEqual([{ userId: 'u1', until: null, note: 'Repeated sends', message: MESSAGE }]);
+  });
+
+  it('marks the message required, and sends nothing until one is written', () => {
+    const sent = timeOutSent();
+    open(ADMIN);
+    openTimeOut();
+    writeNote();
+
+    expect(timeOutSubmit()).toBeDisabled();
+    writeMessage('   ');
+    expect(timeOutSubmit()).toBeDisabled();
+    fireEvent.click(timeOutSubmit());
+    expect(screen.queryByRole('button', { name: 'Time Out' })).toBeNull();
+    expect(sent).toHaveLength(0);
+
+    // Why it could have been sent: with a message written, the same form is ready.
+    writeMessage();
+    expect(timeOutSubmit()).toBeEnabled();
   });
 
   it('offers a Message to User, said to be emailed to them, beside a note said to be seen by staff only', () => {
     open(ADMIN);
     openTimeOut();
 
-    const message = within(dialog()).getByRole('textbox', { name: 'Message to User' });
-    expect(message).not.toBeRequired();
+    const message = within(dialog()).getByRole('textbox', { name: /^Message to User/ });
+    expect(message).toHaveAttribute('aria-required', 'true');
     expect(message).toHaveAccessibleDescription(/email/i);
     expect(within(dialog()).getByRole('textbox', { name: /^Note/ })).toHaveAccessibleDescription(
       /Seen by staff only/,
@@ -344,9 +370,7 @@ describe('Time-Out', () => {
     open(ADMIN);
     openTimeOut();
     writeNote();
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Message to User' }), {
-      target: { value: '  Please keep each request to one problem.  ' },
-    });
+    writeMessage(`  ${MESSAGE}  `);
     fireEvent.click(timeOutSubmit());
     // Precondition: nothing goes before the confirmation.
     expect(sent).toHaveLength(0);
@@ -366,6 +390,7 @@ describe('Time-Out', () => {
     open(ADMIN);
     openTimeOut();
     writeNote();
+    writeMessage();
     fireEvent.click(timeOutSubmit());
     expect(sent).toHaveLength(0);
     confirmTimeOut();

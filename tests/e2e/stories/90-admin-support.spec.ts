@@ -117,6 +117,9 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     await test.step('the admin times the sender out, and their send is refused with the end time', async () => {
       await dialog.getByRole('button', { name: 'Time-Out', expanded: false }).click();
       await dialog.getByRole('textbox', { name: 'Note' }).fill('Repeated test messages');
+      await dialog
+        .getByRole('textbox', { name: /^Message to User/ })
+        .fill('Please keep each request to one problem.');
       await dialog.getByRole('button', { name: 'Time Out Sender' }).click();
       await page.getByRole('button', { name: 'Time Out', exact: true }).click();
       await expect(dialog.getByRole('button', { name: 'Lift' })).toBeVisible();

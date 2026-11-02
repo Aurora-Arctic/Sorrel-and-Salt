@@ -26,7 +26,7 @@ import type { SupportNotifier } from '@/modules/support';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { noPauseNotifier } from '../../../support/email-verification';
+import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 
 // The support lifecycle by direct call: each row of the transition table, the pairs it leaves out, the reopen guard, what a
 // sender never reads, and the tier derived from a card.
@@ -272,6 +272,7 @@ describe('a sender’s message', () => {
       new Date(Date.now() + 3_600_000),
       'Spam',
       noPauseNotifier,
+      PAUSE_MESSAGE,
     );
     const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'Hi.'));
     expect(refused).toBeInstanceOf(Forbidden);
@@ -285,7 +286,14 @@ describe('a timed-out sender’s reply', () => {
 
   it('is refused by direct request id with the reply wording, saves nothing, and works once the time-out is lifted', async () => {
     const request = await waiting();
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam', noPauseNotifier);
+    const timeout = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      until,
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
 
     const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'The red one.'));
     expect(refused).toBeInstanceOf(Forbidden);
@@ -301,7 +309,7 @@ describe('a timed-out sender’s reply', () => {
 
   it('is refused with the no-end wording during a time-out with no end date', async () => {
     const request = await waiting();
-    await timeOutSupportSender(asUser(E), C.id, null, 'Spam', noPauseNotifier);
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam', noPauseNotifier, PAUSE_MESSAGE);
 
     const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'The red one.'));
     expect(refused).toBeInstanceOf(Forbidden);
@@ -314,7 +322,7 @@ describe('a timed-out sender’s reply', () => {
   it('keeps the new-request wording for a closed request', async () => {
     const closed = await send();
     await closeSupportRequest(asUser(E), closed.id);
-    await timeOutSupportSender(asUser(E), C.id, until, 'Spam', noPauseNotifier);
+    await timeOutSupportSender(asUser(E), C.id, until, 'Spam', noPauseNotifier, PAUSE_MESSAGE);
 
     const refused = await failureOf(sendSenderMessage(asUser(C), closed.id, 'Again.'));
     expect((refused as Error).message).toContain('You cannot send support requests until');

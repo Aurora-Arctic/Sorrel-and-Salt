@@ -8,7 +8,7 @@ import { A, B, E, F, asUser } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
-import { noPauseNotifier } from '../support/email-verification';
+import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
 
 // Through Better Auth's real endpoints with the plugin registered: an admin becomes the user they impersonate (role, coven, stamps) and Stop returns their own session
 // (claude-docs/auth/impersonation.md, "Impersonation").
@@ -237,7 +237,14 @@ describe('impersonating a paused user', () => {
   async function impersonatingPaused(until: Date | null) {
     const target = await insertUser('user');
     const asE = await signedInAs(E.id);
-    await pauseUserAccess(asUser(E), target, until, 'A fixture pause', noPauseNotifier);
+    await pauseUserAccess(
+      asUser(E),
+      target,
+      until,
+      'A fixture pause',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
     const response = await impersonate(asE, target);
     return { target, asE, response, cookie: cookieHeader(response) };
   }

@@ -80,6 +80,12 @@ const writeNote = () =>
     target: { value: 'Shared password' },
   });
 
+const MESSAGE = 'Your access is paused for a week.';
+const writeMessage = (message = MESSAGE) =>
+  fireEvent.change(within(section()).getByRole('textbox', { name: /^Message to User/ }), {
+    target: { value: message },
+  });
+
 describe('UserDetail, Site Access', () => {
   it('draws no Site Access section when no pauses are given, as for the primary admin and the admin’s own account', () => {
     renderDetail();
@@ -97,6 +103,7 @@ describe('UserDetail, Site Access', () => {
     fireEvent.change(within(section()).getByRole('textbox', { name: 'Note' }), {
       target: { value: '  Shared password  ' },
     });
+    writeMessage();
     fireEvent.click(within(section()).getByRole('button', { name: 'Pause Access' }));
     expect(sent).toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
@@ -117,23 +124,45 @@ describe('UserDetail, Site Access', () => {
       target: { value: 'none' },
     });
     writeNote();
+    writeMessage();
     fireEvent.click(within(section()).getByRole('button', { name: 'Pause Access' }));
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-    expect(sent).toEqual([{ userId: BO.id, until: null, note: 'Shared password', message: null }]);
+    expect(sent).toEqual([
+      { userId: BO.id, until: null, note: 'Shared password', message: MESSAGE },
+    ]);
   });
 
-  it('offers a Message to User, said to be emailed to them, beside a note said to be seen by staff only', () => {
+  it('offers a required Message to User, said to be emailed to them, beside a note said to be seen by staff only', () => {
     renderDetail({ pauses: [] });
     unfold();
 
-    const message = within(section()).getByRole('textbox', { name: 'Message to User' });
-    expect(message).not.toBeRequired();
+    const message = within(section()).getByRole('textbox', { name: /^Message to User/ });
+    expect(message).toBeRequired();
     expect(message).toHaveAccessibleDescription(/email/i);
     expect(within(section()).getByRole('textbox', { name: 'Note' })).toHaveAccessibleDescription(
       /Seen by staff only/,
     );
+  });
+
+  it('holds Pause Access, and sends nothing, until the message has text', () => {
+    const sent = pausesSent();
+    renderDetail({ pauses: [] });
+    unfold();
+    writeNote();
+    const pauseButton = within(section()).getByRole('button', { name: 'Pause Access' });
+
+    expect(pauseButton).toBeDisabled();
+    writeMessage('   ');
+    expect(pauseButton).toBeDisabled();
+    fireEvent.click(pauseButton);
+    expect(screen.queryByRole('button', { name: 'Pause' })).toBeNull();
+    expect(sent).toHaveLength(0);
+
+    // Why it could have been sent: with a message written, the same form is ready.
+    writeMessage();
+    expect(pauseButton).toBeEnabled();
   });
 
   it('sends the message to the user, trimmed, with the pause', async () => {
@@ -141,9 +170,7 @@ describe('UserDetail, Site Access', () => {
     renderDetail({ pauses: [] });
     unfold();
     writeNote();
-    fireEvent.change(within(section()).getByRole('textbox', { name: 'Message to User' }), {
-      target: { value: '  Paused while we look into a report.  ' },
-    });
+    writeMessage('  Paused while we look into a report.  ');
     fireEvent.click(within(section()).getByRole('button', { name: 'Pause Access' }));
     // Precondition: nothing goes before the confirmation.
     expect(sent).toHaveLength(0);
@@ -166,6 +193,7 @@ describe('UserDetail, Site Access', () => {
       fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
         target: { value: span },
       });
+      writeMessage();
       const note = within(section()).getByRole('textbox', { name: 'Note' });
       const pauseButton = within(section()).getByRole('button', { name: 'Pause Access' });
       expect(note).toBeRequired();
@@ -181,6 +209,7 @@ describe('UserDetail, Site Access', () => {
     renderDetail({ pauses: [] });
     unfold();
     writeNote();
+    writeMessage();
     const pauseButton = within(section()).getByRole('button', { name: 'Pause Access' });
     expect(pauseButton).toBeEnabled();
     fireEvent.change(within(section()).getByRole('combobox', { name: 'For' }), {
