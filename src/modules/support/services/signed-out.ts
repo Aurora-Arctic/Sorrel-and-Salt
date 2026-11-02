@@ -5,12 +5,13 @@ import type { Session } from '../../../lib/session';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
 import { parseInput } from '../../../lib/validation';
 import { supportRequests } from '../schema/support-requests';
-import type { SupportNotifier } from '../types';
+import type { SupportNotifier, SupportRequestRow } from '../types';
 import {
   SIGNED_OUT_ABOUTS,
   SignedOutSupportRequestInput,
   type SignedOutSupportRequestInput as SignedOutInput,
 } from '../validation/support';
+import { mailSender } from './mail-sender';
 import { redactPath } from './redact-path';
 
 /** Sends one address may make in the window. */
@@ -64,7 +65,7 @@ export async function sendSignedOutSupportRequest(
     );
   }
 
-  await withAudit(SIGNED_OUT_SESSION, (write) =>
+  const [request] = await withAudit(SIGNED_OUT_SESSION, (write) =>
     write.insert(supportRequests, {
       about: values.about,
       subject: values.subject,
@@ -76,5 +77,5 @@ export async function sendSignedOutSupportRequest(
       lastSenderActivityAt: now,
     }),
   );
-  await context.notifier.signedOutReceived(values.email);
+  await mailSender(context.notifier, request as SupportRequestRow, 'received');
 }

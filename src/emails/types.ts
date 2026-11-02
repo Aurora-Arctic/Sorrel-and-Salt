@@ -102,8 +102,20 @@ export interface SupportReplyNoticeProps extends BaseEmailProps {
   requestSubject: string;
 }
 
-/** Told to a signed-out visitor that their support request arrived. `url` is the support page, for writing again. */
-export type SupportReceivedProps = BaseEmailProps;
+/** What the received, resolved and closing-soon mails take: the request they name, and whether its sender has an account. */
+export interface SupportStatusProps extends BaseEmailProps {
+  /** The subject of the request, as its sender wrote it; the template cuts it to length. */
+  requestSubject: string;
+  /** True for a sender with no account: `url` is then the support page, which asks for no sign-in. */
+  signedOut?: boolean;
+}
+
+/** Told a sender that their support request arrived. `url` opens the request, or the support page for a signed-out sender. */
+export type SupportReceivedProps = SupportStatusProps;
+/** Told a sender that their support request is resolved. */
+export type SupportResolvedProps = SupportStatusProps;
+/** Told a sender that their resolved support request is about to close. */
+export type SupportClosingSoonProps = SupportStatusProps;
 
 /** A staff reply to a signed-out visitor, whose only way to read it is this mail. `url` is the support page, for writing again. */
 export interface SupportEmailReplyProps extends BaseEmailProps {

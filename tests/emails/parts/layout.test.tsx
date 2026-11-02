@@ -8,7 +8,9 @@ import { passwordChangedMessage } from '@/emails/password-changed';
 import { passwordLockedMessage } from '@/emails/password-locked';
 import { resetPasswordMessage } from '@/emails/reset-password';
 import { supportEmailReplyMessage } from '@/emails/support-email-reply';
+import { supportClosingSoonMessage } from '@/emails/support-closing-soon';
 import { supportReceivedMessage } from '@/emails/support-received';
+import { supportResolvedMessage } from '@/emails/support-resolved';
 import { supportReplyNoticeMessage } from '@/emails/support-reply-notice';
 import { verifyEmailMessage } from '@/emails/verify-email';
 import type { Message } from '@/lib/types';
@@ -147,7 +149,35 @@ const MAILS: {
     template: 'support-received',
     name: 'supportReceivedMessage',
     link: `${ORIGIN}/support`,
-    message: () => supportReceivedMessage({ to: 'someone@layout.test', url: `${ORIGIN}/support` }),
+    message: () =>
+      supportReceivedMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/support`,
+        requestSubject: 'The jar will not open',
+        signedOut: true,
+      }),
+  },
+  {
+    template: 'support-resolved',
+    name: 'supportResolvedMessage',
+    link: `${ORIGIN}/account/support?request=req-1`,
+    message: () =>
+      supportResolvedMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/account/support?request=req-1`,
+        requestSubject: 'The jar will not open',
+      }),
+  },
+  {
+    template: 'support-closing-soon',
+    name: 'supportClosingSoonMessage',
+    link: `${ORIGIN}/account/support?request=req-1`,
+    message: () =>
+      supportClosingSoonMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/account/support?request=req-1`,
+        requestSubject: 'The jar will not open',
+      }),
   },
   {
     template: 'support-email-reply',

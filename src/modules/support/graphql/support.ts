@@ -298,7 +298,7 @@ builder.mutationField('sendSupportRequest', (t) =>
     args: { input: t.arg({ type: SupportRequestInput, required: true }) },
     authScopes: { signedIn: true },
     resolve: (_root, { input }, context) =>
-      sendSupportRequest(sessionOf(context), definedArgs(input)),
+      sendSupportRequest(sessionOf(context), definedArgs(input), context.support),
   }),
 );
 
@@ -413,7 +413,8 @@ builder.mutationField('resolveSupportRequest', (t) =>
       'Marks a request resolved. An admin may on any request, a curator on one assigned to them.',
     args: { id: t.arg.id({ required: true }) },
     authScopes: { curator: true },
-    resolve: (_root, { id }, context) => resolveSupportRequest(sessionOf(context), id),
+    resolve: (_root, { id }, context) =>
+      resolveSupportRequest(sessionOf(context), id, context.support),
   }),
 );
 
