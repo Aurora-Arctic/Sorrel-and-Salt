@@ -33,9 +33,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * A resolved request whose seven days have passed reads as closed, whether or not its job has closed it yet, so a lost run only
- * delays the stored move. Every finder and move below reads status through this.
+ * delays the stored move. Every finder and move below reads status through this. `coalesce` keeps a resolved request with no
+ * `resolved_at` resolved, as `asOfNow` reads it, rather than a null that drops it from every view.
  */
-const lapsedResolved = sql`(${supportRequests.status} = 'resolved' and ${supportRequests.resolvedAt} <= now() - make_interval(days => ${RESOLVED_CLOSES_AFTER_DAYS}))`;
+const lapsedResolved = sql`(${supportRequests.status} = 'resolved' and coalesce(${supportRequests.resolvedAt} <= now() - make_interval(days => ${RESOLVED_CLOSES_AFTER_DAYS}), false))`;
 
 /** The status a reader is shown: a lapsed resolved request as closed, from the day it lapsed. */
 function asOfNow<Row extends typeof supportRequests.$inferSelect>(row: Row): Row {
