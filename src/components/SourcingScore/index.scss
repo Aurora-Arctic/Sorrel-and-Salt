@@ -1,15 +1,78 @@
 @use '../../scss/variables' as *;
 
+// The score bar's height: no token sizes a meter, so this is the one value past them.
+$bar-height: 0.5rem;
+
 .sourcing-score {
   margin-block-end: space(4);
 }
 
+.sourcing-score__head {
+  display: flex;
+  align-items: center;
+  gap: space(1);
+  margin-block-end: space(2);
+}
+
 .sourcing-score__heading {
-  margin-block: 0 space(2);
+  margin: 0;
+}
+
+.sourcing-score__bar {
+  display: flex;
+  block-size: $bar-height;
+  overflow: hidden;
+  border-radius: radius('sharp');
+  background: $fill-quiet;
+}
+
+.sourcing-score__gain {
+  background: $accent;
+}
+
+.sourcing-score__cost {
+  background: $warning;
+}
+
+.sourcing-score__key {
+  margin: space(1) 0 space(2);
+  font-size: type-size('caption');
+  color: $text-muted;
 }
 
 .sourcing-score__facts {
+  display: grid;
+  gap: space(1);
   margin: 0;
-  padding-inline-start: space(5);
+  padding: 0;
+  list-style: none;
+}
+
+.sourcing-score__fact {
+  display: grid;
+  grid-template-columns: $glyph-size minmax(0, 1fr) auto;
+  align-items: center;
+  gap: space(2);
+}
+
+.sourcing-score__glyph {
+  inline-size: $glyph-size;
+  block-size: $glyph-size;
+}
+
+.sourcing-score__points {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.sourcing-score__fact--gain .sourcing-score__glyph {
+  color: $accent;
+}
+
+.sourcing-score__fact--cost .sourcing-score__glyph {
+  color: $warning;
+}
+
+.sourcing-score__fact--none .sourcing-score__glyph {
   color: $text-muted;
 }

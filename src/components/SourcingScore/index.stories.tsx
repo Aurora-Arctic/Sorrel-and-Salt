@@ -28,7 +28,7 @@ export const Default: Story = {
   },
 };
 
-// Nothing cited and nothing settled: a negative total, which the list sorts first.
+// Nothing cited and nothing settled: a negative total, which the list sorts first; the bar draws the cost alone. The bar draws the cost alone.
 export const Negative: Story = {
   args: {
     sourcing: {
@@ -42,6 +42,36 @@ export const Negative: Story = {
         { fact: 'noLocator', label: 'Citations with No Locator: 0', points: 0 },
         { fact: 'safetyUnsourced', label: 'Safety Note: None', points: 0 },
         { fact: 'formCitesNothing', label: 'Forms Citing Nothing: 0', points: 0 },
+      ],
+    },
+  },
+};
+
+// Gains past the bar's 100: the bar stops at its end and the key still states every number.
+export const GainsOverTheMaximum: Story = {
+  args: {
+    sourcing: {
+      score: 115,
+      facts: [
+        { fact: 'sources', label: '12 Sources', points: 60 },
+        { fact: 'bestSource', label: 'Best Source: Book', points: 40 },
+        { fact: 'nameBacked', label: 'Formal Name Backed: 12 of 12', points: 25 },
+        { fact: 'formCitesNothing', label: 'Forms Citing Nothing: 2', points: -10 },
+      ],
+    },
+  },
+};
+
+// Costs against near-full gains: the cost takes only what the gains left of the bar.
+export const CostsAgainstFullGains: Story = {
+  args: {
+    sourcing: {
+      score: 70,
+      facts: [
+        { fact: 'sources', label: '12 Sources', points: 95 },
+        { fact: 'noLocator', label: 'Citations with No Locator: 5', points: -15 },
+        { fact: 'formCitesNothing', label: 'Forms Citing Nothing: 2', points: -10 },
+        { fact: 'curatorReviewed', label: 'Curator Review: Not Yet', points: 0 },
       ],
     },
   },
