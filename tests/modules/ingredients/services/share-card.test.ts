@@ -14,7 +14,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // What a compendium entry's share card draws, read through the public entry read alone: the entry's
-// name, formal name and own categories with their group's colour, and nothing for an address that
+// name, formal name and own categories (else its live forms') with their group's colour, and nothing for an address that
 // read does not answer with an entry. The ingredients table is emptied per test.
 
 let sql: postgres.Sql;
@@ -75,7 +75,7 @@ describe('readCompendiumShareCard', () => {
       makeIngredient({
         name: 'Testwort',
         categories: ['Card Charm', 'Card Binding', 'Card Aegis'],
-        // A form's category is the form's, not the entry's, so the card leaves it out.
+        // With categories of its own, the card shows only those: a form's is left out.
         variants: [makeVariant({ categories: ['Card Drift'] }), makeVariant({ form: 'Testoil' })],
       }),
       A.id,
@@ -90,6 +90,32 @@ describe('readCompendiumShareCard', () => {
         { name: 'Card Charm', color: WARDS },
       ],
       groupColors: [WARDS, BONDS],
+    });
+  });
+
+  it("falls back to its live forms' categories, each once, when the entry has none of its own", async () => {
+    const id = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Formwort',
+        variants: [
+          makeVariant({ form: 'Testoil', categories: ['Card Drift', 'Card Charm'] }),
+          makeVariant({ form: 'Testleaf', categories: ['Card Charm'] }),
+          makeVariant({ form: 'Testash', categories: ['Card Binding'] }),
+        ],
+      }),
+      A.id,
+    );
+    // A soft-deleted form's pair outlives it, and must not reach the card.
+    await sql`update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+      where ingredient_id = ${id} and form = 'Testash'`;
+
+    await expect(readCompendiumShareCard(await slugOf(id))).resolves.toMatchObject({
+      categories: [
+        { name: 'Card Charm', color: WARDS },
+        { name: 'Card Drift', color: CHANGES },
+      ],
+      groupColors: [WARDS, CHANGES],
     });
   });
 

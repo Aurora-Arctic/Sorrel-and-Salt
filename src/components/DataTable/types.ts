@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { GroupColors } from '../../lib/types';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
@@ -24,6 +25,45 @@ export interface StackColumn<Row> {
   className?: string;
   /** What a row shows in this column. */
   cell: (row: Row) => ReactNode;
+  /** Sorts the list from its heading, a link to each direction's address; absent, the heading is plain text. */
+  sort?: ColumnSort;
+}
+
+/** A sort direction, as `aria-sort` names it. */
+export type SortDirection = 'ascending' | 'descending';
+
+/**
+ * A sortable column's two orders. Ascending is the order a first click gives, whichever way the column reads it:
+ * Name's A to Z, or the sourcing score's Lowest First.
+ */
+export interface ColumnSort {
+  /** The direction the list is sorted by this column, or absent when another order holds. */
+  current?: SortDirection;
+  /** Each direction's address: the same list, sorted that way, at its first page. */
+  href: Record<SortDirection, Route>;
+  /** Each direction in words, title case: "A to Z", "Lowest First". */
+  labels: Record<SortDirection, string>;
+}
+
+/** An order no column heading gives, such as a search's Best Match, offered beside the columns' orders. */
+export interface OtherOrder {
+  label: string;
+  href: Route;
+  /** Whether the list is in this order now. */
+  current: boolean;
+}
+
+/** One choice of the sort select a phone shows in place of the headings. */
+export interface SortChoice {
+  /** The column and direction, "Name, A to Z", or another order's own label. */
+  label: string;
+  href: Route;
+}
+
+export interface SortSelectProps {
+  choices: readonly SortChoice[];
+  /** The address of the order the list is in now. */
+  current: Route | undefined;
 }
 
 export interface StackTableProps<Row> {
@@ -42,6 +82,8 @@ export interface StackTableProps<Row> {
   'aria-label'?: string;
   /** Modifiers past the stacking table's own: `data-table--roomy`, `data-table--nowrap`. */
   className?: string;
+  /** Orders beside the sortable columns', offered first in the phone's sort select: a search's Best Match. */
+  otherOrders?: readonly OtherOrder[];
 }
 
 export interface GroupChipProps {

@@ -122,6 +122,7 @@ const entry = (
   canonicalName: string | null,
   forms: string[],
   categoryCount = 0,
+  sourcingScore = 0,
 ): CompendiumListEntry => {
   const slug = slugify(canonicalName ? `${name} ${canonicalName}` : name);
   return {
@@ -141,17 +142,21 @@ const entry = (
       heading: detailsHeading({ name, canonicalName, nomenclature }),
     },
     shown: true,
+    sourcingScore,
     editHref: compendiumHref({}, { edit: slug }),
     editHeading: { eyebrow: 'Edit Ingredient', title: name, qualifier: canonicalName ?? undefined },
   };
 };
 
 const ENTRIES = [
-  entry('Testwort', 'botanical', 'Fixtura testalis', ['Dried', 'Oil'], 4),
-  entry('Testwort', 'botanical', 'Fixtura alteralis', ['Dried'], 1),
-  entry('Fixture Salt', 'unknown', null, []),
-  entry('Mockroot', 'none', null, ['Powder']),
+  entry('Testwort', 'botanical', 'Fixtura testalis', ['Dried', 'Oil'], 4, 36),
+  entry('Testwort', 'botanical', 'Fixtura alteralis', ['Dried'], 1, 15),
+  entry('Fixture Salt', 'unknown', null, [], 0, -12),
+  entry('Mockroot', 'none', null, ['Powder'], 0, 0),
 ];
+
+// Lowest first, as a first press on Sourcing Score sorts: the worst-sourced at the top.
+const BY_SCORE = [...ENTRIES].sort((left, right) => left.sourcingScore! - right.sourcingScore!);
 
 // The middle page of three, both pager ends live.
 const PageOfSeveral = (): ReactElement => (
@@ -211,6 +216,7 @@ const FilteredView = () => (
         toxic: '',
         reviewed: '',
         sort: '',
+        order: '',
       }}
       facets={FACETS}
       categories={CATEGORIES}
@@ -257,6 +263,7 @@ const noMatchesNode = (
         toxic: '',
         reviewed: '',
         sort: '',
+        order: '',
       }}
       facets={FACETS}
       categories={CATEGORIES}
@@ -350,6 +357,50 @@ const singlePageNode = (
   </Page>
 );
 
+// Sorted by the sourcing score, lowest first: its heading marked with an arrow, Name's a plain link.
+const sortedByScoreNode = (
+  <Page>
+    <CompendiumList
+      entries={BY_SCORE}
+      filter={{ ...NO_FILTER, sort: 'sourcing_score' }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={ENTRIES.length}
+    />
+  </Page>
+);
+
+// Name, Z to A, the second press on Name.
+const sortedByNameDescendingNode = (
+  <Page>
+    <CompendiumList
+      entries={[...ENTRIES].reverse()}
+      filter={{ ...NO_FILTER, sort: 'name', order: 'desc' }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={ENTRIES.length}
+    />
+  </Page>
+);
+
+// At phone width the headings are hidden and the Sort By select stands above the cards, a search adding Best Match to it.
+const phoneSortNode = (
+  <div style={{ inlineSize: '24rem' }}>
+    <Page>
+      <CompendiumList
+        entries={[...BY_SCORE].reverse()}
+        filter={{ ...NO_FILTER, query: 'wort', sort: 'sourcing_score', order: 'desc' }}
+        facets={FACETS}
+        categories={CATEGORIES}
+        vocabulary={VOCABULARY}
+        total={ENTRIES.length}
+      />
+    </Page>
+  </div>
+);
+
 // Filters pressed once drawn, as a person would, on the wide layout (below it the sheet is modal).
 const FilterPanelOpenView = () => {
   useSteps([() => document.querySelector<HTMLButtonElement>('.facet-panel__button')?.click()]);
@@ -374,6 +425,9 @@ const STATES: Record<string, ReactNode> = {
   'Last Page': lastPageNode,
   'Single Page': singlePageNode,
   'Filter Panel Open': filterPanelOpenNode,
+  'Sorted By Sourcing Score': sortedByScoreNode,
+  'Sorted By Name, Z to A': sortedByNameDescendingNode,
+  'Sort At Phone Width': phoneSortNode,
 };
 
 export const States: Story = {

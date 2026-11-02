@@ -5,6 +5,7 @@ import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
   CategoryModeEnum,
   CompendiumListingEnum,
+  CompendiumOrderEnum,
   CompendiumSortEnum,
   IngredientElementEnum,
   IngredientRef,
@@ -87,8 +88,9 @@ builder.queryField('compendium', (t) =>
         description:
           'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
       }),
-      // A curator's order by sourcing score: FORBIDDEN to anyone else, as the score is.
+      // The column to sort on; the sourcing score is FORBIDDEN to anyone but a curator, as the score is.
       sort: t.arg({ type: CompendiumSortEnum, required: false }),
+      order: t.arg({ type: CompendiumOrderEnum, required: false }),
     },
     // The session reaches the read for a curator's settings alone: Reviewed, the hidden listing and the sourcing sort.
     resolve: (_root, args, page, { session }) => listCompendium(filterOf(args), page, session),
@@ -178,6 +180,7 @@ function filterOf({
   reviewed,
   listing,
   sort,
+  order,
 }: CompendiumFilterInput): CompendiumFilterInput {
   return {
     query,
@@ -195,5 +198,6 @@ function filterOf({
     reviewed,
     listing,
     sort,
+    order,
   };
 }

@@ -31,8 +31,10 @@ export interface CompendiumSearchParams extends ListSearchParams {
   toxic?: string | string[];
   /** Reviewed by a curator, `1`, or not, `0`; the public page drops it. */
   reviewed?: string | string[];
-  /** The order by sourcing score, lowest first, `sourcing_score`; the public page drops it. */
+  /** The column the list sorts on, `name` or `sourcing_score`; the public page drops it. */
   sort?: string | string[];
+  /** `desc` reverses the sort; the public page drops it. */
+  order?: string | string[];
   /** The entry whose details modal is open over the list, by slug. */
   entry?: string | string[];
 }

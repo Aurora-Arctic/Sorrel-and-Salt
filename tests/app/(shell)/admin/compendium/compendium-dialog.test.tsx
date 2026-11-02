@@ -7,7 +7,7 @@ import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { ViewerIdProvider } from '@/lib/viewer-id';
 import { textbox, waitFor } from '../../../../support/ingredient-form';
-import { type } from '../../../../support/interact';
+import { press, type } from '../../../../support/interact';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../../../support/msw/ingredient-lookups';
 
 const navigation = vi.hoisted(() => ({ navigate: vi.fn(), refresh: vi.fn() }));
@@ -100,7 +100,7 @@ describe('CompendiumDialog after an autosave', () => {
 });
 
 describe('CompendiumDialog on an edit', () => {
-  it("shows the entry's sourcing score in the dialog above the form", async () => {
+  it("shows the entry's sourcing score at the start of the Sources section", async () => {
     offerNothing();
     render(
       <QueryClientProvider client={makeQueryClient()}>
@@ -122,6 +122,7 @@ describe('CompendiumDialog on an edit', () => {
     );
 
     const modal = await screen.findByRole('dialog', { name: 'Edit Ingredient, Mockwort' });
+    press(within(modal).getByRole('button', { name: 'Sources' }));
     expect(within(modal).getByRole('region', { name: 'Sourcing Score: 10' })).toBeInTheDocument();
   });
 });

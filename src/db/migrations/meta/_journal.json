@@ -820,6 +820,13 @@
       "when": 1793586332455,
       "tag": "0116_print-encyclopedia-entries",
       "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1793586951144,
+      "tag": "0117_compendium-hide-uncategorised-live",
+      "breakpoints": true
     }
   ]
 }

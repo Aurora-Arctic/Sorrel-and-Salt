@@ -22,14 +22,15 @@ rows it draws `empty` in a `<p>` instead.
 
 `StackTableProps` (`types.ts`):
 
-| Prop         | What it is                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------- |
-| `columns`    | The columns in order; `false` or `undefined` for one the table leaves out                   |
-| `rows`       | This page's rows                                                                            |
-| `rowKey`     | Each row's React key, its id                                                                |
-| `empty`      | What stands in the table's place when there are no rows                                     |
-| `aria-label` | The table's name, where its page holds more than one thing to tell apart                    |
-| `className`  | Modifiers past the stacking table's own: `data-table--roomy`, `data-table--nowrap`, or both |
+| Prop          | What it is                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| `columns`     | The columns in order; `false` or `undefined` for one the table leaves out                   |
+| `rows`        | This page's rows                                                                            |
+| `rowKey`      | Each row's React key, its id                                                                |
+| `empty`       | What stands in the table's place when there are no rows                                     |
+| `aria-label`  | The table's name, where its page holds more than one thing to tell apart                    |
+| `className`   | Modifiers past the stacking table's own: `data-table--roomy`, `data-table--nowrap`, or both |
+| `otherOrders` | Orders no column stands for, listed first in the phone sort select: a search's Best Match   |
 
 A column (`StackColumn`) is its `heading`, what its `cell(row)` shows, and
 optionally:
@@ -40,6 +41,7 @@ optionally:
 | `hiddenHeading`    | The heading is read by a screen reader and drawn nowhere, as the pencil column's "Edit" is                                                                                                                                                                     |
 | `headingClassName` | A class on the heading, for a column styled as a whole: Impersonate's red rule                                                                                                                                                                                 |
 | `className`        | A class on each cell: a description held to the reading measure, a muted fact                                                                                                                                                                                  |
+| `sort`             | Makes the column sortable from its heading ("Sortable columns" below)                                                                                                                                                                                          |
 
 A column that only some pages show, the value lists' group or the user
 list's Impersonate, is passed as `false` or `undefined` when it is off, so a
@@ -56,6 +58,20 @@ list writes its columns as one array.
   primitive reads as "span the card, no label".
 - **A heading names its column even when hidden**: the pencil's column is
   "Edit" to a screen reader, in a `.visually-hidden` span.
+
+### Sortable columns
+
+A column sorts when it carries a `sort` (`ColumnSort`, `types.ts`), which the list builds from its own URL:
+
+| Field     | What it is                                                                               |
+| --------- | ---------------------------------------------------------------------------------------- |
+| `current` | `'ascending'` or `'descending'` when the list is sorted by this column, absent otherwise |
+| `href`    | The link for each direction                                                              |
+| `labels`  | Each direction in words, as the column reads it: "A to Z", "Lowest First"                |
+
+The heading holds a link and carries `aria-sort` with `current`, so a screen reader announces the column as sorted. The link goes to the reverse direction when the column is sorted ascending, and to ascending otherwise, so a first click sorts ascending and a second reverses. Its accessible name states the current order, "Name, Sorted A to Z", and every sortable heading draws an arrow hidden from screen readers: the sorted one in the accent colour, up for ascending and down for descending, the others a muted up-and-down pair at the disabled opacity. The headings have no underline in any state; hover and the focus ring mark them as links. With no JavaScript the links still sort.
+
+At phone width the headings are hidden with the rest of the head, so when any column sorts the frame also draws a Sort By select above the cards (`SortSelect`, `sort-select.tsx`). It lists the table's `otherOrders` first, then each sortable column in each direction ("Name, Z to A"), and choosing one navigates. It is drawn only after hydration (`useHydrated`) and only inside the stacked container query, so it is an enhancement: a phone with no JavaScript has no sort control.
 
 ### The two modifiers
 
@@ -93,13 +109,13 @@ list's Name cell and the value lists' group cell draw it.
 Data Table`: `StackTable` over a few category groups, each in its `ListFrame`
 as an admin list holds it. `States` has a control that chooses: Default has two groups in chips and two plain;
 Roomy adds the `data-table--roomy` class; Empty shows the empty-state
-sentence; Foot Action And Icon Chip adds a foot action and an icon chip. The toolbar viewport menu shows the rows turned into cards at 375px.
+sentence; Foot Action And Icon Chip adds a foot action and an icon chip; Sorted sorts by Name with Description sortable too; Sorted At Phone Width draws it 24rem wide, with the Sort By select and a Best Match order. The toolbar viewport menu shows the rows turned into cards at 375px.
 
 ## Testing
 
 No test of its own: each list's test asserts the table it draws — its rows,
 its columns and its empty state — by role and label, which covers the
-scaffold through every list that uses it.
+scaffold through every list that uses it. The sortable headings and the Sort By select are asserted through the compendium list's test, the one list that sorts.
 
 ## The group chip
 

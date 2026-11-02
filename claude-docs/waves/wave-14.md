@@ -30,7 +30,7 @@
 
 **M14.34 and M14.35 joined on 2026-10-30**, the owner's call: a compendium entry with no sourced magical use is kept but not shown. M14.34 adds the hidden flag's column, and M14.35 the behaviour: the seed starts an entry with no categories hidden, a curator shows or hides any entry by hand from the admin screens, and every public surface filters hidden rows in SQL. They sit **after M14.33 and ahead of M14.13**, so the review queue sees the hidden count from the start ([`tasks/m14.md`](../tasks/m14.md)).
 
-**M14.38 joined on 2026-10-31**, the owner's call: once M14.35 counts a form's categories toward showing an entry, search has to settle how it shows and filters on them. It is a discussion that ends in a design decision, and sits **right after M14.35** ([`tasks/m14.md`](../tasks/m14.md)).
+**M14.38 joined on 2026-10-31**, the owner's call: once M14.35 counts a form's categories toward showing an entry, search has to settle how it shows and filters on them. It is a discussion that ends in a design decision, and sits **right after M14.35** ([`tasks/m14.md`](../tasks/m14.md)). **M14.39 joined on 2026-11-02** from its outcome: it builds the card union and the share card's fallback, and sits **right after M14.38**.
 
 **M14.36 and M14.37 joined on 2026-10-31**, the owner's call, from the M14.24 proposal: three of the sourcing score's facts need data the rows do not hold. M14.36 adds a citation's name basis and supported fields and a source's scholarly mark as columns, and M14.37 has the seed and the admin screens write them. They sit **after MB.249 and ahead of M14.24**, so the score reads every fact from the row ([`tasks/m14.md`](../tasks/m14.md)).
 

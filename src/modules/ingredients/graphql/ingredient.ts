@@ -5,6 +5,7 @@ import {
   INGREDIENT_ELEMENTS,
   INGREDIENT_SOURCES,
   COMPENDIUM_LISTINGS,
+  COMPENDIUM_ORDERS,
   COMPENDIUM_SORTS,
   NOMENCLATURE_KINDS,
   TOXIC_FILTERS,
@@ -31,7 +32,12 @@ export const CompendiumListingEnum = builder.enumType('CompendiumListing', {
 export const CompendiumSortEnum = builder.enumType('CompendiumSort', {
   values: COMPENDIUM_SORTS,
   description:
-    "An order for the compendium list besides its default: sourcing_score is the sourcing score, lowest first, then name. A curator or admin's alone.",
+    "A column to sort the compendium list on, in place of its default of by name or by best match under a search: name, A to Z, or sourcing_score, the sourcing score lowest first, then name. The sourcing score is a curator or admin's alone.",
+});
+export const CompendiumOrderEnum = builder.enumType('CompendiumOrder', {
+  values: COMPENDIUM_ORDERS,
+  description:
+    'Which way a compendium sort runs: asc, its usual direction, or desc, the exact reverse, name and id ties included. Ignored without a sort.',
 });
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
 // A search's toxic setting, an argument rather than a field.

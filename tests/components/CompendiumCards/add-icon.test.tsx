@@ -64,6 +64,7 @@ const props = (
     toxic: '',
     reviewed: '',
     sort: '',
+    order: '',
     covens: [],
     covensNot: false,
   },

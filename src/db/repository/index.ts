@@ -187,6 +187,7 @@ export type {
   Claimant,
   CommonNameSuggestion,
   CompendiumFacets,
+  CompendiumListEdge,
   CompendiumScore,
   GrimoireFacetCounts,
   GrimoireQuery,

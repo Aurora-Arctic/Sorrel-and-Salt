@@ -22,6 +22,7 @@ export const NO_FILTER: CompendiumListFilter = {
   toxic: '',
   reviewed: '',
   sort: '',
+  order: '',
 };
 
 export const NO_FACETS: CompendiumFacetCounts = {

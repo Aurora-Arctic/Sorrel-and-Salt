@@ -542,6 +542,16 @@ $panel-head-gap: space(3);
     align-items: center;
   }
 
+  // What an edit reaches, or that the source is loading: a caption's ink,
+  // as the tier's, above the fields. The 14rem basis is the head row's: a note squeezed under it drops
+  // the button group to its own line. Before the container query, so its `flex: none` wins.
+  .ingredient-form__panel-note {
+    flex: 1 1 14rem;
+    margin: 0;
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
   .ingredient-form__panel-end {
     display: flex;
     flex: none;
@@ -582,15 +592,12 @@ $panel-head-gap: space(3);
       // mark sits `space(1)` inside its target, so the rest is padding.
       padding-inline: 0 calc(#{$panel-head-gap} - #{space(1)});
     }
-  }
 
-  // What an edit reaches, or that the source is loading: a caption's ink,
-  // as the tier's, above the fields.
-  .ingredient-form__panel-note {
-    flex: 1 1 14rem;
-    margin: 0;
-    color: $text-muted;
-    font-size: type-size('caption');
+    // The head is no row here, so the note sits in the fieldset's column and takes only its own
+    // height: a 14rem basis there would be 14rem of height above the first field.
+    .ingredient-form__panel-note {
+      flex: none;
+    }
   }
 
   // Its buttons a little further from its fields than they are from each

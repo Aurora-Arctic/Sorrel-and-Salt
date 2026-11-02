@@ -86,6 +86,7 @@ export const ENTRIES: CompendiumListEntry[] = [
       { category: { id: 'c-tb', name: 'Testbane' }, group: WARDS },
     ],
     shown: true,
+    sourcingScore: 36,
     editHref: compendiumHref({}, { edit: 'testwort' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
     details: {
@@ -104,6 +105,7 @@ export const ENTRIES: CompendiumListEntry[] = [
     forms: [],
     categories: [],
     shown: true,
+    sourcingScore: -5,
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
     details: {
@@ -135,6 +137,7 @@ export const NO_FILTER: CompendiumListFilter = {
   toxic: '',
   reviewed: '',
   sort: '',
+  order: '',
   covens: [],
   covensNot: false,
 };
@@ -155,6 +158,7 @@ export const SHOWN: CompendiumListFilter = {
   toxic: '',
   reviewed: '',
   sort: '',
+  order: '',
   covens: [],
   covensNot: false,
 };

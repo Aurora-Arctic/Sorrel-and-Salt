@@ -187,7 +187,8 @@ export async function selectFrom(
 
   if (!keyset) return build(db);
 
-  const direction = keyset.request.inverted ? desc : asc;
+  // An inverted read of a descending key reads it ascending, and the other way round.
+  const direction = keyset.request.inverted !== Boolean(keyset.descending) ? desc : asc;
   type KeyedRow = { row: Record<string, unknown>; key: string[]; keyId: string };
   const page = (executor: Executor) =>
     build(executor)
@@ -239,7 +240,7 @@ function countsOf({ count: order, start }: KeysetCount) {
   return {
     totalCount: count(),
     countBefore: start
-      ? sql<number>`count(*) filter (where ${lt(rowKey(order), cursorKey(order, start))})`.mapWith(
+      ? sql<number>`count(*) filter (where ${(order.descending ? gt : lt)(rowKey(order), cursorKey(order, start))})`.mapWith(
           Number,
         )
       : sql<null>`null`,
@@ -336,15 +337,16 @@ function typeOf(part: SortPart): string {
 }
 
 /**
- * The cursor bounds: rows strictly after `after` and before `before` in `(...sort, id)` order.
+ * The cursor bounds: rows strictly after `after` and before `before` in `(...sort, id)` order, reversed for a `descending` key.
  *
  * @throws {InvalidCursor} a cursor's key has more or fewer parts than `sort`.
  */
 export function pageBounds(keyset: Keyset<object>): SQL | undefined {
   const { after, before } = keyset.request;
+  const [later, earlier] = keyset.descending ? [lt, gt] : [gt, lt];
   return and(
-    after && gt(rowKey(keyset), cursorKey(keyset, after)),
-    before && lt(rowKey(keyset), cursorKey(keyset, before)),
+    after && later(rowKey(keyset), cursorKey(keyset, after)),
+    before && earlier(rowKey(keyset), cursorKey(keyset, before)),
   );
 }
 

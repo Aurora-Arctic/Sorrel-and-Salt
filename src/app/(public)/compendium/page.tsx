@@ -63,6 +63,7 @@ const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSea
     reviewed: _reviewed,
     hidden: _hidden,
     sort: _sort,
+    order: _order,
     ...rest
   } = params;
   return rest;

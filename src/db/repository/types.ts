@@ -11,6 +11,7 @@ import type { ingredientDeities } from '../../modules/ingredients/schema/ingredi
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type {
   CategoryMode,
+  CompendiumOrder,
   CompendiumSort,
   IngredientElement,
   NomenclatureKind,
@@ -99,8 +100,8 @@ export type WritableInWorkspace<TTable extends PgTable> = Omit<Writable<TTable>,
 export type SortColumn = AnyPgColumn<{ notNull: true }>;
 
 /**
- * One part of a page's sort, always ascending: a column, or an expression and the type its cursor text casts back to.
- * An expression that can be NULL is the caller's bug (see `SortColumn`); a descending part is written negated.
+ * One part of a page's sort, ascending unless the whole key is `descending`: a column, or an expression and the type its cursor text casts back to.
+ * An expression that can be NULL is the caller's bug (see `SortColumn`); one descending part among ascending ones is written negated.
  */
 export type SortPart = SortColumn | { expression: SQL; type: string };
 
@@ -108,6 +109,8 @@ export type SortPart = SortColumn | { expression: SQL; type: string };
 export interface KeyOrder {
   sort: readonly SortPart[];
   id: AnyPgColumn;
+  /** The whole key, `(...sort, id)`, read in reverse: the exact reverse of the ascending list, ties included. */
+  descending?: boolean;
   /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
   join?: { source: SQL; on: SQL };
   /**
@@ -824,10 +827,14 @@ export interface IngredientFilter {
    */
   listing?: 'shown' | 'hidden' | 'all';
   /**
-   * The compendium's only: `sourcing_score` orders by the sourcing score, lowest first, then name; absent orders by name, or by best match
-   * under a query. A coven's cupboard read ignores it. The service lets only a curator set it.
+   * The column the list sorts on, overriding best match under a query: `name` A to Z, or the compendium's `sourcing_score`, lowest first, then name.
+   * Absent orders by name, or by best match under a query. A coven's cupboard read ignores the sourcing score. The service lets only a curator set it.
    */
   sort?: CompendiumSort;
+  /** `desc` reads `sort`'s whole key in reverse, name and id included; ignored without a `sort`. */
+  order?: CompendiumOrder;
+  /** The compendium's only: carry each entry's sourcing score as `sourcingScore`, read in the page's own query. The service lets only a curator set it. */
+  withSourcingScore?: boolean;
   /**
    * The compendium only: keep an entry when a live cupboard row of any one of these covens names it. A proof each, so a coven the caller is not in
    * cannot be named; an empty list is no filter.
@@ -893,6 +900,11 @@ export type ReviewFacetValue = 'reviewed' | 'needs_review';
  */
 export interface CompendiumScore {
   score: number | null;
+}
+
+/** A compendium page entry's carried values, with its sourcing score when the filter asks for it (`withSourcingScore`). */
+export interface CompendiumListEdge extends CompendiumScore {
+  sourcingScore?: number;
 }
 
 /** Which of the substitute picker's two groups an entry is listed in. */

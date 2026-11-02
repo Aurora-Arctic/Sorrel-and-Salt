@@ -75,12 +75,18 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // The admin list holds hidden entries beside shown ones; the Hidden switch narrows it to them.
   const asked = COMPENDIUM_PARAMS.variables(filter, lookups);
   const variables = JSON.stringify({ ...asked, listing: asked.listing ?? 'all' });
+  // The page's rows carry each entry's sourcing score for its column, read in the list's own query; the facets need none.
+  const pageVariables = JSON.stringify({
+    ...asked,
+    listing: asked.listing ?? 'all',
+    withSourcingScore: true,
+  });
 
   // The entry whose details are open over the list, `?entry=`.
   const entrySlug = single(params.entry);
   const [page, counts, formIcons, { edited, missing }, shown] = await Promise.all([
     // The session, for the Reviewed filter and its counts, a curator's alone.
-    readCompendium(variables, after, before, DEFAULT_PAGE_SIZE, session),
+    readCompendium(pageVariables, after, before, DEFAULT_PAGE_SIZE, session),
     readFacets(variables, session),
     readFormIcons(),
     readEditPlace(place, (slug) => readCompendiumEntry(slug, session)),
@@ -137,7 +143,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     page.edges.map(({ node }) => node),
   );
   const chipRows = await readCardCategories(page.edges.map(({ node }) => node.id));
-  const entries = page.edges.map(({ node }, i): CompendiumListEntry => ({
+  const entries = page.edges.map(({ node, sourcingScore }, i): CompendiumListEntry => ({
     ...stamps[i],
     id: node.id,
     slug: node.slug,
@@ -151,6 +157,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       heading: detailsHeading(node),
     },
     shown: node.shown,
+    sourcingScore,
     editHref: compendiumHref(list, { edit: node.slug }),
     editHeading: editHeading(node),
   }));

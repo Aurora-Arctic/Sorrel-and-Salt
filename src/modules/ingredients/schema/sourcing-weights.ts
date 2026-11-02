@@ -1,4 +1,3 @@
-import 'server-only';
 import type { NameBasis, ReferenceKind } from './ingredient-enums';
 
 // Every number the sourcing score uses, read by the pure function and by the repository's sort expression, so the two cannot drift:

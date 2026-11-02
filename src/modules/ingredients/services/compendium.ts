@@ -1,6 +1,6 @@
 import 'server-only';
 import {
-  type CompendiumScore,
+  type CompendiumListEdge,
   findCompendiumCount,
   findCompendiumEntryByIdentity,
   findCompendiumEntryBySlug,
@@ -75,21 +75,21 @@ const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount
  * Parses the filter itself, and `viewer` is read only for the Reviewed setting
  * (claude-docs/db/compendium-writes.md, "Compendium service details").
  *
- * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
+ * @throws {Forbidden} the filter sets what only a curator may (`compendiumFilterFor`) and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the toxic setting is not in `TOXIC_FILTERS`.
  */
 export async function listCompendium(
   filter: CompendiumFilterInput,
   page: PageRequest,
   viewer: Session | null = null,
-): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
+): Promise<PageEntry<IngredientRow, CompendiumListEdge>[]> {
   return cachedPage(compendiumFilterFor(filter, viewer), page);
 }
 
 /**
  * How many entries the compendium holds under `filter`, and how many come before `start`; parsed as `listCompendium` parses.
  *
- * @throws {Forbidden} the filter sets Reviewed and `viewer` is not a curator.
+ * @throws {Forbidden} the filter sets what only a curator may (`compendiumFilterFor`) and `viewer` is not a curator.
  * @throws {ValidationError} a category or deity id is not a uuid, or the toxic setting is not in `TOXIC_FILTERS`.
  */
 export async function countCompendium(

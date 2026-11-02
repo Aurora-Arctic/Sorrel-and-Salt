@@ -33,8 +33,6 @@ export default function CompendiumDialog({
           heading: opened.heading,
           body: (done) => (
             <>
-              {/* An edit's sourcing score above its form, so a curator sees what the entry still lacks. */}
-              {opened.sourcing && <SourcingScore sourcing={opened.sourcing} />}
               <IngredientForm
                 // A fresh form per entry, inside the one modal: Save Ingredient's move
                 // from ?new to ?edit= swaps the form without the modal fading away
@@ -52,6 +50,8 @@ export default function CompendiumDialog({
                 workspaceId={null}
                 mayPromote
                 review={opened.review}
+                // An edit's sourcing score opens its Sources section, so a curator sees what the entry still lacks.
+                sourcesIntro={opened.sourcing && <SourcingScore sourcing={opened.sourcing} />}
                 entry={entry && entry.id !== created ? entry : undefined}
                 // Save Ingredient opens the entry it saved, at the address its name
                 // now spells; Save & Add Another stays on the new form, which clears

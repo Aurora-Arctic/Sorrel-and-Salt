@@ -205,9 +205,18 @@ enum CompendiumListing {
 }
 
 """
-An order for the compendium list besides its default: sourcing_score is the sourcing score, lowest first, then name. A curator or admin's alone.
+Which way a compendium sort runs: asc, its usual direction, or desc, the exact reverse, name and id ties included. Ignored without a sort.
+"""
+enum CompendiumOrder {
+  asc
+  desc
+}
+
+"""
+A column to sort the compendium list on, in place of its default of by name or by best match under a search: name, A to Z, or sourcing_score, the sourcing score lowest first, then name. The sourcing score is a curator or admin's alone.
 """
 enum CompendiumSort {
+  name
   sourcing_score
 }
 
@@ -1458,6 +1467,7 @@ type Query {
     last: Int
     listing: CompendiumListing
     nomenclature: Nomenclature
+    order: CompendiumOrder
     query: String
 
     """
