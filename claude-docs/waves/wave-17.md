@@ -6,4 +6,6 @@
 
 **M17.2 and M17.3 scope the two ingredient warnings** the backlog lists under V Fast Follow, on the owner's call of 2026-11-02: the closed-practice warning and the ethical warnings, each from the data M14.29 gathered in `compendium/ethics/`. Neither depends on the billing work, so they sit after M17.1 in board order only. Each mints its own build tasks, and the task that ships a warning updates the Code of Ethics in the same PR.
 
+**M17.5 scopes a better editing experience for ingredients and spells**, minted on 2026-11-02 on the owner's call while M15.59 scoped the editor for the site's documents ([`tasks/m17.md`](../tasks/m17.md)). It depends on M15.71, whose editor it may reuse for the free-text fields, and is a prerequisite for nothing yet.
+
 **MB.163, MB.175 and MB.78 stay on Wave 15**, unscheduled by design and trigger-based, until the owner moves them: they were minted before this wave existed and nothing about them changed.
