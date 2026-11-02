@@ -5,6 +5,7 @@ import {
   INGREDIENT_ELEMENTS,
   INGREDIENT_SOURCES,
   COMPENDIUM_LISTINGS,
+  COMPENDIUM_SORTS,
   NOMENCLATURE_KINDS,
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
@@ -26,6 +27,11 @@ export const CompendiumListingEnum = builder.enumType('CompendiumListing', {
   values: COMPENDIUM_LISTINGS,
   description:
     "Which compendium entries a search reads: shown (the default), hidden, or all. Hidden and all are a curator or admin's alone.",
+});
+export const CompendiumSortEnum = builder.enumType('CompendiumSort', {
+  values: COMPENDIUM_SORTS,
+  description:
+    "An order for the compendium list besides its default: sourcing_score is the sourcing score, lowest first, then name. A curator or admin's alone.",
 });
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
 // A search's toxic setting, an argument rather than a field.

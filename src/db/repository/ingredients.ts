@@ -54,6 +54,7 @@ import {
 } from './predicates';
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
+import { sourcingScoreExpression } from './sourcing-score';
 import { curated, inLiveGroup } from './vocabularies';
 import { weightedSearch } from './weighted-search';
 import type {
@@ -610,7 +611,6 @@ export function compendiumList(
 } {
   const columns = listColumns(cupboardOf);
   const match = searchMatch(filter.query, cupboardOf);
-  const leftJoined = columns.leftJoined && { leftJoined: columns.leftJoined };
   return {
     arms: and(
       ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
@@ -630,24 +630,44 @@ export function compendiumList(
       filter.heldIn?.length ? heldInAnyOf(filter.heldIn) : undefined,
       filter.notHeldIn?.length ? heldInNoneOf(filter.notHeldIn) : undefined,
     ),
-    order: match
-      ? {
-          sort: [
-            { expression: sql`-${match.score}`, type: 'real' },
-            { expression: match.position, type: 'integer' },
-            columns.name,
-          ],
-          wordMatch: true,
-          join: match.join,
-          ...leftJoined,
-          carry: { score: match.score },
-        }
-      : {
-          sort: [columns.name],
-          ...leftJoined,
-          carry: { score: sql<number | null>`null` },
-        },
+    order: listOrder(filter, cupboardOf, columns, match),
   };
+}
+
+/**
+ * The compendium list's order: a curator's sourcing sort, lowest score first and then by name, when asked for and the list is the compendium's
+ * own; otherwise best match first under a query, and by name without one. A query still narrows the sourcing sort to the entries it matches.
+ */
+function listOrder(
+  filter: IngredientFilter,
+  cupboardOf: Membership | undefined,
+  columns: ReturnType<typeof listColumns>,
+  match: ReturnType<typeof searchMatch>,
+): ListOrder<CompendiumScore> {
+  const leftJoined = columns.leftJoined && { leftJoined: columns.leftJoined };
+  const searched = match && { wordMatch: true, join: match.join, carry: { score: match.score } };
+  if (filter.sort === 'sourcing_score' && !cupboardOf) {
+    return {
+      sort: [{ expression: sourcingScoreExpression, type: 'integer' }, columns.name],
+      ...leftJoined,
+      ...(searched || { carry: { score: sql<number | null>`null` } }),
+    };
+  }
+  return match
+    ? {
+        sort: [
+          { expression: sql`-${match.score}`, type: 'real' },
+          { expression: match.position, type: 'integer' },
+          columns.name,
+        ],
+        ...leftJoined,
+        ...searched,
+      }
+    : {
+        sort: [columns.name],
+        ...leftJoined,
+        carry: { score: sql<number | null>`null` },
+      };
 }
 
 /**

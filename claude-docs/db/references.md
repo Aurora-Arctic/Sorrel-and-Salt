@@ -13,15 +13,24 @@ DESIGN.md §5, "References", is the specification this doc expands.
   tier, as on `ingredients`), `kind`, `authors`, `title` (NOT NULL),
   `container`, `contributors`, `edition`, `volume`, `issue`, `series`,
   `place`, `publisher`, `published`, `pages`, `host`, `url`, `modified`,
-  `accessed`, `note`, + audit. Every column is text as Chicago prints it, with
+  `accessed`, `note`, `scholarly`, + audit. Every column is text as Chicago prints it, with
   a non-blank CHECK, one per column so a refusal names its field (`url`'s is
   its http(s) CHECK, which already refuses a blank), except `modified` and
   `accessed`, which are `date`s.
   `kind` is the enum `reference_kind`: `book`, `chapter`, `article`, `entry`,
   `web_page`.
+  `scholarly` is a boolean, NOT NULL, default false. A work is scholarly when
+  scholars edited or reviewed it, in print or online. That includes a
+  peer-reviewed journal; a university, its press or its museum; an academic
+  press; a learned society's edition or series; and a reference work edited by
+  scholars with signed articles. It is not scholarly when it is a trade press,
+  a wiki, a site that republishes others' works (credit the original work
+  instead), or an unsigned site.
 - **`reference_links`** — `id`, `reference_id` (NOT NULL), `ingredient_id`,
-  `deity_id`, `deity_tradition_id`, `celestial_body_id`, `zodiac_sign_id` (each
-  nullable, exactly one set), `locator` (nullable, non-blank), + audit.
+  `deity_id`, `deity_tradition_id`, `celestial_body_id`, `zodiac_sign_id`,
+  `ingredient_variant_id` (each nullable, exactly one set), `locator` (nullable,
+  non-blank), `name_basis` (nullable enum `name_basis`: `stated`, `resolved`,
+  `unresolved`, `unaudited`), `supports` (nullable `text[]`), + audit.
   Soft-deleted, with its own `set_updated_at` trigger line.
 
 **The kind decides the rendering, and the CHECKs make the renderer total.**
@@ -40,7 +49,7 @@ CHECK (accessed IS NULL OR url IS NOT NULL);
 CHECK (kind NOT IN ('chapter', 'article', 'entry') OR container IS NOT NULL);
 CHECK (kind <> 'web_page' OR (url IS NOT NULL AND accessed IS NOT NULL));
 
-CHECK (num_nonnulls(ingredient_id, deity_id, deity_tradition_id, celestial_body_id, zodiac_sign_id) = 1);
+CHECK (num_nonnulls(ingredient_id, deity_id, deity_tradition_id, celestial_body_id, zodiac_sign_id, ingredient_variant_id) = 1);
 
 CREATE UNIQUE INDEX reference_links_ingredient_unique
   ON reference_links (ingredient_id, reference_id)
@@ -49,16 +58,28 @@ CREATE UNIQUE INDEX reference_links_ingredient_unique
 -- and _zodiac_sign_unique in the same shape
 ```
 
+**Citation attributes.** `reference_links.name_basis` records how the citation
+names the ingredient, `reference_links.supports` the field names it backs, and
+`references.scholarly` whether the source is scholarly. All three are nullable
+or defaulted, so a row written before them reads null, null and false. They are
+a compendium citation's and a compendium source's alone: the seed writes them
+from the files (below), a curator writes them on the compendium's ingredient
+form, and the service refuses each on a coven's citation or source with an
+explaining `ValidationError`. `supports` names only fields the citation's
+owner has: an entry's from `CITED_ENTRY_FIELDS`, a form's from
+`CITED_VARIANT_FIELDS` (`src/modules/ingredients/schema/ingredient-enums.ts`),
+by the column's own names. The sourcing score (M14.24) reads them from the row.
+
 **The sourced tables are listed once** (MB.207). `SOURCED` in
 `src/modules/ingredients/schema/reference-links.ts` maps each property —
-`ingredientId`, `deityId`, `deityTraditionId`, `celestialBodyId`, `zodiacSignId` —
-to its column and the table it keys into, and the five foreign keys, the five
-partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
-A sixth sourced table is one entry there, and the migration `db:generate`
+`ingredientId`, `deityId`, `deityTraditionId`, `celestialBodyId`, `zodiacSignId`,
+`ingredientVariantId` — to its column and the table it keys into, and the six
+foreign keys, the six partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
+A seventh sourced table is one entry there, and the migration `db:generate`
 writes from it drops and re-adds `reference_links_one_row`, which takes an
 `.ack.md` sidecar ([destructive DDL](expand-contract.md)). MB.217's
 `ingredientVariantId`, a form's own sources beside its ingredient's, was the
-first: `ingredient_variant_id`, `reference_links_ingredient_variant_unique`
+last added: `ingredient_variant_id`, `reference_links_ingredient_variant_unique`
 and a six-column CHECK, in migration `0063`. The repository
 reads the links of any of them through the registry (MB.208):
 `findReferencesOf` and `citesNothing` take a `SourcedKey` and read its
@@ -293,7 +314,7 @@ drops each missing piece with its punctuation.
   Edition. Volume. Series. Place: Publisher, Published. Host. Last modified
   Modified. Accessed Accessed. URL. (Note) — the contributors as a chapter
   prints them, "edited by …", after its book.
-  - Pope, Marvin H. "Anath." In _Encyclopaedia Judaica_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath.
+  - Smith, William, ed. "Liber." In _A Dictionary of Greek and Roman Biography and Mythology_. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dliber-bio-1.
 - **`article`** — Authors. "Title." _Container_ Volume, no. Issue
   (Published): Pages. Host. Last modified Modified. Accessed Accessed. URL.
   (Note) — and without a volume, _Container_, Published, Pages.
@@ -303,6 +324,7 @@ drops each missing piece with its punctuation.
   Place: Publisher, Published. Host. Last modified Modified. Accessed
   Accessed. URL. (Note)
   - Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+  - Pope, Marvin H. _Encyclopaedia Judaica_, 2nd ed., under "Anath." Edited by Fred Skolnik and Michael Berenbaum. Detroit: Macmillan Reference USA in association with the Keter Publishing House, 2007. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath. (Print details from the Library of Congress catalogue record, LCCN 2006020426.)
   - _Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
 - **`web_page`** — Authors. "Title." Container. Publisher. Published; last
   modified Modified. Accessed Accessed. URL. (Note) — "Last modified" is
@@ -389,7 +411,15 @@ sources were recast in Chicago form from pages fetched again.
 
 **Keyed by `seed_key`** (MB.171). A reference the seed writes records the
 citation it rendered, so one an admin has since edited is still its own and
-is neither overwritten nor twinned; a soft-deleted one is neither re-inserted
+is neither overwritten nor twinned. A run restates a present source's fields
+and its `scholarly` mark, set or cleared, to match `sources.ts`, unless a
+person edited the row: that one is kept, and `db:seed:sources` prints a
+`KEPT <citation> (edited on the site)` line for it without failing. A row is
+found by its key, which is its citation, so the fields that differ are the ones
+the citation does not print, or all of them once a migration has rewritten the
+key to a source's new citation
+([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
+attributes on a present entry"). A soft-deleted one is neither re-inserted
 nor linked anew. A live compendium reference nobody seeded whose citation is
 a source's to the letter is linked rather than duplicated, and never written
 to. Link targets are found by the `seed_key` their own seed gave them, so a
@@ -408,6 +438,25 @@ key in place, and where a row already holds the new key it moves the old row's
 live links there, soft-deletes a link that would duplicate one already on it,
 and soft-deletes the old row
 (`tests/db/migrations/0095-rekey-citation-seed-keys.test.ts`).
+
+A change to a source's own fields changes its key the same way.
+`0116_print-encyclopedia-entries` did it for the 22 vocabulary sources read
+through Encyclopedia.com and the Jewish Virtual Library, which were chapters
+and are now entries in the print work (the _Encyclopedia of Religion_,
+_Encyclopaedia Judaica_, _Encyclopedia of India_ and _Contemporary American
+Religion_), with the editor, edition, place, publisher and year their Library
+of Congress catalogue records give and the record named in each note. It
+does the same for de Groot's _The Religious System of China_, volumes IV and
+VI, whose files in `compendium/sources/` gained a place, a publisher and the
+title page's wording in the note; the compendium seed restates those fields.
+It rewrites each compendium row's key from its old citation to its new one,
+soft-deleted rows included so a deleted source stays deleted, and leaves a row
+alone where another compendium row already holds the new key. The row keeps its
+id and its links, and the next `db:seed:sources` run writes the new fields
+onto it, and the next compendium seed run does the same for de Groot,
+unless a person edited it
+(`tests/db/migrations/0116-print-encyclopedia-entries.test.ts`,
+`tests/db/seed/sources-print-entries.test.ts`).
 
 ### How the compendium seed cites its sources (MB.242)
 
@@ -429,12 +478,21 @@ one `reference_links` row, `ingredient_id` for the entry and
 `under "Mugwort"`). Every entry cites at least one source of its own, because the
 admin's "unsourced" filter counts the entry's own links and its forms'.
 
-Which fields a citation backs (`supports`) is the guard's to check and is not
-stored: a link says which work supports the row, and the entry file's
-`supports` list (`compendium/ingredients/<nomenclature>/<slug>.md`) says which
-fields each source gave. The links are written once, with the entry, as everything beneath an
-entry is ([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
-and how a correction lands").
+Each link also carries its citation's `nameBasis` and `supports`, as the
+entry file (`compendium/ingredients/<nomenclature>/<slug>.md`) writes them,
+`colours` stored as `colors`. The guard still checks `supports` against the
+populated fields before anything is written. A work in `works.ts` or `compendium/sources/` that is
+academic says `scholarly: true`, and its `references` row is written with the
+mark. The links are written with the entry, as everything beneath an entry is.
+
+The three attributes say where content comes from; they are not content, so no
+`seedUpdate` mark and no person's work on the entry holds them back. Every run
+restates each present link's two attributes where they differ from its file,
+and each present source's fields and `scholarly` mark, either way, where they
+differ from its work, unless a person edited that link or that source: a person's edit is
+kept, and the run prints a `KEPT` line for it without failing
+([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
+attributes on a present entry").
 
 ## Reference service details
 
@@ -448,7 +506,7 @@ and how a correction lands").
 
 ## Reference links schema details
 
-- **Adding a sixth sourced table** is one entry in `SOURCED` in `src/modules/ingredients/schema/reference-links.ts`: its column, its partial unique index and the widened CHECK are built from the list. The migration `db:generate` then writes drops and re-adds `reference_links_one_row`, and that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's `findReferencesOf` and `citesNothing` take a key of the registry and read its table, so reading the new links costs nothing more; writing them is still code of its own, as the ingredient services and the sources seed each write the links they own.
+- **Adding a seventh sourced table** is one entry in `SOURCED` in `src/modules/ingredients/schema/reference-links.ts`: its column, its partial unique index and the widened CHECK are built from the list. The migration `db:generate` then writes drops and re-adds `reference_links_one_row`, and that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's `findReferencesOf` and `citesNothing` take a key of the registry and read its table, so reading the new links costs nothing more; writing them is still code of its own, as the ingredient services and the sources seed each write the links they own.
 - **Why one table.** A nullable key per sourced table under one `num_nonnulls` CHECK, as a spell's layers do, rather than a join table per table, which would cost a table, a trigger, a finder and a loader each.
 - **Indexes.** One live link per reference per row, partial per rule 4. Each leads on its sourced id, so a read of one row's links uses it and no plain parent index is built beside them. None leads on `reference_id`: nothing reads from a reference back to its links, and a reference is never hard-deleted.
 - **The `references` table.** Every field is text as Chicago prints it (`authors` with its role, `published` at a year's or a season's precision), because name order and dates are not mechanical across sources; only the two days are `date`s. There is no unique index: nothing short of a librarian identifies a source, so the seed is idempotent by the rendered citation instead.

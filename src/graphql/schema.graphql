@@ -204,6 +204,13 @@ enum CompendiumListing {
   shown
 }
 
+"""
+An order for the compendium list besides its default: sourcing_score is the sourcing score, lowest first, then name. A curator or admin's alone.
+"""
+enum CompendiumSort {
+  sourcing_score
+}
+
 """A completed working, and the steps it took nothing for."""
 type CompleteWorkingResult {
   warnings: [WorkingWarning!]!
@@ -1286,6 +1293,16 @@ type Mutation {
 }
 
 """
+How a citation names the ingredient: prints the formal name (stated), heads a common name a cited authority maps to it (resolved), leaves doubt (unresolved), or was not checked (unaudited).
+"""
+enum NameBasis {
+  resolved
+  stated
+  unaudited
+  unresolved
+}
+
+"""
 A form, zodiac sign or celestial body, and how many entries it would list.
 """
 type NameFacetCount {
@@ -1446,6 +1463,7 @@ type Query {
     Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.
     """
     reviewed: Boolean
+    sort: CompendiumSort
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
@@ -1525,6 +1543,11 @@ type Query {
   The compendium entries whose name or formal name is exactly the typed one, case aside: what the Add Ingredient form asks about before it makes a second copy.
   """
   compendiumMatches(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryCompendiumMatchesConnection!
+
+  """
+  A compendium entry's sourcing score and the facts behind it. Curators and admins only; null for anyone else.
+  """
+  compendiumSourcingScore(id: ID!): SourcingScore
 
   """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
@@ -2118,6 +2141,11 @@ type Reference {
   place: String
   published: String
   publisher: String
+
+  """
+  Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Only a compendium source is marked; a coven's is always false.
+  """
+  scholarly: Boolean!
   series: String
   title: String!
   url: String
@@ -2140,6 +2168,11 @@ input ReferenceInput {
   place: String
   published: String
   publisher: String
+
+  """
+  Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles; left out is false. Refused on a coven's source.
+  """
+  scholarly: Boolean
   series: String
   title: String!
   url: String
@@ -2158,12 +2191,30 @@ enum ReferenceKind {
 type ReferenceLink {
   """Where in the source: "p. 112", "chap. 13"."""
   locator: String
+
+  """
+  A compendium citation's; null on a coven's, or when nobody recorded it.
+  """
+  nameBasis: NameBasis
   reference: Reference!
+
+  """
+  The fields of the cited entry or form this source backs, by name. A compendium citation's; null on a coven's, or when nobody recorded them.
+  """
+  supports: [String!]
 }
 
 input ReferenceLinkInput {
   locator: String
+
+  """The compendium's alone: refused on a coven's citation."""
+  nameBasis: NameBasis
   referenceId: ID!
+
+  """
+  The fields of the entry, or of the form, this source backs. The compendium's alone: refused on a coven's citation.
+  """
+  supports: [String!]
 }
 
 """A Reviewed setting, and how many entries it would list (M14.8)."""
@@ -2220,6 +2271,36 @@ type SourceFacetCount {
 
   """local or compendium, as source takes it."""
   value: IngredientSource!
+}
+
+"""
+One fact behind a sourcing score, and the points it adds or takes away.
+"""
+type SourcingFact {
+  fact: SourcingFactKind!
+
+  """How the list says it, such as "3 Sources"."""
+  label: String!
+  points: Int!
+}
+
+enum SourcingFactKind {
+  bestSource
+  curatorReviewed
+  formCitesNothing
+  nameBacked
+  noLocator
+  nomenclatureUnknown
+  safetyUnsourced
+  sources
+}
+
+"""
+How well a compendium entry is sourced, and every fact behind it; the facts sum to the score.
+"""
+type SourcingScore {
+  facts: [SourcingFact!]!
+  score: Int!
 }
 
 """A coven's working: what it intends, and the recipe that makes it."""

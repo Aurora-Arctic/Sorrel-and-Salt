@@ -62,6 +62,7 @@ const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSea
     withoutForms: _forms,
     reviewed: _reviewed,
     hidden: _hidden,
+    sort: _sort,
     ...rest
   } = params;
   return rest;
@@ -343,6 +344,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
             editing && {
               heading: editHeading(editing.values, EDIT_ENTRY_EYEBROW),
               entry: { id: editing.id, values: editing.values },
+              sourcing: editing.sourcing,
               ...(editReview && {
                 review: {
                   reviewed: editReview.reviewedAt !== null,

@@ -1,7 +1,6 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { applyAudit } from '../../audit';
-import { BOOTSTRAP_USER_ID } from '../../bootstrap';
-import { BOOTSTRAP_SESSION } from '../bootstrap-admin';
+import { BOOTSTRAP_SESSION, touched } from '../bootstrap-admin';
 import { insertStamped } from '../idempotent';
 import { insertMissingReferences } from '../reference-rows';
 import { identityOf } from '../coven-content';
@@ -12,6 +11,7 @@ import {
   entryColumns,
   foldForm,
   folkNameRows,
+  linkColumns,
   pick,
   pickedVariants,
   substituteRows,
@@ -32,8 +32,12 @@ import { inventoryItems } from '../../../modules/ingredients/schema/inventory-it
 import { referenceLinks } from '../../../modules/ingredients/schema/reference-links';
 import { references } from '../../../modules/ingredients/schema/references';
 import { spellSteps } from '../../../modules/grimoire/schema/spell-steps';
-import type { CitationFields } from '../../../lib/types';
-import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from '../types';
+import type {
+  SeedCompendiumEntry,
+  SeedCompendiumVariant,
+  SeedTransaction,
+  SeedWork,
+} from '../types';
 
 // The seed's update path for an entry already present (state table: "Write-once,
 // and how a correction lands"). Children are reconciled by key, never dropped and
@@ -43,7 +47,7 @@ import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from
 export interface SeedItem {
   entry: SeedCompendiumEntry;
   /** The works and per-entry sources its citations may name, by handle. */
-  sources: Record<string, CitationFields>;
+  sources: Record<string, SeedWork>;
   /** The entry file's path under the compendium root, which names the entry in the report. */
   where: string;
   /** `contentHash(entry)`, computed when the file was read. */
@@ -173,20 +177,6 @@ export async function readReferenceTexts(tx: SeedTransaction): Promise<Map<strin
   return new Map(rows.map((row) => [row.id, row.seedKey ?? citationText(row)]));
 }
 
-/** A row a person wrote, changed or deleted: anyone but the bootstrap user on any stamp. The seed's own soft delete is not a person's. */
-function touched(row: {
-  createdBy: string;
-  updatedBy: string;
-  deletedAt?: Date | null;
-  deletedBy?: string | null;
-}): boolean {
-  return (
-    row.createdBy !== BOOTSTRAP_USER_ID ||
-    row.updatedBy !== BOOTSTRAP_USER_ID ||
-    ((row.deletedAt ?? null) !== null && row.deletedBy !== BOOTSTRAP_USER_ID)
-  );
-}
-
 /** The child table a person touched, in the order the README lists them, or `null`. */
 function touchedChild(state: PresentState): string | null {
   const tables: [string, { createdBy: string; updatedBy: string }[]][] = [
@@ -282,6 +272,12 @@ function planVariants(entry: SeedCompendiumEntry, state: PresentState, picks: Pi
 /** A key over the columns a child's unique index folds, so the file's rows and the live rows meet. */
 const keyed = (...parts: (string | null | undefined)[]) => parts.map((p) => p ?? '').join('|');
 
+interface Restate {
+  row: LinkRow;
+  cite: Citing;
+  differs: ('nameBasis' | 'supports')[];
+}
+
 interface ChildDiffs {
   folkNames: { insert: { ingredientId: string; name: string }[]; remove: string[] };
   deities: { rename: { id: string; name: string }[]; replace: boolean };
@@ -290,7 +286,11 @@ interface ChildDiffs {
     remove: { ingredientId: string; variantId: string | null; categoryId: string }[];
   };
   substitutes: { insert: ReturnType<typeof substituteRows>; remove: string[] };
-  references: { insert: Citing[]; remove: string[] };
+  /**
+   * A link whose owner, work and locator match keeps its row. `restate` is one whose name basis or supports differ: provenance, not content,
+   * so it is left out of `differs` and written by `linkAttributes` whatever the entry's outcome.
+   */
+  references: { insert: Citing[]; remove: string[]; restate: Restate[] };
   differs: string[];
 }
 
@@ -433,9 +433,36 @@ function childDiffs(
       )
       .map((row) => row.id),
   };
-  if (links.insert.length > 0 || links.remove.length > 0) differs.push('references');
+  const wantedByKey = new Map(
+    wantedLinks.map((cite) => [
+      keyed(ownerKey(cite.owner), cite.text, cite.citation.locator),
+      cite,
+    ]),
+  );
+  const restate = liveLinks.flatMap((row): Restate[] => {
+    const cite = wantedByKey.get(
+      keyed(ownerKey(row), ctx.referenceTexts.get(row.referenceId) ?? row.referenceId, row.locator),
+    );
+    if (cite === undefined) return [];
+    const { nameBasis, supports } = linkColumns(cite.citation);
+    const differs = [
+      ...(same(row.nameBasis, nameBasis) ? [] : (['nameBasis'] as const)),
+      ...(same(row.supports, supports) ? [] : (['supports'] as const)),
+    ];
+    return differs.length === 0 ? [] : [{ row, cite, differs }];
+  });
+  if (links.insert.length > 0 || links.remove.length > 0) {
+    differs.push('references');
+  }
 
-  return { folkNames, deities, categories, substitutes, references: links, differs };
+  return {
+    folkNames,
+    deities,
+    categories,
+    substitutes,
+    references: { ...links, restate },
+    differs,
+  };
 }
 
 /** The whole difference between a file and its present row, and whether the update may land. */
@@ -679,6 +706,7 @@ export async function applyUpdate(
       .set(tombstone())
       .where(inArray(referenceLinks.id, children.references.remove));
   }
+  await writeLinkAttributes(tx, children.references.restate);
   // A source the run has not met is written here, never deleted: a reference
   // row is a work, and a link that goes is only the link.
   const referenceIds = await insertMissingReferences(
@@ -690,7 +718,47 @@ export async function applyUpdate(
     referenceLinks,
     children.references.insert.flatMap(({ citation, text, owner }) => {
       const referenceId = referenceIds.get(text);
-      return referenceId ? [{ referenceId, ...owner, locator: citation.locator ?? null }] : [];
+      return referenceId ? [{ referenceId, ...owner, ...linkColumns(citation) }] : [];
     }),
   );
+}
+
+/** What `linkAttributes` found: the links the seed writes, and the ones a person edited, kept. */
+export interface LinkAttributes {
+  write: Restate[];
+  kept: { source: string; differs: string[] }[];
+}
+
+/**
+ * Each matched link whose name basis or supports differ from the file, decided per link rather than per entry: provenance, not content,
+ * so neither the mark nor a person's work on the entry holds it back. A link no person edited takes the file's; one a person edited is kept.
+ */
+export function linkAttributes(
+  item: SeedItem,
+  state: PresentState,
+  ctx: UpdateContext,
+): LinkAttributes {
+  const { matched } = planVariants(item.entry, state, ctx.picks);
+  const variantIdOf = new Map([...matched].map(([variant, row]) => [variant, row.id] as const));
+  const { restate } = childDiffs(item, state, ctx, variantIdOf).references;
+  return {
+    write: restate.filter(({ row }) => !touched(row)),
+    kept: restate
+      .filter(({ row }) => touched(row))
+      .map(({ cite, differs }) => ({ source: cite.citation.source, differs })),
+  };
+}
+
+/** Rewrites each link's two attributes in place as the bootstrap user. */
+export async function writeLinkAttributes(
+  tx: SeedTransaction,
+  restate: readonly { row: LinkRow; cite: Citing }[],
+): Promise<void> {
+  for (const { row, cite } of restate) {
+    const { nameBasis, supports } = linkColumns(cite.citation);
+    await tx
+      .update(referenceLinks)
+      .set(applyAudit('update', { nameBasis, supports }, BOOTSTRAP_SESSION))
+      .where(eq(referenceLinks.id, row.id));
+  }
 }

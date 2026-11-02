@@ -6,6 +6,8 @@ import {
   COPIED,
   OILWORT_ID,
   OILWORT_OIL_ID,
+  OTHER_REFERENCE_ID,
+  REFERENCE_ID,
   control,
   copyOf,
   filled,
@@ -93,6 +95,32 @@ describe('copying from the ingredient', () => {
       { name: 'Fixture fern' },
       { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },
       { name: 'Fixture moss' },
+    ]);
+  });
+
+  // An entry's citation may back what a form has no field for: its deities, say.
+  it('copies a citation’s name basis, and of what it supports only what a form holds', async () => {
+    const entry = filled();
+    entry.references[0] = {
+      ...entry.references[0],
+      nameBasis: 'stated',
+      supports: ['deities', 'description'],
+    };
+    const onSubmit = renderVariants({ workspaceId: null, values: entry });
+    const oil = openWhole('Oil');
+
+    fireEvent.click(copyOf(oil, 'References'));
+    save();
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(sent(onSubmit)?.variants?.[0]?.references).toEqual([
+      { referenceId: OTHER_REFERENCE_ID, locator: '' },
+      {
+        referenceId: REFERENCE_ID,
+        locator: 'p. 112',
+        nameBasis: 'stated',
+        supports: ['description'],
+      },
     ]);
   });
 

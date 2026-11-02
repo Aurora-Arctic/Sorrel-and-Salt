@@ -127,10 +127,13 @@ function cited(
       modified: null,
       accessed: url ? '2026-01-01' : null,
       note: null,
+      scholarly: false,
       seedKey: null,
       ...STAMPS,
     },
     locator,
+    nameBasis: null,
+    supports: null,
   };
 }
 

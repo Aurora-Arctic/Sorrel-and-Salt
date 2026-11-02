@@ -8,6 +8,9 @@ import {
   setCompendiumEntryShown,
   updateCompendiumEntry,
 } from '../services/compendium';
+import { readSourcingScore } from '../services/compendium-sourcing';
+import { SOURCING_FACTS } from '../schema/sourcing-weights';
+import type { SourcingFact, SourcingScore } from '../types';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
 import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
@@ -147,5 +150,45 @@ builder.queryField('compendiumEntryUsers', (t) =>
     args: { id: t.arg.id({ required: true }) },
     authScopes: { curator: true },
     resolve: (_root, { id }, context) => countCompendiumEntryUsers(sessionOf(context), id),
+  }),
+);
+
+const SourcingFactKindEnum = builder.enumType('SourcingFactKind', { values: SOURCING_FACTS });
+
+const SourcingFactRef = builder.objectRef<SourcingFact>('SourcingFact').implement({
+  description: 'One fact behind a sourcing score, and the points it adds or takes away.',
+  fields: (t) => ({
+    fact: t.field({ type: SourcingFactKindEnum, resolve: (row) => row.fact }),
+    label: t.exposeString('label', { description: 'How the list says it, such as "3 Sources".' }),
+    points: t.exposeInt('points'),
+  }),
+});
+
+const SourcingScoreRef = builder.objectRef<SourcingScore>('SourcingScore').implement({
+  description:
+    'How well a compendium entry is sourced, and every fact behind it; the facts sum to the score.',
+  fields: (t) => ({
+    score: t.exposeInt('score'),
+    facts: t.field({ type: [SourcingFactRef], resolve: (row) => row.facts }),
+  }),
+});
+
+// Null rather than Forbidden for anyone else, so a page asking for it beside public fields still renders.
+builder.queryField('compendiumSourcingScore', (t) =>
+  t.field({
+    type: SourcingScoreRef,
+    nullable: true,
+    description:
+      "A compendium entry's sourcing score and the facts behind it. Curators and admins only; null for anyone else.",
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { curator: true },
+    unauthorizedResolver: () => null,
+    resolve: (_root, { id }, { loaders, ...context }) =>
+      readSourcingScore(sessionOf(context), id, {
+        variants: (entry) => loaders.variantsByIngredient.load(entry),
+        references: (entry) => loaders.referencesByIngredient.load(entry),
+        variantReferences: (variants) =>
+          Promise.all(variants.map((variant) => loaders.referencesByVariant.load(variant))),
+      }),
   }),
 );

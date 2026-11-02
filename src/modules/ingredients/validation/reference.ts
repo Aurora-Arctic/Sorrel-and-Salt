@@ -60,6 +60,12 @@ export const ReferenceInput = z
     url,
     modified: optionalDay('modified'),
     accessed: optionalDay('accessed'),
+    // A work scholars edited or reviewed (the column's rule, in schema/references.ts); left out is not, as an update replaces the row.
+    // Only a compendium source is marked, which the service holds a coven's to.
+    scholarly: z
+      .boolean()
+      .nullish()
+      .transform((value) => value ?? false),
   })
   .superRefine((value, ctx) => {
     const refuse = (field: string, message: string) =>

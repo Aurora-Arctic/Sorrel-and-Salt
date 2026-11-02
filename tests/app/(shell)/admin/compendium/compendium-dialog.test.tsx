@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { editHeading } from '@/components/CompendiumList/heading';
@@ -96,5 +96,32 @@ describe('CompendiumDialog after an autosave', () => {
     expect(screen.getByRole('dialog', { name: 'Edit Ingredient, Mockwort' })).toBeInTheDocument();
     expect(textbox('Name')).toHaveValue('Mockwort');
     expect(textbox('Description')).toHaveValue('Typed after the save');
+  });
+});
+
+describe('CompendiumDialog on an edit', () => {
+  it("shows the entry's sourcing score in the dialog above the form", async () => {
+    offerNothing();
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <ViewerIdProvider id="u1">
+          <RouteModalProvider>
+            <CompendiumDialog
+              place={{}}
+              opened={{
+                ...opened('Mockwort', 1),
+                sourcing: {
+                  score: 10,
+                  facts: [{ fact: 'sources', label: '1 Source', points: 10 }],
+                },
+              }}
+            />
+          </RouteModalProvider>
+        </ViewerIdProvider>
+      </QueryClientProvider>,
+    );
+
+    const modal = await screen.findByRole('dialog', { name: 'Edit Ingredient, Mockwort' });
+    expect(within(modal).getByRole('region', { name: 'Sourcing Score: 10' })).toBeInTheDocument();
   });
 });

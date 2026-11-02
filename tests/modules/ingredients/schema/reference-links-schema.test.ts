@@ -21,7 +21,7 @@ const SOURCED: [column: string, table: string][] = [
 ];
 const COLUMNS = SOURCED.map(([column]) => column);
 
-const OWN_COLUMNS = ['id', 'reference_id', ...COLUMNS, 'locator'];
+const OWN_COLUMNS = ['id', 'reference_id', ...COLUMNS, 'locator', 'name_basis', 'supports'];
 
 const CHECK_ONE_ROW = 'reference_links_one_row';
 const CHECK_LOCATOR_NOT_BLANK = 'reference_links_locator_not_blank';

@@ -486,6 +486,7 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           modified: blank(fields.modified),
           accessed: blank(fields.accessed),
           note: blank(fields.note),
+          scholarly: false,
         },
       } satisfies ReferenceQuery;
     }
@@ -858,6 +859,8 @@ const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') =>
   value: citation,
   link,
   locator,
+  nameBasis: '' as const,
+  supports: [],
 });
 
 // The entry the edit story opens: a celestial body, a category, three sources (a

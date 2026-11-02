@@ -1,12 +1,15 @@
 import { z } from 'zod';
 import {
+  CITED_ENTRY_FIELDS,
+  CITED_VARIANT_FIELDS,
   INGREDIENT_ELEMENTS,
+  NAME_BASES,
   NOMENCLATURE_KINDS,
+  type NameBasis,
 } from '../../../modules/ingredients/schema/ingredient-enums';
 import type {
   CompendiumEntryField,
   CompendiumVariantField,
-  NameBasis,
   SeedCitation,
   SeedCompendiumEntry,
   SeedCompendiumVariant,
@@ -16,38 +19,18 @@ import type {
 // a list (claude-docs/db/compendium-seed/README.md, "An entry, field by field"). The file spells `colours`, the row `colors`; `toEntry` is where they meet.
 
 export const FILE_STATUSES = ['draft', 'needs-review', 'approved'] as const;
-export const NAME_BASES = ['stated', 'resolved', 'unresolved', 'unaudited'] as const;
 
-/** A `supports` name as a file spells it: the literal's names with `colours` for `colors`. */
-const ENTRY_FIELDS_IN_FILE = [
-  'name',
-  'canonicalName',
-  'nomenclature',
-  'description',
-  'elements',
-  'celestialBodies',
-  'zodiacSigns',
-  'colours',
-  'safetyNotes',
-  'toxic',
-  'folkNames',
-  'deities',
-  'categories',
-  'substitutes',
-] as const;
+type InFile<Field> = Field extends 'colors' ? 'colours' : Field;
 
-const VARIANT_FIELDS_IN_FILE = [
-  'form',
-  'description',
-  'safetyNotes',
-  'toxic',
-  'elements',
-  'celestialBodies',
-  'zodiacSigns',
-  'colours',
-  'categories',
-  'substitutes',
-] as const;
+/** A `supports` name as a file spells it: the column's name with `colours` for `colors`. */
+const inFile = <const Field extends string>(fields: readonly [Field, ...Field[]]) =>
+  fields.map((field) => (field === 'colors' ? 'colours' : field)) as [
+    InFile<Field>,
+    ...InFile<Field>[],
+  ];
+
+const ENTRY_FIELDS_IN_FILE = inFile(CITED_ENTRY_FIELDS);
+const VARIANT_FIELDS_IN_FILE = inFile(CITED_VARIANT_FIELDS);
 
 const SHA256 = /^[0-9a-f]{64}$/;
 

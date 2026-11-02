@@ -29,7 +29,16 @@ const OPTIONAL_TEXT = [
 ];
 const DATES = ['modified', 'accessed'];
 // `seed_key` is the reference seed's own, outside the blank CHECKs.
-const OWN_COLUMNS = ['id', 'workspace_id', 'kind', 'title', ...OPTIONAL_TEXT, ...DATES, 'seed_key'];
+const OWN_COLUMNS = [
+  'id',
+  'workspace_id',
+  'kind',
+  'title',
+  ...OPTIONAL_TEXT,
+  ...DATES,
+  'scholarly',
+  'seed_key',
+];
 
 // `url` has no blank CHECK of its own: the http(s) CHECK already refuses one.
 const NOT_BLANK = ['title', ...OPTIONAL_TEXT.filter((column) => column !== 'url')];

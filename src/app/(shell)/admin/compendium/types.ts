@@ -7,6 +7,7 @@ import type { CompendiumPlace } from '../../../../components/CompendiumList/type
 import type { ModalHeading } from '../../../../components/Modal/types';
 import type { ListDialog } from '../../../../lib/types';
 import type { ListSearchParams } from '../types';
+import type { SourcingScore } from '@/modules/ingredients';
 
 export interface AdminCompendiumPageProps {
   // A promise in Next 16 (node_modules/next/dist/docs/01-app/03-api-reference/
@@ -30,6 +31,8 @@ export interface CompendiumSearchParams extends ListSearchParams {
   toxic?: string | string[];
   /** Reviewed by a curator, `1`, or not, `0`; the public page drops it. */
   reviewed?: string | string[];
+  /** The order by sourcing score, lowest first, `sourcing_score`; the public page drops it. */
+  sort?: string | string[];
   /** The entry whose details modal is open over the list, by slug. */
   entry?: string | string[];
 }
@@ -53,6 +56,8 @@ export interface OpenedEntry {
    * review read for a curator or admin, left out for anyone else.
    */
   review?: ReviewOffer;
+  /** The edited entry's sourcing score and its facts, a curator's read; none for an add. */
+  sourcing?: SourcingScore | null;
 }
 
 export interface CompendiumDialogProps {

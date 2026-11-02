@@ -62,8 +62,13 @@ const substituteEntry =
         }
       : { value: name };
 
-/** A reference as its row: the citation, the source it links with the fields its short form is made of, and its locator. */
-const referenceEntry = ({ reference, locator }: CitedReference): ReferenceListEntry => ({
+/** A reference as its row: the citation, the source it links with the fields its short form is made of, its locator, and how the source names the ingredient and what it supports. */
+const referenceEntry = ({
+  reference,
+  locator,
+  nameBasis,
+  supports,
+}: CitedReference): ReferenceListEntry => ({
   value: citationText(reference),
   link: {
     id: reference.id,
@@ -74,6 +79,8 @@ const referenceEntry = ({ reference, locator }: CitedReference): ReferenceListEn
     container: reference.container,
   },
   locator: locator ?? '',
+  nameBasis: nameBasis ?? '',
+  supports: supports ?? [],
 });
 
 const entries = (values: readonly string[] | null) => (values ?? []).map((value) => ({ value }));

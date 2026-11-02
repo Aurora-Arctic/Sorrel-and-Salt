@@ -92,3 +92,29 @@ $categories-wide: 75rem;
     font-weight: 700;
   }
 }
+
+// The two orders in a row above the table, the current one bold.
+.compendium-list__sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: space(2);
+  margin-block-end: space(3);
+}
+
+.compendium-list__sort-label {
+  color: $text-muted;
+}
+
+.compendium-list__sort-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  [aria-current='page'] {
+    font-weight: 600;
+  }
+}

@@ -439,6 +439,7 @@ describe('ReferencePanel', () => {
       modified: null,
       accessed: null,
       note: null,
+      scholarly: false,
     });
     mockGraphQLError('UpdateReference', {
       code: 'VALIDATION',

@@ -144,6 +144,7 @@ describe('ReferenceInput', () => {
         issue: '1–2',
         published: '1950–51',
         pages: '12–19',
+        scholarly: false,
       });
     });
 

@@ -6,7 +6,11 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { seedAstrology } from '@/db/seed/astrology';
 import { DEITIES, seedDeities } from '@/db/seed/deities';
 import { SOURCES, seedSources } from '@/db/seed/sources';
+import { FIXTURE_USERS } from '@/db/seed/standard';
+import { WORKS } from '@/db/seed/compendium/works';
+import { loadCompendium } from '@/db/seed/compendium/load';
 import { citationText } from '@/lib/citation';
+import type { SeedWork } from '@/db/seed/types';
 import type { DocLink, DocLinkKind, ReferenceLinkRow, ReferenceRow } from './types';
 
 // The sources seed writes compendium references keyed by citation, a tradition's source reaching every deity under it, against the real tables emptied first: one run serves every read, and a re-run over an admin's edit empties them again.
@@ -83,6 +87,8 @@ async function namesLinkedFrom(referenceId: string): Promise<DocLink[]> {
   return rows.map((row) => ({ ...row })).sort(byLink);
 }
 
+const A_ID = FIXTURE_USERS.A.id;
+
 const sourceTitled = (title: string) => {
   const source = SOURCES.find(({ reference }) => reference.title === title);
   if (!source) throw new Error(`No source titled ${title}`);
@@ -142,16 +148,20 @@ describe('seedSources', () => {
       const [edited] = await allReferences();
       const before = citationText(edited);
       await sql`
-        update "references" set title = 'Retitled by an Admin', updated_by = ${BOOTSTRAP_USER_ID}
+        insert into users (id, name, email, created_by, updated_by)
+        values (${A_ID}, 'Fixture Person A', ${`${A_ID}@users.test`}, ${A_ID}, ${A_ID})`;
+      await sql`
+        update "references" set title = 'Retitled by an Admin', updated_by = ${A_ID}
         where id = ${edited.id}
       `;
       // Precondition: the edit changed the citation, so keying by it would twin.
       expect(citationText(await referenceById(edited.id))).not.toBe(before);
 
-      await seedSources(db);
+      const kept = await seedSources(db);
 
       expect(await allReferences()).toHaveLength(SOURCES.length);
       expect((await referenceById(edited.id)).title).toBe('Retitled by an Admin');
+      expect(kept).toEqual([{ source: before, differs: ['title'] }]);
     });
 
     // Unkeyed is what marks a row as not the seed's; an emptied database holds
@@ -184,6 +194,59 @@ describe('seedSources', () => {
       ]);
     });
 
+    // The mark is provenance the seed owns until a person edits the row: it restates it either way, and a person's edit is kept and reported.
+    describe('a source’s scholarly mark', () => {
+      const marked = () => {
+        const source = SOURCES.find(({ reference }) => reference.scholarly === true);
+        if (!source) throw new Error('No source is marked scholarly');
+        return source.reference;
+      };
+      const unmarked = () => {
+        const source = SOURCES.find(({ reference }) => reference.scholarly !== true);
+        if (!source) throw new Error('Every source is marked scholarly');
+        return source.reference;
+      };
+
+      it('sets it on a present source no person edited, either way', async () => {
+        await seedAll();
+        const scholarly = await referenceCited(citationText(marked()));
+        const trade = await referenceCited(citationText(unmarked()));
+        await sql`update "references" set scholarly = not scholarly where id in ${sql([scholarly.id, trade.id])}`;
+        // Precondition: both rows now disagree with sources.ts, and only the seed's user has stamped them, so no person edited either.
+        for (const [id, wanted] of [
+          [scholarly.id, true],
+          [trade.id, false],
+        ] as const) {
+          const row = await referenceById(id);
+          expect(row.scholarly).toBe(!wanted);
+          expect([row.created_by, row.updated_by]).toEqual([BOOTSTRAP_USER_ID, BOOTSTRAP_USER_ID]);
+        }
+
+        expect(await seedSources(db)).toEqual([]);
+
+        expect((await referenceById(scholarly.id)).scholarly).toBe(true);
+        expect((await referenceById(trade.id)).scholarly).toBe(false);
+      });
+
+      it('keeps a person’s edit to it, and reports the source', async () => {
+        await seedAll();
+        const work = marked();
+        const row = await referenceCited(citationText(work));
+        await sql`
+          insert into users (id, name, email, created_by, updated_by)
+          values (${A_ID}, 'Fixture Person A', ${`${A_ID}@users.test`}, ${A_ID}, ${A_ID})`;
+        await sql`update "references" set scholarly = false, updated_by = ${A_ID} where id = ${row.id}`;
+        // Precondition: the row disagrees with sources.ts, and the run without the guard would set it, as the test above proves.
+        expect((await referenceById(row.id)).scholarly).toBe(false);
+        expect((await referenceById(row.id)).updated_by).toBe(A_ID);
+
+        const kept = await seedSources(db);
+
+        expect((await referenceById(row.id)).scholarly).toBe(false);
+        expect(kept).toEqual([{ source: citationText(work), differs: ['scholarly'] }]);
+      });
+    });
+
     it('links a deity an admin has since renamed, found by its seed key', async () => {
       await seedDeities(db);
       await seedAstrology(db);
@@ -196,6 +259,18 @@ describe('seedSources', () => {
         await namesLinkedFrom((await referenceCited(citationText(adonis.reference))).id),
       ).toEqual([{ kind: 'deity', name: 'Adonis Renamed', locator: null }]);
     });
+  });
+  it('names no work in both its list and the compendium’s with different marks, so neither seed undoes the other', () => {
+    const works: Record<string, SeedWork> = { ...WORKS, ...loadCompendium().sources };
+    const compendium = new Map(
+      Object.values(works).map((work) => [citationText(work), work.scholarly === true]),
+    );
+    const disagree = SOURCES.map(({ reference }) => reference).filter(
+      (work) =>
+        compendium.has(citationText(work)) &&
+        compendium.get(citationText(work)) !== (work.scholarly === true),
+    );
+    expect(disagree.map(citationText)).toEqual([]);
   });
 });
 

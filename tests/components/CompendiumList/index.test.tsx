@@ -242,6 +242,33 @@ describe('CompendiumList', () => {
   });
 });
 
+describe('the sort', () => {
+  it('offers the sourcing score, lowest first, beside the default order, which is the current one', () => {
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, query: 'wort' } })} />);
+
+    const sort = screen.getByRole('navigation', { name: 'Sort' });
+    expect(within(sort).getByRole('link', { name: 'Best Match' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    const score = within(sort).getByRole('link', { name: 'Sourcing Score (Lowest First)' });
+    expect(score).not.toHaveAttribute('aria-current');
+    expect(score).toHaveAttribute('href', '/admin/compendium?query=wort&sort=sourcing_score');
+  });
+
+  it('marks the sourcing score current while the list is in that order, and leads back to the name order', () => {
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, sort: 'sourcing_score' } })} />);
+
+    const sort = screen.getByRole('navigation', { name: 'Sort' });
+    expect(
+      within(sort).getByRole('link', { name: 'Sourcing Score (Lowest First)' }),
+    ).toHaveAttribute('aria-current', 'page');
+    const name = within(sort).getByRole('link', { name: 'Name' });
+    expect(name).not.toHaveAttribute('aria-current');
+    expect(name).toHaveAttribute('href', '/admin/compendium');
+  });
+});
+
 describe('compendiumHref', () => {
   it('keeps the page a modal opens over, the modal last', () => {
     expect(compendiumHref({ after: 'x/y' }, { edit: 'testwort' })).toBe(

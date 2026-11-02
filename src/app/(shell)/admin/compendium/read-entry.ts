@@ -1,5 +1,5 @@
 import 'server-only';
-import { resolveCompendiumSlug } from '@/modules/ingredients';
+import { readSourcingScore, resolveCompendiumSlug } from '@/modules/ingredients';
 import type { Session } from '@/lib/session';
 import { entryValues } from '@/app/entry-values';
 
@@ -7,7 +7,7 @@ import { entryValues } from '@/app/entry-values';
 // edit dialog over themselves: the admin Compendium and, for a curator, the public search.
 
 /**
- * What `?edit=` names: the entry, its form values, or the address it moved to. A slug naming
+ * What `?edit=` names: the entry, its form values and its sourcing score, or the address it moved to. A slug naming
  * nothing throws `NotFound`, which `readEditPlace` turns into a notice.
  */
 export const readCompendiumEntry = async (slug: string, session: Session) => {
@@ -19,5 +19,6 @@ export const readCompendiumEntry = async (slug: string, session: Session) => {
     values: await entryValues(address.entry, null),
     revision: address.entry.revision,
     updatedAt: address.entry.updatedAt.toISOString(),
+    sourcing: await readSourcingScore(session, address.entry.id),
   };
 };

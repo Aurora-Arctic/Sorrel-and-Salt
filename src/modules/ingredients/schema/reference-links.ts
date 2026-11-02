@@ -1,17 +1,20 @@
 import { sql } from 'drizzle-orm';
-import { check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import type { PgUUIDBuilderInitial } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { deities, deityTraditions } from '../../vocabulary/schema/deities';
 import { celestialBodies, zodiacSigns } from '../../vocabulary/schema/astrology';
 import { ingredients } from './ingredients';
 import { ingredientVariants } from './ingredient-variants';
+import { NAME_BASES } from './ingredient-enums';
 import { references } from './references';
 import { idColumn } from '../../../db/schema-parts';
 
 // Which row a reference supports, one per citation: a nullable key per sourced table under one `num_nonnulls` CHECK. Full `auditColumns`:
 // a link is content, and unlinking leaves a tombstone (DESIGN.md §5, "References"). Adding a sourced table:
 // claude-docs/db/references.md, "Reference links schema details".
+
+export const nameBasis = pgEnum('name_basis', NAME_BASES);
 
 /**
  * The tables a reference can support, each by the property and column that
@@ -54,6 +57,10 @@ export const referenceLinks = pgTable(
     // "p. 112", `under "Hecate"`: the link's, not the reference's, since the
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
+    // How the citation names the ingredient, and the field names it backs; null when nobody recorded them. Written by the seed and a curator,
+    // never on a coven's link (claude-docs/db/references.md, "Citation attributes").
+    nameBasis: nameBasis('name_basis'),
+    supports: text('supports').array(),
     ...auditColumns,
   },
   (table) => [
