@@ -117,8 +117,9 @@ export default function TermsOfUsePage() {
         the right to create covens. Accounts are never closed. A site admin may pause an account's
         access to the site for as long as an admin decides. A paused account can still sign in to
         ask for support, but cannot open anything else. The compendium stays open to it, as it does
-        to everyone. When any of these is set on you, the site emails you at the address on your
-        account. Lifting one sends no email.
+        to everyone. When you are stopped from sending support requests, or your access to the site
+        or a coven is paused, the site emails you at the address on your account. Lifting one sends
+        no email.
       </p>
 
       <h2>What the Site Owes You</h2>
