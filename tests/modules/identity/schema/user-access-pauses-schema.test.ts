@@ -4,7 +4,7 @@ import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { A, B, E, asUser } from '../../../support/as-user';
-import { findStandingUserAccessPause, findUserAccessPauses, withAudit } from '@/db/repository';
+import { findStandingUserAccessPause, findUserAccessPausePage, withAudit } from '@/db/repository';
 import { assertSiteAdmin } from '@/modules/identity';
 import { userAccessPauses } from '@/modules/identity/schema/user-access-pauses';
 import type { NamedWrites } from '@/db/types';
@@ -144,6 +144,11 @@ describe('user_access_pauses table', () => {
 // The table is marked `namedWrites`, so every generic write is refused at compile time (user-access-pauses-schema.type-check.ts).
 describe('the repository', () => {
   const admin = assertSiteAdmin(asUser(E));
+  /** The first page of a user's pauses, its rows alone. */
+  const historyOf = async (userId: string) =>
+    (await findUserAccessPausePage(admin, userId, { limit: 25, inverted: false })).map(
+      (entry) => entry.node,
+    );
   const tomorrow = () => new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   beforeEach(emptied);
@@ -280,7 +285,7 @@ describe('the repository', () => {
 
     expect(second?.id).not.toBe(first?.id);
     expect(await findStandingUserAccessPause(PAUSED)).toEqual(second);
-    const history = await findUserAccessPauses(admin, PAUSED);
+    const history = await historyOf(PAUSED);
     expect(history.find((row) => row.id === first?.id)).toMatchObject({ liftedBy: ADMIN });
   });
 
@@ -317,7 +322,7 @@ describe('the repository', () => {
       write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
     );
 
-    const history = await findUserAccessPauses(admin, PAUSED);
+    const history = await historyOf(PAUSED);
 
     expect(history.map((row) => row.userId)).toEqual([PAUSED, PAUSED]);
     expect(history[0]).toEqual(standing);
@@ -330,7 +335,7 @@ describe('the repository', () => {
       values (${PAUSED}, ${ADMIN}, ${ADMIN}, now(), ${ADMIN})
     `;
 
-    expect(await findUserAccessPauses(admin, PAUSED)).toEqual([]);
+    expect(await historyOf(PAUSED)).toEqual([]);
   });
 
   it('adds no property to the table for drizzle-kit to see', () => {

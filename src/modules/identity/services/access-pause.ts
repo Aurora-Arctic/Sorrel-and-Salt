@@ -1,7 +1,13 @@
 import 'server-only';
-import { findOneById, findStandingUserAccessPause, withAudit } from '../../../db/repository';
+import {
+  findOneById,
+  findStandingUserAccessPause,
+  findUserAccessPausePage,
+  withAudit,
+} from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
 import { users } from '../schema/users';
 import type { UserAccessPauseRow } from '../types';
@@ -96,4 +102,20 @@ export async function liftUserAccessPause(
  */
 export function standingAccessPause(userId: string): Promise<UserAccessPauseRow | undefined> {
   return findStandingUserAccessPause(userId);
+}
+
+/**
+ * One page of every pause set on a user, standing, run out and lifted alike, newest first: the user modal's history.
+ *
+ * @throws {Forbidden} the caller is not a site admin.
+ * @throws {ValidationError} the id is malformed.
+ */
+export async function listUserAccessPauses(
+  session: Session,
+  userId: string,
+  page: PageRequest,
+): Promise<PageEntry<UserAccessPauseRow>[]> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  const id = parseInput(RowId, userId);
+  return findUserAccessPausePage(admin, id, page);
 }

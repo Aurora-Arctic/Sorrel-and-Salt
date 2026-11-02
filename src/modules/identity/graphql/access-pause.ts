@@ -1,7 +1,11 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { sessionOf } from '../../../graphql/context-helpers';
-import { liftUserAccessPause, pauseUserAccess } from '../services/access-pause';
+import {
+  liftUserAccessPause,
+  listUserAccessPauses,
+  pauseUserAccess,
+} from '../services/access-pause';
 import type { UserAccessPauseRow } from '../types';
 
 const UserAccessPauseRef = builder.objectRef<UserAccessPauseRow>('UserAccessPause').implement({
@@ -13,6 +17,7 @@ const UserAccessPauseRef = builder.objectRef<UserAccessPauseRow>('UserAccessPaus
     until: t.expose('until', { type: 'DateTime', nullable: true }),
     note: t.exposeString('note', { nullable: true }),
     liftedAt: t.expose('liftedAt', { type: 'DateTime', nullable: true }),
+    liftedBy: t.exposeID('liftedBy', { nullable: true }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
 });
@@ -41,5 +46,17 @@ builder.mutationField('liftUserAccessPause', (t) =>
     args: { userId: t.arg.id({ required: true }) },
     authScopes: { admin: true },
     resolve: (_root, { userId }, context) => liftUserAccessPause(sessionOf(context), userId),
+  }),
+);
+
+builder.queryField('userAccessPauses', (t) =>
+  t.pagedConnection({
+    type: UserAccessPauseRef,
+    description:
+      'Every pause set on a user’s access, standing, run out and lifted alike, newest first. Site admins only.',
+    args: { userId: t.arg.id({ required: true }) },
+    authScopes: { admin: true },
+    resolve: (_root, { userId }, page, context) =>
+      listUserAccessPauses(sessionOf(context), userId, page),
   }),
 );

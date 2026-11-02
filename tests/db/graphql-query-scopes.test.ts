@@ -82,6 +82,10 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ privilegeChanges(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
   },
+  userAccessPauses: {
+    source: `{ userAccessPauses(userId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
+    outcome: 'refuses',
+  },
   invitationCardBatches: {
     source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
@@ -884,7 +888,7 @@ describe('a curator at every admin write, and at the people page’s reads', () 
     });
   });
 
-  it.each(['users', 'privilegeChanges'])(
+  it.each(['users', 'privilegeChanges', 'userAccessPauses'])(
     '%s refuses a curator, answering an admin',
     async (field) => {
       const { source } = PROBES[field];

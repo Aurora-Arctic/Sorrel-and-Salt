@@ -4,8 +4,10 @@ import { sessions } from '../../modules/identity/schema/auth';
 import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
 import type { SiteAdmin } from '@/modules/identity';
 import { notSoftDeleted } from './predicates';
-import { selectFrom, selectOne } from './select';
-import type { AuditWriter, UserAccessPauseRow, WriterContext } from './types';
+import { findPage } from './finders';
+import { selectOne } from './select';
+import type { PageEntry, PageRequest } from '../../lib/types';
+import type { AuditWriter, SortPart, UserAccessPauseRow, WriterContext } from './types';
 
 /** A live pause's `until` is still ahead, or it has none: whether the pause stands rather than having run out. */
 const notRunOut = or(isNull(userAccessPauses.until), gt(userAccessPauses.until, sql`now()`));
@@ -27,17 +29,21 @@ export function findStandingUserAccessPause(
   );
 }
 
-/** Every pause set on a user, standing, run out and lifted alike, newest first. Under the `SiteAdmin` proof: the history is an admin's. */
-export async function findUserAccessPauses(
+// A user's pauses, newest first.
+const HISTORY_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${userAccessPauses.createdAt})`, type: 'numeric' },
+];
+
+/**
+ * One page of every pause set on a user, standing, run out and lifted alike, newest first (CLAUDE.md rule 8). Under the
+ * `SiteAdmin` proof: the history is an admin's.
+ */
+export function findUserAccessPausePage(
   _admin: SiteAdmin,
   userId: string,
-): Promise<UserAccessPauseRow[]> {
-  const rows = await selectFrom(
-    userAccessPauses,
-    and(notSoftDeleted(userAccessPauses), eq(userAccessPauses.userId, userId)),
-  );
-  // Ordered here because `selectFrom` orders only a keyset page; one user's pauses are a handful of rows.
-  return rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  page: PageRequest,
+): Promise<PageEntry<UserAccessPauseRow>[]> {
+  return findPage(userAccessPauses, HISTORY_ORDER, page, eq(userAccessPauses.userId, userId));
 }
 
 /** The site access pause's two named writes, beside its finders. `writerFor` spreads them into the writer. */

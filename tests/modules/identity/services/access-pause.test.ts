@@ -3,6 +3,7 @@ import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import {
   liftUserAccessPause,
+  listUserAccessPauses,
   pauseAdminRoleChanges,
   pauseUserAccess,
   standingAccessPause,
@@ -286,5 +287,48 @@ describe('liftUserAccessPause', () => {
 
   it('answers NotFound for an id that names no user', async () => {
     expect(await refusalOf(liftUserAccessPause(asUser(E), NOWHERE))).toBeInstanceOf(NotFound);
+  });
+});
+
+describe('listUserAccessPauses', () => {
+  const firstPage = { limit: 25, inverted: false };
+  const nodes = async (caller: Parameters<typeof asUser>[0], limit = 25) =>
+    (await listUserAccessPauses(asUser(caller), A.id, { ...firstPage, limit })).map(
+      (entry) => entry.node,
+    );
+
+  it('pages a user’s pauses newest first, lifted and standing alike, and no other user’s', async () => {
+    const lifted = await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    await liftUserAccessPause(asUser(E), A.id);
+    const standing = await pauseUserAccess(asUser(E), A.id, inADay(), null);
+    await pauseUserAccess(asUser(E), B.id, null, null);
+
+    expect((await nodes(E)).map((row) => row.id)).toEqual([standing.id, lifted.id]);
+    expect((await nodes(E, 1)).map((row) => row.id)).toEqual([standing.id]);
+    const [, after] = await listUserAccessPauses(asUser(E), A.id, firstPage);
+    const next = await listUserAccessPauses(asUser(E), A.id, {
+      ...firstPage,
+      after: after?.cursor,
+    });
+    expect(next).toEqual([]);
+  });
+
+  it.each([
+    ['a curator', F],
+    ['a plain user', B],
+  ])('refuses %s with Forbidden, by the paused user’s id', async (_who, caller) => {
+    await pauseUserAccess(asUser(E), A.id, null, null);
+    // The precondition: the same read by an admin answers the pause.
+    expect(await nodes(E)).toHaveLength(1);
+
+    expect(await refusalOf(listUserAccessPauses(asUser(caller), A.id, firstPage))).toBeInstanceOf(
+      Forbidden,
+    );
+  });
+
+  it('refuses a malformed id', async () => {
+    expect(await refusalOf(listUserAccessPauses(asUser(E), 'not-an-id', firstPage))).toBeInstanceOf(
+      ValidationError,
+    );
   });
 });

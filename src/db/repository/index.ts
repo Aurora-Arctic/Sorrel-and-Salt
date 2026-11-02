@@ -162,7 +162,7 @@ export {
   findSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
-export { findStandingUserAccessPause, findUserAccessPauses } from './user-access-pauses';
+export { findStandingUserAccessPause, findUserAccessPausePage } from './user-access-pauses';
 export {
   deleteLapsedProvisionalUser,
   findLapsedProvisionalUserIds,

@@ -1686,6 +1686,11 @@ type Query {
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
   """
   supportRequests(about: SupportAbout, after: String, before: String, errorCode: Int, first: Int, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
+
+  """
+  Every pause set on a user’s access, standing, run out and lifted alike, newest first. Site admins only.
+  """
+  userAccessPauses(after: String, before: String, first: Int, last: Int, userId: ID!): QueryUserAccessPausesConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
@@ -2083,6 +2088,16 @@ type QuerySupportRequestsConnection {
 type QuerySupportRequestsConnectionEdge {
   cursor: String!
   node: SupportRequest!
+}
+
+type QueryUserAccessPausesConnection {
+  edges: [QueryUserAccessPausesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryUserAccessPausesConnectionEdge {
+  cursor: String!
+  node: UserAccessPause!
 }
 
 type QueryUsersConnection {
@@ -2778,6 +2793,7 @@ type UserAccessPause {
   audit: AuditInfo!
   id: ID!
   liftedAt: DateTime
+  liftedBy: ID
   note: String
   until: DateTime
   userId: ID!
