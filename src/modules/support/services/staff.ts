@@ -27,7 +27,6 @@ import { IssueUrlInput } from '../validation/support';
 import { readerOf } from './access';
 import { mailSender } from './mail-sender';
 import { redactPathForCurator } from './redact-path';
-import { scheduleSupportLifecycle } from './retention-start';
 
 // What the staff do to a request. An admin reads every request and may do everything; a curator reads the requests marked for
 // curators or assigned to them, and may reply to and resolve the ones assigned to them. Both are checked here, by direct call.
@@ -208,7 +207,6 @@ export async function resolveSupportRequest(
   });
   // The move is saved before the mail goes, so a failed mail loses nothing.
   await mailSender(notifier, resolved, 'resolved');
-  await scheduleSupportLifecycle(resolved, await notifier.origin());
   return resolved;
 }
 
@@ -236,8 +234,6 @@ export async function closeSupportRequest(
       lastStaffActivityAt: now,
     },
   );
-  // The run that anonymises it in twelve months; a resolved request's own run, already waiting, ends at its next look.
-  await scheduleSupportLifecycle(closed, null);
   return closed;
 }
 

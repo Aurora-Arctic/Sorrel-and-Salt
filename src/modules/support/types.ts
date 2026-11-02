@@ -27,6 +27,20 @@ export type SupportStatusMail = {
   origin: string;
 };
 
+/** One support-retention stage: the closing-soon notice, the close, or the anonymising. */
+export type RetentionStage = 'notice' | 'close' | 'anonymise';
+
+/**
+ * What one support-retention batch run is given: its stage, its page of request ids, the job's `now` in milliseconds, so every
+ * batch of one day reads the same cutoffs, and the origin the notices link from. Ids, a kind, a number and the site origin.
+ */
+export interface RetentionBatch {
+  kind: RetentionStage;
+  ids: string[];
+  now: number;
+  origin: string;
+}
+
 /** What the Support dialog offers a visitor: `until` is set only for a dated `timedOut`, and null for one with no end date. */
 export interface SupportDialogAnswer {
   kind: 'signedOut' | 'unverified' | 'timedOut' | 'form';

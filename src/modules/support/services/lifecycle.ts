@@ -5,11 +5,10 @@ import type { Session } from '../../../lib/session';
 import { RowId, parseInput } from '../../../lib/validation';
 import { supportReplies } from '../schema/support-replies';
 import { supportRequests } from '../schema/support-requests';
-import type { SupportNotifier, SupportReplyRow, SupportRequestRow } from '../types';
+import type { SupportReplyRow, SupportRequestRow } from '../types';
 import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
 import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
-import { scheduleSupportLifecycle } from './retention-start';
 import { getSupportRequest, refuseAnonymised } from './staff';
 
 // The request lifecycle. The transitions, and who may make each:
@@ -104,7 +103,6 @@ export async function sendSenderMessage(
 export async function resolveMySupportRequest(
   session: Session,
   requestId: string,
-  notifier: Pick<SupportNotifier, 'origin'>,
 ): Promise<SupportRequestRow> {
   requireVerified(session);
   const id = parseInput(RowId, requestId);
@@ -122,7 +120,6 @@ export async function resolveMySupportRequest(
       `A request can be resolved only while it is open or waiting on sender; this one is ${request.status.replace(/_/g, ' ')}`,
     );
   }
-  await scheduleSupportLifecycle(moved, await notifier.origin());
   return moved;
 }
 

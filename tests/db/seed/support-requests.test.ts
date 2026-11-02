@@ -9,7 +9,8 @@ import { SANCTIONED_USERS, seedSanctionedUsers } from '@/db/seed/sanctioned-user
 import { seedSupportRequests } from '@/db/seed/support-requests';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
-import { sweepSupportRetention } from '@/modules/support';
+import { retentionDueStep } from '@/modules/support/jobs/support-retention-steps';
+import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
 
 // The fake support requests the `demo` scenario seeds for the admin Support tab and the account's own requests, run against the `standard` cast
 // and the held-back accounts the demo seeds before it.
@@ -222,8 +223,8 @@ describe('the support request seed', () => {
       expect(await sql`select id, created_at from support_requests order by id`).toEqual(times);
     });
 
-    // Last, as the sweep changes a row.
-    it('seeds one request already anonymised and one the sweep anonymises, which it leaves as the seed left the first', async () => {
+    // Last, as the daily run changes a row.
+    it('seeds one request already anonymised and one the daily run anonymises, which it leaves as the seed left the first', async () => {
       const ANONYMISED = '00000000-0000-0000-0005-000000000018';
       const DUE = '00000000-0000-0000-0005-000000000019';
       const shape = (id: string) => sql`
@@ -237,7 +238,20 @@ describe('the support request seed', () => {
       expect(due).toMatchObject({ created_by: FIXTURE_USERS.C.id, past_cutoff: true });
       expect(due.subject).not.toBe('');
 
-      expect(await sweepSupportRetention()).toEqual({ closed: 0, anonymised: 1 });
+      const now = Date.now();
+      // The seed leaves nothing due to close, and of these two only the one not yet anonymised is due.
+      expect(await retentionDueStep('close', now, null)).toEqual([]);
+      const page = await retentionDueStep('anonymise', now, null);
+      expect(page).toContain(DUE);
+      expect(page).not.toContain(ANONYMISED);
+      expect(
+        await retentionBatchStep({
+          kind: 'anonymise',
+          ids: page,
+          now,
+          origin: 'http://localhost:3000',
+        }),
+      ).toBe(page.length);
 
       const [anonymised] = await shape(ANONYMISED);
       const [swept] = await shape(DUE);

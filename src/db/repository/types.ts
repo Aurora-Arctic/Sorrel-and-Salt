@@ -226,6 +226,8 @@ export interface Aggregate<TRow extends Record<string, unknown>> {
   joins?: readonly AggregateJoin[];
   groupBy?: readonly (SQL | AnyPgColumn)[];
   orderBy?: readonly (SQL | AnyPgColumn)[];
+  /** The most rows read, after `orderBy`; every row without. */
+  limit?: number;
 }
 
 /** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table too. */
@@ -634,12 +636,12 @@ export interface AuditWriter {
     values: SupportRequestMove,
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
-   * Closes every resolved request whose `resolved_at` is at or before `cutoff`, or only request `id` when given, stamping `closed_at`
-   * as the day its seven days ended; returns the rows closed.
+   * Closes those of requests `ids` still resolved with `resolved_at` at or before `cutoff`, stamping `closed_at` as the
+   * day its seven days ended; returns the rows closed.
    */
   closeIdleResolvedSupportRequests(
     cutoff: Date,
-    id?: string,
+    ids: readonly string[],
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /** Stamps the closing-soon notice on request `id` while it is still resolved and unstamped; none when it was not. */
   markClosingNoticeSent(id: string, sentAt: Date): Promise<(typeof supportRequests.$inferSelect)[]>;
@@ -654,13 +656,13 @@ export interface AuditWriter {
   /** Stamps the sender's notice of staff reply `id` while it is unstamped; none when it already was. */
   markReplyNoticeSent(id: string, sentAt: Date): Promise<(typeof supportReplies.$inferSelect)[]>;
   /**
-   * Strips every closed request whose `closed_at` is at or before `cutoff`, or only request `id` when given, of what it holds of its
+   * Strips those of requests `ids` still closed with `closed_at` at or before `cutoff` of what each holds of its
    * sender: subject, message, path, address and sender id, and its replies' text. Topic, status, dates and the rows stay, so the
    * counts do. A request already stripped is left alone; returns the rows stripped.
    */
   anonymiseClosedSupportRequests(
     cutoff: Date,
-    id?: string,
+    ids: readonly string[],
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in

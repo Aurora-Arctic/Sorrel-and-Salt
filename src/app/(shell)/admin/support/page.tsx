@@ -1,12 +1,10 @@
 import type { Metadata } from 'next';
-import { after } from 'next/server';
 import TabbedPage from '@/components/TabbedPage';
 import SupportRequests from '@/components/SupportRequests';
 import { USER_MODAL_PLACE, supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import { pagerHrefs } from '@/lib/list-href';
 import { impersonationEnabled } from '@/lib/impersonation';
 import { requireCuratorSession } from '@/lib/request-session';
-import { startSupportRetentionSweep } from '@/modules/support';
 import MissingNotice from '../missing-notice';
 import { changesLocked } from '@/components/UserList/lock';
 import { readPauseState } from '../(people)/pause-state';
@@ -25,8 +23,6 @@ export const metadata: Metadata = {
 // `?request=` opens. The page and GraphQL end at the same support services, which are the guard.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const session = await requireCuratorSession();
-  // Closes what has lapsed and anonymises what is due, standing in for a lost run; after the response, so the page never waits.
-  after(() => startSupportRetentionSweep(session));
   const { filter, cursor, request, user } = readSupportPlace(await searchParams);
   // The user modal is the Users page's own, for an admin; a curator reaches nothing on the People pages.
   const userId = session.role === 'admin' ? user : undefined;

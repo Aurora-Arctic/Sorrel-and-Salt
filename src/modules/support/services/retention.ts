@@ -1,19 +1,28 @@
 import 'server-only';
-import { RESOLVED_CLOSES_AFTER_DAYS, findOneById, withAudit } from '../../../db/repository';
-import { deliver } from '../../../lib/mail-transport';
+import {
+  RESOLVED_CLOSES_AFTER_DAYS,
+  findClosingNoticesDue,
+  findOneById,
+  findSupportRequestsDueToAnonymise,
+  findSupportRequestsDueToClose,
+  withAudit,
+} from '../../../db/repository';
+import { MailNotSent, deliver } from '../../../lib/mail-transport';
 import { supportClosingNoticeMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
+import { RETENTION_PAGE_SIZE } from '../jobs/support-retention-pages';
 import type { Message } from '../../../lib/types';
-import type { SupportRequestRow } from '../types';
+import type { RetentionBatch, RetentionStage, SupportRequestRow } from '../types';
 
-// What happens to a request after it is resolved, done by jobs as the System account: the closing-soon notice on day 5, the close
-// on day 7, and on the twelfth month after the close the anonymising, which keeps the row and its topic, status and dates, so the
-// counts survive, and drops everything the sender wrote or is known by. Each step reads the row again, so a step run twice, or a
-// run that outlived a reopen, changes nothing.
+// What happens to a request after it is resolved, done once a day by the support-retention job as the System account: the
+// closing-soon notice from day 5, the close on day 7, and on the twelfth month after the close the anonymising, which keeps the row
+// and its topic, status and dates, so the counts survive, and drops everything the sender wrote or is known by. The job reads the
+// ids due for each stage a page at a time and hands each page to a batch, and each batch reads its rows' status and dates again
+// before it writes, so a batch run twice, two runs at once, or a batch that follows a reopen, changes nothing.
 
-/** The day after resolving that the closing-soon notice goes out. */
+/** The day after resolving from which the closing-soon notice is due. */
 export const NOTICE_AFTER_DAYS = 5;
 /** How many months a closed request keeps its sender's text. */
 export const ANONYMISE_AFTER_MONTHS = 12;
@@ -21,64 +30,10 @@ export const ANONYMISE_AFTER_MONTHS = 12;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SYSTEM = { userId: SYSTEM_ACTOR_ID };
 
-/** What a request's run does next: wait, send the closing-soon notice for the resolution at `resolvedAt`, or end. */
-export type SupportRequestNext =
-  { kind: 'wait'; seconds: number } | { kind: 'notice'; resolvedAt: number } | { kind: 'done' };
-
 function monthsBefore(when: Date, months: number): Date {
   const shifted = new Date(when);
   shifted.setUTCMonth(shifted.getUTCMonth() - months);
   return shifted;
-}
-
-function monthsAfter(when: Date, months: number): Date {
-  return monthsBefore(when, -months);
-}
-
-const waitUntil = (due: number, now: Date): SupportRequestNext => ({
-  kind: 'wait',
-  seconds: Math.max(1, Math.ceil((due - now.getTime()) / 1000)),
-});
-
-/**
- * Does whatever is due on the request as of `now`, and says what comes next. A resolved request waits for day 5, asks for the
- * notice unless it went out, was given up on for this resolution (`noticeSkippedFor`, the resolution's instant) or the request
- * has already lapsed, waits for day 7, and closes; a closed one waits twelve months from its close and is anonymised. Anything else, an anonymised row included, ends the run.
- */
-export async function advanceSupportRequest(
-  requestId: string,
-  noticeSkippedFor: number | null,
-  now: Date = new Date(),
-): Promise<SupportRequestNext> {
-  let row: SupportRequestRow | undefined = await findOneById(supportRequests, requestId);
-  if (!row) return { kind: 'done' };
-
-  if (row.status === 'resolved' && row.resolvedAt) {
-    const resolvedAt = row.resolvedAt.getTime();
-    const noticeAt = resolvedAt + NOTICE_AFTER_DAYS * DAY_MS;
-    const closeAt = resolvedAt + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS;
-    if (now.getTime() < noticeAt) return waitUntil(noticeAt, now);
-    if (!row.closingNoticeSentAt && noticeSkippedFor !== resolvedAt && now.getTime() < closeAt) {
-      return { kind: 'notice', resolvedAt };
-    }
-    if (now.getTime() < closeAt) return waitUntil(closeAt, now);
-    const cutoff = new Date(now.getTime() - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
-    const [closed] = await withAudit(SYSTEM, (write) =>
-      write.closeIdleResolvedSupportRequests(cutoff, requestId),
-    );
-    row = closed ?? (await findOneById(supportRequests, requestId));
-    if (!row) return { kind: 'done' };
-  }
-
-  if (row.status !== 'closed' || !row.closedAt || row.createdBy === SYSTEM_ACTOR_ID) {
-    return { kind: 'done' };
-  }
-  const anonymiseAt = monthsAfter(row.closedAt, ANONYMISE_AFTER_MONTHS).getTime();
-  if (now.getTime() < anonymiseAt) return waitUntil(anonymiseAt, now);
-  await withAudit(SYSTEM, (write) =>
-    write.anonymiseClosedSupportRequests(monthsBefore(now, ANONYMISE_AFTER_MONTHS), requestId),
-  );
-  return { kind: 'done' };
 }
 
 /**
@@ -126,18 +81,72 @@ export async function sendClosingNotice(
 }
 
 /**
- * The fallback for a lost run: closes every resolved request whose seven days have passed, as of the day they passed, then
- * anonymises every request closed twelve months or more before `now`. Sends no notice. Returns how many of each.
+ * One page of the ids due for `stage` as of `now` (milliseconds), in id order after `after` and at most
+ * `RETENTION_PAGE_SIZE`. Pages are read by id, so a batch changing rows while the next page is read moves no row past the cursor.
  */
-export async function sweepSupportRetention(
-  now: Date = new Date(),
-): Promise<{ closed: number; anonymised: number }> {
-  return withAudit(SYSTEM, async (write) => {
-    const cutoff = new Date(now.getTime() - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
-    const closed = await write.closeIdleResolvedSupportRequests(cutoff);
-    const anonymised = await write.anonymiseClosedSupportRequests(
-      monthsBefore(now, ANONYMISE_AFTER_MONTHS),
-    );
-    return { closed: closed.length, anonymised: anonymised.length };
-  });
+export function findRetentionDue(
+  stage: RetentionStage,
+  now: number,
+  after: string | null,
+): Promise<string[]> {
+  const lapsedBy = new Date(now - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+  switch (stage) {
+    case 'notice':
+      return findClosingNoticesDue(
+        new Date(now - NOTICE_AFTER_DAYS * DAY_MS),
+        lapsedBy,
+        after,
+        RETENTION_PAGE_SIZE,
+      );
+    case 'close':
+      return findSupportRequestsDueToClose(lapsedBy, after, RETENTION_PAGE_SIZE);
+    case 'anonymise':
+      return findSupportRequestsDueToAnonymise(
+        monthsBefore(new Date(now), ANONYMISE_AFTER_MONTHS),
+        after,
+        RETENTION_PAGE_SIZE,
+      );
+  }
+}
+
+/**
+ * Takes one page of requests through its stage as of `batch.now` and returns how many it changed. The notice batch sends each
+ * notice still owed, and when the transport refused any it throws once it has tried them all, so a retry of the batch sends
+ * only those, the rest being stamped. The close and anonymise batches are one guarded write each.
+ *
+ * @throws {MailNotSent} the transport refused at least one notice of the page.
+ */
+export async function runRetentionBatch(batch: RetentionBatch): Promise<number> {
+  if (batch.ids.length === 0) return 0;
+  const now = new Date(batch.now);
+  switch (batch.kind) {
+    case 'notice': {
+      let noticed = 0;
+      let refused: MailNotSent | null = null;
+      for (const requestId of batch.ids) {
+        try {
+          if (await sendClosingNotice(requestId, batch.origin, now)) noticed += 1;
+        } catch (error) {
+          if (!(error instanceof MailNotSent)) throw error;
+          refused = error;
+        }
+      }
+      if (refused) throw refused;
+      return noticed;
+    }
+    case 'close': {
+      const cutoff = new Date(batch.now - RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+      const closed = await withAudit(SYSTEM, (write) =>
+        write.closeIdleResolvedSupportRequests(cutoff, batch.ids),
+      );
+      return closed.length;
+    }
+    case 'anonymise': {
+      const cutoff = monthsBefore(now, ANONYMISE_AFTER_MONTHS);
+      const anonymised = await withAudit(SYSTEM, (write) =>
+        write.anonymiseClosedSupportRequests(cutoff, batch.ids),
+      );
+      return anonymised.length;
+    }
+  }
 }

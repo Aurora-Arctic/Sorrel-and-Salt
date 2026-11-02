@@ -12,7 +12,7 @@ import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { supportStatusStep } from '@/modules/support/jobs/support-status-mail-steps';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { supportNotifier } from '@/lib/support-mail';
-import { closingNoticeStep } from '@/modules/support/jobs/support-lifecycle-steps';
+import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { replyNoticeStep } from '@/modules/support/jobs/support-reply-notice-steps';
 import { C, E, asUser } from '../../../support/as-user';
@@ -28,8 +28,8 @@ vi.mock('@/lib/mail', () => ({
   },
 }));
 
-// The reply notice and the closing-soon notice are sent by their jobs' steps, through the transport itself. The jobs are not
-// run here: a test calls the step, as the run would.
+// The reply notice and the closing-soon notice are sent by jobs, through the transport itself. The jobs are not run here: a test
+// calls the reply notice's step, or the daily support-retention job's notice batch step, as the runs would.
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));
@@ -196,7 +196,14 @@ describe('the rendered mails', () => {
     const reply = await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
     expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
     await resolveSupportRequest(asUser(E), request.id, notifier);
-    expect(await closingNoticeStep(request.id, 'http://localhost:8000')).toBe(true);
+    expect(
+      await retentionBatchStep({
+        kind: 'notice',
+        ids: [request.id],
+        now: Date.now(),
+        origin: 'http://localhost:8000',
+      }),
+    ).toBe(1);
 
     expect(sent).toHaveLength(4);
     for (const message of sent) {
@@ -219,7 +226,14 @@ describe('the rendered mails', () => {
     );
     expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
     await resolveSupportRequest(asUser(E), row!.id as string, notifier);
-    expect(await closingNoticeStep(row!.id as string, 'http://localhost:8000')).toBe(true);
+    expect(
+      await retentionBatchStep({
+        kind: 'notice',
+        ids: [row!.id as string],
+        now: Date.now(),
+        origin: 'http://localhost:8000',
+      }),
+    ).toBe(1);
 
     // received, replied, resolved, closing soon
     expect(sent).toHaveLength(4);

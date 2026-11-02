@@ -43,7 +43,7 @@ describe('resolveMySupportRequest', () => {
     await waitOn(request.id);
     expect((await row(request.id)).status).toBe('waiting_on_sender');
 
-    const resolved = await resolveMySupportRequest(asUser(C), request.id, mail);
+    const resolved = await resolveMySupportRequest(asUser(C), request.id);
 
     expect(resolved).toMatchObject({ status: 'resolved', resolvedBy: C.id });
     expect(resolved.resolvedAt).toBeInstanceOf(Date);
@@ -52,7 +52,7 @@ describe('resolveMySupportRequest', () => {
 
   it('resolves the sender’s own open request', async () => {
     const request = await sendAs(C);
-    expect((await resolveMySupportRequest(asUser(C), request.id, mail)).status).toBe('resolved');
+    expect((await resolveMySupportRequest(asUser(C), request.id)).status).toBe('resolved');
   });
 
   it('refuses another account’s request by direct id, which exists and is waiting', async () => {
@@ -62,10 +62,10 @@ describe('resolveMySupportRequest', () => {
     const before = await row(request.id);
     expect(before).toMatchObject({ status: 'waiting_on_sender', created_by: C.id });
 
-    expect(await failureOf(resolveMySupportRequest(asUser(D), request.id, mail))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(asUser(D), request.id))).toBeInstanceOf(
       NotFound,
     );
-    expect(await failureOf(resolveMySupportRequest(asUser(A), request.id, mail))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(asUser(A), request.id))).toBeInstanceOf(
       NotFound,
     );
     expect((await row(request.id)).status).toBe('waiting_on_sender');
@@ -75,13 +75,13 @@ describe('resolveMySupportRequest', () => {
   it('refuses a resolved or closed request with an explaining error', async () => {
     const resolved = await sendAs(C);
     await resolveSupportRequest(asUser(E), resolved.id, mail);
-    const failure = await failureOf(resolveMySupportRequest(asUser(C), resolved.id, mail));
+    const failure = await failureOf(resolveMySupportRequest(asUser(C), resolved.id));
     expect(failure).toBeInstanceOf(Forbidden);
     expect((failure as Error).message).toMatch(/open or waiting on sender/);
 
     const closed = await sendAs(C);
     await closeSupportRequest(asUser(E), closed.id);
-    expect(await failureOf(resolveMySupportRequest(asUser(C), closed.id, mail))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(asUser(C), closed.id))).toBeInstanceOf(
       Forbidden,
     );
     expect((await row(closed.id)).status).toBe('closed');
@@ -90,14 +90,14 @@ describe('resolveMySupportRequest', () => {
   it('refuses an unverified account', async () => {
     const request = await sendAs(C);
     const unverified = { ...asUser(C), emailUnverified: true as const };
-    expect(await failureOf(resolveMySupportRequest(unverified, request.id, mail))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(unverified, request.id))).toBeInstanceOf(
       Forbidden,
     );
   });
 
   it('lets the sender’s next message reopen it', async () => {
     const request = await sendAs(C);
-    await resolveMySupportRequest(asUser(C), request.id, mail);
+    await resolveMySupportRequest(asUser(C), request.id);
     expect((await sendSenderMessage(asUser(C), request.id, 'Still stuck.')).status).toBe('open');
   });
 });
@@ -147,7 +147,7 @@ describe('getMySupportCounts', () => {
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(2);
     await resolveSupportRequest(asUser(E), staffResolved.id, mail);
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(1);
-    await resolveMySupportRequest(asUser(C), selfResolved.id, mail);
+    await resolveMySupportRequest(asUser(C), selfResolved.id);
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(0);
   });
 

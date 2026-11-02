@@ -57,8 +57,11 @@ The mail jobs:
   support received and resolved mails, by the request's id. The step reads the
   sender's address from the request, or from the account that sent it, and
   sends no resolved mail for a request reopened since.
-- The support closing-soon notice and a staff reply's mail, each sent by its
-  request's or reply's own job.
+- The support closing-soon notice, sent by a batch run of the daily
+  support-retention job (`src/modules/support/jobs/support-retention-batch.ts`),
+  which Vercel Cron starts once a day; a refused notice fails the batch's step
+  once the page's others are sent, so the retry sends only that one.
+- A staff reply's mail, sent by the reply's own job.
 
 **Every mail has a job.** `send` (`src/lib/mail.ts`), which delivers once and
 never throws, is only what a job falls back to when `MAIL_TRANSPORT` is unset or
@@ -78,7 +81,7 @@ the run argument, then runs the step itself. Real retries are tested in the
 `workflow` project (`tests/workflows/secret-link-mail.test.ts`,
 `tests/workflows/invitation-mail.test.ts`,
 `tests/workflows/support-status-mail.test.ts`,
-`tests/workflows/support-lifecycle.test.ts`).
+`tests/workflows/support-retention.test.ts`).
 
 ## Templates: React Email (MB.66)
 
@@ -325,7 +328,7 @@ the owner reads them in the clients.
 | `src/emails/support-reply-notice.ts`              | `replyToSupportRequest`, through the reply's own job (`src/modules/support/jobs/support-reply-notice.ts`), whose step renders it from the rows with `supportReplyMessage` in `src/lib/support-job-mail.ts` and sets `support_replies.notice_sent_at`; the signed-out sender's `support-email-reply.ts` goes the same way            | A short notice that names the request (subject and heading read "Reply to your support request: <subject>", the subject cut at 80 characters) and a link that opens that request (`/account/support?request=<id>`); never the reply text (M15.1)                                                     |
 | `src/emails/support-received.ts`                  | `sendSupportRequest` and `sendSignedOutSupportRequest`, once the request is saved, through the `supportStatusMail` job (`kind: 'received'`), whose step renders it from the request with `supportStatusMessage` in `src/lib/support-job-mail.ts`                                                                                    | That the request arrived and will be answered within 5 working days, naming it (subject cut at 80 characters). A signed-in sender’s link opens the request (`/account/support?request=<id>`); a signed-out sender’s goes to `/support`, which needs no account. Never what the sender wrote (M15.45) |
 | `src/emails/support-resolved.ts`                  | `resolveSupportRequest`, once the move is saved, through the `supportStatusMail` job (`kind: 'resolved'`), which sends nothing if the request is no longer resolved when the step runs                                                                                                                                              | That the request is resolved, naming it. A signed-in sender is told a reply from them reopens it and that it closes by itself after seven days; a signed-out sender, who cannot reply to the request, is told to write again at `/support`. Never the thread or an internal note (M15.45)            |
-| `src/emails/support-closing-soon.ts`              | The request's job (`src/modules/support/jobs/support-lifecycle.ts`), on day five of a resolved request, rendered by `supportClosingNoticeMessage` in `src/lib/support-job-mail.ts` and sent by the job's own step, from the row as it stands then, which sets `closing_notice_sent_at`                                              | How long is left until the resolved request closes, worked out when it sends, naming it, with the same links as the resolved mail. A signed-in sender is told a reply keeps it open (M15.45)                                                                                                         |
+| `src/emails/support-closing-soon.ts`              | The daily support-retention job's batch (`src/modules/support/jobs/support-retention-batch.ts`), on day five or six of a resolved request, rendered by `supportClosingNoticeMessage` in `src/lib/support-job-mail.ts` and sent by the batch's step, from the row as it stands then, which sets `closing_notice_sent_at`             | How long is left until the resolved request closes, worked out when it sends, naming it, with the same links as the resolved mail. A signed-in sender is told a reply keeps it open (M15.45)                                                                                                         |
 
 The verification flow itself is
 [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "First-party verification"

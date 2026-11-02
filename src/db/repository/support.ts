@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, lte, ne, not, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, lte, ne, not, or, sql, type SQL } from 'drizzle-orm';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
@@ -349,6 +349,84 @@ export function findReplyAwaitingNotice(id: string) {
   );
 }
 
+/** One page of request ids matching `where`, in id order after `after`, at most `limit`: the retention job's stage reads. */
+async function retentionPage(
+  where: SQL | undefined,
+  after: string | null,
+  limit: number,
+): Promise<string[]> {
+  const rows = await selectFrom(
+    supportRequests,
+    and(
+      notSoftDeleted(supportRequests),
+      where,
+      after === null ? undefined : gt(supportRequests.id, after),
+    ),
+    {
+      aggregate: { id: sql<string>`${supportRequests.id}` },
+      over: {},
+      orderBy: [supportRequests.id],
+      limit,
+    },
+  );
+  return rows.map((row) => row.id);
+}
+
+/**
+ * A page of ids of resolved requests still owed their closing-soon notice: resolved at or before `dueBy` and after
+ * `lapsedBy`, so inside the last days before the close, with none sent yet. In id order after `after`, at most `limit`.
+ */
+export function findClosingNoticesDue(
+  dueBy: Date,
+  lapsedBy: Date,
+  after: string | null,
+  limit: number,
+): Promise<string[]> {
+  return retentionPage(
+    and(
+      eq(supportRequests.status, 'resolved'),
+      isNull(supportRequests.closingNoticeSentAt),
+      lte(supportRequests.resolvedAt, dueBy),
+      gt(supportRequests.resolvedAt, lapsedBy),
+    ),
+    after,
+    limit,
+  );
+}
+
+/** A page of ids of resolved requests resolved at or before `cutoff`, so due to close. In id order after `after`, at most `limit`. */
+export function findSupportRequestsDueToClose(
+  cutoff: Date,
+  after: string | null,
+  limit: number,
+): Promise<string[]> {
+  return retentionPage(
+    and(eq(supportRequests.status, 'resolved'), lte(supportRequests.resolvedAt, cutoff)),
+    after,
+    limit,
+  );
+}
+
+/**
+ * A page of ids of requests closed at or before `cutoff` and not yet anonymised, so due to be. In id order after `after`,
+ * at most `limit`.
+ */
+export function findSupportRequestsDueToAnonymise(
+  cutoff: Date,
+  after: string | null,
+  limit: number,
+): Promise<string[]> {
+  return retentionPage(
+    and(
+      eq(supportRequests.status, 'closed'),
+      lte(supportRequests.closedAt, cutoff),
+      ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
+    ),
+    after,
+    limit,
+  );
+}
+
 /** A time-out by id, for an admin to lift. */
 export function findSupportTimeoutById(id: string) {
   return selectOne(
@@ -516,7 +594,8 @@ export function supportWrites({
         ),
       ),
     // Closed as of the day it lapsed, the date readers already show, so a late close does not put off the anonymising.
-    closeIdleResolvedSupportRequests: (cutoff, id) =>
+    // The status and cutoff are read again here, so an id reopened since the page was read is left alone.
+    closeIdleResolvedSupportRequests: (cutoff, ids) =>
       update(
         supportRequests,
         {
@@ -524,7 +603,7 @@ export function supportWrites({
           closedAt: sql`${supportRequests.resolvedAt} + make_interval(days => ${RESOLVED_CLOSES_AFTER_DAYS})`,
         },
         and(
-          id === undefined ? undefined : eq(supportRequests.id, id),
+          inArray(supportRequests.id, [...ids]),
           eq(supportRequests.status, 'resolved'),
           lte(supportRequests.resolvedAt, cutoff),
         ),
@@ -548,7 +627,7 @@ export function supportWrites({
     // The sender leaves the row in one statement, so the one-sender CHECK never sees an address without the signed-out
     // sender: `created_by` passes to the System account, which no request is otherwise created by, and which marks the row done.
     // The audit writer strips `created_by` from what it sets, so this one statement goes to the transaction itself.
-    anonymiseClosedSupportRequests: async (cutoff, id) => {
+    anonymiseClosedSupportRequests: async (cutoff, ids) => {
       const rows = await tx
         .update(supportRequests)
         .set({
@@ -563,7 +642,7 @@ export function supportWrites({
         .where(
           and(
             notSoftDeleted(supportRequests),
-            id === undefined ? undefined : eq(supportRequests.id, id),
+            inArray(supportRequests.id, [...ids]),
             eq(supportRequests.status, 'closed'),
             lte(supportRequests.closedAt, cutoff),
             ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),

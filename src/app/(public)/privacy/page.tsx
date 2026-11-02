@@ -332,10 +332,10 @@ export default function PrivacyPolicyPage() {
       </p>
       <p>
         A support request closes by itself seven days after it is resolved. Twelve months after it
-        closes, it is anonymised: its subject is replaced with “Anonymised support request.”, its
-        message, page address and the text of every reply are emptied, and the email and account it
-        was sent from are removed from it. Its topic, status and dates are kept, so the site can
-        still count requests by topic and month.
+        closes, a job that runs once a day anonymises it, within a day: its subject is replaced with
+        “Anonymised support request.”, its message, page address and the text of every reply are
+        emptied, and the email and account it was sent from are removed from it. Its topic, status
+        and dates are kept, so the site can still count requests by topic and month.
       </p>
       <p>Some rows are removed outright:</p>
       <ul>
