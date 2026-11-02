@@ -975,11 +975,20 @@
     }
   }
 
-  // Turned over as the dropdown chevrons are (MenuButton, CollapsibleSection): the shared flip and its
-  // transition, which carries the reduced-motion guard itself.
+  // Turned over on the dropdown chevrons' timing (MenuButton, CollapsibleSection). Not `chevron-flip`:
+  // under `body` its `.is-descending &` puts the class before `body`, so it never matches; and a flat
+  // flip, as `rotateX` on an SVG part is not drawn in every browser.
   .data-table__sort-turn {
     transform-origin: 12px 12px;
-    @include chevron-flip('.is-descending');
+    @include theme-transition(transform);
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .is-descending > .data-table__sort-turn {
+    transform: scaleY(-1);
   }
 
   .data-table__sort-head {
