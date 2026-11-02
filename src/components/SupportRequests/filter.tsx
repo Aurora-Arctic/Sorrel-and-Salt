@@ -63,6 +63,7 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
         all="All"
         options={ABOUT_OPTIONS}
         defaultValue={filter.about}
+        fit
         onChange={(about) =>
           apply(supportHref({ ...filter, errorCode: code, about: about as SupportAbout | '' }))
         }

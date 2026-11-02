@@ -20,6 +20,7 @@ export function ComboboxSelect({
   onBlur,
   choices,
   placeholder,
+  fit,
   required,
   inputRef,
   busy,
@@ -48,7 +49,12 @@ export function ComboboxSelect({
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
 
   return (
-    <div className={isOpen ? 'combobox is-open' : 'combobox'} ref={setControl}>
+    <div
+      className={['combobox', fit && 'combobox--fit', isOpen && 'is-open']
+        .filter(Boolean)
+        .join(' ')}
+      ref={setControl}
+    >
       {/* The control is the box itself: nothing is typed, so the whole of it
           is the one target, and it takes the focus. */}
       <div
@@ -93,6 +99,14 @@ export function ComboboxSelect({
             </span>
           ) : (
             <span className="combobox__value is-placeholder">{placeholder}</span>
+          )}
+          {/* Every label, unseen in the shown one's place, so the box is as wide as the longest. */}
+          {fit && (
+            <span className="combobox__sizer" aria-hidden="true">
+              {[placeholder, ...choices.map((choice) => choice.label)].map((text, index) => (
+                <span key={index}>{text}</span>
+              ))}
+            </span>
           )}
         </div>
         <div className="combobox__indicators">
