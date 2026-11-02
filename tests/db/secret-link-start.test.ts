@@ -1,18 +1,28 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
-import { PROVIDER_CREDENTIALS } from '../support/oauth';
+import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import { post, pwnedRange } from '../support/password';
 import type { Message } from '@/lib/types';
+import { placeholderEmail } from '@/modules/identity';
 import type { AuthInstance } from '../support/types';
 
-// Where Better Auth's endpoints hand a secret-link mail to its job: the run is started with ids and the auth base, and never
-// the address, the token or the link. The run itself is tests/workflows/secret-link-mail.test.ts.
+// Where Better Auth's endpoints hand a secret-link mail or an account notice to its job: the run is started with ids and an
+// origin, and never
+// the address, the token or the link. The secret-link run itself is tests/workflows/secret-link-mail.test.ts.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
+// What a job's step hands the transport, when a test runs the step as the run would.
+const delivered = vi.hoisted(() => [] as Message[]);
+vi.mock('@/lib/mail-transport', () => ({
+  deliver: async (message: Message) => {
+    delivered.push(message);
+    return true;
+  },
+}));
 const startJob = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => 'run-id'));
 vi.mock('@/lib/jobs', () => ({ startJob, jobTokenActive: async () => false }));
 vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
@@ -144,5 +154,97 @@ describe('a secret-link mail starts its job with ids alone', () => {
     expect(send.mock.calls[0]![0].to).toBe(OWNER);
     startJob.mockImplementation(async () => 'run-id');
     errors.mockRestore();
+  });
+});
+
+/** The account notice runs started so far: each run's one argument. */
+async function accountNoticeRuns(): Promise<Record<string, unknown>[]> {
+  const { accountNoticeMail } = await import('@/modules/identity/jobs/account-notice-mail');
+  return startJob.mock.calls
+    .filter(([job]) => job === accountNoticeMail)
+    .map(([, args]) => (args as [Record<string, unknown>])[0]);
+}
+
+/** The mail a run's step sends, built from the rows as they stand, or null when it sends none. */
+async function noticeFor(run: Record<string, unknown>): Promise<Message | null> {
+  const { accountNoticeStep } = await import('@/modules/identity/jobs/account-notice-mail-steps');
+  delivered.length = 0;
+  await accountNoticeStep(run as Parameters<typeof accountNoticeStep>[0]);
+  return delivered[0] ?? null;
+}
+
+describe('an account notice starts its job with ids alone', () => {
+  it('starts the account-exists mail for a sign-up at a held address with the holder id, and its step names the ways in', async () => {
+    await signUp();
+    startJob.mockClear();
+
+    await signUp();
+
+    const runs = await accountNoticeRuns();
+    expect(runs).toEqual([
+      { kind: 'account-exists', userId: await userId(), origin: expect.any(String) },
+    ]);
+    expect(JSON.stringify(runs)).not.toContain(DOMAIN);
+    const message = await noticeFor(runs[0]!);
+    expect(message!.to).toBe(OWNER);
+    expect(message!.text).toContain('/sign-in');
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('starts the password-changed mail for a change with the account id and how, and its step mails the account', async () => {
+    await signUp();
+    await asTouch(sql, (tx) => tx`update users set email_verified = true where email = ${OWNER}`);
+    const signedIn = await post(auth, '/sign-in/email', { email: OWNER, password: RIGHT });
+    expect(signedIn.status).toBe(200);
+    startJob.mockClear();
+
+    const changed = await post(
+      auth,
+      '/change-password',
+      { currentPassword: RIGHT, newPassword: WRONG },
+      cookieHeader(signedIn),
+    );
+    expect(changed.status, await changed.clone().text()).toBe(200);
+
+    const runs = await accountNoticeRuns();
+    expect(runs).toEqual([
+      {
+        kind: 'password-changed',
+        userId: await userId(),
+        origin: expect.any(String),
+        how: 'change',
+      },
+    ]);
+    expect(JSON.stringify(runs)).not.toContain(DOMAIN);
+    const message = await noticeFor(runs[0]!);
+    expect(message!.to).toBe(OWNER);
+    expect(message!.text).toContain('/forgot-password');
+  });
+
+  it('reads the address when it sends, so a notice for a placeholder address sends nothing', async () => {
+    await signUp();
+    const id = await userId();
+    // Precondition: with the row's real address, the step has a mail to send.
+    expect(
+      await noticeFor({
+        kind: 'password-changed',
+        userId: id,
+        origin: 'http://x.test',
+        how: 'set',
+      }),
+    ).not.toBeNull();
+    await asTouch(
+      sql,
+      (tx) => tx`update users set email = ${placeholderEmail('github', id)} where id = ${id}`,
+    );
+
+    const notice = await noticeFor({
+      kind: 'password-changed',
+      userId: id,
+      origin: 'http://x.test',
+      how: 'set',
+    });
+    await asTouch(sql, (tx) => tx`update users set email = ${OWNER} where id = ${id}`);
+    expect(notice).toBeNull();
   });
 });

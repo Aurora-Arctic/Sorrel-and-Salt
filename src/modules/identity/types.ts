@@ -198,4 +198,8 @@ export type SecretLink =
  */
 export type AccountNotice =
   /** Tells the address being left that a change to the row's pending address was asked for. */
-  { kind: 'change-requested'; userId: string; origin: string };
+  | { kind: 'change-requested'; userId: string; origin: string }
+  /** Tells the account a sign-up arrived for its address, in place of the second account that is not made. */
+  | { kind: 'account-exists'; userId: string; origin: string }
+  /** Tells the account its password was just replaced, and `how`. */
+  | { kind: 'password-changed'; userId: string; origin: string; how: 'reset' | 'change' | 'set' };

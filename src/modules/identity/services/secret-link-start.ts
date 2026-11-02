@@ -14,6 +14,6 @@ import type { SecretLink } from '../types';
 export async function scheduleSecretLinkMail(link: SecretLink): Promise<void> {
   await startMailJob(secretLinkMail, [link], link.kind, async () => {
     const message = await secretLinkMessage(link);
-    if (message) await send(message, { carriesSecret: true });
+    if (message) await send(message);
   });
 }

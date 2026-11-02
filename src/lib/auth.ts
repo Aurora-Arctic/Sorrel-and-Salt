@@ -56,8 +56,6 @@ import { breachedPasswordCheck } from './breached-password';
 import { HELD_PASSWORD_FIELDS } from './held-password-paths';
 import { isFreshSession } from './session-fresh';
 import { primaryAdminEmail } from './primary-admin';
-import { accountExistsMessage } from '../emails/account-exists';
-import { mailPasswordChanged } from './password-notice';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
@@ -78,6 +76,7 @@ import {
   isPasswordSignInLocked,
   recordFailedPasswordSignIn,
   scheduleSecretLinkMail,
+  scheduleAccountNotice,
 } from '@/modules/identity';
 import type { ProviderId } from './types';
 
@@ -356,20 +355,15 @@ const PASSWORD_BREACHED_MESSAGE =
 
 /**
  * Mails the holder of an address a sign-up arrived with, in place of the second account Better Auth does not
- * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken.
+ * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken. The job's step reads the
+ * address and the ways in from the rows, so the run carries the account id and the origin alone.
  */
-async function mailExistingHolder({ user }: { user: { id: string; email: string } }) {
-  if (isPlaceholderEmail(user.email)) return;
-  const ctx = getCurrentAuthEndpointContext();
-  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
-  await send(
-    await accountExistsMessage({
-      to: user.email,
-      url: `${new URL(ctx.context.baseURL).origin}/sign-in`,
-      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
-      hasPassword: accounts.some((account) => account.providerId === 'credential'),
-    }),
-  );
+async function mailExistingHolder({ user }: { user: { id: string } }) {
+  await scheduleAccountNotice({
+    kind: 'account-exists',
+    userId: user.id,
+    origin: endpointOrigin(),
+  });
 }
 
 /** How long a reset link lasts. Short, because Better Auth stores the reset token unhashed in `verifications`. */
@@ -493,8 +487,10 @@ async function mailLockNotice(ctx: HookContext, userId: string, length: number) 
 async function mailChangeNotice(ctx: HookContext) {
   const returned = ctx.context.returned;
   if (isAPIError(returned) || returned instanceof Response) return;
-  const email = ctx.context.session?.user.email;
-  if (email) await mailPasswordChanged(email, new URL(ctx.context.baseURL).origin, 'change');
+  const userId = ctx.context.session?.user.id;
+  if (!userId) return;
+  const origin = new URL(ctx.context.baseURL).origin;
+  await scheduleAccountNotice({ kind: 'password-changed', userId, origin, how: 'change' });
 }
 
 function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
@@ -513,7 +509,12 @@ function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
     sendResetPassword: mailResetLink,
     onPasswordReset: async ({ user }) => {
       await clearFailedPasswordSignIns(user.id);
-      await mailPasswordChanged(user.email, endpointOrigin(), 'reset');
+      await scheduleAccountNotice({
+        kind: 'password-changed',
+        userId: user.id,
+        origin: endpointOrigin(),
+        how: 'reset',
+      });
     },
   };
 }
@@ -572,6 +573,7 @@ async function countPasswordSignIn(ctx: HookContext) {
 }
 
 // The change link's token names the address being left and the one taken; the left one is told once the swap is written.
+// Sent once, with no job: after the swap no row holds the address being left, so a run would have to carry it.
 async function noticeCompletedChange(request: Request | undefined): Promise<void> {
   const claims = tokenClaims(request && new URL(request.url).searchParams.get('token'));
   if (!request || !claims?.email || !claims.updateTo) return;

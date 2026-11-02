@@ -1,5 +1,6 @@
 import 'server-only';
-import { findOneById } from '../../../db/repository';
+import { findOneById, findOwnProviderIds } from '../../../db/repository';
+import { accountExistsNotice, passwordChangedNotice } from '../../../lib/account-notice-mail';
 import { deliver } from '../../../lib/mail-transport';
 import { emailChangeNoticeMessage } from '../../../lib/email-change-notice';
 import { users } from '../schema/users';
@@ -13,6 +14,12 @@ import type { AccountNotice } from '../types';
 export async function accountNoticeMessage(notice: AccountNotice): Promise<Message | null> {
   const user = await findOneById(users, notice.userId);
   if (!user || isPlaceholderEmail(user.email)) return null;
+  if (notice.kind === 'account-exists') {
+    return accountExistsNotice(notice.origin, user.email, await findOwnProviderIds(user.id));
+  }
+  if (notice.kind === 'password-changed') {
+    return passwordChangedNotice(notice.origin, user.email, notice.how);
+  }
   if (!user.pendingEmail) return null;
   return emailChangeNoticeMessage(
     notice.origin,
