@@ -19,4 +19,8 @@ export interface AccountMenuProps {
    * avatar wears a dot, a count beside Your Account links to the Invitations section with a tip below it, and the button says how many to a screen reader. Defaults to 0.
    */
   pendingInvitations?: number;
+  /** Open support requests assigned to the viewer, staff only. Above 0 the avatar wears a dot and the Admin row shows the count, linking to those requests. Defaults to 0. */
+  assignedSupport?: number;
+  /** The viewer's own support requests waiting on them. Above 0 the avatar wears a dot and the Support row shows the count, linking to the list. Defaults to 0. */
+  waitingSupport?: number;
 }

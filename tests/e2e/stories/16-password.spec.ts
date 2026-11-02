@@ -64,6 +64,9 @@ test(
     await page.goto(`${link.pathname}${link.search}`);
     await expect(page).toHaveURL('/account/email?verified&next=%2Fcoven');
     await page.getByRole('link', { name: 'Continue', exact: true }).click();
+    // A new account has not agreed to the terms, so the page it asked for sends it to the acceptance page first.
+    await expect(page).toHaveURL('/account/terms?next=%2Fcoven');
+    await page.getByRole('button', { name: 'Agree & Continue' }).click();
     // /coven sends a member into their first coven, which for a new account is the demo coven.
     await expect(page).toHaveURL(`/coven/${slugify(DEMO_COVEN_NAME)}`);
 

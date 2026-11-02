@@ -1,7 +1,7 @@
 @use '../../scss/mixins' as *;
 
 // The story's row of phases. A list that is not a bulleted list, so
-// `list-reset` clears typography-base's ◆ on each item as well as the
+// `list-reset` clears typography-base's ✦ on each item as well as the
 // marker and indent; inline styles cannot reach the item's `::before`.
 .moon-phase-icon-story {
   @include list-reset;

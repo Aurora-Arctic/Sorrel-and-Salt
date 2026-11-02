@@ -457,3 +457,47 @@ test(
     expect(paper.spread).toBeGreaterThan(paper.reach);
   },
 );
+
+// The pane's top row is at the window's top edge, where a phone's camera cutout is. A tip beside the eye is level with the
+// cutout's band; one below the eye is clear of it. A headless browser has no cutout, so this asserts the tip's place, not the inset.
+test(
+  'the eye tip opens below the eye, inside the phone window',
+  { tag: '@story-86' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Tip', 'preview-eye-tip.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.A, 'complete'),
+    );
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'wakeLock', {
+        configurable: true,
+        value: {
+          request: () =>
+            Promise.resolve({
+              addEventListener: () => undefined,
+              release: () => Promise.resolve(),
+            }),
+        },
+      });
+    });
+    await page.setViewportSize({ width: 390, height: 780 });
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    await page.getByRole('button', { name: /^Preview Spell/ }).click();
+    const pane = page.getByRole('dialog', { name: 'Fixture Working' });
+    const awake = pane.getByRole('button', { name: 'Screen Awake' });
+    await awake.focus();
+    const tip = pane.getByRole('tooltip', { includeHidden: true });
+    await expect(tip).toBeVisible();
+    const button = await awake.boundingBox();
+    const bubble = await tip.boundingBox();
+    const viewport = page.viewportSize();
+    if (!button || !bubble || !viewport) throw new Error('nothing to measure');
+    expect(bubble.y).toBeGreaterThanOrEqual(button.y + button.height);
+    expect(bubble.x).toBeGreaterThanOrEqual(0);
+    expect(bubble.x + bubble.width).toBeLessThanOrEqual(viewport.width);
+  },
+);

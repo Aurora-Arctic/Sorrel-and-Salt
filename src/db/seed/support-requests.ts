@@ -34,6 +34,14 @@ interface SeedRequest {
   resolved?: { by: string; daysAgo: number };
   /** Days before the first run: negative is in the past. */
   daysAgo: number;
+  /** Waiting on the sender: the latest public reply is staff's and asks them something. */
+  waiting?: boolean;
+  /** Closed, by staff (`by`) or by the idle job (no `by`), and how many days before the first run. */
+  closed?: { by?: string; daysAgo: number };
+  /** The closed request this one follows up. */
+  linkedFrom?: string;
+  /** Days before the first run that staff last replied or closed, when the lifecycle sets it. */
+  staffActivityDaysAgo?: number;
 }
 
 const SUPPORT_REQUESTS: readonly SeedRequest[] = [
@@ -163,6 +171,73 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     errorReference: '994764113',
     daysAgo: 1.1,
   },
+  {
+    id: '00000000-0000-0000-0005-000000000012',
+    sender: A.id,
+    about: 'question',
+    subject: 'Can I move a jar to another coven?',
+    message:
+      'I keep a jar of dried mugwort in one coven and would like it in another one I belong to. Can I move it across?',
+    path: '/coven/whitethorn-coven/ingredients',
+    assignedTo: E.id,
+    waiting: true,
+    staffActivityDaysAgo: 2.6,
+    daysAgo: 3.3,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000013',
+    sender: E.id,
+    about: 'bug',
+    subject: 'The members page lists a role I do not hold',
+    message:
+      'The members page of the demo coven lists me as a member, but I am an admin and expected an owner seat. Is my role wrong, or is the page?',
+    path: '/coven/whitethorn-coven/members',
+    assignedTo: F.id,
+    curatorVisible: true,
+    waiting: true,
+    staffActivityDaysAgo: 4.4,
+    daysAgo: 5.7,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000014',
+    sender: F.id,
+    about: 'question',
+    subject: 'Where do I see which sources an entry cites?',
+    message:
+      'I want to check the sources behind a compendium entry before I edit it. Is there a page that lists them?',
+    path: '/compendium',
+    assignedTo: E.id,
+    resolved: { by: E.id, daysAgo: 17.4 },
+    closed: { daysAgo: 10.2 },
+    staffActivityDaysAgo: 17.4,
+    daysAgo: 20.8,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000015',
+    sender: D.id,
+    about: 'bug',
+    subject: 'Spell search ignores words in the steps',
+    message:
+      'I searched my grimoire for a word that is in the steps of one of my spells and nothing came up. Searching by its name works.',
+    path: '/coven/ninebark-coven/grimoire',
+    assignedTo: E.id,
+    resolved: { by: E.id, daysAgo: 21.3 },
+    closed: { by: E.id, daysAgo: 14.6 },
+    staffActivityDaysAgo: 14.6,
+    daysAgo: 24.2,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000016',
+    sender: D.id,
+    about: 'bug',
+    subject: 'Spell search ignores words in the steps',
+    message:
+      'Writing again about this: I searched for "thyme" this morning and a spell with thyme in its third step still did not appear.',
+    path: '/coven/ninebark-coven/grimoire',
+    assignedTo: E.id,
+    linkedFrom: '00000000-0000-0000-0005-000000000015',
+    daysAgo: 2.2,
+  },
 ];
 
 interface SeedReply {
@@ -174,7 +249,9 @@ interface SeedReply {
   daysAgo: number;
 }
 
-const [, , , R4, R5, R6, R7, , , R10] = SUPPORT_REQUESTS.map((request) => request.id);
+const [, , , R4, R5, R6, R7, , , R10, , R12, R13, R14, R15] = SUPPORT_REQUESTS.map(
+  (request) => request.id,
+);
 
 const SUPPORT_REPLIES: readonly SeedReply[] = [
   {
@@ -218,6 +295,41 @@ const SUPPORT_REPLIES: readonly SeedReply[] = [
     by: E.id,
     body: 'No. A private spell can only be read by the person who wrote it, whatever role the others hold.',
     daysAgo: 0.3,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000107',
+    requestId: R12,
+    by: E.id,
+    body: 'Not yet, but I can move the stock for you. Which coven should the jar go to, and how much of it is left?',
+    daysAgo: 2.6,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000108',
+    requestId: R13,
+    by: F.id,
+    body: 'I can see the seat you hold on my side. Could you tell me which action you tried, and what the page said when you did?',
+    daysAgo: 4.4,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000109',
+    requestId: R14,
+    by: E.id,
+    body: 'Open the entry and look under Sources: it lists everything the entry cites. Tell us if that is not what you wanted.',
+    daysAgo: 17.4,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000110',
+    requestId: R15,
+    by: E.id,
+    body: 'Thank you. I have opened an issue for this. Search reads names only for now, and I will write when that changes.',
+    daysAgo: 23.5,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000111',
+    requestId: R15,
+    by: E.id,
+    body: 'I am closing this while the issue is open. Write to us again if it is still a problem for you.',
+    daysAgo: 14.6,
   },
 ];
 
@@ -338,12 +450,23 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
       path: r.path,
       errorCode: r.errorCode ?? null,
       errorReference: r.errorReference ?? null,
-      status: r.resolved ? ('resolved' as const) : ('open' as const),
+      status: r.closed
+        ? ('closed' as const)
+        : r.waiting
+          ? ('waiting_on_sender' as const)
+          : r.resolved
+            ? ('resolved' as const)
+            : ('open' as const),
       assignedTo: r.assignedTo ?? null,
       curatorVisible: r.curatorVisible ?? false,
       issueUrl: r.issueNumber ? `${ISSUES}/${r.issueNumber}` : null,
       resolvedBy: r.resolved?.by ?? null,
       resolvedAt: r.resolved ? ago(r.resolved.daysAgo) : null,
+      lastSenderActivityAt: ago(r.daysAgo),
+      lastStaffActivityAt:
+        r.staffActivityDaysAgo === undefined ? null : ago(r.staffActivityDaysAgo),
+      closedAt: r.closed ? ago(r.closed.daysAgo) : null,
+      linkedFrom: r.linkedFrom ?? null,
     }),
     (r) => ago(r.daysAgo),
   );

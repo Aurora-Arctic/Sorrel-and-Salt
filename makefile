@@ -11,7 +11,7 @@
 	test-stories test-debug test-ui e2e-ui e2e-trace \
 	db-generate db-migrate db-seed db-drop db-reset db-reset-demo db-studio db-psql codegen \
 	workshop workshop-build \
-	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
+	docker-build docker-up docker-workshop docker-studio docker-jobs docker-all docker-e2e docker-down docker-rebuild docker-logs \
 	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down lighthouse-up lighthouse-down docker-codegen \
 	act-image act-cache-checkout act-check act-test
 
@@ -146,9 +146,9 @@ workshop-build:
 # `audit` has nothing to build, and is listed on `docker-build` all the same
 # so the three stay one list.
 
-## Build the local dev images (app + workshop + studio + e2e)
+## Build the local dev images (app + workshop + studio + jobs + e2e)
 docker-build:
-	$(COMPOSE) --profile workshop --profile studio --profile e2e --profile audit build
+	$(COMPOSE) --profile workshop --profile studio --profile jobs --profile e2e --profile audit build
 
 ## Start the app (8000) and Postgres detached, migrating and seeding first
 docker-up:
@@ -162,6 +162,10 @@ docker-workshop:
 docker-studio:
 	$(COMPOSE) --profile studio up -d
 
+## Also start the job-run viewer on 3456 (compose profile: jobs)
+docker-jobs:
+	$(COMPOSE) --profile jobs up -d
+
 # `e2e` itself is a one-shot suite run, not a service to leave up.
 ## Start every long-running service: app, Postgres, workshop, studio, browser server
 docker-all:
@@ -171,13 +175,13 @@ docker-all:
 docker-e2e:
 	$(COMPOSE) --profile e2e run --rm e2e
 
-## Stop and remove the local stack, workshop/e2e/audit profiles included (named volumes kept)
+## Stop and remove the local stack, workshop/studio/jobs/e2e/audit profiles included (named volumes kept)
 docker-down:
-	$(COMPOSE) --profile workshop --profile studio --profile e2e --profile audit down
+	$(COMPOSE) --profile workshop --profile studio --profile jobs --profile e2e --profile audit down
 
 ## Tear down including volumes, then rebuild and start the app
 docker-rebuild:
-	$(COMPOSE) --profile workshop --profile studio --profile e2e --profile audit down -v && $(COMPOSE) up --build -d
+	$(COMPOSE) --profile workshop --profile studio --profile jobs --profile e2e --profile audit down -v && $(COMPOSE) up --build -d
 
 ## Follow the local stack logs
 docker-logs:

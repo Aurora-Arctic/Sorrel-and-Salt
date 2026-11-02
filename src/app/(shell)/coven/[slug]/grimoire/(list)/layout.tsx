@@ -20,6 +20,7 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
       filtered: true,
       shape: 'cards',
       density: 'compact',
+      card: 'spell',
     },
     {
       href: `/coven/${slug}/grimoire/drafts` as Route,
@@ -27,6 +28,7 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
       filtered: true,
       shape: 'cards',
       density: 'compact',
+      card: 'spell',
     },
   ];
   const action = rolePermits(membership.role, { spell: ['create'] }) ? (

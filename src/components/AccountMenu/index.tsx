@@ -9,6 +9,7 @@ import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
 import { ChevronIcon } from '../IconTip/icons';
 import SupportLink from '../SupportLink';
+import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import SignOutButton from './sign-out-button';
 import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
@@ -21,20 +22,73 @@ import './index.scss';
 // The account page: its sections beside the jump menu.
 const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
 
+// The most a menu count shows; a larger one reads "99+".
+const COUNT_CAP = 99;
+
+const ADMIN_ASSIGNED_PATH = '/admin/support?view=mine';
+
+function countText(count: number, what: string): string {
+  return count > COUNT_CAP
+    ? `more than ${COUNT_CAP} requests ${what}`
+    : `${count} ${count === 1 ? 'request' : 'requests'} ${what}`;
+}
+
+// The count as a circle shows it, and its tip: "3 Support Requests Assigned to You".
+function supportTip(count: number, tipWhat: string): { shown: number | string; tip: string } {
+  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
+  return { shown, tip: `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}` };
+}
+
+// The red circle inside a row's link, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
+function MenuCount({
+  count,
+  what,
+  tipWhat,
+}: {
+  count: number;
+  what: string;
+  /** The tip's words after the count, in title case: "Assigned to You". */
+  tipWhat: string;
+}): ReactElement {
+  const { shown, tip } = supportTip(count, tipWhat);
+  return (
+    <>
+      <span className="account-menu__badge-tip">
+        <IconTip tip={tip} placement="below">
+          <span className="account-menu__badge" aria-hidden="true">
+            {shown}
+          </span>
+        </IconTip>
+      </span>
+      <span className="visually-hidden">, {countText(count, what)}</span>
+    </>
+  );
+}
+
 const AccountMenu = ({
   name,
   verified,
   links = [],
   pendingInvitations = 0,
+  assignedSupport = 0,
+  waitingSupport = 0,
 }: AccountMenuProps): ReactElement => {
   const [open, setOpen] = useState(false);
   // An unverified account cannot reach the account page the count leads to.
   const pending = verified && pendingInvitations > 0;
+  const staffCount = verified ? assignedSupport : 0;
+  const senderCount = verified ? waitingSupport : 0;
+  const dotted = pending || staffCount > 0 || senderCount > 0;
   const invitations = `${pendingInvitations} Coven ${pendingInvitations === 1 ? 'Invitation' : 'Invitations'}`;
   // The dot is drawn only; the button's name carries the count as hidden text that repeats the visible
   // name, whole, so a browser joins it with no stray space. Not an `aria-label`, which must repeat every
   // visible word, the avatar's initials among them (axe's label-content-name-mismatch).
-  const fullName = pending ? `${name}, ${invitations.toLowerCase()}` : undefined;
+  const notes = [
+    pending ? invitations.toLowerCase() : null,
+    staffCount > 0 ? countText(staffCount, 'assigned to you') : null,
+    senderCount > 0 ? countText(senderCount, 'waiting on you') : null,
+  ].filter((note) => note !== null);
+  const fullName = notes.length > 0 ? `${name}, ${notes.join(', ')}` : undefined;
   const pathname = usePathname();
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
@@ -76,10 +130,10 @@ const AccountMenu = ({
       >
         <span className="account-menu__avatar" aria-hidden="true">
           {initialsOf(name)}
-          {pending && <span className="account-menu__dot" />}
+          {dotted && <span className="account-menu__dot" />}
         </span>
         {/* Hidden by size on a phone, not removed: the button keeps its name. */}
-        <span className="account-menu__name" aria-hidden={pending || undefined}>
+        <span className="account-menu__name" aria-hidden={fullName !== undefined || undefined}>
           {name}
         </span>
         {fullName && <span className="account-menu__full-name">{fullName}</span>}
@@ -119,24 +173,75 @@ const AccountMenu = ({
           </li>
         )}
         {verified &&
-          links.map(({ label, href, base }) => (
-            <li key={label} className="account-menu__link">
+          links.map(({ label, href, base }) => {
+            const counted = base === '/admin' && staffCount > 0;
+            const { shown, tip } = supportTip(staffCount, 'Assigned to You');
+            return (
+              <li
+                key={label}
+                className={
+                  counted ? 'account-menu__link account-menu__link--counted' : 'account-menu__link'
+                }
+              >
+                <PendingLink
+                  href={href}
+                  navigationTarget={siteLinkTarget(base, href)}
+                  className={
+                    counted
+                      ? 'account-menu__item account-menu__item--counted'
+                      : 'account-menu__item'
+                  }
+                  onClick={close}
+                  aria-current={isAtPath(pathname, base) ? 'page' : undefined}
+                >
+                  {label}
+                </PendingLink>
+                {/* A link of its own beside Admin, as the invitations count is beside Your Account:
+                    a press on the circle opens the requests assigned to the viewer, on the rest of the row /admin. */}
+                {counted && (
+                  <span className="account-menu__count">
+                    <IconTip tip={tip} placement="below">
+                      <PendingLink
+                        href={ADMIN_ASSIGNED_PATH as typeof href}
+                        navigationTarget={siteLinkTarget(base, ADMIN_ASSIGNED_PATH as typeof href)}
+                        className="account-menu__count-mark"
+                        onClick={close}
+                      >
+                        <span aria-hidden="true">{shown}</span>
+                        <span className="visually-hidden">
+                          {countText(staffCount, 'assigned to you')}
+                        </span>
+                      </PendingLink>
+                    </IconTip>
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        {verified && (
+          <li
+            className={
+              senderCount > 0
+                ? 'account-menu__link account-menu__link--counted'
+                : 'account-menu__link'
+            }
+          >
+            {senderCount > 0 ? (
+              // Waiting requests: the row leads to the list that shows which, not to a blank form.
               <PendingLink
-                href={href}
-                navigationTarget={siteLinkTarget(base, href)}
+                href={SUPPORT_LIST_PATH}
+                navigationTarget={ACCOUNT_TARGET}
                 className="account-menu__item"
                 onClick={close}
-                aria-current={isAtPath(pathname, base) ? 'page' : undefined}
               >
-                {label}
+                Support
+                <MenuCount count={senderCount} what="waiting on you" tipWhat="Waiting on You" />
               </PendingLink>
-            </li>
-          ))}
-        {verified && (
-          <li className="account-menu__link">
-            <SupportLink className="account-menu__item" onClick={close}>
-              Support
-            </SupportLink>
+            ) : (
+              <SupportLink className="account-menu__item" onClick={close}>
+                Support
+              </SupportLink>
+            )}
           </li>
         )}
         <li className="account-menu__signout">

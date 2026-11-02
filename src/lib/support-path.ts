@@ -158,3 +158,27 @@ export function supportClosedHref(pathname: string, params: URLSearchParams): st
   const lead = rest.toString();
   return lead ? `${pathname}?${lead}` : pathname;
 }
+
+/**
+ * The admin Support page’s views, in tab order, each with the words its tab shows. The first three hold open requests,
+ * told apart by who holds them; the rest are one status each.
+ */
+export const SUPPORT_VIEWS = [
+  { value: 'needs_staff', label: 'Needs Staff' },
+  { value: 'mine', label: 'Mine' },
+  { value: 'unassigned', label: 'Unassigned' },
+  { value: 'waiting', label: 'Waiting on Sender' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' },
+] as const;
+export type SupportView = (typeof SUPPORT_VIEWS)[number]['value'];
+
+/** The view the page opens on. */
+export const DEFAULT_SUPPORT_VIEW: SupportView = 'needs_staff';
+
+/**
+ * The kinds of sender the admin Support page can narrow to, each with the words its choice shows. A sender may be in
+ * several, so each is a narrowing of its own rather than a rank.
+ */
+export const SUPPORT_SENDER_GROUPS = [{ value: 'beta_tester', label: 'Beta Testers' }] as const;
+export type SupportSenderGroup = (typeof SUPPORT_SENDER_GROUPS)[number]['value'];

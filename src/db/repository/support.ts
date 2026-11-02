@@ -4,6 +4,8 @@ import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportSendCounts } from '../../modules/support/schema/support-send-counts';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
+import { SUPPORT_VIEWS } from '../../lib/support-path';
+import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
 import { notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
@@ -12,7 +14,9 @@ import type {
   AuditWriter,
   SortPart,
   SupportReader,
+  SupportMenuCounts,
   SupportStatusCounts,
+  SupportViewCounts,
   SupportRequestFilter,
   SupportViewer,
   WriterContext,
@@ -54,15 +58,65 @@ const REQUEST_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
 ];
 
-const NEWEST_FIRST: readonly SortPart[] = [
+// The sender's list: still open (open, waiting on the sender) ahead of done (resolved, closed), then newest first.
+const OWN_ORDER: readonly SortPart[] = [
+  {
+    expression: sql`case when ${supportRequests.status} in ('open', 'waiting_on_sender') then 0 else 1 end`,
+    type: 'integer',
+  },
   { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
 ];
 
-function filterArms({ about, status, errorCode }: SupportRequestFilter): (SQL | undefined)[] {
+// The queue views: the oldest sender activity first, which a request with none dates from its sending.
+const QUEUE_ORDER: readonly SortPart[] = [
+  {
+    expression: sql`extract(epoch from coalesce(${supportRequests.lastSenderActivityAt}, ${supportRequests.createdAt}))`,
+    type: 'numeric',
+  },
+];
+
+const QUEUE_VIEWS: readonly SupportView[] = ['needs_staff', 'mine', 'unassigned'];
+
+const orderOf = ({ view }: SupportRequestFilter): readonly SortPart[] =>
+  view && QUEUE_VIEWS.includes(view) ? QUEUE_ORDER : REQUEST_ORDER;
+
+/** What a view holds: the status, and for the queue views who holds the request. */
+function viewArm(reader: SupportReader, view: SupportView): SQL {
+  const open = eq(supportRequests.status, 'open');
+  switch (view) {
+    case 'needs_staff':
+      return open;
+    case 'mine':
+      return and(open, eq(supportRequests.assignedTo, reader.proof.userId)) as SQL;
+    case 'unassigned':
+      return and(open, isNull(supportRequests.assignedTo)) as SQL;
+    case 'waiting':
+      return eq(supportRequests.status, 'waiting_on_sender');
+    case 'resolved':
+      return eq(supportRequests.status, 'resolved');
+    case 'closed':
+      return eq(supportRequests.status, 'closed');
+  }
+}
+
+/** The request's sender is in the group. A beta tester accepted a printed card: derived from the invitation and never stored. */
+function senderArm(group: SupportSenderGroup): SQL {
+  switch (group) {
+    case 'beta_tester':
+      return sql`exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null)`;
+  }
+}
+
+function filterArms(
+  reader: SupportReader,
+  { about, status, errorCode, view, senderGroup }: SupportRequestFilter,
+): (SQL | undefined)[] {
   return [
+    view ? viewArm(reader, view) : undefined,
     about ? eq(supportRequests.about, about) : undefined,
     status ? eq(supportRequests.status, status) : undefined,
     errorCode === undefined ? undefined : eq(supportRequests.errorCode, errorCode),
+    senderGroup ? senderArm(senderGroup) : undefined,
   ];
 }
 
@@ -74,9 +128,9 @@ export function findSupportRequestPage(
 ) {
   return findPage(
     supportRequests,
-    REQUEST_ORDER,
+    orderOf(filter),
     page,
-    and(readerScope(reader), ...filterArms(filter)),
+    and(readerScope(reader), ...filterArms(reader, filter)),
   );
 }
 
@@ -88,10 +142,40 @@ export function findSupportRequestCount(
 ): Promise<PageCount> {
   return findPageCount(
     supportRequests,
-    REQUEST_ORDER,
+    orderOf(filter),
     start,
-    and(readerScope(reader), ...filterArms(filter)),
+    and(readerScope(reader), ...filterArms(reader, filter)),
   );
+}
+
+/**
+ * How many requests each view holds among those the reader may see and the filter’s About, error number and sender group leave. One
+ * query, so the tab row never asks six times.
+ */
+export async function findSupportViewCounts(
+  reader: SupportReader,
+  { about, errorCode, senderGroup }: SupportRequestFilter,
+): Promise<SupportViewCounts> {
+  const [row] = await selectFrom(
+    supportRequests,
+    and(
+      notSoftDeleted(supportRequests),
+      readerScope(reader),
+      ...filterArms(reader, { about, errorCode, senderGroup }),
+    ),
+    {
+      aggregate: Object.fromEntries(
+        SUPPORT_VIEWS.map(({ value }) => [
+          value,
+          sql<number>`count(*) filter (where ${viewArm(reader, value)})::int`,
+        ]),
+      ) as Record<SupportView, SQL<number>>,
+      over: {},
+    },
+  );
+  return Object.fromEntries(
+    SUPPORT_VIEWS.map(({ value }) => [value, row?.[value] ?? 0]),
+  ) as SupportViewCounts;
 }
 
 /** The request the reader may see, or `undefined` for one that is absent or outside their scope. */
@@ -107,7 +191,7 @@ export function findOwnSupportRequestPage(
   userId: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof supportRequests.$inferSelect>[]> {
-  return findPage(supportRequests, NEWEST_FIRST, page, eq(supportRequests.createdBy, userId));
+  return findPage(supportRequests, OWN_ORDER, page, eq(supportRequests.createdBy, userId));
 }
 
 /** How many rows `findOwnSupportRequestPage` pages, and how many come before `start`. */
@@ -115,7 +199,7 @@ export function findOwnSupportRequestCount(
   userId: string,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(supportRequests, NEWEST_FIRST, start, eq(supportRequests.createdBy, userId));
+  return findPageCount(supportRequests, OWN_ORDER, start, eq(supportRequests.createdBy, userId));
 }
 
 /** How many of the sender's requests are still open (open, waiting on the sender) and how many are done (resolved, closed). */
@@ -134,6 +218,21 @@ export async function findOwnSupportStatusCounts(userId: string): Promise<Suppor
   return { open: row?.open ?? 0, closed: row?.closed ?? 0 };
 }
 
+/**
+ * What the account menu counts for a viewer in one query: open requests assigned to them, and their own requests waiting on them.
+ * Not cached: both are the viewer's. The caller decides whether an assignment counts for this role.
+ */
+export async function findSupportMenuCounts(userId: string): Promise<SupportMenuCounts> {
+  const [row] = await selectFrom(supportRequests, notSoftDeleted(supportRequests), {
+    aggregate: {
+      assignedOpen: sql<number>`count(*) filter (where ${supportRequests.status} = 'open' and ${supportRequests.assignedTo} = ${userId})::int`,
+      waitingOnMe: sql<number>`count(*) filter (where ${supportRequests.status} = 'waiting_on_sender' and ${supportRequests.createdBy} = ${userId})::int`,
+    },
+    over: {},
+  });
+  return { assignedOpen: row?.assignedOpen ?? 0, waitingOnMe: row?.waitingOnMe ?? 0 };
+}
+
 /** The sender's own request, or `undefined` for one that is absent or another sender's. */
 export function findOwnSupportRequest(userId: string, id: string) {
   return selectOne(
@@ -141,6 +240,18 @@ export function findOwnSupportRequest(userId: string, id: string) {
     and(
       notSoftDeleted(supportRequests),
       eq(supportRequests.id, id),
+      eq(supportRequests.createdBy, userId),
+    ),
+  );
+}
+
+/** The request the sender opened as a follow-up to this closed one of theirs, or `undefined` when they have not. */
+export function findOwnSupportFollowUp(userId: string, id: string) {
+  return selectOne(
+    supportRequests,
+    and(
+      notSoftDeleted(supportRequests),
+      eq(supportRequests.linkedFrom, id),
       eq(supportRequests.createdBy, userId),
     ),
   );

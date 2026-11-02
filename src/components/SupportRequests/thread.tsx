@@ -9,6 +9,8 @@ export interface SupportThreadEntry {
   /** Who wrote it; left out where the tag alone says so. */
   name?: string;
   tag: string;
+  /** A staff-only note: its tag reads "Staff · Internal", with Internal in the warning ink. */
+  internal?: boolean;
   at: Date;
   body: string;
 }
@@ -23,7 +25,15 @@ const SupportThread = ({ entries }: { entries: readonly SupportThreadEntry[] }):
           <li key={entry.id} className="support-detail__entry">
             <div className="support-detail__meta">
               {entry.name && <strong>{entry.name}</strong>}
-              <span className="support-detail__tag">{entry.tag}</span>
+              <span className="support-detail__tag">
+                {entry.internal ? (
+                  <>
+                    {entry.tag} · <span className="support-detail__internal">Internal</span>
+                  </>
+                ) : (
+                  entry.tag
+                )}
+              </span>
               <LocalTime at={entry.at} short="minute" />
             </div>
             <p>{entry.body}</p>

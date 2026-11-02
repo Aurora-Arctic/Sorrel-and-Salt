@@ -1,6 +1,0 @@
-@use '../../scss/variables' as *;
-
-// The shut reply box fades to the disabled opacity, as one control would, so it reads as not yet available.
-.support-sender-request__reply {
-  opacity: $opacity-disabled;
-}

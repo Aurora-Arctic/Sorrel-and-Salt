@@ -133,6 +133,7 @@ describe('/admin/card-sign-ups', () => {
 
       expect(replace).toHaveBeenCalledWith(
         `/admin/card-sign-ups?after=${encodeURIComponent(AFTER)}`,
+        { scroll: false },
       );
     });
   });

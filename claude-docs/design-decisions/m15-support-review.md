@@ -39,15 +39,15 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
 ## The admin page
 
 - **Six views as tabs:** Needs Staff, Mine, Unassigned, Waiting on Sender,
-  Resolved, Closed. Needs Staff is sorted by tier, then by oldest sender
-  activity.
+  Resolved, Closed. Needs Staff is sorted by oldest sender activity
+  for everyone.
 - **A "Sender Replied" text label on the row**, and the Needs Staff count in
   the admin nav link's text.
 - **Internal notes are a labelled composer mode**, never the default, never
   emailed, tagged Internal on the thread.
 - **Beta testers.** A sender who accepted an invitation with `kind = 'card'`
-  is a beta tester: a "Beta Tester" row label and tier-first sort, with no
-  view of its own. The tier is derived, never stored, so paying users can join
+  is a beta tester: a sprout mark tipped "Beta Tester" after the sender's name and a Beta Testers option in a Sender filter
+  on the admin page (the owner, 2026-10-31: the filter is a Sender filter so coven owners and paying members can join it as further options), with no view of its own and no sort order of its own. The tier is derived, never stored, so paying users can join
   it later.
 
 - **No Create Issue link** (the owner, 2026-10-31): the prefilled GitHub link copied the message, which could hold private

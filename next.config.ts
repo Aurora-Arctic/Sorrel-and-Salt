@@ -1,4 +1,6 @@
 import type { NextConfig } from 'next';
+// oxlint-disable-next-line no-restricted-imports -- a build plugin, not code that runs in the app
+import { withWorkflow } from 'workflow/next';
 import { securityHeaders } from './src/lib/security-headers';
 
 const nextConfig: NextConfig = {
@@ -43,4 +45,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Compiles the job files ("use workflow" and "use step") and generates the run route under /.well-known/workflow/.
+export { nextConfig };
+export default withWorkflow(nextConfig);

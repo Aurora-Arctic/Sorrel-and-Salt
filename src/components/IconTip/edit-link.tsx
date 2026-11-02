@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { useOpenModalClick } from '../Modal';
+import { ModalLink, useOpenModalClick } from '../Modal';
 import IconTip from './icon-tip';
 import { AnnotateIcon, MysticEyeIcon, PencilIcon } from './icons';
 import type { EditLinkProps } from './types';
@@ -26,12 +25,12 @@ const IconLink = ({
   const onClick = useOpenModalClick(href, heading, place);
   return (
     <IconTip tip={verb}>
-      <Link ref={ref} className={className} href={href} onClick={onClick}>
+      <ModalLink ref={ref} className={className} href={href} onClick={onClick}>
         {icon}
         <span className="visually-hidden">
           {verb} {name}
         </span>
-      </Link>
+      </ModalLink>
     </IconTip>
   );
 };

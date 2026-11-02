@@ -6,6 +6,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
+const countSupportViews = vi.fn();
+vi.mock('@/modules/support', () => ({ countSupportViews }));
 // AdminNav marks the page you are on from the address, which Next reads from
 // the App Router's state; a test mounts no router, so the address is given,
 // and the route-modal provider's router is a stand-in that goes nowhere.
@@ -23,9 +25,23 @@ const navHrefs = () =>
 
 beforeEach(() => {
   requireCuratorSession.mockReset();
+  countSupportViews.mockReset().mockResolvedValue({ needs_staff: 5 });
 });
 
 describe('the /admin layout', () => {
+  it('says the requests waiting on staff in the Support link', async () => {
+    requireCuratorSession.mockResolvedValue(CURATOR);
+
+    render(await AdminLayout({ children: <p>The page itself</p> }));
+
+    expect(
+      within(screen.getByRole('navigation', { name: 'Admin' })).getByRole('link', {
+        name: /Support/,
+      }),
+    ).toHaveTextContent('Support 5');
+    expect(countSupportViews).toHaveBeenCalledWith(CURATOR, {});
+  });
+
   // The row's name is the area's home, as the coven row's switcher is.
   it('leads the row with Admin linking to the admin index', async () => {
     requireCuratorSession.mockResolvedValue(CURATOR);

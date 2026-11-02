@@ -3,12 +3,17 @@ import type {
   SupportRequestsCursor,
   SupportRequestsFilter,
 } from '@/components/SupportRequests/types';
-import { SUPPORT_ABOUTS } from '@/lib/support-path';
+import {
+  DEFAULT_SUPPORT_VIEW,
+  SUPPORT_ABOUTS,
+  SUPPORT_SENDER_GROUPS,
+  SUPPORT_VIEWS,
+} from '@/lib/support-path';
 import { oneOf, single, trimmed } from '@/lib/search-params';
 import { readListPlace } from '../list-page';
 import type { SupportSearchParams } from './types';
 
-const STATUSES = ['open', 'resolved'] as const;
+const VIEWS = SUPPORT_VIEWS.map((view) => view.value);
 
 /**
  * The page's filter and cursor off its address. A value outside the set is no filter, and an error
@@ -29,8 +34,13 @@ export function readSupportPlace(params: SupportSearchParams): {
           SUPPORT_ABOUTS.map((about) => about.value),
           single(params.about),
         ) ?? '',
-      status: oneOf(STATUSES, single(params.status)) ?? '',
+      view: oneOf(VIEWS, single(params.view)) ?? DEFAULT_SUPPORT_VIEW,
       errorCode: /^\d{1,3}$/.test(code) ? code : '',
+      sender:
+        oneOf(
+          SUPPORT_SENDER_GROUPS.map((group) => group.value),
+          single(params.sender),
+        ) ?? '',
     },
     cursor: { after, before },
     request: single(params.request) || undefined,
@@ -41,12 +51,14 @@ export function readSupportPlace(params: SupportSearchParams): {
 /** The same filter as the service takes it. */
 export function serviceFilter({
   about,
-  status,
+  view,
   errorCode,
+  sender,
 }: SupportRequestsFilter): SupportRequestFilter {
   return {
+    view,
     ...(about && { about }),
-    ...(status && { status }),
     ...(errorCode && { errorCode: Number(errorCode) }),
+    ...(sender && { senderGroup: sender }),
   };
 }

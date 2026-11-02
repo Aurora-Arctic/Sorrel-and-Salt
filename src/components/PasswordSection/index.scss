@@ -57,7 +57,7 @@
   margin-block-start: space(2);
 }
 
-// Two equal columns with each code centred in its own. list-reset also drops the ◆ marker that
+// Two equal columns with each code centred in its own. list-reset also drops the ✦ marker that
 // typography-base draws on every list item.
 .two-factor__codes {
   @include list-reset;

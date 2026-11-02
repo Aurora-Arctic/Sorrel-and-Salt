@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
+import { SITE_ROLE_ACCESS } from '@/components/UserList/roles';
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
@@ -85,6 +86,21 @@ function cellsOf(name: string): string[] {
 }
 
 describe('UserList', () => {
+  it('gives every row a tooltip saying what its role may do, in the words Change Role shows', () => {
+    render(<UserList {...props({ users: [ADA, BO, CY] })} />);
+    for (const [user, label] of [
+      [ADA, 'Admin'],
+      [BO, 'User'],
+      [CY, 'Curator'],
+    ] as const) {
+      const row = screen.getByRole('row', { name: new RegExp(user.name) });
+      const button = within(row).getByRole('button', { name: `About ${label}` });
+      const tip = document.getElementById(button.getAttribute('aria-describedby')!);
+      expect(tip).toHaveAttribute('role', 'tooltip');
+      expect(tip).toHaveTextContent(SITE_ROLE_ACCESS[user.role]);
+    }
+  });
+
   it('shows a row per user, in the order given, with its address, its coven-creation flag and its signup date', () => {
     render(<UserList {...props()} />);
 

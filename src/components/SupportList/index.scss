@@ -63,7 +63,7 @@
   background-color: $surface-page;
   @include theme-transition(background-color, box-shadow);
 
-  // The site's ◆ marker is a ::before, which would otherwise take a cell of its own.
+  // The site's ✦ marker is a ::before, which would otherwise take a cell of its own.
   &::before {
     content: none;
   }
@@ -100,4 +100,15 @@
   gap: space(1) space(3);
   color: $text-muted;
   font-size: type-size('small');
+}
+
+// Waiting on the sender: a wax dot at the row's top right, the same red as the account menu's.
+.support-list__dot {
+  position: absolute;
+  top: space(3);
+  right: space(3);
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border-radius: 50%;
+  background-color: badge-token('attention', 'fill');
 }

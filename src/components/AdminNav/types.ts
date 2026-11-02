@@ -25,4 +25,6 @@ export interface AdminSection {
 // sees the People page, or a curator, who does not.
 export interface AdminNavProps {
   managesPeople: boolean;
+  /** The requests waiting on staff, said in the Support link's text; left out, the link says only its name. */
+  needsStaff?: number;
 }

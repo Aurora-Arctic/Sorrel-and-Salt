@@ -22,6 +22,8 @@ export type SectionIconName =
  */
 export interface SectionNavItem {
   label: string;
+  /** A number after the label, as the facet count draws it: the Support link's requests waiting on staff. */
+  count?: number;
   href: Route;
   icon: SectionIconName;
   /**

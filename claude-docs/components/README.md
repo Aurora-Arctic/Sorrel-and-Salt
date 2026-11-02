@@ -27,17 +27,20 @@ the PR that made it.
 These five docs are written with the shell's components. The reasoning behind the
 design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md).
 
-| Doc                                  | Component                                                                                                                                    |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`app-shell.md`](app-shell.md)       | The frame around every signed-in page: the slim bar, the context row, the page's content, and the bottom-bar clearance on a phone            |
-| [`public-frame.md`](public-frame.md) | The chrome round a public page for a signed-out visitor: skip link, site name, Compendium link, Sign In, and the page body that draws a wait |
-| [`account-menu.md`](account-menu.md) | The disclosure in the bar offering Your Account and Sign Out, with a dot and a count linking to the pending coven invitations                |
-| [`context-row.md`](context-row.md)   | The row under the bar: the coven switcher or "Admin" at the left, the section nav beside it                                                  |
-| [`section-nav.md`](section-nav.md)   | The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone                                     |
-| [`page-nav.md`](page-nav.md)         | A page's own menu of jump links to its sections, marking the one in view                                                                     |
-| [`link-hint.md`](link-hint.md)       | A dot inside a link that shows the click took while the next page loads                                                                      |
-| [`support-link.md`](support-link.md) | A link that opens the Support dialog over the current page                                                                                   |
-| [`site-footer.md`](site-footer.md)   | The line under every page in both frames, holding the Support link                                                                           |
+| Doc                                            | Component                                                                                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`app-shell.md`](app-shell.md)                 | The frame around every signed-in page: the slim bar, the context row, the page's content, and the bottom-bar clearance on a phone            |
+| [`public-frame.md`](public-frame.md)           | The chrome round a public page for a signed-out visitor: skip link, site name, Compendium link, Sign In, and the page body that draws a wait |
+| [`account-menu.md`](account-menu.md)           | The disclosure in the bar offering Your Account and Sign Out, with a dot and a count linking to the pending coven invitations                |
+| [`context-row.md`](context-row.md)             | The row under the bar: the coven switcher or "Admin" at the left, the section nav beside it                                                  |
+| [`section-nav.md`](section-nav.md)             | The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone                                     |
+| [`page-nav.md`](page-nav.md)                   | A page's own menu of jump links to its sections, marking the one in view                                                                     |
+| [`link-hint.md`](link-hint.md)                 | A dot inside a link that shows the click took while the next page loads                                                                      |
+| [`support-link.md`](support-link.md)           | A link that opens the Support dialog over the current page                                                                                   |
+| [`site-footer.md`](site-footer.md)             | The line under every page in both frames, holding the document links and the Support link                                                    |
+| [`disclaimer-notice.md`](disclaimer-notice.md) | The line under an ingredient's safety notes saying they are not complete, linking the disclaimer                                             |
+| [`document-page.md`](document-page.md)         | The page a public document is read on: title, when it last changed, then its sections                                                        |
+| [`access-cards.md`](access-cards.md)           | The privacy policy's who-can-see-what: one card per kind of data, a mark per role, full wording inside                                       |
 
 ## Lists
 
@@ -49,6 +52,7 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | [`ingredient-card-list.md`](ingredient-card-list.md) | The grid of ingredient cards every list page shares, with its card skeleton                                   |
 | [`entry-marks.md`](entry-marks.md)                   | The Local, Compendium, Annotated and Retired badges, shared by the card and the entry page                    |
 | [`spell-marks.md`](spell-marks.md)                   | A spell's or a working's Draft and Private badges, shared by the spell card, the recipe page and its workings |
+| [`role-tip.md`](role-tip.md)                         | A role's word in a Role column with the ⓘ beside it saying what the role may do, in Change Role's words       |
 
 ## Stock
 

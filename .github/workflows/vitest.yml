@@ -136,7 +136,7 @@ jobs:
 
   vitest-db:
     if: inputs.should-run
-    # The `db` and `db-mocking` projects, which build the template database (tests/support/db-global-setup.ts) against the Postgres service.
+    # The `db`, `db-mocking` and `workflow` projects, which build the template database (tests/support/db-global-setup.ts) against the Postgres service.
     runs-on: ubuntu-26.04
     container:
       image: ${{ inputs.image }}
@@ -179,11 +179,11 @@ jobs:
       # The blob reporter writes this part's results and its coverage map for
       # the `vitest` job to merge. The 80% thresholds are switched off here and
       # applied there: a part covers only its own projects' share of src/.
-      - name: Run vitest (db db-mocking)
+      - name: Run vitest (db db-mocking workflow)
         run: |
           set -o pipefail
           echo "nproc: $(nproc)"
-          npx vitest run --project db --project db-mocking --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-db.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
+          npx vitest run --project db --project db-mocking --project workflow --coverage --reporter=blob --outputFile.blob=/app/.reports/blobs/blob-db.json --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0
 
       # A failing test still leaves a blob, so the merge job reports it.
       - name: Upload blob

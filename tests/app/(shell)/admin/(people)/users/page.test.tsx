@@ -21,10 +21,12 @@ const providersOf = vi.fn();
 const isPrimaryAdmin = vi.fn();
 const adminRoleChangePauseState = vi.fn();
 const usersForAdmin = vi.fn();
+const ensureProvisionalCleanup = vi.fn(async () => null);
 const listedOnUserList = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countUsers,
+  ensureProvisionalCleanup,
   isPrimaryAdmin,
   listedOnUserList,
   listUsers,
@@ -95,6 +97,7 @@ function lastRequest(): PageRequest {
 
 beforeEach(() => {
   replace.mockReset();
+  ensureProvisionalCleanup.mockClear();
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   listUsers.mockReset();
@@ -128,6 +131,13 @@ describe('the /admin/users page', () => {
     expect(countUsers).not.toHaveBeenCalled();
     expect(adminRoleChangePauseState).not.toHaveBeenCalled();
     expect(providersOf).not.toHaveBeenCalled();
+    expect(ensureProvisionalCleanup).not.toHaveBeenCalled();
+  });
+
+  it('makes sure the daily provisional cleanup is running once an admin has been let in', async () => {
+    await renderPage();
+
+    expect(ensureProvisionalCleanup).toHaveBeenCalledOnce();
   });
 
   it("reads the first page of 25 and its count as the guard's session, with no filter", async () => {
@@ -304,7 +314,7 @@ describe('the /admin/users page, the user modal', () => {
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }),
     );
 
-    expect(replace).toHaveBeenCalledWith(closeTo);
+    expect(replace).toHaveBeenCalledWith(closeTo, { scroll: false });
   });
 
   // Hand-edited, or copied wrong: the list beneath is still the page asked for.

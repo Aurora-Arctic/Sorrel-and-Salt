@@ -3,17 +3,11 @@
 @use 'switch-size' as *;
 
 // The switch for "shown in the public compendium": a native checkbox drawn as a 2.772 x 1.584rem track
-// with a 1.188rem thumb, and an eye in the thumb whose upper lid comes down when the entry is hidden.
+// with a 1.188rem thumb, and the lidded eye in the thumb, shut when the entry is hidden.
 // Taller than `.switch` so the eye can be read. Tokens only, before the section's design review.
 .shown-switch {
   // The cross-fade between the thumb and the ring; `RING_FADE_MS` in shown-toggle.tsx waits for it.
   $fade: 150ms ease-out;
-  // The open and shut lids of the Quick Look eye's 16-unit grid; the markup carries the same shapes
-  // as attributes for a browser that cannot set `d` from CSS.
-  $lid-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
-  $lid-shut: 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8';
-  $gap-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z';
-  $gap-shut: 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z';
 
   display: inline-flex;
   align-items: center;
@@ -137,55 +131,12 @@
     display: block;
     inline-size: 80%;
     block-size: 80%;
-    overflow: visible;
-  }
-
-  .shown-switch__lashes {
-    opacity: 1;
-    transition: opacity 120ms ease-out 140ms;
-  }
-
-  input:checked ~ .shown-switch__thumb .shown-switch__lashes {
-    opacity: 0;
-    transition-delay: 0s;
-  }
-
-  // Setting `d` from CSS is not Baseline (Safari cannot), so it sits in @supports: the lid then
-  // moves with the thumb. Without it the shapes come from the markup's `d` and change at once.
-  @supports (d: path('M0 0')) {
-    .shown-switch__lid,
-    .shown-switch__gap {
-      transition: d $slide;
-    }
-
-    .shown-switch__lid {
-      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
-      d: path($lid-shut);
-    }
-
-    .shown-switch__gap {
-      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
-      d: path($gap-shut);
-    }
-
-    input:checked ~ .shown-switch__thumb .shown-switch__lid {
-      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
-      d: path($lid-open);
-    }
-
-    input:checked ~ .shown-switch__thumb .shown-switch__gap {
-      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
-      d: path($gap-open);
-    }
   }
 
   @include reduced-motion {
     input,
     .shown-switch__thumb,
-    .shown-switch__ring,
-    .shown-switch__lashes,
-    .shown-switch__lid,
-    .shown-switch__gap {
+    .shown-switch__ring {
       transition: none;
     }
   }

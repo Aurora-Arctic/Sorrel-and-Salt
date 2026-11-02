@@ -295,7 +295,7 @@ In [`db/demo-scenario.md`](db/demo-scenario.md#a-jars-stack-is-seeded-whole-or-n
 
 ## The provisional-account delete (MB.67)
 
-`deleteProvisionalUsers` is the one hard delete of a table carrying `deleted_at`: it removes unverified accounts past their lifetime or cap, outside `withAudit`, since there is no session. [`db/provisional-account-delete.md`](db/provisional-account-delete.md)
+`deleteLapsedProvisionalUser` is the one hard delete of a table carrying `deleted_at`: it removes one unverified account past its lifetime or cap, outside `withAudit`, since no surviving row is left to stamp. [`db/provisional-account-delete.md`](db/provisional-account-delete.md)
 
 ## Who may import the client (M1.17)
 

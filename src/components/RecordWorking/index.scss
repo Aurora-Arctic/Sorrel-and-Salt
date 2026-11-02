@@ -15,7 +15,7 @@
 .working-deductions {
   @include stack(3);
 
-  // No ◆ beside the jars: the jar is each line's mark.
+  // No ✦ beside the jars: the jar is each line's mark.
   @include list-reset;
 
   // A long name wraps here: the preview has the room, and a cut name hides which step it is.

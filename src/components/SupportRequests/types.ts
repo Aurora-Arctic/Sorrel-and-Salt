@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { SupportAboutParam } from '../../lib/support-path';
+import type { SupportAboutParam, SupportSenderGroup, SupportView } from '../../lib/support-path';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 export type SupportAbout = SupportAboutParam;
@@ -30,6 +30,16 @@ export interface SupportRequestEntry {
   errorCode: number | null;
   /** The error page's digest, to match the server log. */
   errorReference: string | null;
+  /** When it was sent. */
+  createdAt: Date;
+  /** When the sender last wrote on it: their newest message, or the request itself when it has no follow-up. */
+  lastFromSenderAt: Date;
+  /** The sender wrote last: their activity is later than staff's. */
+  senderReplied: boolean;
+  /** The sender accepted a printed card. */
+  betaTester: boolean;
+  /** It is resolved, and the sender resolved it themselves rather than staff. */
+  resolvedBySender: boolean;
 }
 
 export interface SupportReplyEntry {
@@ -37,6 +47,10 @@ export interface SupportReplyEntry {
   body: string;
   author: SupportPerson | null;
   createdAt: Date;
+  /** A staff-only note: never sent to the sender. */
+  internal: boolean;
+  /** The sender wrote it, as a follow-up on their request. */
+  fromSender: boolean;
 }
 
 export interface SupportTimeoutEntry {
@@ -55,8 +69,6 @@ export interface SupportTimeoutEntry {
 /** A request opened to its message, replies and, for an admin, the sender's time-outs. */
 export interface SupportRequestDetailEntry extends SupportRequestEntry {
   message: string;
-  /** When it was sent. */
-  createdAt: Date;
   path: string | null;
   issueUrl: string | null;
   resolvedBy: SupportPerson | null;
@@ -70,10 +82,12 @@ export interface SupportRequestDetailEntry extends SupportRequestEntry {
 export interface SupportRequestsFilter {
   /** Blank is everything. */
   about: SupportAbout | '';
-  /** Blank is every status. */
-  status: SupportStatus | '';
+  /** The tab: which statuses and assignment the list shows. */
+  view: SupportView;
   /** An HTTP status, as typed; blank is none. */
   errorCode: string;
+  /** Only requests whose sender is in this group; blank is every sender. */
+  sender: SupportSenderGroup | '';
 }
 
 export interface SupportRequestsCursor {

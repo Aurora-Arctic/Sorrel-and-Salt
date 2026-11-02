@@ -911,6 +911,7 @@ type Mutation {
   Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.
   """
   addSupportInternalNote(body: String!, requestId: ID!): SupportReply!
+  agreeToTerms: User!
 
   """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
@@ -1116,6 +1117,11 @@ type Mutation {
     """
     waitingOnSender: Boolean
   ): SupportReply!
+
+  """
+  The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.
+  """
+  resolveMySupportRequest(id: ID!): SupportRequest!
 
   """
   Marks a request resolved. An admin may on any request, a curator on one assigned to them.
@@ -2661,6 +2667,7 @@ type User {
   """The sign-in providers linked to the account, by id, sorted."""
   providers: [String!]!
   role: UserRole!
+  termsVersion: String
 }
 
 """

@@ -59,7 +59,10 @@ export const TabPanel = ({ children }: TabPanelProps): ReactElement => {
       filter={target?.filtered}
       shape={target?.shape}
       count={target?.sections}
+      columns={target?.columns}
+      fields={target?.fields}
       density={target?.density}
+      card={target?.card}
     >
       {children}
     </SwapPanel>

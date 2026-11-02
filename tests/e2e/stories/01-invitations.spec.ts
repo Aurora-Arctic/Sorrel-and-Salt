@@ -468,10 +468,10 @@ test(
     await expect(page).toHaveTitle(/\S/);
     await assertNoAccessibilityViolations(page);
 
-    // A member now: the roll opens for them, with their own row at that role.
+    // A member now: the roll opens for them, with their own row at that role, read from the role's own tip.
     await page.goto(`/coven/${COVEN_SLUG}/members`);
     await expect(
-      rollRow(page, invited.name).getByRole('cell', { name: 'Member', exact: true }),
+      rollRow(page, invited.name).getByRole('button', { name: 'About Member', exact: true }),
     ).toBeVisible();
 
     // The landing now goes straight into the coven. The redirect is read rather than followed, so the

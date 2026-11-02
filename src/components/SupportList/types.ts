@@ -11,6 +11,8 @@ export interface SupportListEntry {
   createdAt: Date;
   /** How many staff replies it has. */
   replyCount: number;
+  /** The latest public message is staff's, not the sender's. */
+  staffWroteLast: boolean;
 }
 
 export interface SupportListProps {

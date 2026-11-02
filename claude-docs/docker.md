@@ -116,6 +116,16 @@ no Neon connection and no host Node-version juggling.
     Studio UI is hosted externally at `https://local.drizzle.studio`; the
     browser connects from there back to `127.0.0.1:4983`, so this service
     serves data only, never a page.
+  - **`jobs`** — behind the **`jobs` compose profile**, same build stage;
+    runs `npm run jobs:web` (`workflow web --noBrowser`, the Workflow SDK's
+    own page) and publishes **3456**. It lists the background job runs a local
+    dev server has made — each run's steps, events and hooks — read from
+    `.next/workflow-data/` through the `..:/app` bind mount
+    (`WORKFLOW_TARGET_WORLD=local`, `WORKFLOW_LOCAL_DATA_DIR`), so it shows
+    whichever dev server last ran, in `app` or the devcontainer, and nothing
+    until one has. It needs no database and no sign-in, and is local only: the
+    deployed runs are on the Vercel dashboard. The page can cancel a
+    run, which acts on the local data only.
   - **`postgres`** — `build:`s straight from `Docker/Dockerfile.postgres` rather
     than pulling the GHCR image `build-db-image.yml` publishes for CI; this file
     is local dev only. Named volume `postgres_data` at
@@ -150,7 +160,7 @@ no Neon connection and no host Node-version juggling.
       `pg_isready` asks only whether the server answers, not whether the role
       it names is valid.
   - **Volumes** — one `node_modules` volume per service
-    (`node_modules_app`, `node_modules_workshop`, `node_modules_studio`,
+    (`node_modules_app`, `node_modules_workshop`, `node_modules_studio`, `node_modules_jobs`,
     `node_modules_e2e`, `node_modules_playwright_server`,
     `node_modules_db_init`, `node_modules_devcontainer`);
     a single shared volume makes the services race to populate it from their
@@ -163,7 +173,7 @@ no Neon connection and no host Node-version juggling.
       volume hides the packages of a rebuilt image, and a branch that adds a
       package would start without it. `Docker/ensure-deps.sh` is the
       `entrypoint` of every service that mounts one of these volumes (`db-init`,
-      `app`, `workshop`, `studio`, `e2e`, `playwright-server` and `devcontainer`).
+      `app`, `workshop`, `studio`, `jobs`, `e2e`, `playwright-server` and `devcontainer`).
       It compares the SHA-256 hash of `package-lock.json` with the one saved at
       `node_modules/.lock-sha256`; if they differ, or the file is missing, it
       runs `npm ci`, saves the new hash, and then runs the service's command.
@@ -229,7 +239,8 @@ no Neon connection and no host Node-version juggling.
   `docker-up` (app + Postgres, detached, migrated and seeded by `db-init`
   first — `SEED_SCENARIO=demo make docker-up` picks a scenario),
   `docker-workshop` (adds the workshop
-  on 61000), `docker-studio` (adds Drizzle Studio on 4983, MB.21), `docker-all`
+  on 61000), `docker-studio` (adds Drizzle Studio on 4983, MB.21), `docker-jobs` (adds
+  the job viewer on 3456), `docker-all`
   (app + Postgres + workshop + studio + the Playwright browser server
   together — `--profile e2e up -d` is scoped to name `playwright-server`
   explicitly rather than every service that profile enables, since `e2e`
@@ -237,7 +248,7 @@ no Neon connection and no host Node-version juggling.
   `docker-build`, `docker-down` (keeps named volumes), `docker-rebuild`
   (`down -v`, then rebuild and start), `docker-logs`, and **`docker-build` /
   `docker-down` / `docker-rebuild` all pass
-  `--profile workshop --profile studio --profile e2e --profile audit`** so
+  `--profile workshop --profile studio --profile jobs --profile e2e --profile audit`** so
   they still reach every profiled service; a new profiled service that
   forgets one of these three targets is left orphaned by `docker-down`
   (`audit` has nothing to build, and rides on `docker-build` so the three
@@ -265,9 +276,10 @@ NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
   changes, like the others), no published ports, and `command: sleep infinity` —
   which only sticks because `devcontainer.json` sets **`overrideCommand: false`**;
   without that the lifecycle re-pins the container to `npm run dev`.
-  `devcontainer.json` forwards ten ports — **8000** (`next dev`), **8001**
+  `devcontainer.json` forwards eleven ports — **8000** (`next dev`), **8001**
   (production build), **4983** (Drizzle Studio, MB.21 — `npm run db:studio`
-  run directly, since `make`/`docker` aren't in the devcontainer), and the
+  run directly, since `make`/`docker` aren't in the devcontainer), **3456**
+  (the job viewer, `npm run jobs:web`), and the
   seven debugging ports MB.22/MB.23 added (9229, 9230, 9231, 9323, 9324,
   51204, 7900); `claude-docs/debugging.md`'s port map is the annotated
   version. It also adds

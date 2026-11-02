@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import type { SkeletonHead, SkeletonProps, SkeletonShape } from './types';
 import './index.scss';
 
@@ -14,18 +14,28 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   requests: 3,
   contents: 2,
   line: 1,
+  recipe: 1,
+  detail: 1,
 };
 
 // The admin index's two sections: Compendium's five pages and People's one.
 const CONTENTS_ENTRIES = [5, 1];
 
-const Bars = ({ of: length, className }: { of: number; className: string }): ReactElement => (
+const Bars = ({
+  of: length,
+  className,
+  cells = 3,
+}: {
+  of: number;
+  className: string;
+  cells?: number;
+}): ReactElement => (
   <>
     {Array.from({ length }, (_, at) => (
       <div key={at} className={className}>
-        <span />
-        <span />
-        <span />
+        {Array.from({ length: cells }, (_, cell) => (
+          <span key={cell} />
+        ))}
       </div>
     ))}
   </>
@@ -176,10 +186,15 @@ const Skeleton = ({
   title = false,
   action = false,
   tabs = false,
+  tabsBelow = false,
+  columns,
+  fields = 2,
+  side = false,
   menu = false,
   entry = false,
   head,
   density,
+  card,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
@@ -189,22 +204,56 @@ const Skeleton = ({
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
         {listed && title && (
-          <div className="page-header skeleton__header">
-            <span className="skeleton__title" />
-            {tabs && <span className="skeleton__tabs" />}
-            {action && <span className="skeleton__action" />}
+          // A list page with an eyebrow and a lede (the public Compendium) holds its heading row in the
+          // same column, as the page does, so the filter row below lands where the page's does.
+          <div className={head === 'eyebrow' ? 'skeleton__intro' : undefined}>
+            {head === 'eyebrow' && <span className="skeleton__eyebrow" />}
+            <div
+              className={
+                tabs && tabsBelow
+                  ? 'page-header skeleton__header skeleton__header--tabs-below'
+                  : 'page-header skeleton__header'
+              }
+            >
+              <div className="skeleton__title-row">
+                <span className="skeleton__title" />
+              </div>
+              {tabs && (
+                <span
+                  className={tabsBelow ? 'skeleton__tabs skeleton__tabs--wide' : 'skeleton__tabs'}
+                />
+              )}
+              {action && <span className="skeleton__action" />}
+            </div>
+            {head === 'eyebrow' && (
+              <div className="skeleton__lede">
+                <span />
+                <span />
+                <span className="skeleton__lede-more" />
+              </div>
+            )}
           </div>
         )}
         {listed && filter && (
           <div className="skeleton__filter">
             <span className="skeleton__field" />
-            <span
-              className={
-                shape === 'cards'
-                  ? 'skeleton__field skeleton__field--button'
-                  : 'skeleton__field skeleton__field--short'
-              }
-            />
+            {Array.from({ length: shape === 'cards' ? 1 : fields - 1 }, (_, at) => (
+              <span
+                key={at}
+                className={
+                  shape === 'cards'
+                    ? 'skeleton__field skeleton__field--button'
+                    : 'skeleton__field skeleton__field--short'
+                }
+              />
+            ))}
+            {shape === 'cards' && density === 'compact' && (
+              // The Compact switch the coven's card lists end their filter row with.
+              <div className="skeleton__switch">
+                <span />
+                <span />
+              </div>
+            )}
           </div>
         )}
         {shape === 'cards' && filter && (
@@ -214,17 +263,25 @@ const Skeleton = ({
         )}
         {shape === 'cards' && (
           <div className="skeleton__cards">
-            <Bars of={many} className="skeleton__card" />
+            <Bars
+              of={many}
+              className={
+                card === 'spell' ? 'skeleton__card skeleton__card--spell' : 'skeleton__card'
+              }
+            />
           </div>
         )}
         {shape === 'table' && (
-          <div className="skeleton__table">
+          <div
+            className={columns ? 'skeleton__table skeleton__table--columns' : 'skeleton__table'}
+            style={columns ? ({ '--skeleton-columns': columns } as CSSProperties) : undefined}
+          >
             <div className="skeleton__head">
-              <span />
-              <span />
-              <span />
+              {Array.from({ length: columns ?? 3 }, (_, at) => (
+                <span key={at} />
+              ))}
             </div>
-            <Bars of={many} className="skeleton__row" />
+            <Bars of={many} className="skeleton__row" cells={columns} />
           </div>
         )}
         {listed && (
@@ -282,6 +339,98 @@ const Skeleton = ({
                 ))}
               </div>
             </div>
+          </div>
+        )}
+        {shape === 'recipe' && (
+          // A spell's page in its own grid (`.skeleton__recipe`, the recipe's `entry-nav-grid`): the head,
+          // the Workings menu, then the main and side columns, so each stands where the real one does.
+          <div className="skeleton__recipe">
+            <div className="skeleton__recipe-head">
+              <span className="skeleton__recipe-back" />
+              <span className="skeleton__recipe-edited" />
+              <div className="skeleton__recipe-row">
+                <span className="skeleton__recipe-title" />
+                <div className="skeleton__recipe-actions">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+            </div>
+            <div className="page-nav skeleton__menu">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="skeleton__recipe-columns">
+              <div className="skeleton__recipe-main">
+                <span className="skeleton__heading" />
+                <div className="skeleton__entry-text">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="skeleton__heading" />
+                <div className="skeleton__entry-text">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+              <div className="skeleton__recipe-aside">
+                <div className="skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
+                <div className="skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {shape === 'detail' && (
+          // An opened support request in the modal's body, in the `.support-detail` grid the detail draws: the facts, the
+          // Thread and the reply in the main column, and for an admin the settings in the side column.
+          <div className={side ? 'support-detail' : 'support-detail support-detail--single'}>
+            <div className="support-detail__main">
+              <div className="support-detail__facts">
+                <div className="support-detail__fact--wide skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
+                {Array.from({ length: 2 }, (_, at) => (
+                  <div key={at} className="skeleton__entry-block">
+                    <span />
+                    <span />
+                  </div>
+                ))}
+              </div>
+              <span className="skeleton__label" />
+              <div className="skeleton__entry-text">
+                <span />
+                <span />
+                <span />
+              </div>
+              <span className="skeleton__box" />
+              <div className="skeleton__actions">
+                <span />
+                <span />
+              </div>
+            </div>
+            {side && (
+              <div className="support-detail__side">
+                {Array.from({ length: 2 }, (_, at) => (
+                  <div key={at} className="skeleton__form-field">
+                    <span className="skeleton__label" />
+                    <span className="skeleton__box" />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {shape === 'line' &&

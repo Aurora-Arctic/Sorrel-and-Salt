@@ -34,6 +34,10 @@ through `Workspace.members`.
 - **Roles are told apart by their word**, from `workspaceRoleLabel`
   (`UserDetail/roles.ts`). An owner is
   also bold, as the user list sets an admin, but weight is never the only cue.
+- **Every role carries a tip saying what it may do**: the word is a
+  [`RoleTip`](role-tip.md), its text `WORKSPACE_ROLE_ACCESS[role]`, the same
+  sentence Change Role shows beside that role, on every row whether or not it
+  carries Change Role, so a viewer reads it too.
 - **The joined date** is a `<time>` holding the ISO date, muted above the
   stacking width, as the user list's Signed Up is.
 - **Invited By** is the display name of whoever sent the invitation that seated

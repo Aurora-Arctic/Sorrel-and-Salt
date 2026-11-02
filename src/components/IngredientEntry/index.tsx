@@ -17,6 +17,7 @@ import InfoTip from '../InfoTip';
 import FormalName from './formal-name';
 import LinkHint, { LinkIconHint } from '../LinkHint';
 import SafetyNote, { ToxicMark } from '../SafetyNote';
+import DisclaimerNotice from '../DisclaimerNotice';
 import { slugify } from '../../lib/slugify';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { SubstituteDetail, VariantDetail } from '@/modules/ingredients';
@@ -124,6 +125,7 @@ function FormSection({
           <p className="ingredient-entry__description">{variant.description}</p>
         )}
         <SafetyNote safetyNotes={variant.safetyNotes} level={4} />
+        <DisclaimerNotice />
         {addsNothing && (
           <p className="ingredient-entry__empty">
             {variant.toxic
@@ -432,6 +434,7 @@ const IngredientEntry = ({
               <p className="ingredient-entry__empty">No description recorded.</p>
             )}
             <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
+            <DisclaimerNotice />
             <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
           </div>
         </section>

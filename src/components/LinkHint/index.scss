@@ -12,15 +12,13 @@
   margin-inline-start: space(1);
   border-radius: 50%;
   background: $accent;
+  // Unseen by opacity alone: its own `visibility` would override a held page's hidden one.
   opacity: 0;
-  visibility: hidden;
 
   // The fade-in and the pulse run after the delay. Under reduced motion `loading-motion`
   // swaps both for the shared `loading-pulse`, so the dot pulses there too, as Spinner and
   // Skeleton do.
   &.is-pending {
-    visibility: visible;
-
     @include loading-motion(
       (
         link-hint-in 200ms ease $loading-delay forwards,

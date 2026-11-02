@@ -89,6 +89,8 @@ export interface RouteModalProps {
   readingBody?: ModalProps['readingBody'];
   /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
   content?: RouteModalContent;
+  /** What the body shows while its contents are on its way; a form's skeleton when absent. */
+  loadingBody?: ReactNode;
   /** Which of a page's modal places this is, where it has more than one: a press shows only in the place it names. Unnamed, as every one-place page leaves it. */
   place?: string;
   /** Where the focus goes as it closes when neither its opener nor a link to its address is in the page: a menu's button, when the pressed link was one of the menu's items. */

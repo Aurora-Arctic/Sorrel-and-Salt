@@ -1,6 +1,7 @@
 import { users } from '../../modules/identity/schema/users';
 import { applyAudit } from '../audit';
 import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { AuditSession } from '../types';
 import type { SeedTransaction, SeedUser } from './types';
@@ -27,6 +28,17 @@ export const SIGNED_OUT_SENDER: SeedUser = {
   role: 'user',
 };
 
+/**
+ * The actor of a scheduled job's writes. Seeded on every environment with no seat and no way in: no OAuth account, no password and
+ * `canCreateWorkspace` false.
+ */
+export const SYSTEM_ACTOR: SeedUser = {
+  id: SYSTEM_ACTOR_ID,
+  name: 'System',
+  email: 'system@seed.sorrelandsalt.com',
+  role: 'user',
+};
+
 /** The bootstrap user acts for every seed, including its own insert. */
 export const BOOTSTRAP_SESSION: AuditSession = { userId: BOOTSTRAP_USER_ID };
 
@@ -45,4 +57,5 @@ export async function insertSeedUser(tx: SeedTransaction, user: SeedUser): Promi
 export async function insertBootstrapAdmin(tx: SeedTransaction): Promise<void> {
   await insertSeedUser(tx, BOOTSTRAP_ADMIN);
   await insertSeedUser(tx, SIGNED_OUT_SENDER);
+  await insertSeedUser(tx, SYSTEM_ACTOR);
 }

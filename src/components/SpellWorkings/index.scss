@@ -23,7 +23,7 @@
     display: grid;
     gap: space(5);
 
-    // No margin, indent or typography-base's ◆ marker: each row is headed by its date.
+    // No margin, indent or typography-base's ✦ marker: each row is headed by its date.
     @include list-reset;
   }
 
@@ -71,7 +71,7 @@
     font-size: type-size('caption');
   }
 
-  // Same reset as the list above: the global ◆ marker would otherwise lead each ingredient line.
+  // Same reset as the list above: the global ✦ marker would otherwise lead each ingredient line.
   &__deductions {
     @include list-reset;
 

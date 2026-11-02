@@ -3,6 +3,7 @@ import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
+import { TERMS_VERSION } from '../../lib/terms-version';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -616,7 +617,13 @@ async function insertMissingFixtureUsers(
 ): Promise<void> {
   await insertMissingBy(tx, users, wanted, {
     columns: ['id'],
-    toRow: (user) => ({ emailVerified: true, ...user }),
+    // The cast has agreed to the terms in force, so a test lands on its page rather than the acceptance page.
+    toRow: (user) => ({
+      emailVerified: true,
+      termsVersion: TERMS_VERSION,
+      termsAcceptedAt: new Date(),
+      ...user,
+    }),
   });
 }
 

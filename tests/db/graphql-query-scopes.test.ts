@@ -389,6 +389,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
+  agreeToTerms: write('mutation { agreeToTerms { id } }'),
   // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
   sendSignedOutSupportRequest: {
     source:
@@ -404,6 +405,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   sendSupportMessage: write(
     `mutation { sendSupportMessage(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
   ),
+  resolveMySupportRequest: write(`mutation { resolveMySupportRequest(id: "${NOWHERE}\") { id } }`),
   addSupportInternalNote: write(
     `mutation { addSupportInternalNote(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
   ),
@@ -698,6 +700,8 @@ const OPEN_WRITES = [
   'setName',
   // The session's own cookie names the account, which Better Auth reads.
   'setPassword',
+  // The session names the account it records against, and the service records the version in force.
+  'agreeToTerms',
   // The flag decides who may, which the service reads.
   'createWorkspace',
   // The owner's `member: update` decides, which the service checks.
@@ -743,6 +747,8 @@ const OPEN_WRITES = [
   'sendSupportRequest',
   // Any verified session may write on a request; the service finds only the sender's own.
   'sendSupportMessage',
+  // Any verified session may resolve a request; the service finds only the sender's own.
+  'resolveMySupportRequest',
   // A curator's scope admits; the service decides which requests (an admin any, a curator one assigned to them).
   'replyToSupportRequest',
   'resolveSupportRequest',

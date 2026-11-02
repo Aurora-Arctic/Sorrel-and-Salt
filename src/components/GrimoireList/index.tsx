@@ -32,6 +32,7 @@ const GrimoireList = ({
   <div data-density="compact">
     <IngredientSearch
       shape="cards"
+      card="spell"
       search={
         <GrimoireFilter
           path={path}

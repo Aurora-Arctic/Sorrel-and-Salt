@@ -6,6 +6,7 @@ import { userPrivilegeChanges } from '../../modules/identity/schema/user-privile
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findMany, findPage, findPageCount } from './finders';
@@ -33,18 +34,19 @@ export async function findUserByEmail(
 /** The user list's order, by name and then id. */
 const USER_ORDER: readonly SortPart[] = [users.name];
 
-/** The users the list holds under `filter`: all but the two system users, narrowed by its arms. */
+/** The users the list holds under `filter`: all but the three system users, narrowed by its arms. */
 function listedUsers(filter: UserFilter): SQL | undefined {
   return and(
     ne(users.id, BOOTSTRAP_USER_ID),
     ne(users.id, SIGNED_OUT_SENDER_ID),
+    ne(users.id, SYSTEM_ACTOR_ID),
     ...userArms(filter),
   );
 }
 
 /**
  * One page of the live users under `filter`, by name then id, for the admin user list, under the `SiteAdmin` proof. The seed's
- * bootstrap user and the signed-out support sender are left out: nobody signs in as it and nothing an admin does to a person applies to it
+ * bootstrap user, the signed-out support sender and the job actor are left out: nobody signs in as it and nothing an admin does to a person applies to it
  * (claude-docs/auth/admin-users.md, "The user list").
  */
 export function findUserPage(

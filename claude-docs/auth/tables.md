@@ -6,7 +6,7 @@ convention) and split across two schema files:
 
 - **`src/modules/identity/schema/users.ts`** — `users`: `id`, `name`, `email`,
   `emailVerified`, `image`, `role` (`user` | `admin`, default `user`),
-  `canCreateWorkspace` (default `false`), plus `...auditColumns`. M2.2
+  `canCreateWorkspace` (default `false`), `termsVersion` and `termsAcceptedAt` (M15.57, both null until the account agrees to the terms; [`admin-bootstrap.md`](admin-bootstrap.md), "The terms page"), plus `...auditColumns`. M2.2
   shipped Better Auth's own core shape (`name`/`image`, no
   `role`/`canCreateWorkspace`); M2.3 added the app's own columns
   (DESIGN.md §5) without touching `name`/`image` — renaming them to

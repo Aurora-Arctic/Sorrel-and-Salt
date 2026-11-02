@@ -8,13 +8,14 @@ import { supportRequests } from '../schema/support-requests';
 import type { SupportReplyRow, SupportRequestRow } from '../types';
 import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
-import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut } from './send';
+import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
 import { getSupportRequest } from './staff';
 
 // The request lifecycle. The transitions, and who may make each:
 //
 //   open               -> waiting_on_sender  staff reply marked "waiting on sender"        (reply.ts)
 //   open, waiting      -> resolved           staff                                         (staff.ts)
+//   open, waiting      -> resolved           the sender, on their own request              (resolveMySupportRequest)
 //   open, waiting, res -> closed             staff                                         (closeSupportRequest)
 //   waiting, resolved  -> open               the sender's public message; keeps the assignee
 //   resolved           -> closed             closeResolvedRequests, after seven idle days
@@ -53,7 +54,9 @@ export async function sendSenderMessage(
       session.userId,
       SEND_WINDOW_SECONDS,
     );
-    refuseTimedOut(timedOutUntil);
+    // A closed request's message opens a new request, so it is refused in the new-request wording.
+    if (request.status === 'closed') refuseTimedOut(timedOutUntil);
+    else refuseTimedOutReply(timedOutUntil);
 
     const [moved] = await write.moveSupportRequest(
       id,
@@ -88,6 +91,38 @@ export async function sendSenderMessage(
     });
     return linked as SupportRequestRow;
   });
+}
+
+/**
+ * The sender resolves their own request without replying: it moves from open or waiting on the sender to resolved, stamped with
+ * the sender as `resolved_by`, which is how staff tell it from a staff resolve. An open request may be resolved as well as a waiting
+ * one, since a sender whose problem went away should not have to wait for staff to ask; a reply reopens it. One guarded update
+ * that ANDs `created_by`, so another account's request is never touched.
+ *
+ * @throws {Forbidden} the address is unverified, or the request is already resolved or closed.
+ * @throws {NotFound} the sender has no request with this id.
+ */
+export async function resolveMySupportRequest(
+  session: Session,
+  requestId: string,
+): Promise<SupportRequestRow> {
+  requireVerified(session);
+  const id = parseInput(RowId, requestId);
+  const request = await findOwnSupportRequest(session.userId, id);
+  if (!request) throw new NotFound('No such support request');
+  const [moved] = await withAudit(session, (write) =>
+    write.moveSupportRequest(id, session.userId, ['open', 'waiting_on_sender'], {
+      status: 'resolved',
+      resolvedAt: new Date(),
+      resolvedBy: session.userId,
+    }),
+  );
+  if (!moved) {
+    throw new Forbidden(
+      `A request can be resolved only while it is open or waiting on sender; this one is ${request.status.replace(/_/g, ' ')}`,
+    );
+  }
+  return moved;
 }
 
 /**

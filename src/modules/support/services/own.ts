@@ -1,10 +1,12 @@
 import 'server-only';
 import {
   findActiveSupportTimeoutEnd,
+  findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportRequestPage,
   findOwnSupportStatusCounts,
+  findSupportMenuCounts,
 } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -78,6 +80,16 @@ export async function getMySupportRequest(
 }
 
 /**
+ * The id of the request the signed-in sender opened as a follow-up to their closed one, or `null` when there is none.
+ *
+ * @throws {Forbidden} the address is unverified.
+ */
+export async function getMySupportFollowUpId(session: Session, id: string): Promise<string | null> {
+  requireVerified(session);
+  return (await findOwnSupportFollowUp(session.userId, parseInput(RowId, id)))?.id ?? null;
+}
+
+/**
  * When the signed-in sender's time-out ends, or `null` when none is in force: for `/support`, which shows the end instead of the form.
  *
  * @throws {Forbidden} the address is unverified.
@@ -98,4 +110,19 @@ export async function getMySupportDialogState(
   if (session.emailUnverified) return { kind: 'unverified', until: null };
   const until = await getMySupportTimeoutEnd(session);
   return until ? { kind: 'timedOut', until } : { kind: 'form', until: null };
+}
+
+/**
+ * What the account menu counts for the viewer: open requests assigned to them (a curator's or an admin's alone; anyone else
+ * is assigned none) and their own requests waiting on their answer. Read per request and never cached, as both are the viewer's.
+ *
+ * @throws {Forbidden} the address is unverified.
+ */
+export async function getMySupportCounts(
+  session: Session,
+): Promise<{ assignedOpen: number; waitingOnMe: number }> {
+  requireVerified(session);
+  const counts = await findSupportMenuCounts(session.userId);
+  const staff = session.role === 'admin' || session.role === 'curator';
+  return { assignedOpen: staff ? counts.assignedOpen : 0, waitingOnMe: counts.waitingOnMe };
 }

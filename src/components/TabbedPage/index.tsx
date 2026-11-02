@@ -5,10 +5,26 @@ import { TabAction, TabPanel, TabSwitchProvider } from './tab-switch';
 import type { TabbedPageProps } from './types';
 import './index.scss';
 
-// A page in tabs: its heading with a row of links, one per tab, on the same line, the open tab's action at the line's end,
+// A page in tabs: its heading with a row of links, one per tab, on the same line (or beneath it, with `tabsBelow`), the open tab's action at the line's end,
 // and its content beneath. Each tab is at its own address (claude-docs/components/tabbed-page.md, "What a tabbed page is").
-const TabbedPage = ({ title, tabs, action, framed, children }: TabbedPageProps): ReactElement => (
-  <main className={framed ? 'tabbed-page tabbed-page--framed' : 'tabbed-page'}>
+const TabbedPage = ({
+  title,
+  tabs,
+  open,
+  tabsBelow,
+  action,
+  framed,
+  children,
+}: TabbedPageProps): ReactElement => (
+  <main
+    className={[
+      'tabbed-page',
+      framed && 'tabbed-page--framed',
+      tabsBelow && 'tabbed-page--tabs-below',
+    ]
+      .filter(Boolean)
+      .join(' ')}
+  >
     <TabSwitchProvider>
       <PageHeader
         title={title}
@@ -17,7 +33,7 @@ const TabbedPage = ({ title, tabs, action, framed, children }: TabbedPageProps):
             {/* One tab has nowhere to switch to, so no row is drawn. */}
             {tabs.length > 1 && (
               <nav aria-label={title} className="tabbed-page__tabs">
-                <TabLinks tabs={tabs} />
+                <TabLinks tabs={tabs} open={open} />
               </nav>
             )}
             <TabAction>{action}</TabAction>

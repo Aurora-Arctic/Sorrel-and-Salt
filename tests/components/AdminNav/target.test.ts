@@ -36,3 +36,17 @@ describe('adminTarget', () => {
     expect(target.action).toBeFalsy();
   });
 });
+
+describe('adminTarget for Support', () => {
+  it('draws the support list as a titled table with its view tabs beneath the heading, a filter and its columns', () => {
+    expect(adminTarget('/admin/support')).toMatchObject({
+      region: 'admin',
+      shape: 'table',
+      title: true,
+      tabs: true,
+      tabsBelow: true,
+      filter: true,
+    });
+    expect(adminTarget('/admin/support').columns).toBeGreaterThan(3);
+  });
+});

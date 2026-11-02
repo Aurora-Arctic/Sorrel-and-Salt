@@ -15,7 +15,7 @@ names that file, not this page.
 
 ## Where tests live
 
-Every Vitest file sits under `tests/` mirroring `src/`, a path glob assigns it to the `unit`, `dom`, `db` or `rsc` project (`db` splitting into `db-mocking` for the files that mock), `db` re-clones each worker's database from the seeded `sorrel_test_template` before every file, and `npm run test:coverage` runs all five against an 80% threshold. [`testing/where-tests-live.md`](testing/where-tests-live.md)
+Every Vitest file sits under `tests/` mirroring `src/`, a path glob assigns it to the `unit`, `dom`, `db`, `rsc` or `workflow` project (`db` splitting into `db-mocking` for the files that mock), `db` re-clones each worker's database from the seeded `sorrel_test_template` before every file, and `npm run test:coverage` runs all six against an 80% threshold. [`testing/where-tests-live.md`](testing/where-tests-live.md)
 
 ## The db test harness — `tests/support/db/` (MB.51)
 

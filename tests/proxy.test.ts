@@ -78,6 +78,25 @@ describe('the proxy matcher', () => {
   ])('stays off %s', (path) => {
     expect(matches(path)).toBe(false);
   });
+
+  // The Workflow SDK's generated routes receive its own queue calls, which carry no cookie and a
+  // body the proxy must not touch (it fails on a detached buffer when the proxy runs first).
+  it.each(['/.well-known/workflow/v1/flow', '/.well-known/workflow/v1/step'])(
+    'stays off the SDK route %s',
+    (path) => {
+      expect(matches(path)).toBe(false);
+    },
+  );
+
+  // Only that one prefix is exempt: every other path under /.well-known/ still reaches the proxy.
+  it.each([
+    '/.well-known/other',
+    '/.well-known/ai-catalog.json',
+    '/.well-known/workflowx/v1/flow',
+    '/.well-known/workflow',
+  ])('still runs on %s', (path) => {
+    expect(matches(path)).toBe(true);
+  });
 });
 
 describe('public routes', () => {
@@ -101,6 +120,11 @@ describe('public routes', () => {
     // The support page offers a signed-out visitor Sign In and holds no data.
     '/support',
     '/support?support=bug&error=404',
+    // The public documents carry no application data.
+    '/privacy',
+    '/disclaimer',
+    '/terms',
+    '/code-of-ethics',
     '/robots.txt',
     '/sitemap.xml',
     '/llms.txt',
@@ -108,6 +132,9 @@ describe('public routes', () => {
     '/.well-known/ard.json',
     '/favicon.ico',
     '/manifest.webmanifest',
+    // The site share card a link preview fetches for `/`, at the address Next gives it.
+    '/opengraph-image',
+    '/opengraph-image?1c801e44ee73c51d',
   ])('lets a signed-out request to %s through', async (path) => {
     const response = await proxy(request(path));
 
@@ -134,6 +161,7 @@ describe('public routes', () => {
     '/account/support',
     '/robots.txt.bak',
     '/llms.txt/x',
+    '/opengraph-image/x',
     '/.well-known',
     '/coven/hearth',
     '/coven/hearth/ingredients',

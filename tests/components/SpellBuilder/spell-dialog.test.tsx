@@ -353,7 +353,7 @@ describe('SpellDialog', () => {
         fireEvent.click(close());
       });
 
-      expect(router.replace).toHaveBeenCalledWith(CLOSE);
+      expect(router.replace).toHaveBeenCalledWith(CLOSE, { scroll: false });
       expect(created).toHaveLength(0);
     });
 
@@ -369,7 +369,7 @@ describe('SpellDialog', () => {
       });
 
       expect(screen.queryByText(/Discard/)).toBeNull();
-      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
+      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE, { scroll: false }));
       expect(created).toHaveLength(1);
       expect(created[0].input).toMatchObject({ title: 'Fixture Working' });
       // Saved, then closed: never the draft's own address on the way out.
@@ -388,7 +388,7 @@ describe('SpellDialog', () => {
         fireEvent.click(close());
       });
 
-      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
+      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE, { scroll: false }));
       expect(updated).toHaveLength(1);
       expect(updated[0]).toMatchObject({
         id: 's9',
@@ -413,7 +413,7 @@ describe('SpellDialog', () => {
 
       land();
 
-      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
+      await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE, { scroll: false }));
       expect(updated).toHaveLength(1);
       expect(updated[0]?.input).toMatchObject({ intent: 'Calmer', steps: [ROSEWORT_SENT] });
     });
@@ -447,7 +447,7 @@ describe('SpellDialog', () => {
         fireEvent.click(close());
       });
 
-      expect(router.replace).toHaveBeenCalledWith(CLOSE);
+      expect(router.replace).toHaveBeenCalledWith(CLOSE, { scroll: false });
       expect(updated).toHaveLength(0);
     });
 

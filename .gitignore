@@ -94,3 +94,6 @@ ds-bundle/
 
 # Playwright output
 /test-results/
+/.swc
+/.workflow-data
+/.workflow-vitest

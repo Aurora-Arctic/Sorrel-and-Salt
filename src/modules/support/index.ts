@@ -19,6 +19,7 @@ export type {
   SupportNotifier,
   SupportReplyRow,
   SupportRequestFilter,
+  SupportViewCounts,
   SupportRequestRow,
   SupportStatus,
   SupportTimeoutRow,
