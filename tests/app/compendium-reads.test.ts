@@ -14,7 +14,9 @@ const listCompendiumHeldIn = vi.fn();
 const countCompendiumHeldIn = vi.fn();
 const compendiumFacetsHeldIn = vi.fn();
 const variantsOf = vi.fn();
+const cardCategoriesOf = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  cardCategoriesOf,
   getIngredient,
   readCompendiumEntry,
   listCompendiumHeldIn,
@@ -22,12 +24,24 @@ vi.mock('@/modules/ingredients', () => ({
   compendiumFacetsHeldIn,
   variantsOf,
 }));
+// One live category in one group, as the card read finds them through the vocabulary.
+const WARD = {
+  id: 'cat-ward',
+  slug: 'testward',
+  name: 'Testward',
+  description: '',
+  groupId: 'g-1',
+};
+const CHARM = { ...WARD, id: 'cat-charm', slug: 'testcharm', name: 'Testcharm' };
+const GROUP = { id: 'g-1', name: 'Testgroup', colorDark: '#112233', colorLight: '#445566' };
 vi.mock('@/modules/vocabulary', () => ({
   formChoicesOf: async () => [],
   formGroupsOf: async () => [],
+  listCategories: async () => [WARD, CHARM].map((node) => ({ node, cursor: node.id })),
+  categoryGroupsOf: async () => [GROUP],
 }));
 
-const { readCompendiumDetails, readCompendiumHeldIn, readFacetsHeldIn } =
+const { readCardCategoriesOf, readCompendiumDetails, readCompendiumHeldIn, readFacetsHeldIn } =
   await import('@/app/compendium-reads');
 
 const DETAIL = entryDetail();
@@ -115,5 +129,36 @@ describe('readCompendiumHeldIn and readFacetsHeldIn', () => {
       { covenIds: ['w-1'], covensNot: true },
       {},
     );
+  });
+});
+
+// The one read the compendium's cards and a coven's cupboard share. Which categories it finds is
+// tests/modules/ingredients/services/card-categories.test.ts's; here, that each chip keeps its forms, as
+// the screen names a form, and its group's colours.
+describe('readCardCategoriesOf', () => {
+  it('passes the session, the refs and the holding coven on, and gives a form-only chip the forms that carry it', async () => {
+    cardCategoriesOf.mockResolvedValue([
+      [
+        { category: WARD, forms: [] },
+        { category: CHARM, forms: ['dried testleaf', 'testoil'] },
+      ],
+    ]);
+    const session = { user: { id: 'u-1' } } as never;
+    const refs = [{ id: 'i-1', workspaceId: 'w-1' }];
+    const heldBy = { workspaceId: 'w-1' } as never;
+
+    const [chips] = await readCardCategoriesOf(session, refs, heldBy);
+
+    expect(cardCategoriesOf).toHaveBeenCalledExactlyOnceWith(session, refs, heldBy);
+    const group = {
+      id: GROUP.id,
+      name: GROUP.name,
+      colorDark: GROUP.colorDark,
+      colorLight: GROUP.colorLight,
+    };
+    expect(chips).toEqual([
+      { category: { id: WARD.id, name: WARD.name }, group },
+      { category: { id: CHARM.id, name: CHARM.name }, group, forms: ['Dried Testleaf', 'Testoil'] },
+    ]);
   });
 });
