@@ -158,14 +158,15 @@ export async function requireSignedIn(): Promise<Session> {
  */
 export async function requireSession(): Promise<Session> {
   const session = await requireSignedIn();
-  const { emailVerified, termsAgreed } = await getSessionState();
+  const { emailVerified, termsAgreed, accessPause } = await getSessionState();
   const returnPath = await forwardedReturnPath();
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));
   }
   // After the address check, so an unverified account proves its address first and agrees second; the acceptance page is exempt
-  // from this check as the email page is from the one above.
-  if (!termsAgreed && !isTermsPage(returnPath) && !isEmailPage(returnPath)) {
+  // from this check as the email page is from the one above. A paused account, which reaches only the support pages here, is
+  // not sent: it cannot agree while paused, as the API refuses the agreement, so the acceptance page would send it back.
+  if (!termsAgreed && !accessPause && !isTermsPage(returnPath) && !isEmailPage(returnPath)) {
     redirect(termsPagePath(safeReturnPath(returnPath)));
   }
   return session;
