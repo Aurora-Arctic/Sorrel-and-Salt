@@ -200,6 +200,83 @@ describe('the Membership proof', () => {
       const ids = (await findMembershipsOfUsers([A.id])).map((row) => row.workspaceId);
       expect(ids).toEqual([WORKSPACE_W_ID]);
     });
+
+    // The switcher and the compendium's In My Covens mark a paused coven from this one read, as the seat read does.
+    describe('the pause standing on each seat', () => {
+      async function pauseB(until: string | null) {
+        await sql`
+          insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+          values (${WORKSPACE_W_ID}, ${B.id}, ${until}, ${A.id}, ${A.id})
+        `;
+      }
+      const clear = () =>
+        sql`delete from workspace_member_pauses where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}`;
+      const pauses = async () =>
+        (await findMembershipsOfUsers([A.id, B.id, D.id])).map(
+          ({ userId, workspaceId, pause }) => ({
+            userId,
+            workspaceId,
+            pause,
+          }),
+        );
+
+      it('answers no pause on a seat with none', async () => {
+        expect(await pauses()).toEqual(
+          expect.arrayContaining([
+            { userId: A.id, workspaceId: WORKSPACE_W_ID, pause: null },
+            { userId: B.id, workspaceId: WORKSPACE_W_ID, pause: null },
+            { userId: D.id, workspaceId: WORKSPACE_X_ID, pause: null },
+          ]),
+        );
+      });
+
+      it('answers the standing pause on its own seat alone, dated or open-ended, adding no row', async () => {
+        const before = (await pauses()).length;
+        await pauseB('2099-01-01T00:00:00Z');
+        try {
+          const rows = await pauses();
+          expect(rows).toHaveLength(before);
+          expect(rows).toContainEqual({
+            userId: B.id,
+            workspaceId: WORKSPACE_W_ID,
+            pause: { until: new Date('2099-01-01T00:00:00Z') },
+          });
+          // A's seat in the same coven is untouched.
+          expect(rows).toContainEqual({ userId: A.id, workspaceId: WORKSPACE_W_ID, pause: null });
+        } finally {
+          await clear();
+        }
+        await pauseB(null);
+        try {
+          expect(await pauses()).toContainEqual({
+            userId: B.id,
+            workspaceId: WORKSPACE_W_ID,
+            pause: { until: null },
+          });
+        } finally {
+          await clear();
+        }
+      });
+
+      it('reads a run-out pause as none', async () => {
+        await pauseB('2000-01-01T00:00:00Z');
+        try {
+          // Why this could have answered a pause: the row is there, naming B in W.
+          const [row] = await sql`
+            select count(*)::int as n from workspace_member_pauses
+             where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}
+          `;
+          expect(row?.n).toBe(1);
+          expect(await pauses()).toContainEqual({
+            userId: B.id,
+            workspaceId: WORKSPACE_W_ID,
+            pause: null,
+          });
+        } finally {
+          await clear();
+        }
+      });
+    });
   });
 });
 

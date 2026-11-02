@@ -14,6 +14,15 @@ import { existsIn, pageBounds, selectFrom, selectOne } from './select';
 import { notRunOut } from './workspace-member-pauses';
 import type { AuditWriter, Keyset, WriterContext } from './types';
 
+/** The standing pause on a seat: unlifted, undeleted and not run out. The one-live index allows one per seat, so joining it adds no row. */
+const standingPauseOnSeat = and(
+  eq(workspaceMemberPauses.workspaceId, workspaceMembers.workspaceId),
+  eq(workspaceMemberPauses.userId, workspaceMembers.userId),
+  isNull(workspaceMemberPauses.liftedAt),
+  notSoftDeleted(workspaceMemberPauses),
+  notRunOut,
+) as SQL;
+
 /**
  * The one workspace-scoped read that takes no proof, because it mints one: the user's role in the workspace and the pause
  * standing on it, in one query. Narrow on purpose (a role and a pause, not rows) so it cannot stand in for a finder; the index's
@@ -34,17 +43,7 @@ export async function findWorkspaceSeat(
       // members, and this check is what refuses every role at once.
       existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
     ),
-    {
-      // The one-live index allows a member one unlifted, undeleted pause per coven, so the join adds no row.
-      leftJoin: workspaceMemberPauses,
-      on: and(
-        eq(workspaceMemberPauses.workspaceId, workspaceMembers.workspaceId),
-        eq(workspaceMemberPauses.userId, workspaceMembers.userId),
-        isNull(workspaceMemberPauses.liftedAt),
-        notSoftDeleted(workspaceMemberPauses),
-        notRunOut,
-      ) as SQL,
-    },
+    { leftJoin: workspaceMemberPauses, on: standingPauseOnSeat },
   );
   if (!found) return undefined;
   return { role: found.row.role, pause: found.joined ? { until: found.joined.until } : null };
@@ -62,22 +61,27 @@ export async function findWorkspaceRole(
 }
 
 /**
- * Every live membership each of these users holds, in a live workspace. A proofless
- * read: a user's memberships span workspaces, so the service decides whose ids may be
+ * Every live membership each of these users holds, in a live workspace, with the pause standing on each seat or null, in
+ * the same query. A proofless read: a user's memberships span workspaces, so the service decides whose ids may be
  * asked about, and the index's export list is pinned. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export async function findMembershipsOfUsers(
   userIds: readonly string[],
-): Promise<(typeof workspaceMembers.$inferSelect)[]> {
+): Promise<(typeof workspaceMembers.$inferSelect & Pick<WorkspaceSeat, 'pause'>)[]> {
   if (userIds.length === 0) return [];
-  return selectFrom(
+  const rows = await selectFrom(
     workspaceMembers,
     and(
       notSoftDeleted(workspaceMembers),
       inArray(workspaceMembers.userId, [...userIds]),
       existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
     ),
+    { leftJoin: workspaceMemberPauses, on: standingPauseOnSeat },
   );
+  return rows.map(({ row, joined }) => ({
+    ...row,
+    pause: joined ? { until: joined.until } : null,
+  }));
 }
 
 /**
