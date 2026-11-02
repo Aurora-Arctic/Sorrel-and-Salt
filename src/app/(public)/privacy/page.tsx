@@ -185,7 +185,8 @@ export default function PrivacyPolicyPage() {
         A coven holds its name, its members with their roles and when each joined, its invitations
         (the invited address, the role offered and any note), its ingredients and their stock, and
         its grimoire: every spell, its steps and its workings, with who wrote each. A spell marked
-        private is still stored in the coven; the site shows it only to its author.
+        private is shown only to the person who wrote it. Nobody else in the coven sees it, its
+        owners included, though it is stored with the coven's other spells.
       </p>
       <p>
         A printed invitation card is bound to no address. When someone opens a card's link and is
