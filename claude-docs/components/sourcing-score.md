@@ -15,18 +15,18 @@ The score and its facts come from `sourcingScore` in `src/modules/ingredients/se
 
 `SourcingScoreProps` (`types.ts`):
 
-| Prop           | What it is                                                                                                                       |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `sourcing`     | The `SourcingScore` the curator read returns: `score` and its `facts` list.                                                      |
-| `headingLevel` | The heading's level: 4 (the default) in the edit dialog, 2 on the entry page under its h1. The size is the h4's at either level. |
+| Prop           | What it is                                                                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sourcing`     | The `SourcingScore` the curator read returns: `score` and its `facts` list.                                                                  |
+| `headingLevel` | The heading's level: 4 (the default) in the edit dialog, 3 on the entry page, under its References h2. The size is the h4's at either level. |
 
 ## On the entry page
 
-The entry page shows the same panel, whole and always open, as the last row of the entry's head, with `headingLevel={2}`. `IngredientEntry` wraps it in `.ingredient-entry__score`, which rules it off above with a hairline and `space(4)` padding and drops the panel's own bottom divider and margin, as nothing follows it in the head. There is no toggle.
+The entry page shows the same panel, whole and always open, as the last block of the References section, with `headingLevel={3}`, so the section still ends the page. `ReferencesSection` takes it as `children`; the section is always drawn (with "No sources recorded." when there are none), so an entry with no references still shows the score. The section spaces its parts with its own stack gap and no hairline, so the panel takes that gap, and `.ingredient-entry__references .sourcing-score` drops the panel's bottom divider, margin and padding, as nothing follows it. There is no toggle.
 
 ## Where it shows
 
-The compendium's edit dialog, at the start of the form's Sources section (the form's `sourcesIntro` slot). The admin compendium dialog and the entry page's dialog both render [`CompendiumEntryForm`](compendium-entry-form.md), which draws the panel from its `sourcing` prop. The admin page reads the score in `read-entry.ts`; the entry page reads it in `sourcingOf` in `src/app/(public)/compendium/ingredients/[slug]/page.tsx`. Both call `readSourcingScore`, which refuses anyone who is not a curator or admin; the entry page asks only when the viewer can curate, and the score is never in the cached public read. An add and a coven's own entry have none. The panel is a landmark named by its heading, so a screen reader can jump to it. The entry page also shows it in its head, from the same read.
+The compendium's edit dialog, at the start of the form's Sources section (the form's `sourcesIntro` slot). The admin compendium dialog and the entry page's dialog both render [`CompendiumEntryForm`](compendium-entry-form.md), which draws the panel from its `sourcing` prop. The admin page reads the score in `read-entry.ts`; the entry page reads it in `sourcingOf` in `src/app/(public)/compendium/ingredients/[slug]/page.tsx`. Both call `readSourcingScore`, which refuses anyone who is not a curator or admin; the entry page asks only when the viewer can curate, and the score is never in the cached public read. An add and a coven's own entry have none. The panel is a landmark named by its heading, so a screen reader can jump to it. The entry page also shows it at the foot of its References section, from the same read.
 
 ## Testing
 

@@ -633,15 +633,10 @@ $replaces-gap: space(5);
   }
 }
 
-// The sourcing score, the head's last row: ruled off above, and the panel's own bottom divider and
-// margin dropped, as nothing follows it in the head.
-.ingredient-entry__score {
-  padding-block-start: space(4);
-  border-block-start: 1px solid $hairline;
-
-  .sourcing-score {
-    margin-block: 0;
-    padding-block-end: 0;
-    border-block-end: 0;
-  }
+// The sourcing score ends the References section, which spaces it from the list above; the panel's
+// own bottom divider and margin are dropped, as nothing follows it.
+.ingredient-entry__references .sourcing-score {
+  margin-block: 0;
+  padding-block-end: 0;
+  border-block-end: 0;
 }

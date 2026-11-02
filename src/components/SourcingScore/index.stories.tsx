@@ -77,10 +77,10 @@ export const CostsAgainstFullGains: Story = {
   },
 };
 
-// The entry page's: the same panel under an h2.
+// The entry page's: the same panel under an h3, at the foot of References.
 export const OnTheEntryPage: Story = {
   args: {
-    headingLevel: 2,
+    headingLevel: 3,
     sourcing: {
       score: 38,
       facts: [

@@ -89,12 +89,12 @@ describe('SourcingScore', () => {
 });
 
 describe('SourcingScore on the entry page', () => {
-  it('names its region by an h2 carrying the total and still shows the bar and every fact', () => {
-    render(<SourcingScore sourcing={SCORE} headingLevel={2} />);
+  it('names its region by an h3 carrying the total and still shows the bar and every fact', () => {
+    render(<SourcingScore sourcing={SCORE} headingLevel={3} />);
 
     const section = screen.getByRole('region', { name: 'Sourcing Score: 7' });
     expect(
-      within(section).getByRole('heading', { level: 2, name: 'Sourcing Score: 7' }),
+      within(section).getByRole('heading', { level: 3, name: 'Sourcing Score: 7' }),
     ).toBeInTheDocument();
     expect(within(section).getByRole('img')).toBeInTheDocument();
     expect(within(section).getAllByRole('listitem')).toHaveLength(SCORE.facts.length);
