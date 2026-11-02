@@ -28,11 +28,22 @@ attempt is logged ("every attempt failed") and the run returns false. A refusal
 logged once and not retried, since no retry would change it. If the job cannot be
 started, `send` logs that and tries the transport once itself.
 
-**What skips the job.** A run's arguments are kept in the job's event log, so a
-mail that carries a secret link is sent with `send(message, { carriesSecret: true })`,
-tried once and never retried: the verification and change links, the reset links
-(a reset and a lockout), and both invitations. A mail while `MAIL_TRANSPORT` is
-unset skips the job too, since it is only logged. The record is
+**Secret links.** A run's arguments are kept in the job's event log, so a mail
+that carries a secret link never puts the link in a run. The sign-up and resend
+verification link, the password reset link and the lockout mail go through their
+own job, `secretLinkMail` (`src/modules/identity/jobs/secret-link-mail.ts`),
+whose run holds the account id, the request's `/api/auth` base and, for a
+verification, where the account was going, or for a lockout, its length. The step
+reads the address when it sends. A verification link is signed afresh there with
+the secret Better Auth verifies with (`verificationSigningSecret`); a reset link
+carries the newest unexpired reset token Better Auth stored for the account.
+
+**What skips the job.** The change-of-address link and both invitations are still
+sent with `send(message, { carriesSecret: true })`, tried once and never
+retried: the new address is stored nowhere for a step to read, and an
+invitation's token is stored only as its hash. A mail while `MAIL_TRANSPORT` is
+unset skips the job too, since it is only logged, and a secret-link mail is then
+built in the request and tried once. The record is
 [`design-decisions/m15.50-mail-through-a-retried-job.md`](design-decisions/m15.50-mail-through-a-retried-job.md).
 
 **A "sent" marker.** A caller that records a mail as sent does it in its own job

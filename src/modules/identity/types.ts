@@ -177,3 +177,15 @@ export interface MintedCards {
   expiresAt: Date;
   tokens: string[];
 }
+
+/**
+ * A mail carrying a secret link, as its job's run holds it: ids and the request's `/api/auth` base, never the token, the
+ * address or the link. The step reads the address and the token, or signs one, when it sends.
+ */
+export type SecretLink =
+  /** The sign-up or resend verification link, landing on the way to `next`. */
+  | { kind: 'verification'; userId: string; authBase: string; next: string | null }
+  /** The password reset link. */
+  | { kind: 'reset'; userId: string; authBase: string }
+  /** The lockout notice, with its reset link, for a lock of `minutes`. */
+  | { kind: 'lockout'; userId: string; authBase: string; minutes: number };

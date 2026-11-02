@@ -1,7 +1,7 @@
-import { and, eq, inArray, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, like, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
-import { accounts } from '../../modules/identity/schema/auth';
+import { accounts, passkeys, verifications } from '../../modules/identity/schema/auth';
 import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
@@ -189,3 +189,53 @@ function userArms({ query, awaitingApproval, role }: UserFilter): (SQL | undefin
 function nameOrEmailHolds(query: string): SQL | undefined {
   return or(containsText(users.name, query), containsText(users.email, query));
 }
+
+/**
+ * The provider of every account linked to this user, for a mail that names the ways in. A proofless read the mail's job makes
+ * as the System account, which holds no proof; only the provider ids leave, never a token.
+ */
+export async function findOwnProviderIds(userId: string): Promise<string[]> {
+  // `accounts` carries no `deleted_at`, so the filter adds nothing today.
+  const rows = await selectFrom(
+    accounts,
+    and(notSoftDeleted(accounts), eq(accounts.userId, userId)),
+  );
+  return rows.map(({ providerId }) => providerId);
+}
+
+/** Whether this user holds a passkey, for the lockout mail. Only the answer leaves. */
+export async function findHoldsPasskey(userId: string): Promise<boolean> {
+  // Neither `passkeys` nor `verifications` carries `deleted_at`, so the filter adds nothing today.
+  const rows = await selectFrom(
+    passkeys,
+    and(notSoftDeleted(passkeys), eq(passkeys.userId, userId)),
+  );
+  return rows.length > 0;
+}
+
+/**
+ * The token of this user's newest unexpired reset link, as Better Auth stores it in `verifications`, or `undefined`. Read by
+ * the reset and lockout mails' step when it sends, so the job's run never carries the token.
+ */
+export async function findNewestResetToken(
+  userId: string,
+  now: Date = new Date(),
+): Promise<string | undefined> {
+  const rows = await selectFrom(
+    verifications,
+    and(
+      notSoftDeleted(verifications),
+      eq(verifications.value, userId),
+      like(verifications.identifier, `${RESET_IDENTIFIER_PREFIX}%`),
+      gt(verifications.expiresAt, now),
+    ),
+  );
+  const newest = rows.reduce<(typeof rows)[number] | undefined>(
+    (best, row) => (!best || row.createdAt > best.createdAt ? row : best),
+    undefined,
+  );
+  return newest?.identifier.slice(RESET_IDENTIFIER_PREFIX.length);
+}
+
+/** How Better Auth names a reset link's row in `verifications`: this, then the token. */
+const RESET_IDENTIFIER_PREFIX = 'reset-password:';

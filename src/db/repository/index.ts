@@ -113,6 +113,9 @@ export {
 export { findDemoWorkspace } from './workspaces';
 export {
   findCoMemberNamesIncludingSoftDeleted,
+  findHoldsPasskey,
+  findNewestResetToken,
+  findOwnProviderIds,
   findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,

@@ -46,7 +46,7 @@ import { authSecrets } from './auth-secrets';
 import { SITE_NAME } from './site';
 import { send } from './mail';
 import { runInBackground } from './background-tasks';
-import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
+import { emailPagePath, returnPathOf } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { sendEmailChangeNotice } from './email-change-notice';
 import { signedInLanding } from './landing';
@@ -56,10 +56,7 @@ import { breachedPasswordCheck } from './breached-password';
 import { HELD_PASSWORD_FIELDS } from './held-password-paths';
 import { isFreshSession } from './session-fresh';
 import { primaryAdminEmail } from './primary-admin';
-import { verifyEmailMessage } from '../emails/verify-email';
 import { accountExistsMessage } from '../emails/account-exists';
-import { resetPasswordMessage } from '../emails/reset-password';
-import { passwordLockedMessage } from '../emails/password-locked';
 import { mailPasswordChanged } from './password-notice';
 import {
   promotePrimaryAdmin,
@@ -79,6 +76,7 @@ import {
   clearFailedPasswordSignIns,
   isPasswordSignInLocked,
   recordFailedPasswordSignIn,
+  scheduleSecretLinkMail,
 } from '@/modules/identity';
 import type { ProviderId } from './types';
 
@@ -365,9 +363,6 @@ async function mailExistingHolder({ user }: { user: { id: string; email: string 
   );
 }
 
-/** The page a reset link opens, whatever page the request for it named. */
-const RESET_PASSWORD_PAGE = '/reset-password';
-
 /** How long a reset link lasts. Short, because Better Auth stores the reset token unhashed in `verifications`. */
 const RESET_TOKEN_SECONDS = 15 * 60;
 
@@ -378,22 +373,18 @@ function endpointOrigin(): string {
 
 /**
  * Mails a reset link to a verified address. An unverified one gets nothing, so a reset never reaches an
- * inbox the account has not proved; the request answers the same either way. The link always opens the
- * reset page, so a request cannot point it anywhere else.
+ * inbox the account has not proved; the request answers the same either way. The mail's job reads the token
+ * Better Auth just stored when it sends, so the run carries the account id alone, and the link always opens
+ * the reset page, so a request cannot point it anywhere else.
  */
 async function mailResetLink({
   user,
-  url,
 }: {
-  user: { email: string; emailVerified: boolean };
-  url: string;
+  user: { id: string; email: string; emailVerified: boolean };
 }) {
   if (!user.emailVerified || isPlaceholderEmail(user.email)) return;
-  const link = new URL(url);
-  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
-  await send(await resetPasswordMessage({ to: user.email, url: link.toString() }), {
-    carriesSecret: true,
-  });
+  const authBase = getCurrentAuthEndpointContext().context.baseURL;
+  await scheduleSecretLinkMail({ kind: 'reset', userId: user.id, authBase });
 }
 
 const PASSWORD_SIGN_IN_PAUSED = {
@@ -480,24 +471,13 @@ async function mailLockNotice(ctx: HookContext, userId: string, length: number) 
     identifier: `reset-password:${token}`,
     expiresAt: new Date(Date.now() + RESET_TOKEN_SECONDS * 1000),
   });
-  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
-  const passkeys = await ctx.context.adapter.findMany({
-    model: 'passkey',
-    where: [{ field: 'userId', value: user.id }],
-    limit: 1,
+  // The job reads this token back when it sends, so the run carries the account id alone.
+  await scheduleSecretLinkMail({
+    kind: 'lockout',
+    userId: user.id,
+    authBase: ctx.context.baseURL,
+    minutes: length / 60_000,
   });
-  const link = new URL(`${ctx.context.baseURL}/reset-password/${token}`);
-  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
-  await send(
-    await passwordLockedMessage({
-      to: user.email,
-      url: link.toString(),
-      minutes: length / 60_000,
-      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
-      hasPasskey: passkeys.length > 0,
-    }),
-    { carriesSecret: true },
-  );
 }
 
 /** Tells the account a change on its account page replaced its password. */
@@ -683,15 +663,13 @@ export const auth = betterAuth({
       const next = (await asksNoReturnPath())
         ? undefined
         : returnPathOf(link.searchParams.get('callbackURL'));
-      link.searchParams.set('callbackURL', verifiedLanding(next));
-      await send(
-        await verifyEmailMessage({
-          to: user.email,
-          url: link.href,
-          providers: await linkedProviderIds(ctx.context, user.id),
-        }),
-        { carriesSecret: true },
-      );
+      // The job signs a link of its own when it sends, so the run carries the account id and the destination alone.
+      await scheduleSecretLinkMail({
+        kind: 'verification',
+        userId: user.id,
+        authBase: ctx.context.baseURL,
+        next: next ?? null,
+      });
     },
     // Only from a browser signed in to this very account. Without it, a
     // stranger's sign-up carrying your address is verified by your click on a

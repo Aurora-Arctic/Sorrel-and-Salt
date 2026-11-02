@@ -24,6 +24,8 @@ import type { AuthInstance, Profile } from '../support/types';
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
+// A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
+vi.stubEnv('MAIL_TRANSPORT', '');
 
 const DOMAIN = '@email-verification.test';
 const OWNER = `owner${DOMAIN}`;
@@ -134,6 +136,16 @@ describe('Story 58: sign-up mails a verification link and still signs in', () =>
 
     expect((await userRow(OWNER))?.email_verified).toBe(true);
     expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe('the verification link a job signs', () => {
+  it('is signed with the secret Better Auth verifies its own links with', async () => {
+    const { verificationSigningSecret } = await import('@/lib/auth-secrets');
+    const ctx = await auth.$context;
+
+    // The choice under each setting is tests/lib/auth-secrets.test.ts; this holds it to the secret Better Auth chose here.
+    expect(verificationSigningSecret()).toBe(ctx.secret);
   });
 });
 
