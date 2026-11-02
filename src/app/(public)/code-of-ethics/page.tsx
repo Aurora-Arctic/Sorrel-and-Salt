@@ -303,7 +303,8 @@ export default function CodeOfEthicsPage() {
       <ul>
         <li>
           The site stays free of advertising, sells no data and uses nothing anyone writes here to
-          train anything, and the owner says so in writing before that could ever change.
+          train anything. If any of that could ever change, the owner emails every account to say
+          so, in writing, before it does.
         </li>
         <li>
           The owner reaches the database by hand only to do what a person has asked for, such as an
@@ -319,8 +320,8 @@ export default function CodeOfEthicsPage() {
           what it does.
         </li>
         <li>
-          If the site must end, the owner says so ahead of time and gives people a way to take their
-          own writing with them.
+          If the site must end, the owner says so ahead of time. The owner commits to building a way
+          for people to take their own writing with them; it does not exist yet.
         </li>
       </ul>
 
