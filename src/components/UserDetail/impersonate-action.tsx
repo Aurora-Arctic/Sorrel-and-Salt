@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { ConfirmQuestion } from '../Modal';
 import Notice from '../Notice';
 import {
@@ -19,6 +19,8 @@ const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => 
   const [asked, setAsked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string>();
+  // The refusal itself, kept for onRefused, which is handed only a sentence read as a GraphQL failure.
+  const refused = useRef<unknown>(undefined);
 
   return (
     <>
@@ -48,6 +50,7 @@ const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => 
           try {
             await sendImpersonation(user.id);
           } catch (error) {
+            refused.current = error;
             setBusy(false);
             throw error;
           }
@@ -57,7 +60,7 @@ const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => 
         onKeep={() => setAsked(false)}
         onRefused={() => {
           setAsked(false);
-          setFailure(impersonationRefusal(user.name));
+          setFailure(impersonationRefusal(user.name, refused.current));
         }}
       />
     </>

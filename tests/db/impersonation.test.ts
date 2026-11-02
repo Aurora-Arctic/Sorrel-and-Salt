@@ -3,7 +3,9 @@ import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { ORIGIN, cookieHeader } from '../support/oauth';
-import { A, B, E, F } from '../support/as-user';
+import { ACCESS_PAUSED_CODE } from '@/lib/access-paused';
+import { liftUserAccessPause, pauseUserAccess } from '@/modules/identity';
+import { A, B, E, F, asUser } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
@@ -199,5 +201,47 @@ describe('stopping', () => {
     const asB = await signedInAs(B.id);
 
     expect((await post('/admin/stop-impersonating', asB)).status).toBe(400);
+  });
+});
+
+describe('impersonating a paused user', () => {
+  /** The user a cookie signs in, read back through get-session; `undefined` when it signs in nobody. */
+  async function sessionOf(cookie: string) {
+    const response = await auth.handler(
+      new Request(`${ORIGIN}/api/auth/get-session`, { headers: { cookie } }),
+    );
+    const body = (await response.json()) as { user?: { id: string } } | null;
+    return body?.user?.id;
+  }
+
+  it('is refused with the pause code, makes no session, and leaves the admin signed in as themselves', async () => {
+    const target = await insertUser('user');
+    const asE = await signedInAs(E.id);
+    await pauseUserAccess(asUser(E), target, null, null);
+
+    const refused = await impersonate(asE, target);
+
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: ACCESS_PAUSED_CODE, until: null });
+    // The only cookie the refusal sets is the admin's own session, refreshed as any request of theirs refreshes it.
+    expect(await sessionOf(cookieHeader(refused))).toBe(E.id);
+    const [{ count }] = await sql`
+      select count(*)::int as count from sessions where user_id = ${target}
+    `;
+    expect(count).toBe(0);
+    expect(await sessionOf(asE)).toBe(E.id);
+  });
+
+  it('is handed over once the pause is lifted', async () => {
+    const target = await insertUser('user');
+    const asE = await signedInAs(E.id);
+    await pauseUserAccess(asUser(E), target, null, null);
+    expect((await impersonate(asE, target)).status).toBe(403);
+
+    await liftUserAccessPause(asUser(E), target);
+
+    const response = await impersonate(asE, target);
+    expect(response.status).toBe(200);
+    expect(await sessionOf(cookieHeader(response))).toBe(target);
   });
 });
