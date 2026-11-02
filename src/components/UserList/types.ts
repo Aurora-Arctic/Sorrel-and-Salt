@@ -41,12 +41,6 @@ export interface UserListProps extends Partial<PagerHrefs<Route>> {
   position?: PagePosition;
   /** Whether impersonation is registered here, so each non-admin row offers it. */
   canImpersonate?: boolean;
-  /**
-   * The pause on admin changes and whether this admin may flip it:
-   * while paused, a viewer who may not has every Change Role locked. The
-   * switch itself is the page's, beside its heading.
-   */
-  adminChanges?: PauseControlProps;
 }
 
 /** The filter the page shows, which the form starts from and compares against. */
@@ -215,7 +209,7 @@ export interface LockedControlProps {
   reason: string;
 }
 
-/** A linked sign-in provider in the Sign-In Methods cell, by its roster id. */
+/** A linked sign-in provider in the Logins cell, by its roster id. */
 export interface ProviderLogoProps {
   id: string;
 }

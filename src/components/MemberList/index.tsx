@@ -4,33 +4,34 @@ import type { StackColumn } from '../DataTable/types';
 import { emptyList } from '../../lib/text';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import RoleTip from '../RoleTip';
+import { Until } from '../UserDetail/access-pause-parts';
+import MemberLink from './member-link';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
 
 // A coven's members, one row each, drawn as the admin user list is: the stacking
-// `DataTable`, a card per member at phone width. Render-only. The page reads the members
-// through `Workspace.members` and passes each row's controls in as `actions`, so this holds
-// no permission check (claude-docs/components/member-list.md).
+// `DataTable`, a card per member at phone width. Render-only, with no row actions: a name opens
+// the member's modal, which holds them, and the page decides what it offers there
+// (claude-docs/components/member-list.md).
 
 /**
- * The columns: name, address where asked, role with its change, then joined, invited by, Updated and the access pause where asked; Remove is last, ruled in red, and only when the page passes it.
+ * The columns: name, address where asked, role, then joined, invited by, Updated and, where asked, a standing pause.
  * (claude-docs/components/member-list.md, "Columns").
  */
 const columns = (
   currentUserId: string,
-  {
-    showEmail,
-    roleAction,
-    removeAction,
-    accessAction,
-  }: Pick<MemberListProps, 'showEmail' | 'roleAction' | 'removeAction' | 'accessAction'>,
+  { showEmail, showAccess }: Pick<MemberListProps, 'showEmail' | 'showAccess'>,
 ): readonly (StackColumn<MemberListEntry> | false)[] => [
   {
     heading: 'Name',
     cell: (member) => (
       <span className="member-list__name">
-        {member.name}
+        {member.openHref && member.heading ? (
+          <MemberLink href={member.openHref} heading={member.heading} name={member.name} />
+        ) : (
+          member.name
+        )}
         {member.userId === currentUserId && <span className="member-list__you">You</span>}
       </span>
     ),
@@ -55,7 +56,6 @@ const columns = (
           description={WORKSPACE_ROLE_ACCESS[member.role]}
           emphasis={member.role === 'owner'}
         />
-        {roleAction && <span className="member-list__actions">{roleAction(member)}</span>}
       </div>
     ),
   },
@@ -74,16 +74,18 @@ const columns = (
     cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
   updatedColumn('member-list__fact'),
-  Boolean(accessAction) && {
+  // A pause standing on the member, and when it ends; empty while their access is open.
+  Boolean(showAccess) && {
     heading: 'Access',
-    cell: (member) => accessAction?.(member),
-  },
-  Boolean(removeAction) && {
-    heading: 'Remove',
-    action: 'corner',
-    headingClassName: 'member-list__remove',
-    className: 'member-list__remove',
-    cell: (member) => removeAction?.(member),
+    cell: (member) =>
+      member.paused && (
+        <span className="member-list__access">
+          <span className="badge badge--caution">Paused</span>
+          <span className="member-list__fact">
+            <Until until={member.paused.until} />
+          </span>
+        </span>
+      ),
   },
 ];
 
@@ -91,14 +93,12 @@ const MemberList = ({
   members,
   currentUserId,
   showEmail,
-  roleAction,
-  removeAction,
-  accessAction,
+  showAccess,
 }: MemberListProps): ReactElement => (
   <div className="member-list">
     <StackTable
       aria-label="Members"
-      columns={columns(currentUserId, { showEmail, roleAction, removeAction, accessAction })}
+      columns={columns(currentUserId, { showEmail, showAccess })}
       rows={members}
       rowKey={(member) => member.userId}
       empty={emptyList('members')}

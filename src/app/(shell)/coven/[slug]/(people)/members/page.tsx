@@ -2,10 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import MemberList from '../../../../../../components/MemberList';
-import PauseControl from '../../../../../../components/MemberList/pause-control';
-import RemoveControl from '../../../../../../components/MemberList/remove-control';
-import RoleControl from '../../../../../../components/MemberList/role-control';
 import type { MemberListEntry } from '../../../../../../components/MemberList/types';
+import { RouteModalProvider } from '../../../../../../components/Modal/route-modal-provider';
 import Notice from '../../../../../../components/Notice';
 import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
@@ -13,6 +11,8 @@ import { resolvePage } from '../../../../../../lib/pagination';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../../lib/numbered-page';
+import { single } from '../../../../../../lib/search-params';
+import type { PagerCursor } from '../../../../../../lib/types';
 import { displayNamesOf } from '@/modules/identity';
 import {
   listMembers,
@@ -22,13 +22,16 @@ import {
   standingMemberPauses,
 } from '@/modules/coven';
 import type { CovenLayoutParams } from '../../types';
+import MemberDialog from './member-dialog';
+import { memberHeading } from './member-heading';
 import type { MembersPageProps } from './types';
 
 export const metadata: Metadata = {
   title: 'Members',
 };
 
-// Who is in the coven and what each may do. A viewer gets the stranger's 404. The read is
+// Who is in the coven and what each may do; a name opens the member's modal, which holds what the viewer may do
+// to them. A viewer gets the stranger's 404. The read is
 // `listMembers`, which GraphQL ends at too (rule 1). An address is an owner's alone, asked only when
 // the role holds `member: readEmail` and checked again by `memberEmails`.
 export default async function MembersPage({
@@ -36,7 +39,10 @@ export default async function MembersPage({
   searchParams,
 }: CovenLayoutParams & MembersPageProps) {
   const { slug } = await params;
-  const { after, before } = readPageCursors(await searchParams);
+  const query = await searchParams;
+  const { after, before } = readPageCursors(query);
+  // Blank is no modal.
+  const memberParam = single(query.member) || undefined;
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
 
@@ -79,17 +85,6 @@ export default async function MembersPage({
       )
     : [];
   const emailOf = (id: string) => emails.find(({ userId }) => userId === id)?.address ?? null;
-  const members = page.edges.map(({ node }): MemberListEntry => ({
-    userId: node.userId,
-    name: nameOf(node.userId),
-    role: node.role,
-    joinedAt: node.joinedAt,
-    updatedBy: editorOf(node.updatedBy),
-    updatedAt: editorOf(node.updatedBy) ? node.updatedAt : null,
-    invitedBy: node.invitedBy ? editorOf(node.invitedBy) : null,
-    email: emailOf(node.userId),
-  }));
-
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
   const canRemove = rolePermits(membership.role, { member: ['remove'] });
   const canPause = rolePermits(membership.role, { member: ['pause'] });
@@ -101,10 +96,46 @@ export default async function MembersPage({
         page.edges.map(({ node }) => node.userId),
       )
     : [];
-  const pauseOf = (id: string) => pauses.find(({ userId }) => userId === id);
+  // The pause standing on a member, with its end; null for none, and undefined for a role that reads none.
+  const pauseOf = (id: string) => {
+    if (!canPause) return undefined;
+    const standing = pauses.find(({ userId }) => userId === id);
+    return standing ? { until: standing.until } : null;
+  };
+
+  const path = `/coven/${slug}/members`;
+  const cursor: PagerCursor | undefined = after ? { after } : before ? { before } : undefined;
+  const members = page.edges.map(({ node }): MemberListEntry => {
+    const row = {
+      userId: node.userId,
+      name: nameOf(node.userId),
+      role: node.role,
+      joinedAt: node.joinedAt,
+      updatedBy: editorOf(node.updatedBy),
+      updatedAt: editorOf(node.updatedBy) ? node.updatedAt : null,
+      invitedBy: node.invitedBy ? editorOf(node.invitedBy) : null,
+      email: emailOf(node.userId),
+      paused: pauseOf(node.userId),
+    };
+    // Its modal over this page, the cursor kept, under the head the loaded modal carries.
+    return {
+      ...row,
+      openHref: listHref(path, { ...cursor, member: node.userId }),
+      heading: memberHeading(row),
+    };
+  });
+  // The member the address opens, from this page's rows: the modal reads nothing the list has not.
+  const openedRow = memberParam && members.find(({ userId }) => userId === memberParam);
+  const opened = openedRow ? { heading: memberHeading(openedRow), member: openedRow } : undefined;
 
   return (
-    <>
+    <RouteModalProvider>
+      {memberParam && !opened && (
+        <Notice kind="error">
+          No member on this page of the list has that address. They may have been removed, or be
+          listed on another page.
+        </Notice>
+      )}
       <ListFrame>
         {/* Raised before it is urgent: a quiet status, since it is on the page
             from the start and asks nothing of the reader yet. Inside the
@@ -120,56 +151,21 @@ export default async function MembersPage({
             members={members}
             currentUserId={session.userId}
             showEmail={showEmail}
-            roleAction={
-              canChangeRoles
-                ? (member) => (
-                    <RoleControl
-                      workspaceId={workspace.id}
-                      userId={member.userId}
-                      name={member.name}
-                      currentRole={member.role}
-                    />
-                  )
-                : undefined
-            }
-            // A member's or a viewer's row only: an owner's access is never paused.
-            accessAction={
-              canPause
-                ? (member) =>
-                    member.role !== 'owner' && (
-                      <PauseControl
-                        workspaceId={workspace.id}
-                        userId={member.userId}
-                        name={member.name}
-                        standing={
-                          pauseOf(member.userId)
-                            ? { until: pauseOf(member.userId)?.until ?? null }
-                            : null
-                        }
-                      />
-                    )
-                : undefined
-            }
-            // Another's row only: leaving is the coven page's, for every role.
-            removeAction={
-              canRemove
-                ? (member) =>
-                    member.userId !== session.userId && (
-                      <RemoveControl
-                        workspaceId={workspace.id}
-                        userId={member.userId}
-                        name={member.name}
-                      />
-                    )
-                : undefined
-            }
+            showAccess={canPause}
           />
-          <Pager
-            {...pagerHrefs(page.pageInfo, (cursor) => listHref(`/coven/${slug}/members`, cursor))}
-            soft
-          />
+          <Pager {...pagerHrefs(page.pageInfo, (at) => listHref(path, at))} soft />
         </ListBody>
       </ListFrame>
-    </>
+      {/* Rendered whatever the address opens, so a press on a name opens it at once. */}
+      <MemberDialog
+        closeHref={listHref(path, cursor)}
+        opened={opened}
+        workspaceId={workspace.id}
+        currentUserId={session.userId}
+        canChangeRoles={canChangeRoles}
+        canPause={canPause}
+        canRemove={canRemove}
+      />
+    </RouteModalProvider>
   );
 }

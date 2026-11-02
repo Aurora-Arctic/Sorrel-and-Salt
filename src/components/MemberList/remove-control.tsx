@@ -16,11 +16,18 @@ const RemoveMemberDocument = graphql(`
   }
 `);
 
-const RemoveControl = ({ workspaceId, userId, name }: RemoveControlProps): ReactElement => (
+const RemoveControl = ({
+  workspaceId,
+  userId,
+  name,
+  inModal = false,
+  onSent,
+}: RemoveControlProps): ReactElement => (
   <ConfirmedAction
     label="Remove"
     accessibleName={`Remove ${name}`}
-    openClass="btn btn--quiet btn--small"
+    // Plain on a row and in the member modal alike: the red is the confirm's.
+    openClass={inModal ? 'btn btn--quiet' : 'btn btn--quiet btn--small'}
     title="Remove Member"
     question={
       <>
@@ -31,6 +38,8 @@ const RemoveControl = ({ workspaceId, userId, name }: RemoveControlProps): React
     busy="Removing"
     confirmClass="btn btn--destructive"
     announcement={`${name} is removed.`}
+    inModal={inModal}
+    onSent={onSent}
     send={() => graphqlRequest(RemoveMemberDocument, { workspaceId, userId })}
   />
 );

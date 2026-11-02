@@ -152,18 +152,39 @@ async function userRow(page: Page, email: string) {
 /** The role cell, the third: its text opens with the role. */
 const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(2);
 
-/** Opens `name`'s Change Role dialog from `row`, picks `role` and answers the dialog for the caller to confirm. */
+/** Opens `name`'s user modal from their row's name, where Change Role and coven creation's controls are, and answers it. */
+async function userModal(page: Page, row: ReturnType<Page['getByRole']>, name: string) {
+  await row.getByRole('link', { name, exact: true }).click();
+  const modal = page.getByRole('dialog', { name: new RegExp(name) });
+  await expect(modal).toBeVisible();
+  return modal;
+}
+
+/** Closes the open user modal, back to the list. */
+async function closeModal(page: Page) {
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+}
+
+/**
+ * Presses Change Role in `name`'s user modal, opening it from `row` unless it is open, picks `role`, and answers
+ * the question asked over the modal's body for the caller to confirm.
+ */
 async function chooseRole(
   page: Page,
   row: ReturnType<Page['getByRole']>,
   name: string,
   role: 'User' | 'Curator' | 'Admin',
 ) {
-  await row.getByRole('button', { name: `Change Role for ${name}` }).click();
-  const dialog = page.getByRole('dialog', { name: 'Change Role' });
+  const modal = (await page.getByRole('dialog').count())
+    ? page.getByRole('dialog')
+    : await userModal(page, row, name);
+  await modal.getByRole('button', { name: `Change Role for ${name}` }).click();
+  // Named by its sentence, which names the user.
+  const question = modal.getByRole('group', { name: new RegExp(name) });
   // The radio's name opens with the role, its description following.
-  await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
-  return dialog;
+  await question.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
+  return question;
 }
 
 /** Invites `email` from /admin/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
@@ -361,9 +382,11 @@ test(
     await expect(revoking).toHaveCount(0);
     await expect(roleCell(again)).toHaveText(/^User/);
     await expect(again.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+    // The modal stays open on the new role, its Change Role there to be used again.
     await expect(
-      again.getByRole('button', { name: 'Change Role for Fixture Person' }),
+      page.getByRole('dialog').getByRole('button', { name: 'Change Role for Fixture Person' }),
     ).toBeVisible();
+    await closeModal(page);
 
     await signInAgainAs(page, grantee);
     await expectAdminArea(page, false);
@@ -386,7 +409,7 @@ test.describe('the primary admin', () => {
       await signInAs(page, address('acting-admin'), ['discord'], 'admin');
 
       // Another admin's Change Role is there to be used: the guard is about the primary admin alone.
-      const peer = await userRow(page, peerEmail);
+      const peer = await userModal(page, await userRow(page, peerEmail), 'Fixture Person');
       const usable = peer.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(usable).toBeVisible();
       await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
@@ -395,16 +418,17 @@ test.describe('the primary admin', () => {
       const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
       await expect(row.getByRole('button', { name: 'Primary Admin' })).toBeVisible();
       await expect(roleCell(row)).toHaveText(/^Admin/);
-      const locked = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      const modal = await userModal(page, row, 'Fixture Person');
+      const locked = modal.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(locked).toHaveAttribute('aria-disabled', 'true');
       await expect(locked).toHaveAccessibleDescription(/\S/);
 
       // Pressed anyway, from the keyboard since a pointer click waits for an
-      // enabled control, it says why again and opens nothing.
+      // enabled control, it says why again and asks nothing.
       await locked.focus();
       await page.keyboard.press('Enter');
-      await expect(row.getByRole('alert')).toBeVisible();
-      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(modal.getByRole('alert')).toBeVisible();
+      await expect(modal.getByRole('radio')).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
       // Sent straight to the server, the revoke is refused there too.
@@ -451,20 +475,21 @@ test.describe('the primary admin', () => {
       await assertNoAccessibilityViolations(page);
 
       // The other admin's Change Role is locked; tried from the keyboard, it says
-      // why and opens nothing, and Approve is locked the same way.
+      // why and asks nothing, and Approve is locked the same way.
       await signInAgainAs(page, other);
       await visit(page, list);
       await expect(status).toBeVisible();
       const row = page.getByRole('row', { name: new RegExp(granteeEmail.replace(/[.]/g, '\\.')) });
-      const grant = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      const modal = await userModal(page, row, 'Fixture Person');
+      const grant = modal.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(grant).toHaveAttribute('aria-disabled', 'true');
       await expect(grant).toHaveAccessibleDescription(/\S/);
       await grant.focus();
       await page.keyboard.press('Enter');
-      await expect(row.getByRole('alert')).toBeVisible();
+      await expect(modal.getByRole('alert')).toBeVisible();
       await assertNoAccessibilityViolations(page);
-      await expect(page.getByRole('dialog')).toHaveCount(0);
-      const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
+      await expect(modal.getByRole('radio')).toHaveCount(0);
+      const approve = modal.getByRole('button', { name: 'Approve Fixture Person' });
       await expect(approve).toHaveAttribute('aria-disabled', 'true');
       await expect(approve).toHaveAccessibleDescription(/\S/);
       // Sent straight to the server, the grant is refused there too.
@@ -481,6 +506,7 @@ test.describe('the primary admin', () => {
       await granting.getByRole('button', { name: 'Promote' }).click();
       await expect(granting).toHaveCount(0);
       await expect(roleCell(row)).toHaveText(/^Admin/);
+      await closeModal(page);
 
       // And resumes.
       await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
@@ -526,14 +552,15 @@ test.describe('the primary admin', () => {
       const row = await userRow(page, loneEmail);
 
       // The control is offered, since the list cannot know the count stays
-      // above one; pressed, the server refuses and the row says why.
+      // above one; pressed, the server refuses and the modal says why.
       const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
       await revoking.getByRole('button', { name: 'Demote' }).click();
       await expect(revoking).toHaveCount(0);
-      await expect(row.getByRole('alert')).toBeVisible();
-      // Said under the Change Role that opened the dialog, which has the focus back.
+      const modal = page.getByRole('dialog');
+      await expect(modal.getByRole('alert')).toBeVisible();
+      // Said under the Change Role that asked, which has the focus back.
       await expect(
-        row.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
+        modal.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
       ).toBeFocused();
       await assertNoAccessibilityViolations(page);
 
@@ -560,8 +587,9 @@ test(
 
     // Two changes made where an admin makes them, each with its reason.
     const row = await userRow(page, subjectEmail);
-    await row.getByRole('button', { name: 'Approve Ledger Fixturewort' }).click();
-    const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
+    const modal = await userModal(page, row, 'Ledger Fixturewort');
+    await modal.getByRole('button', { name: 'Approve Ledger Fixturewort' }).click();
+    const approving = modal.getByRole('group', { name: /Ledger Fixturewort/ });
     await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
     await approving.getByRole('button', { name: 'Approve' }).click();
     await expect(approving).toHaveCount(0);
