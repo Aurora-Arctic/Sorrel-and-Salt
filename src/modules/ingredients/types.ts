@@ -219,7 +219,7 @@ export interface CompendiumShareCard {
   name: string;
   /** The formal name, or null when there is none or it only repeats the name. */
   formalName: string | null;
-  /** The entry's own categories, alphabetical, each in its group's dark-theme colour. */
+  /** The entry's own categories, else its live forms', alphabetical, each in its group's dark-theme colour. */
   categories: { name: string; color: string }[];
   /** Each group's dark-theme colour, once, in the order its first category appears. */
   groupColors: string[];
