@@ -788,7 +788,7 @@ ink. No component needs to now.
 `nav` with `class="pager"` and `aria-label="Pages"`, holding a bare `ul` of
 two `li`s, each a full-size `.btn.btn--quiet` anchor. They are quiet because
 paging changes nothing. The list is a wrapping flex row, centred under the
-table, with a `space(3)` gap and no ◆ marker. The ‹ and › marks are
+table, with a `space(3)` gap and no ✦ marker. The ‹ and › marks are
 `.pager__mark` spans at 2em with a line height of 1, raised 0.08em to the
 label's centre, so they read at a glance without making the button taller. They are `aria-hidden`, so the links
 are named "Prev" and "Next". `.pager__position`, "Page 2 of 3" between them,

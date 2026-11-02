@@ -208,6 +208,7 @@ describe('a curated value page, on the categories', () => {
 
     expect(router.replace).toHaveBeenCalledWith(
       '/admin/categories?query=test&group=fixture-healing',
+      { scroll: false },
     );
   });
 });

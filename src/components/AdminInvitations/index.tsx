@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -11,7 +10,7 @@ import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
 import { roleLabel } from '../UserList/roles';
 import ListFrame, { ListBody } from '../ListFrame';
-import { useOpenModalClick } from '../Modal';
+import { ModalLink, useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import Pager from '../Pager';
 import AdminInvitationsFilter from './filter';
@@ -99,9 +98,9 @@ export const InviteAdmin = ({
   return locked ? (
     <LockedControl label={INVITE_TITLE} className="btn btn--solid" reason={locked} />
   ) : (
-    <Link className="btn btn--solid" href={href} onClick={onClick}>
+    <ModalLink className="btn btn--solid" href={href} onClick={onClick}>
       {INVITE_TITLE}
-    </Link>
+    </ModalLink>
   );
 };
 

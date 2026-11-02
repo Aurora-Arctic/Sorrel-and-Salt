@@ -7,9 +7,8 @@ import SupportLink from '../SupportLink';
 import './index.scss';
 
 // The row under every page, drawn once by the root layout: the site's name at the left,
-// the footer's links at the right. Support is the only link, drawn as a bare icon button;
-// later links join the nav here
-// (claude-docs/components/site-footer.md).
+// the footer's links at the right: the public documents as text, then Support as a bare icon
+// button (claude-docs/components/site-footer.md).
 
 const SiteFooter = (): ReactElement => (
   <footer className="site-footer">
@@ -19,6 +18,18 @@ const SiteFooter = (): ReactElement => (
           {SITE_NAME}
         </Link>
         <nav aria-label="Footer" className="site-footer__nav">
+          <Link href="/privacy" className="site-footer__link">
+            Privacy
+          </Link>
+          <Link href="/disclaimer" className="site-footer__link">
+            Disclaimer
+          </Link>
+          <Link href="/terms" className="site-footer__link">
+            Terms
+          </Link>
+          <Link href="/code-of-ethics" className="site-footer__link">
+            Code of Ethics
+          </Link>
           <IconTip tip="Support">
             <SupportLink className="site-footer__support">
               <SupportIcon />

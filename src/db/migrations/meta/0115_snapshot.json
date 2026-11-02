@@ -1,6 +1,6 @@
 {
   "id": "f9f19d61-3e7f-45cf-9616-282592525935",
-  "prevId": "5e71ae97-9d64-4b0b-a811-2c8306184d39",
+  "prevId": "77e4af23-21d1-4ca1-bbeb-0a5345549a59",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2678,6 +2678,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "terms_version": {
+          "name": "terms_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "terms_accepted_at": {
+          "name": "terms_accepted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

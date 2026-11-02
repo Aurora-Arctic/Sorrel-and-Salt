@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
 import type { UserRole } from '@/lib/session';
+import { TERMS_VERSION } from '@/lib/terms-version';
 import { e2eDatabaseUrl } from './database';
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { browserUrl } from './slots';
@@ -36,7 +37,7 @@ async function holdSession(page: Page, value: string): Promise<void> {
 
 /**
  * Makes `page` a browser signed in to a new user with one account per provider named and the site role given.
- * The user is verified unless `emailVerified` says otherwise; rows go to this worker's slot database unless
+ * The user is verified, and has agreed to the terms in force, unless `emailVerified` or `termsAgreed` says otherwise; rows go to this worker's slot database unless
  * `database` names the server's own. How the cookie arrives is `holdSession`'s.
  */
 export async function signInAs(
@@ -44,7 +45,11 @@ export async function signInAs(
   email: string,
   providers: readonly string[] = ['discord'],
   role: UserRole = 'user',
-  { emailVerified = true, database }: { emailVerified?: boolean; database?: string } = {},
+  {
+    emailVerified = true,
+    termsAgreed = true,
+    database,
+  }: { emailVerified?: boolean; termsAgreed?: boolean; database?: string } = {},
 ): Promise<{ userId: string }> {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret)
@@ -62,8 +67,9 @@ export async function signInAs(
       // Stamped as its own creator, as the sign-up hook stamps one. A curator or an admin holds the
       // creation flag, as the users CHECK asks.
       await tx`
-        insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
-        values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role !== 'user'}, ${userId}, ${userId})
+        insert into users (id, name, email, email_verified, role, can_create_workspace, terms_version, terms_accepted_at, created_by, updated_by)
+        values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role !== 'user'},
+          ${termsAgreed ? TERMS_VERSION : null}, ${termsAgreed ? new Date() : null}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

@@ -18,7 +18,7 @@
 
 .spell-inventory__list {
   @include stack(2);
-  // Not a bulleted list: no ◆ marker from typography-base's `ul li::before`.
+  // Not a bulleted list: no ✦ marker from typography-base's `ul li::before`.
   @include list-reset;
 }
 

@@ -27,7 +27,7 @@
   margin: 0;
 }
 
-// No `_typography.scss` ◆ marker: a column of rows, not a bulleted list.
+// No `_typography.scss` ✦ marker: a column of rows, not a bulleted list.
 .passkeys__item::before {
   content: none;
 }

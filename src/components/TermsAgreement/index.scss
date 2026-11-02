@@ -1,0 +1,17 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+.terms-agreement {
+  @include stack(3);
+}
+
+.terms-agreement__version {
+  margin: 0;
+}
+
+.terms-agreement__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  margin: 0;
+}

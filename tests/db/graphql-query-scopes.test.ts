@@ -397,6 +397,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
+  agreeToTerms: write('mutation { agreeToTerms { id } }'),
   // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
   sendSignedOutSupportRequest: {
     source:
@@ -707,6 +708,8 @@ const OPEN_WRITES = [
   'setName',
   // The session's own cookie names the account, which Better Auth reads.
   'setPassword',
+  // The session names the account it records against, and the service records the version in force.
+  'agreeToTerms',
   // The flag decides who may, which the service reads.
   'createWorkspace',
   // The owner's `member: update` decides, which the service checks.

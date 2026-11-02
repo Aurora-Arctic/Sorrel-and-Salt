@@ -190,7 +190,7 @@ describe('DetailsDialog', () => {
       fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
     });
 
-    expect(router.replace).toHaveBeenCalledWith(LIST);
+    expect(router.replace).toHaveBeenCalledWith(LIST, { scroll: false });
   });
 
   it('opens the edit modal at once over the details on a press of Edit, in the edit place', async () => {
@@ -218,7 +218,7 @@ describe('DetailsDialog', () => {
       fireEvent.click(edit);
     });
 
-    expect(router.push).toHaveBeenCalledWith(EDIT);
+    expect(router.push).toHaveBeenCalledWith(EDIT, { scroll: false });
     // The details stay open beneath the edit modal's skeleton.
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
     expect(

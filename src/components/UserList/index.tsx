@@ -8,7 +8,8 @@ import { changesLocked } from './lock';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
 import UserLink from './user-link';
-import { roleLabel } from './roles';
+import { roleLabel, SITE_ROLE_ACCESS } from './roles';
+import RoleTip from '../RoleTip';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
@@ -74,17 +75,17 @@ const columns = (
   },
   {
     heading: 'Role',
-    // An admin's or curator's role in bold, with the control that changes it on the right: one
-    // column, as Coven Creation holds its own. The primary admin carries a crown with a tip, and
-    // its Change Role's tip says why it cannot be used.
+    // An admin's or curator's role in bold, each role with the tip saying what it may do, with the
+    // control that changes it on the right: one column, as Coven Creation holds its own. The primary
+    // admin carries a crown with a tip, and its Change Role's tip says why it cannot be used.
     cell: (user) => (
       <div className="user-list__role">
         <span className="user-list__role-name">
-          {user.role !== 'user' ? (
-            <strong>{roleLabel(user.role)}</strong>
-          ) : (
-            <span>{roleLabel(user.role)}</span>
-          )}
+          <RoleTip
+            label={roleLabel(user.role)}
+            description={SITE_ROLE_ACCESS[user.role]}
+            emphasis={user.role !== 'user'}
+          />
           {user.primaryAdmin && <PrimaryAdminMark />}
         </span>
         {/* Keyed by the role, so the refresh after a change mounts a fresh

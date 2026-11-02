@@ -1,0 +1,145 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A document reads as prose: every running line keeps to the measure, a table may run wider in
+// its own scrolling frame, and each section's heading sits a step above its text.
+// The page is `.page-with-nav` with its column widened from the narrow column to the reading
+// measure, and the same breakpoints; the text stays start-aligned inside the centred column. The
+// rule names both classes, as the primitives are emitted under `body` and one class alone loses to
+// them.
+// The menu's column is half as wide again as `.page-with-nav`'s: a document's section headings run
+// to a clause or two, and in the narrower column most of them broke into three lines. From a tablet
+// up the menu and the measure still fit side by side inside the frame's gutters.
+$menu-column: calc(#{space(8)} * 4 + #{space(6)});
+
+.document-page.page-with-nav {
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    grid-template-columns: $menu-column minmax(0, $measure);
+  }
+
+  @media (min-width: calc(#{$menu-column} * 2 + #{$measure} + #{space(6)} * 2 + #{space(4)} * 2)) {
+    grid-template-columns: $menu-column minmax(0, $measure) $menu-column;
+  }
+
+  // A menu of long entries: each entry takes a step more air above and below, so the gap between
+  // two entries is plainly wider than the gap between one entry's own lines, and its lines are set
+  // a touch looser than the font's own so a two-line entry reads as one thing.
+  > .page-nav a {
+    padding-block: space(2);
+    line-height: 1.3;
+  }
+
+  // A document has more sections than the menu can show in a short window, so while the menu is
+  // sticky it is no taller than the room under the shell's bar and scrolls inside itself. The
+  // focus ring sits inside the entry here, as the scrolling edge would clip one drawn outside.
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    > .page-nav {
+      max-height: calc(100dvh - #{$shell-bar-height} - #{space(4)} * 2);
+      overflow-y: auto;
+
+      a:focus-visible {
+        @include focus-ring($placement: inset);
+      }
+    }
+  }
+}
+
+.document-page__updated {
+  margin: 0 0 space(2);
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+.document-page__body {
+  margin-block-start: space(6);
+
+  h2 {
+    margin-block: space(8) space(3);
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+
+  h3 {
+    margin-block: space(6) space(2);
+  }
+
+  ul,
+  ol {
+    max-width: $measure;
+    margin-block: space(2) space(4);
+  }
+
+  li {
+    line-height: 1.65;
+  }
+
+  // A source list reads as a bibliography: each entry hangs its second line under the first.
+  .document-page__sources li {
+    padding-inline-start: 1.5rem;
+    text-indent: -1.5rem;
+    // A source's address has no break in it, so it breaks anywhere rather than widen the page.
+    overflow-wrap: anywhere;
+  }
+
+  // Source numbers sit on the line without lifting it: the superscript takes no line height of its
+  // own, so a line holding one is as tall as its neighbours.
+  sup {
+    line-height: 0;
+  }
+
+  // Each number is its own link to hit, set apart by spacing alone.
+  .document-page__marks a {
+    padding-inline: space(1);
+  }
+
+  // A source number, an entry's link and its return arrow rest in the body ink and fade to
+  // `$accent-hover` when pointed at or focused, as an ingredient entry's note numbers do.
+  .document-page__marks a,
+  .document-page__sources a {
+    color: $text-primary;
+    @include faded-underline;
+    @include theme-transition(color);
+
+    &:hover,
+    &:focus-visible {
+      color: $accent-hover;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &:where(:visited) {
+      color: $text-primary;
+    }
+
+    &:hover:where(:visited),
+    &:focus-visible:where(:visited) {
+      color: $accent-hover;
+    }
+  }
+
+  .document-page__return {
+    margin-inline-start: space(2);
+    white-space: nowrap;
+  }
+
+  // The number a jump lands on, and the entry it lands on, stand out and clear the top inset.
+  .document-page__marks a:target,
+  .document-page__source:target {
+    background-color: $fill-quiet;
+  }
+
+  .document-page__marks a,
+  .document-page__source {
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(8)});
+  }
+
+  .data-table-frame {
+    margin-block: space(3) space(6);
+  }
+
+  // A cell is prose too, so it keeps the paragraph's loose line.
+  .data-table td {
+    line-height: 1.5;
+  }
+}

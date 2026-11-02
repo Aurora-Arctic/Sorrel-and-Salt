@@ -1,0 +1,275 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The width of a mark's column, the chevron's, and the cards' side padding: one set of measures the
+// label row and every summary line share, so their columns line up by construction.
+.access-cards {
+  --access-mark-col: #{space(6)};
+  --access-chevron-col: #{$glyph-size};
+  --access-pad-x: #{space(4)};
+
+  @include stack(4);
+  // The prose's measure, so the cards stop where the paragraphs above them do.
+  max-width: $measure;
+}
+
+// The key: the three marks, each beside its word, in a row.
+.access-cards__key {
+  @include list-reset;
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2) space(5);
+  font-size: type-size('small');
+  font-weight: 500;
+
+  > li {
+    display: inline-flex;
+    align-items: center;
+    gap: space(2);
+  }
+}
+
+.access-cards__note {
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+// The three marks, each a different shape so the colour only confirms it: Yes the site's ✦ in the
+// accent, In Part the same ✦ with one half filled and the other an outline, in the warning ochre,
+// No a short dash in the muted ink. Forced colours would paint the fills away, so there each is
+// drawn in the text colour.
+.access-cards__mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--access-mark-col);
+  block-size: $icon-size;
+
+  &::before {
+    content: '';
+    display: block;
+
+    @include forced-colors {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: without it the browser paints the mark's fill away and only the hidden text says the reading, not yet Baseline
+      forced-color-adjust: none;
+    }
+  }
+}
+
+.access-cards__mark--yes::before {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  background-color: $accent;
+  clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
+
+  @include forced-colors {
+    background-color: CanvasText;
+  }
+}
+
+// Drawn by mask, as the warning triangle is: the star's outline at the Yes star's size, over its
+// left half filled, so the half fill holds under forced colours where a gradient would not.
+.access-cards__mark--part::before {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  background-color: $warning;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 18 18'%3E%3CclipPath id='h'%3E%3Crect x='-1' y='-1' width='9' height='18'/%3E%3C/clipPath%3E%3Cpolygon points='8,0 9.28,6.72 16,8 9.28,9.28 8,16 6.72,9.28 0,8 6.72,6.72' fill='black' clip-path='url(%23h)'/%3E%3Cpolygon points='8,0 9.28,6.72 16,8 9.28,9.28 8,16 6.72,9.28 0,8 6.72,6.72' fill='none' stroke='black' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+
+  @include forced-colors {
+    background-color: CanvasText;
+  }
+}
+
+.access-cards__mark--no::before {
+  inline-size: 0.7rem;
+  block-size: $rule-medium;
+  border-radius: 1px;
+  background-color: $text-muted;
+
+  @include forced-colors {
+    background-color: CanvasText;
+  }
+}
+
+.access-cards__spoken {
+  @include visually-hidden;
+}
+
+// The list: the label row and the cards. Positioned and clipping nothing, so the sticky row inside
+// it pins to the window and releases where the list ends.
+.access-cards__list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+}
+
+// The shared grid: the name, six mark columns and the chevron's.
+.access-cards__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(6, var(--access-mark-col)) var(--access-chevron-col);
+  column-gap: space(1);
+  align-items: center;
+  padding-inline: var(--access-pad-x);
+}
+
+// The space between the bar and the stuck row, as IngredientSearch's search row keeps it: inside the
+// row, as padding its ground fills, so no card shows through the gap.
+$stuck-pad: space(4);
+
+// The label row: pinned under the site's bar while the cards pass beneath it, in the page's ground
+// so a card scrolling under it does not show through.
+.access-cards__columns {
+  position: sticky;
+  // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
+  top: var(--sticky-top, 0px);
+  z-index: layer('sticky-row');
+  align-items: end;
+  margin-block-start: calc(-1 * #{$stuck-pad});
+  padding-block: $stuck-pad space(1);
+  border-bottom: 1px solid $hairline;
+  background-color: $surface-page;
+
+  // Each label's tip wrapper is the grid item; the label is centred in it.
+  .icon-tip {
+    justify-content: center;
+  }
+}
+
+.access-cards__short {
+  font-size: type-size('tab');
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $text-muted;
+  cursor: help;
+}
+
+.access-cards__columns-label {
+  font-size: type-size('caption');
+  color: $text-muted;
+  white-space: nowrap;
+}
+
+.access-cards__card {
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+
+  &[open] > .access-cards__summary {
+    border-bottom: 1px solid $hairline;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+}
+
+.access-cards__summary {
+  padding-block: space(2) + space(1);
+  border-radius: radius('surface');
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:hover {
+    background-color: $fill-highlight-field;
+  }
+
+  &:focus-visible {
+    @include focus-ring($placement: inset);
+  }
+}
+
+.access-cards__name {
+  padding-inline-end: space(2);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+// The site's disclosure chevron: down while the card is closed, turned over while it is open.
+.access-cards__chevron {
+  @include disclosure-chevron('.access-cards__card[open]');
+}
+
+// The open card: each role on a line, its mark, its name and the cell's full wording.
+.access-cards__detail {
+  margin: 0;
+  padding: space(1) var(--access-pad-x) space(3);
+
+  > div {
+    display: grid;
+    grid-template-columns: var(--access-mark-col) calc(#{space(8)} * 2.75) minmax(0, 1fr);
+    column-gap: space(2);
+    align-items: start;
+    padding-block: space(2);
+    border-bottom: 1px solid $hairline;
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+
+  dt {
+    margin: 0;
+    font-size: type-size('small');
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  // The wording at the small size, as the role beside it, with prose leading.
+  dd {
+    margin: 0;
+    font-size: type-size('small');
+    line-height: 1.6;
+  }
+}
+
+// At the width a table turns into cards, the name takes the whole first line and the marks sit
+// beneath it, still in their columns; the label row keeps the same columns, so it still names
+// them, and gives up its own label, which has no room beside six columns.
+@media (max-width: $table-stack-width) {
+  .access-cards {
+    --access-pad-x: #{space(3)};
+  }
+
+  .access-cards__summary {
+    row-gap: space(1) + space(2) * 0.5;
+  }
+
+  .access-cards__name {
+    grid-column: 1 / -1;
+    padding-inline-end: 0;
+  }
+
+  // The first mark starts the second line under the first label, not in the name's column.
+  .access-cards__name + .access-cards__mark {
+    grid-column: 2;
+  }
+
+  .access-cards__columns-label {
+    visibility: hidden;
+  }
+
+  .access-cards__detail {
+    > div {
+      grid-template-columns: var(--access-mark-col) minmax(0, 1fr);
+    }
+
+    .access-cards__mark {
+      grid-row: 1 / 3;
+    }
+
+    dt {
+      grid-column: 2;
+      color: $text-muted;
+    }
+
+    dd {
+      grid-column: 2;
+    }
+  }
+}

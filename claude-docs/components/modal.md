@@ -789,6 +789,7 @@ The form arrives in the same dialog.
   opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
   So does Edit on an ingredient's own page, which opens the edit modal over
   that page ([`ingredient-entry.md`](ingredient-entry.md), "Edit").
+- **Opening and closing leave the page where it is.** A modal opens and closes by changing the address, and a navigation scrolls to the top unless told not to. So `open` and `RouteModal`'s close navigate with `scroll: false`, as does every save that closes the modal in place, and every link that opens a modal is a `ModalLink` (`src/components/Modal/modal-link.tsx`), a `next/link` with `scroll={false}`. `tests/guards/modal-links.test.ts` fails a file that opens a modal and imports `next/link` itself. A link to another page, such as the one in the Support dialog to Your Email, stays a plain link.
 - **The heading is known before the form.** The page builds each row's
   `editHeading` on the server, with the same builder the loaded modal uses,
   and hands it to the row beside `editHref`. So the head does not change when

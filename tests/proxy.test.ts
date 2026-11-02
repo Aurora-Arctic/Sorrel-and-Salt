@@ -120,6 +120,11 @@ describe('public routes', () => {
     // The support page offers a signed-out visitor Sign In and holds no data.
     '/support',
     '/support?support=bug&error=404',
+    // The public documents carry no application data.
+    '/privacy',
+    '/disclaimer',
+    '/terms',
+    '/code-of-ethics',
     '/robots.txt',
     '/sitemap.xml',
     '/llms.txt',

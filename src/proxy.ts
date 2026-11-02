@@ -26,6 +26,10 @@ const PUBLIC_ROUTES = [
   '/compendium', // the one public surface, read by anyone, indexed by search engines
   '/compendium/*',
   '/support', // offers a signed-out visitor Sign In and holds no data
+  '/privacy', // a public document, holding no application data
+  '/disclaimer',
+  '/terms',
+  '/code-of-ethics',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
   // The icon and manifest files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.
