@@ -9,6 +9,8 @@
   --access-pad-x: #{space(4)};
 
   @include stack(4);
+  // The prose's measure, so the cards stop where the paragraphs above them do.
+  max-width: $measure;
 }
 
 // The key: the three marks, each beside its word, in a row.
@@ -111,11 +113,11 @@
   padding-inline: var(--access-pad-x);
 }
 
-// The label row: pinned to the top of the window while the cards pass beneath it, in the page's
-// ground so a card scrolling under it does not show through.
+// The label row: pinned under the site's bar while the cards pass beneath it, in the page's ground
+// so a card scrolling under it does not show through.
 .access-cards__columns {
   position: sticky;
-  top: $top-inset;
+  top: calc(#{$top-inset} + #{$shell-bar-height});
   z-index: layer('sticky-row');
   align-items: end;
   padding-block: space(1);
