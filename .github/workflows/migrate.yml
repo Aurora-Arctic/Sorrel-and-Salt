@@ -194,9 +194,10 @@ jobs:
 
           {
             echo "Resolving 'main' branch id..."
-            parent_id=$(curl -sf "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
-              -H "Authorization: Bearer ${NEON_API_KEY}" \
-              | jq -r '.branches[] | select(.name == "main") | .id')
+            # --fail-with-body rather than -f, so a refused call logs Neon's error message.
+            branches=$(curl -sS --fail-with-body "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
+              -H "Authorization: Bearer ${NEON_API_KEY}")
+            parent_id=$(jq -r '.branches[] | select(.name == "main") | .id' <<< "$branches")
 
             if [ -z "$parent_id" ]; then
               echo "No Neon branch named 'main' found in project ${NEON_PROJECT_ID}"
@@ -204,13 +205,21 @@ jobs:
             fi
             echo "main branch id: ${parent_id}"
 
-            echo "Creating snapshot branch ${branch_name}..."
-            curl -sf -X POST "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
-              -H "Authorization: Bearer ${NEON_API_KEY}" \
-              -H "Content-Type: application/json" \
-              -d "{\"branch\": {\"name\": \"${branch_name}\", \"parent_id\": \"${parent_id}\"}}"
-            echo
-            echo "Snapshot branch ${branch_name} created from main, preceding commit ${GITHUB_SHA}."
+            # A rerun of the same commit keeps the first attempt's snapshot rather than
+            # recreating it: that one holds the database before this commit's migrations ran.
+            if jq -e --arg name "$branch_name" 'any(.branches[]; .name == $name)' <<< "$branches" > /dev/null; then
+              echo "Snapshot branch ${branch_name} already exists from an earlier attempt at commit ${GITHUB_SHA}; keeping it."
+              echo "verb=Kept" >> "$GITHUB_OUTPUT"
+            else
+              echo "Creating snapshot branch ${branch_name}..."
+              curl -sS --fail-with-body -X POST "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches" \
+                -H "Authorization: Bearer ${NEON_API_KEY}" \
+                -H "Content-Type: application/json" \
+                -d "{\"branch\": {\"name\": \"${branch_name}\", \"parent_id\": \"${parent_id}\"}}"
+              echo
+              echo "Snapshot branch ${branch_name} created from main, preceding commit ${GITHUB_SHA}."
+              echo "verb=Created" >> "$GITHUB_OUTPUT"
+            fi
           } 2>&1 | tee snapshot.log
 
           echo "branch_name=${branch_name}" >> "$GITHUB_OUTPUT"
@@ -222,7 +231,7 @@ jobs:
           check-name: Neon snapshot (production)
           outcome: ${{ steps.snapshot.outcome }}
           log-file: snapshot.log
-          summary: ${{ steps.snapshot.outcome == 'success' && format('Created {0}', steps.snapshot.outputs.branch_name) || 'Snapshot failed' }}
+          summary: ${{ steps.snapshot.outcome == 'success' && format('{0} {1}', steps.snapshot.outputs.verb, steps.snapshot.outputs.branch_name) || 'Snapshot failed' }}
 
       - name: Apply pending migrations
         id: migrate
