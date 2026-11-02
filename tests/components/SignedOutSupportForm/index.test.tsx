@@ -35,6 +35,18 @@ describe('SignedOutSupportForm', () => {
     expect(screen.queryByRole('radio', { name: /^Feedback/ })).toBeNull();
   });
 
+  it('opens with the topic chosen when it is one open without an account', () => {
+    render(<SignedOutSupportForm about="privacy" path="/privacy" />);
+    expect(screen.getByRole('radio', { name: /^Privacy/ })).toBeChecked();
+  });
+
+  it('chooses nothing for a topic that needs an account', () => {
+    render(<SignedOutSupportForm about="compendium" path="/disclaimer" />);
+    expect(
+      screen.getAllByRole('radio').filter((radio) => (radio as HTMLInputElement).checked),
+    ).toHaveLength(0);
+  });
+
   it('sends the trimmed address with the request, then says the answer comes by email', async () => {
     const calls: SendSignedOutSupportRequestMutationVariables[] = [];
     mockGraphQLMutation<

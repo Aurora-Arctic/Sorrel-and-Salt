@@ -116,7 +116,7 @@
       position: relative;
       margin: space(1) 0;
 
-      // The ◆, drawn as a shape so it sits centred on the first line at any
+      // The ✦, drawn as a shape so it sits centred on the first line at any
       // size, as the duplicates list's does. An item that draws a ::before of its
       // own clears it with `list-marker-cleared` (_mixins.scss).
       &::before {

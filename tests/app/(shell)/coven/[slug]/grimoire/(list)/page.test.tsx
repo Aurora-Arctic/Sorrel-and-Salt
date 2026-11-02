@@ -612,6 +612,7 @@ describe('the spell builder over a Grimoire tab', () => {
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith(
         '/coven/fixture-coven/grimoire/drafts?query=fixture',
+        { scroll: false },
       ),
     );
   });
@@ -885,6 +886,7 @@ describe('Quick Look over a Grimoire tab', () => {
     await waitFor(() =>
       expect(router.replace).toHaveBeenCalledWith(
         '/coven/fixture-coven/grimoire/drafts?query=fixture',
+        { scroll: false },
       ),
     );
   });

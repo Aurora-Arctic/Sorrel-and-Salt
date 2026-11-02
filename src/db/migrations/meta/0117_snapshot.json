@@ -1,6 +1,6 @@
 {
   "id": "c9646ff6-1490-46ae-8a13-c62256a3cfbe",
-  "prevId": "5e71ae97-9d64-4b0b-a811-2c8306184d39",
+  "prevId": "77e4af23-21d1-4ca1-bbeb-0a5345549a59",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2679,6 +2679,18 @@
           "notNull": true,
           "default": false
         },
+        "terms_version": {
+          "name": "terms_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "terms_accepted_at": {
+          "name": "terms_accepted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -4013,6 +4025,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "shown": {
+          "name": "shown",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
         "seed_key": {
           "name": "seed_key",
           "type": "text",
@@ -4063,13 +4082,6 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
-        },
-        "shown": {
-          "name": "shown",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
         }
       },
       "indexes": {
@@ -4187,6 +4199,28 @@
           "method": "btree",
           "with": {}
         },
+        "ingredients_tier_shown": {
+          "name": "ingredients_tier_shown",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "shown",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"ingredients\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "ingredients_trgm": {
           "name": "ingredients_trgm",
           "columns": [
@@ -4227,28 +4261,6 @@
           "isUnique": false,
           "concurrently": false,
           "method": "gin",
-          "with": {}
-        },
-        "ingredients_tier_shown": {
-          "name": "ingredients_tier_shown",
-          "columns": [
-            {
-              "expression": "workspace_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "shown",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"ingredients\".\"deleted_at\" is null",
-          "concurrently": false,
-          "method": "btree",
           "with": {}
         }
       },

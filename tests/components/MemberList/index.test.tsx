@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import MemberList from '@/components/MemberList';
+import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
 import type { MemberListEntry } from '@/components/MemberList/types';
 
 // A coven's member list (claude-docs/components/member-list.md): one row per
@@ -33,6 +34,18 @@ const ALL = [OWNER, MEMBER, VIEWER];
 const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
 describe('MemberList', () => {
+  it('gives every row a tooltip saying what its role may do, in the words Change Role shows', () => {
+    render(<MemberList members={ALL} currentUserId="someone-else" />);
+    for (const member of ALL) {
+      const row = rowOf(member.name);
+      const label = member.role[0]!.toUpperCase() + member.role.slice(1);
+      const button = within(row).getByRole('button', { name: `About ${label}` });
+      const tip = document.getElementById(button.getAttribute('aria-describedby')!);
+      expect(tip).toHaveAttribute('role', 'tooltip');
+      expect(tip).toHaveTextContent(WORKSPACE_ROLE_ACCESS[member.role]);
+    }
+  });
+
   it('shows each member with their role, joining date and last change', () => {
     render(<MemberList members={ALL} currentUserId="someone-else" />);
     for (const [member, role] of [
@@ -41,7 +54,7 @@ describe('MemberList', () => {
       [VIEWER, 'Viewer'],
     ] as const) {
       const row = rowOf(member.name);
-      expect(within(row).getByRole('cell', { name: role })).toBeTruthy();
+      expect(within(row).getByRole('cell', { name: new RegExp(`^${role}`) })).toBeTruthy();
       expect(within(row).getByText('2026-03-04')).toBeTruthy();
       // Who last changed the membership, and when.
       expect(within(row).getByText('Testwort Editor')).toBeTruthy();
@@ -73,7 +86,7 @@ describe('MemberList', () => {
   it('has no Remove column when no removeAction is passed', () => {
     render(<MemberList members={ALL} currentUserId={OWNER.userId} />);
     expect(screen.queryByRole('columnheader', { name: 'Remove' })).toBeNull();
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Remove/ })).toBeNull();
   });
 
   it("puts each control on its row, given that row's member", () => {

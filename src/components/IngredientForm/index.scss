@@ -136,7 +136,7 @@ $skeleton-fade: 300ms;
     }
 
     // Clear of the sentence above and the button below.
-    // The ◆ on the list's own edge and the title a step in, as typography-base
+    // The ✦ on the list's own edge and the title a step in, as typography-base
     // lays a list out.
     ul {
       display: grid;
@@ -151,7 +151,7 @@ $skeleton-fade: 300ms;
 
     // In a coven's form the matches come in two headed groups, each opening and closing by height (0fr to
     // 1fr) so a heading never stands alone over an emptied list. The gutter pull moves from the list onto
-    // the group, so the heading sits flush with the diamonds' edge.
+    // the group, so the heading sits flush with the stars' edge.
     .ingredient-form__group {
       display: grid;
       grid-template-rows: 0fr;
@@ -342,7 +342,7 @@ $skeleton-fade: 300ms;
       block-size: $icon-size-large;
     }
 
-    // The ◆ centred on the row, not on a line of text: a row is as tall as its control. The row is the li's
+    // The ✦ centred on the row, not on a line of text: a row is as tall as its control. The row is the li's
     // body, which after the first row starts space(1) down (the rule above), so the centre moves half that.
     li::before {
       top: 50%;
@@ -397,7 +397,7 @@ $skeleton-fade: 300ms;
   // quotation's bar rather than a box.
   border-left: $rule-medium solid $text-muted;
   background-color: $surface-card;
-  // A row, not a bulleted item: no margin or ◆ of typography-base's.
+  // A row, not a bulleted item: no margin or ✦ of typography-base's.
   margin: 0;
 
   &::before {

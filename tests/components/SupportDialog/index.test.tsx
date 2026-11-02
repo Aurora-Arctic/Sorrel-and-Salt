@@ -129,6 +129,6 @@ describe('SupportDialog', () => {
     open();
     await screen.findByRole('radio', { name: /^Bug/ });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven?page=2');
+    expect(router.replace).toHaveBeenCalledWith('/coven/fixture-coven?page=2', { scroll: false });
   });
 });

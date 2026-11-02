@@ -63,7 +63,7 @@
   background-color: $surface-page;
   @include theme-transition(background-color, box-shadow);
 
-  // The site's ◆ marker is a ::before, which would otherwise take a cell of its own.
+  // The site's ✦ marker is a ::before, which would otherwise take a cell of its own.
   &::before {
     content: none;
   }

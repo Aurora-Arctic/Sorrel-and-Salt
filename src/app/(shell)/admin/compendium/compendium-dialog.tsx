@@ -53,7 +53,8 @@ export default function CompendiumDialog({
               // now spells; Save & Add Another stays on the new form, which clears
               // itself, and the list beneath gains the entry.
               onSaved={(saved, next) => {
-                if (next === 'open') navigate(href({ edit: saved.slug }), { replace: true });
+                if (next === 'open')
+                  navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
                 refresh();
               }}
               // The modal's own close, so a delete fades it out as Close does. An edit
@@ -62,7 +63,10 @@ export default function CompendiumDialog({
               onDeleted={
                 place.entry
                   ? () => {
-                      navigate(compendiumHref({ ...place, entry: undefined }), { replace: true });
+                      navigate(compendiumHref({ ...place, entry: undefined }), {
+                        replace: true,
+                        scroll: false,
+                      });
                       refresh();
                     }
                   : done

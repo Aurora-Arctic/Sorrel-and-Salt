@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { listHref } from '../../lib/list-href';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
-import { RouteModal, useOpenModalClick } from '../Modal';
+import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import { SupportIcon } from '../IconTip/icons';
 import Pager from '../Pager';
 import { ABOUT_OPTIONS } from '../SupportRequests/filter';
@@ -43,9 +42,9 @@ const RowLink = ({
 }): ReactElement => {
   const onClick = useOpenModalClick(href, { title: request.subject, focusTitle: true });
   return (
-    <Link href={href} onClick={onClick} className="support-list__link">
+    <ModalLink href={href} onClick={onClick} className="support-list__link">
       {request.subject}
-    </Link>
+    </ModalLink>
   );
 };
 

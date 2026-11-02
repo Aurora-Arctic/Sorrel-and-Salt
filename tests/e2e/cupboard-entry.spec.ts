@@ -75,6 +75,8 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   // Annotated wins over Compendium.
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
+  // A coven's entry carries the disclaimer line under its notes as the public page does.
+  await expect(page.getByRole('link', { name: 'Read the Disclaimer' }).first()).toBeVisible();
   // At a phone's width, the narrowest a section signs off at.
   await page.setViewportSize({ width: 375, height: 812 });
   await assertNoAccessibilityViolations(page);
