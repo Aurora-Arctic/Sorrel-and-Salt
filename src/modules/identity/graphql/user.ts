@@ -5,6 +5,7 @@ import { userRole } from '../schema/users';
 import { pauseAdminRoleChanges, resumeAdminRoleChanges } from '../services/admin-role-pause';
 import { setEmail } from '../services/email';
 import { setName } from '../services/name';
+import { agreeToTerms } from '../services/terms';
 import { setPassword } from '../services/password';
 import { getMe } from '../services/profile';
 import { listUsers } from '../services/user-list';
@@ -29,6 +30,7 @@ export const UserRef = builder.objectRef<UserRow>('User').implement({
     role: t.expose('role', { type: UserRoleEnum, authScopes: selfOrAdmin }),
     canCreateWorkspace: t.exposeBoolean('canCreateWorkspace', { authScopes: selfOrAdmin }),
     emailVerified: t.exposeBoolean('emailVerified', { authScopes: selfOrAdmin }),
+    termsVersion: t.exposeString('termsVersion', { nullable: true, authScopes: selfOrAdmin }),
     // An admin's alone, the user's own row included: the account page reads a
     // user's own from Better Auth, whose table it is.
     providers: t.stringList({
@@ -81,6 +83,15 @@ builder.mutationField('setName', (t) =>
     args: { name: t.arg.string({ required: true }) },
     authScopes: { signedIn: true },
     resolve: (_root, { name }, context) => setName(sessionOf(context), name),
+  }),
+);
+
+// The terms page's Agree button. It takes no version: the service records the one in force, so the browser cannot claim another.
+builder.mutationField('agreeToTerms', (t) =>
+  t.field({
+    type: UserRef,
+    authScopes: { signedIn: true },
+    resolve: (_root, _args, context) => agreeToTerms(sessionOf(context)),
   }),
 );
 

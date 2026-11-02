@@ -11,6 +11,7 @@ const DOCUMENTS = [
   { path: '/privacy', title: 'Privacy Policy', link: 'Privacy' },
   { path: '/disclaimer', title: 'Disclaimer', link: 'Disclaimer' },
   { path: '/code-of-ethics', title: 'Code of Ethics', link: 'Code of Ethics' },
+  { path: '/terms', title: 'Terms of Use', link: 'Terms' },
 ];
 
 test.beforeAll(async () => {

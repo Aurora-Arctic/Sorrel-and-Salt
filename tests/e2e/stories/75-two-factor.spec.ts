@@ -5,6 +5,7 @@ import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { totpCode } from '../../support/two-factor';
 import { withSql } from './accounts-setup';
+import { TERMS_VERSION } from '@/lib/terms-version';
 
 // Two-factor for password sign-ins (claude-docs/auth/two-factor.md). The code is computed from the key the account
 // page shows, as an authenticator app computes it from the QR code.
@@ -36,7 +37,10 @@ test(
       data: { name: 'Testwort Doubled', email, password: PASSWORD },
     });
     expect(made.status(), await made.text()).toBe(200);
-    await withSql((sql) => sql`update users set email_verified = true where email = ${email}`);
+    await withSql(
+      (sql) =>
+        sql`update users set email_verified = true, terms_version = ${TERMS_VERSION}, terms_accepted_at = now() where email = ${email}`,
+    );
 
     // Sign-up leaves a session cookie; the story starts signed out.
     await page.context().clearCookies();
