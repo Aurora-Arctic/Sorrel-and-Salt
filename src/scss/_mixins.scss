@@ -501,6 +501,24 @@
   }
 }
 
+// The columns of `.page-with-nav` (_primitives.scss), from a tablet up: the menu's column, then the
+// content column, centred; on a wide screen an empty third column balances the menu so the content
+// column sits at the window's centre. A document page passes its wider pair (DocumentPage). One mixin
+// for the pages and for the shell's paused notice, which stands over that column (AppShell), so the
+// two cannot differ.
+@mixin page-with-nav-grid($menu: calc(#{space(8)} * 3), $column: $narrow-column) {
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    display: grid;
+    grid-template-columns: $menu minmax(0, $column);
+    place-content: start center;
+  }
+
+  // Not from a tablet up, which lacks the room for three columns and the frame's padding.
+  @media (min-width: calc(#{$menu} * 2 + #{$column} + #{space(6)} * 2 + #{space(4)} * 2)) {
+    grid-template-columns: $menu minmax(0, $column) $menu;
+  }
+}
+
 // The grid of a page whose jump menu stands to the left of content that fills
 // the rest of the wide column (an ingredient's entry), from a tablet up. The
 // children are the head, the menu, then the body that holds the sections

@@ -105,7 +105,13 @@ requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in whil
   above the page, in its own `aside` labelled `Site Access`, since the page owns `main`: "Your site access is paused
   until …" with the end in `LocalTime`, or "with no end date", then a What This Means link to `/access-paused`, which
   reads the pause itself. `.app-shell__pause` sets it in the
-  wide column's edges.
+  wide column's edges and the notice fills that column. Over a page that narrows its column the notice takes that
+  column instead, through the page's own grid mixin, so the two cannot drift: `page-with-nav-grid` for Support and
+  the account's tabs, the same mixin with `$document-menu-column` and the measure for a document page, and
+  `entry-nav-grid` for an ingredient entry, whose notice also ends where the entry's text column does, short of
+  its side column. Each is a `:has()` rule, an enhancement: without it the notice keeps the wide column. One
+  gap remains: from a tablet's width up to a window of about 70rem (by the menu's longest label) the entry's menu column grows to that label, which
+  the notice's empty grid cannot see, so the notice starts left of the entry's text there.
 
 ## Styling
 

@@ -1019,7 +1019,9 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   stands on its own, so it also serves a page that is not a `.page-frame`,
   such as the coven index inside `.coven-layout`, and clears the children's
   block margins as the frame does. Both pages use the one class, so the two
-  cannot drift (MB.119).
+  cannot drift (MB.119). The columns are the mixin `page-with-nav-grid($menu, $column)`
+  in `_mixins.scss`, shared with a document page's wider pair and with the shell's
+  paused notice, which stands over the page's column.
 - **`.notice.page-frame__notice`** is a notice standing between a section's head
   and its body, such as the `/coven` landing's word of waiting invitations
   (M10.32): `space(3)` above and below it, on top of the section's gap, so it
