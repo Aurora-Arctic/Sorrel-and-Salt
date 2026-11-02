@@ -19,8 +19,11 @@ in `viewerOf`), so the component fetches nothing.
 `paused` is the pause an owner set on the viewer's seat there, `{ until }` or
 null, `until` null for no end date (M15.55, M15.56). A paused coven's row
 carries a second line, "Paused until 1 January 2099, 00:00 UTC" or "Paused,
-with no end date", read as part of its name. It stays pickable: the coven
-layout sends the viewer on to `/coven-paused/[slug]`, which says the same.
+with no end date", read as part of its name. It stays pickable, and a pick goes
+straight to `/coven-paused/[slug]`, which says the same, drawing that page's
+skeleton (a `form` on a panel in the narrow column, as Create Coven's) while it
+loads. The coven layout would send the viewer there anyway; going direct skips
+the hop and draws the right skeleton rather than the coven's.
 `viewerOf` also reads both flags false for a paused coven.
 
 `canCreate`: whether the viewer holds `canCreateWorkspace`, which the caller
@@ -32,7 +35,8 @@ with a Create Coven choice (M9.16). It defaults to false.
 - **The current workspace is read from the address, never kept.** The value is
   `covenSlugOf(usePathname())` (`src/lib/coven-path.ts`). Nothing is stored in
   session, cookie or local state, so two tabs in two workspaces cannot disagree
-  through it.
+  through it. On a coven's paused page, `/coven-paused/<slug>`, the value is that coven
+  (`pausedCovenSlugOf`, `src/lib/access-paused.ts`), and a choice goes to the chosen coven's home.
   Anywhere else outside `/coven/…` the box shows "Choose a coven".
 - **A choice keeps the page when the page exists in the other workspace**
   (M9.12, the owner's call, 2026-10-21). `pathInCoven(pathname, slug, options)`

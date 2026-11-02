@@ -32,7 +32,8 @@ vi.mock('@/components/LeaveWorkspaceButton', () => ({ default: LeaveWorkspaceBut
 
 const viewerOf = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerOf }));
-// The page draws no switcher, its list of the other covens being the way on; mocked so a draw would be seen.
+// The switcher's choices and moves are its own (tests/components/WorkspaceSwitcher/index.test.tsx); here only that the page
+// hands it every coven of the viewer's.
 const WorkspaceSwitcher = vi.fn((_props: { workspaces: unknown[]; canCreate: boolean }) => (
   <div>Coven switcher</div>
 ));
@@ -104,14 +105,26 @@ describe('/coven-paused/[slug]', () => {
     );
   });
 
-  it('draws no coven switcher, so the other covens are offered once, by the list', async () => {
+  it('offers the coven switcher over every coven of the viewer’s, so the paused coven is no dead end', async () => {
     pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
     viewerOf.mockResolvedValue({ viewer: { canCreate: true }, workspaces: [FIXTURE, TESTWORT] });
     await visit();
 
-    expect(screen.getByRole('list', { name: 'Your Other Covens' })).toBeInTheDocument();
-    expect(WorkspaceSwitcher).not.toHaveBeenCalled();
-    expect(screen.queryByRole('region', { name: 'Context' })).toBeNull();
+    expect(screen.getByRole('region', { name: 'Context' })).toHaveTextContent('Coven switcher');
+    expect(WorkspaceSwitcher.mock.lastCall?.[0]).toEqual({
+      workspaces: [FIXTURE, TESTWORT],
+      canCreate: true,
+    });
+  });
+
+  it('reads Leave Coven before the list of the other covens', async () => {
+    pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
+    viewerOf.mockResolvedValue({ viewer: { canCreate: false }, workspaces: [FIXTURE, TESTWORT] });
+    await visit();
+
+    const leave = screen.getByRole('button', { name: 'Leave Coven' });
+    const others = screen.getByRole('list', { name: 'Your Other Covens' });
+    expect(leave.compareDocumentPosition(others) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('links to each other coven the viewer can open, passing over this one and any other paused', async () => {

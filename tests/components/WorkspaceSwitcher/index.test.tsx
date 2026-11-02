@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useEffect } from 'react';
+import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 
 const pathname = vi.fn<() => string>();
@@ -142,6 +144,47 @@ describe('WorkspaceSwitcher', () => {
 
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
     });
+  });
+
+  it('shows the paused coven as current on its paused page, and goes from there to another coven’s home', () => {
+    pathname.mockReturnValue('/coven-paused/fixture-coven');
+    const workspaces = [{ ...WORKSPACES[0]!, paused: { until: null } }, WORKSPACES[1]!];
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+
+    expect(box()).toHaveTextContent('Fixture Coven');
+    fireEvent.click(box());
+    fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
+
+    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
+  });
+
+  it('goes from another coven straight to a paused coven’s paused page, drawing that page’s narrow panel while it loads', async () => {
+    let target: unknown;
+    function Probe() {
+      const state = useNavigationState();
+      useEffect(() => {
+        target = state.target;
+      });
+      return null;
+    }
+    const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[1]!, paused: { until: null } }];
+    render(
+      <Navigating push={push}>
+        <WorkspaceSwitcher workspaces={workspaces} />
+        <Probe />
+      </Navigating>,
+    );
+    // Why the guard's hop could have been taken: the address is a page of another coven, which has the same section.
+    expect(box()).toHaveTextContent('Fixture Coven');
+
+    fireEvent.click(box());
+    await act(async () => {
+      fireEvent.click(screen.getByRole('option', { name: /Testwort Circle/ }));
+    });
+
+    expect(push).toHaveBeenCalledTimes(1);
+    expect(push.mock.calls[0]?.[0]).toBe('/coven-paused/testwort-circle');
+    expect(target).toEqual({ region: 'main', shape: 'form', frame: 'narrow' });
   });
 
   it('keeps the current workspace from the address, so a re-render in another tab’s workspace does not change it', () => {
