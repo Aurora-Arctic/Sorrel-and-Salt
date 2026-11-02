@@ -79,7 +79,10 @@ const PauseForm = ({
   const [span, setSpan] = useState<PauseSpan>('day');
   const [day, setDay] = useState('');
   const [note, setNote] = useState('');
-  const discard = useDiscardGuard(span !== 'day' || day !== '' || note.trim() !== '');
+  const [message, setMessage] = useState('');
+  const discard = useDiscardGuard(
+    span !== 'day' || day !== '' || note.trim() !== '' || message.trim() !== '',
+  );
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
@@ -97,6 +100,10 @@ const PauseForm = ({
         noteRequired={noteRequired}
         noteHint={copy.noteHint}
         notePlaceholder={copy.notePlaceholder}
+        message={message}
+        onMessage={setMessage}
+        messageLabel={copy.messageLabel}
+        messagePlaceholder={copy.messagePlaceholder}
       />
       <div className="form__actions">
         <ConfirmedAction
@@ -115,12 +122,13 @@ const PauseForm = ({
           send={() => {
             const until = endOf(span, day, new Date());
             if (until === undefined) return Promise.reject(new Error('No end chosen'));
-            return pause(until, note.trim() || undefined);
+            return pause(until, note.trim() || undefined, message.trim() || null);
           }}
           onSent={() => {
             setSpan('day');
             setDay('');
             setNote('');
+            setMessage('');
             onChanged?.();
             refresh();
           }}

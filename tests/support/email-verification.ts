@@ -34,9 +34,7 @@ export const noSupportNotifier: SupportNotifier = {
   origin: async () => unexpected('resolve an origin'),
 };
 
-/** For a test that sets a time-out or pause and does not look at the mail: it sends nothing. */
+/** For a test that sets a time-out or pause and does not look at the mail: it gives the origin a pause mail's run carries. */
 export const noPauseNotifier: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier = {
-  timedOut: async () => {},
-  accessPaused: async () => {},
-  memberPaused: async () => {},
+  origin: async () => 'http://localhost:3000',
 };

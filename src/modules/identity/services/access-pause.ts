@@ -7,6 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
+import { parsePauseMessage } from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -15,6 +16,7 @@ import { users } from '../schema/users';
 import type { AccessPauseNotifier, UserAccessPauseRow } from '../types';
 import { assertChangesOpen } from './admin-role-pause';
 import { isPrimaryAdmin } from './primary-admin';
+import { mailPausedUser } from './access-pause-start';
 import { assertSiteAdmin } from './site-admin';
 
 // The site access pause: an admin closes the site but support to a user, until a time or with no end, and may lift it early.
@@ -33,14 +35,14 @@ const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
 
 /**
  * Pauses a user's access until `until`, or with no end when `until` is `null`, and ends every session they hold. Pausing
- * another admin waits on admin changes being open, as revoking one does. The user is mailed once the pause is saved.
+ * another admin waits on admin changes being open, as revoking one does. The user is mailed, with `message` if one is written, once the pause is saved.
  *
  * @throws {Forbidden} the session is not an admin; the user is the primary admin, the caller, the System account or the signed-out
  * sender account; or admin changes are paused
  * and the user is an admin.
  * @throws {NotFound} no live user has this id.
- * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, or a pause
- * already stands.
+ * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, the message is over
+ * 500, or a pause already stands.
  */
 export async function pauseUserAccess(
   session: Session,
@@ -48,6 +50,7 @@ export async function pauseUserAccess(
   until: Date | null | undefined,
   note: string | null | undefined,
   notifier: AccessPauseNotifier,
+  message?: string | null,
 ): Promise<UserAccessPauseRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
@@ -62,6 +65,7 @@ export async function pauseUserAccess(
   if (trimmed.length > NOTE_MAX_LENGTH) {
     throw fieldRefusal('note', LONG_NOTE);
   }
+  const toUser = parsePauseMessage(message);
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
   if (isPrimaryAdmin(user)) throw new Forbidden(PRIMARY_REFUSAL);
@@ -75,6 +79,7 @@ export async function pauseUserAccess(
     const [row] = await write.setUserAccessPause(admin, user.id, {
       until: until ?? null,
       note: trimmed,
+      message: toUser,
     });
     // An empty answer is a pause another admin set in the same moment, which took the one live slot.
     if (!row) {
@@ -84,12 +89,12 @@ export async function pauseUserAccess(
     }
     return row;
   });
-  // The pause is saved, so a failed mail is logged and not thrown.
+  // The pause is saved, so a mail that cannot start or send is logged by the start and never thrown.
   try {
-    await notifier.accessPaused(user.email, { until: pause.until, note: pause.note });
+    await mailPausedUser(pause.id, await notifier.origin());
   } catch (error) {
     // oxlint-disable-next-line no-console -- the log is how a failed send is seen
-    console.error('Could not mail an access pause notice', error);
+    console.error('Could not start an access pause notice', error);
   }
   return pause;
 }

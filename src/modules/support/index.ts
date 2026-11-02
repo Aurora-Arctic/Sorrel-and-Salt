@@ -24,6 +24,7 @@ export type {
   SupportRequestRow,
   SupportStatus,
   SupportStatusMail,
+  SupportTimeoutMail,
   SupportTimeoutRow,
   TimeoutNotifier,
 } from './types';

@@ -17,9 +17,22 @@ const message = () =>
     url: 'https://sorrelandsalt.com/support',
     covenName: 'Testwort Circle',
     until: new Date('2099-03-14T12:00:00Z'),
-    note: 'Cooling off after the argument.',
+    message: 'A short break from the coven while we talk.',
+    origin: WORKSHOP_ORIGIN,
+  });
+
+// With no end date and no message, the shortest the mail gets.
+const bare = () =>
+  covenAccessPausedMessage({
+    to: 'someone@example.com',
+    url: 'https://sorrelandsalt.com/support',
+    covenName: 'Testwort Circle',
+    until: null,
+    message: null,
     origin: WORKSHOP_ORIGIN,
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
 export const Default: Story = { render: () => <EmailPreview message={message} /> };
+
+export const NoMessage: Story = { render: () => <EmailPreview message={bare} /> };

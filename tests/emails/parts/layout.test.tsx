@@ -145,7 +145,7 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/support`,
         until: new Date('2099-03-14T12:00:00Z'),
-        note: 'A note.',
+        message: 'A message.',
       }),
   },
   {
@@ -157,7 +157,7 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/support`,
         until: new Date('2099-03-14T12:00:00Z'),
-        note: 'A note.',
+        message: 'A message.',
       }),
   },
   {
@@ -170,7 +170,7 @@ const MAILS: {
         url: `${ORIGIN}/support`,
         until: new Date('2099-03-14T12:00:00Z'),
         covenName: 'Testwort',
-        note: 'A note.',
+        message: 'A message.',
       }),
   },
   {

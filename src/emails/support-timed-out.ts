@@ -7,12 +7,12 @@ const SUBJECT = 'You Were Timed Out of Support';
 
 const PREVIEW = 'An admin timed your account out of sending support requests.';
 
-// Sent when an admin sets a support time-out. It states the end, the admin's note and what the time-out stops, and links to the
-// support page, where the user's past requests and the time-out notice stay readable.
+// Sent when an admin sets a support time-out. It states the end, the message written to the user when there is one, and what the
+// time-out stops, and never the admin's note. It links to the support page, where the user's past requests and the time-out notice stay readable.
 export function SupportTimedOut({
   url,
   until,
-  note,
+  message,
   origin = new URL(url).origin,
   part,
 }: SupportTimedOutProps) {
@@ -24,7 +24,7 @@ export function SupportTimedOut({
       null,
       `A site admin set a support time-out on your Sorrel & Salt account. ${pauseEnd(until)}`,
     ),
-    h(Paragraph, null, `The admin's note: ${note}`),
+    message ? h(Paragraph, null, message) : null,
     h(
       Paragraph,
       null,

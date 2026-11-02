@@ -1111,12 +1111,29 @@ type Mutation {
   """
   Pauses a member’s access to a coven until `until`, or with no end when it is left out. Owners only; an owner cannot be paused.
   """
-  pauseMemberAccess(note: String, until: DateTime, userId: ID!, workspaceId: ID!): WorkspaceMemberPause!
+  pauseMemberAccess(
+    """
+    What the user is emailed, up to 500 characters; the note is never mailed.
+    """
+    message: String
+    note: String
+    until: DateTime
+    userId: ID!
+    workspaceId: ID!
+  ): WorkspaceMemberPause!
 
   """
   Pauses a user’s access until `until`, or with no end when it is left out, with a note saying why, and ends every session they hold. Site admins only.
   """
-  pauseUserAccess(note: String!, until: DateTime, userId: ID!): UserAccessPause!
+  pauseUserAccess(
+    """
+    What the user is emailed, up to 500 characters; the note is never mailed.
+    """
+    message: String
+    note: String!
+    until: DateTime
+    userId: ID!
+  ): UserAccessPause!
 
   """
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
@@ -1238,7 +1255,15 @@ type Mutation {
   """
   Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.
   """
-  timeOutSupportSender(note: String!, until: DateTime, userId: ID!): SupportTimeout!
+  timeOutSupportSender(
+    """
+    What the user is emailed, up to 500 characters; the note is never mailed.
+    """
+    message: String
+    note: String!
+    until: DateTime
+    userId: ID!
+  ): SupportTimeout!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!

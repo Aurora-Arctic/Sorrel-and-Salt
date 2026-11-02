@@ -29,8 +29,8 @@ import './timeout-panel.scss';
 // serves the request dialog and the user modal, keyed by the user, so a repeat sender is seen as one.
 
 const TimeOutDocument = graphql(`
-  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!) {
-    timeOutSupportSender(userId: $userId, until: $until, note: $note) {
+  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String) {
+    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {
       id
     }
   }
@@ -102,7 +102,10 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
   const [span, setSpan] = useState<PauseSpan>('day');
   const [day, setDay] = useState('');
   const [note, setNote] = useState('');
-  const discard = useDiscardGuard(span !== 'day' || day !== '' || note.trim() !== '');
+  const [message, setMessage] = useState('');
+  const discard = useDiscardGuard(
+    span !== 'day' || day !== '' || note.trim() !== '' || message.trim() !== '',
+  );
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
@@ -120,6 +123,10 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
         noteHint={NOTE_HINT}
         notePlaceholder="Why"
         noteRequired
+        message={message}
+        onMessage={setMessage}
+        messageLabel="Message to User"
+        messagePlaceholder="For them"
       />
       <div className="form__actions">
         <ConfirmedAction
@@ -145,12 +152,14 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
               userId,
               until: until?.toISOString() ?? null,
               note: note.trim(),
+              message: message.trim() || null,
             });
           }}
           onSent={() => {
             setSpan('day');
             setDay('');
             setNote('');
+            setMessage('');
             refresh();
           }}
         />

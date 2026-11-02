@@ -324,7 +324,41 @@ describe('Time-Out', () => {
     confirmTimeOut();
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(sent).toEqual([{ userId: 'u1', until: null, note: 'Repeated sends' }]);
+    expect(sent).toEqual([{ userId: 'u1', until: null, note: 'Repeated sends', message: null }]);
+  });
+
+  it('offers a Message to User, said to be emailed to them, beside a note said to be seen by staff only', () => {
+    open(ADMIN);
+    openTimeOut();
+
+    const message = within(dialog()).getByRole('textbox', { name: 'Message to User' });
+    expect(message).not.toBeRequired();
+    expect(message).toHaveAccessibleDescription(/email/i);
+    expect(within(dialog()).getByRole('textbox', { name: /^Note/ })).toHaveAccessibleDescription(
+      /Seen by staff only/,
+    );
+  });
+
+  it('sends the message to the user, trimmed, with the time-out, after asking', async () => {
+    const sent = timeOutSent();
+    open(ADMIN);
+    openTimeOut();
+    writeNote();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Message to User' }), {
+      target: { value: '  Please keep each request to one problem.  ' },
+    });
+    fireEvent.click(timeOutSubmit());
+    // Precondition: nothing goes before the confirmation.
+    expect(sent).toHaveLength(0);
+    confirmTimeOut();
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      userId: 'u1',
+      note: 'Repeated sends',
+      message: 'Please keep each request to one problem.',
+    });
   });
 
   it('sends the sender and an end a day on, after asking', async () => {

@@ -23,6 +23,7 @@ export const workspaceMemberPauses = namedWrites(
       // Null for a pause with no end date.
       until: timestamp('until'),
       note: text('note'),
+      message: text('message'),
       liftedAt: timestamp('lifted_at'),
       liftedBy: uuid('lifted_by').references(() => users.id),
       ...auditColumns,

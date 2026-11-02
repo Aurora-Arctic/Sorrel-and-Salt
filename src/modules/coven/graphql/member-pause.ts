@@ -49,10 +49,22 @@ builder.mutationField('pauseMemberAccess', (t) =>
       userId: t.arg.id({ required: true }),
       until: t.arg({ type: 'DateTime', required: false }),
       note: t.arg.string({ required: false }),
+      message: t.arg.string({
+        required: false,
+        description: 'What the user is emailed, up to 500 characters; the note is never mailed.',
+      }),
     },
     authScopes: { signedIn: true },
-    resolve: (_root, { workspaceId, userId, until, note }, context) =>
-      pauseMemberAccess(sessionOf(context), workspaceId, userId, until, note, context.pauses),
+    resolve: (_root, { workspaceId, userId, until, note, message }, context) =>
+      pauseMemberAccess(
+        sessionOf(context),
+        workspaceId,
+        userId,
+        until,
+        note,
+        context.pauses,
+        message,
+      ),
   }),
 );
 

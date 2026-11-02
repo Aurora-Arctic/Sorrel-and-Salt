@@ -14,8 +14,20 @@ import type { CovenAccessPanelProps } from './types';
 // date, and its lifting, on the user modal's pause panel (claude-docs/components/member-detail.md, "Coven Access").
 
 export const PauseMemberDocument = graphql(`
-  mutation PauseMemberAccess($workspaceId: ID!, $userId: ID!, $until: DateTime, $note: String) {
-    pauseMemberAccess(workspaceId: $workspaceId, userId: $userId, until: $until, note: $note) {
+  mutation PauseMemberAccess(
+    $workspaceId: ID!
+    $userId: ID!
+    $until: DateTime
+    $note: String
+    $message: String
+  ) {
+    pauseMemberAccess(
+      workspaceId: $workspaceId
+      userId: $userId
+      until: $until
+      note: $note
+      message: $message
+    ) {
       id
     }
   }
@@ -66,6 +78,8 @@ const person = (who: { id: string; name?: string | null } | null | undefined) =>
 const copyFor = (name: string): PausePanelCopy => ({
   noteHint: "Seen by the coven's owners only, up to 500 characters.",
   notePlaceholder: 'Why, for owners',
+  messageLabel: 'Message to Member',
+  messagePlaceholder: 'For them',
   pauseQuestion: () => (
     <>
       <strong>{name}</strong> keeps their place in this coven but cannot open it, or change anything
@@ -115,12 +129,13 @@ const CovenAccessPanel = ({
       standing={standing ? (read ?? standing) : undefined}
       earlier={pauses.filter((pause) => !stands(pause, now))}
       copy={copyFor(name)}
-      pause={(until, note) =>
+      pause={(until, note, message) =>
         graphqlRequest(PauseMemberDocument, {
           workspaceId,
           userId,
           until: until?.toISOString() ?? null,
           note,
+          message,
         })
       }
       lift={() => graphqlRequest(LiftMemberDocument, { workspaceId, userId })}

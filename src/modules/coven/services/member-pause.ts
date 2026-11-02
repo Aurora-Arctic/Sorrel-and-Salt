@@ -1,6 +1,5 @@
 import 'server-only';
 import {
-  findOneById,
   findStandingWorkspaceMemberPause,
   findStandingWorkspaceMemberPauses,
   findWorkspaceMemberPausePage,
@@ -8,13 +7,13 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
+import { parsePauseMessage } from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId } from '../../../lib/validation';
-import { users } from '../../identity/schema/users';
-import { workspaces } from '../schema/workspaces';
 import type { MemberPauseNotifier, WorkspaceMemberPauseRow } from '../types';
+import { mailPausedMember } from './member-pause-start';
 import { assertMembership } from './membership';
 
 // The coven access pause: an owner stops one member reaching their coven, until a time or with no end, and may lift it early.
@@ -43,13 +42,14 @@ async function memberRoleOf(workspaceId: string, userId: string) {
 
 /**
  * Pauses a member's access to the coven until `until`, or with no end when `until` is `null`. The caller needs `member: pause`,
- * which only owners hold; an owner cannot be paused, so the coven always keeps someone who can lift it. The member is mailed once
- * the pause is saved.
+ * which only owners hold; an owner cannot be paused, so the coven always keeps someone who can lift it. The member is mailed, with
+ * `message` if one is written, once the pause is saved.
  *
  * @throws {Forbidden} the caller is not an owner of the coven; `userId` holds no seat in it; `userId` is an owner; or `userId` is
  * the System account or the signed-out sender account, which are not people.
  * @throws {AccessPaused} the caller's own access to the coven is paused.
- * @throws {ValidationError} `until` is not in the future, the note is over 500 characters, or a pause already stands.
+ * @throws {ValidationError} `until` is not in the future, the note or the message is over 500 characters, or a pause
+ * already stands.
  */
 export async function pauseMemberAccess(
   session: Session,
@@ -58,6 +58,7 @@ export async function pauseMemberAccess(
   until: Date | null | undefined,
   note: string | null | undefined,
   notifier: MemberPauseNotifier,
+  message?: string | null,
 ): Promise<WorkspaceMemberPauseRow> {
   const membership = await assertMembership(session, workspaceId, { member: ['pause'] });
   const trimmed = note?.trim() || null;
@@ -70,6 +71,7 @@ export async function pauseMemberAccess(
   if (trimmed && trimmed.length > NOTE_MAX_LENGTH) {
     throw fieldRefusal('note', LONG_NOTE);
   }
+  const toMember = parsePauseMessage(message);
   if (isStandInAccount(userId)) throw new Forbidden(STAND_IN_REFUSAL);
   if ((await memberRoleOf(membership.workspaceId, userId)) === 'owner') {
     throw new Forbidden(OWNER_REFUSAL);
@@ -81,27 +83,18 @@ export async function pauseMemberAccess(
     const [row] = await write.setWorkspaceMemberPause(membership, userId, {
       until: until ?? null,
       note: trimmed,
+      message: toMember,
     });
     // An empty answer is a pause another owner set in the same moment, which took the one live slot.
     if (!row) throw fieldRefusal('userId', ALREADY_PAUSED);
     return row;
   });
-  // The pause is saved, so a failed lookup or mail is logged and not thrown.
+  // The pause is saved, so a mail that cannot start or send is logged by the start and never thrown.
   try {
-    const [member, coven] = await Promise.all([
-      findOneById(users, userId),
-      findOneById(workspaces, membership.workspaceId),
-    ]);
-    if (member && coven) {
-      await notifier.memberPaused(member.email, {
-        covenName: coven.name,
-        until: pause.until,
-        note: pause.note,
-      });
-    }
+    await mailPausedMember(pause.id, await notifier.origin());
   } catch (error) {
     // oxlint-disable-next-line no-console -- the log is how a failed send is seen
-    console.error('Could not mail a coven access pause notice', error);
+    console.error('Could not start a coven access pause notice', error);
   }
   return pause;
 }

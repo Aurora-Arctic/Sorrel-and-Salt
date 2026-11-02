@@ -31,10 +31,14 @@ builder.mutationField('pauseUserAccess', (t) =>
       userId: t.arg.id({ required: true }),
       until: t.arg({ type: 'DateTime', required: false }),
       note: t.arg.string({ required: true }),
+      message: t.arg.string({
+        required: false,
+        description: 'What the user is emailed, up to 500 characters; the note is never mailed.',
+      }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { userId, until, note }, context) =>
-      pauseUserAccess(sessionOf(context), userId, until, note, context.pauses),
+    resolve: (_root, { userId, until, note, message }, context) =>
+      pauseUserAccess(sessionOf(context), userId, until, note, context.pauses, message),
   }),
 );
 

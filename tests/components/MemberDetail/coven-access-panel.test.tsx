@@ -119,7 +119,13 @@ describe('CovenAccessPanel, while access stands open', () => {
     expect(sent).toEqual([
       {
         name: 'PauseMemberAccess',
-        variables: { workspaceId: 'w', userId: 'u', until: null, note: 'Cooling off' },
+        variables: {
+          workspaceId: 'w',
+          userId: 'u',
+          until: null,
+          note: 'Cooling off',
+          message: null,
+        },
       },
     ]);
     expect(announced()).toContain('paused');
@@ -139,6 +145,38 @@ describe('CovenAccessPanel, while access stands open', () => {
     const until = new Date(sent[0].variables.until as string).getTime();
     expect(until - before).toBeGreaterThanOrEqual(24 * 60 * 60 * 1000);
     expect(until - Date.now()).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
+  });
+
+  it("offers a Message to Member, said to be emailed to them, beside a note said to be seen by the coven's owners only", () => {
+    serve([]);
+    renderPanel(null);
+    unfold();
+
+    const message = within(section()).getByRole('textbox', { name: 'Message to Member' });
+    expect(message).not.toBeRequired();
+    expect(message).toHaveAccessibleDescription(/email/i);
+    expect(within(section()).getByRole('textbox', { name: 'Note' })).toHaveAccessibleDescription(
+      /Seen by the coven's owners only/,
+    );
+  });
+
+  it('sends the message to the member, trimmed, with the pause', async () => {
+    const { sent } = serve([]);
+    renderPanel(null);
+    unfold();
+    fireEvent.change(within(section()).getByRole('textbox', { name: 'Message to Member' }), {
+      target: { value: '  A short break while we talk.  ' },
+    });
+    fireEvent.click(within(section()).getByRole('button', { name: 'Pause Access' }));
+    // Precondition: nothing goes before the confirmation.
+    expect(sent).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]).toMatchObject({
+      name: 'PauseMemberAccess',
+      variables: { workspaceId: 'w', userId: 'u', message: 'A short break while we talk.' },
+    });
   });
 
   it('holds Pause Access while Until a Date has no day picked', () => {

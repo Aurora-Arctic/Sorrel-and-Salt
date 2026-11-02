@@ -16,9 +16,21 @@ const message = () =>
     to: 'someone@example.com',
     url: 'https://sorrelandsalt.com/support',
     until: null,
-    note: 'Repeated off-topic requests.',
+    message: 'Your account is paused while we look into a report.',
+    origin: WORKSHOP_ORIGIN,
+  });
+
+// With no end date and no message, the shortest the mail gets.
+const bare = () =>
+  accessPausedMessage({
+    to: 'someone@example.com',
+    url: 'https://sorrelandsalt.com/support',
+    until: null,
+    message: null,
     origin: WORKSHOP_ORIGIN,
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
 export const Default: Story = { render: () => <EmailPreview message={message} /> };
+
+export const NoMessage: Story = { render: () => <EmailPreview message={bare} /> };

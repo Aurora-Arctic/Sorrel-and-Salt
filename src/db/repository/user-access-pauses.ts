@@ -81,12 +81,12 @@ export function userAccessPauseWrites({
     // set for the same user in a transaction alongside wins the slot, and this call writes nothing rather than failing.
     // Every session the user holds ends in the same transaction, so their next request is signed out; a session row has no
     // audit columns or `deleted_at`, and Better Auth deletes it the same way at sign-out.
-    setUserAccessPause: async (_admin, userId, { until, note }) => {
+    setUserAccessPause: async (_admin, userId, { until, note, message }) => {
       await update(userAccessPauses, lifted(), liveFor(userId));
       await tx.delete(sessions).where(eq(sessions.userId, userId));
       return tx
         .insert(userAccessPauses)
-        .values(applyAudit('insert', { userId, until, note }, session) as never)
+        .values(applyAudit('insert', { userId, until, note, message }, session) as never)
         .onConflictDoNothing()
         .returning();
     },

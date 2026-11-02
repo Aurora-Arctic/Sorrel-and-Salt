@@ -180,6 +180,7 @@ export {
 } from './user-access-pauses';
 export {
   findStandingWorkspaceMemberPause,
+  findWorkspaceMemberPauseForMail,
   findStandingWorkspaceMemberPauses,
   findWorkspaceMemberPausePage,
 } from './workspace-member-pauses';

@@ -121,7 +121,41 @@ describe('UserDetail, Site Access', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-    expect(sent).toEqual([{ userId: BO.id, until: null, note: 'Shared password' }]);
+    expect(sent).toEqual([{ userId: BO.id, until: null, note: 'Shared password', message: null }]);
+  });
+
+  it('offers a Message to User, said to be emailed to them, beside a note said to be seen by staff only', () => {
+    renderDetail({ pauses: [] });
+    unfold();
+
+    const message = within(section()).getByRole('textbox', { name: 'Message to User' });
+    expect(message).not.toBeRequired();
+    expect(message).toHaveAccessibleDescription(/email/i);
+    expect(within(section()).getByRole('textbox', { name: 'Note' })).toHaveAccessibleDescription(
+      /Seen by staff only/,
+    );
+  });
+
+  it('sends the message to the user, trimmed, with the pause', async () => {
+    const sent = pausesSent();
+    renderDetail({ pauses: [] });
+    unfold();
+    writeNote();
+    fireEvent.change(within(section()).getByRole('textbox', { name: 'Message to User' }), {
+      target: { value: '  Paused while we look into a report.  ' },
+    });
+    fireEvent.click(within(section()).getByRole('button', { name: 'Pause Access' }));
+    // Precondition: nothing goes before the confirmation.
+    expect(sent).toHaveLength(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause' }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      userId: BO.id,
+      note: 'Shared password',
+      message: 'Paused while we look into a report.',
+    });
   });
 
   it.each([['day'], ['none']])(

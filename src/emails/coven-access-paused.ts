@@ -6,13 +6,13 @@ import type { CovenAccessPausedProps } from './types';
 const subjectOf = ({ covenName }: { covenName: string }): string =>
   `Your Access to ${covenName} Was Paused`;
 
-// Sent when a coven owner pauses a member. It names the coven, states the end and the owner's note when they wrote one, and links
+// Sent when a coven owner pauses a member. It names the coven, states the end and the message to the member when one was written, never the owner's note, and links
 // to the support page. The member keeps their seat; the pause only stops them reaching the coven.
 export function CovenAccessPaused({
   url,
   covenName,
   until,
-  note,
+  message,
   origin = new URL(url).origin,
   part,
 }: CovenAccessPausedProps) {
@@ -28,7 +28,7 @@ export function CovenAccessPaused({
       null,
       `An owner of the coven ${covenName} paused your access to it. ${pauseEnd(until)} You keep your seat in the coven, and the rest of Sorrel & Salt works as before.`,
     ),
-    note ? h(Paragraph, null, `The owner's note: ${note}`) : null,
+    message ? h(Paragraph, null, message) : null,
     h(Action, { href: url, label: 'Open the Support Page', part }),
   );
 }

@@ -45,11 +45,15 @@ export type MemberKey = {
   userId: string;
 };
 
-/** Tells a member their access to a coven was paused. Handed to the service by the GraphQL context. */
+/** The origin a coven access pause mail links from, which the mail job carries. Handed to the service by the GraphQL context. */
 export interface MemberPauseNotifier {
-  /** Mails `to` that their access to `covenName` is paused until `until` (`null`: no end date), with the owner's note if one was written. Never throws on a failed send. */
-  memberPaused(
-    to: string,
-    details: { covenName: string; until: Date | null; note: string | null },
-  ): Promise<void>;
+  /** The origin a mailed link is built on. @throws {Error} where none resolves. */
+  origin(): Promise<string>;
 }
+
+/** One coven access pause mail, as its job carries it: the pause's id and the origin, and nothing of the member's. */
+export type MemberPauseMail = {
+  kind: 'member-pause';
+  pauseId: string;
+  origin: string;
+};
