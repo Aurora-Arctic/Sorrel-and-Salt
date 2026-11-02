@@ -6,7 +6,8 @@ import type { FixtureUser, SeedTransaction } from './types';
 
 // Two accounts for the `demo` scenario that an admin has held back, so the Users table's Support Time-Out and Site Access
 // Paused columns and the user modal have a standing one to show: H, whose site access is paused with no end date, and I, who
-// is timed out of support (the time-out itself is the support seed's). Not fixtures A–G, whom stories and specs sign in as.
+// is timed out of support with no end date (the time-out itself is the support seed's). Not fixtures A–G, whom stories
+// and specs sign in as.
 
 const DAY = 24 * 60 * 60 * 1000;
 

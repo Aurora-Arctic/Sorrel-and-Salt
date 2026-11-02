@@ -146,7 +146,7 @@ export {
   findPendingSiteInvitationPage,
 } from './invitations';
 export {
-  findActiveSupportTimeoutEnd,
+  findStandingSupportTimeout,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
@@ -190,6 +190,7 @@ export {
 export type { SignInFailureRow } from './sign-in-failures';
 export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
+  StandingTimeout,
   WorkingDeductionRow,
   WorkingParticipantRow,
   WorkingRow,

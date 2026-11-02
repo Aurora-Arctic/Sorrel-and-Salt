@@ -431,7 +431,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { setSupportRequestIssueUrl(id: "${NOWHERE}", issueUrl: null) { id } }`,
   ),
   timeOutSupportSender: write(
-    `mutation { timeOutSupportSender(userId: "${NOWHERE}", until: "2999-01-01T00:00:00Z") { id } }`,
+    `mutation { timeOutSupportSender(userId: "${NOWHERE}", note: "Spam") { id } }`,
   ),
   liftSupportTimeout: write(`mutation { liftSupportTimeout(id: "${NOWHERE}") { id } }`),
   grantWorkspaceCreation: write(`mutation { grantWorkspaceCreation(userId: "${NOWHERE}") { id } }`),

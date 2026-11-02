@@ -21,8 +21,8 @@ export interface UserListEntry {
   openHref: Route;
   /** The modal’s head, shown at once on a press: the one the loaded modal carries. */
   heading: ModalHeading;
-  /** When the support time-out standing on them ends; absent when none stands. */
-  supportTimeoutUntil?: Date;
+  /** The support time-out standing on them, `until` null for one with no end; absent when none stands. */
+  supportTimeout?: { until: Date | null };
   /** The pause standing on their site access, `until` null for one with no end; absent when none stands. */
   accessPause?: { until: Date | null };
 }

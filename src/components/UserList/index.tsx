@@ -125,13 +125,17 @@ const columns = (
   },
   {
     heading: 'Support Time-Out',
-    // Whether a time-out stands on them now, its end in the tip; one run out or lifted is a cross.
-    cell: (user) =>
-      user.supportTimeoutUntil ? (
+    // Whether a time-out stands on them now, its end or that it has none in the tip; one run out or lifted is a cross.
+    cell: ({ supportTimeout }) =>
+      supportTimeout ? (
         <Mark
           value
-          label={`Timed out until ${inUtc(user.supportTimeoutUntil)}`}
-          tip={`Until ${inUtc(user.supportTimeoutUntil)}`}
+          label={
+            supportTimeout.until
+              ? `Timed out until ${inUtc(supportTimeout.until)}`
+              : 'Timed out with no end date'
+          }
+          tip={supportTimeout.until ? `Until ${inUtc(supportTimeout.until)}` : 'No end date'}
         />
       ) : (
         <Mark value={false} label="Not timed out" />

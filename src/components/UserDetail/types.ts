@@ -84,4 +84,6 @@ export interface PauseFieldsProps {
   /** Who reads the note, beneath the field. */
   noteHint: string;
   notePlaceholder: string;
+  /** Marks the note required, for a sanction that must say why. */
+  noteRequired?: boolean;
 }

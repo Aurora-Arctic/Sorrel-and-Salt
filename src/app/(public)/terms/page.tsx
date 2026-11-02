@@ -113,10 +113,10 @@ export default function TermsOfUsePage() {
         promise more. A coven's owner may remove a member from the coven, or pause a member's access
         to it, until a date or with no end date; while that pause stands the member keeps their
         place but cannot open the coven, and their other covens are unaffected. A site admin may
-        stop a person sending support requests for a time, and may take away the right to create
-        covens. Accounts are never closed. A site admin may pause an account's access to the site,
-        until a date or with no end date; while the pause stands the account cannot sign in, and the
-        compendium stays open to it as it is to everyone.
+        stop a person sending support requests, until a date or with no end date, and may take away
+        the right to create covens. Accounts are never closed. A site admin may pause an account's
+        access to the site, until a date or with no end date; while the pause stands the account
+        cannot sign in, and the compendium stays open to it as it is to everyone.
       </p>
 
       <h2>What the Site Owes You</h2>

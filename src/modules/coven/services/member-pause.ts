@@ -6,7 +6,7 @@ import {
   findWorkspaceRole,
   withAudit,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId } from '../../../lib/validation';
@@ -24,10 +24,6 @@ const ALREADY_PAUSED = 'This member is already paused; lift the pause first';
 const STRANGER_REFUSAL = 'That person is not a member of this coven';
 const PAST_END = 'Choose a time in the future';
 const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
-
-// Each sentence is also the error's message, which is what the members page shows, since it names no field.
-const refusal = (path: string, message: string) =>
-  new ValidationError([{ path: [path], message }], message);
 
 /**
  * The live seat `userId` holds in the proof's coven, refused as a stranger when there is none: an id that cannot name a user
@@ -61,16 +57,16 @@ export async function pauseMemberAccess(
     until != null &&
     (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
   ) {
-    throw refusal('until', PAST_END);
+    throw fieldRefusal('until', PAST_END);
   }
   if (trimmed && trimmed.length > NOTE_MAX_LENGTH) {
-    throw refusal('note', LONG_NOTE);
+    throw fieldRefusal('note', LONG_NOTE);
   }
   if ((await memberRoleOf(membership.workspaceId, userId)) === 'owner') {
     throw new Forbidden(OWNER_REFUSAL);
   }
   if (await findStandingWorkspaceMemberPause(membership, userId)) {
-    throw refusal('userId', ALREADY_PAUSED);
+    throw fieldRefusal('userId', ALREADY_PAUSED);
   }
   return withAudit(session, async (write) => {
     const [row] = await write.setWorkspaceMemberPause(membership, userId, {
@@ -78,7 +74,7 @@ export async function pauseMemberAccess(
       note: trimmed,
     });
     // An empty answer is a pause another owner set in the same moment, which took the one live slot.
-    if (!row) throw refusal('userId', ALREADY_PAUSED);
+    if (!row) throw fieldRefusal('userId', ALREADY_PAUSED);
     return row;
   });
 }

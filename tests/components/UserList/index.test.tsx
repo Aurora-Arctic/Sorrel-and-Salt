@@ -89,21 +89,22 @@ function cellUnder(name: string, heading: string): HTMLElement {
 
 describe('UserList, standing support time-outs and access pauses', () => {
   const AT = new Date('2026-11-20T09:30:00Z');
-  // Bo stands timed out and paused until AT, Cy paused with no end, Ada neither: the page passes only what stands.
+  // Bo stands timed out and paused until AT, Cy timed out and paused with no end, Ada neither: the page passes only what
+  // stands.
   const rows = () =>
     render(
       <UserList
         {...props({
           users: [
             ADA,
-            { ...BO, supportTimeoutUntil: AT, accessPause: { until: AT } },
-            { ...CY, accessPause: { until: null } },
+            { ...BO, supportTimeout: { until: AT }, accessPause: { until: AT } },
+            { ...CY, supportTimeout: { until: null }, accessPause: { until: null } },
           ],
         })}
       />,
     );
 
-  it('marks a standing time-out with its end in UTC, and a cross for a user with none', () => {
+  it('marks a standing time-out with its end in UTC or none, and a cross for a user with none', () => {
     rows();
     expect(screen.getByRole('columnheader', { name: 'Support Time-Out' })).toBeInTheDocument();
     expect(
@@ -111,11 +112,14 @@ describe('UserList, standing support time-outs and access pauses', () => {
         'Timed out until 20 November 2026, 09:30 UTC',
       ),
     ).toBeInTheDocument();
-    for (const name of ['Ada Fixturewort', 'Cy Fixturewort']) {
-      expect(
-        within(cellUnder(name, 'Support Time-Out')).getByText('Not timed out'),
-      ).toBeInTheDocument();
-    }
+    expect(
+      within(cellUnder('Cy Fixturewort', 'Support Time-Out')).getByText(
+        'Timed out with no end date',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Ada Fixturewort', 'Support Time-Out')).getByText('Not timed out'),
+    ).toBeInTheDocument();
   });
 
   it('marks a standing pause with its end in UTC or none, and a cross for a user with none', () => {
