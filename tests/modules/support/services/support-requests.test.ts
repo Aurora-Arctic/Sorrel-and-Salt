@@ -67,6 +67,14 @@ function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids
 const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest>[1] = INPUT) =>
   sendSupportRequest(asUser(user), input, notifier());
 
+const mail: SupportNotifier = {
+  replyWaiting: async () => undefined,
+  received: async () => undefined,
+  resolved: async () => undefined,
+  closingSoon: async () => undefined,
+  signedOutReply: async () => undefined,
+};
+
 async function emailOf(user: SessionUser): Promise<string> {
   const [row] = await sql`select email from users where id = ${user.id}`;
   return row!.email as string;
@@ -192,7 +200,7 @@ describe('mySupportRequests', () => {
     await sql`update support_requests set created_at = now() - interval '2 hours' where id = ${waiting.id}`;
     await sql`update support_requests set status = 'waiting_on_sender' where id = ${waiting.id}`;
     await sql`update support_requests set status = 'closed', created_at = now() - interval '3 hours' where id = ${closed.id}`;
-    await resolveSupportRequest(asUser(E), resolved.id);
+    await resolveSupportRequest(asUser(E), resolved.id, mail);
 
     const entries = await listMySupportRequests(asUser(C), PAGE);
     expect(entries.map((entry) => entry.node.id)).toEqual([

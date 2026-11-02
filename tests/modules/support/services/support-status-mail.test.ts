@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import {
   addSupportInternalNote,
@@ -8,10 +8,19 @@ import {
   sendSupportRequest,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportNotifier } from '@/lib/support-mail';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
 // Which status mail each service move sends, to whom, and that no internal note reaches any of them.
+
+const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
+
+vi.mock('@/lib/mail', () => ({
+  send: async (message: (typeof sent)[number]) => {
+    sent.push(message);
+  },
+}));
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -124,5 +133,57 @@ describe('an internal note', () => {
 
     expect(calls.map((call) => call.kind)).toEqual(['received', 'replyWaiting', 'resolved']);
     expect(JSON.stringify(calls)).not.toContain('repeat caller');
+  });
+});
+
+describe('the rendered mails', () => {
+  const real = () => supportNotifier(new Request('http://localhost:8000/api/graphql'));
+  const SIGNED_OUT = {
+    about: 'account',
+    email: 'visitor@example.test',
+    subject: 'I cannot sign in',
+    message: 'No code.',
+  } as const;
+
+  beforeEach(() => {
+    sent.length = 0;
+  });
+
+  it('carry no internal note text in any of the four mails, signed in', async () => {
+    const notifier = real();
+    const request = await sendSupportRequest(asUser(C), INPUT, notifier);
+    // Precondition: the note is saved on the request, so a leak would have text to carry.
+    await addSupportInternalNote(asUser(E), request.id, NOTE);
+    expect(await sql`select 1 from support_replies where body = ${NOTE}`).toHaveLength(1);
+    await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
+    await resolveSupportRequest(asUser(E), request.id, notifier);
+    await notifier.closingSoon(await emailOf(C.id), INPUT.subject, request.id);
+
+    expect(sent).toHaveLength(4);
+    for (const message of sent) {
+      expect(message.html).not.toContain('repeat caller');
+      expect(message.text).not.toContain('repeat caller');
+      expect(message.subject).not.toContain('repeat caller');
+    }
+  });
+
+  it('link a signed-out sender to nothing behind an account, in every mail they receive', async () => {
+    const notifier = real();
+    await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier });
+    const [row] = await sql`select id from support_requests`;
+    await addSupportInternalNote(asUser(E), row!.id as string, NOTE);
+    await replyToSupportRequest(asUser(E), row!.id as string, 'Use the card.', notifier);
+    await resolveSupportRequest(asUser(E), row!.id as string, notifier);
+    await notifier.closingSoon(SIGNED_OUT.email, SIGNED_OUT.subject, null);
+
+    // received, replied, resolved, closing soon
+    expect(sent).toHaveLength(4);
+    for (const message of sent) {
+      expect(message.to).toBe(SIGNED_OUT.email);
+      expect(message.html).not.toContain('/account');
+      expect(message.text).not.toContain('/account');
+      expect(message.html).not.toContain('repeat caller');
+      expect(message.text).not.toContain('repeat caller');
+    }
   });
 });

@@ -25,17 +25,23 @@ beforeEach(async () => {
 
 const mail: SupportNotifier = {
   replyWaiting: async () => undefined,
-  signedOutReceived: async () => undefined,
+  received: async () => undefined,
+  resolved: async () => undefined,
+  closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
 };
 
 describe('the thread the sender’s page receives', () => {
   it('is in order, marks the sender’s own messages and carries no internal note', async () => {
-    const request = await sendSupportRequest(asUser(C), {
-      about: 'bug',
-      subject: 'The jar will not open',
-      message: 'It sticks.',
-    });
+    const request = await sendSupportRequest(
+      asUser(C),
+      {
+        about: 'bug',
+        subject: 'The jar will not open',
+        message: 'It sticks.',
+      },
+      mail,
+    );
     await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail, {
       waitingOnSender: true,
     });
@@ -55,11 +61,15 @@ describe('the thread the sender’s page receives', () => {
   });
 
   it('is not readable by another sender', async () => {
-    const request = await sendSupportRequest(asUser(C), {
-      about: 'bug',
-      subject: 'The jar will not open',
-      message: 'It sticks.',
-    });
+    const request = await sendSupportRequest(
+      asUser(C),
+      {
+        about: 'bug',
+        subject: 'The jar will not open',
+        message: 'It sticks.',
+      },
+      mail,
+    );
     expect(await readOpenedRequest(asUser(E), request.id)).toBeUndefined();
   });
 });
