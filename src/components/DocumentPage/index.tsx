@@ -21,3 +21,5 @@ const DocumentPage = ({ title, lede, updatedOn, children }: DocumentPageProps): 
 );
 
 export default DocumentPage;
+
+export { SourceItem, SourceMarks } from './sources';
