@@ -164,6 +164,7 @@ navigation.
   session on those pages and on `/` and `/sign-in`, and `null` elsewhere; `sessionFromHeaders()`
   always answers `null`; `getShellSession()` answers the session with the pause, for the shell's
   viewer and its paused notice (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
+  `requireSession()` skips its terms redirect for a paused session, which cannot agree while paused.
 - **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the
   same render cost one lookup. It is `sessionFromHeaders(await headers())`;
   the proxy, which has the request but no `headers()`, calls

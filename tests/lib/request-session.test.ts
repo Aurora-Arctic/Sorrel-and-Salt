@@ -197,6 +197,21 @@ describe('a paused session', () => {
     }
   });
 
+  it('reaches the support pages without having agreed to the terms, which it could not agree to while paused', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), null));
+    requestHeaders.set(RETURN_PATH_HEADER, '/account/support');
+    await expect(requireSession()).rejects.toThrow('redirect:/account/terms');
+
+    paused();
+
+    for (const page of ['/support', '/account/support', '/account/support?request=r1']) {
+      requestHeaders.set(RETURN_PATH_HEADER, page);
+      await expect(requireSession()).resolves.toMatchObject({ userId: USER_ID });
+    }
+    requestHeaders.set(RETURN_PATH_HEADER, '/account/terms');
+    await expect(requireSession()).rejects.toThrow(PAUSED_PAGE);
+  });
+
   it('reads as signed in on the entry and sign-in pages, which send it on, and on no page that merely starts like one', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
     paused();

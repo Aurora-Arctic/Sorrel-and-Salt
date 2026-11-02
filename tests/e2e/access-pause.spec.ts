@@ -131,6 +131,23 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
     await expect(userPage).toHaveURL('/access-paused');
   }
 
+  // Timed out from support as well, the paused page, which has no account menu, still links to the user's own requests:
+  // the request reads there, and the time-out refuses a reply.
+  await withSql(
+    (sql) => sql`
+      insert into support_timeouts (user_id, until, note, created_by, updated_by)
+      values (${userId}, null, 'Spam', ${adminId}, ${adminId})`,
+  );
+  await userPage.goto('/access-paused');
+  await expect(userPage.getByRole('main')).toContainText('you are timed out with no end date');
+  await userPage.getByRole('main').getByRole('link', { name: 'your requests' }).click();
+  await expect(userPage).toHaveURL('/account/support');
+  await userPage.getByRole('link', { name: 'Why is my access paused?' }).click();
+  const thread = userPage.getByRole('dialog', { name: 'Why is my access paused?' });
+  await expect(thread.getByText('I cannot open my coven.')).toBeVisible();
+  await expect(thread.getByLabel(/^Your Reply/)).toBeDisabled();
+  await assertNoAccessibilityViolations(userPage);
+
   // Lifted, the pause moves to the earlier list, and the form is offered again.
   await access.getByRole('button', { name: 'Lift Pause', exact: true }).click();
   await page.getByRole('button', { name: 'Lift', exact: true }).click();
