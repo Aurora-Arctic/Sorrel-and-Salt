@@ -39,7 +39,7 @@ export default function CodeOfEthicsPage() {
         <li>
           Take only what can be spared: no endangered plants, no animal parts from protected
           species, nothing poached. The law can make exceptions for Indigenous peoples' religious
-          and cultural use. <SourceMarks cite="exception-short" numbers={[11]} />
+          and cultural use. <SourceMarks cite="exception-short" numbers={[1]} />
         </li>
         <li>What the compendium says, it sources. A claim with no source is a claim to doubt.</li>
         <li>
@@ -48,7 +48,9 @@ export default function CodeOfEthicsPage() {
         <li>No advertising, no selling of data, no owner above the community.</li>
       </ul>
 
-      <h2>What Everyone Agrees To</h2>
+      <h2>For Everyone</h2>
+
+      <h3>What Everyone Agrees To</h3>
       <p>
         The <Link href="/terms">Terms of Use</Link> make this section part of what every account
         agrees to. It is kept short on purpose. The sections after it say why each rule is here; the
@@ -67,7 +69,7 @@ export default function CodeOfEthicsPage() {
         </li>
       </ul>
 
-      <h2>What We Value</h2>
+      <h3>What We Value</h3>
       <p>
         {SITE_NAME} is a grimoire for covens: a place for small groups of people to keep what they
         know, what they have and what they make. These are the values the people who run it hold
@@ -87,7 +89,7 @@ export default function CodeOfEthicsPage() {
           Europe and its colonies executed an estimated 40,000 to 60,000 people for witchcraft, and
           roughly four in five of them were women, in a period that held women to be less
           intelligent than men and more open to sin.
-          <SourceMarks cite="fear" numbers={[7]} /> A site about witchcraft that is not feminist has
+          <SourceMarks cite="fear" numbers={[2]} /> A site about witchcraft that is not feminist has
           forgotten whose history it is handling. Feminism here means the plain thing: that women,
           including trans women, are people whose knowledge, work and bodies are their own.
         </li>
@@ -105,7 +107,22 @@ export default function CodeOfEthicsPage() {
         </li>
       </ul>
 
-      <h2>Closed Practices and Where Lore Comes From</h2>
+      <h3>Accessibility</h3>
+      <p>
+        The site is built to be used by everyone: with a keyboard, with a screen reader, on a phone,
+        at a large text size, in light or in dark. Its pages are checked against the Web Content
+        Accessibility Guidelines, the W3C's standard for making web content accessible to people
+        with disabilities, by an automated test in the browser suite that runs on every change, and
+        the colours in both themes keep to the guidelines' contrast floor.
+        <SourceMarks cite="contrast" numbers={[3]} /> Automated checks do not find everything, so if
+        something on the site does not work for you, that is a bug, and we commit to fixing
+        accessibility bugs first. You can report an accessibility bug through the{' '}
+        <SupportLink about="accessibility">support form</SupportLink>, with or without an account.
+      </p>
+
+      <h2>The Compendium</h2>
+
+      <h3>Closed Practices and Where Lore Comes From</h3>
       <p>
         Much of what the compendium contains was borrowed from somewhere. Some of it comes from open
         traditions that invite anyone to learn. Some of it comes from closed practices: traditions
@@ -123,7 +140,7 @@ export default function CodeOfEthicsPage() {
           interfered with, and in a few instances banned". Today, mass-market "smudging kits" are
           sold against traditional prohibitions on selling spiritual medicines such as white sage,
           and Native activists have protested this as cultural misappropriation.
-          <SourceMarks cite="borrowing" numbers={[2, 8]} />
+          <SourceMarks cite="borrowing" numbers={[4, 5]} />
         </li>
         <li>
           Hoodoo was created by enslaved African Americans in the Southern United States, drawing on
@@ -131,7 +148,7 @@ export default function CodeOfEthicsPage() {
           was practised in secrecy, as a form of resistance, and by the twentieth century white
           drugstore owners and mail-order companies had appropriated it for profit. That
           appropriation remains a major concern for the people who hold the tradition.
-          <SourceMarks cite="tradition" numbers={[9]} />
+          <SourceMarks cite="tradition" numbers={[6]} />
         </li>
       </ul>
       <p>
@@ -161,7 +178,7 @@ export default function CodeOfEthicsPage() {
         </li>
       </ul>
 
-      <h2>Ethical and Sustainable Sourcing</h2>
+      <h3>Ethical and Sustainable Sourcing</h3>
       <p>
         An ingredient that is sacred, scarce or both is not a commodity. The site asks every coven
         to take only what can be spared. Three plants sold for burning show why it matters.
@@ -175,26 +192,26 @@ export default function CodeOfEthicsPage() {
           arrested for taking 400 pounds of it. It is not on the United States' endangered species
           list, but conservationists are concerned for its survival. Smudging with it is one of the
           closed ceremonies described above, and many Native Americans have asked non-Native people
-          not to use it at all. <SourceMarks cite="sacred" numbers={[1, 2]} /> If you use it, grow
+          not to use it at all. <SourceMarks cite="sacred" numbers={[4, 7]} /> If you use it, grow
           your own, or buy from an ethical grower, never from a wild harvest you cannot trace.
-          <SourceMarks cite="sourcing" numbers={[1, 2]} />
+          <SourceMarks cite="sourcing" numbers={[4, 7]} />
         </li>
         <li>
           <strong>Palo santo</strong> is two trees. <em>Bursera graveolens</em>, the one burned as
           incense in Bolivia, Ecuador and Peru, is assessed as Least Concern by the IUCN, and Peru
           permits only the collection of naturally fallen or dead wood.
-          <SourceMarks cite="wood" numbers={[3]} /> <em>Bulnesia sarmientoi</em>, also called palo
+          <SourceMarks cite="wood" numbers={[8]} /> <em>Bulnesia sarmientoi</em>, also called palo
           santo, has been listed as Endangered on the IUCN Red List since 2018 and in Appendix II of
           CITES since 2010, under pressure from deforestation of the Gran Chaco and global demand
           for its wood, extracts and oils.
-          <SourceMarks cite="tree" numbers={[4]} /> Know which tree you are buying, and buy fallen
+          <SourceMarks cite="tree" numbers={[9]} /> Know which tree you are buying, and buy fallen
           wood.
         </li>
         <li>
           <strong>Indian sandalwood</strong> (<em>Santalum album</em>), burned as incense and held
           sacred in Hinduism, is assessed as Vulnerable by the IUCN because over-exploitation has
           put its wild population at risk of extinction, and India has banned its export.
-          <SourceMarks cite="resin" numbers={[5]} />
+          <SourceMarks cite="resin" numbers={[10]} />
         </li>
         <li>
           <strong>Animal parts.</strong> CITES, the treaty in force since 1975 that protects
@@ -202,11 +219,11 @@ export default function CodeOfEthicsPage() {
           species, subspecies and populations: Appendix I lists those threatened with extinction and
           given the highest protection, Appendix II those whose trade must be controlled to avoid
           use incompatible with their survival.
-          <SourceMarks cite="wildlife" numbers={[6]} /> The law can make exceptions for Indigenous
+          <SourceMarks cite="wildlife" numbers={[11]} /> The law can make exceptions for Indigenous
           peoples' religious and cultural use. For example, in the United States, the government's
           National Eagle Repository gives eagle feathers and parts to enrolled members of federally
           recognised tribes "for spiritual and religious use".
-          <SourceMarks cite="exception" numbers={[11]} /> Outside such an exception, no bone,
+          <SourceMarks cite="exception" numbers={[1]} /> Outside such an exception, no bone,
           feather, fur, shell or tooth of a listed species belongs in a working, and the site will
           not help you source one.
         </li>
@@ -217,7 +234,7 @@ export default function CodeOfEthicsPage() {
         yet; both are planned.
       </p>
 
-      <h2>Why the Compendium Cites Its Sources</h2>
+      <h3>Why the Compendium Cites Its Sources</h3>
       <p>
         Every claim in the compendium is meant to trace to a source: a book, a paper, a page. An
         entry with no source still saves, and sits on the curators' to-do list until it has one. A
@@ -237,20 +254,9 @@ export default function CodeOfEthicsPage() {
         you are unsure.
       </p>
 
-      <h2>Accessibility</h2>
-      <p>
-        The site is built to be used by everyone: with a keyboard, with a screen reader, on a phone,
-        at a large text size, in light or in dark. Its pages are checked against the Web Content
-        Accessibility Guidelines, the W3C's standard for making web content accessible to people
-        with disabilities, by an automated test in the browser suite that runs on every change, and
-        the colours in both themes keep to the guidelines' contrast floor.
-        <SourceMarks cite="contrast" numbers={[10]} /> Automated checks do not find everything, so
-        if something on the site does not work for you, that is a bug, and we commit to fixing
-        accessibility bugs first. You can report an accessibility bug through the{' '}
-        <SupportLink about="accessibility">support form</SupportLink>, with or without an account.
-      </p>
+      <h2>For the People Who Run the Site</h2>
 
-      <h2>For Curators</h2>
+      <h3>Curators</h3>
       <p>
         A curator curates the compendium, its vocabularies and its references, and reads the support
         requests an admin has marked for curators or assigned to them. A curator agrees to
@@ -281,7 +287,7 @@ export default function CodeOfEthicsPage() {
         </li>
       </ul>
 
-      <h2>For Admins</h2>
+      <h3>Admins</h3>
       <p>
         An admin can do everything a curator can, and also manages who uses the site: an admin sees
         which covens a person belongs to, by name and role, grants and revokes the right to create
@@ -316,7 +322,7 @@ export default function CodeOfEthicsPage() {
         </li>
       </ul>
 
-      <h2>For Developers</h2>
+      <h3>Developers</h3>
       <p>
         A developer writes and runs the site's code, and may be able to reach its database and
         servers. A developer agrees to everything above, and to this:
@@ -356,7 +362,7 @@ export default function CodeOfEthicsPage() {
         </li>
       </ul>
 
-      <h2>For the Owner and Everyone Who Runs the Site</h2>
+      <h3>The Owner and Everyone Who Runs the Site</h3>
       <p>
         The owner holds the primary admin account, which no one can revoke. The site relies on
         outside companies for things such as its hosting and its mail; the owner tries to choose
@@ -386,67 +392,21 @@ export default function CodeOfEthicsPage() {
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
-        <SourceItem number={1} cites={['sacred', 'sourcing']}>
-          Wikipedia. "Salvia apiana." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/Salvia_apiana">
-            https://en.wikipedia.org/wiki/Salvia_apiana
+        <SourceItem number={1} cites={['exception-short', 'exception']}>
+          U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026.{' '}
+          <a href="https://www.fws.gov/program/national-eagle-repository">
+            https://www.fws.gov/program/national-eagle-repository
           </a>
           .
         </SourceItem>
-        <SourceItem number={2} cites={['borrowing', 'sacred', 'sourcing']}>
-          Wikipedia. "Smudging." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/Smudging">
-            https://en.wikipedia.org/wiki/Smudging
-          </a>
-          .
-        </SourceItem>
-        <SourceItem number={3} cites={['wood']}>
-          Wikipedia. "Bursera graveolens." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/Bursera_graveolens">
-            https://en.wikipedia.org/wiki/Bursera_graveolens
-          </a>
-          .
-        </SourceItem>
-        <SourceItem number={4} cites={['tree']}>
-          Wikipedia. "Bulnesia sarmientoi." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/Bulnesia_sarmientoi">
-            https://en.wikipedia.org/wiki/Bulnesia_sarmientoi
-          </a>
-          .
-        </SourceItem>
-        <SourceItem number={5} cites={['resin']}>
-          Wikipedia. "Santalum album." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/Santalum_album">
-            https://en.wikipedia.org/wiki/Santalum_album
-          </a>
-          .
-        </SourceItem>
-        <SourceItem number={6} cites={['wildlife']}>
-          Wikipedia. "CITES." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/CITES">https://en.wikipedia.org/wiki/CITES</a>.
-        </SourceItem>
-        <SourceItem number={7} cites={['fear']}>
+        <SourceItem number={2} cites={['fear']}>
           Wikipedia. "Witch Trials in the Early Modern Period." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Witch_trials_in_the_early_modern_period">
             https://en.wikipedia.org/wiki/Witch_trials_in_the_early_modern_period
           </a>
           .
         </SourceItem>
-        <SourceItem number={8} cites={['borrowing']}>
-          Wikipedia. "American Indian Religious Freedom Act." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act">
-            https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act
-          </a>
-          .
-        </SourceItem>
-        <SourceItem number={9} cites={['tradition']}>
-          Wikipedia. "Hoodoo (Spirituality)." Accessed 1 November 2026.{' '}
-          <a href="https://en.wikipedia.org/wiki/Hoodoo_(spirituality)">
-            https://en.wikipedia.org/wiki/Hoodoo_(spirituality)
-          </a>
-          .
-        </SourceItem>
-        <SourceItem number={10} cites={['contrast']}>
+        <SourceItem number={3} cites={['contrast']}>
           World Wide Web Consortium, Web Accessibility Initiative. "WCAG 2 Overview." Last updated
           17 September 2026.{' '}
           <a href="https://www.w3.org/WAI/standards-guidelines/wcag/">
@@ -454,12 +414,58 @@ export default function CodeOfEthicsPage() {
           </a>
           .
         </SourceItem>
-        <SourceItem number={11} cites={['exception-short', 'exception']}>
-          U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026.{' '}
-          <a href="https://www.fws.gov/program/national-eagle-repository">
-            https://www.fws.gov/program/national-eagle-repository
+        <SourceItem number={4} cites={['borrowing', 'sacred', 'sourcing']}>
+          Wikipedia. "Smudging." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/Smudging">
+            https://en.wikipedia.org/wiki/Smudging
           </a>
           .
+        </SourceItem>
+        <SourceItem number={5} cites={['borrowing']}>
+          Wikipedia. "American Indian Religious Freedom Act." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act">
+            https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={6} cites={['tradition']}>
+          Wikipedia. "Hoodoo (Spirituality)." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/Hoodoo_(spirituality)">
+            https://en.wikipedia.org/wiki/Hoodoo_(spirituality)
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={7} cites={['sacred', 'sourcing']}>
+          Wikipedia. "Salvia apiana." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/Salvia_apiana">
+            https://en.wikipedia.org/wiki/Salvia_apiana
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={8} cites={['wood']}>
+          Wikipedia. "Bursera graveolens." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/Bursera_graveolens">
+            https://en.wikipedia.org/wiki/Bursera_graveolens
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={9} cites={['tree']}>
+          Wikipedia. "Bulnesia sarmientoi." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/Bulnesia_sarmientoi">
+            https://en.wikipedia.org/wiki/Bulnesia_sarmientoi
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={10} cites={['resin']}>
+          Wikipedia. "Santalum album." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/Santalum_album">
+            https://en.wikipedia.org/wiki/Santalum_album
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={11} cites={['wildlife']}>
+          Wikipedia. "CITES." Accessed 1 November 2026.{' '}
+          <a href="https://en.wikipedia.org/wiki/CITES">https://en.wikipedia.org/wiki/CITES</a>.
         </SourceItem>
       </ol>
     </DocumentPage>
