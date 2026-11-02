@@ -2,7 +2,7 @@
 // The repo's one database CLI: reaching the database means importing the
 // client, and that exemption set is six files pinned by test (claude-docs/db/client-imports.md,
 // "Who may import the client"). `categories`, `forms`, `astrology`, `deities`,
-// `sources`, `compendium` and `demo-coven` are reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
+// `sources`, `compendium`, `demo-coven` and `documents` are reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
 // Node's own type stripping resolves no extensionless relative import.
 //
 // Usage: npm run db:seed              # SEED_SCENARIO, default minimal
@@ -10,6 +10,7 @@
 //        npm run db:seed:sources      # after the vocabularies it links
 //        npm run db:seed:compendium   # after the vocabularies and sources
 //        npm run db:seed:demo-coven   # after the compendium; seats every account
+//        npm run db:seed:documents    # the site's documents, version 1 of each
 //        npm run db:seed:<reference target> -- --dry-run    # run, then roll back: write nothing
 //        npm run db:seed:compendium -- [--dry-run] [--adopt] [--force]
 //          --adopt also lists the ADOPTED lines, as migrate.yml does
@@ -31,6 +32,7 @@ import { seedDeities } from '../src/db/seed/deities.ts';
 import { seedSources } from '../src/db/seed/sources.ts';
 import { seedDemoCoven } from '../src/db/seed/demo-coven.ts';
 import { formatContentReport } from '../src/db/seed/demo-coven-content.ts';
+import { seedDocuments } from '../src/db/seed/documents.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
 import { seedReferenceData } from '../src/db/seed/reference-data.ts';
 import { formatReport, hasRefusals, keptLines } from '../src/db/seed/compendium/report.ts';
@@ -48,6 +50,7 @@ const FLAGS: Record<string, readonly string[]> = {
   deities: ['--dry-run'],
   sources: ['--dry-run'],
   'demo-coven': ['--dry-run'],
+  documents: ['--dry-run'],
   compendium: ['--dry-run', '--adopt', '--force'],
   reference: ['--dry-run', '--adopt', '--force'],
 };
@@ -88,6 +91,9 @@ try {
       console.log(line);
     }
     done("the vocabularies' sources and their links");
+  } else if (target === 'documents') {
+    await seedDocuments(db, { dryRun });
+    done('the privacy policy, the disclaimer, the code of ethics and the terms');
   } else if (target === 'demo-coven') {
     const contents = await seedDemoCoven(db, { dryRun });
     const skipped = formatContentReport(contents);
@@ -131,7 +137,7 @@ try {
     console.log(`Seeded the ${scenario} scenario.`);
   } else {
     throw new Error(
-      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "demo-coven", "reference" or "drop", or nothing to seed a scenario.`,
+      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "demo-coven", "documents", "reference" or "drop", or nothing to seed a scenario.`,
     );
   }
 } finally {

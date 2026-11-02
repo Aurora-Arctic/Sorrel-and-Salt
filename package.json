@@ -44,6 +44,7 @@
     "db:seed:sources": "tsx scripts/db-seed.ts sources",
     "db:seed:compendium": "tsx scripts/db-seed.ts compendium",
     "db:seed:demo-coven": "tsx scripts/db-seed.ts demo-coven",
+    "db:seed:documents": "tsx scripts/db-seed.ts documents",
     "db:seed:reference": "tsx scripts/db-seed.ts reference",
     "db:drop": "tsx scripts/db-seed.ts drop",
     "seed:mark": "tsx scripts/seed-mark.ts",

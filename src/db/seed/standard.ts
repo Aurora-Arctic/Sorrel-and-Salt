@@ -16,6 +16,7 @@ import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
 import { seedDeityVocabulary } from './deities';
+import { seedDocumentFiles } from './documents';
 import { seedVocabularySources } from './sources';
 import { seedFormVocabulary } from './forms';
 import {
@@ -546,6 +547,7 @@ export async function seedStandardContent(
   await seedAstrologyVocabularies(tx);
   await seedDeityVocabulary(tx);
   await seedVocabularySources(tx);
+  await seedDocumentFiles(tx);
 
   await insertMissingUsers(tx);
   await insertMissingWorkspaces(tx);
