@@ -201,10 +201,9 @@ describe('the /coven/[slug]/members page', () => {
       within(table)
         .getAllByRole('row')
         .find((row) => within(row).queryByRole('link', { name: `Name of ${id}` }))!;
-    expect(within(rowOf('u-viewer')).getByText('Paused')).toBeInTheDocument();
-    expect(rowOf('u-viewer')).toHaveTextContent('with no end date');
-    expect(within(rowOf('u-member')).queryByText('Paused')).toBeNull();
-    expect(within(rowOf('u-owner')).queryByText('Paused')).toBeNull();
+    expect(within(rowOf('u-viewer')).getByText('Paused with no end date')).toBeInTheDocument();
+    expect(within(rowOf('u-member')).queryByText(/^Paused/)).toBeNull();
+    expect(within(rowOf('u-owner')).queryByText(/^Paused/)).toBeNull();
   });
 
   it('reads no pauses for a member, and draws no Access column', async () => {
@@ -212,7 +211,7 @@ describe('the /coven/[slug]/members page', () => {
 
     expect(standingMemberPauses).not.toHaveBeenCalled();
     expect(screen.queryByRole('columnheader', { name: 'Access' })).toBeNull();
-    expect(screen.queryByText('Paused')).toBeNull();
+    expect(screen.queryByText(/^Paused/)).toBeNull();
   });
 });
 
