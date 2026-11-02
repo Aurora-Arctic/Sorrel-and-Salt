@@ -302,7 +302,8 @@ export default function PrivacyPolicyPage() {
         screen happens to show. "Coven" means the coven in which you hold that role; every account
         holds a viewer seat in the demo coven, and every site admin an owner seat there. A developer
         with database access means a person who can read the database directly, which the site's
-        authorisation rules cannot limit.
+        authorisation rules cannot limit. Database access is given to as few developers as possible,
+        and only to those who need it to run the site.
       </p>
       <div className="data-table-frame">
         <table className="data-table" aria-label="Who can see what">
