@@ -108,7 +108,7 @@ describe('RouteModalProvider', () => {
     });
     expect(handled).toBe(false);
 
-    expect(router.push).toHaveBeenCalledWith(EDIT);
+    expect(router.push).toHaveBeenCalledWith(EDIT, { scroll: false });
     const dialog = screen.getByRole('dialog', { name: NAME });
     expect(within(dialog).getByRole('status')).toBeInTheDocument();
   });
@@ -126,7 +126,7 @@ describe('RouteModalProvider', () => {
     });
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(router.replace).toHaveBeenCalledWith(CLOSE);
+    expect(router.replace).toHaveBeenCalledWith(CLOSE, { scroll: false });
     expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
@@ -308,7 +308,7 @@ describe('two modal places on one page', () => {
       fireEvent.click(screen.getByRole('link', { name: 'Testcraft' }));
     });
 
-    expect(router.push).toHaveBeenCalledWith(DETAILS);
+    expect(router.push).toHaveBeenCalledWith(DETAILS, { scroll: false });
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(screen.getByRole('dialog', { name: 'Ingredient, Testcraft' })).toBeInTheDocument();
   });

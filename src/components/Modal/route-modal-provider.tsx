@@ -34,7 +34,7 @@ export const RouteModalProvider = ({ children }: RouteModalProviderProps): React
     open: (href, heading, place) => {
       setOpening({ heading, place });
       setOpened(href);
-      navigate(href);
+      navigate(href, { scroll: false });
     },
     cancel: () => setOpening(undefined),
   };

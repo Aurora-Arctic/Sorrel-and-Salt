@@ -200,6 +200,7 @@ describe('a group page, on the category groups', () => {
 
     expect(router.replace).toHaveBeenCalledWith(
       `/admin/category-groups?after=${encodeURIComponent(after)}`,
+      { scroll: false },
     );
     expect(router.refresh).toHaveBeenCalled();
   });

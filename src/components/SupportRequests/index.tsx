@@ -1,11 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { type ReactElement } from 'react';
 import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
-import { RouteModal, useOpenModalClick } from '../Modal';
+import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import LocalTime from '../LocalTime';
 import IconTip, {
   BubbleLinesIcon,
@@ -68,13 +67,13 @@ const SubjectLink = ({
   const href = supportHref(filter, cursor, request.id);
   const onClick = useOpenModalClick(href, { title: request.subject, focusTitle: true });
   return (
-    <Link href={href} onClick={onClick} className="support-requests__subject">
+    <ModalLink href={href} onClick={onClick} className="support-requests__subject">
       {request.subject}
       {/* Names the sender too, so two requests with one subject are told apart. */}{' '}
       <span className="visually-hidden">
         from {request.signedOut ? 'Signed-out sender' : (request.sender?.name ?? 'Deleted account')}
       </span>
-    </Link>
+    </ModalLink>
   );
 };
 

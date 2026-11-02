@@ -972,7 +972,7 @@ describe('IngredientEntry edit', () => {
       fireEvent.click(screen.getByRole('link', { name: 'Edit in Compendium Testwort' }));
     });
 
-    expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
+    expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`, { scroll: false });
     expect(within(dialog()!).getByRole('status')).toBeInTheDocument();
     expect(screen.queryByRole('form', { name: 'Fixture Form' })).not.toBeInTheDocument();
   });
@@ -1005,7 +1005,9 @@ describe('IngredientEntry edit', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Save' }));
 
-    expect(router.replace).toHaveBeenCalledWith('/compendium/ingredients/testwort-renamed?edit');
+    expect(router.replace).toHaveBeenCalledWith('/compendium/ingredients/testwort-renamed?edit', {
+      scroll: false,
+    });
     expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
@@ -1015,7 +1017,7 @@ describe('IngredientEntry edit', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Save' }));
 
-    expect(router.replace).toHaveBeenCalledWith(savedHref);
+    expect(router.replace).toHaveBeenCalledWith(savedHref, { scroll: false });
     expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
@@ -1024,7 +1026,7 @@ describe('IngredientEntry edit', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Delete' }));
 
-    expect(router.replace).toHaveBeenCalledWith('/compendium');
+    expect(router.replace).toHaveBeenCalledWith('/compendium', { scroll: false });
   });
 
   // A coven's own entry: the same dialog, writing to the coven.
@@ -1100,7 +1102,7 @@ describe('IngredientEntry edit', () => {
 
       fireEvent.click(within(covenDialog()).getByRole('button', { name: 'Fixture Save' }));
 
-      expect(router.replace).toHaveBeenCalledWith(OWN);
+      expect(router.replace).toHaveBeenCalledWith(OWN, { scroll: false });
       expect(router.refresh).toHaveBeenCalledTimes(1);
     });
   });

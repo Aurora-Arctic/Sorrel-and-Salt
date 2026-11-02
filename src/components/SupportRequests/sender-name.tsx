@@ -1,9 +1,8 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { useOpenModalClick } from '../Modal';
+import { ModalLink, useOpenModalClick } from '../Modal';
 import { USER_MODAL_PLACE } from './href';
 import type { SupportSender } from './types';
 
@@ -32,9 +31,9 @@ const SenderName = ({
   if (!sender) return <>Deleted account</>;
   if (!href) return <>{sender.name}</>;
   return (
-    <Link href={href} onClick={onClick}>
+    <ModalLink href={href} onClick={onClick}>
       {sender.name}
-    </Link>
+    </ModalLink>
   );
 };
 

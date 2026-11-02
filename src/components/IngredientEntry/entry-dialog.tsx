@@ -52,7 +52,7 @@ export default function EntryDialog({
                 // A save closes the dialog: back to the page, fetched again so it shows what was
                 // saved.
                 onSaved={() => {
-                  navigate(savedHref ?? closeHref, { replace: true });
+                  navigate(savedHref ?? closeHref, { replace: true, scroll: false });
                   refresh();
                 }}
                 // An autosave keeps the dialog open: the page is fetched again so its heading shows the
@@ -62,7 +62,7 @@ export default function EntryDialog({
                 // for `deletedHref`, fetched again; the focus goes to the page's heading (RouteModal).
                 onDeleted={() => {
                   announce(`${entry.name} deleted`);
-                  navigate(deletedHref, { replace: true });
+                  navigate(deletedHref, { replace: true, scroll: false });
                   refresh();
                 }}
                 duplicateHref={(match) => `${coven.ingredientsHref}/${match.id}`}
@@ -83,6 +83,7 @@ export default function EntryDialog({
                 onSaved={(saved) => {
                   navigate(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route), {
                     replace: true,
+                    scroll: false,
                   });
                   refresh();
                 }}
@@ -97,7 +98,7 @@ export default function EntryDialog({
                   refresh();
                 }}
                 // Not `done`, which would go back to this page: it is gone.
-                onDeleted={() => navigate(deletedHref, { replace: true })}
+                onDeleted={() => navigate(deletedHref, { replace: true, scroll: false })}
                 duplicateHref={({ slug }) => publicAddress(slug)}
                 // A linked substitute's summary opens its entry in a new tab, every substitute here
                 // being a compendium entry.

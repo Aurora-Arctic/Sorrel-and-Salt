@@ -314,7 +314,7 @@ describe('the /admin/users page, the user modal', () => {
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }),
     );
 
-    expect(replace).toHaveBeenCalledWith(closeTo);
+    expect(replace).toHaveBeenCalledWith(closeTo, { scroll: false });
   });
 
   // Hand-edited, or copied wrong: the list beneath is still the page asked for.
