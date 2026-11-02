@@ -247,7 +247,7 @@ export default function CodeOfEthicsPage() {
         <SourceMarks cite="contrast" numbers={[10]} /> Automated checks do not find everything, so
         if something on the site does not work for you, that is a bug, and we commit to fixing
         accessibility bugs first. You can report an accessibility bug through the{' '}
-        <SupportLink about="accessibility">support form</SupportLink>.
+        <SupportLink about="accessibility">support form</SupportLink>, with or without an account.
       </p>
 
       <h2>For Curators</h2>
