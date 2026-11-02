@@ -49,9 +49,15 @@ export function byCovenName(
   return Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 }
 
-/** The slug of the first coven the switcher lists for this account, or `undefined` for one in none. */
+/**
+ * The slug of the first coven the switcher lists for this account that it can open, passing over one whose access is
+ * paused; the first when every one is, or `undefined` for an account in none.
+ */
 export async function firstCovenSlugOf(session: Session): Promise<string | undefined> {
   const [memberships] = await membershipsOf(session, [session.userId]);
   if (!memberships || memberships instanceof Error) return undefined;
-  return memberships.map(({ workspace }) => workspace).sort(byCovenName)[0]?.slug;
+  const listed = memberships
+    .map(({ workspace, pause }) => ({ ...workspace, pause }))
+    .sort(byCovenName);
+  return (listed.find(({ pause }) => !pause) ?? listed[0])?.slug;
 }

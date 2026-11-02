@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
@@ -25,6 +25,19 @@ const LeaveWorkspaceButton = vi.fn((_props: { workspaceId: string; name: string 
 ));
 vi.mock('@/components/LeaveWorkspaceButton', () => ({ default: LeaveWorkspaceButton }));
 
+const viewerOf = vi.fn();
+vi.mock('@/lib/viewer', () => ({ viewerOf }));
+// The switcher's choices and moves are its own (tests/components/WorkspaceSwitcher/index.test.tsx); here only that the page
+// hands it every coven of the viewer's.
+const WorkspaceSwitcher = vi.fn((_props: { workspaces: unknown[]; canCreate: boolean }) => (
+  <div>Coven switcher</div>
+));
+vi.mock('@/components/WorkspaceSwitcher', () => ({ default: WorkspaceSwitcher }));
+
+const FIXTURE = { slug: 'fixture-coven', name: 'Fixture Coven', paused: { until: null } };
+const TESTWORT = { slug: 'testwort-circle', name: 'Testwort Circle', paused: null };
+const THIRD = { slug: 'third-circle', name: 'Third Circle', paused: { until: null } };
+
 const { default: CovenPausedPage, metadata } =
   await import('@/app/(shell)/coven-paused/[slug]/page');
 
@@ -37,6 +50,8 @@ beforeEach(() => {
   requireSession.mockResolvedValue(SESSION);
   pausedCovenBySlug.mockReset();
   LeaveWorkspaceButton.mockClear();
+  WorkspaceSwitcher.mockClear();
+  viewerOf.mockReset().mockResolvedValue({ viewer: { canCreate: false }, workspaces: [FIXTURE] });
 });
 
 afterEach(cleanup);
@@ -74,6 +89,42 @@ describe('/coven-paused/[slug]', () => {
       workspaceId: 'coven-id',
       name: 'Fixture Coven',
     });
+  });
+
+  it('offers the coven switcher over every coven of the viewer’s, so the paused coven is no dead end', async () => {
+    pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
+    viewerOf.mockResolvedValue({ viewer: { canCreate: true }, workspaces: [FIXTURE, TESTWORT] });
+    await visit();
+
+    expect(screen.getByRole('region', { name: 'Context' })).toHaveTextContent('Coven switcher');
+    expect(WorkspaceSwitcher.mock.lastCall?.[0]).toEqual({
+      workspaces: [FIXTURE, TESTWORT],
+      canCreate: true,
+    });
+  });
+
+  it('links to each other coven the viewer can open, passing over this one and any other paused', async () => {
+    pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
+    viewerOf.mockResolvedValue({
+      viewer: { canCreate: false },
+      workspaces: [FIXTURE, TESTWORT, THIRD],
+    });
+    await visit();
+
+    const others = screen.getByRole('list', { name: 'Your Other Covens' });
+    expect(
+      within(others)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(['/coven/testwort-circle']);
+    expect(within(others).getByRole('link', { name: 'Testwort Circle' })).toBeInTheDocument();
+  });
+
+  it('lists no other covens for a viewer with none to open', async () => {
+    pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
+    await visit();
+
+    expect(screen.queryByRole('list', { name: 'Your Other Covens' })).toBeNull();
   });
 
   it('links to the compendium, which stays open', async () => {

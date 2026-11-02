@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
+import { pausedCovenSlugOf } from '../../lib/access-paused';
 import { pauseNote } from '../../lib/pause-note';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
@@ -12,7 +13,7 @@ import type { WorkspaceSwitcherProps } from './types';
 import './index.scss';
 
 // A select over the viewer's workspaces (covens on screen); the current one is read off the
-// address, so two tabs do not interfere. A viewer who may create gets a last choice whose value is
+// address, a coven's own pages or its paused page, so two tabs do not interfere. A viewer who may create gets a last choice whose value is
 // the create page's path, which no slug can equal (claude-docs/components/workspace-switcher.md).
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
@@ -66,7 +67,12 @@ export default function WorkspaceSwitcher({
       <ComboboxSelect
         id={id}
         label="Coven"
-        value={(pending ? picked : undefined) ?? covenSlugOf(pathname) ?? ''}
+        value={
+          (pending ? picked : undefined) ??
+          covenSlugOf(pathname) ??
+          pausedCovenSlugOf(pathname) ??
+          ''
+        }
         busy={pending}
         inputRef={box}
         onChange={(value) => {

@@ -62,7 +62,7 @@ one's own id) throws.
   no theme switch.
 - **The brand** is a link to `/`, the front page, for every viewer, an unverified one included (`/` is public),
   now that Your Coven and Admin sit in the site nav; `/` reads the session
-  and offers a signed-in visitor their landing, without redirecting. `src/lib/shell-home.ts` holds `covenHome` (the Your Coven link): `/coven/<slug>` of the first coven the switcher lists, or the
+  and offers a signed-in visitor their landing, without redirecting. `src/lib/shell-home.ts` holds `covenHome` (the Your Coven link): `/coven/<slug>` of the first coven the switcher lists that the viewer can open (`firstReachable`, passing over a coven whose access is paused, or the first when every one is), or the
   `/coven` landing (M2.8) for someone in none, which offers the create page or
   explains the invitation. The links go into the coven themselves rather than
   to `/coven`, which would only redirect a member there and leave the browser

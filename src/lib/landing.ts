@@ -13,5 +13,5 @@ export async function signedInLanding(session: Session): Promise<Route> {
   const landing = postSignInLanding(session.role);
   if (landing !== POST_SIGN_IN_LANDING) return landing;
   const slug = await firstCovenSlugOf(session);
-  return covenHome(slug === undefined ? [] : [{ slug }]);
+  return covenHome(slug === undefined ? [] : [{ slug, paused: null }]);
 }

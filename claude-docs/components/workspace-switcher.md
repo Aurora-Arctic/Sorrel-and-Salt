@@ -32,7 +32,9 @@ with a Create Coven choice (M9.16). It defaults to false.
 - **The current workspace is read from the address, never kept.** The value is
   `covenSlugOf(usePathname())` (`src/lib/coven-path.ts`). Nothing is stored in
   session, cookie or local state, so two tabs in two workspaces cannot disagree
-  through it. Outside `/coven/…` the box shows "Choose a coven".
+  through it. On a coven's paused page, `/coven-paused/<slug>`, the value is that coven
+  (`pausedCovenSlugOf`, `src/lib/access-paused.ts`), and a choice goes to the chosen coven's home.
+  Anywhere else outside `/coven/…` the box shows "Choose a coven".
 - **A choice keeps the page when the page exists in the other workspace**
   (M9.12, the owner's call, 2026-10-21). `pathInCoven(pathname, slug, options)`
   decides, in this order:

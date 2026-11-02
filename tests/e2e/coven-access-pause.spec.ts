@@ -129,3 +129,52 @@ test('a member whose access is paused leaves the coven from its paused page', as
   await page.goto(`/coven-paused/${coven.slug}`);
   await expect(page.getByRole('heading', { name: 'Access Paused' })).toHaveCount(0);
 });
+
+test('a member paused in the coven they would land in is taken to their next coven, and the paused page leads to it too', async ({
+  page,
+}) => {
+  // The page ends signed in as the member. Alder sorts ahead of Birch, so without the pause the member lands in Alder.
+  const alder = await seedCoven(page, 'Fixture Alder Coven', 'coven-pause-elsewhere.test', {
+    Owner: 'owner',
+    Member: 'member',
+  });
+  const memberId = alder.users.Member!;
+  const ownerId = alder.users.Owner!;
+  await withSql((sql) =>
+    sql.begin(async (tx) => {
+      const [birch] = await tx<{ id: string }[]>`
+        insert into workspaces (name, slug, created_by, updated_by)
+        values ('Fixture Birch Coven', 'fixture-birch-coven', ${ownerId}, ${ownerId})
+        returning id`;
+      await tx`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${birch!.id}, ${ownerId}, 'owner', ${ownerId}, ${ownerId}),
+               (${birch!.id}, ${memberId}, 'member', ${ownerId}, ${ownerId})`;
+      await tx`
+        insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+        values (${alder.id}, ${memberId}, null, ${ownerId}, ${ownerId})`;
+    }),
+  );
+  const birchHome = '/coven/fixture-birch-coven';
+
+  // The landing passes over the paused coven for the next one.
+  await page.goto('/coven');
+  await expect(page).toHaveURL(birchHome);
+
+  // The paused coven's page lists the switcher, showing the paused coven as current, and links to Birch.
+  await page.goto(`/coven/${alder.slug}`);
+  await expect(page).toHaveURL(`/coven-paused/${alder.slug}`);
+  await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Fixture Alder Coven/);
+  await assertNoAccessibilityViolations(page);
+  await page
+    .getByRole('list', { name: 'Your Other Covens' })
+    .getByRole('link', { name: 'Fixture Birch Coven' })
+    .click();
+  await expect(page).toHaveURL(birchHome);
+
+  // The switcher leads there as well.
+  await page.goto(`/coven-paused/${alder.slug}`);
+  await page.getByRole('combobox', { name: 'Coven' }).click();
+  await page.getByRole('option', { name: 'Fixture Birch Coven' }).click();
+  await expect(page).toHaveURL(birchHome);
+});
