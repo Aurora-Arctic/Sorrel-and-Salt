@@ -29,11 +29,13 @@ beforeEach(async () => {
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
   replyWaiting: async () => undefined,
-  signedOutReceived: async () => undefined,
+  received: async () => undefined,
+  resolved: async () => undefined,
+  closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
 };
 
-const sendAs = (user: typeof C) => sendSupportRequest(asUser(user), INPUT);
+const sendAs = (user: typeof C) => sendSupportRequest(asUser(user), INPUT, mail);
 const waitOn = async (id: string) => {
   await replyToSupportRequest(asUser(E), id, 'Which jar?', mail, { waitingOnSender: true });
 };
@@ -76,7 +78,7 @@ describe('resolveMySupportRequest', () => {
 
   it('refuses a resolved or closed request with an explaining error', async () => {
     const resolved = await sendAs(C);
-    await resolveSupportRequest(asUser(E), resolved.id);
+    await resolveSupportRequest(asUser(E), resolved.id, mail);
     const failure = await failureOf(resolveMySupportRequest(asUser(C), resolved.id));
     expect(failure).toBeInstanceOf(Forbidden);
     expect((failure as Error).message).toMatch(/open or waiting on sender/);
@@ -115,7 +117,7 @@ describe('getMySupportCounts', () => {
     await assignSupportRequest(asUser(E), others.id, E.id);
     await assignSupportRequest(asUser(E), resolvedMine.id, F.id);
     await assignSupportRequest(asUser(E), waitingMine.id, F.id);
-    await resolveSupportRequest(asUser(E), resolvedMine.id);
+    await resolveSupportRequest(asUser(E), resolvedMine.id, mail);
     await waitOn(waitingMine.id);
     expect((await row(unassigned.id)).assigned_to).toBeNull();
 
@@ -130,7 +132,7 @@ describe('getMySupportCounts', () => {
     const theirs = await sendAs(D);
     await waitOn(mine.id);
     await waitOn(theirs.id);
-    await resolveSupportRequest(asUser(E), resolvedMine.id);
+    await resolveSupportRequest(asUser(E), resolvedMine.id, mail);
     expect((await row(openMine.id)).status).toBe('open');
 
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(1);
@@ -147,7 +149,7 @@ describe('getMySupportCounts', () => {
 
     await sendSenderMessage(asUser(C), answered.id, 'The red one.');
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(2);
-    await resolveSupportRequest(asUser(E), staffResolved.id);
+    await resolveSupportRequest(asUser(E), staffResolved.id, mail);
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(1);
     await resolveMySupportRequest(asUser(C), selfResolved.id);
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(0);

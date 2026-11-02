@@ -30,13 +30,37 @@ describe('supportNotifier', () => {
     expect(sent[0]!.html).toContain('/account/support?request=req-1');
   });
 
-  it('mails a signed-out visitor a receipt that names the answer time', async () => {
-    await supportNotifier(new Request('http://localhost:8000/api/graphql')).signedOutReceived(
-      'visitor@example.test',
-    );
+  const notifier = () => supportNotifier(new Request('http://localhost:8000/api/graphql'));
 
-    expect(sent).toHaveLength(1);
-    expect(sent[0]!.to).toBe('visitor@example.test');
+  it.each(['received', 'resolved', 'closingSoon'] as const)(
+    'mails a signed-in sender the %s mail, naming the request and linking to it',
+    async (method) => {
+      await notifier()[method]('sender@example.test', 'The jar will not open', 'req-1');
+
+      expect(sent).toHaveLength(1);
+      expect(sent[0]!.to).toBe('sender@example.test');
+      expect(sent[0]!.subject).toContain('The jar will not open');
+      expect(sent[0]!.text).toContain('/account/support?request=req-1');
+      expect(sent[0]!.html).toContain('/account/support?request=req-1');
+    },
+  );
+
+  it.each(['received', 'resolved', 'closingSoon'] as const)(
+    'mails a signed-out sender the %s mail, linking to the support page alone',
+    async (method) => {
+      await notifier()[method]('visitor@example.test', 'I cannot sign in', null);
+
+      expect(sent).toHaveLength(1);
+      expect(sent[0]!.subject).toContain('I cannot sign in');
+      expect(sent[0]!.text).toContain('http://localhost:8000/support');
+      expect(sent[0]!.text).not.toContain('/account');
+      expect(sent[0]!.html).not.toContain('/account');
+    },
+  );
+
+  it('mails a receipt that names the answer time', async () => {
+    await notifier().received('visitor@example.test', 'I cannot sign in', null);
+
     expect(sent[0]!.text).toContain('5 working days');
   });
 
