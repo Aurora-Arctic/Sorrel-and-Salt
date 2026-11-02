@@ -30,10 +30,7 @@ export default function TermsOfUsePage() {
 
       <h2>The Short Version</h2>
       <ul>
-        <li>
-          The site carries no advertising and sells nothing about you. That is a promise, not a
-          description of today.
-        </li>
+        <li>The site carries no advertising and sells nothing about you.</li>
         <li>
           What you write stays yours. The site shows it only to the people you chose to share it
           with, and never uses it to train anything.
