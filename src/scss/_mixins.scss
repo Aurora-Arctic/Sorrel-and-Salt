@@ -79,8 +79,8 @@
   block-size: 0.62em;
   background-color: $list-marker-ink;
   clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
-  // A tenth of its height above centre, since the line's middle reads below the lowercase letters' middle.
-  transform: translate(-50%, -60%);
+  // 1px above centre, since the line's middle reads below the lowercase letters' middle.
+  transform: translate(-50%, calc(-50% - 1px));
 
   @include forced-colors {
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: without it the browser forces the background to the canvas and the ✦ goes, as a list without one would read, not yet Baseline
