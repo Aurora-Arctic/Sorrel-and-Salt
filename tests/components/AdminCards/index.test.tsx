@@ -212,7 +212,7 @@ describe('AdminCards', () => {
     expect(within(row).getByText('other@example.test')).toBeInTheDocument();
     expect(within(row).getByRole('link', { name: 'Other Wort' })).toHaveAttribute(
       'href',
-      '/admin/users?user=u1&from=invitation-cards',
+      '/keepers/users?user=u1&from=invitation-cards',
     );
     expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
@@ -264,7 +264,7 @@ describe('AdminCards', () => {
     fireEvent.click(await within(list).findByRole('link', { name: 'Other Wort' }));
 
     expect(opener.open).toHaveBeenCalledExactlyOnceWith(
-      '/admin/users?user=u1&from=invitation-cards',
+      '/keepers/users?user=u1&from=invitation-cards',
       expect.objectContaining({ eyebrow: 'User', title: 'Other Wort' }),
       undefined,
     );
@@ -336,7 +336,7 @@ describe('AdminCards', () => {
 
     expect(screen.getByRole('link', { name: 'Mint Cards' })).toHaveAttribute(
       'href',
-      '/admin/invitation-cards?mint',
+      '/keepers/invitation-cards?mint',
     );
   });
 
@@ -600,7 +600,7 @@ describe('Mint Cards default expiry', () => {
 });
 
 const WORT = {
-  openHref: '/admin/users?user=u-wort' as const,
+  openHref: '/keepers/users?user=u-wort' as const,
   heading: { eyebrow: 'User', title: 'Wort Tester' },
 };
 
@@ -702,7 +702,7 @@ describe('AdminCards filter', () => {
     expiresFrom: '2026-11-01',
     expiresTo: '2026-12-31',
   };
-  const PATH = '/admin/invitation-cards';
+  const PATH = '/keepers/invitation-cards';
   const send = (batch: string, status: string, mf: string, mt: string, ef: string, et: string) =>
     `batch=${batch}&status=${status}&mintedFrom=${mf}&mintedTo=${mt}&expiresFrom=${ef}&expiresTo=${et}`;
 
@@ -870,7 +870,7 @@ describe('AdminCards filter', () => {
 });
 
 describe('AdminArrivals filter', () => {
-  const PATH = '/admin/card-sign-ups';
+  const PATH = '/keepers/card-sign-ups';
   const SUBJECT: FilterFormSubject = {
     label: 'Filter Card Sign-Ups',
     path: PATH,

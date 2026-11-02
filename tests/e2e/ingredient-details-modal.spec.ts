@@ -44,7 +44,7 @@ const editIn = (dialog: Locator, name = NAME) =>
 
 test.describe('on the admin Compendium list', () => {
   const slug = ingredientSlug(NAME, FORMAL);
-  const listPath = `/admin/compendium?query=${encodeURIComponent(NAME)}`;
+  const listPath = `/curator/compendium?query=${encodeURIComponent(NAME)}`;
 
   test.beforeEach(async ({ page }, testInfo) => {
     // One admin per test, as an address names one user.
@@ -129,7 +129,7 @@ test.describe('on the admin Compendium list', () => {
           String(admin?.id),
         );
     });
-    await page.goto(`/admin/compendium?query=${encodeURIComponent(longName)}`);
+    await page.goto(`/curator/compendium?query=${encodeURIComponent(longName)}`);
     await quickLook(page, `${longName}, Fixtura longa`).click();
     return detailsDialog(page, longName);
   };
@@ -243,7 +243,7 @@ test.describe('on the admin Compendium list', () => {
           String(admin?.id),
         );
     });
-    await page.goto(`/admin/compendium?query=${encodeURIComponent(midName)}`);
+    await page.goto(`/curator/compendium?query=${encodeURIComponent(midName)}`);
     await quickLook(page, `${midName}, ${midFormal}`).click();
     const details = detailsDialog(page, midName);
     const body = details.locator('.modal-dialog__body');

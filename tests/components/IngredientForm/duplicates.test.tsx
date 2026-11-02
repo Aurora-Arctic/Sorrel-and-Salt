@@ -107,7 +107,7 @@ function renderName(
         <RouteModalProvider>
           <RouteModal
             place={DETAILS_PLACE}
-            closeHref="/admin/compendium?new=ingredient-compendium"
+            closeHref="/curator/compendium?new=ingredient-compendium"
           />
           <Harness />
         </RouteModalProvider>
@@ -124,7 +124,7 @@ const closedForm = vi.fn();
 
 /** A match's Quick Look, as the admin form's caller builds it: its details over the list. */
 const quickLookOf = (match: { slug: string; name: string }) => ({
-  href: `/admin/compendium?entry=${match.slug}&new` as Route,
+  href: `/curator/compendium?entry=${match.slug}&new` as Route,
   heading: { title: match.name },
 });
 

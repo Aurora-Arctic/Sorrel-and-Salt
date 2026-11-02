@@ -4,7 +4,7 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm } from '../../../../../support/filter-form';
 
-// The `/admin/invitations` page, the People page's Invitations tab with New Invitation beside the heading: the guard, then the identity reads (a page of pending invitations and their count, shown with no hash),
+// The `/keepers/invitations` page, the People page's Invitations tab with New Invitation beside the heading: the guard, then the identity reads (a page of pending invitations and their count, shown with no hash),
 // the cursor and the pager's links, the invite form `?invite` opens, and the pause locking Invite and Revoke.
 // The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/admin-invitations.test.ts's.
 
@@ -24,9 +24,9 @@ vi.mock('@/modules/identity', () => ({
 }));
 
 const { default: AdminInvitationsPage } =
-  await import('@/app/(shell)/admin/(people)/invitations/page');
+  await import('@/app/(shell)/keepers/(invitations)/invitations/page');
 const { default: InvitationsAction } =
-  await import('@/app/(shell)/admin/(people)/@action/invitations/page');
+  await import('@/app/(shell)/keepers/(invitations)/@action/invitations/page');
 
 // The tab's action and its content, as the route group's layout puts them on one page.
 async function renderPage(params: Record<string, string> = {}) {
@@ -74,7 +74,7 @@ beforeEach(() => {
   countPendingAdminInvitations.mockResolvedValue({ totalCount: 1, countBefore: 0 });
 });
 
-describe('the /admin/invitations page', () => {
+describe('the /keepers/invitations page', () => {
   it('renders nothing, and reads nothing, when the guard refuses', async () => {
     requireAdminSession.mockRejectedValue(new Error('forbidden'));
 
@@ -120,7 +120,7 @@ describe('the /admin/invitations page', () => {
     expect(within(search).getByRole('switch', { name: 'Expires in 24 Hrs' })).toBeChecked();
     expect(screen.getByRole('link', { name: 'New Invitation' })).toHaveAttribute(
       'href',
-      '/admin/invitations?email=fern&expiring&invite',
+      '/keepers/invitations?email=fern&expiring&invite',
     );
   });
 
@@ -142,7 +142,7 @@ describe('the /admin/invitations page', () => {
 
     await renderPage({ email: 'fern', expiring: '', after: encodeCursor(entry(0).cursor) });
 
-    const filter = '/admin/invitations?email=fern&expiring';
+    const filter = '/keepers/invitations?email=fern&expiring';
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
       `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
@@ -160,7 +160,7 @@ describe('the /admin/invitations page', () => {
 
     expect(screen.getByRole('link', { name: 'New Invitation' })).toHaveAttribute(
       'href',
-      `/admin/invitations?email=fern&after=${encodeURIComponent(after)}&invite`,
+      `/keepers/invitations?email=fern&after=${encodeURIComponent(after)}&invite`,
     );
   });
 

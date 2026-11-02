@@ -15,7 +15,7 @@ async function headersFor(path: string): Promise<Record<string, string>> {
 }
 
 describe('security headers', () => {
-  it.each(['/', '/compendium', '/coven/some-coven', '/admin/people'])(
+  it.each(['/', '/compendium', '/coven/some-coven', '/keepers/people'])(
     '%s carries the page headers',
     async (path) => {
       const headers = await headersFor(path);

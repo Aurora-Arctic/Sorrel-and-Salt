@@ -233,7 +233,7 @@ describe('a navigation whose caller is taken off the page', () => {
       <Navigating push={router.push} arrives={arrives}>
         <Probe />
         <Region>
-          <Go name="Go" href="/admin/forms" options={{ target: COVEN_CARDS }} />
+          <Go name="Go" href="/curator/forms" options={{ target: COVEN_CARDS }} />
         </Region>
       </Navigating>,
     );

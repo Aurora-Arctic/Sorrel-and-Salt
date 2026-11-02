@@ -7,7 +7,7 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
 
-// The `/admin/users` page: the guard, then the identity reads (a page of users and its count), the search parameters turned into the filter and the page, and the pager's links keeping the filter.
+// The `/keepers/users` page: the guard, then the identity reads (a page of users and its count), the search parameters turned into the filter and the page, and the pager's links keeping the filter.
 // The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/user-list.test.ts's.
 
 const requireAdminSession = vi.fn();
@@ -45,10 +45,10 @@ const standingTimeoutsOf = vi.fn();
 vi.mock('@/modules/support', () => ({ standingTimeoutsOf }));
 
 // The modal also reads the user's support time-outs, which are the support page tests' to prove; none here.
-vi.mock('@/app/(shell)/admin/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
+vi.mock('@/app/(shell)/keepers/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
 
-const { default: AdminUsersPage } = await import('@/app/(shell)/admin/(people)/users/page');
-const { default: UsersAction } = await import('@/app/(shell)/admin/(people)/@action/users/page');
+const { default: AdminUsersPage } = await import('@/app/(shell)/keepers/(people)/users/page');
+const { default: UsersAction } = await import('@/app/(shell)/keepers/(people)/@action/users/page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -145,7 +145,7 @@ beforeEach(() => {
   membershipsOf.mockImplementation(async (_session, ids: string[]) => ids.map(() => [COVEN_ROW]));
 });
 
-describe('the /admin/users page', () => {
+describe('the /keepers/users page', () => {
   it('renders nothing, and reads nothing, when the guard refuses', async () => {
     requireAdminSession.mockRejectedValue(new Error('forbidden'));
 
@@ -305,7 +305,7 @@ describe('the /admin/users page', () => {
       after: encodeCursor(entry(0).cursor),
     });
 
-    const filter = '/admin/users?query=listed&awaiting&role=user&timed-out&paused';
+    const filter = '/keepers/users?query=listed&awaiting&role=user&timed-out&paused';
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
       `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
@@ -319,7 +319,7 @@ describe('the /admin/users page', () => {
 
 // `?user=<id>` opens the user’s modal over the list, holding the
 // covens the coven service answers for them, read with the navigation.
-describe('the /admin/users page, the user modal', () => {
+describe('the /keepers/users page, the user modal', () => {
   it('reads the user and their covens as the guard’s session, and shows them in the modal', async () => {
     await renderPage({ query: 'listed', user: user(1).id });
 
@@ -404,15 +404,15 @@ describe('the /admin/users page, the user modal', () => {
 
     expect(screen.getByRole('link', { name: 'Listed Fixture 02' })).toHaveAttribute(
       'href',
-      `/admin/users?query=listed&role=user&user=${user(2).id}`,
+      `/keepers/users?query=listed&role=user&user=${user(2).id}`,
     );
   });
 
   // Opened from a cards screen, Close goes back to that screen; from the list, or a `from` outside the set, back to the list.
   it.each([
-    ['invitation-cards', '/admin/invitation-cards'],
-    [undefined, '/admin/users?query=listed'],
-    ['https://elsewhere.test', '/admin/users?query=listed'],
+    ['invitation-cards', '/keepers/invitation-cards'],
+    [undefined, '/keepers/users?query=listed'],
+    ['https://elsewhere.test', '/keepers/users?query=listed'],
   ])('closes a modal opened from %s to %s', async (from, closeTo) => {
     await renderPage({ query: 'listed', user: user(1).id, ...(from && { from }) });
 
@@ -456,7 +456,7 @@ describe('the /admin/users page, the user modal', () => {
 
 // The page offers impersonation where the plugin is registered, and
 // only there; the gate itself is tests/lib/impersonation.test.ts's.
-describe('the /admin/users page, impersonation', () => {
+describe('the /keepers/users page, impersonation', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });

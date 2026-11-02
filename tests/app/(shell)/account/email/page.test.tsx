@@ -46,10 +46,16 @@ beforeEach(() => {
 });
 
 describe('the /account/email page', () => {
-  it("continues an admin's confirmed address to the admin area when it was going nowhere else", async () => {
+  it("continues an admin's confirmed address to the keepers area when it was going nowhere else", async () => {
     await renderPage('admin', { verified: '' });
 
-    expect(continueLink()).toHaveAttribute('href', '/admin');
+    expect(continueLink()).toHaveAttribute('href', '/keepers');
+  });
+
+  it("continues a curator's confirmed address to the curator area when it was going nowhere else", async () => {
+    await renderPage('curator', { verified: '' });
+
+    expect(continueLink()).toHaveAttribute('href', '/curator');
   });
 
   // Why the one above could have gone elsewhere: the request's `next`.

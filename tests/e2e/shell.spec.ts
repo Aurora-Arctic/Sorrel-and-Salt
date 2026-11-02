@@ -98,11 +98,12 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   await expect(banner).toBeVisible();
   // The brand leads to the front page, which redirects no one.
   await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
-  // A non-admin's Site nav holds the Compendium and, as a member, Your Coven; never Admin.
+  // A non-admin's Site nav holds the Compendium and, as a member, Your Coven; never Curator or Keepers.
   await expect(
     page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
   ).toBeVisible();
-  await expect(banner.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0);
+  await expect(banner.getByRole('link', { name: 'Curator', exact: true })).toHaveCount(0);
+  await expect(banner.getByRole('link', { name: 'Keepers', exact: true })).toHaveCount(0);
   await expect(banner.getByRole('link', { name: /^Your Covens?$/ }).first()).toBeVisible();
 
   const coven = page.getByRole('navigation', { name: 'Coven' });
@@ -215,12 +216,12 @@ test('at a phone the coven nav is the bottom bar and the keyboard reaches the wh
   expect([...reached].sort()).toEqual([0, 1, 2]);
 });
 
-test('at a phone the admin nav folds its later tabs behind More', async ({ page }) => {
+test('at a phone the curator nav folds its later tabs behind More', async ({ page }) => {
   await signInAgainAs(page, users.admin.id);
   await page.setViewportSize(PHONE);
-  await page.goto('/admin/categories');
+  await page.goto('/curator/categories');
 
-  const admin = page.getByRole('navigation', { name: 'Admin' });
+  const admin = page.getByRole('navigation', { name: 'Curator' });
   const more = admin.getByRole('button', { name: 'More', exact: true });
   await expect(more).toHaveAttribute('aria-expanded', 'false');
   await expect(admin.getByRole('link', { name: 'Astrology', exact: true })).toHaveCount(0);
@@ -228,7 +229,6 @@ test('at a phone the admin nav folds its later tabs behind More', async ({ page 
   await more.click();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
   await expect(admin.getByRole('link', { name: 'Astrology', exact: true })).toBeVisible();
-  await expect(admin.getByRole('link', { name: 'People', exact: true })).toBeVisible();
 
   await page.keyboard.press('Escape');
   await expect(more).toHaveAttribute('aria-expanded', 'false');
@@ -239,7 +239,7 @@ test('at a phone the admin nav folds its later tabs behind More', async ({ page 
 // shell is the frame all three share, so its surfaces are checked here.
 const PAGES = [
   ['a coven page', 'member', `/coven/${ALPHA.slug}`, 'Coven'],
-  ['an admin tabbed page', 'admin', '/admin/categories', 'Admin'],
+  ['a curator tabbed page', 'admin', '/curator/categories', 'Curator'],
   ['the account page', 'member', '/account', null],
 ] as const;
 
@@ -264,10 +264,10 @@ for (const [name, who, path, nav] of PAGES) {
 
 // The row wider than the phone fits the window: four labelled tabs and More outran it from 642px up, so
 // tabs that do not fit sit behind More. 768px is the tablet tests' below and a desktop width the last two tests'.
-test('the admin row fits the window at 642px, without overflowing', async ({ page }) => {
+test('the curator row fits the window at 642px, without overflowing', async ({ page }) => {
   await signInAgainAs(page, users.admin.id);
   await page.setViewportSize({ width: 642, height: 800 });
-  await page.goto('/admin');
+  await page.goto('/curator');
 
   // The stylesheet draws every tab until the fit script runs, so the branch
   // below waits for the fit: read before it, the test could take the all-tabs
@@ -276,7 +276,7 @@ test('the admin row fits the window at 642px, without overflowing', async ({ pag
   await expect(nav).toBeVisible();
   // Either More holds the tabs that do not fit, or all of them fit and are
   // in view; never a tab cut off with neither.
-  const more = nav.getByRole('button', { name: /More|Astrology|People|Deities/ });
+  const more = nav.getByRole('button', { name: /More|Astrology|Deities/ });
   if ((await more.count()) > 0) {
     await expect(more).toBeVisible();
   } else {
@@ -292,9 +292,9 @@ test('the admin row fits the window at 642px, without overflowing', async ({ pag
 // current page, and whether the row overflows its box. A hidden tab is drawn but not visible.
 const rowLinks = (nav: Locator) => nav.getByRole('link').filter({ visible: true });
 
-/** The admin nav once the script has fitted its row. */
+/** The curator nav, the longer of the two area rows, once the script has fitted it. */
 async function fittedAdminNav(page: Page): Promise<Locator> {
-  const nav = page.getByRole('navigation', { name: 'Admin' });
+  const nav = page.getByRole('navigation', { name: 'Curator' });
   await expect(nav).toHaveAttribute('data-fit', '');
   return nav;
 }
@@ -310,19 +310,23 @@ test('at a tablet width, More carries the current page when its tab is hidden be
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
-  await page.setViewportSize({ width: 768, height: 800 });
+  // Narrow enough that the last of the five curation tabs, Astrology, goes behind More.
+  await page.setViewportSize({ width: 700, height: 800 });
 
   // Why More could carry it: on a page whose tab is in the row it does not.
-  await page.goto('/admin');
+  await page.goto('/curator');
   let nav = await fittedAdminNav(page);
   const more = nav.getByRole('button', { name: /More/ });
   await expect(more).toBeVisible();
   await expect(more).not.toHaveAttribute('aria-current');
 
-  await page.goto('/admin/users');
+  await page.goto('/curator/zodiac-signs');
   nav = await fittedAdminNav(page);
-  await expect(rowLinks(nav).filter({ hasText: 'People' })).toHaveCount(0);
-  await expect(nav.getByRole('button', { name: /People/ })).toHaveAttribute('aria-current', 'page');
+  await expect(rowLinks(nav).filter({ hasText: 'Astrology' })).toHaveCount(0);
+  await expect(nav.getByRole('button', { name: /Astrology/ })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
 });
 
 // The current tab is heavier, so wider: the row is fitted afresh on each navigation. At 681px Forms current
@@ -336,10 +340,10 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
   // page, loaded fresh, fits fewer tabs than the forms page does, whose
   // tabs all fit with no More. From about 880px to 889px in Chromium.
   await page.setViewportSize({ width: 884, height: 800 });
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   const fresh = await rowLinks(await fittedAdminNav(page)).count();
 
-  await page.goto('/admin/forms');
+  await page.goto('/curator/forms');
   const nav = await fittedAdminNav(page);
   // Why it could have kept the old count: the forms page fits a different one.
   expect(await rowLinks(nav).count()).not.toBe(fresh);
@@ -347,7 +351,7 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
   await expect(compendium).toHaveCount(1);
 
   await compendium.click();
-  await expect(page).toHaveURL(/\/admin\/compendium$/);
+  await expect(page).toHaveURL(/\/curator\/compendium$/);
   await expect(nav.getByRole('link', { name: 'Compendium', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
@@ -357,15 +361,15 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
   await assertNoSidewaysScroll(page);
 });
 
-test('at a desktop width, once fitted, the admin row shows every tab and draws no More', async ({
+test('at a desktop width, once fitted, the curator row shows every tab and draws no More', async ({
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
   await page.setViewportSize(DESKTOP);
-  await page.goto('/admin');
+  await page.goto('/curator');
 
   const nav = await fittedAdminNav(page);
-  await expect(rowLinks(nav)).toHaveCount(7);
+  await expect(rowLinks(nav)).toHaveCount(5);
   await expect(nav.getByRole('button')).toHaveCount(0);
   expect(await rowOverflows(nav)).toBe(false);
 });
@@ -373,7 +377,7 @@ test('at a desktop width, once fitted, the admin row shows every tab and draws n
 // The server cannot know the window's width, so it draws the phone's four tabs and More; wider, the stylesheet
 // must show every tab from the first paint. The script's chunks are held so the page never hydrates during
 // the assertions.
-test('before the script runs, a desktop admin row shows every tab and no More', async ({
+test('before the script runs, a desktop curator row shows every tab and no More', async ({
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
@@ -387,11 +391,11 @@ test('before the script runs, a desktop admin row shows every tab and no More', 
     await held;
     await route.continue().catch(() => undefined);
   });
-  await page.goto('/admin', { waitUntil: 'commit' });
+  await page.goto('/curator', { waitUntil: 'commit' });
 
-  const admin = page.getByRole('navigation', { name: 'Admin' });
+  const admin = page.getByRole('navigation', { name: 'Curator' });
   await expect(admin).toBeVisible();
-  await expect(admin.getByRole('link')).toHaveCount(7);
+  await expect(admin.getByRole('link')).toHaveCount(5);
   for (const link of await admin.getByRole('link').all()) await expect(link).toBeVisible();
   await expect(admin.getByRole('button')).toHaveCount(0);
 
@@ -399,7 +403,7 @@ test('before the script runs, a desktop admin row shows every tab and no More', 
   const hrefs = await admin
     .getByRole('link')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
-  expect(new Set(hrefs).size).toBe(7);
+  expect(new Set(hrefs).size).toBe(5);
   release();
 });
 
@@ -430,7 +434,7 @@ async function tuckedWithRoom(nav: Locator): Promise<boolean> {
 
 for (const [who, label, path] of [
   ['member', 'Coven', `/coven/${ALPHA.slug}`],
-  ['admin', 'Admin', '/admin'],
+  ['admin', 'Curator', '/curator'],
 ] as const) {
   test(`across the tablet band, the ${label.toLowerCase()} row puts a tab behind More only when it has no room`, async ({
     page,

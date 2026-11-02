@@ -17,7 +17,7 @@ const assignMock = vi.fn();
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The body of the modal over `/admin/users`: render-only, so the page
+// The body of the modal over `/keepers/users`: render-only, so the page
 // owns the read and this owns what an admin sees of it
 // (claude-docs/components/user-detail.md).
 

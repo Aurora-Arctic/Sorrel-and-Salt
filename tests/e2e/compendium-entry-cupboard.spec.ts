@@ -360,7 +360,7 @@ test('the Quick Look window has the plus, then the check, on a compendium list f
 
     await test.step('a site admin in no coven gets neither on the admin list', async () => {
       await signInAgainAs(page, adminId);
-      await opened(`/admin/compendium?query=${encodeURIComponent(NAME_LOOK)}`, slug);
+      await opened(`/curator/compendium?query=${encodeURIComponent(NAME_LOOK)}`, slug);
       await expect(add()).toHaveCount(0);
       await expect(check()).toHaveCount(0);
     });

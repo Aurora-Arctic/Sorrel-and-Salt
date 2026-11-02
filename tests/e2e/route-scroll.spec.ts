@@ -25,7 +25,7 @@ for (const { name, ...viewport } of VIEWPORTS) {
   }) => {
     await signInAs(page, `admin-${name}@route-scroll.test`, ['discord'], 'admin');
     await page.setViewportSize(viewport);
-    await page.goto('/admin/categories');
+    await page.goto('/curator/categories');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
     // Down the page first, as a reader who has been reading it would be.

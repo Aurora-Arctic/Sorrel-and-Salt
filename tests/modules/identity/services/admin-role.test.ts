@@ -281,8 +281,8 @@ describe('Promotion at sign-in', () => {
 
     expectSignedIn(response);
     // The landing reads the role after the promotion: the row was created a
-    // user, so only the promotion at this very sign-in sends it to /admin.
-    expect(landingOf(response)).toBe('/admin');
+    // user, so only the promotion at this very sign-in sends it to /keepers.
+    expect(landingOf(response)).toBe('/keepers');
     const row = await userRow(PRIMARY);
     expect(row?.role).toBe('admin');
     expect(row?.can_create_workspace).toBe(true);

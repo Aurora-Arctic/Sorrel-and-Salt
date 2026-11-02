@@ -14,8 +14,8 @@ describe('FilterForm', () => {
       <ListFrame>
         <FilterForm
           label="Filter Users"
-          action="/admin/users"
-          searchHref={() => '/admin/users'}
+          action="/keepers/users"
+          searchHref={() => '/keepers/users'}
           shown={[]}
         >
           <input name="query" aria-label="Name" />

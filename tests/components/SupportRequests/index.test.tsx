@@ -26,7 +26,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
-  usePathname: () => '/admin/support',
+  usePathname: () => '/keepers/support',
 }));
 
 const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
@@ -105,7 +105,7 @@ describe('SupportRequests list', () => {
     expect(within(row).queryByText('Open')).toBeNull();
     expect(
       within(row).getByRole('link', { name: `${ROW.subject} from Ada Wortley` }),
-    ).toHaveAttribute('href', '/admin/support?request=r1');
+    ).toHaveAttribute('href', '/keepers/support?request=r1');
   });
 
   it('says what the filter left out when no request matches', () => {
@@ -512,13 +512,13 @@ describe('The sender', () => {
     const row = screen.getByRole('row', { name: /The moon icon is missing/ });
     expect(within(row).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
       'href',
-      '/admin/support?user=u1',
+      '/keepers/support?user=u1',
     );
     cleanup();
     open(ADMIN);
     expect(within(dialog()).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
       'href',
-      '/admin/support?request=r1&user=u1',
+      '/keepers/support?request=r1&user=u1',
     );
   });
 
@@ -965,7 +965,7 @@ describe('The views', () => {
     renderTabs();
     expect(screen.getByRole('link', { name: /Closed/ })).toHaveAttribute(
       'href',
-      '/admin/support?about=bug&view=closed&error=500&sender=beta_tester',
+      '/keepers/support?about=bug&view=closed&error=500&sender=beta_tester',
     );
   });
 
@@ -976,7 +976,7 @@ describe('The views', () => {
     await user.click(screen.getByRole('link', { name: /Closed/ }));
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenLastCalledWith(
-      '/admin/support?about=bug&view=closed&error=500&sender=beta_tester',
+      '/keepers/support?about=bug&view=closed&error=500&sender=beta_tester',
     );
   });
 
@@ -988,7 +988,7 @@ describe('The views', () => {
     expect(within(group).getByRole('radio', { name: 'All' })).toBeChecked();
     await user.click(within(group).getByRole('radio', { name: 'Beta Testers' }));
     expect(router.push).toHaveBeenLastCalledWith(
-      '/admin/support?about=bug&view=mine&error=500&sender=beta_tester',
+      '/keepers/support?about=bug&view=mine&error=500&sender=beta_tester',
     );
   });
 

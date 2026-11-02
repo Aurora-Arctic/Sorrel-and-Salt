@@ -8,7 +8,7 @@ import { asManualFix } from '../support/db/privileges';
 import { run } from '../support/graphql/run';
 import type { AuthInstance } from '../support/types';
 
-// A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/admin` and every admin mutation close at once (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking").
+// A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/keepers` and every admin mutation close at once (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking").
 // Through the real session reader; the cookie cache that would keep the old role is pinned off in tests/lib/auth.test.ts.
 
 let sql: ReturnType<typeof postgres>;
@@ -61,7 +61,7 @@ const sessionsOf = async () =>
   sql`select token from sessions where user_id = ${REVOKED} order by token`;
 
 describe('a revoked admin’s next request', () => {
-  it('reads the user role off the same session, refused at /admin and at an admin mutation', async () => {
+  it('reads the user role off the same session, refused at /keepers and at an admin mutation', async () => {
     const headers = await signedInAs(REVOKED);
     const before = await requestSession.sessionFromHeaders(headers);
     // The precondition: the same cookie was an admin's, admitted by both gates.
@@ -78,7 +78,7 @@ describe('a revoked admin’s next request', () => {
 
     const after = await requestSession.sessionFromHeaders(headers);
     expect(after).toEqual({ userId: REVOKED, role: 'user' });
-    // What `/admin`'s guard asks, and the mutation's scope refusing first.
+    // What `/keepers`'s guard asks, and the mutation's scope refusing first.
     // The identity module here is the auth import's graph, so its `Forbidden`
     // is another class than this file's: the name is what is compared.
     expect(() => identity.assertSiteAdmin(after!)).toThrow(

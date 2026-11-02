@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({
 
 const { RouteModalProvider } = await import('@/components/Modal');
 const { default: CompendiumDialog } =
-  await import('../../../../../src/app/(shell)/admin/compendium/compendium-dialog');
+  await import('../../../../../src/app/(shell)/curator/compendium/compendium-dialog');
 
 // The admin compendium's edit dialog after the form has saved itself: the heading and the address follow
 // the name the autosave filed, without waiting for Save (claude-docs/components/autosave.md).
@@ -75,7 +75,7 @@ describe('CompendiumDialog after an autosave', () => {
     await waitFor(() => expect(saves).toHaveLength(1));
     await waitFor(() => expect(navigation.refresh).toHaveBeenCalled());
     expect(navigation.navigate).toHaveBeenCalledWith(
-      '/admin/compendium?edit=mockwort-fixtura-testalis',
+      '/curator/compendium?edit=mockwort-fixtura-testalis',
       { replace: true, scroll: false },
     );
   });

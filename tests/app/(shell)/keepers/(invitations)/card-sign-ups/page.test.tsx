@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { encodeCursor } from '@/lib/pagination';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The `/admin/card-sign-ups` page: one row per accepted card, kept when the account behind it can no longer be read.
+// The `/keepers/card-sign-ups` page: one row per accepted card, kept when the account behind it can no longer be read.
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
@@ -31,9 +31,10 @@ const membershipsOf = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipsOf }));
 
 // The modal also reads the user's support time-outs, which are the support page tests' to prove; none here.
-vi.mock('@/app/(shell)/admin/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
+vi.mock('@/app/(shell)/keepers/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
 
-const { default: ArrivalsPage } = await import('@/app/(shell)/admin/(people)/card-sign-ups/page');
+const { default: ArrivalsPage } =
+  await import('@/app/(shell)/keepers/(invitations)/card-sign-ups/page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 const BATCH = 'b1111111-0000-4000-8000-000000000001';
@@ -54,7 +55,7 @@ beforeEach(() => {
   providersOf.mockResolvedValue([[]]);
 });
 
-describe('/admin/card-sign-ups', () => {
+describe('/keepers/card-sign-ups', () => {
   it('keeps a row whose account lookup failed, naming it a removed account', async () => {
     listCardArrivals.mockResolvedValue([
       arrival('a1', 'u1'),
@@ -112,7 +113,7 @@ describe('/admin/card-sign-ups', () => {
       render(await ArrivalsPage({ searchParams: Promise.resolve({}) }));
       expect(screen.getByRole('link', { name: 'Wort Tester' })).toHaveAttribute(
         'href',
-        `/admin/card-sign-ups?user=${WORT.id}`,
+        `/keepers/card-sign-ups?user=${WORT.id}`,
       );
     });
 
@@ -120,7 +121,7 @@ describe('/admin/card-sign-ups', () => {
       render(await ArrivalsPage({ searchParams: Promise.resolve({ after: AFTER }) }));
       expect(screen.getByRole('link', { name: 'Wort Tester' })).toHaveAttribute(
         'href',
-        `/admin/card-sign-ups?after=${encodeURIComponent(AFTER)}&user=${WORT.id}`,
+        `/keepers/card-sign-ups?after=${encodeURIComponent(AFTER)}&user=${WORT.id}`,
       );
     });
 
@@ -134,7 +135,7 @@ describe('/admin/card-sign-ups', () => {
       await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
 
       expect(replace).toHaveBeenCalledWith(
-        `/admin/card-sign-ups?after=${encodeURIComponent(AFTER)}`,
+        `/keepers/card-sign-ups?after=${encodeURIComponent(AFTER)}`,
         { scroll: false },
       );
     });

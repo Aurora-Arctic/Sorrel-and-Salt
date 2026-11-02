@@ -47,7 +47,7 @@ describe("the email page's paths", () => {
   });
 
   it('carries a same-site return path on to Continue, encoded', () => {
-    expect(verifiedLanding('/admin')).toBe('/account/email?verified&next=%2Fadmin');
+    expect(verifiedLanding('/keepers')).toBe('/account/email?verified&next=%2Fkeepers');
     expect(verifiedLanding('/coven/hearth?tab=mine')).toBe(
       '/account/email?verified&next=%2Fcoven%2Fhearth%3Ftab%3Dmine',
     );
@@ -67,7 +67,7 @@ describe("the email page's paths", () => {
   });
 
   it("reads a sign-up link's callbackURL as where the sign-in was going", () => {
-    expect(returnPathOf('/admin')).toBe('/admin');
+    expect(returnPathOf('/keepers')).toBe('/keepers');
     expect(returnPathOf('/coven/hearth?tab=mine')).toBe('/coven/hearth?tab=mine');
   });
 
@@ -75,8 +75,8 @@ describe("the email page's paths", () => {
   // sign-in may itself have been headed for the email page: either way the
   // page's own `next` is the one to carry, never the page.
   it("reads the email page's own next out of a callbackURL on it", () => {
-    expect(returnPathOf('/account/email?verified&next=%2Fadmin')).toBe('/admin');
-    expect(returnPathOf('/account/email?next=%2Fadmin')).toBe('/admin');
+    expect(returnPathOf('/account/email?verified&next=%2Fkeepers')).toBe('/keepers');
+    expect(returnPathOf('/account/email?next=%2Fkeepers')).toBe('/keepers');
     expect(returnPathOf('/account/email?verified')).toBeUndefined();
     expect(returnPathOf('/account/email')).toBeUndefined();
   });

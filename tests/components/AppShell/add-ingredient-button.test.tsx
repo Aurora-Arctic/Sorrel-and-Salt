@@ -171,7 +171,7 @@ describe('AddIngredientButton', () => {
     const menuOf = () => screen.getByRole('menu');
 
     it('lists the compendium then the coven for a curator, and opens a coven chosen on an admin page in place', () => {
-      pathname.mockReturnValue('/admin/users');
+      pathname.mockReturnValue('/keepers/users');
       draw(ADMIN, [FIXTURE]);
       expect(chevron()).toHaveAttribute('aria-haspopup', 'menu');
       expect(chevron()).toHaveAttribute('aria-expanded', 'false');
@@ -208,17 +208,20 @@ describe('AddIngredientButton', () => {
       fireEvent.click(chevron());
       press(within(menuOf()).getByRole('menuitem', { name: 'to Compendium' }));
 
-      expect(push).toHaveBeenCalledWith('/admin/compendium?new=ingredient-compendium');
+      expect(push).toHaveBeenCalledWith('/curator/compendium?new=ingredient-compendium');
       expect(screen.queryByRole('dialog')).toBeNull();
     });
 
-    it('opens the compendium from the main part on an admin page', () => {
-      pathname.mockReturnValue('/admin/users');
-      draw(ADMIN, [FIXTURE]);
-      open();
+    it.each(['/curator/categories', '/keepers/users'])(
+      'opens the compendium from the main part on %s, a curator or keepers page',
+      (path) => {
+        pathname.mockReturnValue(path);
+        draw(ADMIN, [FIXTURE]);
+        open();
 
-      expect(push).toHaveBeenCalledWith('/admin/compendium?new=ingredient-compendium');
-    });
+        expect(push).toHaveBeenCalledWith('/curator/compendium?new=ingredient-compendium');
+      },
+    );
 
     it('opens the coven the address names from the main part, a curator off the admin pages', () => {
       pathname.mockReturnValue('/coven/testwort-circle');
@@ -262,7 +265,14 @@ describe('AddIngredientButton', () => {
         ],
       ],
       [
-        '/admin/users',
+        '/keepers/users',
+        [
+          ['Compendium', ['to Compendium']],
+          ['Coven', ['to Fixture Coven']],
+        ],
+      ],
+      [
+        '/curator/categories',
         [
           ['Compendium', ['to Compendium']],
           ['Coven', ['to Fixture Coven']],
@@ -331,13 +341,13 @@ describe('AddIngredientButton', () => {
       view.unmount();
 
       // On an admin page too, where a bare `?new` is the page's own.
-      pathname.mockReturnValue('/admin/users');
-      window.history.replaceState(null, '', '/admin/users?new=ingredient-coven-fixture-coven');
+      pathname.mockReturnValue('/keepers/users');
+      window.history.replaceState(null, '', '/keepers/users?new=ingredient-coven-fixture-coven');
       view = draw(ADMIN, [FIXTURE, TESTWORT]);
       expect(target()).toBe('id-fixture-coven');
       view.unmount();
 
-      window.history.replaceState(null, '', '/admin/users?new=ingredient');
+      window.history.replaceState(null, '', '/keepers/users?new=ingredient');
       draw(ADMIN, [FIXTURE, TESTWORT]);
       expect(target()).toBe('id-fixture-coven');
     });
@@ -352,14 +362,14 @@ describe('AddIngredientButton', () => {
       expect(screen.queryByRole('dialog')).toBeNull();
       view.unmount();
 
-      pathname.mockReturnValue('/admin/users');
-      window.history.replaceState(null, '', '/admin/users?new');
+      pathname.mockReturnValue('/keepers/users');
+      window.history.replaceState(null, '', '/keepers/users?new');
       let admin = draw(ADMIN, [FIXTURE]);
       expect(screen.queryByRole('dialog')).toBeNull();
       admin.unmount();
 
-      pathname.mockReturnValue('/admin/compendium');
-      window.history.replaceState(null, '', '/admin/compendium?new=ingredient-compendium');
+      pathname.mockReturnValue('/curator/compendium');
+      window.history.replaceState(null, '', '/curator/compendium?new=ingredient-compendium');
       admin = draw(ADMIN, [FIXTURE]);
       expect(screen.queryByRole('dialog')).toBeNull();
     });

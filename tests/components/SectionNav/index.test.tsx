@@ -19,17 +19,17 @@ const { default: SectionNav } = await import('@/components/SectionNav');
 
 const ITEMS: readonly SectionNavItem[] = [
   { label: 'Overview', href: '/coven/fixture-coven' as Route, icon: 'overview', exact: true },
-  { label: 'Compendium', href: '/admin/compendium', icon: 'compendium' },
+  { label: 'Compendium', href: '/curator/compendium', icon: 'compendium' },
   {
     label: 'Categories',
-    href: '/admin/categories',
+    href: '/curator/categories',
     icon: 'categories',
-    matches: ['/admin/category-groups'],
+    matches: ['/curator/category-groups'],
   },
-  { label: 'Forms', href: '/admin/forms', icon: 'forms' },
-  { label: 'Deities', href: '/admin/deities', icon: 'deities' },
-  { label: 'Astrology', href: '/admin/celestial-bodies', icon: 'astrology' },
-  { label: 'People', href: '/admin/users', icon: 'people', apart: true },
+  { label: 'Forms', href: '/curator/forms', icon: 'forms' },
+  { label: 'Deities', href: '/curator/deities', icon: 'deities' },
+  { label: 'Astrology', href: '/curator/celestial-bodies', icon: 'astrology' },
+  { label: 'People', href: '/keepers/users', icon: 'people', apart: true },
 ];
 const FEW = ITEMS.slice(0, 4);
 
@@ -51,7 +51,7 @@ describe('SectionNav', () => {
 
   it.each([
     // A `matches` address marks the section it belongs to; `isAtPath` owns the rest.
-    ['/admin/category-groups', ['/admin/categories']],
+    ['/curator/category-groups', ['/curator/categories']],
   ])('marks only the section at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 
@@ -125,18 +125,18 @@ describe('SectionNav', () => {
     });
 
     it('shuts after a client-side navigation', () => {
-      pathname.mockReturnValue('/admin/compendium');
+      pathname.mockReturnValue('/curator/compendium');
       const { rerender } = render(<SectionNav label="Test" sections={ITEMS} />);
       fireEvent.click(more()!);
 
-      pathname.mockReturnValue('/admin/users');
+      pathname.mockReturnValue('/keepers/users');
       rerender(<SectionNav label="Test" sections={ITEMS} />);
 
       expect(more()).toHaveAttribute('aria-expanded', 'false');
     });
 
     it('takes the page you are on, marked current, when it is one of the hidden sections', () => {
-      pathname.mockReturnValue('/admin/celestial-bodies');
+      pathname.mockReturnValue('/curator/celestial-bodies');
 
       render(<SectionNav label="Test" sections={ITEMS} />);
 
@@ -145,7 +145,7 @@ describe('SectionNav', () => {
     });
 
     it('does not take a visible section as its own', () => {
-      pathname.mockReturnValue('/admin/forms');
+      pathname.mockReturnValue('/curator/forms');
 
       render(<SectionNav label="Test" sections={ITEMS} />);
 

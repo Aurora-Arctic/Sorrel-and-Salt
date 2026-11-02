@@ -9,7 +9,7 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { entryDetail } from '../../../../support/entry-detail';
 
-// The `/admin/compendium` page: the guard, one page of the compendium under the address's filter, and the modal its address opens (`?new=ingredient-compendium` or a bare `?new`, `?edit=` an entry by slug, an old slug sent on to the new one).
+// The `/curator/compendium` page: the guard, one page of the compendium under the address's filter, and the modal its address opens (`?new=ingredient-compendium` or a bare `?new`, `?edit=` an entry by slug, an old slug sent on to the new one).
 // The guard, services and entry values are mocked: what they decide is tests/lib/request-session.test.ts's, the compendium services' tests' and tests/db/entry-values.test.ts's.
 
 const requireCuratorSession = vi.fn();
@@ -25,11 +25,11 @@ vi.mock('@/lib/viewer', () => ({
   covenRolesIfSignedIn: async () => undefined,
 }));
 
-// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
+// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/curator/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
   rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
 );
-vi.mock('@/app/(shell)/admin/editors', () => ({ editorStamps }));
+vi.mock('@/app/(shell)/curator/editors', () => ({ editorStamps }));
 
 // The categories are `readCardCategories`'s, tested with the public page; the page's part is
 // asking once for the entries it lists and handing each its own.
@@ -137,7 +137,7 @@ const redirect = vi.fn((href: string) => {
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router, redirect }));
 
-const { default: AdminCompendiumPage } = await import('@/app/(shell)/admin/compendium/page');
+const { default: AdminCompendiumPage } = await import('@/app/(shell)/curator/compendium/page');
 
 /** The edit dialog's name: its eyebrow, then the entry and its formal name. */
 const EDITING_TESTWORT = 'Edit Ingredient, Testwort, Fixtura testalis';
@@ -228,7 +228,7 @@ const FILTERED = {
   elements: ['fire', 'earth'],
 };
 const FILTERED_HREF =
-  '/admin/compendium?query=test&forms=Fixture+Oil&forms=Fixture+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth';
+  '/curator/compendium?query=test&forms=Fixture+Oil&forms=Fixture+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth';
 
 /** A curated form as its service lists it, keyed by name as the finder pages it. */
 const curatedForm = (name: string, index: number) =>
@@ -314,7 +314,7 @@ beforeEach(() => {
   router.replace.mockClear();
 });
 
-describe('the /admin/compendium page', () => {
+describe('the /curator/compendium page', () => {
   it('asks the admin guard, and reads nothing when it refuses', async () => {
     requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
@@ -345,7 +345,7 @@ describe('the /admin/compendium page', () => {
     expect(within(row).getByRole('cell', { name: 'Herb' })).toBeInTheDocument();
     expect(
       within(row).getByRole('link', { name: 'Edit Testwort, Fixtura testalis' }),
-    ).toHaveAttribute('href', `/admin/compendium?edit=${TESTWORT.slug}`);
+    ).toHaveAttribute('href', `/curator/compendium?edit=${TESTWORT.slug}`);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(resolveCompendiumSlug).not.toHaveBeenCalled();
   });
@@ -353,7 +353,7 @@ describe('the /admin/compendium page', () => {
 
 // What each parameter parses to is tests/components/CompendiumList/params.test.ts's; here
 // only that the parsed filter, and the lookups the page makes for it, reach the reads.
-describe('the /admin/compendium filter', () => {
+describe('the /curator/compendium filter', () => {
   it('reads ?query= trimmed, a repeated ?forms= as a list and ?withoutReferences=1 into the list and its count', async () => {
     await readPage({
       query: '  test wort ',
@@ -395,7 +395,7 @@ describe('the /admin/compendium filter', () => {
     // The links keep the slugs the address spelt, never the ids.
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
-      '/admin/compendium?categories=testward&categories=testcraft&new=ingredient-compendium',
+      '/curator/compendium?categories=testward&categories=testcraft&new=ingredient-compendium',
     );
   });
 
@@ -459,15 +459,15 @@ describe('the /admin/compendium filter', () => {
     );
     const pages = screen.getByRole('navigation', { name: 'Pages' });
     expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&before=[^&]+$/,
+      /^\/curator\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&before=[^&]+$/,
     );
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&after=[^&]+$/,
+      /^\/curator\/compendium\?query=test&forms=Fixture\+Oil&forms=Fixture\+Powder&withoutReferences=1&withoutForms=1&elements=fire&elements=earth&after=[^&]+$/,
     );
   });
 });
 
-describe('the /admin/compendium modal', () => {
+describe('the /curator/compendium modal', () => {
   // A bare `?new` is an older link's, read as `ingredient-compendium` so it still opens.
   it.each(['ingredient-compendium', ''])(
     'opens the form on ?new=%s with no entry',
@@ -561,7 +561,7 @@ describe('the /admin/compendium modal', () => {
 // A name's details modal over the list: `?entry=<slug>`, which an Edit
 // inside it opens the edit modal over, `?entry=<slug>&edit=<slug>`, so closing
 // the edit goes back to the details.
-describe('the /admin/compendium details modal', () => {
+describe('the /curator/compendium details modal', () => {
   const DETAILS_TESTWORT = 'Testwort';
   const ON_DETAILS = `${FILTERED_HREF}&entry=${TESTWORT.slug}`;
   const details = () => screen.getByRole('dialog', { name: DETAILS_TESTWORT });

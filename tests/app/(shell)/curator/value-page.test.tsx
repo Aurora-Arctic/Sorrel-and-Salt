@@ -7,18 +7,18 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
 
-// The page every curated value shares (src/app/(shell)/admin/value-page.tsx): the guard, one page of the vocabulary under the address's filter and groups, and the modal its address opens (`?new` empty, `?edit=` a value by slug).
+// The page every curated value shares (src/app/(shell)/curator/value-page.tsx): the guard, one page of the vocabulary under the address's filter and groups, and the modal its address opens (`?new` empty, `?edit=` a value by slug).
 // The shape runs on the categories; other kinds get only what they change, their path and services (claude-docs/testing/layer-ownership.md, rule 5). The guard and services are mocked (tests/lib/request-session.test.ts, the vocabulary service tests).
 // This file holds the page's half: the address read into service calls, the guard, NotFound against any other error, and the props built for the list and modal; how those behave is their own tests' (layer-ownership.md, "The owning layer").
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 
-// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
+// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/curator/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
   rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
 );
-vi.mock('@/app/(shell)/admin/editors', () => ({ editorStamps }));
+vi.mock('@/app/(shell)/curator/editors', () => ({ editorStamps }));
 
 const listCategories = vi.fn();
 const listCategoryGroups = vi.fn();
@@ -58,7 +58,7 @@ vi.mock('@/modules/vocabulary', () => ({
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-const { ValueAction, ValuePage } = await import('@/app/(shell)/admin/value-page');
+const { ValueAction, ValuePage } = await import('@/app/(shell)/curator/value-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -207,7 +207,7 @@ describe('a curated value page, on the categories', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(
-      '/admin/categories?query=test&group=fixture-healing',
+      '/curator/categories?query=test&group=fixture-healing',
       { scroll: false },
     );
   });
@@ -260,10 +260,10 @@ describe("a curated value page's filter, on the categories", () => {
     expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('');
     expect(screen.getByRole('link', { name: 'Add Category' })).toHaveAttribute(
       'href',
-      '/admin/categories?query=test&new',
+      '/curator/categories?query=test&new',
     );
     expect(screen.getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/categories\?query=test&after=[^&]+$/,
+      /^\/curator\/categories\?query=test&after=[^&]+$/,
     );
   });
 
@@ -274,7 +274,7 @@ describe("a curated value page's filter, on the categories", () => {
 
     await renderPage({ query: 'test', group: 'fixture-healing', after });
 
-    const here = `/admin/categories?query=test&group=fixture-healing&after=${encodeURIComponent(after)}`;
+    const here = `/curator/categories?query=test&group=fixture-healing&after=${encodeURIComponent(after)}`;
     expect(screen.getByRole('link', { name: 'Add Category' })).toHaveAttribute(
       'href',
       `${here}&new`,
@@ -285,10 +285,10 @@ describe("a curated value page's filter, on the categories", () => {
     );
     const pages = screen.getByRole('navigation', { name: 'Pages' });
     expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
-      /^\/admin\/categories\?query=test&group=fixture-healing&before=[^&]+$/,
+      /^\/curator\/categories\?query=test&group=fixture-healing&before=[^&]+$/,
     );
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/categories\?query=test&group=fixture-healing&after=[^&]+$/,
+      /^\/curator\/categories\?query=test&group=fixture-healing&after=[^&]+$/,
     );
   });
 });
@@ -301,7 +301,7 @@ describe('a curated value page, for each other kind', () => {
   const ROWS = [
     {
       kind: 'form',
-      path: '/admin/forms',
+      path: '/curator/forms',
       address: { group: 'fixture-protection' },
       list: listIngredientFormValues,
       count: countIngredientFormValues,
@@ -314,7 +314,7 @@ describe('a curated value page, for each other kind', () => {
     },
     {
       kind: 'deity',
-      path: '/admin/deities',
+      path: '/curator/deities',
       address: { tradition: 'fixture-protection' },
       list: listDeities,
       count: countDeities,
@@ -329,7 +329,7 @@ describe('a curated value page, for each other kind', () => {
     },
     {
       kind: 'celestialBody',
-      path: '/admin/celestial-bodies',
+      path: '/curator/celestial-bodies',
       address: {},
       list: listAstrologyValues,
       count: countAstrologyValues,

@@ -11,7 +11,7 @@ vi.mock('@/modules/identity', () => ({
   listedOnUserList: (id: string) => id !== SEED,
 }));
 
-const { editorStamps } = await import('@/app/(shell)/admin/editors');
+const { editorStamps } = await import('@/app/(shell)/curator/editors');
 
 const ADMIN = { userId: 'admin-1', role: 'admin' } as const;
 const FIRST = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';

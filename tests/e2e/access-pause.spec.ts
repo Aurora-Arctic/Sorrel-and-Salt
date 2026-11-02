@@ -64,7 +64,7 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   );
   const entry = makeIngredient({ name: 'Testwort Pausewort', nomenclature: 'none' });
   await withSql((sql) => insertIngredient(sql, entry, adminId));
-  await page.goto(`/admin/users?user=${userId}`);
+  await page.goto(`/keepers/users?user=${userId}`);
   const modal = page.getByRole('dialog');
   const access = modal.getByRole('region', { name: 'Site Access' });
   await access.getByRole('button', { name: 'Site Access', expanded: false }).click();

@@ -4,7 +4,7 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
 
-// The `/admin/privilege-changes` page: the guard, then the ledger read, its count and the users it names, the search parameters turned into the filter and the page, and the pager's links keeping the filter.
+// The `/keepers/privilege-changes` page: the guard, then the ledger read, its count and the users it names, the search parameters turned into the filter and the page, and the pager's links keeping the filter.
 // The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/privilege-changes.test.ts's.
 
 const requireAdminSession = vi.fn();
@@ -25,7 +25,7 @@ vi.mock('@/modules/identity', () => ({
 }));
 
 const { default: AdminPrivilegeChangesPage } =
-  await import('@/app/(shell)/admin/(people)/privilege-changes/page');
+  await import('@/app/(shell)/keepers/(people)/privilege-changes/page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 const ADA = {
@@ -85,7 +85,7 @@ beforeEach(() => {
   );
 });
 
-describe('the /admin/privilege-changes page', () => {
+describe('the /keepers/privilege-changes page', () => {
   it('renders nothing, and reads nothing, when the guard refuses', async () => {
     requireAdminSession.mockRejectedValue(new Error('forbidden'));
 
@@ -118,11 +118,11 @@ describe('the /admin/privilege-changes page', () => {
     const [first, second, third] = screen.getAllByRole('row').slice(1);
     expect(within(first).getByRole('link', { name: 'Ada Fixturewort' })).toHaveAttribute(
       'href',
-      '/admin/users?query=ada%40ledger.test',
+      '/keepers/users?query=ada%40ledger.test',
     );
     expect(within(first).getByRole('link', { name: 'Bram Testwort' })).toHaveAttribute(
       'href',
-      '/admin/users?query=bram%40ledger.test',
+      '/keepers/users?query=bram%40ledger.test',
     );
     expect(within(first).getByText('Covering the spring audit')).toBeInTheDocument();
     // The seed's bootstrap user is named, but the user list has no row for it.
@@ -181,7 +181,7 @@ describe('the /admin/privilege-changes page', () => {
 
     await renderPage({ query: 'ada', privilege: 'admin', after: encodeCursor(entry(0).cursor) });
 
-    const filter = '/admin/privilege-changes?query=ada&privilege=admin';
+    const filter = '/keepers/privilege-changes?query=ada&privilege=admin';
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
       `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,

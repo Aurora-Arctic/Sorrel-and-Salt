@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The `/admin/invitation-cards` page: the guard first, then the identity reads. What the guard and services decide is
+// The `/keepers/invitation-cards` page: the guard first, then the identity reads. What the guard and services decide is
 // tests/lib/request-session.test.ts's and tests/modules/identity/services/invitation-cards.test.ts's.
 
 const requireAdminSession = vi.fn();
@@ -13,7 +13,8 @@ const countCardBatches = vi.fn();
 const cardBatchTotals = vi.fn();
 vi.mock('@/modules/identity', () => ({ cardBatchTotals, countCardBatches, listCardBatches }));
 
-const { default: CardsPage } = await import('@/app/(shell)/admin/(people)/invitation-cards/page');
+const { default: CardsPage } =
+  await import('@/app/(shell)/keepers/(invitations)/invitation-cards/page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 const BATCH = 'b1111111-0000-4000-8000-000000000001';
@@ -26,7 +27,7 @@ beforeEach(() => {
   cardBatchTotals.mockReset();
 });
 
-describe('/admin/invitation-cards', () => {
+describe('/keepers/invitation-cards', () => {
   it('is refused to anyone the admin guard refuses, before any read', async () => {
     requireAdminSession.mockRejectedValue(new Error('forbidden'));
 

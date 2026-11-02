@@ -7,18 +7,18 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupKind } from '@/components/GroupForm/types';
 
-// The page every group vocabulary shares (src/app/(shell)/admin/group-page.tsx): the guard, one page of groups, and the modal its address opens (`?new` empty, `?edit=` a group by slug, told how many rows its delete must move).
+// The page every group vocabulary shares (src/app/(shell)/curator/group-page.tsx): the guard, one page of groups, and the modal its address opens (`?new` empty, `?edit=` a group by slug, told how many rows its delete must move).
 // The shape runs on the category groups; the form groups and deity traditions get only what they change, their path and services (claude-docs/testing/layer-ownership.md, rule 5).
 // The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/vocabulary's.
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 
-// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
+// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/curator/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
   rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
 );
-vi.mock('@/app/(shell)/admin/editors', () => ({ editorStamps }));
+vi.mock('@/app/(shell)/curator/editors', () => ({ editorStamps }));
 
 const listCategoryGroups = vi.fn();
 const countCategoryGroups = vi.fn();
@@ -50,7 +50,7 @@ vi.mock('@/modules/vocabulary', () => ({
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-const { GroupAction, GroupPage } = await import('@/app/(shell)/admin/group-page');
+const { GroupAction, GroupPage } = await import('@/app/(shell)/curator/group-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -121,11 +121,11 @@ describe('a group page, on the category groups', () => {
     expect(screen.getByRole('cell', { name: 'Fixture Wards' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Edit Fixture Wards' })).toHaveAttribute(
       'href',
-      '/admin/category-groups?edit=fixture-wards',
+      '/curator/category-groups?edit=fixture-wards',
     );
     expect(screen.getByRole('link', { name: 'Add Group' })).toHaveAttribute(
       'href',
-      '/admin/category-groups?new',
+      '/curator/category-groups?new',
     );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -199,7 +199,7 @@ describe('a group page, on the category groups', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(
-      `/admin/category-groups?after=${encodeURIComponent(after)}`,
+      `/curator/category-groups?after=${encodeURIComponent(after)}`,
       { scroll: false },
     );
     expect(router.refresh).toHaveBeenCalled();
@@ -213,7 +213,7 @@ describe('a group page, for each other kind', () => {
   const ROWS = [
     {
       kind: 'form',
-      path: '/admin/form-groups',
+      path: '/curator/form-groups',
       list: listIngredientFormGroups,
       count: countIngredientFormGroups,
       get: getIngredientFormGroupBySlug,
@@ -223,7 +223,7 @@ describe('a group page, for each other kind', () => {
     },
     {
       kind: 'tradition',
-      path: '/admin/deity-traditions',
+      path: '/curator/deity-traditions',
       list: listDeityTraditions,
       count: countDeityTraditions,
       get: getDeityTraditionBySlug,
@@ -283,15 +283,15 @@ describe('a group page, searched by name', () => {
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('wort');
     expect(screen.getAllByRole('link', { name: `Edit ${WARDS.name}` })[0]).toHaveAttribute(
       'href',
-      `/admin/deity-traditions?query=wort&edit=${WARDS.slug}`,
+      `/curator/deity-traditions?query=wort&edit=${WARDS.slug}`,
     );
     expect(screen.getByRole('link', { name: 'Add Tradition' })).toHaveAttribute(
       'href',
-      '/admin/deity-traditions?query=wort&new',
+      '/curator/deity-traditions?query=wort&new',
     );
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
-      expect.stringMatching(/^\/admin\/deity-traditions\?query=wort&after=/),
+      expect.stringMatching(/^\/curator\/deity-traditions\?query=wort&after=/),
     );
   });
 
@@ -308,7 +308,7 @@ describe('a group page, searched by name', () => {
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Add Group' })).toHaveAttribute(
       'href',
-      '/admin/category-groups?new',
+      '/curator/category-groups?new',
     );
   });
 });

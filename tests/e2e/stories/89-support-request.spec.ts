@@ -5,7 +5,7 @@ import { signInAs } from '../session';
 import { sendAs } from '../send-as';
 
 // Story 89: a signed-in account opens the Support dialog from the footer, sends a question, an admin replies on
-// /admin/support, and the reply shows on /account/support.
+// /keepers/support, and the reply shows on /account/support.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -52,7 +52,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
     });
 
     await test.step('the admin replies from the support list', async () => {
-      await adminPage.goto('/admin/support');
+      await adminPage.goto('/keepers/support');
       await adminPage.getByRole('link', { name: 'Where is the moon table?' }).click();
       const adminDialog = adminPage.getByRole('dialog', { name: 'Where is the moon table?' });
       await sendAs(adminDialog, 'Reply');

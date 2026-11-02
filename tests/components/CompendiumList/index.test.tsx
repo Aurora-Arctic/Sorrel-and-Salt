@@ -28,7 +28,7 @@ import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// `/admin/compendium`'s filter, table and pager: each entry with its formal name and live forms, an Edit link opening it in the page's modal,
+// `/curator/compendium`'s filter, table and pager: each entry with its formal name and live forms, an Edit link opening it in the page's modal,
 // the filter that narrows them to the admin's to-do lists, and the pager (claude-docs/components/compendium-list.md).
 
 // The fixtures and the filter row's controls are shared with filter.test.tsx, which renders the
@@ -126,11 +126,11 @@ describe('CompendiumList', () => {
 
     expect(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' })).toHaveAttribute(
       'href',
-      '/admin/compendium?edit=testwort',
+      '/curator/compendium?edit=testwort',
     );
     expect(screen.getByRole('link', { name: 'Edit Fixture Salt' })).toHaveAttribute(
       'href',
-      '/admin/compendium?edit=fixture-salt',
+      '/curator/compendium?edit=fixture-salt',
     );
   });
 
@@ -153,7 +153,7 @@ describe('CompendiumList', () => {
       <Navigating push={router.push}>
         <RouteModalProvider>
           <CompendiumList {...props()} />
-          <RouteModal place={DETAILS_PLACE} closeHref="/admin/compendium" />
+          <RouteModal place={DETAILS_PLACE} closeHref="/curator/compendium" />
         </RouteModalProvider>
       </Navigating>,
     );
@@ -167,7 +167,7 @@ describe('CompendiumList', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     const look = screen.getByRole('link', { name: 'Quick Look Fixture Salt' });
-    expect(look).toHaveAttribute('href', '/admin/compendium?entry=fixture-salt');
+    expect(look).toHaveAttribute('href', '/curator/compendium?entry=fixture-salt');
     expect(fireEvent.click(look, { metaKey: true })).toBe(true);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
@@ -175,7 +175,7 @@ describe('CompendiumList', () => {
       fireEvent.click(look);
     });
 
-    expect(router.push.mock.lastCall?.[0]).toBe('/admin/compendium?entry=fixture-salt');
+    expect(router.push.mock.lastCall?.[0]).toBe('/curator/compendium?entry=fixture-salt');
     expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });
 
@@ -261,10 +261,10 @@ describe('the sort', () => {
     // Sorted already, so Name leads to its reverse; the score to its first direction, lowest first.
     expect(
       within(heading('Name')).getByRole('link', { name: 'Name, Sorted A to Z' }),
-    ).toHaveAttribute('href', '/admin/compendium?sort=name&order=desc');
+    ).toHaveAttribute('href', '/curator/compendium?sort=name&order=desc');
     expect(
       within(heading('Sourcing Score')).getByRole('link', { name: 'Sourcing Score' }),
-    ).toHaveAttribute('href', '/admin/compendium?sort=sourcing_score');
+    ).toHaveAttribute('href', '/curator/compendium?sort=sourcing_score');
   });
 
   it("reverses the sourcing score from its heading once sorted by it, and shows each entry's score", () => {
@@ -276,10 +276,10 @@ describe('the sort', () => {
       within(heading('Sourcing Score')).getByRole('link', {
         name: 'Sourcing Score, Sorted Lowest First',
       }),
-    ).toHaveAttribute('href', '/admin/compendium?sort=sourcing_score&order=desc');
+    ).toHaveAttribute('href', '/curator/compendium?sort=sourcing_score&order=desc');
     expect(within(heading('Name')).getByRole('link', { name: 'Name' })).toHaveAttribute(
       'href',
-      '/admin/compendium',
+      '/curator/compendium',
     );
     expect(
       within(screen.getByRole('row', { name: /Testwort/ })).getByRole('cell', { name: '36' }),
@@ -298,7 +298,7 @@ describe('the sort', () => {
       within(heading('Sourcing Score')).getByRole('link', {
         name: 'Sourcing Score, Sorted Highest First',
       }),
-    ).toHaveAttribute('href', '/admin/compendium?sort=sourcing_score');
+    ).toHaveAttribute('href', '/curator/compendium?sort=sourcing_score');
   });
 
   it("marks no heading under a search's Best Match, and sorts the search by name from Name", () => {
@@ -308,7 +308,7 @@ describe('the sort', () => {
     expect(heading('Sourcing Score')).not.toHaveAttribute('aria-sort');
     expect(within(heading('Name')).getByRole('link', { name: 'Name' })).toHaveAttribute(
       'href',
-      '/admin/compendium?query=wort&sort=name',
+      '/curator/compendium?query=wort&sort=name',
     );
   });
 
@@ -328,7 +328,7 @@ describe('the sort', () => {
     ]);
     fireEvent.click(screen.getByRole('option', { name: 'Sourcing Score, Highest First' }));
     expect(router.push).toHaveBeenCalledWith(
-      '/admin/compendium?query=wort&sort=sourcing_score&order=desc',
+      '/curator/compendium?query=wort&sort=sourcing_score&order=desc',
     );
   });
 });
@@ -336,12 +336,12 @@ describe('the sort', () => {
 describe('compendiumHref', () => {
   it('keeps the page a modal opens over, the modal last', () => {
     expect(compendiumHref({ after: 'x/y' }, { edit: 'testwort' })).toBe(
-      '/admin/compendium?after=x%2Fy&edit=testwort',
+      '/curator/compendium?after=x%2Fy&edit=testwort',
     );
     expect(compendiumHref({ before: 'b' }, 'new')).toBe(
-      '/admin/compendium?before=b&new=ingredient-compendium',
+      '/curator/compendium?before=b&new=ingredient-compendium',
     );
-    expect(compendiumHref({})).toBe('/admin/compendium');
+    expect(compendiumHref({})).toBe('/curator/compendium');
   });
 
   it('keeps the filter ahead of the cursor and the modal', () => {
@@ -356,21 +356,21 @@ describe('compendiumHref', () => {
         { edit: 'x' },
       ),
     ).toBe(
-      '/admin/compendium?query=test+wort&forms=Fixture+Oil&forms=Fixture+Resin&withoutReferences=1&after=a&edit=x',
+      '/curator/compendium?query=test+wort&forms=Fixture+Oil&forms=Fixture+Resin&withoutReferences=1&after=a&edit=x',
     );
     expect(compendiumHref({ elements: ['fire', 'water'], after: 'a' })).toBe(
-      '/admin/compendium?elements=fire&elements=water&after=a',
+      '/curator/compendium?elements=fire&elements=water&after=a',
     );
     expect(compendiumHref({ query: 'test', before: 'b' }, 'new')).toBe(
-      '/admin/compendium?query=test&before=b&new=ingredient-compendium',
+      '/curator/compendium?query=test&before=b&new=ingredient-compendium',
     );
     expect(compendiumHref({ withoutReferences: true })).toBe(
-      '/admin/compendium?withoutReferences=1',
+      '/curator/compendium?withoutReferences=1',
     );
   });
 
   it('writes no blank filter', () => {
-    expect(compendiumHref(NO_FILTER)).toBe('/admin/compendium');
+    expect(compendiumHref(NO_FILTER)).toBe('/curator/compendium');
   });
 });
 // While a filter or a page is on its way, the list gives way to its loading status and the row
@@ -401,7 +401,7 @@ describe('the list while a filter is on its way', () => {
       applyFilters();
     });
 
-    expect(router.push).toHaveBeenCalledWith('/admin/compendium?withoutReferences=1');
+    expect(router.push).toHaveBeenCalledWith('/curator/compendium?withoutReferences=1');
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(row()).toHaveAttribute('aria-busy', 'true');
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
@@ -436,7 +436,7 @@ describe('the list while a filter is on its way', () => {
   it('leaves the sentence settled when a pager end opens another page', async () => {
     render(
       <Navigating push={router.push}>
-        <CompendiumList {...props({ filter: SEARCHED, nextHref: '/admin/compendium?after=a' })} />
+        <CompendiumList {...props({ filter: SEARCHED, nextHref: '/curator/compendium?after=a' })} />
       </Navigating>,
     );
     expect(typing()).toBe(false);
@@ -463,7 +463,9 @@ describe('the list while a filter is on its way', () => {
       });
       render(
         <Navigating push={router.push} arrives={arrives}>
-          <CompendiumList {...props({ filter: SEARCHED, nextHref: '/admin/compendium?after=a' })} />
+          <CompendiumList
+            {...props({ filter: SEARCHED, nextHref: '/curator/compendium?after=a' })}
+          />
         </Navigating>,
       );
       if (was === 'open') {

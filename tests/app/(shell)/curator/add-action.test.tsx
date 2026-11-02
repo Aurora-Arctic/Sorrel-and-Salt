@@ -1,21 +1,21 @@
 import type { Route } from 'next';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import AddAction from '@/app/(shell)/admin/add-action';
+import AddAction from '@/app/(shell)/curator/add-action';
 
 const NEW_SPELL_HREF = '/coven/fixture/grimoire?new=spell-fixture' as Route;
 
 describe('AddAction', () => {
   it('is named by its label at every width, the plus hidden from assistive technology', () => {
     const { container } = render(
-      <AddAction href="/admin/categories?new" heading={{ title: 'Add Category' }}>
+      <AddAction href="/curator/categories?new" heading={{ title: 'Add Category' }}>
         Add Category
       </AddAction>,
     );
 
     const link = screen.getByRole('link', { name: 'Add Category' });
 
-    expect(link).toHaveAttribute('href', '/admin/categories?new');
+    expect(link).toHaveAttribute('href', '/curator/categories?new');
     const icon = container.querySelector('svg');
     expect(icon).toHaveAttribute('aria-hidden', 'true');
     expect(link).toContainElement(icon as SVGElement);

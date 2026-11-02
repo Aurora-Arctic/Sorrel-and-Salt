@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
@@ -72,13 +72,15 @@ describe('AppShell', () => {
     );
   });
 
-  it('offers an admin the Compendium, Your Covens and Admin links', () => {
+  it('offers a curator or an admin the Compendium, Your Covens, Curator and Keepers links', () => {
     shell(ADMIN);
 
     const nav = screen.getByRole('navigation', { name: 'Site' });
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Compendium' }));
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Your Covens' }));
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+    expect(within(nav).getByRole('link', { name: 'Curator' })).toHaveAttribute('href', '/curator');
+    expect(within(nav).getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
+    expect(within(nav).queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
     // Into the first coven, not via the /coven landing's redirect.
     expect(screen.getByRole('link', { name: 'Your Covens' })).toHaveAttribute(
       'href',
@@ -92,7 +94,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute('href', '/coven');
   });
 
-  it('offers a verified member of a coven Your Coven and not Admin', () => {
+  it('offers a verified member of a coven Your Coven and neither Curator nor Keepers', () => {
     shell(MEMBER, COVENS.slice(0, 1));
 
     // The precondition: a verified viewer does get the rest of the bar.
@@ -102,14 +104,16 @@ describe('AppShell', () => {
       'href',
       '/coven/fixture-coven',
     );
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
   });
 
-  it('offers a verified viewer in a coven Your Coven and not Admin', () => {
+  it('offers a verified viewer in a coven Your Coven and neither Curator nor Keepers', () => {
     shell(MEMBER, [{ ...COVENS[0], canWrite: false, canInvite: false }]);
 
     expect(screen.getByRole('link', { name: 'Your Coven' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
   });
 
   it('offers a verified account in no coven, who is not a curator, the Compendium alone', () => {
@@ -117,7 +121,8 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('link', { name: 'Compendium' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^Your Covens?$/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
   });
 
   it('names the coven link for one coven or several', () => {
@@ -145,7 +150,8 @@ describe('AppShell', () => {
     shell({ ...UNVERIFIED, canCurate: true });
 
     expect(screen.getByRole('link', { name: 'Compendium' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
   });
 

@@ -15,7 +15,7 @@ import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Where the callback lands a sign-in: a return path wins; otherwise an admin goes to /admin, a coven member into the first coven the switcher lists, anyone else to /coven;
+// Where the callback lands a sign-in: a return path wins; otherwise an admin goes to /keepers, a curator to /curator, a coven member into the first coven the switcher lists, anyone else to /coven;
 // an unverified account lands on the email page first. Driven through Better Auth's real endpoints (claude-docs/auth/route-protection.md, "Route protection").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -131,22 +131,23 @@ function mailedLink(): string {
 const callbackOf = (link: string) => new URL(link).searchParams.get('callbackURL');
 
 describe('a sign-in with no return path', () => {
-  it('lands a verified admin on the admin area', async () => {
+  it('lands a verified admin on the keepers area', async () => {
     await insertVerified(ADMIN, 'admin');
 
     const response = await signIn('google', { sub: 'g-admin', email: ADMIN, verified: true });
 
     expect(response.status).toBe(302);
-    expect(landingOf(response)).toBe('/admin');
+    expect(landingOf(response)).toBe('/keepers');
     expect(cookieHeader(response)).toMatch(/session_token=/);
   });
 
-  it('lands a verified curator on the admin area, as an admin', async () => {
+  it('lands a verified curator on the curator area, not the keepers area', async () => {
     await insertVerified(CURATOR, 'curator');
 
     const response = await signIn('google', { sub: 'g-curator', email: CURATOR, verified: true });
 
-    expect(landingOf(response)).toBe('/admin');
+    expect(landingOf(response)).toBe('/curator');
+    expect(await roleOf(CURATOR)).toBe('curator');
   });
 
   // Why the admin's could have been /coven: the same sign-in, differing only
@@ -182,13 +183,13 @@ describe('a sign-in with no return path', () => {
     expect(landingOf(response)).toBe('/coven');
   });
 
-  it('lands an admin who is in a coven on the admin area all the same', async () => {
+  it('lands an admin who is in a coven on the keepers area all the same', async () => {
     await insertVerified(ADMIN, 'admin');
     await seat(ADMIN, 'Adminhold');
 
     const response = await signIn('google', { sub: 'g-admin', email: ADMIN, verified: true });
 
-    expect(landingOf(response)).toBe('/admin');
+    expect(landingOf(response)).toBe('/keepers');
   });
 
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
@@ -207,7 +208,7 @@ describe('a sign-in with no return path', () => {
 
     const again = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
 
-    // Not /admin, and no `next` for Continue to take there: with none, the
+    // Not /keepers, and no `next` for Continue to take there: with none, the
     // email page's Continue lands the account by its role
     // (tests/app/(shell)/account/email/page.test.tsx).
     expect(landingOf(again)).toBe('/account/email');
@@ -236,7 +237,7 @@ describe('a sign-in with a return path', () => {
     expect(landingOf(await signIn('google', admin, '/coven'))).toBe('/coven');
     expect(landingOf(await signIn('google', admin, '/compendium?q=rue'))).toBe('/compendium?q=rue');
     // The same admin with no return path, so the two above were the return path's doing.
-    expect(landingOf(await signIn('google', admin))).toBe('/admin');
+    expect(landingOf(await signIn('google', admin))).toBe('/keepers');
   });
 
   it('carries an explicit /coven through the email page and its mailed link', async () => {
