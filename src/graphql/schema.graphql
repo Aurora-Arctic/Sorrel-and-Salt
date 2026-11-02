@@ -1537,6 +1537,11 @@ type Query {
   compendiumMatches(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryCompendiumMatchesConnection!
 
   """
+  A compendium entry's sourcing score and the facts behind it. Curators and admins only; null for anyone else.
+  """
+  compendiumSourcingScore(id: ID!): SourcingScore
+
+  """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
   """
   deities(after: String, before: String, first: Int, last: Int, query: String, traditionId: ID): QueryDeitiesConnection!
@@ -2258,6 +2263,36 @@ type SourceFacetCount {
 
   """local or compendium, as source takes it."""
   value: IngredientSource!
+}
+
+"""
+One fact behind a sourcing score, and the points it adds or takes away.
+"""
+type SourcingFact {
+  fact: SourcingFactKind!
+
+  """How the list says it, such as "3 Sources"."""
+  label: String!
+  points: Int!
+}
+
+enum SourcingFactKind {
+  bestSource
+  curatorReviewed
+  formCitesNothing
+  nameBacked
+  noLocator
+  nomenclatureUnknown
+  safetyUnsourced
+  sources
+}
+
+"""
+How well a compendium entry is sourced, and every fact behind it; the facts sum to the score.
+"""
+type SourcingScore {
+  facts: [SourcingFact!]!
+  score: Int!
 }
 
 """A coven's working: what it intends, and the recipe that makes it."""

@@ -47,6 +47,9 @@ async function expectOutcome(field: string, probe: ScopeProbe) {
   if (probe.outcome === 'answers') {
     expect(result.errors).toBeUndefined();
     expect(result.data?.[field]).not.toBeNull();
+  } else if (probe.outcome === 'nulls') {
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toHaveProperty(field, null);
   } else if (probe.outcome === 'refuses') {
     // The path is what shows the field was reached: a probe the SDL refused
     // would answer an error with none.
@@ -115,6 +118,11 @@ const PROBES: Record<string, ScopeProbe> = {
   compendiumEntryUsers: {
     source: `{ compendiumEntryUsers(id: "${NOWHERE}") }`,
     outcome: 'refuses',
+  },
+  // A curator's read that answers null rather than refusing, so a page asking for it beside public fields still renders.
+  compendiumSourcingScore: {
+    source: `{ compendiumSourcingScore(id: "${NOWHERE}") { score } }`,
+    outcome: 'nulls',
   },
   ingredient: {
     source: 'query ($id: ID!) { ingredient(id: $id) { id } }',

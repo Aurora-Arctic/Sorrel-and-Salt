@@ -9,6 +9,7 @@ export * from './services/ingredient-detail';
 export * from './services/workspace-ingredients';
 export * from './services/compendium';
 export * from './services/sourcing-score';
+export * from './services/compendium-sourcing';
 export * from './services/share-card';
 export * from './services/compendium-held-in';
 export * from './services/compendium-slugs';
