@@ -241,7 +241,7 @@ and is closed before `reorder` runs.
 - **The id-first form** at the start of the subject, or of the first line of the commit's body, which is where GitHub writes the PR's title: `M15.32/M15.33/M15.49 — Support revision`.
 - **A single trailing id** in the subject, `(MB.13)`, when it has a heading in the breakdown.
 
-GitHub never writes a PR body into git, so a PR that finishes several tasks names them in its title. `.github/workflows/pr-title-names-tasks.yml` runs `scripts/check-pr-title.mjs` on every PR into `staging`. The script reads the issue numbers of the body's `Closes #N` lines, takes each id from its issue's `<ID> — ` title, and fails, naming each id the title does not open with. It reads the title, body and branch from environment variables, as `close-task-on-merge.yml` reads the body. A PR that closes one task whose branch names it passes with any title. `scripts/task-ids.mjs` holds the forms, shared by the tally and the check.
+GitHub never writes a PR body into git, so a PR that finishes several tasks names them in its title, which `create-pr` writes id-first. This is a convention, not a CI check. `scripts/task-ids.mjs` holds the forms the tally reads.
 
 The tally's hand-kept list of ids stays for work done outside git: dashboard or console work, or a merge made before the title rule.
 
