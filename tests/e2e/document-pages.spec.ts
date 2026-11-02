@@ -71,7 +71,12 @@ for (const { path, title, link } of DOCUMENTS) {
 test('the code of ethics opens the support form on an accessibility bug', async ({ page }) => {
   await signInAs(page, 'reporter@document-pages.test', ['discord']);
   await page.goto('/code-of-ethics');
-  await page.getByRole('link', { name: 'Report an accessibility bug' }).click();
+  // The page links the support form twice; this one sits in the paragraph on accessibility bugs.
+  await page
+    .getByRole('paragraph')
+    .filter({ hasText: 'accessibility bug' })
+    .getByRole('link', { name: 'support form' })
+    .click();
 
   await expect(page).toHaveURL(/\/support\?support=accessibility$/);
   // In the page's own form: the Support dialog beside the footer holds a second, closed copy.
