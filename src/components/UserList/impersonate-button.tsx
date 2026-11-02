@@ -25,7 +25,7 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
     confirmClass="btn btn--destructive"
     send={() => sendImpersonation(userId)}
     onSent={() => window.location.assign(IMPERSONATION_LANDING)}
-    refusal={(error) => impersonationRefusal(name, error)}
+    refusal={impersonationRefusal(name)}
   />
 );
 

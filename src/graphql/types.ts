@@ -16,6 +16,8 @@ import type { Loaders } from './loaders';
 export interface Context {
   /** `null` when signed out: the endpoint answers, and a scope or service refuses. */
   session: Session | null;
+  /** Set while a pause stands on the signed-in user: `session` is then `null`, and a refusal says the access is paused. */
+  accessPause?: { until: Date | null };
   loaders: Loaders;
   /** Bound to this request's host and cookie: the email page's mail goes out through it. */
   emailVerification: EmailVerificationSender;

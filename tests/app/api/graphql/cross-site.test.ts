@@ -3,7 +3,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 const ENDPOINT = 'https://sorrelandsalt.com/api/graphql';
 const written = vi.hoisted(() => ({ count: 0 }));
 
-vi.mock('@/lib/request-session', () => ({ sessionFromHeaders: async () => null }));
+vi.mock('@/lib/request-session', () => ({
+  sessionStateFromHeaders: async () => ({
+    session: null,
+    emailVerified: false,
+    termsAgreed: false,
+    sessionFresh: false,
+  }),
+}));
 
 // A schema with one mutation that counts its calls, so "no resolver ran" is a state the test reads.
 vi.mock('@/graphql/schema', async () => {

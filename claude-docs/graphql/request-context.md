@@ -4,11 +4,15 @@
 `context` option. It gives every resolver three things, typed as `Context` in
 `src/graphql/types.ts`:
 
-- **`session`**, the service-level `Session` from `sessionFromHeaders` over the
+- **`session`**, the service-level `Session` from `sessionStateFromHeaders` over the
   request's own headers, or `null` when signed out. It does not use
   `getSession()`, which reads `headers()` for server components. A signed-out
   request is not refused here: the endpoint answers, and whichever scope or
   service the query reaches refuses it.
+- **`accessPause`**, set with the pause's end when a pause stands on the signed-in user. `session` is then
+  `null`, so a public read answers as for anyone signed out, and a refusal from a scope (`unauthorizedError` in
+  `src/graphql/builder.ts`) or from `sessionOf` is `AccessPaused`, which leaves as `ACCESS_PAUSED` with
+  `pausedUntil` (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
 - **`loaders`**, a fresh set of DataLoader instances for this request.
 - **`emailVerification`**, `src/lib/email-verification.ts`'s sender bound to
   this request's host and cookie, which the `setEmail` resolver passes to its

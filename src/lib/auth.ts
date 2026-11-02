@@ -592,12 +592,13 @@ async function noticeCompletedChange(request: Request | undefined): Promise<void
  * Refuses a session to an account whose access an admin has paused, however it signs in: every sign-in method, and every
  * other path that makes a session, ends in this one write. A browser navigation (the provider callback, a mailed link) is
  * sent to the paused page; a fetch from the sign-in panel is answered 403 with the pause's end, and the panel goes there. An
- * admin impersonating the account is refused the same way, since impersonation exists only off production.
+ * admin impersonating the account is let through, and request-session's pause check shows them what the user would see.
  */
 async function refusePausedSession(
-  session: { userId: string },
+  session: { userId: string; impersonatedBy?: string | null },
   ctx: { path?: string; request?: Request } | null,
 ): Promise<void> {
+  if (session.impersonatedBy) return;
   const pause = await standingAccessPause(session.userId);
   if (!pause) return;
   if (ctx?.path === '/callback/:id' || ctx?.request?.method === 'GET') {

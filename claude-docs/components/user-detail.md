@@ -69,8 +69,7 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   wording, landing and send are `UserList/impersonation.tsx`, shared with the
   list's row button, so the two cannot drift. A success does a full load of
   `/`, the question busy until it opens; a refusal closes the question and
-  shows an error notice, naming the pause and its end when the user's site
-  access is paused.
+  shows an error notice.
 - **Tokens only**: spacing from `space()`; the button row is the page's own
   `btn btn--destructive`. No styling past the tokens before the section's
   design review.

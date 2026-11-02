@@ -34,6 +34,8 @@ export interface SessionState {
   termsAgreed: boolean;
   /** Younger than Better Auth's `freshAge`, so `/unlink-account` would take it. */
   sessionFresh: boolean;
+  /** Set while a pause stands on the session's user, with its end, `null` for none; absent otherwise. */
+  accessPause?: { until: Date | null };
 }
 
 /** What a Better Auth hook handler is handed: the request, and the session once there is one. */

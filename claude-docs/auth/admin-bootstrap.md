@@ -727,9 +727,10 @@ fetch it answers 403 with the code `ACCESS_PAUSED` and `until`, and the sign-in 
 loads `/access-paused` itself. The address carries `?until=` for a dated pause and nothing for an open-ended one
 (`accessPausedPath` in `src/lib/access-paused.ts`). The hook runs after the credential is checked, so a wrong password
 still answers 401 and counts as a failed sign-in, and a paused right password counts as none.
-An admin impersonating a paused user is refused the same way, a 403 with the pause's end and no session, their own session
-untouched; the users list and the user modal say so under Impersonate (impersonation is never built on production, so a
-paused user has no reason to be impersonated).
+An admin impersonating a paused user is let through, and is shown what the user would see: `sessionStateFromHeaders` in
+`src/lib/request-session.ts` records the standing pause on an impersonation session, every signed-in page then redirects to
+`/access-paused`, a public page draws the signed-out view, and every signed-in GraphQL field answers `ACCESS_PAUSED`
+(`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
 
 **The paused page.** `/access-paused` is public (`src/proxy.ts`), outside the app shell, and not indexed. It reads only its
 own `?until=`: a future end is named in UTC, a past one is said to have ended with a link to Sign In, and none or a

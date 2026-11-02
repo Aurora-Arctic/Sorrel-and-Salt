@@ -157,6 +157,10 @@ navigation.
   ([`components/welcome.md`](../components/welcome.md)). The helpers are shared
   with the tests' OAuth harness, whose `signIn` with no destination is
   `SignInPanel`'s sign-in with none.
+- **A paused session is read once, in `sessionStateFromHeaders`**, which records a standing pause on
+  the session state as `accessPause`. `requireSignedIn()`, and so every guard built on it, then
+  redirects to `/access-paused`, and `getSession()` and `sessionFromHeaders()` answer `null`
+  (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
 - **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the
   same render cost one lookup. It is `sessionFromHeaders(await headers())`;
   the proxy, which has the request but no `headers()`, calls

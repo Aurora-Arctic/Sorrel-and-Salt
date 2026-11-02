@@ -35,6 +35,12 @@ vi.mock('next/navigation', () => ({
 // helper answers its refusal.
 const membershipBySlugMock = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipBySlug: membershipBySlugMock }));
+// The pause lookup is the service's, proved against Postgres in tests/db/impersonation.test.ts; here only what the helpers do with its answer.
+const standingAccessPauseMock = vi.fn();
+vi.mock('@/modules/identity', async (actual) => ({
+  ...(await actual<typeof import('@/modules/identity')>()),
+  standingAccessPause: standingAccessPauseMock,
+}));
 
 const {
   getSession,
@@ -76,6 +82,8 @@ function betterAuthSession(
 beforeEach(() => {
   getSessionMock.mockReset();
   listUserAccountsMock.mockReset();
+  standingAccessPauseMock.mockReset();
+  standingAccessPauseMock.mockResolvedValue(undefined);
   requestHeaders = new Headers({ cookie: 'better-auth.session_token=t.s' });
 });
 
@@ -142,6 +150,44 @@ describe('requireSignedIn', () => {
     // The same request is one `requireSession()` sends away, so it is the
     // missing email check, not the path, that let it through.
     await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
+  });
+});
+
+// An admin impersonating a paused user is shown what that user sees: the paused page in place of every signed-in page.
+describe('a paused impersonation', () => {
+  const UNTIL = new Date('2030-01-01T00:00:00.000Z');
+
+  function impersonation() {
+    const result = betterAuthSession('user');
+    return { ...result, session: { ...result.session, impersonatedBy: 'admin-id' } };
+  }
+
+  it('is sent from a signed-in page to the paused page with the pause’s end, where the unpaused one is let through', async () => {
+    getSessionMock.mockResolvedValue(impersonation());
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
+    await expect(requireSignedIn()).resolves.toMatchObject({ userId: USER_ID });
+
+    standingAccessPauseMock.mockResolvedValue({ userId: USER_ID, until: UNTIL });
+
+    await expect(requireSignedIn()).rejects.toThrow(
+      `redirect:/access-paused?until=${encodeURIComponent(UNTIL.toISOString())}`,
+    );
+    await expect(requireSession()).rejects.toThrow('redirect:/access-paused?until=');
+    expect(standingAccessPauseMock).toHaveBeenCalledWith(USER_ID);
+  });
+
+  it('reads as signed out on a public page', async () => {
+    getSessionMock.mockResolvedValue(impersonation());
+    standingAccessPauseMock.mockResolvedValue({ userId: USER_ID, until: null });
+
+    await expect(getSession()).resolves.toBeNull();
+  });
+
+  it('asks for no pause on a session that is not an impersonation', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+
+    await expect(getSession()).resolves.toMatchObject({ userId: USER_ID });
+    expect(standingAccessPauseMock).not.toHaveBeenCalled();
   });
 });
 

@@ -470,7 +470,7 @@ the history link before every name and its address; each name a link to its
 `openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
-while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back, a paused user's naming the pause's end; the creation cell: Approve on rows awaiting approval, and nothing on approved rows or on a curator's or an admin's, each modal naming the user and its
+while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back; the creation cell: Approve on rows awaiting approval, and nothing on approved rows or on a curator's or an admin's, each modal naming the user and its
 focus, Cancel sending nothing, each call with its reason and its busy state
 until the refresh, the success said in the status region, and the refusal under the button; the unverified warning
 describing Approve for an unverified user, who is still approved; the role cell (MB.59, M11.20): Change Role on every row, offering every role but the one held, Promote or Demote by the ladder with a demotion styled destructive, the chosen role and the reason sent trimmed or not at all, Cancel sending nothing, the warning on a promotion of an unverified user and on no demotion, the promotion said in the status region, the refusal under the button, and the primary admin's crown and its `aria-disabled` Change Role, described by the

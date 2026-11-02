@@ -13,10 +13,10 @@ export const ACCESS_PAUSED_MESSAGE = 'Access to this account is paused.';
 export const ACCESS_PAUSED_PATH = '/access-paused' satisfies Route;
 
 /** The paused page, carrying the pause's end as `?until=` when it has one; an open-ended pause carries nothing. */
-export function accessPausedPath(until: Date | string | null | undefined): string {
+export function accessPausedPath(until: Date | string | null | undefined): Route {
   const at = until == null ? undefined : new Date(until);
   if (!at || Number.isNaN(at.getTime())) return ACCESS_PAUSED_PATH;
-  return `${ACCESS_PAUSED_PATH}?${new URLSearchParams({ until: at.toISOString() })}`;
+  return `${ACCESS_PAUSED_PATH}?${new URLSearchParams({ until: at.toISOString() })}` as Route;
 }
 
 /** The end a paused page's `?until=` names, or `undefined` for none or a malformed one. */

@@ -1,5 +1,3 @@
-import { ACCESS_PAUSED_CODE } from '@/lib/access-paused';
-import { inUtc } from '@/lib/utc';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal from '@/components/Modal';
@@ -310,21 +308,6 @@ describe('UserDetail', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(assignMock).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: 'Impersonate' })).not.toBeInTheDocument();
-  });
-
-  it('names the pause’s end when the user’s site access is paused, and goes nowhere', async () => {
-    const until = new Date('2026-12-01T09:30:00Z');
-    impersonateUserMock.mockResolvedValue({
-      data: null,
-      error: { status: 403, code: ACCESS_PAUSED_CODE, until: until.toISOString() },
-    });
-    renderDetail({ canImpersonate: true });
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
-
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate' }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(inUtc(until));
-    expect(assignMock).not.toHaveBeenCalled();
   });
 });
 

@@ -59,7 +59,7 @@ the transport's share is written once, in `src/graphql/context-helpers.ts`
 rule 1).
 
 - **`sessionOf(context)`** is the session, non-null, or `Forbidden` for a
-  signed-out caller: the refusal a field scope gives, so the transport maps
+  signed-out caller and `AccessPaused` for a paused one: the refusal a field scope gives, so the transport maps
   one shape. It narrows the type for a service that takes a `Session`; a
   scoped field has refused a null session already, and the service checks
   again. `.oxlintrc.json` holds a module's resolvers and loaders to it: oxlint
