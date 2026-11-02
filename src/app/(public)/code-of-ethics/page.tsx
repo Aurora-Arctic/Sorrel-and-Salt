@@ -219,10 +219,10 @@ export default function CodeOfEthicsPage() {
 
       <h2>Why the Compendium Cites Its Sources</h2>
       <p>
-        Every claim in the compendium is meant to trace to a source: a book, a paper, a page, a
-        practitioner. An entry with no source still saves, and sits on the curators' to-do list
-        until it has one. A formal name is treated as a unique identifier and a common name never
-        is, so a source is cited on an entry only when it names the plant without doubt.
+        Every claim in the compendium is meant to trace to a source: a book, a paper, a page. An
+        entry with no source still saves, and sits on the curators' to-do list until it has one. A
+        formal name is treated as a unique identifier and a common name never is, so a source is
+        cited on an entry only when it names the plant without doubt.
       </p>
       <p>
         This is not pedantry. Folklore without provenance is where appropriation hides, where a
