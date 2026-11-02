@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 /** The day this text last changed. */
-const UPDATED_ON = new Date('2026-11-01T00:00:00Z');
+const UPDATED_ON = new Date('2026-11-02T00:00:00Z');
 
 // What the site's information is and is not. Every example is cited in the sources at the end; the
 // working notes say where each sentence comes from
@@ -54,10 +54,11 @@ export default function DisclaimerPage() {
 
       <h2>No Warranty</h2>
       <p>
-        The site is run by volunteers and offered as it is. The people who run it do their best to
-        cite a source for every claim and to mark what has not been checked, but they do not promise
-        that any page is accurate, complete or current, and they accept no responsibility for what
-        you do with it. Where a page cites a source, the source is the authority, not the page.
+        The site is offered as it is, and today it is run by people in their spare time. They do
+        their best to cite a source for every claim and to mark what has not been checked, but they
+        do not promise that any page is accurate, complete or current, and they accept no
+        responsibility for what you do with it. Where a page cites a source, the source is the
+        authority, not the page.
       </p>
 
       <h2>Safety Notes Are Not Complete</h2>
