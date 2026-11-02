@@ -78,7 +78,11 @@ const person = (who: { id: string; name?: string | null } | null | undefined) =>
 
 /** The member's pauses other than the one standing, newest first; nothing while they are read or when there are none. */
 const EarlierPauses = ({ workspaceId, userId }: { workspaceId: string; userId: string }) => {
-  const { data } = useQuery(graphqlQuery(MemberPausesDocument, { workspaceId, userId }));
+  // Read afresh each time a dialog opens, since a pause or a lift since the last opening changes the list.
+  const { data } = useQuery({
+    ...graphqlQuery(MemberPausesDocument, { workspaceId, userId }),
+    staleTime: 0,
+  });
   const [now] = useState(() => Date.now());
   const pauses = (data?.workspace?.memberPauses.edges ?? []).map(({ node }): AccessPauseEntry => ({
     id: node.id,

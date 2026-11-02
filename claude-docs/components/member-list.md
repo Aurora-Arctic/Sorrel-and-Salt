@@ -17,6 +17,7 @@ through `Workspace.members`.
 | `currentUserId` | The signed-in user; their row's name is followed by "You"                                                                                                        |
 | `roleAction`    | `(member) => ReactNode`, drawn beside the role (Change Role); absent, the role alone                                                                             |
 | `removeAction`  | `(member) => ReactNode`, drawn in a Remove column at the end; absent, no column                                                                                  |
+| `accessAction`  | `(member) => ReactNode`, drawn in an Access column after Updated (Pause Access, or Paused with Lift Pause); absent, no column                                    |
 
 ## Contracts
 
@@ -83,12 +84,23 @@ member, since the callout hangs from that member's row (the owner's call,
 success is said in the page's status region: "<name> is now <role>." or
 "<name> is removed.".
 
+## Pausing access
+
+An owner can pause one member's or viewer's access to the coven, for a span or with no end date, and lift it (M15.56). The pause itself, and who may set it, is the coven service's (claude-docs/design-decisions/m15.55-coven-access-pause.md).
+
+- **The control is `PauseControl`** (`pause-control.tsx`), passed as `accessAction`. With no pause standing it is **Pause Access**: a `ConfirmedAction` whose dialog asks For (1 Day, 1 Week, 1 Month, Until a Date, No End Date), Until (the day, for Until a Date) and a Note, and confirms with a red **Pause**. With a pause standing it is a **Paused** badge, the pause's end, and **Lift Pause**, which confirms with a red **Lift**. Either way the page is read again afterwards, so the row shows the state the action leaves.
+- **Until a Date with no day picked sends nothing**: the dialog closes and says "Choose a day for the pause to end." under the button.
+- **Each dialog lists the member's earlier pauses** under Earlier Pauses, each with its dates, note, and "Set by X · Lifted by Y". The list is read through `Workspace.memberPauses` (a paged list) only once a dialog opens, so the page itself makes no read per row.
+- **The fields, the end and the list are shared** with the admin's site-wide pause, from `UserDetail/access-pause-parts.tsx`, so the two ask and list alike (claude-docs/components/user-detail.md, "Site Access").
+- **The page passes it to owners alone** (`member: pause`), and returns nothing on an owner's row, since an owner's access is never paused. The pauses standing on the page's members are read in one query, `standingMemberPauses`.
+- **A paused member is sent to `/coven-paused/<slug>`** from every page of the coven, by the coven guard `requireCovenMembership`. That page names the coven and when the pause ends, and sends anyone with no pause standing back to the coven; a stranger still gets the 404. A GraphQL answer of `ACCESS_PAUSED` on a coven page sends the browser there too (`src/lib/graphql-client.ts`).
+
 ## Styling
 
 `index.scss` holds the list's own rules only: the name with its "You" mark, the
 Joined, Invited By and Updated facts muted at the caption size above the
 stacking width, the Role column shrunk to its content, the role beside its
-button, and the Remove column from `sticky-action-column`. The table, its frame
+button, a standing pause's badge, end and Lift Pause on one line (`value-and-control`), and the Remove column from `sticky-action-column`. The table, its frame
 and its card layout are the `.data-table` primitives
 ([`../styling.md`](../styling.md)). The Change Role button has no minimum
 width: every row holds the same one button, so they line up without it. Tokens
@@ -99,7 +111,7 @@ used: `space()`, `type-size('caption')`, `$text-muted`, `$table-stack-width`.
 [`index.stories.tsx`](../../src/components/MemberList/index.stories.tsx),
 `Coven / Member List`: `States`, with a control that chooses Default (a member's view with no controls);
 With Actions (an owner's, with plain buttons standing in for the page's
-controls and the Email column); Sole Owner (the owner's page composition, addresses included, with the sole-owner note
+controls, a standing pause on the viewer's row, and the Email column); Sole Owner (the owner's page composition, addresses included, with the sole-owner note
 inside a `ListFrame` ahead of the list); Gaps In The Record; and Addresses Without Actions.
 
 ## Tests
@@ -111,8 +123,8 @@ on the own row only, and the address only under
 `showEmail`. `tests/components/MemberList/remove-control.test.tsx`
 and `role-control.test.tsx` hold each control's refusal, said under the button
 as the service's sentence alone and the focus on the button, the badge bringing it back,
-and its success said in the status region.
+and its success said in the status region. `pause-control.test.tsx` holds the pause each sends (open-ended with its note, and one day), nothing sent for Until a Date with no day, the lift, and the earlier pauses each dialog lists. `tests/e2e/coven-access-pause.spec.ts` walks pause, the paused page, lift and access restored, with axe on the dialog and on the paused page.
 
 ## Columns
 
-The roll reads left to right as who, what they may do, and what has happened to the membership. The name comes first and the address only where the page asks for it. Next is the role with its change control beside it. Then come the facts no control changes: when the person joined, who invited them, and who last changed the membership and when, folded into one Updated column. Remove is last, and only when the page passes it. It is the table's one destructive row action, yet its column is drawn plain, on the neutral rule: the red is kept for the Remove in its question, the one that removes.
+The roll reads left to right as who, what they may do, and what has happened to the membership. The name comes first and the address only where the page asks for it. Next is the role with its change control beside it. Then come the facts no control changes: when the person joined, who invited them, and who last changed the membership and when, folded into one Updated column. Access follows, where the page passes it: the pause standing on a member, or the control to set one. Remove is last, and only when the page passes it. It is the table's one destructive row action, yet its column is drawn plain, on the neutral rule: the red is kept for the Remove in its question, the one that removes.

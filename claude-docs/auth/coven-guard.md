@@ -3,14 +3,15 @@
 Every page under `/coven/[slug]` belongs to one workspace, and the address is
 the only thing that says which. The guard reads the slug (the coven's name as
 it appears in the URL, such as `whitethorn-coven`), finds the workspace it
-names, and checks the signed-in user is a member of it. It answers three
-visitors three ways, all from the server:
+names, and checks the signed-in user is a member of it. It answers four
+visitors four ways, all from the server:
 
 | Visitor                                            | Answer                                  | From                                      |
 | -------------------------------------------------- | --------------------------------------- | ----------------------------------------- |
 | Signed out                                         | 307 to `/sign-in?next=<path and query>` | The proxy, then `requireSession()`        |
 | Signed in, and the slug names no coven they are in | **404**, the same for both cases        | `requireCovenMembership()`'s `notFound()` |
 | A member, at any role                              | The layout, around the page             | `src/app/(shell)/coven/[slug]/layout.tsx` |
+| A member whose access to this coven is paused      | 307 to `/coven-paused/<slug>`           | `requireCovenMembership()`'s `redirect()` |
 
 - **A 404, not a 403.** This is the opposite of `/admin`, on purpose. A slug
   is a guess at someone's private data, so answering "you may not" would
@@ -22,6 +23,13 @@ visitors three ways, all from the server:
   `requireCovenMembership()` in `src/lib/request-session.ts`, turns that
   `Forbidden` into Next's `notFound()`, the way `requireAdminSession()` turns
   its own into `forbidden()`. Any other error passes through as itself.
+- **A paused member is sent to the coven's paused page** (M15.56). An owner can
+  pause a member's access to one coven; the service then throws `AccessPaused`,
+  which is a kind of `Forbidden`, so the guard checks for it first and redirects
+  to `/coven-paused/<slug>`. That page sits outside the coven's layout, reads the
+  pause again through `pausedCovenBySlug`, and says when it ends; a stranger gets
+  the 404 there too, and a member with no pause standing is sent back
+  (claude-docs/design-decisions/m15.55-coven-access-pause.md, "What M15.56 adds").
 - **The workspace comes from the URL segment only.** Never a cookie or a
   "current workspace" stored on the session: two browser tabs can sit in two
   covens without disagreeing (M6.9's switcher rewrites the address for the
@@ -44,7 +52,7 @@ visitors three ways, all from the server:
 
 Tests: `tests/modules/coven/services/workspace-by-slug.test.ts` (against
 Postgres, every fixture user), `tests/lib/request-session.test.ts` (the 404
-mapping), `tests/app/coven/layout.test.tsx` (the layout calls the guard
+mapping, and the paused redirect beside it), `tests/app/(shell)/coven-paused/page.test.tsx` (the paused page), `tests/app/coven/layout.test.tsx` (the layout calls the guard
 with its own segment) and `tests/e2e/coven.spec.ts` (a member at each role
 gets the page, a stranger and an unknown slug the same 404, in a real
 browser against the built server).
