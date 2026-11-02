@@ -73,8 +73,8 @@ const ACCESS_ROWS: { data: string; cells: [string, string, string, string, strin
       'No',
       'No',
       'No',
-      'Only requests an admin marked for curators or assigned to them, with your address hidden',
-      'Yes, with your address',
+      "Only requests an admin marked for curators or assigned to them, without anyone's email (bar the curator's own) or the coven named in the page address",
+      'Yes, with your email',
       'Yes',
     ],
   },
@@ -130,12 +130,12 @@ export default function PrivacyPolicyPage() {
       <h2>What Is Stored</h2>
       <h3>Your Account</h3>
       <p>
-        Signing in creates an account holding your name, your email address, whether that address is
+        Signing in creates an account holding your name, your email address, whether that email is
         verified, and a link to the picture your sign-in provider shared (if it shared one).
       </p>
       <p>
-        Your email address changes only when you verify the new one. Until then the old address
-        stays, and the new one appears only in the verification link the site sends.
+        Your email address changes only when you verify the new one. Until then the old email stays,
+        and the new one appears only in the verification link the site sends.
       </p>
 
       <h3>How You Sign In</h3>
@@ -191,15 +191,15 @@ export default function PrivacyPolicyPage() {
       <h3>What a Coven Holds</h3>
       <p>
         A coven holds its name, its members with their roles and when each joined, its invitations
-        (the invited address, the role offered and any note), its ingredients and their stock, and
-        its grimoire: every spell, its steps and its workings, with who wrote each. A spell marked
+        (the invited email, the role offered and any note), its ingredients and their stock, and its
+        grimoire: every spell, its steps and its workings, with who wrote each. A spell marked
         private is shown only to the person who wrote it. Nobody else in the coven sees it, its
         owners included, though it is stored in the database. A working can be private too, even on
         a shared spell: it is shown only to the person who recorded it and to any coven member named
         on it.
       </p>
       <p>
-        A printed invitation card is bound to no address. When someone opens a card's link and is
+        A printed invitation card is bound to no email. When someone opens a card's link and is
         refused, the attempt is recorded against their account with the reason.
       </p>
 
@@ -245,14 +245,14 @@ export default function PrivacyPolicyPage() {
             <tr>
               <td>Resend</td>
               <td>Sends the site's mail</td>
-              <td>Your address and the mail's text: verification links, invitations, notices</td>
+              <td>Your email and the mail's text: verification links, invitations, notices</td>
             </tr>
             <tr>
               <td>Discord, Google, Microsoft, Facebook</td>
               <td>Sign you in, when you choose one of them</td>
               <td>
-                They learn that you signed in to {SITE_NAME}, and hand the site your name, address
-                and picture
+                They learn that you signed in to {SITE_NAME}, and hand the site your name, email and
+                picture
               </td>
             </tr>
           </tbody>
@@ -274,7 +274,7 @@ export default function PrivacyPolicyPage() {
       <p>Some rows are removed outright:</p>
       <ul>
         <li>
-          An account that signed in through a provider but never verified its address lapses an hour
+          An account that signed in through a provider but never verified its email lapses an hour
           after its last verification mail, or three hours after it was created, whichever comes
           first. The next sign-in on the site removes every lapsed account, with its sessions and
           provider rows.
