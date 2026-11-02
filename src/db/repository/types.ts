@@ -5,6 +5,10 @@ import type { supportRequests } from '../../modules/support/schema/support-reque
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
+import type { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
+import type { documentMailings } from '../../modules/documents/schema/document-mailings';
+import type { documentVersions } from '../../modules/documents/schema/document-versions';
+import type { documents } from '../../modules/documents/schema/documents';
 import type { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
 import type { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
@@ -290,6 +294,13 @@ export interface WriterContext {
   insert(table: PgTable, values: object): Promise<never>;
   update(table: PgTable, values: object, where: SQL | undefined): Promise<never>;
   softDelete(table: PgTable, where: SQL | undefined): Promise<never>;
+  /** `update` for a table carrying `revision`, with `updateRevisioned`'s contract over `where` alone: no scope, a stale row throws `StaleWrite`. */
+  updateAtRevision(
+    table: PgTable & Identified & Revisioned,
+    where: SQL | undefined,
+    expectedRevision: number | null,
+    values: object,
+  ): Promise<never>;
 }
 
 /** What `withAudit` hands its callback: every write, stamped from the session. */
@@ -506,6 +517,54 @@ export interface AuditWriter {
    * at once cannot both leave the other the last. A read, in the writer because the lock must be taken in the writing transaction.
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
+  /** Write a document's title and lede, stamped from the session. No row comes back for a soft-deleted or missing document. */
+  updateDocument(
+    admin: SiteAdmin,
+    documentId: string,
+    values: DocumentTextInput,
+  ): Promise<DocumentRow[]>;
+  /**
+   * Open the document's draft: the next number past every version it ever held, deleted ones included, with the body of the latest live
+   * published version, or empty when it has none. No row comes back while a draft is open, or for a soft-deleted or missing document.
+   */
+  openDocumentDraft(admin: SiteAdmin, documentId: string): Promise<DocumentVersionRow[]>;
+  /**
+   * Write a draft's body while it is at `expectedRevision`: a draft that has moved on throws `StaleWrite` with its revision now, and
+   * `null` writes whatever the draft holds. A published, deleted or missing version answers `[]`, never `StaleWrite`.
+   */
+  saveDocumentDraft(
+    admin: SiteAdmin,
+    versionId: string,
+    expectedRevision: number | null,
+    body: string,
+  ): Promise<DocumentVersionRow[]>;
+  /** Publish a draft, dated now, under `saveDocumentDraft`'s revision contract. An already published version answers `[]`. */
+  publishDocumentDraft(
+    admin: SiteAdmin,
+    versionId: string,
+    expectedRevision: number | null,
+  ): Promise<DocumentVersionRow[]>;
+  /**
+   * Start the mailing of a published version, sending. No row comes back for a draft, a soft-deleted or missing version, or one with a
+   * live mailing already.
+   */
+  startDocumentMailing(
+    admin: SiteAdmin,
+    versionId: string,
+    mailing: DocumentMailingInput,
+  ): Promise<DocumentMailingRow[]>;
+  /** Add accounts to a mailing, unsent. An account already in it is skipped, so the rows added come back; none for an empty list. */
+  addDocumentMailingRecipients(
+    mailingId: string,
+    userIds: readonly string[],
+  ): Promise<DocumentMailingRecipientRow[]>;
+  /** Stamp the named accounts of a mailing sent now. One already sent is left as it is, so the first send time stands. */
+  markDocumentMailingRecipientsSent(
+    mailingId: string,
+    userIds: readonly string[],
+  ): Promise<DocumentMailingRecipientRow[]>;
+  /** Finish a sending mailing: sent, dated now. A mailing that is sent or replaced answers `[]`. */
+  finishDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
   /**
    * Pause a user's access, stamped from the session: `until` null for no end date. The user's live pause, standing or run out, is
    * lifted first from the session, so the one-live index takes the new row. No row comes back when a pause set alongside took the slot.
@@ -1085,6 +1144,30 @@ export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredie
  * A row as the generic finders read it: the table's whole row, less any column `unread-columns.ts` keeps out of reads.
  * Writers' `returning()` still hold the whole row.
  */
+/** One `documents` row. */
+export type DocumentRow = typeof documents.$inferSelect;
+
+/** What a document's title and lede are written with. */
+export interface DocumentTextInput {
+  title: string;
+  lede: string;
+}
+
+/** One `document_versions` row. */
+export type DocumentVersionRow = typeof documentVersions.$inferSelect;
+
+/** One `document_mailings` row. */
+export type DocumentMailingRow = typeof documentMailings.$inferSelect;
+
+/** What a mailing starts with: what changed, and how many accounts it will reach. */
+export interface DocumentMailingInput {
+  summary: string;
+  recipientCount: number;
+}
+
+/** One `document_mailing_recipients` row. */
+export type DocumentMailingRecipientRow = typeof documentMailingRecipients.$inferSelect;
+
 /** One `user_access_pauses` row. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 

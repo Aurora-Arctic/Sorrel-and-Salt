@@ -862,6 +862,20 @@
       "when": 1793637761063,
       "tag": "0122_user-access-pause-note-required",
       "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1793655211681,
+      "tag": "0128_documents-tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1793655238231,
+      "tag": "0129_agreed-terms-version",
+      "breakpoints": true
     }
   ]
 }

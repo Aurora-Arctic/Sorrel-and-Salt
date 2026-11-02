@@ -165,6 +165,15 @@ export {
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export {
+  findCurrentDocumentVersion,
+  findDocumentByKey,
+  findDocumentDraft,
+  findDocumentMailingForVersion,
+  findPublishedDocumentVersion,
+  findPublishedDocumentVersionPage,
+  findUnsentDocumentMailingRecipientPage,
+} from './documents';
+export {
   findStandingUserAccessPause,
   findStandingUserAccessPausesFor,
   findUserAccessPausePage,
@@ -252,4 +261,12 @@ export type {
   UserFilter,
   VocabularySuggestion,
   WorkspaceInvitationValues,
+} from './types';
+export type {
+  DocumentMailingInput,
+  DocumentMailingRecipientRow,
+  DocumentMailingRow,
+  DocumentRow,
+  DocumentTextInput,
+  DocumentVersionRow,
 } from './types';

@@ -11,6 +11,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { fold, inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
 import { adminRoleWrites } from './admin-roles';
+import { documentWrites } from './documents';
 import { invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
@@ -105,7 +106,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
   // What a marked table's named writes are built from, in the repository file
   // beside its finders: spread in below, so a new marked table adds
   // its writes there rather than here.
-  const context: WriterContext = { tx, session, insert, update, softDelete };
+  const context: WriterContext = { tx, session, insert, update, softDelete, updateAtRevision };
 
   const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
     and(inCompendium(table), eq(table.id, id));
@@ -218,6 +219,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         ),
       ),
     ...adminRoleWrites(context),
+    ...documentWrites(context),
     ...invitationWrites(context),
     ...membershipWrites(context),
     ...spellStepWrites(context),
