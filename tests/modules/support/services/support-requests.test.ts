@@ -30,6 +30,7 @@ import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { noPauseNotifier } from '../../../support/email-verification';
 
 // The support services by direct call: who may send, read, answer and manage a request, each refusal paired with the
 // same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
@@ -168,7 +169,7 @@ describe('sendSupportRequest', () => {
 
   it('refuses a send during a time-out, naming its end, and allows it once lifted', async () => {
     const until = new Date(Date.now() + 7_200_000);
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam');
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam', noPauseNotifier);
     const refusal = await failureOf(send(C));
     expect(refusal).toBeInstanceOf(Forbidden);
     expect((refusal as Forbidden).message).toContain(
@@ -180,7 +181,7 @@ describe('sendSupportRequest', () => {
   });
 
   it('refuses a send during a time-out with no end date, saying so, and allows it once lifted', async () => {
-    const timeout = await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    const timeout = await timeOutSupportSender(asUser(E), C.id, null, 'Spam', noPauseNotifier);
     const refusal = await failureOf(send(C));
     expect(refusal).toBeInstanceOf(Forbidden);
     expect((refusal as Forbidden).message).toContain('timed out with no end date');
@@ -513,10 +514,16 @@ describe('admin-only changes', () => {
 
   it('times a sender out and lifts it, refusing a curator both', async () => {
     expect(asUser(F).role).toBe('curator');
-    expect(await failureOf(timeOutSupportSender(asUser(F), C.id, FUTURE(), 'Spam'))).toBeInstanceOf(
-      Forbidden,
+    expect(
+      await failureOf(timeOutSupportSender(asUser(F), C.id, FUTURE(), 'Spam', noPauseNotifier)),
+    ).toBeInstanceOf(Forbidden);
+    const timeout = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      FUTURE(),
+      ' spam ',
+      noPauseNotifier,
     );
-    const timeout = await timeOutSupportSender(asUser(E), C.id, FUTURE(), ' spam ');
     expect(timeout).toMatchObject({ userId: C.id, note: 'spam', liftedAt: null });
 
     expect(await failureOf(liftSupportTimeout(asUser(F), timeout.id))).toBeInstanceOf(Forbidden);
@@ -531,10 +538,12 @@ describe('admin-only changes', () => {
     expect(
       await sql`select id from users where id = ${accountId} and deleted_at is null`,
     ).toHaveLength(1);
-    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier);
     expect(await sql`select id from support_timeouts where user_id = ${C.id}`).toHaveLength(1);
 
-    const error = await failureOf(timeOutSupportSender(asUser(E), accountId, FUTURE(), 'Spam'));
+    const error = await failureOf(
+      timeOutSupportSender(asUser(E), accountId, FUTURE(), 'Spam', noPauseNotifier),
+    );
 
     expect(error).toBeInstanceOf(Forbidden);
     expect((error as Error).message).toBe(
@@ -544,7 +553,7 @@ describe('admin-only changes', () => {
   });
 
   it('times a sender out with no end date, and the time-out stands until lifted', async () => {
-    const timeout = await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    const timeout = await timeOutSupportSender(asUser(E), C.id, null, 'Spam', noPauseNotifier);
     expect(timeout).toMatchObject({ userId: C.id, until: null, note: 'Spam', liftedAt: null });
     expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(timeout.id);
 
@@ -553,9 +562,21 @@ describe('admin-only changes', () => {
   });
 
   it('lists the open-ended time-out for a sender who also holds a dated one', async () => {
-    await timeOutSupportSender(asUser(E), C.id, new Date(Date.now() + 86_400_000), 'Spam');
-    const open = await timeOutSupportSender(asUser(E), C.id, null, 'Spam again');
-    await timeOutSupportSender(asUser(E), C.id, new Date(Date.now() + 2 * 86_400_000), 'Spam');
+    await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      new Date(Date.now() + 86_400_000),
+      'Spam',
+      noPauseNotifier,
+    );
+    const open = await timeOutSupportSender(asUser(E), C.id, null, 'Spam again', noPauseNotifier);
+    await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      new Date(Date.now() + 2 * 86_400_000),
+      'Spam',
+      noPauseNotifier,
+    );
 
     expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(open.id);
   });
@@ -566,7 +587,7 @@ describe('admin-only changes', () => {
     ['a blank note', '   '],
   ])('refuses a time-out with %s, in its own sentence, and sets none', async (_what, note) => {
     const refusal = await failureOf(
-      timeOutSupportSender(asUser(E), C.id, null, note as unknown as string),
+      timeOutSupportSender(asUser(E), C.id, null, note as unknown as string, noPauseNotifier),
     );
     expect(refusal).toBeInstanceOf(ValidationError);
     expect((refusal as Error).message).toBe('Write a note saying why');
@@ -574,7 +595,9 @@ describe('admin-only changes', () => {
   });
 
   it('refuses a note over 500 characters, in its own sentence', async () => {
-    const refusal = await failureOf(timeOutSupportSender(asUser(E), C.id, null, 'x'.repeat(501)));
+    const refusal = await failureOf(
+      timeOutSupportSender(asUser(E), C.id, null, 'x'.repeat(501), noPauseNotifier),
+    );
     expect((refusal as Error).message).toBe('Keep the note to 500 characters');
   });
 
@@ -583,11 +606,11 @@ describe('admin-only changes', () => {
     ['a plain user', B],
   ])('refuses %s setting or lifting a time-out by direct id', async (_who, caller) => {
     // The precondition: an admin may set the same open-ended time-out on the same sender, and lift it.
-    const set = await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    const set = await timeOutSupportSender(asUser(E), C.id, null, 'Spam', noPauseNotifier);
     expect(set.userId).toBe(C.id);
 
     expect(
-      await failureOf(timeOutSupportSender(asUser(caller), C.id, null, 'Spam')),
+      await failureOf(timeOutSupportSender(asUser(caller), C.id, null, 'Spam', noPauseNotifier)),
     ).toBeInstanceOf(Forbidden);
     expect(await failureOf(liftSupportTimeout(asUser(caller), set.id))).toBeInstanceOf(Forbidden);
     expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(set.id);
@@ -596,12 +619,14 @@ describe('admin-only changes', () => {
 
   it('refuses a time-out that ends in the past', async () => {
     expect(
-      await failureOf(timeOutSupportSender(asUser(E), C.id, new Date(Date.now() - 1000), 'Spam')),
+      await failureOf(
+        timeOutSupportSender(asUser(E), C.id, new Date(Date.now() - 1000), 'Spam', noPauseNotifier),
+      ),
     ).toBeInstanceOf(ValidationError);
   });
 
   it('reads a sender’s time-outs for an admin alone', async () => {
-    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier);
     expect((await timeoutsForSenders(asUser(E), [C.id]))[0]).toHaveLength(1);
     expect((await timeoutsForSenders(asUser(F), [C.id]))[0]).toBeInstanceOf(Forbidden);
   });
@@ -609,7 +634,7 @@ describe('admin-only changes', () => {
 
 describe('standingTimeoutsOf', () => {
   it('answers each sender’s standing time-out in the order asked, and none where none stands', async () => {
-    const standing = await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
+    const standing = await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier);
 
     const answered = await standingTimeoutsOf(asUser(E), [D.id, C.id]);
 
@@ -620,7 +645,7 @@ describe('standingTimeoutsOf', () => {
     ['a curator', F],
     ['a plain user', B],
   ])('refuses %s with Forbidden', async (_who, caller) => {
-    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier);
     // The precondition: the same read by an admin answers the time-out.
     expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeDefined();
 
@@ -668,7 +693,7 @@ describe('getMySupportTimeout', () => {
   it('names when the sender’s live time-out ends, and nothing once it is lifted', async () => {
     expect(await getMySupportTimeout(asUser(C))).toBeNull();
     const until = FUTURE();
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam');
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, 'Spam', noPauseNotifier);
     expect((await getMySupportTimeout(asUser(C)))?.until?.getTime()).toBe(until.getTime());
     // Another sender's time-out is outside the query.
     expect(await getMySupportTimeout(asUser(B))).toBeNull();
@@ -677,13 +702,13 @@ describe('getMySupportTimeout', () => {
   });
 
   it('answers a time-out with no end date as standing, with no end', async () => {
-    await timeOutSupportSender(asUser(E), C.id, null, 'Spam');
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam', noPauseNotifier);
     expect(await getMySupportTimeout(asUser(C))).toEqual({ until: null });
   });
 
   it('answers no end when a dated and an open-ended time-out both stand', async () => {
-    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
-    await timeOutSupportSender(asUser(E), C.id, null, 'Spam again');
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier);
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam again', noPauseNotifier);
     expect(await getMySupportTimeout(asUser(C))).toEqual({ until: null });
   });
 

@@ -12,7 +12,7 @@ import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
 import { users } from '../schema/users';
-import type { UserAccessPauseRow } from '../types';
+import type { AccessPauseNotifier, UserAccessPauseRow } from '../types';
 import { assertChangesOpen } from './admin-role-pause';
 import { isPrimaryAdmin } from './primary-admin';
 import { assertSiteAdmin } from './site-admin';
@@ -33,7 +33,7 @@ const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
 
 /**
  * Pauses a user's access until `until`, or with no end when `until` is `null`, and ends every session they hold. Pausing
- * another admin waits on admin changes being open, as revoking one does.
+ * another admin waits on admin changes being open, as revoking one does. The user is mailed once the pause is saved.
  *
  * @throws {Forbidden} the session is not an admin; the user is the primary admin, the caller, the System account or the signed-out
  * sender account; or admin changes are paused
@@ -47,6 +47,7 @@ export async function pauseUserAccess(
   userId: string,
   until: Date | null | undefined,
   note: string | null | undefined,
+  notifier: AccessPauseNotifier,
 ): Promise<UserAccessPauseRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
@@ -70,7 +71,7 @@ export async function pauseUserAccess(
   if (await findStandingUserAccessPause(user.id)) {
     throw fieldRefusal('userId', ALREADY_PAUSED);
   }
-  return withAudit(session, async (write) => {
+  const pause = await withAudit(session, async (write) => {
     const [row] = await write.setUserAccessPause(admin, user.id, {
       until: until ?? null,
       note: trimmed,
@@ -83,6 +84,14 @@ export async function pauseUserAccess(
     }
     return row;
   });
+  // The pause is saved, so a failed mail is logged and not thrown.
+  try {
+    await notifier.accessPaused(user.email, { until: pause.until, note: pause.note });
+  } catch (error) {
+    // oxlint-disable-next-line no-console -- the log is how a failed send is seen
+    console.error('Could not mail an access pause notice', error);
+  }
+  return pause;
 }
 
 /**

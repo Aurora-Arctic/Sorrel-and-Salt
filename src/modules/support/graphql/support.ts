@@ -443,7 +443,7 @@ builder.mutationField('timeOutSupportSender', (t) =>
     },
     authScopes: { admin: true },
     resolve: (_root, { userId, until, note }, context) =>
-      timeOutSupportSender(sessionOf(context), userId, until, note),
+      timeOutSupportSender(sessionOf(context), userId, until, note, context.pauses),
   }),
 );
 

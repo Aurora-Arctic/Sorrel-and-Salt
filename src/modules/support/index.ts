@@ -23,4 +23,5 @@ export type {
   SupportRequestRow,
   SupportStatus,
   SupportTimeoutRow,
+  TimeoutNotifier,
 } from './types';

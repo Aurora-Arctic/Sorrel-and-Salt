@@ -13,6 +13,7 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { noPauseNotifier } from '../../../support/email-verification';
 
 useRawClient();
 
@@ -70,7 +71,14 @@ describe('pauseMemberAccess', () => {
       assertMembership(asUser(B), covenId, { spell: ['create'] }),
     ).resolves.toMatchObject({ role: 'member' });
 
-    const row = await pauseMemberAccess(asUser(A), covenId, B.id, LATER, '  Cooling off  ');
+    const row = await pauseMemberAccess(
+      asUser(A),
+      covenId,
+      B.id,
+      LATER,
+      '  Cooling off  ',
+      noPauseNotifier,
+    );
 
     expect(row).toMatchObject({
       workspaceId: covenId,
@@ -96,7 +104,14 @@ describe('pauseMemberAccess', () => {
       [C.id, 'viewer'],
     ]);
 
-    const row = await pauseMemberAccess(asUser(A), covenId, C.id, undefined, '   ');
+    const row = await pauseMemberAccess(
+      asUser(A),
+      covenId,
+      C.id,
+      undefined,
+      '   ',
+      noPauseNotifier,
+    );
 
     expect(row).toMatchObject({ userId: C.id, until: null, note: null });
     await expect(assertMembership(asUser(C), covenId, { spell: ['read'] })).rejects.toMatchObject({
@@ -117,12 +132,12 @@ describe('pauseMemberAccess', () => {
     ).resolves.toBeDefined();
     await expect(assertMembership(asUser(C), covenId, { spell: ['read'] })).resolves.toBeDefined();
 
-    await expect(pauseMemberAccess(asUser(B), covenId, C.id, LATER, null)).rejects.toThrow(
-      Forbidden,
-    );
-    await expect(pauseMemberAccess(asUser(C), covenId, B.id, LATER, null)).rejects.toThrow(
-      Forbidden,
-    );
+    await expect(
+      pauseMemberAccess(asUser(B), covenId, C.id, LATER, null, noPauseNotifier),
+    ).rejects.toThrow(Forbidden);
+    await expect(
+      pauseMemberAccess(asUser(C), covenId, B.id, LATER, null, noPauseNotifier),
+    ).rejects.toThrow(Forbidden);
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
     expect(await pausesOf(covenId, C.id)).toHaveLength(0);
   });
@@ -140,9 +155,9 @@ describe('pauseMemberAccess', () => {
     const proof = await assertMembership(asUser(D), homeId, { member: ['pause'] });
     expect(proof.role).toBe('owner');
 
-    await expect(pauseMemberAccess(asUser(D), covenId, B.id, LATER, null)).rejects.toThrow(
-      Forbidden,
-    );
+    await expect(
+      pauseMemberAccess(asUser(D), covenId, B.id, LATER, null, noPauseNotifier),
+    ).rejects.toThrow(Forbidden);
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
   });
 
@@ -154,7 +169,7 @@ describe('pauseMemberAccess', () => {
     // Why this could have succeeded: E is a site admin, and admins hold owner seats in the demo coven.
     expect(asUser(E).role).toBe('admin');
 
-    const refusal = pauseMemberAccess(asUser(E), covenId, B.id, LATER, null);
+    const refusal = pauseMemberAccess(asUser(E), covenId, B.id, LATER, null, noPauseNotifier);
     await expect(refusal).rejects.toThrow(Forbidden);
     await expect(refusal).rejects.not.toBeInstanceOf(AccessPaused);
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
@@ -170,16 +185,18 @@ describe('pauseMemberAccess', () => {
       { demo: true },
     );
 
-    await expect(pauseMemberAccess(asUser(E), demoId, B.id, LATER, null)).rejects.toThrow(
-      Forbidden,
-    );
+    await expect(
+      pauseMemberAccess(asUser(E), demoId, B.id, LATER, null, noPauseNotifier),
+    ).rejects.toThrow(Forbidden);
     expect(await pausesOf(demoId, B.id)).toHaveLength(0);
 
     // The owner seat every admin holds in the demo coven is what admits, not the admin role.
     await sql`
       insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
       values (${demoId}, ${E.id}, 'owner', ${A.id}, ${A.id})`;
-    await expect(pauseMemberAccess(asUser(E), demoId, B.id, LATER, null)).resolves.toMatchObject({
+    await expect(
+      pauseMemberAccess(asUser(E), demoId, B.id, LATER, null, noPauseNotifier),
+    ).resolves.toMatchObject({
       userId: B.id,
       createdBy: E.id,
     });
@@ -198,12 +215,12 @@ describe('pauseMemberAccess', () => {
     // The sentence the browser shows, whole: the members page names no field, so it says the error's message.
     const owner =
       "An owner's access can't be paused. Change their role first if they should be paused.";
-    await expect(pauseMemberAccess(asUser(A), covenId, D.id, LATER, null)).rejects.toThrow(
-      new Forbidden(owner),
-    );
-    await expect(pauseMemberAccess(asUser(A), covenId, A.id, null, null)).rejects.toThrow(
-      new Forbidden(owner),
-    );
+    await expect(
+      pauseMemberAccess(asUser(A), covenId, D.id, LATER, null, noPauseNotifier),
+    ).rejects.toThrow(new Forbidden(owner));
+    await expect(
+      pauseMemberAccess(asUser(A), covenId, A.id, null, null, noPauseNotifier),
+    ).rejects.toThrow(new Forbidden(owner));
     expect(await pausesOf(covenId, D.id)).toHaveLength(0);
     expect(await pausesOf(covenId, A.id)).toHaveLength(0);
   });
@@ -221,12 +238,17 @@ describe('pauseMemberAccess', () => {
       ]);
       // Why this could have succeeded: the account holds a seat, and the same call pauses another member in the same seat.
       expect(await roleOf(covenId, accountId)).toBe('member');
-      await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
+      await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null, noPauseNotifier);
       expect(await pausesOf(covenId, B.id)).toHaveLength(1);
 
-      const error = await pauseMemberAccess(asUser(A), covenId, accountId, LATER, null).catch(
-        (thrown: unknown) => thrown,
-      );
+      const error = await pauseMemberAccess(
+        asUser(A),
+        covenId,
+        accountId,
+        LATER,
+        null,
+        noPauseNotifier,
+      ).catch((thrown: unknown) => thrown);
 
       expect(error).toBeInstanceOf(Forbidden);
       expect((error as Error).message).toBe(
@@ -240,13 +262,13 @@ describe('pauseMemberAccess', () => {
     const covenId = await insertCoven('Fixture Stranger Pause Coven', [[A.id, 'owner']]);
 
     const stranger = new Forbidden('That person is not a member of this coven');
-    await expect(pauseMemberAccess(asUser(A), covenId, D.id, LATER, null)).rejects.toThrow(
-      stranger,
-    );
+    await expect(
+      pauseMemberAccess(asUser(A), covenId, D.id, LATER, null, noPauseNotifier),
+    ).rejects.toThrow(stranger);
     // An id that cannot name a user is refused as a wrong one is, in the same words.
-    await expect(pauseMemberAccess(asUser(A), covenId, 'not-an-id', LATER, null)).rejects.toThrow(
-      stranger,
-    );
+    await expect(
+      pauseMemberAccess(asUser(A), covenId, 'not-an-id', LATER, null, noPauseNotifier),
+    ).rejects.toThrow(stranger);
     expect(await pausesOf(covenId, D.id)).toHaveLength(0);
   });
 
@@ -255,18 +277,18 @@ describe('pauseMemberAccess', () => {
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'First');
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'First', noPauseNotifier);
 
-    const second = pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second');
+    const second = pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second', noPauseNotifier);
     await expect(second).rejects.toThrow(ValidationError);
     await expect(issuePaths(second)).resolves.toEqual([['userId']]);
     // The sentence the browser shows: the members page names no field, so it says the error's message.
-    await expect(pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second')).rejects.toMatchObject(
-      {
-        message: 'This member is already paused; lift the pause first',
-        issues: [{ message: 'This member is already paused; lift the pause first' }],
-      },
-    );
+    await expect(
+      pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second', noPauseNotifier),
+    ).rejects.toMatchObject({
+      message: 'This member is already paused; lift the pause first',
+      issues: [{ message: 'This member is already paused; lift the pause first' }],
+    });
     const rows = await pausesOf(covenId, B.id);
     expect(rows.map((row) => row.note)).toEqual(['First']);
   });
@@ -276,13 +298,13 @@ describe('pauseMemberAccess', () => {
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'First');
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'First', noPauseNotifier);
     await sql`
       update workspace_member_pauses set until = now() - interval '1 minute'
        where workspace_id = ${covenId} and user_id = ${B.id}`;
 
     await expect(
-      pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second'),
+      pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second', noPauseNotifier),
     ).resolves.toMatchObject({ note: 'Second', until: null });
 
     const rows = await pausesOf(covenId, B.id);
@@ -299,26 +321,46 @@ describe('pauseMemberAccess', () => {
     ]);
 
     await expect(
-      issuePaths(pauseMemberAccess(asUser(A), covenId, B.id, new Date(Date.now() - 1000), null)),
+      issuePaths(
+        pauseMemberAccess(
+          asUser(A),
+          covenId,
+          B.id,
+          new Date(Date.now() - 1000),
+          null,
+          noPauseNotifier,
+        ),
+      ),
     ).resolves.toEqual([['until']]);
     await expect(
-      issuePaths(pauseMemberAccess(asUser(A), covenId, B.id, new Date('invalid'), null)),
+      issuePaths(
+        pauseMemberAccess(asUser(A), covenId, B.id, new Date('invalid'), null, noPauseNotifier),
+      ),
     ).resolves.toEqual([['until']]);
     await expect(
-      issuePaths(pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501))),
+      issuePaths(
+        pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501), noPauseNotifier),
+      ),
     ).resolves.toEqual([['note']]);
     // The sentences the browser shows: the members page names no field, so it says each error's message.
     await expect(
-      pauseMemberAccess(asUser(A), covenId, B.id, new Date(Date.now() - 1000), null),
+      pauseMemberAccess(
+        asUser(A),
+        covenId,
+        B.id,
+        new Date(Date.now() - 1000),
+        null,
+        noPauseNotifier,
+      ),
     ).rejects.toMatchObject({ message: 'Choose a time in the future' });
     await expect(
-      pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501)),
+      pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501), noPauseNotifier),
     ).rejects.toMatchObject({ message: 'Keep the note to 500 characters' });
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
 
     // The limit itself is allowed.
     await expect(
-      pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(500)),
+      pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(500), noPauseNotifier),
     ).resolves.toBeDefined();
   });
 });
@@ -329,7 +371,7 @@ describe('liftMemberAccessPause', () => {
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    await pauseMemberAccess(asUser(A), covenId, B.id, null, null);
+    await pauseMemberAccess(asUser(A), covenId, B.id, null, null, noPauseNotifier);
     await expect(assertMembership(asUser(B), covenId, { spell: ['read'] })).rejects.toBeInstanceOf(
       AccessPaused,
     );
@@ -350,11 +392,11 @@ describe('liftMemberAccessPause', () => {
     ]);
     await expect(liftMemberAccessPause(asUser(A), covenId, B.id)).rejects.toThrow(NotFound);
 
-    await pauseMemberAccess(asUser(A), covenId, B.id, null, null);
+    await pauseMemberAccess(asUser(A), covenId, B.id, null, null, noPauseNotifier);
     await liftMemberAccessPause(asUser(A), covenId, B.id);
     await expect(liftMemberAccessPause(asUser(A), covenId, B.id)).rejects.toThrow(NotFound);
 
-    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null, noPauseNotifier);
     await sql`
       update workspace_member_pauses set until = now() - interval '1 minute'
        where workspace_id = ${covenId} and user_id = ${B.id} and lifted_at is null`;
@@ -377,7 +419,7 @@ describe('liftMemberAccessPause', () => {
       [C.id, 'viewer'],
     ]);
     const homeId = await insertCoven('Fixture Lift Home Coven', [[D.id, 'owner']]);
-    await pauseMemberAccess(asUser(A), covenId, C.id, null, null);
+    await pauseMemberAccess(asUser(A), covenId, C.id, null, null, noPauseNotifier);
     // Why each could have succeeded: B is admitted to the coven, D holds the permission in D's own, and E is a site admin.
     await expect(
       assertMembership(asUser(B), covenId, { spell: ['create'] }),
@@ -404,8 +446,8 @@ describe('standingMemberPauses', () => {
       [B.id, 'member'],
       [C.id, 'viewer'],
     ]);
-    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
-    await pauseMemberAccess(asUser(A), covenId, C.id, null, null);
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null, noPauseNotifier);
+    await pauseMemberAccess(asUser(A), covenId, C.id, null, null, noPauseNotifier);
     await liftMemberAccessPause(asUser(A), covenId, C.id);
     // A run-out pause on C, written straight in, since the service refuses a past end.
     await sql`
@@ -429,7 +471,7 @@ describe('standingMemberPauses', () => {
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    await pauseMemberAccess(asUser(A), otherId, B.id, LATER, null);
+    await pauseMemberAccess(asUser(A), otherId, B.id, LATER, null, noPauseNotifier);
     // Why the empty answer is the coven filter's: B does stand paused, in the other coven.
     await expect(standingMemberPauses(asUser(A), otherId, [B.id])).resolves.toHaveLength(1);
     await expect(standingMemberPauses(asUser(A), covenId, [B.id])).resolves.toEqual([]);
@@ -458,10 +500,10 @@ describe('listMemberPauses', () => {
       [B.id, 'member'],
       [C.id, 'viewer'],
     ]);
-    await pauseMemberAccess(asUser(A), covenId, B.id, null, 'First');
+    await pauseMemberAccess(asUser(A), covenId, B.id, null, 'First', noPauseNotifier);
     await liftMemberAccessPause(asUser(A), covenId, B.id);
-    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'Second');
-    await pauseMemberAccess(asUser(A), covenId, C.id, LATER, 'Other');
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'Second', noPauseNotifier);
+    await pauseMemberAccess(asUser(A), covenId, C.id, LATER, 'Other', noPauseNotifier);
 
     const page = await listMemberPauses(asUser(A), covenId, B.id, { limit: 25, inverted: false });
     expect(page.map(({ node }) => [node.note, node.liftedBy])).toEqual([
@@ -477,7 +519,7 @@ describe('listMemberPauses', () => {
       [C.id, 'viewer'],
     ]);
     const otherId = await insertCoven('Fixture History Elsewhere', [[D.id, 'owner']]);
-    await pauseMemberAccess(asUser(A), covenId, C.id, LATER, null);
+    await pauseMemberAccess(asUser(A), covenId, C.id, LATER, null, noPauseNotifier);
     const page = { limit: 25, inverted: false };
     // Why each refusal is the guard's: the owner reads the pause, and D is an owner, of another coven.
     await expect(listMemberPauses(asUser(A), covenId, C.id, page)).resolves.toHaveLength(1);
@@ -512,7 +554,7 @@ describe('pausedCovenBySlug', () => {
     // Why the answer below is the pause's: before it, B holds a seat with nothing standing on it.
     await expect(pausedCovenBySlug(asUser(B), slug)).resolves.toBeNull();
 
-    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
+    await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null, noPauseNotifier);
     await expect(pausedCovenBySlug(asUser(B), slug)).resolves.toEqual({
       id: covenId,
       name: 'Fixture Paused Page Coven',

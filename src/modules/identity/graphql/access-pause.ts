@@ -34,7 +34,7 @@ builder.mutationField('pauseUserAccess', (t) =>
     },
     authScopes: { admin: true },
     resolve: (_root, { userId, until, note }, context) =>
-      pauseUserAccess(sessionOf(context), userId, until, note),
+      pauseUserAccess(sessionOf(context), userId, until, note, context.pauses),
   }),
 );
 

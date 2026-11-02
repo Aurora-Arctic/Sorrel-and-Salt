@@ -38,6 +38,7 @@ export * from './loaders/providers-by-user';
 export * from './loaders/users-by-id';
 export * from './loaders/users-by-id-for-admin';
 export type {
+  AccessPauseNotifier,
   AdminInvitationFilter,
   CardArrivalFilter,
   CardBatchFilter,

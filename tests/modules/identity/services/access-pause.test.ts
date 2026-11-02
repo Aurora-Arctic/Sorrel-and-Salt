@@ -14,6 +14,7 @@ import {
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
+import { noPauseNotifier } from '../../../support/email-verification';
 
 // An admin pauses a user's access, dated or open-ended, and lifts it early (claude-docs/auth/admin-bootstrap.md, "Pausing a user's
 // access"). The sign-in refusal itself is tests/db/access-pause-sign-in.test.ts.
@@ -102,7 +103,7 @@ describe('pauseUserAccess', () => {
     await giveSession(B.id, 'b');
     const until = inADay();
 
-    const row = await pauseUserAccess(asUser(E), A.id, until, '  Testnote  ');
+    const row = await pauseUserAccess(asUser(E), A.id, until, '  Testnote  ', noPauseNotifier);
 
     expect(row).toMatchObject({ userId: A.id, until, note: 'Testnote', liftedAt: null });
     expect(await pauseRows(A.id)).toEqual([
@@ -121,7 +122,7 @@ describe('pauseUserAccess', () => {
   });
 
   it('pauses with no end date when until is left out', async () => {
-    const row = await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    const row = await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
 
     expect(row).toMatchObject({ userId: A.id, until: null, note: 'Testnote' });
     expect(await standingAccessPause(A.id)).toEqual(row);
@@ -136,7 +137,9 @@ describe('pauseUserAccess', () => {
       await giveSession(A.id, 'a');
 
       for (const note of [undefined, null, '', '  \n  ']) {
-        const error = await refusalOf(pauseUserAccess(asUser(E), A.id, until(), note));
+        const error = await refusalOf(
+          pauseUserAccess(asUser(E), A.id, until(), note, noPauseNotifier),
+        );
 
         expect(error).toBeInstanceOf(ValidationError);
         expect(issuesOf(error)).toEqual([{ path: ['note'], message: 'Write a note saying why' }]);
@@ -145,7 +148,7 @@ describe('pauseUserAccess', () => {
       expect(await pauseRows(A.id)).toEqual([]);
       expect(await sessionCount(A.id)).toBe(1);
       // The precondition: the same pause with a note is set.
-      await pauseUserAccess(asUser(E), A.id, until(), 'Testnote');
+      await pauseUserAccess(asUser(E), A.id, until(), 'Testnote', noPauseNotifier);
       expect(await pauseRows(A.id)).toHaveLength(1);
     },
   );
@@ -158,26 +161,30 @@ describe('pauseUserAccess', () => {
     async (_who, caller) => {
       await giveSession(A.id, 'a');
 
-      const error = await refusalOf(pauseUserAccess(asUser(caller), A.id, inADay(), 'Testnote'));
+      const error = await refusalOf(
+        pauseUserAccess(asUser(caller), A.id, inADay(), 'Testnote', noPauseNotifier),
+      );
 
       expect(error).toBeInstanceOf(Forbidden);
       expect(await pauseRows(A.id)).toEqual([]);
       expect(await sessionCount(A.id)).toBe(1);
       // The precondition: the same call by an admin pauses A, so the role is what refused it.
-      await pauseUserAccess(asUser(E), A.id, inADay(), 'Testnote');
+      await pauseUserAccess(asUser(E), A.id, inADay(), 'Testnote', noPauseNotifier);
       expect(await pauseRows(A.id)).toHaveLength(1);
     },
   );
 
   it('refuses to pause the primary admin, saying why', async () => {
-    const error = await refusalOf(pauseUserAccess(asUser(E), PRIMARY, null, 'Testnote'));
+    const error = await refusalOf(
+      pauseUserAccess(asUser(E), PRIMARY, null, 'Testnote', noPauseNotifier),
+    );
 
     expect(error).toBeInstanceOf(Forbidden);
     expect(error.message).toBe('The primary admin’s access cannot be paused');
     expect(await pauseRows(PRIMARY)).toEqual([]);
     // The precondition: once ADMIN_BOOTSTRAP_EMAIL names another address, the same admin is pausable.
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `elsewhere${DOMAIN}`);
-    await pauseUserAccess(asUser(E), PRIMARY, null, 'Testnote');
+    await pauseUserAccess(asUser(E), PRIMARY, null, 'Testnote', noPauseNotifier);
     expect(await pauseRows(PRIMARY)).toHaveLength(1);
   });
 
@@ -189,10 +196,12 @@ describe('pauseUserAccess', () => {
     expect(
       await sql`select id from users where id = ${accountId} and deleted_at is null`,
     ).toHaveLength(1);
-    await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
     expect(await pauseRows(A.id)).toHaveLength(1);
 
-    const error = await refusalOf(pauseUserAccess(asUser(E), accountId, null, 'Testnote'));
+    const error = await refusalOf(
+      pauseUserAccess(asUser(E), accountId, null, 'Testnote', noPauseNotifier),
+    );
 
     expect(error).toBeInstanceOf(Forbidden);
     expect(error.message).toBe('This account is not a person, so its access cannot be paused');
@@ -200,19 +209,21 @@ describe('pauseUserAccess', () => {
   });
 
   it('refuses an admin pausing themselves, saying why', async () => {
-    const error = await refusalOf(pauseUserAccess(asUser(E), E.id, null, 'Testnote'));
+    const error = await refusalOf(
+      pauseUserAccess(asUser(E), E.id, null, 'Testnote', noPauseNotifier),
+    );
 
     expect(error).toBeInstanceOf(Forbidden);
     expect(error.message).toBe('You cannot pause your own access');
     expect(await pauseRows(E.id)).toEqual([]);
     // The precondition: another admin may pause the same account.
-    await pauseUserAccess(asUser(AS_OTHER_ADMIN), E.id, null, 'Testnote');
+    await pauseUserAccess(asUser(AS_OTHER_ADMIN), E.id, null, 'Testnote', noPauseNotifier);
     expect(await pauseRows(E.id)).toHaveLength(1);
   });
 
   it('refuses a time that has passed, and accepts one ahead', async () => {
     const error = await refusalOf(
-      pauseUserAccess(asUser(E), A.id, new Date(Date.now() - 1000), 'Testnote'),
+      pauseUserAccess(asUser(E), A.id, new Date(Date.now() - 1000), 'Testnote', noPauseNotifier),
     );
 
     expect(error).toBeInstanceOf(ValidationError);
@@ -220,12 +231,14 @@ describe('pauseUserAccess', () => {
     // The sentence the browser shows: the admin's form names no field, so it says the error's message.
     expect(error.message).toBe('Choose a time in the future');
     expect(await pauseRows(A.id)).toEqual([]);
-    await pauseUserAccess(asUser(E), A.id, inADay(), 'Testnote');
+    await pauseUserAccess(asUser(E), A.id, inADay(), 'Testnote', noPauseNotifier);
     expect(await pauseRows(A.id)).toHaveLength(1);
   });
 
   it('accepts a note of 500 characters and refuses one of 501', async () => {
-    const error = await refusalOf(pauseUserAccess(asUser(E), A.id, null, 'n'.repeat(501)));
+    const error = await refusalOf(
+      pauseUserAccess(asUser(E), A.id, null, 'n'.repeat(501), noPauseNotifier),
+    );
 
     expect(error).toBeInstanceOf(ValidationError);
     expect(issuesOf(error)).toEqual([
@@ -233,23 +246,25 @@ describe('pauseUserAccess', () => {
     ]);
     expect(error.message).toBe('Keep the note to 500 characters');
     expect(await pauseRows(A.id)).toEqual([]);
-    const row = await pauseUserAccess(asUser(E), A.id, null, 'n'.repeat(500));
+    const row = await pauseUserAccess(asUser(E), A.id, null, 'n'.repeat(500), noPauseNotifier);
     expect(row.note).toHaveLength(500);
   });
 
   it('answers NotFound for an id that names no user, and refuses a malformed id', async () => {
-    expect(await refusalOf(pauseUserAccess(asUser(E), NOWHERE, null, 'Testnote'))).toBeInstanceOf(
-      NotFound,
-    );
     expect(
-      await refusalOf(pauseUserAccess(asUser(E), 'not-an-id', null, 'Testnote')),
+      await refusalOf(pauseUserAccess(asUser(E), NOWHERE, null, 'Testnote', noPauseNotifier)),
+    ).toBeInstanceOf(NotFound);
+    expect(
+      await refusalOf(pauseUserAccess(asUser(E), 'not-an-id', null, 'Testnote', noPauseNotifier)),
     ).toBeInstanceOf(ValidationError);
   });
 
   it('refuses a user already paused, saying to lift the pause first, and pauses again once it is lifted', async () => {
-    const first = await pauseUserAccess(asUser(E), A.id, inADay(), 'First');
+    const first = await pauseUserAccess(asUser(E), A.id, inADay(), 'First', noPauseNotifier);
 
-    const error = await refusalOf(pauseUserAccess(asUser(E), A.id, null, 'Second'));
+    const error = await refusalOf(
+      pauseUserAccess(asUser(E), A.id, null, 'Second', noPauseNotifier),
+    );
 
     expect(error).toBeInstanceOf(ValidationError);
     expect(issuesOf(error)).toEqual([
@@ -258,7 +273,7 @@ describe('pauseUserAccess', () => {
     expect(error.message).toBe('This user is already paused; lift the pause first');
     expect(await standingAccessPause(A.id)).toEqual(first);
     await liftUserAccessPause(asUser(E), A.id);
-    const second = await pauseUserAccess(asUser(E), A.id, null, 'Second');
+    const second = await pauseUserAccess(asUser(E), A.id, null, 'Second', noPauseNotifier);
     expect(await standingAccessPause(A.id)).toEqual(second);
   });
 
@@ -270,7 +285,7 @@ describe('pauseUserAccess', () => {
     // The precondition: the old row is live, holding the one live slot, but no longer stands.
     expect(await standingAccessPause(A.id)).toBeUndefined();
 
-    const row = await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    const row = await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
 
     expect(await standingAccessPause(A.id)).toEqual(row);
     const rows = await pauseRows(A.id);
@@ -281,7 +296,9 @@ describe('pauseUserAccess', () => {
   it('refuses pausing another admin while admin changes are paused, and lets the primary admin', async () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
 
-    const error = await refusalOf(pauseUserAccess(asUser(E), OTHER_ADMIN, null, 'Testnote'));
+    const error = await refusalOf(
+      pauseUserAccess(asUser(E), OTHER_ADMIN, null, 'Testnote', noPauseNotifier),
+    );
 
     expect(error).toBeInstanceOf(Forbidden);
     expect(error.message).toBe(
@@ -289,15 +306,15 @@ describe('pauseUserAccess', () => {
     );
     expect(await pauseRows(OTHER_ADMIN)).toEqual([]);
     // A plain user is not an admin change, so the switch leaves pausing them open.
-    await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
-    await pauseUserAccess(asUser(AS_PRIMARY), OTHER_ADMIN, null, 'Testnote');
+    await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
+    await pauseUserAccess(asUser(AS_PRIMARY), OTHER_ADMIN, null, 'Testnote', noPauseNotifier);
     expect(await pauseRows(OTHER_ADMIN)).toHaveLength(1);
   });
 });
 
 describe('liftUserAccessPause', () => {
   it('lifts the standing pause, stamping who lifted it, after which none stands', async () => {
-    const set = await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    const set = await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
 
     const lifted = await liftUserAccessPause(asUser(AS_OTHER_ADMIN), A.id);
 
@@ -325,7 +342,7 @@ describe('liftUserAccessPause', () => {
   ])(
     'refuses %s with Forbidden, by the paused user’s id, leaving the pause standing',
     async (_who, caller) => {
-      const set = await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+      const set = await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
 
       const error = await refusalOf(liftUserAccessPause(asUser(caller), A.id));
 
@@ -349,10 +366,10 @@ describe('listUserAccessPauses', () => {
     );
 
   it('pages a user’s pauses newest first, lifted and standing alike, and no other user’s', async () => {
-    const lifted = await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    const lifted = await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
     await liftUserAccessPause(asUser(E), A.id);
-    const standing = await pauseUserAccess(asUser(E), A.id, inADay(), 'Testnote');
-    await pauseUserAccess(asUser(E), B.id, null, 'Testnote');
+    const standing = await pauseUserAccess(asUser(E), A.id, inADay(), 'Testnote', noPauseNotifier);
+    await pauseUserAccess(asUser(E), B.id, null, 'Testnote', noPauseNotifier);
 
     expect((await nodes(E)).map((row) => row.id)).toEqual([standing.id, lifted.id]);
     expect((await nodes(E, 1)).map((row) => row.id)).toEqual([standing.id]);
@@ -368,7 +385,7 @@ describe('listUserAccessPauses', () => {
     ['a curator', F],
     ['a plain user', B],
   ])('refuses %s with Forbidden, by the paused user’s id', async (_who, caller) => {
-    await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
     // The precondition: the same read by an admin answers the pause.
     expect(await nodes(E)).toHaveLength(1);
 
@@ -386,7 +403,7 @@ describe('listUserAccessPauses', () => {
 
 describe('standingAccessPausesOf', () => {
   it('answers each user’s standing pause in the order asked, and none where none stands', async () => {
-    const standing = await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    const standing = await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
 
     const answered = await standingAccessPausesOf(asUser(E), [B.id, A.id]);
 
@@ -397,7 +414,7 @@ describe('standingAccessPausesOf', () => {
     ['a curator', F],
     ['a plain user', B],
   ])('refuses %s with Forbidden', async (_who, caller) => {
-    await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier);
     // The precondition: the same read by an admin answers the pause.
     expect((await standingAccessPausesOf(asUser(E), [A.id]))[0]).toBeDefined();
 

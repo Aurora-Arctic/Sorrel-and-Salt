@@ -1,5 +1,11 @@
-import type { EmailVerificationSender, InvitationSender, PasswordSetter } from '@/modules/identity';
-import type { SupportNotifier } from '@/modules/support';
+import type { MemberPauseNotifier } from '@/modules/coven';
+import type {
+  AccessPauseNotifier,
+  EmailVerificationSender,
+  InvitationSender,
+  PasswordSetter,
+} from '@/modules/identity';
+import type { SupportNotifier, TimeoutNotifier } from '@/modules/support';
 
 // The sender for a hand-built GraphQL context in a test that sends nothing:
 // a call is the test's mistake, so it throws rather than passing silently.
@@ -31,4 +37,11 @@ export const noSupportNotifier: SupportNotifier = {
   resolved: async () => unexpected('mail a resolved notice'),
   closingSoon: async () => unexpected('mail a closing-soon notice'),
   signedOutReply: async () => unexpected('mail a signed-out reply'),
+};
+
+/** For a test that sets a time-out or pause and does not look at the mail: it sends nothing. */
+export const noPauseNotifier: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier = {
+  timedOut: async () => {},
+  accessPaused: async () => {},
+  memberPaused: async () => {},
 };

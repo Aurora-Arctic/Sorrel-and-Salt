@@ -15,6 +15,12 @@ export type SupportStatus = SupportRequestRow['status'];
  * How a reply's notice reaches the sender. Built per request by the GraphQL context, as `InvitationSender` is, because a service
  * may not import the origin resolution the link needs.
  */
+/** Tells a user they were timed out of support. Handed to the service by the GraphQL context so it need not import the origin resolution the link needs. */
+export interface TimeoutNotifier {
+  /** Mails `to` that they were timed out until `until` (`null`: no end date), with the admin's note. Never throws on a failed send. */
+  timedOut(to: string, details: { until: Date | null; note: string }): Promise<void>;
+}
+
 export interface SupportNotifier {
   /** Mails `to` that a reply to the request `requestId`, headed `subject`, is waiting; the link opens that request. Carries no reply text; never throws on a failed send. */
   replyWaiting(to: string, subject: string, requestId: string): Promise<void>;

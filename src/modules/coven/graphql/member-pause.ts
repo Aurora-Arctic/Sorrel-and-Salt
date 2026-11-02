@@ -52,7 +52,7 @@ builder.mutationField('pauseMemberAccess', (t) =>
     },
     authScopes: { signedIn: true },
     resolve: (_root, { workspaceId, userId, until, note }, context) =>
-      pauseMemberAccess(sessionOf(context), workspaceId, userId, until, note),
+      pauseMemberAccess(sessionOf(context), workspaceId, userId, until, note, context.pauses),
   }),
 );
 

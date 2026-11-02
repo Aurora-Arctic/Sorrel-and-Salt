@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  findOneById,
   findStandingWorkspaceMemberPause,
   findStandingWorkspaceMemberPauses,
   findWorkspaceMemberPausePage,
@@ -11,7 +12,9 @@ import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId } from '../../../lib/validation';
-import type { WorkspaceMemberPauseRow } from '../types';
+import { users } from '../../identity/schema/users';
+import { workspaces } from '../schema/workspaces';
+import type { MemberPauseNotifier, WorkspaceMemberPauseRow } from '../types';
 import { assertMembership } from './membership';
 
 // The coven access pause: an owner stops one member reaching their coven, until a time or with no end, and may lift it early.
@@ -40,7 +43,8 @@ async function memberRoleOf(workspaceId: string, userId: string) {
 
 /**
  * Pauses a member's access to the coven until `until`, or with no end when `until` is `null`. The caller needs `member: pause`,
- * which only owners hold; an owner cannot be paused, so the coven always keeps someone who can lift it.
+ * which only owners hold; an owner cannot be paused, so the coven always keeps someone who can lift it. The member is mailed once
+ * the pause is saved.
  *
  * @throws {Forbidden} the caller is not an owner of the coven; `userId` holds no seat in it; `userId` is an owner; or `userId` is
  * the System account or the signed-out sender account, which are not people.
@@ -53,6 +57,7 @@ export async function pauseMemberAccess(
   userId: string,
   until: Date | null | undefined,
   note: string | null | undefined,
+  notifier: MemberPauseNotifier,
 ): Promise<WorkspaceMemberPauseRow> {
   const membership = await assertMembership(session, workspaceId, { member: ['pause'] });
   const trimmed = note?.trim() || null;
@@ -72,7 +77,7 @@ export async function pauseMemberAccess(
   if (await findStandingWorkspaceMemberPause(membership, userId)) {
     throw fieldRefusal('userId', ALREADY_PAUSED);
   }
-  return withAudit(session, async (write) => {
+  const pause = await withAudit(session, async (write) => {
     const [row] = await write.setWorkspaceMemberPause(membership, userId, {
       until: until ?? null,
       note: trimmed,
@@ -81,6 +86,24 @@ export async function pauseMemberAccess(
     if (!row) throw fieldRefusal('userId', ALREADY_PAUSED);
     return row;
   });
+  // The pause is saved, so a failed lookup or mail is logged and not thrown.
+  try {
+    const [member, coven] = await Promise.all([
+      findOneById(users, userId),
+      findOneById(workspaces, membership.workspaceId),
+    ]);
+    if (member && coven) {
+      await notifier.memberPaused(member.email, {
+        covenName: coven.name,
+        until: pause.until,
+        note: pause.note,
+      });
+    }
+  } catch (error) {
+    // oxlint-disable-next-line no-console -- the log is how a failed send is seen
+    console.error('Could not mail a coven access pause notice', error);
+  }
+  return pause;
 }
 
 /**

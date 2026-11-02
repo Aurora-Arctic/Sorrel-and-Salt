@@ -32,6 +32,12 @@ export interface AdminInvitationFilter {
 /** One site access pause: standing, run out or lifted. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
+/** Tells a user their site access was paused. Handed to the service by the GraphQL context. */
+export interface AccessPauseNotifier {
+  /** Mails `to` that their access is paused until `until` (`null`: no end date), with the admin's note. Never throws on a failed send. */
+  accessPaused(to: string, details: { until: Date | null; note: string }): Promise<void>;
+}
+
 /** One row of the privilege ledger. */
 export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
 

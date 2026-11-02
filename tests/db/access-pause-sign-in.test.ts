@@ -18,6 +18,7 @@ import { post, pwnedRange } from '../support/password';
 import { softKey } from '../support/passkey-authenticator';
 import { enrol, signInWithPasskey } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
+import { noPauseNotifier } from '../support/email-verification';
 
 // A paused account signs in by every method, through Better Auth's real endpoints, into a view of the site with support in it
 // and nothing else: the support form sends, and every other signed-in API call answers ACCESS_PAUSED, through the real
@@ -186,7 +187,7 @@ describe('a paused account signs in by every method, into support alone', () => 
     await expectOpenView(cookieHeader(first), id);
     const until = inADay();
 
-    await pauseUserAccess(asUser(E), id, until, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, until, 'A fixture pause', noPauseNotifier);
 
     expect(await signedInAs(cookieHeader(first))).toBeUndefined();
     const again = await signInWithProvider(PROVIDER_USER);
@@ -198,7 +199,7 @@ describe('a paused account signs in by every method, into support alone', () => 
   it('by a provider, paused with no end: the paused view carries no date', async () => {
     await signInWithProvider(PROVIDER_USER);
     const id = await idOf(PROVIDER_USER);
-    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause', noPauseNotifier);
 
     const again = await signInWithProvider(PROVIDER_USER);
 
@@ -208,7 +209,7 @@ describe('a paused account signs in by every method, into support alone', () => 
   it('by a password: signs in, counts no failure, and reaches the paused view', async () => {
     const id = await passwordAccount();
     const until = inADay();
-    await pauseUserAccess(asUser(E), id, until, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, until, 'A fixture pause', noPauseNotifier);
 
     const signedIn = await signInWithPassword();
 
@@ -221,7 +222,7 @@ describe('a paused account signs in by every method, into support alone', () => 
 
   it('by a wrong password: still answers as a wrong password', async () => {
     const id = await passwordAccount();
-    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause', noPauseNotifier);
 
     const wrong = await post(auth, '/sign-in/email', {
       email: PASSWORD_USER,
@@ -234,7 +235,7 @@ describe('a paused account signs in by every method, into support alone', () => 
 
   it('by a passkey: signs in to the paused view, an open-ended pause carrying no end', async () => {
     const { id, key } = await passkeyAccount();
-    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause', noPauseNotifier);
 
     const signedIn = await signInWithPasskey(auth, key);
 
@@ -244,12 +245,12 @@ describe('a paused account signs in by every method, into support alone', () => 
 
   it('is refused the send by a support time-out, with the time-out’s own sentence', async () => {
     const id = await passwordAccount();
-    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause', noPauseNotifier);
     const cookie = cookieHeader(await signInWithPassword());
     // The precondition: the paused session sends, so the time-out, not the pause, refuses the next.
     expect((await graphql(cookie, SEND, { input: REQUEST })).errors).toBeUndefined();
 
-    await timeOutSupportSender(asUser(E), id, inADay(), 'A fixture time-out');
+    await timeOutSupportSender(asUser(E), id, inADay(), 'A fixture time-out', noPauseNotifier);
 
     const refused = await graphql(cookie, SEND, { input: REQUEST });
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
@@ -261,7 +262,7 @@ describe('a paused account signs in by every method, into support alone', () => 
 describe('a pause that has ended', () => {
   it('signs a password in to the whole site once until has passed, writing nothing to the pause', async () => {
     const id = await passwordAccount();
-    await pauseUserAccess(asUser(E), id, inADay(), 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, inADay(), 'A fixture pause', noPauseNotifier);
     await sql`update user_access_pauses set until = now() - interval '1 minute' where user_id = ${id}`;
     const [before] = await sql`select * from user_access_pauses where user_id = ${id}`;
 
@@ -275,7 +276,7 @@ describe('a pause that has ended', () => {
   it('signs a provider in to the whole site once until has passed', async () => {
     await signInWithProvider(PROVIDER_USER);
     const id = await idOf(PROVIDER_USER);
-    await pauseUserAccess(asUser(E), id, inADay(), 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, inADay(), 'A fixture pause', noPauseNotifier);
     await sql`update user_access_pauses set until = now() - interval '1 minute' where user_id = ${id}`;
 
     const signedIn = await signInWithProvider(PROVIDER_USER);
@@ -285,7 +286,7 @@ describe('a pause that has ended', () => {
 
   it('opens a passkey’s session to the whole site once the pause is lifted, without signing in again', async () => {
     const { id, key } = await passkeyAccount();
-    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause', noPauseNotifier);
     const cookie = cookieHeader(await signInWithPasskey(auth, key));
     expect((await graphql(cookie, ME)).errors?.[0]?.extensions?.code).toBe('ACCESS_PAUSED');
 
@@ -299,7 +300,7 @@ describe('a paused account at the compendium', () => {
   it('reads as signed out to the proxy and the public pages, and the proxy lets /compendium through', async () => {
     await signInWithProvider(PROVIDER_USER);
     const id = await idOf(PROVIDER_USER);
-    await pauseUserAccess(asUser(E), id, null, 'A fixture pause');
+    await pauseUserAccess(asUser(E), id, null, 'A fixture pause', noPauseNotifier);
     const cookie = cookieHeader(await signInWithProvider(PROVIDER_USER));
     const { sessionFromHeaders, sessionStateFromHeaders } = await import('@/lib/request-session');
     const { proxy } = await import('@/proxy');
