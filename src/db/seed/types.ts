@@ -262,7 +262,7 @@ export type SourceTargetTable = (typeof SOURCED)[Exclude<
 
 /**
  * A source as the seed writes it: its citation's fields and, for a peer-reviewed journal's article or a university or academic press's book,
- * `scholarly`, which lands on its `references` row when the row is first written.
+ * `scholarly`, which lands on its `references` row when written and, while no person edits the row, on every compendium seed run.
  */
 export type SeedWork = CitationFields & { scholarly?: true };
 

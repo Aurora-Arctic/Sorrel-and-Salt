@@ -12,7 +12,7 @@ import type { SeedTransaction, SeedWork } from './types';
 /**
  * Every wanted source's id by its citation, inserting the missing ones. A row a seed wrote answers by its key, `null` when soft-deleted (neither re-inserted
  * nor linked). A live compendium row nobody seeded whose citation matches to the letter is linked, never written to. A source wanted twice is one row.
- * A work's `scholarly` mark is written with its row and never to a row already present.
+ * A work's `scholarly` mark is written with its row; the compendium seed's `restateScholarly` keeps a present row's in step.
  */
 export async function insertMissingReferences(
   tx: SeedTransaction,
