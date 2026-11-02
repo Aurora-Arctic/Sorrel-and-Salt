@@ -755,9 +755,10 @@ and an open-ended one says it has no end date. A visitor with no session is sent
 standing, lifted or ended, to `/`. Its Support link is a `SupportLink`, so it opens the Support dialog over the page as the
 footer's does; a paused account sends from it signed in. The page has no account menu, so it also links "your requests" to
 `/account/support` itself. It reads the viewer's standing support time-out through `getMySupportTimeout`, skipped for an
-unverified account, whose support reads refuse it: with one standing, it says the viewer can read their requests but cannot
-send one until the time-out's end, in `LocalTime`'s long form, or that the time-out has no end date. It also links to the
-compendium, which it reads as any signed-out visitor.
+unverified account, whose support reads refuse it. With one standing, the page drops that paragraph and its Support link,
+since the dialog could send nothing, and says instead "You cannot send a support request until …", in `LocalTime`'s long
+form, or with no end "You cannot send a support request: you are timed out with no end date.", then "You can still read your requests.", with "read your requests" linking
+to `/account/support`. It also links to the compendium, which it reads as any signed-out visitor.
 
 **Ending.** A dated pause ends by itself once `until` passes, with no write, and a lift stamps `lifted_at` and `lifted_by`.
 Either way the next request of a session signed in while paused reaches the whole site.

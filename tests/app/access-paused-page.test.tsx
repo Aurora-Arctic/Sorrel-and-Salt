@@ -6,7 +6,8 @@ import { printed } from '../support/printed-text';
 // /access-paused reads the viewer's own standing pause, as the shell does, and says when it ends: a pause with an end and
 // one with none. Signed out it sends the visitor to Sign In, and with no pause standing, lifted or ended, to the entry page.
 // Its Support link opens the Support dialog over the page, as the footer's does, and it links to the viewer's own requests,
-// the one way there from this shell-less page; a standing support time-out is named beside them.
+// the one way there from this shell-less page. A standing support time-out replaces both with a sentence refusing the send
+// and a link to read the requests, and no Support dialog link, since the dialog could send nothing.
 
 vi.mock('next/navigation', () => ({
   redirect: (url: string) => {
@@ -88,33 +89,41 @@ describe('/access-paused', () => {
     expect(screen.queryByText(/cannot send/)).not.toBeInTheDocument();
   });
 
-  it('says a timed-out viewer reads their requests but cannot send one until the time-out ends', async () => {
+  it('says a timed-out viewer cannot send until the time-out ends, links their requests, and offers no Support dialog', async () => {
     const until = new Date('2026-12-03T15:00:00.000Z');
     getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until: null } });
     getMySupportTimeout.mockResolvedValue({ until });
     await visit();
 
-    expect(screen.getByText(/cannot send one/)).toHaveTextContent(
-      `You can still reach Support signed in to read your requests, but you cannot send one until ${printed(longMinuteInZone(until))}.`,
+    expect(screen.getByText(/cannot send a support request/)).toHaveTextContent(
+      `You cannot send a support request until ${printed(longMinuteInZone(until))}.`,
     );
-    expect(screen.getByRole('link', { name: 'your requests' })).toHaveAttribute(
+    expect(screen.getByText(/You can still/)).toHaveTextContent(
+      'You can still read your requests.',
+    );
+    expect(screen.getByRole('link', { name: 'read your requests' })).toHaveAttribute(
       'href',
       '/account/support',
     );
-    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
-      'href',
-      '/access-paused?support=',
-    );
+    expect(screen.queryByRole('link', { name: 'Support' })).not.toBeInTheDocument();
+    // The pause and the compendium are still named, so only the support paragraph changed.
+    expect(screen.getByText(/paused, with no end date/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Compendium' })).toBeInTheDocument();
   });
 
-  it('says a time-out with no end leaves the viewer reading their requests', async () => {
+  it('says a time-out with no end refuses the send, and still links the viewer’s requests', async () => {
     getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until: null } });
     getMySupportTimeout.mockResolvedValue({ until: null });
     await visit();
 
-    expect(screen.getByText(/cannot send one/)).toHaveTextContent(
-      'You can still reach Support signed in to read your requests, but you cannot send one: you are timed out with no end date.',
+    expect(screen.getByText(/cannot send a support request/)).toHaveTextContent(
+      'You cannot send a support request: you are timed out with no end date.',
     );
+    expect(screen.getByRole('link', { name: 'read your requests' })).toHaveAttribute(
+      'href',
+      '/account/support',
+    );
+    expect(screen.queryByRole('link', { name: 'Support' })).not.toBeInTheDocument();
   });
 
   it('reads no time-out for an unverified account, which the support reads refuse', async () => {

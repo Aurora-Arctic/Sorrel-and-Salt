@@ -26,7 +26,6 @@ export default async function AccessPausedPage() {
   if (!accessPause) redirect('/');
   // An unverified account's support reads refuse it, and its pages send it to confirm the address first.
   const timedOut = session.emailUnverified ? null : await getMySupportTimeout(session);
-  const requests = <Link href={SUPPORT_LIST_PATH}>your requests</Link>;
 
   return (
     <main className="page-frame page-frame--narrow">
@@ -43,23 +42,24 @@ export default async function AccessPausedPage() {
             once an admin lifts the pause.
           </p>
         )}
+        {/* Timed out, the page leaves out the Support dialog link, since the dialog could send nothing. */}
         {timedOut ? (
-          <p>
-            You can still reach <SupportLink>Support</SupportLink> signed in to read {requests}, but
-            you cannot send one
+          <>
             {timedOut.until ? (
-              <>
-                {' '}
-                until <LocalTime at={timedOut.until} long />.
-              </>
+              <p>
+                You cannot send a support request until <LocalTime at={timedOut.until} long />.
+              </p>
             ) : (
-              ': you are timed out with no end date.'
+              <p>You cannot send a support request: you are timed out with no end date.</p>
             )}
-          </p>
+            <p>
+              You can still <Link href={SUPPORT_LIST_PATH}>read your requests</Link>.
+            </p>
+          </>
         ) : (
           <p>
             You can still reach <SupportLink>Support</SupportLink> signed in, to ask about the
-            pause, and read {requests}.
+            pause, and read <Link href={SUPPORT_LIST_PATH}>your requests</Link>.
           </p>
         )}
         <p>

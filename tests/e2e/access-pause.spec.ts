@@ -131,16 +131,22 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
     await expect(userPage).toHaveURL('/access-paused');
   }
 
-  // Timed out from support as well, the paused page, which has no account menu, still links to the user's own requests:
-  // the request reads there, and the time-out refuses a reply.
+  // Timed out from support as well, the paused page, which has no account menu, still links to the user's own requests
+  // and offers no Support dialog: the request reads there, and the time-out refuses a reply.
   await withSql(
     (sql) => sql`
       insert into support_timeouts (user_id, until, note, created_by, updated_by)
       values (${userId}, null, 'Spam', ${adminId}, ${adminId})`,
   );
   await userPage.goto('/access-paused');
-  await expect(userPage.getByRole('main')).toContainText('you are timed out with no end date');
-  await userPage.getByRole('main').getByRole('link', { name: 'your requests' }).click();
+  await expect(userPage.getByRole('main')).toContainText(
+    'You cannot send a support request: you are timed out with no end date.',
+  );
+  // The dialog could send nothing, so the page offers no Support link to open it.
+  await expect(
+    userPage.getByRole('main').getByRole('link', { name: 'Support', exact: true }),
+  ).toHaveCount(0);
+  await userPage.getByRole('main').getByRole('link', { name: 'read your requests' }).click();
   await expect(userPage).toHaveURL('/account/support');
   await userPage.getByRole('link', { name: 'Why is my access paused?' }).click();
   const thread = userPage.getByRole('dialog', { name: 'Why is my access paused?' });
