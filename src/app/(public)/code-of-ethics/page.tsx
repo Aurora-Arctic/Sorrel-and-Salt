@@ -303,7 +303,7 @@ export default function CodeOfEthicsPage() {
         </li>
       </ul>
 
-      <h2>For the Site's Owner</h2>
+      <h2>For the Owner and Everyone Who Runs the Site</h2>
       <p>
         The owner holds the primary admin account, which no one can revoke. The site relies on
         outside companies for things such as its hosting and its mail; the owner tries to choose
