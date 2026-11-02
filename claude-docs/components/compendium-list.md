@@ -13,7 +13,7 @@ the formal name sits beside the label because it is the entry's identity
 one batch through `variantsOf(null, refs)`, the read `Ingredient.variants`
 resolves through, rather than one read per row.
 
-**The Categories column** (after Form, before Updated) draws the card's chips through the shared `CategoryChips` ([`category-chips.md`](category-chips.md)) at its `compact` size: the first two and a +N button, an entry with none showing a dash. The admin page reads them in one batch for the page (`readCardCategories`), and `CompendiumListEntry` carries them as `categories`. The +N panel is fixed-position, so the table frame's scrolling neither clips it nor grows the row; `tests/e2e/admin-compendium.spec.ts` measures both, on a desktop table and a phone card.
+**The Categories column** (after Form, before Updated) draws the card's chips through the shared `CategoryChips` ([`category-chips.md`](category-chips.md)) at its `compact` size: the first two and a +N button, an entry with none showing a dash. The admin page reads them in one batch for the page (`readCardCategories`), so a category only a form carries shows here as on the card, outlined after the entry's own with a tip naming the forms, and `CompendiumListEntry` carries them as `categories`. The +N panel is fixed-position, so the table frame's scrolling neither clips it nor grows the row; `tests/e2e/admin-compendium.spec.ts` measures both, on a desktop table and a phone card.
 
 ## Props
 

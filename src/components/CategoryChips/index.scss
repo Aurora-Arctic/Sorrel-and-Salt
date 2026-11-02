@@ -115,8 +115,12 @@
 }
 
 // A chip with a tip is a button that looks like the plain chip: the help cursor says there is
-// more behind it, and it takes the focus ring.
+// more behind it, and it takes the focus ring. Raised over a card's stretched link and taking the
+// pointer back from the card's plain-chip rule, as the +N button does, so hover and a tap reach its tip.
 .category-chips__tip-chip {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
   cursor: help;
 
   &:focus-visible {
@@ -126,4 +130,10 @@
 
 .category-chips__tip-text {
   @include visually-hidden;
+}
+
+// A category only the entry's forms carry: the plain chip with a dashed border, so it reads apart
+// from the entry's own without outweighing them; its tip names the forms.
+.category-chips .category-chips__form-chip {
+  border-style: dashed;
 }

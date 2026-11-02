@@ -46,7 +46,8 @@
   }
 
   // The plain category chips pass a click through to the title link's overlay. Only the chips' `li`s,
-  // not the row: the +N item keeps its press, hover and focus (CategoryChips). A plain chip is text.
+  // not the row: the +N item keeps its press, hover and focus (CategoryChips), and a tip chip's button
+  // takes the pointer back. A plain chip is text.
   #{$card} .specimen__chips > li:not(.category-more-item) {
     pointer-events: none;
   }

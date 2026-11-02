@@ -52,6 +52,18 @@ export const States: Story = {
             <CategoryChips categories={make(6)} label="Testwort" />
           </div>
         ),
+        // The entry's own chip, then two only its forms carry: dashed, each with a tip naming the forms.
+        'On A Form Only': (
+          <CategoryChips
+            categories={[
+              ...make(1),
+              { ...make(2)[1], forms: ['Oil', 'Dried Leaf'] },
+              { ...make(3)[2], forms: ['Oil'] },
+            ]}
+            label="Testwort"
+            showAll
+          />
+        ),
         // Both sizes: the regular one the card wears, the compact one the table does.
         Sizes: (
           <div style={{ display: 'grid', gap: '1rem' }}>

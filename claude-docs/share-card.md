@@ -12,9 +12,9 @@ The owner approved the design on 2026-10-31. Both cards are 1200 by 630 pixels o
 - **An entry's card**: the site name at 64 px, 48 px from the top with 90 px at each side; 12 px below it a "Compendium" eyebrow in Lexend Regular at 26 px, upper case, spaced 6 px, in `$sorrel-bright`. Centred in the space left, 20 px apart:
   - the entry's name at 112 px, or 84 px when it is over 20 characters, line height 1.05;
   - its formal name in Lexend Light at 44 px in `$chalk-muted`, left out when the entry has none or when it only repeats the name;
-  - up to four of the entry's own categories as chips, alphabetical, in Lexend Regular at 24 px, each outlined and lettered in its group's dark-theme colour (`colorDark`), with a `+N` chip in `$chalk-muted` counting the rest.
+  - up to four of the entry's categories as chips, alphabetical, in Lexend Regular at 24 px, each outlined and lettered in its group's dark-theme colour (`colorDark`), with a `+N` chip in `$chalk-muted` counting the rest.
   - 40 px below that, a 4 px band along the foot of the card in equal segments, one per category group, in the order the groups first appear among the chips' categories. An entry with no categories keeps the band's 4 px, empty.
-- **Only the ingredient's own categories** are drawn, never its forms'. M14.38's fallback to the forms' categories is not built here.
+- **The ingredient's own categories, else its forms'** (M14.39). The chips and the band draw the ingredient's own categories. When it has none, they draw those of its live forms, each once and alphabetical, with nothing marking them apart: the result cards' outlined form chips are not drawn here. With neither there are no chips and an empty band (`claude-docs/design-decisions/m14.38-form-categories-in-search.md`, decision 4).
 
 The alt text is the entry's name on an entry's card and the site name on the site card.
 
@@ -65,7 +65,7 @@ Step 2 fails if the route draws per request, and step 3 fails if the tag does no
 
 ### In tests
 
-- `tests/modules/ingredients/services/share-card.test.ts`: what the card draws (name, formal name, own categories and their colours, the band's groups) and the 404s, each with the precondition that the entry is there to be found.
+- `tests/modules/ingredients/services/share-card.test.ts`: what the card draws (name, formal name, own categories and their colours, the band's groups, the fallback to the live forms' categories when the entry has none) and the 404s, each with the precondition that the entry is there to be found.
 - `tests/e2e/share-card.spec.ts`: a shown entry's card is a PNG; a hidden entry's, a coven entry's and an unknown slug's are 404 at the same route that draws a shown entry.
 - `tests/e2e/seo.spec.ts`: `/`, `/compendium` and an entry name their card at an absolute address with width, height and alt, and the card answers.
 - `tests/e2e/compendium-cache.spec.ts`: the caching above.

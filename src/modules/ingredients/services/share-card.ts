@@ -12,7 +12,16 @@ import type { CompendiumShareCard } from '../types';
 export async function readCompendiumShareCard(slug: string): Promise<CompendiumShareCard> {
   const page = await readCompendiumEntry(slug);
   if (page.kind === 'moved') throw new NotFound('No such compendium entry');
-  const { entry, categories } = page.detail;
+  const { entry, categories: own, variants } = page.detail;
+  // The entry's own categories, else those of its live forms, each once and by name: the card marks none apart.
+  const categories =
+    own.length > 0
+      ? own
+      : [
+          ...new Map(
+            variants.flatMap(({ categories }) => categories).map((c) => [c.category.id, c]),
+          ).values(),
+        ].sort((a, b) => a.category.name.localeCompare(b.category.name));
   const formal = entry.canonicalName;
   return {
     name: entry.name,

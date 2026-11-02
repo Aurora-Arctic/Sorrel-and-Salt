@@ -17,6 +17,7 @@ import { ingredientVariants } from '../schema/ingredient-variants';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { Membership } from '@/modules/coven';
 import type {
+  CardCategoryRow,
   CategoryRow,
   CitedReference,
   FolkNameRow,
@@ -54,6 +55,52 @@ export async function categoriesOfVariants(
   );
 
   return answer((id) => filed((link) => link.variantId === id));
+}
+
+/**
+ * The categories a result card shows for each ingredient: its own, by name, then those only its live forms carry, by name, each with
+ * the forms that carry it, by form. A category on both is its own. One batch for a page, refused as `categoriesOf` refuses.
+ */
+export async function cardCategoriesOf(
+  session: Session | null,
+  refs: readonly IngredientKey[],
+  heldBy?: Membership,
+): Promise<(CardCategoryRow[] | Forbidden)[]> {
+  const { memberships, admitted, answer } = await admit(session, refs, heldBy);
+  const [own, forms] = await Promise.all([
+    admitted(ingredientCategories),
+    admitted(ingredientVariants),
+  ]);
+  // Asked by the live forms' ids: a soft-deleted form's pairs outlive it, as the pair table is hard-deleted.
+  const formPairs = await findManyOfVariants(
+    memberships,
+    ingredientCategories,
+    forms.map(({ id }) => id),
+    heldBy,
+  );
+  const filed = await filedUnder([...own, ...formPairs]);
+  const formOf = new Map(forms.map((form) => [form.id, form]));
+
+  return answer((id) => {
+    const owned = filed((link) => link.ingredientId === id && link.variantId === null);
+    const ownIds = new Set(owned.map((category) => category.id));
+    const carriers = new Map<string, string[]>();
+    for (const { variantId, categoryId } of formPairs) {
+      const form = variantId ? formOf.get(variantId) : undefined;
+      if (!form || form.ingredientId !== id || ownIds.has(categoryId)) continue;
+      carriers.set(categoryId, [...(carriers.get(categoryId) ?? []), form.form]);
+    }
+    const formOnly = filed((link) => link.ingredientId === id && carriers.has(link.categoryId))
+      // Two forms carrying one category file it twice; the card shows it once.
+      .filter((category, at, list) => list.findIndex(({ id }) => id === category.id) === at);
+    return [
+      ...owned.map((category) => ({ category, forms: [] })),
+      ...formOnly.map((category) => ({
+        category,
+        forms: (carriers.get(category.id) ?? []).sort((a, b) => byForm({ form: a }, { form: b })),
+      })),
+    ];
+  });
 }
 
 /** The live folk names of each ingredient as §7's `FolkName` (id and text), sorted, refused as `categoriesOf` refuses. */
