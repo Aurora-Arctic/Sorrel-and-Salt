@@ -57,9 +57,12 @@ the ingredient's permission; `workspace-ingredients.test.ts` proves it.
 
 ### One lookup per render
 
-`assertMembership` reads the role through `cache(findWorkspaceRole)`, so a
-layout and a page asking about the same workspace in one server render cost one
-query, whatever permission each asks for; the permission check under it runs
+`assertMembership` reads the seat through `cache(findWorkspaceSeat)`, which
+answers the role and any pause standing on it in one query, so a layout and a
+page asking about the same workspace in one server render cost one query,
+whatever permission each asks for. A standing pause is refused with
+`AccessPaused` before the permission is checked (M15.55,
+[`design-decisions/m15.55-coven-access-pause.md`](../design-decisions/m15.55-coven-access-pause.md)); the permission check under it runs
 every time and costs nothing. The cache is keyed by `(userId, workspaceId)`
 rather than the session, because `cache()` compares object arguments by identity
 and two callers holding equal sessions would each miss. It lives as long as the
@@ -72,8 +75,9 @@ two transports").
 
 ### The reads that take no proof
 
-`findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
-demand one. It is narrow on purpose — it answers with a role, not with rows —
+`findWorkspaceSeat(userId, workspaceId)` is what mints a proof, so it cannot
+demand one; `findWorkspaceRole` answers its role alone, for a caller that needs
+no pause. It is narrow on purpose — it answers with a role and a pause, not with rows —
 so it cannot stand in for a finder. It also finds no role in a deleted
 workspace, the same live-workspace check `findMembershipsOfUsers` makes, which
 is how deleting a workspace (M6.14) refuses every member at once while their
