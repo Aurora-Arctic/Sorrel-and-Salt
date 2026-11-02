@@ -8,6 +8,8 @@ import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { SANCTIONED_USERS, seedSanctionedUsers } from '@/db/seed/sanctioned-users';
 import { seedSupportRequests } from '@/db/seed/support-requests';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
+import { sweepSupportRetention } from '@/modules/support';
 
 // The fake support requests the `demo` scenario seeds for the admin Support tab and the account's own requests, run against the `standard` cast
 // and the held-back accounts the demo seeds before it.
@@ -218,6 +220,36 @@ describe('the support request seed', () => {
       await run();
       expect(await counts()).toEqual(before);
       expect(await sql`select id, created_at from support_requests order by id`).toEqual(times);
+    });
+
+    // Last, as the sweep changes a row.
+    it('seeds one request already anonymised and one the sweep anonymises, which it leaves as the seed left the first', async () => {
+      const ANONYMISED = '00000000-0000-0000-0005-000000000018';
+      const DUE = '00000000-0000-0000-0005-000000000019';
+      const shape = (id: string) => sql`
+        select q.about, q.status, q.subject, q.message, q.path, q.sender_email, q.resolved_by, q.assigned_to,
+               q.created_by, q.updated_by, q.closed_at < now() - interval '12 months' as past_cutoff,
+               (select json_agg(json_build_object('body', r.body, 'created_by', r.created_by, 'updated_by', r.updated_by))
+                  from support_replies r where r.request_id = q.id) as replies
+        from support_requests q where q.id = ${id}`;
+      const [due] = await shape(DUE);
+      // Precondition: the due one holds its sender's words and is past the twelve months.
+      expect(due).toMatchObject({ created_by: FIXTURE_USERS.C.id, past_cutoff: true });
+      expect(due.subject).not.toBe('');
+
+      expect(await sweepSupportRetention()).toEqual({ closed: 0, anonymised: 1 });
+
+      const [anonymised] = await shape(ANONYMISED);
+      const [swept] = await shape(DUE);
+      expect(anonymised).toMatchObject({
+        subject: '',
+        message: '',
+        path: '',
+        created_by: SYSTEM_ACTOR_ID,
+      });
+      const { about: _a, ...sweptFields } = swept;
+      const { about: _b, ...seededFields } = anonymised;
+      expect(sweptFields).toEqual(seededFields);
     });
   });
 });
