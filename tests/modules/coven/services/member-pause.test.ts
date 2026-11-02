@@ -8,6 +8,8 @@ import {
   pausedCovenBySlug,
   standingMemberPauses,
 } from '@/modules/coven';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
@@ -41,6 +43,12 @@ const pausesOf = (workspaceId: string, userId: string) => sql`
   select until, note, lifted_at, lifted_by, created_by, updated_by from workspace_member_pauses
    where workspace_id = ${workspaceId} and user_id = ${userId}
    order by created_at`;
+
+const roleOf = async (workspaceId: string, userId: string) =>
+  (
+    await sql`
+      select role from workspace_members where workspace_id = ${workspaceId} and user_id = ${userId}`
+  )[0]?.role as string | undefined;
 
 /** The issue paths a ValidationError carries, or the error itself when it is something else. */
 async function issuePaths(promise: Promise<unknown>): Promise<unknown> {
@@ -199,6 +207,34 @@ describe('pauseMemberAccess', () => {
     expect(await pausesOf(covenId, D.id)).toHaveLength(0);
     expect(await pausesOf(covenId, A.id)).toHaveLength(0);
   });
+
+  it.each([
+    ['the System account', SYSTEM_ACTOR_ID],
+    ['the signed-out sender account', SIGNED_OUT_SENDER_ID],
+  ])(
+    'refuses %s, which is not a person, even holding a seat, saying why',
+    async (label, accountId) => {
+      const covenId = await insertCoven(`Fixture Pause Stand-In Coven for ${label}`, [
+        [A.id, 'owner'],
+        [accountId, 'member'],
+        [B.id, 'member'],
+      ]);
+      // Why this could have succeeded: the account holds a seat, and the same call pauses another member in the same seat.
+      expect(await roleOf(covenId, accountId)).toBe('member');
+      await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
+      expect(await pausesOf(covenId, B.id)).toHaveLength(1);
+
+      const error = await pauseMemberAccess(asUser(A), covenId, accountId, LATER, null).catch(
+        (thrown: unknown) => thrown,
+      );
+
+      expect(error).toBeInstanceOf(Forbidden);
+      expect((error as Error).message).toBe(
+        'This account is not a person, so its access to a coven cannot be paused',
+      );
+      expect(await pausesOf(covenId, accountId)).toHaveLength(0);
+    },
+  );
 
   it('refuses a person who is not a member of the coven, and an id that names no one', async () => {
     const covenId = await insertCoven('Fixture Stranger Pause Coven', [[A.id, 'owner']]);

@@ -7,6 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
+import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -23,6 +24,7 @@ import { assertSiteAdmin } from './site-admin';
 const REFUSAL = 'Only a site admin may pause or lift a user’s access';
 const PRIMARY_REFUSAL = 'The primary admin’s access cannot be paused';
 const SELF_REFUSAL = 'You cannot pause your own access';
+const STAND_IN_REFUSAL = 'This account is not a person, so its access cannot be paused';
 const NOTE_MAX_LENGTH = 500;
 const PAST_END = 'Choose a time in the future';
 const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
@@ -33,7 +35,8 @@ const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
  * Pauses a user's access until `until`, or with no end when `until` is `null`, and ends every session they hold. Pausing
  * another admin waits on admin changes being open, as revoking one does.
  *
- * @throws {Forbidden} the session is not an admin; the user is the primary admin or the caller; or admin changes are paused
+ * @throws {Forbidden} the session is not an admin; the user is the primary admin, the caller, the System account or the signed-out
+ * sender account; or admin changes are paused
  * and the user is an admin.
  * @throws {NotFound} no live user has this id.
  * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, or a pause
@@ -62,6 +65,7 @@ export async function pauseUserAccess(
   if (!user) throw new NotFound('No such user');
   if (isPrimaryAdmin(user)) throw new Forbidden(PRIMARY_REFUSAL);
   if (user.id === session.userId) throw new Forbidden(SELF_REFUSAL);
+  if (isStandInAccount(user.id)) throw new Forbidden(STAND_IN_REFUSAL);
   if (user.role === 'admin') await assertChangesOpen(session, admin);
   if (await findStandingUserAccessPause(user.id)) {
     throw fieldRefusal('userId', ALREADY_PAUSED);

@@ -5,6 +5,7 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
 import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import TabbedPage from '@/components/TabbedPage';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type {
   SupportRequestDetailEntry,
   SupportRequestEntry,
@@ -534,6 +535,28 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).getAllByText(/Signed-out sender/).length).toBeGreaterThan(0);
     expect(within(dialog()).getByText('visitor@example.test')).toBeInTheDocument();
     expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
+  });
+
+  it('offers an admin no Time-Out for a signed-out sender, and does for a signed-in one', () => {
+    const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    const { unmount } = open(ADMIN);
+    expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
+    unmount();
+    open(ADMIN, { sender: visitor, signedOut: true });
+    expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
+  });
+
+  it('offers no note or reply on an anonymised request, which the System account owns, and does on another', () => {
+    const { unmount } = open(ADMIN);
+    expect(within(dialog()).getByLabelText(/^Your Note/)).toBeInTheDocument();
+    unmount();
+    open(ADMIN, {
+      status: 'closed',
+      sender: { id: SYSTEM_ACTOR_ID, name: 'System', email: null },
+    });
+    expect(within(dialog()).queryByLabelText(/^Your (Note|Reply)/)).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /Send/ })).toBeNull();
+    expect(within(dialog()).getByText(/anonymised/)).toBeInTheDocument();
   });
 
   it('gives an admin every control', () => {

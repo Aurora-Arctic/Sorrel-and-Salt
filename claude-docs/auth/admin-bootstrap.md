@@ -710,6 +710,7 @@ The table is DESIGN.md §5's `user_access_pauses` (M15.51).
 - a curator or a user: `Forbidden`, "Only a site admin may pause or lift a user’s access";
 - the primary admin, the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL`: `Forbidden`, "The primary admin’s access cannot be paused";
 - the admin themselves: `Forbidden`, "You cannot pause your own access";
+- the System account or the signed-out sender account (neither is a person; `isStandInAccount` in `src/lib/system-actor.ts`): `Forbidden`, "This account is not a person, so its access cannot be paused". The service refuses; no table constraint does, as for the primary admin and the admin themselves, and neither account is listed on the Users page;
 - another admin while admin changes are paused (MB.62), unless the caller is the primary admin: the same refusal a revoke of admin gets;
 - a user already paused: a validation error, "This user is already paused; lift the pause first";
 - an `until` that is not in the future: a validation error on `until`, "Choose a time in the future";

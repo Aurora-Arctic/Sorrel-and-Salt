@@ -3,6 +3,7 @@
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Spinner from '../Spinner';
@@ -133,29 +134,34 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           ]}
         />
 
-        <ReplyForm
-          noteOnly={!answers}
-          requestId={request.id}
-          canWait={open && answers}
-          senderTimedOut={standingTimeout(request.timeouts)}
-          resolve={
-            open &&
-            answers && (
-              <ConfirmedAction
-                label="Resolve"
-                accessibleName="Resolve"
-                openClass="btn btn--quiet"
-                title="Resolve This Request?"
-                question="The sender sees it as resolved on their support page, and can reopen it by replying. It closes by itself after seven days without a reply."
-                busy="Resolving"
-                confirmClass="btn btn--solid"
-                announcement="Request resolved."
-                inModal
-                send={() => graphqlRequest(ResolveDocument, { id: request.id })}
-              />
-            )
-          }
-        />
+        {request.sender?.id === SYSTEM_ACTOR_ID ? (
+          // An anonymised request is owned by the System account, and the service refuses a note or a reply on it.
+          <Notice kind="plain">This request is anonymised. It takes no notes or replies.</Notice>
+        ) : (
+          <ReplyForm
+            noteOnly={!answers}
+            requestId={request.id}
+            canWait={open && answers}
+            senderTimedOut={standingTimeout(request.timeouts)}
+            resolve={
+              open &&
+              answers && (
+                <ConfirmedAction
+                  label="Resolve"
+                  accessibleName="Resolve"
+                  openClass="btn btn--quiet"
+                  title="Resolve This Request?"
+                  question="The sender sees it as resolved on their support page, and can reopen it by replying. It closes by itself after seven days without a reply."
+                  busy="Resolving"
+                  confirmClass="btn btn--solid"
+                  announcement="Request resolved."
+                  inModal
+                  send={() => graphqlRequest(ResolveDocument, { id: request.id })}
+                />
+              )
+            }
+          />
+        )}
       </div>
 
       {isAdmin && (
@@ -207,7 +213,8 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               )
             }
           />
-          {request.sender && (
+          {/* A signed-out request is sent by a stand-in account, which cannot be timed out. */}
+          {request.sender && !request.signedOut && (
             <TimeoutPanel
               userId={request.sender.id}
               name={request.sender.name}
