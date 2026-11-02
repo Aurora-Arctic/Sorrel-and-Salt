@@ -456,10 +456,10 @@ export function supportWrites({
   }
 
   return {
-    countSignedOutSend: async (address, client, now, windowSeconds) => ({
+    countSignedOutSend: async (addressKey, clientKey, now, windowSeconds) => ({
       // Fixed order, so two sends taking both locks cannot wait on each other.
-      address: await countKey('address', address, now, windowSeconds),
-      client: await countKey('client', client, now, windowSeconds),
+      address: await countKey('address', addressKey, now, windowSeconds),
+      client: await countKey('client', clientKey, now, windowSeconds),
     }),
     moveSupportRequest: (id, ownerId, from, values) =>
       update(

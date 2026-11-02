@@ -118,6 +118,29 @@ describe('sendSignedOutSupportRequest', () => {
     ]);
   });
 
+  it('stores neither the email address nor the client address in its counts, only a keyed hash of each', async () => {
+    await send(INPUT);
+
+    const rows =
+      await sql`select kind, key, row_to_json(c)::text as whole from support_send_counts c order by kind`;
+    // Precondition: both keys were counted, so a stored address would have a row to sit in.
+    expect(rows.map((row) => row.kind)).toEqual(['address', 'client']);
+    for (const row of rows) {
+      expect(row.key).toMatch(/^[0-9a-f]{64}$/);
+      expect(row.whole).not.toContain(INPUT.email);
+      expect(row.whole).not.toContain('visitor@');
+      expect(row.whole).not.toContain('203.0.113.7');
+    }
+  });
+
+  it('counts one address however its case and spacing are written', async () => {
+    await send(INPUT);
+    await send({ ...INPUT, email: '  Visitor@Example.TEST ' });
+
+    const rows = await sql`select count from support_send_counts where kind = 'address'`;
+    expect(rows.map((row) => row.count)).toEqual([2]);
+  });
+
   it('refuses an address that is not one', async () => {
     const error = await failureOf(send({ ...INPUT, email: 'not an address' }));
 

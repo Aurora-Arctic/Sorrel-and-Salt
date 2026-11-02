@@ -578,13 +578,13 @@ export interface AuditWriter {
     windowSeconds: number,
   ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
   /**
-   * Counts one signed-out send against an email address and a client address, each in its own row of `support_send_counts`,
-   * and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
+   * Counts one signed-out send against the keys of an email address and of a client address (`src/lib/send-count-key.ts`, never
+   * the addresses themselves), each in its own row of `support_send_counts`, and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
    * starts over at one. Takes a lock per key until the transaction ends, so sends racing each other all count.
    */
   countSignedOutSend(
-    address: string,
-    client: string,
+    addressKey: string,
+    clientKey: string,
     now: Date,
     windowSeconds: number,
   ): Promise<{ address: number; client: number }>;
