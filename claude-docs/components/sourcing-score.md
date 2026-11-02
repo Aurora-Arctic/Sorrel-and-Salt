@@ -5,7 +5,9 @@
 1. **The heading**, "Sourcing Score: 38", an `h4` under the Sources section's `h3`, with an "About Sourcing Score" InfoTip beside it (not inside it, so the region's name stays the heading's text).
 2. **The bar**, 0.5rem high and out of 100: gains in the accent, costs in the warning ink, the rest the quiet fill. It is `role="img"` with a label stating the numbers, "Gained 43, cost 5, out of 100". Gains stop at 100 and costs take only what the gains left, so a total over 100 or below 0 never overflows the track. The bar's height is the one value past the tokens, held in `$bar-height` in `index.scss`.
 3. **The key**, "Gained +43 · Cost −5 · Out of 100", in muted caption ink, so colour is never the only carrier. It is hidden from screen readers, which hear the bar's label instead.
-4. **The facts**, one row each: a 1rem stroke circle, the label, then signed points right-aligned in tabular numerals. A gain (points above 0) has a ticked circle in the accent, a cost (below 0) a dashed circle in the warning ink, and no points an empty circle in the muted ink. Rows run gains, then costs, then zeros, each group in the order the read returned them. The glyphs are `aria-hidden`; every row shows its sign and number, "+10", "−5" or "0", with a true minus sign. Zero-point facts are listed too, so the curator reads what to fix as well as what is wrong, and the rows always add up to the heading.
+4. **The facts**, a list with its markers cleared (`list-reset`, as the global `ul li::before` draws a ✦ that would become a grid cell), one row each: a 1rem stroke circle, the label, then signed points right-aligned in tabular numerals. A gain (points above 0) has a ticked circle in the accent, a cost (below 0) a dashed circle in the warning ink, and no points an empty circle in the muted ink. Rows run gains, then costs, then zeros, each group in the order the read returned them. The glyphs are `aria-hidden`; every row shows its sign and number, "+10", "−5" or "0", with a true minus sign. Zero-point facts are listed too, so the curator reads what to fix as well as what is wrong, and the rows always add up to the heading.
+
+A hairline closes the panel off from the References field beneath. The padding above it is `space(5)`, equal to the Sources body's gap below it, and the panel's own bottom margin is cleared so the two sides match.
 
 The score and its facts come from `sourcingScore` in `src/modules/ingredients/services/sourcing-score.ts`, with every weight in `src/modules/ingredients/schema/sourcing-weights.ts`. The reasoning behind each fact and weight is in [`../design-decisions/m14.24-plan.md`](../design-decisions/m14.24-plan.md), "The score".
 
@@ -13,14 +15,19 @@ The score and its facts come from `sourcingScore` in `src/modules/ingredients/se
 
 `SourcingScoreProps` (`types.ts`):
 
-| Prop       | What it is                                                                  |
-| ---------- | --------------------------------------------------------------------------- |
-| `sourcing` | The `SourcingScore` the curator read returns: `score` and its `facts` list. |
+| Prop       | What it is                                                                       |
+| ---------- | -------------------------------------------------------------------------------- |
+| `sourcing` | The `SourcingScore` the curator read returns: `score` and its `facts` list.      |
+| `variant`  | `panel` (the default) is the edit dialog's; `head` is the entry page's head row. |
+
+## The head variant
+
+On the public entry page the score is the last row of the entry's head, ruled off above by a hairline with `space(4)` padding. It is an `h2` sized with `heading-size(3)` and the same InfoTip, with no bar or key. Beneath is a native `<details>` whose summary reads "Show the Facts", or "Hide the Facts" once open (kept in state from the `toggle` event), in muted caption ink with the shared `disclosure-chevron`. The facts are the same glyph rows in the same order, in a grid of `repeat(auto-fill, minmax(16rem, 1fr))`: one column at phone width, more in a wide head. The component is a client component for that state.
 
 ## Where it shows
 
-The compendium's edit dialog (`src/app/(shell)/admin/compendium/compendium-dialog.tsx`), at the start of the form's Sources section (the form's `sourcesIntro` slot), on the admin compendium and on the public compendium's edit dialog for a curator. `readCompendiumEntry` in `read-entry.ts` reads the score through `readSourcingScore`, which refuses anyone who is not a curator or admin; an add has no score. The section is a landmark named by its heading, so a screen reader can jump to it.
+The compendium's edit dialog, at the start of the form's Sources section (the form's `sourcesIntro` slot). The admin compendium dialog and the entry page's dialog both render [`CompendiumEntryForm`](compendium-entry-form.md), which draws the panel from its `sourcing` prop. The admin page reads the score in `read-entry.ts`; the entry page reads it in `sourcingOf` in `src/app/(public)/compendium/ingredients/[slug]/page.tsx`. Both call `readSourcingScore`, which refuses anyone who is not a curator or admin; the entry page asks only when the viewer can curate, and the score is never in the cached public read. An add and a coven's own entry have none. The panel is a landmark named by its heading, so a screen reader can jump to it. The head variant shows on the entry page itself, from the same read.
 
 ## Testing
 
-`tests/components/SourcingScore/index.test.tsx` checks the region is named by the heading, the rows run gains, costs then zeros with their signed points, the bar's accessible name states the numbers (including for a negative total), and the bar never passes its track. `tests/app/(shell)/admin/compendium/compendium-dialog.test.tsx` checks the edit dialog shows it.
+`tests/components/SourcingScore/index.test.tsx` checks the region is named by the heading, the rows run gains, costs then zeros with their signed points, the bar's accessible name states the numbers (including for a negative total), and the bar never passes its track. `tests/app/(shell)/admin/compendium/compendium-dialog.test.tsx` checks the edit dialog shows it. The head variant's toggle and fact order are tested in the same file, and `tests/app/(public)/compendium/ingredients/slug-page.test.tsx` checks who is handed the score. The service refusal is `tests/modules/ingredients/services/compendium-sourcing.test.ts`.

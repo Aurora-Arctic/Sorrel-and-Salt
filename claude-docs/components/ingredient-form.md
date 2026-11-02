@@ -1673,7 +1673,7 @@ deities with their traditions, references with their citations, and its
 variants, each with its pick and group and its own categories, substitutes
 and references (MB.221), a linked substitute carrying the forms its second
 picker offers — so opening the modal sends no browser read
-(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, a
+(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, which draws the form through [`CompendiumEntryForm`](compendium-entry-form.md), a
 `RouteModal` ([`modal.md`](modal.md), "RouteModal"), in the default width, that closes back to the
 list, with a router of its own for what RouteModal does not do: Save
 Ingredient replaces the address with the saved entry's `?edit=`, at the
