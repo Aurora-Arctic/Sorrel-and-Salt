@@ -42,9 +42,10 @@ export default function CodeOfEthicsPage() {
 
       <h2>What Everyone Agrees To</h2>
       <p>
-        The Terms of Use make this section part of what every account agrees to. It is kept short on
-        purpose. The sections after it say why each rule is here; the three at the end add to it for
-        curators, admins and the site's owner, and bind whoever holds that role.
+        The <Link href="/terms">Terms of Use</Link> make this section part of what every account
+        agrees to. It is kept short on purpose. The sections after it say why each rule is here; the
+        three at the end add to it for curators, admins and the site's owner, and bind whoever holds
+        that role.
       </p>
       <ul>
         <li>
