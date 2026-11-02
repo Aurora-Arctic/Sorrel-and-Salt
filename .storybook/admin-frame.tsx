@@ -12,7 +12,7 @@ import { ShellFrame } from './shell-frame';
 import type { AdminFrameProps, AdminTabbedFrameProps } from './types';
 
 // The admin layout's markup for a story, without the server component's session read
-// (`src/app/(shell)/admin/layout.tsx`). The context row and nav sit above `.page-column`,
+// (`src/app/(shell)/keepers/layout.tsx`). The context row and nav sit above `.page-column`,
 // all inside `.app-shell__main`, which keeps the last row clear of the phone's bottom nav.
 
 // A provider only where a story names an address; without one the stub's own default stands.
@@ -51,9 +51,9 @@ export const AdminFrame = ({
           <ContextRow
             lead={
               <PendingLink
-                href="/admin"
+                href="/keepers"
                 className="context-row__name"
-                navigationTarget={adminTarget('/admin')}
+                navigationTarget={adminTarget('/keepers')}
               >
                 Admin
               </PendingLink>

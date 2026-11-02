@@ -174,7 +174,7 @@ const preview: Preview = {
       appDirectory: true,
       // The page the workshop pretends to be on, unless a story wraps itself
       // in WorkshopPathname (./navigation.tsx).
-      navigation: { pathname: '/admin/users' },
+      navigation: { pathname: '/keepers/users' },
     },
     options: {
       // The top-level groups in the order claude-docs/workshop.md gives

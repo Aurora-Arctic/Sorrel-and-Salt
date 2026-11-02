@@ -73,7 +73,7 @@ const Page = (): ReactElement => (
       </li>
       <li>
         <PendingLink
-          href={'/admin/users'}
+          href={'/keepers/users'}
           navigationTarget={{
             region: 'main',
             shape: 'table',

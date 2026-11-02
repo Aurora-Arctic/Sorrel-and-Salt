@@ -66,7 +66,7 @@ const OPEN_COVEN = 'fixture-coven';
 
 const DEFAULT_OPEN = {
   coven: '/coven/fixture-coven',
-  admin: '/admin/users',
+  admin: '/keepers/users',
   new: '/coven/new',
   none: '/account',
 };
@@ -112,9 +112,9 @@ export const ShellFrame = ({
             <ContextRow
               lead={
                 <PendingLink
-                  href="/admin"
+                  href="/keepers"
                   className="context-row__name"
-                  navigationTarget={adminTarget('/admin')}
+                  navigationTarget={adminTarget('/keepers')}
                 >
                   Admin
                 </PendingLink>
