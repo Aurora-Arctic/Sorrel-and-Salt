@@ -3,6 +3,7 @@ import type { Route } from 'next';
 import { describe, expect, it, vi } from 'vitest';
 import MemberList from '@/components/MemberList';
 import { longMinuteInZone } from '@/lib/utc';
+import { printed } from '../../support/printed-text';
 import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
 import type { MemberListEntry } from '@/components/MemberList/types';
 
@@ -131,7 +132,7 @@ describe('MemberList', () => {
     expect(screen.getByRole('columnheader', { name: 'Access' })).toBeTruthy();
     expect(within(rowOf(MEMBER.name)).getByText('Paused with no end date')).toBeTruthy();
     // The site's long date form, in the viewer's own zone once drawn on the client, as `LocalTime` prints it.
-    const end = longMinuteInZone(AT);
+    const end = printed(longMinuteInZone(AT));
     expect(within(rowOf(OWNER.name)).getByText(`Paused until ${end}`)).toBeTruthy();
     expect(within(rowOf(OWNER.name)).getByText(`Until ${end}`)).toBeTruthy();
     // The check's tip repeats its word, so the word is read from the page, not the hover bubble.

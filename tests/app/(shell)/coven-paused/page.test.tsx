@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
+import { printed } from '../../../support/printed-text';
 import { Forbidden } from '@/lib/errors';
 
 // `/coven-paused/[slug]`, where a member whose access to one coven is paused is sent from its pages. It reads the pause itself
@@ -70,7 +71,7 @@ describe('/coven-paused/[slug]', () => {
     expect(pausedCovenBySlug).toHaveBeenCalledExactlyOnceWith(SESSION, 'fixture-coven');
     expect(screen.getByRole('heading', { name: 'Access Paused' })).toBeInTheDocument();
     expect(screen.getByText(/Your access to/)).toHaveTextContent(
-      `Your access to Fixture Coven is paused until ${longMinuteInZone(until)}.`,
+      `Your access to Fixture Coven is paused until ${printed(longMinuteInZone(until))}.`,
     );
   });
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { longMinuteInZone } from '@/lib/utc';
+import { printed } from '../../support/printed-text';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
@@ -103,7 +104,7 @@ describe('UserList, standing support time-outs and access pauses', () => {
     );
 
   // The end in the site's long date form, in the viewer's own zone once drawn on the client, as `LocalTime` prints it.
-  const end = longMinuteInZone(AT);
+  const end = printed(longMinuteInZone(AT));
 
   it('marks a standing time-out with its end in the site’s date form or none under Support, and a user with none as not timed out', () => {
     rows();

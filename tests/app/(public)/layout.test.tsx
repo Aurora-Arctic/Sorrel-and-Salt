@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
+import { printed } from '../../support/printed-text';
 import type { ShellContext } from '@/lib/types';
 
 // The public frame's layout: the session decides which chrome, and
@@ -79,7 +80,7 @@ describe('the (public) layout', () => {
 
     const notice = screen.getByRole('status');
     expect(notice).toHaveTextContent(
-      `Your site access is paused until ${longMinuteInZone(until)}.`,
+      `Your site access is paused until ${printed(longMinuteInZone(until))}.`,
     );
     expect(screen.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
       'href',
