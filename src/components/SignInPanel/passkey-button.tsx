@@ -5,6 +5,7 @@ import { signIn } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import { PASSKEY_SIGN_IN_ERROR, leaveSignedIn } from './passkey-sign-in';
+import { leaveIfPaused } from './paused';
 import type { PasskeyButtonProps } from './types';
 
 const NAME = 'Sign In with a Passkey';
@@ -21,6 +22,8 @@ const PasskeyButton = ({ next, lastUsed }: PasskeyButtonProps): ReactElement => 
     setBusy(true);
     // A dropped connection throws rather than answering `error`; both say so.
     const result = await signIn.passkey().catch((thrown: unknown) => ({ error: thrown }));
+    // The passkey of a paused account: the paused page says so, and until when.
+    if (result?.error && leaveIfPaused(result.error)) return;
     if (result?.error) {
       setBusy(false);
       report(PASSKEY_SIGN_IN_ERROR);

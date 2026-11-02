@@ -112,6 +112,19 @@ describe('SignInPanel, the two-factor step', () => {
     expect(assign).toHaveBeenCalled();
   });
 
+  it('leaves for the paused page when the account was paused after its password was checked', async () => {
+    verifyTotp.mockResolvedValue({
+      data: null,
+      error: { status: 403, code: 'ACCESS_PAUSED', until: '2026-12-01T09:00:00.000Z' },
+    });
+    await passPassword();
+
+    type('Code From Your App', '123456');
+    await press(screen.getByRole('button', { name: 'Verify' }));
+
+    expect(assign).toHaveBeenCalledWith('/access-paused?until=2026-12-01T09%3A00%3A00.000Z');
+  });
+
   it('says a wrong code with the field, and stays on the step', async () => {
     verifyTotp.mockResolvedValue({ data: null, error: { status: 401, code: 'INVALID_CODE' } });
     await passPassword();

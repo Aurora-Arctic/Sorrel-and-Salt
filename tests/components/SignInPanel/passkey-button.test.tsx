@@ -46,6 +46,21 @@ describe('Sign In with a Passkey', () => {
     expect(assignMock).toHaveBeenCalledWith('/sign-in?next=%2Fcoven%2Fhearth');
   });
 
+  it('leaves for the paused page with no end when the passkey signs in an account paused with no end date', async () => {
+    passkeyMock.mockResolvedValue({
+      data: null,
+      error: { status: 403, code: 'ACCESS_PAUSED', until: null },
+    });
+    render(<SignInPanel next="/coven/hearth" configured={['google']} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', BUTTON));
+    });
+
+    expect(assignMock).toHaveBeenCalledWith('/access-paused');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('stays on the page and says so under the button when the passkey does not sign in', async () => {
     passkeyMock.mockResolvedValue(REFUSED);
     render(<SignInPanel configured={['google']} />);

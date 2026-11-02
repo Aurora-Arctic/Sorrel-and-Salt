@@ -12,6 +12,7 @@ import PageHeader from '../PageHeader';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
+import { leaveIfPaused } from './paused';
 import TwoFactorStep from './two-factor-step';
 import type { PasswordFormProps } from './types';
 
@@ -121,6 +122,8 @@ const PasswordForm = ({
           })
         : signIn.email({ email: address, password })
     ).catch(() => ({ data: null, error: {} as Failure }));
+    // The right password for a paused account: the paused page says so, and until when.
+    if (error && leaveIfPaused(error)) return;
     if (error) {
       setPending(false);
       setProblem(refusal(mode, error));

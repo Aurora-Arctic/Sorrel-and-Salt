@@ -124,6 +124,19 @@ describe('SignInPanel, email and password', () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
+  it('leaves for the paused page, carrying the end of the pause, when the right password signs in a paused account', async () => {
+    signInEmail.mockResolvedValue({
+      data: null,
+      error: { status: 403, code: 'ACCESS_PAUSED', until: '2026-12-01T09:00:00.000Z' },
+    });
+    fillSignIn();
+
+    await press(submit('Sign In'));
+
+    expect(assign).toHaveBeenCalledWith('/access-paused?until=2026-12-01T09%3A00%3A00.000Z');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('says to wait when the server limits the attempts', async () => {
     signInEmail.mockResolvedValue({ data: null, error: { status: 429 } });
     fillSignIn();
