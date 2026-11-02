@@ -70,12 +70,12 @@ an admin looks.
 - **An admin cannot impersonate another admin**, the primary admin included.
   `allowImpersonatingAdmins` stays at its default, off, and the default `admin`
   role lacks `impersonate-admins`.
-- **A user whose site access is paused is impersonated into what they see while paused.** The
-  session hook that refuses their own sign-in (`refusePausedSession` in `src/lib/auth.ts`) lets
-  the impersonation session through, and `sessionStateFromHeaders` in `src/lib/request-session.ts`
-  records the standing pause on it: every signed-in page redirects to `/access-paused`, a public
-  page draws the signed-out view, and every signed-in GraphQL field answers `ACCESS_PAUSED`. The
-  banner, drawn by the root layout, stays on every page, so Stop still works. Once the pause is
+- **A user whose site access is paused is impersonated into what they see while paused.**
+  `sessionStateFromHeaders` in `src/lib/request-session.ts` records the standing pause on the
+  impersonation session as on the user's own: support's pages and API calls act as the user, every
+  other signed-in page redirects to `/access-paused`, another public page draws the signed-out view
+  under the shell's paused notice, and every other signed-in GraphQL call answers `ACCESS_PAUSED`.
+  The banner, drawn by the root layout, stays on every page, so Stop still works. Once the pause is
   lifted or runs out the same impersonation reaches the normal pages
   (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
 - **An impersonation lasts an hour**, Better Auth's default. The session row

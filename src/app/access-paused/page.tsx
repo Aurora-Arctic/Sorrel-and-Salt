@@ -12,9 +12,9 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// Where a paused account's sign-in lands (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access"). It reads
-// nothing but its own `?until=`, which the refused sign-in wrote, so it tells a visitor nothing the address does not.
-// No AppShell: the page is reached signed out.
+// Where a paused account's pages send it (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access"). It reads
+// nothing but its own `?until=`, which the redirect wrote, so it tells a visitor nothing the address does not. No AppShell:
+// it reads no session, so it draws the same signed in or out.
 export default async function AccessPausedPage({ searchParams }: AccessPausedPageProps) {
   const until = pausedUntil((await searchParams).until);
   const ended = until !== undefined && until.getTime() <= Date.now();
@@ -29,14 +29,19 @@ export default async function AccessPausedPage({ searchParams }: AccessPausedPag
           </p>
         ) : until ? (
           <p>
-            Access to this account is paused until {inUtc(until)}. You can sign in again after that.
+            Access to this account is paused until {inUtc(until)}. The rest of the site opens again
+            after that.
           </p>
         ) : (
           <p>
-            Access to this account is paused, with no end date. You can sign in again once an admin
-            lifts the pause.
+            Access to this account is paused, with no end date. The rest of the site opens again
+            once an admin lifts the pause.
           </p>
         )}
+        <p>
+          You can still reach <Link href="/support">Support</Link> signed in, to ask about the
+          pause.
+        </p>
         <p>
           The <Link href="/compendium">Compendium</Link> stays open to everyone, without signing in.
         </p>

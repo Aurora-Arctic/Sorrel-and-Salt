@@ -44,6 +44,7 @@ vi.mock('@/modules/identity', async (actual) => ({
 
 const {
   getSession,
+  getShellSession,
   hasPassword,
   linkedAccounts,
   requireAdminSession,
@@ -153,41 +154,96 @@ describe('requireSignedIn', () => {
   });
 });
 
-// An admin impersonating a paused user is shown what that user sees: the paused page in place of every signed-in page.
-describe('a paused impersonation', () => {
+// A paused user signs in to a view of the site with support in it and nothing else (claude-docs/design-decisions/m15.52-site-access-pause.md,
+// "A paused user may sign in to reach support"); an admin impersonating them is shown the same.
+describe('a paused session', () => {
   const UNTIL = new Date('2030-01-01T00:00:00.000Z');
+  const PAUSED_PAGE = `redirect:/access-paused?until=${encodeURIComponent(UNTIL.toISOString())}`;
 
-  function impersonation() {
-    const result = betterAuthSession('user');
-    return { ...result, session: { ...result.session, impersonatedBy: 'admin-id' } };
+  function paused() {
+    standingAccessPauseMock.mockResolvedValue({ userId: USER_ID, until: UNTIL });
   }
 
-  it('is sent from a signed-in page to the paused page with the pause’s end, where the unpaused one is let through', async () => {
-    getSessionMock.mockResolvedValue(impersonation());
-    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
-    await expect(requireSignedIn()).resolves.toMatchObject({ userId: USER_ID });
+  it('is sent from a coven or account page to the paused page with the pause’s end, where the unpaused session is let through', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    for (const page of ['/coven/wyrdwood', '/account', '/account/security']) {
+      requestHeaders.set(RETURN_PATH_HEADER, page);
+      await expect(requireSession()).resolves.toMatchObject({ userId: USER_ID });
+    }
 
-    standingAccessPauseMock.mockResolvedValue({ userId: USER_ID, until: UNTIL });
+    paused();
 
-    await expect(requireSignedIn()).rejects.toThrow(
-      `redirect:/access-paused?until=${encodeURIComponent(UNTIL.toISOString())}`,
-    );
-    await expect(requireSession()).rejects.toThrow('redirect:/access-paused?until=');
+    for (const page of ['/coven/wyrdwood', '/account', '/account/security']) {
+      requestHeaders.set(RETURN_PATH_HEADER, page);
+      await expect(requireSignedIn()).rejects.toThrow(PAUSED_PAGE);
+      await expect(requireSession()).rejects.toThrow(PAUSED_PAGE);
+    }
     expect(standingAccessPauseMock).toHaveBeenCalledWith(USER_ID);
   });
 
-  it('reads as signed out on a public page', async () => {
-    getSessionMock.mockResolvedValue(impersonation());
-    standingAccessPauseMock.mockResolvedValue({ userId: USER_ID, until: null });
+  it('reaches the support pages signed in, a request opened on the list included', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    paused();
 
-    await expect(getSession()).resolves.toBeNull();
+    for (const page of [
+      '/support',
+      '/support?support=bug',
+      '/account/support',
+      '/account/support?request=r1',
+    ]) {
+      requestHeaders.set(RETURN_PATH_HEADER, page);
+      await expect(requireSession()).resolves.toMatchObject({ userId: USER_ID });
+      await expect(getSession()).resolves.toMatchObject({ userId: USER_ID });
+    }
   });
 
-  it('asks for no pause on a session that is not an impersonation', async () => {
+  it('reads as signed in on the entry and sign-in pages, which send it on, and on no page that merely starts like one', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    paused();
+
+    for (const page of ['/', '/sign-in', '/sign-in?next=%2Fsupport']) {
+      requestHeaders.set(RETURN_PATH_HEADER, page);
+      await expect(getSession(), page).resolves.toMatchObject({ userId: USER_ID });
+    }
+    for (const page of ['/sign-in-help', '/supporters', '/account/supportive']) {
+      requestHeaders.set(RETURN_PATH_HEADER, page);
+      await expect(getSession(), page).resolves.toBeNull();
+    }
+  });
+
+  it('reads as signed out on another public page, and to the proxy, and still signed in to the shell with the pause', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    requestHeaders.set(RETURN_PATH_HEADER, '/compendium');
+    await expect(getSession()).resolves.toMatchObject({ userId: USER_ID });
+
+    paused();
+
+    await expect(getSession()).resolves.toBeNull();
+    await expect(sessionFromHeaders(requestHeaders)).resolves.toBeNull();
+    await expect(getShellSession()).resolves.toEqual({
+      session: { userId: USER_ID, role: 'user' },
+      accessPause: { until: UNTIL },
+    });
+  });
+
+  it('is an impersonation’s too: the admin is shown the paused page', async () => {
+    const result = betterAuthSession('user');
+    getSessionMock.mockResolvedValue({
+      ...result,
+      session: { ...result.session, impersonatedBy: 'admin-id' },
+    });
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven/wyrdwood');
+    paused();
+
+    await expect(requireSignedIn()).rejects.toThrow(PAUSED_PAGE);
+  });
+
+  it('leaves an unpaused session’s shell without a pause', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
 
-    await expect(getSession()).resolves.toMatchObject({ userId: USER_ID });
-    expect(standingAccessPauseMock).not.toHaveBeenCalled();
+    await expect(getShellSession()).resolves.toEqual({
+      session: { userId: USER_ID, role: 'user' },
+    });
   });
 });
 

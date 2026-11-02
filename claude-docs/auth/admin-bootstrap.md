@@ -719,25 +719,37 @@ A note is trimmed, and an empty one is stored as none. Lifting a user with no st
 the new pause, all in one `withAudit` transaction (`setUserAccessPause` in `src/db/repository/user-access-pauses.ts`).
 The session rows have no audit columns and no `deleted_at`, so they are deleted as Better Auth's own sign-out deletes them.
 
-**Sign-in while paused.** `refusePausedSession` in `src/lib/auth.ts` is Better Auth's `session.create.before` hook,
-which every way of signing in passes through: a provider callback, a password, a passkey, the two-factor step and the
-verification link alike. It reads the standing pause through `standingAccessPause`, which takes no proof because no
-session exists yet. For the provider callback and any other GET it answers a redirect to `/access-paused`; for a
-fetch it answers 403 with the code `ACCESS_PAUSED` and `until`, and the sign-in panel (`src/components/SignInPanel/paused.ts`)
-loads `/access-paused` itself. The address carries `?until=` for a dated pause and nothing for an open-ended one
-(`accessPausedPath` in `src/lib/access-paused.ts`). The hook runs after the credential is checked, so a wrong password
-still answers 401 and counts as a failed sign-in, and a paused right password counts as none.
-An admin impersonating a paused user is let through, and is shown what the user would see: `sessionStateFromHeaders` in
-`src/lib/request-session.ts` records the standing pause on an impersonation session, every signed-in page then redirects to
-`/access-paused`, a public page draws the signed-out view, and every signed-in GraphQL field answers `ACCESS_PAUSED`
+**Signed in while paused.** A paused account signs in by every method, as any other does: nothing in `src/lib/auth.ts`
+reads the pause, so a wrong password still answers 401 and counts as a failed sign-in, and a right one counts as none. The
+pause is read once per request, in `sessionStateFromHeaders` in `src/lib/request-session.ts`, which records the standing
+pause on every session, an impersonation's included, as `accessPause`. From there:
+
+- **Pages.** `requireSignedIn()`, and every guard built on it, redirects to `/access-paused` from every page but
+  `/support` and `/account/support` and the pages beneath them (`isPausedViewPage` in `src/lib/access-paused.ts`).
+  `getSession()` answers the session on those pages and on `/` and `/sign-in`, which only send the account on to
+  `?next=` or its landing, and `null` on every other public page, so the compendium draws its signed-out view.
+- **The shell.** `getShellSession()` answers the session with the pause beside it, and `viewerOf` and `viewerIfSignedIn`
+  in `src/lib/viewer.ts` draw a paused viewer with no coven, curation, creation or invitation, keeping the count of their
+  own requests waiting on them. AppShell draws a caution notice above the page, in its own `Site Access` landmark:
+  "Your site access is paused until …" in UTC, or "with no end date", linking to the paused page.
+- **The API.** `createContext` in `src/graphql/context.ts` keeps the session for an operation whose every root field is one
+  the signed-in support form uses (`isSupportOperation` in `src/graphql/paused-operations.ts`: `supportDialogState`,
+  `mySupportRequests`, `mySupportRequest`, `sendSupportRequest`, `sendSupportMessage`, `resolveMySupportRequest`). Any
+  other operation, a fragment at the root, or a document that does not parse runs with no session and `accessPause` set, so a
+  public field answers as signed out and the rest answer `ACCESS_PAUSED` with `pausedUntil`.
+- **Support time-outs.** A paused user who is also timed out is refused the send by the time-out, with its own sentence.
+
+The paused page's address carries `?until=` for a dated pause and nothing for an open-ended one (`accessPausedPath`).
+An admin impersonating a paused user is shown all of this as the user is
 (`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
 
 **The paused page.** `/access-paused` is public (`src/proxy.ts`), outside the app shell, and not indexed. It reads only its
 own `?until=`: a future end is named in UTC, a past one is said to have ended with a link to Sign In, and none or a
-malformed one reads as no end date. It links to the compendium, which a paused account reads as any signed-out visitor.
+malformed one reads as no end date. It links to Support, which a paused account reaches signed in, and to the compendium,
+which it reads as any signed-out visitor.
 
-**Ending.** A dated pause ends by itself once `until` passes, with no write; the next sign-in simply succeeds.
-A lift stamps `lifted_at` and `lifted_by`. Neither restores a session: the user signs in again.
+**Ending.** A dated pause ends by itself once `until` passes, with no write, and a lift stamps `lifted_at` and `lifted_by`.
+Either way the next request of a session signed in while paused reaches the whole site.
 **In the user modal.** The People page's user modal has a Site Access section (`claude-docs/components/user-detail.md`)
 where an admin sets a pause, lifts the one that stands, and reads the earlier ones with who set and who lifted each. It is
 absent on the primary admin and on the admin's own account. The history is read through `listUserAccessPauses`, a

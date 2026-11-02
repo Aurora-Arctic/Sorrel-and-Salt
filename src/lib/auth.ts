@@ -56,7 +56,6 @@ import { breachedPasswordCheck } from './breached-password';
 import { HELD_PASSWORD_FIELDS } from './held-password-paths';
 import { isFreshSession } from './session-fresh';
 import { primaryAdminEmail } from './primary-admin';
-import { ACCESS_PAUSED_CODE, ACCESS_PAUSED_MESSAGE, accessPausedPath } from './access-paused';
 import { verifyEmailMessage } from '../emails/verify-email';
 import { accountExistsMessage } from '../emails/account-exists';
 import { resetPasswordMessage } from '../emails/reset-password';
@@ -65,7 +64,6 @@ import { mailPasswordChanged } from './password-notice';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
-  standingAccessPause,
   type PrimaryAdminOutcome,
   type SignInProfile,
 } from '@/modules/identity';
@@ -588,29 +586,6 @@ async function noticeCompletedChange(request: Request | undefined): Promise<void
   await sendEmailChangeNotice(request, claims.email, claims.updateTo, 'completed');
 }
 
-/**
- * Refuses a session to an account whose access an admin has paused, however it signs in: every sign-in method, and every
- * other path that makes a session, ends in this one write. A browser navigation (the provider callback, a mailed link) is
- * sent to the paused page; a fetch from the sign-in panel is answered 403 with the pause's end, and the panel goes there. An
- * admin impersonating the account is let through, and request-session's pause check shows them what the user would see.
- */
-async function refusePausedSession(
-  session: { userId: string; impersonatedBy?: string | null },
-  ctx: { path?: string; request?: Request } | null,
-): Promise<void> {
-  if (session.impersonatedBy) return;
-  const pause = await standingAccessPause(session.userId);
-  if (!pause) return;
-  if (ctx?.path === '/callback/:id' || ctx?.request?.method === 'GET') {
-    throw new APIError('FOUND', undefined, { Location: accessPausedPath(pause.until) });
-  }
-  throw new APIError('FORBIDDEN', {
-    code: ACCESS_PAUSED_CODE,
-    message: ACCESS_PAUSED_MESSAGE,
-    until: pause.until?.toISOString() ?? null,
-  });
-}
-
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
@@ -861,11 +836,6 @@ export const auth = betterAuth({
     }),
   },
   databaseHooks: {
-    session: {
-      create: {
-        before: async (session, ctx) => refusePausedSession(session, ctx),
-      },
-    },
     user: {
       create: {
         // Writes outside `withAudit` (CLAUDE.md rule 3): there is no session yet,

@@ -161,4 +161,22 @@ describe('AppShell', () => {
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });
+
+  it('tells a paused viewer their access is paused, in a landmark of its own', () => {
+    const until = new Date('2027-01-02T03:04:00Z');
+    shell({ ...MEMBER, accessPause: { until } }, []);
+
+    const pause = screen.getByRole('complementary', { name: 'Site Access' });
+    expect(pause).toHaveTextContent('Your site access is paused until 2 January 2027, 03:04 UTC.');
+    expect(screen.getByRole('link', { name: 'Why Access Is Paused' })).toHaveAttribute(
+      'href',
+      '/access-paused?until=2027-01-02T03%3A04%3A00.000Z',
+    );
+  });
+
+  it('shows no pause notice to a viewer who is not paused', () => {
+    shell(MEMBER);
+
+    expect(screen.queryByRole('complementary', { name: 'Site Access' })).not.toBeInTheDocument();
+  });
 });

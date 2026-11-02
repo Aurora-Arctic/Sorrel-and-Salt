@@ -20,7 +20,7 @@ const PUBLIC_ROUTES = [
   '/sign-in',
   '/forgot-password', // asking for a password reset link
   '/reset-password', // where the mailed reset link lands
-  '/access-paused', // where a paused account's refused sign-in lands, reading only its own ?until=
+  '/access-paused', // where a paused account's pages send it, reading only its own ?until=
   '/invite/*', // accepting an invitation
   '/i/*', // a card's short link, accepting like /invite/*
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie

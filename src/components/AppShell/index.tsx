@@ -1,7 +1,11 @@
 import { PendingLink } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
+import Link from 'next/link';
+import { accessPausedPath } from '../../lib/access-paused';
+import { inUtc } from '../../lib/utc';
 import AccountMenu from '../AccountMenu';
+import Notice from '../Notice';
 import ThemeToggle from '../ThemeToggle';
 import { ViewerIdProvider } from '../../lib/viewer-id';
 import AddIngredientButton from './add-ingredient-button';
@@ -79,6 +83,18 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           click, and the next Tab would restart at the top of the page. */}
       <span id="main" className="skip-target" tabIndex={-1} />
       <div className="app-shell__main">
+        {/* A paused viewer is told so on every page they reach; a landmark of its own, as the page owns `main`. */}
+        {viewer.accessPause && (
+          <aside className="app-shell__pause" aria-label="Site Access">
+            <Notice kind="caution" quiet>
+              Your site access is paused
+              {viewer.accessPause.until
+                ? ` until ${inUtc(viewer.accessPause.until)}.`
+                : ', with no end date.'}{' '}
+              <Link href={accessPausedPath(viewer.accessPause.until)}>Why Access Is Paused</Link>
+            </Notice>
+          </aside>
+        )}
         <ViewerIdProvider id={viewer.id}>
           <MainBody>{children}</MainBody>
         </ViewerIdProvider>

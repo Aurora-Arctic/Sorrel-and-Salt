@@ -6,9 +6,9 @@ import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { withSql } from './stories/coven-ingredients';
 
-// An admin pauses a user's access from the People page's user modal, the user's sign-in is refused onto the paused
-// page, and once the admin lifts the pause the same sign-in succeeds (claude-docs/auth/admin-bootstrap.md, "Pausing a
-// user's access"). The user signs in by password through the sign-in page, so the refusal is the sign-in hook's.
+// An admin pauses a user's access from the People page's user modal; the user still signs in, by password through the
+// sign-in page, into support and nothing else, told on every page they reach that they are paused, and once the admin lifts
+// the pause the rest of the site opens (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -30,7 +30,7 @@ async function signInByPassword(page: Page, email: string): Promise<void> {
 const sessionsOf = (userId: string) =>
   withSql((sql) => sql`select 1 from sessions where user_id = ${userId}`);
 
-test('an admin pauses a user’s access, the user’s sign-in is refused, and once lifted it succeeds', async ({
+test('an admin pauses a user’s access, the user signs in to support alone, and once lifted reaches the rest', async ({
   page,
   browser,
 }) => {
@@ -76,12 +76,40 @@ test('an admin pauses a user’s access, the user’s sign-in is refused, and on
   // Pausing signs the user out everywhere.
   expect(await sessionsOf(userId)).toHaveLength(0);
 
-  // The right password is refused onto the paused page, which names no end, and no session is made.
+  // The right password signs in, and the landing sends the user on to the paused page, which names no end.
   await signInByPassword(userPage, email);
   await expect(userPage).toHaveURL('/access-paused');
   await expect(userPage.getByRole('heading', { name: 'Access Paused', level: 1 })).toBeVisible();
   await assertNoAccessibilityViolations(userPage);
-  expect(await sessionsOf(userId)).toHaveLength(0);
+  expect(await sessionsOf(userId)).toHaveLength(1);
+
+  // Support opens signed in, under the notice that access is paused, and the request sends.
+  await userPage.getByRole('main').getByRole('link', { name: 'Support', exact: true }).click();
+  await expect(userPage).toHaveURL('/support');
+  const notice = userPage.getByRole('complementary', { name: 'Site Access' });
+  await expect(notice).toContainText('Your site access is paused, with no end date.');
+  await expect(notice.getByRole('link', { name: 'Why Access Is Paused' })).toHaveAttribute(
+    'href',
+    '/access-paused',
+  );
+  await assertNoAccessibilityViolations(userPage);
+  await userPage.getByRole('radio', { name: /^Account & Sign-In/ }).check();
+  await field(userPage, 'Subject').fill('Why is my access paused?');
+  await field(userPage, 'Message').fill('I cannot open my coven.');
+  await userPage.getByRole('button', { name: 'Send Request', exact: true }).click();
+  await expect(userPage.getByRole('status').filter({ hasText: 'was received' })).toBeVisible();
+  const sent = await withSql(
+    (sql) => sql`select 1 from support_requests where created_by = ${userId}`,
+  );
+  expect(sent).toHaveLength(1);
+
+  // The compendium reads as signed out beneath the notice; a coven or account page sends the user to the paused page.
+  await userPage.goto('/compendium');
+  await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toBeVisible();
+  for (const path of ['/coven', '/account']) {
+    await userPage.goto(path);
+    await expect(userPage).toHaveURL('/access-paused');
+  }
 
   // Lifted, the pause moves to the earlier list, and the form is offered again.
   await access.getByRole('button', { name: 'Lift Pause', exact: true }).click();
@@ -96,10 +124,10 @@ test('an admin pauses a user’s access, the user’s sign-in is refused, and on
   );
   expect(lifted).toEqual({ lifted: true });
 
-  // The same sign-in now succeeds, leaving the sign-in page with a session.
-  await signInByPassword(userPage, email);
-  await expect(userPage).not.toHaveURL(/\/(sign-in|access-paused)/);
-  expect(await sessionsOf(userId)).toHaveLength(1);
+  // The same session now reaches the account page, without the notice.
+  await userPage.goto('/account');
+  await expect(userPage).toHaveURL(/\/account/);
+  await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toHaveCount(0);
 
   await user.close();
 });

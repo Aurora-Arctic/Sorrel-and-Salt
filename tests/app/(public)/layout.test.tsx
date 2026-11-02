@@ -66,4 +66,50 @@ describe('the (public) layout', () => {
       screen.getByRole('heading', { name: 'The compendium' }),
     );
   });
+
+  it('tells a paused viewer their access is paused until its end, in UTC, and links to the paused page', async () => {
+    const until = new Date('2027-01-02T03:04:00Z');
+    viewerIfSignedIn.mockResolvedValue({
+      ...MEMBER,
+      viewer: { ...MEMBER.viewer, accessPause: { until } },
+    });
+
+    await layout();
+
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent(/Your site access is paused until 2 January 2027, 03:04 UTC/);
+    expect(screen.getByRole('link', { name: 'Why Access Is Paused' })).toHaveAttribute(
+      'href',
+      '/access-paused?until=2027-01-02T03%3A04%3A00.000Z',
+    );
+    expect(screen.getByRole('main')).toContainElement(
+      screen.getByRole('heading', { name: 'The compendium' }),
+    );
+  });
+
+  it('tells a viewer paused with no end that it has no end date', async () => {
+    viewerIfSignedIn.mockResolvedValue({
+      ...MEMBER,
+      viewer: { ...MEMBER.viewer, accessPause: { until: null } },
+    });
+
+    await layout();
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      /Your site access is paused, with no end date/,
+    );
+    expect(screen.getByRole('link', { name: 'Why Access Is Paused' })).toHaveAttribute(
+      'href',
+      '/access-paused',
+    );
+  });
+
+  it('shows no pause notice to a viewer who is not paused', async () => {
+    viewerIfSignedIn.mockResolvedValue(MEMBER);
+
+    await layout();
+
+    expect(screen.queryByText(/site access is paused/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Why Access Is Paused' })).not.toBeInTheDocument();
+  });
 });

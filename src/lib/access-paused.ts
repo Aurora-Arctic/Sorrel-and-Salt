@@ -1,15 +1,15 @@
 import type { Route } from 'next';
 
-// The site access pause as sign-in sees it: the refusal's code, which the sign-in panel turns into a visit to the paused
-// page, and that page's address. Pure, so the server's session hook and the browser's panel share one spelling.
+// The access pauses as the request sees them: the code a paused call answers with, the pages a site pause leaves open, and the
+// paused pages' addresses. Pure, so the server and the browser share one spelling.
 
-/** The code a sign-in refused for a standing pause answers with, beside the pause's end as `until`. */
+/** The code a call refused for a standing pause answers with, beside the pause's end as `pausedUntil`. */
 export const ACCESS_PAUSED_CODE = 'ACCESS_PAUSED';
 
 /** The refusal's sentence, for a client that reads the message rather than the code. */
 export const ACCESS_PAUSED_MESSAGE = 'Access to this account is paused.';
 
-/** The public page a paused sign-in lands on. */
+/** The page a paused account's other pages send it to. */
 export const ACCESS_PAUSED_PATH = '/access-paused' satisfies Route;
 
 /** The paused page, carrying the pause's end as `?until=` when it has one; an open-ended pause carries nothing. */
@@ -26,14 +26,21 @@ export function pausedUntil(raw: string | string[] | undefined): Date | undefine
   return Number.isNaN(at.getTime()) ? undefined : at;
 }
 
-/** Whether a sign-in's refusal is a standing pause: what the panel leaves for the paused page on. */
-export function isAccessPaused(
-  failure: unknown,
-): failure is { code: typeof ACCESS_PAUSED_CODE; until?: string | null } {
+/** The pages a paused account reaches signed in, with everything beneath them: support, where it may ask about the pause. */
+const PAUSED_VIEW_PAGES = ['/support', '/account/support'];
+
+/**
+ * The pages that read a paused account as signed in only to send it on, to `?next=` or its landing: the entry page and the
+ * sign-in page. Exact paths, since `/` is beneath nothing; read as signed out, they would offer Sign In to a signed-in account.
+ */
+const PAUSED_SEND_ON_PAGES = ['/', '/sign-in'];
+
+/** Whether a page's path, its query ignored, is one a paused account reaches signed in rather than being sent to the paused page. */
+export function isPausedViewPage(path: string): boolean {
+  const pathname = path.split(/[?#]/, 1)[0];
   return (
-    typeof failure === 'object' &&
-    failure !== null &&
-    (failure as { code?: unknown }).code === ACCESS_PAUSED_CODE
+    PAUSED_SEND_ON_PAGES.includes(pathname) ||
+    PAUSED_VIEW_PAGES.some((page) => pathname === page || pathname.startsWith(`${page}/`))
   );
 }
 

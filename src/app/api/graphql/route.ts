@@ -14,7 +14,7 @@ const production = process.env.NODE_ENV === 'production';
 const yoga = createYoga({
   schema,
   graphqlEndpoint: '/api/graphql',
-  context: ({ request }) => createContext({ request }),
+  context: ({ request, params }) => createContext({ request, params }),
   fetchAPI: { Response },
   plugins: protections({ production }),
   // Each service error leaves with its code; anything else leaves masked.

@@ -110,7 +110,7 @@ describe('public routes', () => {
     '/forgot-password',
     '/reset-password?token=abc',
     '/reset-password?error=INVALID_TOKEN',
-    // Where a paused account's refused sign-in lands.
+    // Where a paused account's pages send it.
     '/access-paused',
     '/access-paused?until=2026-12-01T09%3A00%3A00.000Z',
     // A mail client fetches the mail's images and fonts with no cookie.

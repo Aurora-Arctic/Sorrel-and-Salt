@@ -4,16 +4,25 @@ import { passwordSetter } from '../lib/password-setter';
 import { supportNotifier } from '../lib/support-mail';
 import { sessionStateFromHeaders } from '../lib/request-session';
 import { createLoaders } from './loaders';
+import { isSupportOperation, type OperationParams } from './paused-operations';
 import type { Context } from './types';
 
 /** Yoga's `context` option, called once per request. */
-export async function createContext({ request }: { request: Request }): Promise<Context> {
+export async function createContext({
+  request,
+  params,
+}: {
+  request: Request;
+  params?: OperationParams;
+}): Promise<Context> {
   const state = await sessionStateFromHeaders(request.headers);
-  // A paused session acts as nobody, so a public read answers as signed out and the rest are refused with the pause.
-  const session = state.accessPause ? null : state.session;
+  // A paused session acts as itself for the signed-in support form alone; elsewhere it acts as nobody, so a public read
+  // answers as signed out and the rest are refused with the pause.
+  const paused = state.accessPause && !isSupportOperation(params) ? state.accessPause : undefined;
+  const session = paused ? null : state.session;
   return {
     session,
-    ...(state.accessPause && { accessPause: state.accessPause }),
+    ...(paused && { accessPause: paused }),
     loaders: createLoaders(session),
     emailVerification: emailVerificationSender(request),
     invitations: invitationSender(request),

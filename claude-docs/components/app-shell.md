@@ -54,6 +54,11 @@ goes to the account menu, which shows it ([`account-menu.md`](account-menu.md)).
 covens are listed alphabetically by name. A refused lookup (impossible for
 one's own id) throws.
 
+A viewer whose site access is paused carries `accessPause`, its end `null` when it has none. `viewerOf()` and
+`viewerIfSignedIn()` read it through `getShellSession()` and then draw no coven, no curation, no creation and no
+invitation, reading neither the memberships nor the invitation count, and keep the count of the viewer's own support
+requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in while paused").
+
 ## Contracts
 
 - **The bar** has the brand, the site nav, then at the right Add Ingredient,
@@ -96,6 +101,10 @@ one's own id) throws.
 - **The context row** is the layouts' to render: the coven layout puts the
   switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
   `AdminNav` ([`context-row.md`](context-row.md)).
+- **The paused notice.** For a paused viewer, a caution `Notice` above the page, in its own `aside` labelled
+  `Site Access`, since the page owns `main`: "Your site access is paused until …" in UTC, or "with no end date",
+  then a Why Access Is Paused link to `/access-paused` carrying the pause's end. `.app-shell__pause` sets it in the
+  wide column's edges.
 
 ## Styling
 

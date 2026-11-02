@@ -115,8 +115,9 @@ export default function TermsOfUsePage() {
         place but cannot open the coven, and their other covens are unaffected. A site admin may
         stop a person sending support requests for a time, and may take away the right to create
         covens. Accounts are never closed. A site admin may pause an account's access to the site,
-        until a date or with no end date; while the pause stands the account cannot sign in, and the
-        compendium stays open to it as it is to everyone.
+        until a date or with no end date; while the pause stands the account can still sign in to
+        ask for support, but can open nothing else, and the compendium stays open to it as it is to
+        everyone.
       </p>
 
       <h2>What the Site Owes You</h2>

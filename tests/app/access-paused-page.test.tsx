@@ -51,6 +51,12 @@ describe('/access-paused', () => {
     expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute('href', '/compendium');
   });
 
+  it('links to Support, which a paused account still reaches signed in', async () => {
+    await visit('2026-12-01T09:30:00.000Z');
+
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute('href', '/support');
+  });
+
   it('asks search engines not to index it', () => {
     expect(metadata.robots).toMatchObject({ index: false });
   });

@@ -9,7 +9,9 @@
   `getSession()`, which reads `headers()` for server components. A signed-out
   request is not refused here: the endpoint answers, and whichever scope or
   service the query reaches refuses it.
-- **`accessPause`**, set with the pause's end when a pause stands on the signed-in user. `session` is then
+- **`accessPause`**, set with the pause's end when a pause stands on the signed-in user and the operation
+  is not one of the signed-in support form's alone (`isSupportOperation` in `src/graphql/paused-operations.ts`,
+  which reads Yoga's `params`); such an operation keeps the session and carries no pause. `session` is then
   `null`, so a public read answers as for anyone signed out, and a refusal from a scope (`unauthorizedError` in
   `src/graphql/builder.ts`) or from `sessionOf` is `AccessPaused`, which leaves as `ACCESS_PAUSED` with
   `pausedUntil` (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
