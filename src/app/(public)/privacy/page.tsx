@@ -157,8 +157,8 @@ export default function PrivacyPolicyPage() {
       <p>
         Each time you sign in, session info is stored: this includes the network address (IP
         address) you came from and the browser details your browser sent. The sign-in library the
-        site is built on records these with every session by default. The site does not use them for
-        anything today, and no screen shows them to anyone.
+        site is built on records these with every session, for security purposes. No screen shows
+        them to anyone.
       </p>
 
       <h3>Rate-Limit Counters</h3>
