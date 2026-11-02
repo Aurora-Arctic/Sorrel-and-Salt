@@ -10,7 +10,7 @@ import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
 import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
 import { scheduleSupportLifecycle } from './retention-start';
-import { getSupportRequest } from './staff';
+import { getSupportRequest, refuseAnonymised } from './staff';
 
 // The request lifecycle. The transitions, and who may make each:
 //
@@ -130,7 +130,7 @@ export async function resolveMySupportRequest(
  * Adds a note only staff read. It never changes the request's status and is never mailed. An admin may on any request, a
  * curator on any request they can read, assigned to them or not.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin.
+ * @throws {Forbidden} the session is neither a curator nor an admin, or the request is anonymised.
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.
  */
@@ -140,6 +140,7 @@ export async function addSupportInternalNote(
   body: string,
 ): Promise<SupportReplyRow> {
   const request = await getSupportRequest(session, requestId);
+  refuseAnonymised(request);
   const text = parseInput(SupportMessage, body);
   return withAudit(session, async (write) => {
     const [row] = await write.insert(supportReplies, {

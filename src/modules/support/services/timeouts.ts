@@ -1,7 +1,8 @@
 import 'server-only';
 import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
-import { NotFound, fieldRefusal } from '../../../lib/errors';
+import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { isStandInAccount } from '../../../lib/system-actor';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
 import { users } from '../../identity/schema/users';
@@ -9,6 +10,7 @@ import { supportTimeouts } from '../schema/support-timeouts';
 import type { SupportTimeoutRow } from '../types';
 
 const REFUSAL = 'Only a site admin may time out or restore a support sender';
+const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
 const NOTE_MAX_LENGTH = 500;
 const PAST_END = 'Choose a time in the future';
 const NO_NOTE = 'Write a note saying why';
@@ -19,7 +21,8 @@ const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
  * gives. Their earlier requests stay, and staff may still reply to them. Each refusal's sentence is also the error's message,
  * which is what the panel shows.
  *
- * @throws {Forbidden} the session is not an admin.
+ * @throws {Forbidden} the session is not an admin, or the user is the System account or the signed-out sender account, which are
+ * not people.
  * @throws {NotFound} no live user has this id.
  * @throws {ValidationError} `until` is not in the future, or the note is missing, blank or over 500 characters.
  */
@@ -41,6 +44,7 @@ export async function timeOutSupportSender(
   if (!trimmed) throw fieldRefusal('note', NO_NOTE);
   if (trimmed.length > NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
   if (!(await findOneById(users, id))) throw new NotFound('No such user');
+  if (isStandInAccount(id)) throw new Forbidden(STAND_IN_REFUSAL);
   return withAudit(session, async (write) => {
     const [row] = await write.insert(supportTimeouts, {
       userId: id,

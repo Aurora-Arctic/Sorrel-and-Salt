@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type { PageRequest } from '@/lib/types';
 import {
   addSupportInternalNote,
@@ -480,5 +481,41 @@ describe('the sender’s latest message time on the list', () => {
     const page = await listSupportRequests(asUser(E), {}, PAGE);
 
     expect(page[0]!.node.lastSenderActivityAt).toEqual(request.lastSenderActivityAt);
+  });
+});
+
+describe('an anonymised request', () => {
+  // A request whose sender was anonymised is a closed request stamped with the System account.
+  const anonymised = async () => {
+    const request = await send();
+    await closeSupportRequest(asUser(E), request.id);
+    await sql`update support_requests set created_by = ${SYSTEM_ACTOR_ID} where id = ${request.id}`;
+    return request;
+  };
+  const savedReplies = async (id: string) =>
+    (await sql`select 1 from support_replies where request_id = ${id}`).length;
+
+  it('takes no staff note, and the same call works on a request that is not anonymised', async () => {
+    const plain = await send();
+    await addSupportInternalNote(asUser(E), plain.id, 'Seen.');
+    expect(await savedReplies(plain.id)).toBe(1);
+
+    const request = await anonymised();
+    const error = await failureOf(addSupportInternalNote(asUser(E), request.id, 'Seen.'));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await savedReplies(request.id)).toBe(0);
+  });
+
+  it('takes no staff reply, and says it is anonymised rather than closed', async () => {
+    const request = await anonymised();
+    expect(await statusOf(request.id)).toBe('closed');
+
+    const error = await failureOf(replyToSupportRequest(asUser(E), request.id, 'Hello.', mail));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await savedReplies(request.id)).toBe(0);
   });
 });

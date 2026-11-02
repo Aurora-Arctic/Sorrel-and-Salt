@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type { PageRequest } from '@/lib/types';
 import {
   assignSupportRequest,
@@ -504,6 +506,26 @@ describe('admin-only changes', () => {
 
     expect(await failureOf(liftSupportTimeout(asUser(F), timeout.id))).toBeInstanceOf(Forbidden);
     expect((await liftSupportTimeout(asUser(E), timeout.id)).liftedAt).toBeInstanceOf(Date);
+  });
+
+  it.each([
+    ['the System account', SYSTEM_ACTOR_ID],
+    ['the signed-out sender account', SIGNED_OUT_SENDER_ID],
+  ])('refuses to time out %s, which is not a person, saying why', async (_label, accountId) => {
+    // Why this could have succeeded: the account is a live user, and the same call times a person out.
+    expect(
+      await sql`select id from users where id = ${accountId} and deleted_at is null`,
+    ).toHaveLength(1);
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam');
+    expect(await sql`select id from support_timeouts where user_id = ${C.id}`).toHaveLength(1);
+
+    const error = await failureOf(timeOutSupportSender(asUser(E), accountId, FUTURE(), 'Spam'));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toBe(
+      'This account is not a person, so it cannot be timed out of support',
+    );
+    expect(await sql`select id from support_timeouts where user_id = ${accountId}`).toHaveLength(0);
   });
 
   it('times a sender out with no end date, and the time-out stands until lifted', async () => {

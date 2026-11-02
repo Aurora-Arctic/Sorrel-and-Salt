@@ -7,6 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
+import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { RowId } from '../../../lib/validation';
@@ -20,6 +21,7 @@ import { assertMembership } from './membership';
 const NOTE_MAX_LENGTH = 500;
 const OWNER_REFUSAL =
   "An owner's access can't be paused. Change their role first if they should be paused.";
+const STAND_IN_REFUSAL = 'This account is not a person, so its access to a coven cannot be paused';
 const ALREADY_PAUSED = 'This member is already paused; lift the pause first';
 const STRANGER_REFUSAL = 'That person is not a member of this coven';
 const PAST_END = 'Choose a time in the future';
@@ -40,7 +42,8 @@ async function memberRoleOf(workspaceId: string, userId: string) {
  * Pauses a member's access to the coven until `until`, or with no end when `until` is `null`. The caller needs `member: pause`,
  * which only owners hold; an owner cannot be paused, so the coven always keeps someone who can lift it.
  *
- * @throws {Forbidden} the caller is not an owner of the coven; `userId` holds no seat in it; or `userId` is an owner.
+ * @throws {Forbidden} the caller is not an owner of the coven; `userId` holds no seat in it; `userId` is an owner; or `userId` is
+ * the System account or the signed-out sender account, which are not people.
  * @throws {AccessPaused} the caller's own access to the coven is paused.
  * @throws {ValidationError} `until` is not in the future, the note is over 500 characters, or a pause already stands.
  */
@@ -62,6 +65,7 @@ export async function pauseMemberAccess(
   if (trimmed && trimmed.length > NOTE_MAX_LENGTH) {
     throw fieldRefusal('note', LONG_NOTE);
   }
+  if (isStandInAccount(userId)) throw new Forbidden(STAND_IN_REFUSAL);
   if ((await memberRoleOf(membership.workspaceId, userId)) === 'owner') {
     throw new Forbidden(OWNER_REFUSAL);
   }

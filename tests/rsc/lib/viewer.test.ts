@@ -18,6 +18,8 @@ const { membershipsOf } = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/request-session', () => ({
   getSession: async () => SESSION,
+  // No pause stands on this viewer.
+  getShellSession: async () => ({ session: SESSION }),
   requireSignedIn: async () => SESSION,
 }));
 vi.mock('@/modules/identity', () => ({
@@ -45,7 +47,10 @@ async function render(): Promise<string> {
     createElement(Page),
     {},
     {
-      onError: (error) => errors.push(error),
+      // Returns nothing: React reads a returned value as the error's digest and refuses anything but a string.
+      onError: (error) => {
+        errors.push(error);
+      },
     },
   );
   const text = await new Response(stream).text();
