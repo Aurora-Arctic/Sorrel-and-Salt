@@ -19,13 +19,13 @@ export function SupportResolved({
     <EmailLayout preview="Your support request is resolved." heading={title} origin={origin}>
       {signedOut ? (
         <>
-          <Paragraph>{`${title}. If you still need help, ${actionVerb(part)} to write to us again.`}</Paragraph>
+          <Paragraph>{`If you still need help, ${actionVerb(part)} to write to us again.`}</Paragraph>
           <Action href={url} label="Write to Us Again" part={part} />
         </>
       ) : (
         <>
           <Paragraph>
-            {`${title}. A reply from you reopens it, and it closes by itself after seven days without one. To open the request, ${actionVerb(part)}.`}
+            {`A reply from you reopens it, and it closes by itself after seven days without one. To open the request, ${actionVerb(part)}.`}
           </Paragraph>
           <Action href={url} label="Open the Request" part={part} />
         </>

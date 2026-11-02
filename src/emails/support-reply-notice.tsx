@@ -21,9 +21,7 @@ export function SupportReplyNotice({
       heading={title}
       origin={origin}
     >
-      <Paragraph>
-        {`${title}. Sign in, then ${actionVerb(part)} to read it on your support page.`}
-      </Paragraph>
+      <Paragraph>{`Sign in, then ${actionVerb(part)} to read it on your support page.`}</Paragraph>
       <Action href={url} label="Read the Reply" part={part} />
     </EmailLayout>
   );

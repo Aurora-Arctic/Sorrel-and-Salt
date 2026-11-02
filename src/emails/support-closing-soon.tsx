@@ -20,14 +20,14 @@ export function SupportClosingSoon({
       {signedOut ? (
         <>
           <Paragraph>
-            {`${title}. It closes in 2 days. If you still need help, ${actionVerb(part)} to write to us again.`}
+            {`It closes in 2 days. If you still need help, ${actionVerb(part)} to write to us again.`}
           </Paragraph>
           <Action href={url} label="Write to Us Again" part={part} />
         </>
       ) : (
         <>
           <Paragraph>
-            {`${title}. It closes in 2 days, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`}
+            {`It closes in 2 days, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`}
           </Paragraph>
           <Action href={url} label="Open the Request" part={part} />
         </>

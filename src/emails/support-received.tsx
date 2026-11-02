@@ -18,7 +18,7 @@ export function SupportReceived({
   return (
     <EmailLayout preview="We have your message." heading={title} origin={origin}>
       <Paragraph>
-        {`${title}. We will reply within 5 working days${signedOut ? ', to this address' : ''}.`}
+        {`We will reply within 5 working days${signedOut ? ', to this address' : ''}.`}
       </Paragraph>
       {signedOut ? (
         <>
