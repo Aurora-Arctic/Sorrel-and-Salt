@@ -163,8 +163,7 @@ export default function TermsOfUsePage() {
       <p>
         If a dispute about these terms or the site has to go to court, it goes to the state courts
         of Washington in Spokane County, where the Spokane County Superior Court sits, and you and
-        the site's owner each agree to that court hearing it. Washington's venue law already lets an
-        action be brought in the county where the defendant lives, and the owner lives there.
+        the site's owner each agree to that court hearing it.
       </p>
 
       <h2>Leaving</h2>
@@ -216,14 +215,6 @@ export default function TermsOfUsePage() {
           modification or limitation of remedy". Accessed 2 November 2026.{' '}
           <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719">
             https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719
-          </a>
-          .
-        </li>
-        <li>
-          Washington State Legislature. <em>Revised Code of Washington</em>, 4.12.025, "Action to be
-          brought where defendant resides". Accessed 2 November 2026.{' '}
-          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=4.12.025">
-            https://app.leg.wa.gov/RCW/default.aspx?cite=4.12.025
           </a>
           .
         </li>
