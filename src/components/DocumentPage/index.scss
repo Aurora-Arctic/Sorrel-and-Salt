@@ -7,19 +7,12 @@
 // measure, and the same breakpoints; the text stays start-aligned inside the centred column. The
 // rule names both classes, as the primitives are emitted under `body` and one class alone loses to
 // them.
-// The menu's column is half as wide again as `.page-with-nav`'s: a document's section headings run
-// to a clause or two, and in the narrower column most of them broke into three lines. From a tablet
-// up the menu and the measure still fit side by side inside the frame's gutters.
-$menu-column: calc(#{space(8)} * 4 + #{space(6)});
+// The menu's column is half as wide again as `.page-with-nav`'s (`$document-menu-column`): in the narrower
+// column most section headings broke into three lines. From a tablet up the menu and the measure
+// still fit side by side inside the frame's gutters.
 
 .document-page.page-with-nav {
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-    grid-template-columns: $menu-column minmax(0, $measure);
-  }
-
-  @media (min-width: calc(#{$menu-column} * 2 + #{$measure} + #{space(6)} * 2 + #{space(4)} * 2)) {
-    grid-template-columns: $menu-column minmax(0, $measure) $menu-column;
-  }
+  @include page-with-nav-grid($document-menu-column, $measure);
 
   // A menu of long entries: each entry takes a step more air above and below, so the gap between
   // two entries is plainly wider than the gap between one entry's own lines, and its lines are set

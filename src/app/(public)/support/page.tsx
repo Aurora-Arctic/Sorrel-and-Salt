@@ -39,14 +39,15 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           errorReference: errorReferenceOf(single(params.ref) ?? null),
         };
   }
+  // The form keeps to the column the account's support tab uses (`.page-with-nav`), not the frame's wide one.
   return (
-    <>
+    <div className="page-with-nav">
       <PageHeader
         eyebrow="Help"
         title="Support"
         lede="Tell us about something you cannot use, something broken, or ask a question."
       />
       <SupportPanel state={state} path={single(params.from) ?? SUPPORT_PATH} />
-    </>
+    </div>
   );
 }
