@@ -112,8 +112,9 @@ export default function TermsOfUsePage() {
         The tools the site has today for keeping to this are small, and we name them rather than
         promise more. A coven's owner may remove a member from the coven. A site admin may stop a
         person sending support requests for a time, and may take away the right to create covens.
-        Accounts are never closed. There is no way yet to pause one, so an admin who needs to stop
-        an account does it by hand and says so.
+        Accounts are never closed. A site admin may pause an account's access to the site, until a
+        date or with no end date; while the pause stands the account cannot sign in, and the
+        compendium stays open to it as it is to everyone.
       </p>
 
       <h2>What the Site Owes You</h2>

@@ -697,6 +697,46 @@ tasks that build the rest:
   impersonation endpoints reachable, since the rest would grant admin or
   delete users outside `withAudit` ([`impersonation.md`](impersonation.md)).
 
+### Pausing a user's access (M15.52)
+
+Specified in DESIGN.md §8, "An admin can pause a user's access", and argued in
+[`design-decisions/m15.52-site-access-pause.md`](../design-decisions/m15.52-site-access-pause.md).
+The table is DESIGN.md §5's `user_access_pauses` (M15.51).
+
+**Who and whom.** `pauseUserAccess(userId, until, note)` and `liftUserAccessPause(userId)` are admin-only
+(`assertSiteAdmin`), in `src/modules/identity/services/access-pause.ts`. Each refusal explains itself:
+
+- a curator or a user: `Forbidden`, "Only a site admin may pause or lift a user’s access";
+- the primary admin, the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL`: `Forbidden`, "The primary admin’s access cannot be paused";
+- the admin themselves: `Forbidden`, "You cannot pause your own access";
+- another admin while admin changes are paused (MB.62), unless the caller is the primary admin: the same refusal a revoke of admin gets;
+- a user already paused: a validation error, "This user is already paused; lift the pause first";
+- an `until` that is not in the future, or a note over 500 characters: a validation error on that field.
+
+A note is trimmed, and an empty one is stored as none. Lifting a user with no standing pause, a run-out one included, answers `NotFound`.
+
+**What a pause does.** Setting it lifts any run-out live row, deletes every row in `sessions` for the user and inserts
+the new pause, all in one `withAudit` transaction (`setUserAccessPause` in `src/db/repository/user-access-pauses.ts`).
+The session rows have no audit columns and no `deleted_at`, so they are deleted as Better Auth's own sign-out deletes them.
+
+**Sign-in while paused.** `refusePausedSession` in `src/lib/auth.ts` is Better Auth's `session.create.before` hook,
+which every way of signing in passes through: a provider callback, a password, a passkey, the two-factor step and the
+verification link alike. It reads the standing pause through `standingAccessPause`, which takes no proof because no
+session exists yet. For the provider callback and any other GET it answers a redirect to `/access-paused`; for a
+fetch it answers 403 with the code `ACCESS_PAUSED` and `until`, and the sign-in panel (`src/components/SignInPanel/paused.ts`)
+loads `/access-paused` itself. The address carries `?until=` for a dated pause and nothing for an open-ended one
+(`accessPausedPath` in `src/lib/access-paused.ts`). The hook runs after the credential is checked, so a wrong password
+still answers 401 and counts as a failed sign-in, and a paused right password counts as none.
+An impersonation session (`impersonatedBy` set) passes, since it belongs to the admin.
+
+**The paused page.** `/access-paused` is public (`src/proxy.ts`), outside the app shell, and not indexed. It reads only its
+own `?until=`: a future end is named in UTC, a past one is said to have ended with a link to Sign In, and none or a
+malformed one reads as no end date. It links to the compendium, which a paused account reads as any signed-out visitor.
+
+**Ending.** A dated pause ends by itself once `until` passes, with no write; the next sign-in simply succeeds.
+A lift stamps `lifted_at` and `lifted_by`. Neither restores a session: the user signs in again.
+The admin user modal's controls and the pause history are M15.53's.
+
 ### The self-created user
 
 - **Sign-up writes outside `withAudit(session, fn)`**, as one of CLAUDE.md
