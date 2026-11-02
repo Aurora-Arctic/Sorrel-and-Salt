@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import SupportLink from '../../../components/SupportLink';
-import DocumentPage from '../../../components/DocumentPage';
+import DocumentPage, { SourceItem, SourceMarks } from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 import { TERMS_UPDATED_ON, TERMS_VERSION } from '../../../lib/terms-version';
 
@@ -60,6 +60,7 @@ export default function TermsOfUsePage() {
         Children's Online Privacy Protection Act treats anyone under thirteen as a child whose
         personal information an online service may not collect without a parent's consent, and the
         site does not ask for a parent's consent.
+        <SourceMarks cite="coppa" numbers={[1, 2]} />
       </p>
       <p>
         Your account is yours alone. Keep your sign-in details to yourself, and tell us through the{' '}
@@ -147,10 +148,12 @@ export default function TermsOfUsePage() {
           <strong>What this cannot remove:</strong> any liability the law does not let a site
           exclude, and any right the law gives you that it does not let you give up. Washington's
           Consumer Protection Act, for instance, declares unfair or deceptive acts in trade unlawful
-          and lets a person injured by one sue; these terms do not take that away. Washington law
-          also treats a limitation of damages as invalid where it is unconscionable, that is, so
-          one-sided that a court will not enforce it, and this one is meant to be read as the narrow
-          limit it says it is and no more.
+          and lets a person injured by one sue; these terms do not take that away.
+          <SourceMarks cite="cpa" numbers={[3]} /> Washington law also treats a limitation of
+          damages as invalid where it is unconscionable, that is, so one-sided that a court will not
+          enforce it, and this one is meant to be read as the narrow limit it says it is and no
+          more.
+          <SourceMarks cite="unconscionable" numbers={[4]} />
         </li>
       </ul>
 
@@ -166,8 +169,9 @@ export default function TermsOfUsePage() {
         If you and the site's owner have a dispute about these terms or the site, each of you first
         tries arbitration: a neutral person hears both sides and gives a decision. The arbitration
         is non-binding, which means the decision is advice, not an order, and either of you may
-        reject it. Nobody gives up the right to go to court, or the right to bring a claim together
-        with other people, by agreeing to these terms.
+        reject it.
+        <SourceMarks cite="arbitration" numbers={[5]} /> Nobody gives up the right to go to court,
+        or the right to bring a claim together with other people, by agreeing to these terms.
       </p>
       <p>
         Whoever asks for the arbitration pays the arbitrator. The site's owner does not pay for an
@@ -180,23 +184,28 @@ export default function TermsOfUsePage() {
         as TANF, SSI, poverty-related veterans' benefits or food stamps; or your household income is
         at or below 125 per cent of the federal poverty guideline; or it is above that line but your
         recurring basic living expenses leave you unable to pay; or other compelling circumstances
-        show you cannot pay. You check yourself against those guidelines; you need no order from
-        anyone first. The court looks at the same question when you ask it to waive your filing
-        fees. If the claim of hardship was false, the owner may raise that in the same case. The
-        point of this is simple: a person with a real claim is never priced out of court.
+        show you cannot pay.
+        <SourceMarks cite="gr34-test" numbers={[6]} /> You check yourself against those guidelines;
+        you need no order from anyone first. The court looks at the same question when you ask it to
+        waive your filing fees.
+        <SourceMarks cite="gr34-check" numbers={[6]} /> If the claim of hardship was false, the
+        owner may raise that in the same case. The point of this is simple: a person with a real
+        claim is never priced out of court.
       </p>
       <p>
         If arbitration does not settle the dispute, either of you may take it to the state courts of
         Washington in Spokane County, where the Spokane County Superior Court sits, and you and the
         site's owner each agree to that court hearing it.
+        <SourceMarks cite="spokane" numbers={[7]} />
       </p>
 
       <p>
         If a dispute goes to court, the judge can make one side pay the other side's reasonable
         costs, including lawyer's fees. This happens only when the judge finds that side's claim or
-        defence frivolous, meaning it had no real basis and was pursued without good reason. It
-        works both ways: the judge can order it against the site's owner just as against you. Only
-        the judge can order this, not the arbitrator.
+        defence frivolous, meaning it had no real basis and was pursued without good reason.
+        <SourceMarks cite="frivolous" numbers={[8]} /> It works both ways: the judge can order it
+        against the site's owner just as against you. Only the judge can order this, not the
+        arbitrator.
       </p>
 
       <h2>Leaving</h2>
@@ -228,40 +237,24 @@ export default function TermsOfUsePage() {
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
-        <li>
-          Washington Courts.{' '}
-          <em>
-            General Rule 34: Waiver of Court and Clerk's Fees and Charges in Civil Matters on the
-            Basis of Indigency
-          </em>
-          , (a)(3)–(4). Adopted 28 December 2010, amended 1 January 2023. Accessed 2 November 2026.{' '}
-          <a href="https://www.courts.wa.gov/court_rules/pdf/GR/GA_GR_34_00_00.pdf">
-            https://www.courts.wa.gov/court_rules/pdf/GR/GA_GR_34_00_00.pdf
+        <SourceItem number={1} cites={['coppa']}>
+          United States. <em>Children's Online Privacy Protection Act</em>, 15 U.S.C. § 6501
+          (Definitions). Legal Information Institute, Cornell Law School. Accessed 2 November 2026.{' '}
+          <a href="https://www.law.cornell.edu/uscode/text/15/6501">
+            https://www.law.cornell.edu/uscode/text/15/6501
           </a>
           .
-        </li>
-        <li>
-          Washington State Legislature. <em>Revised Code of Washington</em>, 7.04A.030, "When
-          chapter applies", and 7.04A.060, "Validity of agreement to arbitrate" (Uniform Arbitration
-          Act). Accessed 2 November 2026.{' '}
-          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030">
-            https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030
-          </a>
-          ,{' '}
-          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060">
-            https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060
+        </SourceItem>
+        <SourceItem number={2} cites={['coppa']}>
+          United States. <em>Children's Online Privacy Protection Rule</em>, 16 C.F.R. part 312, §§
+          312.1 and 312.2. Legal Information Institute, Cornell Law School. Accessed 2 November
+          2026.{' '}
+          <a href="https://www.law.cornell.edu/cfr/text/16/part-312">
+            https://www.law.cornell.edu/cfr/text/16/part-312
           </a>
           .
-        </li>
-        <li>
-          Washington State Legislature. <em>Revised Code of Washington</em>, 7.06.050, "Decision and
-          award—Appeals—Trial—Judgment" (Arbitration of Civil Actions). Accessed 2 November 2026.{' '}
-          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050">
-            https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050
-          </a>
-          .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={3} cites={['cpa']}>
           Washington State Legislature. <em>Revised Code of Washington</em>, 19.86.020, "Unfair
           competition, practices, declared unlawful", and 19.86.090, "Civil action for damages".
           Accessed 2 November 2026.{' '}
@@ -273,40 +266,48 @@ export default function TermsOfUsePage() {
             https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.090
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={4} cites={['unconscionable']}>
           Washington State Legislature. <em>Revised Code of Washington</em>, 62A.2-719, "Contractual
           modification or limitation of remedy". Accessed 2 November 2026.{' '}
           <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719">
             https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={5} cites={['arbitration']}>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 7.04A.030, "When
+          chapter applies", and 7.04A.060, "Validity of agreement to arbitrate" (Uniform Arbitration
+          Act). Accessed 2 November 2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.030
+          </a>
+          ,{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=7.04A.060
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={6} cites={['gr34-test', 'gr34-check']}>
+          Washington Courts.{' '}
+          <em>
+            General Rule 34: Waiver of Court and Clerk's Fees and Charges in Civil Matters on the
+            Basis of Indigency
+          </em>
+          , (a)(3)–(4). Adopted 28 December 2010, amended 1 January 2023. Accessed 2 November 2026.{' '}
+          <a href="https://www.courts.wa.gov/court_rules/pdf/GR/GA_GR_34_00_00.pdf">
+            https://www.courts.wa.gov/court_rules/pdf/GR/GA_GR_34_00_00.pdf
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={7} cites={['spokane']}>
           Washington Courts. "Court Directory: Spokane County." Accessed 2 November 2026.{' '}
           <a href="https://www.courts.wa.gov/court_dir/orgs/291.html">
             https://www.courts.wa.gov/court_dir/orgs/291.html
           </a>
           .
-        </li>
-        <li>
-          United States. <em>Children's Online Privacy Protection Act</em>, 15 U.S.C. § 6501
-          (Definitions). Legal Information Institute, Cornell Law School. Accessed 2 November 2026.{' '}
-          <a href="https://www.law.cornell.edu/uscode/text/15/6501">
-            https://www.law.cornell.edu/uscode/text/15/6501
-          </a>
-          .
-        </li>
-        <li>
-          United States. <em>Children's Online Privacy Protection Rule</em>, 16 C.F.R. part 312, §§
-          312.1 and 312.2. Legal Information Institute, Cornell Law School. Accessed 2 November
-          2026.{' '}
-          <a href="https://www.law.cornell.edu/cfr/text/16/part-312">
-            https://www.law.cornell.edu/cfr/text/16/part-312
-          </a>
-          .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={8} cites={['frivolous']}>
           Washington State Legislature. <em>Revised Code of Washington</em>, 4.84.185, "Prevailing
           party to receive expenses for opposing frivolous action or defense". Accessed 2 November
           2026.{' '}
@@ -314,7 +315,15 @@ export default function TermsOfUsePage() {
             https://app.leg.wa.gov/RCW/default.aspx?cite=4.84.185
           </a>
           .
-        </li>
+        </SourceItem>
+        <SourceItem number={9} cites={[]}>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 7.06.050, "Decision and
+          award—Appeals—Trial—Judgment" (Arbitration of Civil Actions). Accessed 2 November 2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050
+          </a>
+          .
+        </SourceItem>
       </ol>
     </DocumentPage>
   );
