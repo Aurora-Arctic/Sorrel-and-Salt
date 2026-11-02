@@ -107,11 +107,11 @@ export default function CodeOfEthicsPage() {
 
       <h2>Closed Practices and Where Lore Comes From</h2>
       <p>
-        Much of what a compendium of correspondences contains was taken from somewhere. Some of it
-        comes from open traditions that invite anyone to learn. Some of it comes from closed
-        practices: traditions that belong to a people, are passed on by initiation or by birth, and
-        are not open to outsiders. Taking from a closed practice, without belonging to it, is
-        appropriation, and it has a history of doing real harm.
+        Much of what the compendium contains was borrowed from somewhere. Some of it comes from open
+        traditions that invite anyone to learn. Some of it comes from closed practices: traditions
+        that belong to a people, are passed on by initiation or by birth, and are not open to
+        outsiders. Taking from a closed practice, without belonging to it, is appropriation, and it
+        has a history of doing real harm.
       </p>
       <ul>
         <li>
