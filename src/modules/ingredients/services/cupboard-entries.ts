@@ -632,8 +632,10 @@ export async function covensHoldingEntry(
   session: Session,
   ingredientId: string,
 ): Promise<readonly HoldingCoven[]> {
-  const [memberships] = await membershipsOf(session, [session.userId]);
-  if (!memberships || memberships instanceof Error) return [];
+  const [all] = await membershipsOf(session, [session.userId]);
+  if (!all || all instanceof Error) return [];
+  // A paused seat reads nothing in its coven, so the read leaves it out rather than be refused.
+  const memberships = all.filter(({ pause }) => !pause);
   const held = await heldCompendiumEntryIdsIn(
     session,
     memberships.map(({ workspace }) => workspace.id),

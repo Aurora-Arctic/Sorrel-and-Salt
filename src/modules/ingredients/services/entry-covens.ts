@@ -14,7 +14,9 @@ export async function covensOpeningEntry(
 ): Promise<readonly HoldingCoven[]> {
   const [memberships] = await membershipsOf(session, [session.userId]);
   if (!memberships || memberships instanceof Error) return [];
+  // A paused seat opens nothing in its coven, so it is left out rather than refused.
   const covens = memberships
+    .filter(({ pause }) => !pause)
     .map(({ workspace: { id, slug, name } }) => ({ id, slug, name }))
     .filter(({ id }) => entry.workspaceId === null || id === entry.workspaceId)
     .sort(byCovenName);

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { covensHoldingEntry } from '@/modules/ingredients';
-import { A, C, D, E, F, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -72,6 +72,27 @@ describe('covensHoldingEntry', () => {
 
     expect(await covensHoldingEntry(asUser(E), both)).toEqual([]);
     expect(await covensHoldingEntry(asUser(F), both)).toEqual([]);
+  });
+
+  it('leaves out a coven whose access is paused for the viewer, and refuses nothing', async () => {
+    // B belongs to X as well as W; both hold the entry. Setup rows through the raw client, removed after, as the database outlives the test.
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${WORKSPACE_X_ID}, ${B.id}, 'member', ${D.id}, ${D.id})`;
+    try {
+      // Why W could be named: it holds the entry, and B reads it while no pause stands.
+      expect(await covensHoldingEntry(asUser(B), both)).toEqual(
+        expect.arrayContaining([await coven(WORKSPACE_W_ID), await coven(WORKSPACE_X_ID)]),
+      );
+
+      await sql`
+        insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${B.id}, null, ${A.id}, ${A.id})`;
+      expect(await covensHoldingEntry(asUser(B), both)).toEqual([await coven(WORKSPACE_X_ID)]);
+    } finally {
+      await sql`delete from workspace_member_pauses where user_id = ${B.id}`;
+      await sql`delete from workspace_members where workspace_id = ${WORKSPACE_X_ID} and user_id = ${B.id}`;
+    }
   });
 
   it('leaves out a coven that removed the entry, and gives nothing for one no coven holds', async () => {

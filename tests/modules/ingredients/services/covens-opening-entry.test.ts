@@ -95,6 +95,27 @@ describe('covensOpeningEntry', () => {
     expect(await slugsFor(D, retiredHeldByW)).toEqual([]);
   });
 
+  it('leaves out a coven whose access is paused for the viewer, live entry or retired, and refuses nothing', async () => {
+    // Why X could be named: B is in X, and reads both covens while no pause stands.
+    expect(await slugsFor(B, live)).toContain(await slugOf(WORKSPACE_X_ID));
+    await sql`
+      insert into workspace_compendium_entries (workspace_id, ingredient_id, created_by, updated_by)
+      values (${WORKSPACE_X_ID}, ${retiredHeldByW}, ${D.id}, ${D.id})`;
+    expect(await slugsFor(B, retiredHeldByW)).toEqual(
+      [await slugOf(WORKSPACE_W_ID), await slugOf(WORKSPACE_X_ID)].sort(),
+    );
+
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${WORKSPACE_X_ID}, ${B.id}, null, ${D.id}, ${D.id})`;
+    try {
+      expect(await slugsFor(B, live)).toEqual([await slugOf(WORKSPACE_W_ID)]);
+      expect(await slugsFor(B, retiredHeldByW)).toEqual([await slugOf(WORKSPACE_W_ID)]);
+    } finally {
+      await sql`delete from workspace_member_pauses where user_id = ${B.id}`;
+    }
+  });
+
   it('gives an admin or a curator in no coven nothing', async () => {
     expect(await slugsFor(E, live)).toEqual([]);
     expect(await slugsFor(F, live)).toEqual([]);
