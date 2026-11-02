@@ -5,7 +5,7 @@ import { emptyList } from '../../lib/text';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import RoleTip from '../RoleTip';
 import { Mark } from '../UserList/marks';
-import { inUtc } from '../../lib/utc';
+import UntilMark from '../UserList/until-mark';
 import MemberLink from './member-link';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
@@ -83,14 +83,7 @@ const columns = (
     headingClassName: 'member-list__mark-column',
     cell: ({ paused }) => {
       if (!paused) return <Mark value label="Not paused" hint />;
-      const end = paused.until && inUtc(paused.until);
-      return (
-        <Mark
-          value={false}
-          label={end ? `Paused until ${end}` : 'Paused with no end date'}
-          tip={end ? `Until ${end}` : 'No end date'}
-        />
-      );
+      return <UntilMark standing="Paused" until={paused.until} />;
     },
   },
 ];

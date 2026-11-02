@@ -100,9 +100,14 @@ head, both built by the page per row, as the other admin lists carry
   end or an end still to come, the services' own rule, so a time-out or pause
   that has run out is a check again and nothing is written to end it. A
   cross's hidden word carries the end, "Timed out until <instant>" or "Paused
-  until <instant>" (`inUtc`), or "Timed out with no end date" or "Paused with no end
+  until <instant>", or "Timed out with no end date" or "Paused with no end
   date"; its bubble says
-  "Until <instant>" or "No end date", the heading saying the rest. A check
+  "Until <instant>" or "No end date", the heading saying the rest. The instant is
+  in the site's long date form (`28 August 2026, 12:00 am`, `longMinuteInZone`), drawn by
+  `UntilMark` (`until-mark.tsx`), a client component the coven members list shares. A tip
+  takes text, so it reads the viewer's zone through `LocalTime`'s own hook, `useLocalTime`:
+  the server and hydration print UTC, and the client the viewer's zone once hydrated, as an
+  external store, so the two renders never mismatch. A check
   says "Not timed out" or "Not paused" and has no bubble.
   The page reads both for the whole page of users in one query each,
   `standingTimeoutsOf` (support) and `standingAccessPausesOf` (identity), both

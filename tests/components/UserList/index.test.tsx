@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { longMinuteInZone } from '@/lib/utc';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
@@ -101,14 +102,15 @@ describe('UserList, standing support time-outs and access pauses', () => {
       />,
     );
 
-  it('marks a standing time-out with its end in UTC or none under Support, and a user with none as not timed out', () => {
+  // The end in the site's long date form, in the viewer's own zone once drawn on the client, as `LocalTime` prints it.
+  const end = longMinuteInZone(AT);
+
+  it('marks a standing time-out with its end in the site’s date form or none under Support, and a user with none as not timed out', () => {
     rows();
     expect(screen.getByRole('columnheader', { name: 'Support' })).toBeInTheDocument();
-    expect(
-      within(cellUnder('Bo Fixturewort', 'Support')).getByText(
-        'Timed out until 20 November 2026, 09:30 UTC',
-      ),
-    ).toBeInTheDocument();
+    const bo = within(cellUnder('Bo Fixturewort', 'Support'));
+    expect(bo.getByText(`Timed out until ${end}`)).toBeInTheDocument();
+    expect(bo.getByText(`Until ${end}`)).toBeInTheDocument();
     expect(
       within(cellUnder('Cy Fixturewort', 'Support')).getByText('Timed out with no end date'),
     ).toBeInTheDocument();
@@ -117,14 +119,12 @@ describe('UserList, standing support time-outs and access pauses', () => {
     ).toBeInTheDocument();
   });
 
-  it('marks a standing pause with its end in UTC or none under Access, and a user with none as not paused', () => {
+  it('marks a standing pause with its end in the site’s date form or none under Access, and a user with none as not paused', () => {
     rows();
     expect(screen.getByRole('columnheader', { name: 'Access' })).toBeInTheDocument();
-    expect(
-      within(cellUnder('Bo Fixturewort', 'Access')).getByText(
-        'Paused until 20 November 2026, 09:30 UTC',
-      ),
-    ).toBeInTheDocument();
+    const bo = within(cellUnder('Bo Fixturewort', 'Access'));
+    expect(bo.getByText(`Paused until ${end}`)).toBeInTheDocument();
+    expect(bo.getByText(`Until ${end}`)).toBeInTheDocument();
     expect(
       within(cellUnder('Cy Fixturewort', 'Access')).getByText('Paused with no end date'),
     ).toBeInTheDocument();

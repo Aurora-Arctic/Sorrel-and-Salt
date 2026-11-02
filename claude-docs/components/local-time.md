@@ -13,7 +13,9 @@ viewer's own, for tests and stories).
 The server cannot know the viewer's zone. The server render and the hydration render print UTC; once the
 page has hydrated, the component prints the viewer's zone. It reads the zone through
 `useSyncExternalStore` with a server snapshot, so React does the swap itself and there is no mismatch
-and no `suppressHydrationWarning`. The text carries no zone label.
+and no `suppressHydrationWarning`. The text carries no zone label. The read is `useLocalTime`
+(`use-local-time.ts`), shared with text that cannot be a `<time>`: the Support and Access crosses' tips and
+hidden words (`UntilMark`, [`user-list.md`](user-list.md)) print the same way.
 
 The formatters (`minuteInZone`, `minuteInUtc`, `longMinuteInZone`, `longMinuteInUtc`, `isoDayInUtc`) are in
 `src/lib/utc.ts`, beside `inUtc` and `dayInUtc`. `inUtc` (24-hour, with a UTC suffix) is left to the

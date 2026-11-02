@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { describe, expect, it, vi } from 'vitest';
 import MemberList from '@/components/MemberList';
+import { longMinuteInZone } from '@/lib/utc';
 import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
 import type { MemberListEntry } from '@/components/MemberList/types';
 
@@ -114,7 +115,7 @@ describe('MemberList', () => {
     expect(screen.queryByRole('columnheader', { name: 'Remove' })).toBeNull();
   });
 
-  it('marks each row’s access in the Access column, a standing pause with its end in UTC or none', () => {
+  it('marks each row’s access in the Access column, a standing pause with its end in the site’s date form or none', () => {
     const AT = new Date('2026-11-20T09:30:00Z');
     render(
       <MemberList
@@ -129,9 +130,10 @@ describe('MemberList', () => {
     );
     expect(screen.getByRole('columnheader', { name: 'Access' })).toBeTruthy();
     expect(within(rowOf(MEMBER.name)).getByText('Paused with no end date')).toBeTruthy();
-    expect(
-      within(rowOf(OWNER.name)).getByText('Paused until 20 November 2026, 09:30 UTC'),
-    ).toBeTruthy();
+    // The site's long date form, in the viewer's own zone once drawn on the client, as `LocalTime` prints it.
+    const end = longMinuteInZone(AT);
+    expect(within(rowOf(OWNER.name)).getByText(`Paused until ${end}`)).toBeTruthy();
+    expect(within(rowOf(OWNER.name)).getByText(`Until ${end}`)).toBeTruthy();
     // The check's tip repeats its word, so the word is read from the page, not the hover bubble.
     expect(
       within(rowOf(VIEWER.name)).getByText('Not paused', { ignore: '[aria-hidden="true"]' }),

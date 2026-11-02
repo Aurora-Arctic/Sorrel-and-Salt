@@ -1,11 +1,9 @@
 'use client';
 
-import { type ReactElement, useSyncExternalStore } from 'react';
+import type { ReactElement } from 'react';
 import { longMinuteInZone, minuteInZone, shortDayInZone, shortMinuteInZone } from '../../lib/utc';
 import type { LocalTimeProps } from './types';
-
-// The local zone never changes while a page is open, so there is nothing to subscribe to.
-const subscribe = (): (() => void) => () => undefined;
+import { useLocalTime } from './use-local-time';
 
 /**
  * An instant to the minute (`2026-10-30 2:05 pm`, or `28 August 2026, 12:00 am` with `long`) in a `<time>` carrying the full instant. The server and
@@ -18,11 +16,7 @@ const LocalTime = ({ at, timeZone, long, short }: LocalTimeProps): ReactElement 
     if (short === 'minute') return shortMinuteInZone(at, zone);
     return long ? longMinuteInZone(at, zone) : minuteInZone(at, zone);
   };
-  const text = useSyncExternalStore(
-    subscribe,
-    () => print(timeZone),
-    () => print('UTC'),
-  );
+  const text = useLocalTime(print, timeZone);
   return <time dateTime={at.toISOString()}>{text}</time>;
 };
 

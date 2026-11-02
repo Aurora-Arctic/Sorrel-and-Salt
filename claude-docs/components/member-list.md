@@ -56,7 +56,7 @@ Change Role, Coven Access and Remove.
   `showAccess`, with the admin user list's `Mark` ([`user-list.md`](user-list.md)):
   a green check while no pause stands, its hidden word and its tip "Not
   paused"; a red cross while one does, its hidden word "Paused until <instant>"
-  (`inUtc`) or "Paused with no end date", and its tip "Until <instant>" or "No
+  (`UntilMark`, the site's long date form) or "Paused with no end date", and its tip "Until <instant>" or "No
   end date". The heading and the marks are centred above the stacking width
   (`.member-list__mark-column`). Pausing and lifting are the modal's.
 - **The own row is marked in text** ("You"), not by colour or a test id.

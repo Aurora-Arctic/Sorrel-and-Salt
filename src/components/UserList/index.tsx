@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import UserListFilter from './filter';
 import { Mark, ProviderLogo } from './marks';
+import UntilMark from './until-mark';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import PrimaryAdminMark from './primary-admin-mark';
@@ -12,7 +13,6 @@ import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { emptyList, noMatchText } from '../../lib/text';
-import { inUtc } from '../../lib/utc';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
@@ -101,15 +101,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     // none in the tip.
     cell: ({ supportTimeout }) =>
       supportTimeout ? (
-        <Mark
-          value={false}
-          label={
-            supportTimeout.until
-              ? `Timed out until ${inUtc(supportTimeout.until)}`
-              : 'Timed out with no end date'
-          }
-          tip={supportTimeout.until ? `Until ${inUtc(supportTimeout.until)}` : 'No end date'}
-        />
+        <UntilMark standing="Timed out" until={supportTimeout.until} />
       ) : (
         <Mark value label="Not timed out" />
       ),
@@ -122,15 +114,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     // the tip.
     cell: ({ accessPause }) =>
       accessPause ? (
-        <Mark
-          value={false}
-          label={
-            accessPause.until
-              ? `Paused until ${inUtc(accessPause.until)}`
-              : 'Paused with no end date'
-          }
-          tip={accessPause.until ? `Until ${inUtc(accessPause.until)}` : 'No end date'}
-        />
+        <UntilMark standing="Paused" until={accessPause.until} />
       ) : (
         <Mark value label="Not paused" />
       ),

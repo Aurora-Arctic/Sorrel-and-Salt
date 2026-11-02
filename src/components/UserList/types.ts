@@ -221,6 +221,13 @@ export interface ProviderLogoProps {
 }
 
 /** A yes-or-no drawn as a check or a cross, with its word for a screen reader. */
+export interface UntilMarkProps {
+  /** What stands, opening the hidden text: "Timed out" or "Paused". */
+  standing: string;
+  /** When it ends; null for none. */
+  until: Date | null;
+}
+
 export interface MarkProps {
   value: boolean;
   /** The word the mark stands for: "Verified", "Yes". */

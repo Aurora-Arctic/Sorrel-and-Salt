@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { longMinuteInZone } from '@/lib/utc';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
@@ -209,7 +210,7 @@ describe('the /admin/users page', () => {
     expect(standingAccessPausesOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
     expect(
       within(cellUnder('Listed Fixture 01', 'Support')).getByText(
-        'Timed out until 20 November 2026, 09:30 UTC',
+        `Timed out until ${longMinuteInZone(until)}`,
       ),
     ).toBeInTheDocument();
     expect(
