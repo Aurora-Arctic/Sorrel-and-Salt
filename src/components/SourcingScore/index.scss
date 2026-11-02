@@ -5,9 +5,11 @@
 $bar-height: 0.5rem;
 
 // A hairline closes the panel off from the References field beneath, as the form's sections are ruled.
+// The padding above the line equals the section body's gap beneath it, so the line sits midway; the
+// bare `section` rule's bottom margin is cleared so it does not add to that gap.
 .sourcing-score {
-  margin-block-end: space(4);
-  padding-block-end: space(4);
+  margin-block-end: 0;
+  padding-block-end: space(5);
   border-block-end: 1px solid $hairline;
 }
 
