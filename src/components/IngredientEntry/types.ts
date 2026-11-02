@@ -7,7 +7,7 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { AddIconProps } from '../AddIcon/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
-import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
+import type { IngredientDetail, IngredientRow, SourcingScore } from '@/modules/ingredients';
 import type { EditedIngredient, ReviewOffer } from '../IngredientForm/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { EntryMarksProps } from '../EntryMarks/types';
@@ -31,6 +31,8 @@ export interface IngredientEntryEdit {
   opened?: EditedIngredient;
   /** The Reviewed switch as a field of the compendium's edit form: Save carries it; left out for a coven's entry and for anyone who cannot curate. */
   review?: ReviewOffer;
+  /** The compendium entry's sourcing score, shown at the head of the form's Sources and on the page's head; read for a curator or admin only, so left out for anyone else and for a coven's entry. */
+  sourcing?: SourcingScore | null;
   /** A coven's own entry: the form writes to this coven and its near matches open in it; `mayPromote` is the role's answer to making a folk name the display name; left out, the entry is the compendium's. */
   coven?: {
     workspaceId: string;

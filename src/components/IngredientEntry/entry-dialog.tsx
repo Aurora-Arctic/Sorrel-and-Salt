@@ -5,6 +5,7 @@ import { useAnnounce } from '../ClickFeedback/status-region';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
+import CompendiumEntryForm from '../CompendiumEntryForm';
 import IngredientForm from '../IngredientForm';
 import { RouteModal } from '../Modal';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
@@ -29,7 +30,7 @@ export default function EntryDialog({
 }): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const announce = useAnnounce();
-  const { opened, closeHref, deletedHref, savedHref, coven, review } = edit;
+  const { opened, closeHref, deletedHref, savedHref, coven, review, sourcing } = edit;
   // Annotate's press shares this page's skeleton; that belongs to it.
   const loading = useRouteModalOpener()?.loading?.title;
   if (loading === ANNOTATE_HEADING.title && !opened) {
@@ -70,12 +71,11 @@ export default function EntryDialog({
                 entryHref={({ slug, isGlobal }) => (isGlobal ? publicAddress(slug) : undefined)}
               />
             ) : (
-              <IngredientForm
+              <CompendiumEntryForm
                 // A fresh form per entry, inside the one modal.
                 key={opened.id}
-                workspaceId={null}
-                mayPromote
                 review={review}
+                sourcing={sourcing}
                 entry={opened}
                 // An edit has Save Ingredient alone, so a save is always 'open': the modal stays. A
                 // rename moves the public address, so the page follows it, `?edit` kept; the

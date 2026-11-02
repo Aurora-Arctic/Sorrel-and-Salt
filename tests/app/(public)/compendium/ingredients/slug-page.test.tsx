@@ -17,9 +17,11 @@ vi.mock('next/navigation', () => ({
 
 const readCompendiumEntry = vi.fn();
 const readCompendiumEntryAsCurator = vi.fn();
+const readSourcingScore = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumEntry,
   readCompendiumEntryAsCurator,
+  readSourcingScore,
   readCompendiumReview: async () => null,
   getIngredient: async () => ({ shown: false }),
 }));
@@ -35,7 +37,11 @@ vi.mock('@/app/(public)/compendium/ingredients/[slug]/cupboard', () => ({
 }));
 const shown = vi.fn();
 vi.mock('@/components/IngredientEntry', () => ({
-  default: (props: { detail: { entry: { name: string } }; hiddenFromPublic?: boolean }) => {
+  default: (props: {
+    detail: { entry: { name: string } };
+    hiddenFromPublic?: boolean;
+    edit?: { sourcing?: unknown };
+  }) => {
     shown(props);
     return (
       <>
@@ -105,5 +111,46 @@ describe('the public entry page for a hidden entry', () => {
     readCompendiumEntry.mockResolvedValue({ ...hiddenEntry, detail: { ...hiddenEntry.detail } });
     render(await open());
     expect(getSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("the public entry page's sourcing score", () => {
+  const score = { score: 38, facts: [] };
+  const viewer = (canCurate: boolean) => ({ viewer: { canCurate }, workspaces: [] });
+
+  // The entry is public and found by the cached read, so the score's absence below is the page's choice.
+  beforeEach(() => {
+    readCompendiumEntry.mockResolvedValue({
+      ...hiddenEntry,
+      detail: { ...hiddenEntry.detail, entry: { ...hiddenEntry.detail.entry, shown: true } },
+    });
+    readSourcingScore.mockResolvedValue(score);
+  });
+
+  it.each(['curator', 'admin'])('hands a %s the score, read with their session', async (role) => {
+    const session = { userId: 'u', role };
+    getSession.mockResolvedValue(session);
+    viewerIfSignedIn.mockResolvedValue(viewer(true) as never);
+    render(await open());
+    expect(readSourcingScore).toHaveBeenCalledWith(session, 'entry-1');
+    expect(shown.mock.calls[0]?.[0].edit?.sourcing).toEqual(score);
+  });
+
+  it.each([
+    ['a signed-out visitor', null, null],
+    ['a viewer, member or owner', { userId: 'u', role: 'user' }, viewer(false)],
+  ])('gives %s no score and does not read one', async (_who, session, shell) => {
+    getSession.mockResolvedValue(session);
+    viewerIfSignedIn.mockResolvedValue(shell as never);
+    render(await open());
+    expect(readSourcingScore).not.toHaveBeenCalled();
+    expect(shown.mock.calls[0]?.[0].edit).toBeUndefined();
+  });
+
+  it('leaves the cached public read without a session or a score', async () => {
+    getSession.mockResolvedValue(null);
+    render(await open());
+    expect(readCompendiumEntry).toHaveBeenCalledWith('testwort');
+    expect(JSON.stringify(readCompendiumEntry.mock.results[0]?.value)).not.toContain('sourcing');
   });
 });

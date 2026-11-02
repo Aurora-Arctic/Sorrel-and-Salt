@@ -50,6 +50,13 @@ describe('the proxy matcher', () => {
     '/invite/2b7c5e2f8a',
     '/i/Xk7pQ2mR9tVw3nBc',
     '/compendium',
+    '/compendium?entry=3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
+    '/compendium/ingredients/testwort',
+    '/support',
+    '/privacy',
+    '/disclaimer',
+    '/terms',
+    '/code-of-ethics',
     '/coven/hearth/grimoire/new?from=draft',
     '/admin/compendium',
     '/apiary',
@@ -207,11 +214,48 @@ describe('X-Robots-Tag', () => {
     expect((await proxy(request('/compendium'))).headers.get('x-robots-tag')).toBe('noindex');
   });
 
-  it.each(['/', '/compendium', '/coven/hearth'])('is absent on production at %s', async (path) => {
+  it.each([
+    '/',
+    '/compendium',
+    '/compendium/ingredients/testwort',
+    '/privacy',
+    '/disclaimer',
+    '/terms',
+    '/code-of-ethics',
+    '/coven/hearth',
+    // A filter is the page's own metadata to mark, not the proxy's.
+    '/compendium?query=wort',
+  ])('is absent on production at %s', async (path) => {
     vi.stubEnv('VERCEL_ENV', 'production');
 
     expect((await proxy(request(path))).headers.get('x-robots-tag')).toBeNull();
   });
+
+  // An address that opens a dialog over a page, or a pager page that drifts as entries change,
+  // is a copy of a real page: kept out of results, its links still followed. Each name is its own
+  // case, so removing one from the proxy's list fails here.
+  it.each([
+    '/compendium?entry=3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
+    '/compendium?query=wort&entry=3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
+    '/compendium?after=c',
+    '/compendium?before=c',
+    '/?support=',
+    '/privacy?support=',
+    '/compendium/ingredients/testwort?support=',
+  ])('is noindex, follow on production at %s', async (path) => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+
+    expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex, follow');
+  });
+
+  it.each(['/compendium?entry=x', '/compendium?after=c', '/?support='])(
+    'stays the blanket noindex off production at %s',
+    async (path) => {
+      vi.stubEnv('VERCEL_ENV', 'preview');
+
+      expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex');
+    },
+  );
 });
 
 describe('proxy', () => {

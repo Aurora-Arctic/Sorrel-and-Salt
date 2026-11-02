@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({ redirect }));
 vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
 vi.mock('@/components/SignInPanel', () => ({ default: () => null }));
 
-const { default: SignInPage } = await import('@/app/sign-in/page');
+const { default: SignInPage, generateMetadata } = await import('@/app/sign-in/page');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 const SIGNED_IN: Session = { userId: USER_ID, role: 'user' };
@@ -79,4 +79,25 @@ describe('the sign-in page for a signed-out visitor', () => {
     expect(await visit('/coven/fixture-coven')).toBeUndefined();
     expect(redirect).not.toHaveBeenCalled();
   });
+});
+
+// /sign-in is crawlable and in the sitemap; its ?next= and ?error= addresses are the same form.
+describe('the sign-in page metadata', () => {
+  const metadata = (params: { next?: string; error?: string }) =>
+    generateMetadata({ searchParams: Promise.resolve(params) });
+
+  it('names /sign-in as canonical and stays indexable at the bare address', async () => {
+    const result = await metadata({});
+    expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/sign-in');
+    expect(result.robots).toBeUndefined();
+  });
+
+  it.each([{ next: '/coven/fixture-coven' }, { error: 'signup_disabled' }])(
+    'keeps %o out of search results, its links followed, canonical to /sign-in',
+    async (params) => {
+      const result = await metadata(params);
+      expect(result.robots).toEqual({ index: false, follow: true });
+      expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/sign-in');
+    },
+  );
 });

@@ -941,16 +941,89 @@
     }
   }
 
+  // The arrow is four parts that stay the same elements in every state (DataTable's SortArrow): the head
+  // and stem turn as one, the mate is the pair's lower chevron. Unsorted, the head and mate are the
+  // pair's two small chevrons and the stem is folded away; sorted, the head is full size, the stem is
+  // drawn and the mate is gone. Descending turns the head and stem over.
   .data-table__sort-arrow {
     flex: none;
     inline-size: 1rem;
     block-size: 1rem;
-  }
-
-  // The up-and-down pair on a column not sorted by, faded as a disabled control is.
-  .data-table__sort-link:not(.is-sorted) .data-table__sort-arrow {
+    // The up-and-down pair on a column not sorted by, faded as a disabled control is.
     color: $text-muted;
     opacity: $opacity-disabled;
+
+    path {
+      // The chevrons scale to the pair's size without thinning their stroke.
+      vector-effect: non-scaling-stroke;
+    }
+  }
+
+  // Turned over on the dropdown chevrons' timing (MenuButton, CollapsibleSection). Not `chevron-flip`:
+  // under `body` its `.is-descending &` puts the class before `body`, so it never matches; and a flat
+  // flip, as `rotateX` on an SVG part is not drawn in every browser.
+  .data-table__sort-turn {
+    transform-origin: 12px 12px;
+    @include theme-transition(transform);
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  .is-descending > .data-table__sort-turn {
+    transform: scaleY(-1);
+  }
+
+  .data-table__sort-head {
+    transform: scale(0.57);
+    transform-origin: 12px 5px;
+  }
+
+  .data-table__sort-mate {
+    transform: scale(0.57);
+    transform-origin: 12px 19px;
+  }
+
+  .data-table__sort-stem {
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: 12px 12px;
+  }
+
+  .data-table__sort-link.is-sorted .data-table__sort-arrow {
+    color: $accent;
+    opacity: 1;
+
+    .data-table__sort-head {
+      transform: none;
+    }
+
+    .data-table__sort-mate {
+      opacity: 0;
+    }
+
+    .data-table__sort-stem {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  // The change eases in only for a visitor who has not asked for less motion, who sees it at once.
+  @media (prefers-reduced-motion: no-preference) {
+    .data-table__sort-arrow {
+      transition:
+        color $motion-short ease-out,
+        opacity $motion-short ease-out;
+    }
+
+    .data-table__sort-head,
+    .data-table__sort-mate,
+    .data-table__sort-stem {
+      transition:
+        transform $motion-short ease-out,
+        opacity $motion-short ease-out;
+    }
   }
 
   // The sort select a phone shows above the cards; the headings sort at every other width.

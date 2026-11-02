@@ -32,6 +32,7 @@ describe('robots', () => {
       '/compendium',
       '/compendium/',
       '/sign-in',
+      '/support',
       '/privacy',
       '/disclaimer',
       '/terms',
@@ -57,6 +58,9 @@ describe('robots', () => {
     ['/', true],
     ['/compendium', true],
     ['/compendium/ingredients/testwort', true],
+    // Fetchable so a crawler reads the page's own noindex.
+    ['/support', true],
+    ['/support?support=', true],
     ['/llms.txt', true],
     ['/robots.txt', true],
     ['/.well-known/ai-catalog.json', true],
