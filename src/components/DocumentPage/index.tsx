@@ -15,7 +15,7 @@ const DocumentPage = ({ title, lede, updatedOn, children }: DocumentPageProps): 
       Last updated{' '}
       <time dateTime={updatedOn.toISOString().slice(0, 10)}>{dayInUtc(updatedOn)}</time>
     </p>
-    <PageHeader id="document-title" eyebrow="Documents" title={title} lede={lede} />
+    <PageHeader id="document-title" title={title} lede={lede} />
     <div className="document-page__body">{children}</div>
   </article>
 );
