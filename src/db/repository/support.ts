@@ -349,7 +349,10 @@ export function findReplyAwaitingNotice(id: string) {
   );
 }
 
-/** One page of request ids matching `where`, in id order after `after`, at most `limit`: the retention job's stage reads. */
+/**
+ * One page of request ids matching `where`, in id order after `after`, at most `limit`: the retention job's stage reads. Each
+ * caller puts `notSoftDeleted` in its own `where`, so the soft-delete guard sees it in every exported finder.
+ */
 async function retentionPage(
   where: SQL | undefined,
   after: string | null,
@@ -357,11 +360,7 @@ async function retentionPage(
 ): Promise<string[]> {
   const rows = await selectFrom(
     supportRequests,
-    and(
-      notSoftDeleted(supportRequests),
-      where,
-      after === null ? undefined : gt(supportRequests.id, after),
-    ),
+    and(where, after === null ? undefined : gt(supportRequests.id, after)),
     {
       aggregate: { id: sql<string>`${supportRequests.id}` },
       over: {},
@@ -382,7 +381,11 @@ export function findClosingNoticesDue(
   after: string | null,
   limit: number,
 ): Promise<string[]> {
-  return retentionPage(closingNoticeDue(dueBy, lapsedBy), after, limit);
+  return retentionPage(
+    and(notSoftDeleted(supportRequests), closingNoticeDue(dueBy, lapsedBy)),
+    after,
+    limit,
+  );
 }
 
 /**
@@ -396,7 +399,11 @@ export function findClosingNoticesDueAmong(
 ): Promise<string[]> {
   if (ids.length === 0) return Promise.resolve([]);
   return retentionPage(
-    and(closingNoticeDue(dueBy, lapsedBy), inArray(supportRequests.id, [...ids])),
+    and(
+      notSoftDeleted(supportRequests),
+      closingNoticeDue(dueBy, lapsedBy),
+      inArray(supportRequests.id, [...ids]),
+    ),
     null,
     ids.length,
   );
@@ -419,7 +426,11 @@ export function findSupportRequestsDueToClose(
   limit: number,
 ): Promise<string[]> {
   return retentionPage(
-    and(eq(supportRequests.status, 'resolved'), lte(supportRequests.resolvedAt, cutoff)),
+    and(
+      notSoftDeleted(supportRequests),
+      eq(supportRequests.status, 'resolved'),
+      lte(supportRequests.resolvedAt, cutoff),
+    ),
     after,
     limit,
   );
@@ -436,6 +447,7 @@ export function findSupportRequestsDueToAnonymise(
 ): Promise<string[]> {
   return retentionPage(
     and(
+      notSoftDeleted(supportRequests),
       eq(supportRequests.status, 'closed'),
       lte(supportRequests.closedAt, cutoff),
       ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),

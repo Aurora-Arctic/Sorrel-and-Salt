@@ -58,6 +58,8 @@ beforeEach(async () => {
 
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const NOTE = 'Internal: the sender looks like a repeat caller.';
+/** Day 6 after a request resolved just now, inside its closing-soon window, as the daily job would see it. */
+const noticeDay = () => Date.now() + 6 * 24 * 60 * 60 * 1000;
 
 const emailOf = async (userId: string) =>
   (await sql`select email from users where id = ${userId}`)[0]!.email as string;
@@ -200,7 +202,7 @@ describe('the rendered mails', () => {
       await retentionBatchStep({
         kind: 'notice',
         ids: [request.id],
-        now: Date.now(),
+        now: noticeDay(),
         origin: 'http://localhost:8000',
       }),
     ).toBe(1);
@@ -230,7 +232,7 @@ describe('the rendered mails', () => {
       await retentionBatchStep({
         kind: 'notice',
         ids: [row!.id as string],
-        now: Date.now(),
+        now: noticeDay(),
         origin: 'http://localhost:8000',
       }),
     ).toBe(1);

@@ -38,6 +38,13 @@ const { startJob } = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/jobs', () => ({ startJob }));
 
+// A page of three rather than 500, so the paging test crosses a page boundary in every stage with a few rows rather than 1,503:
+// what it proves is the cursor and the hand-off between pages, which the page's size does not change.
+vi.mock('@/modules/support/jobs/support-retention-pages', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/support/jobs/support-retention-pages')>()),
+  RETENTION_PAGE_SIZE: 3,
+}));
+
 // The closing-soon notice goes through the transport itself; this stands in for it, and can be told to refuse a message.
 const { delivered, refuse, MailNotSent } = vi.hoisted(() => {
   class MailNotSent extends Error {}
