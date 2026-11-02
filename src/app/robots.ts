@@ -5,11 +5,13 @@ import { siteUrl } from '@/lib/site';
 // documents, the public files and the sitemap. `Allow` beats `Disallow: /` as the longer match (RFC 9309, 2.2.2); `/robots.txt` is
 // listed for tools that skip that rule. `/$` not `/`: a bare `/` allows every path by prefix, and `$`
 // ends the pattern (RFC 9309, 2.2.3). The home page must be crawlable for Google to read a site name.
+// `/support` is fetchable only so a crawler reads its noindex: a blocked page can still be listed from links.
 export const CRAWLABLE_PATHS = [
   '/$',
   '/compendium',
   '/compendium/',
   '/sign-in',
+  '/support',
   '/privacy',
   '/disclaimer',
   '/terms',

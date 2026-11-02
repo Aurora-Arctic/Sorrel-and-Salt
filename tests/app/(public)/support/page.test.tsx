@@ -21,7 +21,7 @@ vi.mock('@/components/SupportPanel', () => ({
   default: ({ state }: { state: { kind: string } }) => <p>{`panel:${state.kind}`}</p>,
 }));
 
-const { default: SupportPage } = await import('@/app/(public)/support/page');
+const { default: SupportPage, metadata } = await import('@/app/(public)/support/page');
 
 const SESSION = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'user' } as Session;
 
@@ -65,5 +65,13 @@ describe('the /support page', () => {
     await show();
 
     expect(screen.getByText('panel:form')).toBeVisible();
+  });
+});
+
+// robots.txt lets a crawler fetch /support so it can read this; the page itself holds no content
+// worth a search result.
+describe('the /support page metadata', () => {
+  it('keeps the page out of search results, its links followed', () => {
+    expect(metadata.robots).toEqual({ index: false, follow: true });
   });
 });
