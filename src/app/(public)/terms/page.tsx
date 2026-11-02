@@ -136,8 +136,8 @@ export default function TermsOfUsePage() {
         <li>
           <strong>Not liable for:</strong> the site being unavailable, slow or changed; anything you
           lose because a page was wrong, incomplete or out of date; anything you do with what you
-          read here, including with any ingredient; and anything a coven's members write to one
-          another.
+          read here, including with any ingredient; and anything other people write on the site,
+          such as the ingredients and spells a coven's members add.
         </li>
         <li>
           <strong>Up to what point:</strong> the most the people who run the site will owe you for
