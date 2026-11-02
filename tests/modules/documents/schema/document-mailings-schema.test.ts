@@ -38,6 +38,11 @@ describe('document_mailings schema', () => {
     expect(byName.status.default).toBe('sending');
   });
 
+  // `replaced` marks a mailing a newer mailing of the same document stopped before it finished.
+  it('takes a status of sending, sent or replaced', () => {
+    expect(documentMailings.status.enumValues).toEqual(['sending', 'sent', 'replaced']);
+  });
+
   it('declares its one-per-version index, unique and partial', () => {
     expect(Object.keys(byIndexName)).toEqual([VERSION_UNIQUE]);
     expect(byIndexName[VERSION_UNIQUE].config.unique).toBe(true);
@@ -134,6 +139,25 @@ describe('document_mailings table', () => {
     const [mailing] = await aMailing(await aPublishedVersion());
 
     expect(mailing).toMatchObject({ status: 'sending', finished_at: null, recipient_count: 3 });
+  });
+
+  it('takes a mailing replaced by a newer one, finished, and refuses a status outside the three', async () => {
+    const versionId = await aPublishedVersion();
+
+    const [replaced] = await sql`
+      insert into document_mailings (document_version_id, summary, status, recipient_count, finished_at, created_by, updated_by)
+      values (${versionId}, 'Testwort.', 'replaced', 3, now(), ${ADMIN}, ${ADMIN})
+      returning *
+    `;
+    const error = await failureOf(sql`
+      insert into document_mailings (document_version_id, summary, status, recipient_count, created_by, updated_by)
+      values (${await aPublishedVersion()}, 'Testwort.', 'archived', 3, ${ADMIN}, ${ADMIN})
+    `);
+
+    expect(replaced.status).toBe('replaced');
+    expect(replaced.finished_at).toBeInstanceOf(Date);
+    // 22P02 is invalid_text_representation: the enum refuses the value.
+    expect(error.code).toBe('22P02');
   });
 
   it('refuses a mailing of no version', async () => {

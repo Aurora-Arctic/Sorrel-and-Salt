@@ -58,11 +58,11 @@ async function aVersion(
 
 async function aMailing(
   versionId: string,
-  status: 'sending' | 'sent' = 'sending',
+  status: 'sending' | 'sent' | 'replaced' = 'sending',
 ): Promise<string> {
   const [row] = await sql`
     insert into document_mailings (document_version_id, summary, status, recipient_count, finished_at, created_by, updated_by)
-    values (${versionId}, 'Testwort clause added.', ${status}, 2, ${status === 'sent' ? sql`now()` : null}, ${ADMIN}, ${ADMIN})
+    values (${versionId}, 'Testwort clause added.', ${status}, 2, ${status === 'sending' ? null : sql`now()`}, ${ADMIN}, ${ADMIN})
     returning id
   `;
   return row.id;
@@ -561,5 +561,15 @@ describe('the mailing finders and writes', () => {
     expect(finished[0]).toMatchObject({ id: mailing, status: 'sent' });
     expect(finished[0]?.finishedAt).toBeInstanceOf(Date);
     expect(again).toEqual([]);
+  });
+
+  it('finishes nothing that a newer mailing replaced, keeping it replaced', async () => {
+    const mailing = await aMailing(versionId, 'replaced');
+
+    const finished = await withAudit(asUser(E), (write) => write.finishDocumentMailing(mailing));
+
+    expect(finished).toEqual([]);
+    const [row] = await sql`select status from document_mailings where id = ${mailing}`;
+    expect(row.status).toBe('replaced');
   });
 });
