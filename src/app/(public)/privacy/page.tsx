@@ -140,8 +140,7 @@ export default function PrivacyPolicyPage() {
         </li>
         <li>
           <strong>A password:</strong> the site keeps a scrambled form of it (a hash, made with
-          scrypt), never the password itself. Failed password sign-ins are counted on your account,
-          with the time of the first and last failure and when a lock ends.
+          scrypt), never the password itself.
         </li>
         <li>
           <strong>A passkey:</strong> the site keeps the key's public half, its name, the kind of
