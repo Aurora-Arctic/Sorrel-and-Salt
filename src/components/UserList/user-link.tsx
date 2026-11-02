@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { useOpenModalClick } from '../Modal';
+import { ModalLink, useOpenModalClick } from '../Modal';
 import type { UserLinkProps } from './types';
 
 /**
@@ -12,9 +11,9 @@ import type { UserLinkProps } from './types';
 const UserLink = ({ href, heading, name }: UserLinkProps): ReactElement => {
   const onClick = useOpenModalClick(href, heading);
   return (
-    <Link href={href} onClick={onClick}>
+    <ModalLink href={href} onClick={onClick}>
       {name}
-    </Link>
+    </ModalLink>
   );
 };
 

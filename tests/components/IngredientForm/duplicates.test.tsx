@@ -679,7 +679,7 @@ describe('NameField, with useDuplicateWarning', () => {
         fireEvent.click(eye);
       });
 
-      expect(router.push).toHaveBeenCalledWith(quickLookOf(UNUSED).href);
+      expect(router.push).toHaveBeenCalledWith(quickLookOf(UNUSED).href, { scroll: false });
       const details = screen.getByRole('dialog', { name: "Cat's Claw" });
       expect(details).toHaveAttribute('open');
       expect(details.querySelector('[aria-busy="true"]')).not.toBeNull();

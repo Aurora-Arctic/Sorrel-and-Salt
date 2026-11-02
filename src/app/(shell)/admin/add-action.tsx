@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import type { MouseEvent, ReactElement } from 'react';
 import IconTip, { PlusIcon } from '../../../components/IconTip';
-import { useOpenModalClick } from '../../../components/Modal';
+import { ModalLink, useOpenModalClick } from '../../../components/Modal';
 import type { AddActionProps } from './types';
 
 /**
@@ -28,7 +27,7 @@ export default function AddAction({
   };
   return (
     <IconTip tip={children}>
-      <Link
+      <ModalLink
         className="btn btn--solid add-action"
         href={href}
         onClick={drawnHere ? pushed : navigated}
@@ -37,7 +36,7 @@ export default function AddAction({
         <span className="add-action__plus" aria-hidden="true">
           <PlusIcon />
         </span>
-      </Link>
+      </ModalLink>
     </IconTip>
   );
 }

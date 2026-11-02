@@ -53,7 +53,7 @@ describe('DetailsLink', () => {
     });
 
     expect(handled).toBe(false);
-    expect(router.push).toHaveBeenCalledWith(DETAILS);
+    expect(router.push).toHaveBeenCalledWith(DETAILS, { scroll: false });
     // One dialog: the press shows in the details place, not the edit modal's too.
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(screen.getByRole('dialog', { name: 'Testwort' })).toBeInTheDocument();

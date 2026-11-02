@@ -1,8 +1,8 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { ModalLink } from '../Modal';
 import { Suspense, type ReactElement } from 'react';
 import { SUPPORT_PARAM, SUPPORT_PATH, supportHref } from '../../lib/support-path';
 import type { SupportLinkProps } from './types';
@@ -14,17 +14,17 @@ function Opening({ children, about, ...rest }: SupportLinkProps): ReactElement {
   const pathname = usePathname();
   const params = useSearchParams();
   return (
-    <Link {...rest} href={supportHref(pathname, new URLSearchParams(params), about) as Route}>
+    <ModalLink {...rest} href={supportHref(pathname, new URLSearchParams(params), about) as Route}>
       {children}
-    </Link>
+    </ModalLink>
   );
 }
 
 const SupportLink = ({ children, about, ...rest }: SupportLinkProps): ReactElement => {
   const fallback = (
-    <Link {...rest} href={about ? `${SUPPORT_PATH}?${SUPPORT_PARAM}=${about}` : SUPPORT_PATH}>
+    <ModalLink {...rest} href={about ? `${SUPPORT_PATH}?${SUPPORT_PARAM}=${about}` : SUPPORT_PATH}>
       {children}
-    </Link>
+    </ModalLink>
   );
   return (
     <Suspense fallback={fallback}>

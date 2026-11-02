@@ -261,7 +261,9 @@ describe('CupboardActions', () => {
     const dialog = screen.getByRole('dialog', { name: 'Annotate This Entry' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(ANNOTATE.closeHref));
+    await waitFor(() =>
+      expect(router.replace).toHaveBeenCalledWith(ANNOTATE.closeHref, { scroll: false }),
+    );
     expect(router.refresh).toHaveBeenCalled();
   });
 

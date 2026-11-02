@@ -263,7 +263,7 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     });
 
     press(within(dialog()).getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE, { scroll: false }));
     expect(calls).toEqual([
       expect.objectContaining({
         input: { description: 'Fixture unsaved note' },
