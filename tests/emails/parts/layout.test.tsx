@@ -5,6 +5,9 @@ import { adminInvitationMessage } from '@/emails/admin-invitation';
 import { covenInvitationMessage } from '@/emails/coven-invitation';
 import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
 import { passwordChangedMessage } from '@/emails/password-changed';
+import { accessPausedMessage } from '@/emails/access-paused';
+import { covenAccessPausedMessage } from '@/emails/coven-access-paused';
+import { supportTimedOutMessage } from '@/emails/support-timed-out';
 import { passwordLockedMessage } from '@/emails/password-locked';
 import { resetPasswordMessage } from '@/emails/reset-password';
 import { supportEmailReplyMessage } from '@/emails/support-email-reply';
@@ -131,6 +134,43 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/api/auth/reset-password/fixture-lock-token?callbackURL=%2Freset-password`,
         minutes: 15,
+      }),
+  },
+  {
+    template: 'support-timed-out',
+    name: 'supportTimedOutMessage',
+    link: `${ORIGIN}/support`,
+    message: () =>
+      supportTimedOutMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/support`,
+        until: new Date('2099-03-14T12:00:00Z'),
+        note: 'A note.',
+      }),
+  },
+  {
+    template: 'access-paused',
+    name: 'accessPausedMessage',
+    link: `${ORIGIN}/support`,
+    message: () =>
+      accessPausedMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/support`,
+        until: new Date('2099-03-14T12:00:00Z'),
+        note: 'A note.',
+      }),
+  },
+  {
+    template: 'coven-access-paused',
+    name: 'covenAccessPausedMessage',
+    link: `${ORIGIN}/support`,
+    message: () =>
+      covenAccessPausedMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/support`,
+        until: new Date('2099-03-14T12:00:00Z'),
+        covenName: 'Testwort',
+        note: 'A note.',
       }),
   },
   {

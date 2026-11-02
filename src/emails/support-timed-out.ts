@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, defineMessage } from './parts/layout';
 import { pauseEnd } from './parts/pause-end';
 import type { SupportTimedOutProps } from './types';
@@ -15,18 +16,21 @@ export function SupportTimedOut({
   origin = new URL(url).origin,
   part,
 }: SupportTimedOutProps) {
-  return (
-    <EmailLayout preview={PREVIEW} heading={SUBJECT} origin={origin}>
-      <Paragraph>
-        {`A site admin set a support time-out on your Sorrel & Salt account. ${pauseEnd(until)}`}
-      </Paragraph>
-      <Paragraph>{`The admin's note: ${note}`}</Paragraph>
-      <Paragraph>
-        Until it ends, no support request can be sent from your account. Your earlier requests and
-        their replies stay on your support page.
-      </Paragraph>
-      <Action href={url} label="Open Your Support Page" part={part} />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: PREVIEW, heading: SUBJECT, origin },
+    h(
+      Paragraph,
+      null,
+      `A site admin set a support time-out on your Sorrel & Salt account. ${pauseEnd(until)}`,
+    ),
+    h(Paragraph, null, `The admin's note: ${note}`),
+    h(
+      Paragraph,
+      null,
+      'Until it ends, no support request can be sent from your account. Your earlier requests and their replies stay on your support page.',
+    ),
+    h(Action, { href: url, label: 'Open Your Support Page', part }),
   );
 }
 

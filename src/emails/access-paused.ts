@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import { pauseEnd } from './parts/pause-end';
 import type { AccessPausedProps } from './types';
@@ -15,17 +16,21 @@ export function AccessPaused({
   origin = new URL(url).origin,
   part,
 }: AccessPausedProps) {
-  return (
-    <EmailLayout preview={PREVIEW} heading={SUBJECT} origin={origin}>
-      <Paragraph>
-        {`A site admin paused your access to Sorrel & Salt. ${pauseEnd(until)} You have been signed out everywhere.`}
-      </Paragraph>
-      <Paragraph>{`The admin's note: ${note}`}</Paragraph>
-      <Paragraph>
-        {`You can still sign in to reach the support page, where you can write to us about the pause. To open it, ${actionVerb(part)}.`}
-      </Paragraph>
-      <Action href={url} label="Open the Support Page" part={part} />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: PREVIEW, heading: SUBJECT, origin },
+    h(
+      Paragraph,
+      null,
+      `A site admin paused your access to Sorrel & Salt. ${pauseEnd(until)} You have been signed out everywhere.`,
+    ),
+    h(Paragraph, null, `The admin's note: ${note}`),
+    h(
+      Paragraph,
+      null,
+      `You can still sign in to reach the support page, where you can write to us about the pause. To open it, ${actionVerb(part)}.`,
+    ),
+    h(Action, { href: url, label: 'Open the Support Page', part }),
   );
 }
 

@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, defineMessage } from './parts/layout';
 import { pauseEnd } from './parts/pause-end';
 import type { CovenAccessPausedProps } from './types';
@@ -15,18 +16,20 @@ export function CovenAccessPaused({
   origin = new URL(url).origin,
   part,
 }: CovenAccessPausedProps) {
-  return (
-    <EmailLayout
-      preview={`An owner paused your access to ${covenName}.`}
-      heading={subjectOf({ covenName })}
-      origin={origin}
-    >
-      <Paragraph>
-        {`An owner of the coven ${covenName} paused your access to it. ${pauseEnd(until)} You keep your seat in the coven, and the rest of Sorrel & Salt works as before.`}
-      </Paragraph>
-      {note ? <Paragraph>{`The owner's note: ${note}`}</Paragraph> : null}
-      <Action href={url} label="Open the Support Page" part={part} />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    {
+      preview: `An owner paused your access to ${covenName}.`,
+      heading: subjectOf({ covenName }),
+      origin,
+    },
+    h(
+      Paragraph,
+      null,
+      `An owner of the coven ${covenName} paused your access to it. ${pauseEnd(until)} You keep your seat in the coven, and the rest of Sorrel & Salt works as before.`,
+    ),
+    note ? h(Paragraph, null, `The owner's note: ${note}`) : null,
+    h(Action, { href: url, label: 'Open the Support Page', part }),
   );
 }
 
