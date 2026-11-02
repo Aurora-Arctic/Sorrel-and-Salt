@@ -48,15 +48,17 @@ async function viewerFor(session: Session): Promise<ShellContext> {
     // Alphabetical with the demo coven last: the service's order is the database's, which looks random.
     workspaces: [...memberships]
       .sort((a, b) => byCovenName(a.workspace, b.workspace))
-      .map(({ role, workspace: { id, slug, name } }) => ({
+      .map(({ role, pause, workspace: { id, slug, name } }) => ({
         id,
         slug,
         name,
-        canReadMembers: rolePermits(role, { member: ['read'] }),
+        // A paused seat reaches only the paused page, so its role offers nothing: every service refuses it too.
+        canReadMembers: !pause && rolePermits(role, { member: ['read'] }),
         // The statement the invite service asserts: the switcher keeps a viewer on the invitations page only where it opens.
-        canInvite: rolePermits(role, { member: ['invite'] }),
+        canInvite: !pause && rolePermits(role, { member: ['invite'] }),
         // The statement createWorkspaceIngredient asserts, so the button never offers a coven the save would refuse.
-        canWrite: rolePermits(role, { ingredient: ['create'], inventory: ['update'] }),
+        canWrite: !pause && rolePermits(role, { ingredient: ['create'], inventory: ['update'] }),
+        paused: pause ? { until: pause.until } : null,
       })),
   };
 }

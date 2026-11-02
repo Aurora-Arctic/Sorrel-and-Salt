@@ -71,6 +71,35 @@ describe('membershipsOf', () => {
   });
 });
 
+describe('membershipsOf: the pause on each seat', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  // The shell marks a paused coven and hides its writes from this answer, so each membership carries the pause standing on it.
+  it("carries a standing pause on the caller's own seat, and none where none stands", async () => {
+    const [before] = await membershipsOf(asUser(B), [B.id]);
+    expect(before).toEqual([expect.objectContaining({ workspaceId: WORKSPACE_W_ID, pause: null })]);
+
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${B.id}, '2099-01-01T00:00:00Z', ${A.id}, ${A.id})
+    `;
+    try {
+      const [paused] = await membershipsOf(asUser(B), [B.id]);
+      expect(paused).toEqual([
+        expect.objectContaining({
+          workspaceId: WORKSPACE_W_ID,
+          pause: { until: new Date('2099-01-01T00:00:00Z') },
+        }),
+      ]);
+    } finally {
+      await sql`delete from workspace_member_pauses where user_id = ${B.id}`;
+    }
+  });
+});
+
 describe('firstCovenSlugOf', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {

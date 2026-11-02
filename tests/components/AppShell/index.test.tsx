@@ -34,6 +34,7 @@ const COVENS: ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: true,
     canWrite: true,
+    paused: null,
   },
   {
     id: 'w2',
@@ -42,6 +43,7 @@ const COVENS: ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: false,
     canWrite: true,
+    paused: null,
   },
 ];
 

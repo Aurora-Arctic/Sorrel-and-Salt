@@ -21,6 +21,9 @@ export type MembershipWithWorkspace = typeof workspaceMembers.$inferSelect & {
   workspace: WorkspaceRow;
 };
 
+/** One of a user's own memberships, with the pause standing on its seat: what the shell reads to mark a paused coven and hide its writes. */
+export type MembershipOfUser = MembershipWithWorkspace & Pick<WorkspaceSeat, 'pause'>;
+
 /** The workspace a `/coven/[slug]` address names, with the caller's proof of membership in it. */
 export type CovenMembership = {
   workspace: WorkspaceRow;

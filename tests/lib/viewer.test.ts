@@ -27,8 +27,15 @@ const { covenRolesIfSignedIn, viewerIfSignedIn, viewerOf } = await import('@/lib
 
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
-const membership = (slug: string, name: string, role = 'member', demo = false) => ({
+const membership = (
+  slug: string,
+  name: string,
+  role = 'member',
+  demo = false,
+  pause: { until: Date | null } | null = null,
+) => ({
   role,
+  pause,
   workspace: { id: `id-${slug}`, slug, name, demo },
 });
 
@@ -121,6 +128,7 @@ describe('viewerOf', () => {
         canReadMembers: true,
         canInvite: false,
         canWrite: true,
+        paused: null,
       },
       {
         id: 'id-testwort-circle',
@@ -129,6 +137,56 @@ describe('viewerOf', () => {
         canReadMembers: false,
         canInvite: false,
         canWrite: false,
+        paused: null,
+      },
+    ]);
+  });
+
+  it('marks a paused coven, and takes away everything its role would offer there', async () => {
+    const until = new Date('2099-01-01T00:00:00Z');
+    membershipsOf.mockResolvedValue([
+      [
+        membership('own-coven', 'Own Coven', 'owner', false, { until }),
+        membership('open-ended', 'Open Ended', 'member', false, { until: null }),
+        membership('fixture-coven', 'Fixture Coven', 'owner'),
+      ],
+    ]);
+
+    const { workspaces } = await viewerOf();
+
+    // Why the paused covens could have offered all three: the same owner role unpaused does.
+    expect(workspaces.find(({ slug }) => slug === 'fixture-coven')).toEqual(
+      expect.objectContaining({
+        canReadMembers: true,
+        canInvite: true,
+        canWrite: true,
+        paused: null,
+      }),
+    );
+    expect(
+      workspaces
+        .filter(({ slug }) => slug !== 'fixture-coven')
+        .map(({ slug, canReadMembers, canInvite, canWrite, paused }) => ({
+          slug,
+          canReadMembers,
+          canInvite,
+          canWrite,
+          paused,
+        })),
+    ).toEqual([
+      {
+        slug: 'open-ended',
+        canReadMembers: false,
+        canInvite: false,
+        canWrite: false,
+        paused: { until: null },
+      },
+      {
+        slug: 'own-coven',
+        canReadMembers: false,
+        canInvite: false,
+        canWrite: false,
+        paused: { until },
       },
     ]);
   });

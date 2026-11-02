@@ -266,8 +266,10 @@ export interface ShellWorkspace {
   canReadMembers: boolean;
   /** The viewer’s role there may invite (an owner’s alone): the invitations page is a 404 without it. */
   canInvite: boolean;
-  /** The viewer’s role there may create ingredients: false lists the coven in Add Ingredient, disabled. */
+  /** The viewer’s role there may create ingredients: false leaves the coven out of every write target, Add Ingredient's among them. */
   canWrite: boolean;
+  /** The pause an owner set on the viewer's seat there, or null. `until` null is open-ended. A paused coven reads false for every flag above. */
+  paused: { until: Date | null } | null;
 }
 
 /** The viewer and their covens together: what the shell is drawn from (`src/lib/viewer.ts`). */
