@@ -576,8 +576,9 @@ the text, and has one Agree & Continue button.
 - **After agreeing the browser makes a full navigation** to `next`, or to the
   signed-in landing page when there is none, so the router does not reuse the
   cached redirect.
-- **Not gated:** signed-out visitors, `/terms`, the other document pages and
-  the public compendium.
+- **Not gated:** signed-out visitors, `/terms`, the other document pages,
+  the public compendium, and a paused account, which reaches only the support
+  pages and cannot agree while paused ("Pausing a user's access").
 - **The API is not gated the same way.** `/api/graphql` does not refuse an
   account that has not agreed; the gate covers pages only, as the entry for
   M15.57 specifies.
@@ -766,7 +767,11 @@ pause on every session, an impersonation's included, as `accessPause`. From ther
   `mySupportRequests`, `mySupportRequest`, `sendSupportRequest`, `sendSupportMessage`, `resolveMySupportRequest`). Any
   other operation, a fragment at the root, or a document that does not parse runs with no session and `accessPause` set, so a
   public field answers as signed out and the rest answer `ACCESS_PAUSED` with `pausedUntil`.
-- **Support time-outs.** A paused user who is also timed out is refused the send by the time-out, with its own sentence.
+- **Support time-outs.** A paused user who is also timed out still reaches the support pages and reads their requests and
+  threads; only the send is refused, by the time-out, with its own sentence.
+- **The terms gate.** `requireSession()` does not send a paused account to `/account/terms`: the API refuses
+  `agreeToTerms` while the pause stands, so the acceptance page could only send it back to the paused page, and an
+  account that has not agreed to the current terms would never reach its support pages.
 
 The paused page's address carries nothing: the page reads the pause itself. An admin impersonating a paused user is shown all of this as the user is
 (`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
@@ -776,8 +781,12 @@ signed out, and it sits outside the app shell and is not indexed. It reads the v
 `getShellSession()`, as the shell does: a dated pause names its end with `LocalTime`, the format the site prints an end in,
 and an open-ended one says it has no end date. A visitor with no session is sent to `/sign-in`, and a session with no pause
 standing, lifted or ended, to `/`. Its Support link is a `SupportLink`, so it opens the Support dialog over the page as the
-footer's does; a paused account sends from it signed in. It also links to the compendium, which it reads as any signed-out
-visitor.
+footer's does; a paused account sends from it signed in. The page has no account menu, so it also links "your requests" to
+`/account/support` itself. It reads the viewer's standing support time-out through `getMySupportTimeout`, skipped for an
+unverified account, whose support reads refuse it. With one standing, the page drops that paragraph and its Support link,
+since the dialog could send nothing, and says instead "You cannot send a support request until …", in `LocalTime`'s long
+form, or with no end "You cannot send a support request: you are timed out with no end date.", then "You can still read your requests.", with "read your requests" linking
+to `/account/support`. It also links to the compendium, which it reads as any signed-out visitor.
 
 **Ending.** A dated pause ends by itself once `until` passes, with no write, and a lift stamps `lifted_at` and `lifted_by`.
 Either way the next request of a session signed in while paused reaches the whole site.

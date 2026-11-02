@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { longMinuteInZone } from '@/lib/utc';
+import { printed } from '../../../../../support/printed-text';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
@@ -210,7 +211,7 @@ describe('the /admin/users page', () => {
     expect(standingAccessPausesOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
     expect(
       within(cellUnder('Listed Fixture 01', 'Support')).getByText(
-        `Timed out until ${longMinuteInZone(until)}`,
+        `Timed out until ${printed(longMinuteInZone(until))}`,
       ),
     ).toBeInTheDocument();
     expect(
