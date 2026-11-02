@@ -10,6 +10,8 @@ import {
 import type { SupportNotifier } from '@/modules/support';
 import { supportNotifier } from '@/lib/support-mail';
 import { closingNoticeStep } from '@/modules/support/jobs/support-lifecycle-steps';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
+import { replyNoticeStep } from '@/modules/support/jobs/support-reply-notice-steps';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
@@ -23,7 +25,12 @@ vi.mock('@/lib/mail', () => ({
   },
 }));
 
-// The closing-soon notice is sent by its job's step, through the transport itself.
+// The reply notice and the closing-soon notice are sent by their jobs' steps, through the transport itself. The jobs are not
+// run here: a test calls the step, as the run would.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
 vi.mock('@/lib/mail-transport', () => ({
   deliver: async (message: (typeof sent)[number]) => {
     sent.push(message);
@@ -37,6 +44,7 @@ useTestDatabase((client) => {
 });
 
 beforeEach(async () => {
+  startJob.mockClear();
   await sql`truncate support_replies, support_timeouts, support_requests, support_send_counts cascade`;
 });
 
@@ -51,10 +59,8 @@ function recorder() {
       calls.push({ kind, args });
     };
   const mail: SupportNotifier = {
-    replyWaiting: record('replyWaiting'),
     received: record('received'),
     resolved: record('resolved'),
-    signedOutReply: record('signedOutReply'),
     origin: async () => 'http://localhost:3000',
   };
   return { mail, calls };
@@ -137,10 +143,12 @@ describe('an internal note', () => {
     await addSupportInternalNote(asUser(E), request.id, NOTE);
     expect(await sql`select 1 from support_replies where body = ${NOTE}`).toHaveLength(1);
 
-    await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail);
+    const reply = await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail);
     await resolveSupportRequest(asUser(E), request.id, mail);
 
-    expect(calls.map((call) => call.kind)).toEqual(['received', 'replyWaiting', 'resolved']);
+    expect(calls.map((call) => call.kind)).toEqual(['received', 'resolved']);
+    const replyRuns = startJob.mock.calls.filter(([job]) => job === supportReplyNotice);
+    expect(replyRuns.map(([, args]) => args)).toEqual([[reply.id, 'http://localhost:3000']]);
     expect(JSON.stringify(calls)).not.toContain('repeat caller');
   });
 });
@@ -164,7 +172,8 @@ describe('the rendered mails', () => {
     // Precondition: the note is saved on the request, so a leak would have text to carry.
     await addSupportInternalNote(asUser(E), request.id, NOTE);
     expect(await sql`select 1 from support_replies where body = ${NOTE}`).toHaveLength(1);
-    await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
+    const reply = await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
+    expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
     await resolveSupportRequest(asUser(E), request.id, notifier);
     expect(await closingNoticeStep(request.id, 'http://localhost:8000')).toBe(true);
 
@@ -181,7 +190,13 @@ describe('the rendered mails', () => {
     await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier });
     const [row] = await sql`select id from support_requests`;
     await addSupportInternalNote(asUser(E), row!.id as string, NOTE);
-    await replyToSupportRequest(asUser(E), row!.id as string, 'Use the card.', notifier);
+    const reply = await replyToSupportRequest(
+      asUser(E),
+      row!.id as string,
+      'Use the card.',
+      notifier,
+    );
+    expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
     await resolveSupportRequest(asUser(E), row!.id as string, notifier);
     expect(await closingNoticeStep(row!.id as string, 'http://localhost:8000')).toBe(true);
 

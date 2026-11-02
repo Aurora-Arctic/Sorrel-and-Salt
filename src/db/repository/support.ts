@@ -307,6 +307,22 @@ export async function findActiveSupportTimeoutEnd(userId: string): Promise<Date 
   return rows.map((row) => row.until).sort((x, y) => y.getTime() - x.getTime())[0];
 }
 
+/** A public staff reply whose mail to the sender has not been sent yet, for its job to send, or `undefined`. */
+export function findReplyAwaitingNotice(id: string) {
+  return selectOne(
+    supportReplies,
+    and(
+      notSoftDeleted(supportReplies),
+      eq(supportReplies.id, id),
+      eq(supportReplies.authorRole, 'staff'),
+      // A reply's visibility, not a spell's.
+      // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
+      eq(supportReplies.visibility, 'public'),
+      isNull(supportReplies.noticeSentAt),
+    ),
+  );
+}
+
 /** A time-out by id, for an admin to lift. */
 export function findSupportTimeoutById(id: string) {
   return selectOne(
@@ -402,6 +418,7 @@ export function supportWrites({
   | 'moveSupportRequest'
   | 'closeIdleResolvedSupportRequests'
   | 'markClosingNoticeSent'
+  | 'markReplyNoticeSent'
   | 'anonymiseClosedSupportRequests'
 > {
   // One key's count: its advisory lock first, then the live row, started again when its window has passed.
@@ -479,6 +496,12 @@ export function supportWrites({
           eq(supportRequests.status, 'resolved'),
           isNull(supportRequests.closingNoticeSentAt),
         ),
+      ),
+    markReplyNoticeSent: (id, sentAt) =>
+      update(
+        supportReplies,
+        { noticeSentAt: sentAt },
+        and(eq(supportReplies.id, id), isNull(supportReplies.noticeSentAt)),
       ),
     // The sender leaves the row in one statement, so the one-sender CHECK never sees an address without the signed-out
     // sender: `created_by` passes to the System account, which no request is otherwise created by, and which marks the row done.

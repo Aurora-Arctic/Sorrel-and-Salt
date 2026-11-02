@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, RateLimited, ValidationError } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
@@ -11,6 +11,7 @@ import {
   sendSignedOutSupportRequest,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
@@ -22,7 +23,16 @@ useTestDatabase((client) => {
   sql = client;
 });
 
+// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+const replyNotices = () =>
+  startJob.mock.calls.filter(([job]) => job === supportReplyNotice).map(([, args]) => args);
+
 beforeEach(async () => {
+  startJob.mockClear();
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
   await sql`delete from support_send_counts`;
 });
@@ -36,19 +46,14 @@ const INPUT = {
 
 function notifier() {
   const received: { to: string; subject: string; requestId: string | null }[] = [];
-  const replies: { to: string; body: string }[] = [];
   const mail: SupportNotifier = {
-    replyWaiting: async () => undefined,
     received: async (to, subject, requestId) => {
       received.push({ to, subject, requestId });
     },
     resolved: async () => undefined,
-    signedOutReply: async (to, body) => {
-      replies.push({ to, body });
-    },
     origin: async () => 'http://localhost:3000',
   };
-  return { mail, received, replies };
+  return { mail, received };
 }
 
 const send = (
@@ -188,18 +193,18 @@ describe('sendSignedOutSupportRequest', () => {
 });
 
 describe('a reply to a signed-out request', () => {
-  it('is mailed to the visitor in full, and the account notice is not sent', async () => {
+  it('starts its notice with the reply’s id and the origin, and nothing of the visitor’s', async () => {
     await send();
     const [request] = await sql`select id from support_requests`;
-    const { mail, replies } = notifier();
-    let notices = 0;
-    mail.replyWaiting = async () => {
-      notices += 1;
-    };
+    const { mail } = notifier();
 
-    await replyToSupportRequest(asUser(E), request!.id as string, 'Try the recovery link.', mail);
+    const reply = await replyToSupportRequest(
+      asUser(E),
+      request!.id as string,
+      'Try the recovery link.',
+      mail,
+    );
 
-    expect(replies).toEqual([{ to: 'visitor@example.test', body: 'Try the recovery link.' }]);
-    expect(notices).toBe(0);
+    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 });

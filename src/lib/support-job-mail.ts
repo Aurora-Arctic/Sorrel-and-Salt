@@ -1,4 +1,6 @@
 import { supportClosingSoonMessage } from '../emails/support-closing-soon';
+import { supportEmailReplyMessage } from '../emails/support-email-reply';
+import { supportReplyNoticeMessage } from '../emails/support-reply-notice';
 import { supportRequestPath } from './support-path';
 import type { Message } from './types';
 
@@ -19,4 +21,19 @@ export function supportClosingNoticeMessage(
   const signedOut = requestId === null;
   const url = `${origin}${signedOut ? '/support' : supportRequestPath(requestId)}`;
   return supportClosingSoonMessage({ to, url, requestSubject, signedOut, timeLeftMs });
+}
+
+/**
+ * The mail telling a sender of a staff reply, linked from `origin`. A signed-in sender is told one is waiting, with no reply text,
+ * and linked to the request; a signed-out sender, who has no page to read it on, gets `body` whole, linked to the support form.
+ */
+export function supportReplyMessage(
+  origin: string,
+  to: string,
+  reply: { requestId: string; requestSubject: string; body: string; signedOut: boolean },
+): Promise<Message> {
+  if (reply.signedOut)
+    return supportEmailReplyMessage({ to, url: `${origin}/support`, body: reply.body });
+  const url = `${origin}${supportRequestPath(reply.requestId)}`;
+  return supportReplyNoticeMessage({ to, url, requestSubject: reply.requestSubject });
 }

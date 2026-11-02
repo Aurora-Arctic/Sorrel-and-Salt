@@ -1,6 +1,7 @@
 import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+import type { supportReplies } from '../../modules/support/schema/support-replies';
 import type { supportRequests } from '../../modules/support/schema/support-requests';
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -608,6 +609,8 @@ export interface AuditWriter {
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /** Stamps the closing-soon notice on request `id` while it is still resolved and unstamped; none when it was not. */
   markClosingNoticeSent(id: string, sentAt: Date): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Stamps the sender's notice of staff reply `id` while it is unstamped; none when it already was. */
+  markReplyNoticeSent(id: string, sentAt: Date): Promise<(typeof supportReplies.$inferSelect)[]>;
   /**
    * Strips every closed request whose `closed_at` is at or before `cutoff`, or only request `id` when given, of what it holds of its
    * sender: subject, message, path, address and sender id, and its replies' text. Topic, status, dates and the rows stay, so the

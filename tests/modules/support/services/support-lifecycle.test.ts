@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import type { PageRequest } from '@/lib/types';
@@ -20,6 +20,7 @@ import {
   timeOutSupportSender,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
@@ -31,17 +32,24 @@ useTestDatabase((client) => {
   sql = client;
 });
 
+// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+const replyNotices = () =>
+  startJob.mock.calls.filter(([job]) => job === supportReplyNotice).map(([, args]) => args);
+
 beforeEach(async () => {
+  startJob.mockClear();
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
 });
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
-  replyWaiting: async () => undefined,
   received: async () => undefined,
   resolved: async () => undefined,
-  signedOutReply: async () => undefined,
   origin: async () => 'http://localhost:3000',
 };
 
@@ -327,20 +335,12 @@ describe('internal notes', () => {
 
   it('never change the status or mail the sender', async () => {
     const request = await send();
-    const sent: string[] = [];
     await addSupportInternalNote(asUser(E), request.id, 'Note.');
-    await replyToSupportRequest(asUser(E), request.id, 'Hi.', {
-      replyWaiting: async (to) => {
-        sent.push(to);
-      },
-      received: async () => undefined,
-      resolved: async () => undefined,
-      signedOutReply: async () => undefined,
-      origin: async () => 'http://localhost:3000',
-    });
+    const reply = await replyToSupportRequest(asUser(E), request.id, 'Hi.', mail);
 
     expect(await statusOf(request.id)).toBe('open');
-    expect(sent).toHaveLength(1);
+    // The reply's notice alone: the note starts none.
+    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 
   it('are written by an admin, and by a curator on any request they can read, assigned to them or not', async () => {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import type { PageRequest } from '@/lib/types';
@@ -23,6 +23,7 @@ import {
   usersNamedOnRequests,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import type { SessionUser } from '../../../support/types';
@@ -31,12 +32,21 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 // The support services by direct call: who may send, read, answer and manage a request, each refusal paired with the
 // same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
 
+// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+const replyNotices = () =>
+  startJob.mock.calls.filter(([job]) => job === supportReplyNotice).map(([, args]) => args);
+
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
 beforeEach(async () => {
+  startJob.mockClear();
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
 });
 
@@ -44,22 +54,10 @@ const PAGE: PageRequest = { limit: 101, inverted: false };
 const FUTURE = () => new Date(Date.now() + 3_600_000);
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 
-function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids: string[] } {
-  const sent: string[] = [];
-  const subjects: string[] = [];
-  const ids: string[] = [];
+function notifier(): SupportNotifier {
   return {
-    sent,
-    subjects,
-    ids,
-    replyWaiting: async (to, subject, requestId) => {
-      ids.push(requestId);
-      sent.push(to);
-      subjects.push(subject);
-    },
     received: async () => undefined,
     resolved: async () => undefined,
-    signedOutReply: async () => undefined,
     origin: async () => 'http://localhost:3000',
   };
 }
@@ -68,17 +66,10 @@ const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest
   sendSupportRequest(asUser(user), input, notifier());
 
 const mail: SupportNotifier = {
-  replyWaiting: async () => undefined,
   received: async () => undefined,
   resolved: async () => undefined,
-  signedOutReply: async () => undefined,
   origin: async () => 'http://localhost:3000',
 };
-
-async function emailOf(user: SessionUser): Promise<string> {
-  const [row] = await sql`select email from users where id = ${user.id}`;
-  return row!.email as string;
-}
 
 describe('sendSupportRequest', () => {
   it('lets a viewer and an account in no coven send', async () => {
@@ -396,7 +387,7 @@ describe('supportRequests', () => {
 });
 
 describe('replyToSupportRequest', () => {
-  it('lets an admin reply to any request, stores the reply and notifies the sender without its text', async () => {
+  it('lets an admin reply to any request, stores the reply and starts its notice with ids alone', async () => {
     const request = await send(C);
     const mail = notifier();
     const reply = await replyToSupportRequest(asUser(E), request.id, 'A secret answer.', mail);
@@ -406,9 +397,7 @@ describe('replyToSupportRequest', () => {
       body: 'A secret answer.',
       createdBy: E.id,
     });
-    expect(mail.sent).toEqual([await emailOf(C)]);
-    expect(mail.subjects).toEqual([INPUT.subject]);
-    expect(mail.ids).toEqual([request.id]);
+    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 
   it('lets a curator reply only to a request assigned to them', async () => {
@@ -419,7 +408,7 @@ describe('replyToSupportRequest', () => {
     expect(
       await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hi.', mail)),
     ).toBeInstanceOf(Forbidden);
-    expect(mail.sent).toEqual([]);
+    expect(replyNotices()).toEqual([]);
 
     await assignSupportRequest(asUser(E), request.id, F.id);
     expect((await replyToSupportRequest(asUser(F), request.id, 'Hi.', mail)).createdBy).toBe(F.id);

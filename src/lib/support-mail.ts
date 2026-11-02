@@ -1,15 +1,13 @@
 import type { SupportNotifier } from '@/modules/support';
-import { supportEmailReplyMessage } from '../emails/support-email-reply';
 import { supportReceivedMessage } from '../emails/support-received';
 import { supportResolvedMessage } from '../emails/support-resolved';
-import { supportReplyNoticeMessage } from '../emails/support-reply-notice';
 import { requestOrigin } from './request-origin';
 import { supportRequestPath } from './support-path';
 import type { Message } from './types';
 
-// Where a reply's notice becomes a mail. The origin is Better Auth's, resolved against its allowed hosts, so a forged Host cannot
-// point the link at another site. Handed to the service by the GraphQL context. The closing-soon notice is
-// rendered by its job's step instead (src/modules/support/services/retention.ts).
+// Where the received and resolved mails are built. The origin is Better Auth's, resolved against its allowed hosts, so a forged Host cannot
+// point the link at another site. Handed to the service by the GraphQL context. The reply mails and the
+// closing-soon notice are rendered by their jobs' steps instead (src/lib/support-job-mail.ts).
 
 const STATUS_MESSAGES = {
   received: supportReceivedMessage,
@@ -45,19 +43,9 @@ export function supportNotifier(request: Request): SupportNotifier {
 
   return {
     origin: () => requestOrigin(request, '/'),
-    async replyWaiting(to, requestSubject, requestId) {
-      const url = `${await requestOrigin(request, '/')}${supportRequestPath(requestId)}`;
-      const { send } = await import('./mail');
-      await send(await supportReplyNoticeMessage({ to, url, requestSubject }));
-    },
     received: (to, requestSubject, requestId) =>
       statusMail('received', to, requestSubject, requestId),
     resolved: (to, requestSubject, requestId) =>
       statusMail('resolved', to, requestSubject, requestId),
-    async signedOutReply(to, body) {
-      const url = `${await requestOrigin(request, '/')}/support`;
-      const { send } = await import('./mail');
-      await send(await supportEmailReplyMessage({ to, url, body }));
-    },
   };
 }
