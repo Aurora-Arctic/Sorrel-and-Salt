@@ -1,0 +1,2 @@
+ALTER TABLE "document_mailing_recipients" ADD COLUMN "skipped_at" timestamp;--> statement-breakpoint
+ALTER TABLE "document_mailing_recipients" ADD CONSTRAINT "document_mailing_recipients_sent_or_skipped" CHECK (num_nonnulls("document_mailing_recipients"."sent_at", "document_mailing_recipients"."skipped_at") <= 1);
