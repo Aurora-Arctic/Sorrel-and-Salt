@@ -20,7 +20,7 @@ Every other wave is complete first. This one is mostly verification, but not pur
 
 **M7.A.1 is unscheduled by design**: trigger-based, not wave-based, and a prerequisite for nothing; its trigger is in [`tasks/m7a.md`](../tasks/m7a.md). It sits on this wave's milestone, last in its row, because that is the latest point it could still fire before v1, and every open task needs a milestone and a place on the board. The trigger, not the milestone or the position, is what starts it.
 
-**MB.163 is unscheduled by design too, and post-launch**, the owner's call: it moves a curated rename's rewrite of compendium entries into a background job, and is a prerequisite for nothing, since M5.6a, MB.95 and MB.132 rewrite in the rename's own transaction until it lands. Its trigger is a rename's rewrite coming near the function's time limit as the compendium grows after launch; its entry is in [`tasks/mb.md`](../tasks/mb.md). It sits last in this wave's row for the reason M7.A.1 does.
+**MB.163 moved to Wave 17**, the owner's call of 2026-11-03: it is post-launch and trigger-based, so it sits last in [Wave 17's row](wave-17.md).
 
 **MB.78 is unscheduled by design and post-launch too**, the owner's call: the OAuth proxy that lets a hotfix preview complete a real sign-in. It was minted into Wave 8 ahead of MB.53, but hotfixes are not needed until after launch, and the hotfix path needs infrastructure fixes before its branches work properly. It is a prerequisite for nothing before launch. Its trigger is the first hotfix after launch that needs a sign-in to check; its entry is in [`tasks/mb.md`](../tasks/mb.md). It sits last in this wave's row for the reason M7.A.1 does.
 
