@@ -53,3 +53,19 @@ describe('adminTarget for Support', () => {
     expect(adminTarget('/keepers/support').columns).toBeGreaterThan(3);
   });
 });
+
+describe('adminTarget for the documents', () => {
+  it('draws a document editor under a heading with its tabs beneath it, and no filter or action', () => {
+    const target = adminTarget('/keepers/documents/privacy');
+
+    expect(target).toMatchObject({
+      region: 'admin',
+      shape: 'document',
+      title: true,
+      tabs: true,
+      tabsBelow: true,
+    });
+    expect(target.filter).toBeFalsy();
+    expect(target.action).toBeFalsy();
+  });
+});

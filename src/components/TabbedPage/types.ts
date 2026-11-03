@@ -9,8 +9,8 @@ export interface PageTab {
   count?: number;
   /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
   filtered?: boolean;
-  /** What the tab's loading skeleton stands in for: a table (the default), or cards, as the grimoire's tabs. */
-  shape?: 'table' | 'cards' | 'sections' | 'requests';
+  /** What the tab's loading skeleton stands in for: a table (the default), cards (as the grimoire's tabs), or document (a site document's editor). */
+  shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
   /** With the `sections` shape: how many panels the skeleton draws, to match the tab's own. */
   sections?: number;
   /** A `table` tab's column count, where it has more than three. */
@@ -69,7 +69,7 @@ export interface TabPanelLoadingProps {
   /** Whether to draw a filter row above the table: the pressed tab's `filtered`. */
   filter?: boolean;
   /** What the skeleton stands in for: `table` (the default), or `cards`, the grid of ingredient cards, or `sections`, an account tab's menu and panels. */
-  shape?: 'table' | 'cards' | 'sections' | 'requests';
+  shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
   /** With `sections`: how many panels it draws. */
   count?: number;
   /** A `table` skeleton's column count: the pressed tab's `columns`. */
