@@ -20,6 +20,8 @@ export type UserDetailUser = Pick<
   | 'providers'
   | 'createdAt'
   | 'agreedTermsVersion'
+  | 'agreedDisclaimerVersion'
+  | 'agreedEthicsVersion'
 >;
 
 /** One live coven the user belongs to, as the service answered it. */

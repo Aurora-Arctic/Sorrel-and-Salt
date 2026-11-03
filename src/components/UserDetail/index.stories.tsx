@@ -24,6 +24,8 @@ const FACTS = {
   providers: ['google'],
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
+  agreedDisclaimerVersion: 1,
+  agreedEthicsVersion: 1,
 };
 const BO: UserDetailUser = {
   ...FACTS,

@@ -24,7 +24,7 @@ the hrefs of the pages either side
 | `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default              |
 
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
-`createdAt`, `emailVerified` and `agreedTermsVersion` (the number of the terms version they agreed to most recently, shown as "Version 1"; `null` for one who never agreed, shown as a red cross), plus `providers`, the provider ids the service
+`createdAt`, `emailVerified` and `agreedTermsVersion`, `agreedDisclaimerVersion` and `agreedEthicsVersion` (the numbers of the terms, disclaimer and code of ethics versions they agreed to most recently, shown as one joint version such as "Version 1.4.2" by `formatAgreementVersion`; `null` for one who never agreed, shown as a red cross), plus `providers`, the provider ids the service
 read beside it, and `primaryAdmin`, which the page asks of the identity
 service's `isPrimaryAdmin` for each row as it reads it (MB.59). Since M9.19
 it also carries `openHref`, this page with the user's modal open over it

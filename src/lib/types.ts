@@ -291,3 +291,10 @@ export type AgreementVersion = Record<AgreementPart, number>;
 
 /** The version numbers an account stored when it last agreed, each null or absent until it agrees. */
 export type AgreedVersion = Record<AgreementPart, number | null | undefined>;
+
+/** A user row's three agreed numbers, by their column names, each null until the account agrees. */
+export interface AgreedColumns {
+  agreedTermsVersion: number | null;
+  agreedDisclaimerVersion: number | null;
+  agreedEthicsVersion: number | null;
+}

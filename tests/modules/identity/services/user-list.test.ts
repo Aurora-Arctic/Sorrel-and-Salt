@@ -279,36 +279,48 @@ describe('providersOf', () => {
   });
 });
 
-// The terms version each user last agreed to, which the user table and the user modal show: the version on their row,
-// none for one who never agreed.
-describe('the terms version a user agreed to', () => {
-  const AGREED = 7;
+// The terms, disclaimer and code of ethics versions each user last agreed to, which the user table and the user modal show as one
+// joint version: the numbers on their row, none for one who never agreed.
+describe('the versions a user agreed to', () => {
+  const AGREED = { agreedTermsVersion: 7, agreedDisclaimerVersion: 3, agreedEthicsVersion: 5 };
+  const NEVER = {
+    agreedTermsVersion: null,
+    agreedDisclaimerVersion: null,
+    agreedEthicsVersion: null,
+  };
 
   beforeAll(async () => {
-    await sql`update users set agreed_terms_version = ${AGREED}, terms_accepted_at = now() where id = ${WILDCARD}`;
-    const [never] = await sql`select agreed_terms_version from users where id = ${PENDING}`;
-    expect(never?.agreed_terms_version).toBeNull();
+    await sql`update users set agreed_terms_version = ${AGREED.agreedTermsVersion},
+      agreed_disclaimer_version = ${AGREED.agreedDisclaimerVersion}, agreed_ethics_version = ${AGREED.agreedEthicsVersion},
+      terms_accepted_at = now() where id = ${WILDCARD}`;
+    const [never] = await sql`
+      select agreed_terms_version, agreed_disclaimer_version, agreed_ethics_version from users where id = ${PENDING}`;
+    expect(never).toEqual({
+      agreed_terms_version: null,
+      agreed_disclaimer_version: null,
+      agreed_ethics_version: null,
+    });
   });
 
   it('lists each user with the version they agreed to, and none for one who never agreed', async () => {
     const page = await listUsers(asUser(E), {}, PAGE);
     const listed = (id: string) => page.find((entry) => entry.node.id === id)?.node;
 
-    expect(listed(WILDCARD)).toMatchObject({ agreedTermsVersion: AGREED });
-    expect(listed(PENDING)).toMatchObject({ agreedTermsVersion: null });
+    expect(listed(WILDCARD)).toMatchObject(AGREED);
+    expect(listed(PENDING)).toMatchObject(NEVER);
   });
 
   it('reads one user by id with the version they agreed to, for the user modal', async () => {
     const [agreed, never] = await usersForAdmin(asUser(E), [WILDCARD, PENDING]);
 
-    expect(agreed).toMatchObject({ id: WILDCARD, agreedTermsVersion: AGREED });
-    expect(never).toMatchObject({ id: PENDING, agreedTermsVersion: null });
+    expect(agreed).toMatchObject({ id: WILDCARD, ...AGREED });
+    expect(never).toMatchObject({ id: PENDING, ...NEVER });
   });
 
   it('refuses the version to anyone but a site keeper, asked by id', async () => {
     // The precondition: the row holds a version, and the same ask as a keeper reads it.
     const [admitted] = await usersForAdmin(asUser(E), [WILDCARD]);
-    expect(admitted).toMatchObject({ agreedTermsVersion: AGREED });
+    expect(admitted).toMatchObject(AGREED);
     expect(A.role).toBe('user');
 
     const [refused] = await usersForAdmin(asUser(A), [WILDCARD]);

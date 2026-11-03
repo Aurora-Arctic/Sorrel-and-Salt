@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  agreedVersionOfColumns,
   agreementIsCurrent,
   documentsChangedSince,
   formatAgreementVersion,
@@ -65,5 +66,14 @@ describe('agreementIsCurrent', () => {
         { terms: 0, disclaimer: 0, ethics: 0 },
       ),
     ).toBe(true);
+  });
+});
+
+describe('agreedVersionOfColumns', () => {
+  it('reads a user row’s three agreed numbers as its stored agreement', () => {
+    const row = { agreedTermsVersion: 1, agreedDisclaimerVersion: 4, agreedEthicsVersion: null };
+
+    expect(agreedVersionOfColumns(row)).toEqual({ terms: 1, disclaimer: 4, ethics: null });
+    expect(formatAgreementVersion(agreedVersionOfColumns(row))).toBe('1.4.0');
   });
 });

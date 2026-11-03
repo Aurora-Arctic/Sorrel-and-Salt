@@ -1,4 +1,10 @@
-import type { AgreedVersion, AgreementDocumentKey, AgreementPart, AgreementVersion } from './types';
+import type {
+  AgreedColumns,
+  AgreedVersion,
+  AgreementDocumentKey,
+  AgreementPart,
+  AgreementVersion,
+} from './types';
 
 // An account agrees to the terms, the disclaimer and the code of ethics at once, and the agreement reads as one joint version,
 // `terms.disclaimer.ethics` (claude-docs/design-decisions/m15.79-agreement-covers-three-documents.md). Pure, so the gate, the
@@ -10,6 +16,15 @@ export const AGREEMENT_DOCUMENTS: readonly { part: AgreementPart; key: Agreement
   { part: 'disclaimer', key: 'disclaimer' },
   { part: 'ethics', key: 'code-of-ethics' },
 ];
+
+/** A user row's agreed numbers as its stored agreement, by part. */
+export function agreedVersionOfColumns(row: AgreedColumns): AgreedVersion {
+  return {
+    terms: row.agreedTermsVersion,
+    disclaimer: row.agreedDisclaimerVersion,
+    ethics: row.agreedEthicsVersion,
+  };
+}
 
 /** The joint version, `terms.disclaimer.ethics`, with 0 for a document that has no published version. */
 export function formatAgreementVersion(version: AgreedVersion): string {
