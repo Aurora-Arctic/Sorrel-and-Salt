@@ -231,14 +231,11 @@ describe('X-Robots-Tag', () => {
     expect((await proxy(request(path))).headers.get('x-robots-tag')).toBeNull();
   });
 
-  // An address that opens a dialog over a page, or a pager page that drifts as entries change,
-  // is a copy of a real page: kept out of results, its links still followed. Each name is its own
-  // case, so removing one from the proxy's list fails here.
+  // An address that opens a dialog over a page is a copy of a real page: kept out of results, its
+  // links still followed. Each name is its own case, so removing one from the proxy's list fails here.
   it.each([
     '/compendium?entry=3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
     '/compendium?query=wort&entry=3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
-    '/compendium?after=c',
-    '/compendium?before=c',
     '/?support=',
     '/privacy?support=',
     '/compendium/ingredients/testwort?support=',
@@ -247,6 +244,16 @@ describe('X-Robots-Tag', () => {
 
     expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex, follow');
   });
+
+  // The list's later pages are real pages with their own canonical, so they stay indexable.
+  it.each(['/compendium?after=c', '/compendium?before=c'])(
+    'leaves the compendium pager page %s indexable on production',
+    async (path) => {
+      vi.stubEnv('VERCEL_ENV', 'production');
+
+      expect((await proxy(request(path))).headers.get('x-robots-tag')).toBeNull();
+    },
+  );
 
   it.each(['/compendium?entry=x', '/compendium?after=c', '/?support='])(
     'stays the blanket noindex off production at %s',

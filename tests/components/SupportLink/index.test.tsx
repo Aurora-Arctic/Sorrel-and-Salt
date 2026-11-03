@@ -56,6 +56,25 @@ describe('SupportLink', () => {
     expect(link()).toHaveAttribute('href', '/coven/hearth/grimoire?support=privacy');
   });
 
+  // Every page links to a copy of itself with the dialog asked for, and robots.txt blocks the home
+  // page's copy, `/?support=`: a crawler that followed it would report the blocked link.
+  it('asks a crawler not to follow it', () => {
+    pathname.mockReturnValue('/');
+    render(<SupportLink>Support</SupportLink>);
+    expect(link()).toHaveAttribute('href', '/?support=');
+    expect(link()).toHaveAttribute('rel', 'nofollow');
+  });
+
+  it('asks a crawler not to follow it before the address is known, too', () => {
+    // The address hooks suspending leaves the fallback, the support page's own address.
+    pathname.mockImplementation(() => {
+      throw new Promise(() => {});
+    });
+    render(<SupportLink>Support</SupportLink>);
+    expect(link()).toHaveAttribute('href', '/support');
+    expect(link()).toHaveAttribute('rel', 'nofollow');
+  });
+
   it('opens the dialog without scrolling the page to the top', () => {
     render(<SupportLink>Support</SupportLink>);
     expect(linkScroll).toHaveBeenCalledWith(false);

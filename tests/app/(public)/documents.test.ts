@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Metadata } from 'next';
 import { NotFound } from '@/lib/errors';
 
 // The four document pages and their version pages: what each reads, and what it hands DocumentPage. The reads and DocumentPage
@@ -22,18 +23,32 @@ const documentPage = vi.fn((_props: Record<string, unknown>) => null);
 vi.mock('@/components/DocumentPage', () => ({ default: documentPage }));
 
 type Page = (props?: unknown) => Promise<unknown>;
+type VersionMetadata = (props: { params: Promise<{ number: string }> }) => Promise<Metadata>;
 
 // Literal paths, so the bundler resolves each route.
-const PAGES: Record<string, { page: () => Promise<Page>; version: () => Promise<Page> }> = {
+const PAGES: Record<
+  string,
+  {
+    page: () => Promise<Page>;
+    version: () => Promise<Page>;
+    versionMetadata: () => Promise<VersionMetadata>;
+  }
+> = {
   privacy: {
     page: async () => (await import('@/app/(public)/privacy/page')).default as unknown as Page,
     version: async () =>
       (await import('@/app/(public)/privacy/versions/[number]/page')).default as unknown as Page,
+    versionMetadata: async () =>
+      (await import('@/app/(public)/privacy/versions/[number]/page'))
+        .generateMetadata as unknown as VersionMetadata,
   },
   disclaimer: {
     page: async () => (await import('@/app/(public)/disclaimer/page')).default as unknown as Page,
     version: async () =>
       (await import('@/app/(public)/disclaimer/versions/[number]/page')).default as unknown as Page,
+    versionMetadata: async () =>
+      (await import('@/app/(public)/disclaimer/versions/[number]/page'))
+        .generateMetadata as unknown as VersionMetadata,
   },
   'code-of-ethics': {
     page: async () =>
@@ -41,11 +56,17 @@ const PAGES: Record<string, { page: () => Promise<Page>; version: () => Promise<
     version: async () =>
       (await import('@/app/(public)/code-of-ethics/versions/[number]/page'))
         .default as unknown as Page,
+    versionMetadata: async () =>
+      (await import('@/app/(public)/code-of-ethics/versions/[number]/page'))
+        .generateMetadata as unknown as VersionMetadata,
   },
   terms: {
     page: async () => (await import('@/app/(public)/terms/page')).default as unknown as Page,
     version: async () =>
       (await import('@/app/(public)/terms/versions/[number]/page')).default as unknown as Page,
+    versionMetadata: async () =>
+      (await import('@/app/(public)/terms/versions/[number]/page'))
+        .generateMetadata as unknown as VersionMetadata,
   },
 };
 
@@ -126,6 +147,41 @@ describe.each(Object.keys(PAGES))('/%s', (key) => {
       body: `## Fixture Section\n\nFixture ${key} version 1.`,
     });
     expect(getSession).not.toHaveBeenCalled();
+  });
+
+  // A version page is a copy of the document page while it is the current version, and a page of
+  // its own once a newer one is published; either way its title says which document and version.
+  describe("a version page's metadata", () => {
+    it('names the document and version in its title, and the document page as canonical while current', async () => {
+      readDocument.mockResolvedValue(version(key, 2, SECOND));
+      readDocumentVersion.mockResolvedValue(version(key, 2, SECOND));
+      const metadata = await PAGES[key]!.versionMetadata();
+
+      const result = await metadata(params('2'));
+
+      expect(readDocumentVersion).toHaveBeenCalledWith(key, 2);
+      expect(result.title).toBe(`Fixture ${key} Title, Version 2`);
+      expect(result.alternates?.canonical).toBe(`https://sorrelandsalt.com/${key}`);
+    });
+
+    it('names itself as canonical once a newer version is published', async () => {
+      readDocument.mockResolvedValue(version(key, 2, SECOND));
+      readDocumentVersion.mockResolvedValue(version(key, 1, FIRST));
+      const metadata = await PAGES[key]!.versionMetadata();
+
+      const result = await metadata(params('1'));
+
+      expect(result.title).toBe(`Fixture ${key} Title, Version 1`);
+      expect(result.alternates?.canonical).toBe(`https://sorrelandsalt.com/${key}/versions/1`);
+    });
+
+    it('reads nothing for an address that is not a whole version number', async () => {
+      const metadata = await PAGES[key]!.versionMetadata();
+
+      await metadata(params('abc')).catch(() => undefined);
+
+      expect(readDocumentVersion).not.toHaveBeenCalled();
+    });
   });
 
   // A draft, a deleted version and a number never published all reach the page as the read's NotFound.

@@ -292,6 +292,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.286 | Seven Cosmetic Faults in Loading, Spell Preview and Quick Look                                                           | Bugfixes | —                      |
 | MB.287 | A Production Deploy Rerun Fails at the Neon Snapshot                                                                     | Bugfixes | —                      |
 | MB.288 | Bug Bash 2026-11-02: Ingredient Edits, the Formal Name Eyebrow and the Terms Screens                                     | Bugfixes | —                      |
+| MB.289 | Crawlers Hit Blocked Links and Index Few Compendium Pages                                                                | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -6009,3 +6010,39 @@ _Acceptance criteria:_
 - E: while the agreement save runs, the Agree button shows the standard spinner, and a second press sends no second request.
 - F: from the admin compendium, the entry's Back link returns to `/admin/compendium` with its query. From the public compendium, and with no history, it still returns to `/compendium`.
 - `claude-docs/components/ingredient-entry.md`, "Structure", no longer says the formal name is never blank.
+
+**MB.289 — Crawlers Hit Blocked Links and Index Few Compendium Pages** · 6.5h
+
+_Story:_ As someone looking for a compendium entry through a search engine, I want every public page in the sitemap to be crawlable and indexable, so that I can find the entry from a search.
+
+Found on 2026-11-03 on production, on every scan. Bing Webmaster Tools' Site Scan reports `ERROR : Blocked by robots.txt` on `/account/terms` and `/?support=`, and finds 174 pages; Google indexes 74; the sitemap lists 529 public URLs. The causes:
+
+- The Support link (`src/components/SupportLink/`) adds `?support=` to the current page's address, so every page links to a copy of itself. On the home page that copy is `/?support=`, which `robots.txt` blocks, because `Allow: /$` matches `/` and nothing after it.
+- The published Terms of Use document links to the acceptance page, `/account/terms`. `robots.txt` blocks it, and a signed-out visitor is redirected from it to sign-in, which is marked noindex.
+- The compendium list is split into pages of 24 entries. The pages after the first (`/compendium?after=…`) name `/compendium` as their canonical address (the address a search engine should treat as the page's real one), so crawlers treat them as copies of page 1. Each `/compendium?entry=…` link, which opens an entry in a dialog, also names `/compendium` as its canonical, not the entry's own page.
+- The proxy (`src/proxy.ts`) marks `?after=` and `?before=` pages `noindex, follow`, so a search engine may index none of the list's later pages.
+- `robots.txt` blocks `/_next/`, so Google renders pages without their CSS, JavaScript and images, and `/opengraph-image`, the home page's share image.
+- Each site document has a page per published version, such as `/terms/versions/1`. These pages carry the generic site title and no canonical, so the current version's page is an unmarked copy of `/terms`. No page links to them while a document has one version; once it has two, the document page lists them.
+
+Steps to reproduce:
+
+1. Open Bing Webmaster Tools for the production site.
+2. Run a Site Scan of the production site.
+3. Open the scan's errors.
+4. Open Google Search Console's Pages report for the same site.
+
+Actual: Site Scan reports `ERROR : Blocked by robots.txt` on `/account/terms` and `/?support=`, and finds 174 pages. Google indexes 74 pages. The sitemap lists 529 URLs, all public.
+Expected: Site Scan reports no robots.txt errors, because no public page links to a URL that `robots.txt` blocks. Every URL in the sitemap can be crawled and indexed (assumed): each page of the compendium list names itself as canonical, and the sitemap lists no noindex page.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix and passes after it, for each cause above.
+- Every Support link carries `rel="nofollow"`.
+- Each `/compendium?after=…` page names its own address, cursor included, as its canonical.
+- Each `/compendium?entry=…` address names the entry's page, `/compendium/ingredients/<slug>`, as its canonical.
+- A link from a site document to `/account/terms` carries `rel="nofollow"`, so a crawler does not fetch it.
+- `/account/terms` is marked `noindex, nofollow`. `robots.txt` keeps blocking `/account`, and a signed-in account still gets the acceptance page exactly as it does today.
+- `robots.txt` allows `/_next/`, which holds only the site's build files, and `/opengraph-image`.
+- Each document version page has its own title naming the document and version number. The current version's page names the document page (for example `/terms`) as its canonical; an older version's page names itself.
+- `/compendium?after=…` and `?before=…` responses carry no noindex header, and `?entry=` and `?support=` still do.
+- The comments in `src/app/robots.ts` and `src/app/sitemap.ts` describe the new allowed paths and the sitemap's contents, and `claude-docs/components/support-link.md` names the `nofollow`.

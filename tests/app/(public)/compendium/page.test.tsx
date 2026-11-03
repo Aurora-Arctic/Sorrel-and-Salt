@@ -661,6 +661,42 @@ describe('the public compendium page metadata', () => {
       expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/compendium');
     },
   );
+
+  // A later page of the list holds other entries than the first, so naming the first as its
+  // canonical tells a crawler to drop it, and with it the only links to those entries.
+  it.each(['after', 'before'])(
+    'names a ?%s= page of the unfiltered list, cursor included, as its own canonical',
+    async (key) => {
+      const cursor = encodeCursor({ key: ['Testwort'], id: NODE.id });
+      const result = await metadata({ [key]: cursor });
+      expect(result.alternates?.canonical).toBe(
+        `https://sorrelandsalt.com/compendium?${key}=${encodeURIComponent(cursor)}`,
+      );
+    },
+  );
+
+  it('keeps a filtered later page canonical to the unfiltered page', async () => {
+    const cursor = encodeCursor({ key: ['Testwort'], id: NODE.id });
+    const result = await metadata({ query: 'wort', after: cursor });
+    expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/compendium');
+  });
+
+  it("names the entry's own page as the canonical of ?entry=<id>, read by the id alone", async () => {
+    readCompendiumDetails.mockResolvedValue(
+      entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name }),
+    );
+    const result = await metadata({ entry: NODE.id, query: 'wort' });
+    expect(readCompendiumDetails).toHaveBeenCalledExactlyOnceWith(NODE.id);
+    expect(result.alternates?.canonical).toBe(
+      `https://sorrelandsalt.com/compendium/ingredients/${NODE.slug}`,
+    );
+  });
+
+  it('keeps ?entry= canonical to the list when it names no entry the public reads', async () => {
+    readCompendiumDetails.mockResolvedValue(undefined);
+    const result = await metadata({ entry: NODE.id });
+    expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/compendium');
+  });
 });
 
 // The Reviewed switch in the Quick Look and the edit dialog, for a curator or

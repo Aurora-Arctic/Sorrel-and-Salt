@@ -32,8 +32,8 @@ answer.
   `X-Robots-Tag: noindex` on every response it handles, so a preview or the
   staging site is never indexed. On production it sets
   `X-Robots-Tag: noindex, follow` instead, and only for an address carrying one
-  of the query parameters in `NOINDEX_PARAMS` (`entry`, `support`, `after`,
-  `before`), which open a dialog over a page or turn a pager page. Everything else redirects, so a
+  of the query parameters in `NOINDEX_PARAMS` (`entry`, `support`), which open a dialog over a page. A compendium pager page
+  (`after`, `before`) is its own indexable page and gets no header. Everything else redirects, so a
   route added without anyone thinking about auth is protected, not open. An
   entry is an exact path, or a path ending `/*` for everything beneath it:
   `/` admits only `/`, `/sign-in` does not admit `/sign-in-help`, and

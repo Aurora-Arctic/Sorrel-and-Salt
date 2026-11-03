@@ -84,14 +84,31 @@ const isFiltered = (params: PublicCompendiumSearchParams) =>
 const isListAddress = (params: PublicCompendiumSearchParams) =>
   !isFiltered(params) && [params.entry, params.after, params.before].every((v) => v === undefined);
 
-/** A filtered view is a thin copy: kept out of search results, with the unfiltered page canonical. */
+/**
+ * The address a search engine should treat as this one's real page. An open Quick Look is a copy of
+ * the entry's own page. A pager page of the unfiltered list names itself, cursor included, as it holds
+ * other entries than the first page. A filtered view is a thin copy of the unfiltered page.
+ */
+async function canonicalPath(params: PublicCompendiumSearchParams): Promise<string> {
+  const entryId = single(params.entry);
+  const shown = entryId ? await readCompendiumDetails(entryId) : undefined;
+  if (shown) return `/compendium/ingredients/${shown.entry.slug}`;
+  if (isFiltered(params)) return PUBLIC_COMPENDIUM_PATH;
+  const { after, before } = readPageCursors(params);
+  const cursor = after ? ['after', after] : before ? ['before', before] : undefined;
+  return cursor
+    ? `${PUBLIC_COMPENDIUM_PATH}?${new URLSearchParams([cursor])}`
+    : PUBLIC_COMPENDIUM_PATH;
+}
+
+/** A filtered view is kept out of search results; the proxy marks the other copies (src/proxy.ts). */
 export async function generateMetadata({
   searchParams,
 }: PublicCompendiumPageProps): Promise<Metadata> {
-  const filtered = isFiltered(await searchParams);
+  const params = publicParams(await searchParams);
   return {
-    ...publicPageMetadata('Compendium', LIST_DESCRIPTION, PUBLIC_COMPENDIUM_PATH),
-    ...(filtered && { robots: { index: false, follow: true } }),
+    ...publicPageMetadata('Compendium', LIST_DESCRIPTION, await canonicalPath(params)),
+    ...(isFiltered(params) && { robots: { index: false, follow: true } }),
   };
 }
 
