@@ -151,10 +151,10 @@ async function route(request: NextRequest): Promise<NextResponse> {
 /**
  * Query parameters that make an address a copy of a real page, kept out of
  * search results with their links still followed: `entry` opens Quick Look over
- * the compendium, `support` the support dialog over any page, and `after` and
- * `before` turn the compendium's pages, whose contents drift as entries change.
+ * the compendium and `support` the support dialog over any page. The list's
+ * pager pages (`after`, `before`) are left out: each is its own indexable page.
  */
-const NOINDEX_PARAMS = ['entry', 'support', 'after', 'before'];
+const NOINDEX_PARAMS = ['entry', 'support'];
 
 /**
  * Anything but a production deploy tells search engines to index nothing,

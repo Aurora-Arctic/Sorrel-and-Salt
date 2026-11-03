@@ -13,11 +13,11 @@ vi.mock('@/modules/ingredients', () => ({
 }));
 
 describe('sitemap', () => {
-  // Sign-in is a form with nothing to find from a search, so the sitemap leaves it out.
-  it('lists the home page, the compendium, the public documents and one absolute address per current entry, dated by its last change', async () => {
+  it('lists the home page, the compendium, sign-in, the public documents and one absolute address per current entry, dated by its last change', async () => {
     expect(await sitemap()).toEqual([
       { url: 'https://sorrelandsalt.com/' },
       { url: 'https://sorrelandsalt.com/compendium' },
+      { url: 'https://sorrelandsalt.com/sign-in' },
       { url: 'https://sorrelandsalt.com/privacy' },
       { url: 'https://sorrelandsalt.com/disclaimer' },
       { url: 'https://sorrelandsalt.com/terms' },

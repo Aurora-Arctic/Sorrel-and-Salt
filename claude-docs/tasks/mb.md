@@ -5954,7 +5954,7 @@ _Acceptance criteria:_
 - F: from the admin compendium, the entry's Back link returns to `/admin/compendium` with its query. From the public compendium, and with no history, it still returns to `/compendium`.
 - `claude-docs/components/ingredient-entry.md`, "Structure", no longer says the formal name is never blank.
 
-**MB.289 — Crawlers Hit Blocked Links and Index Few Compendium Pages** · 6h
+**MB.289 — Crawlers Hit Blocked Links and Index Few Compendium Pages** · 6.5h
 
 _Story:_ As someone looking for a compendium entry through a search engine, I want every public page in the sitemap to be crawlable and indexable, so that I can find the entry from a search.
 
@@ -5963,7 +5963,7 @@ Found on 2026-11-03 on production, on every scan. Bing Webmaster Tools' Site Sca
 - The Support link (`src/components/SupportLink/`) adds `?support=` to the current page's address, so every page links to a copy of itself. On the home page that copy is `/?support=`, which `robots.txt` blocks, because `Allow: /$` matches `/` and nothing after it.
 - The published Terms of Use document links to the acceptance page, `/account/terms`. `robots.txt` blocks it, and a signed-out visitor is redirected from it to sign-in, which is marked noindex.
 - The compendium list is split into pages of 24 entries. The pages after the first (`/compendium?after=…`) name `/compendium` as their canonical address (the address a search engine should treat as the page's real one), so crawlers treat them as copies of page 1. Each `/compendium?entry=…` link, which opens an entry in a dialog, also names `/compendium` as its canonical, not the entry's own page.
-- The sitemap lists `/sign-in`, which is marked noindex.
+- The proxy (`src/proxy.ts`) marks `?after=` and `?before=` pages `noindex, follow`, so a search engine may index none of the list's later pages.
 - `robots.txt` blocks `/_next/`, so Google renders pages without their CSS, JavaScript and images, and `/opengraph-image`, the home page's share image.
 - Each site document has a page per published version, such as `/terms/versions/1`. These pages carry the generic site title and no canonical, so the current version's page is an unmarked copy of `/terms`. No page links to them while a document has one version; once it has two, the document page lists them.
 
@@ -5987,5 +5987,5 @@ _Acceptance criteria:_
 - `/account/terms` is marked `noindex, nofollow`. `robots.txt` keeps blocking `/account`, and a signed-in account still gets the acceptance page exactly as it does today.
 - `robots.txt` allows `/_next/`, which holds only the site's build files, and `/opengraph-image`.
 - Each document version page has its own title naming the document and version number. The current version's page names the document page (for example `/terms`) as its canonical; an older version's page names itself.
-- The sitemap no longer lists `/sign-in`, and `/sign-in` stays crawlable.
+- `/compendium?after=…` and `?before=…` responses carry no noindex header, and `?entry=` and `?support=` still do.
 - The comments in `src/app/robots.ts` and `src/app/sitemap.ts` describe the new allowed paths and the sitemap's contents, and `claude-docs/components/support-link.md` names the `nofollow`.
