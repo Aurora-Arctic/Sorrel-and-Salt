@@ -17,7 +17,6 @@ import { NotFound, ValidationError, fieldRefusal } from '@/lib/errors';
 import { jobTokenActive, startJob } from '@/lib/jobs';
 import { allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
-import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { parseInput, requiredText } from '@/lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { z } from 'zod';
@@ -184,7 +183,6 @@ export async function resumeDocumentMailing(
  * cron route calls it, as the System account, so it takes no session. Returns the run's id, or null when nothing was started.
  */
 export async function startDailyDocumentMailing(origin: string): Promise<string | null> {
-  void SYSTEM_ACTOR_ID;
   const oldest = await findOldestSendingDocumentMailing();
   if (!oldest) return null;
   if (await jobTokenActive(documentMailingHookToken(oldest.id))) return null;
