@@ -215,9 +215,10 @@ const DocumentEditor = ({
           closeOnSent
         />
         <ConfirmedAction
-          label="Restore Published Version"
+          label="Restore"
           accessibleName="Restore Published Version"
-          openClass="btn"
+          confirmLabel="Restore Published Version"
+          openClass="btn btn--quiet"
           title="Restore Published Version"
           question={
             <>
