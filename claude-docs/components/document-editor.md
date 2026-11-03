@@ -6,7 +6,7 @@
 
 - **The Save Draft and Publish row sits under the text**, with its messages, at the end of the form.
 - **The draft saves itself.** The shared `useAutosave` hook (`src/lib/autosave/use-autosave.ts`, [autosave](autosave.md)) saves the text 3 seconds after the last change, at its default timing. A stale revision stops it: the explaining failure shows and no more saves are sent.
-- **Save Draft** saves at once, and stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text differs from what was last opened or saved, compared as markdown, so undoing back to it disables Save Draft again (and Publish, when there is no draft).
+- **Save Draft** saves at once, and stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text differs from what was last opened or saved, compared as markdown, so undoing back to it disables Save Draft again (and Publish, when there is no draft). While a save is in flight, the text is compared with the text that save is writing instead, so an edit that puts back the text saved before it still counts as a change: once the save lands, the autosave sends it, and Save Draft is never enabled with nothing for it to save.
 - **Publish** is yellow (`.btn--caution`), on the button and its confirm. It opens a confirmation, then publishes the draft as the next version (saving first when there are unsaved changes). It is disabled while any save, autosave or Save Draft, is in flight, so it never publishes a draft that is still being written. The confirmation for the terms says that every account will be asked to agree again; no other document's confirmation says so. Leaving with unsaved text asks first, through the discard question, and a save or publish in flight is not asked about. The page is read again once a publish lands.
 - **Restore Published Version** sits beside Save Draft and Publish: a quiet button labelled Restore (its accessible name is the full Restore Published Version) that opens a confirmation whose own button, named Restore Published Version, is red. It is available only when a draft is open or there is unsaved text. Confirming with a draft open soft-deletes the draft at the revision the editor holds (`discardDocumentDraft`); with none open it sends nothing. Either way the editor shows `publishedBody` again, with nothing unsaved and no autosave pending. Readers see no change.
 - A save, a publish and a restore send the draft's `revision`. A second keeper's save in between makes the next one fail with an explaining message rather than overwrite it.
@@ -47,6 +47,16 @@ The groups sit centred in the row, in that order. Each button is a Plate transfo
 - **One tab stop.** The toolbar follows the WAI-ARIA toolbar pattern: only the last-focused button is in the tab order, and the arrow keys, Home and End move focus between the buttons.
 - **A link needs a full web address.** `upsertLink` refuses an address the link plugin cannot validate, and the dialog says so and stays open.
 
+## Pasting
+
+A paste is read as markdown or as HTML, by `PasteMarkdownPlugin` in `elements.tsx`:
+
+- **Plain text alone is read as markdown**, as Plate reads it, so a pasted `## Heading` becomes a heading and a `[^1]` a footnote. A lone web address is left to the link plugin.
+- **A copy from a code editor is read as markdown too.** A code editor also puts its highlighted rendering of the text on the clipboard as HTML, and Plate would read that HTML and show the markdown's marks as literal text. The paste is taken as a code editor's when the clipboard holds VS Code's own `vscode-editor-data` type, or when its HTML is a single pre-formatted block (a `<pre>`, or an element styled `white-space: pre`), which is how a code editor draws its text.
+- **Any other HTML is read as HTML**, so rich text copied from a web page keeps its headings, bold and links, and its plain text is not used.
+
+Plate sets its markdown paste rule in a function extension, so the editor replaces it with one too: a plain-object `parser` is merged beneath Plate's and has no effect.
+
 ## Empty cells and notes
 
 An empty table cell or footnote definition is serialised by the markdown package as a lone zero-width space. `editorValueToMarkdown` removes it, so a table or note the toolbar adds and nobody fills in saves as `|  |` and `[^2]:`.
@@ -57,7 +67,7 @@ An empty table cell or footnote definition is serialised by the markdown package
 
 ## Props
 
-`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `publishedBody` (the published text, or empty when nothing is published), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take) and `mailing`, an optional block drawn under the lede, above the text, which no page passes: the [Document Mailing Panel](document-mailing-panel.md) has its own page, `/keepers/documents`.
+`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `publishedBody` (the published text, or empty when nothing is published), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take). The [Document Mailing Panel](document-mailing-panel.md) is not part of the editor: it has its own page, `/keepers/documents`.
 
 ## Leaving the text box with the keyboard
 

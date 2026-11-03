@@ -43,6 +43,8 @@ const FACTS = {
   providers: ['google', 'discord'],
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
+  agreedDisclaimerVersion: 4,
+  agreedEthicsVersion: 2,
 };
 const BO: UserDetailUser = {
   ...FACTS,
@@ -97,7 +99,12 @@ const renderDetail = (overrides: Partial<UserDetailProps> = {}) =>
   );
 
 // Bo as one who never agreed to any terms.
-const NEVER_AGREED = { ...BO, agreedTermsVersion: null };
+const NEVER_AGREED = {
+  ...BO,
+  agreedTermsVersion: null,
+  agreedDisclaimerVersion: null,
+  agreedEthicsVersion: null,
+};
 
 /** The value beside the fact with this term. */
 function factOf(term: string): HTMLElement {
@@ -109,12 +116,12 @@ function factOf(term: string): HTMLElement {
 describe('UserDetail', () => {
   it('states the terms version the user last agreed to, or that they never agreed', () => {
     const { unmount } = renderDetail();
-    expect(factOf('Terms')).toHaveTextContent('Version 1');
+    expect(factOf('Terms')).toHaveTextContent('1.4.2');
     unmount();
 
     renderDetail({ user: NEVER_AGREED });
     expect(factOf('Terms')).toHaveTextContent('Not agreed');
-    expect(factOf('Terms')).not.toHaveTextContent('Version 1');
+    expect(factOf('Terms')).not.toHaveTextContent(/\d\.\d\.\d/);
   });
 
   it('shows each fact of the users table as a term with its value', () => {

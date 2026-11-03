@@ -6,11 +6,11 @@ import { insertDocument, insertDocumentVersion } from '../../support/db/insert-d
 import { E } from '../../support/as-user';
 import { fromRoot } from '../../support/paths';
 
-// A migration test, retired once `0134` is in production's journal. `0134` gives every mailing written before the items table
+// A migration test, retired once `0135` is in production's journal. `0135` gives every mailing written before the items table
 // one item: the version and summary it carried. The test database is already migrated, so the hand-written statements run
 // again over rows the case writes; they skip a mailing that already has its item, so running them twice adds nothing.
 
-const FILE = fromRoot('src/db/migrations/0134_joint-document-mailing.sql');
+const FILE = fromRoot('src/db/migrations/0135_joint-document-mailing.sql');
 
 const MIGRATION = readFileSync(FILE, 'utf8');
 const HAND_WRITTEN = MIGRATION.slice(MIGRATION.indexOf('-- Hand-written from here'));
@@ -24,7 +24,7 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-describe('0134', () => {
+describe('0135', () => {
   it('gives each mailing that names a version one item, with its version and summary', async () => {
     await sql`truncate documents cascade`;
     const documentId = await insertDocument(sql, { key: 'testwort-charter' }, E.id);

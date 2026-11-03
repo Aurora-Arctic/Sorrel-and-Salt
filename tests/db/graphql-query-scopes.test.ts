@@ -429,7 +429,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
-  agreeToTerms: write('mutation { agreeToTerms(version: 1) { id } }'),
+  agreeToTerms: write(
+    'mutation { agreeToTerms(version: { terms: 1, disclaimer: 1, ethics: 1 }) { id } }',
+  ),
   // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
   sendSignedOutSupportRequest: {
     source:

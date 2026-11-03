@@ -44,7 +44,7 @@ const PublishDraftDocument = graphql(`
   }
 `);
 
-/** What a publish does for readers; only the terms ask anyone to agree again. */
+/** What a publish does for readers; the terms, and the disclaimer and code of ethics they include, ask everyone to agree again. */
 function PublishQuestion({
   documentKey,
   title,
@@ -56,6 +56,11 @@ function PublishQuestion({
     <>
       Publish this as the new terms of use? Every account will be asked to agree to them again
       before it can use the site.
+    </>
+  ) : documentKey === 'disclaimer' || documentKey === 'code-of-ethics' ? (
+    <>
+      Publish this as the new {title}? The terms of use include it, so every account will be asked
+      to agree to them again before it can use the site.
     </>
   ) : (
     <>
@@ -74,7 +79,6 @@ const DocumentEditor = ({
   publishedBody,
   revision: openRevision,
   nextNumber,
-  mailing,
 }: DocumentEditorProps): ReactElement => {
   const editor = usePlateEditor({
     plugins: editorPlugins,
@@ -94,11 +98,15 @@ const DocumentEditor = ({
   // as the editor writes markdown a little differently from how it was read.
   const savedRef = useRef<string | null>(null);
   savedRef.current ??= editorValueToMarkdown(editor.children as never);
+  // The markdown a save in flight is writing: a change is measured against it, so one that puts back the text saved before it
+  // still counts, and the autosave sends it once that save lands.
+  const sendingRef = useRef<string | null>(null);
 
   /** Writes `text` as the draft, against the revision the last write answered with. */
   async function writeDraft(text: string): Promise<SaveResult> {
     setFailure(undefined);
     setPublished(undefined);
+    sendingRef.current = text;
     try {
       const { saveDocumentDraft } = await graphqlRequest(SaveDraftDocument, {
         documentId,
@@ -118,6 +126,8 @@ const DocumentEditor = ({
     } catch (error) {
       setFailure(readGraphqlFailure(error).alert);
       throw error;
+    } finally {
+      sendingRef.current = null;
     }
   }
 
@@ -177,14 +187,13 @@ const DocumentEditor = ({
     <div className="document-editor">
       <h2>{title}</h2>
       <p className="lede">{lede}</p>
-      {mailing}
       <div className="document-page__body document-editor__text">
         <Plate
           editor={editor}
           onValueChange={({ value }) => {
             const text = editorValueToMarkdown(value as never);
             setMarkdown(text);
-            setDirty(text !== savedRef.current);
+            setDirty(text !== (sendingRef.current ?? savedRef.current));
           }}
         >
           <Toolbar />

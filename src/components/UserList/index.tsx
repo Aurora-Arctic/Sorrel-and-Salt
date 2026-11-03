@@ -12,6 +12,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
+import { agreedVersionOfColumns, formatAgreementVersion } from '../../lib/agreement-version';
 import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
@@ -136,12 +137,12 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   {
     heading: 'Terms',
     className: 'user-list__fact',
-    // The version agreed to most recently, or a red cross when none was.
-    cell: ({ agreedTermsVersion }) =>
-      agreedTermsVersion === null ? (
+    // The joint version agreed to most recently, or a red cross when none was.
+    cell: (user) =>
+      user.agreedTermsVersion === null ? (
         <Mark value={false} label="Not agreed" />
       ) : (
-        `Version ${agreedTermsVersion}`
+        `Version ${formatAgreementVersion(agreedVersionOfColumns(user))}`
       ),
   },
   {

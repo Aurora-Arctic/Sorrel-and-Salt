@@ -24,7 +24,7 @@ warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 // What the editor does around a write: a publish reads the page again, so what the page drew from the server (the version
-// number, the mailing panel) describes the version just published; and typed text is not lost to a link, a tab close or a reload.
+// number) describes the version just published; and typed text is not lost to a link, a tab close or a reload.
 
 beforeEach(() => {
   router.push.mockClear();

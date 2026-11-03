@@ -1,5 +1,5 @@
 {
-  "id": "d1ae85e5-a136-44f9-b515-cfdd48c2dba6",
+  "id": "682bf5b2-7a37-4da8-9189-72d46976ea71",
   "prevId": "84069f36-9a9a-42cb-b722-d2730fd3728b",
   "version": "7",
   "dialect": "postgresql",
@@ -912,151 +912,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.document_mailing_items": {
-      "name": "document_mailing_items",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "pg_catalog.gen_random_uuid()"
-        },
-        "mailing_id": {
-          "name": "mailing_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "document_version_id": {
-          "name": "document_version_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "summary": {
-          "name": "summary",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_by": {
-          "name": "created_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_by": {
-          "name": "updated_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "deleted_by": {
-          "name": "deleted_by",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "document_mailing_items_mailing_version_unique": {
-          "name": "document_mailing_items_mailing_version_unique",
-          "columns": [
-            {
-              "expression": "mailing_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "document_version_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"document_mailing_items\".\"deleted_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "document_mailing_items_mailing_id_document_mailings_id_fk": {
-          "name": "document_mailing_items_mailing_id_document_mailings_id_fk",
-          "tableFrom": "document_mailing_items",
-          "tableTo": "document_mailings",
-          "columnsFrom": ["mailing_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "document_mailing_items_created_by_users_id_fk": {
-          "name": "document_mailing_items_created_by_users_id_fk",
-          "tableFrom": "document_mailing_items",
-          "tableTo": "users",
-          "columnsFrom": ["created_by"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "document_mailing_items_updated_by_users_id_fk": {
-          "name": "document_mailing_items_updated_by_users_id_fk",
-          "tableFrom": "document_mailing_items",
-          "tableTo": "users",
-          "columnsFrom": ["updated_by"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "document_mailing_items_deleted_by_users_id_fk": {
-          "name": "document_mailing_items_deleted_by_users_id_fk",
-          "tableFrom": "document_mailing_items",
-          "tableTo": "users",
-          "columnsFrom": ["deleted_by"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "document_mailing_items_version_fk": {
-          "name": "document_mailing_items_version_fk",
-          "tableFrom": "document_mailing_items",
-          "tableTo": "document_versions",
-          "columnsFrom": ["document_version_id"],
-          "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.document_mailing_recipients": {
       "name": "document_mailing_recipients",
       "schema": "",
@@ -1228,13 +1083,13 @@
           "name": "document_version_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "summary": {
           "name": "summary",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "status": {
           "name": "status",
@@ -3814,6 +3669,18 @@
         },
         "agreed_terms_version": {
           "name": "agreed_terms_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agreed_disclaimer_version": {
+          "name": "agreed_disclaimer_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agreed_ethics_version": {
+          "name": "agreed_ethics_version",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
