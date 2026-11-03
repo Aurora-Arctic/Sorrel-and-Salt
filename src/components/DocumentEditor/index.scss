@@ -45,10 +45,10 @@
   outline: none;
 }
 
-// One group of related buttons, with a line between it and the group before, as far from each as the buttons are apart.
+// One group of related buttons, close together, with a line between it and the group before.
 .document-editor__group {
   display: flex;
-  gap: space(2);
+  gap: space(1);
 
   & + & {
     padding-inline-start: space(2);
