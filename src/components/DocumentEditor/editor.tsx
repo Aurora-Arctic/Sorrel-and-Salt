@@ -66,6 +66,7 @@ const DocumentEditor = ({
   body,
   revision: openRevision,
   nextNumber,
+  mailing,
 }: DocumentEditorProps): ReactElement => {
   const editor = usePlateEditor({
     plugins: editorPlugins,
@@ -74,19 +75,26 @@ const DocumentEditor = ({
   const [revision, setRevision] = useState(openRevision);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [failure, setFailure] = useState<string>();
   const [published, setPublished] = useState<number>();
-  const guard = useDiscardGuard(dirty && !saving);
+  const guard = useDiscardGuard(dirty && !saving && !publishing);
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
+  // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from the editor, not `body`,
+  // as the editor writes markdown a little differently from how it was read.
+  const savedRef = useRef<string | null>(null);
+  savedRef.current ??= editorValueToMarkdown(editor.children as never);
 
   /** Writes the editor's text as the draft. */
   async function writeDraft(): Promise<void> {
+    const markdown = editorValueToMarkdown(editor.children as never);
     const { saveDocumentDraft } = await graphqlRequest(SaveDraftDocument, {
       documentId,
-      body: editorValueToMarkdown(editor.children as never),
+      body: markdown,
       expectedRevision: revisionRef.current,
     });
+    savedRef.current = markdown;
     revisionRef.current = saveDocumentDraft.revision;
     setRevision(saveDocumentDraft.revision);
     setDirty(false);
@@ -105,22 +113,39 @@ const DocumentEditor = ({
   }
 
   async function publish(): Promise<void> {
-    if (dirty) await writeDraft();
-    const { publishDocumentDraft } = await graphqlRequest(PublishDraftDocument, {
-      documentId,
-      expectedRevision: revisionRef.current,
-    });
-    revisionRef.current = null;
-    setRevision(null);
-    setDirty(false);
-    setFailure(undefined);
-    setPublished(publishDocumentDraft.number);
+    setPublishing(true);
+    try {
+      if (dirty) await writeDraft();
+      const { publishDocumentDraft } = await graphqlRequest(PublishDraftDocument, {
+        documentId,
+        expectedRevision: revisionRef.current,
+      });
+      revisionRef.current = null;
+      setRevision(null);
+      setDirty(false);
+      setFailure(undefined);
+      setPublished(publishDocumentDraft.number);
+    } finally {
+      setPublishing(false);
+    }
   }
 
   return (
     <div className="document-editor">
       <h2>{title}</h2>
       <p className="lede">{lede}</p>
+      {mailing}
+      <div className="document-page__body document-editor__text">
+        <Plate
+          editor={editor}
+          onValueChange={({ value }) =>
+            setDirty(editorValueToMarkdown(value as never) !== savedRef.current)
+          }
+        >
+          <Toolbar />
+          <PlateContent aria-label="Document Text" />
+        </Plate>
+      </div>
       <div className="document-editor__bar">
         <BusyButton
           className="btn"
@@ -155,12 +180,6 @@ const DocumentEditor = ({
       {guard.asking && <DiscardQuestion guard={guard} />}
       {failure && <Notice kind="error">{failure}</Notice>}
       {published !== undefined && <Notice kind="success">Published as version {published}.</Notice>}
-      <div className="document-page__body document-editor__text">
-        <Plate editor={editor} onValueChange={() => setDirty(true)}>
-          <Toolbar />
-          <PlateContent aria-label="Document Text" />
-        </Plate>
-      </div>
     </div>
   );
 };

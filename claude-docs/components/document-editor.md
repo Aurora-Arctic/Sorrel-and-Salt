@@ -4,8 +4,9 @@
 
 ## What it does
 
-- **Save Draft** stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text changes, and again after a save.
-- **Publish** opens a confirmation, then publishes the draft as the next version (saving first when there are unsaved changes). The confirmation for the terms says that every account will be asked to agree again; no other document's confirmation says so. Leaving with unsaved text asks first, through the discard question, and a save in flight is not asked about. The page is read again once a publish lands.
+- **The Save Draft and Publish row sits under the text**, with its messages, at the end of the form.
+- **Save Draft** stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text differs from what was last opened or saved, compared as markdown, so undoing back to it disables Save Draft again (and Publish, when there is no draft).
+- **Publish** opens a confirmation, then publishes the draft as the next version (saving first when there are unsaved changes). The confirmation for the terms says that every account will be asked to agree again; no other document's confirmation says so. Leaving with unsaved text asks first, through the discard question, and a save or publish in flight is not asked about. The page is read again once a publish lands.
 - A save and a publish send the draft's `revision`. A second admin's save in between makes the next one fail with an explaining message rather than overwrite it.
 
 ## The text is markdown
@@ -16,17 +17,17 @@ The stored text is markdown, the same text `DocumentPage` renders, so the editor
 
 ## The toolbar
 
-`toolbar.tsx` is a `role="toolbar"` named "Document Text Formatting", above the text box. It has eleven quiet icon buttons (`btn btn--quiet btn--icon`, 2.5rem square, marks from [`icons.tsx`](icon-tip.md), "The icons"), each named by `aria-label` and tipped below with its name through `IconTip`. Nine are one for each thing the public page draws that a person can add, and no others; the last two are Undo and Redo. They sit in five `role="group"` rows, each named, with a hairline between groups, 0.5rem from the buttons on each side, and 0.5rem between the buttons in a group:
+`toolbar.tsx` is a `role="toolbar"` named "Document Text Formatting", above the text box. It has eleven quiet icon buttons (`btn btn--quiet btn--icon`, 2.25rem square, marks from [`icons.tsx`](icon-tip.md), "The icons"), each named by `aria-label` and tipped below with its name through `IconTip`. Nine are one for each thing the public page draws that a person can add, and no others; the last two are Undo and Redo. They sit in five `role="group"` rows, each named, with a hairline between groups, 0.5rem from the buttons on each side, and 0.25rem between the buttons in a group:
 
-| Group    | Buttons                                 |
-| -------- | --------------------------------------- |
-| Headings | Heading 2, Heading 3                    |
-| Text     | Bold, Italic, Link                      |
-| Lists    | Bulleted List, Numbered List            |
-| Insert   | Table, Footnote                         |
-| History  | Undo, Redo, at the right end of the row |
+| Group    | Buttons                      |
+| -------- | ---------------------------- |
+| Headings | Heading 2, Heading 3         |
+| Text     | Bold, Italic, Link           |
+| Lists    | Bulleted List, Numbered List |
+| Insert   | Table, Footnote              |
+| History  | Undo, Redo                   |
 
-The first four groups sit centred in the space left of History. Each button is a Plate transform, not a hand-written edit:
+The groups sit centred in the row, in that order. Each button is a Plate transform, not a hand-written edit:
 
 | Button                       | What it calls                                                                                                                                                | Pressed when                                    |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
@@ -54,7 +55,7 @@ An empty table cell or footnote definition is serialised by the markdown package
 
 ## Props
 
-`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `revision` (the draft's revision, or `null` when there is no draft) and `nextNumber` (the number the next publish will take).
+`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take) and `mailing`, drawn under the lede, above the text (the page passes the [Document Mailing Panel](document-mailing-panel.md)).
 
 ## Leaving the text box with the keyboard
 

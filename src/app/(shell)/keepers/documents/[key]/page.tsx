@@ -22,24 +22,24 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
   // A version has to be published before it can be emailed.
   const overview = published ? await readDocumentMailing(session, key) : null;
   return (
-    <>
-      <DocumentEditor
-        documentId={document.id}
-        documentKey={document.key}
-        title={document.title}
-        lede={document.lede}
-        body={draft?.body ?? published?.body ?? ''}
-        revision={draft?.revision ?? null}
-        nextNumber={(published?.number ?? 0) + 1}
-      />
-      {overview && (
-        <DocumentMailingPanel
-          documentId={document.id}
-          documentKey={document.key}
-          title={document.title}
-          overview={overview}
-        />
-      )}
-    </>
+    <DocumentEditor
+      documentId={document.id}
+      documentKey={document.key}
+      title={document.title}
+      lede={document.lede}
+      body={draft?.body ?? published?.body ?? ''}
+      revision={draft?.revision ?? null}
+      nextNumber={(published?.number ?? 0) + 1}
+      mailing={
+        overview && (
+          <DocumentMailingPanel
+            documentId={document.id}
+            documentKey={document.key}
+            title={document.title}
+            overview={overview}
+          />
+        )
+      }
+    />
   );
 }

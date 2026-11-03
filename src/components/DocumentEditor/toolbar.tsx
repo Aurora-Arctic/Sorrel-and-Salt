@@ -127,7 +127,7 @@ const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
       },
     ],
   },
-  // Last, so it sits at the row's right end, apart from the buttons that format.
+  // Last, after the buttons that format.
   {
     label: 'History',
     buttons: [

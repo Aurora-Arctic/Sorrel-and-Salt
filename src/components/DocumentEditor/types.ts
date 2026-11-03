@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 export interface DocumentEditorProps {
   /** The document's id, sent with each save and publish. */
   documentId: string;
@@ -13,4 +15,6 @@ export interface DocumentEditorProps {
   revision: number | null;
   /** The version a publish would make, shown beside the title. */
   nextNumber: number;
+  /** What sits under the lede, above the text: the page's Email Every Account panel. */
+  mailing?: ReactNode;
 }
