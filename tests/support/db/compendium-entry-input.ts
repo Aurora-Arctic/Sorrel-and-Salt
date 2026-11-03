@@ -32,7 +32,9 @@ export function useCompendiumEntryInput(sql: () => postgres.Sql) {
    * typed, each form picked by its text unless the variant states `formId`. One curated form, Herb, unless
    * the test states `variants`.
    */
-  return function entry(overrides: Overrides<IngredientFixture> = {}): CompendiumEntryInput {
+  return function entry(
+    overrides: Overrides<IngredientFixture> = {},
+  ): CompendiumEntryInput & { variants: NonNullable<CompendiumEntryInput['variants']> } {
     const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })], ...overrides });
     const {
       workspaceId: _tier,

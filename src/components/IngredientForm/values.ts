@@ -73,7 +73,7 @@ export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
   categoryIds: { label: 'Categories', one: 'category', many: 'categories' },
   substitutes: { label: 'Substitute Ingredients', one: 'substitute', many: 'substitutes' },
   references: { label: 'References', one: 'reference', many: 'references' },
-  variants: { label: 'Variants', one: 'form', many: 'forms' },
+  variants: { label: 'Forms', one: 'form', many: 'forms' },
 };
 
 /** A variant whose Form box is empty, as its card and the Variants line name it. */

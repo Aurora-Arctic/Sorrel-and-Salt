@@ -71,7 +71,7 @@ function renderForm(props: { workspaceId: string | null; values?: IngredientForm
   renderWithClient(form);
   // An edit opens with every section closed: its variants are what
   // these tests work in.
-  if (props.values) openSections('Variants');
+  if (props.values) openSections('Forms');
   return onSaved;
 }
 
@@ -239,7 +239,7 @@ describe('IngredientForm’s variants', () => {
       fireEvent.click(sectionOf(oil, 'Correspondences'));
 
       fireEvent.click(screen.getByRole('button', { name: 'Close All' }));
-      openSections('Variants');
+      openSections('Forms');
       expect(openIn(variant('Oil'))).toEqual([]);
 
       // Variants open, so the control reads Close All: closed first, then opened.

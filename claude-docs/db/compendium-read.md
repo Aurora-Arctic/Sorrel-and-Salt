@@ -217,8 +217,9 @@ precision`, and while the keyset casts its sort back to `real`, the score
 - **`nomenclature`** (M5.5) is equality on the column, so `unknown` lists the
   formal names still to look up: the keeper's to-do list beside
   `withoutReferences`' (["References"](references.md)).
-- **`celestialBodies`** and **`zodiacSigns`** match an entry whose own list
-  holds any of the values given, compared entry by entry under the
+- **`celestialBodies`** and **`zodiacSigns`** match an entry whose own list,
+  or a live variant's, holds any of the values given, as `elements` reads
+  its lists (MB.290); a soft-deleted variant's list counts for nothing. Each is compared entry by entry under the
   suggestions' fold, `lower(btrim(…))` on both sides through `listFolds`
   (M11.22). Each value is its own `IN` over the folded list, ORed, rather than
   Postgres's array overlap `&&`, which would compare the raw spellings. A
@@ -361,7 +362,8 @@ queries for the compendium (the seven kinds and the two switch counts, No Refs a
 for a coven (the seven kinds, the two Source counts, the In Stock count and the Low Stock Only count), whatever the filter. With a search, each runs in its own transaction
 that sets the 0.5 threshold, as the list does. Signs and bodies use a right
 join from the vocabulary table, with the entries' conditions in the join, so a
-sign no entry lists still comes back at zero. Elements and toxic need no
+sign no entry lists still comes back at zero; the join matches an entry's own
+list or a live variant's through `listOrVariantHolds`, as the filter does. Elements and toxic need no
 join: one query counts every setting at once with `count(*) filter (where …)`.
 
 **`findOneIngredient(memberships, id)`** is one live row in the compendium or
@@ -639,7 +641,8 @@ the facets, so they cannot disagree.
   The category itself must be live, through `pointsLive`.
 - `stated` drops blank values from a list filter, so `['', 'Mars']` filters by Mars
   and `[' ']` by nothing; the fold stays in SQL, beside the column's own.
-  `listArm` is one `IN` per value, ORed, not an array overlap (`&&`), because the
+  `listArm` reads the entry's list and a live variant's through
+  `listOrVariantHolds`, the variant's a correlated `EXISTS`, one `IN` per value, ORed, not an array overlap (`&&`), because the
   list's side has to be folded entry by entry, which `listFolds` does, and an
   overlap would compare raw spellings.
 - `elementArm` is an array overlap on the entry's own list and a correlated

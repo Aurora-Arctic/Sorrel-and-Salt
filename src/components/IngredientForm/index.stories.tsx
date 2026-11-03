@@ -697,25 +697,24 @@ function WhatToTry() {
           shows one plant twice, the compendium&rsquo;s and this coven&rsquo;s.
         </li>
         <li>
-          <strong>A pick:</strong> pick either Wax in New Form, and a Wax variant is added, its
-          group following the text in its Form box, muted, its description in a tooltip on hover or
-          focus; edit the text and the group goes. Pick both Hecates in Deity, and each pill reads
-          with its tradition, its description in its tooltip.
+          <strong>A pick:</strong> pick either Wax in New Form, and a Wax form is added, its group
+          following the text in its Form box, muted, its description in a tooltip on hover or focus;
+          edit the text and the group goes. Pick both Hecates in Deity, and each pill reads with its
+          tradition, its description in its tooltip.
         </li>
         <li>
-          <strong>Variants:</strong> type Oil in New Form and press Add, then add Oil again: the
-          repeat is refused at the box. The new variant opens first, just beneath the box, with
-          every one of its sections open; each heading folds its own, as the ingredient&rsquo;s do,
-          and Open All / Close All reaches them too. Done folds the variant to its summary line, and
-          Edit opens it again, closing any other. Save with a variant&rsquo;s box holding text while
-          it or its section is folded, and both open on the error. Remove takes a variant out. In a
-          variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in
-          oil first, one row for each of its forms, and never Mockleaf, which comes in none; pick a
-          form, and its pill names it. Each of a variant&rsquo;s fields has a Copy From Ingredient
-          icon button, shut while the ingredient&rsquo;s own field is empty: fill the
-          ingredient&rsquo;s, and press it to add what the variant lacks. Its Substitute Ingredients
-          links the same form of each, and names beneath the list those in no such form, with Copy
-          Anyway to add them as names.
+          <strong>Forms:</strong> type Oil in New Form and press Add, then add Oil again: the repeat
+          is refused at the box. The new form opens first, just beneath the box, with every one of
+          its sections open; each heading folds its own, as the ingredient&rsquo;s do, and Open All
+          / Close All reaches them too. Done folds the form to its summary line, and Edit opens it
+          again, closing any other. Save with a form&rsquo;s box holding text while it or its
+          section is folded, and both open on the error. Remove takes a form out. In a form&rsquo;s
+          Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in oil first, one
+          row for each of its forms, and never Mockleaf, which comes in none; pick a form, and its
+          pill names it. Each of a form&rsquo;s fields has a Copy From Ingredient icon button, shut
+          while the ingredient&rsquo;s own field is empty: fill the ingredient&rsquo;s, and press it
+          to add what the form lacks. Its Substitute Ingredients links the same form of each, and
+          names beneath the list those in no such form, with Copy Anyway to add them as names.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what
@@ -963,10 +962,10 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
           <strong>Classification:</strong> required here: Save with none chosen to see it refused.
         </li>
         <li>
-          <strong>Picks only:</strong> New Form, a variant&rsquo;s Form, Celestial Body, Zodiac Sign
-          and Deity offer the curated rows alone, with no &ldquo;Use what you typed&rdquo; and no
-          Add; type into one and Save, or press Enter, to see the text refused. Substitute
-          Ingredient offers the compendium&rsquo;s entries alone{editing ? ', never this one' : ''}.
+          <strong>Picks only:</strong> New Form, a form’s Form, Celestial Body, Zodiac Sign and
+          Deity offer the curated rows alone, with no &ldquo;Use what you typed&rdquo; and no Add;
+          type into one and Save, or press Enter, to see the text refused. Substitute Ingredient
+          offers the compendium&rsquo;s entries alone{editing ? ', never this one' : ''}.
         </li>
         <li>
           <strong>Another entry&rsquo;s redirect:</strong> a Name with &ldquo;redirect&rdquo; in it
@@ -1073,7 +1072,7 @@ export const CompendiumEntryVariantOpen: Story = {
   render: () => {
     // Pressed once it is drawn: which form is open is the form's own state.
     useEffect(() => {
-      openSection('Variants');
+      openSection('Forms');
       openDriedLeaf();
     }, []);
     return <CompendiumForm entry={ENTRY} />;
@@ -1084,7 +1083,7 @@ export const CompendiumEntryVariantOpen: Story = {
 export const CompendiumEntryVariantSectionOpen: Story = {
   render: () => {
     useEffect(() => {
-      openSection('Variants');
+      openSection('Forms');
       const card = openDriedLeaf();
       if (card) openSection('Correspondences', card);
     }, []);
@@ -1105,7 +1104,7 @@ export const VariantAdded: Story = {
       setInputValue(box, 'Oil');
       // Once the typed text has reached the form, as a press after typing would.
       const timer = setTimeout(() =>
-        document.querySelector<HTMLButtonElement>('button[aria-label="Add Variant"]')?.click(),
+        document.querySelector<HTMLButtonElement>('button[aria-label="Add Form"]')?.click(),
       );
       return () => clearTimeout(timer);
     }, []);
@@ -1121,7 +1120,7 @@ export const VariantAdded: Story = {
 export const CompendiumEntryCopySkipped: Story = {
   render: () => {
     useEffect(() => {
-      openSection('Variants');
+      openSection('Forms');
       const card = openDriedLeaf();
       if (card) openSection('Relations', card);
       const timer = setTimeout(() =>

@@ -12,14 +12,7 @@ import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredie
 // The form's six sections as disclosures: a new entry opens with every one open, an edit with every one closed to its summary line; each heading opens and closes its own; Open All and Close All do every one.
 // A save that finds an error in a closed section opens it so the focus reaches the field (claude-docs/components/ingredient-form.md, "Sections").
 
-const SECTIONS = [
-  'Identity',
-  'Details & Care',
-  'Correspondences',
-  'Relations',
-  'Sources',
-  'Variants',
-];
+const SECTIONS = ['Identity', 'Details & Care', 'Correspondences', 'Relations', 'Sources', 'Forms'];
 
 /** An entry with something in its Identity, as the summary line reads it back. */
 const TESTWORT: IngredientFormValues = {

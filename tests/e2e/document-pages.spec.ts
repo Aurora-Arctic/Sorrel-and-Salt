@@ -74,7 +74,11 @@ test('/privacy draws the access cards under Who Can See What', async ({ page }) 
   const article = page.getByRole('main');
   await expect(article.getByRole('heading', { name: 'Who Can See What' })).toBeVisible();
 
-  await expect(article.getByRole('group')).toHaveCount(11);
+  // The On This Page menu folds in a <details>, a group too, so its groups are left out of the count.
+  const menuGroups = page.getByRole('navigation', { name: 'On This Page' }).getByRole('group');
+  await expect
+    .poll(async () => (await article.getByRole('group').count()) - (await menuGroups.count()))
+    .toBe(11);
   await expect(article.getByText('{access-cards}')).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 });
