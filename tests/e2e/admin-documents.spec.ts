@@ -5,7 +5,7 @@ import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
 // A keeper edits the site's documents in place, one tab each under /keepers/documents: a saved draft is the keeper's alone, and a publish is what a
-// reader sees, as a new version with the old one in its history. Publishing the terms asks every account to agree again, and the
+// reader sees, as a new version with the old one in its history. Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again, and the
 // confirmation says so first (claude-docs/design-decisions/m15.59-document-editor-scope.md).
 
 test.beforeAll(async () => {
@@ -37,6 +37,11 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await signInAs(page, 'an-admin@admin-documents.test', ['discord'], 'admin');
   const reader = await (await browser.newContext()).newPage();
   const ADDITION = ' Fixturewort sentence from the editor.';
+  // A signed-in account that has agreed to everything in force, so a protected page answers it.
+  const member = await (await browser.newContext()).newPage();
+  await signInAs(member, 'disclaimer-reader@admin-documents.test');
+  await member.goto('/account');
+  await expect(member).not.toHaveURL(/\/account\/terms/);
 
   // The nav's Documents opens the privacy policy's editor, under a tab row with one tab per document in the footer's order.
   await page.goto('/keepers');
@@ -88,8 +93,6 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await main.getByRole('button', { name: 'Publish', exact: true }).click();
   const confirmation = page.getByRole('dialog');
   await expect(confirmation).toBeVisible();
-  // Only the terms ask anyone to agree again.
-  await expect(confirmation).not.toContainText(/agree/i);
   await assertNoAccessibilityViolations(page);
   await confirmation.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(confirmation).toHaveCount(0);
@@ -103,6 +106,18 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await reader.goto('/disclaimer/versions/1');
   await expect(reader.getByRole('main')).not.toContainText('Fixturewort');
   await reader.context().close();
+
+  // The terms include the disclaimer, so the account's agreement was to the version before: its next protected page is the
+  // acceptance page, which links the disclaimer alone as changed, and agreeing returns it to the page it asked for.
+  await member.goto('/account');
+  await expect(member).toHaveURL(/\/account\/terms\?next=%2Faccount$/);
+  const changed = member.getByRole('main').getByRole('list').getByRole('link');
+  await expect(changed).toHaveCount(1);
+  await expect(changed).toHaveAttribute('href', '/disclaimer');
+  await assertNoAccessibilityViolations(member);
+  await member.getByRole('button', { name: 'Agree & Continue' }).click();
+  await expect(member).toHaveURL(/\/account$/);
+  await member.context().close();
 });
 
 test('publishing the terms warns that every account will agree again, and sends an agreed account to agree', async ({

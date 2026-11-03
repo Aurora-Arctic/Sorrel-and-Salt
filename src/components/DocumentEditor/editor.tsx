@@ -44,7 +44,7 @@ const PublishDraftDocument = graphql(`
   }
 `);
 
-/** What a publish does for readers; only the terms ask anyone to agree again. */
+/** What a publish does for readers; the terms, and the disclaimer and code of ethics they include, ask everyone to agree again. */
 function PublishQuestion({
   documentKey,
   title,
@@ -56,6 +56,11 @@ function PublishQuestion({
     <>
       Publish this as the new terms of use? Every account will be asked to agree to them again
       before it can use the site.
+    </>
+  ) : documentKey === 'disclaimer' || documentKey === 'code-of-ethics' ? (
+    <>
+      Publish this as the new {title}? The terms of use include it, so every account will be asked
+      to agree to them again before it can use the site.
     </>
   ) : (
     <>
