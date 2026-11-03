@@ -12,9 +12,9 @@ import type {
 // them (claude-docs/components/ingredient-search.md, "The search sentence").
 
 // `Intl.ListFormat` is Baseline Widely Available, so no guard line is needed.
-// `en-GB` gives "sage, rue or thyme": no serial comma.
-const OR = new Intl.ListFormat('en-GB', { type: 'disjunction' });
-const AND = new Intl.ListFormat('en-GB', { type: 'conjunction' });
+// `en-US` gives the Oxford comma, "sage, rue, or thyme"; `en-GB` leaves it out.
+const OR = new Intl.ListFormat('en-US', { type: 'disjunction' });
+const AND = new Intl.ListFormat('en-US', { type: 'conjunction' });
 
 // "The" goes before the two luminaries and no other celestial body.
 const WITH_THE = new Set(['sun', 'moon']);
@@ -27,15 +27,15 @@ const text = (t: string): Part => ({ kind: 'text', text: t });
 // names; display only, as the fragment's `value` keeps its own spelling.
 const lower = (t: string): string => t.toLocaleLowerCase('en-GB');
 
-/** A list format's literal chunk: a bare word ("or") is a join, between its spaces; a comma stays text. */
+/** A list format's literal chunk: a bare word ("or") is a join, and the comma and spaces around it stay text. */
 function literal(chunk: string): Part[] {
-  const word = chunk.trim();
-  if (!/^\p{L}+$/u.test(word)) return [text(chunk)];
-  const at = chunk.indexOf(word);
+  const match = /^(\P{L}*)(\p{L}+)(\P{L}*)$/u.exec(chunk);
+  if (!match) return [text(chunk)];
+  const [, before = '', word = '', after = ''] = match;
   return [
-    ...(at > 0 ? [text(chunk.slice(0, at))] : []),
+    ...(before ? [text(before)] : []),
     { kind: 'join', text: word },
-    ...(at + word.length < chunk.length ? [text(chunk.slice(at + word.length))] : []),
+    ...(after ? [text(after)] : []),
   ];
 }
 

@@ -38,13 +38,13 @@ describe('buildSearchSentence', () => {
     expect(sentence.hasFilter).toBe(false);
   });
 
-  it('joins two values with or and three with no serial comma', () => {
+  it('joins two values with or and three with the Oxford comma', () => {
     const labels = { forms: { oil: 'Oil', resin: 'Resin', leaf: 'Leaf' } };
     expect(text({ forms: ['oil', 'resin'] }, 2, { labels })).toBe(
       '2 ingredients, in the form oil or resin',
     );
     expect(text({ forms: ['oil', 'resin', 'leaf'] }, 2, { labels })).toBe(
-      '2 ingredients, in the form oil, resin or leaf',
+      '2 ingredients, in the form oil, resin, or leaf',
     );
   });
 

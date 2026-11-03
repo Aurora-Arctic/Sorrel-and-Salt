@@ -342,8 +342,8 @@ separated by a comma. An example with every kind:
 > form oil or resin, linked to Isis, under Aries, ruled by the Sun or Mars, of
 > the fire element, that are not toxic, classified as botanical, without references
 
-- **Joining.** Values are joined through `Intl.ListFormat` in `en-GB`, which has
-  no serial comma: "oil, resin or leaf". Forms, deities, zodiac, celestial bodies and
+- **Joining.** Values are joined through `Intl.ListFormat` in `en-US`, which puts
+  the Oxford comma before the last word: "oil, resin, or leaf" (`en-GB` leaves it out). Forms, deities, zodiac, celestial bodies and
   elements join with "or"; categories join with "and" in all-mode ("in the
   protection and healing categories") and "or" in any-mode ("in the protection or
   healing category"). `Intl.ListFormat` is Baseline Widely Available, so the
