@@ -96,25 +96,31 @@ function HeaderCell(props: PlateElementProps): ReactElement {
   return <PlateElement as="th" {...props} />;
 }
 
-/** A source mark: the note's number, raised, where the text refers to it. */
+/** A source mark: the note's number, raised, where the text refers to it, drawn as the public page's link (index.scss). */
 function FootnoteMark(
   props: PlateElementProps<{ type: 'footnoteReference'; identifier: string; children: never[] }>,
 ): ReactElement {
   return (
-    <PlateElement as="sup" {...props}>
-      [{props.element.identifier}]{props.children}
+    <PlateElement as="sup" {...props} className="document-page__marks">
+      <span contentEditable={false}>{props.element.identifier}</span>
+      {props.children}
     </PlateElement>
   );
 }
 
-/** A source's entry: its number, then its text. */
+/** A source's entry: a numbered item of the public page's Sources list, one list per entry as each is its own block. */
 function FootnoteEntry(
   props: PlateElementProps<{ type: 'footnoteDefinition'; identifier: string; children: never[] }>,
 ): ReactElement {
+  const start = Number(props.element.identifier);
   return (
-    <PlateElement {...props}>
-      <span contentEditable={false}>[{props.element.identifier}]: </span>
-      {props.children}
+    <PlateElement
+      as="ol"
+      {...props}
+      className="document-page__sources"
+      attributes={{ ...props.attributes, start: Number.isInteger(start) ? start : undefined }}
+    >
+      <li className="document-page__source">{props.children}</li>
     </PlateElement>
   );
 }
