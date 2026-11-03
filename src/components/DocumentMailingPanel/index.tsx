@@ -4,6 +4,7 @@ import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { asksAgreement } from '../../lib/agreement-documents';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { Required } from '../Field';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { DocumentMailingPanelProps, MailingProgressProps } from './types';
 import './index.scss';
@@ -125,11 +126,16 @@ const DocumentMailingPanel = ({ overview }: DocumentMailingPanelProps): ReactEle
           </p>
           {pending.map((document) => (
             <div className="field" key={document.versionId}>
-              <label htmlFor={`${id}-${document.versionId}`}>Summary of the {document.title}</label>
+              <label className="field__label" htmlFor={`${id}-${document.versionId}`}>
+                Summary of the {document.title}
+                <Required />
+              </label>
               <textarea
                 id={`${id}-${document.versionId}`}
                 className="input"
                 rows={4}
+                required
+                aria-required
                 aria-describedby={`${id}-${document.versionId}-hint`}
                 value={summaryOf(document.versionId)}
                 onChange={(event) =>
