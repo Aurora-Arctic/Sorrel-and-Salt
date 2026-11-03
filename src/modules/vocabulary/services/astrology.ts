@@ -25,7 +25,7 @@ import { refuseWhileHeld } from './held-entries';
 import type { AstrologyValueFilter, AstrologyValueRow, CuratedField } from '../types';
 
 // The two curated astrology vocabularies, one code path keyed by the ingredient list each curates. Reads are public; writes are
-// for a curator or an admin alone (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
+// for a curator or a keeper alone (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
 
 /** What each vocabulary is called, read and checked by. */
 const VOCABULARY = {
@@ -97,7 +97,7 @@ export async function getAstrologyValueBySlug(
 /**
  * Adds a celestial body or a sign, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks the vocabulary's schema, or its slug is a live row's.
  */
 export async function createAstrologyValue(
@@ -122,7 +122,7 @@ export async function createAstrologyValue(
  * Rewrites a celestial body or a sign whole, its slug following the name, and carries a rename onto every live compendium entry's
  * list (claude-docs/db/astrology-vocabularies.md, "Astrology service details"). Its `seedKey` is left as it was.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createAstrologyValue` throws it, the row's own slug excepted.
  * @throws {NotFound} no live row of the vocabulary has this id.
  */
@@ -151,9 +151,9 @@ export async function updateAstrologyValue(
 }
 
 /**
- * Soft-deletes a celestial body or a sign no live compendium entry's list holds (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
+ * Soft-deletes a celestial body or a sign no live compendium entry's list, or live variant's, holds (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin, or a live entry holds the value.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper, or a live entry holds the value.
  * @throws {NotFound} no live row of the vocabulary has this id.
  */
 export async function deleteAstrologyValue(

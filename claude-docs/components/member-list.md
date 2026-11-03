@@ -12,12 +12,12 @@ Change Role, Coven Access and Remove.
 
 `MemberListProps` (`types.ts`):
 
-| Prop            | What it is                                                                                                                                                                                     |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, `invitedBy`, `email` (owners only), `paused` (owners only), and `openHref` and `heading` for the modal |
-| `showEmail`     | Set for owners alone (M11.19): adds the Email column after Name; absent, no column                                                                                                             |
-| `showAccess`    | Set for owners alone (`member: pause`): adds the Access column after Updated, drawn from each entry's `paused`; absent, no column                                                              |
-| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                                                                                                      |
+| Prop            | What it is                                                                                                                                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, `invitedBy`, `email` (stewards only), `paused` (stewards only), and `openHref` and `heading` for the modal |
+| `showEmail`     | Set for stewards alone (M11.19): adds the Email column after Name; absent, no column                                                                                                               |
+| `showAccess`    | Set for stewards alone (`member: pause`): adds the Access column after Updated, drawn from each entry's `paused`; absent, no column                                                                |
+| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                                                                                                          |
 
 ## Contracts
 
@@ -29,8 +29,8 @@ Change Role, Coven Access and Remove.
   with its heading, through the page's `RouteModalProvider`, as a user's name
   does on `/keepers/users`. It is still a link, so a new tab opens the address.
 - **Roles are told apart by their word**, from `workspaceRoleLabel`
-  (`UserDetail/roles.ts`). An owner is
-  also bold, as the user list sets an admin, but weight is never the only cue.
+  (`UserDetail/roles.ts`). A steward is
+  also bold, as the user list sets a keeper, but weight is never the only cue.
 - **Every role carries a tip saying what it may do**: the word is a
   [`RoleTip`](role-tip.md), its text `WORKSPACE_ROLE_ACCESS[role]`, the same
   sentence Change Role shows beside that role, on every row, so a member reads
@@ -77,7 +77,7 @@ the list has that address. …"). The controls it holds, `role-control.tsx` and
 
 `role-control.tsx` (M6.13) is one Change Role button, asking first which role
 the member moves to (`ConfirmedAction`), then sending `updateMemberRole`. In
-the modal it asks over the modal's body (`inModal`). It is offered to owners
+the modal it asks over the modal's body (`inModal`). It is offered to stewards
 only; the service is the guard.
 
 The question has a radio per role but their own, each with what that role may
@@ -89,7 +89,7 @@ chosen to start. The confirm button follows the choice: **Promote**, green
 Both controls say what happened through `ConfirmedAction`'s click feedback
 ([`click-feedback.md`](click-feedback.md), M12.31). Change Role's refusal
 floats under its button in a callout saying the service's sentence alone ("This
-is the last owner, and a coven needs one. Make another member an owner
+is the last steward, and a coven needs one. Make another member a steward
 first."), with a badge on the button to bring it back; nothing in the modal
 moves, and the next attempt clears it (`refusalInModal="callout"`, as the admin
 user modal's is). A success is said in the page's status region: "<name> is now
@@ -104,9 +104,9 @@ modal back to the list (`onSent`); a refusal is a notice in the modal.
 
 ### Pausing access
 
-An owner can pause one member's or viewer's access to the coven, for a span or with no end date, and lift it (M15.56). The pause itself, and who may set it, is the coven service's (claude-docs/design-decisions/m15.55-coven-access-pause.md). The form, the standing pause and Earlier Pauses are the modal's Coven Access section ([`member-detail.md`](member-detail.md), "Coven Access").
+A steward can pause one member's or viewer's access to the coven, for a span or with no end date, and lift it (M15.56). The pause itself, and who may set it, is the coven service's (claude-docs/design-decisions/m15.55-coven-access-pause.md). The form, the standing pause and Earlier Pauses are the modal's Coven Access section ([`member-detail.md`](member-detail.md), "Coven Access").
 
-- **The page reads the pauses standing on its members in one query**, `standingMemberPauses`, for an owner alone (`member: pause`), and passes each as the entry's `paused`: the Access column draws it and the modal starts from it.
+- **The page reads the pauses standing on its members in one query**, `standingMemberPauses`, for a steward alone (`member: pause`), and passes each as the entry's `paused`: the Access column draws it and the modal starts from it.
 - **A paused member is sent to `/coven-paused/<slug>`** from every page of the coven, by the coven guard `requireCovenMembership`. That page names the coven and when the pause ends, and sends anyone with no pause standing back to the coven; a stranger still gets the 404. A GraphQL answer of `ACCESS_PAUSED` on a coven page sends the browser there too (`src/lib/graphql-client.ts`).
 
 ## Styling
@@ -124,7 +124,7 @@ used: `space()`, `type-size('caption')`, `$text-muted`, `$table-stack-width`.
 
 [`index.stories.tsx`](../../src/components/MemberList/index.stories.tsx),
 `Coven / Member List`: `States`, with a control that chooses Default (a member's view);
-Owner View (the Email and Access columns, a standing pause on the viewer's row); Sole Owner (the owner's page composition, addresses included, with the sole-owner note
+Owner View (the Email and Access columns, a standing pause on the viewer's row); Sole steward (the owner's page composition, addresses included, with the sole-owner note
 inside a `ListFrame` ahead of the list); Gaps In The Record; and Addresses Without Actions (the Email column without Access).
 
 ## Tests
@@ -136,7 +136,7 @@ the pause's end only under `showAccess`, "You" on the own row only, and the addr
 under `showEmail`. `tests/components/MemberList/remove-control.test.tsx` and
 `role-control.test.tsx` hold each control's refusal and success.
 `tests/app/(shell)/coven/members.test.tsx` holds the page: no row actions for
-anyone, the standing pauses read in one batch for an owner alone, and the
+anyone, the standing pauses read in one batch for a steward alone, and the
 modal opened by `?member=`. The modal's own tests and specs are listed in
 [`member-detail.md`](member-detail.md).
 

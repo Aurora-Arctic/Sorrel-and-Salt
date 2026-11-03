@@ -83,7 +83,7 @@ const entry = (index: number) => {
   return { node, cursor: { key: [node.name], id: node.id } };
 };
 
-// The tab's action beside the heading, the switch on admin changes, and the
+// The tab's action beside the heading, the switch on keeper changes, and the
 // tab's content, as the route group's layout puts them on one page.
 async function renderPage(params: Record<string, string> = {}) {
   const [action, page] = await Promise.all([
@@ -215,28 +215,28 @@ describe('the /keepers/users page', () => {
     ).toBeInTheDocument();
   });
 
-  // Whether a row is the primary admin's is the identity service's
+  // Whether a row is the primary keeper's is the identity service's
   // answer, asked of each row as the page reads it.
-  it('labels the row the service says is the primary admin, and no other', async () => {
+  it('labels the row the service says is the primary keeper, and no other', async () => {
     isPrimaryAdmin.mockImplementation((node: { id: string }) => node.id === user(2).id);
 
     await renderPage();
 
     expect(isPrimaryAdmin).toHaveBeenCalledTimes(2);
     const primary = screen.getByRole('row', { name: /Listed Fixture 02/ });
-    expect(within(primary).getByText('Primary Admin')).toBeInTheDocument();
+    expect(within(primary).getByText('Primary Keeper')).toBeInTheDocument();
     const other = screen.getByRole('row', { name: /Listed Fixture 01/ });
-    expect(within(other).queryByText('Primary Admin')).not.toBeInTheDocument();
+    expect(within(other).queryByText('Primary Keeper')).not.toBeInTheDocument();
   });
 
-  // The switch's state, as the identity service answers it for this admin.
-  it('states whether admin changes are paused, asked as the guard’s session', async () => {
+  // The switch's state, as the identity service answers it for this keeper.
+  it('states whether keeper changes are paused, asked as the guard’s session', async () => {
     adminRoleChangePauseState.mockResolvedValue({ paused: true, canToggle: true });
 
     await renderPage();
 
     expect(adminRoleChangePauseState).toHaveBeenCalledWith(ADMIN);
-    expect(screen.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Resume Keeper Changes' })).toBeEnabled();
   });
 
   it('turns the search parameters into the filter', async () => {

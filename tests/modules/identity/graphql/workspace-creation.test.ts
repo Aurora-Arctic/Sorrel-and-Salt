@@ -5,7 +5,7 @@ import { asManualFix } from '../../../support/db/privileges';
 import { run } from '../../../support/graphql/run';
 import type { GrantedUserResult, RevokedUserResult } from './types';
 
-// `grantWorkspaceCreation` and `revokeWorkspaceCreation`, the transport's half (claude-docs/testing/layer-ownership.md): an admin's answer, and one refusal per error code, read as the browser reads them.
+// `grantWorkspaceCreation` and `revokeWorkspaceCreation`, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's answer, and one refusal per error code, read as the browser reads them.
 // Which roles the service refuses is services/workspace-creation.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
@@ -38,14 +38,14 @@ const GRANT = `
 `;
 
 describe('Mutation.grantWorkspaceCreation', () => {
-  it('answers an admin the user, now able to create a coven', async () => {
+  it('answers a keeper the user, now able to create a coven', async () => {
     const result = await run<GrantedUserResult>(asUser(E), GRANT, { userId: PENDING });
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.grantWorkspaceCreation).toEqual({ id: PENDING, canCreateWorkspace: true });
   });
 
-  // E is an admin the scope admits, so the refusal is the service's.
+  // E is a keeper the scope admits, so the refusal is the service's.
   it('answers a second approval as FORBIDDEN', async () => {
     await run(asUser(E), GRANT, { userId: PENDING });
 
@@ -105,7 +105,7 @@ describe('Mutation.revokeWorkspaceCreation', () => {
     );
   });
 
-  it('answers an admin the user, no longer able to create a coven', async () => {
+  it('answers a keeper the user, no longer able to create a coven', async () => {
     const result = await run<RevokedUserResult>(asUser(E), REVOKE, { userId: PENDING });
 
     expect(result.errors).toBeUndefined();
@@ -115,7 +115,7 @@ describe('Mutation.revokeWorkspaceCreation', () => {
     });
   });
 
-  it("answers an admin's flag as FORBIDDEN", async () => {
+  it("answers a keeper's flag as FORBIDDEN", async () => {
     const result = await run(asUser(E), REVOKE, { userId: E.id });
 
     expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });

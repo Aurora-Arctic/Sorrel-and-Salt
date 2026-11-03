@@ -8,7 +8,7 @@ import type { CategoryGroupNode } from './types';
 
 // The three category-group writes over the wire: the transport's half (claude-docs/testing/layer-ownership.md).
 // That is the loaders cleared by a write, `moveTo` reaching the delete, and per write one refusal per error code, read as the browser reads it. Roles and colour and collision rules are services/category-groups.test.ts's;
-// signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
+// signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {
@@ -57,7 +57,7 @@ const groupOf = async (id: string) =>
   (await sql`select * from category_groups where id = ${id}`)[0];
 
 describe('createCategoryGroup', () => {
-  it('writes one for a site admin, answering it with its colours', async () => {
+  it('writes one for a site keeper, answering it with its colours', async () => {
     const result = await run<{ createCategoryGroup: CategoryGroupNode }>(asUser(E), CREATE, {
       input: input(),
     });
@@ -82,7 +82,7 @@ describe('createCategoryGroup', () => {
 });
 
 describe('updateCategoryGroup', () => {
-  it("rewrites one for a site admin, and a category's group read after it in the same request reads the new name", async () => {
+  it("rewrites one for a site keeper, and a category's group read after it in the same request reads the new name", async () => {
     const id = await seedGroup('Fixture Wards');
     await sql`
       insert into categories (name, slug, description, group_id, created_by, updated_by)

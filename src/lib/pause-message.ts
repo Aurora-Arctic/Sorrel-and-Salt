@@ -6,7 +6,7 @@ export const MESSAGE_MAX_LENGTH = 500;
 const LONG_MESSAGE = `Keep the message to ${MESSAGE_MAX_LENGTH} characters`;
 
 /**
- * The message an owner writes to a member they pause: trimmed, and `null` when blank or not given.
+ * The message a steward writes to a member they pause: trimmed, and `null` when blank or not given.
  *
  * @throws {ValidationError} on `['message']` when it is over 500 characters.
  */
@@ -17,7 +17,7 @@ export function parseOptionalPauseMessage(message: string | null | undefined): s
 }
 
 /**
- * The message an admin writes to a user they time out or pause on the site: trimmed, and required.
+ * The message a keeper writes to a user they time out or pause on the site: trimmed, and required.
  *
  * @throws {ValidationError} on `['message']` when it is missing, blank or over 500 characters.
  */

@@ -210,7 +210,7 @@ describe('InvitationAcceptance', () => {
     mockGraphQLError('AcceptInvitation', {
       code: 'FORBIDDEN',
       message:
-        "Admin changes are paused, so this invitation can't be accepted until they are resumed.",
+        "Keeper changes are paused, so this invitation can't be accepted until they are resumed.",
     });
     render(
       <InvitationAcceptance

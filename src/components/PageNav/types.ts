@@ -26,6 +26,12 @@ export type PageNavProps = {
   /** The landmark's accessible name, "On This Page". */
   label: string;
   entries: PageNavEntry[];
+  /**
+   * On a phone the menu folds behind its label, closed until opened, so a long menu does not push
+   * the text down; from a tablet up it stands open with no toggle. Native `<details>`, so it
+   * opens without the script.
+   */
+  collapsible?: boolean;
 };
 
 /** What the menu draws: a top-level entry, or a run of consecutive entries sharing a group. */

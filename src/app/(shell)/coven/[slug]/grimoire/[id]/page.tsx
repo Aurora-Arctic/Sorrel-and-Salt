@@ -69,7 +69,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     recipe.views,
     recipe.categories,
     recipePath,
-    // Edit Stock on the inventory's lines, on the permission `saveStock` asserts: none for a viewer.
+    // Edit Stock on the inventory's lines, on the permission `saveStock` asserts: none for an observer.
     rolePermits(membership.role, { inventory: ['update'] }),
   );
   const workings = await readWorkingsOf(

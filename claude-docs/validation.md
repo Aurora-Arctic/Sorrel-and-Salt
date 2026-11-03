@@ -83,7 +83,7 @@ a rule changes in one place:
   column's non-blank CHECK accepts. A filter has no column, and wants no
   value as `undefined`, so `CompendiumFilter` maps `null` itself rather
   than the helper hiding a second meaning of absent.
-- **`curatedValueInput(noun)`**: an admin-curated value's `name` and
+- **`curatedValueInput(noun)`**: a keeper-curated value's `name` and
   `description`, each `requiredText` saying the noun — "Give the sign a
   name", "Describe the tradition". Every vocabulary's schema is built on it
   (below).
@@ -194,7 +194,7 @@ Rules both variants enforce:
 - **Celestial bodies and zodiac signs are suggested rather than enforced**, like a
   variant's `form` and `deities`: anything trimmed and non-blank passes either schema.
   The project serves a wide range of practices, and any closed list refuses
-  some of them. The suggestions are the admin-curated `celestial_bodies` and
+  some of them. The suggestions are the keeper-curated `celestial_bodies` and
   `zodiac_signs` vocabularies
   ([`db/astrology-vocabularies.md`](db/astrology-vocabularies.md), "The
   astrology vocabularies"), and on a coven's ingredient an entry off them is

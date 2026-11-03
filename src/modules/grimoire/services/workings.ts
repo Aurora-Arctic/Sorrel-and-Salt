@@ -64,7 +64,7 @@ function assertRecorder(membership: Membership, working: WorkingRow): void {
   }
 }
 
-/** A working is changed by its recorder or by a coven member named on it; the role check has already refused a viewer. */
+/** A working is changed by its recorder or by a coven member named on it; the role check has already refused an observer. */
 async function assertMayChange(membership: Membership, working: WorkingRow): Promise<void> {
   if (working.createdBy === membership.userId) return;
   if (await isParticipantOfWorking(membership, working.id)) return;

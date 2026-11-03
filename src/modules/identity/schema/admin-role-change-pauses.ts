@@ -4,7 +4,7 @@ import { namedWrites } from '../../../db/table-marks';
 import { auditColumns, users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
-// The primary admin's switch on admin grants and revokes, one row per pause so no migration has to seed a row before any user
+// The primary keeper's switch on keeper grants and revokes, one row per pause so no migration has to seed a row before any user
 // exists; each pause keeps who began it and who ended it (claude-docs/design-decisions/mb.62-pause-ledger.md).
 // Marked `namedWrites`: reached only through the writer's pause and resume and the open-pause finder.
 export const adminRoleChangePauses = namedWrites(

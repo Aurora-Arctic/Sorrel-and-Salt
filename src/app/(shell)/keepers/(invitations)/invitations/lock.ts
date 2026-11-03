@@ -5,7 +5,7 @@ import type { Session } from '../../../../../lib/session';
 import { readPauseState } from '../../(people)/pause-state';
 
 /**
- * Why this admin may neither invite nor revoke (changes paused, not the primary admin), or
+ * Why this keeper may neither invite nor revoke (changes paused, not the primary keeper), or
  * `undefined` when they may.
  */
 export async function invitationsLock(session: Session): Promise<string | undefined> {

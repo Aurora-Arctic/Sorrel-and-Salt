@@ -51,7 +51,7 @@ export async function findWorkspaceSeat(
 
 /**
  * The user's role in the workspace, paused or not: a paused member still holds the seat. For the callers that ask whether a
- * seat is taken (invitations, an owner acting on a member); `assertMembership` reads the whole seat.
+ * seat is taken (invitations, a steward acting on a member); `assertMembership` reads the whole seat.
  */
 export async function findWorkspaceRole(
   userId: string,
@@ -141,8 +141,8 @@ export function findMemberByEmail(
 }
 
 /**
- * The address of each of these users holding a live seat in the proof's coven, for the owner's Email column; nothing else
- * of the row leaves the repository. Others are left out in SQL. The caller has checked `member: readEmail`, held by owners.
+ * The address of each of these users holding a live seat in the proof's coven, for the steward's Email column; nothing else
+ * of the row leaves the repository. Others are left out in SQL. The caller has checked `member: readEmail`, held by stewards.
  */
 export async function findMemberEmails(
   membership: Membership,
@@ -179,7 +179,7 @@ export function workspaceWrites({
 
 /**
  * The membership write that takes no proof, as `findWorkspaceRole` is the read that takes none: a proof is minted from a
- * membership row, so the row making a creator an owner has none to be written under. Still inside `withAudit`. One row,
+ * membership row, so the row making a creator a steward has none to be written under. Still inside `withAudit`. One row,
  * the pair and role named; the caller decides whether this user may be seated.
  */
 export function membershipWrites({

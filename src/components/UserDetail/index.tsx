@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { agreedVersionOfColumns, formatAgreementVersion } from '../../lib/agreement-version';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import CreationControl from '../UserList/creation-control';
 import { Mark, ProviderLogo } from '../UserList/marks';
@@ -17,7 +18,7 @@ import './index.scss';
 // modal is, in hairline-parted sections; render-only.
 
 /**
- * Owners, then members, then viewers, each by coven name. Sorted here because
+ * Stewards, then practitioners, then observers, each by coven name. Sorted here because
  * the service's order is unspecified; the list is bounded by the user's own
  * memberships, so sorting it all costs nothing.
  */
@@ -99,7 +100,7 @@ const UserDetail = ({
             <Answer value={user.canCreateWorkspace}>
               {user.canCreateWorkspace ? 'Yes' : 'No'}
             </Answer>
-            {/* None for an admin or a curator, whom the users CHECK holds to the flag. */}
+            {/* None for a keeper or a curator, whom the users CHECK holds to the flag. */}
             {user.role === 'user' && (
               <CreationControl
                 key={user.canCreateWorkspace ? 'revoke' : 'approve'}
@@ -127,7 +128,7 @@ const UserDetail = ({
             {user.agreedTermsVersion === null ? (
               <Mark value={false} label="Not agreed" />
             ) : (
-              `Version ${user.agreedTermsVersion}`
+              `Version ${formatAgreementVersion(agreedVersionOfColumns(user))}`
             )}
           </dd>
         </div>
@@ -149,7 +150,7 @@ const UserDetail = ({
         <ul className="user-detail__covens" aria-labelledby="user-detail-covens">
           {ordered(memberships).map((coven) => (
             <li key={coven.workspaceId}>
-              {/* Text, never a link: an admin is no member of these covens,
+              {/* Text, never a link: a keeper is no member of these covens,
                   so `/coven/[slug]` would answer them 404. */}
               <span className="user-detail__coven-name">{coven.name}</span>
               <span className="user-detail__coven-meta">

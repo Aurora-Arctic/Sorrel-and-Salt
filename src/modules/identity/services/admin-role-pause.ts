@@ -7,19 +7,19 @@ import { assertSiteAdmin, type SiteAdmin } from './site-admin';
 import { actsAsPrimaryAdmin } from './primary-admin';
 import type { AdminRoleChangePauseState } from '../types';
 
-// The primary admin's switch on admin grants and revokes, so a rogue admin can neither make admins nor remove the good ones.
-// Only the primary admin may flip it; `setUserRole` reads it (claude-docs/auth/admin-users.md, "Pausing admin changes").
+// The primary keeper's switch on keeper grants and revokes, so a rogue admin can neither make keepers nor remove the good ones.
+// Only the primary keeper may flip it; `setUserRole` reads it (claude-docs/auth/admin-users.md, "Pausing keeper changes").
 
-const REFUSAL = 'Only a site admin may see or change whether admin changes are paused';
-const NOT_PRIMARY_REFUSAL = 'Only the primary admin may pause or resume admin changes';
+const REFUSAL = 'Only a site keeper may see or change whether keeper changes are paused';
+const NOT_PRIMARY_REFUSAL = 'Only the primary keeper may pause or resume keeper changes';
 
 /**
- * Refuses an admin change while the primary admin has paused them, unless the
- * caller is the primary admin, whom the pause exempts so it can clean up
+ * Refuses a keeper change while the primary keeper has paused them, unless the
+ * caller is the primary keeper, whom the pause exempts so it can clean up
  * without resuming first: the one guard the role service and coven
  * creation's approve and revoke both call.
  *
- * @throws {Forbidden} a pause is open and the caller is another admin.
+ * @throws {Forbidden} a pause is open and the caller is another keeper.
  */
 export async function assertChangesOpen(session: Session, admin: SiteAdmin): Promise<void> {
   if (!(await findOpenAdminRoleChangePause(admin))) return;
@@ -29,12 +29,12 @@ export async function assertChangesOpen(session: Session, admin: SiteAdmin): Pro
 
 /**
  * The site-role check, in `reason`'s words, then the pause's: the one guard
- * every admin change opens with — a user's role, coven creation's approval
- * and its revoke, an admin invitation and its withdrawal — answering the
+ * every keeper change opens with — a user's role, coven creation's approval
+ * and its revoke, a keeper invitation and its withdrawal — answering the
  * proof the change writes under.
  *
  * @throws {Forbidden} the session's role is not `admin`, or a pause is open
- * and the caller is another admin.
+ * and the caller is another keeper.
  */
 export async function assertAdminChangesOpen(session: Session, reason: string): Promise<SiteAdmin> {
   const admin = assertSiteAdmin(session, reason);
@@ -42,7 +42,7 @@ export async function assertAdminChangesOpen(session: Session, reason: string): 
   return admin;
 }
 
-/** The site-role check, then the primary admin's: who may flip the switch. */
+/** The site-role check, then the primary keeper's: who may flip the switch. */
 async function assertPrimaryAdmin(session: Session): Promise<SiteAdmin> {
   const admin = assertSiteAdmin(session, REFUSAL);
   if (!(await actsAsPrimaryAdmin(session))) throw new Forbidden(NOT_PRIMARY_REFUSAL);
@@ -50,8 +50,8 @@ async function assertPrimaryAdmin(session: Session): Promise<SiteAdmin> {
 }
 
 /**
- * Whether admin changes are paused, and whether the session's admin may
- * switch that: what `/keepers/users` states beside its control, to any admin.
+ * Whether keeper changes are paused, and whether the session's admin may
+ * switch that: what `/keepers/users` states beside its control, to any keeper.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
@@ -67,11 +67,11 @@ export async function adminRoleChangePauseState(
 }
 
 /**
- * Pauses admin grants and revokes for every admin but the primary one,
- * stamped as the primary admin, and answers `true`, paused. A pause already
+ * Pauses keeper grants and revokes for every keeper but the primary one,
+ * stamped as the primary keeper, and answers `true`, paused. A pause already
  * open is left as it is, so a second click changes nothing.
  *
- * @throws {Forbidden} the session's user is not the primary admin.
+ * @throws {Forbidden} the session's user is not the primary keeper.
  */
 export async function pauseAdminRoleChanges(session: Session): Promise<boolean> {
   const admin = await assertPrimaryAdmin(session);
@@ -83,7 +83,7 @@ export async function pauseAdminRoleChanges(session: Session): Promise<boolean> 
  * Ends the open pause, stamping who ended it and when, and answers `false`,
  * not paused. With none open it writes nothing.
  *
- * @throws {Forbidden} the session's user is not the primary admin.
+ * @throws {Forbidden} the session's user is not the primary keeper.
  */
 export async function resumeAdminRoleChanges(session: Session): Promise<boolean> {
   const admin = await assertPrimaryAdmin(session);

@@ -215,10 +215,11 @@ precision`, and while the keyset casts its sort back to `real`, the score
   How a form's delete finds the entries holding it (M5.6a). The repository's
   filter alone: the public `compendium` query takes no such argument.
 - **`nomenclature`** (M5.5) is equality on the column, so `unknown` lists the
-  formal names still to look up: the admin's to-do list beside
+  formal names still to look up: the keeper's to-do list beside
   `withoutReferences`' (["References"](references.md)).
-- **`celestialBodies`** and **`zodiacSigns`** match an entry whose own list
-  holds any of the values given, compared entry by entry under the
+- **`celestialBodies`** and **`zodiacSigns`** match an entry whose own list,
+  or a live variant's, holds any of the values given, as `elements` reads
+  its lists (MB.290); a soft-deleted variant's list counts for nothing. Each is compared entry by entry under the
   suggestions' fold, `lower(btrim(…))` on both sides through `listFolds`
   (M11.22). Each value is its own `IN` over the folded list, ORed, rather than
   Postgres's array overlap `&&`, which would compare the raw spellings. A
@@ -252,7 +253,7 @@ precision`, and while the keyset casts its sort back to `real`, the score
   whose `curator_reviewed_at` is set, `false` the ones where it is null, and
   absent is both. The finder takes it from anyone; the service decides who
   may send it. `compendiumFilterFor` (`services/compendium-filter.ts`) refuses a
-  `reviewed` filter with `Forbidden` for a viewer who does not curate, so
+  `reviewed` filter with `Forbidden` for an observer who does not curate, so
   the public page, a coven and a signed-out caller cannot learn which entries
   a curator has checked. The public page drops `?reviewed=` from its address
   before it reads, and a coven's parameter table has no `reviewed`.
@@ -263,7 +264,7 @@ compendium read and is the same for every viewer (CLAUDE.md, rule 6). The review
 every finder over `ingredients` selects `readColumns(ingredients)` from
 `src/db/repository/unread-columns.ts`, which leaves out `curator_reviewed_by`, and the row types
 leave it out too (`UnreadIngredientColumn`). The mutation `setCompendiumEntryReviewed` calls
-`expireCompendium()`, so a change shows at once. The admin's switch reads the mark with
+`expireCompendium()`, so a change shows at once. The keeper's switch reads the mark with
 **`findCompendiumReview(curator, id)`** through `readCompendiumReview(session, id)`, which throws
 `Forbidden` for anyone who does not curate. The Reviewed filter and its counts stay curator-only.
 
@@ -361,7 +362,8 @@ queries for the compendium (the seven kinds and the two switch counts, No Refs a
 for a coven (the seven kinds, the two Source counts, the In Stock count and the Low Stock Only count), whatever the filter. With a search, each runs in its own transaction
 that sets the 0.5 threshold, as the list does. Signs and bodies use a right
 join from the vocabulary table, with the entries' conditions in the join, so a
-sign no entry lists still comes back at zero. Elements and toxic need no
+sign no entry lists still comes back at zero; the join matches an entry's own
+list or a live variant's through `listOrVariantHolds`, as the filter does. Elements and toxic need no
 join: one query counts every setting at once with `count(*) filter (where …)`.
 
 **`findOneIngredient(memberships, id)`** is one live row in the compendium or
@@ -639,7 +641,8 @@ the facets, so they cannot disagree.
   The category itself must be live, through `pointsLive`.
 - `stated` drops blank values from a list filter, so `['', 'Mars']` filters by Mars
   and `[' ']` by nothing; the fold stays in SQL, beside the column's own.
-  `listArm` is one `IN` per value, ORed, not an array overlap (`&&`), because the
+  `listArm` reads the entry's list and a live variant's through
+  `listOrVariantHolds`, the variant's a correlated `EXISTS`, one `IN` per value, ORed, not an array overlap (`&&`), because the
   list's side has to be folded entry by entry, which `listFolds` does, and an
   overlap would compare raw spellings.
 - `elementArm` is an array overlap on the entry's own list and a correlated
@@ -659,7 +662,7 @@ the facets, so they cannot disagree.
   `curator_reviewed_by` is. `findCompendiumReview` returns that time as epoch
   milliseconds, as a column inside an aggregate loses Drizzle's date mapping and
   a `Date` holds no finer anyway.
-- `citesNowhere` is the admin's to-do list: an entry whose only source is on its
+- `citesNowhere` is the keeper's to-do list: an entry whose only source is on its
   oil is sourced (the union rule), so it is not on the list. `hasNoForm` lists
   entries nobody can stock or put in a spell yet; a soft-deleted variant is none,
   through `existsIn`.
@@ -670,7 +673,7 @@ the facets, so they cannot disagree.
 
 The admin list also shows the score. `filter.withSourcingScore` makes `findCompendiumPage` select `sourcingScoreExpression` beside each row, in the same query, and hand it back on the row's edge as `sourcingScore`; without it no score is computed.
 
-The score sort and the carried score are a curator's: `compendiumFilterFor` refuses either with `Forbidden` for a signed-out request or anyone not a curator or admin, as it does the Reviewed filter, because the cache is keyed by the parsed filter. The name sort is open to anyone. `tests/db/repository/sourcing-score.test.ts` lists eight fixture entries under the sort and checks the order and each row's sort key against the pure function, checks each direction is the reverse of the other, pages two rows at a time across a boundary forwards and backwards in each of the four orders, checks the carried score equals `readSourcingScore`, and checks a member, a viewer, a non-member and a signed-out read are refused the score where the unguarded repository call returns it.
+The score sort and the carried score are a curator's: `compendiumFilterFor` refuses either with `Forbidden` for a signed-out request or anyone not a curator or keeper, as it does the Reviewed filter, because the cache is keyed by the parsed filter. The name sort is open to anyone. `tests/db/repository/sourcing-score.test.ts` lists eight fixture entries under the sort and checks the order and each row's sort key against the pure function, checks each direction is the reverse of the other, pages two rows at a time across a boundary forwards and backwards in each of the four orders, checks the carried score equals `readSourcingScore`, and checks a practitioner, an observer, a non-member and a signed-out read are refused the score where the unguarded repository call returns it.
 
 ## Hidden entries (M14.35)
 

@@ -14,7 +14,7 @@ The page reads the session with **`getSession()`, never `requireSession()`**.
 The session decides one thing: a signed-out visitor is offered **Sign In**
 (`/sign-in`), a signed-in one **Continue** to where they belong (for an unverified account, the email page with that place as its `next`) —
 `signedInLanding(session)` (`src/lib/landing.ts`), the rule a sign-in with no
-return path lands by: `/keepers` for an admin and `/curator` for a curator (MB.113, M11.20, M15.77), the first coven the
+return path lands by: `/keepers` for a keeper and `/curator` for a curator (MB.113, M11.20, M15.77), the first coven the
 switcher lists for a member, and `/coven`, the post-sign-in landing (M2.8),
 for someone in none. A member goes into the coven directly rather than via
 `/coven`, whose redirect would leave the browser a stop with nothing on it
@@ -75,7 +75,7 @@ Render-only, no test ids, no snapshots.
 
 `tests/components/Welcome/index.test.tsx` covers the compendium link's href for both visitors, and the way in: the signed-out
 link to `/sign-in` with no "Continue", and the signed-in link to the
-`landing` given, an admin's included, with no Sign In. What the page says is
+`landing` given, a keeper's included, with no Sign In. What the page says is
 copy, and no test asserts it. Role and label queries only. Runs in the `dom`
 (happy-dom) Vitest project — `npm run test:coverage`.
 `tests/app/page.test.tsx` covers the page's half, with the session mocked:
@@ -84,4 +84,4 @@ Sign In signed out, and Continue signed in.
 `tests/e2e/smoke.spec.ts` renders `/` against the built server signed out,
 with no redirect, nothing scrolling and nothing pushing it sideways at 375px,
 and runs the axe scan in each theme ([`testing/e2e.md`](../testing/e2e.md));
-signed in as an admin through `signInAs`, Continue reaches the admin area.
+signed in as a keeper through `signInAs`, Continue reaches the admin area.

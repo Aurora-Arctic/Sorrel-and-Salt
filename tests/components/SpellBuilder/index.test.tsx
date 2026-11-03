@@ -325,13 +325,19 @@ describe('SpellBuilder', () => {
   });
 
   it('puts any other refusal in a notice, in the server’s words', async () => {
-    mockGraphQLError('CreateSpell', { code: 'FORBIDDEN', message: 'Viewers cannot write spells' });
+    mockGraphQLError('CreateSpell', {
+      code: 'FORBIDDEN',
+      message: 'Observers cannot write spells',
+    });
     renderBuilder();
 
     type('Title', 'Fixture Working');
     submit();
 
-    expect(await screen.findByText('Viewers cannot write spells')).toHaveAttribute('role', 'alert');
+    expect(await screen.findByText('Observers cannot write spells')).toHaveAttribute(
+      'role',
+      'alert',
+    );
     expect(save()).toBeEnabled();
   });
 

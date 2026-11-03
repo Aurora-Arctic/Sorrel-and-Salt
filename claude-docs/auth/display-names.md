@@ -11,17 +11,17 @@ user who holds, or has held, a seat in a coven the viewer sits in now. Any
 other id answers `null`, so the loader cannot be used to look up a
 stranger's name by guessing an id.
 
-| The user asked about                      | Answer                            |
-| ----------------------------------------- | --------------------------------- |
-| Sits in one of the viewer's covens        | Their name                        |
-| Was removed from one of them, or left     | Their name                        |
-| Is a deleted user who sat in one          | The name their row last held      |
-| Never shared a coven with the viewer      | `null`                            |
-| Invited the viewer into a coven, pending  | Their name, on `/coven` alone     |
-| Shared only a coven that is now deleted   | `null`                            |
-| Shared a coven the viewer has since left  | `null`                            |
-| Is anyone, and the viewer is a site admin | As for any viewer: no wider reach |
-| Is anyone, and the request is signed out  | `Forbidden`, in every slot        |
+| The user asked about                       | Answer                            |
+| ------------------------------------------ | --------------------------------- |
+| Sits in one of the viewer's covens         | Their name                        |
+| Was removed from one of them, or left      | Their name                        |
+| Is a deleted user who sat in one           | The name their row last held      |
+| Never shared a coven with the viewer       | `null`                            |
+| Invited the viewer into a coven, pending   | Their name, on `/coven` alone     |
+| Shared only a coven that is now deleted    | `null`                            |
+| Shared a coven the viewer has since left   | `null`                            |
+| Is anyone, and the viewer is a site keeper | As for any viewer: no wider reach |
+| Is anyone, and the request is signed out   | `Forbidden`, in every slot        |
 
 - **The removed and the deleted are included on purpose.** A row's last
   editor may have left the coven since, and the viewer saw the name when the
@@ -35,9 +35,9 @@ stranger's name by guessing an id.
   mail already names them (M7.3), so the list says no more than the mail.
 - **The viewer's own seat must be live.** The scope is the covens the viewer
   is in now, so leaving a coven ends the viewer's view of its members.
-- **A site admin gets nothing extra.** Admins curate the compendium and reach
+- **A site keeper gets nothing extra.** Keepers curate the compendium and reach
   no workspace (CLAUDE.md's domain invariants). The privilege ledger, which
-  is an admin's, reads whole user rows through `usersByIdForAdmin` instead,
+  is a keeper's, reads whole user rows through `usersByIdForAdmin` instead,
   under its own gate and with its own null rule: null for a deleted user
   ([`admin-users.md`](admin-users.md), "The privilege ledger"). The two stay
   separate, since one loader serving both would need two gates and two null

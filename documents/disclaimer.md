@@ -10,7 +10,7 @@ This disclaimer is part of the [Terms of Use](/terms): agreeing to the terms is 
 ## The Short Version
 
 - Sorrel & Salt is folklore and reference. Nothing on it is medical, legal or other professional advice.
-- The compendium is how its admins and curators read their sources. It is not an authority, and spirituality is personal.
+- The compendium is how its keepers and curators read their sources. It is not an authority, and spirituality is personal.
 - The site comes with no warranty. Its text can be wrong, out of date or incomplete.
 - Safety notes do not list every risk. If an ingredient has no safety note, that does not mean it is safe.
 - An ingredient can harm in a way its usual use does not suggest. Something eaten every day can burn the skin as an oil or irritate the lungs in the air.
@@ -25,7 +25,7 @@ If you are ill, pregnant, breastfeeding, taking medicine or caring for someone w
 
 ### An Interpretation, Not an Authority
 
-What the compendium says is its admins' and curators' understanding of the sources they have read. They choose which sources to cite and decide what each one means for an entry, and another reader of the same books could decide differently. The site is not an authority on any tradition or practice.
+What the compendium says is its keepers' and curators' understanding of the sources they have read. They choose which sources to cite and decide what each one means for an entry, and another reader of the same books could decide differently. The site is not an authority on any tradition or practice.
 
 Spirituality is personal. Your own practice, tradition and experience may differ from what you read here, and they are yours to follow.
 
@@ -37,9 +37,9 @@ The site is offered as it is. The people who run it do their best to cite a sour
 
 ### Safety Notes Are Not Complete
 
-A safety note on an ingredient is what a cited source said about it, as far as the curators have read. It is not a toxicology report. A note may cover one hazard and miss another; it may describe the ingredient as a whole and say nothing about a particular form; and many ingredients have no note at all because nobody has written one yet, not because the ingredient is safe.
+A safety note on an ingredient is what a cited source said about it, as far as the curators have read. It is not a toxicology report. A note may cover one hazard and miss another; it may describe the ingredient as a whole and say nothing about a particular form, and many ingredients have no note at all because nobody has written one yet, not because the ingredient is safe.
 
-So read every safety note as "at least this", never as "only this", and read the absence of a note as "nothing recorded", never as "nothing to worry about". The line under each ingredient's notes, and under each form's, says so and links here.
+So read every safety note as "at least this", never as "only this", and read the absence of a note as "nothing recorded", never as "nothing to worry about". The line under each ingredient's and form's notes says so and links here.
 
 ### A Familiar Ingredient Can Still Harm
 
@@ -52,11 +52,11 @@ These are just some examples about how risk changes with use. Please do your own
 
 ## Other Sites
 
-The compendium links to the sources it cites. The site does not control those pages and does not vouch for them. Curators and admins try to use reputable sources but cannot control the words of other authors.
+The compendium links to the sources it cites. The site does not control those pages and does not vouch for them. Curators and keepers try to use reputable sources but cannot control the words of other authors.
 
 ## Questions
 
-If a page is wrong, incomplete or dangerous, tell us through the [support form](?support=compendium). A correction with a source is the most useful thing you can send.
+If a page is wrong, incomplete, or dangerous, tell us through the [support form](?support=compendium). A correction with a source is the most useful thing you can send.
 
 [^1]: Kaddu, Steven, Helmut Kerl, and Peter Wolf. "Accidental Bullous Phototoxic Reactions to Bergamot Aromatherapy Oil." _Journal of the American Academy of Dermatology_ 45, no. 3 (2001): 458–61. https://doi.org/10.1067/mjd.2001.116226.
 

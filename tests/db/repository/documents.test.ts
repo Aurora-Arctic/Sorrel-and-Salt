@@ -6,7 +6,10 @@ import {
   findCurrentDocumentVersion,
   findDocumentByKey,
   findDocumentDraft,
-  findDocumentMailingForVersion,
+  findDocumentMailingItems,
+  findLatestSentDocumentMailing,
+  findOpenDocumentMailings,
+  findPendingDocumentVersions,
   findPublishedDocumentVersion,
   findPublishedDocumentVersionPage,
   findUnsentDocumentMailingRecipientPage,
@@ -14,6 +17,7 @@ import {
 } from '@/db/repository';
 import { assertSiteAdmin } from '@/modules/identity';
 import { StaleWrite } from '@/lib/errors';
+import { insertDocumentMailing } from '../../support/db/insert-document';
 
 // The documents' finders and named writes. Every table is marked `namedWrites`, so the generic writes refuse each at compile time
 // (tests/modules/documents/schema/documents-schema.type-check.ts). Setup rows go in through the raw client.
@@ -56,16 +60,21 @@ async function aVersion(
   return row.id;
 }
 
+/** A mailing of the versions, each item summarised as the version's own id, so a test can tell the items apart. */
 async function aMailing(
-  versionId: string,
-  status: 'sending' | 'sent' | 'replaced' = 'sending',
+  versionIds: string | readonly string[],
+  status: 'sending' | 'sent' | 'replaced' | 'paused' = 'sending',
+  startedSecondsAgo = 0,
 ): Promise<string> {
-  const [row] = await sql`
-    insert into document_mailings (document_version_id, summary, status, recipient_count, finished_at, created_by, updated_by)
-    values (${versionId}, 'Testwort clause added.', ${status}, 2, ${status === 'sending' ? null : sql`now()`}, ${ADMIN}, ${ADMIN})
-    returning id
-  `;
-  return row.id;
+  const items = (typeof versionIds === 'string' ? [versionIds] : versionIds).map((versionId) => ({
+    versionId,
+    summary: `Summary of ${versionId}`,
+  }));
+  return insertDocumentMailing(
+    sql,
+    { items, status, recipient_count: 2, startedSecondsAgo },
+    ADMIN,
+  );
 }
 
 async function aRecipient(
@@ -444,59 +453,137 @@ describe('the mailing finders and writes', () => {
     versionId = await aVersion(documentId, 1, 'published');
   });
 
-  it('starts a mailing of a published version, sending, stamped from the session', async () => {
+  it('starts a mailing of published versions, sending, with an item each, stamped from the session', async () => {
+    const other = await aVersion(await aDocument(), 2, 'published');
+
     const started = await withAudit(asUser(E), (write) =>
-      write.startDocumentMailing(admin(), versionId, {
-        summary: 'Testwort clause added.',
+      write.startDocumentMailing(admin(), {
         recipientCount: 2,
+        items: [
+          { versionId, summary: 'Testwort clause added.' },
+          { versionId: other, summary: 'Testwort clause removed.' },
+        ],
       }),
     );
 
     expect(started).toHaveLength(1);
     expect(started[0]).toMatchObject({
-      documentVersionId: versionId,
-      summary: 'Testwort clause added.',
+      documentVersionId: null,
+      summary: null,
       status: 'sending',
       recipientCount: 2,
       finishedAt: null,
       createdBy: ADMIN,
     });
-    expect(await findDocumentMailingForVersion(versionId)).toEqual(started[0]);
+    expect(
+      await sql`select document_version_id, summary, created_by from document_mailing_items
+        where mailing_id = ${started[0]!.id} order by summary`,
+    ).toEqual([
+      { document_version_id: versionId, summary: 'Testwort clause added.', created_by: ADMIN },
+      { document_version_id: other, summary: 'Testwort clause removed.', created_by: ADMIN },
+    ]);
   });
 
-  it('starts nothing for a version already mailed', async () => {
-    await aMailing(versionId);
-
-    const started = await withAudit(asUser(E), (write) =>
-      write.startDocumentMailing(admin(), versionId, { summary: 'Again.', recipientCount: 2 }),
-    );
-
-    expect(started).toEqual([]);
-  });
-
-  it('starts nothing for a draft, a soft-deleted version or a missing one', async () => {
+  it('starts nothing when any version is a draft, soft-deleted or missing', async () => {
     const documentId = await aDocument();
-    const draft = await aVersion(documentId, 1, 'draft');
-    const deleted = await aVersion(await aDocument(), 1, 'published', { deleted: true });
+    const draft = await aVersion(documentId, 2, 'draft');
+    const deleted = await aVersion(await aDocument(), 2, 'published', { deleted: true });
 
     const outcomes = [];
     for (const id of [draft, deleted, crypto.randomUUID()]) {
       outcomes.push(
         await withAudit(asUser(E), (write) =>
-          write.startDocumentMailing(admin(), id, { summary: 'Testwort.', recipientCount: 1 }),
+          write.startDocumentMailing(admin(), {
+            recipientCount: 1,
+            items: [
+              { versionId, summary: 'Testwort.' },
+              { versionId: id, summary: 'Testwort.' },
+            ],
+          }),
         ),
       );
     }
 
     expect(outcomes).toEqual([[], [], []]);
+    expect(await sql`select id from document_mailings`).toEqual([]);
   });
 
-  it('reads no mailing for an unmailed version, nor a soft-deleted mailing', async () => {
-    expect(await findDocumentMailingForVersion(versionId)).toBeUndefined();
-    const mailing = await aMailing(versionId);
-    await sql`update document_mailings set deleted_at = now(), deleted_by = ${ADMIN} where id = ${mailing}`;
+  it('replaces every live sending and paused mailing, and no other', async () => {
+    const sending = await aMailing(versionId);
+    const paused = await aMailing(versionId, 'paused');
+    const sent = await aMailing(versionId, 'sent');
+    const deleted = await aMailing(versionId);
+    await sql`update document_mailings set deleted_at = now(), deleted_by = ${ADMIN} where id = ${deleted}`;
 
-    expect(await findDocumentMailingForVersion(versionId)).toBeUndefined();
+    const replaced = await withAudit(asUser(E), (write) =>
+      write.replaceOpenDocumentMailings(admin()),
+    );
+
+    expect(replaced.map((row) => row.id).sort()).toEqual([sending, paused].sort());
+    const statuses = await sql`select id, status from document_mailings`;
+    expect(Object.fromEntries(statuses.map((row) => [row.id, row.status]))).toEqual({
+      [sending]: 'replaced',
+      [paused]: 'replaced',
+      [sent]: 'sent',
+      [deleted]: 'sending',
+    });
+  });
+
+  it('reads the live sending and paused mailings, oldest first', async () => {
+    const newer = await aMailing(versionId, 'paused', 10);
+    const older = await aMailing(versionId, 'sending', 20);
+    await aMailing(versionId, 'sent', 30);
+    await aMailing(versionId, 'replaced', 40);
+    const deleted = await aMailing(versionId, 'sending', 50);
+    await sql`update document_mailings set deleted_at = now(), deleted_by = ${ADMIN} where id = ${deleted}`;
+
+    expect((await findOpenDocumentMailings()).map((row) => row.id)).toEqual([older, newer]);
+  });
+
+  it('reads the newest live sent mailing, or none', async () => {
+    expect(await findLatestSentDocumentMailing()).toBeUndefined();
+    await aMailing(versionId, 'sent', 30);
+    const newest = await aMailing(versionId, 'sent', 20);
+    await aMailing(versionId, 'replaced', 10);
+    const deleted = await aMailing(versionId, 'sent', 5);
+    await sql`update document_mailings set deleted_at = now(), deleted_by = ${ADMIN} where id = ${deleted}`;
+
+    expect((await findLatestSentDocumentMailing())?.id).toBe(newest);
+  });
+
+  it('reads the live items of the named mailings, with each document, leaving out a deleted version or document', async () => {
+    const charter = await aDocument('testdoc-charter');
+    const charterVersion = await aVersion(charter, 2, 'published');
+    const goneDocument = await aDocument();
+    const goneDocumentVersion = await aVersion(goneDocument, 2, 'published');
+    const goneVersion = await aVersion(await aDocument(), 2, 'published');
+    const mailing = await aMailing([charterVersion, goneDocumentVersion, goneVersion]);
+    const other = await aMailing(versionId);
+    await aMailing(versionId);
+    await sql`update documents set deleted_at = now(), deleted_by = ${ADMIN} where id = ${goneDocument}`;
+    await sql`update document_versions set deleted_at = now(), deleted_by = ${ADMIN} where id = ${goneVersion}`;
+
+    const items = await findDocumentMailingItems([mailing, other]);
+
+    expect(items.sort((a, b) => a.versionNumber - b.versionNumber)).toEqual([
+      {
+        mailingId: other,
+        versionId,
+        key: expect.stringMatching(/^testdoc-/),
+        title: 'Testwort Charter',
+        versionNumber: 1,
+        summary: `Summary of ${versionId}`,
+      },
+      {
+        mailingId: mailing,
+        versionId: charterVersion,
+        key: 'testdoc-charter',
+        title: 'Testwort Charter',
+        versionNumber: 2,
+        summary: `Summary of ${charterVersion}`,
+      },
+    ]);
+    expect(await findDocumentMailingItems([])).toEqual([]);
   });
 
   it('adds each account once, unsent, skipping one already in the mailing', async () => {
@@ -571,5 +658,82 @@ describe('the mailing finders and writes', () => {
     expect(finished).toEqual([]);
     const [row] = await sql`select status from document_mailings where id = ${mailing}`;
     expect(row.status).toBe('replaced');
+  });
+});
+
+describe('findPendingDocumentVersions', () => {
+  const pendingIds = async () => (await findPendingDocumentVersions()).map((row) => row.versionId);
+
+  it('reads each document’s newest published version past the first, with its document', async () => {
+    const documentId = await aDocument('testdoc-charter');
+    await aVersion(documentId, 1, 'published');
+    await aVersion(documentId, 2, 'published');
+    const newest = await aVersion(documentId, 3, 'published');
+    await aVersion(documentId, 4, 'draft');
+
+    expect(await findPendingDocumentVersions()).toEqual([
+      {
+        documentId,
+        versionId: newest,
+        key: 'testdoc-charter',
+        title: 'Testwort Charter',
+        versionNumber: 3,
+      },
+    ]);
+  });
+
+  it('leaves out a document whose only published version is the first', async () => {
+    await aVersion(await aDocument(), 1, 'published');
+    // Precondition: a second document past its first version is read, so the empty answer is the first version's.
+    const second = await aVersion(await aDocument(), 2, 'published');
+
+    expect(await pendingIds()).toEqual([second]);
+  });
+
+  it('leaves out a version an item of a sent mailing covers, and keeps one a replaced, sending or paused mailing covers', async () => {
+    const sent = await aVersion(await aDocument(), 2, 'published');
+    const replaced = await aVersion(await aDocument(), 2, 'published');
+    const sending = await aVersion(await aDocument(), 2, 'published');
+    const paused = await aVersion(await aDocument(), 2, 'published');
+    await aMailing([sent], 'sent');
+    await aMailing([replaced], 'replaced');
+    await aMailing([sending], 'sending');
+    await aMailing([paused], 'paused');
+
+    expect((await pendingIds()).sort()).toEqual([replaced, sending, paused].sort());
+  });
+
+  it('keeps a version whose sent mailing, or the item in it, is deleted', async () => {
+    const mailingGone = await aVersion(await aDocument(), 2, 'published');
+    const itemGone = await aVersion(await aDocument(), 2, 'published');
+    const gone = await aMailing([mailingGone], 'sent');
+    const kept = await aMailing([itemGone], 'sent');
+    await sql`update document_mailings set deleted_at = now(), deleted_by = ${ADMIN} where id = ${gone}`;
+    await sql`update document_mailing_items set deleted_at = now(), deleted_by = ${ADMIN} where mailing_id = ${kept}`;
+
+    expect((await pendingIds()).sort()).toEqual([mailingGone, itemGone].sort());
+  });
+
+  it('reads a newer version as pending once an older one was mailed', async () => {
+    const documentId = await aDocument();
+    const mailed = await aVersion(documentId, 2, 'published');
+    await aMailing([mailed], 'sent');
+    // Precondition: the mailed version is not pending.
+    expect(await pendingIds()).toEqual([]);
+
+    const newer = await aVersion(documentId, 3, 'published');
+
+    expect(await pendingIds()).toEqual([newer]);
+  });
+
+  it('reads past a deleted newest version, and leaves out a deleted document', async () => {
+    const documentId = await aDocument();
+    const live = await aVersion(documentId, 2, 'published');
+    await aVersion(documentId, 3, 'published', { deleted: true });
+    const goneDocument = await aDocument();
+    await aVersion(goneDocument, 2, 'published');
+    await sql`update documents set deleted_at = now(), deleted_by = ${ADMIN} where id = ${goneDocument}`;
+
+    expect(await pendingIds()).toEqual([live]);
   });
 });

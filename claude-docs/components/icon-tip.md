@@ -261,7 +261,7 @@ The tip is `fixed`, so a table frame's sideways scroll clips nothing. It fades i
 ## The controls built on it
 
 - `EditLink` is a list row's icon link into a dialog. A press opens the row's modal at once under the given heading, over a skeleton while the form loads, and the link still works as an address. It is named by its verb and the row's name in hidden text.
-- Edit in Compendium, on a compendium entry for an admin or a curator, is named and tipped "Edit in Compendium" so it cannot be taken for a coven's own choice.
+- Edit in Compendium, on a compendium entry for a keeper or a curator, is named and tipped "Edit in Compendium" so it cannot be taken for a coven's own choice.
 - Annotate in a coven's list wears `AnnotateIcon`, an open book with a pencil, not Edit's pencil, since it writes the coven's notes over a compendium entry. Its stroke is 1.25 rather than the set's 1.5 so the lines sit apart at 16px, and the pencil is filled.
 - `QuickLookLink` is the eye beside an entry's name, in its own class as it sits in the name's line. `QuickLookButton` serves where the details open in the page rather than at an address, such as over the Add Ingredient form's held duplicates.
 - `MoreButton` is the three dots: a menu of further choices, as flat items (a spell's) or in labelled sections (an entry's Compendium and Coven). A Delete or Remove of something that has an edit dialog is in that dialog and is not drawn beside More; only a thing with no edit dialog draws a lone bin, which asks first ([`.claude/rules/components.md`](../../.claude/rules/components.md), "Destructive controls"). A More drawn with words keeps its chevron.

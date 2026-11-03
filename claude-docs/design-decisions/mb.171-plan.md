@@ -4,13 +4,13 @@
 
 MB.156 seeds the curated vocabularies' sources as compendium-tier `references` rows, idempotent by the rendered citation.
 
-**The problem.** The owner asked what happens when an admin edits a seeded reference. After the edit, the next reseed no longer recognises the row and inserts the original again as a twin. The vocabulary seeds have the same gap today:
+**The problem.** The owner asked what happens when a keeper edits a seeded reference. After the edit, the next reseed no longer recognises the row and inserts the original again as a twin. The vocabulary seeds have the same gap today:
 
 - They key by slug, and a slug is derived from the name.
 - The admin CRUD tasks (M5.6, M5.6a, M5.6b, MB.95, MB.132) all rename and re-slug a row.
 - So a reseed after a rename brings the original back.
 
-**The owner's call (option C):** every seeded row records a stable key the seed recognises whatever an admin later does to the row, for every data type this can happen to.
+**The owner's call (option C):** every seeded row records a stable key the seed recognises whatever a keeper later does to the row, for every data type this can happen to.
 
 **Which types those are.** Only the reference data `migrate.yml` seeds on every deploy that changes a seed file:
 
@@ -39,12 +39,12 @@ MB.171 and MB.172 are new ids; MB.170 is the highest id minted anywhere. I re-ch
 - **The index:** a partial unique `<table>_seed_key_unique` on `(seed_key) WHERE seed_key IS NOT NULL AND deleted_at IS NULL`, partial under rule 4.
 - **Seed-only:**
   - Nothing outside `src/db/seed/` writes the column.
-  - No Zod input, GraphQL field or service names it, so an admin never sees or edits it.
+  - No Zod input, GraphQL field or service names it, so a keeper never sees or edits it.
   - The row types pick it up through `$inferSelect`, harmlessly.
 - **What it holds:**
   - for a vocabulary row, the slug the seed derived when it inserted the row
   - for a reference, the citation `citationText` rendered at insert
-  - for a row an admin or a member wrote, null
+  - for a row a keeper or a member wrote, null
 
 **The migration.** One `db:generate` migration, `000N_seed-keys.sql`. It is additive, so it needs no `.ack.md`.
 
@@ -65,7 +65,7 @@ MB.171 and MB.172 are new ids; MB.170 is the highest id minted anywhere. I re-ch
 
 - **DESIGN.md:**
   - §5 adds `seedKey` to the nine tables' column lists, with one paragraph on what it holds and why.
-  - §14 adds a decision row: "How does a reseed recognise a row an admin renamed or edited?"
+  - §14 adds a decision row: "How does a reseed recognise a row a keeper renamed or edited?"
 - **`claude-docs/db/seed-module.md`:** a "Seed keys" section.
 - **The decision record:** `design-decisions/mb.171-seed-keys.md`. It covers options A to D with the owner's reasons, and C's cost: a seed-only column on domain tables, and three PRs where there was one.
 - **This plan** is copied to `design-decisions/mb.171-plan.md`.
@@ -86,18 +86,18 @@ MB.171 and MB.172 are new ids; MB.170 is the highest id minted anywhere. I re-ch
 
 - **What counts as present:** every row's `seed_key`, live or soft-deleted, plus every live row's slug.
 - **Why both:**
-  - The key recognises a seeded row an admin renamed or soft-deleted.
-  - The live slug stops the seed colliding with a row an admin created under the same name, which `*_slug_unique` would otherwise refuse.
+  - The key recognises a seeded row a keeper renamed or soft-deleted.
+  - The live slug stops the seed colliding with a row a keeper created under the same name, which `*_slug_unique` would otherwise refuse.
 - **On insert:** each new row is written with `seedKey: slugify(name)`.
 - **Unchanged:** `insertMissing` (`src/db/seed/idempotent.ts`) is reused as it is. Only `existing` and `toRow` differ.
 
-**A latent bug this fixes.** `seedTwoTierVocabulary` resolves an item's group through `groupIdByName`, by the group's current name. If an admin renamed a group, the seed would throw. It now resolves through `seed_key`, as `slugify(groupOf(item))`.
+**A latent bug this fixes.** `seedTwoTierVocabulary` resolves an item's group through `groupIdByName`, by the group's current name. If a keeper renamed a group, the seed would throw. It now resolves through `seed_key`, as `slugify(groupOf(item))`.
 
 **Tests**, in `tests/db/seed/` (the forms, categories, astrology and deities seeds share the helpers, so the deity and astrology tests carry them):
 
 - **Rename:** rename and re-slug a seeded deity and a seeded tradition directly in SQL, as M5.6-style writers will, then reseed. Nothing is added, and the renamed rows are unchanged.
 - **Soft delete:** soft-delete a seeded planet, then reseed. Nothing is resurrected.
-- **An admin's row:** an admin-created live row under a seed name blocks that insert without an error.
+- **A keeper's row:** an admin-created live row under a seed name blocks that insert without an error.
 - **The precondition:** each test first asserts that the row's slug no longer equals its key, so it would fail under slug keying.
 
 **Docs:** these docs say "idempotent by slug" and now say "by seed key":
@@ -158,7 +158,7 @@ MB.171 and MB.172 are new ids; MB.170 is the highest id minted anywhere. I re-ch
 
 - **References:**
   - The seed key is `citationText(reference)`. Present means any compendium reference's `seed_key`, live or deleted.
-  - Failing that, a live compendium reference with no key whose citation is identical is adopted for linking and never written to. An admin who typed the same source gets no duplicate.
+  - Failing that, a live compendium reference with no key whose citation is identical is adopted for linking and never written to. A keeper who typed the same source gets no duplicate.
   - Each new reference is inserted with `seedKey`.
 - **Links:**
   - A tradition's source links to the tradition and to every deity the `DEITIES` literal files under it.
@@ -195,7 +195,7 @@ MB.171 and MB.172 are new ids; MB.170 is the highest id minted anywhere. I re-ch
   - adds nothing
   - leaves a soft-deleted reference and link soft-deleted
   - after an edited title, adds no twin and leaves the edit in place (asserting first that the citation changed)
-  - adopts an admin's identical reference without writing to it
+  - adopts a keeper's identical reference without writing to it
 
 ### Docs
 

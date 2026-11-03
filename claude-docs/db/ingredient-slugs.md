@@ -69,12 +69,12 @@ follows is what exists.
 
 **The rule (MB.82).** The slug follows the label and the formal name: both services recompute it on every update, not only on create.
 
-- **A compendium entry's old slug is retired as the admin's.**
+- **A compendium entry's old slug is retired as the keeper's.**
   `updateCompendiumEntry` reads the row first, for the slug it holds, and
   when the new one differs it writes a retirement in the same transaction,
-  `retired_at` the write's own instant. Two admins saving one entry at the
+  `retired_at` the write's own instant. Two keepers saving one entry at the
   same instant can retire the older slug rather than the one the other just
-  wrote; with only admins writing the compendium, that is accepted rather
+  wrote; with only keepers writing the compendium, that is accepted rather
   than locked.
 - **A retired slug redirects while its window is open and nobody holds it.**
   `findCompendiumSlugRedirect(slug, at, excluding?)` answers the live entry
@@ -97,7 +97,7 @@ follows is what exists.
   window closes, unless the input carries `endRedirect: true` — over GraphQL
   the compendium mutations' `endRedirect` argument, which M5.5's form sends
   once the admin confirms. The check is
-  read before the write, as the collision naming is after it; two admins
+  read before the write, as the collision naming is after it; two keepers
   saving at once can both pass it. Confirmed, the write takes the slug, and
   the retirement stays, so the page at the address can link to the entry
   that moved. An entry taking back its own old slug is left out of the check

@@ -10,7 +10,7 @@ bar's links are client code.
 
 `(shell)` is a route group: a folder in parentheses that groups routes under a
 shared layout without adding to the URL. The root layout stays free of the
-session so a public page can choose its own chrome. Everything that needs a signed-in viewer sits
+session so a public page can choose its own chrome. Everything that needs a signed-in observer sits
 under `(shell)`, whose layout calls `viewerOf()`. That sends a signed-out
 visitor to sign in, but never sends an unverified account to the email page:
 the page does that (MB.256, [Route protection](../auth/route-protection.md),
@@ -35,7 +35,7 @@ there is workspace data.
 ## Props
 
 - `viewer`: `{ name, canCurate, canCreate, verified, pendingInvitations }`
-  (`ShellViewer`, `src/lib/types.ts`). `canCurate` is true for a curator or an admin, read from the session's role (M11.20);
+  (`ShellViewer`, `src/lib/types.ts`). `canCurate` is true for a curator or a keeper, read from the session's role (M11.20);
   `canCreate` and `verified` come from the user row; `pendingInvitations` is
   how many coven invitations wait for the viewer's verified address (M10.32).
 - `workspaces`: the viewer's covens (`ShellWorkspace[]`), in the switcher's
@@ -54,7 +54,7 @@ goes to the account menu, which shows it ([`account-menu.md`](account-menu.md)).
 covens are listed alphabetically by name. A refused lookup (impossible for
 one's own id) throws.
 
-A viewer whose site access is paused carries `accessPause`, its end `null` when it has none. `viewerOf()` and
+An observer whose site access is paused carries `accessPause`, its end `null` when it has none. `viewerOf()` and
 `viewerIfSignedIn()` read it through `getShellSession()` and then draw no coven, no curation, no creation and no
 invitation, reading neither the memberships nor the invitation count, and keep the count of the viewer's own support
 requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in while paused").
@@ -75,12 +75,12 @@ requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in whil
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.
-- **The site nav** (`nav` named "Site") lists the Compendium for every viewer, verified or not, and, on every shell page, Your Coven ("Your Covens" when the viewer is in more than one coven) **for a verified account that is in at least one coven, and for a verified curator or admin in none** (that link goes to `/coven`), and Admin **for a verified curator or admin** (`canCurate`) alone. At or
+- **The site nav** (`nav` named "Site") lists the Compendium for every viewer, verified or not, and, on every shell page, Your Coven ("Your Covens" when the viewer is in more than one coven) **for a verified account that is in at least one coven, and for a verified curator or keeper in none** (that link goes to `/coven`), and Admin **for a verified curator or keeper** (`canCurate`) alone. At or
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
   offered in the account panel.
 - **Add Ingredient** is `add-ingredient-button.tsx`, a client part: a plain button for one destination (the compendium for a curator, each coven they may write to), a split button with a menu of them all, each “to” its name, for two or more, and nothing without one. The menu draws the places in two labelled groups, **Compendium** and **Coven**, when the viewer may add to both, and as a plain list when to one kind alone (the owner’s call, 2026-10-20). The side the viewer is on comes first, learned from the address alone (`usePathname()`): a coven’s pages (`covenSlugOf`) put the covens first, any other page the compendium, as the bar has always led with it. The groups are made by the shared `sectionsFor` ([`menu-button.md`](menu-button.md), "Sections"); the chevron and its menu are a `MenuButton` (`add-ingredient-menu.tsx`, M14.27), the chevron alone shown as its `icon` and named “Choose Where to Add”, its menu named “Add Ingredient To” (`menuLabel`), so the groups, the keys and the look are MenuButton’s own. A coven opens a modal headed by its name over “Add Ingredient”, named “Add Ingredient to” the coven; the compendium navigates to `/curator/compendium?new` (claude-docs/components/modal.md, "Add Ingredient").
-  Its target will follow the area: a coven page adds to that coven, an admin
+  Its target will follow the area: a coven page adds to that coven, a keeper
   page to the compendium, anywhere else to the viewer's only coven or a choice.
 - **An unverified viewer** gets the brand link, the account menu with Sign
   Out alone, and the theme disc, a site nav holding the Compendium alone, and no Add Ingredient. (The
@@ -145,7 +145,7 @@ link.
 ## Testing
 
 `tests/components/AppShell/index.test.tsx` covers who sees the Admin and Your
-Coven links (a verified member or viewer of a coven sees Your Coven and not Admin; a verified account in no coven sees neither unless it curates; an unverified one sees neither), the brand's target (`/`), the Your Coven label for one coven or several, Add Ingredient’s target, the unverified
+Coven links (a verified practitioner or observer of a coven sees Your Coven and not Admin; a verified account in no coven sees neither unless it curates; an unverified one sees neither), the brand's target (`/`), the Your Coven label for one coven or several, Add Ingredient’s target, the unverified
 viewer's bar, the skip link's target, and the viewer's invitation count reaching
 the account menu's link. `tests/lib/shell-home.test.ts` and
 `tests/lib/viewer.test.ts` cover the two helpers, the latter including the count

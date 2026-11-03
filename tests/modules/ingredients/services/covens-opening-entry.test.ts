@@ -116,7 +116,7 @@ describe('covensOpeningEntry', () => {
     }
   });
 
-  it('gives an admin or a curator in no coven nothing', async () => {
+  it('gives a keeper or a curator in no coven nothing', async () => {
     expect(await slugsFor(E, live)).toEqual([]);
     expect(await slugsFor(F, live)).toEqual([]);
   });

@@ -12,6 +12,12 @@ import type { CovenInvitationProps } from './types';
 // The one place a coven invitation's link exists outside the reader's inbox:
 // only its token's hash is stored (claude-docs/db/invitations.md, "Inviting into a coven").
 
+/** The role as the mail names it, with its article: "an observer". */
+const ROLE_PROSE: Record<CovenInvitationProps['role'], string> = {
+  viewer: 'an observer',
+  member: 'a practitioner',
+};
+
 // The column's default, `now() + interval '7 days'`; nothing sets another.
 const LIFETIME = 'seven days';
 
@@ -26,14 +32,14 @@ export function CovenInvitation({
   return h(
     EmailLayout,
     {
-      preview: `Accept within ${LIFETIME} to join ${covenName} as a ${role}.`,
+      preview: `Accept within ${LIFETIME} to join ${covenName} as ${ROLE_PROSE[role]}.`,
       heading: 'You Are Invited',
       origin,
     },
     h(
       Paragraph,
       null,
-      `${inviterName} has invited you to join ${covenName} on Sorrel & Salt as a ${role}.`,
+      `${inviterName} has invited you to join ${covenName} on Sorrel & Salt as ${ROLE_PROSE[role]}.`,
     ),
     h(
       Paragraph,

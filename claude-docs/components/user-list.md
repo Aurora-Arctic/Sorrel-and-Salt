@@ -24,7 +24,7 @@ the hrefs of the pages either side
 | `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default              |
 
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
-`createdAt`, `emailVerified` and `agreedTermsVersion` (the number of the terms version they agreed to most recently, shown as "Version 1"; `null` for one who never agreed, shown as a red cross), plus `providers`, the provider ids the service
+`createdAt`, `emailVerified` and `agreedTermsVersion`, `agreedDisclaimerVersion` and `agreedEthicsVersion` (the numbers of the terms, disclaimer and code of ethics versions they agreed to most recently, shown as one joint version such as "Version 1.4.2" by `formatAgreementVersion`; `null` for one who never agreed, shown as a red cross), plus `providers`, the provider ids the service
 read beside it, and `primaryAdmin`, which the page asks of the identity
 service's `isPrimaryAdmin` for each row as it reads it (MB.59). Since M9.19
 it also carries `openHref`, this page with the user's modal open over it
@@ -84,7 +84,7 @@ head, both built by the page per row, as the other admin lists carry
   ([`user-detail.md`](user-detail.md)), so a row is an index into the modal
   (the owner's call, 2026-11-02). The Email
   cell leads with whether the address is verified, then the address, so the
-  two are one column. Sign-in methods and the verified mark are what an admin changing a role judges a person by (MB.59, M11.20). A yes-or-no is a mark, on the
+  two are one column. Sign-in methods and the verified mark are what a keeper changing a role judges a person by (MB.59, M11.20). A yes-or-no is a mark, on the
   owner's call: a green check (`$accent`) or a red cross (`$secondary`), the
   shared set's `CheckIcon` and `CrossIcon` (`IconTip/icons.tsx`, stroke 1.5), its word beside it in `.visually-hidden` since the mark is
   drawn alone, and the icon `aria-hidden`. The email's says Verified or
@@ -114,7 +114,7 @@ head, both built by the page per row, as the other admin lists carry
   under `assertSiteAdmin`, beside `providersOf`, and hands each row
   `supportTimeout` and `accessPause` (each `{ until }`, `until` null for no
   end date), absent when none stands.
-  An admin's or a curator's role is bold, on the owner's call. The signup is the UTC
+  A keeper's or a curator's role is bold, on the owner's call. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the shared provider mark, `ProviderMark`
   ([`provider-mark.md`](provider-mark.md)), which draws the sign-in page's own
@@ -141,7 +141,7 @@ head, both built by the page per row, as the other admin lists carry
   and nothing at all on a list of one page. A plain anchor is a full load, so the page's guard runs again, as with
   `AdminNav`.
 - **A history icon leads each name** (MB.200, on the owner's call: an
-  icon rather than a column), on every row, an admin's included: a link to
+  icon rather than a column), on every row, a keeper's included: a link to
   `/keepers/privilege-changes?query=<email>`, the privilege ledger searched for
   that user's address, lower-cased as every address is held, built by `PrivilegeLedger`'s `privilegeLedgerHref`
   ([`privilege-ledger.md`](privilege-ledger.md)). It is `history-link.tsx`,
@@ -187,9 +187,9 @@ head, both built by the page per row, as the other admin lists carry
 - **Impersonate is a ninth column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
-  column does not exist. Each non-admin row holds an Impersonate button named
-  "Impersonate <name>", from `impersonate-button.tsx`, a client file. An admin's row holds none, because the endpoint refuses to
-  impersonate an admin. It asks first, as every action in the table and the modal does
+  column does not exist. Each non-keeper row holds an Impersonate button named
+  "Impersonate <name>", from `impersonate-button.tsx`, a client file. A keeper's row holds none, because the endpoint refuses to
+  impersonate a keeper. It asks first, as every action in the table and the modal does
   (MB.115, on the owner's call): a `ConfirmedAction` (below) whose `Modal` is
   titled "Impersonate User" and says "Impersonate <name>? You will see the
   site as they do, and act as them, until you press Stop Impersonating at the
@@ -200,7 +200,7 @@ head, both built by the page per row, as the other admin lists carry
   sends nothing and hands focus back to the row's button. A refusal closes
   the modal and says "You couldn't impersonate <name>. Please try again." in
   a callout under Impersonate, which has the focus back, and the page stays.
-  The endpoint is the guard: the button only puts it where an admin looks.
+  The endpoint is the guard: the button only puts it where a keeper looks.
   The column, heading and cells, has a red rule down its left, and its
   heading's hairline is red where every other is the muted ink, with a faded
   red tint and red text (kept at MB.115 on the owner's call). It is sticky at the table's right edge, so on a narrow
@@ -231,7 +231,7 @@ head, both built by the page per row, as the other admin lists carry
   change ([`user-detail.md`](user-detail.md)); the row's Can Create cell is the
   mark alone. A user who may not yet create a coven has Approve, quiet, named
   "Approve <name>"; one who may has Revoke, quiet too, named "Revoke approval
-  for <name>"; the red is its confirmation's Revoke (MB.123). A curator's or an admin's row has the mark alone, since each holds the flag (MB.177, M11.20): the control shows for a `user` only. Each asks first, in a
+  for <name>"; the red is its confirmation's Revoke (MB.123). A curator's or a keeper's row has the mark alone, since each holds the flag (MB.177, M11.20): the control shows for a `user` only. Each asks first, in a
   `Modal` ([`modal.md`](modal.md)) titled "Approve Coven Creation" or "Revoke
   Coven Creation", on the owner's call, the name in bold: "Let <name> create
   covens?", or "Stop <name> from creating covens? Covens they own stay
@@ -272,7 +272,7 @@ head, both built by the page per row, as the other admin lists carry
 - **Change Role is the user modal's** (MB.59, M11.20,
   [`auth/admin-users.md`](../auth/admin-users.md), "Changing a site role"),
   from `role-control.tsx`, beside the Role fact it changes; the row's Role
-  cell holds the role and, on the primary admin's row, the crown. It
+  cell holds the role and, on the primary keeper's row, the crown. It
   replaces the Promote and Revoke pair the row had before the curator role:
   one quiet button, named "Change Role for <name>". It
   opens a `Modal` titled "Change Role", with the question "Choose a role for
@@ -291,7 +291,7 @@ head, both built by the page per row, as the other admin lists carry
   row's note. The modal, its focus, Cancel, the busy confirm ("Promoting" or
   "Demoting"), the announcement ("<name> is now <role>.") and a refusal under the button behave as the creation control's: both
   are `confirmed-action.tsx`'s `ConfirmedAction`, each control only its words
-  and its write. Impersonate, Pause Admin Changes and the invitations' Revoke
+  and its write. Impersonate, Pause Keeper Changes and the invitations' Revoke
   build one too; Impersonate passes `onSent`, its full load in place of the
   refresh, and `refusal`, its own sentence in place of the service's.
   `ConfirmedAction` is built on `useClickFeedback` (M12.31, [`click-feedback.md`](click-feedback.md)).
@@ -308,8 +308,8 @@ head, both built by the page per row, as the other admin lists carry
   M12.31's rule 6, 2026-10-20). A
   promotion warns on an unverified address as Approve does, in its own verb
   (above); a demotion does not.
-- **The switch on admin changes is the Users tab's action** (MB.63,
-  [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
+- **The switch on keeper changes is the Users tab's action** (MB.63,
+  [`auth/admin-users.md`](../auth/admin-users.md), "Pausing keeper changes"),
   from `pause-control.tsx`, exported beside the list as `PauseControl`: the
   People page draws it beside its heading while Users is open, where the
   other admin tabs put their primary action, from
@@ -324,17 +324,17 @@ head, both built by the page per row, as the other admin lists carry
   take a line each, the switch across it, locked or not (the `.page-header`
   primitive, and `controls.scss` for a locked control as a page's action). While
   changes are on it shows the button alone; while paused it first says so in
-  a quiet warning `Notice`: "Admin changes are paused.", on the owner's
+  a quiet warning `Notice`: "Keeper changes are paused.", on the owner's
   call. Quiet makes it an `<output>`, a status rather than an alert, because
   it arrives with the page and is read in its order rather than announced.
   It takes `.user-list__pause-state` as its layout class, compounded past the
   `body .notice` primitive, and is the page's one sentence about the pause.
-  Then Pause Admin Changes or Resume Admin Changes, both full size and
+  Then Pause Keeper Changes or Resume Keeper Changes, both full size and
   `.btn--destructive`, big and red on the owner's call, so the control keeps
-  its look as it flips. For the primary admin (`canToggle`), Pause asks
-  first, a `ConfirmedAction` whose `Modal` is titled "Pause Admin Changes"
-  and says whom it stops: "Pause admin changes? Until you resume them, no other admin can change a role, approve or revoke coven creation, or
-  invite an admin." That reverses MB.63's call that pausing needs no
+  its look as it flips. For the primary keeper (`canToggle`), Pause asks
+  first, a `ConfirmedAction` whose `Modal` is titled "Pause Keeper Changes"
+  and says whom it stops: "Pause keeper changes? Until you resume them, no other keeper can change a role, approve or revoke coven creation, or
+  invite a keeper." That reverses MB.63's call that pausing needs no
   confirmation, on the owner's call at MB.115's sign-off
   ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)).
   Resume gives back what the pause stopped, so it sends at once. Either stays
@@ -342,24 +342,24 @@ head, both built by the page per row, as the other admin lists carry
   re-reads the page, and the status region then says changes are paused or
   resumed. A refusal says why in a callout under the button pressed, which
   keeps the focus: Resume is `aria-disabled` while it sends, not
-  `disabled`, so the focus is not lost. For any other admin it is `locked-control.tsx`'s
-  `LockedControl`, as the primary admin's Change Role is: in view,
-  `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
-  resume admin changes.", that describes it and that each try mounts afresh as
+  `disabled`, so the focus is not lost. For any other keeper it is `locked-control.tsx`'s
+  `LockedControl`, as the primary keeper's Change Role is: in view,
+  `aria-disabled`, its reason in a tip, "Only the primary keeper can pause or
+  resume keeper changes.", that describes it and that each try mounts afresh as
   an alert.
-- **While paused, an admin the pause binds cannot use Change Role, nor coven creation's Approve or Revoke** (MB.63, on the owner's call; the
+- **While paused, a keeper the pause binds cannot use Change Role, nor coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
-  and the user modal's role and creation controls, for a viewer who is not the primary admin
-  (`canToggle`), is locked as the primary admin's Change Role is. That reading,
-  paused and not the primary admin, is `changesLocked` (`lock.ts`), which the
+  and the user modal's role and creation controls, for an observer who is not the primary keeper
+  (`canToggle`), is locked as the primary keeper's Change Role is. That reading,
+  paused and not the primary keeper, is `changesLocked` (`lock.ts`), which the
   Invitations tab's lock reads too. Locked means in view,
   `aria-disabled`, described by the service's own refusal in a tip,
   `ADMIN_CHANGES_PAUSED_REFUSAL` (`src/lib/primary-admin.ts`, one string for
-  both): "The primary admin has paused admin changes. Ask them to resume
+  both): "The primary keeper has paused keeper changes. Ask them to resume
   changes." Activating it opens nothing, sends
-  nothing and mounts the reason afresh as an alert. The primary admin's
+  nothing and mounts the reason afresh as an alert. The primary keeper's
   controls stay usable, since the pause exempts it, and its own Change Role keeps its own reason. The service still refuses: the lock only reflects it.
-- **The primary admin's row is marked by a crown** beside the role
+- **The primary keeper's row is marked by a crown** beside the role
   (`primary-admin-mark.tsx`), a button named "Primary Admin" with a tip
   saying so, as InfoTip's ⓘ is a button with its tip, and through the same
   `useTip`: opened by hover, focus or a tap, kept open while the pointer is on
@@ -368,7 +368,7 @@ head, both built by the page per row, as the other admin lists carry
   keeps its place in the tab order and a click still lands. The reason is in a
   tip on the button, opening as the crown's does: the service's own refusal in
   the same words (`PRIMARY_ADMIN_REFUSAL`, `src/lib/primary-admin.ts`, one
-  string for both), "You can't revoke the primary admin. The site's
+  string for both), "You can't revoke the primary keeper. The site's
   configuration sets who that is." It names no variable; how to change it is the docs'. The button is described by
   it, and activating it opens nothing and sends nothing but opens the tip and
   mounts it afresh as an alert, so a screen reader hears it each time, rather
@@ -439,7 +439,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   first line and every other cell spans both. The grid places it, not the
   markup, so the columns and the keyboard order stay the desktop's. An
   admin's card, with no Impersonate, hides the empty cell.
-- **The role cell** holds the role and the primary admin's crown side by side
+- **The role cell** holds the role and the primary keeper's crown side by side
   (`.user-list__role-name`). **The pause** is a row, `.user-list__pause`, centred with a
   `space(3)` gap.
 - **`controls.scss`** holds the rules of the controls that also stand outside
@@ -459,17 +459,17 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
 `Admin / User List`, every story inside the admin layout's frame (the nav in its
 context row above the column) and the People page with its Users tab open:
 
-- **States**, one story with a control that chooses: Without Filters, the page as a signed-in admin who is not the primary one sees it (the site's resting state: Pause Admin Changes dashed and locked, in the app shell); Primary Admin, the same page with a usable Pause Admin Changes and each row's Impersonate opening their
+- **States**, one story with a control that chooses: Without Filters, the page as a signed-in keeper who is not the primary one sees it (the site's resting state: Pause Keeper Changes dashed and locked, in the app shell); Primary Keeper, the same page with a usable Pause Keeper Changes and each row's Impersonate opening their
   confirmations; Awaiting Approval And Query; Role Filter; No Matches, with every filter set, so the
   sentence names all three; Without Impersonation, where impersonation is
-  not registered; Admin Roles, Admin Changes Paused
-  and Admin Changes Not Primary, each name led by its privilege changes icon,
-  whose tip shows on hover or focus; the list holds an admin, a user awaiting
+  not registered; Admin Roles, Keeper Changes Paused
+  and Keeper Changes Not Primary, each name led by its privilege changes icon,
+  whose tip shows on hover or focus; the list holds a keeper, a user awaiting
   approval and an approved user, each Can Create a mark alone, since Approve, Revoke and Change Role are the user modal's;
   Impersonate is red, in its red-ruled column at the right.
-  Admin Roles holds the primary admin with its crown, a second admin, a curator (bold) and users. Admin Changes Paused
-  shows the switch paused with the primary admin's Resume, and
-  Admin Changes Not Primary the switch on, unusable, with its reason (MB.63).
+  Admin Roles holds the primary keeper with its crown, a second keeper, a curator (bold) and users. Keeper Changes Paused
+  shows the switch paused with the primary keeper's Resume, and
+  Keeper Changes Not Primary the switch on, unusable, with its reason (MB.63).
   Middle Page is a middle page of 25, both pager ends live and
   "Page 2 of 3" between them (MB.115).
 - **Phone width**: the toolbar viewport menu shows any story at 375px, every row a card, with Clear offered on the filtered states and the pager on one line beneath the last card on Middle Page.
@@ -487,17 +487,17 @@ bare `awaiting`, `timed-out` or `paused` a change of its switch opens, the other
 Clear offered by each filter shown and absent with none; the row starting again from a filter shown anew;
 the history link before every name and its address; each name a link to its
 `openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
-absent when off, on non-admin rows only, the modal asking first with Cancel
+absent when off, on non-keeper rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
 while pending with a second press sending nothing, and the refusal under the button, with the focus on it and the badge bringing it back; no Change Role, Approve or Revoke on any row, a user awaiting approval included; the
-switch on admin changes (MB.63): no notice while on and one while paused,
+switch on keeper changes (MB.63): no notice while on and one while paused,
 Pause asking first with Cancel sending nothing, Pause's confirm and Resume
 busy until the refresh and then said in the status region, a refusal under the button pressed, Resume's included, and another
 admin's locked switch, described by its reason and raising an alert when
 tried. The role and creation controls' tests are the user modal's
 (`tests/components/UserDetail/role-and-creation.test.tsx`, [`user-detail.md`](user-detail.md)). It also covers the Support and Access columns: a standing time-out or pause read with its end, dated or open, and "Not timed out" or "Not paused" for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
 are presentation; paging is Pager's. `tests/app/(shell)/keepers/(people)/users/page.test.tsx` reads the page's
-half: what it hands the list, the impersonation gate and the primary admin's
+half: what it hands the list, the impersonation gate and the primary keeper's
 flag included, `awaiting`, `timed-out` and `paused` read by their presence, and the count behind the
 pager's position; the page's standing time-outs and pauses read in one batch each, as the guard's session, and marked on their rows; and the user modal (M9.19): `?user=<id>` reading the user and
 their covens as the guard's session into a dialog, each name's link keeping the
@@ -505,14 +505,14 @@ filter, and the notice with no dialog, and no read, for an id that is not one,
 and the notice for a user the service finds none of or the list leaves out.
 The batched finders' own tests, in `tests/modules/identity/schema/user-access-pauses-schema.test.ts` and `tests/modules/support/schema/support-timeouts-schema.test.ts`, return only a standing row of a user asked for, never one run out, lifted, deleted or another user's; the services' tests keep the ids' order and refuse a curator and a plain user.
 `tests/e2e/stories/08-email-and-admin.spec.ts` approves a user and changes roles through the user modal against the built
-server, with a reason, axe over each question, the primary admin's and a paused admin's locked Change Role, and a refused demotion said in the modal. `tests/e2e/admin.spec.ts` reads a row's cells; and `tests/e2e/stories/07-admin.spec.ts`, tagged `@story-19`, opens a user's modal from their name, finds
+server, with a reason, axe over each question, the primary keeper's and a paused admin's locked Change Role, and a refused demotion said in the modal. `tests/e2e/admin.spec.ts` reads a row's cells; and `tests/e2e/stories/07-admin.spec.ts`, tagged `@story-19`, opens a user's modal from their name, finds
 their coven and role in it, no link to the coven and no Impersonate (the run
 registers none), axe over it, and Close back to the filtered list, then
 `?user=not-an-id` showing the notice and no dialog.
 
 ## Actions that ask first
 
-The creation control and the role control (both in the user modal), Impersonate, the pause switch and the invitations' Revoke share one kind of action: it asks in a modal first. The modal's confirm sends the write and stays busy until the page is read again, or left. A success says its `announcement` in the page's status region, for a screen reader, beside the result the page shows. The service is the guard. This only puts the question where an admin looks.
+The creation control and the role control (both in the user modal), Impersonate, the pause switch and the invitations' Revoke share one kind of action: it asks in a modal first. The modal's confirm sends the write and stays busy until the page is read again, or left. A success says its `announcement` in the page's status region, for a screen reader, beside the result the page shows. The service is the guard. This only puts the question where a keeper looks.
 
 A refusal closes the modal, gives the focus back to the button that opened it, and says why in a callout under that button (`useClickFeedback`). The callout floats rather than taking room in a row.
 
@@ -529,11 +529,11 @@ Outside a modal a refusal is always the callout.
 
 ### The vouching warning
 
-Before vouching for an unverified address the action shows a warning. An admin's approval or grant vouches for whoever holds the address, and the ledger row it writes keeps the account from the sweep of lapsed unverified accounts. It is a warning rather than a refusal, since confirming who someone is is left to the admin. `verb` is the act's own, "Approving" or "Promoting".
+Before vouching for an unverified address the action shows a warning. A keeper's approval or grant vouches for whoever holds the address, and the ledger row it writes keeps the account from the sweep of lapsed unverified accounts. It is a warning rather than a refusal, since confirming who someone is is left to the admin. `verb` is the act's own, "Approving" or "Promoting".
 
 ## Locked controls
 
-A control that cannot be used says why. This covers the primary admin's Change Role in the user modal, every Change Role and Approve or Revoke while admin changes are paused to an admin the pause binds, and the pause switch itself to any admin but the primary one.
+A control that cannot be used says why. This covers the primary keeper's Change Role in the user modal, every Change Role and Approve or Revoke while keeper changes are paused to a keeper the pause binds, and the pause switch itself to any keeper but the primary one.
 
 - It is `aria-disabled` rather than `disabled`, so it keeps its place in the tab order and a click still lands, which says why rather than doing nothing.
 - The reason is the button's description, in a tip that opens on hover, focus and a tap, stays open while the pointer is on it and closes on Escape (WCAG 1.4.13), through InfoTip's `useTip`. Each attempt also mounts the tip afresh as an alert, so a screen reader hears the reason again.
@@ -543,7 +543,7 @@ A control that cannot be used says why. This covers the primary admin's Change R
 
 Three kinds of mark carry a tip that behaves as InfoTip's does, through the same `useTip`: opened by hover, focus or a tap, kept open while the pointer is on it, and closed on Escape (WCAG 1.4.13).
 
-- **The primary admin's mark** beside its role is a crown named "Primary Admin". It is a button, as InfoTip's ⓘ is, so the keyboard reaches the tip too. The tip says no more than the button's name, so it is hidden from assistive technology while closed.
+- **The primary keeper's mark** beside its role is a crown named "Primary Admin". It is a button, as InfoTip's ⓘ is, so the keyboard reaches the tip too. The tip says no more than the button's name, so it is hidden from assistive technology while closed.
 - **The history link** is a row's way into the privilege ledger narrowed to its user: the ledger's search opened with their address, lower-cased as every address is held. It is an icon before the name, named "Privilege changes for <name>", with a tip reading Privilege Changes, the ledger's one name. The tip says less than the link's name, so it describes nothing, and is hidden from assistive technology while closed.
 - **A hint** is a mark or a logo that says what it is in a tip bubble on hover: the provider logos, and the yes-or-no marks whose column heading does not say it, and a standing time-out's or pause's cross, whose bubble gives its end (`Mark`'s `tip`, shown in place of its word). The bubble is the eye's copy, hidden from assistive technology, since the mark carries its word as hidden text. It opens on hover only, as before it was CSS's. `useTip` places it so it stays on the screen, centred over the mark where there is room. It takes no pointer, so it never blocks the row it overlaps.
 

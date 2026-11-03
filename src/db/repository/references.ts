@@ -141,7 +141,7 @@ export function cites(key: SourcedKey): SQL {
 
 /**
  * A row of the sourced table `key` names with no live link to a live compendium reference, which a compendium entry reads as an
- * empty bibliography: the admin's to-do list. Correlated on that table's outer row.
+ * empty bibliography: the keeper's to-do list. Correlated on that table's outer row.
  */
 export function citesNothing(key: SourcedKey): SQL {
   return not(cites(key));

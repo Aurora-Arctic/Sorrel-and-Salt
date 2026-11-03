@@ -5,7 +5,7 @@ lede: What Sorrel & Salt values, and how it handles the cultures, sourcing and a
 published: 2026-11-02
 ---
 
-This code is part of the [Terms of Use](/terms). Its section "What Everyone Agrees To" binds every account that agrees to the terms, and its sections for curators, admins, developers and the owner bind whoever holds that role.
+This code is part of the [Terms of Use](/terms). Its section "What Everyone Agrees To" binds every account that agrees to the terms, and its sections for curators, keepers, developers, and the owner bind whoever holds that role.
 
 ## The Short Version
 
@@ -20,18 +20,18 @@ This code is part of the [Terms of Use](/terms). Its section "What Everyone Agre
 
 ### What Everyone Agrees To
 
-The [Terms of Use](/terms) make this section part of what every account agrees to. It is kept short on purpose. The sections after it say why each rule is here; the three at the end add to it for curators, admins and the site's owner, and bind whoever holds that role.
+The [Terms of Use](/terms) make this section part of what every account agrees to. It is kept short on purpose. The sections after it say why each rule is here; the three at the end add to it for curators, keepers and the site's owner, and bind whoever holds that role.
 
-- Treat everyone here with respect. Racism, misogyny, transphobia, homophobia, ableism, antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry have no place on the site, in a coven or in a support request.
+- Treat everyone here with respect. Racism, misogyny, transphobia, homophobia, ableism, antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry have no place on the site, in a coven, or in a support request.
 - Read the [Disclaimer](/disclaimer) before you act on anything the compendium says.
 
 ### What We Value
 
-Sorrel & Salt is a grimoire for covens: a place for small groups of people to keep what they know, what they have and what they make. These are the values the people who run it hold themselves to, and ask of everyone who joins.
+Sorrel & Salt is a grimoire for covens: a place for small groups of people to keep what they know, what they have, and what they make. These are the values the people who run it hold themselves to, and ask of everyone who joins.
 
 - **Everyone is welcome.** Witches, folk practitioners, the curious and the sceptical, of every race, nation, faith and none, every gender and every sexuality. Transgender, non-binary and queer practitioners are welcome here as themselves, without question or qualification. Racism, misogyny, transphobia, homophobia, ableism, antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry have no place here.
 - **Witchcraft's history is a gendered history.** Between about 1400 and 1775, Europe and its colonies executed an estimated 40,000 to 60,000 people for witchcraft, and roughly four in five of them were women, in a period that held women to be less intelligent than men and more open to sin.[^2] A site about witchcraft that is not feminist has forgotten whose history it is handling. Feminism here means the plain thing: that women, including trans women, are people whose knowledge, work and bodies are their own.
-- **Community over profit.** The site shows no advertising and sells no data. It will charge, fairly: enough to cover its costs and to pay the people who work on it a fair, living wage. It is run by people, for people, and the covens on it are run by their own members. We would rather the site stayed small and honest than grew by exploiting anyone, and we hold that what is shared should be shared fairly and decided together.
+- **Community over profit.** The site shows no advertising and sells no data. It will charge, fairly: enough to cover its costs and to pay the people who work on it a fair, living wage. It is run by people, for people, and the covens on it are run by their own members. We would rather the site stay small and honest than grow by exploiting anyone, and we hold that what is shared should be shared fairly and decided together.
 - **Honesty.** The site says what it does and does not do, in plain words, in its [privacy policy](/privacy) and its [disclaimer](/disclaimer). Where it is unsure, it says so.
 
 ### Accessibility
@@ -79,24 +79,24 @@ We ask the same of you: be honest about what you know and where you learned it, 
 
 ### Curators
 
-A curator curates the compendium, its vocabularies and its references, and reads the support requests an admin has marked for curators or assigned to them. A curator agrees to everything above, and to this:
+A curator curates the compendium, its vocabularies and its references, and reads the support requests a keeper has marked for curators or assigned to them. A curator agrees to everything above, and to this:
 
 - Every entry you write or change says where it comes from. You add no claim you cannot source, and you leave an unsourced entry on the to-do list rather than guessing a source for it.
 - You describe a closed practice in its own people's words, cited to them where a source exists, and you do not describe its ceremonies.
 - You keep the compendium's safety notes honest: you write what a source says, you mark what has not been checked, and you never soften a hazard.
 - A support request shows you what a requestor chose to write, without the requestor's email or the coven named in the page address. You read it only to help, and you repeat nothing to anyone who is not authorised to view it.
-- Your curator role gives you nothing in any coven but your own. You do not use it, or ask an admin to use theirs, to reach another coven's ingredients or grimoire.
+- Your curator role gives you nothing in any coven but your own. You do not use it, or ask a keeper to use theirs, to reach another coven's ingredients or grimoire.
 
-### Admins
+### Keepers
 
-An admin can do everything a curator can, and also manages who uses the site: an admin sees which covens a person belongs to, by name and role, grants and revokes the right to create covens, changes site roles, times out a support requestor, mints invitations and holds an owner's seat in the demo coven. An admin agrees to everything above, and to this:
+A keeper can do everything a curator can, and also manages who uses the site: a keeper sees which covens a person belongs to, by name and role, grants and revokes the right to create covens, changes site roles, times out a support requestor, mints invitations and holds a steward's seat in the demo coven. A keeper agrees to everything above, and to this:
 
 - You use each of those powers for the site's sake and never for your own: to keep people safe, to keep the compendium honest and to keep the site running. A grudge is not a reason.
 - Every change you make to a person's role or rights is recorded with your name, and you write a note saying why wherever the screen offers one.
 - You see a requestor's email and which covens a person belongs to. You use neither for anything but the request in front of you, and you share neither.
 - A time-out on a support requestor is the site's one sanction today, and you use it for abuse of the support form, not for disagreement.
-- Your owner's seat in the demo coven is for showing people the site. Everyone who signs in can see what you write there, so keep it suitable for everyone who signs in.
-- An admin's role gives you nothing in any other coven. The site's code refuses it, and so do you.
+- Your steward seat in the demo coven is for showing people the site. Everyone who signs in can see what you write there, so keep it suitable for everyone who signs in.
+- A keeper's role gives you nothing in any other coven. The site's code refuses it, and so do you.
 
 ### Developers
 
@@ -108,17 +108,17 @@ A developer writes and runs the site's code, and may be able to reach its databa
 - You add no advertising. Analytics run only on the site's own servers, never in a visitor's browser, and the Privacy Policy names the analytics service and what each visit records before it starts.
 - When a change alters what the site stores, who can see it or how long it is kept, you update the Privacy Policy in the same change.
 - You fix accessibility bugs first, and you keep the automated accessibility checks passing.
-- The site's code and its task board are public. You never put a password, key, token or anyone's personal details in the code, an issue or a comment.
+- The site's code and its task board are public. You never put a password, key, token, or anyone's personal details in the code, an issue, or a comment.
 - When you find a security problem, you tell the owner at once and fix it before other work.
 
 ### The Owner and Everyone Who Runs the Site
 
-The owner holds the primary admin account, which no one can revoke. The site relies on outside companies for things such as its hosting and its mail; the owner tries to choose ethical ones, but cannot hold them to this page. The owner, and every admin, curator and developer who helps run the site, agrees to everything above, and to this:
+The owner holds the primary keeper account, which no one can revoke. The site relies on outside companies for things such as its hosting and its mail; the owner tries to choose ethical ones, but cannot hold them to this page. The owner, and every keeper, curator and developer who helps run the site, agrees to everything above, and to this:
 
 - The site stays free of advertising, sells no data and uses nothing anyone writes here to train anything. If any of that could ever change, the owner emails every account to say so, in writing, before it does.
 - Anyone who reaches the database does so only to do what a person has asked for, such as an erasure, or to fix a fault, and says so when it is done.
 - Every rule on this page, and every change to the terms, applies to the owner as to anyone else, and a change to the terms is published as a new version that everyone agrees to again.
-- If the site must end, the owner says so ahead of time. The owner commits to building a way for people to take their own writing with them; it does not exist yet.
+- If the site must end, the owner says so ahead of time. The owner commits to building a way for people to take their own writing with them; it does not exist yet, and it is planned as [M18.5](https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1527).
 
 [^1]: U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026. https://www.fws.gov/program/national-eagle-repository.
 

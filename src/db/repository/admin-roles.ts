@@ -8,7 +8,7 @@ import { selectFrom, selectOne } from './select';
 import type { AuditWriter, SiteInvitationRow, WriterContext } from './types';
 
 /**
- * The open pause on admin role changes, or `undefined` while none holds: what the grant and revoke read before acting. Under the
+ * The open pause on keeper role changes, or `undefined` while none holds: what the grant and revoke read before acting. Under the
  * `SiteAdmin` proof, or a site-tier invitation's accept, which reads it from a session holding no proof. The one-open index allows one at most.
  */
 export function findOpenAdminRoleChangePause(
@@ -33,7 +33,7 @@ export function adminRoleWrites({
   'pauseAdminRoleChanges' | 'resumeAdminRoleChanges' | 'lockLiveAdmins'
 > {
   return {
-    // Every live admin, locked in id order, so two revokes at once queue on
+    // Every live keeper, locked in id order, so two revokes at once queue on
     // the first row rather than each holding one the other wants.
     lockLiveAdmins: () =>
       selectFrom(users, and(notSoftDeleted(users), eq(users.role, 'admin')), {

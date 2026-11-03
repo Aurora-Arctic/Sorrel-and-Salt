@@ -4,7 +4,7 @@ import { recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
 
-// Story 89: a signed-in account opens the Support dialog from the footer, sends a question, an admin replies on
+// Story 89: a signed-in account opens the Support dialog from the footer, sends a question, a keeper replies on
 // /keepers/support, and the reply shows on /account/support.
 
 test.beforeAll(async () => {

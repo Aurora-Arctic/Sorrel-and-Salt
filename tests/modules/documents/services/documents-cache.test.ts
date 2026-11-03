@@ -86,7 +86,7 @@ describe('the documents reads are cached under the documents tag', () => {
   });
 });
 
-// The admin's writes empty the cache themselves, so a reader sees a publish, or a new title, on the next read rather than whenever
+// The keeper's writes empty the cache themselves, so a reader sees a publish, or a new title, on the next read rather than whenever
 // the cache would have lapsed. A saved draft leaves it, since no reader is shown a draft.
 describe('the editing services expire the documents tag', () => {
   it('shows a reader the published draft, and the earlier version in the list, after a publish', async () => {

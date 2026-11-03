@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-// The table's own marks: the history link's clock and the primary admin's
+// The table's own marks: the history link's clock and the primary keeper's
 // crown, hidden from assistive technology since the link and the crown's button
 // carry their own names. A yes-or-no column's check and cross are the shared set's.
 
@@ -20,7 +20,7 @@ export function HistoryIcon(): ReactElement {
   );
 }
 
-/** A crown: the primary admin, set by the site's configuration. */
+/** A crown: the primary keeper, set by the site's configuration. */
 export function CrownIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

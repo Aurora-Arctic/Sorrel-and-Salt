@@ -494,8 +494,11 @@ describe('the spell builder over a Grimoire tab', () => {
       await renderTab(SpellsPage);
       // The roles named are the state's data: a viewer has no New Spell and nothing else says who to ask.
       const state = screen.getByRole('status', { name: 'No Spells' });
-      if (named) expect(state).toHaveTextContent(/\bmember\b.*\bowner\b|\bowner\b.*\bmember\b/i);
-      else expect(state).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+      if (named)
+        expect(state).toHaveTextContent(
+          /\bpractitioner\b.*\bsteward\b|\bsteward\b.*\bpractitioner\b/i,
+        );
+      else expect(state).not.toHaveTextContent(/\bpractitioner\b|\bsteward\b/i);
     },
   );
 

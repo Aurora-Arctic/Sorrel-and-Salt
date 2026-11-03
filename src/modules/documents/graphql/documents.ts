@@ -8,15 +8,17 @@ import {
   updateDocument,
 } from '../services/editing';
 import {
-  emailDocumentToEveryAccount,
-  readDocumentMailing,
+  emailDocumentsToEveryAccount,
+  readDocumentMailings,
   resumeDocumentMailing,
 } from '../services/document-mailing';
 import type {
   DocumentDraft,
   DocumentForEditing,
   DocumentMailingOverview,
+  DocumentMailingDocument,
   DocumentMailingSummary,
+  PendingDocument,
   PublishedDocumentVersion,
 } from '../types';
 
@@ -147,12 +149,27 @@ builder.mutationField('updateDocument', (t) =>
   }),
 );
 
+const DocumentMailingDocumentRef = builder
+  .objectRef<DocumentMailingDocument>('DocumentMailingDocument')
+  .implement({
+    description: 'A document a mailing covers, at the version it tells every account about.',
+    fields: (t) => ({
+      key: t.exposeString('key'),
+      title: t.exposeString('title'),
+      versionNumber: t.exposeInt('versionNumber'),
+    }),
+  });
+
 const DocumentMailingRef = builder.objectRef<DocumentMailingSummary>('DocumentMailing').implement({
   description:
-    'One mailing of a document version to every account. `state` is queued, sending, waiting, paused, sent or replaced.',
+    'One mailing to every account, of every document it covers. `state` is queued, sending, waiting, paused, sent or replaced.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    versionNumber: t.exposeInt('versionNumber'),
+    // Bounded by the four site documents.
+    documents: t.field({
+      type: [DocumentMailingDocumentRef],
+      resolve: (mailing) => mailing.documents,
+    }),
     state: t.exposeString('state'),
     reached: t.exposeInt('reached'),
     recipientCount: t.exposeInt('recipientCount'),
@@ -161,47 +178,74 @@ const DocumentMailingRef = builder.objectRef<DocumentMailingSummary>('DocumentMa
   }),
 });
 
+const PendingDocumentRef = builder.objectRef<PendingDocument>('PendingDocument').implement({
+  description:
+    'A document whose newest published version past the first no sent mailing has covered. `inMailing` says a sending or paused mailing covers it.',
+  fields: (t) => ({
+    documentId: t.exposeID('documentId'),
+    versionId: t.exposeID('versionId'),
+    key: t.exposeString('key'),
+    title: t.exposeString('title'),
+    versionNumber: t.exposeInt('versionNumber'),
+    inMailing: t.exposeBoolean('inMailing'),
+  }),
+});
+
 const DocumentMailingOverviewRef = builder
   .objectRef<DocumentMailingOverview>('DocumentMailingOverview')
   .implement({
     description:
-      'What the editor needs to email a document: its published version, whom a mailing would reach and in how many days, and the mailings that matter.',
+      'What the mailing page needs: the documents changed since the last email, whom a mailing would reach and in how many days, and the mailings that matter.',
     fields: (t) => ({
-      versionNumber: t.exposeInt('versionNumber'),
+      // Bounded by the four site documents.
+      pending: t.field({ type: [PendingDocumentRef], resolve: (overview) => overview.pending }),
       accountCount: t.exposeInt('accountCount'),
       days: t.exposeInt('days'),
-      current: t.field({
+      canSend: t.exposeBoolean('canSend'),
+      // A new mailing replaces every open one, so this holds one mailing, or a few left from before joint mailings.
+      open: t.field({ type: [DocumentMailingRef], resolve: (overview) => overview.open }),
+      lastSent: t.field({
         type: DocumentMailingRef,
         nullable: true,
-        resolve: (overview) => overview.current,
-      }),
-      inProgress: t.field({
-        type: DocumentMailingRef,
-        nullable: true,
-        resolve: (overview) => overview.inProgress,
+        resolve: (overview) => overview.lastSent,
       }),
     }),
   });
 
-builder.queryField('documentMailing', (t) =>
+const DocumentMailingSummaryInputRef = builder.inputType('DocumentMailingSummaryInput', {
+  description: 'What changed in one pending document, in the keeper’s words.',
+  fields: (t) => ({
+    versionId: t.id({ required: true }),
+    summary: t.string({ required: true }),
+  }),
+});
+
+builder.queryField('documentMailings', (t) =>
   t.field({
     type: DocumentMailingOverviewRef,
-    args: { key: t.arg.string({ required: true }) },
     authScopes: { admin: true },
-    resolve: (_root, { key }, context) => readDocumentMailing(sessionOf(context), key),
+    resolve: (_root, _args, context) => readDocumentMailings(sessionOf(context)),
   }),
 );
 
-builder.mutationField('emailDocumentToEveryAccount', (t) =>
+builder.mutationField('emailDocumentsToEveryAccount', (t) =>
   t.field({
     type: DocumentMailingOverviewRef,
     args: {
-      documentId: t.arg.id({ required: true }),
-      summary: t.arg.string({ required: true }),
+      summaries: t.arg({ type: [DocumentMailingSummaryInputRef], required: true }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { documentId, summary }, context) =>
-      emailDocumentToEveryAccount(sessionOf(context), documentId, { summary }, context.documents),
+    resolve: (_root, { summaries }, context) =>
+      emailDocumentsToEveryAccount(
+        sessionOf(context),
+        {
+          summaries: summaries.map(({ versionId, summary }) => ({
+            versionId: String(versionId),
+            summary,
+          })),
+        },
+        context.documents,
+      ),
   }),
 );
 

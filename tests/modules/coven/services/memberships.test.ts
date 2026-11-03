@@ -8,7 +8,7 @@ import { assertMembership, firstCovenSlugOf, membershipsOf } from '@/modules/cov
 import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// Whose covens a caller may list: their own, and for a site admin anyone's, by workspace and role alone, since an admin still reaches nothing a coven holds.
+// Whose covens a caller may list: their own, and for a site keeper anyone's, by workspace and role alone, since a keeper still reaches nothing a coven holds.
 // There is one answer per key, in key order, as a DataLoader batch needs; a refused key is an Error in its slot rather than a rejection of the whole batch.
 
 const summary = (answer: Awaited<ReturnType<typeof membershipsOf>>[number]) =>
@@ -38,7 +38,7 @@ describe('membershipsOf', () => {
     expect(other).toBeInstanceOf(Forbidden);
   });
 
-  it('answers a site admin asking after anyone, each with its workspace', async () => {
+  it('answers a site keeper asking after anyone, each with its workspace', async () => {
     // Why this is the admin branch and not a membership: E's session carries
     // the admin role, D holds a membership D's own call finds, and E is not a
     // member of that workspace.
@@ -59,7 +59,7 @@ describe('membershipsOf', () => {
     ]);
   });
 
-  it('answers a site admin a mixed batch of their own key and another’s', async () => {
+  it('answers a site keeper a mixed batch of their own key and another’s', async () => {
     const [other, own] = await membershipsOf(asUser(E), [D.id, E.id]);
 
     expect(summary(other)).toEqual([{ role: 'member', workspaceId: WORKSPACE_X_ID }]);

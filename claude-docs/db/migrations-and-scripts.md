@@ -163,8 +163,8 @@
 - **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of MB.58's
   admin ledger and its enum, with three statements added by hand: the table's
   `set_updated_at` trigger; the demotion of the seed's bootstrap user, which a
-  database seeded before MB.58 holds as an admin and the seed never rewrites;
-  and the backfill, one `bootstrap` row for every live admin, stamped as that
+  database seeded before MB.58 holds as a keeper and the seed never rewrites;
+  and the backfill, one `bootstrap` row for every live keeper, stamped as that
   admin. The ledger is superseded by `user_privilege_changes` (`0055`) and
   dropped by `0058`, and its schema test, which re-ran both data statements,
   went with its schema in MB.196. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),

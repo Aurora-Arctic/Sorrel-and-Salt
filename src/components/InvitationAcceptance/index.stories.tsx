@@ -42,7 +42,7 @@ const DIFFERENT_ADDRESS =
 const UNVERIFIED =
   "Your email address isn't confirmed yet. Confirm it, then open this link again to accept.";
 const PAUSED =
-  "Admin changes are paused, so this invitation can't be accepted until they are resumed.";
+  "Keeper changes are paused, so this invitation can't be accepted until they are resumed.";
 
 const SignedOutView = () => <Page status="signed-out" signInHref={SIGN_IN} />;
 

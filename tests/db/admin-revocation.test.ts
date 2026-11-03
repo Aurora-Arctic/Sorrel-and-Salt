@@ -8,7 +8,7 @@ import { asManualFix } from '../support/db/privileges';
 import { run } from '../support/graphql/run';
 import type { AuthInstance } from '../support/types';
 
-// A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/keepers` and every admin mutation close at once (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking").
+// A revoked admin's sessions stay valid and their next request reads `role: 'user'` off the users row, so `/keepers` and every keeper mutation close at once (claude-docs/design-decisions/m2.9-granting-admin.md, "Revoking").
 // Through the real session reader; the cookie cache that would keep the old role is pinned off in tests/lib/auth.test.ts.
 
 let sql: ReturnType<typeof postgres>;
@@ -61,10 +61,10 @@ const sessionsOf = async () =>
   sql`select token from sessions where user_id = ${REVOKED} order by token`;
 
 describe('a revoked admin’s next request', () => {
-  it('reads the user role off the same session, refused at /keepers and at an admin mutation', async () => {
+  it('reads the user role off the same session, refused at /keepers and at a keeper mutation', async () => {
     const headers = await signedInAs(REVOKED);
     const before = await requestSession.sessionFromHeaders(headers);
-    // The precondition: the same cookie was an admin's, admitted by both gates.
+    // The precondition: the same cookie was a keeper's, admitted by both gates.
     expect(before).toEqual({ userId: REVOKED, role: 'admin' });
     expect(() => identity.assertSiteAdmin(before!)).not.toThrow();
     const probe = `mutation { setUserRole(userId: "${E.id}", role: admin) { id } }`;

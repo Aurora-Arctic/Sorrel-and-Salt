@@ -275,14 +275,16 @@ describe('the add icon among several covens', () => {
   it('says a refusal under the plus, which keeps the focus and offers the menu again', async () => {
     mockGraphQLError('AddCupboardEntry', {
       code: 'FORBIDDEN',
-      message: 'Viewers cannot add ingredients.',
+      message: 'Observers cannot add ingredients.',
     });
     render(<Plus covens={COVENS} heldIn={[]} />);
 
     fireEvent.click(within(openMenu()).getByRole('menuitem', { name: ONE.name }));
 
     const plus = await screen.findByRole('button', PLUS);
-    expect(await expectRefusalUnder(plus, PLUS.name)).toContain('Viewers cannot add ingredients.');
+    expect(await expectRefusalUnder(plus, PLUS.name)).toContain(
+      'Observers cannot add ingredients.',
+    );
     expect(plus).not.toHaveAttribute('aria-disabled');
     expect(plus).not.toHaveAttribute('aria-busy');
     expect(router.refresh).not.toHaveBeenCalled();
@@ -364,14 +366,14 @@ describe('the plus after an add', () => {
   it('never shows the check on a refusal, and says nothing in the status region', async () => {
     mockGraphQLError('AddCupboardEntry', {
       code: 'FORBIDDEN',
-      message: 'Viewers cannot add ingredients.',
+      message: 'Observers cannot add ingredients.',
     });
     render(<Plus covens={[ONE]} heldIn={[]} />);
 
     fireEvent.click(plus());
 
     expect(await expectRefusalUnder(plus(), PLUS.name)).toContain(
-      'Viewers cannot add ingredients.',
+      'Observers cannot add ingredients.',
     );
     expect(plus()).not.toHaveAttribute('data-state');
     await act(() => vi.advanceTimersByTimeAsync(2000));

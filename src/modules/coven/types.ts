@@ -13,7 +13,7 @@ export type WorkspaceSeat = {
 
 export type WorkspaceRow = typeof workspaces.$inferSelect;
 
-/** One pause an owner set on a member's access to their coven, standing, run out or lifted. */
+/** One pause a steward set on a member's access to their coven, standing, run out or lifted. */
 export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 
 /** One membership, carrying the workspace it is of. */
@@ -33,7 +33,7 @@ export type CovenMembership = {
 /** The coven a paused member is shut out of, as the paused page names it: its id, for Leave; its name; and when the pause ends, or null for none. */
 export type PausedCoven = { id: string; name: string; until: Date | null };
 
-/** A member's address as the owner's Email column reads it. */
+/** A member's address as the steward's Email column reads it. */
 export type MemberEmail = {
   userId: string;
   address: string;

@@ -119,7 +119,7 @@ describe('a compendium entry’s toxic flags', () => {
     expect(await flagsOf(created.id)).toMatchObject(NOTHING_TOXIC);
   });
 
-  it('lets the site admin set either flag, each leaving the other as it was', async () => {
+  it('lets the site keeper set either flag, each leaving the other as it was', async () => {
     const fixture = twoForms();
     const id = await seed(fixture);
 

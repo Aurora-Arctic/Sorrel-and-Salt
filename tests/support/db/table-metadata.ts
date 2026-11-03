@@ -35,6 +35,7 @@ export const AUDITED_TABLES = [
   'deities',
   'deity_other_names',
   'deity_traditions',
+  'document_mailing_items',
   'document_mailing_recipients',
   'document_mailings',
   'document_versions',

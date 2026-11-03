@@ -36,14 +36,14 @@ export interface VerifyEmailProps extends BaseEmailProps {
 export interface AdminInvitationProps extends BaseEmailProps {
   /** The site role the invitation grants. */
   siteRole: 'curator' | 'admin';
-  /** The admin who sent the invitation. */
+  /** The keeper who sent the invitation. */
   inviterName: string;
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;
 }
 
 export interface CovenInvitationProps extends BaseEmailProps {
-  /** The owner who sent the invitation. */
+  /** The steward who sent the invitation. */
   inviterName: string;
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;
@@ -126,7 +126,7 @@ export interface SupportEmailReplyProps extends BaseEmailProps {
   body: string;
 }
 
-/** Told to a user that an admin timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */
+/** Told to a user that a keeper timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */
 export interface SupportTimedOutProps extends BaseEmailProps {
   url: string;
   /** When the time-out ends, or `null` when it has no end date. */
@@ -135,7 +135,7 @@ export interface SupportTimedOutProps extends BaseEmailProps {
   message: string | null;
 }
 
-/** Told to a user that an admin paused their site access. `url` opens the support page, which a paused account can still reach. */
+/** Told to a user that a keeper paused their site access. `url` opens the support page, which a paused account can still reach. */
 export interface AccessPausedProps extends BaseEmailProps {
   url: string;
   /** When the pause ends, or `null` when it has no end date. */
@@ -144,22 +144,30 @@ export interface AccessPausedProps extends BaseEmailProps {
   message: string | null;
 }
 
-/** Told to a member that a coven owner paused their access to the coven. */
+/** Told to a member that a coven steward paused their access to the coven. */
 export interface CovenAccessPausedProps extends BaseEmailProps {
   url: string;
   covenName: string;
   /** When the pause ends, or `null` when it has no end date. */
   until: Date | null;
-  /** What the owner wrote to the member, or `null` when they wrote none. */
+  /** What the steward wrote to the member, or `null` when they wrote none. */
   message: string | null;
 }
 
-/** Told every account that a published document changed. `url` is the document's page. */
-export interface DocumentUpdatedProps extends BaseEmailProps {
+/** One document an update mail lists. */
+export interface UpdatedDocument {
   /** The document's title, as the page shows it. */
   title: string;
-  /** What changed, in the admin's words. */
+  /** What changed, in the keeper's words. */
   summary: string;
-  /** The terms ask each account to agree again at its next visit; the other documents do not. */
+  /** The document's page. */
+  url: string;
+}
+
+/** Told every account which published documents changed. `url` is the first document's page. */
+export interface DocumentUpdatedProps extends BaseEmailProps {
+  /** Every document changed since the last mailing, in the order the mail lists them. */
+  documents: UpdatedDocument[];
+  /** One of the documents is one an account agrees to, so each is asked to agree again at its next visit. */
   asksAgreement: boolean;
 }

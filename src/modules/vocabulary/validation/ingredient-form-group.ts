@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { curatedValueInput } from '../../../lib/validation';
 import { FORM_GROUP_ICONS } from '../schema/form-group-icons';
 
-// A form group as an admin writes one. No slug (curatedValueInput says why), no colour. The icon is one of the six or none (null and absent both mean none,
+// A form group as a keeper writes one. No slug (curatedValueInput says why), no colour. The icon is one of the six or none (null and absent both mean none,
 // since the service writes the group whole and GraphQL hands a null over as absent).
 export const IngredientFormGroupInput = curatedValueInput('group').extend({
   icon: z

@@ -42,7 +42,7 @@ export const optionalText = (format: (text: string) => string = (text) => text.t
     });
 
 /**
- * An admin-curated value's own fields, a name and the non-blank description, each refusal saying the vocabulary's noun ("Give the sign a name"). No slug: it is
+ * A keeper-curated value's own fields, a name and the non-blank description, each refusal saying the vocabulary's noun ("Give the sign a name"). No slug: it is
  * derived by src/lib/slugify.ts, so one in the input is dropped.
  */
 export const curatedValueInput = (noun: string) =>

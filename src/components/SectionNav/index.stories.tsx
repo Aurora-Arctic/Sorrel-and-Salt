@@ -46,7 +46,7 @@ const admin = (path: string, managesPeople = true) => (
   </Row>
 );
 
-// Wide: the tabs a member sees, then a viewer's (no Members), then the admin's
+// Wide: the tabs a practitioner sees, then an observer's (no Members), then the keeper's
 // six tabs with a hairline between Astrology and People.
 const SECTION_STATES: Record<string, ReactNode> = {
   'Coven Overview Current': coven('/coven/fixture-coven', true),

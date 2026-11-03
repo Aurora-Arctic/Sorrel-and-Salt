@@ -2,7 +2,7 @@
 
 The curated reads every viewer sees alike are held in Next's data cache under
 one tag, `compendium`, so the most-read data on the site does not reach
-Postgres on every page (DESIGN.md §7, layer 3). An admin write expires the tag
+Postgres on every page (DESIGN.md §7, layer 3). A keeper write expires the tag
 (M8.7, "Expiring the tag" below), and anything workspace-scoped is never held (CLAUDE.md rule 6).
 
 ### The wrapper
@@ -42,12 +42,12 @@ empty (the project's "Enable access to System Environment Variables" setting
 is off). Vercel's system environment variables page lists both as available
 at build and at runtime, so nothing is stamped in through `next.config.ts`.
 With neither set (local runs, tests) there is no part, and the keys are the
-bare `key`. The tag is unchanged, so an admin's write still expires every
+bare `key`. The tag is unchanged, so a keeper's write still expires every
 entry under the current deployment.
 
 **Reseeding locally under a running server still needs a restart.** The key
 part is fixed there, so the cache keeps serving what it held until the hour
-runs out or an admin saves a compendium edit.
+runs out or a keeper saves a compendium edit.
 
 ### What is cached
 
@@ -102,7 +102,7 @@ A page that sets its own `revalidate` takes the lower of its own and the
 reads' hour.
 
 An entry's share card (M12.34) is the same: its `opengraph-image.tsx` reads
-`readCompendiumEntry`, so the card's cached PNG carries the tag and an admin
+`readCompendiumEntry`, so the card's cached PNG carries the tag and a keeper
 write draws it afresh. `tests/e2e/compendium-cache.spec.ts` shows it
 ([`../share-card.md`](../share-card.md), "Caching").
 
@@ -111,7 +111,7 @@ write draws it afresh. `tests/e2e/compendium-cache.spec.ts` shows it
 `expireCompendium()`, beside the read wrapper, is
 `revalidateTag(COMPENDIUM_TAG, { expire: 0 })` (M8.7). Every admin write to
 something the cache holds calls it after its `withAudit` resolves, so a
-refused or rolled-back write expires nothing, and the admin's next read is
+refused or rolled-back write expires nothing, and the keeper's next read is
 a miss that reads Postgres. `{ expire: 0 }` rather than Next's recommended
 `'max'`, which would serve the stale entry while it revalidates, and
 `revalidateTag` rather than `updateTag`, which throws outside a Server
@@ -125,24 +125,24 @@ The writes that call it are every service in the `ingredients` and
 update and delete; `createReference` and `updateReference` when
 `workspaceId` is null, and only then; `promoteFolkName` on a null `workspaceId`; and the create, update and delete of
 categories, category groups, forms, form groups, celestial bodies and zodiac signs,
-deities and deity traditions. That is 27 services, and an admin's write
+deities and deity traditions. That is 27 services, and a keeper's write
 reaches only these, since the GraphQL mutations over them are its only path
 (CLAUDE.md rule 1).
 
-**The rule is keyed on those two modules, not on every admin mutation.**
+**The rule is keyed on those two modules, not on every keeper mutation.**
 Every exported service in `src/modules/ingredients/services/` and
 `src/modules/vocabulary/services/` that calls `assertSiteAdmin` calls
 `expireCompendium`; `tests/modules/ingredients/services/compendium-expiry.test.ts`
 and `tests/e2e/compendium-cache.spec.ts` prove the expiry itself. The identity module's admin writes are outside it by
-construction: a user's role, a pause, an admin invitation and a coven-creation
-grant touch nothing the cache holds. A guard over every admin mutation would
+construction: a user's role, a pause, a keeper invitation and a coven-creation
+grant touch nothing the cache holds. A guard over every keeper mutation would
 need a list of those exemptions, which each new identity write would have to
 join from its own task. Keying on the modules that own the compendium tier
 means only a write to that tier is held to the rule.
 `tests/modules/ingredients/services/compendium-expiry.test.ts` shows the
 call itself: once, with `{ expire: 0 }`, after the write; not after a
 refusal; and not after a coven's reference. `tests/e2e/compendium-cache.spec.ts`
-shows Next acting on it: the admin's added entry, and a rename the cache had
+shows Next acting on it: the keeper's added entry, and a rename the cache had
 been hiding, both appear on the next load.
 
 ### In tests
@@ -180,5 +180,5 @@ One more server keeps it: the compendium-cache server on 8101, over
 `tests/e2e/compendium-cache.spec.ts` alone in the `chromium-compendium-cache`
 project. The spec renames an entry underneath the admin's compendium list and
 asserts the reload does not show it, and that a filter never read before
-does. Then, as an admin adding an entry, it asserts the
+does. Then, as a keeper adding an entry, it asserts the
 next load shows both the entry and the rename.

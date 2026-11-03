@@ -231,14 +231,11 @@ describe('X-Robots-Tag', () => {
     expect((await proxy(request(path))).headers.get('x-robots-tag')).toBeNull();
   });
 
-  // An address that opens a dialog over a page, or a pager page that drifts as entries change,
-  // is a copy of a real page: kept out of results, its links still followed. Each name is its own
-  // case, so removing one from the proxy's list fails here.
+  // An address that opens a dialog over a page is a copy of a real page: kept out of results, its
+  // links still followed. Each name is its own case, so removing one from the proxy's list fails here.
   it.each([
     '/compendium?entry=3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
     '/compendium?query=wort&entry=3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
-    '/compendium?after=c',
-    '/compendium?before=c',
     '/?support=',
     '/privacy?support=',
     '/compendium/ingredients/testwort?support=',
@@ -247,6 +244,16 @@ describe('X-Robots-Tag', () => {
 
     expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex, follow');
   });
+
+  // The list's later pages are real pages with their own canonical, so they stay indexable.
+  it.each(['/compendium?after=c', '/compendium?before=c'])(
+    'leaves the compendium pager page %s indexable on production',
+    async (path) => {
+      vi.stubEnv('VERCEL_ENV', 'production');
+
+      expect((await proxy(request(path))).headers.get('x-robots-tag')).toBeNull();
+    },
+  );
 
   it.each(['/compendium?entry=x', '/compendium?after=c', '/?support='])(
     'stays the blanket noindex off production at %s',
@@ -322,7 +329,7 @@ describe('the workshop', () => {
 
   /**
    * Each refusal below is the gate reading who is asking, not a path the proxy never sees or a response that would have failed anyway:
-   * the same request with an admin's live session reaches the files.
+   * the same request with a keeper's live session reaches the files.
    */
   async function expectAnAdminReaches(path: string) {
     expect(matches(path)).toBe(true);
@@ -384,7 +391,7 @@ describe('the workshop', () => {
     '/workshop/project.json',
     '/workshop/sb-manager/runtime.js',
     '/workshop/assets/iframe-B4mi58lY.js',
-  ])('lets an admin through to %s', async (path) => {
+  ])('lets a keeper through to %s', async (path) => {
     actAs('admin');
 
     const response = await proxy(signedIn(path));
@@ -398,7 +405,7 @@ describe('the workshop', () => {
   // Storybook's build links its files relative to the page, so a page at /workshop would ask for
   // /iframe.html; Next serves no directory index and its trailing-slash redirect sends /workshop/
   // back to /workshop. So the bare path goes to the manager's file, where relative paths resolve.
-  it('sends an admin at the bare path to the manager page, query kept', async () => {
+  it('sends a keeper at the bare path to the manager page, query kept', async () => {
     actAs('admin');
 
     const response = await proxy(signedIn('/workshop?path=/story/layout-theme-toggle--states'));
@@ -497,7 +504,7 @@ describe('the workshop', () => {
     },
   );
 
-  // The workshop's own code runs on this origin with an admin's cookie. The
+  // The workshop's own code runs on this origin with a keeper's cookie. The
   // policy lets it fetch Storybook's own files and nothing else on the origin.
   describe.each(['/workshop', '/workshop/index.html', '/workshop/iframe.html'])(
     "the admin's policy at %s",

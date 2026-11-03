@@ -22,7 +22,7 @@ export default function CompendiumDialog({
   // The entry an autosave created: the address moves to its `?edit=`, and the form stays the one
   // the person is typing in.
   const [created, setCreated] = useState<string | null>(null);
-  // The list it opened over: the admin's, or the public search's.
+  // The list it opened over: the keeper's, or the public search's.
   const href = (dialog?: { edit: string }) => compendiumHref(place, dialog, path);
   return (
     <RouteModal

@@ -83,21 +83,21 @@ it back with `pointer-events: auto`; without that, the last-edit line's tip open
 Given an `editHref`, the card draws an `EditLink` (an icon link, named "Edit <title>") in the
 card's foot, at the right of the `specimen__actions` row, as IngredientCard draws its Edit pencil (M13.10). The row reuses IngredientCard's classes and size rules (`.spell-card .specimen__actions` is in the same selector lists), so the icons match in the grid, compact and phone layouts. The grimoire tab works the address
 out and passes it only for a role that may update a spell (`rolePermits(role, { spell:
-['update'] })`), so a viewer's cards have none. It keeps the tab's filter, page and tab in
+['update'] })`), so an observer's cards have none. It keeps the tab's filter, page and tab in
 the address, so closing the dialog returns to the list as it was.
 
 ## Record a Working, Edit and the More menu
 
 The foot's actions, after the Quick Look eye, are the spell page's own parts, so each has one implementation: Record a Working (the green cauldron, `SpellCard/record-working.tsx`, opening the same form the spell page's `RecordWorkingButton` opens), the Edit pencil (text colour) and `SpellMoreMenu` (`SpellRecipe/more-menu.tsx`) holding Duplicate and Delete Spell (destructive). The card passes its own `id`, `visibility` and name, and `canPrint={false}`: Print is the spell page's alone. The menu draws nothing when neither Duplicate nor Delete Spell is allowed. The buttons sit in the foot, outside the title link, so no interactive element nests in another. Each needs a query client, which the workshop does not provide, so the card has no story with them.
 
-The grimoire tab builds `recordWorking` for a complete spell when the role may record a working and read members (the spell page's rule), naming the recorder from `viewerOf()`, and `more` when the role may create or delete a spell (`rolePermits`: owner and member, never viewer). The list does not hold what the dialog needs, and reads none of it: the button opens the dialog at once, and the dialog reads the spell's steps in one `RecordWorkingSetup` query through `/api/graphql` (`spell(workspaceId, id).steps`), so a list nobody records from costs no steps batch, and its participant box searches the members as the user types ([`record-working.md`](record-working.md)). While the query runs the dialog holds a `form` skeleton and one Loading status, as [`loading.md`](../loading.md) sets out; a refused or failed read is one error Notice in the dialog. A linked step with no name to read is "Unavailable Ingredient", as on the spell page. `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added.
+The grimoire tab builds `recordWorking` for a complete spell when the role may record a working and read members (the spell page's rule), naming the recorder from `viewerOf()`, and `more` when the role may create or delete a spell (`rolePermits`: steward and practitioner, never observer). The list does not hold what the dialog needs, and reads none of it: the button opens the dialog at once, and the dialog reads the spell's steps in one `RecordWorkingSetup` query through `/api/graphql` (`spell(workspaceId, id).steps`), so a list nobody records from costs no steps batch, and its participant box searches the members as the user types ([`record-working.md`](record-working.md)). While the query runs the dialog holds a `form` skeleton and one Loading status, as [`loading.md`](../loading.md) sets out; a refused or failed read is one error Notice in the dialog. A linked step with no name to read is "Unavailable Ingredient", as on the spell page. `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added.
 
 ## The Quick Look eye
 
 Given a `lookHref`, the card draws a `QuickLookLink` (an eye icon link, named "Quick Look <title>")
 at the bottom left of the foot, in `specimen__actions-start`, as IngredientCard draws its eye (M13.21), opening the `look` modal place
 (`SPELL_LOOK_PLACE`) so it is independent of the spell builder's dialog. The grimoire tab passes
-it for every role, since a viewer may read the spell; it keeps the tab's filter, page and tab in
+it for every role, since an observer may read the spell; it keeps the tab's filter, page and tab in
 the address, and closing returns there with focus back on the eye. What the modal shows is
 `SpellLookDialog` (claude-docs/components/spell-recipe.md, "Quick Look").
 

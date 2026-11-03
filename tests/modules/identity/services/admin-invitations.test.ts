@@ -21,8 +21,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
 
-// An admin invites an address to become an admin. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
-// Creating and revoking are a site admin's alone and paused with the rest of the admin changes for every admin but the primary one (claude-docs/auth/admin-users.md, "Inviting an admin").
+// A keeper invites an address to become a keeper. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
+// Creating and revoking are a site admin's alone and paused with the rest of the keeper changes for every keeper but the primary one (claude-docs/auth/admin-users.md, "Inviting a keeper").
 // The real sender builds the link and hands it to a mocked `send`, so what reaches the address is what the test reads.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
@@ -43,7 +43,7 @@ const ORIGIN = 'http://localhost:8000';
 /** More than the list's page, so every row is read in one. */
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
-/** The pending invitations an admin is listed, in the list's order, on one page. */
+/** The pending invitations a keeper is listed, in the list's order, on one page. */
 const pending = async (filter: Parameters<typeof listPendingAdminInvitations>[1] = {}) =>
   (await listPendingAdminInvitations(asUser(E), filter, PAGE)).map(({ node }) => node);
 
@@ -206,7 +206,7 @@ describe('createAdminInvitation', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('refuses the address of a live admin, who has nothing to accept', async () => {
+  it('refuses the address of a live keeper, who has nothing to accept', async () => {
     const refusal = createAdminInvitation(
       asUser(E),
       PRIMARY_EMAIL.toUpperCase(),
@@ -220,7 +220,7 @@ describe('createAdminInvitation', () => {
     expect(await invitations()).toEqual([]);
   });
 
-  // The site role is the admin's pick, and the row records it.
+  // The site role is the keeper's pick, and the row records it.
   it('invites to the curator role, recording it on the row', async () => {
     await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
 
@@ -449,12 +449,12 @@ describe('countPendingAdminInvitations', () => {
   });
 });
 
-describe('while admin changes are paused', () => {
+describe('while keeper changes are paused', () => {
   beforeEach(async () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
-  it('refuses another admin’s invitation, naming nobody, and sends it once resumed', async () => {
+  it('refuses another keeper’s invitation, naming nobody, and sends it once resumed', async () => {
     const refusal = createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
 
     await expect(refusal).rejects.toThrow(Forbidden);
@@ -468,7 +468,7 @@ describe('while admin changes are paused', () => {
     ).resolves.toMatchObject({ email: INVITED });
   });
 
-  it('refuses another admin’s revoke, and revokes once resumed', async () => {
+  it('refuses another keeper’s revoke, and revokes once resumed', async () => {
     const { id } = await createAdminInvitation(
       asUser(AS_PRIMARY),
       INVITED,
@@ -484,7 +484,7 @@ describe('while admin changes are paused', () => {
     await expect(revokeAdminInvitation(asUser(E), id)).resolves.toMatchObject({ id });
   });
 
-  it('lets the primary admin invite and revoke', async () => {
+  it('lets the primary keeper invite and revoke', async () => {
     const { id } = await createAdminInvitation(
       asUser(AS_PRIMARY),
       INVITED,

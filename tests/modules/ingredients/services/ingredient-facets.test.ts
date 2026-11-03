@@ -516,7 +516,7 @@ describe('workspaceIngredientFacets', () => {
     );
   });
 
-  it('refuses the site admin, who belongs to no coven', async () => {
+  it('refuses the site keeper, who belongs to no coven', async () => {
     await seedCovens();
     expect(
       countedOf(await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {}), 'forms'),

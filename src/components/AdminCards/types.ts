@@ -10,7 +10,7 @@ export interface BatchEntry {
   batchId: string;
   mintedAt: Date;
   expiresAt: Date;
-  /** The admin's note written at the mint; null for none. */
+  /** The keeper's note written at the mint; null for none. */
   note: string | null;
   /** How many cards the mint made. */
   cards: number;

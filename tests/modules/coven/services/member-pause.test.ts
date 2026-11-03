@@ -161,12 +161,12 @@ describe('pauseMemberAccess', () => {
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
   });
 
-  it('refuses a site admin, who holds no seat in the coven', async () => {
+  it('refuses a site keeper, who holds no seat in the coven', async () => {
     const covenId = await insertCoven('Fixture Admin Pause Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
     ]);
-    // Why this could have succeeded: E is a site admin, and admins hold owner seats in the demo coven.
+    // Why this could have succeeded: E is a site keeper, and keepers hold owner seats in the demo coven.
     expect(asUser(E).role).toBe('admin');
 
     const refusal = pauseMemberAccess(asUser(E), covenId, B.id, LATER, null, noPauseNotifier);
@@ -175,7 +175,7 @@ describe('pauseMemberAccess', () => {
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
   });
 
-  it('lets a site admin pause in the demo coven only from an owner seat there', async () => {
+  it('lets a site keeper pause in the demo coven only from an owner seat there', async () => {
     const demoId = await insertCoven(
       'Fixture Demo Pause Coven',
       [
@@ -190,7 +190,7 @@ describe('pauseMemberAccess', () => {
     ).rejects.toThrow(Forbidden);
     expect(await pausesOf(demoId, B.id)).toHaveLength(0);
 
-    // The owner seat every admin holds in the demo coven is what admits, not the admin role.
+    // The owner seat every keeper holds in the demo coven is what admits, not the admin role.
     await sql`
       insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
       values (${demoId}, ${E.id}, 'owner', ${A.id}, ${A.id})`;
@@ -214,7 +214,7 @@ describe('pauseMemberAccess', () => {
 
     // The sentence the browser shows, whole: the members page names no field, so it says the error's message.
     const owner =
-      "An owner's access can't be paused. Change their role first if they should be paused.";
+      "A steward's access can't be paused. Change their role first if they should be paused.";
     await expect(
       pauseMemberAccess(asUser(A), covenId, D.id, LATER, null, noPauseNotifier),
     ).rejects.toThrow(new Forbidden(owner));
@@ -412,7 +412,7 @@ describe('liftMemberAccessPause', () => {
     await expect(liftMemberAccessPause(asUser(A), covenId, 'not-an-id')).rejects.toThrow(Forbidden);
   });
 
-  it('refuses a member, a viewer, an owner of another coven and a site admin, and the pause stands', async () => {
+  it('refuses a member, a viewer, an owner of another coven and a site keeper, and the pause stands', async () => {
     const covenId = await insertCoven('Fixture Lift Refusal Coven', [
       [A.id, 'owner'],
       [B.id, 'member'],
@@ -420,7 +420,7 @@ describe('liftMemberAccessPause', () => {
     ]);
     const homeId = await insertCoven('Fixture Lift Home Coven', [[D.id, 'owner']]);
     await pauseMemberAccess(asUser(A), covenId, C.id, null, null, noPauseNotifier);
-    // Why each could have succeeded: B is admitted to the coven, D holds the permission in D's own, and E is a site admin.
+    // Why each could have succeeded: B is admitted to the coven, D holds the permission in D's own, and E is a site keeper.
     await expect(
       assertMembership(asUser(B), covenId, { spell: ['create'] }),
     ).resolves.toBeDefined();

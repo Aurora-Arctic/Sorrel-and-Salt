@@ -6,7 +6,7 @@ import { workspaces } from '../schema/workspaces';
 import type { MembershipOfUser } from '../types';
 
 /**
- * The live memberships of each user named, in order: a DataLoader's batch. A caller lists their own covens and a site admin anyone's, by workspace and role alone;
+ * The live memberships of each user named, in order: a DataLoader's batch. A caller lists their own covens and a site keeper anyone's, by workspace and role alone;
  * any other id is a `Forbidden` in its own slot. Each membership carries the pause standing on its seat, or null. A session whose address is unverified is told of no covens, an empty list in every slot, not a refusal:
  * the shell draws the email page and the public pages from this same call, so a refusal would break them. The admin read yields no `Membership` proof (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
  */

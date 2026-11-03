@@ -31,7 +31,7 @@ describe('adminTarget', () => {
     });
   });
 
-  it('draws any other admin address, a later tab, as a titled table with no filter', () => {
+  it('draws any other keeper address, a later tab, as a titled table with no filter', () => {
     const target = adminTarget('/curator/category-groups');
 
     expect(target).toMatchObject({ region: 'admin', shape: 'table', title: true });
@@ -56,7 +56,7 @@ describe('adminTarget for Support', () => {
 
 describe('adminTarget for the documents', () => {
   it('draws a document editor under a heading with its tabs beneath it, and no filter or action', () => {
-    const target = adminTarget('/keepers/documents/privacy');
+    const target = adminTarget('/keepers/documents/terms');
 
     expect(target).toMatchObject({
       region: 'admin',

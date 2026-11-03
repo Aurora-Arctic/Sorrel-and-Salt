@@ -2,7 +2,7 @@
 
 Since M15.77 the admin area is two: `/curator` for curation and `/keepers` for support, people and invitations. Both layouts call `requireCuratorSession()`. The curation pages
 (the compendium with its references, and the vocabularies) are open to a curator as
-well as an admin, described in
+well as a keeper, described in
 "The curator guard" below. Support under `/keepers` is open to both too. The People and Invitations pages (users, the privilege
 ledger, invitations, invitation cards and card sign-ups) stay admin-only and are guarded by `requireAdminSession()`, which this
 section describes. Both answer in the same three ways, all from the server:
@@ -23,8 +23,8 @@ section describes. Both answer in the same three ways, all from the server:
   proof in the service it calls.
 - **A 403 page, not a 404.** `/curator` and `/keepers` are paths everyone already knows, so
   pretending it does not exist buys no secrecy and only makes the app look
-  broken (CLAUDE.md's domain invariants; ["The three errors"](service-session.md)). The page says the account lacks admin rights and
-  offers the way back to `/`. It never names an admin and offers no way to ask
+  broken (CLAUDE.md's domain invariants; ["The three errors"](service-session.md)). The page says the account lacks keeper rights and
+  offers the way back to `/`. It never names a keeper and offers no way to ask
   for access ([`components/not-authorized.md`](../components/not-authorized.md)).
 - **`forbidden()` is Next's, behind `experimental.authInterrupts`** in
   `next.config.ts`. It throws, and Next answers 403 with a `noindex` robots
@@ -33,14 +33,14 @@ section describes. Both answer in the same three ways, all from the server:
   it, and a segment's own `forbidden.tsx` sits inside that segment's layout. It is the one `forbidden()` in the app:
   `/coven/[slug]` answers 404.
 - **The 403 renders inside the navigation shell.** `src/app/(shell)/layout.tsx`
-  (MB.7) wraps both areas, so a signed-in non-admin sees the shell's bar around
+  (MB.7) wraps both areas, so a signed-in non-keeper sees the shell's bar around
   the not-authorised page, with no Admin entry in it.
 - **The browser renders that page, not the server.** A `forbidden()` or
   `notFound()` thrown during render with no `<Suspense>` above it fails the
   server render, so Next sends the status with an empty
   `<html id="__next_error__">` shell and the browser renders the page from the
   RSC payload the response carries. The refusal is still the server's: the
-  403 comes first and the payload holds no admin markup — but the page needs
+  403 comes first and the payload holds no keeper markup — but the page needs
   JavaScript to show, and on it the root layout's pre-paint scripts do not
   run. React would create them in the browser inert, and warn, so
   `src/app/pre-paint-scripts.tsx` renders them only while hydrating the
@@ -90,17 +90,17 @@ section describes. Both answer in the same three ways, all from the server:
   server HTML carries all three scripts (theme, Facebook hash, script mark) and hydrates without a warning;
   `tests/app/(shell)/curator/layout.test.tsx` and `tests/app/(shell)/keepers/layout.test.tsx` proves the layout
   and the index page each await the guard before rendering;
-  `tests/e2e/admin.spec.ts` asserts the 403 with no admin markup anywhere in
+  `tests/e2e/admin.spec.ts` asserts the 403 with no keeper markup anywhere in
   the document, and the layout, against the built server; the signed-out
   redirect is `tests/e2e/route-protection.spec.ts`'s.
 
 ## The curator guard (M11.20)
 
 A curator is a signed-in account whose site role is `curator`: it uses every
-curation screen an admin can and none of the people pages. The guard that lets
+curation screen a keeper can and none of the people pages. The guard that lets
 it in is `requireCuratorSession()`, beside `requireAdminSession()` in
 `src/lib/request-session.ts`. It is `requireSession()` and then the identity
-module's `assertCurator()`, which passes a curator or an admin; the helper turns
+module's `assertCurator()`, which passes a curator or a keeper; the helper turns
 its `Forbidden` into Next's `forbidden()` and returns the `Session`, exactly as
 the admin guard does. A signed-out visitor and an unverified account are
 redirected first, as everywhere.
@@ -118,7 +118,7 @@ redirected first, as everywhere.
   that every page calls its own guard matters here.
 - **The nav and the index hide People from a curator, and that is display
   only.** `AdminNav` and the `/keepers` index take `managesPeople`, which is true
-  for an admin; a curator's lists leave out the People and Invitations pages
+  for a keeper; a curator's lists leave out the People and Invitations pages
   ([`components/admin-nav.md`](../components/admin-nav.md)). A curator who types
   `/keepers/users` still gets the 403 from the page's guard.
 - **The services check again.** The curation services call `assertCurator` and
@@ -126,10 +126,10 @@ redirected first, as everywhere.
   ([`db/site-admin-proof.md`](../db/site-admin-proof.md), "The Curator proof"),
   and GraphQL puts the `curator` scope on curation fields and keeps `admin` on
   the people ones ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes").
-- **A curator lands on `/curator` after signing in**, an admin on `/keepers`
+- **A curator lands on `/curator` after signing in**, a keeper on `/keepers`
   (`postSignInLanding` in `src/lib/sign-in.ts`), and the site bar's Curator and Keepers
   links and the brand link follow the viewer's `canCurate`, true for either role.
-- **Impersonation.** A curator can be impersonated like any non-admin, because
+- **Impersonation.** A curator can be impersonated like any non-keeper, because
   Better Auth's `adminRoles` stays `['admin']`; being a curator grants no
   impersonation of anyone.
 - **Tests.** `tests/lib/request-session.test.ts` covers the curator, admin and

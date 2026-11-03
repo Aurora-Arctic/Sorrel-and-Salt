@@ -65,7 +65,7 @@ owner, 2026-10-20).
 | `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row    |
 | `CharacterCount`    | The characters a field has left, in a polite live region, shown once it passes 75% of its limit               |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
-| `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
+| `ReasonField`       | A keeper change's optional Reason, in a plain-state form                                                      |
 | `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
 | `FilterSelectField` | A list filter's closed set: a native select from the server, a select-only box or type-ahead once hydrated    |
 
@@ -94,7 +94,7 @@ than its own. `noun` still names Delete, on a form that has one.
 
 ### `ReasonField`
 
-The optional Reason an admin gives a change (MB.115): a text box under
+The optional Reason a keeper gives a change (MB.115): a text box under
 "Reason", "Add a reason" its placeholder, held by the caller in plain state,
 its hint behind the ⓘ saying where the reason is kept, by default "Kept with
 the change in the record of who changed what." The invitation form passes its
@@ -182,7 +182,7 @@ group in a `.fieldset.radio-group`: each radio is a small ring whose centre dot,
 accent green, grows in with only a thin gap to the ring over the switch's `$motion-short` ease
 (none under reduced motion), the dot as well as the colour carrying the
 choice. The description is `aria-describedby`. `required` draws the `*` after the legend and sets `aria-required` on every radio, since a group has no one control to carry it. An optional `note` (M7.4) is a line
-for the whole group, such as the invite dialog's "an owner is made afterwards", set as the
+for the whole group, such as the invite dialog's "a steward is made afterwards", set as the
 fieldset's own `aria-describedby` so it is read with the group. The group carries
 `margin-block: space(5)`, which is 1.5rem, where nothing else spaces it, as in
 a confirm's modal. As a direct child of a `.form` it carries none, because the

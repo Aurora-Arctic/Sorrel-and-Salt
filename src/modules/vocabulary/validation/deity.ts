@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { curatedValueInput, requiredRowId } from '../../../lib/validation';
 
-// A curated deity as an admin writes one, a form's shape with its tradition in place of a group. No slug (curatedValueInput says why), and no `endRedirect`,
+// A curated deity as a keeper writes one, a form's shape with its tradition in place of a group. No slug (curatedValueInput says why), and no `endRedirect`,
 // since a deity is no part of an entry's address. `otherNames` is the whole list the form shows; repeats are refused by `otherNameRepeats` below and the service
 // (claude-docs/db/categories.md, "Vocabulary schema details").
 export const DeityInput = curatedValueInput('deity').extend({

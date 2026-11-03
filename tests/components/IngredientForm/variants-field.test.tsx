@@ -27,7 +27,7 @@ import {
   variant,
 } from './variants-harness';
 
-// The Variants section on its own: a form added from the New Form box, refused there, removed by its own button, folded to a line and opened one at a time, each variant's sections folding under its own headings, and a form an admin has renamed settled by the member.
+// The Variants section on its own: a form added from the New Form box, refused there, removed by its own button, folded to a line and opened one at a time, each variant's sections folding under its own headings, and a form a keeper has renamed settled by the member.
 // It is rendered by ./variants-harness.tsx, the field on the form's resolver. What the whole form adds around it (a save opening the variant an error is in, Close All, undo, the unsaved-changes question, the save mutation) is variants.test.tsx's;
 // a variant's copy buttons and substitutes are copy.test.tsx's and substitutes.test.tsx's (claude-docs/components/ingredient-form.md, "The variants").
 
@@ -175,7 +175,7 @@ describe('VariantsField', () => {
 
     // An open variant's fields in the ingredient's
     // sections, a heading level beneath Variants.
-    it('heads an open variant’s sections with the ingredient’s section headings, a level beneath Variants', () => {
+    it('heads an open variant’s sections with the ingredient’s section headings, a level beneath Forms', () => {
       renderVariants({ workspaceId: null, values: twoForms() });
 
       const oil = openVariant('Oil');
@@ -201,7 +201,7 @@ describe('VariantsField', () => {
       expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('opens a variant as Add Variant adds it, closing the one open', () => {
+    it('opens a variant as Add Form adds it, closing the one open', () => {
       renderVariants({ workspaceId: WORKSPACE_ID });
 
       addVariant('Oil');
@@ -270,7 +270,7 @@ describe('VariantsField', () => {
       expect(openIn(oil)).toEqual(['Correspondences']);
       expect(control(oil, 'Celestial Body')).toBeVisible();
       // The section around it, a level up, stays as it was.
-      expect(screen.getByRole('button', { name: 'Variants' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Forms' })).toHaveAttribute(
         'aria-expanded',
         'true',
       );
@@ -280,10 +280,10 @@ describe('VariantsField', () => {
     });
   });
 
-  // An admin's rename rewrites nothing of a coven's, so a coven's
+  // A keeper's rename rewrites nothing of a coven's, so a coven's
   // variant can open holding "Wax" beside a pick now called "Beeswax", a pair
   // the service refuses at `form`. The member settles it.
-  describe('a form an admin has renamed', () => {
+  describe('a form a keeper has renamed', () => {
     const WAX_ID = '0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e';
     const renamed = {
       ...EMPTY_VALUES,

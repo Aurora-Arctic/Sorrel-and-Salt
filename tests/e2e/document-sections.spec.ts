@@ -43,7 +43,7 @@ const DOCUMENTS: readonly DocumentShape[] = [
       },
       { heading: 'Who Sees It', parts: ['Who Can See What', 'Who Processes It'] },
       {
-        heading: 'Keeping and Removing It',
+        heading: 'Keeping and Removing Your Data',
         parts: ['How Long It Is Kept', 'How to Ask for Removal'],
       },
       { heading: 'What the Site Does Not Do' },
@@ -89,7 +89,7 @@ const DOCUMENTS: readonly DocumentShape[] = [
       },
       {
         heading: 'Running the Site',
-        parts: ['Curators', 'Admins', 'Developers', 'The Owner and Everyone Who Runs the Site'],
+        parts: ['Curators', 'Keepers', 'Developers', 'The Owner and Everyone Who Runs the Site'],
       },
       { heading: 'Sources' },
     ],

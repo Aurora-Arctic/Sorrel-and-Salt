@@ -28,7 +28,7 @@ vi.mock('@/lib/auth-client', () => ({
 const assignMock = vi.fn();
 
 // `/keepers/users`' table, filter and pager: render-only, so the page
-// owns the read and this owns what an admin sees of it
+// owns the read and this owns what a keeper sees of it
 // (claude-docs/components/user-list.md).
 
 const ADA = {
@@ -41,6 +41,8 @@ const ADA = {
   providers: ['discord', 'google'],
   emailVerified: true,
   agreedTermsVersion: 1,
+  agreedDisclaimerVersion: 4,
+  agreedEthicsVersion: 2,
   primaryAdmin: false,
   openHref: '/keepers/users?user=6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
   heading: { eyebrow: 'User', title: 'Ada Fixturewort', qualifier: 'ada@users.test' },
@@ -56,6 +58,8 @@ const BO = {
   providers: [],
   emailVerified: false,
   agreedTermsVersion: null,
+  agreedDisclaimerVersion: null,
+  agreedEthicsVersion: null,
   primaryAdmin: false,
   openHref: '/keepers/users?query=fixture&user=7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
   heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
@@ -138,19 +142,19 @@ describe('UserList, standing support time-outs and access pauses', () => {
 });
 
 describe('UserList', () => {
-  it('shows under Terms the version each user last agreed to, and that a user who never agreed has not', () => {
+  it('shows under Terms the joint version each user last agreed to, and that a user who never agreed has not', () => {
     render(<UserList {...props()} />);
 
     expect(screen.getByRole('columnheader', { name: 'Terms' })).toBeInTheDocument();
-    expect(cellUnder('Ada Fixturewort', 'Terms')).toHaveTextContent('Version 1');
+    expect(cellUnder('Ada Fixturewort', 'Terms')).toHaveTextContent('1.4.2');
     expect(cellUnder('Bo Fixturewort', 'Terms')).toHaveTextContent('Not agreed');
-    expect(cellUnder('Bo Fixturewort', 'Terms')).not.toHaveTextContent('Version 1');
+    expect(cellUnder('Bo Fixturewort', 'Terms')).not.toHaveTextContent(/\d\.\d\.\d/);
   });
 
   it('gives every row a tooltip saying what its role may do, in the words Change Role shows', () => {
     render(<UserList {...props({ users: [ADA, BO, CY] })} />);
     for (const [user, label] of [
-      [ADA, 'Admin'],
+      [ADA, 'Keeper'],
       [BO, 'User'],
       [CY, 'Curator'],
     ] as const) {
@@ -174,7 +178,7 @@ describe('UserList', () => {
       expect(row).toHaveTextContent(user.email);
       expect(row).toHaveTextContent(date);
     }
-    // The mark's word is the flag's one rendering: an admin holds it, Bo does not.
+    // The mark's word is the flag's one rendering: a keeper holds it, Bo does not.
     expect(within(within(ada).getAllByRole('cell')[3]).getByText('Yes')).toBeInTheDocument();
     expect(within(within(bo).getAllByRole('cell')[3]).getByText('No')).toBeInTheDocument();
   });
@@ -264,8 +268,8 @@ describe('UserList', () => {
   });
 });
 
-// Where impersonation is registered, each non-admin row carries the
-// control; the endpoint is the guard, and these only put it where an admin looks.
+// Where impersonation is registered, each non-keeper row carries the
+// control; the endpoint is the guard, and these only put it where a keeper looks.
 describe('UserList impersonation', () => {
   afterEach(() => {
     impersonateUserMock.mockReset();
@@ -280,7 +284,7 @@ describe('UserList impersonation', () => {
     expect(screen.queryByRole('columnheader', { name: 'Impersonate' })).not.toBeInTheDocument();
   });
 
-  it('offers it on each non-admin row, a curator’s included, naming the user, and on no admin row', () => {
+  it('offers it on each non-keeper row, a curator’s included, naming the user, and on no keeper row', () => {
     render(<UserList {...props({ users: [ADA, BO, CY], canImpersonate: true })} />);
 
     expect(screen.getByRole('columnheader', { name: 'Impersonate' })).toBeInTheDocument();
@@ -469,20 +473,20 @@ describe('UserList filter', () => {
   );
 });
 
-// A user who may not yet create a coven is approved from their row, and one who may is revoked, each behind a confirmation naming them; an admin's row offers neither.
-// The service is the guard; these put the control where an admin looks and show what the mutation answers.
-// The primary admin's switch on admin changes, its state in words; to
-// any other admin the control is in view but unusable, saying why.
-describe('UserList admin changes switch', () => {
+// A user who may not yet create a coven is approved from their row, and one who may is revoked, each behind a confirmation naming them; a keeper's row offers neither.
+// The service is the guard; these put the control where a keeper looks and show what the mutation answers.
+// The primary keeper's switch on keeper changes, its state in words; to
+// any other keeper the control is in view but unusable, saying why.
+describe('UserList keeper changes switch', () => {
   afterEach(() => {
     router.refresh.mockReset();
   });
 
   // The paused notice is a plain paragraph before the switch, the state's one
   // rendering; while changes are on, the switch stands alone. Pause asks first.
-  const confirming = () => screen.getByRole('dialog', { name: 'Pause Admin Changes' });
+  const confirming = () => screen.getByRole('dialog', { name: 'Pause Keeper Changes' });
 
-  it('lets the primary admin pause once confirmed, stating that changes are on, and says so', async () => {
+  it('lets the primary keeper pause once confirmed, stating that changes are on, and says so', async () => {
     let calls = 0;
     mockGraphQLMutation('PauseAdminRoleChanges', () => {
       calls += 1;
@@ -491,12 +495,12 @@ describe('UserList admin changes switch', () => {
     render(<PauseControl paused={false} canToggle={true} />, { wrapper: StatusRegionProvider });
 
     // No sentence while changes are on: only the button.
-    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    const pause = screen.getByRole('button', { name: 'Pause Keeper Changes' });
     expect(pause.previousElementSibling).toBeNull();
     expect(pause).not.toHaveAttribute('aria-disabled');
     fireEvent.click(pause);
     expect(calls).toBe(0);
-    const confirm = within(confirming()).getByRole('button', { name: 'Pause Admin Changes' });
+    const confirm = within(confirming()).getByRole('button', { name: 'Pause Keeper Changes' });
     fireEvent.click(confirm);
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
@@ -504,7 +508,7 @@ describe('UserList admin changes switch', () => {
     expect(announced()).not.toBe('');
   });
 
-  it('lets the primary admin resume, stating that changes are paused, and says so', async () => {
+  it('lets the primary keeper resume, stating that changes are paused, and says so', async () => {
     let calls = 0;
     mockGraphQLMutation('ResumeAdminRoleChanges', () => {
       calls += 1;
@@ -512,7 +516,7 @@ describe('UserList admin changes switch', () => {
     });
     render(<PauseControl paused={true} canToggle={true} />, { wrapper: StatusRegionProvider });
 
-    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });
     expect(resume.previousElementSibling).toHaveTextContent(/\S/);
     fireEvent.click(resume);
 
@@ -526,23 +530,23 @@ describe('UserList admin changes switch', () => {
   it('says why under Resume when the service refuses, the focus still on it', async () => {
     mockGraphQLError('ResumeAdminRoleChanges', {
       code: 'FORBIDDEN',
-      message: 'Only the primary admin may pause or resume admin changes',
+      message: 'Only the primary keeper may pause or resume keeper changes',
     });
     render(<PauseControl paused={true} canToggle={true} />);
-    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });
 
     act(() => resume.focus());
     fireEvent.click(resume);
 
-    await expectRefusalUnder(resume, 'Resume Admin Changes');
+    await expectRefusalUnder(resume, 'Resume Keeper Changes');
     expect(resume).not.toHaveAttribute('aria-disabled');
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('shows another admin the state and the switch, aria-disabled and described by the reason', () => {
+  it('shows another keeper the state and the switch, aria-disabled and described by the reason', () => {
     render(<PauseControl paused={false} canToggle={false} />);
 
-    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    const pause = screen.getByRole('button', { name: 'Pause Keeper Changes' });
     expect(pause).toBeEnabled();
     expect(pause).toHaveAttribute('aria-disabled', 'true');
     expect(pause).toHaveAccessibleDescription(/\S/);
@@ -550,10 +554,10 @@ describe('UserList admin changes switch', () => {
 
   // One sentence on the page: the notice; the switch's
   // own reason is in its tip.
-  it('shows another admin the paused notice and a locked Resume whose reason is a tip', () => {
+  it('shows another keeper the paused notice and a locked Resume whose reason is a tip', () => {
     render(<PauseControl paused canToggle={false} />);
 
-    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    const resume = screen.getByRole('button', { name: 'Resume Keeper Changes' });
     // The locked control wraps the button with its tip; the notice stands before it.
     expect(resume.parentElement?.previousElementSibling).toHaveTextContent(/\S/);
     expect(resume).toHaveAttribute('aria-disabled', 'true');

@@ -15,7 +15,7 @@ import type {
   DeclineInvitationByIdResult,
 } from './types';
 
-// The three mutations, the transport's half (claude-docs/testing/layer-ownership.md): an admin's answer, which carries no token and no link, the session as the actor, and one refusal per error code.
+// The three mutations, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's answer, which carries no token and no link, the session as the actor, and one refusal per error code.
 // Which callers, addresses and links the services refuse is services/admin-invitations.test.ts's and services/invitation-acceptance-by-token.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
@@ -57,7 +57,7 @@ beforeEach(async () => {
       values (${GRANTEE}, 'Grantee Fixturewort', ${INVITED}, true, ${GRANTEE}, ${GRANTEE})
     `;
   });
-  // E is the seed's admin; the variable names it the primary admin here.
+  // E is the seed's admin; the variable names it the primary keeper here.
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', E.email);
 });
 
@@ -76,7 +76,7 @@ const CREATE = `
 const ACCEPT = `mutation ($token: String!) { acceptInvitation(token: $token) { id acceptedAt } }`;
 
 describe('Mutation.createAdminInvitation', () => {
-  it('answers an admin the invitation, stamped as the session, and hands the sender its id and no token', async () => {
+  it('answers a keeper the invitation, stamped as the session, and hands the sender its id and no token', async () => {
     const { sent, sender } = recordingSender();
 
     const result = await run<CreateAdminInvitationResult>(
@@ -132,7 +132,7 @@ describe('Mutation.createAdminInvitation', () => {
     expect(carriers).toEqual(['MintedInvitationCards.tokens']);
   });
 
-  // The role is the admin's choice, and the transport carries it through.
+  // The role is the keeper's choice, and the transport carries it through.
   it('answers the curator role it was asked to invite to', async () => {
     const { sender } = recordingSender();
 
@@ -175,7 +175,7 @@ describe('Mutation.createAdminInvitation', () => {
 });
 
 describe('Mutation.revokeAdminInvitation', () => {
-  it('answers an admin the invitation withdrawn, and an id naming none as NOT_FOUND', async () => {
+  it('answers a keeper the invitation withdrawn, and an id naming none as NOT_FOUND', async () => {
     const { sender } = recordingSender();
     const created = await run<CreateAdminInvitationResult>(
       asUser(E),

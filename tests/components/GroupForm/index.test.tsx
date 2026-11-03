@@ -187,7 +187,7 @@ describe('GroupForm, for a category group', () => {
   });
 
   // The colour chosen first sets its partner, the same hue
-  // fitted to the other ground, until the admin sets the partner themselves.
+  // fitted to the other ground, until the keeper sets the partner themselves.
   describe('the pair', () => {
     it('fills either colour from the other chosen first', () => {
       const { unmount } = render(
@@ -216,7 +216,7 @@ describe('GroupForm, for a category group', () => {
       expect(light()).toHaveValue(pairedColor('#35987d', 'colorLight'));
     });
 
-    it('stops once the admin sets the partner themselves', () => {
+    it('stops once the keeper sets the partner themselves', () => {
       renderForm();
 
       typeIn(dark(), '#4e8bc2');
@@ -455,7 +455,7 @@ describe('GroupForm, for a form group', () => {
     ]);
   });
 
-  // The icon an admin picks, one of the six or None, the generic.
+  // The icon a keeper picks, one of the six or None, the generic.
   describe('its icon', () => {
     const icons = () => screen.getByRole('group', { name: 'Icon' });
 

@@ -5,7 +5,7 @@ import { A, B, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
 // The names behind an admin list's Updated column, read by a curator
-// as well as an admin, and by no one else. Called by direct id, as a forged
+// as well as a keeper, and by no one else. Called by direct id, as a forged
 // request would, so the page hiding it is not what refuses.
 
 useTestDatabase(() => {});

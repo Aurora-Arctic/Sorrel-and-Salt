@@ -12,8 +12,8 @@ import ConfirmedAction from './confirmed-action';
 import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
 
-// The primary admin's switch on admin grants and revokes: a warning while paused and the control
-// that flips it. Every admin sees both; only the primary admin can use it, others see the reason in
+// The primary keeper's switch on keeper grants and revokes: a warning while paused and the control
+// that flips it. Every keeper sees both; only the primary keeper can use it, others see the reason in
 // a tip. Pause asks first; Resume acts at once. The service is the guard
 // (claude-docs/components/user-list.md).
 
@@ -33,9 +33,9 @@ const STATES = {
   paused: {
     state:
       // Short: who may still act is the switch's tip.
-      'Admin changes are paused.',
-    label: 'Resume Admin Changes',
-    done: 'Admin changes are resumed.',
+      'Keeper changes are paused.',
+    label: 'Resume Keeper Changes',
+    done: 'Keeper changes are resumed.',
     busy: 'Resuming',
     // Red and full size like Pause, so the control
     // keeps its look as it flips.
@@ -45,10 +45,10 @@ const STATES = {
   open: {
     // No sentence while changes are on: only the button.
     state: undefined,
-    label: 'Pause Admin Changes',
-    done: 'Admin changes are paused.',
+    label: 'Pause Keeper Changes',
+    done: 'Keeper changes are paused.',
     busy: 'Pausing',
-    // Big and red: it stops every other admin.
+    // Big and red: it stops every other keeper.
     buttonClass: 'btn btn--destructive',
     send: () => graphqlRequest(PauseAdminRoleChangesDocument),
   },
@@ -56,10 +56,10 @@ const STATES = {
 
 /** Whom a pause stops, asked before it is sent. */
 const PAUSE_QUESTION =
-  'Pause admin changes? Until you resume them, no other admin can grant or revoke admin, approve or revoke coven creation, or invite an admin.';
+  'Pause keeper changes? Until you resume them, no other keeper can grant or revoke the keeper role, approve or revoke coven creation, or invite a keeper.';
 
-/** Why the control cannot be used, to an admin who is not the primary one. */
-const NOT_PRIMARY = 'Only the primary admin can pause or resume admin changes.';
+/** Why the control cannot be used, to a keeper who is not the primary one. */
+const NOT_PRIMARY = 'Only the primary keeper can pause or resume keeper changes.';
 
 const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement => {
   const { refresh } = usePendingNavigation();
@@ -97,7 +97,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
         </Notice>
       )}
       {!canToggle ? (
-        // In view but unusable, its reason in a tip, as the primary admin's
+        // In view but unusable, its reason in a tip, as the primary keeper's
         // Revoke is (on): the notice is the page's one sentence.
         <LockedControl label={copy.label} className={copy.buttonClass} reason={NOT_PRIMARY} />
       ) : paused ? (

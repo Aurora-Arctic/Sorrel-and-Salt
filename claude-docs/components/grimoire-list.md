@@ -26,9 +26,9 @@ match comes first and that order breaks a tie (M10.9's `grimoire` query).
 
 The route group `src/app/(shell)/coven/[slug]/grimoire/(list)/` holds them. Its `layout.tsx`
 runs the membership guard (`requireCovenMembership`, which calls `requireSession()`) and
-draws the tab row, with New Spell at the heading's end for an owner or a member, the roles that
+draws the tab row, with New Spell at the heading's end for a steward or a practitioner, the roles that
 may create a spell, opening the builder in a wide modal over the open tab at `?new=spell`, the
-tab, filter and page kept (M10.12; [`spell-builder.md`](spell-builder.md)); a viewer
+tab, filter and page kept (M10.12; [`spell-builder.md`](spell-builder.md)); an observer
 sees no New Spell; `page.tsx` and `drafts/page.tsx` set their titles and each call
 `grimoireTab()` (`grimoire-tab.tsx`) with its status. `grimoireTab` is an async function the
 page returns, rather than a component, so a page test can await the page whole. It reads the
@@ -126,8 +126,8 @@ spells them, and `VISIBILITY_LABELS`, what each is called on screen (Private and
   apart, as the coven cards' are ([`coven-cards.md`](coven-cards.md)):
   - **No Spells**, "There are no complete spells here yet.", or **No Drafts**, "There are
     no drafts here yet.", when the tab holds nothing and no filter is in force. On either tab a
-    viewer, who may not write a spell (`canCreate` false), is also told "A member or owner
-    of this coven can write them.", as an empty cupboard tells a viewer who can add;
+    viewer, who may not write a spell (`canCreate` false), is also told "A practitioner or steward
+    of this coven can write them.", as an empty cupboard tells an observer who can add;
   - **No Matches** when a filter is in force and matched nothing. The search sentence above
     already names the filter, so this says only what to do.
 
@@ -153,7 +153,7 @@ assigned categories and editor come from `readRecipeOf` (`grimoire/recipe-read.t
 function the recipe page calls, with the editor named in one `displayNamesOf` call. Each ingredient step then carries its stock mark (`supply`), from one `readStepSuppliesOf` call (`grimoire/[id]/recipe-supply.ts`), since the modal has no In the Cupboard column to show it (story 54; [spell-recipe.md](spell-recipe.md), "Quick Look"). A malformed
 id reads nothing, and `?new` or `?edit` hold the modal back so one dialog shows at a time. The
 modal's Edit shows for the same `rolePermits(role, { spell: ['update'] })` check as the card's
-pencil and links to `?edit=<id>` in place of `?spell=<id>`. Delete Spell's bin, with the same confirmation dialog, sits beside it in the Quick Look's heading, and on each card as an item of its More menu, for the roles that may delete (`rolePermits(role, { spell: ['delete'] })`: owner and member, not viewer). A confirmed delete from either lands on this tab's address, filter and page kept and `?spell` dropped, with `deleted=<name>` added for the Notice (M13.11). The confirmation dialog stacks over the Quick Look. An ingredient step's Quick Look eye
+pencil and links to `?edit=<id>` in place of `?spell=<id>`. Delete Spell's bin, with the same confirmation dialog, sits beside it in the Quick Look's heading, and on each card as an item of its More menu, for the roles that may delete (`rolePermits(role, { spell: ['delete'] })`: steward and practitioner, not observer). A confirmed delete from either lands on this tab's address, filter and page kept and `?spell` dropped, with `deleted=<name>` added for the Notice (M13.11). The confirmation dialog stacks over the Quick Look. An ingredient step's Quick Look eye
 opens the ingredient's details (`DetailsDialog`, M12.5) over the spell's modal, at the same
 address plus `&entry=<id>`, read with the Ingredients page's `readViewedEntry` and drawn with
 its `viewedDetailsOf` (`ingredients/viewed-details.tsx`), without the card's actions; closing

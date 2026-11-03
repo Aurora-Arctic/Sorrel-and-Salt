@@ -270,10 +270,10 @@ describe('Story 58: what the expiry job removes', () => {
   });
 });
 
-// An admin may approve an unverified account or make it an
+// A keeper may approve an unverified account or make it an
 // admin, and the ledger row that writes references the account with a
 // plain foreign key, so the job keeps it rather than fail on it.
-describe('Story 58: an account an admin has vouched for is not removed', () => {
+describe('Story 58: an account a keeper has vouched for is not removed', () => {
   const VOUCHED = `vouched${DOMAIN}`;
 
   async function ledgerRows(userId: string): Promise<number> {
@@ -294,7 +294,7 @@ describe('Story 58: an account an admin has vouched for is not removed', () => {
     );
   }
 
-  /** Two lapsed squats, alike but for whether an admin vouched for the first. */
+  /** Two lapsed squats, alike but for whether a keeper vouched for the first. */
   async function lapsedPair(vouched: boolean) {
     const kept = await squat(VOUCHED, 'fb-vouched');
     if (vouched) await vouch(kept.row.id);

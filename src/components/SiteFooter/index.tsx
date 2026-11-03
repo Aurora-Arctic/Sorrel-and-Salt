@@ -18,17 +18,17 @@ const SiteFooter = (): ReactElement => (
           {SITE_NAME}
         </Link>
         <nav aria-label="Footer" className="site-footer__nav">
-          <Link href="/privacy" className="site-footer__link">
-            Privacy
+          <Link href="/terms" className="site-footer__link">
+            Terms
           </Link>
           <Link href="/disclaimer" className="site-footer__link">
             Disclaimer
           </Link>
-          <Link href="/terms" className="site-footer__link">
-            Terms
-          </Link>
           <Link href="/code-of-ethics" className="site-footer__link">
             Code of Ethics
+          </Link>
+          <Link href="/privacy" className="site-footer__link">
+            Privacy
           </Link>
           <IconTip tip="Support">
             <SupportLink className="site-footer__support">

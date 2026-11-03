@@ -247,12 +247,12 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     // heading. Inside, a group named by that heading alone, as a list's
     // fieldset is by its legend: the New Form box and the cards.
     <CollapsibleSection
-      title="Variants"
+      title="Forms"
       summary={<SectionSummary section="variants" />}
       fold={fold}
       titleId={legendId}
       info={
-        <InfoTip id={hintId} label="Variants">
+        <InfoTip id={hintId} label="Forms">
           The forms it comes in: dried leaf, oil, whole root. Each adds its own description, safety
           notes and lists to the ingredient&rsquo;s, and never takes any away.
         </InfoTip>
@@ -302,7 +302,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
             <button
               type="button"
               className="btn"
-              aria-label="Add Variant"
+              aria-label="Add Form"
               onClick={() => addForm(getValues(BOX), null)}
             >
               Add
@@ -340,7 +340,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
           onKeep={() => setRemoving(null)}
         />
         {/* Labelled, so that it is told from the box's own status region. */}
-        <output className="visually-hidden" aria-label="Variants changes">
+        <output className="visually-hidden" aria-label="Forms changes">
           {announcement}
         </output>
       </fieldset>

@@ -403,7 +403,7 @@ const Skeleton = ({
         )}
         {shape === 'detail' && (
           // An opened support request in the modal's body, in the `.support-detail` grid the detail draws: the facts, the
-          // Thread and the reply in the main column, and for an admin the settings in the side column.
+          // Thread and the reply in the main column, and for a keeper the settings in the side column.
           <div className={side ? 'support-detail' : 'support-detail support-detail--single'}>
             <div className="support-detail__main">
               <div className="support-detail__facts">

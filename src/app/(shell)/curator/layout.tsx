@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: { template: titleTemplate('Curator'), default: 'Curator' },
 };
 
-// The curation guard, passed by a curator or an admin. Every page calls a guard too, as a layout does not
+// The curation guard, passed by a curator or a keeper. Every page calls a guard too, as a layout does not
 // re-run on client navigation (claude-docs/auth/admin-guard.md, "The curator guard"). The route-modal provider
 // is shared by all.
 export default async function CuratorLayout({ children }: AdminLayoutProps) {

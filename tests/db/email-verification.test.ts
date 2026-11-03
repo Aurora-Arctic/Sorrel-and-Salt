@@ -348,7 +348,7 @@ describe('the update hook stamps other Better Auth writes', () => {
 // Promotion at verification: our own mail vouches for the address the
 // way Google or Discord would, and only because the link is honoured from a
 // session holding the row.
-describe('the primary admin is promoted at first-party verification', () => {
+describe('the primary keeper is promoted at first-party verification', () => {
   async function roleOf(email: string): Promise<string | undefined> {
     const [row] = await sql`select role::text as role from users where email = ${email}`;
     return row?.role as string | undefined;

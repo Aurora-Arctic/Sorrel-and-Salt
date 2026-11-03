@@ -12,7 +12,7 @@ import { insertReference, insertReferenceLink } from '../../../support/db/insert
 import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// A compendium entry's sourcing score is a curator's and an admin's read: anyone else, signed out included, gets null from
+// A compendium entry's sourcing score is a curator's and a keeper's read: anyone else, signed out included, gets null from
 // GraphQL and Forbidden from the service, asked by the entry's own id. A coven's ingredient is never scored.
 
 let sql: postgres.Sql;

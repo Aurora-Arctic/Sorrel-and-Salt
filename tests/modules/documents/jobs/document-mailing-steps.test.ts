@@ -4,7 +4,11 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { mailBatchStep } from '@/modules/documents/jobs/document-mailing-steps';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '@/modules/documents/mailing-pace';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
+import {
+  insertDocument,
+  insertDocumentMailing,
+  insertDocumentVersion,
+} from '../../../support/db/insert-document';
 
 // The document mailing's batch step, called directly as the job's run calls it. Mail goes through the real `deliver` to a
 // stand-in Mailpit that answers fetch in this process, so a refused transport is refused the way production refuses it. Each
@@ -110,18 +114,22 @@ interface MailingSeed {
   allSent?: boolean;
 }
 
-/** A mailing of `versionId` to `recipients`, written raw as the service would leave it. */
+/** A mailing of the version or versions to `recipients`, written raw as the service would leave it. */
 async function mailing(
-  versionId: string,
+  versionIds: string | readonly string[],
   recipients: { id: string }[],
   { status = 'sending', startedSecondsAgo = 0, allSent = false }: MailingSeed = {},
 ): Promise<string> {
-  const [{ id }] = await sql`
-    insert into document_mailings
-      (document_version_id, summary, status, recipient_count, finished_at, created_at, created_by, updated_by)
-    values (${versionId}, ${SUMMARY}, ${status}, ${recipients.length}, ${status === 'sent' ? sql`now()` : null},
-      now() - make_interval(secs => ${startedSecondsAgo}), ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
-    returning id`;
+  const id = await insertDocumentMailing(
+    sql,
+    {
+      items: [versionIds].flat().map((versionId) => ({ versionId, summary: SUMMARY })),
+      status,
+      recipient_count: recipients.length,
+      startedSecondsAgo,
+    },
+    BOOTSTRAP_USER_ID,
+  );
   await sql`
     insert into document_mailing_recipients ${sql(
       recipients.map((recipient) => ({
@@ -202,6 +210,19 @@ describe('the document mailing batch step', () => {
     expect(await sentCount(nextId)).toBe(nextReaders.length);
   });
 
+  it('mails the documents of a joint mailing still live once one of its versions is deleted', async () => {
+    const kept = await publishedDocument();
+    const gone = await publishedDocument();
+    const readers = await accounts(2);
+    const mailingId = await mailing([kept.versionId, gone.versionId], readers);
+
+    await sql`update document_versions set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+      where id = ${gone.versionId}`;
+
+    expect(await mailBatchStep(mailingId, ORIGIN)).toBe('sent');
+    expect(await sentCount(mailingId)).toBe(readers.length);
+  });
+
   it('moves a mailing whose document was deleted out of sending, so the mailing behind it starts', async () => {
     const stuck = await publishedDocument();
     const stuckId = await mailing(stuck.versionId, await accounts(2), { startedSecondsAgo: 3600 });
@@ -243,7 +264,7 @@ describe('the document mailing batch step', () => {
   it('sends nothing more once the mailing is replaced partway through a batch', async () => {
     const { versionId } = await publishedDocument();
     const mailingId = await mailing(versionId, await accounts(5));
-    // What the service leaves when an admin mails the document again while this batch is sending.
+    // What the service leaves when a keeper mails the document again while this batch is sending.
     beforeTake = async () => {
       await sql`update document_mailings set status = 'replaced' where id = ${mailingId}`;
     };

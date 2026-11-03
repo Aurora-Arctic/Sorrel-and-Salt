@@ -128,7 +128,7 @@ async function ids(filter: PrivilegeChangeFilter): Promise<string[]> {
 }
 
 describe('listPrivilegeChanges', () => {
-  it('reads an admin every change, newest first, with what each row says', async () => {
+  it('reads a keeper every change, newest first, with what each row says', async () => {
     const expected = await newestFirst();
     expect(expected).toHaveLength(LEDGER.length);
 
@@ -233,7 +233,7 @@ describe('listPrivilegeChanges', () => {
 });
 
 describe('usersForAdmin', () => {
-  it('answers an admin each live user named, in the order asked, null for no one', async () => {
+  it('answers a keeper each live user named, in the order asked, null for no one', async () => {
     const nowhere = '00000000-0000-0000-0000-0000000000f9';
 
     const answers = await usersForAdmin(asUser(E), [B.id, nowhere, A.id, B.id]);

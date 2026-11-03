@@ -164,7 +164,7 @@ describe('the Membership proof', () => {
     });
 
     it('answers nothing for a user in no workspace, and no query for no users', async () => {
-      // E is the site admin and a member of nothing (the fixture cast).
+      // E is the site keeper and a member of nothing (the fixture cast).
       await expect(findMembershipsOfUsers([E.id])).resolves.toEqual([]);
       await expect(findMembershipsOfUsers([])).resolves.toEqual([]);
     });

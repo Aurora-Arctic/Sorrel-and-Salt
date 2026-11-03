@@ -31,7 +31,7 @@ export function identityKeyOf(name: SQLWrapper, canonicalName: SQLWrapper): SQL 
 // Column names are raw and the text matches the migrations byte for byte (claude-docs/db/identity-model.md, "Ingredient table details").
 const IDENTITY_KEY = identityKeyOf(sql.raw('name'), sql.raw('canonical_name'));
 
-// One table, two tiers: `workspace_id IS NULL` is the compendium (everyone reads, admins write); otherwise the row is that workspace's.
+// One table, two tiers: `workspace_id IS NULL` is the compendium (everyone reads, keepers write); otherwise the row is that workspace's.
 export const ingredients = pgTable(
   'ingredients',
   {

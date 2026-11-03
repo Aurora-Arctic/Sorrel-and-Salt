@@ -28,7 +28,7 @@ function childrenFor(session: Session): SourcingChildren {
  * A compendium entry's sourcing score and the facts behind it, for a curator or an admin: what the admin entry page shows.
  * `children` are the request's loaders under GraphQL, so a page of entries reads its forms and citations in one batch.
  *
- * @throws {Forbidden} `session` is neither a curator nor an admin.
+ * @throws {Forbidden} `session` is neither a curator nor a keeper.
  * @throws {NotFound} `id` names no live compendium entry, a coven's ingredient included.
  */
 export async function readSourcingScore(

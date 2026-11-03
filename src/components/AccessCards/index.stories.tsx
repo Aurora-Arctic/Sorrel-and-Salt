@@ -9,9 +9,9 @@ const meta = { title: 'Pages / Access Cards', component: AccessCards } satisfies
 export default meta;
 
 const ROLES: AccessRole[] = [
-  { name: 'Fixture Owner', short: 'Own' },
-  { name: 'Fixture Member', short: 'Mem' },
-  { name: 'Fixture Viewer', short: 'View' },
+  { name: 'Fixture Steward', short: 'Stew' },
+  { name: 'Fixture Practitioner', short: 'Prac' },
+  { name: 'Fixture Observer', short: 'Obs' },
   { name: 'Fixture Curator', short: 'Cur' },
   { name: 'Fixture Admin', short: 'Adm' },
   { name: 'A Fixture with Database Access', short: 'Dev' },
@@ -23,7 +23,7 @@ const ROWS: AccessRow[] = [
     cells: [
       { mark: 'yes', text: 'Yes, for everyone in the fixture' },
       { mark: 'yes', text: 'Yes, for everyone in the fixture' },
-      { mark: 'no', text: 'No: a viewer does not see the fixture roll' },
+      { mark: 'no', text: 'No: an observer does not see the fixture roll' },
       { mark: 'yes', text: 'Yes, as the name beside a fixture edit' },
       { mark: 'yes', text: 'Yes, for every account' },
       { mark: 'yes', text: 'Yes' },

@@ -4,14 +4,14 @@ Every page is protected unless it is named public, and two layers do the
 protecting: a cheap one that owns the redirect, and a secure one that owns the
 answer.
 
-| Layer                                                                | Where                        | Checks                                           | On failure                                                                        |
-| -------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Proxy (optimistic)                                                   | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>`                                           |
-| `requireSession()` (secure)                                          | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page                                                  |
-| `requireSignedIn()`, the shell                                       | `src/lib/request-session.ts` | The secure check, without the email check        | The same redirect, from the shell layout                                          |
-| Proxy, `/workshop/*` only                                            | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin                                              |
-| `requireCuratorSession()`, `/curator/*` pages and `/keepers/support` | `src/lib/request-session.ts` | The secure check, then `assertCurator()`         | The redirect, or a 403 page for a user (["The curator guard"](admin-guard.md))    |
-| `requireAdminSession()`, `/keepers` people pages                     | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-admin (["The admin guard"](admin-guard.md)) |
+| Layer                                                                | Where                        | Checks                                           | On failure                                                                         |
+| -------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Proxy (optimistic)                                                   | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>`                                            |
+| `requireSession()` (secure)                                          | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page                                                   |
+| `requireSignedIn()`, the shell                                       | `src/lib/request-session.ts` | The secure check, without the email check        | The same redirect, from the shell layout                                           |
+| Proxy, `/workshop/*` only                                            | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-keeper                                              |
+| `requireCuratorSession()`, `/curator/*` pages and `/keepers/support` | `src/lib/request-session.ts` | The secure check, then `assertCurator()`         | The redirect, or a 403 page for a user (["The curator guard"](admin-guard.md))     |
+| `requireAdminSession()`, `/keepers` people pages                     | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-keeper (["The admin guard"](admin-guard.md)) |
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
@@ -32,8 +32,8 @@ answer.
   `X-Robots-Tag: noindex` on every response it handles, so a preview or the
   staging site is never indexed. On production it sets
   `X-Robots-Tag: noindex, follow` instead, and only for an address carrying one
-  of the query parameters in `NOINDEX_PARAMS` (`entry`, `support`, `after`,
-  `before`), which open a dialog over a page or turn a pager page. Everything else redirects, so a
+  of the query parameters in `NOINDEX_PARAMS` (`entry`, `support`), which open a dialog over a page. A compendium pager page
+  (`after`, `before`) is its own indexable page and gets no header. Everything else redirects, so a
   route added without anyone thinking about auth is protected, not open. An
   entry is an exact path, or a path ending `/*` for everything beneath it:
   `/` admits only `/`, `/sign-in` does not admit `/sign-in-help`, and
@@ -135,11 +135,11 @@ navigation.
   as `errorCallbackURL`, so a failed attempt still asks for none. The
   callback's after-hook reads the flag back with `getOAuthState()` and, for a
   verified row, replaces the endpoint's redirect with the landing for the role
-  held after `promotePrimaryAdmin` — so the primary admin promoted at this very
+  held after `promotePrimaryAdmin` — so the primary keeper promoted at this very
   sign-in lands on `/keepers` or `/curator`. The flag is client-supplied, as every
   `additionalData` key is, and trusted accordingly: it chooses between two
   landings the account may open anyway, and the area's guard is the role.
-  A non-admin who is already in a coven is sent into its page directly
+  A non-keeper who is already in a coven is sent into its page directly
   (`signedInLanding` in `src/lib/landing.ts`, the first coven the switcher
   lists), not to `/coven`
   (MB.257): `/coven` answers such a visitor with a redirect to that page, and
@@ -154,9 +154,9 @@ navigation.
   An unverified account goes to the email page first as ever, bare
   (`/account/email`) with no return path, and the sign-up mail's link lands
   bare on the confirmed view: its Continue takes the role's landing too, read
-  when the page renders, after the link has promoted the primary admin (["The
+  when the page renders, after the link has promoted the primary keeper (["The
   email page"](admin-bootstrap.md#the-email-page-mb54)). `/`'s Continue offers a signed-in visitor the same landing,
-  so a curator's or an admin's front door leads to `/keepers` or `/curator` too
+  so a curator's or a keeper's front door leads to `/keepers` or `/curator` too
   ([`components/welcome.md`](../components/welcome.md)). The helpers are shared
   with the tests' OAuth harness, whose `signIn` with no destination is
   `SignInPanel`'s sign-in with none.

@@ -23,9 +23,9 @@ export interface FacetPanelFilter {
   withoutReferences: boolean;
   /** Show only the entries that have no live form (admin). */
   withoutForms: boolean;
-  /** The admin's Hidden switch, shown only when set. The public and coven panels leave it out. */
+  /** The keeper's Hidden switch, shown only when set. The public and coven panels leave it out. */
   hidden?: boolean;
-  /** The admin's Reviewed strip, shown only when set: `''` for either. The public and coven panels leave it out. */
+  /** The keeper's Reviewed strip, shown only when set: `''` for either. The public and coven panels leave it out. */
   reviewed?: '' | ReviewSetting;
   /** The coven's Source control, shown only when set: `''` for both. The compendium's panel leaves it out. */
   source?: '' | IngredientSource;

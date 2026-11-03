@@ -57,7 +57,7 @@ export default async function CovenIngredientsPage({
   // The list as it is, with no dialog: where the dialog closes and saves back to.
   const listHref = covenIngredientsHref(workspace.slug, { ...filter, after, before });
   const mayEdit = rolePermits(membership.role, { ingredient: ['update'] });
-  // The entry whose details are open over the list, `?entry=<id>`: any member's, a viewer's too,
+  // The entry whose details are open over the list, `?entry=<id>`: any member's, an observer's too,
   // since the details only read.
   const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
@@ -65,7 +65,7 @@ export default async function CovenIngredientsPage({
   const here = { ...filter, after, before, entry: viewed ? entryId : undefined };
   const hereHref = covenIngredientsHref(workspace.slug, here);
   const editId = typeof query.edit === 'string' && query.edit ? query.edit : undefined;
-  // Read only for a role that may edit: a viewer's `?edit` opens nothing and reads nothing.
+  // Read only for a role that may edit: an observer's `?edit` opens nothing and reads nothing.
   const edited = mayEdit && editId ? await readEditedEntry(workspace.id, editId) : undefined;
   const annotateId =
     typeof query.annotate === 'string' && query.annotate ? query.annotate : undefined;
@@ -77,7 +77,7 @@ export default async function CovenIngredientsPage({
   // assert. An own entry's Delete is in its Edit Ingredient dialog, not on the card.
   const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
   const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
-  // The foot's Edit Stock pencil, on the permission `saveStock` asserts: none for a viewer.
+  // The foot's Edit Stock pencil, on the permission `saveStock` asserts: none for an observer.
   const mayStock = rolePermits(membership.role, { inventory: ['update'] });
   // A card's Edit and Annotate open over the list alone, never over details.
   const placed = (dialog: CovenListDialog) =>

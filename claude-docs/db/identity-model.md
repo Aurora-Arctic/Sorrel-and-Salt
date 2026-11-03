@@ -97,10 +97,10 @@ What follows describes all three as built.
   written to the list since, after each ingredient's rows, then dropped it
   ([`../design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)).
 - **`ingredient_forms`** — `id`, `name`, `slug`, `groupId`, `description`, +
-  audit. Shaped like `categories`: global, admin-curated, no workspace
-  scoping. This is the third resource admins curate globally, alongside the
+  audit. Shaped like `categories`: global, keeper-curated, no workspace
+  scoping. This is the third resource keepers curate globally, alongside the
   compendium and categories (CLAUDE.md). Its `groupId` points at
-  `ingredient_form_groups`, admin-curated in turn — see the
+  `ingredient_form_groups`, keeper-curated in turn — see the
   [categories section](categories.md), which settles both (MB.35).
 
 **`nomenclature`** is a seven-value `pgEnum`, `NOT NULL` with no default:
@@ -204,7 +204,7 @@ and the folded label per workspace, and the slug per tier (MB.226).
 `ingredient_forms`.** It was the ingredient row's own `form` until MB.222,
 for the same reason. To a coven the curated table is an autofill vocabulary,
 not a constraint: a foreign key would make an uncurated value like `rhizome`
-unwritable until an admin curates it first. `ingredients-schema.test.ts`
+unwritable until a keeper curates it first. `ingredients-schema.test.ts`
 asserts the ingredient's own foreign keys are its workspace and nothing else,
 since that is the property the whole free-text design rests on. **A pick is
 recorded beside the text** (MB.165): a variant's `form_id`, a nullable foreign
@@ -475,7 +475,7 @@ Notes that used to sit as comments on `src/modules/ingredients/schema/ingredient
 - **Toxic flag.** The ingredient's flag is its own and is never read into a form or out of one; each form carries its own (DESIGN.md §5, "The toxic flag is the one exception").
 - **Seed hash.** `seedHash` is the sha256 of the seeded fields of the markdown file the entry was last written from, so the seed can tell a changed file from an unchanged one and apply a correction. Null until the seed writes it, and always null on a coven's own entry. It is not a stamp: the trigger leaves `updated_at` alone when only this changes (migration 0081). A hash is 64 lower-case hex characters or nothing, because a truncated or upper-cased one would never equal a file's and would queue a correction forever.
 - **Review mark.** `reviewedAt` and `reviewedBy` are set together or both null, since one without the other says nothing a reader can trust. A reviewed entry is one the seed never overwrites. Only the review service writes them, and like the hash they are never a change to the content, so the trigger ignores both.
-- **Seed key.** `seedKey` is the key the compendium seed gives the entry it writes, so an entry an admin renames is not seeded again beside itself. The `standard` fixture keys on identity and writes none.
+- **Seed key.** `seedKey` is the key the compendium seed gives the entry it writes, so an entry a keeper renames is not seeded again beside itself. The `standard` fixture keys on identity and writes none.
 - **Indexes.** The formal name is unique once per tier whatever the form, as two indexes: a constraint carries no WHERE and `nullsNotDistinct()` exists only on constraints. Label uniqueness is the workspace tier only: inside one drawer an ambiguous label is a mistake, in the compendium it is the point. The slug index for the workspace tier carries no tier predicate, as DESIGN.md §5 writes it, because a null `workspace_id` collides with nothing in a btree.
 - **Shown flag.** `shown` says whether the public compendium shows the entry: `true` by default, so every row there already reads as shown. A hidden entry is kept, never deleted, and a coven's own entry is always shown. A curator sets it through one service, the seed sets it only when it first lands an entry (hidden when neither the entry nor any of its forms names a category), and every public read excludes `shown = false` in SQL, while admin screens and a coven's cupboard still see the entry. Migration `0109` applied that same rule once to the rows already there, since nobody could have chosen Show or Hide before it, and migration `0117` hid once every live shown entry with no live category (the category and its group live, the pair on the entry or on a live form). `ingredients_tier_shown`, on `(workspace_id, shown)` where `deleted_at IS NULL`, serves that read.
 - **Trigram indexes.** One multicolumn `gin_trgm_ops` index serves a predicate on either column alone (asserted by EXPLAIN in ingredients-trigram.test.ts). It is not partial. A match must be written `name % $1` under a per-transaction `pg_trgm.similarity_threshold`, never `similarity(name, $1) > 0.4`, which no trigram index can answer. The folded twin goes through `unaccent_immutable` (migration 0026) for the compendium search's accent-insensitive `<%`; only an expression index lets a fold reach a trigram index. It sits beside the raw one because the fuzzy finders still match the raw columns.

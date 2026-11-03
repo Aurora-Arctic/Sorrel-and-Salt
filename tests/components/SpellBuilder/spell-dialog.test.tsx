@@ -454,7 +454,7 @@ describe('SpellDialog', () => {
     it('stays open with the refusal shown when the save on Close is refused', async () => {
       mockGraphQLError('CreateSpell', {
         code: 'FORBIDDEN',
-        message: 'Viewers cannot write spells',
+        message: 'Observers cannot write spells',
       });
       renderDialog({});
       type('Title', 'Fixture Working');
@@ -463,7 +463,7 @@ describe('SpellDialog', () => {
         fireEvent.click(close());
       });
 
-      expect(await within(dialog()).findByText('Viewers cannot write spells')).toHaveAttribute(
+      expect(await within(dialog()).findByText('Observers cannot write spells')).toHaveAttribute(
         'role',
         'alert',
       );

@@ -8,7 +8,7 @@
 (["The astrology vocabulary seed"](astrology-vocabulary-seed.md)), and read
 by a member's autofill (["The member's autofill"](member-autofill.md)). They
 replace a TypeScript constant of the same lists, deleted with the seed: a list
-an admin cannot extend without a deploy is the shape `form` had before MB.35,
+a keeper cannot extend without a deploy is the shape `form` had before MB.35,
 and wrong for the same reason. Files, scripts and functions say _astrology_
 rather than _correspondence_, which in §5 names every property an ingredient
 carries — element and deities too — not these two; the migration keeps the
@@ -18,7 +18,7 @@ name it shipped under, since its tag is in the journal.
 
 - **`celestial_bodies`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
-  admin-curated, in the `vocabulary` module, both in one schema file as the
+  keeper-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, and a nullable integer `position` (M12.52): calendar order for the signs, Ophiuchus 13, and the Sun outward for the eleven lights and planets; the other bodies and any value a curator adds have none, sort after the positioned ones by name, and the curation form does not take it. No `workspace_id`.
   The only foreign keys are the audit stamps, and `ingredients.celestial_bodies` and
   `.zodiac_signs` point none at either table — `ingredients-schema.test.ts`
@@ -74,9 +74,9 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
 **The two readers are scoped differently.** A member's autofill (MB.94) offers
 curated rows first, then uncurated values in use in the compendium and the
 current workspace only, and since MB.162 every one of those is the
-workspace's. The admin's read (MB.95) is the compendium tier only — the live
+workspace's. The keeper's read (MB.95) is the compendium tier only — the live
 entries holding a value, which refuse its delete and take its rename
-(MB.162) — since an admin reaches no workspace's ingredients (M6.6); its finder
+(MB.162) — since a keeper reaches no workspace's ingredients (M6.6); its finder
 reads across the tier seam ([`modules.md`](../modules.md), "The tier seam"),
 as the autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
@@ -102,17 +102,18 @@ these writes keep them so after the write.
 - **The slug is `slugify(name)`** and follows a rename; `seedKey` stays as it
   was (MB.171). A collision is `VALIDATION` on `name`, naming the row at the
   address.
-- **A delete is refused while a live compendium entry's list holds the
-  value**: `Forbidden`, naming the first three entries and how many more,
-  through the compendium's own filter (`IngredientFilter.celestialBody` or
-  `zodiacSign`) and the shared `refuseWhileHeld`. A coven's ingredient never blocks
+- **A delete is refused while a live compendium entry's list, or a live
+  variant's, holds the value**: `Forbidden`, naming the first three entries and how many more,
+  through the compendium's own filter (`IngredientFilter.celestialBodies` or
+  `zodiacSigns`, which reads live variants' lists as the public filter does) and the shared `refuseWhileHeld`. A coven's ingredient never blocks
   it; its value moves into that coven's in-use bucket.
 - **A rename carries the new name onto every live compendium entry holding
   the old, in the same transaction**, through `write.carryAstrologyRename`:
-  each entry folding to the old spelling is replaced in its place, and
+  each entry folding to the old spelling, and each live variant of a live
+  compendium entry, is replaced in its place in a second statement, and
   nothing else in the row moves, since a celestial body or a sign is no part of an
   entry's identity or slug. A case-only rename carries too. A soft-deleted
-  entry keeps the old spelling, and a coven's ingredient is never written
+  entry, a dropped variant and a coven's ingredient or variant keep the old spelling and are never written
   (M6.6). The writer is the twenty-second, named below the module boundary
   for `carryFormRename`'s reason: the vocabulary module may not name
   `ingredients`.
@@ -129,10 +130,10 @@ Each write expires the `compendium` tag once it has committed (M8.7;
 
 ## Astrology service details
 
-`src/modules/vocabulary/services/astrology.ts` is one code path for both curated astrology vocabularies (celestial bodies and zodiac signs), keyed by the ingredient list each curates. Reads are public; writes are for a curator or an admin alone.
+`src/modules/vocabulary/services/astrology.ts` is one code path for both curated astrology vocabularies (celestial bodies and zodiac signs), keyed by the ingredient list each curates. Reads are public; writes are for a curator or a keeper alone.
 
-- A compendium entry's celestial bodies and signs are spellings the vocabulary curates, so a value a live entry's list holds is held: its delete is refused (the message names the entries) and its rename, a change of case included, is carried onto the list in the same write. No slug moves, since a value is no part of an entry's identity or slug. A soft-deleted entry keeps the old spelling. A rewrite leaves `seedKey` as it was.
-- A coven's ingredient never holds a value and is never rewritten: its spelling moves into the coven's in-use values, and an admin writes nothing of a coven's.
+- A compendium entry's celestial bodies and signs are spellings the vocabulary curates, so a value a live entry's list, or a live variant's, holds is held: its delete is refused (the message names the entries) and its rename, a change of case included, is carried onto the lists in the same write. No slug moves, since a value is no part of an entry's identity or slug. A soft-deleted entry keeps the old spelling. A rewrite leaves `seedKey` as it was.
+- A coven's ingredient never holds a value and is never rewritten: its spelling moves into the coven's in-use values, and a keeper writes nothing of a coven's.
 - A value folds as a slug does, trimmed and lower-cased, so every live row is the last live spelling of its value: two live rows of one fold would share a slug, which the partial unique index refuses.
 - The entries are read before the delete's transaction, so an entry saved with the value in the instant between is left holding a retired spelling.
 - The list and its count are cached under the `compendium` tag, keyed by the field's name rather than handed its table, since the arguments are the cache key.

@@ -107,7 +107,7 @@ export const Inviting: Story = {
   },
 };
 
-// Paused, to an admin who is not the primary one: New Invitation and every
+// Paused, to a keeper who is not the primary one: New Invitation and every
 // Revoke in view but locked, the pause as the reason in a tip.
 const pausedNode = <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />;
 

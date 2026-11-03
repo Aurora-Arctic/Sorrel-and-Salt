@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import DocumentPage from '@/components/DocumentPage';
 import { slugify } from '@/lib/slugify';
@@ -80,6 +80,25 @@ describe('DocumentPage', () => {
     );
     // The deeper heading is still on the page, just not in the menu.
     expect(screen.getByRole('heading', { level: 4, name: 'Fixture Deep' })).toBeTruthy();
+  });
+
+  // On a phone the menu folds into a disclosure, closed so the page lands on its text (PageNav's
+  // `collapsible`; tests/components/PageNav covers the fold). The environment reports a narrow viewport.
+  it('folds the On This Page menu into a closed disclosure on a narrow viewport, opened by its summary', () => {
+    show('## Fixture Section\n\nFixture text.');
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+
+    const fold = within(nav).getByRole('group');
+    expect(fold).not.toHaveAttribute('open');
+    expect(within(fold).getByRole('link', { name: 'Fixture Section' })).toBeTruthy();
+
+    // The summary has no ARIA role, so it is found as the disclosure group's own toggle. happy-dom
+    // toggles a disclosure before React's listener can cancel it, so the native toggle is cancelled
+    // here, as the component does in a browser, leaving `open` to the component.
+    const summary = fold.querySelector(':scope > summary') as HTMLElement;
+    summary.addEventListener('click', (event) => event.preventDefault());
+    fireEvent.click(summary);
+    expect(fold).toHaveAttribute('open');
   });
 
   // A heading's text need not be unique in a document, but an id must be, or the menu's second link lands on the first heading.
@@ -243,6 +262,24 @@ describe('DocumentPage', () => {
         'Fixture Mail': 'mailto:fixture@example.test',
         'https://example.test/auto': 'https://example.test/auto',
       });
+    });
+
+    // robots.txt blocks the account pages and a signed-out crawler is sent to sign-in from them, so a
+    // crawler that followed the link would report a blocked page.
+    it('asks a crawler not to follow a link into the account pages, and follows any other', () => {
+      show(
+        [
+          '[Fixture Agreement](/account/terms), [Fixture Account](/account) and [Fixture Return](/account?tab=email).',
+          '[Fixture Terms](/terms), [Fixture Accounting](/accounting) and [Fixture Site](https://example.test/account/terms).',
+        ].join('\n\n'),
+      );
+
+      for (const name of ['Fixture Agreement', 'Fixture Account', 'Fixture Return']) {
+        expect(screen.getByRole('link', { name }), name).toHaveAttribute('rel', 'nofollow');
+      }
+      for (const name of ['Fixture Terms', 'Fixture Accounting', 'Fixture Site']) {
+        expect(screen.getByRole('link', { name }), name).not.toHaveAttribute('rel');
+      }
     });
 
     it('prints any other address as plain text, keeping the words', () => {

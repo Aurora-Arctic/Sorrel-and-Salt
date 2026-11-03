@@ -260,13 +260,14 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
 worker's slot database, the one its server reads: a user stamped as
 its own creator, holding the site role given
 (`user` unless the spec asks for `curator` or `admin`; any role but `user` also holds `canCreateWorkspace`, which the CHECK demands (M11.20)), verified unless the spec passes
-`emailVerified: false` (MB.205, for an admin approving an unverified
+`emailVerified: false` (MB.205, for a keeper approving an unverified
 account), one `accounts` row per provider named, and a session. It then hands the browser the session cookie Better
 Auth would have set. The value is the token, a dot, and its base64
 HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
 `signCookieValue` does it. The runner and the served build share that
 secret: `playwright.yml` and compose set it at job level, and a local run
-sets it on the command line, or the helper throws. The name is
+sets it on the command line, read from `.env.local`, or the helper throws
+([`../commands.md`](../commands.md) has the command). The name is
 `better-auth.session_token`, not the `__Secure-` name a production build's https base URL would give it, because no browser sends a `Secure` cookie to a plain-http origin such as `devcontainer:<port>`. Every e2e server is started with `E2E_PLAIN_SESSION_COOKIE=true` (`tests/e2e/servers.ts`), which `src/lib/auth.ts` reads through `plainSessionCookie()` (`src/lib/e2e-session-cookie.ts`) as `advanced.useSecureCookies: false`. The helper puts the cookie in the context's jar with the host alone (a cookie ignores the port, so any slot's server gets it), so every engine sends it and a followed redirect keeps it. The flag does nothing wherever `VERCEL_ENV` is set, so no deploy can lose the prefix. A `next start` left running from an earlier run may keep its names, so stop it first. The other shape, https in front of each slot server, was left: a certificate and a proxy per port, to test one cookie name. Give each call a fresh address:
 the email index is unique. To switch back to a user already made,
 `signInAgainAs(page, userId)` gives the browser a new session for it
@@ -507,7 +508,7 @@ during it, at the cost of one image pull and no CI minutes. The pieces:
 did). Two runs collide on `sorrel_e2e_template`, which global setup drops and
 rebuilds, even when their ports differ, and a second session's run may be
 invisible to `ps`. So a run from a session is
-`flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=… npx playwright test …`;
+`flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test …`;
 `npm run e2e:audit` takes the lock itself, and the path is fixed so that
 every session takes the same one. Vitest serialises on
 `/tmp/sorrel-vitest.lock`, for the same reason: its `db` project shares one
@@ -604,7 +605,7 @@ median, and say whether the servers were already up.
 cd /app  # or the worktree
 (
   flock 9
-  time env ENABLE_IMPERSONATION= BETTER_AUTH_SECRET="$(grep -m1 '^BETTER_AUTH_SECRET=' .env.local | cut -d= -f2-)" npx playwright test
+  time env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test
 ) 9>/tmp/sorrel-e2e.lock
 
 node -e '

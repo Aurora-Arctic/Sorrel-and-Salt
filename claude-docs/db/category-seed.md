@@ -11,14 +11,14 @@ import is one of the six pinned exemptions
 
 **Idempotency keys on the seed key and ignores `deleted_at`** (MB.172), which
 is stronger than the partial unique index gives on its own: the index only
-stops a second _live_ row, so a row an admin had soft-deleted would be
+stops a second _live_ row, so a row a keeper had soft-deleted would be
 re-inserted on the next run. A row is the seed's by its `seed_key`, the slug
-it was given at insert, so one an admin has since renamed is not met by its
-original either; a live row an admin wrote under a seed name is taken as
+it was given at insert, so one a keeper has since renamed is not met by its
+original either; a live row a keeper wrote under a seed name is taken as
 present by its slug ([seed-module.md](seed-module.md), "The seed module"). Removing a category is a decision, and a seed that runs again on
 every deploy would keep undoing it. Nothing already present is updated either,
 so a retitled category and a retuned colour pair both survive — the point of
-MB.35 is that the colour is the admin's from here on.
+MB.35 is that the colour is the keeper's from here on.
 
 **The colours live here and nowhere else.** MB.35 made a group's colour a
 pair of hexes on the row; the sixteen are the owner's hand-tuned pairs,
@@ -44,8 +44,8 @@ seed inserts only missing rows and never reaches one already written.
 `0052_retune-category-group-colours.sql` carries M5.6b's retune onto databases
 the seed had already filled. It updates each colour column on its own, matched
 by `seed_key`, and only where the column still holds the old seed's value
-(compared case-insensitively) on a live row — so a colour an admin has since
-chosen stays theirs, and an admin who retuned one half of a pair keeps it while
+(compared case-insensitively) on a live row — so a colour a keeper has since
+chosen stays theirs, and a keeper who retuned one half of a pair keeps it while
 the other half moves. Only the values that changed are listed: six dark hexes
 and all eight light ones. It stamps `updated_by` as the bootstrap user, whose
 values these are.
@@ -57,7 +57,7 @@ underscore separates rather than vanishing). There is no second list to keep
 in step, and no way to seed a row whose slug and name disagree. The rule is
 shared rather than the seed's own because M4.3a's form vocabulary and M5.6's
 admin mutations slug an admin-typed name with the same function, so a category
-an admin adds lands in the same shape as a seeded one.
+a keeper adds lands in the same shape as a seeded one.
 
 That is now a repo-wide rule rather than this seed's habit (CLAUDE.md,
 Conventions): `src/lib/slugify.ts` is the only file that may import the
@@ -90,7 +90,7 @@ One rule a later scenario inherits: write through the handle, stamping via
 
 `tests/db/seed/index.test.ts` is the `db`-project test, against the worker's
 clone with every table emptied first: it hands `seed()` a handle of its own
-and asserts that `minimal` leaves a bare install no admin, then the shape
+and asserts that `minimal` leaves a bare install no keeper, then the shape
 every production seed shares — the category, form, astrology, deity and
 sources seeds `migrate.yml` runs, each alone; the dev-only scenarios are a
 developer's to see working (MB.225) — once over all of them in an
@@ -101,9 +101,9 @@ own tables stamped as it and, through one `AFTER INSERT` trigger on every
 table recording `current_setting('app.current_user_id', true)` — the
 observation trick `tests/db/repository/write.test.ts` uses — published as the
 acting user of every insert; a second run that changes no row anywhere; and a
-row an admin soft-deleted left deleted. Each entry names the tables it is the
+row a keeper soft-deleted left deleted. Each entry names the tables it is the
 seed of.
 `categories.test.ts` keeps what is the category seed's alone: every group's
 colours clearing 4.5:1 on the page grounds `_variables.scss` defines, each
-category filed under its group, and a reseed over a colour pair an admin
+category filed under its group, and a reseed over a colour pair a keeper
 changed. Whether the literal matches §6 is review's, not a test's (MB.225).

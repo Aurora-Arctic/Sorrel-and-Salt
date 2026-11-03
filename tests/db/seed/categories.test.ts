@@ -9,7 +9,7 @@ import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
 import { slugify } from '@/lib/slugify';
 import type { CategoryGroupRow, CategoryRow } from './types';
 
-// Every seeded group colour clears the contrast floor on its theme's page ground, read from the stylesheet that defines it; the seed wires each category to its group and leaves an admin's colours alone.
+// Every seeded group colour clears the contrast floor on its theme's page ground, read from the stylesheet that defines it; the seed wires each category to its group and leaves a keeper's colours alone.
 // The shape every seed shares is index.test.ts's; the content is the seed doc's to review (claude-docs/db/category-seed.md, "The category seed").
 
 /** A page ground as `_variables.scss` defines it. */
@@ -85,13 +85,13 @@ describe('seedCategories(db)', () => {
     );
   });
 
-  describe('over a database an admin has edited', () => {
+  describe('over a database a keeper has edited', () => {
     beforeEach(async () => {
       await truncateAllTables(sql);
     });
 
-    // A group's colour is the admin's to change; a re-asserting seed would undo it.
-    it('does not overwrite a colour pair an admin has since changed', async () => {
+    // A group's colour is the keeper's to change; a re-asserting seed would undo it.
+    it('does not overwrite a colour pair a keeper has since changed', async () => {
       // Precondition: the truncated clone really starts empty, so the row re-coloured is this run's.
       expect(await allGroups()).toEqual([]);
       await seedCategories(db);

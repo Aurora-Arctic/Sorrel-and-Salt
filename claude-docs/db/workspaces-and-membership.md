@@ -9,7 +9,7 @@ proof"](membership-proof.md)).
 
 - **`workspaces`** — `id`, `name`, `slug`, + audit, and **nothing else**.
   There is no `kind` column and no automatically created workspace: every
-  workspace behaves identically, taking members and being deleted by an owner.
+  workspace behaves identically, taking members and being deleted by a steward.
   `workspaces-schema.test.ts` pins the whole column set rather than asserting
   the absence of one name, so a later `kind`/`type`/`personal` column turns it
   red instead of going unnoticed. The entity is `workspaces` even though it
@@ -36,7 +36,7 @@ proof"](membership-proof.md)).
   removed since.
 - **`owner` is a role here but not an invitable one.** That narrowing lives on
   `invitations` (M7.1; one table since MB.201), whose check constraint rejects it — see
-  ["Invitations"](invitations.md); ownership is granted afterwards by an existing owner on
+  ["Invitations"](invitations.md); the Steward role is granted afterwards by an existing steward on
   the members page.
 - Both tables carry the full six-column audit spread, and every `*_by` column
   references `users.id` as MB.5 specifies. `workspace_members` keeps all six

@@ -720,7 +720,7 @@ export const auth = betterAuth({
   // "The account page").
   disabledPaths: ['/update-user'],
   user: {
-    // Off, pinned by test: on, a user could move the primary admin's address
+    // Off, pinned by test: on, a user could move the primary keeper's address
     // to another account. An email changes through the verified flow.
     changeEmail: { enabled: false },
     // Never refuses: it only records what the provider said, for the hook below.
@@ -744,9 +744,11 @@ export const auth = betterAuth({
       // hook below can set these. No `defaultValue`, so Postgres's own applies.
       role: { type: 'string', input: false },
       canCreateWorkspace: { type: 'boolean', input: false },
-      // The terms the account agreed to: read into the session so the page gate can compare it with the terms version in force,
-      // written only by the `agreeToTerms` service.
+      // The versions of the terms, disclaimer and code of ethics the account agreed to: read into the session so the page gate can
+      // compare them with the versions in force, written only by the `agreeToTerms` service.
       agreedTermsVersion: { type: 'number', required: false, input: false },
+      agreedDisclaimerVersion: { type: 'number', required: false, input: false },
+      agreedEthicsVersion: { type: 'number', required: false, input: false },
       termsAcceptedAt: { type: 'date', required: false, input: false, returned: false },
       // Declared so the update hook below can clear it; nothing reads it here.
       verificationSentAt: { type: 'date', required: false, input: false, returned: false },
@@ -847,12 +849,12 @@ export const auth = betterAuth({
             },
           };
         },
-        // The sign-up hook's second write, outside `withAudit` for the same reason: a viewer seat in the demo coven, stamped by the
+        // The sign-up hook's second write, outside `withAudit` for the same reason: an observer seat in the demo coven, stamped by the
         // new user as their own row is. It never throws, as Better Auth cannot roll the user row back and a half-failed sign-up is
         // worse than a missing seat; the demo coven seed's backfill repairs it.
         after: async (user, ctx) => {
           // One run per unverified sign-up removes the row once its window lapses. A failed start is logged, as the sign-up stands
-          // either way and the account then holds its address until an admin removes it.
+          // either way and the account then holds its address until a keeper removes it.
           if (!user.emailVerified) {
             try {
               await scheduleProvisionalExpiry(user.id);

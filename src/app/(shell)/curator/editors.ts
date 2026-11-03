@@ -3,8 +3,8 @@ import type { UpdatedStamp } from '../../../components/DataTable/types';
 import type { Session } from '../../../lib/session';
 import { editorNamesForCurator, listedOnUserList } from '@/modules/identity';
 
-// The Updated column of every admin curated list: each row's last editor by name and when. The
-// names are read by `editorNamesForCurator`, which refuses anyone but a curator or admin and shows
+// The Updated column of every keeper curated list: each row's last editor by name and when. The
+// names are read by `editorNamesForCurator`, which refuses anyone but a curator or keeper and shows
 // no ledger field, in one lookup for the whole page.
 
 /** What the column says of an editor no live account holds any more: a removed user. */

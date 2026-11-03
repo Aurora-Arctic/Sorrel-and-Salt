@@ -10,7 +10,7 @@ export interface AdminInvitationEntry {
   email: string;
   /** The site role it grants once accepted. */
   siteRole: InvitableSiteRole;
-  /** Why the person is invited, where the inviting admin gave a reason. */
+  /** Why the person is invited, where the inviting keeper gave a reason. */
   note: string | null;
   expiresAt: Date;
 }
@@ -40,8 +40,8 @@ export interface AdminInvitationsProps extends Partial<PagerHrefs<Route>> {
   /** Where this page stands, the pager's "Page X of Y". */
   position?: PagePosition;
   /**
-   * Why this admin may neither invite nor withdraw, while admin changes are paused
-   * and they are not the primary admin; absent when they may.
+   * Why this keeper may neither invite nor withdraw, while keeper changes are paused
+   * and they are not the primary keeper; absent when they may.
    */
   locked?: string;
   /** Whether the address opens the invite form, `?invite`; never while locked. */
@@ -49,7 +49,7 @@ export interface AdminInvitationsProps extends Partial<PagerHrefs<Route>> {
 }
 
 export interface InviteAdminProps {
-  /** Why New Invitation is locked, while admin changes are paused; absent when it is not. */
+  /** Why New Invitation is locked, while keeper changes are paused; absent when it is not. */
   locked?: string;
   /** The filter the tab shows, which the form opens over; none when left out. */
   filter?: AdminInvitationsFilter;
@@ -80,6 +80,6 @@ export interface InviteFieldsProps extends Pick<InviteFormProps, 'onSent'> {
 /** A row's Revoke: the invitation it withdraws, and why it is locked, if it is. */
 export interface RevokeInvitationProps {
   invitation: AdminInvitationEntry;
-  /** Why this admin may not revoke, while admin changes are paused; absent when they may. */
+  /** Why this keeper may not revoke, while keeper changes are paused; absent when they may. */
   locked?: string;
 }

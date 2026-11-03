@@ -49,8 +49,8 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['Support', '/keepers/support'],
     ['People', '/keepers/users'],
     ['Invitations', '/keepers/invitations'],
-    // The documents open on the privacy policy, their first tab.
-    ['Documents', '/keepers/documents/privacy'],
+    // The documents open on the terms of use, their first tab.
+    ['Documents', '/keepers/documents/terms'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);
   // A tab with a count is named "Support 0": its label, then its count.
@@ -67,8 +67,8 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
 test('the old /admin addresses answer 404 to an admin', async ({ page }) => {
   await signInAs(page, 'old-addresses@admin-guard.test', ['discord'], 'admin');
 
-  // Why each could have answered: the same admin opens every page at its new address. These are also
-  // the People and Invitations tabs a curator is refused below, open to an admin.
+  // Why each could have answered: the same keeper opens every page at its new address. These are also
+  // the People and Invitations tabs a curator is refused below, open to a keeper.
   for (const path of [
     '/curator/compendium',
     '/keepers/support',
@@ -150,14 +150,14 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
   await expect(admin.getByRole('cell')).toHaveText([
     /Fixture Person$/,
     /an-admin@admin-users\.test$/,
-    /^Admin/,
-    // A mark alone: every admin may create a workspace, and the users CHECK
+    /^Keeper/,
+    // A mark alone: every keeper may create a workspace, and the users CHECK
     // says so, so the cell offers no control.
     'Yes',
     'Not timed out',
     'Not paused',
     /Discord.*Google/,
-    /^Version \d+$/,
+    /^Version \d+\.\d+\.\d+$/,
     /\d/,
   ]);
   // The mark's tip bubble shows on hover, a real browser's CSS.

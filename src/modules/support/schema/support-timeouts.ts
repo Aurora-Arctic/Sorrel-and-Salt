@@ -3,8 +3,8 @@ import { check, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-cor
 import { idColumn } from '../../../db/schema-parts';
 import { auditColumns, users } from '../../identity/schema/users';
 
-// An admin's sanction on a sender, kept as history and never deleted by the app. It stands while `lifted_at IS NULL` and `until`
-// is null or still ahead; the admin who set it is `created_by`.
+// A keeper's sanction on a sender, kept as history and never deleted by the app. It stands while `lifted_at IS NULL` and `until`
+// is null or still ahead; the keeper who set it is `created_by`.
 export const supportTimeouts = pgTable(
   'support_timeouts',
   {

@@ -84,14 +84,31 @@ const isFiltered = (params: PublicCompendiumSearchParams) =>
 const isListAddress = (params: PublicCompendiumSearchParams) =>
   !isFiltered(params) && [params.entry, params.after, params.before].every((v) => v === undefined);
 
-/** A filtered view is a thin copy: kept out of search results, with the unfiltered page canonical. */
+/**
+ * The address a search engine should treat as this one's real page. An open Quick Look is a copy of
+ * the entry's own page. A pager page of the unfiltered list names itself, cursor included, as it holds
+ * other entries than the first page. A filtered view is a thin copy of the unfiltered page.
+ */
+async function canonicalPath(params: PublicCompendiumSearchParams): Promise<string> {
+  const entryId = single(params.entry);
+  const shown = entryId ? await readCompendiumDetails(entryId) : undefined;
+  if (shown) return `/compendium/ingredients/${shown.entry.slug}`;
+  if (isFiltered(params)) return PUBLIC_COMPENDIUM_PATH;
+  const { after, before } = readPageCursors(params);
+  const cursor = after ? ['after', after] : before ? ['before', before] : undefined;
+  return cursor
+    ? `${PUBLIC_COMPENDIUM_PATH}?${new URLSearchParams([cursor])}`
+    : PUBLIC_COMPENDIUM_PATH;
+}
+
+/** A filtered view is kept out of search results; the proxy marks the other copies (src/proxy.ts). */
 export async function generateMetadata({
   searchParams,
 }: PublicCompendiumPageProps): Promise<Metadata> {
-  const filtered = isFiltered(await searchParams);
+  const params = publicParams(await searchParams);
   return {
-    ...publicPageMetadata('Compendium', LIST_DESCRIPTION, PUBLIC_COMPENDIUM_PATH),
-    ...(filtered && { robots: { index: false, follow: true } }),
+    ...publicPageMetadata('Compendium', LIST_DESCRIPTION, await canonicalPath(params)),
+    ...(isFiltered(params) && { robots: { index: false, follow: true } }),
   };
 }
 
@@ -157,7 +174,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // An old address opens the entry at its new one, keeping the search.
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
-  // The review switch's read, for a curator or admin only: per viewer, never inside the cached
+  // The review switch's read, for a curator or keeper only: per viewer, never inside the cached
   // reads, so no review date reaches anyone else from here. The entry's own badge is in the cached read.
   const reviewOf = async (id: string | undefined) => {
     if (!canEdit || !id) return undefined;
@@ -185,14 +202,14 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     categories: new Map(categories.map((category) => [category.id, category])),
   });
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
-  // in its address, so the default is the first the viewer may write in. A viewer-only account and a
+  // in its address, so the default is the first the viewer may write in. An observer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
   const mine = viewer?.workspaces.map(({ id, name, paused }) => ({ id, name, paused })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
   // What the role in each of those covens permits, for the three dots on the cards and in the
-  // window: one read, per request, for both, and none for a visitor or a viewer.
+  // window: one read, per request, for both, and none for a visitor or an observer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
   // Asked of every coven, not only the writable ones, for the holding count; read only where
   // there is a plus or a check to count on. Not of a paused one: its read is refused, which
@@ -253,7 +270,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         holding: mine.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ name }) => name),
       }),
       // The three dots: the covens that hold it and let the viewer annotate, make it theirs or
-      // remove it. None for a visitor, a viewer and a coven without the entry.
+      // remove it. None for a visitor, an observer and a coven without the entry.
       places: cardPlacesOf(
         cardCovens,
         (id) => held?.get(id)?.has(node.id) === true,

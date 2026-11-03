@@ -11,7 +11,7 @@ export interface AccountMenuProps {
   verified: boolean;
   /**
    * The bar's site links, offered here too at a phone's width, where the bar
-   * has no room for them (an admin's Your Coven and Admin). Hidden above it.
+   * has no room for them (a keeper's Your Coven and Admin). Hidden above it.
    */
   links?: readonly SiteLink[];
   /**

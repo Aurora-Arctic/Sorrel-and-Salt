@@ -14,7 +14,7 @@ import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
-// An owner's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails
+// A steward's Invite: a dialog taking an address and a role, sent as `createInvitation`, which mails
 // the link. No link or copy control is drawn, since the browser never holds the token
 // (claude-docs/components/invite-dialog.md).
 
@@ -26,12 +26,12 @@ const CreateInvitationDocument = graphql(`
   }
 `);
 
-/** The roles on offer, least first. Owner is not one: the schema's enum has no such value. */
+/** The roles on offer, least first. Steward is not one: the schema's enum has no such value. */
 const ROLES: readonly InviteRole[] = ['viewer', 'member'];
 
 /** What holds whichever role is chosen, read with the group. */
-const OWNERSHIP_NOTE =
-  'An owner can make them an owner from the members page once they have joined.';
+const STEWARDSHIP_NOTE =
+  'A steward can make them a steward from the members page once they have joined.';
 
 /** The button, and the modal's head. */
 const INVITE_LABEL = 'Invite';
@@ -131,7 +131,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
         value={role}
         onChange={setRole}
         disabled={sending}
-        note={OWNERSHIP_NOTE}
+        note={STEWARDSHIP_NOTE}
       />
       <FormActions
         noun="Invitation"

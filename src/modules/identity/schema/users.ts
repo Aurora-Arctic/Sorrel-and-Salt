@@ -26,7 +26,7 @@ export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencin
 // keeps for a saved snapshot (claude-docs/db/grimoire.md, "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
 export const revisionColumn = () => integer('revision').notNull().default(1);
 
-// Admins curate the global vocabularies and manage the people page; curators
+// Keepers curate the global vocabularies and manage the people page; curators
 // curate the same vocabularies and reach no people page. A closed set
 // of site roles, so a column is enough.
 export const userRole = pgEnum('user_role', ['user', 'curator', 'admin']);
@@ -58,9 +58,12 @@ export const users = pgTable(
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
     // When the account agreed to the terms of use; null until it does.
     termsAcceptedAt: timestamp('terms_accepted_at'),
-    // The number of the published terms version the account agreed to; null until it does. A number other than the newest
-    // published one counts as not agreed (claude-docs/auth/admin-bootstrap.md, "The terms page").
+    // The numbers of the terms, disclaimer and code of ethics versions the account last agreed to, all three at once; null until
+    // it does. Any one other than its document's newest published version counts as not agreed (claude-docs/auth/admin-bootstrap.md,
+    // "The terms page").
     agreedTermsVersion: integer('agreed_terms_version'),
+    agreedDisclaimerVersion: integer('agreed_disclaimer_version'),
+    agreedEthicsVersion: integer('agreed_ethics_version'),
     ...auditColumns,
   },
   (table) => [

@@ -34,7 +34,7 @@ export function findStandingUserAccessPause(
 
 /**
  * The pause standing on each of these users, by the same test as `findStandingUserAccessPause`, in one query: the user
- * list's Site Access Paused column for a page of users. Under the `SiteAdmin` proof: who is paused is an admin's to read.
+ * list's Site Access Paused column for a page of users. Under the `SiteAdmin` proof: who is paused is a keeper's to read.
  */
 export function findStandingUserAccessPausesFor(
   _admin: SiteAdmin,
@@ -58,7 +58,7 @@ const HISTORY_ORDER: readonly SortPart[] = [
 
 /**
  * One page of every pause set on a user, standing, run out and lifted alike, newest first (CLAUDE.md rule 8). Under the
- * `SiteAdmin` proof: the history is an admin's.
+ * `SiteAdmin` proof: the history is a keeper's.
  */
 export function findUserAccessPausePage(
   _admin: SiteAdmin,
@@ -90,7 +90,7 @@ export function userAccessPauseWrites({
         .onConflictDoNothing()
         .returning();
     },
-    // A pause that has run out ended by itself, so it is left alone rather than recorded as an admin's lift.
+    // A pause that has run out ended by itself, so it is left alone rather than recorded as a keeper's lift.
     liftUserAccessPause: (_admin, userId) =>
       update(userAccessPauses, lifted(), and(liveFor(userId), notRunOut)),
   };

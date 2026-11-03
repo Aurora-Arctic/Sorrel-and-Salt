@@ -11,10 +11,10 @@ import type { UserFilter, UserRow } from '../types';
 // does not reach it: the check is here, by direct call, and the page confers
 // no workspace access (claude-docs/auth/admin-users.md, "The user list").
 
-const REFUSAL = 'Only a site admin may list users';
+const REFUSAL = 'Only a site keeper may list users';
 
 /**
- * One page of the live users under `filter`, to a site admin. A blank query
+ * One page of the live users under `filter`, to a site keeper. A blank query
  * is no query.
  *
  * @throws {Forbidden} the session's role is not `admin`.

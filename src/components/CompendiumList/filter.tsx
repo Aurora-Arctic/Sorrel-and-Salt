@@ -241,7 +241,7 @@ const CompendiumListFilterRow = ({
       searchHref={(query) => hrefFor(filter, panel, query, where)}
       source={coven && workspaceId ? { kind: 'cupboard', workspaceId } : undefined}
       // The entry's Quick Look over the list as shown, its page kept and the typed text not
-      // applied, keyed as the list's eye keys it: the admin's by slug, the other two by id.
+      // applied, keyed as the list's eye keys it: the keeper's by slug, the other two by id.
       pickHref={(match) => {
         const place = { ...filter, ...cursor };
         if (where.covenSlug !== undefined) {

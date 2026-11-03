@@ -17,7 +17,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 import type { FilterFormSubject } from '../../support/types';
 
 // The Invitations tab: render-only, so the page owns the read
-// and this owns what an admin sees of it and sends, New Invitation beside the
+// and this owns what a keeper sees of it and sends, New Invitation beside the
 // heading included (claude-docs/components/admin-invitations.md).
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -52,7 +52,7 @@ beforeEach(() => {
 const dialog = () => screen.getByRole('dialog', { name: 'New Invitation' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
 /** A role's radio, by the start of its name: its description is read after it. */
-const roleRadio = (role: 'Curator' | 'Admin') =>
+const roleRadio = (role: 'Curator' | 'Keeper') =>
   within(dialog()).getByRole('radio', { name: new RegExp(`^${role}`) });
 
 describe('AdminInvitations', () => {
@@ -62,7 +62,7 @@ describe('AdminInvitations', () => {
     const [, first, second] = screen.getAllByRole('row');
     expect(within(first).getByText('ada@example.test')).toBeInTheDocument();
     expect(within(first).getByText('Curator')).toBeInTheDocument();
-    expect(within(second).getByText('Admin')).toBeInTheDocument();
+    expect(within(second).getByText('Keeper')).toBeInTheDocument();
     expect(within(first).getByText('Curates the resins')).toBeInTheDocument();
     expect(
       within(first).getByText(/^\d{1,2} October \d{4}, \d{1,2}:\d{2} (am|pm)$/),
@@ -99,7 +99,7 @@ describe('AdminInvitations', () => {
     expect(send()).toBeDisabled();
     expect(within(dialog()).getByRole('textbox', { name: 'Email Address' })).toBeRequired();
     expect(within(dialog()).getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
-    // The lesser role is the one an admin has to choose against.
+    // The lesser role is the one a keeper has to choose against.
     expect(roleRadio('Curator')).toBeChecked();
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: ' cass@example.test ' },
@@ -147,7 +147,7 @@ describe('AdminInvitations', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: 'cass@example.test' },
     });
-    fireEvent.click(roleRadio('Admin'));
+    fireEvent.click(roleRadio('Keeper'));
     fireEvent.click(send());
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
@@ -171,7 +171,7 @@ describe('AdminInvitations', () => {
   it('says a refused address beside the field and keeps the form open', async () => {
     mockGraphQLError('CreateAdminInvitation', {
       code: 'VALIDATION',
-      fieldErrors: [{ path: ['email'], message: 'That address belongs to an admin already' }],
+      fieldErrors: [{ path: ['email'], message: 'That address belongs to a keeper already' }],
     });
     render(<AdminInvitations invitations={[]} inviting />);
 

@@ -107,7 +107,7 @@ describe('acceptInvitationById', () => {
     await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).resolves.toMatchObject({ id });
   });
 
-  it('answers NotFound for an admin invitation’s id, granting and recording nothing, and its link then accepts', async () => {
+  it('answers NotFound for a keeper invitation’s id, granting and recording nothing, and its link then accepts', async () => {
     const id = await invite();
     // Why the id could have admitted: pending, to this verified address, and a site tier a link accepts.
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({

@@ -63,7 +63,7 @@ Expires is the day the card was chosen to last through, `2026-10-30`, read back 
 - **Card Sign-Ups** (`arrivals.tsx`): every account that accepted a card, as a **Name** and an **Email** column (empty for a removed account), the
   date (**Accepted On**), the batch and the covens it owns (**Covens Owned**; "None yet" when none). An account
   that can no longer be read keeps its row as plain "Removed account" text. The name opens that account's user modal on this page (`/keepers/card-sign-ups?user=<id>`, the page's own `UserDialog`, read by the shared `readOpenedUser`); closing it returns to the list at the same cursor. **Download CSV** reads `cardArrivalsCsv` through
-  GraphQL and hands the string to the browser as `card-sign-ups.csv`; a failure shows as the button's click feedback; the service refuses anyone but an admin.
+  GraphQL and hands the string to the browser as `card-sign-ups.csv`; a failure shows as the button's click feedback; the service refuses anyone but a keeper.
 - **Card Sign-Ups filter** (`arrivals-filter.tsx`): the shared `FilterForm` ("Filter Card Sign-Ups") with one search
   box, **Name, Email or Batch** (`query`, held in the URL, sent by the magnifier or Enter). It keeps a sign-up whose
   account name or email holds the text, or whose batch number starts with it, case-folded; an info tip beside the label

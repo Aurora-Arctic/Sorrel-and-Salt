@@ -40,13 +40,13 @@ export type Membership = {
  * await withAudit(session, (write) => write.insertInWorkspace(membership, spells, { title }));
  * ```
  *
- * A site admin gets no bypass: admins curate the compendium and reach no
+ * A site keeper gets no bypass: keepers curate the compendium and reach no
  * workspace (CLAUDE.md's domain invariants), so `session.role` is not read.
  *
  * @throws {Forbidden} the session's email address is unverified, with a message that says to verify it; or the user holds no live membership of `workspaceId` —
  * an id that is not a uuid included — or holds one whose role does not carry
  * `permission`.
- * @throws {AccessPaused} the user holds a seat in `workspaceId` and an owner has paused it; carries when the pause ends.
+ * @throws {AccessPaused} the user holds a seat in `workspaceId` and a steward has paused it; carries when the pause ends.
  */
 export async function assertMembership(
   session: Session,
@@ -58,7 +58,7 @@ export async function assertMembership(
 
 /**
  * The caller's own seat in `workspaceId`, for leaving it and nothing else: `assertMembership` for `workspace: read`, except that
- * a paused seat passes. A paused member may still go (the owner's call, M15.55); every other write stays refused by
+ * a paused seat passes. A paused member may still go (the steward's call, M15.55); every other write stays refused by
  * `assertMembership`. The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
  *
  * @throws {Forbidden} as `assertMembership`: unverified, or no live seat.
@@ -106,7 +106,9 @@ async function admit(
   // Said to a real member, and shown as the alert beside the button they pressed (a stale page after a demotion, say). It names
   // neither the role nor the permission, which are the service's to decide.
   if (!rolePermits(role, permission)) {
-    throw new Forbidden("Your role in this coven doesn't allow that. Ask an owner if you need it.");
+    throw new Forbidden(
+      "Your role in this coven doesn't allow that. Ask a steward if you need it.",
+    );
   }
 
   // The one cast to the brand in the codebase, and the reason the type is

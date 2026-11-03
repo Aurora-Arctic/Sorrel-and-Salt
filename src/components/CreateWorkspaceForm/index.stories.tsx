@@ -37,7 +37,7 @@ const Page = ({
           ) : (
             <Notice kind="warn" quiet>
               Creating a coven needs an invitation from someone already using Sorrel &amp; Salt, or
-              an admin&rsquo;s approval.
+              a keeper&rsquo;s approval.
             </Notice>
           )}
         </div>

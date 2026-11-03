@@ -31,7 +31,7 @@ what that costs while most of the services are still unwritten:
 [`m6.3-permission-statements.md`](../design-decisions/m6.3-permission-statements.md).
 
 The **site role** is not consulted. `session.role` is `'user' | 'curator' | 'admin'` and a
-curator or site admin curates the compendium and reaches no workspace at all, so
+curator or site keeper curates the compendium and reaches no workspace at all, so
 `assertMembership` never reads it — which is what makes that invariant true by
 construction rather than by a branch someone could add later.
 
@@ -46,14 +46,14 @@ malformed id to every GraphQL field that takes a `workspaceId`, and fails on a
 field it does not name.
 
 **Where the viewer census lives.** `tests/db/graphql-viewer-writes.test.ts`
-sends every mutation that takes a `workspaceId` as a viewer, expects `FORBIDDEN`
-with every table unchanged, then sends it again as a member (an owner, where the
+sends every mutation that takes a `workspaceId` as an observer, expects `FORBIDDEN`
+with every table unchanged, then sends it again as a member (a steward, where the
 probe says so) and expects it to be admitted. A mutation with no probe in
 `tests/support/graphql-workspace-probes.ts` fails the test, and so does one that
 is not on its short exceptions list (`leaveWorkspace`, which every role may call).
 A folk name or a category is written inside its ingredient's own save, so it takes
 the ingredient's permission; `workspace-ingredients.test.ts` proves it.
-**A role that lacks the permission is told so.** A stranger and an unknown id get the bare `Forbidden`, since whether a coven exists is private; a member who is really there and lacks the permission is told, in the one sentence every such refusal carries: "Your role in this coven doesn't allow that. Ask an owner if you need it." (the owner's call at MB.119's review). It names neither the role nor the permission, and it is the alert a button on a stale page shows. Only a workspace-scoped call reaches it, so "coven" is always right. A test asserts the `Forbidden` kind, never the sentence.
+**A role that lacks the permission is told so.** A stranger and an unknown id get the bare `Forbidden`, since whether a coven exists is private; a member who is really there and lacks the permission is told, in the one sentence every such refusal carries: "Your role in this coven doesn't allow that. Ask a steward if you need it." (the owner's call at MB.119's review). It names neither the role nor the permission, and it is the alert a button on a stale page shows. Only a workspace-scoped call reaches it, so "coven" is always right. A test asserts the `Forbidden` kind, never the sentence.
 
 ### One lookup per render
 
@@ -97,7 +97,7 @@ whose workspace is live too — the workspace's `deleted_at` is a correlated
 `EXISTS`, as in `findManyInSpell`, because the repository keeps one select
 builder. Who may ask about which ids is the calling service's decision:
 `membershipsOf` in `coven` answers the caller's own id and refuses every
-other, an admin's included.
+other, a keeper's included.
 
 `findUserByEmail(email)` is the third (MB.54), for the same kind of reason
 again: an address is claimed site-wide, so there is no workspace to hold a proof
@@ -109,7 +109,7 @@ other live row holds (`auth/admin-bootstrap.md`, "The email page").
 
 `findInvitationByToken(token)` is the fourth (MB.69, both tiers since
 MB.202), for a different reason: the one asking is an invitee who is not yet
-a member of the workspace nor an admin, so there is no proof of either kind
+a member of the workspace nor a keeper, so there is no proof of either kind
 to hold. What admits is holding the token, which the read hashes itself, so a
 hash out of a dumped row finds nothing. It answers the live invitation the
 token names, on either tier and whatever its state; the accept beside it
@@ -137,7 +137,7 @@ slug and the inviter's name for those alone ([`invitations.md`](invitations.md),
 `insertMembership(workspaceId, userId, role)` (M6.7) is the one membership write
 with no proof, for the reason `findWorkspaceRole` is the read with none: a
 proof is minted from a membership row, so the row that makes a workspace's
-creator its owner has none to be written under. It lives in
+creator its steward has none to be written under. It lives in
 `src/db/repository/memberships.ts` and is spread into the writer beside
 `invitationWrites` (MB.198), so it runs inside `withAudit` and is stamped from
 the session. `createWorkspace` calls it in the same transaction as the
@@ -177,27 +177,27 @@ the type looks like it closes more than it does.
 
 `assertNotLastOwner(write, membership, userId, becomes)` in
 `src/modules/coven/services/last-owner.ts` refuses any change that would leave a
-workspace with no owner. `becomes` is the role the person ends up with, or
-`null` when they are removed or leave. Every write that can take the owner role
+workspace with no steward. `becomes` is the role the person ends up with, or
+`null` when they are removed or leave. Every write that can take the steward role
 calls it inside `withAudit`: the role change (M9.14), the removal and the
 voluntary leave (M6.15).
 
 It reads the workspace's live members through `write.lockLiveMembers(membership)`,
 which locks them `for update` in user-id order, as `lockLiveAdmins` does for
-admins. Two owners stepping down at once therefore queue on the first row, and
-the second counts the first's committed change instead of both seeing two owners.
+keepers. Two stewards stepping down at once therefore queue on the first row, and
+the second counts the first's committed change instead of both seeing two stewards.
 
 The refusal is a `LastOwner`, a subclass of `Forbidden` that carries what M6.16
 needs to offer a way out: `remedy` is `'promote'` when other members exist
-(`promotable` lists their user ids) and `'delete'` when the owner is the only
-member. A change that keeps an owner an owner, or touches someone who is not the
-last owner, passes.
+(`promotable` lists their user ids) and `'delete'` when the steward is the only
+member. A change that keeps a steward a steward, or touches someone who is not the
+last steward, passes.
 
 ## Changing a role (M9.14)
 
 `updateMemberRole(session, workspaceId, userId, role)` in
 `src/modules/coven/services/member-role.ts` is the one way a role changes. It
-asks for `member: update`, which only owners hold, then — in the transaction
+asks for `member: update`, which only stewards hold, then — in the transaction
 that writes — runs `assertNotLastOwner` and calls `write.updateMembershipRole`.
 That writer sets the role on the one live row of the proof's workspace and
 `userId`, so a pending invitation, a removed member or someone from another

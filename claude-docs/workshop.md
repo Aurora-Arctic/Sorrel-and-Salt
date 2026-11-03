@@ -242,7 +242,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   `initial` parameters to the frame's address, and puts the address back when it
   unmounts. The Spell Preview and Spell Recipe stories draw inside it.
 - **`reopenable.tsx`** — `Reopenable`, what stands in for a modal's owner in a
-  story. The app's owners close a modal by unmounting it, and a story has no
+  story. The app's stewards close a modal by unmounting it, and a story has no
   owner. It renders its children while open, hands them a `close`, answers a
   `RouteModal`'s navigation through `WorkshopNavigation` by closing too, and
   leaves an Open Again button in place of the modal, so a review can look
@@ -268,7 +268,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   switcher alone, and no row when there is no coven to switch to), or
   none, as on the account pages. Its `FIXTURE_WORKSPACES` carry each coven's
   `canReadMembers` as the layout works it out from the role (a member of the
-  first two, a viewer of the third), so the coven nav offers Members as it
+  first two, an observer of the third), so the coven nav offers Members as it
   would in the app. Like `admin-frame.tsx`, it is markup only;
   the layouts it copies are server components that read the session.
 - **`fixtures.ts`** — invented rows the admin stories share, so a form's story
@@ -466,7 +466,7 @@ no Docker: the compose edits are reasoned from Storybook's and Vite's behaviour.
 ## On staging (M2.10)
 
 Staging serves the workshop at `https://staging.sorrelandsalt.com/workshop`,
-to admins only. The local `npm run workshop` (see "Commands and gates") is
+to keepers only. The local `npm run workshop` (see "Commands and gates") is
 unchanged and asks for no sign-in — local development is the one relaxed
 environment. Production and hotfix previews never carry the workshop.
 
@@ -494,7 +494,7 @@ environment. Production and hotfix previews never carry the workshop.
   | A cookie Better Auth rejects             | The same redirect                                                      |
   | A live session, role `user` or `curator` | 403, plain text                                                        |
   | A live session, role `admin`             | The file, with the workshop's Content Security Policy (below)          |
-  | The same admin, at bare `/workshop`      | 307 to `/workshop/index.html`, query kept, with the same policy header |
+  | The same keeper, at bare `/workshop`     | 307 to `/workshop/index.html`, query kept, with the same policy header |
 
   The 403 is plain rather than the styled page `/keepers` shows: it answers
   requests for scripts and JSON as well as for the page. The lookup module is
@@ -516,7 +516,7 @@ environment. Production and hotfix previews never carry the workshop.
   invented rows ([`components/ingredient-form.md`](components/ingredient-form.md), "Stories"),
   so the request never leaves the page and the policy below has nothing to
   refuse. The workshop's own scripts nonetheless run on the app's origin
-  carrying an admin's cookie, so every workshop response the gate lets
+  carrying a keeper's cookie, so every workshop response the gate lets
   through carries a Content Security Policy (a header telling the browser
   what the page may load) of `connect-src <host>/workshop/`, for example
   `connect-src staging.sorrelandsalt.com/workshop/`. It covers
@@ -539,7 +539,7 @@ environment. Production and hotfix previews never carry the workshop.
     no header in the proxy, `next.config.ts` or `vercel.json` forbids framing.
   - One limit, from the CSP specification itself: after a redirect the path
     is no longer checked, only the origin. Nothing under `/workshop/`
-    redirects off it for an admin; the only redirect is to `/sign-in` once a
+    redirects off it for a keeper; the only redirect is to `/sign-in` once a
     session has died, which returns the sign-in page and no data.
 
   `tests/proxy.test.ts` checks the header against the specification's

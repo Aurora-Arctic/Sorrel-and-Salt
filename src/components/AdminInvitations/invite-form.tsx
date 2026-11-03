@@ -32,7 +32,7 @@ const NOTE_HINT =
 
 /**
  * The roles an invitation offers, the lesser first and chosen to begin with, so
- * granting the people page is a choice the admin makes.
+ * granting the people page is a choice the keeper makes.
  */
 const SITE_ROLES: readonly InvitableSiteRole[] = ['curator', 'admin'];
 

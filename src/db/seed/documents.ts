@@ -75,7 +75,7 @@ export async function seedDocumentFiles(
   files: SeedDocument[] = loadDocuments(),
 ): Promise<void> {
   for (const file of files) {
-    // Deleted rows count: a document or version an admin deleted stays deleted.
+    // Deleted rows count: a document or version a keeper deleted stays deleted.
     const [existing] = await tx.select().from(documents).where(eq(documents.key, file.key));
     if (existing) {
       const [version] = await tx

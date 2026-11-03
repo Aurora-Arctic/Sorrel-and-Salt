@@ -118,7 +118,7 @@ How to read this document:
 - Help Scout (search): staff can reply by email to notifications. https://docs.helpscout.com/article/67-email-notifications
 - My inference:
   - Subject: say what happened and which request ("Reply to your support request: <subject>").
-  - Body: because replies may contain personal details, a link-only email avoids putting content into mailboxes, but it forces a sign-in to read. Including the reply text is more useful and is what help desks do. This is an owner decision; I have no source that settles it.
+  - Body: because replies may contain personal details, a link-only email avoids putting content into mailboxes, but it forces a sign-in to read. Including the reply text is more useful and is what help desks do. This is a steward decision; I have no source that settles it.
   - Send a plain-text part alongside HTML. No source read states this requirement.
 
 ## 11. Accessibility specifics
@@ -155,7 +155,7 @@ How to read this document:
 - My inference:
   - The common lifecycle across vendors is: new, open (staff working), waiting on sender, resolved, closed. Pending/waiting statuses stop a clock and return to open on a sender reply.
   - A closed request should not reopen; a reply to it should start a linked new request (Zendesk), or the app should refuse and point to the form.
-  - For a team of one admin and a few curators, publish a realistic window (the GOV.UK example is 2 working days) rather than chasing the vendor minute figures.
+  - For a team of one keeper and a few curators, publish a realistic window (the GOV.UK example is 2 working days) rather than chasing the vendor minute figures.
   - Auto-close resolved requests after a short stated period (Zendesk 4 days, Atlassian 3 days) and tell the sender.
 
 ## 13. What the sender is told, and when
@@ -176,7 +176,7 @@ How to read this document:
 ## 15. Internal notes versus public replies
 
 - Zendesk (search, vendor blogs): public replies notify the requester; internal notes do not; the composer defaults to a public reply, so internal text posted to the customer by accident is a known risk. https://www.getmacha.com/blog/zendesk-internal-notes-vs-public-replies ; https://www.eesel.ai/blog/zendesk-ticket-internal-vs-public-comment
-- My inference: even with one admin, a place to record internal context is useful once curators are involved, and "share with curators" is already an internal channel. If notes exist, label the composer mode in text ("Reply to sender" versus "Internal note") and never default to the riskier mode. Whether to build separate notes now is an owner decision.
+- My inference: even with one keeper, a place to record internal context is useful once curators are involved, and "share with curators" is already an internal channel. If notes exist, label the composer mode in text ("Reply to sender" versus "Internal note") and never default to the riskier mode. Whether to build separate notes now is a steward decision.
 
 ## 16. Categories on support forms
 
@@ -226,7 +226,7 @@ Same labels as above: fetched, search, My inference, Gap.
   - Automatic moves: new to open on assignment/agent action; reply from the requester back to Open; Solved to Closed after 4 days by default (max 28); Closed to Archived after 120 days.
 - Help Scout (fetched, https://docs.helpscout.com/article/11-understand-conversation-icons-and-colors): Active ("needs action"; new conversations arrive Active), Pending ("waiting on something, such as a customer's reply"), Closed. Staff set Pending and Closed. A customer reply to Pending or Closed sets Active automatically.
 - Jira Service Management (search, community and Atlassian KB; no official spec page found): typical statuses are Waiting for support and Waiting for customer. A comment-driven move is done by automation, not the workflow. A common rule: customer comments while Waiting for customer, move to Waiting for support; agent public reply, move to Waiting for customer. Internal comments do not move it. https://support.atlassian.com/jira/kb/comments-not-updating-status-in-jira-service-management-cloud/ ; https://community.atlassian.com/forums/Jira-Service-Management/Change-status-after-every-customer-reply/qaq-p/1551587
-- Freshdesk (search; the official page needed a login, so not fetched): defaults Open, Pending, Resolved, Closed; "Waiting on Customer" and "Waiting on third party" are available, and admins can add custom statuses. Pending commonly pauses SLA timers. https://support.freshdesk.com/en/support/solutions/articles/37600-customizing-your-ticket-statuses
+- Freshdesk (search; the official page needed a login, so not fetched): defaults Open, Pending, Resolved, Closed; "Waiting on Customer" and "Waiting on third party" are available, and keepers can add custom statuses. Pending commonly pauses SLA timers. https://support.freshdesk.com/en/support/solutions/articles/37600-customizing-your-ticket-statuses
 - Intercom (search): states Open, Snoozed, Closed in the inbox; ticket states Submitted, In progress, Waiting on customer, Resolved. https://www.intercom.com/help/en/articles/8838656-inbox-faqs ; https://www.intercom.com/help/ja/articles/8687982-customize-ticket-states
 - Linear (search): status categories Backlog, Unstarted, Started, Completed, Canceled; teams add custom statuses inside a category. https://linear.app/docs/configuring-workflows
 - GitHub issues (fetched, partial): open and closed only; closing can carry a reason ("not planned"). The page did not cover reopening. https://docs.github.com/en/issues/tracking-your-work-with-issues/administering-issues/closing-an-issue
@@ -249,7 +249,7 @@ Same labels as above: fetched, search, My inference, Gap.
 ## 22. Buckets, views and queues
 
 - Help Scout (fetched, https://docs.helpscout.com/article/1429-about-default-folder-views-in-help-scout): always shown: Unassigned (Active and Pending not assigned to anyone), Mine (Active and Pending assigned to you), Assigned (assigned to others), Closed, Spam. Conditional: Drafts, Chats, and Needs Attention ("only when one or more conversations need manual intervention"). Sidebar counts count Active only.
-- Jira Service Management (search): default queues such as All open, Assigned to me, Unassigned; admins customise, reorder, delete; SLA data is shown in queue columns; a "Waiting for customer" or "Breaching SLA" queue is suggested only by a third-party guide. https://confluence.atlassian.com/servicemanagementserver/using-service-project-queues-939926462.html ; https://community.atlassian.com/learning/lesson/set-up-requests-and-queues
+- Jira Service Management (search): default queues such as All open, Assigned to me, Unassigned; keepers customise, reorder, delete; SLA data is shown in queue columns; a "Waiting for customer" or "Breaching SLA" queue is suggested only by a third-party guide. https://confluence.atlassian.com/servicemanagementserver/using-service-project-queues-939926462.html ; https://community.atlassian.com/learning/lesson/set-up-requests-and-queues
 - Zendesk (search): views are saved filters; SLA columns sort by time to breach; no triggers on breach, only time-based automations. I could not fetch the default-views page (the URL I tried was a search reference). https://www.eesel.ai/blog/zendesk-sla-view-column-sort-by-breach
 - Intercom (search): inbox filtered by state Open, Snoozed, Closed; views per inbox.
 - Gap: no source states a minimum set of views for a small team.
@@ -273,7 +273,7 @@ Same labels as above: fetched, search, My inference, Gap.
 - Help Scout (fetched): unassigned conversations show in Unassigned for anyone to take; Mine and Assigned split by owner.
 - Jira Service Management (search): "Assigned to me" and "Unassigned" queues; SLA timers can start at assignment.
 - Gap: nothing found on small-team "away" handling outside Zendesk's feature.
-- My inference: for one admin plus a few curators, "take it" from an Unassigned view is enough; auto-assign adds nothing. For an assignee who is away, the minimum is an admin action to reassign, plus a visible "assigned to X, last activity N days ago" so a stalled one can be spotted.
+- My inference: for one keeper plus a few curators, "take it" from an Unassigned view is enough; auto-assign adds nothing. For an assignee who is away, the minimum is a keeper action to reassign, plus a visible "assigned to X, last activity N days ago" so a stalled one can be spotted.
 
 ## 25. Resolution and the sender's say
 
@@ -371,7 +371,7 @@ Each check is yes/no; the number is the source section above.
 44. Is every needs-attention marker text (for example "Sender replied"), with colour or bold only as an extra? (23)
 45. Is the needs-staff view sorted with the oldest sender activity first? (23)
 46. Is "stale" derived from last activity and a stated threshold, not a stored status? (23, 27)
-47. Can any staff member take an unassigned request, and can an admin reassign one? (24)
+47. Can any staff member take an unassigned request, and can a keeper reassign one? (24)
 48. Does a reopened request stay with its assignee, and is that assignee visible? (21, 24)
 49. Is closing done only by the system after a quiet period, with a notice to the sender first? (25)
 50. Is there one lifecycle for all seven topics, with topic as an editable field? (26, 27)

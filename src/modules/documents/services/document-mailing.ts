@@ -3,17 +3,16 @@ import {
   countDocumentMailingAccounts,
   countDocumentMailingReached,
   countDocumentMailsSentToday,
-  findCurrentDocumentVersion,
   findDocumentMailingAccountPage,
   findDocumentMailingById,
-  findDocumentMailingForVersion,
-  findDocumentByKey,
+  findDocumentMailingItems,
+  findLatestSentDocumentMailing,
   findOldestSendingDocumentMailing,
-  findOneById,
-  findOpenDocumentMailingBefore,
+  findOpenDocumentMailings,
+  findPendingDocumentVersions,
   withAudit,
 } from '@/db/repository';
-import { NotFound, ValidationError, fieldRefusal } from '@/lib/errors';
+import { NotFound, ValidationError } from '@/lib/errors';
 import { jobTokenActive, startJob } from '@/lib/jobs';
 import { allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
@@ -22,9 +21,11 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { z } from 'zod';
 import { documentMailing } from '../jobs/document-mailing';
 import { MAILING_DAILY_CAP, documentMailingHookToken, mailingDays } from '../mailing-pace';
-import { documentVersions } from '../schema/document-versions';
-import { documents } from '../schema/documents';
-import type { DocumentMailingRow } from '@/db/repository';
+import type {
+  DocumentMailingItem,
+  DocumentMailingRow,
+  PendingDocumentVersion,
+} from '@/db/repository';
 import type {
   DocumentMailingNotifier,
   DocumentMailingOverview,
@@ -32,30 +33,42 @@ import type {
   DocumentMailingSummary,
 } from '../types';
 
-// Emailing every account about a document's published version. The reads and writes are an admin's alone; the daily start is the
-// cron route's and runs as the System account. The run that sends the mail is jobs/document-mailing.ts.
+// Emailing every account about every document changed since the last sent mailing, in one joint mail. The reads and writes are a
+// keeper's alone; the daily start is the cron route's and runs as the System account. The run that sends the mail is
+// jobs/document-mailing.ts.
 
 /** Recipient rows written per insert, so a statement stays under the driver's parameter limit. */
 const RECIPIENT_CHUNK = 500;
 
-const SummaryInput = z.object({ summary: requiredText('Write what changed') });
+const SummariesInput = z.object({
+  summaries: z.array(
+    z.object({ versionId: z.string(), summary: requiredText('Write what changed') }),
+  ),
+});
 
-async function stateOf(mailing: DocumentMailingRow): Promise<DocumentMailingState> {
+function stateOf(
+  mailing: DocumentMailingRow,
+  oldestSendingId: string | null,
+  sentToday: number,
+): DocumentMailingState {
   if (mailing.status !== 'sending') return mailing.status;
-  const oldest = await findOldestSendingDocumentMailing();
-  if (oldest && oldest.id !== mailing.id) return 'queued';
-  return (await countDocumentMailsSentToday()) >= MAILING_DAILY_CAP ? 'waiting' : 'sending';
+  if (oldestSendingId && oldestSendingId !== mailing.id) return 'queued';
+  return sentToday >= MAILING_DAILY_CAP ? 'waiting' : 'sending';
 }
 
-async function summarise(mailing: DocumentMailingRow): Promise<DocumentMailingSummary> {
-  const [version, reached, state] = await Promise.all([
-    findOneById(documentVersions, mailing.documentVersionId),
-    countDocumentMailingReached(mailing.id),
-    stateOf(mailing),
-  ]);
+async function summarise(
+  mailing: DocumentMailingRow,
+  items: readonly DocumentMailingItem[],
+  oldestSendingId: string | null,
+  sentToday: number,
+): Promise<DocumentMailingSummary> {
+  const reached = await countDocumentMailingReached(mailing.id);
+  const state = stateOf(mailing, oldestSendingId, sentToday);
   return {
     id: mailing.id,
-    versionNumber: version?.number ?? 0,
+    documents: items
+      .filter((item) => item.mailingId === mailing.id)
+      .map(({ key, title, versionNumber }) => ({ key, title, versionNumber })),
     state,
     reached,
     recipientCount: mailing.recipientCount,
@@ -64,61 +77,89 @@ async function summarise(mailing: DocumentMailingRow): Promise<DocumentMailingSu
   };
 }
 
-async function overviewOf(documentId: string): Promise<DocumentMailingOverview> {
-  const version = await findCurrentDocumentVersion(documentId);
-  if (!version) throw new NotFound('Document has no published version');
-  const [accountCount, current, earlier] = await Promise.all([
+/** The version ids a sending or paused mailing covers, read from their items. */
+async function openVersionIds(open: readonly DocumentMailingRow[]): Promise<Set<string>> {
+  const items = await findDocumentMailingItems(open.map((mailing) => mailing.id));
+  return new Set(items.map((item) => item.versionId));
+}
+
+async function overview(): Promise<DocumentMailingOverview> {
+  const [pending, open, lastSent, accountCount, oldest, sentToday] = await Promise.all([
+    findPendingDocumentVersions(),
+    findOpenDocumentMailings(),
+    findLatestSentDocumentMailing(),
     countDocumentMailingAccounts(),
-    findDocumentMailingForVersion(version.id),
-    findOpenDocumentMailingBefore(documentId, version.number),
+    findOldestSendingDocumentMailing(),
+    countDocumentMailsSentToday(),
   ]);
+  const shown = lastSent ? [...open, lastSent] : open;
+  // Every shown mailing's items in one read, rather than one read per mailing.
+  const items = await findDocumentMailingItems(shown.map((mailing) => mailing.id));
+  const inOpen = new Set(
+    items
+      .filter((item) => open.some((mailing) => mailing.id === item.mailingId))
+      .map((item) => item.versionId),
+  );
+  const oldestId = oldest?.id ?? null;
+  const pendingDocuments = pending.map((version) => ({
+    ...version,
+    inMailing: inOpen.has(version.versionId),
+  }));
   return {
-    versionNumber: version.number,
+    pending: pendingDocuments,
     accountCount,
     days: mailingDays(accountCount),
-    current: current ? await summarise(current) : null,
-    inProgress: earlier ? await summarise(earlier) : null,
+    canSend: pendingDocuments.some((document) => !document.inMailing),
+    open: await Promise.all(open.map((mailing) => summarise(mailing, items, oldestId, sentToday))),
+    lastSent: lastSent ? await summarise(lastSent, items, oldestId, sentToday) : null,
   };
 }
 
 /**
- * The document's published version, how many accounts a mailing would reach and in how many days, and the mailings of that version
- * and of an earlier one still going.
+ * Every document changed since the last sent mailing, how many accounts a mailing would reach and in how many days, the sending
+ * and paused mailings, and the last one sent.
  *
- * @throws {Forbidden} the session is not a site admin.
- * @throws {NotFound} no live document holds the key, or it has no published version.
+ * @throws {Forbidden} the session is not a site keeper.
  */
-export async function readDocumentMailing(
-  session: Session,
-  key: string,
-): Promise<DocumentMailingOverview> {
+export async function readDocumentMailings(session: Session): Promise<DocumentMailingOverview> {
   assertSiteAdmin(session);
-  const document = await findDocumentByKey(key);
-  if (!document) throw new NotFound('Document not found');
-  return overviewOf(document.id);
+  return overview();
+}
+
+/** Refuses `summaries` unless they name every pending version, and no other, once each. */
+function assertCoversPending(
+  pending: readonly PendingDocumentVersion[],
+  summaries: readonly { versionId: string }[],
+): void {
+  const named = new Set(summaries.map((summary) => summary.versionId));
+  const exact =
+    named.size === summaries.length &&
+    named.size === pending.length &&
+    pending.every((version) => named.has(version.versionId));
+  if (!exact) {
+    throw new ValidationError(
+      [],
+      'The documents to email have changed. Reload the page and write a summary for each.',
+    );
+  }
 }
 
 /**
- * Starts the mailing of the document's published version to every account it counts, replaces its sending and paused mailings of
- * earlier versions, and starts the run that sends the mail.
+ * Starts one mailing of every pending document to every account it counts, with the keeper's summary of each, replaces every
+ * sending and paused mailing, and starts the run that sends the mail. A lock held for the transaction makes two keepers sending at
+ * once start one mailing: the second finds every pending version already in it, and is refused.
  *
- * @throws {Forbidden} the session is not a site admin.
- * @throws {ValidationError} the summary is blank, or the version has been mailed already.
- * @throws {NotFound} the document is missing or has no published version.
+ * @throws {Forbidden} the session is not a site keeper.
+ * @throws {ValidationError} a summary is blank, nothing is pending, the summaries do not name exactly the pending versions, or every
+ *   pending version is in a sending or paused mailing already.
  */
-export async function emailDocumentToEveryAccount(
+export async function emailDocumentsToEveryAccount(
   session: Session,
-  documentId: string,
-  input: { summary: string },
+  input: { summaries: readonly { versionId: string; summary: string }[] },
   notifier: DocumentMailingNotifier,
 ): Promise<DocumentMailingOverview> {
   const admin = assertSiteAdmin(session);
-  const { summary } = parseInput(SummaryInput, input);
-  if (!(await findOneById(documents, documentId))) throw new NotFound('Document not found');
-  const version = await findCurrentDocumentVersion(documentId);
-  if (!version) throw new NotFound('Document has no published version');
-  const alreadyMailed = () => fieldRefusal('summary', 'This version has been emailed already');
-  if (await findDocumentMailingForVersion(version.id)) throw alreadyMailed();
+  const { summaries } = parseInput(SummariesInput, input);
 
   const userIds = (await allPages((page) => findDocumentMailingAccountPage(page))).map(
     (account) => account.id,
@@ -127,12 +168,26 @@ export async function emailDocumentToEveryAccount(
   const origin = await notifier.origin();
 
   const mailing = await withAudit(session, async (write) => {
-    await write.replaceOpenDocumentMailings(admin, documentId, version.number);
-    const [started] = await write.startDocumentMailing(admin, version.id, {
-      summary,
+    await write.lockDocumentMailingStart(admin);
+    // Read under the lock, so a mailing another keeper started a moment ago is seen.
+    const pending = await findPendingDocumentVersions();
+    if (pending.length === 0) {
+      throw new ValidationError([], 'No document has changed since the last email');
+    }
+    const covered = await openVersionIds(await findOpenDocumentMailings());
+    if (pending.every((version) => covered.has(version.versionId))) {
+      throw new ValidationError([], 'Every changed document is being emailed already');
+    }
+    assertCoversPending(pending, summaries);
+
+    await write.replaceOpenDocumentMailings(admin);
+    const [started] = await write.startDocumentMailing(admin, {
+      items: summaries,
       recipientCount: userIds.length,
     });
-    if (!started) throw alreadyMailed();
+    if (!started) {
+      throw new ValidationError([], 'A document changed while you wrote. Reload the page.');
+    }
     for (let from = 0; from < userIds.length; from += RECIPIENT_CHUNK) {
       await write.addDocumentMailingRecipients(
         started.id,
@@ -143,13 +198,13 @@ export async function emailDocumentToEveryAccount(
   });
 
   await startJob(documentMailing, [mailing.id, origin]);
-  return overviewOf(documentId);
+  return overview();
 }
 
 /**
  * Sets a paused mailing sending again, keeping what it has sent, and starts its run.
  *
- * @throws {Forbidden} the session is not a site admin.
+ * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no mailing holds the id.
  * @throws {ValidationError} the mailing is not paused.
  */
@@ -163,8 +218,6 @@ export async function resumeDocumentMailing(
   if (!mailing) throw new NotFound('Mailing not found');
   const notPaused = () => new ValidationError([], 'Only a paused mailing can be resumed');
   if (mailing.status !== 'paused') throw notPaused();
-  const version = await findOneById(documentVersions, mailing.documentVersionId);
-  if (!version) throw new NotFound('Mailing not found');
   const origin = await notifier.origin();
 
   const [resumed] = await withAudit(session, (write) =>
@@ -173,7 +226,7 @@ export async function resumeDocumentMailing(
   if (!resumed) throw notPaused();
 
   await startJob(documentMailing, [mailingId, origin]);
-  return overviewOf(version.documentId);
+  return overview();
 }
 
 /**

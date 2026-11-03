@@ -551,7 +551,7 @@ describe('Modal', () => {
   });
 
   // The guard over a form's unsaved changes: every way out asks first while the form has changes.
-  // Its shape is asserted here on a form of the test's own; each admin form's test asserts only its wiring.
+  // Its shape is asserted here on a form of the test's own; each keeper form's test asserts only its wiring.
   describe('guarding unsaved changes', () => {
     /** A form as the admin forms are: a field, a save that closes, and Cancel, with the question drawn over it while asking and its buttons still beneath. */
     function GuardedForm({ close }: { close: () => void }): ReactElement {

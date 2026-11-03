@@ -5,7 +5,7 @@ import { signInAgainAs, signInAs } from '../session';
 import { withSql } from './accounts-setup';
 import { insertSpell } from './coven-ingredients';
 
-// Story 87: a new account lands in the demo coven as a viewer and can leave it, and a site admin owns it. `signInAs`
+// Story 87: a new account lands in the demo coven as a viewer and can leave it, and a site keeper owns it. `signInAs`
 // writes the account's rows by SQL and so skips the sign-up hook; the viewer seat the hook writes is written here
 // by SQL as well. The sign-up hook is not walked here, because the suite runs no OAuth provider; the
 // end-to-end sign-up in tests/db/email-verification.test.ts proves it.
@@ -15,7 +15,7 @@ const DEMO_PATH = `/coven/${DEMO_SLUG}`;
 const VIEWER_NOTICE =
   'This is a demo coven, so you can see how Sorrel & Salt works. You can look at everything and change nothing. A coven of your own starts with an invitation from someone who has one.';
 const OWNER_NOTICE =
-  'You own this coven as a site admin: what you change here is what every new account sees.';
+  'You are a steward of this coven as a Keeper: what you change here is what every new account sees.';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -124,13 +124,13 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
     await assertNoAccessibilityViolations(page);
   });
 
-  test('a site admin owns the demo coven', async ({ page }) => {
+  test('a site keeper owns the demo coven', async ({ page }) => {
     await signInAs(page, 'owner@example.test', ['discord'], 'admin');
     await withSql(async (sql) => {
       const [demo] = await sql`select id from workspaces where demo and deleted_at is null`;
       expect(demo, 'the template holds the demo coven').toBeDefined();
       const [user] = await sql`select id from users where email = 'owner@example.test'`;
-      // The admin is seated as the seed seats every admin, the sign-up hook never having run for it.
+      // The admin is seated as the seed seats every keeper, the sign-up hook never having run for it.
       await sql`
         insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
         values (${demo.id}, ${user.id}, 'owner', ${user.id}, ${user.id})`;

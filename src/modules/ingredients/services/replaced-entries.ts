@@ -20,7 +20,7 @@ const MATCHES_SHOWN = 3;
  * - A compendium entry has none, without a database read.
  *
  * The session is checked against the entry's own coven, with the permission
- * `getIngredient` asks, so a viewer reads it and a non-member is refused.
+ * `getIngredient` asks, so an observer reads it and a non-member is refused.
  *
  * @throws {Forbidden} the session holds no seat in the entry's coven.
  */

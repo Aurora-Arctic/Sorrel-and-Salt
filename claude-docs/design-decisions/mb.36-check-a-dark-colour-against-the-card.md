@@ -6,7 +6,7 @@
 
 MB.35 had each colour checked against "its own theme's ground", which M5.6b took to be the page: `$soot` dark, `$parchment` light. MB.36 moved the chip onto the row's pair and showed what that leaves out. An unselected chip has no fill, so its label is the colour itself on whatever surface holds the chip. On an ingredient card or a modal, that surface is the card.
 
-On dark, the card is lighter than the page, so a colour reads weaker on the card. The seeded eight measure 5.1–5.3:1 on the dark page and 4.6–4.8:1 on the dark card. Every seeded colour clears both, since M0.7 tuned them with headroom. An admin's colour picked to just clear the dark page would not: it could pass the check and still read under 4.5:1 on every card it appears on.
+On dark, the card is lighter than the page, so a colour reads weaker on the card. The seeded eight measure 5.1–5.3:1 on the dark page and 4.6–4.8:1 on the dark card. Every seeded colour clears both, since M0.7 tuned them with headroom. A keeper's colour picked to just clear the dark page would not: it could pass the check and still read under 4.5:1 on every card it appears on.
 
 On light, the page is the darker surface, so the page is already the harder ground. That column does not change.
 
@@ -16,4 +16,4 @@ A colour that clears the harder surface clears the easier one too. The selected 
 
 ## What it costs
 
-An admin's dark colour must be a little lighter than the page alone would require. The seeded eight already pass, the worst being wellbeing's dark hex at 4.62:1 on the card. M5.6b asserts that every seeded pair passes the check, so editing a seeded group never trips it.
+A keeper's dark colour must be a little lighter than the page alone would require. The seeded eight already pass, the worst being wellbeing's dark hex at 4.62:1 on the card. M5.6b asserts that every seeded pair passes the check, so editing a seeded group never trips it.

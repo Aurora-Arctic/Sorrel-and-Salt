@@ -6,7 +6,7 @@ export interface ReceivedInvitationEntry {
   id: string;
   covenName: string;
   covenSlug: string;
-  /** The role accepting grants; never an owner. */
+  /** The role accepting grants; never a steward. */
   role: WorkspaceRole;
   /** Who sent it; absent when that account is gone. */
   inviterName: string | null;

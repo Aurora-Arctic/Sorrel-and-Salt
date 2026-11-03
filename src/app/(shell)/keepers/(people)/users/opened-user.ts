@@ -19,8 +19,8 @@ import type { OpenedUser } from './types';
 const PAUSES_SHOWN = 25;
 
 /**
- * A user's pauses, newest first, with who set and lifted each named; none for the primary admin, whose access no one
- * pauses, for the admin's own account, and for anyone but an admin, so the modal draws no Site Access section.
+ * A user's pauses, newest first, with who set and lifted each named; none for the primary keeper, whose access no one
+ * pauses, for the admin's own account, and for anyone but a keeper, so the modal draws no Site Access section.
  */
 async function readPausesOf(
   session: Session,
@@ -71,7 +71,7 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
     providersOf(session, [id]),
     readTimeoutsOf(session, id),
   ]);
-  // An admin's batch answers every slot; a refusal here is the guard's bug.
+  // A keeper's batch answers every slot; a refusal here is the guard's bug.
   if (found instanceof Error) throw found;
   if (!found) return undefined;
   if (!memberships || memberships instanceof Error)
@@ -92,6 +92,8 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
       providers,
       createdAt: found.createdAt,
       agreedTermsVersion: found.agreedTermsVersion,
+      agreedDisclaimerVersion: found.agreedDisclaimerVersion,
+      agreedEthicsVersion: found.agreedEthicsVersion,
     },
     memberships: memberships.map((row) => ({
       workspaceId: row.workspaceId,

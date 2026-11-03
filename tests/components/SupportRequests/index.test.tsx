@@ -507,7 +507,7 @@ describe('Issue', () => {
 });
 
 describe('The sender', () => {
-  it('links the name to the user modal over this page for an admin, keeping the open request, in the list and in the request', () => {
+  it('links the name to the user modal over this page for a keeper, keeping the open request, in the list and in the request', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
     const row = screen.getByRole('row', { name: /The moon icon is missing/ });
     expect(within(row).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
@@ -665,7 +665,7 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByText(/@/)).toBeNull();
   });
 
-  it('calls a signed-out sender by that and shows an admin the address', () => {
+  it('calls a signed-out sender by that and shows a keeper the address', () => {
     const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
     open(ADMIN, { sender: visitor, signedOut: true });
     expect(within(dialog()).getAllByText(/Signed-out sender/).length).toBeGreaterThan(0);
@@ -673,7 +673,7 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
   });
 
-  it('offers an admin no Time-Out for a signed-out sender, and does for a signed-in one', () => {
+  it('offers a keeper no Time-Out for a signed-out sender, and does for a signed-in one', () => {
     const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
     const { unmount } = open(ADMIN);
     expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
@@ -696,7 +696,7 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).getByText(/anonymised/)).toBeInTheDocument();
   });
 
-  it('lets an admin change no setting of an anonymised request, showing its issue as a link, and does on another', () => {
+  it('lets a keeper change no setting of an anonymised request, showing its issue as a link, and does on another', () => {
     const ISSUE = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12';
     const { unmount } = open(ADMIN, { issueUrl: ISSUE });
     expect(within(dialog()).getByLabelText('Assignee')).toBeInTheDocument();
@@ -719,7 +719,7 @@ describe('What a viewer is shown', () => {
     ).toHaveAttribute('href', ISSUE);
   });
 
-  it('gives an admin every control', () => {
+  it('gives a keeper every control', () => {
     open(ADMIN);
     for (const name of ['Assignee', 'GitHub Issue', 'For', /^Your Note/]) {
       expect(within(dialog()).getByLabelText(name)).toBeInTheDocument();

@@ -190,8 +190,8 @@ export async function insertMissingStock(
 }
 
 /**
- * Each entry's forms as variants. `formIds` picks a form by name from the curated rows, as an admin's form is;
- * without it the form is typed, as a coven's may be. Keyed as the unique index keys it: a variant an admin
+ * Each entry's forms as variants. `formIds` picks a form by name from the curated rows, as a keeper's form is;
+ * without it the form is typed, as a coven's may be. Keyed as the unique index keys it: a variant a keeper
  * removed counts as present and is not restored.
  */
 export async function insertMissingVariants(

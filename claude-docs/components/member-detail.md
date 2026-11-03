@@ -2,7 +2,7 @@
 
 `src/components/MemberDetail/` is the body of the modal that opens over
 `/coven/[slug]/members` when someone presses a member's name: the facts the
-members table holds about them and, for an owner, Change Role, Coven Access
+members table holds about them and, for a steward, Change Role, Coven Access
 and Remove. It follows the admin user modal, [`UserDetail`](user-detail.md):
 the same sections parted by hairlines, on the same classes
 (`UserDetail/index.scss`). It is render-only; the page decides what the viewer
@@ -15,7 +15,7 @@ has already read for the page, so opening the modal reads nothing more. Each
 row's name is a link to its own address with the cursor kept (`MemberLink`,
 [`member-list.md`](member-list.md), "Contracts"), and the page is a
 `RouteModalProvider`, so a press opens the modal at once with its heading
-(eyebrow Member, the name, and for an owner the address under it,
+(eyebrow Member, the name, and for a steward the address under it,
 `member-heading.tsx`) and the body follows. `member-dialog.tsx` is the client
 edge, a `RouteModal` closing back to the list at the same cursor.
 
@@ -32,14 +32,14 @@ have been removed, or be listed on another page."
 | `workspaceId`    | The coven, for the writes                                                                    |
 | `member`         | The row's `MemberListEntry`, its `paused` included where the page read it                    |
 | `currentUserId`  | The signed-in user; their own modal offers no Remove                                         |
-| `canChangeRoles` | Draws Change Role beside the role (`member: update`, owners)                                 |
-| `canPause`       | Draws the Coven Access section on a member's or viewer's modal (`member: pause`, owners)     |
-| `canRemove`      | Draws Remove on every modal but the viewer's own (`member: remove`, owners)                  |
+| `canChangeRoles` | Draws Change Role beside the role (`member: update`, stewards)                               |
+| `canPause`       | Draws the Coven Access section on a member's or viewer's modal (`member: pause`, stewards)   |
+| `canRemove`      | Draws Remove on every modal but the viewer's own (`member: remove`, stewards)                |
 | `onRemoved`      | Called once the member is removed; the dialog passes the modal's close, so it fades and goes |
 
 ## Contracts
 
-- **Membership comes first**: a `<dl>` of Role (bold for an owner), Joined,
+- **Membership comes first**: a `<dl>` of Role (bold for a steward), Joined,
   Invited By (only when someone did) and Updated ("by **name** on date"), the
   terms in one column and their values in the next, as the user modal's
   Account facts are. The address is the heading's, so it is not repeated.
@@ -48,7 +48,7 @@ have been removed, or be listed on another page."
   the click feedback's callout, so nothing moves. It is keyed by the role, so
   the page's read after a change mounts a fresh control offering the others,
   and the modal stays open on the new role.
-- **A member or viewer sees the facts alone**, with no actions: the same
+- **A practitioner or observer sees the facts alone**, with no actions: the same
   facts the table shows them.
 - **Remove is last**, in the action row (`user-detail__actions`), plain
   (`btn btn--quiet`), the red kept for its confirm. It is the member list's
@@ -58,7 +58,7 @@ have been removed, or be listed on another page."
 
 ## Coven Access
 
-Where `canPause`, and the member is not an owner (an owner's access is never
+Where `canPause`, and the member is not a steward (a steward's access is never
 paused), a folded section, Coven Access, holds `CovenAccessPanel`
 (`coven-access-panel.tsx`): the user modal's `PausePanel`
 (`UserDetail/pause-panel.tsx`) given the coven's words and writes, so the two
@@ -83,15 +83,15 @@ ask and list alike ([`user-detail.md`](user-detail.md), "Site Access").
 ## Stories
 
 [`index.stories.tsx`](../../src/components/MemberDetail/index.stories.tsx),
-`Coven / Member Detail`, wrapped in a query client: Owner (an owner's view of
+`Coven / Member Detail`, wrapped in a query client: Owner (a steward's view of
 a member, every action), Paused (a standing pause), On an Owner (no Coven
 Access), Own Row (no Remove), and As a Member (the facts alone). The workshop
 serves no GraphQL, so Earlier Pauses stays empty there.
 
 ## Tests
 
-`tests/components/MemberDetail/index.test.tsx`: the facts, an owner's three
-actions, no Coven Access on an owner's modal, no Remove on the viewer's own,
+`tests/components/MemberDetail/index.test.tsx`: the facts, a steward's three
+actions, no Coven Access on a steward's modal, no Remove on the observer's own,
 a member's modal with no actions, and a removal sent only once confirmed and
 then closing through `onRemoved`.
 `tests/components/MemberDetail/coven-access-panel.test.tsx`: Earlier Pauses

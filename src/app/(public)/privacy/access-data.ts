@@ -7,7 +7,7 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
     cells: [
       { mark: 'yes', text: 'Yes, for everyone in the coven' },
       { mark: 'yes', text: 'Yes, for everyone in the coven' },
-      { mark: 'no', text: 'No: a viewer does not see the list of members' },
+      { mark: 'no', text: 'No: an observer does not see the list of members' },
       { mark: 'yes', text: 'Yes, as the name beside a compendium edit' },
       { mark: 'yes', text: 'Yes, for every account' },
       { mark: 'yes', text: 'Yes' },
@@ -101,7 +101,7 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
       { mark: 'no', text: 'No' },
       {
         mark: 'part',
-        text: "Only requests an admin marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
+        text: "Only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
       },
       { mark: 'yes', text: 'Yes, with your email' },
       { mark: 'yes', text: 'Yes' },
@@ -133,10 +133,10 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
 
 /** The roles, in column order, each with the short label over its column. */
 export const PRIVACY_ACCESS_ROLES: AccessRole[] = [
-  { name: 'Coven Owner', short: 'Own' },
-  { name: 'Coven Member', short: 'Mem' },
-  { name: 'Coven Viewer', short: 'View' },
+  { name: 'Coven Steward', short: 'Stew' },
+  { name: 'Coven Practitioner', short: 'Prac' },
+  { name: 'Coven Observer', short: 'Obs' },
   { name: 'Site Curator', short: 'Cur' },
-  { name: 'Site Admin', short: 'Adm' },
+  { name: 'Site Keeper', short: 'Keep' },
   { name: 'A Developer with Database Access', short: 'Dev' },
 ];

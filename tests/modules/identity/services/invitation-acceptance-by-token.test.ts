@@ -29,7 +29,7 @@ import {
 
 // The one accept service, `acceptInvitation(session, token)`, with the site tier's branch and the workspace's. Holding the token names the invitation, and the session's verified address is what admits: a matching unverified account is sent to the email page, a different address refused.
 // The three dead-link checks run first, for both tiers, one reason per link.
-// Accepting a site-tier invitation is an admin grant declared `via: 'invitation'` with the invitation's note, so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Inviting an admin").
+// Accepting a site-tier invitation is a keeper grant declared `via: 'invitation'` with the invitation's note, so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Inviting a keeper").
 
 let sql: postgres.Sql;
 const { invite, invitation, roleOf, ledger } = setUpInvitationAcceptance((client) => {
@@ -37,7 +37,7 @@ const { invite, invitation, roleOf, ledger } = setUpInvitationAcceptance((client
 });
 
 describe('acceptInvitation, on the site tier', () => {
-  it('makes the verified holder of the address an admin who may create covens, recorded via the invitation with its note', async () => {
+  it('makes the verified holder of the address a keeper who may create covens, recorded via the invitation with its note', async () => {
     const id = await invite();
     expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: false });
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
@@ -99,9 +99,9 @@ describe('acceptInvitation, on the site tier', () => {
     ]);
   });
 
-  // An admin invitation sent to a curator's address makes them an
+  // A keeper invitation sent to a curator's address makes them an
   // admin, a revoke of curator and a grant of admin at one instant.
-  it('makes a curator an admin, recorded as a curator revoke and an admin grant via the invitation', async () => {
+  it('makes a curator a keeper, recorded as a curator revoke and a keeper grant via the invitation', async () => {
     await asManualFix(sql, async (tx) => {
       await tx`update users set role = 'curator', can_create_workspace = true where id = ${GRANTEE}`;
     });
@@ -121,7 +121,7 @@ describe('acceptInvitation, on the site tier', () => {
     expect(rows[0]?.created_at).toEqual(rows[1]?.created_at);
   });
 
-  it('stamps the invitation for an account already an admin, granting and recording nothing', async () => {
+  it('stamps the invitation for an account already a keeper, granting and recording nothing', async () => {
     await invite({ email: PRIMARY_EMAIL });
 
     await expect(acceptInvitation(asUser(AS_PRIMARY), TOKEN)).resolves.toMatchObject({
@@ -486,14 +486,14 @@ describe('a link that cannot be used', () => {
   });
 });
 
-describe('while admin changes are paused', () => {
+describe('while keeper changes are paused', () => {
   beforeEach(async () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
   // The pause holds every site role an invitation grants, the curator's too.
   it.each(['admin'] as const)(
-    'refuses another admin’s invitation to %s, naming nobody, and accepts it once resumed',
+    'refuses another keeper’s invitation to %s, naming nobody, and accepts it once resumed',
     async (siteRole) => {
       await invite({ createdBy: E.id, siteRole });
 
@@ -512,8 +512,8 @@ describe('while admin changes are paused', () => {
     },
   );
 
-  // The primary admin is exempt from the pause, and its invitation with it.
-  it('accepts the primary admin’s invitation', async () => {
+  // The primary keeper is exempt from the pause, and its invitation with it.
+  it('accepts the primary keeper’s invitation', async () => {
     await invite({ createdBy: PRIMARY });
 
     await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).resolves.toMatchObject({

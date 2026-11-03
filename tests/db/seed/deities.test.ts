@@ -8,7 +8,7 @@ import { DEITY_TRADITIONS, seedDeities } from '@/db/seed/deities';
 import { deitySlug } from '@/lib/slugify';
 import type { DeityRow, DeityTraditionRow } from './types';
 
-// What a re-run of the deity seed leaves of an admin's edits, and how it finds its own rows by key once an admin has renamed them.
+// What a re-run of the deity seed leaves of a keeper's edits, and how it finds its own rows by key once a keeper has renamed them.
 // The shape every seed shares is index.test.ts's; the content is the seed doc's to review (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 let sql: ReturnType<typeof postgres>;
@@ -36,19 +36,19 @@ afterAll(async () => {
   await sql.end();
 });
 
-describe('seedDeities(db) over a database an admin has edited', () => {
+describe('seedDeities(db) over a database a keeper has edited', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);
     // Precondition: the truncated clone really starts empty, so the rows edited are this run's.
     expect(await countOf('deities')).toBe(0);
   });
 
-  // The vocabulary is the admin's, and a description is the part of
+  // The vocabulary is the keeper's, and a description is the part of
   // a curated row most likely to be rewritten.
-  it('does not overwrite a description an admin has since rewritten', async () => {
+  it('does not overwrite a description a keeper has since rewritten', async () => {
     await seedDeities(db);
     await sql`
-      update deities set description = 'Rewritten by an admin.' where seed_key = 'apollo'
+      update deities set description = 'Rewritten by a keeper.' where seed_key = 'apollo'
     `;
     await sql`
       update deity_traditions set description = 'Also rewritten.' where slug = 'greek'
@@ -58,11 +58,11 @@ describe('seedDeities(db) over a database an admin has edited', () => {
 
     const [apollo] = (await allDeities()).filter((deity) => deity.seed_key === 'apollo');
     const [greek] = (await allTraditions()).filter((tradition) => tradition.slug === 'greek');
-    expect(apollo.description).toBe('Rewritten by an admin.');
+    expect(apollo.description).toBe('Rewritten by a keeper.');
     expect(greek.description).toBe('Also rewritten.');
   });
 
-  it('leaves a deity and tradition an admin has since renamed alone, and adds nothing', async () => {
+  it('leaves a deity and tradition a keeper has since renamed alone, and adds nothing', async () => {
     await seedDeities(db);
     // As the admin pages would leave them: every deity under the renamed
     // tradition re-slugged under its new name, so the backfill finds nothing to do.
@@ -107,11 +107,11 @@ describe('seedDeities(db) over a database an admin has edited', () => {
 
   // Unkeyed is what marks it as not the seed's; the author does not matter to
   // the seed, so it is the one user an emptied database holds once a seed ran.
-  it('takes a live row an admin wrote under a seed name as present, without an error', async () => {
+  it('takes a live row a keeper wrote under a seed name as present, without an error', async () => {
     await seedAstrology(db);
     const [admin] = await sql<{ id: string }[]>`
       insert into deity_traditions (name, slug, description, created_by, updated_by)
-      values ('Greek', 'greek', 'Written by an admin first.', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+      values ('Greek', 'greek', 'Written by a keeper first.', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
       returning id
     `;
 
@@ -124,7 +124,7 @@ describe('seedDeities(db) over a database an admin has edited', () => {
   });
 });
 
-// The other names a deity answers to, loaded beside it. An admin's removal is held as the deities are; stamps and a re-run are index.test.ts's sweep,
+// The other names a deity answers to, loaded beside it. A keeper's removal is held as the deities are; stamps and a re-run are index.test.ts's sweep,
 // and which names are listed is reviewed in claude-docs/db/deity-vocabulary-seed.md, not tested.
 describe('seedDeities(db) loads each deity’s other names', () => {
   beforeEach(async () => {
@@ -144,7 +144,7 @@ describe('seedDeities(db) loads each deity’s other names', () => {
     return names;
   }
 
-  it('does not bring back a name an admin removed, and keeps one an admin added', async () => {
+  it('does not bring back a name a keeper removed, and keeps one a keeper added', async () => {
     await seedDeities(db);
     await sql`
       update deity_other_names set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
@@ -161,7 +161,7 @@ describe('seedDeities(db) loads each deity’s other names', () => {
     expect(odinNames).toEqual(expect.arrayContaining(['Grimnir', 'Wotan']));
   });
 
-  it('gives a deity an admin retired no names', async () => {
+  it('gives a deity a keeper retired no names', async () => {
     await seedAstrology(db);
     await seedDeities(db);
     await sql`delete from deity_other_names`;

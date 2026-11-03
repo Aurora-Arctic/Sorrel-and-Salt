@@ -12,12 +12,15 @@ import {
   listAstrologyValues,
   updateAstrologyValue,
 } from '@/modules/vocabulary';
+import { updateCompendiumEntry } from '@/modules/ingredients';
 import type { AstrologyValueInput } from '@/modules/vocabulary/validation/astrology-value';
 import { slugify } from '@/lib/slugify';
 import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
+import { curatedFormId } from '../../../support/db/curated-ids';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // The celestial body and sign writes, the site admin's alone, and the reads the admin pages list them by.
 // A value a live entry's list holds is held: its delete is refused and its rename is carried onto the list. A coven's ingredient is neither.
@@ -29,13 +32,14 @@ useTestDatabase((client) => {
 });
 
 const admin = asUser(E);
+const entryInput = useCompendiumEntryInput(() => sql);
 
-// The site role is the one thing a vocabulary write turns on, so one non-admin
+// The site role is the one thing a vocabulary write turns on, so one non-keeper
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
 // A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
-// a curator's success proves the write calls assertCurator, and that an admin
+// a curator's success proves the write calls assertCurator, and that a keeper
 // passes assertCurator is proved once in identity's site-admin tests.
 const CURATORS = [['a curator', F]] as const;
 
@@ -104,6 +108,31 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
       makeIngredient({ name, nomenclature: 'none', variants: [], [field]: values, ...overrides }),
       A.id,
     );
+
+  async function variantOf(id: string) {
+    const [row] = await sql`select * from ingredient_variants where id = ${id}`;
+    return row;
+  }
+
+  /**
+   * A fresh compendium entry, or W's own ingredient, whose one variant's list holds `values` and whose
+   * own list holds nothing, with the variant's id: a value only the variant holds.
+   */
+  async function variantHolding(
+    name: string,
+    values: string[],
+    overrides: Parameters<typeof makeIngredient>[0] = {},
+  ) {
+    const ingredientId = await entry(name, [], {
+      variants: [makeVariant({ [field]: values })],
+      ...overrides,
+    });
+    const [variant] = await sql<{ id: string }[]>`
+      select id from ingredient_variants where ingredient_id = ${ingredientId}`;
+    // The precondition: the entry's own list holds nothing, so only the variant could hold the value.
+    expect((await ingredientOf(ingredientId))[column]).toEqual([]);
+    return { ingredientId, variantId: variant.id };
+  }
 
   /** An issue list, or the test fails because the write went through. */
   async function issuesOf(attempt: Promise<unknown>) {
@@ -343,6 +372,61 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
       expect((await ingredientOf(gone))[column]).toEqual(['Fixture Body']);
     });
 
+    // Which variants the carry passes over, and its stamps, are write.carryAstrologyRename's (tests/db/repository/ingredients.test.ts).
+    it('carries a rename onto every live compendium variant holding the value, its other values kept in order', async () => {
+      const id = await seed('Fixture Body');
+      const { ingredientId, variantId } = await variantHolding('Testwort', [
+        'Moon',
+        'Fixture Body',
+        'Sun',
+      ]);
+      const second = await insertVariant(
+        sql,
+        ingredientId,
+        { form: 'Testroot', [field]: ['Fixture Body'] },
+        A.id,
+      );
+      // The precondition: each variant holds the old spelling.
+      expect((await variantOf(variantId))[column]).toEqual(['Moon', 'Fixture Body', 'Sun']);
+      expect((await variantOf(second))[column]).toEqual(['Fixture Body']);
+
+      await updateAstrologyValue(admin, field, id, input({ name: 'Fixture Renamed' }));
+
+      expect((await variantOf(variantId))[column]).toEqual(['Moon', 'Fixture Renamed', 'Sun']);
+      expect((await variantOf(second))[column]).toEqual(['Fixture Renamed']);
+      expect((await ingredientOf(ingredientId))[column]).toEqual([]);
+    });
+
+    // The symptom reported: the entry reopened after a rename and saved unchanged is refused on its variant.
+    it('leaves an entry whose variant held the value saving unchanged after the rename', async () => {
+      const id = await seed('Fixture Body');
+      const herb = await curatedFormId(sql, 'Herb');
+      const ingredientId = await entry('Testwort', [], {
+        variants: [makeVariant({ form: 'Herb', formId: herb, [field]: ['Fixture Body'] })],
+      });
+      const [variant] = await sql`
+        select * from ingredient_variants where ingredient_id = ${ingredientId}`;
+      // Why the save could pass before the rename: the variant holds a curated spelling.
+      const saveAsStored = async () => {
+        const stored = await variantOf(variant.id as string);
+        const sent = entryInput({
+          name: 'Testwort',
+          nomenclature: 'none',
+          variants: [makeVariant({ form: 'Herb', formId: herb, [field]: stored[column] })],
+        });
+        return updateCompendiumEntry(admin, ingredientId, {
+          ...sent,
+          variants: [{ ...sent.variants[0], id: variant.id as string }],
+        });
+      };
+      await saveAsStored();
+
+      await updateAstrologyValue(admin, field, id, input({ name: 'Fixture Renamed' }));
+
+      await expect(saveAsStored()).resolves.toMatchObject({ id: ingredientId });
+      expect((await variantOf(variant.id as string))[column]).toEqual(['Fixture Renamed']);
+    });
+
     if (full) {
       it('carries a change of case alone', async () => {
         const id = await seed('Fixture Body');
@@ -422,6 +506,18 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
       expect((await rowOf(id)).deleted_at).toBeNull();
     });
 
+    it('refuses while only a live compendium variant holds it, naming its entry, and the row stays live', async () => {
+      const id = await seed('Fixture Body');
+      const { variantId } = await variantHolding('Testwort', ['Moon', 'Fixture Body']);
+      // The precondition: the variant holds the value its entry does not.
+      expect((await variantOf(variantId))[column]).toEqual(['Moon', 'Fixture Body']);
+
+      const attempt = deleteAstrologyValue(admin, field, id);
+      await expect(attempt).rejects.toThrow(Forbidden);
+      await expect(attempt).rejects.toThrow('Testwort');
+      expect((await rowOf(id)).deleted_at).toBeNull();
+    });
+
     if (full) {
       it('passes once no live entry holds it: a deleted entry and a coven’s ingredient never block it', async () => {
         const id = await seed('Fixture Body');
@@ -437,6 +533,34 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
 
         expect((await rowOf(id)).deleted_at).toEqual(expect.any(Date));
         expect(await ingredientOf(coven)).toEqual(covenBefore);
+      });
+
+      it('passes once no live compendium variant holds it: a dropped variant, a deleted entry’s and a coven’s never block it', async () => {
+        const id = await seed('Fixture Body');
+        const held = await variantHolding('Testwort', ['Fixture Body']);
+        const gone = await variantHolding('Testgone', ['Fixture Body']);
+        await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone.ingredientId}`;
+        const coven = await variantHolding('Testleaf', ['Fixture Body'], {
+          workspaceId: WORKSPACE_W_ID,
+        });
+        // Why it could have been refused: the live compendium variant holds it, until it is dropped.
+        await expect(deleteAstrologyValue(admin, field, id)).rejects.toThrow(Forbidden);
+        await sql`
+          update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+          where id = ${held.variantId}`;
+        const ids = [held.variantId, gone.variantId, coven.variantId];
+        const before = await Promise.all(ids.map(variantOf));
+        // The precondition: each still holds the value.
+        expect(before.map((row) => row[column])).toEqual([
+          ['Fixture Body'],
+          ['Fixture Body'],
+          ['Fixture Body'],
+        ]);
+
+        await deleteAstrologyValue(admin, field, id);
+
+        expect((await rowOf(id)).deleted_at).toEqual(expect.any(Date));
+        expect(await Promise.all(ids.map(variantOf))).toEqual(before);
       });
 
       it('answers NotFound for a deleted row, and for an id that is not a uuid', async () => {

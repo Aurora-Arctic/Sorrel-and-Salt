@@ -43,7 +43,7 @@ describe('MemberList', () => {
     render(<MemberList members={ALL} currentUserId="someone-else" />);
     for (const member of ALL) {
       const row = rowOf(member.name);
-      const label = member.role[0]!.toUpperCase() + member.role.slice(1);
+      const label = { owner: 'Steward', member: 'Practitioner', viewer: 'Observer' }[member.role];
       const button = within(row).getByRole('button', { name: `About ${label}` });
       const tip = document.getElementById(button.getAttribute('aria-describedby')!);
       expect(tip).toHaveAttribute('role', 'tooltip');
@@ -54,9 +54,9 @@ describe('MemberList', () => {
   it('shows each member with their role, joining date and last change', () => {
     render(<MemberList members={ALL} currentUserId="someone-else" />);
     for (const [member, role] of [
-      [OWNER, 'Owner'],
-      [MEMBER, 'Member'],
-      [VIEWER, 'Viewer'],
+      [OWNER, 'Steward'],
+      [MEMBER, 'Practitioner'],
+      [VIEWER, 'Observer'],
     ] as const) {
       const row = rowOf(member.name);
       expect(within(row).getByRole('cell', { name: new RegExp(`^${role}`) })).toBeTruthy();

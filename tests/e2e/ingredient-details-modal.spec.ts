@@ -426,7 +426,7 @@ test.describe('on the public compendium', () => {
   test("a visitor with no account opens Quick Look and reads the entry's sections", async ({
     page,
   }, testInfo) => {
-    // An admin stamps the seeded entry, then signs out: the rest is a visitor's.
+    // A keeper stamps the seeded entry, then signs out: the rest is a visitor's.
     const { userId } = await signInAs(
       page,
       `admin-${testInfo.testId}@details-public.test`,

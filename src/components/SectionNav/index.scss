@@ -300,7 +300,7 @@
 
   // The current tab takes no fill on the phone: the rule above its icon and its weight tell
   // it, and a filled tab in a bar of one (the coven's Overview alone) would recolour the whole
-  // bar, so the coven's and the admin's bars would not match.
+  // bar, so the coven's and the keeper's bars would not match.
   .section-nav .section-nav__list > li > .section-nav__link[aria-current='page'] {
     background-color: transparent;
 

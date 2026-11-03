@@ -246,7 +246,7 @@ export const skippedNotice = (scope: HTMLElement) =>
 /** Types a form into the New Form box and presses its Add. */
 export const addVariant = (form: string) => {
   type(document.body, 'New Form', form);
-  fireEvent.click(screen.getByLabelText('Add Variant', { selector: 'button' }));
+  fireEvent.click(screen.getByLabelText('Add Form', { selector: 'button' }));
 };
 
 /** Picks Oil from the New Form box, so the variant carries Oil's group. */

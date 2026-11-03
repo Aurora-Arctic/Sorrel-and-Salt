@@ -6,8 +6,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { RemoveControlProps } from './types';
 
-// The members page's Remove: it asks first, naming the member, then sends `removeMember`. Owners
-// only; the service refuses removing the last owner, said in a callout
+// The members page's Remove: it asks first, naming the member, then sends `removeMember`. Stewards
+// only; the service refuses removing the last steward, said in a callout
 // (claude-docs/components/member-list.md).
 
 const RemoveMemberDocument = graphql(`
@@ -32,7 +32,7 @@ const RemoveControl = ({
     question={
       <>
         Remove <strong>{name}</strong> from this coven? They lose access to its ingredients and its
-        grimoire until an owner invites them back.
+        grimoire until a steward invites them back.
       </>
     }
     busy="Removing"

@@ -4,7 +4,7 @@ import { A, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { SetUserRoleResult } from './types';
 
-// `setUserRole`, the transport's half (claude-docs/testing/layer-ownership.md): an admin's answer, the reason reaching the ledger, and one refusal per error code, read as the browser reads them.
+// `setUserRole`, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's answer, the reason reaching the ledger, and one refusal per error code, read as the browser reads them.
 // Which callers and targets the service refuses is services/user-role.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
@@ -36,7 +36,7 @@ const SET_ROLE = `
 `;
 
 describe('Mutation.setUserRole', () => {
-  it('answers an admin the user, now an admin who may create a coven, the reason on the ledger', async () => {
+  it('answers a keeper the user, now a keeper who may create a coven, the reason on the ledger', async () => {
     const result = await run<SetUserRoleResult>(asUser(E), SET_ROLE, {
       userId: GRANTEE,
       role: 'admin',
@@ -75,8 +75,8 @@ describe('Mutation.setUserRole', () => {
     expect(actors).toEqual([{ created_by: E.id }]);
   });
 
-  // E is an admin the scope admits, so the refusal is the service's.
-  it('answers a grant to an admin as FORBIDDEN', async () => {
+  // E is a keeper the scope admits, so the refusal is the service's.
+  it('answers a grant to a keeper as FORBIDDEN', async () => {
     const result = await run(asUser(E), SET_ROLE, { userId: E.id, role: 'admin' });
 
     expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });

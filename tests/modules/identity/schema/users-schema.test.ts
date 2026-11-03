@@ -26,6 +26,8 @@ describe('users schema', () => {
         'verification_sent_at',
         'two_factor_enabled',
         'agreed_terms_version',
+        'agreed_disclaimer_version',
+        'agreed_ethics_version',
         'terms_accepted_at',
         'pending_email',
         'former_email',
@@ -37,6 +39,8 @@ describe('users schema', () => {
   // Null until the account agrees: the terms gate reads null as 'not agreed to the terms in force'.
   it('leaves the agreement columns empty until an account agrees', () => {
     expect(byName.agreed_terms_version.notNull).toBe(false);
+    expect(byName.agreed_disclaimer_version.notNull).toBe(false);
+    expect(byName.agreed_ethics_version.notNull).toBe(false);
     expect(byName.terms_accepted_at.notNull).toBe(false);
   });
 
@@ -47,7 +51,7 @@ describe('users schema', () => {
   });
 });
 
-// The primary admin is whichever live row matches ADMIN_BOOTSTRAP_EMAIL case-insensitively, and `users_email_unique` is on the raw column.
+// The primary keeper is whichever live row matches ADMIN_BOOTSTRAP_EMAIL case-insensitively, and `users_email_unique` is on the raw column.
 // Better Auth lowercases every email it writes but a row inserted by hand need not, so the database holds addresses to lower case and two rows can never differ by case alone.
 describe('users email case', () => {
   let sql: postgres.Sql;
@@ -93,7 +97,7 @@ describe('users email case', () => {
   });
 });
 
-// The flag is what lets anyone create a workspace, admins included, so a CHECK holds every admin to it rather than the gate reading `role` beside it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+// The flag is what lets anyone create a workspace, keepers included, so a CHECK holds every keeper to it rather than the gate reading `role` beside it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
 // It holds for every role but `user`, curators included (claude-docs/design-decisions/m11.20-curator-role.md).
 describe('users privileged creation flag', () => {
   let sql: postgres.Sql;
@@ -116,7 +120,7 @@ describe('users privileged creation flag', () => {
       `;
     });
 
-  it('refuses an admin row without the flag', async () => {
+  it('refuses a keeper row without the flag', async () => {
     const error = await failureOf(insert('flagless-admin@admin-flag.test', 'admin', false));
 
     // 23514 is check_violation.
@@ -126,7 +130,7 @@ describe('users privileged creation flag', () => {
 
   // Why the refusal is the check and not the insert: the same row with the
   // flag goes in, and a user needs no flag at all.
-  it('accepts an admin holding the flag, and a user without it', async () => {
+  it('accepts a keeper holding the flag, and a user without it', async () => {
     await expect(insert('flagged-admin@admin-flag.test', 'admin', true)).resolves.toHaveLength(1);
     await expect(insert('flagless-user@admin-flag.test', 'user', false)).resolves.toHaveLength(1);
   });

@@ -266,7 +266,7 @@ export interface ShellWorkspace {
   slug: string;
   name: string;
   canReadMembers: boolean;
-  /** The viewer’s role there may invite (an owner’s alone): the invitations page is a 404 without it. */
+  /** The viewer’s role there may invite (a steward’s alone): the invitations page is a 404 without it. */
   canInvite: boolean;
   /** The viewer’s role there may create ingredients: false leaves the coven out of every write target, Add Ingredient's among them. */
   canWrite: boolean;
@@ -278,4 +278,23 @@ export interface ShellWorkspace {
 export interface ShellContext {
   viewer: ShellViewer;
   workspaces: ShellWorkspace[];
+}
+
+/** The three documents an account agrees to at once, by their part of the joint version: the terms include the other two. */
+export type AgreementPart = 'terms' | 'disclaimer' | 'ethics';
+
+/** The key of each document an agreement covers, as the documents table holds it. */
+export type AgreementDocumentKey = 'terms' | 'disclaimer' | 'code-of-ethics';
+
+/** The version numbers in force, one per document, each 0 while its document has no published version. */
+export type AgreementVersion = Record<AgreementPart, number>;
+
+/** The version numbers an account stored when it last agreed, each null or absent until it agrees. */
+export type AgreedVersion = Record<AgreementPart, number | null | undefined>;
+
+/** A user row's three agreed numbers, by their column names, each null until the account agrees. */
+export interface AgreedColumns {
+  agreedTermsVersion: number | null;
+  agreedDisclaimerVersion: number | null;
+  agreedEthicsVersion: number | null;
 }

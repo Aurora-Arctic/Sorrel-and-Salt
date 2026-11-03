@@ -29,7 +29,7 @@ describe('covenInvitationMessage', () => {
     const { text } = await covenInvitationMessage(INPUT);
 
     expect(text).toContain('Fixture Coven');
-    expect(text).toContain('viewer');
+    expect(text).toContain('observer');
   });
 
   it('names the owner who sent it', async () => {

@@ -19,7 +19,7 @@ import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
 
-// The shape every production seed shares, asserted once over all of them: the bootstrap user inserted and published as the acting user, every row stamped as it, a second run a no-op, and nothing an admin deleted brought back.
+// The shape every production seed shares, asserted once over all of them: the bootstrap user inserted and published as the acting user, every row stamped as it, a second run a no-op, and nothing a keeper deleted brought back.
 // The handle is this file's own; that the seed writes through it rather than a client of its own is enforced by lint (claude-docs/db/seed-module.md, "The seed module").
 
 const PROBE = 'seed_probe_acting_user';
@@ -110,7 +110,7 @@ describe('seed(db, { scenario: "minimal" })', () => {
     await seed(db, { scenario: 'minimal' });
   });
 
-  // The system user is a creator, not an admin, so a bare install has none.
+  // The system user is a creator, not a keeper, so a bare install has none.
   it('produces the system user, the signed-out support sender, the job actor and one user, and no admin', async () => {
     const users = await allUsers();
     expect(users.map((u) => u.id)).toEqual([
@@ -136,7 +136,7 @@ describe('resolveScenario', () => {
 });
 
 // Every entry point opens with `beginSeedTransaction`, which inserts the bootstrap row when it is missing.
-// That row is no admin: it has no OAuth account and nobody can sign in as it, so as an admin it would only be a revocable row on /keepers/users.
+// That row is no admin: it has no OAuth account and nobody can sign in as it, so as a keeper it would only be a revocable row on /keepers/users.
 // Each entry names the tables it fills from empty: the six `migrate.yml` runs on staging and production; the dev-only scenarios are a developer's to see working.
 const SEED_ENTRIES: SeedEntry[] = (
   [
@@ -283,7 +283,7 @@ describe('the shape every seed shares', () => {
   // Keyed on identity, ignoring `deleted_at`: the partial unique indexes stop
   // only a second live row, and would let the tombstoned one's twin through.
   it.each(SEED_ENTRIES)(
-    '$name does not resurrect a row an admin has since deleted, in any of its tables',
+    '$name does not resurrect a row a keeper has since deleted, in any of its tables',
     async ({ run, tables: own }) => {
       await run(db);
 

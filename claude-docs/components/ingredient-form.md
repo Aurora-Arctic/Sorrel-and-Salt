@@ -500,7 +500,7 @@ query, `PickerCategories`, as the form opens, and holds the picker on
 - **One page holds them all.** The query asks for `first: 100`, the hard
   maximum, written out because `lib/pagination.ts` is the server's; rule 8's
   cursor still pages it, and some sixty categories fit one page. Each comes
-  with its group's id, name and colour pair, so a group an admin adds is a
+  with its group's id, name and colour pair, so a group a keeper adds is a
   heading and a colour without a deploy. The box narrows them itself: with
   every category in hand there is nothing to ask the server as the text
   changes, so unlike the lookups it waits on no debounce.
@@ -730,7 +730,7 @@ the source, not the row's link to it, so it reaches every entry citing it.
   the source should be a second, deliberate step.
 - **Only where the form may change the source.** A coven's form edits its
   own sources; a compendium source there has no Edit Source, and its tier
-  line adds that only the site's admins can edit it. A button left
+  line adds that only the site's keepers can edit it. A button left
   disabled was the alternative, refused because a disabled button takes no
   focus, so its tip could not be reached by keyboard. The compendium's form
   edits every source it lists, all the compendium's. Another coven's source
@@ -765,7 +765,7 @@ the source, not the row's link to it, so it reaches every entry citing it.
   question. New Reference while an edit is open, or Edit Source on another
   row, starts that panel afresh.
 - **A panel's edits still count as unsaved changes** to the ingredient form,
-  new or editing (MB.115, the owner's call that every way out of an admin
+  new or editing (MB.115, the owner's call that every way out of a keeper
   form asks while it has changes). Each panel reports its own `isDirty`
   through `PanelChangesContext` (`panel-changes.ts`), and the form's guard
   reads its `isDirty` or any panel holding edits, so the
@@ -1017,7 +1017,7 @@ says as much.
   cancelled, until a copy skips something. It names what was skipped, "No
   Oil form to link, so not copied: Mockwort.", beside a small quiet **Copy
   Anyway**, which adds them as names only, typed text with no link, so the
-  rule holds and the admin can swap a name for a form later, and a ×,
+  rule holds and the keeper can swap a name for a form later, and a ×,
   "Dismiss". Either one takes the notice away and the focus back to Copy
   From Ingredient, since the pressed button goes with it. Any other change
   to the list, an entry added or removed, takes it away too: the variant
@@ -1070,8 +1070,8 @@ description (MB.169, M12.7).
   `['variants', i, 'formId']`, and that issue is that variant's Form field's. `fieldNameOf` maps the server's, and the
   resolver moves the schema's, so it lands beside the box that made the pick
   rather than above the form.
-- **A pick an admin has since renamed asks the member** (M8.17). A coven's
-  variant keeps the text it was saved with, so after an admin renames the
+- **A pick a keeper has since renamed asks the member** (M8.17). A coven's
+  variant keeps the text it was saved with, so after a keeper renames the
   curated form (M5.6a; "Wax" to "Beeswax", say) the text no longer matches the pick's name, which
   `renamedTo` in `values.ts` notices. Beneath the box the form says "This
   form is now called "Beeswax"." and offers two buttons: Use "Beeswax", which
@@ -1173,7 +1173,7 @@ sentence, since the owner found the sentence with buttons run into it
 unreadable at the cupboard review (2026-10-18); a compendium match's +
 or Quick Look eye (below) sits at the right of its row. Each match is a link named
 by its label and its formal name, since the label alone can name five
-plants; one with no formal name shows its label. Each links where `duplicateHref` says — the admin's
+plants; one with no formal name shows its label. Each links where `duplicateHref` says — the keeper's
 compendium page opens the match's own modal, `?edit=<slug>` — and the shell's add button to
 `/coven/[slug]/ingredients/[id]`, DESIGN.md §9's coven page, which
 reaches compendium and coven entries alike. It opens in a new tab, so the
@@ -1223,7 +1223,7 @@ did-you-mean list gets the same + or eye at the right of its row when
 it is a compendium entry (`isGlobal`); the coven's own entry, which the
 cupboard holds by being the coven's, gets the eye and never a + (the owner's
 calls, 2026-10-18 and M12.48). Both need `onUse`, which the compendium's
-form leaves out, since it has no cupboard. Viewers never reach the modal.
+form leaves out, since it has no cupboard. Observers never reach the modal.
 
 **The + in the duplicate warning** (M12.48, the owner's calls, 2026-10-21).
 This replaces navigating to the entry's page after the add: the form stays open,
@@ -2008,7 +2008,7 @@ in the ingredient's order (MB.115); those sections folding (MB.115): an
 edit's variant opened with every one closed, each heading described by its
 line, the variant's own data in it; a variant added here with every one
 open; a heading opening its own section alone, the ingredient's of the same
-name left as it was; a form an admin has renamed refusing the save at the
+name left as it was; a form a keeper has renamed refusing the save at the
 Form field until Use or Keep settles it; and `useVariantFolds` carrying each
 row's folds across an undo's restore, matching rows one to one.
 
@@ -2332,7 +2332,7 @@ The form and folk-name lookups, and the celestial-body, sign, deity and substitu
 - On the compendium, celestial bodies, signs and deities are picks of the curated rows alone, and the substitutes are its other entries. A pick-only box lists its rows flat, because with every row the compendium's a From Compendium heading would tell the admin nothing.
 - Celestial bodies, signs, colours and deities keep the order entered, so their entries move. Folk names and substitutes read alphabetically, so theirs do not.
 - The Form field's box shows a curated form's group, which the text alone cannot: Wax under _Animal_ and under _Substance_ both read "Wax". A pick of a curated form links it. The text stays the member's to edit, and an edit away from the picked name drops the link, leaving typed text. On the compendium the field must be a pick, with no typed row.
-- A pick an admin has since renamed asks the member, beneath the box, to use the new name or keep the text, which unlinks the pick. The resolver holds the save until one is pressed. Only a coven's variant can hold a stale pick, because an admin renaming a curated form rewrites the compendium's own rows.
+- A pick a keeper has since renamed asks the member, beneath the box, to use the new name or keep the text, which unlinks the pick. The resolver holds the save until one is pressed. Only a coven's variant can hold a stale pick, because a keeper renaming a curated form rewrites the compendium's own rows.
 
 `SuggestField`, `ToggleField`, `MultiSelectField` and `ListField` stayed in the ingredient form, where it grew them, rather than moving to `../Field` as generic fields. `CupboardEntryForm` imports `ListField` and `MultiSelectField`. A multi-select's chips sit inside the control, as a list's entries do.
 

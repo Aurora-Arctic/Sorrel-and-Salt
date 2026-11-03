@@ -77,7 +77,7 @@ interface IngredientFormCallbacks {
   mayPromote?: boolean;
   /**
    * Offers the compendium's Reviewed switch as a field of the form, on an add and an edit, for a
-   * curator or admin only. A flip changes the form, Save sends it after the entry, Cancel drops it.
+   * curator or keeper only. A flip changes the form, Save sends it after the entry, Cancel drops it.
    */
   review?: ReviewOffer;
   /** Shown at the start of the Sources section, above the first source: the compendium edit dialog's sourcing score. */
@@ -667,7 +667,7 @@ export interface NameFieldProps {
   hrefOf: (match: Duplicate) => string;
   /**
    * Puts a compendium match in the cupboard (its +), answering whether it went in; left out where
-   * there is no cupboard, the admin's, and no match offers it.
+   * there is no cupboard, the keeper's, and no match offers it.
    */
   onUse?: (match: Duplicate) => Promise<boolean>;
   /** The coven's name, which the page status region says an add went to; "My Ingredients" when left out. */

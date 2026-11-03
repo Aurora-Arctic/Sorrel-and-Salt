@@ -15,6 +15,7 @@ The account page's sections are panels; the coven index's are plain
 ## Props
 
 - `label`: the landmark's accessible name ("On This Page").
+- `collapsible`: on a phone the menu folds behind its label (a native `<details>` inside the nav landmark, closed until opened, so it works without the script); from a tablet up it stands open and the label is hidden. The server draws it closed, so a browser that supports `::details-content` shows the menu open from the first paint; others show it once the script opens it. Only the document pages set it.
 - `entries`: `{ href: '#id', label, group?, apart? }[]`, one per section, in page order.
   `apart` (MB.155) sets an item off from those above it: a break a step
   wider than a group label's (`space(6)` above, so the rule has air on both

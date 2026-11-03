@@ -75,7 +75,11 @@ test.describe('who is in a coven', () => {
         await membersLink(page).click();
         await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
         await expect(membersLink(page)).toHaveAttribute('aria-current', 'page');
-        await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
+        await expectRoll(
+          page,
+          { [ASH]: 'Steward', [BIRCH]: 'Practitioner', [CEDAR]: 'Observer' },
+          NAMES,
+        );
         // The addresses are the owner's alone: each row carries its
         // member's for Ash, and none reaches Birch's page.
         const table = page.getByRole('table', { name: 'Members' });
@@ -156,7 +160,11 @@ test.describe('removing a member, and leaving', () => {
 
       await signInAgainAs(page, ash);
       await page.goto(`/coven/${coven.slug}/members`);
-      await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(
+        page,
+        { [ASH]: 'Steward', [BIRCH]: 'Practitioner', [CEDAR]: 'Observer' },
+        NAMES,
+      );
       // The roll holds no actions: each is in the member's modal.
       await expect(page.getByRole('button', { name: /^Remove / })).toHaveCount(0);
       // Nobody removes themself from the roll: leaving is the coven page's.
@@ -174,7 +182,7 @@ test.describe('removing a member, and leaving', () => {
       // The modal closes with the member gone, back to the roll at its own address.
       await expect(dialog).toHaveCount(0);
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
-      await expectRoll(page, { [ASH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(page, { [ASH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);
       await page.setViewportSize({ width: 375, height: 812 });
       await assertNoAccessibilityViolations(page);
       await assertNoSidewaysScroll(page);
@@ -227,7 +235,7 @@ test.describe('removing a member, and leaving', () => {
 
       await signInAgainAs(page, ash);
       await page.goto(`/coven/${coven.slug}/members`);
-      await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member' }, NAMES);
+      await expectRoll(page, { [ASH]: 'Steward', [BIRCH]: 'Practitioner' }, NAMES);
       expect(await seatsOf(coven.id)).not.toHaveProperty(cedar);
     },
   );
@@ -273,8 +281,12 @@ test.describe('removing a member, and leaving', () => {
       // and Cedar's modal carries no control.
       await page.reload();
       await expect(modal).toBeVisible();
-      await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
-      await expect(modal.getByRole('region', { name: 'Membership' })).toContainText('Viewer');
+      await expectRoll(
+        page,
+        { [ASH]: 'Steward', [BIRCH]: 'Practitioner', [CEDAR]: 'Observer' },
+        NAMES,
+      );
+      await expect(modal.getByRole('region', { name: 'Membership' })).toContainText('Observer');
       await expect(modal.getByRole('button', { name: /^Remove / })).toHaveCount(0);
       await expect(modal.getByRole('button', { name: /^Change Role / })).toHaveCount(0);
     },
@@ -298,7 +310,11 @@ test.describe('the last owner', () => {
 
       await signInAgainAs(page, ash);
       await page.goto(`/coven/${coven.slug}/members`);
-      await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(
+        page,
+        { [ASH]: 'Steward', [BIRCH]: 'Practitioner', [CEDAR]: 'Observer' },
+        NAMES,
+      );
       // Remove is offered in the others' modals and never in the owner's own.
       const other = await openMember(page, BIRCH);
       await expect(other.getByRole('button', { name: `Remove ${BIRCH}` })).toBeVisible();
@@ -311,7 +327,7 @@ test.describe('the last owner', () => {
       const facts = dialog.getByRole('region', { name: 'Membership' });
       const placed = await facts.boundingBox();
       await control.click();
-      await dialog.getByRole('radio', { name: /^Member/ }).check();
+      await dialog.getByRole('radio', { name: /^Practitioner/ }).check();
       await dialog.getByRole('button', { name: 'Demote', exact: true }).click();
 
       const said = dialog.getByRole('alert');
@@ -326,7 +342,11 @@ test.describe('the last owner', () => {
       expect(at!.x + at!.width).toBeGreaterThan(button!.x);
       expect(await facts.boundingBox()).toEqual(placed);
       await assertNoAccessibilityViolations(page);
-      await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(
+        page,
+        { [ASH]: 'Steward', [BIRCH]: 'Practitioner', [CEDAR]: 'Observer' },
+        NAMES,
+      );
       expect(await seatsOf(coven.id)).toEqual(before);
     },
   );
@@ -358,7 +378,7 @@ test.describe('the last owner', () => {
       await dialog.getByRole('radio', { name: /^Hand It/ }).check();
 
       // Two others, so the new owner is searched for rather than offered alone.
-      await dialog.getByRole('combobox', { name: 'New Owner' }).click();
+      await dialog.getByRole('combobox', { name: 'New Steward' }).click();
       await expect(dialog.getByRole('option')).toHaveCount(2);
       await dialog.getByRole('option', { name: new RegExp(BIRCH) }).click();
       await expect(dialog.getByRole('button', { name: 'Promote and Leave' })).toBeEnabled();
@@ -375,7 +395,7 @@ test.describe('the last owner', () => {
       expect(await seatsOf(coven.id)).toEqual({ [birch]: 'owner', [cedar]: 'viewer' });
       await signInAgainAs(page, birch);
       await page.goto(`/coven/${coven.slug}/members`);
-      await expectRoll(page, { [BIRCH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(page, { [BIRCH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);
     },
   );
 
@@ -440,35 +460,47 @@ test.describe('the last owner', () => {
       // Ash makes Birch a second owner.
       await signInAgainAs(page, ash);
       await page.goto(`/coven/${coven.slug}/members`);
-      await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(
+        page,
+        { [ASH]: 'Steward', [BIRCH]: 'Practitioner', [CEDAR]: 'Observer' },
+        NAMES,
+      );
       const dialog = await openMember(page, BIRCH);
       await dialog.getByRole('button', { name: `Change Role for ${BIRCH}` }).click();
-      await dialog.getByRole('radio', { name: /^Owner/ }).check();
+      await dialog.getByRole('radio', { name: /^Steward/ }).check();
       await expect(dialog.getByRole('button', { name: 'Promote', exact: true })).toBeEnabled();
       await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Promote', exact: true }).click();
       // The modal stays open on Birch, the new role in its facts and in the roll behind it.
-      await expect(dialog.getByRole('region', { name: 'Membership' })).toContainText('Owner');
-      await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
+      await expect(dialog.getByRole('region', { name: 'Membership' })).toContainText('Steward');
+      await expectRoll(page, { [ASH]: 'Steward', [BIRCH]: 'Steward', [CEDAR]: 'Observer' }, NAMES);
 
       // With two, Birch demotes Ash.
       await signInAgainAs(page, birch);
       await page.goto(`/coven/${coven.slug}/members`);
       const ashModal = await openMember(page, ASH);
       await ashModal.getByRole('button', { name: `Change Role for ${ASH}` }).click();
-      await ashModal.getByRole('radio', { name: /^Member/ }).check();
+      await ashModal.getByRole('radio', { name: /^Practitioner/ }).check();
       await ashModal.getByRole('button', { name: 'Demote', exact: true }).click();
-      await expectRoll(page, { [ASH]: 'Member', [BIRCH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(
+        page,
+        { [ASH]: 'Practitioner', [BIRCH]: 'Steward', [CEDAR]: 'Observer' },
+        NAMES,
+      );
       await page.keyboard.press('Escape');
       await expect(ashModal).toHaveCount(0);
 
       // Birch is the last owner now, and cannot step down.
       const own = await openMember(page, BIRCH);
       await own.getByRole('button', { name: `Change Role for ${BIRCH}` }).click();
-      await own.getByRole('radio', { name: /^Member/ }).check();
+      await own.getByRole('radio', { name: /^Practitioner/ }).check();
       await own.getByRole('button', { name: 'Demote', exact: true }).click();
       await expect(own.getByRole('alert')).toBeVisible();
-      await expectRoll(page, { [ASH]: 'Member', [BIRCH]: 'Owner', [CEDAR]: 'Viewer' }, NAMES);
+      await expectRoll(
+        page,
+        { [ASH]: 'Practitioner', [BIRCH]: 'Steward', [CEDAR]: 'Observer' },
+        NAMES,
+      );
       expect(await seatsOf(coven.id)).toEqual({
         [ash]: 'member',
         [birch]: 'owner',

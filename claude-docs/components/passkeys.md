@@ -37,7 +37,7 @@ UTC, then two small buttons:
   the row shows the new name.
 - **Remove** (`.btn--quiet.btn--small`, drawn plain as the destructive-control
   rule has it) asks first, through `ConfirmedAction`
-  ([`user-list.md`](user-list.md), "Actions that ask first"), as an admin
+  ([`user-list.md`](user-list.md), "Actions that ask first"), as a keeper
   invitation's Revoke does: a dialog titled "Remove Passkey" asks "Remove
   <name>? You will need another passkey or your password to sign in from
   that device." and holds the red Remove (`.btn--destructive`) and Cancel.

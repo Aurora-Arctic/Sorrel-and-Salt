@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, eq, isNull, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
@@ -16,7 +16,7 @@ import {
   elementArm,
   hasNoForm,
   listColumns,
-  listHolds,
+  listOrVariantHolds,
   pairIsLive,
   stated,
   reviewArm,
@@ -136,10 +136,17 @@ async function readFacets(
       formFacet(filter, read),
       deityFacet(filter, read),
       categoryFacet(filter, read),
-      listFacet(zodiacSigns, columns.zodiacSigns, { ...filter, zodiacSigns: undefined }, read),
+      listFacet(
+        zodiacSigns,
+        columns.zodiacSigns,
+        ingredientVariants.zodiacSigns,
+        { ...filter, zodiacSigns: undefined },
+        read,
+      ),
       listFacet(
         celestialBodies,
         columns.celestialBodies,
+        ingredientVariants.celestialBodies,
         { ...filter, celestialBodies: undefined },
         read,
       ),
@@ -291,12 +298,13 @@ async function categoryFacet(
 }
 
 /**
- * A flat vocabulary's every live row with how many entries' `list` holds its name under `listArm`'s fold. A right join,
+ * A flat vocabulary's every live row with how many entries hold its name in their `list` or a live variant's `variantList`, as `listArm` matches. A right join,
  * so an unheld row reads at zero: the entries' scope sits in its `on`, as the `where` would drop those rows.
  */
 function listFacet(
   vocabulary: typeof zodiacSigns | typeof celestialBodies,
   list: ListColumns['zodiacSigns'],
+  variantList: SQLWrapper,
   filter: IngredientFilter,
   { scope, membership }: FacetRead,
 ): Promise<FacetCount[]> {
@@ -307,7 +315,13 @@ function listFacet(
       count: sql<number>`count(${ingredients.id})::int`,
     },
     over,
-    joins: [{ type: 'right', table: vocabulary, on: and(listHolds(list, vocabulary.name), where) }],
+    joins: [
+      {
+        type: 'right',
+        table: vocabulary,
+        on: and(listOrVariantHolds(list, variantList, vocabulary.name), where),
+      },
+    ],
     groupBy: [vocabulary.id, vocabulary.name],
     orderBy: [
       sql`${vocabulary.position} asc nulls last`,

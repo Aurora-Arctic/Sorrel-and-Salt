@@ -24,7 +24,7 @@ shape ahead of it so authorization tests could be written first, and
   `withAudit(session, fn)` takes a service session directly and no test needs
   a cast to get one in — a cast being exactly where the acting user stops
   being the one the test named (CLAUDE.md rule 3).
-- **`role` is on the session.** M5.7 puts a Pothos auth scope on every admin
+- **`role` is on the session.** M5.7 puts a Pothos auth scope on every keeper
   mutation as a second, independent check on top of the service's own, and a
   schema-layer scope reads the context rather than running a query.
 - **`canCreateWorkspace` is deliberately not.** Accepting an invitation flips

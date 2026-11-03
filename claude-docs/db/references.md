@@ -41,7 +41,7 @@ admits therefore renders without a branch for a missing required field.
 There is no unique index: two rows may be the same book, since nothing short
 of a librarian identifies a source; the one index is the seed's, on
 `seed_key`, which records the citation it rendered at insert, so a reference
-an admin has since edited is still its own (MB.171).
+a keeper has since edited is still its own (MB.171).
 
 ```sql
 CHECK (url IS NULL OR url ~ '^https?://');
@@ -210,7 +210,7 @@ is built: the table holds the sources a few hundred entries cite, and the
 scan is the search's whole cost at that size. An index is a later task's,
 measured, if the table outgrows it.
 
-**The admin's to-do list** is `compendium(withoutReferences: true)`, whose
+**The keeper's to-do list** is `compendium(withoutReferences: true)`, whose
 arm `citesNothing('ingredientId')` keeps an entry with no live link to a live compendium
 reference — the entries whose bibliography reads empty, so one whose only
 link was unlinked, or cites a retracted source, is listed. Under the union
@@ -386,7 +386,7 @@ supports, transcribed from both docs; review holds the two in step, since
 MB.225 retired the test that parsed the docs and compared them through the
 renderer. `sources.test.ts` keeps the seed's behaviour: compendium rows keyed
 by citation, a tradition's source reaching every deity under it, and what a
-re-run leaves of an admin's edits. The docs hold one shape the literal
+re-run leaves of a keeper's edits. The docs hold one shape the literal
 transcribes:
 
 - **The deity doc.** The bullets before the first tradition chose which
@@ -410,7 +410,7 @@ in …" and the "Existence confirmed …" tails into notes; a back-reference
 sources were recast in Chicago form from pages fetched again.
 
 **Keyed by `seed_key`** (MB.171). A reference the seed writes records the
-citation it rendered, so one an admin has since edited is still its own and
+citation it rendered, so one a keeper has since edited is still its own and
 is neither overwritten nor twinned. A run restates a present source's fields
 and its `scholarly` mark, set or cleared, to match `sources.ts`, unless a
 person edited the row: that one is kept, and `db:seed:sources` prints a
@@ -466,7 +466,7 @@ sources, through the same reference insert as the sources seed:
 out of `sources.ts` unchanged but for being handed the works it wants. Both
 seeds key a work on its rendered citation, so a work the sources seed already
 wrote — the same fields, to the letter — is linked by the compendium, never
-written twice, and a work an admin soft-deleted is neither re-inserted nor
+written twice, and a work a keeper soft-deleted is neither re-inserted nor
 linked anew.
 
 An entry file names a source by a **handle**. The works many entries cite, the
@@ -499,7 +499,7 @@ attributes on a present entry").
 `src/modules/ingredients/services/references.ts` writes and reads references, kept once in their tier and linked from every row they support.
 
 - Two tiers, as ingredients are: a null `workspaceId` is the compendium's, written under the `Curator` proof alone, and a coven's is written under its `Membership`, whoever links it. A member who cites a compendium reference reads it and cannot change it. Nothing deletes one in v1.
-- An update replaces the row rather than merging into it, so every optional field left out is cleared; the edit reaches every row citing the reference, which is the point of keeping a source once. A coven's reference is in no cached read; the compendium-tier write revalidates the `compendium` tag like every admin mutation.
+- An update replaces the row rather than merging into it, so every optional field left out is cleared; the edit reaches every row citing the reference, which is the point of keeping a source once. A coven's reference is in no cached read; the compendium-tier write revalidates the `compendium` tag like every keeper mutation.
 - Reading one by id returns the compendium's without a coven, and with one that coven's own or the compendium's, never another coven's, whose existence is private. The tiers are the picker's, read under the same `ingredient: ['read']`, so it returns no row the picker would not offer.
 - The picker matches authors, title and container, best match first. A blank query, or one under the compendium search's `MIN_QUERY_LENGTH`, offers all by title. Without a coven it offers the compendium's alone, which is all a compendium entry may cite.
 - An id that is not a uuid names nothing and would be a driver error at the comparison.

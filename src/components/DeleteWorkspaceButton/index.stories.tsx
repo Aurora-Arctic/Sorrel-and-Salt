@@ -28,7 +28,7 @@ const Refused = () => {
 const DELETE_STATES: Record<string, ReactNode> = {
   Resting: <DeleteWorkspaceButton workspaceId={ID} name="Fixture Coven" />,
   'Asking To Confirm': <Asking />,
-  'Asking The Only Owner': <Asking onlyOwner />,
+  'Asking The Only Steward': <Asking onlyOwner />,
   'Refused After Confirming': <Refused />,
   'Asking Over A Dialog It Sits In': (
     <DeleteWorkspaceButton workspaceId={ID} name="Fixture Coven" inModal onlyOwner />

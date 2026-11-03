@@ -15,8 +15,8 @@ import { asManualFix } from '../../../support/db/privileges';
 import { makeIngredient } from '../../../support/fixtures/ingredient';
 import type { PrivilegeChangeRow, RoleRow } from './types';
 
-// An admin makes a user an admin, or stops one being one, from `/keepers/users`, declared `via: 'admin'` so the trigger on `users` records each change in the privilege ledger.
-// The primary admin, named by ADMIN_BOOTSTRAP_EMAIL when the check runs, cannot be revoked, and a count under a lock refuses leaving no admin at all (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting" and "Revoking").
+// A keeper makes a user a keeper, or stops one being one, from `/keepers/users`, declared `via: 'admin'` so the trigger on `users` records each change in the privilege ledger.
+// The primary keeper, named by ADMIN_BOOTSTRAP_EMAIL when the check runs, cannot be revoked, and a count under a lock refuses leaving no keeper at all (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting" and "Revoking").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -25,7 +25,7 @@ useTestDatabase((client) => {
 
 const DOMAIN = '@user-role.test';
 // Invented accounts beside the cast: one who may not create a coven and has
-// not verified their address, one who may, a second admin, the address the
+// not verified their address, one who may, a second keeper, the address the
 // variable names, and one soft-deleted.
 const PLAIN = '00000000-0000-0000-0000-0000000000d1';
 const APPROVED = '00000000-0000-0000-0000-0000000000d2';
@@ -36,7 +36,7 @@ const CURATOR = '00000000-0000-0000-0000-0000000000d6';
 const NOWHERE = '00000000-0000-0000-0000-0000000000d9';
 const PRIMARY_EMAIL = `owner${DOMAIN}`;
 
-/** Inserts a user on this file's domain; an admin or curator is declared as a `psql` fix declares one. */
+/** Inserts a user on this file's domain; a keeper or curator is declared as a `psql` fix declares one. */
 async function insertUser(
   id: string,
   name: string,
@@ -138,7 +138,7 @@ async function liveAdmins(): Promise<string[]> {
 }
 
 describe('setUserRole, granting', () => {
-  it('makes a user an admin, setting the creation flag in the same write, stamped as the admin', async () => {
+  it('makes a user a keeper, setting the creation flag in the same write, stamped as the admin', async () => {
     expect(await roleOf(PLAIN)).toEqual({
       role: 'user',
       can_create_workspace: false,
@@ -222,7 +222,7 @@ describe('setUserRole, revoking', () => {
     await sql`truncate user_privilege_changes`;
   });
 
-  it('stops an admin being one, recorded as one revoke row with the reason, the flag left', async () => {
+  it('stops a keeper being one, recorded as one revoke row with the reason, the flag left', async () => {
     const user = await setUserRole(asUser(E), OTHER_ADMIN, 'user', 'Stepped back');
 
     expect(user).toMatchObject({ id: OTHER_ADMIN, role: 'user', canCreateWorkspace: true });
@@ -243,7 +243,7 @@ describe('setUserRole, revoking', () => {
     ]);
   });
 
-  // A owns W and wrote an ingredient there: being made an admin and unmade leaves both.
+  // A owns W and wrote an ingredient there: being made a keeper and unmade leaves both.
   it('leaves memberships and the created_by of what the admin wrote untouched', async () => {
     const ingredientId = await insertIngredient(
       sql,
@@ -266,7 +266,7 @@ describe('setUserRole, revoking', () => {
     expect(await written()).toEqual([{ created_by: A.id }]);
   });
 
-  it('lets an admin revoke themselves while another admin remains', async () => {
+  it('lets a keeper revoke themselves while another keeper remains', async () => {
     await expect(setUserRole(asUser(E), E.id, 'user')).resolves.toMatchObject({ role: 'user' });
 
     expect(await liveAdmins()).toEqual([OTHER_ADMIN]);
@@ -279,7 +279,7 @@ describe('setUserRole, revoking', () => {
 });
 
 // The curator role is set on the same dialog, through the same service.
-// Becoming a curator sets the creation flag in the same write, as becoming an admin does; a move between curator and admin is a revoke of one and a grant of the other.
+// Becoming a curator sets the creation flag in the same write, as becoming a keeper does; a move between curator and keeper is a revoke of one and a grant of the other.
 describe('setUserRole and the curator role', () => {
   beforeEach(async () => {
     await insertUser(CURATOR, 'Curator Fixturewort', `curator${DOMAIN}`, { role: 'curator' });
@@ -361,13 +361,13 @@ describe('setUserRole and the primary admin', () => {
     await sql`truncate user_privilege_changes`;
   });
 
-  // The target is a live admin, two others besides: with the variable naming
+  // The target is a live keeper, two others besides: with the variable naming
   // someone else the same revoke succeeds below, so the refusal is the
   // variable's.
   it.each([
     ['another admin', E],
-    ['the primary admin itself', { id: PRIMARY, role: 'admin' as const }],
-  ])('refuses revoking the primary admin for %s', async (_who, caller) => {
+    ['the primary keeper itself', { id: PRIMARY, role: 'admin' as const }],
+  ])('refuses revoking the primary keeper for %s', async (_who, caller) => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@User-Role.test');
     expect(await liveAdmins()).toEqual([E.id, PRIMARY].sort());
 
@@ -380,7 +380,7 @@ describe('setUserRole and the primary admin', () => {
   });
 
   // Leaving admin for curator is a revoke of admin, so it is held to the same rule.
-  it('refuses moving the primary admin to curator', async () => {
+  it('refuses moving the primary keeper to curator', async () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY_EMAIL);
 
     await expect(setUserRole(asUser(E), PRIMARY, 'curator')).rejects.toThrow(PRIMARY_ADMIN_REFUSAL);
@@ -393,13 +393,13 @@ describe('setUserRole and the primary admin', () => {
     });
   });
 
-  it('can revoke the previous primary admin once the variable names someone else', async () => {
+  it('can revoke the previous primary keeper once the variable names someone else', async () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY_EMAIL);
     await expect(setUserRole(asUser(E), PRIMARY, 'user')).rejects.toThrow(PRIMARY_ADMIN_REFUSAL);
 
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `successor${DOMAIN}`);
 
-    // Still an admin until someone revokes them: the change demotes nobody.
+    // Still a keeper until someone revokes them: the change demotes nobody.
     expect(await roleOf(PRIMARY)).toMatchObject({ role: 'admin' });
     await expect(setUserRole(asUser(E), PRIMARY, 'user')).resolves.toMatchObject({
       role: 'user',
@@ -407,26 +407,26 @@ describe('setUserRole and the primary admin', () => {
   });
 });
 
-// The count is a fallback: with the primary admin in place it is never
+// The count is a fallback: with the primary keeper in place it is never
 // reached, so these run with the variable naming nobody who has an account.
 describe('setUserRole and the last admin', () => {
   beforeEach(() => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `nobody${DOMAIN}`);
   });
 
-  it('refuses revoking the last live admin as Forbidden', async () => {
+  it('refuses revoking the last live keeper as Forbidden', async () => {
     expect(await liveAdmins()).toEqual([E.id]);
 
     await expect(setUserRole(asUser(E), E.id, 'user')).rejects.toThrow(Forbidden);
     expect(await liveAdmins()).toEqual([E.id]);
     expect(await changes()).toEqual([]);
 
-    // With a second admin the same call succeeds, so it was the count.
+    // With a second keeper the same call succeeds, so it was the count.
     await insertUser(OTHER_ADMIN, 'Other Fixturewort', `other${DOMAIN}`, { role: 'admin' });
     await expect(setUserRole(asUser(E), E.id, 'user')).resolves.toMatchObject({ role: 'user' });
   });
 
-  it('refuses moving the last live admin to curator', async () => {
+  it('refuses moving the last live keeper to curator', async () => {
     expect(await liveAdmins()).toEqual([E.id]);
 
     await expect(setUserRole(asUser(E), E.id, 'curator')).rejects.toThrow(Forbidden);
@@ -439,7 +439,7 @@ describe('setUserRole and the last admin', () => {
     });
   });
 
-  it('leaves exactly one admin when the only two revoke each other at once', async () => {
+  it('leaves exactly one keeper when the only two revoke each other at once', async () => {
     await insertUser(OTHER_ADMIN, 'Other Fixturewort', `other${DOMAIN}`, { role: 'admin' });
     await sql`truncate user_privilege_changes`;
     expect(await liveAdmins()).toEqual([E.id, OTHER_ADMIN].sort());
@@ -459,7 +459,7 @@ describe('setUserRole and the last admin', () => {
   });
 });
 
-// A site admin owns the demo coven, so they can keep its contents in order; the seat moves in the transaction that moves the role.
+// A site keeper owns the demo coven, so they can keep its contents in order; the seat moves in the transaction that moves the role.
 describe('setUserRole and the demo coven seat', () => {
   beforeEach(async () => {
     // Drizzle rewires the client it wraps, so the seed gets one of its own.
@@ -473,7 +473,7 @@ describe('setUserRole and the demo coven seat', () => {
 
   afterEach(removeDemoCoven);
 
-  it('seats a new admin as owner, promoting the viewer seat they held', async () => {
+  it('seats a new keeper as owner, promoting the viewer seat they held', async () => {
     expect(await demoSeat(B.id)).toEqual({ role: 'viewer', deleted: false });
 
     await setUserRole(asUser(E), B.id, 'admin');
@@ -481,7 +481,7 @@ describe('setUserRole and the demo coven seat', () => {
     expect(await demoSeat(B.id)).toEqual({ role: 'owner', deleted: false });
   });
 
-  it('inserts the seat for an admin who has none', async () => {
+  it('inserts the seat for a keeper who has none', async () => {
     await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID} and user_id = ${B.id}`;
     expect(await demoSeat(B.id)).toBeUndefined();
 
@@ -490,7 +490,7 @@ describe('setUserRole and the demo coven seat', () => {
     expect(await demoSeat(B.id)).toEqual({ role: 'owner', deleted: false });
   });
 
-  it('revives the seat of an admin who had left', async () => {
+  it('revives the seat of a keeper who had left', async () => {
     await sql`
       update workspace_members set deleted_at = now(), deleted_by = ${B.id}
       where workspace_id = ${DEMO_WORKSPACE_ID} and user_id = ${B.id}

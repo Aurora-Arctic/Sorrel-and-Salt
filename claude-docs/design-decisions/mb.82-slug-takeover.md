@@ -22,7 +22,7 @@ Building the reservation as written would have cost a current-slug expression in
 ## The rule
 
 - **The slug follows the label, the form and the formal name,** in both tiers, recomputed on every update.
-- **A compendium entry's old slug is retired as the admin's** — a `retired_ingredient_slugs` row, `retired_at` the write's own instant — and redirects to the entry's current slug until its `expires_at`, midnight UTC of the retirement's date plus 180 days, **while no live entry holds the slug.** An entry holding it is what the address answers.
+- **A compendium entry's old slug is retired as the keeper's** — a `retired_ingredient_slugs` row, `retired_at` the write's own instant — and redirects to the entry's current slug until its `expires_at`, midnight UTC of the retirement's date plus 180 days, **while no live entry holds the slug.** An entry holding it is what the address answers.
 - **Taking a slug another entry's redirect runs from is refused until the admin confirms it**, as a `ValidationError` on `endRedirect` naming the entry and when its window closes. Confirmed, the write takes the slug. The retirement stays, and the page now at the address names the entry that moved and links to its current address until that window closes. An entry taking back its own old slug needs no confirmation.
 - **A coven ingredient's slug retires nothing.** No route reads it — coven ingredients are reached by id — so there is nothing to redirect.
 - **Lapsed retirements are hard-deleted on the next compendium write,** as MB.80 had it; nothing runs on a schedule.
@@ -31,7 +31,7 @@ Building the reservation as written would have cost a current-slug expression in
 
 The promise MB.80 made — that a 308 never comes to point at a different ingredient inside its window — is given up. A reader who bookmarked A's page for A itself lands on B, whose name is exactly what the URL spells, and the page then links them to A. A search engine sees S go from a 308 to a 200 about a different entry; the ranking A's page had moved to A's new address with the 308, and S's new content starts without history.
 
-The confirmation is read before the write rather than inside it, so two admins saving at the same instant can both pass it. With only admins writing the compendium, that is accepted rather than locked.
+The confirmation is read before the write rather than inside it, so two keepers saving at the same instant can both pass it. With only keepers writing the compendium, that is accepted rather than locked.
 
 ## The pending columns
 

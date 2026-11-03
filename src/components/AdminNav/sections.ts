@@ -90,22 +90,24 @@ export const ADMIN_PAGES = {
     icon: 'documents',
     adminOnly: true,
     description:
-      'The privacy policy, disclaimer, code of ethics and terms of use: edit a draft, then publish it as a new version.',
-    // One tab per document, in the footer's order; each is that document's editor. The cast is because typed routes know the address only as `[key]`.
+      'The terms of use, disclaimer, code of ethics and privacy policy: edit a draft, then publish it as a new version.',
+    // One tab per document, in the footer's order, each that document's editor, then the page that emails every account about the
+    // documents changed since the last email. The cast is because typed routes know an editor's address only as `[key]`.
     tabs: [
-      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy', shape: 'document' },
-      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer', shape: 'document' },
       { href: '/keepers/documents/terms' as Route, label: 'Terms of Use', shape: 'document' },
+      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer', shape: 'document' },
       {
         href: '/keepers/documents/code-of-ethics' as Route,
         label: 'Code of Ethics',
         shape: 'document',
       },
+      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy', shape: 'document' },
+      { href: '/keepers/documents', label: 'Email Updates', shape: 'sections', sections: 1 },
     ],
   },
 } as const satisfies Record<string, AdminPage>;
 
-/** The `/curator` area: the curation pages, for a curator and an admin alike. */
+/** The `/curator` area: the curation pages, for a curator and a keeper alike. */
 export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
     name: 'Compendium',
@@ -119,7 +121,7 @@ export const CURATOR_SECTIONS: readonly AdminSection[] = [
   },
 ];
 
-/** The `/keepers` area: the people, invitation and document pages, which are an admin's, and Support, which a curator has too. */
+/** The `/keepers` area: the people, invitation and document pages, which are a keeper's, and Support, which a curator has too. */
 export const KEEPERS_SECTIONS: readonly AdminSection[] = [
   {
     name: 'People & Support',
@@ -133,7 +135,7 @@ export const KEEPERS_SECTIONS: readonly AdminSection[] = [
 ];
 
 /**
- * The Keepers sections a viewer is shown: every page to an admin, and a curator Support alone. Only what the
+ * The Keepers sections a viewer is shown: every page to a keeper, and a curator Support alone. Only what the
  * nav lists; each people and invitation page refuses a curator itself (claude-docs/auth/admin-guard.md,
  * "The curator guard").
  */

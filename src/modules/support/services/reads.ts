@@ -32,13 +32,13 @@ export async function repliesForRequests(
   return requestIds.map((id) => sorted.filter((reply) => reply.requestId === id));
 }
 
-/** The time-outs set on each sender, newest first, to a site admin alone: anyone else's batch is refused in every slot. */
+/** The time-outs set on each sender, newest first, to a site keeper alone: anyone else's batch is refused in every slot. */
 export async function timeoutsForSenders(
   session: Session,
   userIds: readonly string[],
 ): Promise<(SupportTimeoutRow[] | Forbidden)[]> {
   try {
-    assertSiteAdmin(session, 'Only a site admin may read a sender’s time-outs');
+    assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
   } catch (error) {
     if (!(error instanceof Forbidden)) throw error;
     return userIds.map(() => error);
@@ -50,7 +50,7 @@ export async function timeoutsForSenders(
 
 /**
  * The time-out standing on each sender, in the order asked, undefined where none stands: one query for a page of the user
- * list. To a site admin alone. Of several, one with no end date is shown, else the one ending last.
+ * list. To a site keeper alone. Of several, one with no end date is shown, else the one ending last.
  */
 /** A time-out's end for sorting, with no end date as the latest of all. */
 const endsAt = (row: SupportTimeoutRow): number => row.until?.getTime() ?? Number.POSITIVE_INFINITY;
@@ -59,7 +59,7 @@ export async function standingTimeoutsOf(
   session: Session,
   userIds: readonly string[],
 ): Promise<(SupportTimeoutRow | undefined)[]> {
-  const admin = assertSiteAdmin(session, 'Only a site admin may read a sender’s time-outs');
+  const admin = assertSiteAdmin(session, 'Only a site keeper may read a sender’s time-outs');
   const rows = await findStandingSupportTimeoutsFor(admin, userIds);
   return userIds.map(
     (id) => rows.filter((row) => row.userId === id).sort((a, b) => endsAt(b) - endsAt(a))[0],

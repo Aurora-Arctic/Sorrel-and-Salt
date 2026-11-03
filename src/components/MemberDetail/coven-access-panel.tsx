@@ -10,7 +10,7 @@ import PausePanel from '../UserDetail/pause-panel';
 import type { AccessPauseEntry, PausePanelCopy } from '../UserDetail/types';
 import type { CovenAccessPanelProps } from './types';
 
-// The member modal's Coven Access: an owner's pause on one member's access to this coven, until an end or with no end
+// The member modal's Coven Access: a steward's pause on one member's access to this coven, until an end or with no end
 // date, and its lifting, on the user modal's pause panel (claude-docs/components/member-detail.md, "Coven Access").
 
 export const PauseMemberDocument = graphql(`
@@ -76,8 +76,8 @@ const person = (who: { id: string; name?: string | null } | null | undefined) =>
 
 /** A coven's words for a pause on a member. */
 const copyFor = (name: string): PausePanelCopy => ({
-  noteHint: "Seen by the coven's owners only, up to 500 characters.",
-  notePlaceholder: 'Why, for owners',
+  noteHint: "Seen by the coven's stewards only, up to 500 characters.",
+  notePlaceholder: 'Why, for stewards',
   messageLabel: 'Message to Member',
   messagePlaceholder: 'For them',
   pauseQuestion: () => (
@@ -97,7 +97,7 @@ const copyFor = (name: string): PausePanelCopy => ({
 });
 
 /**
- * A member's access to the coven, for an owner. Whether a pause stands is the page's own answer, so the section is right
+ * A member's access to the coven, for a steward. Whether a pause stands is the page's own answer, so the section is right
  * at once; the member's pauses are read as it opens, adding the standing one's note and who set it, and the earlier
  * ones, and read again after a pause or a lift.
  */
@@ -109,7 +109,7 @@ const CovenAccessPanel = ({
 }: CovenAccessPanelProps): ReactElement => {
   const queryClient = useQueryClient();
   const query = graphqlQuery(MemberPausesDocument, { workspaceId, userId });
-  // A refused read (an owner demoted while the modal is open) leaves the page's answer showing, never the error page.
+  // A refused read (a steward demoted while the modal is open) leaves the page's answer showing, never the error page.
   const { data } = useQuery({ ...query, staleTime: 0, throwOnError: false });
   const [now] = useState(() => Date.now());
   const pauses = (data?.workspace?.memberPauses.edges ?? []).map(({ node }): AccessPauseEntry => ({

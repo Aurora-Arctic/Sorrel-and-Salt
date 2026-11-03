@@ -9,14 +9,14 @@ import {
 } from './parts/layout';
 import type { AdminInvitationProps } from './types';
 
-// The one place an admin invitation's link exists outside the reader's inbox: only
-// its token's hash is stored (claude-docs/auth/admin-users.md, "Inviting an admin").
-// The subject names the site role it grants, curator or admin.
+// The one place a keeper invitation's link exists outside the reader's inbox: only
+// its token's hash is stored (claude-docs/auth/admin-users.md, "Inviting a keeper").
+// The subject names the site role it grants, curator or keeper.
 
 /** The role as the mail names it, with its article: "an admin". */
 const ROLE: Record<AdminInvitationProps['siteRole'], { title: string; prose: string }> = {
   curator: { title: 'a Curator', prose: 'a curator' },
-  admin: { title: 'an Admin', prose: 'an admin' },
+  admin: { title: 'a Keeper', prose: 'a keeper' },
 };
 
 // The column's default, `now() + interval '7 days'`; nothing sets another.
@@ -39,7 +39,7 @@ export function AdminInvitation({
     h(
       Paragraph,
       null,
-      `${inviterName}, an admin of Sorrel & Salt, has invited this email address to become ${ROLE[siteRole].prose}.`,
+      `${inviterName}, a keeper of Sorrel & Salt, has invited this email address to become ${ROLE[siteRole].prose}.`,
     ),
     h(
       Paragraph,

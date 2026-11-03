@@ -251,7 +251,7 @@ const Page = ({ children }: { children: ReactNode }) => (
 
 // The cupboard choices beside the title. With no API, a press answers with the
 // generic error in the failure callout. A member sees Annotate and More, holding Make It
-// Ours and Remove, once the coven holds the entry; a viewer sees none.
+// Ours and Remove, once the coven holds the entry; an observer sees none.
 const CUPBOARD = {
   workspaceId: nextId(),
   covenSlug: FIXTURE_COVEN.slug,
@@ -323,7 +323,7 @@ const noFormalNameNode = (
 );
 
 // A coven's own entry, badged Local, with its latest editor right-aligned above
-// the icon row, as a viewer sees it: no Edit and no More.
+// the icon row, as an observer sees it: no Edit and no More.
 const covenEntryNode = (
   <Entry
     detail={{
@@ -652,7 +652,7 @@ const PUBLIC_LINKS = {
   pageHref: `/compendium/ingredients/${FULL.entry.slug}` as Route,
 };
 
-/** FULL as the coven's own entry, which its owner or member may edit. */
+/** FULL as the coven's own entry, which its steward or practitioner may edit. */
 const OWN: IngredientDetail = {
   ...FULL,
   entry: entryRow({
@@ -968,7 +968,7 @@ const detailsNoFormalNameNode = (
 );
 
 // The coven's jars of the entry: the oil low, the smoke bundle unmeasured. An editor
-// has Edit Stock in the heading; a viewer sees the same shelf without it.
+// has Edit Stock in the heading; an observer sees the same shelf without it.
 const [PAGE_OIL, PAGE_BUNDLE] = FULL.variants.map(({ variant }) => variant.id);
 const STOCK = {
   workspaceId: FIXTURE_WORKSPACE_ID,
@@ -1127,7 +1127,7 @@ export const QuickLook: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// The admin's review switch, in the foot of an entry's details on the
+// The keeper's review switch, in the foot of an entry's details on the
 // admin list: an entry no curator has reviewed, then one a curator has. The
 // workshop has no server, so the switch's change is refused and the switch goes back.
 export const ReviewMarkNeedsReview: Story = {

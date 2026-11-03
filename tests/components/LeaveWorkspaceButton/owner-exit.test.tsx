@@ -27,7 +27,7 @@ const deleteIt = (dialog: HTMLElement) =>
 
 /** Types into the New Owner box and picks the named member from its list. */
 function choose(dialog: HTMLElement, name: string) {
-  const box = within(dialog).getByRole('combobox', { name: 'New Owner' });
+  const box = within(dialog).getByRole('combobox', { name: 'New Steward' });
   fireEvent.focus(box);
   fireEvent.change(box, { target: { value: name } });
   fireEvent.click(within(dialog).getByRole('option', { name: new RegExp(name) }));
@@ -56,7 +56,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     expect(handOver(dialog)).toBeChecked();
     expect(deleteIt(dialog)).toBeEnabled();
-    expect(within(dialog).getByRole('combobox', { name: 'New Owner' })).toBeEnabled();
+    expect(within(dialog).getByRole('combobox', { name: 'New Steward' })).toBeEnabled();
     expect(graphqlRequest).not.toHaveBeenCalled();
   });
 
@@ -65,13 +65,13 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     const promote = within(dialog).getByRole('button', { name: 'Promote and Leave' });
     expect(promote).toBeDisabled();
 
-    const box = within(dialog).getByRole('combobox', { name: 'New Owner' });
+    const box = within(dialog).getByRole('combobox', { name: 'New Steward' });
     fireEvent.focus(box);
     fireEvent.change(box, { target: { value: 'fixture c' } });
 
     expect(within(dialog).getAllByRole('option')).toHaveLength(1);
     // The row names the member with their role, so a viewer is known for one.
-    expect(within(dialog).getByRole('option', { name: /Fixture C.*Viewer/ })).toBeInTheDocument();
+    expect(within(dialog).getByRole('option', { name: /Fixture C.*Observer/ })).toBeInTheDocument();
     // The role is no search term: "viewer" finds nobody.
     fireEvent.change(box, { target: { value: 'viewer' } });
     expect(within(dialog).queryAllByRole('option')).toHaveLength(0);
@@ -80,7 +80,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     fireEvent.click(within(dialog).getByRole('option', { name: /Fixture C/ }));
     expect(promote).toBeEnabled();
     // Chosen, the box describes the member by their role.
-    expect(box).toHaveAccessibleDescription(/Viewer/);
+    expect(box).toHaveAccessibleDescription(/Observer/);
   });
 
   it('promotes the chosen member first, then leaves, then lands on the coven landing', async () => {

@@ -274,7 +274,9 @@ describe('the /coven/[slug]/members page, the member modal', () => {
     await render_('member', { member: 'u-viewer' });
 
     const dialog = screen.getByRole('dialog', { name: 'Member, Name of u-viewer' });
-    expect(within(dialog).getByRole('region', { name: 'Membership' })).toHaveTextContent('Viewer');
+    expect(within(dialog).getByRole('region', { name: 'Membership' })).toHaveTextContent(
+      'Observer',
+    );
     expect(
       within(dialog).queryAllByRole('button', {
         name: /^(Change Role|Pause Access|Lift Pause|Remove)/,

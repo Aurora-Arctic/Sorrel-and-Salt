@@ -4,7 +4,7 @@ Rule 5's two layers, on the site role rather than a workspace role.
 `assertSiteAdmin(session)` in `identity`'s `services/site-admin.ts` is the
 check — `session.role === 'admin'`, or `Forbidden` — and the `SiteAdmin` it
 returns, `{ userId }` under a brand the file does not export, is the proof.
-Its refusal says "Only a site admin may do this" unless the caller passes a
+Its refusal says "Only a site keeper may do this" unless the caller passes a
 more particular reason, as the user list does (MB.52). The writer's
 compendium-tier methods take the wider `Curator` proof instead (below); this
 one guards the people page, and is demanded by the admin user list's two
@@ -12,7 +12,7 @@ reads ([`auth/admin-users.md`](../auth/admin-users.md), "The user list") and
 the admin-role-change pause's read and its pause and resume (MB.62;
 [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)), and
 the site-tier invitation's insert and revoke and its pending list, though not
-its accept or its token read, which the invitee makes before it is an admin
+its accept or its token read, which the invitee makes before it is a keeper
 (MB.69, MB.202; [`invitations.md`](invitations.md), "Written and read by tier"):
 
 ```ts
@@ -26,7 +26,7 @@ await withAudit(session, (write) => write.insertInCompendium(curator, ingredient
   **`softDeleteByIdInCompendium(curator, table, id)`** reach the one row with
   that id only while it is live and in the compendium — `workspace_id IS NULL`
   and `deleted_at IS NULL`, the second as every update ANDs it. A coven's row
-  or a deleted one is written nothing and returns nothing, so an admin naming
+  or a deleted one is written nothing and returns nothing, so a keeper naming
   a coven's ingredient by id changes nothing.
 
 **Why a proof, when the check is one comparison.** `ingredients` holds both
@@ -65,9 +65,9 @@ and throws `Forbidden` otherwise. The `Curator` it returns is `{ userId }`
 under a brand the file does not export, as `SiteAdmin` is.
 
 **Every admin proof is a curator proof.** `SiteAdmin` is `Curator` with a
-second brand of its own, so an admin passes to a method that wants a `Curator`
+second brand of its own, so a keeper passes to a method that wants a `Curator`
 with no conversion, and a curator's proof is not a `SiteAdmin`: the compiler
-refuses it wherever the people page is concerned. An admin curates because the
+refuses it wherever the people page is concerned. A keeper curates because the
 type says so, not because a second check was remembered.
 
 Which methods take which:

@@ -329,10 +329,10 @@ export const RadioGroup: Story = {
           options={[
             {
               value: 'member',
-              label: 'Member',
+              label: 'Practitioner',
               description: 'Reads and writes the ingredients and the grimoire.',
             },
-            { value: 'viewer', label: 'Viewer', description: 'Reads only.' },
+            { value: 'viewer', label: 'Observer', description: 'Reads only.' },
           ]}
         />
       </div>
@@ -604,7 +604,7 @@ export const HistoryButtons: Story = {
   ),
 };
 
-// An admin change's optional Reason, held in plain state, its hint behind the ⓘ.
+// A keeper change's optional Reason, held in plain state, its hint behind the ⓘ.
 export const Reason: Story = {
   render: () => {
     const [reason, setReason] = useState('');

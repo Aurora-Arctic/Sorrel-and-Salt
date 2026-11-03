@@ -1,8 +1,8 @@
 # NotAuthorized
 
-`src/components/NotAuthorized/` — what a signed-in non-admin sees at `/curator` or `/keepers`:
+`src/components/NotAuthorized/` — what a signed-in non-keeper sees at `/curator` or `/keepers`:
 a level-one "Not Authorized", two sentences saying what the area is for and
-that the account does not have admin rights, and a link back to `/`. It
+that the account does not have keeper rights, and a link back to `/`. It
 takes no props. `src/app/(shell)/forbidden.tsx` wraps it in `<main className="page-frame">` and Next renders that,
 with a 403, wherever `forbidden()` is thrown — today only by the `/admin`
 guard ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").
@@ -14,8 +14,8 @@ Two things are left out on purpose, and the test holds both:
 - **No admin is named.** Not a person, not an address. Who curates the site is
   not something a refused visitor needs, and naming them invites the mail the
   next point rules out.
-- **No way to request access.** No button, no form, no contact link. An admin
-  is granted by another admin from `/keepers/users` or invited by one (MB.59,
+- **No way to request access.** No button, no form, no contact link. A keeper
+  is granted by another keeper from `/keepers/users` or invited by one (MB.59,
   MB.69), never requested, so a request control would promise a path that does
   not exist.
 
@@ -54,6 +54,6 @@ Render-only, no test ids, no snapshots.
 to `/` and the absence of any button, form, text field, address or request
 wording. The root `forbidden.tsx` that renders it is exercised by the admin
 403 tests of `tests/e2e/admin.spec.ts` alone, which reach it through the
-guard against the built server — the 403, the page at the same URL, no admin
+guard against the built server — the 403, the page at the same URL, no keeper
 nav — and check nothing pushes it sideways at 375px before the axe scan
 ([`testing/e2e.md`](../testing/e2e.md)).

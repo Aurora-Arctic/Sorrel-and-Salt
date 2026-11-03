@@ -17,7 +17,7 @@ import type {
 
 // `ingredientFormValues` over the wire: the curated form vocabulary as `IngredientFormValue` (named apart from the `IngredientForm` component), each with its group, readable signed out, and the three admin writes.
 // This is the transport's half (claude-docs/testing/layer-ownership.md): a page, its groups in one read, its count, the filters, the loaders cleared by a write, and one refusal per error code per write.
-// Roles, filter matching and collisions are services/ingredient-form-values.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
+// Roles, filter matching and collisions are services/ingredient-form-values.test.ts's; signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 // The reads a page makes, counted at the repository: one for the groups of a
 // whole page, and never a role lookup.
@@ -211,7 +211,7 @@ describe('the admin writes', () => {
   });
 
   describe('createIngredientFormValue', () => {
-    it('writes one for a site admin, answering it with its group', async () => {
+    it('writes one for a site keeper, answering it with its group', async () => {
       const result = await send<{ createIngredientFormValue: FormValueNode }>(asUser(E), CREATE, {
         input: input(),
       });
@@ -237,7 +237,7 @@ describe('the admin writes', () => {
   });
 
   describe('updateIngredientFormValue', () => {
-    it('rewrites one for a site admin, and a pick read after it in the same request reads the new name', async () => {
+    it('rewrites one for a site keeper, and a pick read after it in the same request reads the new name', async () => {
       const id = await seed('Fixture Old');
       const picked = await insertIngredient(
         sql,

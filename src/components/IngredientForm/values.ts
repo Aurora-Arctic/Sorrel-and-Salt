@@ -73,7 +73,7 @@ export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
   categoryIds: { label: 'Categories', one: 'category', many: 'categories' },
   substitutes: { label: 'Substitute Ingredients', one: 'substitute', many: 'substitutes' },
   references: { label: 'References', one: 'reference', many: 'references' },
-  variants: { label: 'Variants', one: 'form', many: 'forms' },
+  variants: { label: 'Forms', one: 'form', many: 'forms' },
 };
 
 /** A variant whose Form box is empty, as its card and the Variants line name it. */
@@ -451,7 +451,7 @@ function placeIn(
 export const fold = (text: string): string => text.trim().toLowerCase();
 
 /**
- * The name a variant's picked form now goes by, when an admin has renamed it since the pick;
+ * The name a variant's picked form now goes by, when a keeper has renamed it since the pick;
  * undefined for a pick still named as typed, and for typed text. Only a coven's variant holds one.
  */
 export const renamedTo = ({ form, formLink }: RenamedFormHolder): string | undefined =>
@@ -658,7 +658,7 @@ function boxIssues(
 
 /**
  * One variant's issues: the schema's, placed; its boxes'; on the compendium a typed form; and a
- * pick an admin has since renamed, until the member settles it.
+ * pick a keeper has since renamed, until the member settles it.
  */
 function variantIssues(
   raw: Issues | undefined,

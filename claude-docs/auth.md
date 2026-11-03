@@ -60,7 +60,7 @@ In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#the-email-page-mb54).
 
 In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#the-account-page-mb88).
 
-### Granting a second admin (M2.9, MB.59)
+### Granting a second keeper (M2.9, MB.59)
 
 In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#granting-a-second-admin-m29-mb59).
 
@@ -78,7 +78,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The admin guard (M5.4)
 
-`requireAdminSession()`, called by every People and Invitations page under `/keepers`, is `requireSession()` then `assertSiteAdmin()`; `requireCuratorSession()`, called by the `/curator` and `/keepers` layouts and every curation page, is `requireSession()` then `assertCurator()`, which a curator or an admin passes (M11.20). A signed-out visitor goes to sign-in and anyone else refused gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
+`requireAdminSession()`, called by every People and Invitations page under `/keepers`, is `requireSession()` then `assertSiteAdmin()`; `requireCuratorSession()`, called by the `/curator` and `/keepers` layouts and every curation page, is `requireSession()` then `assertCurator()`, which a curator or a keeper passes (M11.20). A signed-out visitor goes to sign-in and anyone else refused gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
 
 ## The coven guard (M6.10)
 
@@ -90,15 +90,15 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The create page (M9.16)
 
-`/coven/new` is where someone holding `canCreateWorkspace` names a new coven and lands in it as owner. It runs `requireSession()` and reads the right from the user row; a user without it gets a notice and no form, and the creation service refuses them anyway. `new` is kept from ever being a coven's slug, so a coven named "New" is `new-2`. [`auth/coven-guard.md`](auth/coven-guard.md)
+`/coven/new` is where someone holding `canCreateWorkspace` names a new coven and lands in it as a steward. It runs `requireSession()` and reads the right from the user row; a user without it gets a notice and no form, and the creation service refuses them anyway. `new` is kept from ever being a coven's slug, so a coven named "New" is `new-2`. [`auth/coven-guard.md`](auth/coven-guard.md)
 
 ## Display names (MB.10)
 
-`usersById` answers a user id with that user's display name and nothing else, for a members list and a row's last editor. A viewer reads the name only of someone who holds or has held a seat in a coven the viewer sits in now: a removed member counts, and a deleted user reads under the name their row last held. Anyone else is `null`, a site admin gets no wider reach, and one query answers a batch. [`auth/display-names.md`](auth/display-names.md)
+`usersById` answers a user id with that user's display name and nothing else, for a members list and a row's last editor. An observer reads the name only of someone who holds or has held a seat in a coven the viewer sits in now: a removed member counts, and a deleted user reads under the name their row last held. Anyone else is `null`, a site keeper gets no wider reach, and one query answers a batch. [`auth/display-names.md`](auth/display-names.md)
 
 ## The user list (MB.52)
 
-`/keepers/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no access to any workspace's contents, and shows a user's covens by name and role in a modal (M9.19). [`auth/admin-users.md`](auth/admin-users.md)
+`/keepers/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site keeper by direct call, paged by the M3.6 helper and filtered in SQL; it confers no access to any workspace's contents, and shows a user's covens by name and role in a modal (M9.19). [`auth/admin-users.md`](auth/admin-users.md)
 
 ### The user modal (M9.19)
 
@@ -110,15 +110,15 @@ In [`auth/admin-users.md`](auth/admin-users.md#approving-workspace-creation-m58)
 
 ### Changing a site role (MB.59, M11.20)
 
-An admin gives a user the role `user`, `curator` or `admin` from the user's row through `setUserRole`, declared `{ via: 'admin', note }` so the trigger on `users` records it; becoming a curator or an admin sets `canCreateWorkspace` too, the primary admin named by `ADMIN_BOOTSTRAP_EMAIL` can never be moved off admin, a count under a `for update` lock refuses leaving no admin, and a change takes effect on the next request because the session cookie cache is off. Changing the primary admin is the variable and a redeploy, then the new address's qualifying sign-in or verification; any future user-deletion path must refuse the primary admin. In [`auth/admin-users.md`](auth/admin-users.md#changing-a-site-role-mb59-m1120).
+A keeper gives a user the role `user`, `curator` or `admin` from the user's row through `setUserRole`, declared `{ via: 'admin', note }` so the trigger on `users` records it; becoming a curator or a keeper sets `canCreateWorkspace` too, the primary keeper named by `ADMIN_BOOTSTRAP_EMAIL` can never be moved off admin, a count under a `for update` lock refuses leaving no keeper, and a change takes effect on the next request because the session cookie cache is off. Changing the primary keeper is the variable and a redeploy, then the new address's qualifying sign-in or verification; any future user-deletion path must refuse the primary keeper. In [`auth/admin-users.md`](auth/admin-users.md#changing-a-site-role-mb59-m1120).
 
-### Pausing admin changes (MB.63)
+### Pausing keeper changes (MB.63)
 
-The primary admin alone can pause and resume admin grants and revokes for every other admin, each pause a row of MB.62's ledger stamped from the session; while paused `setUserRole`, and coven creation's approve and revoke, refuse every admin but the primary one, which stays exempt. In [`auth/admin-users.md`](auth/admin-users.md#pausing-admin-changes-mb63).
+The primary keeper alone can pause and resume keeper grants and revokes for every other keeper, each pause a row of MB.62's ledger stamped from the session; while paused `setUserRole`, and coven creation's approve and revoke, refuse every keeper but the primary one, which stays exempt. In [`auth/admin-users.md`](auth/admin-users.md#pausing-admin-changes-mb63).
 
-### Inviting an admin (MB.70)
+### Inviting a keeper (MB.70)
 
-An admin invites an address to become an admin through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every admin but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page, and a coven invitation also accepts by id from the account page, where the invitee's pending ones are listed (M10.32); an admin invitation accepts by its link alone. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
+A keeper invites an address to become a keeper through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every keeper but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page, and a coven invitation also accepts by id from the account page, where the invitee's pending ones are listed (M10.32); a keeper invitation accepts by its link alone. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
 
 ## Plugins (MB.74)
 
@@ -138,7 +138,7 @@ An account with a password can add a code from an authenticator app through `two
 
 ## Impersonation (MB.53)
 
-An admin signs in as a non-admin user wherever `ENABLE_IMPERSONATION` is set and `VERCEL_ENV` is not `production`, through the `admin` plugin narrowed to its two impersonation endpoints. Writes stamp the user, `app.impersonated_by` names the admin, and a banner on every page carries Stop. [`auth/impersonation.md`](auth/impersonation.md)
+A keeper signs in as a non-keeper user wherever `ENABLE_IMPERSONATION` is set and `VERCEL_ENV` is not `production`, through the `admin` plugin narrowed to its two impersonation endpoints. Writes stamp the user, `app.impersonated_by` names the admin, and a banner on every page carries Stop. [`auth/impersonation.md`](auth/impersonation.md)
 
 ### The gate: `VERCEL_ENV`, and both conditions
 

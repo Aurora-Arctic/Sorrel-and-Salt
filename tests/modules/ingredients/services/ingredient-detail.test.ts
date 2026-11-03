@@ -149,7 +149,7 @@ async function entryOf(id: string) {
   return getIngredient(null, id);
 }
 
-/** An admin's write input for an entry holding no form, so no curated pick is needed. */
+/** A keeper's write input for an entry holding no form, so no curated pick is needed. */
 function input(
   overrides: Overrides<IngredientFixture> = {},
 ): Parameters<typeof createCompendiumEntry>[1] {

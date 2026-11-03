@@ -31,7 +31,7 @@ export const readArrivalsCsv = async (
 ): Promise<string> =>
   (await graphqlRequest(ArrivalsCsvDocument, { query: filter.query || undefined })).cardArrivalsCsv;
 
-/** The empty list, naming the search in use so an admin sees what to change. */
+/** The empty list, naming the search in use so a keeper sees what to change. */
 function emptyText({ query }: ArrivalsFilter): string {
   return noMatchText('sign-ups', query ? [`“${query}”`] : [], 'No one has accepted a card yet.');
 }

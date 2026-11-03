@@ -12,7 +12,7 @@ import { clearDataCache, declared } from '../support/next-data-cache';
 vi.mock('next/cache', () => import('../support/next-data-cache'));
 
 describe('cachedCompendiumRead', () => {
-  // Under the tag an admin write expires, keyed by its name; that a write
+  // Under the tag a keeper write expires, keyed by its name; that a write
   // expires it is tests/e2e/compendium-cache.spec.ts's.
   it('declares the read under the compendium tag, and gives a hit back as the miss gave it, dates as dates', async () => {
     clearDataCache();

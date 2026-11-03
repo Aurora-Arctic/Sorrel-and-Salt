@@ -8,7 +8,7 @@ project serves, and that the deities be grouped by tradition; the five
 African traditions added on review carried it past 200. The seed's literal
 transcribes both tables, every deity filed under one of the 88;
 review holds the two in step, and `deities.test.ts` what a re-run leaves of
-an admin's edits (MB.225).
+a keeper's edits (MB.225).
 
 The list lives here rather than in DESIGN.md §5, where the celestial body and zodiac
 values are, because 290 rows with their descriptions are data, not
@@ -82,8 +82,8 @@ is checked against it by hand, so that no other name is the name of a deity
 of its own tradition — Luna stays off Selene and Cronus off Saturn.
 
 The seed adds a name only where the deity has never held it and no live deity
-of its tradition holds it, so an admin's removal stands and the service's
-refusal holds; it adds nothing to a deity an admin retired, and updates nothing.
+of its tradition holds it, so a keeper's removal stands and the service's
+refusal holds; it adds nothing to a deity a keeper retired, and updates nothing.
 Papa Legba's other name, Legba, is the name of the Fon & Ewe vodun too: the
 refusal is per tradition, so both stand.
 

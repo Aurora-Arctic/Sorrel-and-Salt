@@ -23,7 +23,7 @@ const SCORE_REFUSAL = 'Only a curator may read the sourcing scores of compendium
 
 /**
  * `filter` parsed, refused when it sets Reviewed, reads hidden entries, sorts by sourcing score in either direction or reads each
- * entry's sourcing score and `viewer` is not a curator or an admin, a signed-out visitor included.
+ * entry's sourcing score and `viewer` is not a curator or a keeper, a signed-out visitor included.
  *
  * @throws {Forbidden} Reviewed, a listing other than shown, the sourcing sort or the sourcing score is set and `viewer` does not curate.
  * @throws {ValidationError} the filter does not parse.
@@ -52,7 +52,7 @@ export function compendiumFilterFor(
   return parsed;
 }
 
-/** Whether `viewer` may see the review mark's counts: a curator or an admin. */
+/** Whether `viewer` may see the review mark's counts: a curator or a keeper. */
 export function seesReview(viewer: Session | null): boolean {
   return viewer !== null && curates(viewer.role);
 }

@@ -10,7 +10,7 @@ import {
 } from '../services/invitation-acceptance';
 
 // The admin invitation and the one accept. No field carries the token or a link: the token exists only in the mail and the
-// row holds its hash (claude-docs/auth/admin-users.md, "Inviting an admin"). The workspace tier's `workspace` and `role`
+// row holds its hash (claude-docs/auth/admin-users.md, "Inviting a keeper"). The workspace tier's `workspace` and `role`
 // are added from `coven`. "Admin invitation" also covers a curator invite: `siteRole` says which.
 
 const INVITABLE_SITE_ROLES = ['curator', 'admin'] as const satisfies readonly InvitableSiteRole[];

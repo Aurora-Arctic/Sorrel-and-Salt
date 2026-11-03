@@ -9,7 +9,7 @@ import { E, F, asUser } from '../../../support/as-user';
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 describe('assertSiteAdmin', () => {
-  it('admits an admin, with the proof naming them', () => {
+  it('admits a keeper, with the proof naming them', () => {
     expect(assertSiteAdmin({ userId: USER_ID, role: 'admin' })).toEqual({ userId: USER_ID });
   });
 
@@ -24,7 +24,7 @@ describe('assertSiteAdmin', () => {
   });
 });
 
-// The proofs' assignability (an admin is a curator, a curator is not an admin) is
+// The proofs' assignability (a keeper is a curator, a curator is not a keeper) is
 // site-admin.type-check.ts.
 describe('assertCurator', () => {
   it.each([

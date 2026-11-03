@@ -175,24 +175,35 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         .delete(retiredIngredientSlugs)
         .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
         .returning(),
-    // One statement: no slug moves, so every holding entry takes the same
-    // rewrite. The list is rebuilt in its own order, each entry folding to
-    // `from` replaced and every other kept as written.
-    carryAstrologyRename: (_curator, list, from, to) => {
-      const column = ingredients[list];
+    // Two statements, the entries then their variants: no slug moves, so every holding row takes the same
+    // rewrite. A list is rebuilt in its own order, each value folding to `from` replaced and every other kept
+    // as written. A variant is reached through its entry's tier and liveness by a correlated `EXISTS`, so a
+    // coven's variant is never reached. Returns the entries' rows.
+    carryAstrologyRename: async (_curator, list, from, to) => {
       const fromFold = fold(from);
       const entry = sql.identifier('entry');
       const at = sql.identifier('at');
-      return update(
-        ingredients,
-        {
-          [list]: sql`array(
+      const rewritten = (column: AnyPgColumn) => sql`array(
             select case when ${fold(entry)} = ${fromFold} then ${to}::text else ${entry} end
             from unnest(${column}) with ordinality as listed(${entry}, ${at})
-            order by ${at})`,
-        },
-        and(inCompendium(ingredients), inArray(fromFold, listFolds(column))),
+            order by ${at})`;
+      const rows = await update(
+        ingredients,
+        { [list]: rewritten(ingredients[list]) },
+        and(inCompendium(ingredients), inArray(fromFold, listFolds(ingredients[list]))),
       );
+      await update(
+        ingredientVariants,
+        { [list]: rewritten(ingredientVariants[list]) },
+        and(
+          inArray(fromFold, listFolds(ingredientVariants[list])),
+          existsIn(
+            ingredients,
+            and(inCompendium(ingredients), eq(ingredients.id, ingredientVariants.ingredientId)),
+          ),
+        ),
+      );
+      return rows;
     },
     // One statement over the variants: no slug moves, since a slug carries no
     // form, so every pick takes the same rewrite. The entry's tier
@@ -289,7 +300,7 @@ export async function withAudit<T>(
   return db.transaction(async (tx) => {
     // The privilege trigger on `users` reads `app.current_user_id` as the ledger row's actor and refuses a privilege change
     // whose `app.privilege_route` is empty; the GUC is also what lets a history trigger and RLS arrive as one migration. **Do not
-    // remove it.** `app.impersonated_by` names the admin acting as `userId` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
+    // remove it.** `app.impersonated_by` names the keeper acting as `userId` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
     await publishActor(tx, {
       userId: session.userId,
       impersonatedBy: session.impersonatedBy,

@@ -12,7 +12,7 @@ import { invitationsLock } from './lock';
 import type { AdminInvitationsPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Admin Invitations',
+  title: 'Keeper Invitations',
 };
 
 // One page of the pending invitations and its count, newest first. A cursor naming no row gives the
@@ -46,13 +46,13 @@ const readInvitations = cache(
 
 // The pending admin invitations with Revoke, narrowed by the filter in SQL and paged by cursor, with
 // the invite form `?invite` opens. The page and GraphQL end at the same identity services, which are
-// the guard (claude-docs/auth/admin-users.md, "Inviting an admin").
+// the guard (claude-docs/auth/admin-users.md, "Inviting a keeper").
 export default async function AdminInvitationsPage({ searchParams }: AdminInvitationsPageProps) {
   const session = await requireAdminSession();
   const params = await searchParams;
   const { filter, cursor } = readInvitationsPlace(params);
   const [locked, { invitations, pageInfo, position }] = await Promise.all([
-    // Whether admin changes are paused, which locks Invite and Revoke for every admin but the
+    // Whether keeper changes are paused, which locks Invite and Revoke for every keeper but the
     // primary one.
     invitationsLock(session),
     readInvitations(session, filter.email, filter.expiringSoon, cursor.after, cursor.before),

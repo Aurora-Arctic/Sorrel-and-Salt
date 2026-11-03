@@ -85,9 +85,9 @@ describe('assertMembership', () => {
     ).rejects.toBeInstanceOf(Forbidden);
   });
 
-  it('refuses a site admin, who is a member of nothing', async () => {
+  it('refuses a site keeper, who is a member of nothing', async () => {
     // Why this could have succeeded: E's session says `admin`, the role that
-    // would carry a bypass if one existed. It does not — an admin curates the
+    // would carry a bypass if one existed. It does not — a keeper curates the
     // compendium and reaches no workspace (CLAUDE.md).
     expect(asUser(E).role).toBe('admin');
 

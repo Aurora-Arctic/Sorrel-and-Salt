@@ -22,7 +22,7 @@ import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what an admin sees of it
+// The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what a keeper sees of it
 // and sends (claude-docs/components/admin-cards.md).
 
 vi.mock('@/lib/invitation-cards', () => ({

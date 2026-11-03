@@ -137,7 +137,7 @@ export interface CompendiumFacetCounts {
    */
   source?: FacetChoice<IngredientSource>[];
   /**
-   * The admin's Reviewed strip: Reviewed, then Needs Review, zeros kept, each counted
+   * The keeper's Reviewed strip: Reviewed, then Needs Review, zeros kept, each counted
    * with the strip's own choice left out. Left off for anyone who does not curate, whom the
    * service gives no review counts.
    */
@@ -187,7 +187,7 @@ export type CompendiumListFilterProps = Pick<
     Partial<Pick<CompendiumListFilter, 'reviewed' | 'hidden' | 'sort' | 'order'>> &
     Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>;
   /**
-   * Who the filter is for: the admin's (the default) offers No Refs; the public one submits to
+   * Who the filter is for: the keeper's (the default) offers No Refs; the public one submits to
    * `/compendium`; a coven's to `/coven/<covenSlug>/ingredients`, suggesting from its cupboard and adding
    * Source, In Stock and Low Stock Only. Plain data, as a client component's server page passes props.
    */

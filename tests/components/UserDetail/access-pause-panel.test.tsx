@@ -38,6 +38,8 @@ const BO = {
   providers: [],
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
+  agreedDisclaimerVersion: 1,
+  agreedEthicsVersion: 1,
 };
 const ASH = { id: 'a1', name: 'Ash Warden' };
 const IVY = { id: 'a2', name: 'Ivy Keeper' };
@@ -88,7 +90,7 @@ const writeMessage = (message = MESSAGE) =>
   });
 
 describe('UserDetail, Site Access', () => {
-  it('draws no Site Access section when no pauses are given, as for the primary admin and the admin’s own account', () => {
+  it('draws no Site Access section when no pauses are given, as for the primary keeper and the admin’s own account', () => {
     renderDetail();
     expect(screen.queryByRole('region', { name: 'Site Access' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Pause Access' })).toBeNull();

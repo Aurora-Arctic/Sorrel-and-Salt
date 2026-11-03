@@ -12,22 +12,22 @@ This also folds MB.122, the design review of the navigation, into MB.7. Once the
 
 ## The Problem
 
-Nothing in `src/app` drew a site header, an account menu or an Admin entry. `WorkspaceSwitcher` (M6.9) was mounted nowhere. The theme toggle sat in a fixed corner over page headings at 375px. There was no menu, popover or dropdown piece in the codebase, and no map of which element sits above which (`z-index`).
+Nothing in `src/app` drew a site header, an account menu or a Keeper entry. `WorkspaceSwitcher` (M6.9) was mounted nowhere. The theme toggle sat in a fixed corner over page headings at 375px. There was no menu, popover or dropdown piece in the codebase, and no map of which element sits above which (`z-index`).
 
 ## What The Navigation Has To Hold
 
 There are four tiers, and the first three are the shell's.
 
-| Tier    | Items                                                                                                                                               |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Utility | The brand link, the account menu (Your Account, Sign Out), the theme toggle, and later Report a Bug (MB.176)                                        |
-| Primary | The coven switcher (with Create Coven for someone who may create one), Admin for admins, the Compendium once it has a route (MB.80), Add Ingredient |
-| Section | The coven's Overview, Ingredients, Grimoire and Members (role-gated); the admin area's Compendium, Categories, Forms, Deities, Astrology and People |
-| Tabs    | The admin tabbed pages' segmented control, which belongs to the page and is unchanged in every option                                               |
+| Tier    | Items                                                                                                                                                |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Utility | The brand link, the account menu (Your Account, Sign Out), the theme toggle, and later Report a Bug (MB.176)                                         |
+| Primary | The coven switcher (with Create Coven for someone who may create one), Admin for keepers, the Compendium once it has a route (MB.80), Add Ingredient |
+| Section | The coven's Overview, Ingredients, Grimoire and Members (role-gated); the admin area's Compendium, Categories, Forms, Deities, Astrology and People  |
+| Tabs    | The admin tabbed pages' segmented control, which belongs to the page and is unchanged in every option                                                |
 
 The shell leaves alone the impersonation banner (above everything), `/`, `/sign-in`, `/invite/[token]` and the public compendium frame.
 
-Constraints every option had to meet: the coven lives in the URL, never the session; `canCreateWorkspace` comes from the user row, never the session; an unverified account reaches only `/account/email`; `/admin` shows a styled not-authorised page to a signed-in non-admin; `/coven/[slug]` is a 404 to a non-member; admin tables keep their 80rem column; tokens only, in both themes; no sideways scroll at 375px; axe clean; operable by keyboard; the current page told by shape and weight as well as colour.
+Constraints every option had to meet: the coven lives in the URL, never the session; `canCreateWorkspace` comes from the user row, never the session; an unverified account reaches only `/account/email`; `/admin` shows a styled not-authorised page to a signed-in non-keeper; `/coven/[slug]` is a 404 to a non-member; admin tables keep their 80rem column; tokens only, in both themes; no sideways scroll at 375px; axe clean; operable by keyboard; the current page told by shape and weight as well as colour.
 
 ## What The Research Said
 
@@ -72,13 +72,13 @@ Option C's risks were each drawn two ways, and the owner picked one for each.
 1. **A route group, `src/app/(shell)/`,** wraps `account/`, `coven/` and `admin/`. URLs do not change. The root layout stays free of the session, so public pages stay static. The group's layout checks the session and reads the viewer and their memberships (both cached per request).
 2. **The chrome takes plain props** (`viewer`, `workspaces`), with no fetching inside, so MB.83's client island can draw the same chrome from `me`.
 3. **An unverified account** gets the brand as plain text, no site links, no Add Ingredient, no switcher, and an account menu with Sign Out only. Every link would only send it back to `/account/email`.
-4. **The 403 renders inside the shell.** A signed-in non-admin sees the chrome, without an Admin entry, around the not-authorised page.
+4. **The 403 renders inside the shell.** A signed-in non-keeper sees the chrome, without a Keeper entry, around the not-authorised page.
 5. **The switcher's list can go stale,** since layouts do not re-run on client navigation. After `/coven/new` creates a coven, the form refreshes the router (a sub-hour change to M9.16's form, named in the PR).
 6. **The account menu is a disclosure,** not a `role="menu"`: a button with `aria-expanded` and `aria-controls` opening links and the existing Sign Out button. Escape and an outside click close it, and Escape returns focus to the button. The theme toggle moves into the bar on shell pages; the fixed corner stays only on pages outside the shell. This settles MB.116's hand-off.
 7. **Landmarks.** A `header` for the bar; each `nav` has its own label: "Site", "Coven", "Admin", and a tabbed page's own title for its pills. A Skip to Content link is the first thing a keyboard reaches.
 8. **Tokens.** New size tokens for the bar, the context row and the bottom bar, and a `$layers` map that every `z-index` now reads (`shell`, `banner`, `toggle`, `floating`, `dialog`), replacing raw numbers in the banner and the toggle.
 9. **Current page** carries `aria-current="page"` and a heavy accent rule with a quiet fill, never colour alone. Print hides the shell (M10.22).
-10. **The brand link** is the home click: `/admin` for an admin (the owner's call), the viewer's coven for everyone else. Not `/`, which for a signed-in user is a prose page with one button.
+10. **The brand link** is the home click: `/admin` for a keeper (the owner's call), the viewer's coven for everyone else. Not `/`, which for a signed-in user is a prose page with one button.
 11. **Copy says Coven** (below).
 12. **The account menu names the user once,** on its button; its panel opens on Your Account, then Sign Out.
 13. **One section nav component** serves the coven and the admin areas, with an inline stroke icon per section. `AdminNav`'s `<details>` jump menu goes.
@@ -97,7 +97,7 @@ On 2026-10-12 the owner signed off Option C with three adjustments and no furthe
 
 §9's `AppShell` paragraph said the shell carries "the global affordances for adding and editing an ingredient from any page". It now says: one global Add Ingredient button whose target follows the area, and editing on the ingredient wherever it is shown, never inside a relational field and never in the shell. For the ingredient tasks this means:
 
-- **M8.16** built Add Ingredient’s modal and enabled the shell button: a modal for a coven (the one the address names, else the only one the viewer may write to), a plain link to the compendium’s add dialog on an admin page, and nothing for a viewer who may write nowhere.
+- **M8.16** built Add Ingredient’s modal and enabled the shell button: a modal for a coven (the one the address names, else the only one the viewer may write to), a plain link to the compendium’s add dialog on an admin page, and nothing for an observer who may write nowhere.
 - **M8.17** builds Edit Ingredient where an ingredient appears (the ingredient detail page, a list row), not in the bar. A field that links to another ingredient never offers an edit of it.
 
 The shell also gains the account menu, the theme toggle in the bar, and the one section nav, recorded in the same paragraph.
@@ -108,7 +108,7 @@ On-screen copy says Coven: "Select Coven", "Create Coven" (M9.16's "Create Works
 
 ## The M2.8 Dependency
 
-The brand link and Your Coven both point at the `/coven` landing: a page that sends someone into their coven, to the create form, or to the invite-only explanation. `src/app/coven/page.tsx` does not exist; the landing is **M2.8** (issue #270), still open. So MB.7 computes the home link in the shell: an admin goes to `/admin`; anyone else to their first coven by slug, to `/coven/new` if they hold none and may create, and to `/account` otherwise. Your Coven follows the same rule. When M2.8 lands it swaps that href for `/coven`.
+The brand link and Your Coven both point at the `/coven` landing: a page that sends someone into their coven, to the create form, or to the invite-only explanation. `src/app/coven/page.tsx` does not exist; the landing is **M2.8** (issue #270), still open. So MB.7 computes the home link in the shell: a keeper goes to `/admin`; anyone else to their first coven by slug, to `/coven/new` if they hold none and may create, and to `/account` otherwise. Your Coven follows the same rule. When M2.8 lands it swaps that href for `/coven`.
 
 ## What This Rules Out
 

@@ -111,7 +111,7 @@ describe('the six views', () => {
     await seed('assigned', { assignedTo: F.id });
     await seed('assigned-elsewhere', { assignedTo: E.id });
     await seed('hidden');
-    // The precondition: an admin sees all four.
+    // The precondition: a keeper sees all four.
     expect((await countSupportViews(asUser(E), {})).needs_staff).toBe(4);
 
     const counts = await countSupportViews(asUser(F), {});

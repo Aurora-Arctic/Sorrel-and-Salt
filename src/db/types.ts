@@ -12,7 +12,7 @@ export type AuditOperation = 'insert' | 'update' | 'delete';
 export interface AuditSession {
   userId: string;
   /**
-   * The admin acting as `userId`, on an impersonation session alone.
+   * The keeper acting as `userId`, on an impersonation session alone.
    * `userId` is still who the stamps name: impersonation reproduces what that
    * user would see and do.
    */
@@ -33,7 +33,7 @@ export interface PrivilegeDeclaration {
 }
 
 /**
- * Who `publishActor` publishes: the acting user, the admin impersonating
+ * Who `publishActor` publishes: the acting user, the keeper impersonating
  * them, and the privilege route and note a write changing a privilege
  * declares. Each absent one is published as ''.
  */

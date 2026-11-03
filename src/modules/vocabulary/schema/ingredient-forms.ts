@@ -5,7 +5,7 @@ import { FORM_GROUP_ICONS } from './form-group-icons';
 
 export const formGroupIcon = pgEnum('form_group_icon', FORM_GROUP_ICONS);
 
-// Form groups: global, admin-curated, a table rather than an enum. A group sections a dropdown, so it has no colour pair, but it carries its icon as data;
+// Form groups: global, keeper-curated, a table rather than an enum. A group sections a dropdown, so it has no colour pair, but it carries its icon as data;
 // a NULL `icon` is the generic icon. The icon is an enum so adding one is expand-only (claude-docs/design-decisions/m12.6-form-icons.md; claude-docs/db/categories.md,
 // "Vocabulary schema details"). No order column: groups list alphabetically.
 export const ingredientFormGroups = pgTable(

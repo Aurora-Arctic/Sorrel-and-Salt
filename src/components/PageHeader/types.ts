@@ -29,7 +29,7 @@ export interface PageHeaderProps {
   /**
    * The page's one primary action, at the end of the heading's line: an Add
    * link (`<Link className="btn btn--solid">`), or a control such as the user
-   * list's Pause Admin Changes. Left out, the heading stands alone.
+   * list's Pause Keeper Changes. Left out, the heading stands alone.
    */
   action?: ReactNode;
   /** A class for the head's outer element, for the one place that lays it out further. */

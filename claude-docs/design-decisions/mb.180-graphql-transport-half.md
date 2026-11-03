@@ -92,7 +92,7 @@ Pros:
 Cons:
 
 - A wire regression affecting only one scenario would pass. A resolver that
-  special-cased a role — refused owners where the service refuses viewers,
+  special-cased a role — refused stewards where the service refuses observers,
   say — would be caught by the one kept refusal only if it was that role's.
   This is a review concern as much as a test one: a resolver may hold no
   authorization, and a diff that adds some is the bug.

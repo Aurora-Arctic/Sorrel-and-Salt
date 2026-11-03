@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 
 // The public entry page's reach: the cached sessionless read first, and a session asked for only when it finds
-// nothing. A curator or admin then gets a hidden entry from the uncached read; anyone else gets the 404. What the
+// nothing. A curator or keeper then gets a hidden entry from the uncached read; anyone else gets the 404. What the
 // uncached read admits is its service test's (tests/modules/ingredients/services/compendium-hidden.test.ts).
 
 const notFound = vi.fn(() => {
@@ -47,7 +47,7 @@ vi.mock('@/components/IngredientEntry', () => ({
       <>
         <p>{props.detail.entry.name}</p>
         {props.hiddenFromPublic && (
-          <p>Hidden in the Compendium. Only curators and admins can see this page.</p>
+          <p>Hidden in the Compendium. Only curators and keepers can see this page.</p>
         )}
       </>
     );
@@ -85,7 +85,7 @@ describe('the public entry page for a hidden entry', () => {
     expect(readCompendiumEntryAsCurator).toHaveBeenCalled();
     expect(shown).toHaveBeenCalled();
     expect(
-      screen.getByText('Hidden in the Compendium. Only curators and admins can see this page.'),
+      screen.getByText('Hidden in the Compendium. Only curators and keepers can see this page.'),
     ).toBeInTheDocument();
   });
 

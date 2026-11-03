@@ -15,8 +15,18 @@ const message = () =>
     to: 'someone@example.com',
     url: `${WORKSHOP_ORIGIN}/terms`,
     origin: WORKSHOP_ORIGIN,
-    title: 'Terms of Use',
-    summary: 'We now keep sign-in records for ninety days.',
+    documents: [
+      {
+        title: 'Terms of Use',
+        summary: 'We now keep sign-in records for ninety days.',
+        url: `${WORKSHOP_ORIGIN}/terms`,
+      },
+      {
+        title: 'Privacy Policy',
+        summary: 'We name the mail provider that sends our email.',
+        url: `${WORKSHOP_ORIGIN}/privacy`,
+      },
+    ],
     asksAgreement: true,
   });
 

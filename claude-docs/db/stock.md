@@ -169,7 +169,7 @@ test: `0.000` and `NULL` are asserted to be distinguishable on the row.
   which a default cannot see.
 - `source` is where the _stock_ came from — "Miller's farm stand", "foraged by
   the creek" — free text and member-written, per §5's rule that a vocabulary a
-  member writes is text while one only an admin writes is a foreign key. It is
+  member writes is text while one only a keeper writes is a foreign key. It is
   **not** story 27's local-versus-compendium distinction, which M9.7 reads off
   `ingredients.workspace_id` and which never touches this column: that is where
   the _entry_ came from, this is where the stock did.
@@ -198,13 +198,13 @@ checking membership first:
 | `updateStock(session, workspaceId, id, input)`         | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it                  |
 | `deleteStock(session, workspaceId, id)`                | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place                     |
 | `saveStock(session, workspaceId, ingredientId, batch)` | `inventory: update` | One ingredient's creates, updates and deletes in one transaction (M9.9)            |
-| `getStock(session, workspaceId, id)`                   | `inventory: read`   | One jar, for any member of the coven, viewers included                             |
+| `getStock(session, workspaceId, id)`                   | `inventory: read`   | One jar, for any member of the coven, observers included                           |
 | `stockOf(session, refs)`                               | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`                       |
 | `heldFormsOf(session, refs)`                           | `ingredient: read`  | The forms of compendium entries a coven holds, a retired one included (M9.12)      |
 
 The permission is the `inventory` statement in
-`src/modules/coven/services/access-control.ts`: viewers hold `read`, members
-and owners `read` and `update`. The statement has no `create` or `delete`,
+`src/modules/coven/services/access-control.ts`: observers hold `read`, members
+and stewards `read` and `update`. The statement has no `create` or `delete`,
 so all four writes check `update`; the `ingredient` statement is not used for
 stock.
 
@@ -268,7 +268,7 @@ stock.
 `listWorkspaceIngredients(session, workspaceId, filter, page)`
 (`src/modules/ingredients/services/workspace-ingredient-list.ts`, M9.4) is
 the list on the coven's Ingredients page. It checks `ingredient: read`, so any
-member of the coven, viewers included, may read it, and answers one page from
+member of the coven, observers included, may read it, and answers one page from
 `findWorkspaceIngredientPage` in `src/db/repository/ingredients.ts`.
 `countWorkspaceIngredients(session, workspaceId, filter, start)`, beside it, numbers its
 pages (M9.6): it asserts the same permission and reads `findWorkspaceIngredientCount`, the

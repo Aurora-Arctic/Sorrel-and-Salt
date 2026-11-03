@@ -5,7 +5,7 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { seedAstrology } from '@/db/seed/astrology';
 import type { VocabularyRow } from './types';
 
-// What a re-run of the celestial body and zodiac seed leaves of an admin's edits; the shape every seed shares is index.test.ts's.
+// What a re-run of the celestial body and zodiac seed leaves of a keeper's edits; the shape every seed shares is index.test.ts's.
 // The vocabulary's content is the seed doc's to review (claude-docs/db/astrology-vocabulary-seed.md, "The astrology vocabulary seed").
 
 let sql: ReturnType<typeof postgres>;
@@ -24,16 +24,16 @@ afterAll(async () => {
   await sql.end();
 });
 
-describe('seedAstrology(db) over a database an admin has edited', () => {
+describe('seedAstrology(db) over a database a keeper has edited', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);
     // Precondition: the truncated clone really starts empty, so the rows edited are this run's.
     expect(await allRows('celestial_bodies')).toEqual([]);
   });
 
-  // The vocabulary is the admin's, and a description is the part of a
+  // The vocabulary is the keeper's, and a description is the part of a
   // curated row most likely to be rewritten.
-  it('does not overwrite a description an admin has since rewritten', async () => {
+  it('does not overwrite a description a keeper has since rewritten', async () => {
     await seedAstrology(db);
     await sql`
       update zodiac_signs set description = 'The Bull - fixed earth, ruled by Venus.'
@@ -46,8 +46,8 @@ describe('seedAstrology(db) over a database an admin has edited', () => {
     expect(taurus.description).toBe('The Bull - fixed earth, ruled by Venus.');
   });
 
-  // The key, not the slug an admin's rename moves, is what the seed knows.
-  it('leaves a body an admin has since renamed alone, and adds nothing', async () => {
+  // The key, not the slug a keeper's rename moves, is what the seed knows.
+  it('leaves a body a keeper has since renamed alone, and adds nothing', async () => {
     await seedAstrology(db);
     await sql`update celestial_bodies set name = 'Terra', slug = 'terra' where slug = 'earth'`;
     const celestialBodies = await allRows('celestial_bodies');

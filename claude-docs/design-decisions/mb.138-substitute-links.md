@@ -41,10 +41,10 @@ coven's.
 last name**, as plain text with nothing to follow. This was the owner's choice
 of three.
 
-- _Turned to text at the delete._ This keeps rule 4 as it was, but an admin
+- _Turned to text at the delete._ This keeps rule 4 as it was, but a keeper
   deleting a compendium entry would rewrite rows in every coven that linked it,
-  the access to a coven's ingredients that M6.6 asserts an admin never has, and
-  that rule 5's proof gives an admin no handle on. It is also lossy: v2's
+  the access to a coven's ingredients that M6.6 asserts a keeper never has, and
+  that rule 5's proof gives a keeper no handle on. It is also lossy: v2's
   restore (§13) brings the ingredient back and not the links.
 - _Dropped from the list while the ingredient is deleted._ No exception and no
   cross-tier write, and a restore would bring it back. But a substitute the

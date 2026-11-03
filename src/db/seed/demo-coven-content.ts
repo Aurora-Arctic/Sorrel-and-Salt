@@ -32,7 +32,7 @@ import type {
 
 // The demo coven's cupboard, jars, spells and workings, written against the real compendium (the approved files under
 // `compendium/`), never the `standard` fixtures. Each compendium ingredient is named by its formal name and a form its file
-// lists. Additive, as the helpers are: a row that exists is left as it is, so an admin's hand edit stands. An entry the
+// lists. Additive, as the helpers are: a row that exists is left as it is, so a keeper's hand edit stands. An entry the
 // environment's compendium lacks is skipped and reported, never an error (claude-docs/db/demo-coven-seed.md, "Contents").
 
 const COVEN: CovenTarget = { workspaceId: DEMO_WORKSPACE_ID, authorId: BOOTSTRAP_USER_ID };

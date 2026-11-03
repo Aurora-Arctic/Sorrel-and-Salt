@@ -26,7 +26,7 @@ import './index.scss';
 
 // The People page's Invitations tab, `/keepers/invitations`: a filter, a page of pending invitations
 // (address, site role, reason, expiry, Revoke), the pager, and the invite form `?invite` opens. While
-// admin changes are paused both are locked for any admin but the primary (claude-docs/components/admin-invitations.md).
+// keeper changes are paused both are locked for any keeper but the primary (claude-docs/components/admin-invitations.md).
 
 /** No filter: the whole pending list. */
 const NO_FILTER: Filter = { email: '', expiringSoon: false };
@@ -125,7 +125,7 @@ const AdminInvitations = ({
     if (inviting) setSent(undefined);
   }
   return (
-    <section className="admin-invitations" aria-label="Admin Invitations">
+    <section className="admin-invitations" aria-label="Keeper Invitations">
       {sent && (
         <Notice kind="success" className="admin-invitations__sent">
           Invitation sent to {sent}.

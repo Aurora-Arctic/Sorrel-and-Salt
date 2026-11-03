@@ -7,8 +7,8 @@ import type { Session } from '@/lib/session';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import {
-  emailDocumentToEveryAccount,
-  readDocumentMailing,
+  emailDocumentsToEveryAccount,
+  readDocumentMailings,
   resumeDocumentMailing,
   startDailyDocumentMailing,
 } from '@/modules/documents';
@@ -22,11 +22,15 @@ import {
 import { assertCurator } from '@/modules/identity';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
+import {
+  insertDocument,
+  insertDocumentMailing,
+  insertDocumentVersion,
+} from '../../../support/db/insert-document';
 
-// Emailing every account about a document's published version: the read the edit page and its confirmation show, the write that
-// starts a mailing, an admin's resume of a paused one, and the daily start that carries a mailing on to the next UTC day. Each
-// is an admin's alone, through assertSiteAdmin. The run that sends the mail is tests/workflows/document-mailing.test.ts; the
+// Emailing every account about every document changed since the last email: the read the mailing page and its confirmation
+// show, the write that starts one joint mailing, a keeper's resume of a paused one, and the daily start that carries a mailing on
+// to the next UTC day. Each is a keeper's alone, through assertSiteAdmin. The run that sends the mail is tests/workflows/document-mailing.test.ts; the
 // signed-out caller is refused at the GraphQL scope (tests/db/graphql-query-scopes.test.ts).
 
 const { startJob, jobTokenActive } = vi.hoisted(() => ({
@@ -100,18 +104,22 @@ interface MailingSeed {
   startedSecondsAgo?: number;
 }
 
-/** A mailing of `versionId` to `recipients`, written raw as the service and the run would leave it. */
+/** A mailing of the versions to `recipients`, written raw as the service and the run would leave it. */
 async function mailing(
-  versionId: string,
+  versionIds: readonly string[],
   recipients: string[],
   { status = 'sending', sent = 0, sentAt = 'today', startedSecondsAgo = 0 }: MailingSeed = {},
 ): Promise<string> {
-  const [{ id }] = await sql`
-    insert into document_mailings
-      (document_version_id, summary, status, recipient_count, finished_at, created_at, created_by, updated_by)
-    values (${versionId}, ${SUMMARY}, ${status}, ${recipients.length}, ${status === 'sent' ? sql`now()` : null},
-      now() - make_interval(secs => ${startedSecondsAgo}), ${E.id}, ${E.id})
-    returning id`;
+  const id = await insertDocumentMailing(
+    sql,
+    {
+      items: versionIds.map((versionId) => ({ versionId, summary: SUMMARY })),
+      status,
+      recipient_count: recipients.length,
+      startedSecondsAgo,
+    },
+    E.id,
+  );
   const when = new Date(Date.now() - (sentAt === 'yesterday' ? 86_400_000 : 0));
   await sql`
     insert into document_mailing_recipients ${sql(
@@ -126,133 +134,209 @@ async function mailing(
   return id as string;
 }
 
-const mailingsOf = (versionId: string) =>
-  sql`select id, status::text as status, summary, recipient_count, finished_at, created_by
-      from document_mailings where document_version_id = ${versionId} and deleted_at is null`;
+const mailingRows = () =>
+  sql`select id, status::text as status, recipient_count, finished_at, created_by
+      from document_mailings where deleted_at is null order by created_at, id`;
+
+const itemsOf = async (mailingId: string) =>
+  (
+    await sql`select document_version_id, summary from document_mailing_items
+      where mailing_id = ${mailingId} and deleted_at is null order by summary`
+  ).map((row) => ({
+    versionId: row.document_version_id as string,
+    summary: row.summary as string,
+  }));
+
+const statusOf = async (mailingId: string) =>
+  (await sql`select status::text as status from document_mailings where id = ${mailingId}`)[0]!
+    .status;
+
+/** A newly published version of the terms, past the first, so both documents are pending. */
+const publishTermsV2 = () =>
+  insertDocumentVersion(sql, termsId, { number: 2, published_at: '2026-04-06 09:00:00' }, E.id);
+
+const refusalOf = (promise: Promise<unknown>) =>
+  promise.then(
+    () => null,
+    (error: unknown) => error,
+  );
 
 const recipientsOf = async (mailingId: string) =>
   (
     await sql`select user_id, sent_at from document_mailing_recipients where mailing_id = ${mailingId}`
   ).map((row) => ({ userId: row.user_id as string, sentAt: row.sent_at as Date | null }));
 
-describe('readDocumentMailing', () => {
-  it('answers the current published version, not emailed, with how many accounts a mailing would reach and in how many days', async () => {
-    const overview = await readDocumentMailing(asUser(E), 'privacy');
+describe('readDocumentMailings', () => {
+  it('answers each pending document, with how many accounts a mailing would reach and in how many days', async () => {
+    const overview = await readDocumentMailings(asUser(E));
 
-    expect(overview).toMatchObject({ versionNumber: 2, current: null, inProgress: null });
+    // The privacy policy's version 2, not its open draft 3; the terms only at version 1, which no one is told about.
+    expect(overview.pending).toEqual([
+      {
+        documentId: privacyId,
+        versionId: privacyV2,
+        key: 'privacy',
+        title: 'Fixture Policy',
+        versionNumber: 2,
+        inMailing: false,
+      },
+    ]);
+    expect(overview).toMatchObject({ canSend: true, open: [], lastSent: null });
     expect(overview.days).toBe(mailingDays(overview.accountCount));
   });
 
   it('counts a live, verified account, and no unverified, deleted or .invalid one', async () => {
-    const before = (await readDocumentMailing(asUser(E), 'privacy')).accountCount;
+    const before = (await readDocumentMailings(asUser(E))).accountCount;
 
     await accounts(1, { email_verified: false });
     await accounts(1, { deleted: true });
     await accounts(1, { domain: 'provider.invalid' });
-    expect((await readDocumentMailing(asUser(E), 'privacy')).accountCount).toBe(before);
+    expect((await readDocumentMailings(asUser(E))).accountCount).toBe(before);
 
     await accounts(1);
-    expect((await readDocumentMailing(asUser(E), 'privacy')).accountCount).toBe(before + 1);
+    expect((await readDocumentMailings(asUser(E))).accountCount).toBe(before + 1);
   });
 
-  it('answers a mailing of the current version as sending, with how many it has reached', async () => {
-    await mailing(privacyV2, await accounts(3), { sent: 1 });
+  it('answers a sending mailing with every document it covers and how many it has reached', async () => {
+    const termsV2 = await publishTermsV2();
+    await mailing([privacyV2, termsV2], await accounts(3), { sent: 1 });
 
-    expect((await readDocumentMailing(asUser(E), 'privacy')).current).toMatchObject({
-      versionNumber: 2,
+    const overview = await readDocumentMailings(asUser(E));
+
+    expect(overview.open).toHaveLength(1);
+    expect(overview.open[0]).toMatchObject({
       state: 'sending',
       reached: 1,
       recipientCount: 3,
       startedAt: expect.any(Date),
       finishedAt: null,
     });
+    expect(overview.open[0]!.documents).toEqual([
+      { key: 'privacy', title: 'Fixture Policy', versionNumber: 2 },
+      { key: 'terms', title: 'Fixture Terms', versionNumber: 2 },
+    ]);
   });
 
   it('answers a sending mailing that has sent the daily cap today as waiting for tomorrow', async () => {
-    await mailing(privacyV2, await accounts(MAILING_DAILY_CAP + 1), { sent: MAILING_DAILY_CAP });
+    await mailing([privacyV2], await accounts(MAILING_DAILY_CAP + 1), { sent: MAILING_DAILY_CAP });
 
-    expect((await readDocumentMailing(asUser(E), 'privacy')).current).toMatchObject({
+    expect((await readDocumentMailings(asUser(E))).open[0]).toMatchObject({
       state: 'waiting',
       reached: MAILING_DAILY_CAP,
     });
   });
 
   it('answers the same mailing as sending when those sends were yesterday', async () => {
-    await mailing(privacyV2, await accounts(MAILING_DAILY_CAP + 1), {
+    await mailing([privacyV2], await accounts(MAILING_DAILY_CAP + 1), {
       sent: MAILING_DAILY_CAP,
       sentAt: 'yesterday',
     });
 
-    expect((await readDocumentMailing(asUser(E), 'privacy')).current?.state).toBe('sending');
+    expect((await readDocumentMailings(asUser(E))).open[0]?.state).toBe('sending');
   });
 
-  it('answers a sending mailing behind an older mailing of another document as queued', async () => {
-    await mailing(termsV1, await accounts(2), { startedSecondsAgo: 3600 });
-    await mailing(privacyV2, await accounts(2));
+  it('answers a sending mailing behind an older sending one as queued', async () => {
+    // Two open mailings sit side by side only as a mailing written before joint mailings left them.
+    const older = await mailing([termsV1], await accounts(2), { startedSecondsAgo: 3600 });
+    const newer = await mailing([privacyV2], await accounts(2));
 
-    expect((await readDocumentMailing(asUser(E), 'privacy')).current?.state).toBe('queued');
-    expect((await readDocumentMailing(asUser(E), 'terms')).current?.state).toBe('sending');
+    const { open } = await readDocumentMailings(asUser(E));
+
+    expect(open.map((summary) => [summary.id, summary.state])).toEqual([
+      [older, 'sending'],
+      [newer, 'queued'],
+    ]);
   });
 
   it('answers a paused mailing as paused', async () => {
-    await mailing(privacyV2, await accounts(3), { status: 'paused', sent: 2 });
+    await mailing([privacyV2], await accounts(3), { status: 'paused', sent: 2 });
 
-    expect((await readDocumentMailing(asUser(E), 'privacy')).current).toMatchObject({
+    expect((await readDocumentMailings(asUser(E))).open[0]).toMatchObject({
       state: 'paused',
       reached: 2,
       finishedAt: null,
     });
   });
 
-  it('answers a finished mailing as sent, with when it finished', async () => {
-    await mailing(privacyV2, await accounts(2), { status: 'sent', sent: 2 });
+  it('answers the newest sent mailing as the last sent, and leaves its version out of the pending', async () => {
+    const sent = await mailing([privacyV2], await accounts(2), { status: 'sent', sent: 2 });
 
-    expect((await readDocumentMailing(asUser(E), 'privacy')).current).toMatchObject({
+    const overview = await readDocumentMailings(asUser(E));
+
+    expect(overview.lastSent).toMatchObject({
+      id: sent,
       state: 'sent',
       reached: 2,
       recipientCount: 2,
       finishedAt: expect.any(Date),
+      documents: [{ key: 'privacy', title: 'Fixture Policy', versionNumber: 2 }],
     });
+    expect(overview.pending).toEqual([]);
+    expect(overview.canSend).toBe(false);
   });
 
-  it('answers a mailing of an earlier version still sending as the one a new mailing would replace', async () => {
-    await mailing(privacyV1, await accounts(3), { sent: 2 });
+  it('marks a pending document a sending or paused mailing covers, and answers it cannot send when every one is', async () => {
+    const termsV2 = await publishTermsV2();
+    await mailing([privacyV2], await accounts(1), { status: 'paused' });
 
-    const overview = await readDocumentMailing(asUser(E), 'privacy');
+    const some = await readDocumentMailings(asUser(E));
+    expect(some.pending.map((pending) => [pending.key, pending.inMailing])).toEqual([
+      ['privacy', true],
+      ['terms', false],
+    ]);
+    expect(some.canSend).toBe(true);
 
-    expect(overview.current).toBeNull();
-    expect(overview.inProgress).toMatchObject({ versionNumber: 1, state: 'sending', reached: 2 });
+    await mailing([termsV2], await accounts(1));
+    const every = await readDocumentMailings(asUser(E));
+    expect(every.pending.every((pending) => pending.inMailing)).toBe(true);
+    expect(every.canSend).toBe(false);
   });
 
-  it('throws NotFound for a document with no row', async () => {
-    await expect(readDocumentMailing(asUser(E), 'disclaimer')).rejects.toBeInstanceOf(NotFound);
+  it('keeps a version only a replaced mailing covers pending, and sendable', async () => {
+    await mailing([privacyV2], await accounts(1), { status: 'replaced' });
+
+    const overview = await readDocumentMailings(asUser(E));
+
+    expect(overview.pending).toEqual([
+      expect.objectContaining({ versionId: privacyV2, inMailing: false }),
+    ]);
+    expect(overview.canSend).toBe(true);
   });
 });
 
-describe('emailDocumentToEveryAccount', () => {
-  it('writes a sending mailing of the published version to every account it counts, and starts its run', async () => {
+describe('emailDocumentsToEveryAccount', () => {
+  it('writes one sending mailing of every pending document to every account it counts, and starts its run', async () => {
+    const termsV2 = await publishTermsV2();
     const [unverified] = await accounts(1, { email_verified: false });
     const [deleted] = await accounts(1, { deleted: true });
     const [invalid] = await accounts(1, { domain: 'provider.invalid' });
     const [reader] = await accounts(1);
-    const { accountCount } = await readDocumentMailing(asUser(E), 'privacy');
+    const { accountCount } = await readDocumentMailings(asUser(E));
 
-    const overview = await emailDocumentToEveryAccount(
+    const overview = await emailDocumentsToEveryAccount(
       asUser(E),
-      privacyId,
-      { summary: SUMMARY },
+      {
+        summaries: [
+          { versionId: termsV2, summary: 'Testwort terms changed.' },
+          { versionId: privacyV2, summary: '  Testwort policy changed.  ' },
+        ],
+      },
       notifier,
     );
 
-    // The published version 2, not the open draft 3.
-    const [row] = await mailingsOf(privacyV2);
+    const rows = await mailingRows();
+    expect(rows).toHaveLength(1);
+    const [row] = rows;
     expect(row).toMatchObject({
       status: 'sending',
-      summary: SUMMARY,
       recipient_count: accountCount,
       finished_at: null,
       created_by: E.id,
     });
+    expect(await itemsOf(row!.id as string)).toEqual([
+      { versionId: privacyV2, summary: 'Testwort policy changed.' },
+      { versionId: termsV2, summary: 'Testwort terms changed.' },
+    ]);
     const recipients = await recipientsOf(row!.id as string);
     const ids = recipients.map((recipient) => recipient.userId);
     expect(ids).toHaveLength(accountCount);
@@ -270,110 +354,202 @@ describe('emailDocumentToEveryAccount', () => {
     expect(recipients.every((recipient) => recipient.sentAt === null)).toBe(true);
     expect(startJob).toHaveBeenCalledExactlyOnceWith(documentMailing, [row!.id, ORIGIN]);
     expect(() => assertRunArguments([row!.id, ORIGIN])).not.toThrow();
-    expect(overview.current).toMatchObject({ versionNumber: 2, state: 'sending', reached: 0 });
+    expect(overview.open).toEqual([
+      expect.objectContaining({ id: row!.id, state: 'sending', reached: 0 }),
+    ]);
+    expect(overview.canSend).toBe(false);
   });
 
-  it('marks the document’s sending and paused mailings of earlier versions replaced, and leaves another document’s alone', async () => {
-    const sendingV1 = await mailing(privacyV1, await accounts(2), { sent: 1 });
-    const termsMailing = await mailing(termsV1, await accounts(2));
-    // A paused mailing of the same version 1 cannot sit beside a sending one, so it is checked on its own below.
-
-    await emailDocumentToEveryAccount(asUser(E), privacyId, { summary: SUMMARY }, notifier);
-
-    expect((await mailingsOf(privacyV1))[0]).toMatchObject({
-      id: sendingV1,
-      status: 'replaced',
-      finished_at: null,
+  it('marks every live sending and paused mailing replaced, of any document, and leaves a sent one alone', async () => {
+    const termsV2 = await publishTermsV2();
+    const sending = await mailing([privacyV2], await accounts(2), {
+      sent: 1,
+      startedSecondsAgo: 60,
     });
-    expect((await mailingsOf(termsV1))[0]).toMatchObject({ id: termsMailing, status: 'sending' });
-  });
+    const paused = await mailing([privacyV1], await accounts(2), {
+      status: 'paused',
+      startedSecondsAgo: 120,
+    });
+    const sent = await mailing([termsV1], await accounts(2), {
+      status: 'sent',
+      sent: 2,
+      startedSecondsAgo: 180,
+    });
 
-  it('marks a paused mailing of an earlier version replaced', async () => {
-    const pausedV1 = await mailing(privacyV1, await accounts(2), { status: 'paused', sent: 1 });
-
-    await emailDocumentToEveryAccount(asUser(E), privacyId, { summary: SUMMARY }, notifier);
-
-    expect((await mailingsOf(privacyV1))[0]).toMatchObject({ id: pausedV1, status: 'replaced' });
-  });
-
-  it('refuses a second mailing of a version already mailed, writing nothing and starting nothing', async () => {
-    const first = await mailing(privacyV2, await accounts(2), { status: 'sent', sent: 2 });
-
-    const refusal = await emailDocumentToEveryAccount(
+    await emailDocumentsToEveryAccount(
       asUser(E),
-      privacyId,
-      { summary: SUMMARY },
+      {
+        summaries: [
+          { versionId: privacyV2, summary: SUMMARY },
+          { versionId: termsV2, summary: SUMMARY },
+        ],
+      },
       notifier,
-    ).then(
-      () => null,
-      (error: unknown) => error,
     );
 
-    expect(refusal).toBeInstanceOf(ValidationError);
-    expect((await mailingsOf(privacyV2)).map((row) => row.id)).toEqual([first]);
-    expect(startJob).not.toHaveBeenCalled();
+    expect(await statusOf(sending)).toBe('replaced');
+    expect(await statusOf(paused)).toBe('replaced');
+    expect(await statusOf(sent)).toBe('sent');
+    // The replaced mailing keeps what it sent.
+    expect((await recipientsOf(sending)).filter((recipient) => recipient.sentAt)).toHaveLength(1);
   });
 
-  it('refuses a blank summary on the summary field', async () => {
-    const refusal = await emailDocumentToEveryAccount(
+  it('mails again a version only a replaced mailing covered', async () => {
+    const replaced = await mailing([privacyV2], await accounts(1), { status: 'replaced' });
+
+    await emailDocumentsToEveryAccount(
       asUser(E),
-      privacyId,
-      { summary: '   ' },
+      { summaries: [{ versionId: privacyV2, summary: SUMMARY }] },
       notifier,
-    ).then(
-      () => null,
-      (error: unknown) => error,
     );
 
-    expect(refusal).toBeInstanceOf(ValidationError);
-    expect((refusal as ValidationError).issues.map((issue) => issue.path)).toEqual([['summary']]);
-    expect(await mailingsOf(privacyV2)).toEqual([]);
-    expect(startJob).not.toHaveBeenCalled();
+    const started = (await mailingRows()).find((row) => row.id !== replaced);
+    expect(started).toMatchObject({ status: 'sending' });
+    expect(await itemsOf(started!.id as string)).toEqual([
+      { versionId: privacyV2, summary: SUMMARY },
+    ]);
   });
 
-  it('throws NotFound for a document with no published version, and for an id with no document', async () => {
-    const draftOnly = await insertDocument(sql, { key: 'disclaimer' }, E.id);
-    await insertDocumentVersion(sql, draftOnly, { number: 1, status: 'draft' }, E.id);
+  it('refuses when no document is pending, writing nothing and starting nothing', async () => {
+    const sent = await mailing([privacyV2], await accounts(2), { status: 'sent', sent: 2 });
 
-    await expect(
-      emailDocumentToEveryAccount(asUser(E), draftOnly, { summary: SUMMARY }, notifier),
-    ).rejects.toBeInstanceOf(NotFound);
-    await expect(
-      emailDocumentToEveryAccount(
+    const refusal = await refusalOf(
+      emailDocumentsToEveryAccount(
         asUser(E),
-        '00000000-0000-4000-8000-000000000000',
-        { summary: SUMMARY },
+        { summaries: [{ versionId: privacyV2, summary: SUMMARY }] },
         notifier,
       ),
-    ).rejects.toBeInstanceOf(NotFound);
+    );
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((await mailingRows()).map((row) => row.id)).toEqual([sent]);
     expect(startJob).not.toHaveBeenCalled();
+  });
+
+  it('refuses when every pending document is already in a sending or paused mailing', async () => {
+    const open = await mailing([privacyV2], await accounts(2), { status: 'paused' });
+
+    const refusal = await refusalOf(
+      emailDocumentsToEveryAccount(
+        asUser(E),
+        { summaries: [{ versionId: privacyV2, summary: SUMMARY }] },
+        notifier,
+      ),
+    );
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect(await mailingRows()).toEqual([expect.objectContaining({ id: open, status: 'paused' })]);
+    expect(startJob).not.toHaveBeenCalled();
+  });
+
+  it('refuses summaries that leave out a pending document, or name a version that is not pending', async () => {
+    const termsV2 = await publishTermsV2();
+
+    const missing = await refusalOf(
+      emailDocumentsToEveryAccount(
+        asUser(E),
+        { summaries: [{ versionId: privacyV2, summary: SUMMARY }] },
+        notifier,
+      ),
+    );
+    const extra = await refusalOf(
+      emailDocumentsToEveryAccount(
+        asUser(E),
+        {
+          summaries: [
+            { versionId: privacyV2, summary: SUMMARY },
+            { versionId: termsV2, summary: SUMMARY },
+            { versionId: privacyV1, summary: SUMMARY },
+          ],
+        },
+        notifier,
+      ),
+    );
+
+    expect(missing).toBeInstanceOf(ValidationError);
+    expect(extra).toBeInstanceOf(ValidationError);
+    expect(await mailingRows()).toEqual([]);
+    expect(startJob).not.toHaveBeenCalled();
+  });
+
+  it('refuses a blank summary on that document’s summary field', async () => {
+    const termsV2 = await publishTermsV2();
+
+    const refusal = await refusalOf(
+      emailDocumentsToEveryAccount(
+        asUser(E),
+        {
+          summaries: [
+            { versionId: privacyV2, summary: SUMMARY },
+            { versionId: termsV2, summary: '   ' },
+          ],
+        },
+        notifier,
+      ),
+    );
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as ValidationError).issues.map((issue) => issue.path)).toEqual([
+      ['summaries', 1, 'summary'],
+    ]);
+    expect(await mailingRows()).toEqual([]);
+    expect(startJob).not.toHaveBeenCalled();
+  });
+
+  it('starts one mailing when two keepers send at once, and refuses the other', async () => {
+    await accounts(3);
+    const send = () =>
+      emailDocumentsToEveryAccount(
+        asUser(E),
+        { summaries: [{ versionId: privacyV2, summary: SUMMARY }] },
+        notifier,
+      );
+
+    const outcomes = await Promise.allSettled([send(), send(), send()]);
+
+    expect(outcomes.filter((outcome) => outcome.status === 'fulfilled')).toHaveLength(1);
+    const refused = outcomes.filter((outcome) => outcome.status === 'rejected');
+    expect(refused).toHaveLength(2);
+    for (const outcome of refused) {
+      expect((outcome as PromiseRejectedResult).reason).toBeInstanceOf(ValidationError);
+    }
+    expect(await mailingRows()).toEqual([expect.objectContaining({ status: 'sending' })]);
+    expect(startJob).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('resumeDocumentMailing', () => {
   it('sets a paused mailing sending again and starts its run, leaving what it has sent', async () => {
-    const paused = await mailing(privacyV2, await accounts(3), { status: 'paused', sent: 2 });
+    const paused = await mailing([privacyV2], await accounts(3), { status: 'paused', sent: 2 });
 
     const overview = await resumeDocumentMailing(asUser(E), paused, notifier);
 
-    expect((await mailingsOf(privacyV2))[0]).toMatchObject({
-      status: 'sending',
-      finished_at: null,
-    });
+    expect(await mailingRows()).toEqual([
+      expect.objectContaining({ id: paused, status: 'sending', finished_at: null }),
+    ]);
     expect((await recipientsOf(paused)).filter((recipient) => recipient.sentAt)).toHaveLength(2);
     expect(startJob).toHaveBeenCalledExactlyOnceWith(documentMailing, [paused, ORIGIN]);
-    expect(overview.current?.state).toBe('sending');
+    expect(overview.open).toEqual([expect.objectContaining({ id: paused, state: 'sending' })]);
+  });
+
+  it('resumes a mailing whose one item is a version that has since been superseded', async () => {
+    const paused = await mailing([privacyV1], await accounts(2), { status: 'paused' });
+
+    await resumeDocumentMailing(asUser(E), paused, notifier);
+
+    expect(await statusOf(paused)).toBe('sending');
+    expect(startJob).toHaveBeenCalledExactlyOnceWith(documentMailing, [paused, ORIGIN]);
   });
 
   it.each([['sending'], ['sent'], ['replaced']] as const)(
     'refuses a %s mailing, changing nothing and starting nothing',
     async (status) => {
-      const id = await mailing(privacyV2, await accounts(2), { status });
+      const id = await mailing([privacyV2], await accounts(2), { status });
 
       await expect(resumeDocumentMailing(asUser(E), id, notifier)).rejects.toBeInstanceOf(
         ValidationError,
       );
-      expect((await mailingsOf(privacyV2))[0]?.status).toBe(status);
+      expect(await statusOf(id)).toBe(status);
       expect(startJob).not.toHaveBeenCalled();
     },
   );
@@ -387,9 +563,9 @@ describe('resumeDocumentMailing', () => {
 
 describe('startDailyDocumentMailing', () => {
   it('starts a run for the oldest sending mailing alone', async () => {
-    await mailing(privacyV1, await accounts(1), { status: 'paused', startedSecondsAgo: 7200 });
-    const oldest = await mailing(termsV1, await accounts(1), { startedSecondsAgo: 3600 });
-    await mailing(privacyV2, await accounts(1));
+    await mailing([privacyV1], await accounts(1), { status: 'paused', startedSecondsAgo: 7200 });
+    const oldest = await mailing([termsV1], await accounts(1), { startedSecondsAgo: 3600 });
+    await mailing([privacyV2], await accounts(1));
 
     await startDailyDocumentMailing(ORIGIN);
 
@@ -397,7 +573,7 @@ describe('startDailyDocumentMailing', () => {
   });
 
   it('starts nothing while a run still holds the oldest sending mailing’s hook token', async () => {
-    const oldest = await mailing(termsV1, await accounts(1), { startedSecondsAgo: 3600 });
+    const oldest = await mailing([termsV1], await accounts(1), { startedSecondsAgo: 3600 });
     // A run of the oldest mailing is asleep between batches, across midnight, holding its token.
     jobTokenActive.mockImplementation(async (token) => token === documentMailingHookToken(oldest));
 
@@ -409,8 +585,8 @@ describe('startDailyDocumentMailing', () => {
   });
 
   it('starts nothing when no mailing is sending', async () => {
-    await mailing(privacyV2, await accounts(1), { status: 'sent', sent: 1 });
-    await mailing(privacyV1, await accounts(1), { status: 'paused' });
+    await mailing([privacyV2], await accounts(1), { status: 'sent', sent: 1 });
+    await mailing([privacyV1], await accounts(1), { status: 'paused' });
 
     await startDailyDocumentMailing(ORIGIN);
 
@@ -420,17 +596,22 @@ describe('startDailyDocumentMailing', () => {
 
 // Each call is made by direct id, as a forged request would make it. E's same call succeeds, A owns a coven and holds no site
 // role, B is a member, and F passes assertCurator, so each refusal is the admin check's.
-describe('the mailing services are an admin’s alone', () => {
+describe('the mailing services are a keeper’s alone', () => {
   let pausedId: string;
   beforeEach(async () => {
-    pausedId = await mailing(privacyV1, await accounts(2), { status: 'paused' });
+    pausedId = await mailing([privacyV1], await accounts(2), { status: 'paused' });
   });
 
   const CALLS: [string, (session: Session) => Promise<unknown>][] = [
-    ['readDocumentMailing', (session) => readDocumentMailing(session, 'privacy')],
+    ['readDocumentMailings', (session) => readDocumentMailings(session)],
     [
-      'emailDocumentToEveryAccount',
-      (session) => emailDocumentToEveryAccount(session, privacyId, { summary: SUMMARY }, notifier),
+      'emailDocumentsToEveryAccount',
+      (session) =>
+        emailDocumentsToEveryAccount(
+          session,
+          { summaries: [{ versionId: privacyV2, summary: SUMMARY }] },
+          notifier,
+        ),
     ],
     ['resumeDocumentMailing', (session) => resumeDocumentMailing(session, pausedId, notifier)],
   ];
