@@ -1,6 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { makeIngredient } from '../support/fixtures/ingredient';
+import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { curatedFormId } from '../support/db/curated-ids';
+import {
+  insertReference,
+  insertReferenceLink,
+  insertVariantReferenceLink,
+} from '../support/db/insert-reference';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
@@ -107,34 +113,40 @@ test("a coven's own entry reclassified as None saves, as its owner", async ({ pa
     .toEqual({ nomenclature: 'none', canonical_name: null });
 });
 
-// Regression: the seeded Beeswax, Unknown with no formal name, a picked form and a source for its
-// classification, kept Save off after None was chosen.
-test('a seeded Unknown compendium entry reclassified as None saves, as a site admin', async ({
-  page,
-}) => {
-  await signInAs(page, 'unknown-admin@classification-none.test', ['discord'], 'admin');
-  const [seeded] = await withSql(
-    (sql) => sql<{ id: string; picked: number; cited: number }[]>`
-      select i.id,
-        (select count(*)::int from ingredient_variants v
-          where v.ingredient_id = i.id and v.deleted_at is null and v.form_id is not null) as picked,
-        (select count(*)::int from reference_links r
-          where r.ingredient_id = i.id and r.deleted_at is null) as cited
-      from ingredients i
-      where i.name = 'Beeswax' and i.workspace_id is null and i.deleted_at is null
-        and i.nomenclature = 'unknown' and i.canonical_name is null`,
-  );
-  // The precondition: the seed's own shape, Unknown and nameless, with a picked form and a source.
-  expect(seeded).toBeDefined();
-  expect(seeded.picked).toBeGreaterThan(0);
-  expect(seeded.cited).toBeGreaterThan(0);
+/**
+ * A compendium entry shaped as the seeded Beeswax: Unknown with no formal name, hidden, in no category,
+ * one form picked from the curated Wax, a source for its classification and description, and one for
+ * the form. Returns its id.
+ */
+async function unknownWaxEntry(name: string, author: string) {
+  return withSql(async (sql) => {
+    const formId = await curatedFormId(sql, 'Wax');
+    const fixture = makeIngredient({
+      name,
+      nomenclature: 'unknown',
+      canonicalName: null,
+      description: 'A fixture wax.',
+      categories: [],
+      variants: [makeVariant({ form: 'Wax', formId })],
+    });
+    const id = await insertIngredient(sql, fixture, author);
+    await sql`update ingredients set shown = false where id = ${id}`;
+    const [variant] = await sql<{ id: string }[]>`
+      select id from ingredient_variants where ingredient_id = ${id} and deleted_at is null`;
+    const source = await insertReference(sql, { title: 'Fixture Almanac of Waxes' }, author);
+    await insertReferenceLink(sql, id, source, author, null, {
+      supports: ['nomenclature', 'description'],
+    });
+    await insertVariantReferenceLink(sql, variant.id, source, author, null, { supports: ['form'] });
+    return id;
+  });
+}
 
-  await page.goto(`/admin/compendium?edit=${ingredientSlug('Beeswax', null)}`);
-  const dialog = editIngredientDialog(page, 'Beeswax');
+/** In an open edit dialog of an entry with no formal name: Save shut, then None chosen, then Save pressed. */
+async function saveAsNone(page: Page, dialog: Locator) {
   await expect(dialog).toBeVisible();
   const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
   await expect(save).toBeDisabled();
-
   await dialog.getByRole('button', { name: 'Open All' }).click();
   const formal = dialog.getByRole('textbox', { name: 'Formal Name' });
   await expect(formal).toHaveValue('');
@@ -144,10 +156,50 @@ test('a seeded Unknown compendium entry reclassified as None saves, as a site ad
     .getByRole('option', { name: 'None', exact: true })
     .click();
   await expect(formal).toBeDisabled();
-
   await expect(save).toBeEnabled();
   await save.click();
+}
+
+// Regression: an entry shaped as the seeded Beeswax, Unknown with no formal name, a picked form and a
+// source for its classification, kept Save off after None was chosen.
+test('an Unknown compendium entry with a picked form reclassified as None saves from the admin list, as a site admin', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'unknown-admin@classification-none.test',
+    ['discord'],
+    'admin',
+  );
+  const id = await unknownWaxEntry('Fixture Waxwort', userId);
+
+  await page.goto(`/admin/compendium?edit=${ingredientSlug('Fixture Waxwort', null)}`);
+  await saveAsNone(page, editIngredientDialog(page, 'Fixture Waxwort'));
+
   await expect
-    .poll(() => storedIdentity(seeded.id))
+    .poll(() => storedIdentity(id))
+    .toEqual({ nomenclature: 'none', canonical_name: null });
+});
+
+// Regression: opened from the pencil on its public entry page, the same shape of entry kept Save off.
+test("an Unknown compendium entry with a picked form reclassified as None saves from its entry page's pencil, as a site admin", async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'pencil-admin@classification-none.test',
+    ['discord'],
+    'admin',
+  );
+  const id = await unknownWaxEntry('Fixture Pencilwax', userId);
+
+  await page.goto(`/compendium/ingredients/${ingredientSlug('Fixture Pencilwax', null)}`);
+  await page
+    .getByRole('link', { name: 'Edit in Compendium Fixture Pencilwax', exact: true })
+    .click();
+  await saveAsNone(page, page.getByRole('dialog', { name: /Edit Compendium Entry/ }));
+
+  await expect
+    .poll(() => storedIdentity(id))
     .toEqual({ nomenclature: 'none', canonical_name: null });
 });
