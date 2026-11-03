@@ -115,6 +115,29 @@ export async function publishDocumentDraft(
 }
 
 /**
+ * Throws the document's open draft away, as a soft delete, and leaves its published versions as they are. The next save opens a new draft.
+ * Answers the discarded draft's id.
+ *
+ * @throws {Forbidden} the session is not a site admin.
+ * @throws {NotFound} no draft is open.
+ * @throws {StaleWrite} the draft has moved on since the editor read it, carrying the revision it is at now.
+ */
+export async function discardDocumentDraft(
+  session: Session,
+  documentId: string,
+  input: { expectedRevision: number },
+): Promise<string> {
+  const admin = assertSiteAdmin(session);
+  const open = await findDocumentDraft(admin, documentId);
+  if (!open) throw new NotFound('Draft not found');
+  const [discarded] = await withAudit(session, (write) =>
+    write.discardDocumentDraft(admin, open.id, input.expectedRevision),
+  );
+  if (!discarded) throw new NotFound('Draft not found');
+  return discarded.id;
+}
+
+/**
  * Changes a document's title and lede, which make no new version, and empties the cached public reads.
  *
  * @throws {Forbidden} the session is not a site admin.

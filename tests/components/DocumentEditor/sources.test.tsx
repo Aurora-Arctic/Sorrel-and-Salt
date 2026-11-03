@@ -18,6 +18,7 @@ async function renderEditor(body: string) {
       title="Disclaimer"
       lede="What the site does not promise."
       body={body}
+      publishedBody={body}
       revision={null}
       nextNumber={2}
     />,

@@ -1,6 +1,7 @@
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import {
+  discardDocumentDraft,
   publishDocumentDraft,
   readDocumentForEditing,
   saveDocumentDraft,
@@ -119,10 +120,28 @@ builder.mutationField('publishDocumentDraft', (t) =>
   }),
 );
 
+builder.mutationField('discardDocumentDraft', (t) =>
+  t.field({
+    type: 'ID',
+    description:
+      "Throws the document's open draft away, answering its id. Refused as STALE_WRITE when the draft has moved on from `expectedRevision`.",
+    args: {
+      documentId: t.arg.id({ required: true }),
+      expectedRevision: t.arg.int({ required: true }),
+    },
+    authScopes: { admin: true },
+    resolve: (_root, { documentId, expectedRevision }, context) =>
+      discardDocumentDraft(sessionOf(context), documentId, { expectedRevision }),
+  }),
+);
+
 builder.mutationField('updateDocument', (t) =>
   t.field({
     type: DocumentRef,
-    args: { id: t.arg.id({ required: true }), input: t.arg({ type: DocumentInputRef, required: true }) },
+    args: {
+      id: t.arg.id({ required: true }),
+      input: t.arg({ type: DocumentInputRef, required: true }),
+    },
     authScopes: { admin: true },
     resolve: (_root, { id, input }, context) => updateDocument(sessionOf(context), id, input),
   }),

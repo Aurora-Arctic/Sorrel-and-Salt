@@ -46,6 +46,7 @@ async function renderEditor(body: string) {
       title="Disclaimer"
       lede="What the site does not promise."
       body={body}
+      publishedBody={body}
       revision={null}
       nextNumber={2}
     />,
@@ -105,7 +106,8 @@ async function saveDraft(saved: string[]): Promise<string> {
   await waitFor(() => expect(save).toBeEnabled());
   fireEvent.click(save);
   await waitFor(() => expect(saved).toHaveLength(1));
-  await waitFor(() => expect(save).toBeDisabled());
+  // Found by name: while the save is in flight the button is named Saving Draft, so this waits for the save to land.
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled());
   return saved[0]!;
 }
 

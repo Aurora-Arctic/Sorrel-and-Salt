@@ -23,6 +23,7 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { applyAudit } from '../audit';
 import type { SiteAdmin } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../lib/types';
+import { StaleWrite } from '../../lib/errors';
 import { notSoftDeleted } from './predicates';
 import { findPage } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
@@ -251,6 +252,7 @@ export function documentWrites({
   tx,
   session,
   update,
+  softDelete,
   updateAtRevision,
 }: WriterContext): Pick<
   AuditWriter,
@@ -258,6 +260,7 @@ export function documentWrites({
   | 'openDocumentDraft'
   | 'saveDocumentDraft'
   | 'publishDocumentDraft'
+  | 'discardDocumentDraft'
   | 'startDocumentMailing'
   | 'addDocumentMailingRecipients'
   | 'markDocumentMailingRecipientsSent'
@@ -323,6 +326,21 @@ export function documentWrites({
         status: 'published',
         publishedAt: sql`now()`,
       }),
+    // The revision check rides in the delete's own WHERE; only a refused delete reads the draft again, under a lock, to tell a stale revision from a draft that is gone.
+    discardDocumentDraft: async (_admin, versionId, expectedRevision) => {
+      const deleted: DocumentVersionRow[] = await softDelete(
+        documentVersions,
+        and(draftById(versionId), eq(documentVersions.revision, expectedRevision)),
+      );
+      if (deleted.length > 0) return deleted;
+      const [current] = await selectFrom(
+        documentVersions,
+        and(notSoftDeleted(documentVersions), draftById(versionId)),
+        { lockIn: tx, lockOrder: documentVersions.id },
+      );
+      if (current) throw new StaleWrite(current.revision);
+      return [];
+    },
     // The version's row is locked, so a publish or delete alongside cannot slip between the check and the insert; a mailing started
     // alongside meets the one-per-version index and writes nothing.
     startDocumentMailing: async (_admin, versionId, { summary, recipientCount }) => {

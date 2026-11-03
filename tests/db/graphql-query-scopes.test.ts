@@ -415,6 +415,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   publishDocumentDraft: write(
     `mutation { publishDocumentDraft(documentId: "${NOWHERE}", expectedRevision: null) { number } }`,
   ),
+  discardDocumentDraft: write(
+    `mutation { discardDocumentDraft(documentId: "${NOWHERE}", expectedRevision: 1) }`,
+  ),
   updateDocument: write(
     `mutation { updateDocument(id: "${NOWHERE}", input: { title: "Fixture", lede: "Fixture" }) { id } }`,
   ),
@@ -715,6 +718,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   liftSupportTimeout: { governs: 'support' },
   saveDocumentDraft: { governs: 'documents' },
   publishDocumentDraft: { governs: 'documents' },
+  discardDocumentDraft: { governs: 'documents' },
   updateDocument: { governs: 'documents' },
   emailDocumentToEveryAccount: { governs: 'documents' },
   resumeDocumentMailing: { governs: 'documents' },

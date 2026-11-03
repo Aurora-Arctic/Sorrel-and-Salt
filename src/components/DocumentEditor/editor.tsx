@@ -1,8 +1,9 @@
 'use client';
 
 import { Plate, PlateContent, usePlateEditor } from 'platejs/react';
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, useMemo, useRef, useState } from 'react';
 import { graphql } from '../../gql';
+import { useAutosave, type SaveResult } from '../../lib/autosave';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -17,8 +18,8 @@ import '../DocumentPage/index.scss';
 import './index.scss';
 
 // The admin's editor for one site document: the text as the public page will draw it, saved as a draft only its admin
-// sees, then published as the next version. A save and a publish send the draft's revision, so a second admin's save
-// in between is refused rather than overwritten (claude-docs/components/document-editor.md).
+// sees (by the shared autosave, or at once by Save Draft), then published as the next version. A save, a publish and a
+// restore send the draft's revision, so a second admin's save in between is refused rather than overwritten (claude-docs/components/document-editor.md).
 
 const SaveDraftDocument = graphql(`
   mutation SaveDocumentDraft($documentId: ID!, $body: String!, $expectedRevision: Int) {
@@ -26,6 +27,12 @@ const SaveDraftDocument = graphql(`
       id
       revision
     }
+  }
+`);
+
+const DiscardDraftDocument = graphql(`
+  mutation DiscardDocumentDraft($documentId: ID!, $expectedRevision: Int!) {
+    discardDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision)
   }
 `);
 
@@ -64,6 +71,7 @@ const DocumentEditor = ({
   title,
   lede,
   body,
+  publishedBody,
   revision: openRevision,
   nextNumber,
   mailing,
@@ -74,11 +82,12 @@ const DocumentEditor = ({
   });
   const [revision, setRevision] = useState(openRevision);
   const [dirty, setDirty] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [markdown, setMarkdown] = useState(() => editorValueToMarkdown(editor.children as never));
   const [publishing, setPublishing] = useState(false);
+  // Bumped when a publish fails with text still unsaved, so the autosave sees that text as a fresh change.
+  const [retry, setRetry] = useState(0);
   const [failure, setFailure] = useState<string>();
   const [published, setPublished] = useState<number>();
-  const guard = useDiscardGuard(dirty && !saving && !publishing);
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
   // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from the editor, not `body`,
@@ -86,36 +95,47 @@ const DocumentEditor = ({
   const savedRef = useRef<string | null>(null);
   savedRef.current ??= editorValueToMarkdown(editor.children as never);
 
-  /** Writes the editor's text as the draft. */
-  async function writeDraft(): Promise<void> {
-    const markdown = editorValueToMarkdown(editor.children as never);
-    const { saveDocumentDraft } = await graphqlRequest(SaveDraftDocument, {
-      documentId,
-      body: markdown,
-      expectedRevision: revisionRef.current,
-    });
-    savedRef.current = markdown;
-    revisionRef.current = saveDocumentDraft.revision;
-    setRevision(saveDocumentDraft.revision);
-    setDirty(false);
-  }
-
-  async function save(): Promise<void> {
-    setSaving(true);
+  /** Writes `text` as the draft, against the revision the last write answered with. */
+  async function writeDraft(text: string): Promise<SaveResult> {
     setFailure(undefined);
     setPublished(undefined);
     try {
-      await writeDraft();
+      const { saveDocumentDraft } = await graphqlRequest(SaveDraftDocument, {
+        documentId,
+        body: text,
+        expectedRevision: revisionRef.current,
+      });
+      savedRef.current = text;
+      revisionRef.current = saveDocumentDraft.revision;
+      setRevision(saveDocumentDraft.revision);
+      // Text typed while the save was in flight is not on the server yet.
+      setDirty(editorValueToMarkdown(editor.children as never) !== text);
+      return {
+        revision: saveDocumentDraft.revision,
+        savedAt: new Date(),
+        id: saveDocumentDraft.id,
+      };
     } catch (error) {
       setFailure(readGraphqlFailure(error).alert);
+      throw error;
     }
-    setSaving(false);
   }
+
+  // A publish writes its own save, so the autosave sees nothing to save while it runs, and leaving is not held for it.
+  const autosave = useAutosave<{ markdown: string; retry: number }>({
+    value: useMemo(() => ({ markdown, retry }), [markdown, retry]),
+    dirty: dirty && !publishing,
+    enabled: !publishing,
+    save: ({ markdown: text }) => writeDraft(text),
+    revision: openRevision,
+  });
+  const saving = autosave.status === 'saving';
+  const guard = useDiscardGuard(dirty && !saving && !publishing);
 
   async function publish(): Promise<void> {
     setPublishing(true);
     try {
-      if (dirty) await writeDraft();
+      if (dirty) await writeDraft(editorValueToMarkdown(editor.children as never));
       const { publishDocumentDraft } = await graphqlRequest(PublishDraftDocument, {
         documentId,
         expectedRevision: revisionRef.current,
@@ -125,9 +145,32 @@ const DocumentEditor = ({
       setDirty(false);
       setFailure(undefined);
       setPublished(publishDocumentDraft.number);
+    } catch (error) {
+      setRetry((count) => count + 1);
+      throw error;
     } finally {
       setPublishing(false);
     }
+  }
+
+  /** Throws the open draft away, when there is one, and puts the published text back in the editor. */
+  async function restore(): Promise<void> {
+    if (revisionRef.current !== null) {
+      await graphqlRequest(DiscardDraftDocument, {
+        documentId,
+        expectedRevision: revisionRef.current,
+      });
+    }
+    const restored = markdownToEditorValue(publishedBody);
+    const text = editorValueToMarkdown(restored as never);
+    savedRef.current = text;
+    revisionRef.current = null;
+    editor.tf.setValue(restored);
+    setMarkdown(text);
+    setRevision(null);
+    setDirty(false);
+    setFailure(undefined);
+    setPublished(undefined);
   }
 
   return (
@@ -138,9 +181,11 @@ const DocumentEditor = ({
       <div className="document-page__body document-editor__text">
         <Plate
           editor={editor}
-          onValueChange={({ value }) =>
-            setDirty(editorValueToMarkdown(value as never) !== savedRef.current)
-          }
+          onValueChange={({ value }) => {
+            const text = editorValueToMarkdown(value as never);
+            setMarkdown(text);
+            setDirty(text !== savedRef.current);
+          }}
         >
           <Toolbar />
           <PlateContent aria-label="Document Text" />
@@ -153,7 +198,7 @@ const DocumentEditor = ({
           busy={saving}
           busyLabel="Saving Draft"
           disabled={!dirty || saving}
-          onClick={() => void save()}
+          onClick={() => autosave.flush().catch(() => {})}
         >
           Save Draft
         </BusyButton>
@@ -165,8 +210,25 @@ const DocumentEditor = ({
           question={<PublishQuestion documentKey={documentKey} title={title} />}
           busy="Publishing"
           confirmClass="btn btn--caution"
-          disabled={revision === null && !dirty}
+          disabled={(revision === null && !dirty) || saving}
           send={publish}
+          closeOnSent
+        />
+        <ConfirmedAction
+          label="Restore Published Version"
+          accessibleName="Restore Published Version"
+          openClass="btn"
+          title="Restore Published Version"
+          question={
+            <>
+              Throw away this draft and show the published text again? Readers see no change, and
+              the draft cannot be brought back.
+            </>
+          }
+          busy="Restoring"
+          confirmClass="btn btn--destructive"
+          disabled={(revision === null && !dirty) || saving || publishing}
+          send={restore}
           closeOnSent
         />
         <p className="document-editor__status">
