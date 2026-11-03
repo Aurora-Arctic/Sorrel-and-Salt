@@ -11,6 +11,18 @@
 // column most section headings broke into three lines. From a tablet up the menu and the measure
 // still fit side by side inside the frame's gutters.
 
+// The page colour easing out from an edge of the scrolling menu, opaque at the edge so no entry shows
+// cut off there; several stops rather than a straight ramp, so no line shows where it ends.
+$scroll-fade:
+  $surface-page,
+  color-mix(in srgb, $surface-page 85%, transparent) 25%,
+  color-mix(in srgb, $surface-page 50%, transparent) 55%,
+  color-mix(in srgb, $surface-page 15%, transparent) 80%,
+  transparent;
+// The paused notice's tallest shape from a tablet up: the aside's top padding, the notice's padding
+// and three lines of its small text at the prose line height, then the error notice's bottom margin.
+$pause-notice-height: calc(#{space(4)} + #{space(2)} * 2 + #{type-size('small')} * 1.65 * 3 + 1rem);
+
 .document-page.page-with-nav {
   @include page-with-nav-grid($document-menu-column, $measure);
 
@@ -22,17 +34,80 @@
     line-height: 1.3;
   }
 
-  // A document has more sections than the menu can show in a short window, so while the menu is
-  // sticky it is no taller than the room under the shell's bar and scrolls inside itself. The
-  // focus ring sits inside the entry here, as the scrolling edge would clip one drawn outside.
+  // On a phone the folded menu sits one stack step above the text, so the first heading's own top
+  // margin, which would add four steps more, is dropped.
+  @media (max-width: #{$shell-phone-width}) {
+    > .page-nav + .document-page__body > :first-child {
+      margin-block-start: 0;
+    }
+  }
+
+  // The menu scrolls inside itself, capped at the room under its unstuck top (the bar plus the
+  // frame's padding), and starts on the head's row: placed lower, its box overran the window before
+  // it stuck. The focus ring is inset because the scrolling edge clips one drawn outside.
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     > .page-nav {
-      max-height: calc(100dvh - #{$shell-bar-height} - #{space(4)} * 2);
+      grid-row: 1 / span 3;
+      max-height: calc(100dvh - #{$shell-bar-height} - #{space(6)} - #{space(4)});
+      // Room for the scrollbar, so it never touches the current entry's bar or the right-aligned text.
+      padding-inline-end: space(2);
       overflow-y: auto;
+      // A focused entry scrolls clear of the fades below.
+      scroll-padding-block: space(8);
+
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: the browser's usual scrollbar, where unsupported
+      @supports (scrollbar-width: thin) {
+        scrollbar-width: thin;
+      }
 
       a:focus-visible {
         @include focus-ring($placement: inset);
       }
+    }
+
+    // Where entries are scrolled out of view (PageNav sets `data-more-above` and `data-more-below`)
+    // the page colour fades over that edge, drawn by sticky pseudo-elements that take no room and no
+    // press. Without the script neither attribute is set and no fade shows.
+    > .page-nav::before,
+    > .page-nav::after {
+      content: '';
+      position: sticky;
+      display: block;
+      height: space(8);
+      pointer-events: none;
+      opacity: 0;
+      @include theme-transition(opacity);
+
+      @include reduced-motion {
+        transition: none;
+      }
+    }
+
+    > .page-nav::before {
+      // Above the entries, which are positioned for the current entry's bar and come later in the order.
+      z-index: 1;
+      inset-block-start: 0;
+      margin-block-end: calc(-1 * #{space(8)});
+      background: linear-gradient(to bottom, #{$scroll-fade});
+    }
+
+    > .page-nav::after {
+      inset-block-end: 0;
+      margin-block-start: calc(-1 * #{space(8)});
+      background: linear-gradient(to top, #{$scroll-fade});
+    }
+
+    > .page-nav[data-more-above]::before,
+    > .page-nav[data-more-below]::after {
+      opacity: 1;
+    }
+
+    // The paused notice above the frame pushes the page down by its height, so the menu gives up
+    // that much room; sized for three lines of text, its longest shape at the narrowest tablet.
+    .app-shell__main:has(.app-shell__pause) & > .page-nav {
+      max-height: calc(
+        100dvh - #{$shell-bar-height} - #{space(6)} - #{space(4)} - #{$pause-notice-height}
+      );
     }
   }
 }
