@@ -68,7 +68,7 @@ export const ADMIN_PAGES = {
   },
   invitations: {
     label: 'Invitations',
-    icon: 'people',
+    icon: 'invitations',
     adminOnly: true,
     description:
       'The admin invitations waiting, the printed invitation cards, and who arrived by them.',

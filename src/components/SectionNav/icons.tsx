@@ -3,7 +3,7 @@ import { SPOON } from '../FormIcon';
 import type { SectionIconName } from './types';
 
 // The section navs' icons on a 24-unit square, 1.6 stroke, round ends, no fill, so they take the
-// link's colour. Inline: nine shapes used nowhere else. Hidden from assistive technology
+// link's colour. Inline: shapes used nowhere else. Hidden from assistive technology
 // (claude-docs/components/section-nav.md, "Contracts").
 const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
   overview: (
@@ -66,10 +66,21 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M14.5 10h3.5M14.5 13.5h3.5" />
     </>
   ),
+  // The Support button's bubble and question mark (IconTip's SupportIcon), drawn in line rather than cut from a solid bubble.
   support: (
     <>
-      <path d="M4 5h16v11H9l-5 4z" />
-      <path d="M8.5 9.5h7M8.5 12.5h4" />
+      <path d="M12 3.9c5 0 9.1 3.25 9.1 7.28s-4.1 7.28-9.1 7.28c-1.1 0-2.15-.13-3.12-.39L4.2 20.45l1.04-3.77C3.68 15.25 2.77 13.43 2.77 11.16 2.77 7.13 7 3.9 12 3.9z" />
+      <path d="M9.73 9.08a2.28 2.28 0 1 1 3.18 2.08c-.71.39-.91.72-.91 1.43" />
+      <path strokeWidth="2.2" d="M12 15.6h.01" />
+    </>
+  ),
+  // An envelope closed by a round wax seal where the flap meets, the flap's lines stopping at the seal's edge.
+  invitations: (
+    <>
+      <rect x="3" y="5.5" width="18" height="13" rx="1.5" />
+      <path d="M3.5 6.5l6.3 4.97M20.5 6.5l-6.3 4.97" />
+      <circle cx="12" cy="13.2" r="2.8" />
+      <circle cx="12" cy="13.2" r="1.1" />
     </>
   ),
   documents: (
