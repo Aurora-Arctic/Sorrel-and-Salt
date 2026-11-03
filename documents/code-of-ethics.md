@@ -5,7 +5,7 @@ lede: What Sorrel & Salt values, and how it handles the cultures, sourcing and a
 published: 2026-11-02
 ---
 
-This code is part of the [Terms of Use](/terms). Its section "What Everyone Agrees To" binds every account that agrees to the terms, and its sections for curators, keepers, developers and the owner bind whoever holds that role.
+This code is part of the [Terms of Use](/terms). Its section "What Everyone Agrees To" binds every account that agrees to the terms, and its sections for curators, keepers, developers, and the owner bind whoever holds that role.
 
 ## The Short Version
 
@@ -22,16 +22,16 @@ This code is part of the [Terms of Use](/terms). Its section "What Everyone Agre
 
 The [Terms of Use](/terms) make this section part of what every account agrees to. It is kept short on purpose. The sections after it say why each rule is here; the three at the end add to it for curators, keepers and the site's owner, and bind whoever holds that role.
 
-- Treat everyone here with respect. Racism, misogyny, transphobia, homophobia, ableism, antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry have no place on the site, in a coven or in a support request.
+- Treat everyone here with respect. Racism, misogyny, transphobia, homophobia, ableism, antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry have no place on the site, in a coven, or in a support request.
 - Read the [Disclaimer](/disclaimer) before you act on anything the compendium says.
 
 ### What We Value
 
-Sorrel & Salt is a grimoire for covens: a place for small groups of people to keep what they know, what they have and what they make. These are the values the people who run it hold themselves to, and ask of everyone who joins.
+Sorrel & Salt is a grimoire for covens: a place for small groups of people to keep what they know, what they have, and what they make. These are the values the people who run it hold themselves to, and ask of everyone who joins.
 
 - **Everyone is welcome.** Witches, folk practitioners, the curious and the sceptical, of every race, nation, faith and none, every gender and every sexuality. Transgender, non-binary and queer practitioners are welcome here as themselves, without question or qualification. Racism, misogyny, transphobia, homophobia, ableism, antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry have no place here.
 - **Witchcraft's history is a gendered history.** Between about 1400 and 1775, Europe and its colonies executed an estimated 40,000 to 60,000 people for witchcraft, and roughly four in five of them were women, in a period that held women to be less intelligent than men and more open to sin.[^2] A site about witchcraft that is not feminist has forgotten whose history it is handling. Feminism here means the plain thing: that women, including trans women, are people whose knowledge, work and bodies are their own.
-- **Community over profit.** The site shows no advertising and sells no data. It will charge, fairly: enough to cover its costs and to pay the people who work on it a fair, living wage. It is run by people, for people, and the covens on it are run by their own members. We would rather the site stayed small and honest than grew by exploiting anyone, and we hold that what is shared should be shared fairly and decided together.
+- **Community over profit.** The site shows no advertising and sells no data. It will charge, fairly: enough to cover its costs and to pay the people who work on it a fair, living wage. It is run by people, for people, and the covens on it are run by their own members. We would rather the site stay small and honest than grow by exploiting anyone, and we hold that what is shared should be shared fairly and decided together.
 - **Honesty.** The site says what it does and does not do, in plain words, in its [privacy policy](/privacy) and its [disclaimer](/disclaimer). Where it is unsure, it says so.
 
 ### Accessibility
@@ -108,7 +108,7 @@ A developer writes and runs the site's code, and may be able to reach its databa
 - You add no advertising. Analytics run only on the site's own servers, never in a visitor's browser, and the Privacy Policy names the analytics service and what each visit records before it starts.
 - When a change alters what the site stores, who can see it or how long it is kept, you update the Privacy Policy in the same change.
 - You fix accessibility bugs first, and you keep the automated accessibility checks passing.
-- The site's code and its task board are public. You never put a password, key, token or anyone's personal details in the code, an issue or a comment.
+- The site's code and its task board are public. You never put a password, key, token, or anyone's personal details in the code, an issue, or a comment.
 - When you find a security problem, you tell the owner at once and fix it before other work.
 
 ### The Owner and Everyone Who Runs the Site

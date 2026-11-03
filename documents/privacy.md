@@ -9,9 +9,9 @@ published: 2026-11-03
 
 - The site keeps only what it needs to sign you in and to run your covens.
 - It shows no advertising and sells nothing about you.
-- It sets cookies only for signing in: the one that keeps you signed in, and one that remembers which sign-in method you used last. Your light or dark theme is kept in your own browser, not sent to the site.
-- What you delete is marked deleted rather than erased. To have something erased, ask through the [support form](?support=privacy).
-- Who can see what is set out at the end, one card per kind of data, role by role.
+- It sets cookies only for signing in: one that keeps you signed in, and one that remembers which sign-in method you used last. Your light or dark theme is kept in your own browser, not sent to the site.
+- What you delete is marked deleted rather than erased. To have something fully erased, ask through the [support form](?support=privacy).
+- Who can see what is outlined in that section, one card per kind of data, role by role.
 
 ## What Is Stored
 
@@ -50,15 +50,15 @@ A printed invitation card is bound to no email. When someone opens a card's link
 
 ### Support Requests
 
-A support request keeps what you chose to write (its subject and message), the page you sent it from, the error code if you sent it from an error page, its status, who it is assigned to and any replies. A request sent without an account keeps the email you gave so that a reply can reach you. A time-out a keeper sets on a requestor is kept as history. Before a request is saved, the page address is cleaned: an invitation code in it is replaced and anything after a "?" is dropped. A curator sees only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address. A keeper sees them with the requestor's email.
+A support request keeps what you chose to write (its subject and message), the page you sent it from, the error code if you sent it from an error page, its status, who it is assigned to, and any replies. A request sent without an account keeps the email you gave so that a reply can reach you. A time-out a keeper sets on a requestor is kept as history. Before a request is saved, the page address is cleaned: an invitation code in it is replaced and anything after a "?" is dropped. A curator sees only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address. A keeper sees them with the requestor's email.
 
 ### Time-Outs and Pauses
 
-When a keeper times you out of support, pauses your access to the site, or a coven steward pauses your access to their coven, a record is kept about you. It holds the end date if there is one, who set it, the note they wrote, and the message they wrote to you, where they wrote one. You are emailed once when one is set, at the address on your account. The email carries the message and the end date, never the note, which only staff or the coven's stewards see. Lifting one sends no email.
+When a keeper times you out of support, pauses your access to the site, or a coven steward pauses your access to their coven, a record is kept about you. It holds the end date if there is one, who set it, the note they wrote, and the message they wrote to you, where they wrote one. You are emailed once when one is set, at the address on your account. The email carries the message and the end date, never the note, which only staff, or the coven's stewards see. Lifting one sends no email.
 
 ### Emails About Document Changes
 
-When a keeper emails every account about a change to a site document, a record is kept for each account the mailing goes to. It holds which mailing it belongs to, your account's id, and the time your email went out, with the usual stamps of who created and last changed it. It does not hold your email address or the email's text: the address is read from your account at the moment the email is sent. No screen shows these records to anyone. A keeper sees only how many accounts a mailing has reached.
+When a keeper emails every account about a change to a site document, a record is kept for each account the mailing goes to. It holds which mailing it belongs to, your account's ID, and the time your email went out, with the usual stamps of who created and last changed it. It does not hold your email address or the email's text: the address is read from your account at the moment the email is sent. No screen shows these records to anyone. A keeper sees only how many accounts a mailing has reached.
 
 ## Who Sees It
 
@@ -79,7 +79,7 @@ The site runs on other companies' services. Each one handles some of your data t
 | Resend                               | Sends the site's mail                    | Your email and the mail's text: verification links, invitations, notices                                               |
 | Discord, Google, Microsoft, Facebook | Sign you in, when you choose one of them | They learn that you signed in to Sorrel & Salt, and hand the site your name, email and picture                         |
 
-## Keeping and Removing It
+## Keeping and Removing Your Data
 
 ### How Long It Is Kept
 

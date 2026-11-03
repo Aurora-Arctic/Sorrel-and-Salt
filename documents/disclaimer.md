@@ -37,9 +37,9 @@ The site is offered as it is. The people who run it do their best to cite a sour
 
 ### Safety Notes Are Not Complete
 
-A safety note on an ingredient is what a cited source said about it, as far as the curators have read. It is not a toxicology report. A note may cover one hazard and miss another; it may describe the ingredient as a whole and say nothing about a particular form; and many ingredients have no note at all because nobody has written one yet, not because the ingredient is safe.
+A safety note on an ingredient is what a cited source said about it, as far as the curators have read. It is not a toxicology report. A note may cover one hazard and miss another; it may describe the ingredient as a whole and say nothing about a particular form, and many ingredients have no note at all because nobody has written one yet, not because the ingredient is safe.
 
-So read every safety note as "at least this", never as "only this", and read the absence of a note as "nothing recorded", never as "nothing to worry about". The line under each ingredient's notes, and under each form's, says so and links here.
+So read every safety note as "at least this", never as "only this", and read the absence of a note as "nothing recorded", never as "nothing to worry about". The line under each ingredient's and form's notes says so and links here.
 
 ### A Familiar Ingredient Can Still Harm
 
@@ -56,7 +56,7 @@ The compendium links to the sources it cites. The site does not control those pa
 
 ## Questions
 
-If a page is wrong, incomplete or dangerous, tell us through the [support form](?support=compendium). A correction with a source is the most useful thing you can send.
+If a page is wrong, incomplete, or dangerous, tell us through the [support form](?support=compendium). A correction with a source is the most useful thing you can send.
 
 [^1]: Kaddu, Steven, Helmut Kerl, and Peter Wolf. "Accidental Bullous Phototoxic Reactions to Bergamot Aromatherapy Oil." _Journal of the American Academy of Dermatology_ 45, no. 3 (2001): 458–61. https://doi.org/10.1067/mjd.2001.116226.
 
