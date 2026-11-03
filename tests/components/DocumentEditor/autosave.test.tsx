@@ -4,6 +4,7 @@ import type { SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables } fr
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { warmImport } from '../../support/warm-import';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -12,6 +13,9 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { default: DocumentEditor } = await import('@/components/DocumentEditor');
+
+// The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
+warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider } = await import('@/lib/navigation');
 
 // The editor saves its draft as the other autosaving forms do, through the shared hook at its own timing (3 s after the last
