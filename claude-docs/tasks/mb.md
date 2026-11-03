@@ -5939,10 +5939,12 @@ Found on 2026-11-02 on a local dev server, every time, signed in as a site admin
 - D. As a site admin, open Admin › People, look at the table, then open a user's modal. Actual: neither shows a terms version. Expected: both show the latest version the user agreed to.
 - E. As an account that has not agreed to the current terms, press Agree. Actual: no spinner. Expected: the standard loading spinner, and a second press is refused.
 
+A was not reproduced on 2026-11-03. The owner had seen it on the Unknown Beeswax, a hidden compendium entry with a picked Wax form, and it no longer happens. A separate agent could not reproduce it in component, service or browser tests either.
+
 _Acceptance criteria:_
 
-- A, B, C and E each start with a regression test that fails before its fix.
-- A: saving an entry with classification None succeeds, and the entry reads back as None.
+- B, C and E each start with a regression test that fails before its fix.
+- A: saving an entry with classification None succeeds, and the entry reads back as None. A was not reproduced (see below), so there is no fix and no test that fails first; acceptance tests prove that a reclassification to None saves, from the admin list, from the entry page pencil and in a coven.
 - B: two quick changes to the Visible switch leave the entry in the second position after a reload.
 - C: an entry classified None with no formal name draws no formal name list, label or tip on the entry page or in the details modal head.
 - D: the admin user table and the user modal show the latest terms version each user agreed to, and show that a user who never agreed has not; the read goes through the admin service behind `assertSiteAdmin`.
