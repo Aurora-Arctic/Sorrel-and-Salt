@@ -37,7 +37,7 @@ The devcontainer has no `make`, no `docker` and **no Python**: run the npm scrip
 | `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops first         |
 | `npm run check:destructive-ddl` | Flags destructive DDL in new migrations          |
 
-**While working, run the individual test files and specs a change touches.** `test:coverage`, `test:stories` and the full e2e suite run only when the owner says so. When they do, run `test:coverage`, not `test`: a plain pass can still fail CI on the 80% threshold alone. **Deploys are CI-only** (M0.26), through `.github/workflows/deploy.yml`.
+**While working, run the individual test files and specs a change touches.** `test:coverage`, `test:stories` and the full e2e suite run only when the owner says so. When they do, run `test:coverage`, not `test`: a plain pass can still fail CI on the 80% threshold alone. **Every local Playwright run (`e2e`, `test:stories`, a named spec) sets `BETTER_AUTH_SECRET` on its command line, read from `.env.local`**: Next loads that file for the server only, and the runner signs its session cookies with the same secret. A worktree copies `/app`'s `.env.local` first (claude-docs/commands.md). **Deploys are CI-only** (M0.26), through `.github/workflows/deploy.yml`.
 
 ## Non-negotiable architecture rules
 
