@@ -33,10 +33,9 @@
 .document-editor__text [role='textbox'] {
   @include field-box;
 
-  // The public page's text size and weight, in a box as wide as the column.
+  // The public page's text size, in a box as wide as the column.
   min-height: 24rem;
   font-size: type-size('body');
-  font-weight: 300;
 
   &:focus-visible {
     @include focus-ring;
