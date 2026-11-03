@@ -69,7 +69,7 @@ describe('TermsAgreement', () => {
           calls.push(variables);
           await held;
           return HttpResponse.json({
-            data: { agreeToTerms: { id: 'u1', termsVersion: '2026-11-02' } },
+            data: { agreeToTerms: { id: 'u1', agreedTermsVersion: 3 } },
           });
         }),
       );

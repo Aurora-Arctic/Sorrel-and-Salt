@@ -2911,7 +2911,6 @@ type User {
   """The sign-in providers linked to the account, by id, sorted."""
   providers: [String!]!
   role: UserRole!
-  termsVersion: String
 }
 
 """

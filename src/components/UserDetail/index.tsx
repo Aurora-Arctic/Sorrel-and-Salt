@@ -123,7 +123,13 @@ const UserDetail = ({
         </div>
         <div>
           <dt>Terms</dt>
-          <dd>{user.termsVersion ?? <Mark value={false} label="Not agreed" />}</dd>
+          <dd>
+            {user.agreedTermsVersion === null ? (
+              <Mark value={false} label="Not agreed" />
+            ) : (
+              `Version ${user.agreedTermsVersion}`
+            )}
+          </dd>
         </div>
         <div>
           <dt>Signed Up</dt>

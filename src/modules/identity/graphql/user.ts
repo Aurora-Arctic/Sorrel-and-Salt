@@ -30,8 +30,10 @@ export const UserRef = builder.objectRef<UserRow>('User').implement({
     role: t.expose('role', { type: UserRoleEnum, authScopes: selfOrAdmin }),
     canCreateWorkspace: t.exposeBoolean('canCreateWorkspace', { authScopes: selfOrAdmin }),
     emailVerified: t.exposeBoolean('emailVerified', { authScopes: selfOrAdmin }),
-    termsVersion: t.exposeString('termsVersion', { nullable: true, authScopes: selfOrAdmin }),
-    agreedTermsVersion: t.exposeInt('agreedTermsVersion', { nullable: true, authScopes: selfOrAdmin }),
+    agreedTermsVersion: t.exposeInt('agreedTermsVersion', {
+      nullable: true,
+      authScopes: selfOrAdmin,
+    }),
     // An admin's alone, the user's own row included: the account page reads a
     // user's own from Better Auth, whose table it is.
     providers: t.stringList({

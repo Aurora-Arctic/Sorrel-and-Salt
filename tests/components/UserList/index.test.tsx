@@ -40,7 +40,7 @@ const ADA = {
   createdAt: new Date('2026-03-04T05:06:07Z'),
   providers: ['discord', 'google'],
   emailVerified: true,
-  termsVersion: '2026-11-02',
+  agreedTermsVersion: 1,
   primaryAdmin: false,
   openHref: '/keepers/users?user=6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
   heading: { eyebrow: 'User', title: 'Ada Fixturewort', qualifier: 'ada@users.test' },
@@ -55,7 +55,7 @@ const BO = {
   createdAt: new Date('2026-05-06T07:08:09Z'),
   providers: [],
   emailVerified: false,
-  termsVersion: null,
+  agreedTermsVersion: null,
   primaryAdmin: false,
   openHref: '/keepers/users?query=fixture&user=7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
   heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
@@ -142,9 +142,9 @@ describe('UserList', () => {
     render(<UserList {...props()} />);
 
     expect(screen.getByRole('columnheader', { name: 'Terms' })).toBeInTheDocument();
-    expect(cellUnder('Ada Fixturewort', 'Terms')).toHaveTextContent('2026-11-02');
+    expect(cellUnder('Ada Fixturewort', 'Terms')).toHaveTextContent('Version 1');
     expect(cellUnder('Bo Fixturewort', 'Terms')).toHaveTextContent('Not agreed');
-    expect(cellUnder('Bo Fixturewort', 'Terms')).not.toHaveTextContent('2026-11-02');
+    expect(cellUnder('Bo Fixturewort', 'Terms')).not.toHaveTextContent('Version 1');
   });
 
   it('gives every row a tooltip saying what its role may do, in the words Change Role shows', () => {

@@ -137,7 +137,12 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Terms',
     className: 'user-list__fact',
     // The version agreed to most recently, or a red cross when none was.
-    cell: ({ termsVersion }) => termsVersion ?? <Mark value={false} label="Not agreed" />,
+    cell: ({ agreedTermsVersion }) =>
+      agreedTermsVersion === null ? (
+        <Mark value={false} label="Not agreed" />
+      ) : (
+        `Version ${agreedTermsVersion}`
+      ),
   },
   {
     heading: 'Signed Up',
