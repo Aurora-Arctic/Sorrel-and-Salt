@@ -246,7 +246,7 @@ describe('discardDocumentDraft', () => {
     expect(draft).toMatchObject({ deleted_at: null });
     expect((await readDocumentForEditing(asUser(E), 'privacy')).draft).not.toBeNull();
 
-    const discarded = await discardDocumentDraft(asUser(E), privacyId, 1);
+    const discarded = await discardDocumentDraft(asUser(E), privacyId, { expectedRevision: 1 });
 
     expect(discarded).toBe(draft?.id);
     expect(await draftRowOf(privacyId)).toMatchObject({
@@ -264,7 +264,7 @@ describe('discardDocumentDraft', () => {
   });
 
   it('lets the next save open a new draft', async () => {
-    await discardDocumentDraft(asUser(E), privacyId, 1);
+    await discardDocumentDraft(asUser(E), privacyId, { expectedRevision: 1 });
 
     const draft = await saveDocumentDraft(asUser(E), privacyId, {
       body: 'Fixture fresh draft.',
@@ -279,7 +279,7 @@ describe('discardDocumentDraft', () => {
   it('refuses a stale revision with the one stored, and keeps the draft', async () => {
     await saveDocumentDraft(asUser(E), privacyId, { body: 'Fixture newer.', expectedRevision: 1 });
 
-    const refusal = await discardDocumentDraft(asUser(E), privacyId, 1).then(
+    const refusal = await discardDocumentDraft(asUser(E), privacyId, { expectedRevision: 1 }).then(
       () => null,
       (error: unknown) => error,
     );
@@ -295,7 +295,9 @@ describe('discardDocumentDraft', () => {
   });
 
   it('throws NotFound when no draft is open', async () => {
-    await expect(discardDocumentDraft(asUser(E), disclaimerId, 1)).rejects.toBeInstanceOf(NotFound);
+    await expect(
+      discardDocumentDraft(asUser(E), disclaimerId, { expectedRevision: 1 }),
+    ).rejects.toBeInstanceOf(NotFound);
     expect(await versionsOf(disclaimerId)).toEqual([
       expect.objectContaining({ number: 1, status: 'published' }),
     ]);
@@ -352,7 +354,10 @@ describe('the editing services are an admin’s alone', () => {
       'publishDocumentDraft',
       (session) => publishDocumentDraft(session, privacyId, { expectedRevision: 1 }),
     ],
-    ['discardDocumentDraft', (session) => discardDocumentDraft(session, privacyId, 1)],
+    [
+      'discardDocumentDraft',
+      (session) => discardDocumentDraft(session, privacyId, { expectedRevision: 1 }),
+    ],
     [
       'updateDocument',
       (session) => updateDocument(session, privacyId, { title: 'Fixture Forged', lede: 'Forged.' }),

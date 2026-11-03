@@ -28,6 +28,7 @@ export default async function AdminDocumentPage({ params }: { params: Promise<{ 
       title={document.title}
       lede={document.lede}
       body={draft?.body ?? published?.body ?? ''}
+      publishedBody={published?.body ?? ''}
       revision={draft?.revision ?? null}
       nextNumber={(published?.number ?? 0) + 1}
       mailing={

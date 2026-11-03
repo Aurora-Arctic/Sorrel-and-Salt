@@ -11,6 +11,8 @@ export interface DocumentEditorProps {
   lede: string;
   /** The text the editor opens on: the open draft's, else the published version's. */
   body: string;
+  /** The latest published version's text, or empty when nothing is published: what Restore Published Version shows. */
+  publishedBody: string;
   /** The open draft's revision, or null when there is no draft yet. */
   revision: number | null;
   /** The version a publish would make, shown beside the title. */

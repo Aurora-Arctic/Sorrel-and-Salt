@@ -47,6 +47,7 @@ async function renderOnPage({ revision = null }: { revision?: number | null } = 
         title="Disclaimer"
         lede="What the site does not promise."
         body="Fixturewort grows here."
+        publishedBody="Fixturewort grows here."
         revision={revision}
         nextNumber={2}
       />
