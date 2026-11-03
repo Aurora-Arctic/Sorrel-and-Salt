@@ -5,6 +5,7 @@ import { type ReactElement, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import ConfirmedAction from '../UserList/confirmed-action';
@@ -75,6 +76,7 @@ const DocumentEditor = ({
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string>();
   const [published, setPublished] = useState<number>();
+  const guard = useDiscardGuard(dirty && !saving);
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
 
@@ -140,7 +142,6 @@ const DocumentEditor = ({
           confirmClass="btn btn--primary"
           disabled={revision === null && !dirty}
           send={publish}
-          onSent={() => undefined}
           closeOnSent
         />
         <p className="document-editor__status">
@@ -151,6 +152,7 @@ const DocumentEditor = ({
               : 'Draft saved.'}
         </p>
       </div>
+      {guard.asking && <DiscardQuestion guard={guard} />}
       {failure && <Notice kind="error">{failure}</Notice>}
       {published !== undefined && <Notice kind="success">Published as version {published}.</Notice>}
       <div className="document-page__body document-editor__text">
