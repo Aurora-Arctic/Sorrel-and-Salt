@@ -1,5 +1,5 @@
-import { act, render, screen, within } from '@testing-library/react';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import PageNav from '@/components/PageNav';
 
 let callback: IntersectionObserverCallback;
@@ -105,5 +105,147 @@ describe('PageNav', () => {
       'location',
     );
     expect(screen.getByRole('link', { name: 'First' })).not.toHaveAttribute('aria-current');
+  });
+
+  const show = (collapsible?: boolean) => {
+    render(<PageNav label="On This Page" entries={[...entries]} collapsible={collapsible} />, {
+      container: document.body.appendChild(document.createElement('div')),
+    });
+    return screen.getByRole('navigation', { name: 'On This Page' });
+  };
+
+  // On a phone a collapsible menu folds into a disclosure, closed so the page lands with its text in
+  // view; wider, it stands open with no toggle. happy-dom keeps a closed disclosure's content in the
+  // accessibility tree, so the fold's state is its `open` attribute, read from the group it is.
+  describe('collapsible', () => {
+    /** The summary has no ARIA role, so it is found as the disclosure group's own toggle. */
+    const toggleOf = (fold: HTMLElement) => fold.querySelector(':scope > summary') as HTMLElement;
+
+    afterEach(() => vi.restoreAllMocks());
+
+    /** Reports the tablet band (min-width) as matching, keeping the environment's reduced motion. */
+    function wideViewport() {
+      vi.spyOn(window, 'matchMedia').mockImplementation(
+        (query: string) =>
+          ({
+            matches:
+              query.includes('min-width') || query.includes('prefers-reduced-motion: reduce'),
+            media: query,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+          }) as unknown as MediaQueryList,
+      );
+    }
+
+    it('folds the menu into a closed disclosure inside the named navigation on a narrow viewport', () => {
+      const nav = show(true);
+
+      const fold = within(nav).getByRole('group');
+      expect(fold).not.toHaveAttribute('open');
+      expect(toggleOf(fold)).not.toBeNull();
+      expect(within(fold).getAllByRole('link')).toHaveLength(2);
+    });
+
+    it('opens the disclosure when its summary is activated, and closes it when activated again', () => {
+      const nav = show(true);
+      const fold = within(nav).getByRole('group');
+      // Precondition: closed before the press.
+      expect(fold).not.toHaveAttribute('open');
+      // happy-dom toggles a disclosure as the click bubbles past it, before React's root listener can
+      // cancel that; a browser toggles only after dispatch, which the component cancels. Cancelling
+      // here at the summary leaves `open` to the component's own state, as in a browser.
+      toggleOf(fold).addEventListener('click', (event) => event.preventDefault());
+
+      fireEvent.click(toggleOf(fold));
+      expect(fold).toHaveAttribute('open');
+      expect(within(fold).getByRole('link', { name: 'First' })).toHaveAttribute('href', '#one');
+
+      // The environment reports reduced motion, so the close waits for no slide.
+      fireEvent.click(toggleOf(fold));
+      expect(fold).not.toHaveAttribute('open');
+      expect(screen.getByRole('navigation', { name: 'On This Page' })).toBe(nav);
+    });
+
+    it('stands open with no press on a wide viewport, inside the named navigation', () => {
+      wideViewport();
+      const nav = show(true);
+
+      const fold = within(nav).getByRole('group');
+      expect(fold).toHaveAttribute('open');
+      expect(within(fold).getAllByRole('link')).toHaveLength(2);
+    });
+
+    it('draws no disclosure without collapsible, on a narrow viewport', () => {
+      const nav = show();
+
+      expect(within(nav).queryByRole('group')).toBeNull();
+      expect(nav.querySelector('summary')).toBeNull();
+      expect(within(nav).getAllByRole('link')).toHaveLength(2);
+    });
+  });
+
+  // `data-more-above` and `data-more-below` are the state the page's stylesheet reads to fade an edge
+  // that hides entries: attributes on the navigation, not copy or class.
+  describe('scroll-edge attributes', () => {
+    let frames: FrameRequestCallback[] = [];
+
+    beforeEach(() => {
+      frames = [];
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => frames.push(cb));
+      vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    /** Gives the navigation a scroll box and position, fires a scroll and runs the queued frame. */
+    function scroll(el: HTMLElement, box: { top: number; height: number; client: number }) {
+      Object.defineProperty(el, 'scrollHeight', { configurable: true, value: box.height });
+      Object.defineProperty(el, 'clientHeight', { configurable: true, value: box.client });
+      Object.defineProperty(el, 'scrollTop', { configurable: true, value: box.top });
+      fireEvent.scroll(el);
+      act(() => {
+        const queued = frames;
+        frames = [];
+        for (const cb of queued) cb(0);
+      });
+    }
+
+    it('sets data-more-below alone at the top of a menu taller than its box', () => {
+      const nav = show();
+      scroll(nav, { top: 0, height: 600, client: 200 });
+
+      expect(nav).not.toHaveAttribute('data-more-above');
+      expect(nav).toHaveAttribute('data-more-below');
+    });
+
+    it('sets both data-more-above and data-more-below part-way down', () => {
+      const nav = show();
+      scroll(nav, { top: 200, height: 600, client: 200 });
+
+      expect(nav).toHaveAttribute('data-more-above');
+      expect(nav).toHaveAttribute('data-more-below');
+    });
+
+    it('sets data-more-above alone at the bottom, dropping data-more-below', () => {
+      const nav = show();
+      scroll(nav, { top: 0, height: 600, client: 200 });
+      // Precondition: the bottom mark was set, so its removal is the scroll's doing.
+      expect(nav).toHaveAttribute('data-more-below');
+
+      scroll(nav, { top: 400, height: 600, client: 200 });
+      expect(nav).toHaveAttribute('data-more-above');
+      expect(nav).not.toHaveAttribute('data-more-below');
+    });
+
+    it('sets neither data-more-above nor data-more-below once every entry fits', () => {
+      const nav = show(true);
+      scroll(nav, { top: 200, height: 600, client: 200 });
+      // Precondition: both marks were set, so their removal is the fit's doing.
+      expect(nav).toHaveAttribute('data-more-above');
+      expect(nav).toHaveAttribute('data-more-below');
+
+      scroll(nav, { top: 0, height: 200, client: 200 });
+      expect(nav).not.toHaveAttribute('data-more-above');
+      expect(nav).not.toHaveAttribute('data-more-below');
+    });
   });
 });
