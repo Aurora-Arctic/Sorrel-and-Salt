@@ -13,7 +13,7 @@ test.beforeAll(async () => {
 });
 
 // The four documents, in the order their tabs and the footer list them.
-const DOCUMENT_KEYS = ['privacy', 'disclaimer', 'code-of-ethics', 'terms'] as const;
+const DOCUMENT_KEYS = ['privacy', 'disclaimer', 'terms', 'code-of-ethics'] as const;
 
 /** The editor's editable text. */
 const editorOf = (page: Page) =>
@@ -40,10 +40,10 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
     .getByRole('navigation', { name: 'Admin' })
     .getByRole('link', { name: 'Documents' })
     .click();
-  await expect(page).toHaveURL(/\/admin\/documents\/privacy$/);
+  await expect(page).toHaveURL(/\/keepers\/documents\/privacy$/);
   const main = page.getByRole('main');
   const tabs = main.getByRole('navigation', { name: 'Documents' }).getByRole('link');
-  await expect(tabs).toHaveText(['Privacy Policy', 'Disclaimer', 'Code of Ethics', 'Terms of Use']);
+  await expect(tabs).toHaveText(['Privacy Policy', 'Disclaimer', 'Terms of Use', 'Code of Ethics']);
   for (const [index, key] of DOCUMENT_KEYS.entries()) {
     await expect(tabs.nth(index)).toHaveAttribute('href', `/keepers/documents/${key}`);
   }
