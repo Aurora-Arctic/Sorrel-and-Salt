@@ -65,6 +65,7 @@ const DocumentEditor = ({
   body,
   revision: openRevision,
   nextNumber,
+  mailing,
 }: DocumentEditorProps): ReactElement => {
   const editor = usePlateEditor({
     plugins: editorPlugins,
@@ -159,6 +160,7 @@ const DocumentEditor = ({
       </div>
       {failure && <Notice kind="error">{failure}</Notice>}
       {published !== undefined && <Notice kind="success">Published as version {published}.</Notice>}
+      {mailing}
       <div className="document-page__body document-editor__text">
         <Plate
           editor={editor}

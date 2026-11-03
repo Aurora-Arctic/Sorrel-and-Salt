@@ -71,7 +71,8 @@ const STATE_TEXT = {
   queued: 'Waiting behind an older mailing, which starts this one when it ends.',
   sending: 'Sending.',
   waiting: 'Today’s allowance is used. Sending carries on tomorrow.',
-  paused: 'Paused: the mail provider’s monthly allowance is used. Resume it once the allowance renews.',
+  paused:
+    'Paused: the mail provider’s monthly allowance is used. Resume it once the allowance renews.',
   sent: 'Sent to every account.',
   replaced: 'Replaced by a newer mailing.',
 } as const;
@@ -91,8 +92,9 @@ const DocumentMailingPanel = ({
 
   const question = (
     <>
-      Email every account about version {versionNumber} of <strong>{title}</strong>? That is {count(accountCount)}{' '}
-      {accountCount === 1 ? 'account' : 'accounts'}, sent over {days} {days === 1 ? 'day' : 'days'}.
+      Email every account about version {versionNumber} of <strong>{title}</strong>? That is{' '}
+      {count(accountCount)} {accountCount === 1 ? 'account' : 'accounts'}, sent over {days}{' '}
+      {days === 1 ? 'day' : 'days'}.
       {agreement && ' Each account is also asked to agree to the terms at its next visit.'}
       {inProgress &&
         ` The mailing of version ${inProgress.versionNumber} has reached ${count(inProgress.reached)} of ${count(inProgress.recipientCount)} accounts and stops here.`}
@@ -120,7 +122,8 @@ const DocumentMailingPanel = ({
             />
           </div>
           <p className="document-mailing__status">
-            {count(current.reached)} of {count(current.recipientCount)} accounts reached. {STATE_TEXT[current.state]}
+            {count(current.reached)} of {count(current.recipientCount)} accounts reached.{' '}
+            {STATE_TEXT[current.state]}
           </p>
           {current.state === 'paused' && (
             <ConfirmedAction
@@ -139,17 +142,18 @@ const DocumentMailingPanel = ({
         <>
           <p className="document-mailing__status">
             Version {versionNumber} has not been emailed. {count(accountCount)}{' '}
-            {accountCount === 1 ? 'account' : 'accounts'} would be reached over {days} {days === 1 ? 'day' : 'days'}.
+            {accountCount === 1 ? 'account' : 'accounts'} would be reached over {days}{' '}
+            {days === 1 ? 'day' : 'days'}.
           </p>
           <ConfirmedAction
             label="Email Every Account"
             accessibleName="Email Every Account"
             confirmLabel="Send Emails"
-            openClass="btn btn--primary"
+            openClass="btn btn--destructive"
             title="Email Every Account"
             question={question}
             busy="Sending"
-            confirmClass="btn btn--primary"
+            confirmClass="btn btn--destructive"
             confirmDisabled={summary.trim() === ''}
             choices={(sending) => (
               <div className="field">
