@@ -175,7 +175,7 @@ describe('VariantsField', () => {
 
     // An open variant's fields in the ingredient's
     // sections, a heading level beneath Variants.
-    it('heads an open variant’s sections with the ingredient’s section headings, a level beneath Variants', () => {
+    it('heads an open variant’s sections with the ingredient’s section headings, a level beneath Forms', () => {
       renderVariants({ workspaceId: null, values: twoForms() });
 
       const oil = openVariant('Oil');
@@ -201,7 +201,7 @@ describe('VariantsField', () => {
       expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
     });
 
-    it('opens a variant as Add Variant adds it, closing the one open', () => {
+    it('opens a variant as Add Form adds it, closing the one open', () => {
       renderVariants({ workspaceId: WORKSPACE_ID });
 
       addVariant('Oil');
@@ -270,7 +270,7 @@ describe('VariantsField', () => {
       expect(openIn(oil)).toEqual(['Correspondences']);
       expect(control(oil, 'Celestial Body')).toBeVisible();
       // The section around it, a level up, stays as it was.
-      expect(screen.getByRole('button', { name: 'Variants' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Forms' })).toHaveAttribute(
         'aria-expanded',
         'true',
       );
