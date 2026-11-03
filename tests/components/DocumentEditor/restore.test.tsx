@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { warmImport } from '../../support/warm-import';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -10,6 +11,9 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { default: DocumentEditor } = await import('@/components/DocumentEditor');
+
+// The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
+warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider } = await import('@/lib/navigation');
 
 // Restore Published Version throws the draft away: it asks first, deletes the open draft at the revision the editor holds, and
