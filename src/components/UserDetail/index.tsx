@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import CreationControl from '../UserList/creation-control';
-import { ProviderLogo } from '../UserList/marks';
+import { Mark, ProviderLogo } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';
 import RoleControl from '../UserList/role-control';
 import { roleLabel } from '../UserList/roles';
@@ -123,7 +123,7 @@ const UserDetail = ({
         </div>
         <div>
           <dt>Terms</dt>
-          <dd>{user.termsVersion ?? 'Not agreed'}</dd>
+          <dd>{user.termsVersion ?? <Mark value={false} label="Not agreed" />}</dd>
         </div>
         <div>
           <dt>Signed Up</dt>

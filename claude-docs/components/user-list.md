@@ -71,7 +71,7 @@ head, both built by the page per row, as the other admin lists carry
   Support, Access, Logins, Terms and Signed Up, each heading in title case (DESIGN.md §9).
   The headings are short so the table needs less width (the owner's call,
   2026-11-02); each cell's hidden text still says the whole fact, "Not timed
-  out" or "Paused with no end date", so a screen reader loses nothing. Terms is the version the user agreed to most recently, or **Not agreed** for one who never has (MB.288).
+  out" or "Paused with no end date", so a screen reader loses nothing. Terms is the version the user agreed to most recently, or a red cross, read as "Not agreed" by a screen reader, for one who never has (MB.288).
   The table is [`StackTable`](data-table.md), so each heading is also the
   `data-label` its cells carry as a card at phone width, and the table writes
   out its roles (MB.115, "Tables at phone width" in
