@@ -279,3 +279,15 @@ export interface ShellContext {
   viewer: ShellViewer;
   workspaces: ShellWorkspace[];
 }
+
+/** The three documents an account agrees to at once, by their part of the joint version: the terms include the other two. */
+export type AgreementPart = 'terms' | 'disclaimer' | 'ethics';
+
+/** The key of each document an agreement covers, as the documents table holds it. */
+export type AgreementDocumentKey = 'terms' | 'disclaimer' | 'code-of-ethics';
+
+/** The version numbers in force, one per document, each 0 while its document has no published version. */
+export type AgreementVersion = Record<AgreementPart, number>;
+
+/** The version numbers an account stored when it last agreed, each null or absent until it agrees. */
+export type AgreedVersion = Record<AgreementPart, number | null | undefined>;
