@@ -103,3 +103,13 @@
   font: inherit;
   line-height: inherit;
 }
+
+// The tab row stands a space(4) under the heading, whose line box already leaves room under its letters, and a space(5) over the editor. The tab track is drawn 0.125rem low (TabbedPage), so the
+// margins give that back; the doubled class and `:not(:has())` outweigh TabbedPage's own tabs-below rule.
+.document-editor-column > .tabbed-page--tabs-below > .page-header:not(:has(.add-action)) {
+  margin-bottom: calc(#{space(5)} + 0.125rem);
+
+  > .tabbed-page__tabs.tabbed-page__tabs {
+    margin-top: calc(#{space(4)} - #{space(3)} - 0.125rem);
+  }
+}

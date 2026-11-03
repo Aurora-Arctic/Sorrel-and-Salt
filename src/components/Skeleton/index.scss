@@ -897,3 +897,8 @@
 .skeleton__shapes .skeleton__document .skeleton__box {
   height: 24rem;
 }
+
+// The documents' wait spaces its tab row as the page does: a space(4) under the heading, and the column's gap beneath.
+.skeleton--document .skeleton__header--tabs-below > .skeleton__tabs {
+  margin-top: calc(#{space(4)} - #{space(3)});
+}
