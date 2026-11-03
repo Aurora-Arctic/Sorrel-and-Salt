@@ -119,14 +119,14 @@ function FootnoteEntry(
   props: PlateElementProps<{ type: 'footnoteDefinition'; identifier: string; children: never[] }>,
 ): ReactElement {
   const start = Number(props.element.identifier);
+  const before = props.editor.children[props.path[0] - 1] as { type?: string } | undefined;
   return (
-    <PlateElement
-      as="ol"
-      {...props}
-      className="document-page__sources"
-      attributes={{ ...props.attributes, start: Number.isInteger(start) ? start : undefined }}
-    >
-      <li className="document-page__source">{props.children}</li>
+    <PlateElement {...props}>
+      {/* The heading the public page adds above its footnotes, drawn and never saved, as the markdown holds none. */}
+      {before?.type !== props.element.type && <h2 contentEditable={false}>Sources</h2>}
+      <ol className="document-page__sources" start={Number.isInteger(start) ? start : undefined}>
+        <li className="document-page__source">{props.children}</li>
+      </ol>
     </PlateElement>
   );
 }
