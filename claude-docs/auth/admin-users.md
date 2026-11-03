@@ -468,7 +468,7 @@ filter, page)` is one page of the pending list, newest first, and
      expired**, so a link in two states always reports the same one reason, an
      act before the clock. Declined (M10.34) is the invitee's own no, from the
      account page, on the workspace tier alone; it outranks revoked so that a
-     declined link keeps saying so after the owner removes it from their list.
+     declined link keeps saying so after a steward removes it from their list.
      Each is a `Forbidden` in words of its own, and none names a
      workspace (M7.7, which asserts them on the workspace tier).
   3. The tier: the site tier's branch, below, or the workspace's (M7.5), which

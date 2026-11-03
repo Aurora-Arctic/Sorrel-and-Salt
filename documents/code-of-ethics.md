@@ -89,7 +89,7 @@ A curator curates the compendium, its vocabularies and its references, and reads
 
 ### Admins
 
-An admin can do everything a curator can, and also manages who uses the site: an admin sees which covens a person belongs to, by name and role, grants and revokes the right to create covens, changes site roles, times out a support requestor, mints invitations and holds an owner's seat in the demo coven. An admin agrees to everything above, and to this:
+An admin can do everything a curator can, and also manages who uses the site: an admin sees which covens a person belongs to, by name and role, grants and revokes the right to create covens, changes site roles, times out a support requestor, mints invitations and holds a steward's seat in the demo coven. An admin agrees to everything above, and to this:
 
 - You use each of those powers for the site's sake and never for your own: to keep people safe, to keep the compendium honest and to keep the site running. A grudge is not a reason.
 - Every change you make to a person's role or rights is recorded with your name, and you write a note saying why wherever the screen offers one.

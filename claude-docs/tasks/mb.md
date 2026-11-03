@@ -770,7 +770,7 @@ Two transition measures keep the rest of the code working until MB.222 removes t
 Tests are written first:
 
 - validation first, through `failedPaths`, one row per rule and no messages (`claude-docs/testing/layer-ownership.md`, "What a test may assert", rule 2)
-- `tests/modules/ingredients/services/compendium.test.ts` and `workspace-ingredients.test.ts`: create with two variants; an update keeps a variant by id across a respelling, drops one and adds one; a typed compendium variant refused on its path; a substitute variant of the wrong ingredient refused on its path; one viewer `Forbidden`, with its precondition
+- `tests/modules/ingredients/services/compendium.test.ts` and `workspace-ingredients.test.ts`: create with two variants; an update keeps a variant by id across a respelling, drops one and adds one; a typed compendium variant refused on its path; a substitute variant of the wrong ingredient refused on its path; one observer `Forbidden`, with its precondition
 - the GraphQL files assert the transport's half only (rule 6)
 
 _Acceptance criteria:_
@@ -4310,7 +4310,7 @@ _Acceptance criteria:_
 
 _Story:_ As a coven member, I want the coven's pages to feel like one place I belong to, so that finding members and inviting someone is obvious.
 
-Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last steward's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.7's.
+Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its steward controls (M6.12, M6.13), deleting, leaving and the last steward's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.7's.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
@@ -4331,7 +4331,7 @@ _Acceptance criteria:_
 - Each component's doc adds or updates its Styling section, and its stories show the reviewed design
 - The section's user-facing copy uses one noun for a workspace, settled with the owner
 - `ActionFailure` has a doc and a story
-- Owner-only controls read as such, and an observer's page shows no control it cannot use
+- Steward-only controls read as such, and an observer's page shows no control it cannot use
 - The acceptance page reads correctly signed in, signed out, and for an expired or used link, or an invitation into a deleted coven
 
 **MB.120 — Design review: the public compendium and shared ingredient components** · 10h
@@ -5383,7 +5383,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the vocabulary, identity and coven GraphQL tests held to the same half as the ingredients', so that one doctrine governs every module's transport tests.
 
-Minted with MB.180, in the scoping recorded in [`design-decisions/mb.180-plan.md`](../design-decisions/mb.180-plan.md). The same rule and MB.185's harness over `tests/modules/vocabulary/graphql/*.test.ts` — `astrology`, `categories`, `category-groups`, `deity-suggestions`, `form-suggestions`, `ingredient-form-groups`, `ingredient-form-values` and `suggestions` — `tests/modules/identity/graphql/{me,set-email,users,user-private-fields}.test.ts` and `tests/modules/coven/services/two-transports.test.ts`, the coven module's one GraphQL file, which re-run service tests and probe sign-out per field as the ingredients files did. The plan put them at some 3–4 s of summed worker time; measured, they summed some 2.3 s before and after (117 → 127 tests, the error-code refusals added costing what the deletions saved), so the task buys the doctrine holding in every module, not time. Known pairs: `users.test.ts:112` → `identity/services/user-list.test.ts:163`; `me.test.ts:73` → the sweep, which `route.test.ts:181` checks too; `vocabulary suggestions:100`, `deity-suggestions:107` and `form-suggestions:113` → the sweep; `services/form-suggestions.test.ts:213`, a soft-delete one-off, stays for MB.187's READS row. The harness's `run` takes a fourth argument replacing part of the context — loaders a test spies on or shares between operations, or a recording sender — and `runnerOn(schema)` builds it over `two-transports`' scratch schema. Each admin write keeps one `FORBIDDEN` to a coven's owner, as `compendium-entries` does, and a write missing a code it can return gains the test. Its own task rather than MB.185's tail because the pairs are found file by file, and MB.185 already carries the harness and the backstop. `schema.md`'s per-field sections for these modules are amended in the same PR.
+Minted with MB.180, in the scoping recorded in [`design-decisions/mb.180-plan.md`](../design-decisions/mb.180-plan.md). The same rule and MB.185's harness over `tests/modules/vocabulary/graphql/*.test.ts` — `astrology`, `categories`, `category-groups`, `deity-suggestions`, `form-suggestions`, `ingredient-form-groups`, `ingredient-form-values` and `suggestions` — `tests/modules/identity/graphql/{me,set-email,users,user-private-fields}.test.ts` and `tests/modules/coven/services/two-transports.test.ts`, the coven module's one GraphQL file, which re-run service tests and probe sign-out per field as the ingredients files did. The plan put them at some 3–4 s of summed worker time; measured, they summed some 2.3 s before and after (117 → 127 tests, the error-code refusals added costing what the deletions saved), so the task buys the doctrine holding in every module, not time. Known pairs: `users.test.ts:112` → `identity/services/user-list.test.ts:163`; `me.test.ts:73` → the sweep, which `route.test.ts:181` checks too; `vocabulary suggestions:100`, `deity-suggestions:107` and `form-suggestions:113` → the sweep; `services/form-suggestions.test.ts:213`, a soft-delete one-off, stays for MB.187's READS row. The harness's `run` takes a fourth argument replacing part of the context — loaders a test spies on or shares between operations, or a recording sender — and `runnerOn(schema)` builds it over `two-transports`' scratch schema. Each admin write keeps one `FORBIDDEN` to a coven's steward, as `compendium-entries` does, and a write missing a code it can return gains the test. Its own task rather than MB.185's tail because the pairs are found file by file, and MB.185 already carries the harness and the backstop. `schema.md`'s per-field sections for these modules are amended in the same PR.
 
 _Acceptance criteria:_
 
@@ -5639,7 +5639,7 @@ MB.201's code half. MB.69's `insertAdminInvitation`, `acceptAdminInvitation`, `r
 
 _Acceptance criteria:_
 
-- An owner's invitation carries its workspace and role, an admin's the null pair, and the token's hash is the only one stored
+- A steward's invitation carries its workspace and role, an admin's the null pair, and the token's hash is the only one stored
 - A workspace revoke cannot reach a site-tier row by id, nor a site revoke a workspace row, each asserted by direct id against a row the other tier can revoke
 - Accepting matches only a pending row whose address the session holds verified, on either tier, and a second accept matches nothing
 - The writer still offers exactly twenty-three methods
