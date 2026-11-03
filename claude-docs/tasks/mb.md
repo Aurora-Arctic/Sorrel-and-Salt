@@ -293,6 +293,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.287 | A Production Deploy Rerun Fails at the Neon Snapshot                                                                     | Bugfixes | —                      |
 | MB.288 | Bug Bash 2026-11-02: Ingredient Edits, the Formal Name Eyebrow and the Terms Screens                                     | Bugfixes | —                      |
 | MB.289 | Crawlers Hit Blocked Links and Index Few Compendium Pages                                                                | Bugfixes | —                      |
+| MB.290 | Renaming or Deleting a Celestial Body or Zodiac Sign Misses Compendium Variants                                          | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -6059,3 +6060,28 @@ _Acceptance criteria:_
 - Each document version page has its own title naming the document and version number. The current version's page names the document page (for example `/terms`) as its canonical; an older version's page names itself.
 - `/compendium?after=…` and `?before=…` responses carry no noindex header, and `?entry=` and `?support=` still do.
 - The comments in `src/app/robots.ts` and `src/app/sitemap.ts` describe the new allowed paths and the sitemap's contents, and `claude-docs/components/support-link.md` names the `nofollow`.
+
+**MB.290 — Renaming or Deleting a Celestial Body or Zodiac Sign Misses Compendium Variants** · 3h
+
+_Story:_ As a site admin, I want renaming a celestial body or zodiac sign to update every compendium variant that holds it, and deleting one to be refused while a variant holds it, so that a compendium entry never holds a value missing from the curated lists and still saves afterwards.
+
+Since MB.215 each compendium variant carries its own `celestial_bodies` and `zodiac_signs` lists, and the compendium save checks them against the curated rows (`src/modules/ingredients/services/compendium.ts`, `curatedSpellings`), as DESIGN.md §5's MB.162 rule requires ("and each variant's"). Two paths read the ingredient's own lists only. `carryAstrologyRename` (`src/db/repository/write.ts`) rewrites the ingredient's lists and not its variants', so a variant keeps the old spelling. The delete check behind `deleteAstrologyValue` (`refuseWhileHeld` in `src/modules/vocabulary/services/held-entries.ts`, reaching `listArm` in `src/db/repository/ingredients.ts`) reads the ingredient's lists only, where `elementArm` beside it also checks live variants, so a celestial body or sign that only a variant holds can be deleted. Either way a variant ends up holding a value no curated row has, and the entry's next save is refused. No decision record leaves variants out on purpose.
+
+Found on 2026-11-03 by reading the code during MB.163's review, not seen on any environment; it happens on every rename or delete of a value a variant holds. Signed in as a site admin, Admin & Compendium. Steps to reproduce:
+
+1. Sign in as a site admin.
+2. Open a compendium entry for editing, give one of its variants a celestial body, for example Mars, that the entry's own list does not hold, and save.
+3. Open the Celestial Bodies admin page and rename Mars, for example to Mars Planet, and save.
+4. Reopen the compendium entry for editing.
+5. Press Save without changing anything.
+
+Actual: the variant's Celestial Bodies list still reads Mars, and Save is refused on that variant. Expected: the variant reads Mars Planet, and Save succeeds. The same happens for a zodiac sign. Deleting Mars in step 3 instead of renaming it is not refused, where it should be.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: after a celestial body rename and after a zodiac sign rename, a live compendium variant holding the old spelling holds the new one, asserted by row.
+- A regression test fails before the fix: deleting a celestial body or zodiac sign that only a live compendium variant holds is refused, naming the entry.
+- The rename keeps every other value in the variant's list, in its order.
+- A coven's variants are never rewritten and never block a delete, asserted by row.
+- A deleted variant, or a variant of a deleted entry, neither blocks a delete nor is rewritten.
+- DESIGN.md §5's MB.162 paragraph says the rewrite and the delete check both cover the variants' lists.
