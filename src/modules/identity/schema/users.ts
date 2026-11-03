@@ -58,9 +58,12 @@ export const users = pgTable(
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
     // When the account agreed to the terms of use; null until it does.
     termsAcceptedAt: timestamp('terms_accepted_at'),
-    // The number of the published terms version the account agreed to; null until it does. A number other than the newest
-    // published one counts as not agreed (claude-docs/auth/admin-bootstrap.md, "The terms page").
+    // The numbers of the terms, disclaimer and code of ethics versions the account last agreed to, all three at once; null until
+    // it does. Any one other than its document's newest published version counts as not agreed (claude-docs/auth/admin-bootstrap.md,
+    // "The terms page").
     agreedTermsVersion: integer('agreed_terms_version'),
+    agreedDisclaimerVersion: integer('agreed_disclaimer_version'),
+    agreedEthicsVersion: integer('agreed_ethics_version'),
     ...auditColumns,
   },
   (table) => [

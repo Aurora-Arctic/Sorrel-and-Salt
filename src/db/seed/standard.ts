@@ -618,10 +618,12 @@ export async function insertMissingFixtureUsers(
 ): Promise<void> {
   await insertMissingBy(tx, users, wanted, {
     columns: ['id'],
-    // The cast has agreed to the terms in force, so a test lands on its page rather than the acceptance page.
+    // The cast has agreed to the terms, disclaimer and code of ethics in force, so a test lands on its page rather than the acceptance page.
     toRow: (user) => ({
       emailVerified: true,
       agreedTermsVersion: 1,
+      agreedDisclaimerVersion: 1,
+      agreedEthicsVersion: 1,
       termsAcceptedAt: new Date(),
       ...user,
     }),

@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { agreedVersionOfColumns, formatAgreementVersion } from '../../lib/agreement-version';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import CreationControl from '../UserList/creation-control';
 import { Mark, ProviderLogo } from '../UserList/marks';
@@ -127,7 +128,7 @@ const UserDetail = ({
             {user.agreedTermsVersion === null ? (
               <Mark value={false} label="Not agreed" />
             ) : (
-              `Version ${user.agreedTermsVersion}`
+              `Version ${formatAgreementVersion(agreedVersionOfColumns(user))}`
             )}
           </dd>
         </div>

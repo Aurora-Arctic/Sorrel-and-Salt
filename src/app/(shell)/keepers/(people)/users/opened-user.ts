@@ -92,6 +92,8 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
       providers,
       createdAt: found.createdAt,
       agreedTermsVersion: found.agreedTermsVersion,
+      agreedDisclaimerVersion: found.agreedDisclaimerVersion,
+      agreedEthicsVersion: found.agreedEthicsVersion,
     },
     memberships: memberships.map((row) => ({
       workspaceId: row.workspaceId,

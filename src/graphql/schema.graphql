@@ -1,3 +1,9 @@
+input AgreementVersionInput {
+  disclaimer: Int!
+  ethics: Int!
+  terms: Int!
+}
+
 type AuditInfo {
   createdAt: DateTime!
   createdBy: ID!
@@ -992,7 +998,7 @@ type Mutation {
   Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.
   """
   addSupportInternalNote(body: String!, requestId: ID!): SupportReply!
-  agreeToTerms(version: Int!): User!
+  agreeToTerms(version: AgreementVersionInput!): User!
 
   """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
@@ -2903,6 +2909,8 @@ input UpdateSpellInput {
 }
 
 type User {
+  agreedDisclaimerVersion: Int
+  agreedEthicsVersion: Int
   agreedTermsVersion: Int
   audit: AuditInfo!
   canCreateWorkspace: Boolean!

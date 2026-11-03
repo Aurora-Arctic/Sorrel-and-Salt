@@ -14,6 +14,6 @@ export {
   resumeDocumentMailing,
   startDailyDocumentMailing,
 } from './services/document-mailing';
-export { currentTermsVersion } from '../../lib/current-terms-version';
+export { currentAgreementVersion } from '../../lib/current-agreement-version';
 export * from './graphql/documents';
 export type { DocumentKey, DocumentMailingNotifier, DocumentMailingOverview } from './types';

@@ -12,8 +12,10 @@ export interface UserListEntry {
   role: UserRole;
   canCreateWorkspace: boolean;
   createdAt: Date;
-  /** The number of the terms version they agreed to most recently; null when they never agreed. */
+  /** The numbers of the terms, disclaimer and code of ethics versions they agreed to most recently; null when they never agreed. */
   agreedTermsVersion: number | null;
+  agreedDisclaimerVersion: number | null;
+  agreedEthicsVersion: number | null;
   /** Provider ids, as the service sorted them. */
   providers: readonly string[];
   emailVerified: boolean;

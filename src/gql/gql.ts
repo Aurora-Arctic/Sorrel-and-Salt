@@ -134,7 +134,7 @@ type Documents = {
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": typeof types.LiftSupportTimeoutDocument,
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveMySupportRequestDocument,
-    "\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n": typeof types.AgreeToTermsDocument,
+    "\n  mutation AgreeToTerms($version: AgreementVersionInput!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n      agreedDisclaimerVersion\n      agreedEthicsVersion\n    }\n  }\n": typeof types.AgreeToTermsDocument,
     "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": typeof types.PauseUserAccessDocument,
     "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": typeof types.LiftUserAccessPauseDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
@@ -264,7 +264,7 @@ const documents: Documents = {
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": types.LiftSupportTimeoutDocument,
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveMySupportRequestDocument,
-    "\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n": types.AgreeToTermsDocument,
+    "\n  mutation AgreeToTerms($version: AgreementVersionInput!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n      agreedDisclaimerVersion\n      agreedEthicsVersion\n    }\n  }\n": types.AgreeToTermsDocument,
     "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": types.PauseUserAccessDocument,
     "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": types.LiftUserAccessPauseDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
@@ -771,7 +771,7 @@ export function graphql(source: "\n  mutation ResolveMySupportRequest($id: ID!) 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n"): (typeof documents)["\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n"];
+export function graphql(source: "\n  mutation AgreeToTerms($version: AgreementVersionInput!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n      agreedDisclaimerVersion\n      agreedEthicsVersion\n    }\n  }\n"): (typeof documents)["\n  mutation AgreeToTerms($version: AgreementVersionInput!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n      agreedDisclaimerVersion\n      agreedEthicsVersion\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

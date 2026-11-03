@@ -4,6 +4,7 @@ import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { totpCode } from '../../support/two-factor';
+import { agreedInForceSql } from '../../support/db/agreement-in-force';
 import { withSql } from './accounts-setup';
 
 // Two-factor for password sign-ins (claude-docs/auth/two-factor.md). The code is computed from the key the account
@@ -38,7 +39,9 @@ test(
     expect(made.status(), await made.text()).toBe(200);
     await withSql(
       (sql) =>
-        sql`update users set email_verified = true, agreed_terms_version = (select max(v.number) from document_versions v join documents d on d.id = v.document_id where d.key = 'terms' and d.deleted_at is null and v.status = 'published' and v.deleted_at is null), terms_accepted_at = now() where email = ${email}`,
+        sql`update users set email_verified = true,
+          (agreed_terms_version, agreed_disclaimer_version, agreed_ethics_version) = (${agreedInForceSql(sql)}),
+          terms_accepted_at = now() where email = ${email}`,
     );
 
     // Sign-up leaves a session cookie; the story starts signed out.

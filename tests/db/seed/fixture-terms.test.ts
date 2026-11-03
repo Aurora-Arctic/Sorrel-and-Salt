@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { currentTermsVersion } from '@/modules/documents';
-import { hasAgreedToTerms } from '@/modules/identity';
+import { agreementIsCurrent } from '@/lib/agreement-version';
+import { currentAgreementVersion } from '@/modules/documents';
 import { A, B, C, D, E, F } from '../../support/as-user';
 import { useTestDatabase } from '../../support/db/database';
 
-// The standard seed's fixture accounts have agreed to the terms it seeds, version 1, so a test signed in as one of them reaches
+// The standard seed's fixture accounts have agreed to the documents it seeds, each at version 1, so a test signed in as one of them reaches
 // every page without first passing the acceptance page. This file reads its clone as the seed left it.
 
 let sql: postgres.Sql;
@@ -14,17 +14,21 @@ useTestDatabase((client) => {
 });
 
 describe('the standard seed', () => {
-  it('publishes the terms at version 1, and every fixture account has agreed to it', async () => {
-    expect(await currentTermsVersion()).toBe(1);
+  it('publishes the agreed documents at version 1, and every fixture account has agreed to all three', async () => {
+    const inForce = await currentAgreementVersion();
+    expect(inForce).toEqual({ terms: 1, disclaimer: 1, ethics: 1 });
 
     const ids = [A, B, C, D, E, F].map((user) => user.id);
-    const rows = await sql<{ id: string; agreed_terms_version: number | null }[]>`
-      select id, agreed_terms_version from users where id in ${sql(ids)}`;
+    const rows = await sql<
+      { id: string; terms: number | null; disclaimer: number | null; ethics: number | null }[]
+    >`
+      select id, agreed_terms_version as terms, agreed_disclaimer_version as disclaimer, agreed_ethics_version as ethics
+      from users where id in ${sql(ids)}`;
 
     expect(rows).toHaveLength(ids.length);
-    for (const { id, agreed_terms_version } of rows) {
-      expect(agreed_terms_version, id).toBe(1);
-      expect(hasAgreedToTerms(agreed_terms_version, 1), id).toBe(true);
+    for (const { id, ...agreed } of rows) {
+      expect(agreed, id).toEqual(inForce);
+      expect(agreementIsCurrent(agreed, inForce), id).toBe(true);
     }
   });
 });
