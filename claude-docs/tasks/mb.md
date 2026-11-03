@@ -5925,28 +5925,30 @@ _Acceptance criteria:_
 - When a Neon call is refused, the step fails and the log carries Neon's response body.
 - `claude-docs/ci/neon-snapshots.md` describes what a rerun does.
 
-**MB.288 — Bug Bash 2026-11-02: Ingredient Edits, the Formal Name Eyebrow and the Terms Screens** · 6h
+**MB.288 — Bug Bash 2026-11-02: Ingredient Edits, the Formal Name Eyebrow and the Terms Screens** · 6.5h
 
 _Story:_ As a curator, coven owner or site admin, I want ingredient edits to save, the entry page to stay clean, and the terms screens to show their state, so that I can trust what I change and see what users agreed to.
 
-Five faults found in one bug bash, kept in one task at the owner's request. A: in the edit form (`src/components/IngredientForm/`), changing an entry's classification to None blocks the save. B: the curator's Visible switch (`src/components/IngredientEntry/shown-toggle.tsx`) saves one change but loses a second change made straight after it. C: the formal name eyebrow (`src/components/IngredientEntry/formal-name.tsx`) prints "None" for an entry classified None with no formal name, where it should draw nothing. D: the admin user table and user modal do not show which terms version a user agreed to most recently; this is new display work, not a fault. E: the Agree button on the terms page (`src/components/TermsAgreement/index.tsx`) shows no loading state while its save runs.
+Six items found in one bug bash, kept in one task at the owner's request. A: in the edit form (`src/components/IngredientForm/`), changing an entry's classification to None blocks the save. B: the curator's Visible switch (`src/components/IngredientEntry/shown-toggle.tsx`) saves one change but loses a second change made straight after it. C: the formal name eyebrow (`src/components/IngredientEntry/formal-name.tsx`) prints "None" for an entry classified None with no formal name, where it should draw nothing. D: the admin user table and user modal do not show which terms version a user agreed to most recently; this is new display work, not a fault. E: the Agree button on the terms page (`src/components/TermsAgreement/index.tsx`) shows no loading state while its save runs. F: the entry page's Back link, from an entry opened in the admin compendium list (`/admin/compendium`), goes to the public compendium (`/compendium`) instead of back to the admin list (`src/components/IngredientEntry/back-link.tsx`, which takes the previous list from `window.navigation` through `listReturnHref` in `back-href.ts`, and the callers that pass `href`/`also` for a compendium entry).
 
-Found on 2026-11-02 on a local dev server, every time, signed in as a site admin and as a coven owner. Steps to reproduce:
+F was found on 2026-11-03, locally, signed in as a site admin. The rest were found on 2026-11-02 on a local dev server, every time, signed in as a site admin and as a coven owner. Steps to reproduce:
 
 - A. Open an entry's edit form, change Classification to None, press Save. Actual: the save does not go through. Expected: the entry saves with classification None.
 - B. As a curator or admin, open an entry's details, turn Visible off, then straight away back on (order assumed), and reload. Actual: the off saved and the on did not. Expected: the last position saves, however quickly it was changed.
 - C. Open an ingredient page classified None with no formal name. Actual: the eyebrow reads "None" with its label and tip. Expected: no eyebrow.
 - D. As a site admin, open Admin › People, look at the table, then open a user's modal. Actual: neither shows a terms version. Expected: both show the latest version the user agreed to.
 - E. As an account that has not agreed to the current terms, press Agree. Actual: no spinner. Expected: the standard loading spinner, and a second press is refused.
+- F. Sign in as a site admin, open `/admin/compendium`, open an entry from the list and press the Back link. Actual: it goes to `/compendium`. Expected: it goes back to `/admin/compendium`, with its filters.
 
 A was not reproduced on 2026-11-03. The owner had seen it on the Unknown Beeswax, a hidden compendium entry with a picked Wax form, and it no longer happens. A separate agent could not reproduce it in component, service or browser tests either.
 
 _Acceptance criteria:_
 
-- B, C and E each start with a regression test that fails before its fix.
+- B, C, E and F each start with a regression test that fails before its fix.
 - A: saving an entry with classification None succeeds, and the entry reads back as None. A was not reproduced (see below), so there is no fix and no test that fails first; acceptance tests prove that a reclassification to None saves, from the admin list, from the entry page pencil and in a coven.
 - B: two quick changes to the Visible switch leave the entry in the second position after a reload.
 - C: an entry classified None with no formal name draws no formal name list, label or tip on the entry page or in the details modal head.
 - D: the admin user table and the user modal show the latest terms version each user agreed to, and show that a user who never agreed has not; the read goes through the admin service behind `assertSiteAdmin`.
 - E: while the agreement save runs, the Agree button shows the standard spinner, and a second press sends no second request.
+- F: from the admin compendium, the entry's Back link returns to `/admin/compendium` with its query. From the public compendium, and with no history, it still returns to `/compendium`.
 - `claude-docs/components/ingredient-entry.md`, "Structure", no longer says the formal name is never blank.
