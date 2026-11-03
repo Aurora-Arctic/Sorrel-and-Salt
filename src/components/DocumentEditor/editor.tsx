@@ -94,11 +94,15 @@ const DocumentEditor = ({
   // as the editor writes markdown a little differently from how it was read.
   const savedRef = useRef<string | null>(null);
   savedRef.current ??= editorValueToMarkdown(editor.children as never);
+  // The markdown a save in flight is writing: a change is measured against it, so one that puts back the text saved before it
+  // still counts, and the autosave sends it once that save lands.
+  const sendingRef = useRef<string | null>(null);
 
   /** Writes `text` as the draft, against the revision the last write answered with. */
   async function writeDraft(text: string): Promise<SaveResult> {
     setFailure(undefined);
     setPublished(undefined);
+    sendingRef.current = text;
     try {
       const { saveDocumentDraft } = await graphqlRequest(SaveDraftDocument, {
         documentId,
@@ -118,6 +122,8 @@ const DocumentEditor = ({
     } catch (error) {
       setFailure(readGraphqlFailure(error).alert);
       throw error;
+    } finally {
+      sendingRef.current = null;
     }
   }
 
@@ -184,7 +190,7 @@ const DocumentEditor = ({
           onValueChange={({ value }) => {
             const text = editorValueToMarkdown(value as never);
             setMarkdown(text);
-            setDirty(text !== savedRef.current);
+            setDirty(text !== (sendingRef.current ?? savedRef.current));
           }}
         >
           <Toolbar />

@@ -256,3 +256,172 @@ test('an admin publishes a change to the code of ethics, then emails every accou
   await expect(main.getByRole('button', { name: 'Email Every Account' })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 });
+
+/** Puts the caret in a new, empty paragraph after the one holding `anchor`. */
+async function newLineAfter(page: Page, anchor: string): Promise<void> {
+  await editorOf(page).getByText(anchor).click();
+  await page.keyboard.press('End');
+  await page.keyboard.press('Enter');
+}
+
+/**
+ * Pastes into the text at the caret as Chromium does: a `paste` event carrying each type in `data`, then, unless it was
+ * handled there, the `beforeinput` that inserts it, which is where the editor reads anything but plain text.
+ */
+async function paste(page: Page, data: Record<string, string>): Promise<void> {
+  await editorOf(page).evaluate((element, types) => {
+    const transfer = new DataTransfer();
+    for (const [type, value] of Object.entries(types)) transfer.setData(type, value);
+    const handled = !element.dispatchEvent(
+      new ClipboardEvent('paste', { clipboardData: transfer, bubbles: true, cancelable: true }),
+    );
+    if (handled) return;
+    element.dispatchEvent(
+      new InputEvent('beforeinput', {
+        inputType: 'insertFromPaste',
+        dataTransfer: transfer,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }, data);
+}
+
+// Markdown pasted from a code editor, a heading, a sentence with a footnote mark and the footnote's text.
+const PASTED_MARKDOWN = [
+  '## Fixturewort Pasted Heading',
+  '',
+  'A pasted Fixturewort claim.[^77]',
+  '',
+  '[^77]: A pasted Fixturewort source.',
+].join('\n');
+
+/** The pasted heading, and the pasted footnote's text as an entry of the Sources list. */
+const pastedHeading = (page: Page) =>
+  editorOf(page).getByRole('heading', { name: 'Fixturewort Pasted Heading' });
+const pastedSource = (page: Page) =>
+  editorOf(page).getByRole('listitem').filter({ hasText: 'A pasted Fixturewort source.' });
+
+test('markdown pasted from a code editor is read as markdown, not as its highlighted HTML', async ({
+  page,
+}) => {
+  await signInAs(page, 'paste-code-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  await newLineAfter(page, 'Changes to This Policy');
+  // What VS Code puts on the clipboard: the text, its highlighted rendering, and its own editor data.
+  const highlighted = PASTED_MARKDOWN.split('\n')
+    .map((line) => `<div><span style="color: #569cd6;">${line}</span></div>`)
+    .join('');
+  await paste(page, {
+    'text/plain': PASTED_MARKDOWN,
+    'text/html': `<meta charset="utf-8"><div style="font-family: Consolas, monospace; white-space: pre;">${highlighted}</div>`,
+    'vscode-editor-data': JSON.stringify({
+      version: 1,
+      isFromEmptySelection: false,
+      mode: 'markdown',
+    }),
+  });
+
+  await expect(pastedHeading(page)).toBeVisible();
+  await expect(pastedSource(page)).toHaveCount(1);
+  await expect(page.getByRole('main').getByRole('button', { name: 'Save Draft' })).toBeEnabled();
+});
+
+test('a monospace rendering of markdown is read as markdown, and a web page’s HTML is read as HTML', async ({
+  page,
+}) => {
+  await signInAs(page, 'paste-html-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+
+  // A code block's rendering with no editor data of its own: the text is the markdown.
+  await newLineAfter(page, 'Changes to This Policy');
+  await paste(page, {
+    'text/plain': PASTED_MARKDOWN,
+    'text/html': `<pre><code>${PASTED_MARKDOWN}</code></pre>`,
+  });
+  await expect(pastedHeading(page)).toBeVisible();
+  await expect(pastedSource(page)).toHaveCount(1);
+
+  // A web page's rich text: the HTML is what was copied, and its plain text is only a fallback.
+  await newLineAfter(page, 'A pasted Fixturewort claim.');
+  await paste(page, {
+    'text/plain': '## Fixturewort Web Heading',
+    'text/html': '<h3>Fixturewort Rich Heading</h3><p>From a <strong>web</strong> page.</p>',
+  });
+  await expect(
+    editorOf(page).getByRole('heading', { level: 3, name: 'Fixturewort Rich Heading' }),
+  ).toBeVisible();
+  await expect(
+    editorOf(page).getByRole('heading', { name: 'Fixturewort Web Heading' }),
+  ).toHaveCount(0);
+});
+
+// An edit made while a save is in flight is measured against the text being saved, not the text saved before it: one that puts the
+// text back as it was before is still a change once that save lands, and the autosave sends it on its own.
+test('an edit made while a draft save is in flight, typed or pasted, is saved after it', async ({
+  page,
+}) => {
+  await signInAs(page, 'in-flight-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  await page.waitForLoadState('networkidle');
+  const save = page.getByRole('main').getByRole('button', { name: /^Sav(e|ing) Draft$/ });
+  const heading = editorOf(page).getByRole('heading', { name: /^Changes to This Polic/ });
+  // The heading as the document holds it, ended by its line break.
+  const SAVED_HEADING = '## Changes to This Policy\n';
+
+  // Every save is held until the test lets it go.
+  const bodies: string[] = [];
+  let release = () => {};
+  await page.route('**/api/graphql', async (route) => {
+    const request = route.request().postDataJSON() as {
+      operationName?: string;
+      variables: { body: string };
+    } | null;
+    if (request?.operationName !== 'SaveDocumentDraft') return route.continue();
+    bodies.push(request.variables.body);
+    await new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    return route.continue();
+  });
+
+  /** Makes `change` at the end of the heading, waits for the autosave to send it, and makes `revert` while it is held. */
+  async function editInFlight(
+    change: () => Promise<void>,
+    revert: () => Promise<void>,
+  ): Promise<void> {
+    const sent = bodies.length;
+    await heading.click();
+    await page.keyboard.press('End');
+    await change();
+    await expect.poll(() => bodies.length, { timeout: 10_000 }).toBe(sent + 1);
+    await expect(save).toHaveAttribute('aria-busy', 'true');
+    await revert();
+    release();
+    // The text is back as it was before the held save: the autosave sends it again on its own.
+    await expect.poll(() => bodies.length, { timeout: 10_000 }).toBe(sent + 2);
+    expect(bodies[bodies.length - 2]).not.toContain(SAVED_HEADING);
+    expect(bodies[bodies.length - 1]).toContain(SAVED_HEADING);
+    release();
+    await expect(save).toBeDisabled();
+  }
+
+  // Typed: an `X` added, then deleted again.
+  await editInFlight(
+    () => page.keyboard.type('X'),
+    () => page.keyboard.press('Backspace'),
+  );
+  // Pasted: the heading's last letter deleted, then pasted back.
+  await editInFlight(
+    () => page.keyboard.press('Backspace'),
+    () => paste(page, { 'text/plain': 'y' }),
+  );
+
+  await page.reload();
+  await expect(
+    editorOf(page).getByRole('heading', { name: 'Changes to This Policy', exact: true }),
+  ).toBeVisible();
+});

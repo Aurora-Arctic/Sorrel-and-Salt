@@ -24,7 +24,7 @@ import {
   TableRowPlugin,
 } from '@platejs/table/react';
 import { MarkdownPlugin } from '@platejs/markdown';
-import { KEYS } from 'platejs';
+import { isUrl, KEYS } from 'platejs';
 import {
   createPlatePlugin,
   ParagraphPlugin,
@@ -191,6 +191,33 @@ const TabEscapePlugin = createPlatePlugin({ key: 'tabEscape' }).overrideEditor(
   }),
 );
 
+/** Whether a clipboard's HTML is a code editor's rendering of its text: one pre-formatted block, so the plain text is the source. */
+function isPreformatted(html: string): boolean {
+  const blocks = [...new DOMParser().parseFromString(html, 'text/html').body.children];
+  const [block] = blocks;
+  return (
+    blocks.length === 1 &&
+    (block.tagName === 'PRE' || /^pre/.test((block as HTMLElement).style.whiteSpace))
+  );
+}
+
+// Plain text is read as markdown, as Plate does, and so is a code editor's copy, whose HTML is only the text highlighted:
+// VS Code marks its copy with `vscode-editor-data`, and any editor's rendering is one pre-formatted block.
+// A function extension, since the package sets its parser in one and a plain object is merged beneath it.
+const PasteMarkdownPlugin = MarkdownPlugin.configure({
+  options: { remarkPlugins: [remarkGfm] },
+}).extend(() => ({
+  parser: {
+    query: ({ data, dataTransfer }: { data: string; dataTransfer: DataTransfer }) => {
+      const html = dataTransfer.getData('text/html');
+      if (html && !dataTransfer.types.includes('vscode-editor-data') && !isPreformatted(html))
+        return false;
+      // A lone address is left to the link plugin, as Plate leaves it.
+      return Boolean(dataTransfer.files?.length) || !isUrl(data);
+    },
+  },
+}));
+
 /** The plugins the editor runs. */
 export const editorPlugins = [
   ParagraphPlugin.withComponent(Paragraph),
@@ -224,5 +251,5 @@ export const editorPlugins = [
   TableCellHeaderPlugin.withComponent(HeaderCell),
   FootnoteReferencePlugin.withComponent(FootnoteMark),
   FootnoteDefinitionPlugin.withComponent(FootnoteEntry),
-  MarkdownPlugin.configure({ options: { remarkPlugins: [remarkGfm] } }),
+  PasteMarkdownPlugin,
 ];
