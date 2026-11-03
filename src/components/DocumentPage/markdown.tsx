@@ -64,7 +64,8 @@ function markPlaceholders(
     if (!isElement(child) || child.tagName !== 'p') return child;
     const text = child.children.length === 1 ? textOf(child).trim() : '';
     const name = PLACEHOLDER_TEXT.exec(text)?.[1];
-    if (name === undefined || !Object.prototype.hasOwnProperty.call(placeholders, name)) return child;
+    if (name === undefined || !Object.prototype.hasOwnProperty.call(placeholders, name))
+      return child;
     return { type: 'element', tagName: PLACEHOLDER_TAG, properties: { name }, children: [] };
   });
 }
@@ -194,10 +195,15 @@ function sectionsOf(tree: Root): PageNavEntry[] {
     if (element.tagName === 'h2' || element.tagName === 'h3') headings.push(element);
   });
   const entries: PageNavEntry[] = [];
+  // The page's own ids are taken first, so a body heading never claims one; a repeated text gets -2, -3 after the first.
+  const taken = new Set(['document-title', 'document-history']);
   let group: string | null = null;
   headings.forEach((heading, index) => {
     const label = textOf(heading);
-    const id = slugify(label);
+    const base = slugify(label);
+    let id = base;
+    for (let n = 2; taken.has(id); n += 1) id = `${base}-${n}`;
+    taken.add(id);
     heading.properties.id = id;
     const href = `#${id}` as const;
     if (heading.tagName === 'h2') {
@@ -217,7 +223,10 @@ export function renderMarkdown(
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
-  tree.children = markPlaceholders(tree.children as ElementContent[], placeholders) as RootContent[];
+  tree.children = markPlaceholders(
+    tree.children as ElementContent[],
+    placeholders,
+  ) as RootContent[];
   tree.children = frameTables(tree.children as ElementContent[]) as RootContent[];
   visitElements(tree, shapeFootnotes);
   const entries = sectionsOf(tree);
