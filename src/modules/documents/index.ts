@@ -19,10 +19,4 @@ export {
   currentAgreementVersion,
 } from '../../lib/current-agreement-version';
 export * from './graphql/documents';
-export type {
-  DocumentKey,
-  DocumentMailingNotifier,
-  DocumentMailingOverview,
-  DocumentMailingSummary,
-  PendingDocument,
-} from './types';
+export type { DocumentKey, DocumentMailingNotifier, DocumentMailingOverview } from './types';
