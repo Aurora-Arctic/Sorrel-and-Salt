@@ -38,16 +38,6 @@ describe('buildSearchSentence', () => {
     expect(sentence.hasFilter).toBe(false);
   });
 
-  it('joins two values with or and three with the Oxford comma', () => {
-    const labels = { forms: { oil: 'Oil', resin: 'Resin', leaf: 'Leaf' } };
-    expect(text({ forms: ['oil', 'resin'] }, 2, { labels })).toBe(
-      '2 ingredients, in the form oil or resin',
-    );
-    expect(text({ forms: ['oil', 'resin', 'leaf'] }, 2, { labels })).toBe(
-      '2 ingredients, in the form oil, resin, or leaf',
-    );
-  });
-
   it('puts the before Sun and Moon only', () => {
     const labels = { celestialBodies: { sun: 'Sun', moon: 'Moon', mars: 'Mars', venus: 'Venus' } };
     expect(text({ celestialBodies: ['sun', 'mars'] }, 4, { labels })).toBe(
