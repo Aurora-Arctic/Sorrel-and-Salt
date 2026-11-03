@@ -7,12 +7,22 @@ export {
   saveDocumentDraft,
   updateDocument,
 } from './services/editing';
+export {
+  emailDocumentToEveryAccount,
+  readDocumentMailing,
+  resumeDocumentMailing,
+  startDailyDocumentMailing,
+} from './services/document-mailing';
 export { currentTermsVersion } from '../../lib/current-terms-version';
 export * from './graphql/documents';
 export type {
   DocumentDraft,
   DocumentForEditing,
   DocumentKey,
+  DocumentMailingNotifier,
+  DocumentMailingOverview,
+  DocumentMailingState,
+  DocumentMailingSummary,
   DocumentVersionSummary,
   PublishedDocument,
   PublishedDocumentVersion,

@@ -7,6 +7,7 @@ import {
   noInvitationSender,
   noPasswordSetter,
   noSender,
+  noDocumentMailingNotifier,
   noPauseNotifier,
   noSupportNotifier,
 } from '../support/email-verification';
@@ -24,6 +25,7 @@ function context(session: Context['session']): Context {
     passwords: noPasswordSetter,
     support: noSupportNotifier,
     pauses: noPauseNotifier,
+    documents: noDocumentMailingNotifier,
     clientIp: null,
   };
 }

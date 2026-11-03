@@ -1,14 +1,18 @@
-import { and, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, lt, max, not, notInArray, sql } from 'drizzle-orm';
 import { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
 import { documentMailings } from '../../modules/documents/schema/document-mailings';
 import { documentVersions } from '../../modules/documents/schema/document-versions';
 import { documents } from '../../modules/documents/schema/documents';
+import { users } from '../../modules/identity/schema/users';
+import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
+import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
+import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { applyAudit } from '../audit';
 import type { SiteAdmin } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
 import { findPage } from './finders';
-import { selectFrom, selectOne } from './select';
+import { existsIn, selectFrom, selectOne } from './select';
 import type {
   AuditWriter,
   DocumentMailingRecipientRow,
@@ -112,6 +116,111 @@ export function findUnsentDocumentMailingRecipientPage(
   );
 }
 
+/** What a mailing reads of an account. */
+export type MailingAccount = Pick<typeof users.$inferSelect, 'id' | 'email' | 'name'>;
+
+// The seeded accounts that stand in for no one: they hold no mailbox.
+const STAND_INS = [BOOTSTRAP_USER_ID, SYSTEM_ACTOR_ID, SIGNED_OUT_SENDER_ID];
+
+// The accounts a mailing reaches: live, with a verified address a mailbox can hold (RFC 2606 reserves `.invalid`).
+const mailable = and(
+  notSoftDeleted(users),
+  eq(users.emailVerified, true),
+  not(ilike(users.email, '%.invalid')),
+  notInArray(users.id, STAND_INS),
+);
+
+/** How many accounts a mailing would reach. */
+export async function countDocumentMailingAccounts(): Promise<number> {
+  const [row] = await selectFrom(users, mailable, {
+    aggregate: { count: sql<number>`count(*)::int` },
+    over: {},
+  });
+  return row.count;
+}
+
+/** One page of the accounts a mailing reaches, by id (CLAUDE.md rule 8). */
+export function findDocumentMailingAccountPage(
+  page: PageRequest,
+): Promise<PageEntry<MailingAccount>[]> {
+  return findPage(users, [users.id], page, mailable);
+}
+
+/** The named live accounts, for the mail's address and greeting. */
+export function findDocumentMailingRecipientUsers(userIds: readonly string[]): Promise<MailingAccount[]> {
+  if (userIds.length === 0) return Promise.resolve([]);
+  return selectFrom(users, and(notSoftDeleted(users), inArray(users.id, [...userIds])));
+}
+
+/** How many mails, of every mailing, went out since midnight UTC: the provider's daily allowance is shared by them all. */
+export async function countDocumentMailsSentToday(): Promise<number> {
+  const [row] = await selectFrom(
+    documentMailingRecipients,
+    and(
+      notSoftDeleted(documentMailingRecipients),
+      sql`${documentMailingRecipients.sentAt} >= date_trunc('day', now() at time zone 'utc')`,
+    ),
+    { aggregate: { count: sql<number>`count(*)::int` }, over: {} },
+  );
+  return row.count;
+}
+
+/** How many accounts of a mailing its mail has reached. */
+export async function countDocumentMailingReached(mailingId: string): Promise<number> {
+  const [row] = await selectFrom(
+    documentMailingRecipients,
+    and(
+      notSoftDeleted(documentMailingRecipients),
+      eq(documentMailingRecipients.mailingId, mailingId),
+      isNotNull(documentMailingRecipients.sentAt),
+    ),
+    { aggregate: { count: sql<number>`count(*)::int` }, over: {} },
+  );
+  return row.count;
+}
+
+/** A live mailing by id, or `undefined`. */
+export function findDocumentMailingById(mailingId: string): Promise<DocumentMailingRow | undefined> {
+  return selectOne(
+    documentMailings,
+    and(notSoftDeleted(documentMailings), eq(documentMailings.id, mailingId)),
+  );
+}
+
+/** The sending or paused mailing of a document's version numbered below `versionNumber`, which a newer mailing would replace. */
+export function findOpenDocumentMailingBefore(
+  documentId: string,
+  versionNumber: number,
+): Promise<DocumentMailingRow | undefined> {
+  return selectOne(documentMailings, openMailingBefore(documentId, versionNumber));
+}
+
+/** The longest-waiting sending mailing of any document, which the day's run carries on first, or `undefined`. */
+export async function findOldestSendingDocumentMailing(): Promise<DocumentMailingRow | undefined> {
+  const [oldest] = await findPage(
+    documentMailings,
+    [documentMailings.createdAt],
+    { limit: 1, inverted: false },
+    eq(documentMailings.status, 'sending'),
+  );
+  return oldest?.node;
+}
+
+function openMailingBefore(documentId: string, versionNumber: number) {
+  return and(
+    notSoftDeleted(documentMailings),
+    inArray(documentMailings.status, ['sending', 'paused']),
+    existsIn(
+      documentVersions,
+      and(
+        eq(documentVersions.id, documentMailings.documentVersionId),
+        eq(documentVersions.documentId, documentId),
+        lt(documentVersions.number, versionNumber),
+      ),
+    ),
+  );
+}
+
 /** The documents' named writes, beside their finders. `writerFor` spreads them into the writer. */
 export function documentWrites({
   tx,
@@ -128,6 +237,9 @@ export function documentWrites({
   | 'addDocumentMailingRecipients'
   | 'markDocumentMailingRecipientsSent'
   | 'finishDocumentMailing'
+  | 'replaceOpenDocumentMailings'
+  | 'pauseDocumentMailing'
+  | 'resumeDocumentMailing'
 > {
   // The save and the publish match drafts alone, so a published row is never written again and answers like a missing one.
   const draftById = (versionId: string) =>
@@ -237,6 +349,24 @@ export function documentWrites({
         documentMailings,
         { status: 'sent', finishedAt: sql`now()` },
         and(eq(documentMailings.id, mailingId), eq(documentMailings.status, 'sending')),
+      ),
+    replaceOpenDocumentMailings: (_admin, documentId, versionNumber) =>
+      update(
+        documentMailings,
+        { status: 'replaced' },
+        openMailingBefore(documentId, versionNumber),
+      ),
+    pauseDocumentMailing: (mailingId) =>
+      update(
+        documentMailings,
+        { status: 'paused' },
+        and(eq(documentMailings.id, mailingId), eq(documentMailings.status, 'sending')),
+      ),
+    resumeDocumentMailing: (_admin, mailingId) =>
+      update(
+        documentMailings,
+        { status: 'sending' },
+        and(eq(documentMailings.id, mailingId), eq(documentMailings.status, 'paused')),
       ),
   };
 }

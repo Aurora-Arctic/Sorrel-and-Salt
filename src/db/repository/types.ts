@@ -573,6 +573,16 @@ export interface AuditWriter {
   ): Promise<DocumentMailingRecipientRow[]>;
   /** Finish a sending mailing: sent, dated now. A mailing that is sent or replaced answers `[]`. */
   finishDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
+  /** Mark the document's sending and paused mailings of versions numbered below `versionNumber` replaced; they keep what they sent. */
+  replaceOpenDocumentMailings(
+    admin: SiteAdmin,
+    documentId: string,
+    versionNumber: number,
+  ): Promise<DocumentMailingRow[]>;
+  /** Pause a sending mailing, for the provider's monthly quota. A mailing in any other state answers `[]`. */
+  pauseDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
+  /** Set a paused mailing sending again. A mailing in any other state answers `[]`. */
+  resumeDocumentMailing(admin: SiteAdmin, mailingId: string): Promise<DocumentMailingRow[]>;
   /**
    * Pause a user's access, stamped from the session: `until` null for no end date. The user's live pause, standing or run out, is
    * lifted first from the session, so the one-live index takes the new row. No row comes back when a pause set alongside took the slot.
