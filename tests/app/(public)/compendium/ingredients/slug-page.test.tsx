@@ -157,16 +157,16 @@ describe("the public entry page's sourcing score", () => {
 
 describe("the public entry page's way back", () => {
   // Regression: an entry opened from the admin compendium list went back to the public compendium.
-  it('returns to the public compendium, the admin compendium list being the same list', async () => {
+  it('returns to the public compendium, or to the admin compendium list under its own label', async () => {
     readCompendiumEntry.mockResolvedValue({
       ...hiddenEntry,
       detail: { ...hiddenEntry.detail, entry: { ...hiddenEntry.detail.entry, shown: true } },
     });
     render(await open());
     const props = shown.mock.calls[0]?.[0] as
-      { back?: { href: string; also?: readonly string[] } } | undefined;
+      { back?: { href: string; also?: readonly { path: string; label: string }[] } } | undefined;
     const back = props?.back;
     expect(back?.href).toBe('/compendium');
-    expect(back?.also).toEqual(['/admin/compendium']);
+    expect(back?.also).toEqual([{ path: '/admin/compendium', label: 'Admin Compendium' }]);
   });
 });

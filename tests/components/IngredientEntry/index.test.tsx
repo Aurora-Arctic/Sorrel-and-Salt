@@ -2,6 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { ReactElement } from 'react';
+import { renderToString } from 'react-dom/server';
 import type { Route } from 'next';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
@@ -747,41 +748,57 @@ describe('IngredientEntry back link', () => {
         }),
       });
     };
-    // As the public entry page passes it: the compendium list, and the admin's list of it as the same list.
-    // A variable rather than a literal, so the admin path reaches the link however the prop is typed.
+    // As the public entry page passes it: the compendium list, and the admin's list of it under its own label.
+    // A variable rather than a literal, so the admin list reaches the link however the prop is typed.
     const compendiumBack = {
       href: '/compendium' as Route,
       label: 'Compendium',
-      also: ['/admin/compendium'],
+      also: [{ path: '/admin/compendium', label: 'Admin Compendium' }],
     };
-    const backLink = () => screen.getByRole('link', { name: /^Back to/ });
+    const backLink = (name: string) => screen.getByRole('link', { name });
     afterEach(() => {
       Reflect.deleteProperty(window, 'navigation');
     });
 
     // Regression: an entry opened from the admin compendium list went back to the public compendium.
-    it('returns to the admin compendium list it was opened from, with its query', () => {
+    it('returns to the admin compendium list it was opened from, with its query, under its name', () => {
       history('/admin/compendium?query=wax&status=hidden');
       renderEntry({ back: compendiumBack });
-      expect(backLink()).toHaveAttribute('href', '/admin/compendium?query=wax&status=hidden');
+      expect(backLink('Back to Admin Compendium')).toHaveAttribute(
+        'href',
+        '/admin/compendium?query=wax&status=hidden',
+      );
+      expect(screen.queryByRole('link', { name: 'Back to Compendium' })).toBeNull();
+    });
+
+    it('draws the public compendium on the server, before the history is read', () => {
+      history('/admin/compendium?query=wax&status=hidden');
+      const page = document.createElement('div');
+      page.innerHTML = renderToString(
+        <IngredientEntry detail={detail()} hrefOf={hrefOf} back={compendiumBack} />,
+      );
+      expect(within(page).getByRole('link', { name: 'Back to Compendium' })).toHaveAttribute(
+        'href',
+        '/compendium',
+      );
     });
 
     it('returns to the public compendium it was opened from, with its query', () => {
       history('/compendium?query=wax');
       renderEntry({ back: compendiumBack });
-      expect(backLink()).toHaveAttribute('href', '/compendium?query=wax');
+      expect(backLink('Back to Compendium')).toHaveAttribute('href', '/compendium?query=wax');
     });
 
     it('returns to the bare public compendium with no page before it', () => {
       history();
       renderEntry({ back: compendiumBack });
-      expect(backLink()).toHaveAttribute('href', '/compendium');
+      expect(backLink('Back to Compendium')).toHaveAttribute('href', '/compendium');
     });
 
     it('returns to the bare public compendium from a page that is neither list', () => {
       history('/admin/users?query=wax');
       renderEntry({ back: compendiumBack });
-      expect(backLink()).toHaveAttribute('href', '/compendium');
+      expect(backLink('Back to Compendium')).toHaveAttribute('href', '/compendium');
     });
   });
 });
