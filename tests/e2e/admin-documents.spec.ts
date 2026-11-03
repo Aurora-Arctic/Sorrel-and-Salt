@@ -424,7 +424,17 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
 
   // Every save is held until the test lets it go.
   const bodies: string[] = [];
+  let landed = 0;
   let release = () => {};
+  page.on('response', (response) => {
+    const request = response.request();
+    if (!request.url().endsWith('/api/graphql')) return;
+    if (
+      (request.postDataJSON() as { operationName?: string } | null)?.operationName ===
+      'SaveDocumentDraft'
+    )
+      landed += 1;
+  });
   await page.route('**/api/graphql', async (route) => {
     const request = route.request().postDataJSON() as {
       operationName?: string;
@@ -435,6 +445,8 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     await new Promise<void>((resolve) => {
       release = resolve;
     });
+    // A released save takes a moment to reach the server, so the test has to wait for it to land, not for the button.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
     return route.continue();
   });
 
@@ -456,6 +468,8 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     expect(bodies[bodies.length - 2]).not.toContain(SAVED_HEADING);
     expect(bodies[bodies.length - 1]).toContain(SAVED_HEADING);
     release();
+    // Save Draft is disabled while a save is in flight too, so the test waits for the save to land before it reads the button.
+    await expect.poll(() => landed, { timeout: 10_000 }).toBe(sent + 2);
     await expect(save).toBeDisabled();
   }
 
