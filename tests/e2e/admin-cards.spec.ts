@@ -13,6 +13,8 @@ test.beforeAll(async () => {
 test('an admin mints a sheet of cards and the Invitation Cards tab lists the batch without violations', async ({
   page,
 }) => {
+  // Minting a sheet and drawing its cards runs past the default 30 seconds on CI under coverage.
+  test.setTimeout(90_000);
   await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
   await page.goto('/keepers/invitation-cards');
 
