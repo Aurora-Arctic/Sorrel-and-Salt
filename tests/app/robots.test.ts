@@ -42,6 +42,8 @@ describe('robots', () => {
       '/.well-known/ai-catalog.json',
       '/.well-known/ard.json',
       '/sitemap.xml',
+      '/_next/',
+      '/opengraph-image',
     ]);
   });
 
@@ -58,6 +60,14 @@ describe('robots', () => {
     ['/', true],
     ['/compendium', true],
     ['/compendium/ingredients/testwort', true],
+    // Out of the sitemap, but still crawlable.
+    ['/sign-in', true],
+    // The build's CSS, JavaScript and images, which a crawler needs to render a page.
+    ['/_next/static/chunks/main.js', true],
+    ['/_next/image?url=%2Fbackdrop.webp&w=640&q=75', true],
+    // The home page's share card.
+    ['/opengraph-image', true],
+    ['/compendium/opengraph-image', true],
     // Fetchable so a crawler reads the page's own noindex.
     ['/support', true],
     ['/support?support=', true],
@@ -95,7 +105,7 @@ describe('robots', () => {
 
     const paths = (await sitemap()).map(({ url }) => new URL(url).pathname);
 
-    expect(paths).toContain('/sign-in');
+    expect(paths).toContain('/compendium');
     expect(paths.filter((path) => !allowed(path))).toEqual([]);
   });
 
