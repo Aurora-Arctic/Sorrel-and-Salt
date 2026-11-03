@@ -50,11 +50,22 @@ const norm = (id) => canonical.get(id.toUpperCase()) ?? id.toUpperCase();
 // a list of ids (`(M10.22, MB.6, MB.123)`) marks every task a doc edit touched,
 // and a bracketed code that is no task (`(P9)`) would count as a task at 0h.
 const TAIL = new RegExp(String.raw`\((${ID})\)\s*$`);
+// Commits that name a task in one of those forms without finishing it: an edit to
+// the task's entry, or a PR that only corrected it. Listed by hash, not by id, so
+// the merge that does finish the task still counts.
+const NOT_COMPLETIONS = new Set([
+  'd6fd2b5219afd53a6f043916ab66991787c21352', // MB.163: the PR corrected its entry
+  'a8ef62e23cd846e8b323972e74712cc65dc5b9d4', // MB.175: glossary added to its entry
+  'f821420471d675a9aaefeb754b930d669203f7c1', // MB.175: scope recorded in its entry
+  'b49a9168b2d28aaf24ba0db4809993283eaabd6c', // MB.175: seed term added to its entry
+  '30b5c5c25541d5d1ac7a27e8e1dbffe5a7a5bce1', // M17.1: a line added to its entry
+]);
 const done = new Set();
 const RECORD = '\x1e';
 const FIELD = '\x1f';
-for (const record of git('log', ref, `--format=%s${FIELD}%b${RECORD}`).split(RECORD)) {
-  const [subject = '', body = ''] = record.replace(/^\n/, '').split(FIELD);
+for (const record of git('log', ref, `--format=%H${FIELD}%s${FIELD}%b${RECORD}`).split(RECORD)) {
+  const [hash = '', subject = '', body = ''] = record.replace(/^\n/, '').split(FIELD);
+  if (NOT_COMPLETIONS.has(hash)) continue;
   for (const id of idsNamedByMerge(subject, body)) done.add(norm(id));
   const t = TAIL.exec(subject);
   if (t && plan.has(norm(t[1]))) done.add(norm(t[1]));
