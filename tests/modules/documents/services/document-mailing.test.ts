@@ -14,7 +14,11 @@ import {
 } from '@/modules/documents';
 import type { DocumentMailingNotifier } from '@/modules/documents';
 import { documentMailing } from '@/modules/documents/jobs/document-mailing';
-import { MAILING_DAILY_CAP, mailingDays } from '@/modules/documents/mailing-pace';
+import {
+  MAILING_DAILY_CAP,
+  documentMailingHookToken,
+  mailingDays,
+} from '@/modules/documents/mailing-pace';
 import { assertCurator } from '@/modules/identity';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -25,10 +29,11 @@ import { insertDocument, insertDocumentVersion } from '../../../support/db/inser
 // is an admin's alone, through assertSiteAdmin. The run that sends the mail is tests/workflows/document-mailing.test.ts; the
 // signed-out caller is refused at the GraphQL scope (tests/db/graphql-query-scopes.test.ts).
 
-const { startJob } = vi.hoisted(() => ({
+const { startJob, jobTokenActive } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+  jobTokenActive: vi.fn(async (_token: string) => false),
 }));
-vi.mock('@/lib/jobs', () => ({ startJob, jobTokenActive: vi.fn(async () => false) }));
+vi.mock('@/lib/jobs', () => ({ startJob, jobTokenActive }));
 
 const ORIGIN = 'http://localhost:3000';
 const notifier: DocumentMailingNotifier = { origin: async () => ORIGIN };
@@ -47,6 +52,8 @@ let termsV1: string;
 
 beforeEach(async () => {
   startJob.mockClear();
+  jobTokenActive.mockReset();
+  jobTokenActive.mockResolvedValue(false);
   await sql`truncate documents cascade`;
   // The privacy policy published at versions 1 and 2, with 3 an open draft; the terms at version 1. No disclaimer row.
   privacyId = await insertDocument(sql, { key: 'privacy', title: 'Fixture Policy' }, E.id);
@@ -387,6 +394,18 @@ describe('startDailyDocumentMailing', () => {
     await startDailyDocumentMailing(ORIGIN);
 
     expect(startJob).toHaveBeenCalledExactlyOnceWith(documentMailing, [oldest, ORIGIN]);
+  });
+
+  it('starts nothing while a run still holds the oldest sending mailing’s hook token', async () => {
+    const oldest = await mailing(termsV1, await accounts(1), { startedSecondsAgo: 3600 });
+    // A run of the oldest mailing is asleep between batches, across midnight, holding its token.
+    jobTokenActive.mockImplementation(async (token) => token === documentMailingHookToken(oldest));
+
+    await startDailyDocumentMailing(ORIGIN);
+
+    // Precondition: the start looked the token up, so the refusal is the lookup’s.
+    expect(jobTokenActive).toHaveBeenCalledWith(documentMailingHookToken(oldest));
+    expect(startJob).not.toHaveBeenCalled();
   });
 
   it('starts nothing when no mailing is sending', async () => {

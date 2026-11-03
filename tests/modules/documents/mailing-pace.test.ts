@@ -3,6 +3,7 @@ import {
   MAILING_BATCH_PAUSE_SECONDS,
   MAILING_BATCH_SIZE,
   MAILING_DAILY_CAP,
+  documentMailingHookToken,
   mailingDays,
 } from '@/modules/documents/mailing-pace';
 
@@ -26,5 +27,15 @@ describe('the mailing pace', () => {
     [1000, 17],
   ])('takes %i accounts %i days at the daily cap', (accounts, days) => {
     expect(mailingDays(accounts)).toBe(days);
+  });
+});
+
+describe('documentMailingHookToken', () => {
+  it('names one token per mailing, which the run holds and the daily start looks up', () => {
+    const first = documentMailingHookToken('00000000-0000-4000-8000-0000000000a1');
+
+    expect(first).toContain('00000000-0000-4000-8000-0000000000a1');
+    expect(documentMailingHookToken('00000000-0000-4000-8000-0000000000a1')).toBe(first);
+    expect(documentMailingHookToken('00000000-0000-4000-8000-0000000000a2')).not.toBe(first);
   });
 });

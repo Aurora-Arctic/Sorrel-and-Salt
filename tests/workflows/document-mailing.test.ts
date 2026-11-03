@@ -338,6 +338,74 @@ describe('the document mailing run', () => {
     errors.mockRestore();
   });
 
+  it('a second run on a mailing whose run is still going sends nothing, and no one is mailed twice', async () => {
+    const { versionId } = await publishedVersion('privacy');
+    const readers = await accounts(MAILING_BATCH_SIZE + 5);
+    const mailingId = await mailing(versionId, readers);
+    const first = await start(documentMailing, [mailingId, ORIGIN]);
+    const sleepId = await waitForSleep(first);
+    // Precondition: the first run is asleep with recipients left, so a second run that went ahead would mail them.
+    expect(attempts).toHaveLength(MAILING_BATCH_SIZE);
+    expect((await mailingRow(mailingId)).status).toBe('sending');
+
+    // What the daily cron does when a run sleeps across midnight.
+    const second = await start(documentMailing, [mailingId, ORIGIN]);
+
+    await expect(second.returnValue).resolves.toBe('duplicate');
+    expect(attempts).toHaveLength(MAILING_BATCH_SIZE);
+
+    await getRun(first.runId).wakeUp({ correlationIds: [sleepId] });
+
+    await expect(first.returnValue).resolves.toBe('sent');
+    // Every address tried once and taken once.
+    expect(attempts.sort()).toEqual(readers.map((reader) => reader.email).sort());
+    expect(received).toHaveLength(readers.length);
+  });
+
+  it('ends a run whose batch fails every attempt, keeping what it sent, and a later run mails only the rest', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { versionId } = await publishedVersion('privacy');
+    const readers = await accounts(4);
+    const mailingId = await mailing(versionId, readers);
+    // The transport takes two sends, then refuses every send after them, on every attempt.
+    const downAfterTwo = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (url.startsWith(MAILPIT_URL) && received.length >= 2) failNext = 1;
+      return transport(input, init);
+    };
+    vi.stubGlobal('fetch', downAfterTwo);
+    try {
+      const failed = await start(documentMailing, [mailingId, ORIGIN]);
+
+      await expect(failed.returnValue).resolves.toBe('failed');
+      // Precondition: the batch was retried, so the run ended after its last attempt, not its first.
+      expect(attempts.length).toBeGreaterThan(3);
+      expect(received).toHaveLength(2);
+      expect(await sentCount(mailingId)).toBe(2);
+      expect(await mailingRow(mailingId)).toMatchObject({ status: 'sending', finished_at: null });
+      expect(logged.mock.calls.some(([line]) => /every attempt failed/.test(String(line)))).toBe(
+        true,
+      );
+    } finally {
+      vi.stubGlobal('fetch', transport);
+      logged.mockRestore();
+    }
+    const reachedFirst = received.map((mail) => mail.to);
+
+    // The next day's run, as the daily cron starts it, once the transport is back.
+    attempts.length = 0;
+    const next = await start(documentMailing, [mailingId, ORIGIN]);
+
+    await expect(next.returnValue).resolves.toBe('sent');
+    expect(attempts.sort()).toEqual(
+      readers
+        .map((reader) => reader.email)
+        .filter((email) => !reachedFirst.includes(email))
+        .sort(),
+    );
+    expect(await sentCount(mailingId)).toBe(readers.length);
+  });
+
   it('mails each account the document’s title, the summary and a link to the document', async () => {
     const { versionId, title } = await publishedVersion('privacy');
     const [reader] = await accounts(1);
