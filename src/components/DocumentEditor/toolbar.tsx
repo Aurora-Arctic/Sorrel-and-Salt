@@ -14,6 +14,17 @@ import {
   useRef,
   useState,
 } from 'react';
+import IconTip, {
+  BoldIcon,
+  BulletListIcon,
+  FootnoteIcon,
+  Heading2Icon,
+  Heading3Icon,
+  ItalicIcon,
+  LinkIcon,
+  NumberListIcon,
+  TableIcon,
+} from '../IconTip';
 import Modal from '../Modal';
 
 // The editor's toolbar: one button for each thing the public page draws that a person can add. It is a single tab stop
@@ -23,6 +34,7 @@ type EditorRef = ReturnType<typeof useEditorRef>;
 
 interface ToolbarButton {
   label: string;
+  icon: ReactElement;
   /** Whether the selection already has what the button applies; absent for a button that only adds. */
   pressed?: (editor: EditorRef) => boolean;
   run: (editor: EditorRef) => void;
@@ -40,38 +52,45 @@ function nextBlockPath(editor: EditorRef): [number] {
 const BUTTONS: ToolbarButton[] = [
   {
     label: 'Heading 2',
+    icon: <Heading2Icon />,
     pressed: inBlock(KEYS.h2),
     run: (editor) => editor.tf.toggleBlock(KEYS.h2),
   },
   {
     label: 'Heading 3',
+    icon: <Heading3Icon />,
     pressed: inBlock(KEYS.h3),
     run: (editor) => editor.tf.toggleBlock(KEYS.h3),
   },
   {
     label: 'Bold',
+    icon: <BoldIcon />,
     pressed: (editor) => Boolean(editor.api.hasMark(KEYS.bold)),
     run: (editor) => editor.tf.toggleMark(KEYS.bold),
   },
   {
     label: 'Italic',
+    icon: <ItalicIcon />,
     pressed: (editor) => Boolean(editor.api.hasMark(KEYS.italic)),
     run: (editor) => editor.tf.toggleMark(KEYS.italic),
   },
   // Link opens its own dialog, so `run` is not used.
-  { label: 'Link', run: () => undefined },
+  { label: 'Link', icon: <LinkIcon />, run: () => undefined },
   {
     label: 'Bulleted List',
+    icon: <BulletListIcon />,
     pressed: (editor) => Boolean(editor.selection) && someList(editor, 'disc'),
     run: (editor) => toggleList(editor, { listStyleType: 'disc' }),
   },
   {
     label: 'Numbered List',
+    icon: <NumberListIcon />,
     pressed: (editor) => Boolean(editor.selection) && someList(editor, 'decimal'),
     run: (editor) => toggleList(editor, { listStyleType: 'decimal' }),
   },
   {
     label: 'Table',
+    icon: <TableIcon />,
     run: (editor) =>
       insertTable(
         editor,
@@ -81,6 +100,7 @@ const BUTTONS: ToolbarButton[] = [
   },
   {
     label: 'Footnote',
+    icon: <FootnoteIcon />,
     run: (editor) => editor.getTransforms(FootnoteReferencePlugin).insert.footnote(),
   },
 ];
@@ -194,22 +214,24 @@ const Toolbar = (): ReactElement => {
       {BUTTONS.map((button, index) => {
         const pressed = button.pressed?.(editor);
         return (
-          <button
-            key={button.label}
-            ref={(node) => {
-              buttons.current[index] = node;
-            }}
-            type="button"
-            className="btn btn--quiet btn--small"
-            tabIndex={index === stop ? 0 : -1}
-            aria-pressed={pressed}
-            // A press must not move the focus out of the text, or the selection it acts on is lost.
-            onMouseDown={(event: MouseEvent) => event.preventDefault()}
-            onFocus={() => setStop(index)}
-            onClick={() => press(button)}
-          >
-            {button.label}
-          </button>
+          <IconTip key={button.label} tip={button.label} placement="below">
+            <button
+              ref={(node) => {
+                buttons.current[index] = node;
+              }}
+              type="button"
+              className="btn btn--quiet btn--small btn--icon"
+              aria-label={button.label}
+              tabIndex={index === stop ? 0 : -1}
+              aria-pressed={pressed}
+              // A press must not move the focus out of the text, or the selection it acts on is lost.
+              onMouseDown={(event: MouseEvent) => event.preventDefault()}
+              onFocus={() => setStop(index)}
+              onClick={() => press(button)}
+            >
+              {button.icon}
+            </button>
+          </IconTip>
         );
       })}
       {linking && <LinkDialog onAdd={addLink} onClose={closeLink} />}

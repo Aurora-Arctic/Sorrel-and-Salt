@@ -39,8 +39,15 @@
   }
 }
 
-// The row of formatting buttons above the text box, in the same column.
+// The row of formatting buttons above the text box, in the same column. It sticks just under the site bar while the text box
+// is on screen, on the page's own fill so the text scrolls under it.
 .document-editor__toolbar {
+  position: sticky;
+  // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
+  top: var(--sticky-top, 0px);
+  z-index: layer('sticky-row');
+  padding-block: space(1);
+  background-color: $surface-page;
   display: flex;
   flex-wrap: wrap;
   gap: space(1);

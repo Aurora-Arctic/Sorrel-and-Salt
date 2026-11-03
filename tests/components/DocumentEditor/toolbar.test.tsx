@@ -114,6 +114,7 @@ describe('the document editor’s toolbar', () => {
     for (const name of BUTTONS) expect(button(name)).toBeEnabled();
     // Nothing else: no image, underline, raw HTML or any other button the page could not draw.
     expect(within(toolbar()).getAllByRole('button')).toHaveLength(BUTTONS.length);
+    for (const name of BUTTONS) expect(button(name).querySelector('svg')).not.toBeNull();
   });
 
   // Each block button turns the paragraph holding the caret into its block.

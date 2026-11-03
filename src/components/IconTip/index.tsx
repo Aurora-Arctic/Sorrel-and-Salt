@@ -39,4 +39,12 @@ export {
   ArchiveBoxIcon,
   StockIcon,
   UndoIcon,
+  Heading2Icon,
+  Heading3Icon,
+  BoldIcon,
+  ItalicIcon,
+  BulletListIcon,
+  NumberListIcon,
+  TableIcon,
+  FootnoteIcon,
 } from './icons';

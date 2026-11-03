@@ -596,3 +596,163 @@ export function ArchiveBoxIcon(): ReactElement {
     </svg>
   );
 }
+
+// The document editor's toolbar marks, on the same 16-unit box and `currentColor` stroke; each button around them carries the name.
+
+/** The letter H with a small 2: a second-level heading. */
+export function Heading2Icon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.5 3v10M9 3v10M2.5 8H9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M11 9.5a1.5 1.5 0 013 0c0 1-3 2-3 3.5h3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** The letter H with a small 3: a third-level heading. */
+export function Heading3Icon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.5 3v10M9 3v10M2.5 8H9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M11 8.5h3l-1.7 2a1.5 1.5 0 11-1.3 2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A bold B: strong text. */
+export function BoldIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M4.5 2.5h3.75a2.5 2.5 0 010 5H4.5zM4.5 7.5H9a2.75 2.75 0 010 5.5H4.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A slanted I: emphasised text. */
+export function ItalicIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M6.5 2.5h5M4.5 13.5h5M9.5 2.5l-3 11"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Three lines, each led by a dot: a bulleted list. */
+export function BulletListIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M6.5 4h7M6.5 8h7M6.5 12h7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="3" cy="4" r="1" fill="currentColor" />
+      <circle cx="3" cy="8" r="1" fill="currentColor" />
+      <circle cx="3" cy="12" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** Three lines, each led by a small number: a numbered list. */
+export function NumberListIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M7 4h6.5M7 8h6.5M7 12h6.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2 3.5l1.2-.8v3M2 7.3a1 1 0 011.9.3c0 .7-1.9 1.2-1.9 2h2M2 11h1.9l-1 1a1 1 0 11-.9 1.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A grid with a header row: a table. */
+export function TableIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3.5 2.5h9a1 1 0 011 1v9a1 1 0 01-1 1h-9a1 1 0 01-1-1v-9a1 1 0 011-1zM2.5 6.5h11M8 6.5v7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Lines of text with a small raised numeral beside them: a footnote. */
+export function FootnoteIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2 6h6.5M2 10h9M2 14h6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10.5 3.5l1.5-1v4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
