@@ -46,10 +46,13 @@
   // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
   top: var(--sticky-top, 0px);
   z-index: layer('sticky-row');
-  padding-block: space(1);
-  background-color: $surface-page;
+  padding-block: space(2);
+  // An opaque raised ground, so the text scrolls under it, with a line in the body ink beneath: white in dark, as white would vanish on parchment.
+  border-bottom: 1px solid $text-primary;
+  background-color: $surface-card;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: space(1);
   margin-block-end: space(2);
 }
