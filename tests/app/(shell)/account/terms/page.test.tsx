@@ -18,8 +18,8 @@ vi.mock('@/lib/landing', () => ({ signedInLanding }));
 const readDocument = vi.fn();
 // Terms 3, disclaimer 2, code of ethics 1.
 const IN_FORCE = { terms: 3, disclaimer: 2, ethics: 1 };
-const currentAgreementVersion = vi.fn(async () => IN_FORCE);
-vi.mock('@/modules/documents', () => ({ readDocument, currentAgreementVersion }));
+const agreementVersionInForce = vi.fn(async () => IN_FORCE);
+vi.mock('@/modules/documents', () => ({ readDocument, agreementVersionInForce }));
 
 const { default: TermsPage, metadata } = await import('@/app/(shell)/account/terms/page');
 
