@@ -20,7 +20,7 @@ import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRole } from '../types';
 import { assertMembership } from './membership';
 
-// An owner invites an address into a coven with a role: the workspace tier of `invitations` (claude-docs/db/invitations.md,
+// A steward invites an address into a coven with a role: the workspace tier of `invitations` (claude-docs/db/invitations.md,
 // "Coven invitation service details"). Who may invite is this service's; the token, expiry and workspace are the repository's.
 
 /** The roles an invitation may grant: the database's check, said again where it can explain itself. */
@@ -53,7 +53,7 @@ function isInvitable(role: WorkspaceRole): role is InvitableRole {
  * Invites `email` into the coven with `role`: a pending invitation whose token is mailed through `sender` and stored as its hash
  * alone; a second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Coven invitation service details").
  *
- * @throws {Forbidden} the caller is not an owner of the coven (`member: invite`).
+ * @throws {Forbidden} the caller is not a steward of the coven (`member: invite`).
  * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already. On no field: the sender's
  * hourly mail limit is reached, which every new invitation and every resend counts toward.
  */
@@ -70,7 +70,8 @@ export async function createInvitation(
     throw new ValidationError([
       {
         path: ['role'],
-        message: 'Invite someone as a viewer or a member; an owner makes them an owner afterwards',
+        message:
+          'Invite someone as an observer or a practitioner; a steward makes them a steward afterwards',
       },
     ]);
   }
@@ -101,10 +102,10 @@ export async function createInvitation(
 }
 
 /**
- * One page of the coven's pending invitations, newest first, for the members page. Owners only: the rows carry the addresses of
+ * One page of the coven's pending invitations, newest first, for the members page. Stewards only: the rows carry the addresses of
  * people who have not joined, so the check is `member: invite`, never `member: read`.
  *
- * @throws {Forbidden} the caller is not an owner of the coven.
+ * @throws {Forbidden} the caller is not a steward of the coven.
  */
 export async function listPendingWorkspaceInvitations(
   session: Session,
@@ -118,7 +119,7 @@ export async function listPendingWorkspaceInvitations(
 /**
  * How many invitations `listPendingWorkspaceInvitations` pages, and how many come before `start`: "Page X of Y".
  *
- * @throws {Forbidden} the caller is not an owner of the coven.
+ * @throws {Forbidden} the caller is not a steward of the coven.
  */
 export async function countPendingWorkspaceInvitations(
   session: Session,
@@ -132,7 +133,7 @@ export async function countPendingWorkspaceInvitations(
 /**
  * Withdraws a pending invitation of the coven, stamped as the owner: its link is dead from now on and the row stays for the audit.
  *
- * @throws {Forbidden} the caller is not an owner of the coven.
+ * @throws {Forbidden} the caller is not a steward of the coven.
  * @throws {NotFound} no invitation of this coven has this id, or it is no longer pending.
  * @throws {ValidationError} on `id`: the invitation was accepted, so the person is removed on the members page instead.
  */

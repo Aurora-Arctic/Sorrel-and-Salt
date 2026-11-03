@@ -23,7 +23,7 @@ import type {
   SpellUpdate,
 } from '../types';
 
-// The grimoire's service. Owners and members create and edit, viewers read. A private spell is its author's alone, which the
+// The grimoire's service. Stewards and practitioners create and edit, observers read. A private spell is its author's alone, which the
 // finders enforce: a hidden spell is `NotFound`, never confirmed to exist (claude-docs/db/spell-visibility.md).
 
 /** The spell, or the `NotFound` that is also the answer for one this reader may not see. */
@@ -197,8 +197,8 @@ export async function updateSpellStep(
 }
 
 /**
- * Deletes a spell: a soft delete of the spell and its steps in one transaction. Owners and
- * members delete, viewers are refused; another member's private spell is refused as if it did not
+ * Deletes a spell: a soft delete of the spell and its steps in one transaction. Stewards and
+ * practitioners delete, observers are refused; another member's private spell is refused as if it did not
  * exist. The visibility lock governs widening, not existence, so a shared or complete spell goes
  * too. Stock is never touched.
  *

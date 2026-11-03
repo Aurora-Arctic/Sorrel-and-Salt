@@ -5,7 +5,7 @@ import { idColumn } from '../../../db/schema-parts';
 import { auditColumns, users } from '../../identity/schema/users';
 import { workspaces } from './workspaces';
 
-// A coven owner's pause on one member's access to that coven, one row per pause, kept as history; `created_by` is who set it. It
+// A coven steward's pause on one member's access to that coven, one row per pause, kept as history; `created_by` is who set it. It
 // stands while it is live (not lifted, not deleted) and `until` is null or still ahead. Marked `namedWrites`: reached only through
 // its set and lift.
 export const workspaceMemberPauses = namedWrites(

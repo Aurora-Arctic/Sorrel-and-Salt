@@ -4,9 +4,9 @@ export interface SwitcherWorkspace {
   name: string;
   /** The viewer's role there may read its members; false sends a switch from a people page to the index. */
   canReadMembers: boolean;
-  /** The viewer's role there may invite (an owner's alone); false sends a switch from invitations to the members page. */
+  /** The viewer's role there may invite (a steward's alone); false sends a switch from invitations to the members page. */
   canInvite: boolean;
-  /** The pause an owner set on the viewer's seat there, or null: its row is marked with when the pause ends. `until` null is open-ended. */
+  /** The pause a steward set on the viewer's seat there, or null: its row is marked with when the pause ends. `until` null is open-ended. */
   paused: { until: Date | null } | null;
 }
 

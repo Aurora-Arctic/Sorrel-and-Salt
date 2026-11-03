@@ -25,7 +25,7 @@ import { variantsOf } from './ingredient-children';
 import type { IngredientVariantRow, SaveStockValues, StockKey, StockValues } from '../types';
 import { type Membership, assertMembership } from '@/modules/coven';
 
-// What a coven holds of each form, written by members and owners and read by everyone in it (claude-docs/db/stock.md, "The stock service").
+// What a coven holds of each form, written by practitioners and stewards and read by everyone in it (claude-docs/db/stock.md, "The stock service").
 // Writes check `inventory: update` (the statement has no `create` or `delete`), reads `inventory: read`; the dimension is the unit's, never input.
 
 const NO_FORM = 'No such form for this coven to stock';
@@ -243,7 +243,7 @@ export async function deleteStock(
 }
 
 /**
- * One jar of this coven, for any member, viewers included.
+ * One jar of this coven, for any member, observers included.
  *
  * @throws {Forbidden} the caller may not read this coven's stock.
  * @throws {NotFound} no live jar in this coven has this id, as `updateStock`.

@@ -50,7 +50,7 @@ import type {
 // (five "Cat's Claw" rows, mineral varieties, `none` and `unknown`). Writes use the handle `seed()` was given, not `withAudit`. (claude-docs/db/standard-scenario.md, "The compendium is awkward on purpose")
 
 /**
- * A owns W, B is a member, C a viewer, D a member of unrelated X, E a site admin and F a site curator in no
+ * A owns W, B is a practitioner, C an observer, D a practitioner of unrelated X, E a site admin and F a site curator in no
  * workspace, G an unverified account. A–D hold `canCreateWorkspace` by membership, E and F by their roles
  * (the users CHECK requires it of every role but `user`).
  */

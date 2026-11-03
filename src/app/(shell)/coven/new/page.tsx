@@ -38,7 +38,7 @@ export default async function NewCovenPage({
         <div className="page-frame__section panel">
           <PageHeader
             title="Create Coven"
-            lede="Start a coven of your own. You will be its owner."
+            lede="Start a coven of your own. You will be its steward."
           />
           {fromCard && me.canCreateWorkspace && (
             <Notice kind="success" quiet>

@@ -43,7 +43,7 @@ export interface AdminInvitationProps extends BaseEmailProps {
 }
 
 export interface CovenInvitationProps extends BaseEmailProps {
-  /** The owner who sent the invitation. */
+  /** The steward who sent the invitation. */
   inviterName: string;
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;
@@ -144,13 +144,13 @@ export interface AccessPausedProps extends BaseEmailProps {
   message: string | null;
 }
 
-/** Told to a member that a coven owner paused their access to the coven. */
+/** Told to a member that a coven steward paused their access to the coven. */
 export interface CovenAccessPausedProps extends BaseEmailProps {
   url: string;
   covenName: string;
   /** When the pause ends, or `null` when it has no end date. */
   until: Date | null;
-  /** What the owner wrote to the member, or `null` when they wrote none. */
+  /** What the steward wrote to the member, or `null` when they wrote none. */
   message: string | null;
 }
 

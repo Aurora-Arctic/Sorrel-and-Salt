@@ -34,7 +34,7 @@ export const invitations = namedWrites(
       revokedAt: timestamp('revoked_at'),
       // The invitee's no: a coven invitation only, answered once. Who
       // declined is the address it was sent to, held verified by the session
-      // that wrote it; the owner's Remove afterwards stamps `revoked_at`.
+      // that wrote it; the steward's Remove afterwards stamps `revoked_at`.
       declinedAt: timestamp('declined_at'),
       // Why the person is being invited; optional, and either tier may carry one.
       // A card carries its batch's note, copied onto every card of the batch as the expiry is.

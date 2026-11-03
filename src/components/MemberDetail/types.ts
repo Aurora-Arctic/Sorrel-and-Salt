@@ -8,7 +8,7 @@ export interface MemberDetailProps {
   currentUserId: string;
   /** Whether the viewer may change a member's role (`member: update`); off by default. */
   canChangeRoles?: boolean;
-  /** Whether the viewer may pause a member's access (`member: pause`); off by default. Never offered on an owner. */
+  /** Whether the viewer may pause a member's access (`member: pause`); off by default. Never offered on a steward. */
   canPause?: boolean;
   /** Whether the viewer may remove a member (`member: remove`); off by default. */
   canRemove?: boolean;
@@ -16,7 +16,7 @@ export interface MemberDetailProps {
   onRemoved?: () => void;
 }
 
-/** The member modal's Coven Access, for an owner. */
+/** The member modal's Coven Access, for a steward. */
 export interface CovenAccessPanelProps {
   workspaceId: string;
   /** The member the pause is for. */

@@ -67,7 +67,7 @@ const PEOPLE_SECTIONS = new Set(['members', 'invitations']);
 export interface PathInCovenOptions {
   /** The role there may read members; without it the members and invitations pages are a 404. */
   canReadMembers?: boolean;
-  /** The role there may invite; without it the invitations page is a 404 (an owner's alone). */
+  /** The role there may invite; without it the invitations page is a 404 (a steward's alone). */
   canInvite?: boolean;
   /**
    * The slugs of the covens the page being left also opens in, when it is one
@@ -99,8 +99,8 @@ export function pathInCoven(
 
 /**
  * What each section's page draws while it is on its way: the heading and its cards under a filter (Ingredients), the tab row
- * and a filter (grimoire), or a table under the tab row (people; Invitations for an owner). The Invite action is left out,
- * as it is an owner's alone and the address does not say who is asking.
+ * and a filter (grimoire), or a table under the tab row (people; Invitations for a steward). The Invite action is left out,
+ * as it is a steward's alone and the address does not say who is asking.
  */
 const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
   ingredients: { shape: 'cards', title: true, filter: true, density: 'compact' },
@@ -109,7 +109,7 @@ const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
     title: true,
     filter: true,
     tabs: true,
-    // New Spell is for members and owners; a viewer sees a block where it is not, which keeps the rows from jumping.
+    // New Spell is for practitioners and stewards; an observer sees a block where it is not, which keeps the rows from jumping.
     action: true,
     density: 'compact',
     card: 'spell',

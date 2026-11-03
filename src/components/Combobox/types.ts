@@ -227,7 +227,7 @@ export interface Bucket<O extends ComboboxOption> {
 export interface ComboboxChoice {
   value: string;
   label: string;
-  /** What the choice is besides its label, a member's role: its row reads "Fixture B (Member)", the chosen box shows it muted after the label; typing matches the label alone. */
+  /** What the choice is besides its label, a member's role: its row reads "Fixture B (Practitioner)", the chosen box shows it muted after the label; typing matches the label alone. */
   qualifier?: ComboboxQualifier;
   /** The choice makes something new rather than picking one (the switcher's Create Coven): its row is set off by a rule and led by a plus. */
   create?: boolean;

@@ -21,7 +21,7 @@ These terms include two other pages, and agreeing to these terms is agreeing to 
 
 ### Who May Use the Site
 
-Anyone may read the public compendium without an account. Signing in by any method gives you an account and a viewer's seat in the demo coven.
+Anyone may read the public compendium without an account. Signing in by any method gives you an account and an observer's seat in the demo coven.
 
 You must be at least thirteen years old. The site is run from the United States, whose Children's Online Privacy Protection Act treats anyone under thirteen as a child whose personal information an online service may not collect without a parent's consent, and the site does not ask for a parent's consent.[^1][^2]
 
@@ -33,7 +33,7 @@ Everything you write in a coven stays yours: your ingredients, your stock, your 
 
 A spell marked private is shown to you alone. Once a spell is complete and shared with your coven, it cannot be made private again, because the people who have seen it may already rely on it. To have a private version of a shared spell again, use Duplicate: it makes a private draft copy that only you can see and edit, and the shared spell stays as it was.
 
-A coven's owner may delete the coven, and may remove any member from it. Any member may leave a coven at any time. The demo coven, where every account begins, cannot be deleted.
+A coven's steward may delete the coven, and may remove any member from it. Any member may leave a coven at any time. The demo coven, where every account begins, cannot be deleted.
 
 ### The Compendium
 
@@ -45,7 +45,7 @@ The [Code of Ethics](/code-of-ethics) says what the site stands for. Its section
 
 The Code of Ethics goes on to ask more of the people who run the site. Its sections for curators, for admins and for the site's owner each add to the one before, and bind whoever holds that role for as long as they hold it.
 
-The tools the site has today for keeping to this are small, and we name them rather than promise more. A coven's owner may remove a member from the coven. The owner may also pause a member's access to the coven for as long as the owner decides. A paused member keeps their place in the coven but cannot open it. Their other covens are not affected. A site admin may stop a person sending support requests for as long as an admin decides, and may take away the right to create covens. Accounts are never closed. A site admin may pause an account's access to the site for as long as an admin decides. A paused account can still sign in to ask for support, but cannot open anything else. The compendium stays open to it, as it does to everyone. When you are stopped from sending support requests, or your access to the site or a coven is paused, the site emails you at the address on your account. Lifting one sends no email.
+The tools the site has today for keeping to this are small, and we name them rather than promise more. A coven's steward may remove a member from the coven. The steward may also pause a member's access to the coven for as long as the steward decides. A paused member keeps their place in the coven but cannot open it. Their other covens are not affected. A site admin may stop a person sending support requests for as long as an admin decides, and may take away the right to create covens. Accounts are never closed. A site admin may pause an account's access to the site for as long as an admin decides. A paused account can still sign in to ask for support, but cannot open anything else. The compendium stays open to it, as it does to everyone. When you are stopped from sending support requests, or your access to the site or a coven is paused, the site emails you at the address on your account. Lifting one sends no email.
 
 ## What the Site Owes You
 

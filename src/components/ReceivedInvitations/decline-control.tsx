@@ -27,7 +27,7 @@ const DeclineControl = ({ invitation: { id, covenName } }: AcceptControlProps): 
     title="Decline Invitation"
     question={
       <>
-        Decline the invitation to <strong>{covenName}</strong>? Its owner will see that you
+        Decline the invitation to <strong>{covenName}</strong>? Its stewards will see that you
         declined, and its link will stop working.
       </>
     }

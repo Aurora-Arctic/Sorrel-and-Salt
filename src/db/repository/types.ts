@@ -688,7 +688,7 @@ export interface AuditWriter {
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
    * The proof's workspace's live members, locked `for update` until the transaction ends: what the last-owner guard counts before a role change
-   * or removal writes, so two owners stepping down at once cannot both leave the other the last. A read, in the writer for the lock's sake.
+   * or removal writes, so two stewards stepping down at once cannot both leave the other the last. A read, in the writer for the lock's sake.
    */
   lockLiveMembers(membership: Membership): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**

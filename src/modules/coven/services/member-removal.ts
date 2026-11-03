@@ -7,18 +7,18 @@ import { assertNotLastOwner } from './last-owner';
 import { assertMembership, assertSeatToLeave } from './membership';
 import { assertNotSystemSeat } from './system-seat';
 
-// A member goes, removed by an owner or leaving. Both soft-delete the row and run the last-owner guard in the writing transaction.
+// A member goes, removed by a steward or leaving. Both soft-delete the row and run the last-owner guard in the writing transaction.
 // A removed member invited back is not inserted again: the row still holds the pair, so accepting revives it.
 
 /**
  * Removes `userId` from the workspace. The caller needs `member: remove`,
- * which only owners hold, and the person must be a live member already. An
- * owner may remove themselves here as well; the guard stops that when they
+ * which only stewards hold, and the person must be a live member already. A
+ * steward may remove themselves here as well; the guard stops that when they
  * are the last.
  *
- * @throws {Forbidden} the caller is not an owner of the workspace, or `userId`
+ * @throws {Forbidden} the caller is not a steward of the workspace, or `userId`
  * is not a live member of it or is the system user.
- * @throws {LastOwner} the removal would leave the workspace without an owner.
+ * @throws {LastOwner} the removal would leave the workspace without a steward.
  */
 export async function removeMember(
   session: Session,
@@ -38,7 +38,7 @@ export async function removeMember(
 }
 
 /**
- * The caller leaves the workspace. Every role may, a viewer included, so no
+ * The caller leaves the workspace. Every role may, an observer included, so no
  * `member` statement is asked for: `workspace: read`, which every role holds,
  * only proves the caller is a live member. A member whose access is paused may
  * leave too (`assertSeatToLeave`). The row left is the session's own and there

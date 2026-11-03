@@ -7,7 +7,7 @@ import type { MemberDetailProps } from './types';
 import '../UserDetail/index.scss';
 import './index.scss';
 
-// The body of the modal over `/coven/[slug]/members` on a member: the row's facts, and for an owner the role change,
+// The body of the modal over `/coven/[slug]/members` on a member: the row's facts, and for a steward the role change,
 // the pause on their access to the coven and their removal (claude-docs/components/member-detail.md). Laid out as the
 // user modal is, on its classes; render-only, the page deciding what the viewer may do.
 
@@ -78,7 +78,7 @@ const MemberDetail = ({
         )}
       </dl>
     </section>
-    {/* Not on an owner: an owner's access is never paused. */}
+    {/* Not on a steward: a steward's access is never paused. */}
     {canPause && member.role !== 'owner' && (
       <section aria-label="Coven Access" className="user-detail__section">
         <CovenAccessPanel

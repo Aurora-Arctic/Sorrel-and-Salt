@@ -95,7 +95,7 @@ An admin can do everything a curator can, and also manages who uses the site: an
 - Every change you make to a person's role or rights is recorded with your name, and you write a note saying why wherever the screen offers one.
 - You see a requestor's email and which covens a person belongs to. You use neither for anything but the request in front of you, and you share neither.
 - A time-out on a support requestor is the site's one sanction today, and you use it for abuse of the support form, not for disagreement.
-- Your owner's seat in the demo coven is for showing people the site. Everyone who signs in can see what you write there, so keep it suitable for everyone who signs in.
+- Your steward's seat in the demo coven is for showing people the site. Everyone who signs in can see what you write there, so keep it suitable for everyone who signs in.
 - An admin's role gives you nothing in any other coven. The site's code refuses it, and so do you.
 
 ### Developers

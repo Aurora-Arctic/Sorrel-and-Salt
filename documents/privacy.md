@@ -44,7 +44,7 @@ Every change to a site role or to the right to create covens is also written to 
 
 ### What a Coven Holds
 
-A coven holds its name, its members with their roles and when each joined, its invitations (the invited email, the role offered and any note), its ingredients and their stock, and its grimoire: every spell, its steps and its workings, with who wrote each. A spell marked private is shown only to the person who wrote it. Nobody else in the coven sees it, its owners included, though it is stored in the database. A working can be private too, even on a shared spell: it is shown only to the person who recorded it and to any coven member named on it.
+A coven holds its name, its members with their roles and when each joined, its invitations (the invited email, the role offered and any note), its ingredients and their stock, and its grimoire: every spell, its steps and its workings, with who wrote each. A spell marked private is shown only to the person who wrote it. Nobody else in the coven sees it, its stewards included, though it is stored in the database. A working can be private too, even on a shared spell: it is shown only to the person who recorded it and to any coven member named on it.
 
 A printed invitation card is bound to no email. When someone opens a card's link and is refused, the attempt is recorded against their account with the reason.
 
@@ -54,7 +54,7 @@ A support request keeps what you chose to write (its subject and message), the p
 
 ### Time-Outs and Pauses
 
-When an admin times you out of support, pauses your access to the site, or a coven owner pauses your access to their coven, a record is kept about you. It holds the end date if there is one, who set it, the note they wrote, and the message they wrote to you, where they wrote one. You are emailed once when one is set, at the address on your account. The email carries the message and the end date, never the note, which only staff or the coven's owners see. Lifting one sends no email.
+When an admin times you out of support, pauses your access to the site, or a coven steward pauses your access to their coven, a record is kept about you. It holds the end date if there is one, who set it, the note they wrote, and the message they wrote to you, where they wrote one. You are emailed once when one is set, at the address on your account. The email carries the message and the end date, never the note, which only staff or the coven's stewards see. Lifting one sends no email.
 
 ### Emails About Document Changes
 
@@ -64,7 +64,7 @@ When an admin emails every account about a change to a site document, a record i
 
 ### Who Can See What
 
-Each line below comes from the rule the site enforces in its services, not from what a screen happens to show. "Coven" means the coven in which you hold that role; every account holds a viewer seat in the demo coven, and every site admin an owner seat there. A developer with database access means a person who can read the database directly. Database access is given to as few developers as possible, and only to those who need it to run the site.
+Each line below comes from the rule the site enforces in its services, not from what a screen happens to show. "Coven" means the coven in which you hold that role; every account holds an observer seat in the demo coven, and every site admin a steward seat there. A developer with database access means a person who can read the database directly. Database access is given to as few developers as possible, and only to those who need it to run the site.
 
 {access-cards}
 
@@ -102,7 +102,7 @@ The record that an email about a document change was sent to you is kept indefin
 
 There is no "delete my account" button yet, and no self-service export. Until those are built, write to the site admins through the [support form](?support=privacy). You can send one without an account. Say what you want erased, and the site's admin will do it and tell you when it is done.
 
-You can leave a coven yourself from the coven's page, and a coven's owner can delete the coven. Both are soft deletes.
+You can leave a coven yourself from the coven's page, and a coven's steward can delete the coven. Both are soft deletes.
 
 ## What the Site Does Not Do
 

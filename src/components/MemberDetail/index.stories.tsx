@@ -28,7 +28,7 @@ const BO: MemberListEntry = {
 };
 const OWNER = { canChangeRoles: true, canPause: true, canRemove: true };
 
-// The dialog the members page opens: Member over the name, the address beneath it for an owner. The head is the page's
+// The dialog the members page opens: Member over the name, the address beneath it for a steward. The head is the page's
 // member-heading.tsx, written out here.
 const inDialog = (member: MemberListEntry, body: ReactNode, email = true): ReactNode => (
   <QueryClientProvider client={makeQueryClient()}>
@@ -44,13 +44,13 @@ const inDialog = (member: MemberListEntry, body: ReactNode, email = true): React
   </QueryClientProvider>
 );
 
-// An owner on a member: Change Role, Coven Access and a plain Remove.
+// A steward on a member: Change Role, Coven Access and a plain Remove.
 const ownerNode = inDialog(
   BO,
   <MemberDetail workspaceId="w" member={BO} currentUserId="u-self" {...OWNER} />,
 );
 
-// An owner on a paused member: the standing pause with Lift Pause.
+// A steward on a paused member: the standing pause with Lift Pause.
 const pausedNode = inDialog(
   BO,
   <MemberDetail
@@ -61,7 +61,7 @@ const pausedNode = inDialog(
   />,
 );
 
-// An owner on another owner: no Coven Access, as an owner's access is never paused.
+// A steward on another steward: no Coven Access, as a steward's access is never paused.
 const onOwnerNode = inDialog(
   BO,
   <MemberDetail
@@ -72,7 +72,7 @@ const onOwnerNode = inDialog(
   />,
 );
 
-// An owner on their own row: no Remove.
+// A steward on their own row: no Remove.
 const ownRowNode = inDialog(
   BO,
   <MemberDetail
@@ -83,7 +83,7 @@ const ownRowNode = inDialog(
   />,
 );
 
-// A member opening a row: the facts alone, with no address in the head.
+// A practitioner opening a row: the facts alone, with no address in the head.
 const asMemberNode = inDialog(
   BO,
   <MemberDetail workspaceId="w" member={{ ...BO, email: null }} currentUserId="u-self" />,
@@ -91,16 +91,16 @@ const asMemberNode = inDialog(
 );
 
 const STATES_STATES: Record<string, ReactNode> = {
-  Owner: ownerNode,
+  Steward: ownerNode,
   Paused: pausedNode,
-  'On an Owner': onOwnerNode,
+  'On a Steward': onOwnerNode,
   'Own Row': ownRowNode,
-  'As a Member': asMemberNode,
+  'As a Practitioner': asMemberNode,
 };
 
 // In its own iframe: `showModal()` puts the dialog in the top layer.
 export const States: Story = {
-  args: { state: 'Owner' },
+  args: { state: 'Steward' },
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },

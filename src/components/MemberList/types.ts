@@ -15,9 +15,9 @@ export interface MemberListEntry extends UpdatedStamp {
   // joining date does not.
   /** Who invited them, by display name; null for a coven's creator, or when the name is withheld. */
   invitedBy: string | null;
-  /** Their address, which the page reads for an owner alone. */
+  /** Their address, which the page reads for a steward alone. */
   email?: string | null;
-  /** The pause standing on their access to the coven, with its end or null for none; read for an owner alone. */
+  /** The pause standing on their access to the coven, with its end or null for none; read for a steward alone. */
   paused?: { until: Date | null } | null;
   /** The address of their modal over the list, the cursor kept; the name links there when given. */
   openHref?: Route;
@@ -31,18 +31,18 @@ export interface MemberListProps {
   /** The signed-in user, whose own row is marked "You". */
   currentUserId: string;
   /**
-   * Whether to draw the Email column, which the page sets for an owner alone. When absent,
+   * Whether to draw the Email column, which the page sets for a steward alone. When absent,
    * the list has no such column.
    */
   showEmail?: boolean;
   /**
    * Whether to draw the Access column, a standing pause's badge and end from each entry's `paused`, which the page sets
-   * for an owner alone. When absent, the list has no such column.
+   * for a steward alone. When absent, the list has no such column.
    */
   showAccess?: boolean;
 }
 
-/** The role change the member modal offers an owner. */
+/** The role change the member modal offers a steward. */
 export interface RoleControlProps {
   workspaceId: string;
   /** The member the change is for. */
@@ -54,7 +54,7 @@ export interface RoleControlProps {
   inModal?: boolean;
 }
 
-/** The removal the member modal offers an owner. */
+/** The removal the member modal offers a steward. */
 export interface RemoveControlProps {
   workspaceId: string;
   /** The member to remove. */

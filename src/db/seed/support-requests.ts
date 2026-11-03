@@ -157,9 +157,9 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     id: '00000000-0000-0000-0005-000000000010',
     sender: B.id,
     about: 'privacy',
-    subject: 'Can a viewer see a private spell?',
+    subject: 'Can an observer see a private spell?',
     message:
-      'I made a spell private so that only I can read it. Can the viewers in our coven see it anyway?',
+      'I made a spell private so that only I can read it. Can the observers in our coven see it anyway?',
     path: '/coven/whitethorn-coven/grimoire',
     assignedTo: E.id,
     daysAgo: 0.6,
@@ -195,7 +195,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     about: 'bug',
     subject: 'The members page lists a role I do not hold',
     message:
-      'The members page of the demo coven lists me as a member, but I am an admin and expected an owner seat. Is my role wrong, or is the page?',
+      'The members page of the demo coven lists me as a practitioner, but I am an admin and expected a steward seat. Is my role wrong, or is the page?',
     path: '/coven/whitethorn-coven/members',
     assignedTo: F.id,
     curatorVisible: true,

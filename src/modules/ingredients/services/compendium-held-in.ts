@@ -25,7 +25,7 @@ import { assertMembership, type Membership, membershipsOf } from '@/modules/cove
 const MAX_PICKED_COVENS = 20;
 
 /**
- * A proof for each coven the viewer may read the ingredients of, viewers included. A coven they are not in, or an id that is not one,
+ * A proof for each coven the viewer may read the ingredients of, observers included. A coven they are not in, or an id that is not one,
  * is dropped: a refusal would say which ids name a coven.
  */
 async function proofsOf(session: Session, covenIds: readonly string[]): Promise<Membership[]> {
@@ -45,7 +45,7 @@ const pickedProofs = (session: Session, covenIds: readonly string[]) =>
   proofsOf(session, [...new Set(covenIds)].slice(0, MAX_PICKED_COVENS));
 
 /**
- * Every coven the viewer is in, proved, viewers included: Not In's "none of my
+ * Every coven the viewer is in, proved, observers included: Not In's "none of my
  * covens". Not capped, as the list is the viewer's own and not the address's.
  */
 async function everyCovenProof(session: Session): Promise<Membership[]> {

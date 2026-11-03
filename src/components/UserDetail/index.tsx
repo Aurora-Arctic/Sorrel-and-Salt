@@ -17,7 +17,7 @@ import './index.scss';
 // modal is, in hairline-parted sections; render-only.
 
 /**
- * Owners, then members, then viewers, each by coven name. Sorted here because
+ * Stewards, then practitioners, then observers, each by coven name. Sorted here because
  * the service's order is unspecified; the list is bounded by the user's own
  * memberships, so sorting it all costs nothing.
  */

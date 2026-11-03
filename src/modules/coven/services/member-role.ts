@@ -9,24 +9,24 @@ import { assertNotLastOwner } from './last-owner';
 import { assertMembership } from './membership';
 import { assertNotSystemSeat } from './system-seat';
 
-// An owner moves a member between viewer, member and owner, either way.
+// A steward moves a member between observer, practitioner and steward, either way.
 // It changes an existing member's row and nothing else — a pending invitation
 // is not a member, and ownership never comes through one (DESIGN.md §5).
 
 const PAUSED_PROMOTION =
-  "This member's access is paused; lift the pause first to make them an owner";
+  "This member's access is paused; lift the pause first to make them a steward";
 
 /**
  * Sets `userId`'s role in the workspace. The caller needs `member: update`,
- * which only owners hold, and the person must be a live member already.
- * Demoting an owner runs the last-owner guard, under a lock, in the
+ * which only stewards hold, and the person must be a live member already.
+ * Demoting a steward runs the last-owner guard, under a lock, in the
  * transaction that writes. `joinedAt` is untouched: the person joined when
  * they joined.
  *
- * @throws {Forbidden} the caller is not an owner of the workspace, or `userId`
+ * @throws {Forbidden} the caller is not a steward of the workspace, or `userId`
  * is not a live member of it or is the system user.
- * @throws {LastOwner} the change would leave the workspace without an owner.
- * @throws {ValidationError} the change makes an owner of a member whose access to the coven is paused.
+ * @throws {LastOwner} the change would leave the workspace without a steward.
+ * @throws {ValidationError} the change makes a steward of a member whose access to the coven is paused.
  */
 export async function updateMemberRole(
   session: Session,
@@ -38,7 +38,7 @@ export async function updateMemberRole(
   // An id that cannot name a user is a stranger, as a wrong one is.
   if (!RowId.safeParse(userId).success) throw new Forbidden();
   assertNotSystemSeat(userId);
-  // An owner's access is never paused, so a paused member is lifted before being made one.
+  // A steward's access is never paused, so a paused member is lifted before being made one.
   if (role === 'owner' && (await findStandingWorkspaceMemberPause(membership, userId))) {
     throw new ValidationError([{ path: ['role'], message: PAUSED_PROMOTION }], PAUSED_PROMOTION);
   }

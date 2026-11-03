@@ -21,7 +21,7 @@ type ChosenStory = StoryObj<{ state?: ReactNode }>;
 
 const ID = '00000000-0000-0000-0000-000000000001';
 
-// Leave: a member just leaves. Only Owner: Leave asks what happens to the coven, a hand-over
+// Leave: a practitioner just leaves. Only Steward: Leave asks what happens to the coven, a hand-over
 // to a member searched by name, or the deletion. One other member: offered by name, with nothing to
 // search. Only Member: nobody else in the coven, so deletion is the whole answer.
 export const States: Story = {
@@ -29,8 +29,8 @@ export const States: Story = {
     <StatesGrid
       cell="12rem"
       states={{
-        Member: <LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />,
-        'Only Owner': (
+        Practitioner: <LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />,
+        'Only Steward': (
           <LeaveWorkspaceButton
             workspaceId={ID}
             name="Fixture Coven"
@@ -40,7 +40,7 @@ export const States: Story = {
             ]}
           />
         ),
-        'Only Owner One Other': (
+        'Only Steward One Other': (
           <LeaveWorkspaceButton
             workspaceId={ID}
             name="Fixture Coven"
@@ -85,17 +85,17 @@ const OPEN_STATES: Record<string, ReactNode> = {
       <LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />
     </Opened>
   ),
-  'Only Owner Hand Over': (
+  'Only Steward Hand Over': (
     <Opened steps={[() => press('Leave Coven')]}>
       <LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" successors={MANY} />
     </Opened>
   ),
-  'Only Owner Delete Chosen': (
+  'Only Steward Delete Chosen': (
     <Opened steps={[() => press('Leave Coven'), chooseDelete]}>
       <LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" successors={MANY} />
     </Opened>
   ),
-  'Only Owner One Other Hand Over Failed': (
+  'Only Steward One Other Hand Over Failed': (
     <Opened steps={[() => press('Leave Coven'), () => press('Promote and Leave')]}>
       <LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" successors={ONE_OTHER} />
     </Opened>
@@ -212,14 +212,14 @@ const OverviewPage = ({ role }: { role: Role }) => {
 };
 
 const OVERVIEW_STATES: Record<string, ReactNode> = {
-  Owner: <OverviewPage role="owner" />,
-  Member: <OverviewPage role="member" />,
-  Viewer: <OverviewPage role="viewer" />,
+  Steward: <OverviewPage role="owner" />,
+  Practitioner: <OverviewPage role="member" />,
+  Observer: <OverviewPage role="viewer" />,
 };
 
 // The whole page, one story with a control to choose the caller's role.
 export const Overview: ChosenStory = {
-  args: { state: 'Owner' },
+  args: { state: 'Steward' },
   argTypes: {
     state: { control: 'select', options: Object.keys(OVERVIEW_STATES), mapping: OVERVIEW_STATES },
   },

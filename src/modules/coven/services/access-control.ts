@@ -5,7 +5,7 @@ import type { WorkspaceRole } from '../types';
 
 // What each **workspace** role may do. The site role on the session is a different axis and is not read here: an admin curates
 // the compendium and reaches no workspace at all. Permission statements rather than a rank comparison, so a role that is not on
-// the viewer < member < owner line cannot make an "at least member" check mean something nobody checked
+// the observer < practitioner < steward line cannot make an "at least member" check mean something nobody checked
 // (claude-docs/design-decisions/m6.3-permission-statements.md).
 
 /** The resources a workspace role acts on, one per surface DESIGN.md §9 routes to. */
@@ -18,8 +18,8 @@ const statements = {
   /** A working: one time a spell was made, with its participants and the stock it took (M13.5). Its own resource so a role can be given one and not the other. */
   working: ['read', 'create', 'update', 'delete'],
   /**
-   * Members and invitations. Owners and members read the roll (`read`); a member's address (`readEmail`), inviting, changing a
-   * role, removing and pausing a member's access (`pause`) stay with owners. The address is its own action since a member reads the roll but only an owner needs it to tell two people apart.
+   * Members and invitations. Stewards and practitioners read the roll (`read`); a member's address (`readEmail`), inviting, changing a
+   * role, removing and pausing a member's access (`pause`) stay with stewards. The address is its own action since a member reads the roll but only a steward needs it to tell two people apart.
    */
   member: ['read', 'readEmail', 'invite', 'update', 'remove', 'pause'],
   /** The coven itself: renaming it, and deleting it. */
@@ -28,7 +28,7 @@ const statements = {
 
 const ac = createAccessControl(statements);
 
-/** Everything, and nothing else — reads alone (CLAUDE.md: "Viewers write nothing"). */
+/** Everything, and nothing else — reads alone (CLAUDE.md: "Observers write nothing"). */
 const viewer = ac.newRole({
   ingredient: ['read'],
   inventory: ['read'],
@@ -37,7 +37,7 @@ const viewer = ac.newRole({
   workspace: ['read'],
 });
 
-/** The viewer's reads, plus what a coven is for: its ingredients, stock, grimoire, and who else is in the coven (`member: read`). */
+/** The observer's reads, plus what a coven is for: its ingredients, stock, grimoire, and who else is in the coven (`member: read`). */
 const member = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],

@@ -47,7 +47,7 @@ const columns = (
     heading: 'Role',
     className: 'member-list__role-column',
     headingClassName: 'member-list__role-column',
-    // An owner in bold, as the admin list sets an admin: the rows to notice.
+    // A steward in bold, as the admin list sets an admin: the rows to notice.
     // The word differs for all three roles, so the column never relies on
     // weight alone to tell them apart. Each carries the tip saying what it may do.
     cell: (member) => (

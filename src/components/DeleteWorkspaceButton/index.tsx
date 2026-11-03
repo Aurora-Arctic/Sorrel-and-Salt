@@ -8,8 +8,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { DeleteWorkspaceButtonProps } from './types';
 
-// An owner's Delete on the coven index page: it asks first, naming the coven and what becomes
-// unreachable, then deletes and leaves. A refusal shows in a callout, or a notice in the only owner's
+// A steward's Delete on the coven index page: it asks first, naming the coven and what becomes
+// unreachable, then deletes and leaves. A refusal shows in a callout, or a notice in the only steward's
 // exit dialog. The page shows it only to a role holding `workspace: delete` (claude-docs/components/delete-workspace-button.md).
 
 const DeleteWorkspaceDocument = graphql(`
@@ -34,7 +34,7 @@ const DeleteWorkspaceButton = ({
       question={
         <>
           Delete <strong>{name}</strong>? Its ingredients and its grimoire become inaccessible to
-          every member{onlyOwner ? '' : ', other owners included'}.
+          every member{onlyOwner ? '' : ', other stewards included'}.
         </>
       }
       warning="Nothing is destroyed, but only an administrator with database access can restore it."

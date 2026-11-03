@@ -19,7 +19,7 @@ export class Forbidden extends Error {
  * No such row — or none this reader may know about, which reads the same.
  */
 /**
- * A member whose access to this coven an owner has paused: they hold a seat, so it is not the bare refusal a stranger gets.
+ * A member whose access to this coven a steward has paused: they hold a seat, so it is not the bare refusal a stranger gets.
  * A `Forbidden` still, so every caller that maps a refusal to a 404 keeps doing so until it reads this one; `until` is when the
  * pause ends, `null` for a pause with no end.
  */

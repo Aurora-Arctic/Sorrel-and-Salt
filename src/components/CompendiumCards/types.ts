@@ -91,7 +91,7 @@ export interface CompendiumCardEntry {
 
 /**
  * What the foot of each card holds: `add` is Add to My Ingredients, for a signed-in
- * owner or member of a coven; `none` is nothing, for a viewer-only account and a
+ * steward or practitioner of a coven; `none` is nothing, for an observer-only account and a
  * signed-out visitor.
  */
 export type CompendiumCardsAction = 'add' | 'none';

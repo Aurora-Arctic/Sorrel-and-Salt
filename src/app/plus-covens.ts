@@ -11,7 +11,7 @@ import { covensHoldingEntry, type HoldingCoven } from '@/modules/ingredients';
 // claude-docs/components/ingredient-entry.md, "Cupboard buttons".
 
 /**
- * The viewer's covens that hold the entry, viewers' included; none signed out. A refusal reads as
+ * The viewer's covens that hold the entry, observers' included; none signed out. A refusal reads as
  * none, and the write says no.
  */
 export async function covensHolding(id: string): Promise<readonly HoldingCoven[]> {

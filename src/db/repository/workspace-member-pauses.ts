@@ -125,7 +125,7 @@ export function workspaceMemberPauseWrites({
         .onConflictDoNothing()
         .returning();
     },
-    // A pause that has run out ended by itself, so it is left alone rather than recorded as an owner's lift.
+    // A pause that has run out ended by itself, so it is left alone rather than recorded as a steward's lift.
     liftWorkspaceMemberPause: (membership, userId) =>
       update(workspaceMemberPauses, lifted(), and(liveFor(membership, userId), notRunOut)),
   };

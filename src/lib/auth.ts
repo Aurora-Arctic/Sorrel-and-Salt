@@ -847,7 +847,7 @@ export const auth = betterAuth({
             },
           };
         },
-        // The sign-up hook's second write, outside `withAudit` for the same reason: a viewer seat in the demo coven, stamped by the
+        // The sign-up hook's second write, outside `withAudit` for the same reason: an observer seat in the demo coven, stamped by the
         // new user as their own row is. It never throws, as Better Auth cannot roll the user row back and a half-failed sign-up is
         // worse than a missing seat; the demo coven seed's backfill repairs it.
         after: async (user, ctx) => {

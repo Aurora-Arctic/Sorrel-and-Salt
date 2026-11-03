@@ -8,7 +8,7 @@ import type { IngredientRow } from '../types';
  * Swaps an ingredient's display name with one of its folk names. A null
  * `workspaceId` names a compendium entry and needs a site admin; otherwise the
  * ingredient is the coven's and the caller must be allowed to update its
- * ingredients, which a viewer is not. One function over both tiers, as
+ * ingredients, which an observer is not. One function over both tiers, as
  * `createReference` is: the tier is the argument, and each tier's own function
  * holds its rules.
  *

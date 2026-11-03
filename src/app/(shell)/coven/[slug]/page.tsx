@@ -16,7 +16,7 @@ import type { CovenLayoutParams } from './types';
 // The page a coven opens on. The layout's title template does not apply in its own segment, so this
 // titles itself with the coven's name. The guard runs again (claude-docs/auth/coven-guard.md,
 // "The coven guard"). Leave and Delete sit in separate sections, never side by side.
-const ROLE_NAME = { owner: 'an owner', member: 'a member', viewer: 'a viewer' } as const;
+const ROLE_NAME = { owner: 'a steward', member: 'a practitioner', viewer: 'an observer' } as const;
 
 export default async function CovenPage({ params }: CovenLayoutParams) {
   const { slug } = await params;
@@ -25,9 +25,9 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   const canReadMembers = rolePermits(membership.role, { member: ['read'] });
   const canInvite = rolePermits(membership.role, { member: ['invite'] });
 
-  // The last-owner guard stops only an owner, and only when they are the sole one, so only then is
+  // The last-steward guard stops only a steward, and only when they are the sole one, so only then is
   // the roll read: the others become the hand-over's choices. Anyone else leaves by the plain
-  // confirmation, and a change in the owners since this render is still the service's to refuse.
+  // confirmation, and a change in the stewards since this render is still the service's to refuse.
   let successors: Successor[] | undefined;
   if (canDelete) {
     const session = await requireSession();
@@ -119,7 +119,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
         </ul>
       </section>
       {/* Each button says its own refusal under itself. Leave is here, not
-          on the members page, because a viewer cannot open that page and must
+          on the members page, because an observer cannot open that page and must
           still be able to go. Delete asks for the permission its service
           checks, never a rank
           (claude-docs/auth/coven-guard.md, "The coven index page"). */}
@@ -144,7 +144,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           aria-labelledby="coven-delete-heading"
         >
           <h2 id="coven-delete-heading">Delete Coven</h2>
-          <p>Closes its ingredients and its grimoire to every member, other owners included.</p>
+          <p>Closes its ingredients and its grimoire to every member, other stewards included.</p>
           <div className="form__actions">
             <DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />
           </div>

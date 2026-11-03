@@ -6,7 +6,7 @@ export interface DeleteWorkspaceButtonProps {
   /** Asks over the dialog it sits in rather than opening a second modal (the guided exit). */
   inModal?: boolean;
   /**
-   * Pressed by the coven's only owner: the question leaves out "other owners
+   * Pressed by the coven's only steward: the question leaves out "other stewards
    * included", since there are none.
    */
   onlyOwner?: boolean;

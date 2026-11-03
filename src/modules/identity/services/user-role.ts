@@ -40,7 +40,7 @@ export async function writeSiteRoleGrant(
 }
 
 /**
- * Seats the user as owner of the demo coven in the caller's transaction, doing nothing where there is no demo coven: a removed seat is
+ * Seats the user as steward of the demo coven in the caller's transaction, doing nothing where there is no demo coven: a removed seat is
  * revived, a live one promoted, and a missing one inserted. Identity services hold no membership of that coven, so the writes take none.
  */
 async function seatDemoOwner(write: AuditWriter, userId: string): Promise<void> {
@@ -52,7 +52,7 @@ async function seatDemoOwner(write: AuditWriter, userId: string): Promise<void> 
   if (!promoted) await write.insertMembership(demo.id, userId, 'owner');
 }
 
-/** Returns an admin's seat in the demo coven to a viewer's, in the caller's transaction; a user with no live seat is left without one. */
+/** Returns an admin's seat in the demo coven to an observer's, in the caller's transaction; a user with no live seat is left without one. */
 async function unseatDemoOwner(write: AuditWriter, userId: string): Promise<void> {
   const demo = await findDemoWorkspace();
   if (demo) await write.setSeatRole(demo.id, userId, 'viewer');
