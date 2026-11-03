@@ -1,8 +1,10 @@
+import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
 import { notFound } from 'next/navigation';
 import DocumentPage from '@/components/DocumentPage';
 import type { DocumentPlaceholders } from '@/components/DocumentPage/types';
 import { NotFound } from '@/lib/errors';
+import { siteUrl } from '@/lib/site';
 import { listDocumentVersions, readDocument, readDocumentVersion } from '@/modules/documents';
 import type { DocumentKey } from '@/modules/documents';
 
@@ -49,13 +51,42 @@ export async function currentDocumentPage(
 }
 
 /** A version number is digits with no leading zero; anything else names no version, and nothing is read for it. */
+const VERSION_NUMBER = /^[1-9]\d*$/;
+
+/**
+ * A version page's title names the document and version. While it is the current version the page is a
+ * copy of the document page, so that is its canonical; once a newer one is published it names itself.
+ * An address that names no version gets nothing here, and the page is the 404.
+ */
+export async function versionDocumentMetadata(
+  key: DocumentKey,
+  params: Promise<{ number: string }>,
+): Promise<Metadata> {
+  const { number: address } = await params;
+  if (!VERSION_NUMBER.test(address)) return {};
+  try {
+    const [version, current] = await Promise.all([
+      readDocumentVersion(key, Number(address)),
+      readDocument(key),
+    ]);
+    const path = version.number === current.number ? `/${key}` : `/${key}/versions/${address}`;
+    return {
+      title: `${version.title}, Version ${version.number}`,
+      alternates: { canonical: siteUrl(path) },
+    };
+  } catch (error) {
+    if (error instanceof NotFound) return {};
+    throw error;
+  }
+}
+
 export async function versionDocumentPage(
   key: DocumentKey,
   params: Promise<{ number: string }>,
   placeholders?: DocumentPlaceholders,
 ): Promise<ReactElement> {
   const { number: address } = await params;
-  if (!/^[1-9]\d*$/.test(address)) notFound();
+  if (!VERSION_NUMBER.test(address)) notFound();
   const version = await orNotFound(() => readDocumentVersion(key, Number(address)));
   return (
     <DocumentPage
