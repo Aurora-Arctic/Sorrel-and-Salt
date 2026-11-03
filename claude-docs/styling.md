@@ -750,6 +750,7 @@ Four variants:
 - **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only four exist: Impersonate (on the row, in the user modal and on its confirm), Pause Admin Changes (Pause, Resume and its confirm), Revoke Batch (its column on the invitation cards table and its confirm) and Email Every Account (the button and its confirm). The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
+- **`.btn--caution`**, the same outline in the warning ochre (`$warning`): an act that reaches every reader at once and is not undone, but destroys nothing. One control wears it: a document's Publish, on the button and its confirm.
 
 **Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant; a class list names the variant before the size (`btn btn--quiet btn--small`), so one search finds every use. `.btn--small` has half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge

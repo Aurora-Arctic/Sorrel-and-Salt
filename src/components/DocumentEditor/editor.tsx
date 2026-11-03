@@ -152,11 +152,11 @@ const DocumentEditor = ({
         <ConfirmedAction
           label="Publish"
           accessibleName="Publish"
-          openClass="btn btn--primary"
+          openClass="btn btn--caution"
           title={`Publish ${title}`}
           question={<PublishQuestion documentKey={documentKey} title={title} />}
           busy="Publishing"
-          confirmClass="btn btn--primary"
+          confirmClass="btn btn--caution"
           disabled={revision === null && !dirty}
           send={publish}
           onSent={() => undefined}

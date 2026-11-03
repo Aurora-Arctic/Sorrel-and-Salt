@@ -199,6 +199,17 @@
     }
   }
 
+  // What takes effect for every reader at once and needs care, not undoing: a document's Publish.
+  // In the warning ochre, the step short of the destructive red.
+  .btn--caution {
+    border-color: $warning;
+    color: $warning;
+
+    &:hover {
+      background-color: $warning;
+    }
+  }
+
   // A size, not a colour, so it composes with every variant: for a compact
   // strip — a banner, a table row — that the full button would make taller.
   .btn--small {
