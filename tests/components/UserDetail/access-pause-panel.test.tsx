@@ -37,6 +37,7 @@ const BO = {
   canCreateWorkspace: false,
   providers: [],
   createdAt: new Date('2026-02-03T04:05:06Z'),
+  termsVersion: '2026-11-02',
 };
 const ASH = { id: 'a1', name: 'Ash Warden' };
 const IVY = { id: 'a2', name: 'Ivy Keeper' };

@@ -12,6 +12,8 @@ export interface UserListEntry {
   role: UserRole;
   canCreateWorkspace: boolean;
   createdAt: Date;
+  /** The terms version they agreed to most recently; null when they never agreed. */
+  termsVersion: string | null;
   /** Provider ids, as the service sorted them. */
   providers: readonly string[];
   emailVerified: boolean;

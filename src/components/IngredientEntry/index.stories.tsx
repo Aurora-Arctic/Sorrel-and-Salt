@@ -300,7 +300,7 @@ const PublicEntry = (props: Partial<IngredientEntryProps>) => (
 // bundle typed, so its heading takes the spoon.
 const defaultNode = <PublicEntry />;
 
-// No naming system names it: a sentence where the formal name would be, with the
+// No naming system names it and it has no formal name: no formal-name line is drawn, with the
 // cupboard buttons beside the name.
 const noFormalNameNode = (
   <Entry

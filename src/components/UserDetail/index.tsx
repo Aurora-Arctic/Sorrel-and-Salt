@@ -122,6 +122,10 @@ const UserDetail = ({
           </dd>
         </div>
         <div>
+          <dt>Terms</dt>
+          <dd>{user.termsVersion ?? 'Not agreed'}</dd>
+        </div>
+        <div>
           <dt>Signed Up</dt>
           <dd>
             <Day at={user.createdAt} />
