@@ -11,11 +11,8 @@ import type { UserRow } from '../types';
 // (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
 /** Whether `agreed`, the number an account recorded, is the number `current` in force. */
-export function hasAgreedToTerms(
-  agreed: number | null | undefined,
-  current: number,
-): boolean {
-  return agreed === current;
+export function hasAgreedToTerms(agreed: number | null | undefined, current: number): boolean {
+  return (agreed ?? 0) === current;
 }
 
 /**
