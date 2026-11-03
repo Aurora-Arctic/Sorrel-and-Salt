@@ -49,3 +49,11 @@
   color: $text-primary;
   @include faded-underline;
 }
+
+// The editor holds a cell's text in a paragraph, where the public page has the text in the cell, so the paragraph takes the cell's own spacing and type.
+.document-editor__text .data-table p {
+  max-width: none;
+  margin: 0;
+  font: inherit;
+  line-height: inherit;
+}
