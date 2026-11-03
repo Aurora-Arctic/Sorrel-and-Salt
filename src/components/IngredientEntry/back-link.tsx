@@ -12,10 +12,13 @@ import './back-link.scss';
 interface BackLinkProps {
   /** The bare list, `/compendium`, this coven's `/coven/<slug>/ingredients` or its `/grimoire`. */
   href: Route;
-  /** Other paths that are the same list: the grimoire's Drafts tab beside its Spells tab. */
-  also?: readonly string[];
+  /** The words after "Back to": the destination alone. */
+  label: string;
+  /** Other paths that are the same list, each with the label it reads under when the page before was it: the grimoire's Drafts tab beside its Spells tab, the admin compendium beside the public one. */
+  also?: readonly { path: string; label: string }[];
   className?: string;
-  children: ReactNode;
+  /** Drawn after the words. */
+  children?: ReactNode;
 }
 
 /** The chevron before a back control's words; the sign-in card's Back button draws it too, under the same `.back-link` look. */
@@ -61,18 +64,23 @@ function subscribe(onChange: () => void): () => void {
  */
 export default function BackLink({
   href,
+  label,
   also = [],
   className,
   children,
 }: BackLinkProps): ReactElement {
   const router = useRouter();
-  const listPaths = [href.split(/[?#]/)[0] ?? href, ...also];
+  const listPaths = [href.split(/[?#]/)[0] ?? href, ...also.map(({ path }) => path)];
   // The server and the hydrating render draw the bare list; React then reads the history.
   const historyHref = useSyncExternalStore(
     subscribe,
     () => previousListHref(listPaths),
     () => undefined,
   );
+
+  // The server and the hydrating render say the list the page names; the browser then says the one it returns to.
+  const historyPath = historyHref?.split(/[?#]/)[0];
+  const shownLabel = also.find(({ path }) => path === historyPath)?.label ?? label;
 
   const goBack = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!historyHref) return;
@@ -93,7 +101,8 @@ export default function BackLink({
       onClick={goBack}
     >
       <BackChevron />
-      {children}
+      Back to {shownLabel}
+      {children && <> {children}</>}
     </PendingLink>
   );
 }

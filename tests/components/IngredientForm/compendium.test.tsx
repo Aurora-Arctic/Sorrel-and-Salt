@@ -664,6 +664,89 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
+    // Regression: choosing None on an entry that had a formal name blocked Save.
+    it('saves an entry reclassified as None, sending the kind and no formal name', async () => {
+      const calls = acceptUpdate();
+      const { onSaved } = renderEntry();
+      openSections('Identity');
+      expect(textbox('Formal Name')).toHaveValue('Fixtura testalis');
+
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).toHaveValue('');
+      press('Save Ingredient');
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ nomenclature: 'none' });
+      expect(calls[0]?.input.canonicalName || null).toBeNull();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    });
+
+    // Regression: an Unknown entry with no formal name, a picked form and a source for its
+    // classification kept Save off after None was chosen.
+    // The admin list's dialog passes the saved Shown flag; the entry page's pencil passes none, so Shown follows the categories.
+    it.each([
+      ['from the admin list, the saved Shown flag given', { reviewed: false, shown: false }],
+      ['from the entry page, no Shown flag given', { reviewed: false, reviewedAt: null }],
+    ])(
+      'saves a hidden Unknown entry with a picked form reclassified as None, %s',
+      async (_, review) => {
+        const calls = acceptUpdate();
+        const source = {
+          value: 'Fixture Almanac',
+          link: {
+            id: OTHER_ID,
+            isGlobal: true,
+            kind: 'book' as const,
+            title: 'Fixture Almanac',
+            authors: null,
+            container: null,
+          },
+          locator: '',
+          nameBasis: '' as const,
+        };
+        const { onSaved } = renderForm({
+          entry: {
+            id: ENTRY_ID,
+            values: {
+              ...EMPTY_VALUES,
+              name: 'Testwax',
+              nomenclature: 'unknown',
+              canonicalName: '',
+              description: 'A fixture wax.',
+              references: [{ ...source, supports: ['nomenclature', 'description'] }],
+              variants: [
+                {
+                  ...EMPTY_VARIANT,
+                  variantId: 'f1e2d3c4-b5a6-4978-8a6b-5c4d3e2f1a0b',
+                  form: 'Fixture Wax',
+                  formLink: {
+                    id: 'a0b1c2d3-e4f5-4a6b-8c7d-9e0f1a2b3c4d',
+                    name: 'Fixture Wax',
+                    group: null,
+                    icon: null,
+                    description: null,
+                  },
+                  references: [{ ...source, supports: ['form'] }],
+                },
+              ],
+            },
+          },
+          review,
+        });
+        openSections('Identity');
+        expect(textbox('Formal Name')).toHaveValue('');
+        expect(button('Save Ingredient')).toBeDisabled();
+
+        choose('Classification', 'None');
+        expect(button('Save Ingredient')).toBeEnabled();
+        press('Save Ingredient');
+
+        await waitFor(() => expect(calls).toHaveLength(1));
+        expect(calls[0]?.input).toMatchObject({ nomenclature: 'none' });
+        await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      },
+    );
+
     // An edit renames what exists rather than making another, so a near
     // match warns and holds nothing, and the entry
     // is never its own near match.

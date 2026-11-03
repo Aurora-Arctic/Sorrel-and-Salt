@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -38,8 +38,7 @@ export default function ShownToggle({
 }: ShownToggleProps): ReactElement {
   const { refresh } = usePendingNavigation();
   const announce = useAnnounce();
-  // The state shown now: it turns when the save returns, not at the press, so the switch waits in place
-  // under its ring and then slides; the page's own value follows at the refresh.
+  // The position shown now: it turns at the press and the save follows; the page's own value follows at the refresh.
   const [on, setOn] = useState(shown);
   const [seen, setSeen] = useState(shown);
   if (shown !== seen) {
@@ -49,8 +48,14 @@ export default function ShownToggle({
   const [busy, setBusy] = useState(false);
   // The ring stays mounted through its fade out.
   const [ring, setRing] = useState(false);
-  // Presses are ignored from the press until the fade is done and the switch has moved.
-  const locked = useRef(false);
+  // The position last pressed and the one last saved: a save runs until they agree, so the last press is what is stored.
+  const wanted = useRef(shown);
+  const saved = useRef(shown);
+  const running = useRef(false);
+  // The page's value is what is stored once it has read again.
+  useEffect(() => {
+    saved.current = shown;
+  }, [shown]);
   const [refusal, setRefusal] = useState<string>();
 
   async function change(next: boolean) {
@@ -59,30 +64,43 @@ export default function ShownToggle({
       onChange?.(next);
       return;
     }
-    if (locked.current) return;
-    locked.current = true;
+    setOn(next);
+    wanted.current = next;
+    // A save already out sends this position when it returns.
+    if (running.current) return;
+    running.current = true;
     setBusy(true);
     setRing(true);
     setRefusal(undefined);
     const started = Date.now();
-    let saved = false;
+    let failed = false;
     try {
-      await graphqlRequest(SetCompendiumEntryShownDocument, { id: ingredientId, shown: next });
-      saved = true;
+      while (wanted.current !== saved.current) {
+        const sending = wanted.current;
+        await graphqlRequest(SetCompendiumEntryShownDocument, { id: ingredientId, shown: sending });
+        saved.current = sending;
+      }
     } catch (error) {
+      failed = true;
       setRefusal(readGraphqlFailure(error).alert);
+      // The switch goes back to what is stored.
+      wanted.current = saved.current;
+      setOn(saved.current);
     }
-    // The ring fades out and the thumb back in, in place, and only then does the switch move.
+    // The ring fades out and the thumb back in, in place.
     const ringed = Date.now() - started >= RING_DELAY_MS;
     setBusy(false);
     if (ringed) await new Promise((resolve) => setTimeout(resolve, RING_FADE_MS));
     setRing(false);
-    if (saved) {
-      setOn(next);
-      announce(next ? 'Shown in the public compendium.' : 'Hidden from the public compendium.');
+    running.current = false;
+    if (!failed) {
+      announce(
+        saved.current ? 'Shown in the public compendium.' : 'Hidden from the public compendium.',
+      );
       refresh();
+      // A press during the fade is sent now.
+      if (wanted.current !== saved.current) void change(wanted.current);
     }
-    locked.current = false;
   }
 
   return (

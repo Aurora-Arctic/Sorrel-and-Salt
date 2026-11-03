@@ -293,8 +293,8 @@ const IngredientEntry = ({
           // where neither else shows.
           <div className="back-bar ingredient-entry__bar">
             {back && (
-              <BackLink href={back.href}>
-                Back to {back.label} <LinkHint />
+              <BackLink href={back.href} label={back.label} also={back.also}>
+                <LinkHint />
               </BackLink>
             )}
             <RecencyMark recency={recency} />

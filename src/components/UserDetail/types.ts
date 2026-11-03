@@ -19,6 +19,7 @@ export type UserDetailUser = Pick<
   | 'canCreateWorkspace'
   | 'providers'
   | 'createdAt'
+  | 'termsVersion'
 >;
 
 /** One live coven the user belongs to, as the service answered it. */

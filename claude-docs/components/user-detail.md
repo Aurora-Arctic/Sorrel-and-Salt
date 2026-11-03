@@ -10,12 +10,12 @@ coven service and builds the modal around it; this draws only the body.
 
 `UserDetailProps` (`types.ts`):
 
-| Prop             | What it is                                                                                                                                              |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user`           | `UserDetailUser`: a `Pick` of the list's `UserListEntry` (id, name, email, emailVerified, role, primaryAdmin, canCreateWorkspace, providers, createdAt) |
-| `memberships`    | The user's live covens as `UserCoven`s, in any order                                                                                                    |
-| `pauses`         | The user's access pauses as `AccessPauseEntry`s, newest first; left out for the primary admin and the viewing admin's own account                       |
-| `canImpersonate` | Whether impersonation is registered here (MB.53); off by default                                                                                        |
+| Prop             | What it is                                                                                                                                                            |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user`           | `UserDetailUser`: a `Pick` of the list's `UserListEntry` (id, name, email, emailVerified, role, primaryAdmin, canCreateWorkspace, providers, createdAt, termsVersion) |
+| `memberships`    | The user's live covens as `UserCoven`s, in any order                                                                                                                  |
+| `pauses`         | The user's access pauses as `AccessPauseEntry`s, newest first; left out for the primary admin and the viewing admin's own account                                     |
+| `canImpersonate` | Whether impersonation is registered here (MB.53); off by default                                                                                                      |
 
 A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 `joinedAt`.
@@ -34,7 +34,7 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 - **The table's facts come first**: a `<dl>` of Email (verified
   or not, the word with the check or cross to its right), Role (bold for an admin or a curator, with the
   primary-admin crown), Coven Creation (Yes or No, the mark to its right),
-  Sign-In Methods and Signed Up, the terms in one column and their values in
+  Sign-In Methods, Terms (the version agreed to most recently, or a red cross, read as "Not agreed" by a screen reader) and Signed Up, the terms in one column and their values in
   the next. The address itself is not repeated: the heading carries it, under
   the name.
 - **The role and creation controls sit beside the facts they change, at the right edge**
