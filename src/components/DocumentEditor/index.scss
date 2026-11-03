@@ -1,11 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The editor sits in the reading measure the public page uses, with its Save Draft and Publish above the text.
-.document-editor {
-  max-width: $measure;
-  margin-inline: auto;
-}
+// The editor starts at the content column's edge, under the heading and tabs, with its Save Draft and Publish above the text.
 
 .document-editor__bar {
   display: flex;
@@ -25,7 +21,11 @@
 .document-editor__text [role='textbox'] {
   @include field-box;
 
+  // The public page's text size, and a box the measure plus its own padding and border wide, so a line breaks where it will on the public page.
+  max-width: calc(#{$measure} + #{space(3)} * 2 + 2px);
   min-height: 24rem;
+  font-size: type-size('body');
+  font-weight: 300;
 
   &:focus-visible {
     @include focus-ring;
