@@ -1143,6 +1143,11 @@ type Mutation {
   deleteZodiacSign(id: ID!): ID!
 
   """
+  Throws the document's open draft away, answering its id. Refused as STALE_WRITE when the draft has moved on from `expectedRevision`.
+  """
+  discardDocumentDraft(documentId: ID!, expectedRevision: Int!): ID!
+
+  """
   Copies a spell into a new private draft in the same coven, with its categories and live steps; the original is untouched.
   """
   duplicateSpell(id: ID!, workspaceId: ID!): Spell!

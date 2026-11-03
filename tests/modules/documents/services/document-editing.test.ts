@@ -5,6 +5,7 @@ import { DOCUMENTS_TAG } from '@/lib/documents-cache';
 import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import {
+  discardDocumentDraft,
   publishDocumentDraft,
   readDocument,
   readDocumentForEditing,
@@ -229,6 +230,80 @@ describe('publishDocumentDraft', () => {
   });
 });
 
+// Restore Published Version: the draft goes, as a soft delete, and the published text is what the editor shows again.
+describe('discardDocumentDraft', () => {
+  /** The open draft of `documentId` as stored, deleted or not. */
+  async function draftRowOf(documentId: string) {
+    const [row] = await sql<{ id: string; deleted_at: Date | null; deleted_by: string | null }[]>`
+      select id, deleted_at, deleted_by from document_versions
+      where document_id = ${documentId} and status = 'draft'`;
+    return row;
+  }
+
+  it('soft-deletes the open draft as the admin, and leaves the published version as it was', async () => {
+    const draft = await draftRowOf(privacyId);
+    // Precondition: a live draft is open beside the published version 2.
+    expect(draft).toMatchObject({ deleted_at: null });
+    expect((await readDocumentForEditing(asUser(E), 'privacy')).draft).not.toBeNull();
+
+    const discarded = await discardDocumentDraft(asUser(E), privacyId, { expectedRevision: 1 });
+
+    expect(discarded).toBe(draft?.id);
+    expect(await draftRowOf(privacyId)).toMatchObject({
+      deleted_at: expect.any(Date),
+      deleted_by: E.id,
+    });
+    expect((await versionsOf(privacyId)).map(({ number, status }) => [number, status])).toEqual([
+      [1, 'published'],
+      [2, 'published'],
+    ]);
+    const editing = await readDocumentForEditing(asUser(E), 'privacy');
+    expect(editing.draft).toBeNull();
+    expect(editing.published).toMatchObject({ number: 2, body: 'Fixture second.' });
+    expect(await readDocument('privacy')).toMatchObject({ number: 2, body: 'Fixture second.' });
+  });
+
+  it('lets the next save open a new draft', async () => {
+    await discardDocumentDraft(asUser(E), privacyId, { expectedRevision: 1 });
+
+    const draft = await saveDocumentDraft(asUser(E), privacyId, {
+      body: 'Fixture fresh draft.',
+      expectedRevision: null,
+    });
+
+    expect(draft).toMatchObject({ body: 'Fixture fresh draft.', revision: 1 });
+    expect(draft.number).toBeGreaterThan(3);
+  });
+
+  // The editor discards what it shows: a draft saved elsewhere since holds text nobody here read.
+  it('refuses a stale revision with the one stored, and keeps the draft', async () => {
+    await saveDocumentDraft(asUser(E), privacyId, { body: 'Fixture newer.', expectedRevision: 1 });
+
+    const refusal = await discardDocumentDraft(asUser(E), privacyId, { expectedRevision: 1 }).then(
+      () => null,
+      (error: unknown) => error,
+    );
+
+    expect(refusal).toBeInstanceOf(StaleWrite);
+    expect((refusal as StaleWrite).currentRevision).toBe(2);
+    expect(await draftRowOf(privacyId)).toMatchObject({ deleted_at: null });
+    expect(await lastVersionOf(privacyId)).toMatchObject({
+      status: 'draft',
+      body: 'Fixture newer.',
+      revision: 2,
+    });
+  });
+
+  it('throws NotFound when no draft is open', async () => {
+    await expect(
+      discardDocumentDraft(asUser(E), disclaimerId, { expectedRevision: 1 }),
+    ).rejects.toBeInstanceOf(NotFound);
+    expect(await versionsOf(disclaimerId)).toEqual([
+      expect.objectContaining({ number: 1, status: 'published' }),
+    ]);
+  });
+});
+
 describe('updateDocument', () => {
   it('changes the title and lede, with no new version, and expires the documents tag', async () => {
     const before = await versionsOf(disclaimerId);
@@ -280,6 +355,10 @@ describe('the editing services are an admin’s alone', () => {
       (session) => publishDocumentDraft(session, privacyId, { expectedRevision: 1 }),
     ],
     [
+      'discardDocumentDraft',
+      (session) => discardDocumentDraft(session, privacyId, { expectedRevision: 1 }),
+    ],
+    [
       'updateDocument',
       (session) => updateDocument(session, privacyId, { title: 'Fixture Forged', lede: 'Forged.' }),
     ],
@@ -290,6 +369,8 @@ describe('the editing services are an admin’s alone', () => {
     expect(asUser(B).role).toBe('user');
     expect(() => assertCurator(asUser(F))).not.toThrow();
     const versionsBefore = await versionsOf(privacyId);
+    // A live draft is open, so a discard, a save or a publish has a row to act on.
+    expect(versionsBefore).toContainEqual(expect.objectContaining({ number: 3, status: 'draft' }));
     const [documentBefore] = await sql`select title, lede from documents where id = ${privacyId}`;
 
     for (const who of [F, B, A]) {

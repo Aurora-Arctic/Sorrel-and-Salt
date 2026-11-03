@@ -26,3 +26,6 @@ src/gql
 
 # MSW's own service worker, copied by `msw init`; its header says not to modify it
 .storybook/public/mockServiceWorker.js
+
+# The workflow SDK's generated job routes, rebuilt on every build and git-ignored
+src/app/.well-known/workflow/

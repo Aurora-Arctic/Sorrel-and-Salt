@@ -137,12 +137,8 @@
           "name": "card_invitation_attempts_invitation_id_invitations_id_fk",
           "tableFrom": "card_invitation_attempts",
           "tableTo": "invitations",
-          "columnsFrom": [
-            "invitation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invitation_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -150,12 +146,8 @@
           "name": "card_invitation_attempts_user_id_users_id_fk",
           "tableFrom": "card_invitation_attempts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -163,12 +155,8 @@
           "name": "card_invitation_attempts_created_by_users_id_fk",
           "tableFrom": "card_invitation_attempts",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -176,12 +164,8 @@
           "name": "card_invitation_attempts_updated_by_users_id_fk",
           "tableFrom": "card_invitation_attempts",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -189,12 +173,8 @@
           "name": "card_invitation_attempts_deleted_by_users_id_fk",
           "tableFrom": "card_invitation_attempts",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -375,12 +355,8 @@
           "name": "invitations_workspace_id_workspaces_id_fk",
           "tableFrom": "invitations",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -388,12 +364,8 @@
           "name": "invitations_accepted_by_users_id_fk",
           "tableFrom": "invitations",
           "tableTo": "users",
-          "columnsFrom": [
-            "accepted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["accepted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -401,12 +373,8 @@
           "name": "invitations_created_by_users_id_fk",
           "tableFrom": "invitations",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -414,12 +382,8 @@
           "name": "invitations_updated_by_users_id_fk",
           "tableFrom": "invitations",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -427,12 +391,8 @@
           "name": "invitations_deleted_by_users_id_fk",
           "tableFrom": "invitations",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -609,12 +569,8 @@
           "name": "workspace_member_pauses_workspace_id_workspaces_id_fk",
           "tableFrom": "workspace_member_pauses",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -622,12 +578,8 @@
           "name": "workspace_member_pauses_user_id_users_id_fk",
           "tableFrom": "workspace_member_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -635,12 +587,8 @@
           "name": "workspace_member_pauses_lifted_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "lifted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lifted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -648,12 +596,8 @@
           "name": "workspace_member_pauses_created_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -661,12 +605,8 @@
           "name": "workspace_member_pauses_updated_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -674,12 +614,8 @@
           "name": "workspace_member_pauses_deleted_by_users_id_fk",
           "tableFrom": "workspace_member_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -776,12 +712,8 @@
           "name": "workspace_members_workspace_id_workspaces_id_fk",
           "tableFrom": "workspace_members",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -789,12 +721,8 @@
           "name": "workspace_members_user_id_users_id_fk",
           "tableFrom": "workspace_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -802,12 +730,8 @@
           "name": "workspace_members_invited_by_users_id_fk",
           "tableFrom": "workspace_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "invited_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -815,12 +739,8 @@
           "name": "workspace_members_created_by_users_id_fk",
           "tableFrom": "workspace_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -828,12 +748,8 @@
           "name": "workspace_members_updated_by_users_id_fk",
           "tableFrom": "workspace_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -841,12 +757,8 @@
           "name": "workspace_members_deleted_by_users_id_fk",
           "tableFrom": "workspace_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -854,10 +766,7 @@
       "compositePrimaryKeys": {
         "workspace_members_workspace_id_user_id_pk": {
           "name": "workspace_members_workspace_id_user_id_pk",
-          "columns": [
-            "workspace_id",
-            "user_id"
-          ]
+          "columns": ["workspace_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -973,12 +882,8 @@
           "name": "workspaces_created_by_users_id_fk",
           "tableFrom": "workspaces",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -986,12 +891,8 @@
           "name": "workspaces_updated_by_users_id_fk",
           "tableFrom": "workspaces",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -999,12 +900,8 @@
           "name": "workspaces_deleted_by_users_id_fk",
           "tableFrom": "workspaces",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1118,12 +1015,8 @@
           "name": "document_mailing_recipients_mailing_id_document_mailings_id_fk",
           "tableFrom": "document_mailing_recipients",
           "tableTo": "document_mailings",
-          "columnsFrom": [
-            "mailing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["mailing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1131,12 +1024,8 @@
           "name": "document_mailing_recipients_user_id_users_id_fk",
           "tableFrom": "document_mailing_recipients",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1144,12 +1033,8 @@
           "name": "document_mailing_recipients_created_by_users_id_fk",
           "tableFrom": "document_mailing_recipients",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1157,12 +1042,8 @@
           "name": "document_mailing_recipients_updated_by_users_id_fk",
           "tableFrom": "document_mailing_recipients",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1170,12 +1051,8 @@
           "name": "document_mailing_recipients_deleted_by_users_id_fk",
           "tableFrom": "document_mailing_recipients",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1296,12 +1173,8 @@
           "name": "document_mailings_document_version_id_document_versions_id_fk",
           "tableFrom": "document_mailings",
           "tableTo": "document_versions",
-          "columnsFrom": [
-            "document_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["document_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1309,12 +1182,8 @@
           "name": "document_mailings_created_by_users_id_fk",
           "tableFrom": "document_mailings",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1322,12 +1191,8 @@
           "name": "document_mailings_updated_by_users_id_fk",
           "tableFrom": "document_mailings",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1335,12 +1200,8 @@
           "name": "document_mailings_deleted_by_users_id_fk",
           "tableFrom": "document_mailings",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1485,12 +1346,8 @@
           "name": "document_versions_document_id_documents_id_fk",
           "tableFrom": "document_versions",
           "tableTo": "documents",
-          "columnsFrom": [
-            "document_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["document_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1498,12 +1355,8 @@
           "name": "document_versions_created_by_users_id_fk",
           "tableFrom": "document_versions",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1511,12 +1364,8 @@
           "name": "document_versions_updated_by_users_id_fk",
           "tableFrom": "document_versions",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1524,12 +1373,8 @@
           "name": "document_versions_deleted_by_users_id_fk",
           "tableFrom": "document_versions",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1658,12 +1503,8 @@
           "name": "documents_created_by_users_id_fk",
           "tableFrom": "documents",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1671,12 +1512,8 @@
           "name": "documents_updated_by_users_id_fk",
           "tableFrom": "documents",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1684,12 +1521,8 @@
           "name": "documents_deleted_by_users_id_fk",
           "tableFrom": "documents",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1771,12 +1604,8 @@
           "name": "spell_categories_spell_id_spells_id_fk",
           "tableFrom": "spell_categories",
           "tableTo": "spells",
-          "columnsFrom": [
-            "spell_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["spell_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1784,12 +1613,8 @@
           "name": "spell_categories_category_id_categories_id_fk",
           "tableFrom": "spell_categories",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1797,12 +1622,8 @@
           "name": "spell_categories_created_by_users_id_fk",
           "tableFrom": "spell_categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1810,12 +1631,8 @@
           "name": "spell_categories_updated_by_users_id_fk",
           "tableFrom": "spell_categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1823,10 +1640,7 @@
       "compositePrimaryKeys": {
         "spell_categories_spell_id_category_id_pk": {
           "name": "spell_categories_spell_id_category_id_pk",
-          "columns": [
-            "spell_id",
-            "category_id"
-          ]
+          "columns": ["spell_id", "category_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1990,12 +1804,8 @@
           "name": "spell_steps_spell_id_spells_id_fk",
           "tableFrom": "spell_steps",
           "tableTo": "spells",
-          "columnsFrom": [
-            "spell_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["spell_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2003,12 +1813,8 @@
           "name": "spell_steps_ingredient_id_ingredients_id_fk",
           "tableFrom": "spell_steps",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2016,12 +1822,8 @@
           "name": "spell_steps_created_by_users_id_fk",
           "tableFrom": "spell_steps",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2029,12 +1831,8 @@
           "name": "spell_steps_updated_by_users_id_fk",
           "tableFrom": "spell_steps",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2042,12 +1840,8 @@
           "name": "spell_steps_deleted_by_users_id_fk",
           "tableFrom": "spell_steps",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2055,14 +1849,8 @@
           "name": "spell_steps_variant_fk",
           "tableFrom": "spell_steps",
           "tableTo": "ingredient_variants",
-          "columnsFrom": [
-            "variant_id",
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id",
-            "ingredient_id"
-          ],
+          "columnsFrom": ["variant_id", "ingredient_id"],
+          "columnsTo": ["id", "ingredient_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2204,12 +1992,8 @@
           "name": "spell_working_deductions_working_id_spell_workings_id_fk",
           "tableFrom": "spell_working_deductions",
           "tableTo": "spell_workings",
-          "columnsFrom": [
-            "working_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["working_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2217,12 +2001,8 @@
           "name": "spell_working_deductions_spell_step_id_spell_steps_id_fk",
           "tableFrom": "spell_working_deductions",
           "tableTo": "spell_steps",
-          "columnsFrom": [
-            "spell_step_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["spell_step_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2230,12 +2010,8 @@
           "name": "spell_working_deductions_created_by_users_id_fk",
           "tableFrom": "spell_working_deductions",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2243,12 +2019,8 @@
           "name": "spell_working_deductions_updated_by_users_id_fk",
           "tableFrom": "spell_working_deductions",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2256,12 +2028,8 @@
           "name": "spell_working_deductions_inventory_item_fk",
           "tableFrom": "spell_working_deductions",
           "tableTo": "inventory_items",
-          "columnsFrom": [
-            "inventory_item_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["inventory_item_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2383,12 +2151,8 @@
           "name": "spell_working_participants_working_id_spell_workings_id_fk",
           "tableFrom": "spell_working_participants",
           "tableTo": "spell_workings",
-          "columnsFrom": [
-            "working_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["working_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2396,12 +2160,8 @@
           "name": "spell_working_participants_user_id_users_id_fk",
           "tableFrom": "spell_working_participants",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2409,12 +2169,8 @@
           "name": "spell_working_participants_created_by_users_id_fk",
           "tableFrom": "spell_working_participants",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2422,12 +2178,8 @@
           "name": "spell_working_participants_updated_by_users_id_fk",
           "tableFrom": "spell_working_participants",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2566,12 +2318,8 @@
           "name": "spell_workings_spell_id_spells_id_fk",
           "tableFrom": "spell_workings",
           "tableTo": "spells",
-          "columnsFrom": [
-            "spell_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["spell_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2579,12 +2327,8 @@
           "name": "spell_workings_created_by_users_id_fk",
           "tableFrom": "spell_workings",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2592,12 +2336,8 @@
           "name": "spell_workings_updated_by_users_id_fk",
           "tableFrom": "spell_workings",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2605,12 +2345,8 @@
           "name": "spell_workings_deleted_by_users_id_fk",
           "tableFrom": "spell_workings",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2779,12 +2515,8 @@
           "name": "spells_workspace_id_workspaces_id_fk",
           "tableFrom": "spells",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2792,12 +2524,8 @@
           "name": "spells_created_by_users_id_fk",
           "tableFrom": "spells",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2805,12 +2533,8 @@
           "name": "spells_updated_by_users_id_fk",
           "tableFrom": "spells",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2818,12 +2542,8 @@
           "name": "spells_deleted_by_users_id_fk",
           "tableFrom": "spells",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2924,12 +2644,8 @@
           "name": "admin_role_change_pauses_ended_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "ended_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ended_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2937,12 +2653,8 @@
           "name": "admin_role_change_pauses_created_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2950,12 +2662,8 @@
           "name": "admin_role_change_pauses_updated_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2963,12 +2671,8 @@
           "name": "admin_role_change_pauses_deleted_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3091,12 +2795,8 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3217,12 +2917,8 @@
           "name": "passkeys_user_id_users_id_fk",
           "tableFrom": "passkeys",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3270,9 +2966,7 @@
         "rate_limits_key_unique": {
           "name": "rate_limits_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         }
       },
       "policies": {},
@@ -3362,12 +3056,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3375,12 +3065,8 @@
           "name": "sessions_impersonated_by_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "impersonated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["impersonated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3390,9 +3076,7 @@
         "sessions_token_unique": {
           "name": "sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -3443,12 +3127,8 @@
           "name": "sign_in_failures_user_id_users_id_fk",
           "tableFrom": "sign_in_failures",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3531,12 +3211,8 @@
           "name": "two_factors_user_id_users_id_fk",
           "tableFrom": "two_factors",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3724,12 +3400,8 @@
           "name": "user_access_pauses_user_id_users_id_fk",
           "tableFrom": "user_access_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3737,12 +3409,8 @@
           "name": "user_access_pauses_lifted_by_users_id_fk",
           "tableFrom": "user_access_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "lifted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lifted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3750,12 +3418,8 @@
           "name": "user_access_pauses_created_by_users_id_fk",
           "tableFrom": "user_access_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3763,12 +3427,8 @@
           "name": "user_access_pauses_updated_by_users_id_fk",
           "tableFrom": "user_access_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3776,12 +3436,8 @@
           "name": "user_access_pauses_deleted_by_users_id_fk",
           "tableFrom": "user_access_pauses",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3890,12 +3546,8 @@
           "name": "user_privilege_changes_user_id_users_id_fk",
           "tableFrom": "user_privilege_changes",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3903,12 +3555,8 @@
           "name": "user_privilege_changes_created_by_users_id_fk",
           "tableFrom": "user_privilege_changes",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3916,12 +3564,8 @@
           "name": "user_privilege_changes_updated_by_users_id_fk",
           "tableFrom": "user_privilege_changes",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3929,12 +3573,8 @@
           "name": "user_privilege_changes_deleted_by_users_id_fk",
           "tableFrom": "user_privilege_changes",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4133,12 +3773,8 @@
           "name": "users_created_by_users_id_fk",
           "tableFrom": "users",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4146,12 +3782,8 @@
           "name": "users_updated_by_users_id_fk",
           "tableFrom": "users",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4159,12 +3791,8 @@
           "name": "users_deleted_by_users_id_fk",
           "tableFrom": "users",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4305,12 +3933,8 @@
           "name": "ingredient_categories_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_categories",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4318,12 +3942,8 @@
           "name": "ingredient_categories_category_id_categories_id_fk",
           "tableFrom": "ingredient_categories",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4331,12 +3951,8 @@
           "name": "ingredient_categories_created_by_users_id_fk",
           "tableFrom": "ingredient_categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4344,12 +3960,8 @@
           "name": "ingredient_categories_updated_by_users_id_fk",
           "tableFrom": "ingredient_categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4357,14 +3969,8 @@
           "name": "ingredient_categories_variant_fk",
           "tableFrom": "ingredient_categories",
           "tableTo": "ingredient_variants",
-          "columnsFrom": [
-            "variant_id",
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id",
-            "ingredient_id"
-          ],
+          "columnsFrom": ["variant_id", "ingredient_id"],
+          "columnsTo": ["id", "ingredient_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4538,12 +4144,8 @@
           "name": "ingredient_deities_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_deities",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4551,12 +4153,8 @@
           "name": "ingredient_deities_deity_id_deities_id_fk",
           "tableFrom": "ingredient_deities",
           "tableTo": "deities",
-          "columnsFrom": [
-            "deity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4564,12 +4162,8 @@
           "name": "ingredient_deities_created_by_users_id_fk",
           "tableFrom": "ingredient_deities",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4577,12 +4171,8 @@
           "name": "ingredient_deities_updated_by_users_id_fk",
           "tableFrom": "ingredient_deities",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4590,12 +4180,8 @@
           "name": "ingredient_deities_deleted_by_users_id_fk",
           "tableFrom": "ingredient_deities",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4732,12 +4318,8 @@
           "name": "ingredient_folk_names_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_folk_names",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4745,12 +4327,8 @@
           "name": "ingredient_folk_names_created_by_users_id_fk",
           "tableFrom": "ingredient_folk_names",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4758,12 +4336,8 @@
           "name": "ingredient_folk_names_updated_by_users_id_fk",
           "tableFrom": "ingredient_folk_names",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4771,12 +4345,8 @@
           "name": "ingredient_folk_names_deleted_by_users_id_fk",
           "tableFrom": "ingredient_folk_names",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4994,12 +4564,8 @@
           "name": "ingredient_substitutes_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_substitutes",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5007,12 +4573,8 @@
           "name": "ingredient_substitutes_substitute_id_ingredients_id_fk",
           "tableFrom": "ingredient_substitutes",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "substitute_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["substitute_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5020,12 +4582,8 @@
           "name": "ingredient_substitutes_created_by_users_id_fk",
           "tableFrom": "ingredient_substitutes",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5033,12 +4591,8 @@
           "name": "ingredient_substitutes_updated_by_users_id_fk",
           "tableFrom": "ingredient_substitutes",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5046,12 +4600,8 @@
           "name": "ingredient_substitutes_deleted_by_users_id_fk",
           "tableFrom": "ingredient_substitutes",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5059,14 +4609,8 @@
           "name": "ingredient_substitutes_variant_fk",
           "tableFrom": "ingredient_substitutes",
           "tableTo": "ingredient_variants",
-          "columnsFrom": [
-            "variant_id",
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id",
-            "ingredient_id"
-          ],
+          "columnsFrom": ["variant_id", "ingredient_id"],
+          "columnsTo": ["id", "ingredient_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5074,14 +4618,8 @@
           "name": "ingredient_substitutes_substitute_variant_fk",
           "tableFrom": "ingredient_substitutes",
           "tableTo": "ingredient_variants",
-          "columnsFrom": [
-            "substitute_variant_id",
-            "substitute_id"
-          ],
-          "columnsTo": [
-            "id",
-            "ingredient_id"
-          ],
+          "columnsFrom": ["substitute_variant_id", "substitute_id"],
+          "columnsTo": ["id", "ingredient_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5308,12 +4846,8 @@
           "name": "ingredient_variants_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_variants",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5321,12 +4855,8 @@
           "name": "ingredient_variants_form_id_ingredient_forms_id_fk",
           "tableFrom": "ingredient_variants",
           "tableTo": "ingredient_forms",
-          "columnsFrom": [
-            "form_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["form_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5334,12 +4864,8 @@
           "name": "ingredient_variants_created_by_users_id_fk",
           "tableFrom": "ingredient_variants",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5347,12 +4873,8 @@
           "name": "ingredient_variants_updated_by_users_id_fk",
           "tableFrom": "ingredient_variants",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5360,12 +4882,8 @@
           "name": "ingredient_variants_deleted_by_users_id_fk",
           "tableFrom": "ingredient_variants",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5739,12 +5257,8 @@
           "name": "ingredients_workspace_id_workspaces_id_fk",
           "tableFrom": "ingredients",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5752,12 +5266,8 @@
           "name": "ingredients_curator_reviewed_by_users_id_fk",
           "tableFrom": "ingredients",
           "tableTo": "users",
-          "columnsFrom": [
-            "curator_reviewed_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["curator_reviewed_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5765,12 +5275,8 @@
           "name": "ingredients_created_by_users_id_fk",
           "tableFrom": "ingredients",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5778,12 +5284,8 @@
           "name": "ingredients_updated_by_users_id_fk",
           "tableFrom": "ingredients",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5791,12 +5293,8 @@
           "name": "ingredients_deleted_by_users_id_fk",
           "tableFrom": "ingredients",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5959,12 +5457,8 @@
           "name": "inventory_items_workspace_id_workspaces_id_fk",
           "tableFrom": "inventory_items",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5972,12 +5466,8 @@
           "name": "inventory_items_ingredient_id_ingredients_id_fk",
           "tableFrom": "inventory_items",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5985,12 +5475,8 @@
           "name": "inventory_items_created_by_users_id_fk",
           "tableFrom": "inventory_items",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5998,12 +5484,8 @@
           "name": "inventory_items_updated_by_users_id_fk",
           "tableFrom": "inventory_items",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6011,12 +5493,8 @@
           "name": "inventory_items_deleted_by_users_id_fk",
           "tableFrom": "inventory_items",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6024,14 +5502,8 @@
           "name": "inventory_items_variant_fk",
           "tableFrom": "inventory_items",
           "tableTo": "ingredient_variants",
-          "columnsFrom": [
-            "variant_id",
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id",
-            "ingredient_id"
-          ],
+          "columnsFrom": ["variant_id", "ingredient_id"],
+          "columnsTo": ["id", "ingredient_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6297,12 +5769,8 @@
           "name": "reference_links_reference_id_references_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "references",
-          "columnsFrom": [
-            "reference_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["reference_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6310,12 +5778,8 @@
           "name": "reference_links_ingredient_id_ingredients_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6323,12 +5787,8 @@
           "name": "reference_links_deity_id_deities_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "deities",
-          "columnsFrom": [
-            "deity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6336,12 +5796,8 @@
           "name": "reference_links_deity_tradition_id_deity_traditions_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "deity_traditions",
-          "columnsFrom": [
-            "deity_tradition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deity_tradition_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6349,12 +5805,8 @@
           "name": "reference_links_celestial_body_id_celestial_bodies_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "celestial_bodies",
-          "columnsFrom": [
-            "celestial_body_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["celestial_body_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6362,12 +5814,8 @@
           "name": "reference_links_zodiac_sign_id_zodiac_signs_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "zodiac_signs",
-          "columnsFrom": [
-            "zodiac_sign_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["zodiac_sign_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6375,12 +5823,8 @@
           "name": "reference_links_ingredient_variant_id_ingredient_variants_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "ingredient_variants",
-          "columnsFrom": [
-            "ingredient_variant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_variant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6388,12 +5832,8 @@
           "name": "reference_links_created_by_users_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6401,12 +5841,8 @@
           "name": "reference_links_updated_by_users_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6414,12 +5850,8 @@
           "name": "reference_links_deleted_by_users_id_fk",
           "tableFrom": "reference_links",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6640,12 +6072,8 @@
           "name": "references_workspace_id_workspaces_id_fk",
           "tableFrom": "references",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6653,12 +6081,8 @@
           "name": "references_created_by_users_id_fk",
           "tableFrom": "references",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6666,12 +6090,8 @@
           "name": "references_updated_by_users_id_fk",
           "tableFrom": "references",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6679,12 +6099,8 @@
           "name": "references_deleted_by_users_id_fk",
           "tableFrom": "references",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6875,12 +6291,8 @@
           "name": "retired_ingredient_slugs_ingredient_id_ingredients_id_fk",
           "tableFrom": "retired_ingredient_slugs",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6888,12 +6300,8 @@
           "name": "retired_ingredient_slugs_workspace_id_workspaces_id_fk",
           "tableFrom": "retired_ingredient_slugs",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6901,12 +6309,8 @@
           "name": "retired_ingredient_slugs_created_by_users_id_fk",
           "tableFrom": "retired_ingredient_slugs",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6914,12 +6318,8 @@
           "name": "retired_ingredient_slugs_updated_by_users_id_fk",
           "tableFrom": "retired_ingredient_slugs",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6927,12 +6327,8 @@
           "name": "retired_ingredient_slugs_deleted_by_users_id_fk",
           "tableFrom": "retired_ingredient_slugs",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7136,12 +6532,8 @@
           "name": "workspace_compendium_entries_workspace_id_workspaces_id_fk",
           "tableFrom": "workspace_compendium_entries",
           "tableTo": "workspaces",
-          "columnsFrom": [
-            "workspace_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workspace_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7149,12 +6541,8 @@
           "name": "workspace_compendium_entries_ingredient_id_ingredients_id_fk",
           "tableFrom": "workspace_compendium_entries",
           "tableTo": "ingredients",
-          "columnsFrom": [
-            "ingredient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ingredient_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7162,12 +6550,8 @@
           "name": "workspace_compendium_entries_created_by_users_id_fk",
           "tableFrom": "workspace_compendium_entries",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7175,12 +6559,8 @@
           "name": "workspace_compendium_entries_updated_by_users_id_fk",
           "tableFrom": "workspace_compendium_entries",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7188,12 +6568,8 @@
           "name": "workspace_compendium_entries_deleted_by_users_id_fk",
           "tableFrom": "workspace_compendium_entries",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7317,12 +6693,8 @@
           "name": "support_replies_request_id_support_requests_id_fk",
           "tableFrom": "support_replies",
           "tableTo": "support_requests",
-          "columnsFrom": [
-            "request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["request_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7330,12 +6702,8 @@
           "name": "support_replies_created_by_users_id_fk",
           "tableFrom": "support_replies",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7343,12 +6711,8 @@
           "name": "support_replies_updated_by_users_id_fk",
           "tableFrom": "support_replies",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7356,12 +6720,8 @@
           "name": "support_replies_deleted_by_users_id_fk",
           "tableFrom": "support_replies",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7600,12 +6960,8 @@
           "name": "support_requests_assigned_to_users_id_fk",
           "tableFrom": "support_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "assigned_to"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assigned_to"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7613,12 +6969,8 @@
           "name": "support_requests_resolved_by_users_id_fk",
           "tableFrom": "support_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "resolved_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resolved_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7626,12 +6978,8 @@
           "name": "support_requests_linked_from_support_requests_id_fk",
           "tableFrom": "support_requests",
           "tableTo": "support_requests",
-          "columnsFrom": [
-            "linked_from"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["linked_from"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7639,12 +6987,8 @@
           "name": "support_requests_created_by_users_id_fk",
           "tableFrom": "support_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7652,12 +6996,8 @@
           "name": "support_requests_updated_by_users_id_fk",
           "tableFrom": "support_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7665,12 +7005,8 @@
           "name": "support_requests_deleted_by_users_id_fk",
           "tableFrom": "support_requests",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7789,12 +7125,8 @@
           "name": "support_send_counts_created_by_users_id_fk",
           "tableFrom": "support_send_counts",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7802,12 +7134,8 @@
           "name": "support_send_counts_updated_by_users_id_fk",
           "tableFrom": "support_send_counts",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7815,12 +7143,8 @@
           "name": "support_send_counts_deleted_by_users_id_fk",
           "tableFrom": "support_send_counts",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -7945,12 +7269,8 @@
           "name": "support_timeouts_user_id_users_id_fk",
           "tableFrom": "support_timeouts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -7958,12 +7278,8 @@
           "name": "support_timeouts_created_by_users_id_fk",
           "tableFrom": "support_timeouts",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7971,12 +7287,8 @@
           "name": "support_timeouts_updated_by_users_id_fk",
           "tableFrom": "support_timeouts",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -7984,12 +7296,8 @@
           "name": "support_timeouts_deleted_by_users_id_fk",
           "tableFrom": "support_timeouts",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -8145,12 +7453,8 @@
           "name": "celestial_bodies_created_by_users_id_fk",
           "tableFrom": "celestial_bodies",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8158,12 +7462,8 @@
           "name": "celestial_bodies_updated_by_users_id_fk",
           "tableFrom": "celestial_bodies",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8171,12 +7471,8 @@
           "name": "celestial_bodies_deleted_by_users_id_fk",
           "tableFrom": "celestial_bodies",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -8332,12 +7628,8 @@
           "name": "zodiac_signs_created_by_users_id_fk",
           "tableFrom": "zodiac_signs",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8345,12 +7637,8 @@
           "name": "zodiac_signs_updated_by_users_id_fk",
           "tableFrom": "zodiac_signs",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8358,12 +7646,8 @@
           "name": "zodiac_signs_deleted_by_users_id_fk",
           "tableFrom": "zodiac_signs",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -8498,12 +7782,8 @@
           "name": "categories_group_id_category_groups_id_fk",
           "tableFrom": "categories",
           "tableTo": "category_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8511,12 +7791,8 @@
           "name": "categories_created_by_users_id_fk",
           "tableFrom": "categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8524,12 +7800,8 @@
           "name": "categories_updated_by_users_id_fk",
           "tableFrom": "categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8537,12 +7809,8 @@
           "name": "categories_deleted_by_users_id_fk",
           "tableFrom": "categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -8683,12 +7951,8 @@
           "name": "category_groups_created_by_users_id_fk",
           "tableFrom": "category_groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8696,12 +7960,8 @@
           "name": "category_groups_updated_by_users_id_fk",
           "tableFrom": "category_groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8709,12 +7969,8 @@
           "name": "category_groups_deleted_by_users_id_fk",
           "tableFrom": "category_groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -8870,12 +8126,8 @@
           "name": "deities_tradition_id_deity_traditions_id_fk",
           "tableFrom": "deities",
           "tableTo": "deity_traditions",
-          "columnsFrom": [
-            "tradition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tradition_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8883,12 +8135,8 @@
           "name": "deities_created_by_users_id_fk",
           "tableFrom": "deities",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8896,12 +8144,8 @@
           "name": "deities_updated_by_users_id_fk",
           "tableFrom": "deities",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -8909,12 +8153,8 @@
           "name": "deities_deleted_by_users_id_fk",
           "tableFrom": "deities",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -9043,12 +8283,8 @@
           "name": "deity_traditions_created_by_users_id_fk",
           "tableFrom": "deity_traditions",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9056,12 +8292,8 @@
           "name": "deity_traditions_updated_by_users_id_fk",
           "tableFrom": "deity_traditions",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9069,12 +8301,8 @@
           "name": "deity_traditions_deleted_by_users_id_fk",
           "tableFrom": "deity_traditions",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -9196,12 +8424,8 @@
           "name": "deity_other_names_deity_id_deities_id_fk",
           "tableFrom": "deity_other_names",
           "tableTo": "deities",
-          "columnsFrom": [
-            "deity_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deity_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9209,12 +8433,8 @@
           "name": "deity_other_names_created_by_users_id_fk",
           "tableFrom": "deity_other_names",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9222,12 +8442,8 @@
           "name": "deity_other_names_updated_by_users_id_fk",
           "tableFrom": "deity_other_names",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9235,12 +8451,8 @@
           "name": "deity_other_names_deleted_by_users_id_fk",
           "tableFrom": "deity_other_names",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -9376,12 +8588,8 @@
           "name": "ingredient_form_groups_created_by_users_id_fk",
           "tableFrom": "ingredient_form_groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9389,12 +8597,8 @@
           "name": "ingredient_form_groups_updated_by_users_id_fk",
           "tableFrom": "ingredient_form_groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9402,12 +8606,8 @@
           "name": "ingredient_form_groups_deleted_by_users_id_fk",
           "tableFrom": "ingredient_form_groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -9563,12 +8763,8 @@
           "name": "ingredient_forms_group_id_ingredient_form_groups_id_fk",
           "tableFrom": "ingredient_forms",
           "tableTo": "ingredient_form_groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9576,12 +8772,8 @@
           "name": "ingredient_forms_created_by_users_id_fk",
           "tableFrom": "ingredient_forms",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9589,12 +8781,8 @@
           "name": "ingredient_forms_updated_by_users_id_fk",
           "tableFrom": "ingredient_forms",
           "tableTo": "users",
-          "columnsFrom": [
-            "updated_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -9602,12 +8790,8 @@
           "name": "ingredient_forms_deleted_by_users_id_fk",
           "tableFrom": "ingredient_forms",
           "tableTo": "users",
-          "columnsFrom": [
-            "deleted_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -9628,114 +8812,62 @@
     "public.workspace_role": {
       "name": "workspace_role",
       "schema": "public",
-      "values": [
-        "viewer",
-        "member",
-        "owner"
-      ]
+      "values": ["viewer", "member", "owner"]
     },
     "public.document_mailing_status": {
       "name": "document_mailing_status",
       "schema": "public",
-      "values": [
-        "sending",
-        "sent",
-        "replaced",
-        "paused"
-      ]
+      "values": ["sending", "sent", "replaced", "paused"]
     },
     "public.document_version_status": {
       "name": "document_version_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "published"
-      ]
+      "values": ["draft", "published"]
     },
     "public.working_status": {
       "name": "working_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "complete"
-      ]
+      "values": ["draft", "complete"]
     },
     "public.spell_status": {
       "name": "spell_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "complete"
-      ]
+      "values": ["draft", "complete"]
     },
     "public.spell_visibility": {
       "name": "spell_visibility",
       "schema": "public",
-      "values": [
-        "private",
-        "workspace"
-      ]
+      "values": ["private", "workspace"]
     },
     "public.user_privilege": {
       "name": "user_privilege",
       "schema": "public",
-      "values": [
-        "admin",
-        "create_workspace",
-        "curator"
-      ]
+      "values": ["admin", "create_workspace", "curator"]
     },
     "public.user_privilege_change": {
       "name": "user_privilege_change",
       "schema": "public",
-      "values": [
-        "grant",
-        "revoke"
-      ]
+      "values": ["grant", "revoke"]
     },
     "public.user_privilege_route": {
       "name": "user_privilege_route",
       "schema": "public",
-      "values": [
-        "bootstrap",
-        "admin",
-        "invitation",
-        "manual",
-        "card"
-      ]
+      "values": ["bootstrap", "admin", "invitation", "manual", "card"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "user",
-        "curator",
-        "admin"
-      ]
+      "values": ["user", "curator", "admin"]
     },
     "public.ingredient_element": {
       "name": "ingredient_element",
       "schema": "public",
-      "values": [
-        "earth",
-        "air",
-        "fire",
-        "water",
-        "spirit"
-      ]
+      "values": ["earth", "air", "fire", "water", "spirit"]
     },
     "public.nomenclature_kind": {
       "name": "nomenclature_kind",
       "schema": "public",
-      "values": [
-        "botanical",
-        "fungal",
-        "zoological",
-        "mineral",
-        "chemical",
-        "unknown",
-        "none"
-      ]
+      "values": ["botanical", "fungal", "zoological", "mineral", "chemical", "unknown", "none"]
     },
     "public.inventory_unit": {
       "name": "inventory_unit",
@@ -9761,83 +8893,42 @@
     "public.unit_dimension": {
       "name": "unit_dimension",
       "schema": "public",
-      "values": [
-        "weight",
-        "volume",
-        "count"
-      ]
+      "values": ["weight", "volume", "count"]
     },
     "public.name_basis": {
       "name": "name_basis",
       "schema": "public",
-      "values": [
-        "stated",
-        "resolved",
-        "unresolved",
-        "unaudited"
-      ]
+      "values": ["stated", "resolved", "unresolved", "unaudited"]
     },
     "public.reference_kind": {
       "name": "reference_kind",
       "schema": "public",
-      "values": [
-        "book",
-        "chapter",
-        "article",
-        "entry",
-        "web_page"
-      ]
+      "values": ["book", "chapter", "article", "entry", "web_page"]
     },
     "public.support_reply_author_role": {
       "name": "support_reply_author_role",
       "schema": "public",
-      "values": [
-        "sender",
-        "staff"
-      ]
+      "values": ["sender", "staff"]
     },
     "public.support_reply_visibility": {
       "name": "support_reply_visibility",
       "schema": "public",
-      "values": [
-        "public",
-        "internal"
-      ]
+      "values": ["public", "internal"]
     },
     "public.support_request_about": {
       "name": "support_request_about",
       "schema": "public",
-      "values": [
-        "accessibility",
-        "bug",
-        "account",
-        "compendium",
-        "privacy",
-        "feedback",
-        "question"
-      ]
+      "values": ["accessibility", "bug", "account", "compendium", "privacy", "feedback", "question"]
     },
     "public.support_request_status": {
       "name": "support_request_status",
       "schema": "public",
-      "values": [
-        "open",
-        "waiting_on_sender",
-        "resolved",
-        "closed"
-      ]
+      "values": ["open", "waiting_on_sender", "resolved", "closed"]
     },
     "public.form_group_icon": {
       "name": "form_group_icon",
       "schema": "public",
-      "values": [
-        "botanical",
-        "animal",
-        "mineral",
-        "substance",
-        "fluid",
-        "curio"
-      ]
+      "values": ["botanical", "animal", "mineral", "substance", "fluid", "curio"]
     }
   },
   "schemas": {},

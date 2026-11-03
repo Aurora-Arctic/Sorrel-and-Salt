@@ -270,7 +270,7 @@ const CUPBOARD = {
 const COMPENDIUM_BACK = {
   href: '/compendium' as Route,
   label: 'Compendium',
-  also: [{ path: '/admin/compendium', label: 'Admin Compendium' }],
+  also: [{ path: '/curator/compendium', label: 'Curator Compendium' }],
 };
 
 // The head's three lines: the way back with New, the safety

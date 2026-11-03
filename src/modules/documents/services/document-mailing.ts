@@ -21,11 +21,7 @@ import { parseInput, requiredText } from '@/lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { z } from 'zod';
 import { documentMailing } from '../jobs/document-mailing';
-import {
-  MAILING_DAILY_CAP,
-  documentMailingHookToken,
-  mailingDays,
-} from '../mailing-pace';
+import { MAILING_DAILY_CAP, documentMailingHookToken, mailingDays } from '../mailing-pace';
 import { documentVersions } from '../schema/document-versions';
 import { documents } from '../schema/documents';
 import type { DocumentMailingRow } from '@/db/repository';
@@ -171,7 +167,9 @@ export async function resumeDocumentMailing(
   if (!version) throw new NotFound('Mailing not found');
   const origin = await notifier.origin();
 
-  const [resumed] = await withAudit(session, (write) => write.resumeDocumentMailing(admin, mailingId));
+  const [resumed] = await withAudit(session, (write) =>
+    write.resumeDocumentMailing(admin, mailingId),
+  );
   if (!resumed) throw notPaused();
 
   await startJob(documentMailing, [mailingId, origin]);

@@ -65,7 +65,8 @@ export default {
               file,
             ) &&
             !file.startsWith('src/app/api/cron/support-retention/route.') &&
-            !file.startsWith('src/app/api/cron/provisional-cleanup/route.')
+            !file.startsWith('src/app/api/cron/provisional-cleanup/route.') &&
+            !file.startsWith('src/app/api/cron/document-mailing/route.')
           ) {
             context.report({
               node: program,

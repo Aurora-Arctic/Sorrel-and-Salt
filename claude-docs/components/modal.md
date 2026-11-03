@@ -498,8 +498,8 @@ The eyebrow and title are a `.header` column, closer than its gap, which may
 shrink past its content: a long name wraps rather than pushing the × out, and
 a name with no break in it breaks anywhere.
 
-| Dialog                                     | Eyebrow                               | Qualifier   |
-| ------------------------------------------ | ------------------------------------- | ----------- |
+| Dialog                                       | Eyebrow                               | Qualifier   |
+| -------------------------------------------- | ------------------------------------- | ----------- |
 | `/curator/compendium?edit=`, an entry's page | Edit Ingredient                       | Formal name |
 | `/curator/categories`, `forms`               | Edit Category, Edit Form              | —           |
 | `/curator/deities`                           | Edit Deity                            | Tradition   |
@@ -671,7 +671,7 @@ call, 2026-10-28):
 | `ingredient-coven-<slug>` | Add Ingredient for the coven with that slug, on any page in the shell      |
 | `ingredient`              | Add Ingredient for the default coven                                       |
 | none (a bare `?new`)      | Off the admin pages, the same as `ingredient`; on them, the page’s own add |
-| `ingredient-compendium`   | The compendium’s New Entry, on `/curator/compendium`                         |
+| `ingredient-compendium`   | The compendium’s New Entry, on `/curator/compendium`                       |
 | `spell-<slug>`            | That coven’s New Spell ([`spell-builder.md`](spell-builder.md))            |
 | `spell`                   | New Spell for the grimoire the page is on                                  |
 

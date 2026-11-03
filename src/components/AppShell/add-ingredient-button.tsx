@@ -32,7 +32,9 @@ const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
  */
 /** True on the curator and keepers pages, where the add button files into the compendium. */
 function onCuratedPage(pathname: string): boolean {
-  return ["/curator", "/keepers"].some((base) => pathname === base || pathname.startsWith(`${base}/`));
+  return ['/curator', '/keepers'].some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`),
+  );
 }
 
 function savedMessage(saved: SavedIngredient): string {

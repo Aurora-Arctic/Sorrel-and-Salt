@@ -44,7 +44,8 @@ export type DocumentForEditing = {
  * Where a mailing stands: `queued` behind an older mailing of another document, `sending`, `waiting` for tomorrow's allowance once
  * today's is used, `paused` by the provider's monthly quota until an admin resumes it, `sent`, or `replaced` by a newer mailing.
  */
-export type DocumentMailingState = 'queued' | 'sending' | 'waiting' | 'paused' | 'sent' | 'replaced';
+export type DocumentMailingState =
+  'queued' | 'sending' | 'waiting' | 'paused' | 'sent' | 'replaced';
 
 /** One mailing of a version, with how many accounts its mail has reached. */
 export type DocumentMailingSummary = {

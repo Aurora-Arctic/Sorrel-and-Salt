@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { warmImport } from '../../support/warm-import';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
@@ -7,6 +8,9 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { default: DocumentEditor } = await import('@/components/DocumentEditor');
+
+// The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
+warmImport(() => import('@/components/DocumentEditor/editor'));
 
 // The public page heads its footnotes with a Sources heading the markdown does not hold, so the editor draws the same heading.
 
@@ -18,6 +22,7 @@ async function renderEditor(body: string) {
       title="Disclaimer"
       lede="What the site does not promise."
       body={body}
+      publishedBody={body}
       revision={null}
       nextNumber={2}
     />,

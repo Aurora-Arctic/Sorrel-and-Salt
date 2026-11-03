@@ -6,14 +6,7 @@ import { upsertLink } from '@platejs/link';
 import { someList, toggleList } from '@platejs/list';
 import { KEYS, type TRange } from 'platejs';
 import { useEditorRef, useEditorSelection, useEditorVersion } from 'platejs/react';
-import {
-  type KeyboardEvent,
-  type MouseEvent,
-  type ReactElement,
-  useId,
-  useRef,
-  useState,
-} from 'react';
+import { type KeyboardEvent, type MouseEvent, type ReactElement, useRef, useState } from 'react';
 import IconTip, {
   BoldIcon,
   BulletListIcon,
@@ -27,7 +20,7 @@ import IconTip, {
   TableIcon,
   UndoIcon,
 } from '../IconTip';
-import Modal from '../Modal';
+import LinkDialog from './link-dialog';
 
 // The editor's toolbar: one button for each thing the public page draws that a person can add. It is a single tab stop
 // (the WAI-ARIA toolbar pattern), and a press keeps the editor's selection, so a button acts on what was selected.
@@ -150,59 +143,6 @@ const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
 /** Every button in the order the arrow keys move through them. */
 const BUTTONS = GROUPS.flatMap((group) => group.buttons);
 
-/** The dialog that asks for a link's address, and links the words that were selected when it opened. */
-function LinkDialog({ onAdd, onClose }: { onAdd: (url: string) => boolean; onClose: () => void }) {
-  const [url, setUrl] = useState('');
-  const [failed, setFailed] = useState(false);
-  const inputId = useId();
-  const errorId = useId();
-
-  function add() {
-    if (onAdd(url.trim())) onClose();
-    else setFailed(true);
-  }
-
-  return (
-    <Modal title="Add Link" onClose={onClose}>
-      <div className="field">
-        <label className="field__label" htmlFor={inputId}>
-          Address
-        </label>
-        <input
-          id={inputId}
-          className="input"
-          type="url"
-          value={url}
-          aria-invalid={failed || undefined}
-          aria-describedby={failed ? errorId : undefined}
-          onChange={(event) => {
-            setUrl(event.target.value);
-            setFailed(false);
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== 'Enter') return;
-            event.preventDefault();
-            add();
-          }}
-        />
-        {failed && (
-          <p id={errorId} role="alert">
-            Enter a full web address, such as https://example.com.
-          </p>
-        )}
-      </div>
-      <div className="form__actions">
-        <button type="button" className="btn btn--solid" onClick={add}>
-          Add Link
-        </button>
-        <button type="button" className="btn btn--quiet" onClick={onClose}>
-          Cancel
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
 const Toolbar = (): ReactElement => {
   const editor = useEditorRef();
   // Read so the pressed and available states follow the selection and every edit.
@@ -230,7 +170,6 @@ const Toolbar = (): ReactElement => {
 
   function closeLink() {
     setLinking(false);
-    editor.tf.focus();
   }
 
   function move(event: KeyboardEvent<HTMLDivElement>) {
@@ -256,6 +195,8 @@ const Toolbar = (): ReactElement => {
       role="toolbar"
       aria-label="Document Text Formatting"
       className="document-editor__toolbar"
+      // Focusable by script only: the arrow-key handler sits here, and the buttons hold the one tab stop.
+      tabIndex={-1}
       onKeyDown={move}
     >
       {GROUPS.map((group) => (
@@ -294,7 +235,13 @@ const Toolbar = (): ReactElement => {
           })}
         </div>
       ))}
-      {linking && <LinkDialog onAdd={addLink} onClose={closeLink} />}
+      {linking && (
+        <LinkDialog
+          onAdd={addLink}
+          onClose={closeLink}
+          returnTo={() => editor.api.toDOMNode(editor) ?? null}
+        />
+      )}
     </div>
   );
 };

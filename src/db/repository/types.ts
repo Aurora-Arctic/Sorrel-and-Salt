@@ -553,6 +553,15 @@ export interface AuditWriter {
     expectedRevision: number | null,
   ): Promise<DocumentVersionRow[]>;
   /**
+   * Soft-delete a draft while it is at `expectedRevision`: a draft that has moved on throws `StaleWrite` with its revision now. A
+   * published, deleted or missing version answers `[]`, never `StaleWrite`.
+   */
+  discardDocumentDraft(
+    admin: SiteAdmin,
+    versionId: string,
+    expectedRevision: number,
+  ): Promise<DocumentVersionRow[]>;
+  /**
    * Start the mailing of a published version, sending. No row comes back for a draft, a soft-deleted or missing version, or one with a
    * live mailing already.
    */

@@ -167,6 +167,6 @@ describe("the public entry page's way back", () => {
       { back?: { href: string; also?: readonly { path: string; label: string }[] } } | undefined;
     const back = props?.back;
     expect(back?.href).toBe('/compendium');
-    expect(back?.also).toEqual([{ path: '/admin/compendium', label: 'Admin Compendium' }]);
+    expect(back?.also).toEqual([{ path: '/curator/compendium', label: 'Curator Compendium' }]);
   });
 });

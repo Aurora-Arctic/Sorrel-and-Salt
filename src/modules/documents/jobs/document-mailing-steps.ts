@@ -10,7 +10,7 @@ import {
   findUnsentDocumentMailingRecipientPage,
   withAudit,
 } from '@/db/repository';
-import { documentUpdatedMessage } from '@/emails/document-updated';
+import { documentUpdateNotice } from '@/lib/document-mail';
 import { deliver, isUndeliverableAddress, MailNotSent } from '@/lib/mail-transport';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '../mailing-pace';
@@ -91,12 +91,10 @@ async function mailNext(
 
   try {
     const taken = await deliver(
-      await documentUpdatedMessage({
-        to: user.email,
-        url: `${origin}/${document.key}`,
+      await documentUpdateNotice(origin, user.email, {
+        key: document.key,
         title: document.title,
         summary: mailing.summary,
-        asksAgreement: document.key === 'terms',
       }),
     );
     if (!taken) {

@@ -66,7 +66,9 @@ test('a compendium entry reclassified as None saves, as a site admin', async ({ 
   });
   const id = await withSql((sql) => insertIngredient(sql, fixture, userId));
 
-  await page.goto(`/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`);
+  await page.goto(
+    `/curator/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`,
+  );
   const dialog = editIngredientDialog(page, fixture.name, fixture.canonicalName!);
   await expect(dialog).toBeVisible();
   const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
@@ -173,7 +175,7 @@ test('an Unknown compendium entry with a picked form reclassified as None saves 
   );
   const id = await unknownWaxEntry('Fixture Waxwort', userId);
 
-  await page.goto(`/admin/compendium?edit=${ingredientSlug('Fixture Waxwort', null)}`);
+  await page.goto(`/curator/compendium?edit=${ingredientSlug('Fixture Waxwort', null)}`);
   await saveAsNone(page, editIngredientDialog(page, 'Fixture Waxwort'));
 
   await expect

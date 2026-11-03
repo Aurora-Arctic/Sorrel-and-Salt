@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, afterAll, beforeAll } from 'vitest';
+import { WARM_IMPORT_TIMEOUT } from '../../../support/warm-import';
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
@@ -47,7 +48,7 @@ let POST: (typeof import('@/app/api/graphql/route'))['POST'];
 beforeAll(async () => {
   vi.stubEnv('NODE_ENV', 'production');
   ({ POST } = await import('@/app/api/graphql/route'));
-});
+}, WARM_IMPORT_TIMEOUT);
 
 afterAll(() => {
   vi.unstubAllEnvs();

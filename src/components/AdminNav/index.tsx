@@ -13,10 +13,7 @@ export { default as AdminContents, CuratorContents } from './contents';
 // starts a hairline-set group (claude-docs/components/admin-nav.md).
 const SUPPORT_HREF = '/keepers/support';
 
-const items = (
-  sections: readonly AdminSection[],
-  needsStaff?: number,
-): readonly SectionNavItem[] =>
+const items = (sections: readonly AdminSection[], needsStaff?: number): readonly SectionNavItem[] =>
   sections.flatMap(({ pages }, section) =>
     pages.map(({ label, icon, tabs: [first, ...rest] }, at) => ({
       label,

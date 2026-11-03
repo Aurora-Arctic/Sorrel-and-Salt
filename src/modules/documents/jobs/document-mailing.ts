@@ -4,13 +4,7 @@ import { mailBatchStep, nextMailingStep, reportMailingUnsent } from './document-
 
 /** How a run ended: `sent` all of it, `replaced` by a newer mailing, `paused` on the monthly quota, `tomorrow` for the day, `queued` behind an older mailing, `duplicate` of a run still going, or `failed` every attempt. */
 export type DocumentMailingResult =
-  | 'sent'
-  | 'replaced'
-  | 'paused'
-  | 'tomorrow'
-  | 'queued'
-  | 'duplicate'
-  | 'failed';
+  'sent' | 'replaced' | 'paused' | 'tomorrow' | 'queued' | 'duplicate' | 'failed';
 
 /**
  * Emails a published document to every account on one mailing, a batch at a time with a pause between, within the day's allowance.

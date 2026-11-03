@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { describe, expect, it, vi } from 'vitest';
 import type { SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { warmImport } from '../../support/warm-import';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -10,6 +11,9 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { default: DocumentEditor } = await import('@/components/DocumentEditor');
+
+// The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
+warmImport(() => import('@/components/DocumentEditor/editor'));
 
 // The editor's toolbar offers only what the public page draws, and each button changes the document as its markdown shows:
 // what is proved is the text a Save Draft sends, since that markdown is what a reader is shown once it is published.
@@ -46,6 +50,7 @@ async function renderEditor(body: string) {
       title="Disclaimer"
       lede="What the site does not promise."
       body={body}
+      publishedBody={body}
       revision={null}
       nextNumber={2}
     />,
@@ -105,7 +110,8 @@ async function saveDraft(saved: string[]): Promise<string> {
   await waitFor(() => expect(save).toBeEnabled());
   fireEvent.click(save);
   await waitFor(() => expect(saved).toHaveLength(1));
-  await waitFor(() => expect(save).toBeDisabled());
+  // Found by name: while the save is in flight the button is named Saving Draft, so this waits for the save to land.
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled());
   return saved[0]!;
 }
 

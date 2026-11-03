@@ -35,7 +35,8 @@ export function loadDocuments(root: string = DOCUMENTS_ROOT): SeedDocument[] {
 
 function parseDocumentFile(name: string, text: string): SeedDocument {
   const match = FRONT_MATTER.exec(text);
-  if (!match) throw new Error(`${name}: the file does not open with front matter between --- lines`);
+  if (!match)
+    throw new Error(`${name}: the file does not open with front matter between --- lines`);
   const parsed = frontMatterSchema.safeParse(parseYaml(match[1]));
   if (!parsed.success) {
     const issues = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);

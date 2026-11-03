@@ -9,6 +9,7 @@ import type {
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { warmImport } from '../../support/warm-import';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -17,6 +18,9 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { default: DocumentEditor } = await import('@/components/DocumentEditor');
+
+// The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
+warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 // What the editor does around a write: a publish reads the page again, so what the page drew from the server (the version
@@ -47,6 +51,7 @@ async function renderOnPage({ revision = null }: { revision?: number | null } = 
         title="Disclaimer"
         lede="What the site does not promise."
         body="Fixturewort grows here."
+        publishedBody="Fixturewort grows here."
         revision={revision}
         nextNumber={2}
       />
@@ -146,7 +151,8 @@ describe('leaving with unsaved changes', () => {
     const save = screen.getByRole('button', { name: 'Save Draft' });
     fireEvent.click(save);
     await waitFor(() => expect(saved).toHaveLength(1));
-    await waitFor(() => expect(save).toBeDisabled());
+    // Found by name: while the save is in flight the button is named Saving Draft, so this waits for the save to land.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled());
 
     expect(unload()).toBe(false);
     fireEvent.click(link());

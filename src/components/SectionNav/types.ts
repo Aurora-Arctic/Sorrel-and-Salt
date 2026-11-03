@@ -13,6 +13,7 @@ export type SectionIconName =
   | 'deities'
   | 'astrology'
   | 'people'
+  | 'invitations'
   | 'support'
   | 'documents';
 

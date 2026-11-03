@@ -5,7 +5,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 import { run } from '../../../support/graphql/run';
 
-// The document editor's query and three writes over the wire. This is the transport's half (claude-docs/testing/layer-ownership.md):
+// The document editor's query and four writes over the wire. This is the transport's half (claude-docs/testing/layer-ownership.md):
 // each field's shape, and per field one refusal per error code. Which roles are refused, and why, is
 // services/document-editing.test.ts's; the signed-out caller and the curator are refused at the scope in
 // tests/db/graphql-query-scopes.test.ts.
@@ -50,6 +50,12 @@ const PUBLISH = /* GraphQL */ `
       body
       publishedAt
     }
+  }
+`;
+
+const DISCARD = /* GraphQL */ `
+  mutation DiscardDocumentDraft($documentId: ID!, $expectedRevision: Int!) {
+    discardDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision)
   }
 `;
 
@@ -204,6 +210,52 @@ describe('publishDocumentDraft', () => {
     await run(asUser(E), SAVE, { documentId, body: 'Fixture draft.', expectedRevision: null });
 
     expect(codeOf(await run(asUser(A), PUBLISH, { documentId, expectedRevision: 1 }))).toBe(
+      'FORBIDDEN',
+    );
+  });
+});
+
+describe('discardDocumentDraft', () => {
+  it('answers the discarded draft’s id, and the editor reads no draft after', async () => {
+    const saved = await run(asUser(E), SAVE, {
+      documentId,
+      body: 'Fixture draft.',
+      expectedRevision: null,
+    });
+    const draftId = (saved.data as { saveDocumentDraft: { id: string } }).saveDocumentDraft.id;
+
+    const result = await run(asUser(E), DISCARD, { documentId, expectedRevision: 1 });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({ discardDocumentDraft: draftId });
+    const read = await run(asUser(E), READ, { key: 'disclaimer' });
+    expect(read.data).toMatchObject({
+      documentForEditing: { draft: null, published: { number: 1, body: 'Fixture disclaimer.' } },
+    });
+  });
+
+  it('answers NOT_FOUND when no draft is open', async () => {
+    expect(codeOf(await run(asUser(E), DISCARD, { documentId, expectedRevision: 1 }))).toBe(
+      'NOT_FOUND',
+    );
+  });
+
+  it('answers STALE_WRITE with the revision the draft is at now', async () => {
+    await run(asUser(E), SAVE, { documentId, body: 'Fixture first.', expectedRevision: null });
+    await run(asUser(E), SAVE, { documentId, body: 'Fixture second.', expectedRevision: 1 });
+
+    const result = await run(asUser(E), DISCARD, { documentId, expectedRevision: 1 });
+
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'STALE_WRITE',
+      currentRevision: 2,
+    });
+  });
+
+  it('answers FORBIDDEN to an account with no site role', async () => {
+    await run(asUser(E), SAVE, { documentId, body: 'Fixture draft.', expectedRevision: null });
+
+    expect(codeOf(await run(asUser(A), DISCARD, { documentId, expectedRevision: 1 }))).toBe(
       'FORBIDDEN',
     );
   });

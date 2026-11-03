@@ -8,6 +8,7 @@ import { passwordChangedMessage } from '@/emails/password-changed';
 import { accessPausedMessage } from '@/emails/access-paused';
 import { covenAccessPausedMessage } from '@/emails/coven-access-paused';
 import { supportTimedOutMessage } from '@/emails/support-timed-out';
+import { documentUpdatedMessage } from '@/emails/document-updated';
 import { passwordLockedMessage } from '@/emails/password-locked';
 import { resetPasswordMessage } from '@/emails/reset-password';
 import { supportEmailReplyMessage } from '@/emails/support-email-reply';
@@ -123,6 +124,19 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/forgot-password`,
         how: 'change',
+      }),
+  },
+  {
+    template: 'document-updated',
+    name: 'documentUpdatedMessage',
+    link: `${ORIGIN}/terms`,
+    message: () =>
+      documentUpdatedMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/terms`,
+        title: 'Terms of Service',
+        summary: 'We changed how we describe refunds.',
+        asksAgreement: true,
       }),
   },
   {
