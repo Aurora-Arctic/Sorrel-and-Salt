@@ -289,6 +289,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.285 | Compendium Entries Stay Pending After the Citation Wording Changed                                                       | Bugfixes | —                      |
 | MB.286 | Seven Cosmetic Faults in Loading, Spell Preview and Quick Look                                                           | Bugfixes | —                      |
 | MB.287 | A Production Deploy Rerun Fails at the Neon Snapshot                                                                     | Bugfixes | —                      |
+| MB.288 | Bug Bash 2026-11-02: Ingredient Edits, the Formal Name Eyebrow and the Terms Screens                                     | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -5923,3 +5924,27 @@ _Acceptance criteria:_
 - When no snapshot branch exists, the step creates `snapshot-<short sha>` from `main`, as it does today.
 - When a Neon call is refused, the step fails and the log carries Neon's response body.
 - `claude-docs/ci/neon-snapshots.md` describes what a rerun does.
+
+**MB.288 — Bug Bash 2026-11-02: Ingredient Edits, the Formal Name Eyebrow and the Terms Screens** · 6h
+
+_Story:_ As a curator, coven owner or site admin, I want ingredient edits to save, the entry page to stay clean, and the terms screens to show their state, so that I can trust what I change and see what users agreed to.
+
+Five faults found in one bug bash, kept in one task at the owner's request. A: in the edit form (`src/components/IngredientForm/`), changing an entry's classification to None blocks the save. B: the curator's Visible switch (`src/components/IngredientEntry/shown-toggle.tsx`) saves one change but loses a second change made straight after it. C: the formal name eyebrow (`src/components/IngredientEntry/formal-name.tsx`) prints "None" for an entry classified None with no formal name, where it should draw nothing. D: the admin user table and user modal do not show which terms version a user agreed to most recently; this is new display work, not a fault. E: the Agree button on the terms page (`src/components/TermsAgreement/index.tsx`) shows no loading state while its save runs.
+
+Found on 2026-11-02 on a local dev server, every time, signed in as a site admin and as a coven owner. Steps to reproduce:
+
+- A. Open an entry's edit form, change Classification to None, press Save. Actual: the save does not go through. Expected: the entry saves with classification None.
+- B. As a curator or admin, open an entry's details, turn Visible off, then straight away back on (order assumed), and reload. Actual: the off saved and the on did not. Expected: the last position saves, however quickly it was changed.
+- C. Open an ingredient page classified None with no formal name. Actual: the eyebrow reads "None" with its label and tip. Expected: no eyebrow.
+- D. As a site admin, open Admin › People, look at the table, then open a user's modal. Actual: neither shows a terms version. Expected: both show the latest version the user agreed to.
+- E. As an account that has not agreed to the current terms, press Agree. Actual: no spinner. Expected: the standard loading spinner, and a second press is refused.
+
+_Acceptance criteria:_
+
+- A, B, C and E each start with a regression test that fails before its fix.
+- A: saving an entry with classification None succeeds, and the entry reads back as None.
+- B: two quick changes to the Visible switch leave the entry in the second position after a reload.
+- C: an entry classified None with no formal name draws no formal name list, label or tip on the entry page or in the details modal head.
+- D: the admin user table and the user modal show the latest terms version each user agreed to, and show that a user who never agreed has not; the read goes through the admin service behind `assertSiteAdmin`.
+- E: while the agreement save runs, the Agree button shows the standard spinner, and a second press sends no second request.
+- `claude-docs/components/ingredient-entry.md`, "Structure", no longer says the formal name is never blank.
