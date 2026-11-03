@@ -128,7 +128,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & 
 
 - A passing run prints only its verdict; on a failure read the failing part (`tail`, `grep`, `jq`). Read a file over ~300 lines by section.
 - Never mask an exit code with a pipe: log to `.reports/<name>.log`, print `exit $?`, then tail the log.
-- Verify once: one spec at a time while working; the full suites only when the owner says so.
+- Verify once: run the specs a change touches, named together in one command so the servers start once; the full suites only when the owner says so.
 - At a task boundary, suggest `/clear` to the owner.
 - Each rule gives way when the owner asks otherwise, or when following it would thin a test.
 
