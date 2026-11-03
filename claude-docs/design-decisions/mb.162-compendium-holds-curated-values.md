@@ -97,24 +97,24 @@ holds for planets and signs alone
 what they wrote; a deleted or renamed value moves into that coven's "From
 Coven" bucket. The admin cannot see them anyway.
 
-**A form is identity.** `form` is part of `canonicalKey` and of the slug
-(§5; MB.81), so carrying a form's rename onto an entry re-keys it and moves
-its address, retiring the old slug as any compendium update does (MB.82). A
-rewrite that would make two live entries one identity is refused, naming
-both, rather than surfacing the index's error. Planets, signs and deities are
-no part of either, so their rewrite touches the list alone.
+**A form's rename moves no slug.** Since MB.215 a slug comes from the name
+and the formal name alone (§5), and a form is a variant's `form` text plus
+its `form_id` pick, so carrying a form's rename onto an entry rewrites that
+text and nothing else. A rename that would give one live entry two variants
+of the same form is refused, naming the entry, rather than surfacing the
+index's error. Celestial bodies, signs and deities likewise touch the list
+alone.
 
 ## What it leaves open
 
-- **The rename's rewrite grows with the compendium.** One rename of `Root`
-  may rewrite hundreds of entries, re-keying and re-slugging each, inside one
-  admin request. **MB.163** moves it off the request into a background job,
-  after launch: the owner's call, unscheduled by design until a rename's
-  rewrite nears the function's time limit, so the in-transaction rewrite is
-  v1's behaviour.
-  Nothing here runs one today: DESIGN.md §14 turned down a scheduled job for
-  slug expiry (MB.80), so MB.163 picks the mechanism, and decides how the
-  window between the rename and the rewrite keeps the rule.
+- **The rename's rewrite grows with the compendium.** Each rename is one
+  set-based `UPDATE` in the rename's transaction, estimated (not measured) at
+  under 50 ms at 5,000 compendium entries. **MB.163** moves it into a
+  background job, after launch: the owner's call, unscheduled by design until a
+  measured rewrite time nears the function's time limit, so the in-transaction
+  rewrite is v1's behaviour. It picks the mechanism from those the site runs
+  now (m15.49-job-mechanism.md, m15.46-daily-jobs-from-vercel-cron.md), and
+  decides how the window between the rename and the rewrite keeps the rule.
 - **The check is read before the write.** Until MB.148 puts a read inside
   `withAudit` on the write's transaction, the compendium services read the
   curated rows on another connection, so an admin deleting a row at the
