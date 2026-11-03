@@ -26,6 +26,7 @@ import {
 import { MarkdownPlugin } from '@platejs/markdown';
 import { KEYS } from 'platejs';
 import {
+  createPlatePlugin,
   ParagraphPlugin,
   PlateElement,
   PlateLeaf,
@@ -171,6 +172,25 @@ const mark = (tag: 'strong' | 'em' | 's' | 'code') =>
     return <PlateLeaf as={tag} {...props} />;
   };
 
+// Shift+Tab on a block with no indent moves focus out of the text, where the indent plugin would swallow it and trap the keyboard.
+const TabEscapePlugin = createPlatePlugin({ key: 'tabEscape' }).overrideEditor(
+  ({ editor, tf: { tab } }) => ({
+    transforms: {
+      tab(options) {
+        const entry = options.reverse ? editor.api.block() : undefined;
+        if (entry && !(entry[0] as { indent?: number }).indent) {
+          const inQuote = editor.api.above({
+            at: entry[1],
+            match: (node) => (node as { type?: string }).type === editor.getType(KEYS.blockquote),
+          });
+          if (!inQuote) return false;
+        }
+        return tab(options);
+      },
+    },
+  }),
+);
+
 /** The plugins the editor runs. */
 export const editorPlugins = [
   ParagraphPlugin.withComponent(Paragraph),
@@ -197,6 +217,7 @@ export const editorPlugins = [
     },
     render: { belowNodes: listItem },
   }),
+  TabEscapePlugin,
   TablePlugin.withComponent(Table),
   TableRowPlugin.withComponent(Row),
   TableCellPlugin.withComponent(Cell),

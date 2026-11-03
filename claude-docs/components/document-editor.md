@@ -42,3 +42,7 @@ An empty table cell or footnote definition is serialised by the markdown package
 ## Props
 
 `DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `revision` (the draft's revision, or `null` when there is no draft) and `nextNumber` (the number the next publish will take).
+
+## Leaving the text box with the keyboard
+
+The indent plugin takes Shift+Tab on a block with no indent and does nothing with it, which would trap a keyboard user in the text. `TabEscapePlugin` in `elements.tsx` lets that key through, so focus returns to the toolbar. A block that is indented, or inside a quote, still outdents or lifts as before.
