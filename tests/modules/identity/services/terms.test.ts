@@ -124,6 +124,18 @@ describe('hasAgreedToTerms', () => {
     expect(hasAgreedToTerms(null, 2)).toBe(false);
     expect(hasAgreedToTerms(undefined, 2)).toBe(false);
   });
+
+  // Every protected page sends an account that has not agreed to the terms page, which has nothing to show while none are published.
+  it('asks no account to agree while no terms are published', async () => {
+    await sql`truncate documents cascade`;
+    const agreed = (await row(A.id)).agreed_terms_version;
+    // Preconditions: nothing is in force, and A has never agreed to anything.
+    expect(await currentTermsVersion()).toBe(0);
+    expect(agreed).toBeNull();
+
+    expect(hasAgreedToTerms(agreed, await currentTermsVersion())).toBe(true);
+    expect(hasAgreedToTerms(undefined, 0)).toBe(true);
+  });
 });
 
 // Publishing goes through the admin's own services, as the editor does, so the number in force moves the way it moves in use.
