@@ -177,7 +177,8 @@ describe('the coordinator', () => {
 describe('a batch', () => {
   it('retries a notice the transport refused twice, and sends and stamps it once', async () => {
     const { id: by } = await sender();
-    const id = await resolvedRequest(by, 5);
+    // Six days, not the five the notice opens at: on the day itself a few milliseconds between the database clock and this process decide whether it is due.
+    const id = await resolvedRequest(by, 6);
     failNext = 2;
     const run = await start(supportRetentionBatch, [
       { kind: 'notice', ids: [id], now: Date.now(), origin: ORIGIN },
