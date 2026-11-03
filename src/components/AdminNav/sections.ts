@@ -90,17 +90,17 @@ export const ADMIN_PAGES = {
     icon: 'documents',
     adminOnly: true,
     description:
-      'The privacy policy, disclaimer, code of ethics and terms of use: edit a draft, then publish it as a new version.',
+      'The terms of use, disclaimer, code of ethics and privacy policy: edit a draft, then publish it as a new version.',
     // One tab per document, in the footer's order; each is that document's editor. The cast is because typed routes know the address only as `[key]`.
     tabs: [
-      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy', shape: 'document' },
-      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer', shape: 'document' },
       { href: '/keepers/documents/terms' as Route, label: 'Terms of Use', shape: 'document' },
+      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer', shape: 'document' },
       {
         href: '/keepers/documents/code-of-ethics' as Route,
         label: 'Code of Ethics',
         shape: 'document',
       },
+      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy', shape: 'document' },
     ],
   },
 } as const satisfies Record<string, AdminPage>;

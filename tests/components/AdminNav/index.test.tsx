@@ -33,7 +33,7 @@ const PEOPLE = '/keepers/users';
 const INVITATIONS = '/keepers/invitations';
 const SUPPORT = '/keepers/support';
 // The documents, opened at their first tab, the privacy policy: a keeper's alone.
-const DOCUMENTS = '/keepers/documents/privacy';
+const DOCUMENTS = '/keepers/documents/terms';
 
 const sorted = (list: (string | null)[]) => [...list].sort();
 

@@ -56,7 +56,7 @@ describe('adminTarget for Support', () => {
 
 describe('adminTarget for the documents', () => {
   it('draws a document editor under a heading with its tabs beneath it, and no filter or action', () => {
-    const target = adminTarget('/keepers/documents/privacy');
+    const target = adminTarget('/keepers/documents/terms');
 
     expect(target).toMatchObject({
       region: 'admin',

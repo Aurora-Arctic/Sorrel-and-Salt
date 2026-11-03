@@ -50,7 +50,7 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['People', '/keepers/users'],
     ['Invitations', '/keepers/invitations'],
     // The documents open on the privacy policy, their first tab.
-    ['Documents', '/keepers/documents/privacy'],
+    ['Documents', '/keepers/documents/terms'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);
   // A tab with a count is named "Support 0": its label, then its count.
@@ -157,7 +157,7 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
     'Not timed out',
     'Not paused',
     /Discord.*Google/,
-    /^Version \d+$/,
+    /^Version \d+\.\d+\.\d+$/,
     /\d/,
   ]);
   // The mark's tip bubble shows on hover, a real browser's CSS.
