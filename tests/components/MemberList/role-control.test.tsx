@@ -50,7 +50,7 @@ describe('RoleControl', () => {
     renderControl();
 
     fireEvent.click(screen.getByRole('button', { name: 'Change Role for Testwort' }));
-    fireEvent.click(screen.getByRole('radio', { name: /^Owner/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Steward/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -68,13 +68,13 @@ describe('RoleControl', () => {
     renderControl();
 
     fireEvent.click(screen.getByRole('button', { name: 'Change Role for Testwort' }));
-    expect(screen.getByRole('radio', { name: /^Member/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /^Practitioner/ })).toBeChecked();
     fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
-    fireEvent.click(screen.getByRole('radio', { name: /^Owner/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Steward/ }));
 
     // Not drawn as shut, and the pick does not move once the change is sent.
-    expect(screen.getByRole('radio', { name: /^Owner/ })).toBeEnabled();
-    expect(screen.getByRole('radio', { name: /^Member/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /^Steward/ })).toBeEnabled();
+    expect(screen.getByRole('radio', { name: /^Practitioner/ })).toBeChecked();
   });
 
   it('confirms with Demote when the chosen role is below the member’s own, and Promote above it', async () => {
@@ -84,7 +84,7 @@ describe('RoleControl', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Change Role for Testwort' }));
     // The first other role is the viewer, below a member.
     expect(screen.getByRole('button', { name: 'Demote' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('radio', { name: /^Owner/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Steward/ }));
     expect(screen.getByRole('button', { name: 'Promote' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Demote' })).not.toBeInTheDocument();
   });

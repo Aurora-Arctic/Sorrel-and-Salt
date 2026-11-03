@@ -118,7 +118,7 @@ How to read this document:
 - Help Scout (search): staff can reply by email to notifications. https://docs.helpscout.com/article/67-email-notifications
 - My inference:
   - Subject: say what happened and which request ("Reply to your support request: <subject>").
-  - Body: because replies may contain personal details, a link-only email avoids putting content into mailboxes, but it forces a sign-in to read. Including the reply text is more useful and is what help desks do. This is an owner decision; I have no source that settles it.
+  - Body: because replies may contain personal details, a link-only email avoids putting content into mailboxes, but it forces a sign-in to read. Including the reply text is more useful and is what help desks do. This is a steward decision; I have no source that settles it.
   - Send a plain-text part alongside HTML. No source read states this requirement.
 
 ## 11. Accessibility specifics
@@ -176,7 +176,7 @@ How to read this document:
 ## 15. Internal notes versus public replies
 
 - Zendesk (search, vendor blogs): public replies notify the requester; internal notes do not; the composer defaults to a public reply, so internal text posted to the customer by accident is a known risk. https://www.getmacha.com/blog/zendesk-internal-notes-vs-public-replies ; https://www.eesel.ai/blog/zendesk-ticket-internal-vs-public-comment
-- My inference: even with one admin, a place to record internal context is useful once curators are involved, and "share with curators" is already an internal channel. If notes exist, label the composer mode in text ("Reply to sender" versus "Internal note") and never default to the riskier mode. Whether to build separate notes now is an owner decision.
+- My inference: even with one admin, a place to record internal context is useful once curators are involved, and "share with curators" is already an internal channel. If notes exist, label the composer mode in text ("Reply to sender" versus "Internal note") and never default to the riskier mode. Whether to build separate notes now is a steward decision.
 
 ## 16. Categories on support forms
 

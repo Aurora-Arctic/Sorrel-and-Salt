@@ -97,7 +97,7 @@ The grimoire tab builds `recordWorking` for a complete spell when the role may r
 Given a `lookHref`, the card draws a `QuickLookLink` (an eye icon link, named "Quick Look <title>")
 at the bottom left of the foot, in `specimen__actions-start`, as IngredientCard draws its eye (M13.21), opening the `look` modal place
 (`SPELL_LOOK_PLACE`) so it is independent of the spell builder's dialog. The grimoire tab passes
-it for every role, since a viewer may read the spell; it keeps the tab's filter, page and tab in
+it for every role, since an observer may read the spell; it keeps the tab's filter, page and tab in
 the address, and closing returns there with focus back on the eye. What the modal shows is
 `SpellLookDialog` (claude-docs/components/spell-recipe.md, "Quick Look").
 

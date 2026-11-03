@@ -20,7 +20,7 @@ created, and only when that sign-in's provider vouches for the address
   only those two verify an address in a way that can be trusted
   (`VOUCHING_PROVIDERS`). Facebook never reports verified in Better Auth's
   mapping, and Microsoft's `tenantId: 'common'` lets any Entra tenant mint
-  the claim (nOAuth). An owner who signs in only through those two is
+  the claim (nOAuth). A steward who signs in only through those two is
   promoted by verifying the address by mail instead ("Promotion at
   first-party verification" below).
 - **The decision reads the provider's fresh profile at that callback**,
@@ -80,7 +80,7 @@ created, and only when that sign-in's provider vouches for the address
 The second way to become the primary admin: **follow the verification link
 our own mail sent to the bootstrap address, from a browser signed in to that
 account.** Our mail vouches for the address as Google or Discord would, so a
-Microsoft- or Facebook-only owner is promoted too.
+Microsoft- or Facebook-only steward is promoted too.
 
 - **It is safe only because verification is session-bound** ("First-party
   verification" below): the promotion runs only for someone signed in to
@@ -852,7 +852,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
 `/i/<token>`, and nothing but the mint ever holds the token.
 
 - **Who may.** Only a site admin. Every service in `src/modules/identity/services/invitation-cards.ts`
-  opens with `assertSiteAdmin`, so a curator, a member and an owner are refused by direct call, and the
+  opens with `assertSiteAdmin`, so a curator, a practitioner and a steward are refused by direct call, and the
   GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
   `requireAdminSession()`, which answers a curator with the styled not-authorized page.
 - **Minting.** `createInvitationCards(sheets, expiresAt, note)` makes nine cards per sheet in one transaction under

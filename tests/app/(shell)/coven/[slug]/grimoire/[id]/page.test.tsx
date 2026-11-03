@@ -224,7 +224,9 @@ describe('the spell recipe page', () => {
     it('hands an owner of the demo coven the owner sentence', async () => {
       as('owner', true);
       await draw();
-      expect(screen.getByRole('status')).toHaveTextContent(/^You own this coven as a site admin/);
+      expect(screen.getByRole('status')).toHaveTextContent(
+        /^You are a steward of this coven as a site admin/,
+      );
     });
 
     it('hands an ordinary coven nothing', async () => {

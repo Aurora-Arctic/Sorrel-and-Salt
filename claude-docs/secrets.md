@@ -137,7 +137,7 @@ primary admin, which is already true of `DATABASE_URL`.
   existing: its next Google or Discord sign-in with a verified address, or
   its owner following the verification link our mail sends to it, from a
   browser signed in to that account (MB.68). A Microsoft or Facebook sign-in
-  never promotes by itself, so an owner with only those verifies by mail.
+  never promotes by itself, so a steward with only those verifies by mail.
 - **Changing it** promotes the new address at that address's next qualifying
   sign-in or verification. The previous primary admin keeps `role: 'admin'`
   and simply stops being protected. An address its account has already

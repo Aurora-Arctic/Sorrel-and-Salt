@@ -44,7 +44,7 @@ run, not an agent's. The work is committed on
 | A viewer's empty cupboard says which roles can add                                                | Owner's answer                | No                   |
 
 Behaviour is unchanged by all of them: no press, route, name or saved value
-differs. The viewer's added line changes what a viewer reads, nothing else.
+differs. The viewer's added line changes what an observer reads, nothing else.
 
 ## The Stock section without its panel
 
@@ -236,13 +236,13 @@ wrapping by hand is the trap code the Modal deliberately does without
 
 ### A viewer's empty cupboard
 
-A viewer, who may add nothing, sees only "There are no ingredients here yet."
+An observer, who may add nothing, sees only "There are no ingredients here yet."
 Kaplan's first guideline for empty states is to "tell the user what could be
-displayed, and how to populate the area".[^kaplan] A viewer cannot populate it,
+displayed, and how to populate the area".[^kaplan] An observer cannot populate it,
 but can be told who can. A mock, since removed, added "A member or owner of
 this coven can add them."
 
-**The owner's answer (2026-10-23): add the line.** It tells a viewer the empty
+**The owner's answer (2026-10-23): add the line.** It tells an observer the empty
 cupboard is not a fault and who to ask. Built: `CovenCards/empty.tsx` draws it
 in the `No Ingredients` region in place of the Add Ingredient button when the
 viewer cannot add, and the `Empty For A Viewer` story shows it
@@ -284,7 +284,7 @@ not;[^baymard] the sentence is that overview. No change.
 | Criterion                                                                 | How it is met                                                                                                                                             |
 | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                                                                                   |
-| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer is told which roles can add                                                 |
+| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; an observer is told which roles can add                                              |
 | The Stock section has no `.panel`, and the record says what sets it apart | Removed; it is the first section and every section's h2 has a short hairline rule, with the side column beside it ("The Stock section without its panel") |
 | The DRY merges are listed                                                 | "The DRY merges", above                                                                                                                                   |
 | Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                                                                             |

@@ -118,7 +118,7 @@ workspace's contents, and which covens someone belongs to is not among them
   the list's row shows (the page reads them with the user, so the modal holds
   the whole row), with Change Role and Approve or Revoke
   beside the facts they change, asking inside the modal; the modal is the one
-  place they are, the rows holding the facts alone. Then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
+  place they are, the rows holding the facts alone. Then a Covens list (each coven's name, with its role and joining date beneath), stewards first, then members, then observers, each
   by name. Coven names are text, not links: an admin reaches no coven, and
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under

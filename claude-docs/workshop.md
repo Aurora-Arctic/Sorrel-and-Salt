@@ -242,7 +242,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   `initial` parameters to the frame's address, and puts the address back when it
   unmounts. The Spell Preview and Spell Recipe stories draw inside it.
 - **`reopenable.tsx`** — `Reopenable`, what stands in for a modal's owner in a
-  story. The app's owners close a modal by unmounting it, and a story has no
+  story. The app's stewards close a modal by unmounting it, and a story has no
   owner. It renders its children while open, hands them a `close`, answers a
   `RouteModal`'s navigation through `WorkshopNavigation` by closing too, and
   leaves an Open Again button in place of the modal, so a review can look
@@ -268,7 +268,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   switcher alone, and no row when there is no coven to switch to), or
   none, as on the account pages. Its `FIXTURE_WORKSPACES` carry each coven's
   `canReadMembers` as the layout works it out from the role (a member of the
-  first two, a viewer of the third), so the coven nav offers Members as it
+  first two, an observer of the third), so the coven nav offers Members as it
   would in the app. Like `admin-frame.tsx`, it is markup only;
   the layouts it copies are server components that read the session.
 - **`fixtures.ts`** — invented rows the admin stories share, so a form's story

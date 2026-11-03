@@ -20,6 +20,8 @@ Never write "catalog" — it was the old word for the compendium and it is gone.
 
 The schema entity is `workspaces` and the URL prefix `/coven/`, a deliberate divergence (§5). Code, schema, and prose say _workspace_. The URL segment and the screens say _coven_ (MB.119).
 
+The same split names the coven roles. The screens call them **Steward**, **Practitioner** and **Observer**; code, the GraphQL enum and the schema keep `owner`, `member` and `viewer` (M15.79). "Member" also stays as the general word for anyone with a seat in a coven (the Members page, membership). "Admin", "curator" and "site admin" are site roles, not coven roles.
+
 ## Commands
 
 The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. claude-docs/commands.md is the full table.

@@ -98,13 +98,17 @@ describe('the /coven/[slug] page', () => {
 
       expect(within(dialog).getByRole('radio', { name: /^Hand It/ })).toBeChecked();
       expect(within(dialog).getByRole('radio', { name: /^Delete Coven/ })).toBeInTheDocument();
-      const box = await within(dialog).findByRole('combobox', { name: 'New Owner' });
+      const box = await within(dialog).findByRole('combobox', { name: 'New Steward' });
       fireEvent.focus(box);
       fireEvent.change(box, { target: { value: 'Name of' } });
       // The owner themselves is not a choice; the others come with their roles.
       expect(within(dialog).getAllByRole('option')).toHaveLength(2);
-      expect(within(dialog).getByRole('option', { name: /Name of m.*Member/ })).toBeInTheDocument();
-      expect(within(dialog).getByRole('option', { name: /Name of v.*Viewer/ })).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole('option', { name: /Name of m.*Practitioner/ }),
+      ).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole('option', { name: /Name of v.*Observer/ }),
+      ).toBeInTheDocument();
     });
   });
 

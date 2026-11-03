@@ -23,7 +23,7 @@ visitors four ways, all from the server:
   `requireCovenMembership()` in `src/lib/request-session.ts`, turns that
   `Forbidden` into Next's `notFound()`, the way `requireAdminSession()` turns
   its own into `forbidden()`. Any other error passes through as itself.
-- **A paused member is sent to the coven's paused page** (M15.56). An owner can
+- **A paused member is sent to the coven's paused page** (M15.56). A steward can
   pause a member's access to one coven; the service then throws `AccessPaused`,
   which is a kind of `Forbidden`, so the guard checks for it first and redirects
   to `/coven-paused/<slug>`. That page sits outside the coven's layout, reads the
@@ -39,7 +39,7 @@ visitors four ways, all from the server:
   same reason).
 - **Any role is let in.** The guard asks for `workspace: read`, which viewer,
   member and owner all hold. A page that needs more — the members page, which
-  a viewer gets a 404 from — asks the service for that itself.
+  an observer gets a 404 from — asks the service for that itself.
 - **A site admin gets no way in.** Admins curate the compendium and reach no
   workspace, so an admin in no coven gets the 404 like anyone else.
 - **The layout calls it, and so does every page beneath it,** with the slug
@@ -83,21 +83,21 @@ Ingredients by M9.6 and Grimoire by M10.11.
 
 **The page is up to three sections, reached from a jump menu** (`PageNav`, laid out as the account page's is, `.page-with-nav`; MB.119):
 
-| Section           | Shown to                                   | Holds                                                       |
-| ----------------- | ------------------------------------------ | ----------------------------------------------------------- |
-| Contents          | Every role                                 | A link to each such page, with a line saying what it is for |
-| Your Membership   | Every role                                 | Leave Coven (M6.15; M6.16's guided exit for the only owner) |
-| Delete This Coven | Roles holding `workspace: delete` (owners) | Delete Coven (M6.14's confirmation), under one sentence     |
+| Section           | Shown to                                     | Holds                                                         |
+| ----------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| Contents          | Every role                                   | A link to each such page, with a line saying what it is for   |
+| Your Membership   | Every role                                   | Leave Coven (M6.15; M6.16's guided exit for the only steward) |
+| Delete This Coven | Roles holding `workspace: delete` (stewards) | Delete Coven (M6.14's confirmation), under one sentence       |
 
 Contents lists a page only if the caller can open it, so a link is never a
-404: Ingredients (M9.6) and the Grimoire (M10.11) for every role, viewers included, and Members
+404: Ingredients (M9.6) and the Grimoire (M10.11) for every role, observers included, and Members
 for roles holding `member: read`, in that order. The Grimoire line reads "What the coven makes: its
 spells, and the workings it has recorded." Each button says its own
 refusal in a callout under itself (M12.31). Leave
 and Delete are in sections of their own so the button that ends a seat is never
 beside the one that ends a coven.
 
-- **Leave is on this page, not the members page,** because a viewer gets a
+- **Leave is on this page, not the members page,** because an observer gets a
   404 from the members page (M6.13) and must still be able to leave.
 - **Delete is shown by permission, never by rank.** The page asks
   `rolePermits(role, { workspace: ['delete'] })`, the statement M6.14's
@@ -121,11 +121,11 @@ menu by role) and `tests/e2e/coven.spec.ts`
 ## The members page (M6.13)
 
 `/coven/[slug]/members` lists who is in the coven, with each person's role
-and joining date. Owners and members see it; a viewer gets the same 404 a
+and joining date. Stewards and members see it; an observer gets the same 404 a
 stranger does, so the page's existence says nothing about anyone's role (the
 owner's call, 2026-10-12). The `member` role holds `member: read` and no
 other `member` statement, so inviting, changing a role, removing and reading
-members' addresses stay with owners.
+members' addresses stay with stewards.
 
 - **The page asks the service, not the role.** It reads through
   `listMembers`, which checks `member: read`; a `Forbidden` becomes
@@ -137,8 +137,8 @@ members' addresses stay with owners.
   refuses anyone else, and a change that would leave no owner. It moves a
   member to any other role, and only ever an existing member:
   invitations cannot grant ownership, so this is the only route to it.
-- **Addresses are the owner's** (M11.19). An owner sees an Email column with
-  each member's address, and no verified mark, since every member's address is verified. A seat is taken only by accepting an invitation, which matches a verified address, or by creating a coven, which an unverified account cannot reach, and an address changes only at verification. The addresses come from a statement only owners
+- **Addresses are the owner's** (M11.19). A steward sees an Email column with
+  each member's address, and no verified mark, since every member's address is verified. A seat is taken only by accepting an invitation, which matches a verified address, or by creating a coven, which an unverified account cannot reach, and an address changes only at verification. The addresses come from a statement only stewards
   hold, `member: readEmail`, checked by the members service's `memberEmails`,
   which reads `users.email` when the page is drawn,
   for the coven's own live members and nobody else, in SQL. The page asks for
@@ -148,11 +148,11 @@ members' addresses stay with owners.
   Over GraphQL the address is its own field, `WorkspaceMember.email`, never
   part of `CoMember`, which every member reads: it resolves through the
   `memberEmailsByMember` loader, one read per page of members, and answers
-  `FORBIDDEN` to everyone but an owner. Nothing is stored on
+  `FORBIDDEN` to everyone but a steward. Nothing is stored on
   `workspace_members`.
 - **A quiet note when there is one owner** (M6.16): if that person loses
   access nobody can manage members. A status, not an alert, drawn above the
-  table from the whole roll (`memberRoster`), since one page cannot count owners.
+  table from the whole roll (`memberRoster`), since one page cannot count stewards.
 - **The heading, tabs and Invite are the `(people)` layout's** (M7.6): the Members
   page is a tabbed page (see "The invitations page"), so the page draws only the
   roll.
@@ -170,7 +170,7 @@ axe scan).
 
 ## The invitations page (M7.6)
 
-`/coven/[slug]/invitations` lists the invitations an owner has sent and nobody
+`/coven/[slug]/invitations` lists the invitations a steward has sent and nobody
 has accepted: address, role and status (when a pending one expires, or when the
 invitee declined it, M10.34), newest first, paged by `?after` and
 `?before` with a "Page X of Y" count, and a Revoke on each pending row or a
@@ -181,7 +181,7 @@ Invitations are the two tabs of one page, headed Members like the nav item (MB.1
 the Invite button, which opens `InviteDialog` (M7.4), at the end of the
 heading line on both tabs.
 
-- **Owners only, decided by the permission.** The layout leaves the
+- **Stewards only, decided by the permission.** The layout leaves the
   Invitations tab out, the `@action` slot leaves Invite out, and the page
   answers anyone else with the `notFound()` a stranger gets, each from
   `rolePermits(role, { member: ['invite'] })`, never by catching a
@@ -214,18 +214,18 @@ opens it empty under `?new=spell` only when
 `?edit=<id>` only when `rolePermits(role, { spell: ['update'] })`, so a
 viewer, who writes nothing, gets the tab with no dialog and no spell is read
 for them. Hiding the dialog is a convenience: `createSpell` and `updateSpell`
-check the permission again, so a viewer is refused by the API too. New Spell,
+check the permission again, so an observer is refused by the API too. New Spell,
 drawn by `grimoire/(list)/layout.tsx` under the same `rolePermits` check, is
-never shown to a viewer.
+never shown to an observer.
 
 Tests: `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx` (an
-owner and a member get the dialog under either address, a viewer gets
-neither and nothing is read; an owner and a member get New Spell, a viewer
+owner and a member get the dialog under either address, an observer gets
+neither and nothing is read; a steward and a practitioner get New Spell, an observer
 does not).
 
 ## A new account's landing
 
-A new account is seated as a viewer in the demo coven at sign-up
+A new account is seated as an observer in the demo coven at sign-up
 (`databaseHooks.user.create.after`, [`admin-bootstrap.md`](admin-bootstrap.md)), so
 it has a first coven and `signedInLanding` sends it to `/coven/sorrel-and-salt-demo`
 rather than to `/coven`, because the demo coven is its only coven. An account with

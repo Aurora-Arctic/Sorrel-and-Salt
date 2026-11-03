@@ -329,10 +329,10 @@ export const RadioGroup: Story = {
           options={[
             {
               value: 'member',
-              label: 'Member',
+              label: 'Practitioner',
               description: 'Reads and writes the ingredients and the grimoire.',
             },
-            { value: 'viewer', label: 'Viewer', description: 'Reads only.' },
+            { value: 'viewer', label: 'Observer', description: 'Reads only.' },
           ]}
         />
       </div>

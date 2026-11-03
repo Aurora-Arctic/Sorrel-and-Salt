@@ -207,10 +207,10 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
       await expect(covens.getByRole('listitem')).toHaveCount(2);
       await expect(
         covens.getByRole('listitem').filter({ hasText: 'Fixture Owned Coven' }),
-      ).toContainText('Owner');
+      ).toContainText('Steward');
       await expect(
         covens.getByRole('listitem').filter({ hasText: 'Fixture Watched Coven' }),
-      ).toContainText('Viewer');
+      ).toContainText('Observer');
       // Text, never a link: an admin is no member, so the coven's page would be a 404 (below).
       await expect(covens.getByRole('link')).toHaveCount(0);
       // Impersonation is not registered in this run, so there is no Impersonate.

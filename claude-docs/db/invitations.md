@@ -161,7 +161,7 @@ marks"; MB.198). In their place, in the repository's `invitations.ts`, which
   site-tier row. Open (M10.34) is pending, or declined and not yet removed:
   Revoke is this write on a pending row, and Remove is the same write on a
   declined one, so it leaves the owner's list and stays in the table for the
-  audit. By id rather than token: an owner or an admin revokes from
+  audit. By id rather than token: a steward or an admin revokes from
   a list, and neither holds the token. Each reaches only its own tier: a
   workspace proof cannot revoke a site invitation by id, nor the site proof
   a workspace's, nor one workspace's proof another's, each asserted by
@@ -276,7 +276,7 @@ from `@/modules/coven`, is the workspace tier's half of the policy above. It
 runs in this order, and the order is the point:
 
 1. **`assertMembership(session, workspaceId, { member: ['invite'] })`**, which
-   only owners hold (`access-control.ts`). A member, a viewer, an owner of
+   only stewards hold (`access-control.ts`). A practitioner, an observer, a steward of
    another coven and a stranger all get the same `Forbidden`, before the role
    or the address is looked at, so nothing about the input leaks to a caller
    who may not invite.
@@ -347,7 +347,7 @@ Story 4's flow walks sending an invitation; accepting it is story 6's, whose wor
 
 Three more services in `@/modules/coven`, each opening with
 `assertMembership(session, workspaceId, { member: ['invite'] })`, which only
-owners hold. Never `member: read`: members hold that since M6.13, and the
+stewards hold. Never `member: read`: members hold that since M6.13, and the
 pending rows carry the addresses of people who have not joined.
 
 - **`listPendingWorkspaceInvitations(session, workspaceId, page)`** and
@@ -369,7 +369,7 @@ pending rows carry the addresses of people who have not joined.
   by-id lookup exists only to tell those two apart.
 - **A pending invitation outlives its inviter.** Demoting or removing the
   member who sent it changes nothing about the row, as for the admin tier;
-  an owner still lists and revokes it.
+  a steward still lists and revokes it.
 
 In GraphQL, `revokeInvitation(workspaceId: ID!, id: ID!): Invitation!` goes
 through the service.
@@ -511,5 +511,5 @@ column is nullable and nothing would read it until the behaviour landed with it.
 - Inviting stamps the session's user, mails the token to the address through `sender` after the commit (so a mailed link always names a row) and stores its hash alone. The row it answers carries no token. A failed send is the transport's to log: the invitation stays pending and can be revoked and sent again. The mail names who sent it; the session holds the id alone, so the name is read when sending.
 - A second invitation to an address already invited replaces the pending one: that one is stamped revoked by the session's user in the same write as the new one, so a failed insert leaves it pending, only the newest link works and its role is the one that applies. Another coven's invitation, an accepted or lapsed one, and the site tier's are left alone.
 - `role` may not be `owner`, which is granted afterwards on the members page. The email is refused when malformed, unmailable, or a live member's already.
-- Listing pending invitations is for owners only: the rows carry the addresses of people who have not joined, and members read the roll, so the check is `member: invite`, never `member: read`. A pending invitation outlives its inviter's demotion or removal, as the admin tier's does.
+- Listing pending invitations is for stewards only: the rows carry the addresses of people who have not joined, and members read the roll, so the check is `member: invite`, never `member: read`. A pending invitation outlives its inviter's demotion or removal, as the admin tier's does.
 - Revoking kills the link from now on and keeps the row for the audit. An invitation already revoked or lapsed is no longer pending, so it is answered as not found, as the admin tier's is. An accepted one is refused on `id`: the person is a member and is removed on the members page instead. Two tabs revoking at once, or the link lapsing in between, leave nothing pending to stamp.

@@ -372,7 +372,7 @@ M12.20's question before a duplicate: `compendiumMatches(workspaceId, name)`
 lists the compendium entries whose name or formal name is exactly the typed
 one, folded to lower case, and no other tier, so no coven's own entry is ever
 offered. `findCompendiumMatches` asserts read membership of the coven first,
-so a viewer is answered and a non-member is `FORBIDDEN` by direct id. It is
+so an observer is answered and a non-member is `FORBIDDEN` by direct id. It is
 paged (`t.pagedConnection`, ordered by name, the form asks for five), and a
 blank name answers empty. Its node is the `Ingredient`, whose
 `inCupboard(workspaceId)` says whether that coven's cupboard holds it
@@ -419,7 +419,7 @@ type QueryPossibleDuplicatesConnectionEdge {
 - **The refusals are `celestialBodySuggestions`'.** The resolver refuses a signed-out
   caller with `Forbidden`. For a signed-in caller the check is the service's
   `assertMembership` for `ingredient: ['read']`, which refuses a coven the
-  caller is not in, a site admin included. A viewer is answered, because every
+  caller is not in, a site admin included. An observer is answered, because every
   row the field returns is one a reader of the coven could already list.
 - **A null `workspaceId` matches the compendium alone** (M5.5), asking no
   membership, as `celestialBodySuggestions` does: the admin's compendium form,
@@ -452,7 +452,7 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
 - **`categoryIds` keeps entries carrying any of the ids**, on the entry or on one of its variants, through the compendium filter's `any` mode. Null or empty is no filter. The spell builder's Add to Jar picker sends the categories pressed above its box; the list is paged, so a filter applied after fetching would miss matches.
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
-  A viewer is answered, a coven the caller is not in is refused, and so is a
+  An observer is answered, a coven the caller is not in is refused, and so is a
   site admin, who belongs to no coven.
 
 ### `compendium`, `ingredient` and `ingredientFormValues`
@@ -628,7 +628,7 @@ refused are their services' tests' (MB.187).
 
 ### `compendiumSourcingScore` and the `sort` argument
 
-`compendiumSourcingScore(id: ID!): SourcingScore` is a curator's read of one compendium entry's sourcing score: `score`, an integer, and `facts`, each a `SourcingFact` with its `fact` (the `SourcingFactKind` enum), its Title Case `label` and its `points`. Every fact is listed, zero-point ones too, and the points add up to the score. The field carries the `curator` scope with an `unauthorizedResolver` that answers `null`, so a member, a viewer or a signed-out request reads `null` rather than an error, by direct id too. The resolver calls `readSourcingScore`, which checks the curator again (rule 1) and reads the entry's forms and citations through the per-request loaders. `Ingredient` has no score field, so a coven's ingredient, the public read, `llms.txt` and the `.well-known` files never carry one. `tests/modules/ingredients/services/compendium-sourcing.test.ts` and the `nulls` probe in `tests/db/graphql-query-scopes.test.ts` hold this.
+`compendiumSourcingScore(id: ID!): SourcingScore` is a curator's read of one compendium entry's sourcing score: `score`, an integer, and `facts`, each a `SourcingFact` with its `fact` (the `SourcingFactKind` enum), its Title Case `label` and its `points`. Every fact is listed, zero-point ones too, and the points add up to the score. The field carries the `curator` scope with an `unauthorizedResolver` that answers `null`, so a practitioner, an observer or a signed-out request reads `null` rather than an error, by direct id too. The resolver calls `readSourcingScore`, which checks the curator again (rule 1) and reads the entry's forms and citations through the per-request loaders. `Ingredient` has no score field, so a coven's ingredient, the public read, `llms.txt` and the `.well-known` files never carry one. `tests/modules/ingredients/services/compendium-sourcing.test.ts` and the `nulls` probe in `tests/db/graphql-query-scopes.test.ts` hold this.
 
 `compendium` takes an optional `sort: CompendiumSort` and `order: CompendiumOrder`. `sort` is `name` (A to Z, even under a search) or `sourcing_score` (lowest first); `order: desc` reverses either, and `asc` or no order keeps the first direction ([`../db/compendium-read.md`](../db/compendium-read.md), "The sourcing sort"). The score sort refuses anyone who is not a curator or admin with `Forbidden`. No edge carries the score itself: the admin list reads it through the service, beside its rows.
 
@@ -645,7 +645,7 @@ signatures DESIGN.md §7's sketch gives them.
   stamp.** Neither input type declares `workspaceId` or an audit column, and
   GraphQL refuses a field its type does not declare before any resolver runs. The
   service asks the proof for the argument's coven, `{ ingredient: ['create'] }`,
-  `['update']` or `['delete']`, which owners and members hold and viewers,
+  `['update']` or `['delete']`, which stewards and practitioners hold and observers,
   site admins and non-members do not. All three carry the `signedIn` scope. A coven id
   that is not a uuid answers `FORBIDDEN`, as it does at every field taking a
   `workspaceId`
@@ -777,7 +777,7 @@ own forms.
 mutations' half: the input that names a tier, or leaves a field out, refused
 before any resolver runs; the answer equal to a fresh read; the child
 loaders cleared between two updates in one request; and per mutation one
-`VALIDATION`, one `FORBIDDEN` (a viewer, who reads the row) and, for the update
+`VALIDATION`, one `FORBIDDEN` (an observer, who reads the row) and, for the update
 and the delete, one `NOT_FOUND`.
 
 ### `workspaceIngredients`
@@ -793,7 +793,7 @@ Two more arguments are the coven's alone (M9.7), left out of `compendium`: `sour
 compendium entries it holds), where leaving it out lists both; and `inStock`, which keeps an
 entry only when one of the coven's jars of it is not at 0, a jar with no quantity counting as
 held, so a local entry with no jar leaves; and `lowStockOnly` (M9.8), which keeps an
-entry only when one of its jars is at 0 or at or under a threshold above 0 (Out of Stock or Low Stock). A coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
+entry only when one of its jars is at 0 or at or under a threshold above 0 (Out of Stock or Low Stock). A coven the caller is not in answers `FORBIDDEN`; any practitioner, observers included,
 may read it. An entry's jars are its `stock` field, below, so a page reads its
 stock in one batch whatever its length.
 
@@ -907,7 +907,7 @@ public compendium): count only the entries that a live
 resolver hands it to `compendiumFacetsHeldIn` (`services/compendium-held-in.ts`),
 which deduplicates the ids, keeps the first 20, and asks
 `assertMembership` for each against the caller's session with
-`ingredient:read`, which every role holds, viewers included. An id the caller is not a member of, or one that is not a uuid, is
+`ingredient:read`, which every role holds, observers included. An id the caller is not a member of, or one that is not a uuid, is
 dropped without an error, so a foreign coven's id narrows nothing and says
 nothing about that coven. With no id left, or none given, or no session, the
 answer is the cached, public one above. With at least one, it is read per
@@ -920,7 +920,7 @@ page reads the narrowed list through the service, `listCompendiumHeldIn` and
 `countCompendiumHeldIn`, never through the GraphQL list.
 `workspaceIngredientFacets` refuses as `workspaceIngredients` does: a
 signed-out caller and a coven the caller is not in both answer `FORBIDDEN`,
-and any member, viewers included, may read it. It is never cached.
+and any practitioner, observers included, may read it. It is never cached.
 
 `tests/modules/ingredients/graphql/ingredient-facets.test.ts` holds the
 transport's half: the arguments reaching each service, each value typed as
@@ -984,7 +984,7 @@ the stock service ([`db/stock.md`](../db/stock.md), "The stock service").
   entry page and anything saving one jar still use them.
 
 All four writes carry the `signedIn` scope, and the service asks the proof for
-`inventory: update`, which viewers do not hold. The add, the update and `saveStock`
+`inventory: update`, which observers do not hold. The add, the update and `saveStock`
 clear the changed jar's (or the ingredient's) `stockByIngredient` key, so a second write in one request
 answers its own stock; the delete answers no row to key by, so it clears the
 loader whole.
@@ -1015,7 +1015,7 @@ A coven's own say over a compendium entry it holds (M12.14), registered by
   `cupboardEntryByIngredient` loader ([`loaders.md`](loaders.md)), so a page of
   entries makes one read per coven named. A coven the caller is not in refuses
   at the field, `FORBIDDEN` with the field's path, as `Ingredient.stock` does.
-  Any member reads it, viewers included.
+  Any member reads it, observers included.
 
 The field answers the row beside the entry rather than merged into it, so
 `Ingredient` itself still answers the compendium's values and `isGlobal` stays
@@ -1035,7 +1035,7 @@ them through `ingredientDetailOf` instead
 half.
 
 `tests/modules/ingredients/graphql/cupboard-entries.test.ts` holds the
-transport's half: the answer and its `annotated`, a viewer answered, the
+transport's half: the answer and its `annotated`, an observer answered, the
 refusal at the field, the nulls, and one repository read for a page of entries,
 counted by a spy.
 
@@ -1053,7 +1053,7 @@ answer is a fresh read:
   `ingredientId`, as the other deletes answer the id. It is refused with
   `VALIDATION` while the coven holds a jar of the entry.
 
-A viewer is `FORBIDDEN`, an entry the coven does not hold is `NOT_FOUND`,
+An observer is `FORBIDDEN`, an entry the coven does not hold is `NOT_FOUND`,
 and a taken label is `VALIDATION` beside `label`
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
 "Writing it").
@@ -1063,7 +1063,7 @@ ingredientId)`, makes a compendium entry the coven holds into the coven's
 own, the entry page's Make It Ours, and answers a `ConvertedCompendium`:
 `entry`, the new own `Ingredient`, and `dropped`, the same
 `DroppedOnConvert`, in which only `folkNames` can be non-empty (a folk name
-the new name took). A viewer is `FORBIDDEN`, an entry the coven does not
+the new name took). An observer is `FORBIDDEN`, an entry the coven does not
 hold `NOT_FOUND`, and a taken label or an own entry of the same identity
 `VALIDATION` beside `label`, `canonicalName` or `name`
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
@@ -1166,7 +1166,7 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
     nullable `Int`, and the service refuses a save that leaves it out as
     `VALIDATION`. Null writes whatever the revision is. A revision no longer
     current is `STALE_WRITE`, with `extensions.currentRevision`.
-  - A viewer is `FORBIDDEN`; a spell the caller cannot read is `NOT_FOUND`.
+  - An observer is `FORBIDDEN`; a spell the caller cannot read is `NOT_FOUND`.
 
 A page of spells with all three lists costs the same reads as one spell: the
 page, then eight batched reads (three for the steps, two for the assigned
@@ -1315,7 +1315,7 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
 - **The tier is the `workspaceId` argument.** Null writes the compendium,
   under `assertSiteAdmin`; a coven's is written under
   `assertMembership(…, { ingredient: ['create'] })` or `['update']`, which
-  owners and members hold and viewers, site admins and non-members do not.
+  stewards and practitioners hold and observers, site admins and non-members do not.
   The scope follows the same argument: a null one carries `admin`, a coven's
   `signedIn` (M5.7). A member citing a compendium reference cannot edit
   it: under their coven the id names nothing there, `NOT_FOUND`, and without

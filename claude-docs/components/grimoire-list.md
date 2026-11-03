@@ -26,9 +26,9 @@ match comes first and that order breaks a tie (M10.9's `grimoire` query).
 
 The route group `src/app/(shell)/coven/[slug]/grimoire/(list)/` holds them. Its `layout.tsx`
 runs the membership guard (`requireCovenMembership`, which calls `requireSession()`) and
-draws the tab row, with New Spell at the heading's end for an owner or a member, the roles that
+draws the tab row, with New Spell at the heading's end for a steward or a practitioner, the roles that
 may create a spell, opening the builder in a wide modal over the open tab at `?new=spell`, the
-tab, filter and page kept (M10.12; [`spell-builder.md`](spell-builder.md)); a viewer
+tab, filter and page kept (M10.12; [`spell-builder.md`](spell-builder.md)); an observer
 sees no New Spell; `page.tsx` and `drafts/page.tsx` set their titles and each call
 `grimoireTab()` (`grimoire-tab.tsx`) with its status. `grimoireTab` is an async function the
 page returns, rather than a component, so a page test can await the page whole. It reads the
@@ -127,7 +127,7 @@ spells them, and `VISIBILITY_LABELS`, what each is called on screen (Private and
   - **No Spells**, "There are no complete spells here yet.", or **No Drafts**, "There are
     no drafts here yet.", when the tab holds nothing and no filter is in force. On either tab a
     viewer, who may not write a spell (`canCreate` false), is also told "A member or owner
-    of this coven can write them.", as an empty cupboard tells a viewer who can add;
+    of this coven can write them.", as an empty cupboard tells an observer who can add;
   - **No Matches** when a filter is in force and matched nothing. The search sentence above
     already names the filter, so this says only what to do.
 

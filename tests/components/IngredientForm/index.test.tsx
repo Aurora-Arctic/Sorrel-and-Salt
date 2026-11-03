@@ -518,7 +518,7 @@ describe('IngredientForm', () => {
     it("shows a refusal's own message, keeping what was typed", async () => {
       mockGraphQLError('CreateWorkspaceIngredient', {
         code: 'FORBIDDEN',
-        message: 'Viewers cannot add ingredients',
+        message: 'Observers cannot add ingredients',
       });
       renderForm();
 
@@ -526,7 +526,9 @@ describe('IngredientForm', () => {
       addEntry('Celestial Body', 'Mercury');
       save();
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('Viewers cannot add ingredients');
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Observers cannot add ingredients',
+      );
       expect(textbox('Name')).toHaveValue('Testwort');
       expect(removeButton('Mercury')).toBeInTheDocument();
     });

@@ -30,8 +30,8 @@ on the page you are on.
 Members stays the open section on `/coven/[slug]/invitations` too, since
 Invitations is a tab on the same page (its `matches`, M7.6). Members is
 `apart`, a group of its own behind a hairline, as People is in the admin nav:
-it is the coven's people, not its contents (M10.11). Today an owner and a
-member see all four sections and a viewer sees Overview, Ingredients and
+it is the coven's people, not its contents (M10.11). Today a steward and a
+member see all four sections and an observer sees Overview, Ingredients and
 Grimoire.
 
 `sections.ts` holds the list as `covenSections(slug, canReadMembers)`, each
@@ -57,7 +57,7 @@ use the same mapping. What the target does is
   because `typedRoutes`, Next's check that a link points at a built page,
   refuses a link to a route the build does not contain. The coven's four
   sections all fit a phone's bottom bar, so it never needs More.
-- **Members is offered by what the role may do, never by its rank.** A viewer
+- **Members is offered by what the role may do, never by its rank.** An observer
   is not offered a page that would answer them with a 404; the page and its
   service still check membership themselves, so hiding the link is
   presentation, not the guard.
@@ -83,7 +83,7 @@ All of it is `SectionNav`'s ([`section-nav.md`](section-nav.md), "Styling").
 
 - Overview Current: as a member sees it, Overview current, Ingredients and Members beside it.
 - Ingredients Current, Members Current, and Members Current On Its Invitations Tab: the other pages as current.
-- Viewer: as a viewer sees it, Overview and Ingredients.
+- Viewer: as an observer sees it, Overview and Ingredients.
 
 The shapes the nav takes by width are `SectionNav`'s stories; the nav in its
 row is `ContextRow`'s Coven cell and the workshop's shell frame.
@@ -100,4 +100,4 @@ it, and links the ingredients page for every caller, and the members page only f
 
 - A row is added together with the page it links to, because `typedRoutes` refuses a link to a route the build does not contain.
 - Grimoire counts as current on its Drafts tab too, which lies beneath it.
-- Members is shown by what the caller's role may do (`member: read`), never by a rank, so a viewer is not offered a page that answers 404. The layout passes that in as a boolean because the file loads in the workshop's browser build, where the server-only access-control module cannot.
+- Members is shown by what the caller's role may do (`member: read`), never by a rank, so an observer is not offered a page that answers 404. The layout passes that in as a boolean because the file loads in the workshop's browser build, where the server-only access-control module cannot.

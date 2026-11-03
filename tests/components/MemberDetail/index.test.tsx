@@ -66,7 +66,7 @@ describe('MemberDetail', () => {
   it("shows the row's facts: role, joining date, who invited them and the last change", () => {
     renderDetail();
 
-    expect(fact('Role')).toHaveTextContent('Member');
+    expect(fact('Role')).toHaveTextContent('Practitioner');
     expect(fact('Joined')).toHaveTextContent('2026-03-04');
     expect(fact('Invited By')).toHaveTextContent('Ash Warden');
     expect(fact('Updated')).toHaveTextContent('Ivy Keeper');
@@ -100,7 +100,7 @@ describe('MemberDetail', () => {
   it('shows a member the facts and no actions at all', () => {
     renderDetail();
 
-    expect(fact('Role')).toHaveTextContent('Member');
+    expect(fact('Role')).toHaveTextContent('Practitioner');
     expect(screen.queryByRole('region', { name: 'Coven Access' })).toBeNull();
     expect(
       screen.queryAllByRole('button', { name: /^(Change Role|Pause Access|Lift Pause|Remove)/ }),

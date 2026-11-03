@@ -180,7 +180,7 @@ The demo writes eleven workings (`DEMO_WORKINGS` in `src/db/seed/demo-workings.t
 | Hearth Fire Blessing  | 1        | Complete, with all three members as participants.                                                                                                                            |
 | Hearth Warding Jar    | 2        | One complete, one draft. Completing the draft skips Black Salt (no stock), the dust (a custom layer), the ash (pinches against a jar in grams) and the rosemary (no amount). |
 
-They mix complete and draft, workspace and private (never wider than the spell), recorders A and B (a viewer cannot record), workings with and without participants and notes, and dates from July to October 2026, none in the future.
+They mix complete and draft, workspace and private (never wider than the spell), recorders A and B (an observer cannot record), workings with and without participants and notes, and dates from July to October 2026, none in the future.
 
 Completing a working changes stock: the service takes each deducted amount from its jar. The seed does the same, once, when it first writes a working, so a re-run adds nothing and decrements nothing. The jars end at Sea Salt 395 g, Hearth Ash 245 g and Mugwort 0 g. A complete working's deductions are written out in the data, not computed by `planDeductions` at seed time; a test replays them against the spell steps and `DEMO_STOCK` in date order to prove they match what the service would take.
 

@@ -228,14 +228,14 @@ describe('SpellBuilder visibility', () => {
     it('stays private when the share is refused, with the refusal in the notice', async () => {
       mockGraphQLError('UpdateSpell', {
         code: 'FORBIDDEN',
-        message: 'Viewers cannot write spells',
+        message: 'Observers cannot write spells',
       });
       renderBuilder({ spell: COMPLETE });
 
       fireEvent.click(toggle());
       fireEvent.click(within(sharing() as HTMLElement).getByRole('button', { name: 'Share' }));
 
-      expect(await screen.findByText('Viewers cannot write spells')).toHaveAttribute(
+      expect(await screen.findByText('Observers cannot write spells')).toHaveAttribute(
         'role',
         'alert',
       );

@@ -349,7 +349,7 @@ head, both built by the page per row, as the other admin lists carry
   an alert.
 - **While paused, an admin the pause binds cannot use Change Role, nor coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
-  and the user modal's role and creation controls, for a viewer who is not the primary admin
+  and the user modal's role and creation controls, for an observer who is not the primary admin
   (`canToggle`), is locked as the primary admin's Change Role is. That reading,
   paused and not the primary admin, is `changesLocked` (`lock.ts`), which the
   Invitations tab's lock reads too. Locked means in view,

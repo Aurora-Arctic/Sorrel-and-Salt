@@ -46,14 +46,14 @@ malformed id to every GraphQL field that takes a `workspaceId`, and fails on a
 field it does not name.
 
 **Where the viewer census lives.** `tests/db/graphql-viewer-writes.test.ts`
-sends every mutation that takes a `workspaceId` as a viewer, expects `FORBIDDEN`
-with every table unchanged, then sends it again as a member (an owner, where the
+sends every mutation that takes a `workspaceId` as an observer, expects `FORBIDDEN`
+with every table unchanged, then sends it again as a member (a steward, where the
 probe says so) and expects it to be admitted. A mutation with no probe in
 `tests/support/graphql-workspace-probes.ts` fails the test, and so does one that
 is not on its short exceptions list (`leaveWorkspace`, which every role may call).
 A folk name or a category is written inside its ingredient's own save, so it takes
 the ingredient's permission; `workspace-ingredients.test.ts` proves it.
-**A role that lacks the permission is told so.** A stranger and an unknown id get the bare `Forbidden`, since whether a coven exists is private; a member who is really there and lacks the permission is told, in the one sentence every such refusal carries: "Your role in this coven doesn't allow that. Ask an owner if you need it." (the owner's call at MB.119's review). It names neither the role nor the permission, and it is the alert a button on a stale page shows. Only a workspace-scoped call reaches it, so "coven" is always right. A test asserts the `Forbidden` kind, never the sentence.
+**A role that lacks the permission is told so.** A stranger and an unknown id get the bare `Forbidden`, since whether a coven exists is private; a member who is really there and lacks the permission is told, in the one sentence every such refusal carries: "Your role in this coven doesn't allow that. Ask a steward if you need it." (the owner's call at MB.119's review). It names neither the role nor the permission, and it is the alert a button on a stale page shows. Only a workspace-scoped call reaches it, so "coven" is always right. A test asserts the `Forbidden` kind, never the sentence.
 
 ### One lookup per render
 
@@ -184,20 +184,20 @@ voluntary leave (M6.15).
 
 It reads the workspace's live members through `write.lockLiveMembers(membership)`,
 which locks them `for update` in user-id order, as `lockLiveAdmins` does for
-admins. Two owners stepping down at once therefore queue on the first row, and
-the second counts the first's committed change instead of both seeing two owners.
+admins. Two stewards stepping down at once therefore queue on the first row, and
+the second counts the first's committed change instead of both seeing two stewards.
 
 The refusal is a `LastOwner`, a subclass of `Forbidden` that carries what M6.16
 needs to offer a way out: `remedy` is `'promote'` when other members exist
 (`promotable` lists their user ids) and `'delete'` when the owner is the only
-member. A change that keeps an owner an owner, or touches someone who is not the
-last owner, passes.
+member. A change that keeps a steward a steward, or touches someone who is not the
+last steward, passes.
 
 ## Changing a role (M9.14)
 
 `updateMemberRole(session, workspaceId, userId, role)` in
 `src/modules/coven/services/member-role.ts` is the one way a role changes. It
-asks for `member: update`, which only owners hold, then — in the transaction
+asks for `member: update`, which only stewards hold, then — in the transaction
 that writes — runs `assertNotLastOwner` and calls `write.updateMembershipRole`.
 That writer sets the role on the one live row of the proof's workspace and
 `userId`, so a pending invitation, a removed member or someone from another

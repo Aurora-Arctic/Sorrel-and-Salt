@@ -42,7 +42,7 @@ test('an owner opens a role tip on the members page and reads what the role may 
   await page.goto(`/coven/${coven.slug}/members`);
 
   const row = page.getByRole('row', { name: /Fixture Viewer/ });
-  const button = row.getByRole('button', { name: 'About Viewer' });
+  const button = row.getByRole('button', { name: 'About Observer' });
   await button.focus();
   const tip = page.getByRole('tooltip');
   await expect(tip).toBeVisible();

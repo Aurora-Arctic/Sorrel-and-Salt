@@ -53,8 +53,8 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   in its `user-list__mark` colours; `PrimaryAdminMark` is `UserList/primary-admin-mark.tsx`.
 - **A coven's name is text, never a link.** An admin is no member of the
   covens they read about, and `/coven/[slug]` answers a non-member 404.
-- **The covens are a list, ordered here**: owners, then members, then
-  viewers, each by coven name. The service's order is unspecified, and the list
+- **The covens are a list, ordered here**: stewards, then members, then
+  observers, each by coven name. The service's order is unspecified, and the list
   is bounded by the user's own memberships. Each item is the coven's name, then
   its role and the day they joined (a `<time>` with the UTC date, as the list's
   Signed Up is) in the muted ink at the caption size, as a folded ingredient

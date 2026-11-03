@@ -9,7 +9,7 @@ proof"](membership-proof.md)).
 
 - **`workspaces`** — `id`, `name`, `slug`, + audit, and **nothing else**.
   There is no `kind` column and no automatically created workspace: every
-  workspace behaves identically, taking members and being deleted by an owner.
+  workspace behaves identically, taking members and being deleted by a steward.
   `workspaces-schema.test.ts` pins the whole column set rather than asserting
   the absence of one name, so a later `kind`/`type`/`personal` column turns it
   red instead of going unnoticed. The entity is `workspaces` even though it

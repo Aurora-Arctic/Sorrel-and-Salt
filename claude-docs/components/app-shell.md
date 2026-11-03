@@ -10,7 +10,7 @@ bar's links are client code.
 
 `(shell)` is a route group: a folder in parentheses that groups routes under a
 shared layout without adding to the URL. The root layout stays free of the
-session so a public page can choose its own chrome. Everything that needs a signed-in viewer sits
+session so a public page can choose its own chrome. Everything that needs a signed-in observer sits
 under `(shell)`, whose layout calls `viewerOf()`. That sends a signed-out
 visitor to sign in, but never sends an unverified account to the email page:
 the page does that (MB.256, [Route protection](../auth/route-protection.md),
@@ -54,7 +54,7 @@ goes to the account menu, which shows it ([`account-menu.md`](account-menu.md)).
 covens are listed alphabetically by name. A refused lookup (impossible for
 one's own id) throws.
 
-A viewer whose site access is paused carries `accessPause`, its end `null` when it has none. `viewerOf()` and
+An observer whose site access is paused carries `accessPause`, its end `null` when it has none. `viewerOf()` and
 `viewerIfSignedIn()` read it through `getShellSession()` and then draw no coven, no curation, no creation and no
 invitation, reading neither the memberships nor the invitation count, and keep the count of the viewer's own support
 requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in while paused").

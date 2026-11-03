@@ -104,7 +104,7 @@ Four lanes in worktrees off the branch, two waves; the orchestrator (this sessio
 - A private artifact "Coven Design Review" (load `artifact-design`): the findings by number, each proposal side by side with the recommendation, the copy table, the decisions the owner is asked for (below), the screenshots. No URL on the public issue.
 - Comment on #576: paths and story names to look at, the decisions asked, never a value. **Stop for the owner's sign-off.**
 
-**Decisions the owner is asked for at sign-off:** (a) index: Role, OwnerSection or Contents; (b) landing: named headings or Welcome; (c) acceptance page on a panel; (d) nav item "People" to match the heading (recommended) or heading "Members"; (e) Leave and Delete landing on `/coven` with a `router.refresh()` as the create form does, instead of `/` (a navigation target, not a rule); (f) the deleted-coven refusal as its own reason `closed`, "The coven this invitation was for has been deleted, so it can't be accepted."; (g) "withdrawn" in the Revoke dialogs (the service's word) or "revoked" on the page; (h) `membership.ts:81`'s refusal reading "Your role in this coven doesn't allow that. Ask an owner if you need it." in place of the resource-and-action string; (i) the landing with received invitations: Create Coven as an outline beneath the table (one solid per view) or solid as today.
+**Decisions the owner is asked for at sign-off:** (a) index: Role, OwnerSection or Contents; (b) landing: named headings or Welcome; (c) acceptance page on a panel; (d) nav item "People" to match the heading (recommended) or heading "Members"; (e) Leave and Delete landing on `/coven` with a `router.refresh()` as the create form does, instead of `/` (a navigation target, not a rule); (f) the deleted-coven refusal as its own reason `closed`, "The coven this invitation was for has been deleted, so it can't be accepted."; (g) "withdrawn" in the Revoke dialogs (the service's word) or "revoked" on the page; (h) `membership.ts:81`'s refusal reading "Your role in this coven doesn't allow that. Ask a steward if you need it." in place of the resource-and-action string; (i) the landing with received invitations: Create Coven as an outline beneath the table (one solid per view) or solid as today.
 
 ## Phase 2 — Apply the sign-off
 
@@ -119,7 +119,7 @@ Decisions recorded as a comment on #576 and in the plan copy. Lanes 3 and 4 appl
 1. `npm run pre-commit` at every lane commit; `npm run lint:css` on every Sass change.
 2. Heading CSS identical before and after `heading-face` (compiled with `sass` in a scratch script, diffed).
 3. At task end from `/app`: `npm run test:coverage` (80% line), `npm run test:stories`, `npm run workshop:build`, `NEXT_DIST_DIR=.next-check npm run build` then delete the dir and `git checkout -- tsconfig.json`; e2e `coven`, `coven-create`, `invite`, `workspace-invitation`, `shell` against the remote browser under the e2e lock with the recipe in memory (ports 8001+ free, blank `ENABLE_IMPERSONATION`, the secret from `.env.local`, never printed).
-4. Keyboard walk at 375px in both themes in the running app: Leave Coven regains focus after the owner exit closes; the Invite button after the dialog; Members reachable from the nav for an owner and a member, absent for a viewer; no sideways scroll on any page; the acceptance page's refusal announced.
+4. Keyboard walk at 375px in both themes in the running app: Leave Coven regains focus after the owner exit closes; the Invite button after the dialog; Members reachable from the nav for a steward and a practitioner, absent for an observer; no sideways scroll on any page; the acceptance page's refusal announced.
 5. The owner looks once in Safari and Firefox on the host.
 
 ## Out of scope
@@ -150,14 +150,14 @@ Recorded as the lanes reported it. The plan above stays as approved.
 
 The owner reviewed the proposals and the screenshots, and chose:
 
-- **(a) The coven index:** the owner section, with Delete in a section only an owner sees. It also gains the Contents section, a list of the coven's pages, and a jump menu (`PageNav`) laid out as the account page lays its own: a sticky column to the left of the content on a wide screen, and the list above the sections on a phone.
+- **(a) The coven index:** the owner section, with Delete in a section only a steward sees. It also gains the Contents section, a list of the coven's pages, and a jump menu (`PageNav`) laid out as the account page lays its own: a sticky column to the left of the content on a wide screen, and the list above the sections on a phone.
 - **(b) The landing:** named headings. "Welcome" becomes the eyebrow, and the heading says "Start a Coven" or "Join a Coven".
 - **(c) The invitation page:** on a panel, as the sign-in page is.
 - **(d) People or Members:** the page heading says "Members", matching the nav item. This is not the recommended option; the tabs stay Members and Invitations.
 - **(e) Where Leave and Delete land:** the coven landing, `/coven`, followed by a refresh.
 - **(f) A deleted coven's invitation:** its own refusal reason, `closed`, reading "The coven this invitation was for has been deleted, so it can't be accepted."
 - **(g) Revoked or withdrawn:** the Revoke dialogs say "Its link will say it was withdrawn." The button stays Revoke.
-- **(h) The role refusal:** "Your role in this coven doesn't allow that. Ask an owner if you need it."
+- **(h) The role refusal:** "Your role in this coven doesn't allow that. Ask a steward if you need it."
 - **(i):** void, as recorded above.
 - **The Wave B fixes** were accepted as built.
 

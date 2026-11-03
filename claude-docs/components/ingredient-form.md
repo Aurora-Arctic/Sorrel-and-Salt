@@ -1223,7 +1223,7 @@ did-you-mean list gets the same + or eye at the right of its row when
 it is a compendium entry (`isGlobal`); the coven's own entry, which the
 cupboard holds by being the coven's, gets the eye and never a + (the owner's
 calls, 2026-10-18 and M12.48). Both need `onUse`, which the compendium's
-form leaves out, since it has no cupboard. Viewers never reach the modal.
+form leaves out, since it has no cupboard. Observers never reach the modal.
 
 **The + in the duplicate warning** (M12.48, the owner's calls, 2026-10-21).
 This replaces navigating to the entry's page after the add: the form stays open,

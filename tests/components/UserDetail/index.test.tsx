@@ -256,9 +256,9 @@ describe('UserDetail', () => {
       'Beta Coven',
       'Zeta Coven',
     ]);
-    expect(within(items[0]!).getByText('Owner')).toBeInTheDocument();
-    expect(within(items[1]!).getByText('Member')).toBeInTheDocument();
-    expect(within(items[3]!).getByText('Viewer')).toBeInTheDocument();
+    expect(within(items[0]!).getByText('Steward')).toBeInTheDocument();
+    expect(within(items[1]!).getByText('Practitioner')).toBeInTheDocument();
+    expect(within(items[3]!).getByText('Observer')).toBeInTheDocument();
     expect(within(items[0]!).getByText('2026-03-04')).toHaveAttribute(
       'datetime',
       COVENS[0]!.joinedAt.toISOString(),

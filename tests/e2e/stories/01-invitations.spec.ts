@@ -162,7 +162,11 @@ async function invitationIdFor(email: string): Promise<string> {
 const tokenOf = (path: string) => path.slice('/invite/'.length);
 
 /** The owner sends an invitation from the coven's Invitations page through Invite and its dialog; the row lists pending. */
-async function ownerInvites(page: Page, email: string, role: 'Viewer' | 'Member'): Promise<void> {
+async function ownerInvites(
+  page: Page,
+  email: string,
+  role: 'Observer' | 'Practitioner',
+): Promise<void> {
   await signInAgainAs(page, people.owner.id);
   await page.goto(`/coven/${COVEN_SLUG}/invitations`);
   await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
@@ -282,14 +286,14 @@ test(
     // The role choice is viewer or member; owner is not on offer.
     const roles = dialog.getByRole('group', { name: 'Role' }).getByRole('radio');
     await expect(roles).toHaveCount(2);
-    await expect(dialog.getByRole('radio', { name: 'Viewer' })).toBeVisible();
-    await expect(dialog.getByRole('radio', { name: 'Member' })).toBeVisible();
-    await expect(dialog.getByRole('radio', { name: /Owner/ })).toHaveCount(0);
+    await expect(dialog.getByRole('radio', { name: 'Observer' })).toBeVisible();
+    await expect(dialog.getByRole('radio', { name: 'Practitioner' })).toBeVisible();
+    await expect(dialog.getByRole('radio', { name: /Steward/ })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
 
     const invited = address('invited-by-dialog');
     await dialog.getByRole('textbox', { name: 'Email Address' }).fill(invited);
-    await dialog.getByRole('radio', { name: 'Member' }).check();
+    await dialog.getByRole('radio', { name: 'Practitioner' }).check();
     await dialog.getByRole('button', { name: 'Send Invitation' }).click();
     const done = dialog.getByRole('button', { name: 'Done' });
     await expect(done).toBeVisible();
@@ -307,7 +311,7 @@ test(
     // Listed pending, at the role chosen, with its Revoke.
     const row = pendingRow(page, invited);
     await expect(row).toBeVisible();
-    await expect(row.getByRole('cell', { name: 'Member', exact: true })).toBeVisible();
+    await expect(row.getByRole('cell', { name: 'Practitioner', exact: true })).toBeVisible();
     await expect(
       row.getByRole('button', { name: `Revoke the invitation to ${invited}` }),
     ).toBeVisible();
@@ -471,7 +475,7 @@ test(
     // A member now: the roll opens for them, with their own row at that role, read from the role's own tip.
     await page.goto(`/coven/${COVEN_SLUG}/members`);
     await expect(
-      rollRow(page, invited.name).getByRole('button', { name: 'About Member', exact: true }),
+      rollRow(page, invited.name).getByRole('button', { name: 'About Practitioner', exact: true }),
     ).toBeVisible();
 
     // The landing now goes straight into the coven. The redirect is read rather than followed, so the
@@ -510,7 +514,9 @@ test(
     // The owner sees the new member on the roll, at the invited role, and the
     // invitation gone from the pending list with its Revoke.
     await ownerReadsRoll(page);
-    await expect(rollRow(page, invited.name).getByRole('cell', { name: /^Member/ })).toBeVisible();
+    await expect(
+      rollRow(page, invited.name).getByRole('cell', { name: /^Practitioner/ }),
+    ).toBeVisible();
     await page.goto(`/coven/${COVEN_SLUG}/invitations`);
     await expectInvitationsTab(page);
     await expect(pendingRow(page, invited.email)).toHaveCount(0);
@@ -545,7 +551,7 @@ test(
   { tag: ['@story-5', '@story-7'] },
   async ({ page }) => {
     const gone = address('gone');
-    await ownerInvites(page, gone, 'Member');
+    await ownerInvites(page, gone, 'Practitioner');
     const path = await mailedInvitePath(gone);
 
     // Revoke asks first, then the row is gone.
@@ -581,7 +587,7 @@ test(
   { tag: '@story-7' },
   async ({ page }) => {
     const late = address('late');
-    await ownerInvites(page, late, 'Member');
+    await ownerInvites(page, late, 'Practitioner');
     const path = await mailedInvitePath(late);
     const before = await ownerReadsRoll(page);
 
@@ -630,7 +636,7 @@ test(
   { tag: '@story-6' },
   async ({ page }) => {
     const email = address('by-account');
-    await ownerInvites(page, email, 'Viewer');
+    await ownerInvites(page, email, 'Observer');
     const path = await mailedInvitePath(email);
     const holder = await signInNamed(page, email, 'Fixture Account Invitee');
 
@@ -670,7 +676,7 @@ test(
 
     // The owner's roll shows them, at the invited role.
     await ownerReadsRoll(page);
-    await expect(rollRow(page, holder.name).getByRole('cell', { name: /^Viewer/ })).toBeVisible();
+    await expect(rollRow(page, holder.name).getByRole('cell', { name: /^Observer/ })).toBeVisible();
     await assertNoAccessibilityViolations(page);
   },
 );

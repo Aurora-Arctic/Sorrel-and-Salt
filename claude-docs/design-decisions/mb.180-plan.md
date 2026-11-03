@@ -45,7 +45,7 @@ The mechanism + guard of the sweep-task rule; every later task cites it.
 - **`claude-docs/design-decisions/mb.180-plan.md`**: this plan.
 - **The budget, warn-only.** `.github/scripts/summarize-vitest.mjs` gains a `<details><summary>Slowest files</summary>` block from `testResults[].endTime - startTime` (the ten slowest, and every file over `BUDGET_MS = 10_000` marked ⚠ with "over the 10 s budget — claude-docs/testing/layer-ownership.md"), appended to `details` so `job-summary` and `pr-comment` carry it. A unit test under `tests/scripts/` feeds the script fixture JSON (precondition: the fixture contains an over-budget file, and the block names it). `claude-docs/ci/reusable-checks.md` describes the block.
 
-_Acceptance criteria:_ the PR comment and job summary of this PR's own CI run list the slowest files, with the two IngredientForm files marked over budget · `layer-ownership.md` names an owner for every assertion kind the ten tasks cite · the decision record states the doctrine change and both backstops · nothing under `tests/` changes but `tests/scripts/` · coverage threshold holds.
+_Acceptance criteria:_ the PR comment and job summary of this PR's own CI run list the slowest files, with the two IngredientForm files marked over budget · `layer-ownership.md` names a steward for every assertion kind the ten tasks cite · the decision record states the doctrine change and both backstops · nothing under `tests/` changes but `tests/scripts/` · coverage threshold holds.
 
 ## MB.181 — `IngredientForm`'s list field and closed sets tested as components · 3 h
 
@@ -68,7 +68,7 @@ _Acceptance criteria:_ every behaviour independent of which list it is renders `
 `references.test.tsx` (16.4 s / 39) and `compendium.test.tsx` (22) render the whole form for everything.
 
 - **New `tests/components/IngredientForm/reference-panel.test.tsx`** renders `ReferencePanel` (`src/components/IngredientForm/reference-panel.tsx:256`) alone for the ~23 panel tests; the form keeps "open from the list, save, chip appears" and the to-do filter.
-- Delete, with owners: `formats %s` × 4 (`:767`) → `tests/modules/ingredients/validation/reference-format.test.ts`; `:620, 637, 783` → `validation/reference.test.ts:102, 117`; `:293` (debounce) and `:486` (error placement) → MB.181's owners; `:514` Save & Add Another → `index:425`.
+- Delete, with owners: `formats %s` × 4 (`:767`) → `tests/modules/ingredients/validation/reference-format.test.ts`; `:620, 637, 783` → `validation/reference.test.ts:102, 117`; `:293` (debounce) and `:486` (error placement) → MB.181's stewards; `:514` Save & Add Another → `index:425`.
 - `compendium.test.tsx` keeps only what is about the mode (choose-only boxes, required marks, `workspaceId: null` lookups): ~22 → ~10.
 - Doc: `claude-docs/components/ingredient-form.md`.
 

@@ -47,7 +47,7 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
   emailed, tagged Internal on the thread.
 - **Beta testers.** A sender who accepted an invitation with `kind = 'card'`
   is a beta tester: a sprout mark tipped "Beta Tester" after the sender's name and a Beta Testers option in a Sender filter
-  on the admin page (the owner, 2026-10-31: the filter is a Sender filter so coven owners and paying members can join it as further options), with no view of its own and no sort order of its own. The tier is derived, never stored, so paying users can join
+  on the admin page (the owner, 2026-10-31: the filter is a Sender filter so coven stewards and paying members can join it as further options), with no view of its own and no sort order of its own. The tier is derived, never stored, so paying users can join
   it later.
 
 - **No Create Issue link** (the owner, 2026-10-31): the prefilled GitHub link copied the message, which could hold private

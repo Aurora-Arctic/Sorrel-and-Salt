@@ -7,7 +7,7 @@ beside it that opens a tip (a small note) saying what the role may do.
 | ------------- | ------------------------------------------------------------------------------------- |
 | `label`       | The role's word as the column shows it: Admin, Curator, User, Owner, Member, Viewer   |
 | `description` | What the role may do: the sentence the Change Role control shows beside the same role |
-| `emphasis`    | Bold, for the roles a list sets apart: an admin, a curator, an owner                  |
+| `emphasis`    | Bold, for the roles a list sets apart: an admin, a curator, a steward                 |
 
 ## Behaviour
 
@@ -33,7 +33,7 @@ beside it that opens a tip (a small note) saying what the role may do.
   bold for an admin or a curator, beside the primary admin's crown when the row
   has one.
 - [`member-list.md`](member-list.md): the Role column of `/coven/[slug]/members`,
-  every row, bold for an owner, whether or not the row carries Change Role.
+  every row, bold for a steward, whether or not the row carries Change Role.
 
 ## Tests
 

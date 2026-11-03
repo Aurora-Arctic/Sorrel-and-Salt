@@ -526,7 +526,7 @@ admin list's controls.
   [`m2.9-granting-admin.md`](m2.9-granting-admin.md).
 - **MB.68** adds a second way to become the primary admin: verifying the
   bootstrap address by mail, from a session that holds the row. A Microsoft-
-  or Facebook-only owner can now be promoted. It is safe only because of the
+  or Facebook-only steward can now be promoted. It is safe only because of the
   session binding above, and it is the one place first-party verification
   touches promotion.
 - **Kept:** the sign-in promotion still decides on the callback's fresh
@@ -544,7 +544,7 @@ pre-session interstitial, the two things MB.60 cut from its first draft land
 in MB.67, and both invitation flows exist. Notifying admins of a grant becomes
 possible and stays unscheduled.
 
-**The hole:** an owner whose address is squatted waits up to one hour, and is
+**The hole:** a steward whose address is squatted waits up to one hour, and is
 told so. A leaked verification token is good for one hour and one boolean. A
 verification mail that a user did not request is refused when they click it,
 which is correct and will read as a broken link; the mail says why.

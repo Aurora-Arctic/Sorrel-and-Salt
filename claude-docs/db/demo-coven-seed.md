@@ -21,10 +21,10 @@ In one seed transaction, as the bootstrap system user:
 A seat is inserted only when no `workspace_members` row exists for the pair
 (demo coven, user). A soft-deleted row counts as existing. This is the
 never-re-add rule: someone who used Leave stays out, and so does an ex-admin
-whose seat was removed, until another owner invites and promotes them. The seed
+whose seat was removed, until another steward invites and promotes them. The seed
 never updates a row, so a second run inserts nothing.
 
-A new account is seated as a viewer at sign-up by
+A new account is seated as an observer at sign-up by
 `databaseHooks.user.create.after`; the seed's step 3 backfills any account that
 hook missed.
 
@@ -75,7 +75,7 @@ Each throws `Forbidden` with a message that explains it.
   changed."
 - `updateMemberRole` refuses `BOOTSTRAP_USER_ID` with the same message.
 
-These hold even when another owner exists, so the last-owner guard is not what
+These hold even when another steward exists, so the last-owner guard is not what
 stops them.
 
 ## The slug refusal

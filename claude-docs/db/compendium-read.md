@@ -252,7 +252,7 @@ precision`, and while the keyset casts its sort back to `real`, the score
   whose `curator_reviewed_at` is set, `false` the ones where it is null, and
   absent is both. The finder takes it from anyone; the service decides who
   may send it. `compendiumFilterFor` (`services/compendium-filter.ts`) refuses a
-  `reviewed` filter with `Forbidden` for a viewer who does not curate, so
+  `reviewed` filter with `Forbidden` for an observer who does not curate, so
   the public page, a coven and a signed-out caller cannot learn which entries
   a curator has checked. The public page drops `?reviewed=` from its address
   before it reads, and a coven's parameter table has no `reviewed`.
@@ -670,7 +670,7 @@ the facets, so they cannot disagree.
 
 The admin list also shows the score. `filter.withSourcingScore` makes `findCompendiumPage` select `sourcingScoreExpression` beside each row, in the same query, and hand it back on the row's edge as `sourcingScore`; without it no score is computed.
 
-The score sort and the carried score are a curator's: `compendiumFilterFor` refuses either with `Forbidden` for a signed-out request or anyone not a curator or admin, as it does the Reviewed filter, because the cache is keyed by the parsed filter. The name sort is open to anyone. `tests/db/repository/sourcing-score.test.ts` lists eight fixture entries under the sort and checks the order and each row's sort key against the pure function, checks each direction is the reverse of the other, pages two rows at a time across a boundary forwards and backwards in each of the four orders, checks the carried score equals `readSourcingScore`, and checks a member, a viewer, a non-member and a signed-out read are refused the score where the unguarded repository call returns it.
+The score sort and the carried score are a curator's: `compendiumFilterFor` refuses either with `Forbidden` for a signed-out request or anyone not a curator or admin, as it does the Reviewed filter, because the cache is keyed by the parsed filter. The name sort is open to anyone. `tests/db/repository/sourcing-score.test.ts` lists eight fixture entries under the sort and checks the order and each row's sort key against the pure function, checks each direction is the reverse of the other, pages two rows at a time across a boundary forwards and backwards in each of the four orders, checks the carried score equals `readSourcingScore`, and checks a practitioner, an observer, a non-member and a signed-out read are refused the score where the unguarded repository call returns it.
 
 ## Hidden entries (M14.35)
 

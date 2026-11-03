@@ -78,7 +78,7 @@ The public URL needs a slug and ingredients have none (`src/db/schema/ingredient
 16. **Structured data**: optional, and a plain `WebPage`/`BreadcrumbList` is the honest ceiling (the record's "What it rules out"). Not needed for indexing.
 17. **Canonical host**: production is `sorrelandsalt.com` (deploy.yml, auth.ts). Any `www` alias must 308 to it; check the Vercel domain settings when the CLI is available.
 18. **404 and 308 as real statuses.** An unknown slug returns a real 404 (M11.10 owns the page), so a deleted entry drops out of the index rather than being indexed as a soft 404; a retired slug inside its window answers `permanentRedirect()` to the current one (B2). Soft-deleted entries already vanish from finders (rule 4).
-19. **Public chrome**: a signed-out visitor on `/compendium` needs a header with the site name, Sign in, and nothing workspace-shaped. Either `AppShell` grows a signed-out mode or the compendium pages use the same minimal frame as `/`. The M8.18 criterion becomes "Add to my ingredients is present for members, absent for viewers and signed-out visitors, who see a sign-in prompt in its place".
+19. **Public chrome**: a signed-out visitor on `/compendium` needs a header with the site name, Sign in, and nothing workspace-shaped. Either `AppShell` grows a signed-out mode or the compendium pages use the same minimal frame as `/`. The M8.18 criterion becomes "Add to my ingredients is present for members, absent for observers and signed-out visitors, who see a sign-in prompt in its place".
 20. **Outside the repo**: Search Console verification and sitemap submission. Content, not code, and the user's own action.
 
 ### F. Tests and stories

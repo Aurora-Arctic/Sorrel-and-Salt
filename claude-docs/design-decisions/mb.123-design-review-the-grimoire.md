@@ -74,7 +74,7 @@ Sources are numbered notes in section 6. A decision with no note has "no externa
 
 **D29. `CovenSwitchTargets` has no story.** Owner: option a. Built: it is named as the one component without a story in `.claude/rules/components.md` and `claude-docs/workshop.md`. No external source; owner's call.
 
-**D30. Empty Spells tab line for a viewer.** Owner: option a. Built, and the same for the Drafts tab. Source: [22].
+**D30. Empty Spells tab line for an observer.** Owner: option a. Built, and the same for the Drafts tab. Source: [22].
 
 **D31. Step control names.** Owner: option a, keep. Not built. No external source; owner's call.
 

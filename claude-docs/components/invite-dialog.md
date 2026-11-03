@@ -2,14 +2,14 @@
 
 `src/components/InviteDialog/` — an owner's Invite button and the dialog it opens (M7.4, story 4). A
 client component taking the `workspaceId` of the coven invited into. It is a [`ModalButton`](modal.md)
-around the form, so the button takes the focus back when the dialog closes. M7.6 mounts it for owners only, as the
+around the form, so the button takes the focus back when the dialog closes. M7.6 mounts it for stewards only, as the
 `@action` of the coven's People page, so it sits beside the heading on both the Members and
 Invitations tabs (`src/app/(shell)/coven/[slug]/(people)/@action`).
 
 ## Props
 
 `InviteDialogProps` (`types.ts`): `workspaceId`, the coven invited into. The page shows the
-dialog to an owner only; the service is the guard. The form inside the modal takes the same plus
+dialog to a steward only; the service is the guard. The form inside the modal takes the same plus
 `close`, the modal's own close (`InviteFieldsProps`).
 
 ## Contracts
@@ -27,8 +27,8 @@ dialog to an owner only; the service is the guard. The form inside the modal tak
   field the same way, and any other refusal in an alert above it.
 - **Viewer or member, never owner.** The role group is built from a list of two, typed by the
   schema's `InvitableRole` enum, which has no owner value. A line under the group, its
-  `aria-describedby`, says an owner can make them an owner from the members page once they have
-  joined. It starts on Viewer, the role that writes nothing, so an owner who does not look sends the
+  `aria-describedby`, says a steward can make them a steward from the members page once they have
+  joined. It starts on Viewer, the role that writes nothing, so a steward who does not look sends the
   smaller grant.
 - **The role words are the members page's** (`WORKSPACE_ROLE_ACCESS`, `workspaceRoleLabel`), so the
   picker and the page never describe a role two ways.

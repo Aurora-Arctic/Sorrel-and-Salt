@@ -178,11 +178,11 @@ describe('GrimoireList', () => {
       const empty = { status, spells: [], total: 0, position: undefined };
       const { unmount } = render(<List {...props({ ...empty, canCreate: false })} />);
       const state = () => screen.getByRole('status', { name });
-      expect(state()).toHaveTextContent(/\bmember\b/i);
-      expect(state()).toHaveTextContent(/\bowner\b/i);
+      expect(state()).toHaveTextContent(/\bpractitioner\b/i);
+      expect(state()).toHaveTextContent(/\bsteward\b/i);
       unmount();
       render(<List {...props(empty)} />);
-      expect(state()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+      expect(state()).not.toHaveTextContent(/\bpractitioner\b|\bsteward\b/i);
     },
   );
 

@@ -94,7 +94,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## Display names (MB.10)
 
-`usersById` answers a user id with that user's display name and nothing else, for a members list and a row's last editor. A viewer reads the name only of someone who holds or has held a seat in a coven the viewer sits in now: a removed member counts, and a deleted user reads under the name their row last held. Anyone else is `null`, a site admin gets no wider reach, and one query answers a batch. [`auth/display-names.md`](auth/display-names.md)
+`usersById` answers a user id with that user's display name and nothing else, for a members list and a row's last editor. An observer reads the name only of someone who holds or has held a seat in a coven the viewer sits in now: a removed member counts, and a deleted user reads under the name their row last held. Anyone else is `null`, a site admin gets no wider reach, and one query answers a batch. [`auth/display-names.md`](auth/display-names.md)
 
 ## The user list (MB.52)
 
