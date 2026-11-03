@@ -1,5 +1,6 @@
 'use client';
 
+import { FootnoteReferencePlugin } from '@platejs/footnote/react';
 import { insertTable } from '@platejs/table';
 import { upsertLink } from '@platejs/link';
 import { someList, toggleList } from '@platejs/list';
@@ -78,7 +79,10 @@ const BUTTONS: ToolbarButton[] = [
         { at: nextBlockPath(editor) },
       ),
   },
-  { label: 'Footnote', run: (editor) => editor.tf.insert.footnote() },
+  {
+    label: 'Footnote',
+    run: (editor) => editor.getTransforms(FootnoteReferencePlugin).insert.footnote(),
+  },
 ];
 
 /** The dialog that asks for a link's address, and links the words that were selected when it opened. */
