@@ -267,7 +267,11 @@ const CUPBOARD = {
 };
 
 // The way back every entry page has, so the head shows its badge row beside it as the site does.
-const COMPENDIUM_BACK = { href: '/compendium' as Route, label: 'Compendium' };
+const COMPENDIUM_BACK = {
+  href: '/compendium' as Route,
+  label: 'Compendium',
+  also: [{ path: '/admin/compendium', label: 'Admin Compendium' }],
+};
 
 // The head's three lines: the way back with New, the safety
 // badge just right of New; the formal name with the Edit pencil at its end; the name alone.
