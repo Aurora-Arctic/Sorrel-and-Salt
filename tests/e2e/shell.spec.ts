@@ -338,8 +338,8 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
   await signInAgainAs(page, users.admin.id);
   // A width where the bolder current tab tips the count: the compendium
   // page, loaded fresh, fits fewer tabs than the forms page does, whose
-  // tabs all fit with no More. From about 880px to 889px in Chromium.
-  await page.setViewportSize({ width: 884, height: 800 });
+  // tabs all fit with no More. From about 774px to 780px in Chromium.
+  await page.setViewportSize({ width: 777, height: 800 });
   await page.goto('/curator/compendium');
   const fresh = await rowLinks(await fittedAdminNav(page)).count();
 
