@@ -1,5 +1,7 @@
 # Wave 14 — Sweep close-out
 
+**The row lists its finished tasks first, in the order they ran, and its open tasks after them** (the owner's call, 2026-11-03), so the board reads as done work, then the schedule. The placements below give the order each task was planned in, and hold among the open tasks.
+
 **M6.17 is the one deliberate exception to the sweep-task rule.** It is a census, not an enforcer: M6.3 does the enforcing, adopted per PR by each mutating service as it is written. A census of an incomplete set is worthless, so it closes here, where "every mutating workspace service" is finally a finite existing set. **MB.39 moved here from Wave 3**, where it followed MB.38 unstarted: it is CI-only and blocks nothing, so it can move again without consequence. **MB.90 is documentation and tooling** and depends on nothing in the wave; it sits here because the board placed it here, and can move to any wave without consequence. MW.14 is retired (MB.31).
 
 **M10.29 moved here from Wave 10 on 2026-10-13**, the owner's call. It is the msw 3 move. It was on hold from 2026-10-12 because of an upstream bug that broke the database tests; the fix shipped in `@mswjs/interceptors` 0.45.9 and the hold was lifted on 2026-10-30. It is a prerequisite for nothing.
