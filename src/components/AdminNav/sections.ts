@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { KINDS as VALUE_KINDS } from '../GroupedValueList/kinds';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
 import { capitalise } from '../../lib/text';
@@ -90,12 +91,12 @@ export const ADMIN_PAGES = {
     adminOnly: true,
     description:
       'The privacy policy, disclaimer, code of ethics and terms of use: edit a draft, then publish it as a new version.',
-    // One tab per document, in the order the footer lists them; each is that document's editor.
+    // One tab per document, in the order the footer lists them; each is that document's editor. The cast is because typed routes know the address only as `[key]`.
     tabs: [
-      { href: '/keepers/documents/privacy', label: 'Privacy Policy' },
-      { href: '/keepers/documents/disclaimer', label: 'Disclaimer' },
-      { href: '/keepers/documents/code-of-ethics', label: 'Code of Ethics' },
-      { href: '/keepers/documents/terms', label: 'Terms of Use' },
+      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy' },
+      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer' },
+      { href: '/keepers/documents/code-of-ethics' as Route, label: 'Code of Ethics' },
+      { href: '/keepers/documents/terms' as Route, label: 'Terms of Use' },
     ],
   },
 } as const satisfies Record<string, AdminPage>;
