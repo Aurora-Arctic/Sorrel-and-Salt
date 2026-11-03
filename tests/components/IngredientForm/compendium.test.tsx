@@ -681,6 +681,65 @@ describe('IngredientForm on the compendium', () => {
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
     });
 
+    // Regression: an Unknown entry with no formal name, a picked form and a source for its
+    // classification kept Save off after None was chosen.
+    it('saves an Unknown entry with a picked form reclassified as None', async () => {
+      const calls = acceptUpdate();
+      const source = {
+        value: 'Fixture Almanac',
+        link: {
+          id: OTHER_ID,
+          isGlobal: true,
+          kind: 'book' as const,
+          title: 'Fixture Almanac',
+          authors: null,
+          container: null,
+        },
+        locator: '',
+        nameBasis: '' as const,
+      };
+      const { onSaved } = renderForm({
+        entry: {
+          id: ENTRY_ID,
+          values: {
+            ...EMPTY_VALUES,
+            name: 'Testwax',
+            nomenclature: 'unknown',
+            canonicalName: '',
+            description: 'A fixture wax.',
+            references: [{ ...source, supports: ['nomenclature', 'description'] }],
+            variants: [
+              {
+                ...EMPTY_VARIANT,
+                variantId: 'f1e2d3c4-b5a6-4978-8a6b-5c4d3e2f1a0b',
+                form: 'Fixture Wax',
+                formLink: {
+                  id: 'a0b1c2d3-e4f5-4a6b-8c7d-9e0f1a2b3c4d',
+                  name: 'Fixture Wax',
+                  group: null,
+                  icon: null,
+                  description: null,
+                },
+                references: [{ ...source, supports: ['form'] }],
+              },
+            ],
+          },
+        },
+        review: { reviewed: false, shown: true },
+      });
+      openSections('Identity');
+      expect(textbox('Formal Name')).toHaveValue('');
+      expect(button('Save Ingredient')).toBeDisabled();
+
+      choose('Classification', 'None');
+      expect(button('Save Ingredient')).toBeEnabled();
+      press('Save Ingredient');
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ nomenclature: 'none' });
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    });
+
     // An edit renames what exists rather than making another, so a near
     // match warns and holds nothing, and the entry
     // is never its own near match.

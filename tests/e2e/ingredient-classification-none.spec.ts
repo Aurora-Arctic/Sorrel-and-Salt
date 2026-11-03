@@ -106,3 +106,48 @@ test("a coven's own entry reclassified as None saves, as its owner", async ({ pa
     .poll(() => storedIdentity(ingredientId))
     .toEqual({ nomenclature: 'none', canonical_name: null });
 });
+
+// Regression: the seeded Beeswax, Unknown with no formal name, a picked form and a source for its
+// classification, kept Save off after None was chosen.
+test('a seeded Unknown compendium entry reclassified as None saves, as a site admin', async ({
+  page,
+}) => {
+  await signInAs(page, 'unknown-admin@classification-none.test', ['discord'], 'admin');
+  const [seeded] = await withSql(
+    (sql) => sql<{ id: string; picked: number; cited: number }[]>`
+      select i.id,
+        (select count(*)::int from ingredient_variants v
+          where v.ingredient_id = i.id and v.deleted_at is null and v.form_id is not null) as picked,
+        (select count(*)::int from reference_links r
+          where r.ingredient_id = i.id and r.deleted_at is null) as cited
+      from ingredients i
+      where i.name = 'Beeswax' and i.workspace_id is null and i.deleted_at is null
+        and i.nomenclature = 'unknown' and i.canonical_name is null`,
+  );
+  // The precondition: the seed's own shape, Unknown and nameless, with a picked form and a source.
+  expect(seeded).toBeDefined();
+  expect(seeded.picked).toBeGreaterThan(0);
+  expect(seeded.cited).toBeGreaterThan(0);
+
+  await page.goto(`/admin/compendium?edit=${ingredientSlug('Beeswax', null)}`);
+  const dialog = editIngredientDialog(page, 'Beeswax');
+  await expect(dialog).toBeVisible();
+  const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
+  await expect(save).toBeDisabled();
+
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+  const formal = dialog.getByRole('textbox', { name: 'Formal Name' });
+  await expect(formal).toHaveValue('');
+  await dialog.getByRole('combobox', { name: 'Classification' }).click();
+  await page
+    .getByRole('listbox', { name: 'Classification choices' })
+    .getByRole('option', { name: 'None', exact: true })
+    .click();
+  await expect(formal).toBeDisabled();
+
+  await expect(save).toBeEnabled();
+  await save.click();
+  await expect
+    .poll(() => storedIdentity(seeded.id))
+    .toEqual({ nomenclature: 'none', canonical_name: null });
+});
