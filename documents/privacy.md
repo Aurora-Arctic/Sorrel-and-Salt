@@ -40,7 +40,7 @@ To slow down malicious actors, the sign-in routes count requests by network addr
 
 Nearly every row carries four stamps: who created it and when, and who last changed it and when. A row that is deleted gains two more: who deleted it and when. These stamps are how the site shows "edited by" names.
 
-Every change to a site role or to the right to create covens is also written to a ledger that nobody can edit through the site: who changed it, how, when and any note the keeper wrote. The ledger exists so that every change a keeper makes to these rights can be clearly tracked, to prevent admin abuse.
+Every change to a site role or to the right to create covens is also written to a ledger that nobody can edit through the site: who changed it, how, when and any note the keeper wrote. The ledger exists so that every change a keeper makes to these rights can be clearly tracked, to prevent keeper abuse.
 
 ### What a Coven Holds
 
@@ -100,7 +100,7 @@ The record that an email about a document change was sent to you is kept indefin
 
 ### How to Ask for Removal
 
-There is no "delete my account" button yet, and no self-service export. Until those are built, write to the site keepers through the [support form](?support=privacy). You can send one without an account. Say what you want erased, and the site's admin will do it and tell you when it is done.
+There is no "delete my account" button yet, and no self-service export. Until those are built, write to the site keepers through the [support form](?support=privacy). You can send one without an account. Say what you want erased, and a site keeper will do it and tell you when it is done.
 
 You can leave a coven yourself from the coven's page, and a coven's steward can delete the coven. Both are soft deletes.
 
@@ -113,4 +113,4 @@ You can leave a coven yourself from the coven's page, and a coven's steward can 
 
 When the text changes, the date at the top changes with it.
 
-A keeper may also email every account about a change once it is published. Nothing is sent on its own: a keeper chooses whether a change is worth an email, so a small fix may not bring one. The email goes to the verified address on your account. It names the document, says in a line the admin writes what changed, and links to the page; it does not carry the text. When the terms change, it also says you will be asked to agree to them the next time you visit. You cannot turn these emails off. A paused account is still emailed; a deleted one is not.
+A keeper may also email every account about a change once it is published. Nothing is sent on its own: a keeper chooses whether a change is worth an email, so a small fix may not bring one. The email goes to the verified address on your account. It names the document, says in a line the keeper writes what changed, and links to the page; it does not carry the text. When the terms change, it also says you will be asked to agree to them the next time you visit. You cannot turn these emails off. A paused account is still emailed; a deleted one is not.
