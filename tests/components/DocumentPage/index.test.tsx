@@ -82,6 +82,68 @@ describe('DocumentPage', () => {
     expect(screen.getByRole('heading', { level: 4, name: 'Fixture Deep' })).toBeTruthy();
   });
 
+  // A heading's text need not be unique in a document, but an id must be, or the menu's second link lands on the first heading.
+  describe('two headings with the same text', () => {
+    /** Every id on the page that more than one element holds. */
+    function repeatedIds(): string[] {
+      const ids = [...document.querySelectorAll('[id]')].map((element) => element.id);
+      return [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
+    }
+
+    /** Asserts the menu's links named `label` land, in order, on these very headings: equal-looking elements are not enough. */
+    function expectMenuLandsOn(label: string, headings: HTMLElement[]): void {
+      const nav = screen.getByRole('navigation', { name: 'On This Page' });
+      const targets = within(nav).getAllByRole('link', { name: label }).map(targetOf);
+      expect(targets).toHaveLength(headings.length);
+      targets.forEach((target, index) => expect(target, `link ${index + 1}`).toBe(headings[index]));
+    }
+
+    it('gives each its own id, and the menu links each to its own heading', () => {
+      show(
+        [
+          '## Fixture First Group',
+          '### Fixture Scope',
+          'Text.',
+          '## Fixture Second Group',
+          '### Fixture Scope',
+          'Text.',
+        ].join('\n\n'),
+      );
+      const headings = screen.getAllByRole('heading', { level: 3, name: 'Fixture Scope' });
+      // Precondition: both headings are drawn and both are in the menu.
+      expect(headings).toHaveLength(2);
+
+      expectMenuLandsOn('Fixture Scope', headings);
+      expect(repeatedIds()).toEqual([]);
+    });
+
+    it('keeps a body heading named Sources apart from the Sources heading over the footnotes', () => {
+      show(
+        ['## Sources', 'How the fixture chose them.[^one]', '[^one]: Fixture, Author.'].join(
+          '\n\n',
+        ),
+      );
+      const headings = screen.getAllByRole('heading', { level: 2, name: 'Sources' });
+      expect(headings).toHaveLength(2);
+
+      expectMenuLandsOn('Sources', headings);
+      expect(repeatedIds()).toEqual([]);
+    });
+
+    it("keeps a body heading apart from the page's own Earlier Versions heading", () => {
+      show('## Document History\n\nText.', {
+        history: [{ number: 1, publishedAt: DAY, href: '/fixture/versions/1' }],
+      });
+      // Precondition: the page draws its own heading, whose id the body heading's text slugifies to.
+      expect(screen.getByRole('heading', { level: 2, name: 'Earlier Versions' })).toBeTruthy();
+
+      expectMenuLandsOn('Document History', [
+        screen.getByRole('heading', { level: 2, name: 'Document History' }),
+      ]);
+      expect(repeatedIds()).toEqual([]);
+    });
+  });
+
   // Each source is a footnote: its marks link down to its entry in the Sources list, and the entry links back to every mark.
   describe('sources', () => {
     const BODY = [

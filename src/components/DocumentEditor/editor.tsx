@@ -5,6 +5,7 @@ import { type ReactElement, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import ConfirmedAction from '../UserList/confirmed-action';
@@ -74,8 +75,10 @@ const DocumentEditor = ({
   const [revision, setRevision] = useState(openRevision);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [failure, setFailure] = useState<string>();
   const [published, setPublished] = useState<number>();
+  const guard = useDiscardGuard(dirty && !saving && !publishing);
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
   // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from the editor, not `body`,
@@ -110,16 +113,21 @@ const DocumentEditor = ({
   }
 
   async function publish(): Promise<void> {
-    if (dirty) await writeDraft();
-    const { publishDocumentDraft } = await graphqlRequest(PublishDraftDocument, {
-      documentId,
-      expectedRevision: revisionRef.current,
-    });
-    revisionRef.current = null;
-    setRevision(null);
-    setDirty(false);
-    setFailure(undefined);
-    setPublished(publishDocumentDraft.number);
+    setPublishing(true);
+    try {
+      if (dirty) await writeDraft();
+      const { publishDocumentDraft } = await graphqlRequest(PublishDraftDocument, {
+        documentId,
+        expectedRevision: revisionRef.current,
+      });
+      revisionRef.current = null;
+      setRevision(null);
+      setDirty(false);
+      setFailure(undefined);
+      setPublished(publishDocumentDraft.number);
+    } finally {
+      setPublishing(false);
+    }
   }
 
   return (
@@ -159,7 +167,6 @@ const DocumentEditor = ({
           confirmClass="btn btn--caution"
           disabled={revision === null && !dirty}
           send={publish}
-          onSent={() => undefined}
           closeOnSent
         />
         <p className="document-editor__status">
@@ -170,6 +177,7 @@ const DocumentEditor = ({
               : 'Draft saved.'}
         </p>
       </div>
+      {guard.asking && <DiscardQuestion guard={guard} />}
       {failure && <Notice kind="error">{failure}</Notice>}
       {published !== undefined && <Notice kind="success">Published as version {published}.</Notice>}
     </div>

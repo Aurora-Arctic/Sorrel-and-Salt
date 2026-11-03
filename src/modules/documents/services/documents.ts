@@ -26,9 +26,13 @@ async function currentDocument(key: string): Promise<PublishedDocument> {
   };
 }
 
+/** The largest value of the `document_versions.number` integer column. */
+const MAX_VERSION_NUMBER = 2_147_483_647;
+
 async function numberedDocument(key: string, number: number): Promise<PublishedDocument> {
-  // A number that is no positive whole number names no version, so nothing is read for it.
-  if (!Number.isSafeInteger(number) || number < 1) throw new NotFound('Version not found');
+  // A number that is no positive whole number, or past what the integer column holds, names no version, so nothing is read for it.
+  if (!Number.isSafeInteger(number) || number < 1 || number > MAX_VERSION_NUMBER)
+    throw new NotFound('Version not found');
   const document = await findDocumentByKey(key);
   const version = document && (await findPublishedDocumentVersion(document.id, number));
   if (!document || !version?.publishedAt) throw new NotFound('Version not found');
