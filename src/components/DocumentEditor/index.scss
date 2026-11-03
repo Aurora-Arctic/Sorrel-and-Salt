@@ -31,6 +31,7 @@
   // The public page's text size, in a box as wide as the column, on the page's own background so a table's banded rows show.
   min-height: 24rem;
   font-size: type-size('body');
+  padding-inline: 1.125rem;
   background-color: transparent;
 
   &:focus-visible {
