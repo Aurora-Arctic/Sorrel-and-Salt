@@ -426,7 +426,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       // Read back from the server: the new name, both forms, the oil's note its own.
       await page.reload();
       await expect(renamed).toBeFocused();
-      await renamed.getByRole('button', { name: 'Variants', exact: true }).click();
+      await renamed.getByRole('button', { name: 'Forms', exact: true }).click();
       await expect(renamed.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
       await renamed.getByRole('button', { name: 'Edit Oil' }).click();
       const reopenedOil = renamed.getByRole('group', { name: 'Oil', exact: true });

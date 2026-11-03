@@ -6085,3 +6085,4 @@ _Acceptance criteria:_
 - A coven's variants are never rewritten and never block a delete, asserted by row.
 - A deleted variant, or a variant of a deleted entry, neither blocks a delete nor is rewritten.
 - DESIGN.md §5's MB.162 paragraph says the rewrite and the delete check both cover the variants' lists.
+- The compendium's Celestial Body and Zodiac Sign filters, and their facet counts, match an entry whose live variant holds the value, as the Element filter does; a deleted variant's value does not match, asserted by a test that fails before the change.

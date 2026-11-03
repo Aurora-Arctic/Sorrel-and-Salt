@@ -12,7 +12,7 @@ describe('sectionsRestored', () => {
     expect(variants.size).toBe(0);
   });
 
-  it('opens Variants and the variant’s own section for a value inside a variant', () => {
+  it('opens Forms and the variant’s own section for a value inside a variant', () => {
     const { sections, variants } = sectionsRestored([
       'variants.1.description',
       'variants.1.drafts.colors',
@@ -22,7 +22,7 @@ describe('sectionsRestored', () => {
     expect([...(variants.get(1) ?? [])].sort()).toEqual(['correspondences', 'details']);
   });
 
-  it('opens Variants alone for the list itself, and names nothing for a field it does not know', () => {
+  it('opens Forms alone for the list itself, and names nothing for a field it does not know', () => {
     const { sections, variants } = sectionsRestored(['variants', 'nonesuch']);
 
     expect([...sections]).toEqual(['variants']);

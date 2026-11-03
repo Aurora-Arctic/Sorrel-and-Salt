@@ -35,7 +35,7 @@ const DocumentPage = ({
         </p>
         <PageHeader id="document-title" title={title} lede={lede} />
       </div>
-      {entries.length > 0 && <PageNav label="On This Page" entries={entries} />}
+      {entries.length > 0 && <PageNav label="On This Page" entries={entries} collapsible />}
       <div className="document-page__body">
         {content}
         {history && history.length > 0 && (

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import DocumentPage from '@/components/DocumentPage';
 import { slugify } from '@/lib/slugify';
@@ -80,6 +80,25 @@ describe('DocumentPage', () => {
     );
     // The deeper heading is still on the page, just not in the menu.
     expect(screen.getByRole('heading', { level: 4, name: 'Fixture Deep' })).toBeTruthy();
+  });
+
+  // On a phone the menu folds into a disclosure, closed so the page lands on its text (PageNav's
+  // `collapsible`; tests/components/PageNav covers the fold). The environment reports a narrow viewport.
+  it('folds the On This Page menu into a closed disclosure on a narrow viewport, opened by its summary', () => {
+    show('## Fixture Section\n\nFixture text.');
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+
+    const fold = within(nav).getByRole('group');
+    expect(fold).not.toHaveAttribute('open');
+    expect(within(fold).getByRole('link', { name: 'Fixture Section' })).toBeTruthy();
+
+    // The summary has no ARIA role, so it is found as the disclosure group's own toggle. happy-dom
+    // toggles a disclosure before React's listener can cancel it, so the native toggle is cancelled
+    // here, as the component does in a browser, leaving `open` to the component.
+    const summary = fold.querySelector(':scope > summary') as HTMLElement;
+    summary.addEventListener('click', (event) => event.preventDefault());
+    fireEvent.click(summary);
+    expect(fold).toHaveAttribute('open');
   });
 
   // A heading's text need not be unique in a document, but an id must be, or the menu's second link lands on the first heading.

@@ -151,7 +151,7 @@ export async function updateAstrologyValue(
 }
 
 /**
- * Soft-deletes a celestial body or a sign no live compendium entry's list holds (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
+ * Soft-deletes a celestial body or a sign no live compendium entry's list, or live variant's, holds (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin, or a live entry holds the value.
  * @throws {NotFound} no live row of the vocabulary has this id.

@@ -105,7 +105,101 @@
     }
   }
 
+  // On a phone a collapsible menu folds behind its label: a bordered card, as an access card is, whose
+  // label row is the toggle. From a tablet up the card's box is dropped (below).
+  .page-nav__fold {
+    border: 1px solid $hairline;
+    border-radius: radius('surface');
+    background-color: $surface-card;
+  }
+
+  .page-nav__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    min-height: $control-height;
+    padding: space(2) space(4);
+    border-radius: radius('surface');
+    color: $text-primary;
+    cursor: pointer;
+    font-weight: 400;
+    list-style: none;
+    @include theme-transition(background-color);
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &:hover {
+      background-color: $fill-highlight-field;
+    }
+
+    &:focus-visible {
+      @include focus-ring($placement: inset);
+    }
+  }
+
+  // The fold's content slides open and shut by height (grid rows, as useSlide drives it); its entries'
+  // focus ring is inset, as the clipped edge would cut one drawn outside.
+  .page-nav__slide {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--slide-ms, 350ms) ease;
+
+    @include reduced-motion {
+      transition: none;
+    }
+
+    &.page-nav__slide--open,
+    // Before the script runs the browser's own toggle shows the details: nothing may clip them.
+    &.page-nav__slide--static {
+      grid-template-rows: 1fr;
+    }
+  }
+
+  .page-nav__slide-inner {
+    min-height: 0;
+    overflow: hidden;
+
+    a:focus-visible {
+      @include focus-ring($placement: inset);
+    }
+  }
+
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    // The menu stands open from a tablet up, so its fold has no label, card or slide.
+    .page-nav__fold {
+      border: 0;
+      background: none;
+    }
+
+    .page-nav__fold[open] > .page-nav__summary {
+      display: none;
+    }
+
+    .page-nav__slide {
+      grid-template-rows: 1fr;
+      transition: none;
+    }
+
+    .page-nav__slide-inner {
+      overflow: visible;
+    }
+
+    // The server draws the fold closed, so before the script opens it, a browser that can restyle a
+    // closed fold's content shows the menu and hides the label from the first paint.
+    @supports selector(::details-content) {
+      .page-nav__fold::details-content {
+        // stylelint-disable-next-line plugin/use-baseline -- enhancement: the menu waits for the script to open, where unsupported
+        content-visibility: visible;
+      }
+
+      .page-nav__fold > .page-nav__summary {
+        display: none;
+      }
+    }
+
     a {
       justify-content: flex-end;
       text-align: end;
@@ -133,4 +227,10 @@
   .page-nav .page-nav__narrow {
     display: none;
   }
+}
+
+// The chevron turns over while the fold is open, or opening: it stands outside `.page-nav` so the
+// mixin's `<open> &` selector reads `.page-nav__fold… .page-nav__chevron`, not through `.page-nav`.
+.page-nav__chevron {
+  @include disclosure-chevron('.page-nav__fold:is(.is-open, .page-nav__fold--static[open])');
 }
