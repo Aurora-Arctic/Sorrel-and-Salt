@@ -17,9 +17,9 @@ const { covenCardActions } = await import('@/components/CovenCards/actions');
 // The details modal over a list: a summary of the entry, a way through to its full page, and, for whoever may edit it, an Edit that opens the edit modal over it
 // (claude-docs/components/ingredient-entry.md, "The details modal").
 
-const LIST: Route = '/admin/compendium';
+const LIST: Route = '/curator/compendium';
 const PAGE = '/compendium/ingredients/testwort' as Route;
-const EDIT: Route = '/admin/compendium?entry=testwort&edit=testwort';
+const EDIT: Route = '/curator/compendium?entry=testwort&edit=testwort';
 const ENTRY = {
   name: 'Testwort',
   canonicalName: 'Fixtura testalis',

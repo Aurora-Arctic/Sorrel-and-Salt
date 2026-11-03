@@ -1,4 +1,4 @@
-import type { CompendiumSearchParams } from '../../(shell)/admin/compendium/types';
+import type { CompendiumSearchParams } from '../../(shell)/curator/compendium/types';
 
 export interface PublicCompendiumPageProps {
   // A promise in Next 16: awaited before use.

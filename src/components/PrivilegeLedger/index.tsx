@@ -16,7 +16,7 @@ import type {
 } from './types';
 import './index.scss';
 
-// `/admin/privilege-changes`' filter, table and pager. Render-only: the page reads one page
+// `/keepers/privilege-changes`' filter, table and pager. Render-only: the page reads one page
 // of the ledger through the identity service and hands it over
 // (claude-docs/components/privilege-ledger.md). The filter is `filter.tsx`, its one client
 // file.
@@ -43,7 +43,7 @@ function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
   return noMatchText('privilege changes', filters, emptyList('privilege changes'));
 }
 
-/** A named user, linked to their `/admin/users` row where the list has one. */
+/** A named user, linked to their `/keepers/users` row where the list has one. */
 const Person = ({ person }: LedgerPersonProps): ReactElement => {
   if (!person) return <em>Deleted account</em>;
   return person.href ? <a href={person.href}>{person.name}</a> : <span>{person.name}</span>;

@@ -332,7 +332,7 @@ describe('Story 59: one verification mail a minute', () => {
 });
 
 describe('Story 59: the link carries on to where the account was going', () => {
-  const ADMIN_LANDING = '/account/email?verified&next=%2Fadmin';
+  const ADMIN_LANDING = '/account/email?verified&next=%2Fkeepers';
 
   const callbackOf = (link: string) => new URL(link).searchParams.get('callbackURL');
 
@@ -344,7 +344,7 @@ describe('Story 59: the link carries on to where the account was going', () => {
   it('lands a change link on the confirmed view carrying the next it was asked with', async () => {
     const { cookie, before } = await signUpUnverified();
 
-    const link = await changeLink(cookie, OWNER, NEW, '/admin');
+    const link = await changeLink(cookie, OWNER, NEW, '/keepers');
 
     expect(callbackOf(link)).toBe(ADMIN_LANDING);
     expect(landingOf(await follow(link, cookie))).toBe(ADMIN_LANDING);
@@ -362,12 +362,12 @@ describe('Story 59: the link carries on to where the account was going', () => {
 
   it('keeps next beside the error when the change link is refused', async () => {
     const { cookie, before } = await signUpUnverified();
-    const link = await changeLink(cookie, OWNER, NEW, '/admin');
+    const link = await changeLink(cookie, OWNER, NEW, '/keepers');
     expectSignedIn(await signIn('google', { sub: 'g-taker', email: NEW, verified: true }));
 
     const response = await follow(link, cookie);
 
-    expect(landingOf(response)).toBe('/account/email?next=%2Fadmin&error=EMAIL_TAKEN');
+    expect(landingOf(response)).toBe('/account/email?next=%2Fkeepers&error=EMAIL_TAKEN');
     expect(await userRow(OWNER)).toEqual(before);
   });
 
@@ -375,7 +375,7 @@ describe('Story 59: the link carries on to where the account was going', () => {
     const { cookie, before } = await signUpUnverified();
     await outOfCooldown(before.id);
 
-    await sender(cookie).resend(OWNER, '/admin');
+    await sender(cookie).resend(OWNER, '/keepers');
 
     const link = mailedLink();
     expect(callbackOf(link)).toBe(ADMIN_LANDING);

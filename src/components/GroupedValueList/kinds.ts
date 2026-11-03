@@ -6,7 +6,7 @@ import type { GroupedValueListKind } from './types';
 // leans on the heading.
 export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
   category: {
-    path: '/admin/categories',
+    path: '/curator/categories',
     title: 'Categories',
     label: 'Category',
     noun: 'category',
@@ -14,7 +14,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     group: { label: 'Group', plural: 'Groups', param: 'group' },
   },
   form: {
-    path: '/admin/forms',
+    path: '/curator/forms',
     title: 'Forms',
     label: 'Form',
     noun: 'form',
@@ -22,7 +22,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     group: { label: 'Group', plural: 'Groups', param: 'group' },
   },
   deity: {
-    path: '/admin/deities',
+    path: '/curator/deities',
     title: 'Deities',
     label: 'Deity',
     noun: 'deity',
@@ -30,14 +30,14 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     group: { label: 'Tradition', plural: 'Traditions', param: 'tradition' },
   },
   celestialBody: {
-    path: '/admin/celestial-bodies',
+    path: '/curator/celestial-bodies',
     title: 'Celestial Bodies',
     label: 'Celestial Body',
     noun: 'celestial body',
     plural: 'celestial bodies',
   },
   zodiacSign: {
-    path: '/admin/zodiac-signs',
+    path: '/curator/zodiac-signs',
     title: 'Zodiac Signs',
     label: 'Zodiac Sign',
     noun: 'zodiac sign',

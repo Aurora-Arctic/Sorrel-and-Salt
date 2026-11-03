@@ -118,18 +118,18 @@ const ACCEPT_INVITATION = `
   }
 `;
 
-/** Whether `page`'s account reaches the admin area: the layout's nav, or the 403 page. */
+/** Whether `page`'s account reaches the keepers area: the layout's nav, or the 403 page. */
 async function expectAdminArea(page: Page, reached: boolean): Promise<void> {
-  const response = await visit(page, '/admin');
+  const response = await visit(page, '/keepers');
   if (reached) {
     expect(response.status()).toBe(200);
-    await expect(page.getByRole('navigation', { name: 'Admin' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Keepers' })).toBeVisible();
   } else {
     expect(response.status()).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
     ).toBeVisible();
-    await expect(page.getByRole('navigation', { name: 'Admin' })).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: 'Keepers' })).toHaveCount(0);
   }
 }
 
@@ -144,7 +144,7 @@ async function primaryAdminId(page: Page): Promise<string> {
 
 /** The users list narrowed to one address, and that address's row. */
 async function userRow(page: Page, email: string) {
-  const response = await visit(page, `/admin/users?query=${encodeURIComponent(email)}`);
+  const response = await visit(page, `/keepers/users?query=${encodeURIComponent(email)}`);
   expect(response.status()).toBe(200);
   return page.getByRole('row', { name: new RegExp(email.replace(/[.+]/g, '\\$&')) });
 }
@@ -187,13 +187,13 @@ async function chooseRole(
   return question;
 }
 
-/** Invites `email` from /admin/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
+/** Invites `email` from /keepers/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
 async function inviteAdmin(
   page: Page,
   email: string,
   { reason, role = 'Admin' }: { reason?: string; role?: 'Curator' | 'Admin' } = {},
 ): Promise<string> {
-  await visit(page, '/admin/invitations');
+  await visit(page, '/keepers/invitations');
   await page.getByRole('link', { name: 'New Invitation' }).click();
   const dialog = page.getByRole('dialog', { name: 'New Invitation' });
   await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
@@ -451,7 +451,7 @@ test.describe('the primary admin', () => {
       const granteeEmail = address('paused-grantee');
       const { userId: grantee } = await signInAs(page, granteeEmail);
       const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
-      const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
+      const list = `/keepers/users?query=${encodeURIComponent(granteeEmail)}`;
       // The page's statement while paused, and none while open.
       const status = page.getByRole('main').getByRole('status');
 
@@ -545,7 +545,7 @@ test.describe('the primary admin', () => {
       );
       expect(demoted.length).toBeGreaterThan(0);
 
-      const response = await visit(page, '/admin/users?role=admin');
+      const response = await visit(page, '/keepers/users?role=admin');
       expect(response.status()).toBe(200);
       const admins = page.getByRole('row').filter({ has: page.getByRole('cell') });
       await expect(admins).toHaveCount(1);
@@ -613,12 +613,12 @@ test(
     );
 
     // The ledger, by its tab on the People page beside Users.
-    await visit(page, '/admin/users');
+    await visit(page, '/keepers/users');
     const tab = page
       .getByRole('navigation', { name: 'People' })
       .getByRole('link', { name: 'Privilege Changes' });
     await tab.click();
-    await expect(page).toHaveURL(/\/admin\/privilege-changes$/);
+    await expect(page).toHaveURL(/\/keepers\/privilege-changes$/);
     await expect(tab).toHaveAttribute('aria-current', 'page');
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     // Every user's changes, not only this subject's: the seed's and each
@@ -644,7 +644,7 @@ test(
     }
     await history.click();
     await expect(page).toHaveURL(
-      `/admin/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
+      `/keepers/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
     );
     await expect(
       page.getByRole('search', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
@@ -709,7 +709,7 @@ test(
     await privilege.click();
     await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
     await expect(page).toHaveURL(
-      `/admin/privilege-changes?query=${encodeURIComponent(part)}&privilege=create_workspace`,
+      `/keepers/privilege-changes?query=${encodeURIComponent(part)}&privilege=create_workspace`,
     );
     await expect(rows).toHaveCount(1);
     await expect(rows.first().getByRole('cell').nth(1)).toHaveText('Ledger Fixturewort');
@@ -729,7 +729,7 @@ test(
 
     // The subject, a user again, is refused the ledger it has just been shown in.
     await signInAgainAs(page, subject);
-    const refused = await visit(page, '/admin/privilege-changes');
+    const refused = await visit(page, '/keepers/privilege-changes');
     expect(refused.status()).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
@@ -744,7 +744,7 @@ test(
   async ({ page }) => {
     const invited = address('invited');
     await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
-    await visit(page, '/admin/invitations');
+    await visit(page, '/keepers/invitations');
 
     const section = page.getByRole('region', { name: 'Admin Invitations' });
     // New Invitation is the tab's action, beside the page's heading.
@@ -772,13 +772,13 @@ test(
     const token = path.split('/').pop()!;
     expect(await page.content()).not.toContain(token);
     await assertNoAccessibilityViolations(page);
-    await visit(page, '/admin/invitations');
+    await visit(page, '/keepers/invitations');
     await expect(row).toBeVisible();
     expect(await page.content()).not.toContain(token);
 
     // A user is refused the page the admin has just used.
     await signInAs(page, address('not-an-admin'));
-    const refused = await visit(page, '/admin/invitations?invite');
+    const refused = await visit(page, '/keepers/invitations?invite');
     expect(refused.status()).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
@@ -788,7 +788,7 @@ test(
 );
 
 test(
-  'an invitation is accepted only by an account that has proved the invited address, which then lands on /admin as an admin',
+  'an invitation is accepted only by an account that has proved the invited address, which then lands on /keepers as an admin',
   { tag: '@story-62' },
   async ({ page, browser, baseURL }) => {
     const invited = address('invitee');
@@ -851,13 +851,13 @@ test(
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
     await accept.click();
-    await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.getByRole('heading', { level: 1, name: 'Admin' })).toBeVisible();
+    await expect(page).toHaveURL(/\/keepers$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Keepers' })).toBeVisible();
     await expectAdminArea(page, true);
 
     // The ledger records both grants as the invitation's, made by the
     // invitee, with the inviting admin's reason.
-    await visit(page, `/admin/privilege-changes?query=${encodeURIComponent(invited)}`);
+    await visit(page, `/keepers/privilege-changes?query=${encodeURIComponent(invited)}`);
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     await expect(rows).toHaveCount(2);
     const changes = await Promise.all(
@@ -889,7 +889,7 @@ test(
 // The same invitation, to the curator role. The acceptance is the
 // admin's above; this proves what accepting it grants, and what it does not.
 test(
-  'an invitation to the curator role lands its invitee on /admin with the curation pages and no People, both grants in the ledger',
+  'an invitation to the curator role lands its invitee on /curator with the curation pages, and Keepers without People, both grants in the ledger',
   { tag: '@story-62' },
   async ({ page }) => {
     const invited = address('curator-invitee');
@@ -900,16 +900,16 @@ test(
     await rename(invitee, 'Curator Fixturewort');
     await visit(page, path);
     await page.getByRole('button', { name: 'Accept Invitation' }).click();
-    await expect(page).toHaveURL(/\/admin$/);
-    await expectAdminArea(page, true);
-    const nav = page.getByRole('navigation', { name: 'Admin' });
+    await expect(page).toHaveURL(/\/curator$/);
+    const nav = page.getByRole('navigation', { name: 'Curator' });
     await expect(nav.getByRole('link', { name: 'Compendium', exact: true })).toBeVisible();
+    await expectAdminArea(page, true);
     await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
-    expect((await visit(page, '/admin/users')).status()).toBe(403);
+    expect((await visit(page, '/keepers/users')).status()).toBe(403);
 
     // The ledger is People's, so the inviting admin reads it.
     await signInAgainAs(page, admin);
-    await visit(page, `/admin/privilege-changes?query=${encodeURIComponent(invited)}`);
+    await visit(page, `/keepers/privilege-changes?query=${encodeURIComponent(invited)}`);
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     await expect(rows).toHaveCount(2);
     const changes = await Promise.all(
@@ -966,12 +966,12 @@ test(
     await signInAgainAs(page, accounts[usedEmail]);
     await visit(page, used);
     await page.getByRole('button', { name: 'Accept Invitation' }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    await expect(page).toHaveURL(/\/keepers$/);
     const usedReason = await expectInvitationRefused(page, used);
 
     // Withdrawn: the admin revokes it from the list after confirming.
     await signInAgainAs(page, admin);
-    await visit(page, '/admin/invitations');
+    await visit(page, '/keepers/invitations');
     const section = page.getByRole('region', { name: 'Admin Invitations' });
     await section
       .getByRole('button', { name: `Revoke the invitation to ${withdrawnEmail}` })

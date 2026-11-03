@@ -500,12 +500,12 @@ a name with no break in it breaks anywhere.
 
 | Dialog                                     | Eyebrow                               | Qualifier   |
 | ------------------------------------------ | ------------------------------------- | ----------- |
-| `/admin/compendium?edit=`, an entry's page | Edit Ingredient                       | Formal name |
-| `/admin/categories`, `forms`               | Edit Category, Edit Form              | —           |
-| `/admin/deities`                           | Edit Deity                            | Tradition   |
-| `/admin/celestial-bodies`, `zodiac-signs`  | Edit Celestial Body, Edit Zodiac Sign | —           |
-| `/admin/category-groups`, `form-groups`    | Edit Category Group, Edit Form Group  | —           |
-| `/admin/deity-traditions`                  | Edit Tradition                        | —           |
+| `/curator/compendium?edit=`, an entry's page | Edit Ingredient                       | Formal name |
+| `/curator/categories`, `forms`               | Edit Category, Edit Form              | —           |
+| `/curator/deities`                           | Edit Deity                            | Tradition   |
+| `/curator/celestial-bodies`, `zodiac-signs`  | Edit Celestial Body, Edit Zodiac Sign | —           |
+| `/curator/category-groups`, `form-groups`    | Edit Category Group, Edit Form Group  | —           |
+| `/curator/deity-traditions`                  | Edit Tradition                        | —           |
 
 ## A title with its own end
 
@@ -660,7 +660,7 @@ destination by name, the compendium first (`add-ingredient-menu.tsx`, a
 `MenuButton` with the chevron as its icon). The default is, on `/admin/*`, the compendium for a curator;
 otherwise the coven the address names, else the first coven they may write to.
 Choosing the compendium is a `navigate` (`usePendingNavigation`) to
-`/admin/compendium?new=ingredient-compendium` (the admin layout’s route-modal provider sits
+`/curator/compendium?new=ingredient-compendium` (the admin layout’s route-modal provider sits
 below the shell, so the button cannot open that dialog itself, and the page draws it for a
 direct request). A coven’s dialog is opened by the page’s address too (the owner’s call,
 2026-10-18), with one form on every page in the shell, admin pages included (the owner’s
@@ -671,7 +671,7 @@ call, 2026-10-28):
 | `ingredient-coven-<slug>` | Add Ingredient for the coven with that slug, on any page in the shell      |
 | `ingredient`              | Add Ingredient for the default coven                                       |
 | none (a bare `?new`)      | Off the admin pages, the same as `ingredient`; on them, the page’s own add |
-| `ingredient-compendium`   | The compendium’s New Entry, on `/admin/compendium`                         |
+| `ingredient-compendium`   | The compendium’s New Entry, on `/curator/compendium`                         |
 | `spell-<slug>`            | That coven’s New Spell ([`spell-builder.md`](spell-builder.md))            |
 | `spell`                   | New Spell for the grimoire the page is on                                  |
 
@@ -726,7 +726,7 @@ every admin page's add and edit modal takes, and the spell builder's, under
 fixed place (M9.18). It shows its `content` when the address opens a modal, a
 skeleton under the pressed row's head while a press is on its way
 ("Opening at once"), and nothing otherwise. Eight wrappers under
-`src/app/(shell)/admin/` each wrote the same lines until MB.115, and the celestial bodies and
+`src/app/(shell)/curator/` each wrote the same lines until MB.115, and the celestial bodies and
 zodiac signs' one handed the navigation straight to its form, so a save there
 skipped the fade.
 
@@ -768,8 +768,8 @@ at once, with its head over a skeleton, the way a filter shows it is loading.
 The form arrives in the same dialog.
 
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
-  mounted in `src/app/(shell)/admin/layout.tsx`, and by `IngredientEntry` when it
-  is given `edit` (M8.19; the two entry routes have no layout one), and by the two pages whose lists open a details modal outside `/admin`, `/compendium` and a coven's Ingredients (M8.17, M12.5). It keeps the heading of the
+  mounted in `src/app/(shell)/keepers/layout.tsx`, and by `IngredientEntry` when it
+  is given `edit` (M8.19; the two entry routes have no layout one), and by the two pages whose lists open a details modal outside `/curator`, `/keepers`, `/compendium` and a coven's Ingredients (M8.17, M12.5). It keeps the heading of the
   modal just pressed and navigates through `usePendingNavigation`
   (`src/lib/navigation/`), which runs `router.push(href)` inside a React
   transition (a call that marks a change as in progress until it finishes);
@@ -784,8 +784,8 @@ The form arrives in the same dialog.
   button, is the browser's (a new tab or window), and so is a press before
   the page's script has loaded: the link still works as a link. Outside a
   provider the hook returns nothing, and the link stays plain. `EditLink`
-  ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/(shell)/admin/add-action.tsx`)
-  and New Invitation all use it, and so does each name on `/admin/users`, which
+  ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/(shell)/curator/add-action.tsx`)
+  and New Invitation all use it, and so does each name on `/keepers/users`, which
   opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
   So does Edit on an ingredient's own page, which opens the edit modal over
   that page ([`ingredient-entry.md`](ingredient-entry.md), "Edit").

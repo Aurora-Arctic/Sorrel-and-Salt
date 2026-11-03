@@ -5,7 +5,7 @@ import type { GroupListKind } from './types';
 // links, form, page and nav's tabs all read it, so a new kind is an entry here.
 export const KINDS: Record<GroupKind, GroupListKind> = {
   category: {
-    path: '/admin/category-groups',
+    path: '/curator/category-groups',
     title: 'Category Groups',
     label: 'Category Group',
     noun: 'group',
@@ -14,7 +14,7 @@ export const KINDS: Record<GroupKind, GroupListKind> = {
     holds: 'category',
   },
   form: {
-    path: '/admin/form-groups',
+    path: '/curator/form-groups',
     title: 'Form Groups',
     label: 'Form Group',
     noun: 'group',
@@ -23,7 +23,7 @@ export const KINDS: Record<GroupKind, GroupListKind> = {
     holds: 'form',
   },
   tradition: {
-    path: '/admin/deity-traditions',
+    path: '/curator/deity-traditions',
     title: 'Deity Traditions',
     label: 'Tradition',
     noun: 'tradition',

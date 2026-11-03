@@ -26,7 +26,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     const links: string[] = [];
 
     await test.step('the admin mints a sheet of nine, downloads the PDF and sees one batch', async () => {
-      await page.goto('/admin/invitation-cards');
+      await page.goto('/keepers/invitation-cards');
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
@@ -96,7 +96,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
 
     await test.step('the batch counts one accepted, and the admin revokes the rest', async () => {
       await signInAgainAs(page, adminId);
-      await page.goto('/admin/invitation-cards');
+      await page.goto('/keepers/invitation-cards');
       const batch = page
         .getByRole('row')
         .filter({ has: page.getByRole('button', { name: /^Revoke Batch / }) });
@@ -109,17 +109,17 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
         .click();
       await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(0);
 
-      await page.goto('/admin/card-sign-ups');
+      await page.goto('/keepers/card-sign-ups');
       await expect(page.getByRole('row').filter({ hasText: 'Fixture Person' })).toHaveCount(1);
 
       // The name opens the account's modal on this page, and Close returns to the list.
       await page.getByRole('link', { name: 'Fixture Person' }).click();
       const account = page.getByRole('dialog', { name: /Fixture Person/ });
       await expect(account).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/card-sign-ups\?user=/);
+      await expect(page).toHaveURL(/\/keepers\/card-sign-ups\?user=/);
       await account.getByRole('button', { name: 'Close' }).click();
       await expect(account).toBeHidden();
-      await expect(page).toHaveURL(/\/admin\/card-sign-ups$/);
+      await expect(page).toHaveURL(/\/keepers\/card-sign-ups$/);
     });
 
     await test.step('the revoked card’s link is refused as withdrawn', async () => {

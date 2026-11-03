@@ -4,7 +4,7 @@ import { NO_FILTER } from '../../../.storybook/compendium-fixtures';
 import { FIXTURE_EDIT } from '../../../.storybook/fixtures';
 import { useSteps } from '../../../.storybook/press';
 import { AdminFrame } from '../../../.storybook/admin-frame';
-import AddAction from '../../app/(shell)/admin/add-action';
+import AddAction from '../../app/(shell)/curator/add-action';
 import CompendiumList from '.';
 import PageHeader from '../PageHeader';
 import { slugify } from '../../lib/slugify';
@@ -24,8 +24,8 @@ import {
 } from '@/modules/ingredients/schema/ingredient-enums';
 
 // Render-only; behaviour is asserted in tests/components/CompendiumList. The
-// filter reaches `/admin/compendium`, which the workshop does not serve. Each story
-// is the page from `src/app/(shell)/admin/compendium/page.tsx` in `AdminFrame`.
+// filter reaches `/curator/compendium`, which the workshop does not serve. Each story
+// is the page from `src/app/(shell)/curator/compendium/page.tsx` in `AdminFrame`.
 const meta = {
   title: 'Ingredients / Compendium List',
 } satisfies Meta;

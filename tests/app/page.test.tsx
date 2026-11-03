@@ -60,12 +60,20 @@ describe('the / page', () => {
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
   });
 
-  it('continues a signed-in admin to the admin area', async () => {
+  it('continues a signed-in admin to the keepers area', async () => {
     getSession.mockResolvedValue({ userId: USER_ID, role: 'admin' });
 
     render(await HomePage());
 
-    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/keepers');
+  });
+
+  it('continues a signed-in curator to the curator area', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'curator' });
+
+    render(await HomePage());
+
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/curator');
   });
 
   // Into the coven itself, never via the /coven landing's redirect.

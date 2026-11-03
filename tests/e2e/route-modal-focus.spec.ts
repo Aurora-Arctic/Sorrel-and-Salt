@@ -15,7 +15,7 @@ test('a dialog opened by a press and closed by Back gives the focus back to its 
   page,
 }) => {
   await signInAs(page, 'back@route-modal-focus.test', ['discord'], 'admin');
-  await page.goto('/admin/categories?query=Protection');
+  await page.goto('/curator/categories?query=Protection');
   const link = page.getByRole('link', { name: 'Edit Protection', exact: true });
 
   await link.click();
@@ -26,7 +26,7 @@ test('a dialog opened by a press and closed by Back gives the focus back to its 
   await page.goBack();
 
   await expect(dialog).toHaveCount(0);
-  await expect(page).toHaveURL(/\/admin\/categories\?query=Protection$/);
+  await expect(page).toHaveURL(/\/curator\/categories\?query=Protection$/);
   await expect(link).toBeFocused();
 });
 
@@ -34,7 +34,7 @@ test("a dialog reached by a pasted address gives the focus to the page's heading
   page,
 }) => {
   await signInAs(page, 'pasted@route-modal-focus.test', ['discord'], 'admin');
-  await page.goto('/admin/categories?edit=protection');
+  await page.goto('/curator/categories?edit=protection');
   const dialog = page.getByRole('dialog', EDIT);
   await expect(dialog.getByRole('textbox', { name: 'Name' })).toBeFocused();
 

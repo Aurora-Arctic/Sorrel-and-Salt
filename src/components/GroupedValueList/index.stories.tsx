@@ -11,7 +11,7 @@ import { groupedValuesHref } from './href';
 import type { GroupedValueListFilter } from './types';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueList.
-// The filter reaches the admin pages (`/admin/categories` and the rest),
+// The filter reaches the admin pages (`/curator/categories` and the rest),
 // which the workshop does not serve.
 const meta = {
   title: 'Admin / Grouped Value List',
@@ -88,13 +88,13 @@ const deity = (name: string, groupName: string, description: string) => {
 
 // Paging, narrowing, no-match and empty states are the same for every kind, so
 // only the categories show them; the other kinds show what differs. The
-// Categories tab as `/admin/categories` draws it, with the shell and admin row.
+// Categories tab as `/curator/categories` draws it, with the shell and admin row.
 const defaultNode = (
   <AdminTabbedFrame
     shell
     page="categories"
     action={
-      <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
+      <Link className="btn btn--solid" href={'/curator/categories?new' as Route}>
         Add Category
       </Link>
     }
@@ -236,7 +236,7 @@ const CategoriesPage = () => (
   <AdminTabbedFrame
     page="categories"
     action={
-      <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
+      <Link className="btn btn--solid" href={'/curator/categories?new' as Route}>
         Add Category
       </Link>
     }

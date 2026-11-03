@@ -10,8 +10,8 @@ answer.
 | `requireSession()` (secure)                          | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page                                                  |
 | `requireSignedIn()`, the shell                       | `src/lib/request-session.ts` | The secure check, without the email check        | The same redirect, from the shell layout                                          |
 | Proxy, `/workshop/*` only                            | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin                                              |
-| `requireCuratorSession()`, `/admin/*` curation pages | `src/lib/request-session.ts` | The secure check, then `assertCurator()`         | The redirect, or a 403 page for a user (["The curator guard"](admin-guard.md))    |
-| `requireAdminSession()`, `/admin/*` people pages     | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-admin (["The admin guard"](admin-guard.md)) |
+| `requireCuratorSession()`, `/curator/*` pages and `/keepers/support` | `src/lib/request-session.ts` | The secure check, then `assertCurator()`         | The redirect, or a 403 page for a user (["The curator guard"](admin-guard.md))    |
+| `requireAdminSession()`, `/keepers` people pages      | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-admin (["The admin guard"](admin-guard.md)) |
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
@@ -101,10 +101,10 @@ a link into the shell from outside it (`/`'s Continue to `/coven`, say) left
 the browser refetching the email page about every 80 ms, without end. A
 full page load settled, because the server answers it with a 307 before
 anything is drawn. Thrown by the page instead, the redirect settles both
-ways. A layout further down may still throw it: `/admin`'s does, through
-`requireCuratorSession()`, and the same link into `/admin` settles. The
+ways. A layout further down may still throw it: `/curator`'s and `/keepers`'s do, through
+`requireCuratorSession()`, and the same link into `/curator` or `/keepers` settles. The
 difference we can see is that the email page sits beneath the shell layout
-and not beneath `/admin`'s. `tests/e2e/account.spec.ts` follows both
+and not beneath theirs. `tests/e2e/account.spec.ts` follows both
 links. What it costs: the shell layout no longer stops an unverified account
 on a full load, so a page directly in the shell calls `requireSession()`
 itself — it must anyway, since a layout does not re-run on client-side
@@ -122,7 +122,7 @@ navigation.
   (`undefined`), because which landing then applies is the role's, and only
   the callback knows the role once any promotion has run.
 - **With no return path, the landing is the role's** (MB.113). A verified
-  curator or admin lands on `/admin`, `ADMIN_LANDING` (M11.20); everyone else on `/coven`,
+  admin lands on `/keepers`, `ADMIN_LANDING`, and a curator on `/curator`, `CURATOR_LANDING` (M11.20); everyone else on `/coven`,
   `POST_SIGN_IN_LANDING`, the post-sign-in landing M2.8 builds — not `/`:
   someone who has just signed in has been through the front door already
   ([`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md)).
@@ -136,9 +136,9 @@ navigation.
   callback's after-hook reads the flag back with `getOAuthState()` and, for a
   verified row, replaces the endpoint's redirect with the landing for the role
   held after `promotePrimaryAdmin` — so the primary admin promoted at this very
-  sign-in lands on `/admin`. The flag is client-supplied, as every
+  sign-in lands on `/keepers` or `/curator`. The flag is client-supplied, as every
   `additionalData` key is, and trusted accordingly: it chooses between two
-  landings the account may open anyway, and `/admin`'s guard is the role.
+  landings the account may open anyway, and the area's guard is the role.
   A non-admin who is already in a coven is sent into its page directly
   (`signedInLanding` in `src/lib/landing.ts`, the first coven the switcher
   lists), not to `/coven`
@@ -156,7 +156,7 @@ navigation.
   bare on the confirmed view: its Continue takes the role's landing too, read
   when the page renders, after the link has promoted the primary admin (["The
   email page"](admin-bootstrap.md#the-email-page-mb54)). `/`'s Continue offers a signed-in visitor the same landing,
-  so a curator's or an admin's front door leads to `/admin` too
+  so a curator's or an admin's front door leads to `/keepers` or `/curator` too
   ([`components/welcome.md`](../components/welcome.md)). The helpers are shared
   with the tests' OAuth harness, whose `signIn` with no destination is
   `SignInPanel`'s sign-in with none.

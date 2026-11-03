@@ -5,8 +5,8 @@ address: the page's `h1` with a row of links, one per tab, drawn as small
 pills beside it on the same line, the open tab's action at the line's end, and
 the open tab's content beneath. On the owner's call after MB.115's design review, each admin
 list shares a page with the group list that organises it: the Categories page
-has a Categories tab at `/admin/categories` and a Groups tab at
-`/admin/category-groups`. Every admin page but the compendium is one
+has a Categories tab at `/curator/categories` and a Groups tab at
+`/curator/category-groups`. Every admin page but the compendium is one
 ([`admin-nav.md`](admin-nav.md) tables them).
 
 ## Props and parts
@@ -43,8 +43,8 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
 - **Pressing a tab does not change the page.** On the admin pages a route
   group, a folder in parentheses that adds nothing to the address (Next's
   "Route Groups"), holds the page's tabs, and its `layout.tsx` renders this
-  component through `tabbedLayout(key)` (`src/app/(shell)/admin/tabbed-layout.tsx`, over
-  `ADMIN_PAGES`): `src/app/(shell)/admin/(categories)/layout.tsx` is one line around `categories/` and
+  component through `tabbedLayout(key)` (`src/app/(shell)/curator/tabbed-layout.tsx`, over
+  `ADMIN_PAGES`): `src/app/(shell)/curator/(categories)/layout.tsx` is one line around `categories/` and
   `category-groups/`. A layout stays mounted while the address moves between
   its child routes, so the heading and the tab row stay put and only the
   action and the content swap.
@@ -58,7 +58,7 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
   is unchanged. They fall in the order heading, pills, action. Each route group's layout takes the
   action from an `@action` slot, a Next parallel route
   (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/parallel-routes.md`):
-  `src/app/(shell)/admin/(categories)/@action/categories/page.tsx` renders Add
+  `src/app/(shell)/curator/(categories)/@action/categories/page.tsx` renders Add
   Category beside `categories/page.tsx`'s list, and so on, one slot page per
   tab. A slot page is a page, so it renders on the server with the rest of a
   direct request, and Next renders it again on every client-side navigation
@@ -72,7 +72,7 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
   `GroupAction`, beside `ValuePage` and `GroupPage`, reading the same
   address the same way, so the Add keeps the list's filter and cursor. Pause
   Admin Changes reads the pause through a per-request cache the Users page
-  shares (`src/app/(shell)/admin/(people)/pause-state.ts`), so it is read once.
+  shares (`src/app/(shell)/keepers/(people)/pause-state.ts`), so it is read once.
   New Invitation is a link to `?invite`, which opens its form over the list
   ([`admin-invitations.md`](admin-invitations.md)).
 - **A direct request renders the whole page on the server** (the owner's
@@ -109,7 +109,7 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
   draws only the heading and the tabs, both from `ADMIN_PAGES`
   (`src/components/AdminNav/sections.ts`). A layout does not re-run on a
   tab press, so a guard there would add nothing; the guard stays in
-  `src/app/(shell)/admin/layout.tsx` and every page
+  `src/app/(shell)/keepers/layout.tsx` and every page
   ([`auth/admin-guard.md`](../auth/admin-guard.md)).
 - **A filter and the pager show the same loading state, within the tab**
   (the owner's call at MB.115's review). Each list's
@@ -130,7 +130,7 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
   (M10.11). It looks like a small group of pills, and is still a nav: a
   look does not change what pressing a tab does. So `tab-links.tsx` is the
   one client part; the rest renders on the server.
-- **Each tab names itself in its `page.tsx` `metadata.title`** ("Category Groups"); `src/app/(shell)/admin/layout.tsx`
+- **Each tab names itself in its `page.tsx` `metadata.title`** ("Category Groups"); `src/app/(shell)/keepers/layout.tsx`
   sets `title.template`, so the tab shows "Category Groups | Admin | Sorrel & Salt".
 
 ## Styling
@@ -260,7 +260,7 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
 `Layout / Tabbed Page`: the People page in the admin layout's frame, the nav in
 its context row above, with its Invitations tab open and the pills beside the heading, New Invitation at the
-end of the line, as `/admin/invitations` draws it. `States`, with a control that chooses Invitations Tab; Privilege Changes Tab, on Privilege Changes, the last
+end of the line, as `/keepers/invitations` draws it. `States`, with a control that chooses Invitations Tab; Privilege Changes Tab, on Privilege Changes, the last
 tab, with no action; Add Action Label And Plus; Single Tab; and Loading A Filtered Tab, Users on its way: the action and the row greyed out, the
 pill moved to Users in its pending look, over its skeleton with the filter row; and Loading An Unfiltered Tab, the skeleton without the
 filter row. `AddActionAt600`, `AddActionAt382`, `LoadingAt375` and `PrivilegeChangesAt375` are pinned to a width. Hover, focus and the pressed look are real input, so no story
@@ -290,7 +290,7 @@ press is not intercepted. Where the pill and the scroll land is layout,
 which happy-dom has none of, so the workshop's screenshots and measurements
 show them. `tests/components/AdminNav/index.test.tsx` checks a page's nav entry
 is current on each of its tabs. The page tests render each tab's slot page
-beside its page, as the layout does: `tests/app/(shell)/admin/value-page.test.tsx`
+beside its page, as the layout does: `tests/app/(shell)/curator/value-page.test.tsx`
 and `group-page.test.tsx` find the Add keeping the filter and cursor,
 `(people)/users/page.test.tsx` the switch, and
 `(people)/invitations/page.test.tsx` New Invitation and its `?invite`. How

@@ -1,6 +1,6 @@
 # DocumentEditor
 
-`src/components/DocumentEditor/` — the admin's editor for one site document, at `/admin/documents/[key]`. The text is drawn as the public page draws it (`DocumentPage`'s `document-page__body` styles), and an admin edits it in place as rich text. Admin only: the route calls `requireAdminSession()`, and the GraphQL mutations end at the same service, which is the guard.
+`src/components/DocumentEditor/` — the admin's editor for one site document, at `/keepers/documents/[key]`. The text is drawn as the public page draws it (`DocumentPage`'s `document-page__body` styles), and an admin edits it in place as rich text. Admin only: the route calls `requireAdminSession()`, and the GraphQL mutations end at the same service, which is the guard.
 
 ## What it does
 

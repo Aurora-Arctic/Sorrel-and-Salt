@@ -4,7 +4,7 @@ import PageHeader from '../PageHeader';
 import './index.scss';
 
 // The body of `src/app/(shell)/forbidden.tsx`: what a signed-in non-admin sees at
-// `/admin`. It says why and offers the way back — never who the admins are or
+// the keepers pages. It says why and offers the way back — never who the admins are or
 // a way to ask them (claude-docs/components/not-authorized.md).
 
 const NotAuthorized = (): ReactElement => (

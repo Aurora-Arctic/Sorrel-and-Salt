@@ -293,7 +293,7 @@ test.describe('creating a coven', () => {
         role: 'admin',
       });
 
-      await page.goto('/admin');
+      await page.goto('/keepers');
       // Below the tablet width the bar's site links are hidden and move into
       // the account menu's panel, so a phone opens the menu to reach Your Coven.
       if (isMobile) {

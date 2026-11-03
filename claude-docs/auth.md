@@ -78,7 +78,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The admin guard (M5.4)
 
-`requireAdminSession()`, called by every people page under `/admin`, is `requireSession()` then `assertSiteAdmin()`; `requireCuratorSession()`, called by the `/admin` layout and every curation page, is `requireSession()` then `assertCurator()`, which a curator or an admin passes (M11.20). A signed-out visitor goes to sign-in and anyone else refused gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
+`requireAdminSession()`, called by every People and Invitations page under `/keepers`, is `requireSession()` then `assertSiteAdmin()`; `requireCuratorSession()`, called by the `/curator` and `/keepers` layouts and every curation page, is `requireSession()` then `assertCurator()`, which a curator or an admin passes (M11.20). A signed-out visitor goes to sign-in and anyone else refused gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
 
 ## The coven guard (M6.10)
 
@@ -98,7 +98,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The user list (MB.52)
 
-`/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no access to any workspace's contents, and shows a user's covens by name and role in a modal (M9.19). [`auth/admin-users.md`](auth/admin-users.md)
+`/keepers/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no access to any workspace's contents, and shows a user's covens by name and role in a modal (M9.19). [`auth/admin-users.md`](auth/admin-users.md)
 
 ### The user modal (M9.19)
 

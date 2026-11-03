@@ -215,7 +215,7 @@ The finders:
 - **`findPendingWorkspaceInvitationPage(membership, page)`**, the members
   page's pending list (M7.6), which since M10.34 also holds the declined
   invitations not yet removed, and **`findPendingSiteInvitationPage(admin, filter, page)`**,
-  `/admin/invitations`' (MB.70): each tier's pending rows under its own proof.
+  `/keepers/invitations`' (MB.70): each tier's pending rows under its own proof.
   The workspace's pages newest first as the site tier's does, by the same
   order, through `findPageInScope` under the proof's `workspace_id`, and
   **`findPendingWorkspaceInvitationCount(membership, start)`** counts it for
@@ -263,7 +263,7 @@ M7.3, M7.6), and `identity`'s `createAdminInvitation` /
 paused (MB.70). One accept service in `identity`, `acceptInvitation(session,
 token)`, adds the membership and sets `canCreateWorkspace` on a workspace
 row, and grants admin on a site row; one route, `/invite/[token]`, lands in
-the workspace or on `/admin` by tier (M7.5, MB.70). The accept reads
+the workspace or on `/keepers` by tier (M7.5, MB.70). The accept reads
 MB.62's open pause under the site-tier invitation itself, since the invitee
 holds no `SiteAdmin` proof: `findOpenAdminRoleChangePause` takes either. How
 MB.70 built the site tier's half is

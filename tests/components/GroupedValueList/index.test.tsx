@@ -14,13 +14,13 @@ import type { FilterFormSubject, GroupedValueListSubject } from '../../support/t
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A curated vocabulary's filter, table and pager (`/admin/categories`, `/admin/forms`, `/admin/deities`): each value with its group, an Edit link opening it in the page's modal, and the filter that narrows them,
+// A curated vocabulary's filter, table and pager (`/curator/categories`, `/curator/forms`, `/curator/deities`): each value with its group, an Edit link opening it in the page's modal, and the filter that narrows them,
 // plus the flat celestial bodies and signs with no group (claude-docs/components/grouped-value-list.md). The kinds share every behaviour, so it runs on the deities, whose group goes by its own name; the others get only what they change, their page and their group's parameter.
 // Paging is Pager's, and the filter's spinner and its reset to the filter shown are CompendiumList's.
 
 const DEITIES: GroupedValueListSubject = {
   kind: 'deity',
-  path: '/admin/deities',
+  path: '/curator/deities',
   filterName: 'Filter Deities',
   groupLabel: 'Tradition',
   groupParam: 'tradition',
@@ -159,9 +159,9 @@ describe('GroupedValueList', () => {
     });
 
     it.each([
-      { kind: 'category', path: '/admin/categories', group: 'group=g&' },
+      { kind: 'category', path: '/curator/categories', group: 'group=g&' },
       // A flat kind has no group to write.
-      { kind: 'celestialBody', path: '/admin/celestial-bodies', group: '' },
+      { kind: 'celestialBody', path: '/curator/celestial-bodies', group: '' },
     ] as const)('addresses the $kind page, its group as it names one', (other) => {
       expect(groupedValuesHref(other.kind, { query: 'q', group: 'g', after: 'a' }, 'new')).toBe(
         `${other.path}?query=q&${other.group}after=a&new`,

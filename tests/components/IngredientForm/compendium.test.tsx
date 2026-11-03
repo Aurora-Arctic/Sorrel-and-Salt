@@ -196,7 +196,7 @@ describe('IngredientForm on the compendium', () => {
     // the compendium's edit rather than a coven's ingredient page. Its Cancel
     // is the discard guard's case below.
     it('links a near match where the page says', async () => {
-      renderForm({ duplicateHref: (match) => `/admin/compendium?edit=${match.slug}` });
+      renderForm({ duplicateHref: (match) => `/curator/compendium?edit=${match.slug}` });
       offerDuplicates([
         { id: OTHER_ID, name: 'Testworts', canonicalName: null, slug: 'testworts' },
       ]);
@@ -206,7 +206,7 @@ describe('IngredientForm on the compendium', () => {
 
       expect(await screen.findByRole('link', { name: /^Testworts/ })).toHaveAttribute(
         'href',
-        '/admin/compendium?edit=testworts',
+        '/curator/compendium?edit=testworts',
       );
     });
 

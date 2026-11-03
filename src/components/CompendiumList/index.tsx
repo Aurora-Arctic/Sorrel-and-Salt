@@ -26,7 +26,7 @@ import type {
 } from './types';
 import './index.scss';
 
-// `/admin/compendium`'s filter, table and pager. Render-only: the page reads one page under the
+// `/curator/compendium`'s filter, table and pager. Render-only: the page reads one page under the
 // address's filter, and each Edit is an address, so a modal can be linked to and Back closes it
 // (claude-docs/components/compendium-list.md).
 

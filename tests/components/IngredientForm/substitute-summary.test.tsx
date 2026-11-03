@@ -142,12 +142,12 @@ describe('a substitute list’s chips', () => {
 
   it('links the entry’s page, in a new tab, where the form is given one', async () => {
     offerSummary();
-    renderSubstitutes(({ slug }) => `/admin/compendium?edit=${slug}`);
+    renderSubstitutes(({ slug }) => `/curator/compendium?edit=${slug}`);
 
     fireEvent.click(opener());
 
     const link = await within(summary()).findByRole('link', { name: /^See Entry/ });
-    expect(link).toHaveAttribute('href', '/admin/compendium?edit=mockwort-fixtura-vulgaris');
+    expect(link).toHaveAttribute('href', '/curator/compendium?edit=mockwort-fixtura-vulgaris');
     expect(link).toHaveAttribute('target', '_blank');
   });
 

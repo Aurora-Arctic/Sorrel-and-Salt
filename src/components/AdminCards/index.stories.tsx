@@ -69,7 +69,7 @@ const ARRIVALS: ArrivalEntry[] = [
     batchId: BATCH,
     covens: ['Fixture Coven'],
     account: {
-      openHref: '/admin/users?user=fixture',
+      openHref: '/keepers/users?user=fixture',
       heading: { eyebrow: 'User', title: 'Fixture Wort' },
     },
   },
@@ -82,7 +82,7 @@ const Cards = ({
   batches: BatchEntry[];
   minting?: boolean;
 }): ReactElement => (
-  <AdminTabbedFrame page="people" open="/admin/invitation-cards" action={<MintCards />}>
+  <AdminTabbedFrame page="people" open="/keepers/invitation-cards" action={<MintCards />}>
     <AdminCards batches={batches} minting={minting} />
   </AdminTabbedFrame>
 );
@@ -135,7 +135,7 @@ export const RefusedOpensDialog: Story = {
 
 export const Arrivals: Story = {
   render: () => (
-    <AdminTabbedFrame page="people" open="/admin/card-sign-ups">
+    <AdminTabbedFrame page="people" open="/keepers/card-sign-ups">
       <AdminArrivals arrivals={ARRIVALS} />
     </AdminTabbedFrame>
   ),

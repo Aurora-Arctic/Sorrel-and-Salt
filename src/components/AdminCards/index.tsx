@@ -19,7 +19,7 @@ import MintForm, { MINT_TITLE } from './mint-form';
 import type { AdminCardsProps, CardsFilter, MintCardsProps } from './types';
 import './index.scss';
 
-// The People page's Invitation Cards tab, `/admin/invitation-cards`: one row per batch (minted, expiry, cards,
+// The People page's Invitation Cards tab, `/keepers/invitation-cards`: one row per batch (minted, expiry, cards,
 // status, accepted, refused opens with a View dialog, Revoke Batch while any card is pending), the pager, and the mint form `?mint` opens
 // (claude-docs/components/admin-cards.md).
 

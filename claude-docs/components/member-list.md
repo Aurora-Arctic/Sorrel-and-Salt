@@ -27,7 +27,7 @@ Change Role, Coven Access and Remove.
   admin users table). The name is a link, `MemberLink` (`member-link.tsx`),
   to `?member=<id>` with the cursor kept; a press opens the modal at once
   with its heading, through the page's `RouteModalProvider`, as a user's name
-  does on `/admin/users`. It is still a link, so a new tab opens the address.
+  does on `/keepers/users`. It is still a link, so a new tab opens the address.
 - **Roles are told apart by their word**, from `workspaceRoleLabel`
   (`UserDetail/roles.ts`). An owner is
   also bold, as the user list sets an admin, but weight is never the only cue.

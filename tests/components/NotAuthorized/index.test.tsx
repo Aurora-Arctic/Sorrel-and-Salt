@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import NotAuthorized from '@/components/NotAuthorized';
 
-// What a signed-in non-admin sees at `/admin`: a refusal that says why,
+// What a signed-in non-admin sees at `/keepers`: a refusal that says why,
 // and nothing that names an admin or asks one for anything
 // (claude-docs/components/not-authorized.md).
 

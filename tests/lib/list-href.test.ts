@@ -7,20 +7,20 @@ import { list } from '@/lib/search-params';
 // leave no empty pair behind for the page to read as a filter.
 describe('listHref', () => {
   it('writes true as a bare flag, in the order given', () => {
-    expect(listHref('/admin/users', { query: 'wort', awaiting: true, after: 'c' })).toBe(
-      '/admin/users?query=wort&awaiting&after=c',
+    expect(listHref('/keepers/users', { query: 'wort', awaiting: true, after: 'c' })).toBe(
+      '/keepers/users?query=wort&awaiting&after=c',
     );
   });
 
   it('leaves out undefined, false and blank values', () => {
-    expect(listHref('/admin/users', { query: '', awaiting: false, role: undefined })).toBe(
-      '/admin/users',
+    expect(listHref('/keepers/users', { query: '', awaiting: false, role: undefined })).toBe(
+      '/keepers/users',
     );
   });
 
   it('encodes a value', () => {
-    expect(listHref('/admin/compendium', { after: 'x/y z', new: true })).toBe(
-      '/admin/compendium?after=x%2Fy+z&new',
+    expect(listHref('/curator/compendium', { after: 'x/y z', new: true })).toBe(
+      '/curator/compendium?after=x%2Fy+z&new',
     );
   });
 });
@@ -29,14 +29,14 @@ describe('listHref', () => {
 // read `new` by presence.
 describe('dialogParams', () => {
   it('writes the add form as a bare flag and an edit by its slug', () => {
-    expect(listHref('/admin/categories', dialogParams('new'))).toBe('/admin/categories?new');
-    expect(listHref('/admin/categories', dialogParams({ edit: 'testwort' }))).toBe(
-      '/admin/categories?edit=testwort',
+    expect(listHref('/curator/categories', dialogParams('new'))).toBe('/curator/categories?new');
+    expect(listHref('/curator/categories', dialogParams({ edit: 'testwort' }))).toBe(
+      '/curator/categories?edit=testwort',
     );
   });
 
   it('writes no modal as neither', () => {
-    expect(listHref('/admin/categories', dialogParams())).toBe('/admin/categories');
+    expect(listHref('/curator/categories', dialogParams())).toBe('/curator/categories');
   });
 });
 

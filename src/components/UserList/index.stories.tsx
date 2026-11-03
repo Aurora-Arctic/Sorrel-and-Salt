@@ -22,8 +22,8 @@ const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntr
 });
 
 // Render-only; behaviour is asserted in tests/components/UserList. The filter, the
-// pager and each name's privilege changes icon reach `/admin/users` and
-// `/admin/privilege-changes`, which the workshop does not serve.
+// pager and each name's privilege changes icon reach `/keepers/users` and
+// `/keepers/privilege-changes`, which the workshop does not serve.
 const meta = {
   title: 'Admin / User List',
 } satisfies Meta;
@@ -71,7 +71,7 @@ const USERS: readonly UserListEntry[] = [
 // Each story sits inside the admin layout's frame and the People page, Users tab
 // open, with the switch on admin changes beside the heading where a story gives it.
 
-// The page as /admin/users draws it where impersonation is registered: nine columns,
+// The page as /keepers/users draws it where impersonation is registered: nine columns,
 // facts no control changes muted, Impersonate red in its red-ruled column at the right.
 // Impersonate and Pause Admin Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
 // shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
@@ -203,7 +203,7 @@ const adminRolesNode = (
   </AdminTabbedFrame>
 );
 
-// The switch as the Users tab's action beside the heading, as /admin/users draws it.
+// The switch as the Users tab's action beside the heading, as /keepers/users draws it.
 // Paused: the warning and a usable Resume.
 const adminChangesPausedNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>

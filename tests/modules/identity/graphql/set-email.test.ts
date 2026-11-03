@@ -46,10 +46,10 @@ async function run(variables: Record<string, unknown>) {
 
 describe('the setEmail mutation', () => {
   it('hands the sender the next it was sent', async () => {
-    const { result, requestChange } = await run({ email: NEW, next: '/admin' });
+    const { result, requestChange } = await run({ email: NEW, next: '/keepers' });
 
     expect(result.errors).toBeUndefined();
-    expect(requestChange).toHaveBeenCalledExactlyOnceWith(B.id, '/admin');
+    expect(requestChange).toHaveBeenCalledExactlyOnceWith(B.id, '/keepers');
   });
 
   it('hands the sender no next when it was sent none', async () => {

@@ -68,7 +68,8 @@ describe('what the public files list', () => {
       expect(body).not.toContain(bySlug('Fixture Coven Own').slug);
       expect(body).not.toContain('Fixture Coven Own');
       expect(body).not.toContain('/coven');
-      expect(body).not.toContain('/admin');
+      expect(body).not.toContain('/keepers');
+      expect(body).not.toContain('/curator');
       expect(body).not.toContain(coven.name);
       expect(body).not.toContain(coven.slug);
       // Every URL is the public site's compendium, or the sitemap.

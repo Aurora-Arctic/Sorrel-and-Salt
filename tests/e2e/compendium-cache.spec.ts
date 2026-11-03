@@ -25,7 +25,7 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
   page,
 }) => {
   await signInAs(page, `reader-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   const add = page.getByRole('link', { name: 'Add Ingredient' });
   await expect(add).toBeVisible();
 
@@ -45,7 +45,7 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
 
   // The control: a filter never read before misses the cache, so it reads
   // Postgres, which holds the rename.
-  await page.goto(`/admin/compendium?query=${encodeURIComponent(renamed)}`);
+  await page.goto(`/curator/compendium?query=${encodeURIComponent(renamed)}`);
   await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });
 
@@ -53,7 +53,7 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
 // Postgres — the admin's own entry, and the rename the cache was hiding above.
 test('an admin edit is visible on the next page load', async ({ page }) => {
   await signInAs(page, `writer-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   const add = page.getByRole('link', { name: 'Add Ingredient' });
   await expect(add).toBeVisible();
 
@@ -77,7 +77,7 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
     page.getByRole('dialog', { name: `Edit Ingredient, ${added}`, exact: true }),
   ).toBeVisible();
 
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   await expect(page.getByRole('link', { name: added, exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });
@@ -115,7 +115,7 @@ test("an entry's share card is drawn once, until an admin edit draws it again", 
   expect(await draw()).toEqual(first);
 
   // Any admin write to the compendium expires the tag; adding an entry is the one the test above proves.
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   const add = page.getByRole('link', { name: 'Add Ingredient' });
   await add.click();
   // Unlike the rename, so the fuzzy duplicate warning does not stop the save.

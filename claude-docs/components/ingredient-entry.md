@@ -152,7 +152,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 
 ## Testing
 
-`tests/components/IngredientEntry/review-mark.test.tsx` checks the admin's review switch (M14.8) by role and label: the switch off or on from `reviewedAt`, a press sending the mutation and reading the page again with the switch kept, a clear sending `reviewed: false`, and a refusal shown as an alert with the switch put back. `tests/app/(shell)/admin/compendium/page.test.tsx` checks that the open details draw the switch checked or not from `readCompendiumReview`, and that no review is read while no entry is open.
+`tests/components/IngredientEntry/review-mark.test.tsx` checks the admin's review switch (M14.8) by role and label: the switch off or on from `reviewedAt`, a press sending the mutation and reading the page again with the switch kept, a clear sending `reviewed: false`, and a refusal shown as an alert with the switch put back. `tests/app/(shell)/curator/compendium/page.test.tsx` checks that the open details draw the switch checked or not from `readCompendiumReview`, and that no review is read while no entry is open.
 
 `tests/components/IngredientEntry/index.test.tsx` checks, by what renders rather than by its words:
 

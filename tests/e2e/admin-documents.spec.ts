@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// An admin edits the site's documents in place, one tab each under /admin/documents: a saved draft is the admin's alone, and a publish is what a
+// An admin edits the site's documents in place, one tab each under /keepers/documents: a saved draft is the admin's alone, and a publish is what a
 // reader sees, as a new version with the old one in its history. Publishing the terms asks every account to agree again, and the
 // confirmation says so first (claude-docs/design-decisions/m15.59-document-editor-scope.md).
 
@@ -45,7 +45,7 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   const tabs = main.getByRole('navigation', { name: 'Documents' }).getByRole('link');
   await expect(tabs).toHaveText(['Privacy Policy', 'Disclaimer', 'Code of Ethics', 'Terms of Use']);
   for (const [index, key] of DOCUMENT_KEYS.entries()) {
-    await expect(tabs.nth(index)).toHaveAttribute('href', `/admin/documents/${key}`);
+    await expect(tabs.nth(index)).toHaveAttribute('href', `/keepers/documents/${key}`);
   }
   await expect(tabs.nth(0)).toHaveAttribute('aria-current', 'page');
   await expect(editorOf(page)).toBeVisible();
@@ -111,7 +111,7 @@ test('publishing the terms warns that every account will agree again, and sends 
   await reader.goto('/account');
   await expect(reader).not.toHaveURL(/\/account\/terms/);
 
-  await page.goto('/admin/documents/terms');
+  await page.goto('/keepers/documents/terms');
   await appendTo(
     page,
     'agreeing to these terms is agreeing to them too',
@@ -145,7 +145,7 @@ test('a curator is refused every document editor with the styled not-authorised 
   // Precondition: the curator reaches the admin pages that curate.
   expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
 
-  for (const path of ['/admin/documents/privacy', '/admin/documents/disclaimer']) {
+  for (const path of ['/keepers/documents/privacy', '/keepers/documents/disclaimer']) {
     expect((await page.goto(path))?.status(), path).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
@@ -154,14 +154,14 @@ test('a curator is refused every document editor with the styled not-authorised 
   await assertNoAccessibilityViolations(page);
 });
 
-// The documents open on their first tab, so no list page stands at /admin/documents: the address answers as one never built.
-test('/admin/documents is not a page, even for an admin', async ({ page }) => {
+// The documents open on their first tab, so no list page stands at /keepers/documents: the address answers as one never built.
+test('/keepers/documents is not a page, even for an admin', async ({ page }) => {
   await signInAs(page, 'list-admin@admin-documents.test', ['discord'], 'admin');
 
   // Precondition: this admin reaches the documents' editors.
-  expect((await page.goto('/admin/documents/privacy'))?.status()).toBe(200);
+  expect((await page.goto('/keepers/documents/privacy'))?.status()).toBe(200);
 
-  expect((await page.goto('/admin/documents'))?.status()).toBe(404);
+  expect((await page.goto('/keepers/documents'))?.status()).toBe(404);
 });
 
 // A published change is emailed to every account only when an admin asks: the edit page offers it, the confirmation says what will be
@@ -171,7 +171,7 @@ test('an admin publishes a change to the code of ethics, then emails every accou
   page,
 }) => {
   await signInAs(page, 'mail-admin@admin-documents.test', ['discord'], 'admin');
-  await page.goto('/admin/documents/code-of-ethics');
+  await page.goto('/keepers/documents/code-of-ethics');
   const main = page.getByRole('main');
 
   await appendTo(

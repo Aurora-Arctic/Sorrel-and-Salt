@@ -48,7 +48,7 @@ resolve: async (_query, { workspaceId }, { session }) =>
   `opengraph-image.tsx` (M12.34) take no session either and draw only what the public compendium shows
   ([`share-card.md`](../share-card.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
   `src/app/`, by its path: a file is not an import either.
-- **Admin is not an exception to either.** `/admin`'s pages read through
+- **Admin is not an exception to either.** `/keepers`'s pages read through
   services, and its writes go through this endpoint
   ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").
 - **The service enforces its own authorization,** never trusting a caller to

@@ -5,7 +5,7 @@ import type { PagePosition, PagerHrefs } from '../../lib/types';
 /** Where a batch stands: live while a card is pending, else used up, expired or revoked. */
 export type BatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
 
-/** One batch, as `/admin/invitation-cards` lists it: the mint, with its cards counted. No token or hash is in it. */
+/** One batch, as `/keepers/invitation-cards` lists it: the mint, with its cards counted. No token or hash is in it. */
 export interface BatchEntry {
   batchId: string;
   mintedAt: Date;

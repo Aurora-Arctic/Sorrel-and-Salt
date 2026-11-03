@@ -136,7 +136,7 @@ describe('resolveScenario', () => {
 });
 
 // Every entry point opens with `beginSeedTransaction`, which inserts the bootstrap row when it is missing.
-// That row is no admin: it has no OAuth account and nobody can sign in as it, so as an admin it would only be a revocable row on /admin/users.
+// That row is no admin: it has no OAuth account and nobody can sign in as it, so as an admin it would only be a revocable row on /keepers/users.
 // Each entry names the tables it fills from empty: the six `migrate.yml` runs on staging and production; the dev-only scenarios are a developer's to see working.
 const SEED_ENTRIES: SeedEntry[] = (
   [

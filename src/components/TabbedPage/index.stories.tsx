@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
-import AddAction from '../../app/(shell)/admin/add-action';
+import AddAction from '../../app/(shell)/curator/add-action';
 import { AdminFrame, AdminTabbedFrame } from '../../../.storybook/admin-frame';
 import { INVITATIONS } from '../../../.storybook/fixtures';
 import AdminInvitations, { InviteAdmin } from '../AdminInvitations';
@@ -11,7 +11,7 @@ import { TabSwitchContext } from './tab-switch';
 import type { TabSwitch } from './types';
 
 // Render-only; behaviour is asserted in tests/components/TabbedPage. The People page
-// as `/admin/invitations` draws it: the admin frame and nav, the heading with its
+// as `/keepers/invitations` draws it: the admin frame and nav, the heading with its
 // three tabs, Invitations open, and its New Invitation. The workshop's stub names
 // the open address (.storybook/navigation.ts); a tab switch provided above the
 // page says a tab is on its way.
@@ -25,7 +25,7 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 const ON_ITS_WAY = { pending: true, target: ADMIN_PAGES.people.tabs[0], go: () => undefined };
 
 const People = ({
-  open = '/admin/invitations',
+  open = '/keepers/invitations',
   action = <InviteAdmin />,
   children,
 }: {
@@ -67,14 +67,14 @@ const loadingUnfilteredNode = (
 // heading, and a row too wide would scroll inside its track to centre the open
 // tab. Privilege Changes has no action.
 const privilegeChangesTabNode = (
-  <People open="/admin/privilege-changes" action={null}>
+  <People open="/keepers/privilege-changes" action={null}>
     <PrivilegeLedger
       filter={{}}
       changes={[
         {
           id: 'c1',
           at: new Date('2026-10-01T09:30:00Z'),
-          subject: { name: 'Ada Fixturewort', href: '/admin/users?q=ada' },
+          subject: { name: 'Ada Fixturewort', href: '/keepers/users?q=ada' },
           privilege: 'admin',
           change: 'grant',
           via: 'admin',
@@ -92,7 +92,7 @@ const privilegeChangesTabNode = (
 const addActionLabelAndPlusNode = (
   <People
     action={
-      <AddAction href="/admin/invitations?invite" heading={{ title: 'New Invitation' }}>
+      <AddAction href="/keepers/invitations?invite" heading={{ title: 'New Invitation' }}>
         New Invitation
       </AddAction>
     }

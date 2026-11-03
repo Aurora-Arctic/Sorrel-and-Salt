@@ -15,8 +15,8 @@ const { default: MenuButton } = await import('@/components/MenuButton');
 // A page's one modal place: the form its address opens, or, while a press's navigation is on its way, the pressed modal's head over a skeleton in the same dialog, which the form then fills.
 // Also the links that open it so (claude-docs/components/modal.md, "Opening at once").
 
-const CLOSE: Route = '/admin/categories';
-const EDIT: Route = '/admin/categories?edit=testcraft';
+const CLOSE: Route = '/curator/categories';
+const EDIT: Route = '/curator/categories?edit=testcraft';
 const HEADING: ModalHeading = { eyebrow: 'Edit Category', title: 'Testcraft' };
 const NAME = 'Edit Category, Testcraft';
 
@@ -280,7 +280,7 @@ describe('EditLink outside a provider', () => {
 describe('two modal places on one page', () => {
   // A list whose names open a details modal and whose Edit opens the edit
   // modal over it: each place shows only the press meant for it.
-  const DETAILS: Route = '/admin/categories?entry=testcraft';
+  const DETAILS: Route = '/curator/categories?entry=testcraft';
   const DETAILS_HEADING: ModalHeading = { eyebrow: 'Ingredient', title: 'Testcraft' };
   const NameLink = () => {
     const onClick = useOpenModalClick(DETAILS, DETAILS_HEADING, 'details');

@@ -19,9 +19,9 @@ const { default: TabbedPage } = await import('@/components/TabbedPage');
 // content beneath (claude-docs/components/tabbed-page.md).
 
 const TABS = [
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/invitations', label: 'Invitations' },
-  { href: '/admin/privilege-changes', label: 'Privilege Changes' },
+  { href: '/keepers/users', label: 'Users' },
+  { href: '/keepers/invitations', label: 'Invitations' },
+  { href: '/keepers/privilege-changes', label: 'Privilege Changes' },
 ] as const;
 
 const tabs = () => within(screen.getByRole('navigation', { name: 'People' })).getAllByRole('link');
@@ -29,14 +29,14 @@ const open = () => currentHrefs(tabs());
 const busy = () => hrefs(tabs().filter((link) => link.getAttribute('aria-busy') === 'true'));
 
 beforeEach(() => {
-  pathname.mockReturnValue('/admin/users');
+  pathname.mockReturnValue('/keepers/users');
   router.push.mockReset();
 });
 
 describe('TabbedPage', () => {
   it("heads the page with the open tab's action, links each tab at its own address in its order, and shows the content", () => {
     render(
-      <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>
+      <TabbedPage title="People" tabs={TABS} action={<a href="/keepers/users?pause">Pause</a>}>
         <table aria-label="Users" />
       </TabbedPage>,
     );
@@ -54,7 +54,7 @@ describe('TabbedPage', () => {
 
   it('draws no tab row for a page with one tab, and still shows its action and content', () => {
     render(
-      <TabbedPage title="People" tabs={[TABS[0]]} action={<a href="/admin/users?pause">Pause</a>}>
+      <TabbedPage title="People" tabs={[TABS[0]]} action={<a href="/keepers/users?pause">Pause</a>}>
         <p>Content</p>
       </TabbedPage>,
     );
@@ -65,9 +65,9 @@ describe('TabbedPage', () => {
   });
 
   it.each([
-    ['/admin/users', ['/admin/users']],
+    ['/keepers/users', ['/keepers/users']],
     // An address in none of the tabs marks none.
-    ['/admin/compendium', []],
+    ['/curator/compendium', []],
   ])('marks only the tab open at %s as the current page', (path, expected) => {
     pathname.mockReturnValue(path);
 
@@ -113,7 +113,7 @@ describe('TabbedPage', () => {
   const renderNavigating = () =>
     render(
       <Navigating push={router.push}>
-        <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>
+        <TabbedPage title="People" tabs={TABS} action={<a href="/keepers/users?pause">Pause</a>}>
           <table aria-label="Users" />
         </TabbedPage>
       </Navigating>,
@@ -138,15 +138,15 @@ describe('TabbedPage', () => {
       fireEvent.click(tab('Invitations'));
     });
 
-    expect(router.push).toHaveBeenCalledWith('/admin/invitations');
+    expect(router.push).toHaveBeenCalledWith('/keepers/invitations');
     for (const link of tabs()) expect(link).toHaveAttribute('aria-disabled', 'true');
     expect(action()?.closest('[inert]')).not.toBeNull();
     expect(within(panel()).getByRole('status')).toBeInTheDocument();
     expect(within(panel()).queryByRole('table', { name: 'Users' })).not.toBeInTheDocument();
     // The page shown is still Users until Invitations renders; the pressed
     // tab is the one on its way.
-    expect(open()).toEqual(['/admin/users']);
-    expect(busy()).toEqual(['/admin/invitations']);
+    expect(open()).toEqual(['/keepers/users']);
+    expect(busy()).toEqual(['/keepers/invitations']);
 
     // A second press while the first is on its way goes nowhere.
     await act(async () => {
@@ -174,7 +174,7 @@ describe('TabbedPage', () => {
 
     fireEvent.click(tab('Invitations'));
 
-    expect(open()).toEqual(['/admin/invitations']);
+    expect(open()).toEqual(['/keepers/invitations']);
     expect(busy()).toEqual([]);
     expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
   });

@@ -21,7 +21,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
   // The Compendium is public, so its link is everyone's, an unverified account's
   // included: it leads to a page that never sends them to the email page. Your Coven is a
   // verified account's who belongs to a coven, or who curates (a curator or admin in none
-  // is sent to /coven). Admin is a verified curator's or admin's alone.
+  // is sent to /coven). Curator and Keepers are a verified curator's or admin's alone.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
   const curates = viewer.verified && viewer.canCurate;
   const links: SiteLink[] = [compendium];
@@ -32,7 +32,10 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
       base: '/coven',
     });
   }
-  if (curates) links.push({ label: 'Admin', href: '/admin', base: '/admin' });
+  if (curates) {
+    links.push({ label: 'Curator', href: '/curator', base: '/curator' });
+    links.push({ label: 'Keepers', href: '/keepers', base: '/keepers' });
+  }
   const brand = <BrandName block="app-shell" />;
 
   return (

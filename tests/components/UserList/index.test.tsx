@@ -27,7 +27,7 @@ vi.mock('@/lib/auth-client', () => ({
 }));
 const assignMock = vi.fn();
 
-// `/admin/users`' table, filter and pager: render-only, so the page
+// `/keepers/users`' table, filter and pager: render-only, so the page
 // owns the read and this owns what an admin sees of it
 // (claude-docs/components/user-list.md).
 
@@ -41,7 +41,7 @@ const ADA = {
   providers: ['discord', 'google'],
   emailVerified: true,
   primaryAdmin: false,
-  openHref: '/admin/users?user=6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
+  openHref: '/keepers/users?user=6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
   heading: { eyebrow: 'User', title: 'Ada Fixturewort', qualifier: 'ada@users.test' },
 } as const;
 
@@ -55,7 +55,7 @@ const BO = {
   providers: [],
   emailVerified: false,
   primaryAdmin: false,
-  openHref: '/admin/users?query=fixture&user=7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
+  openHref: '/keepers/users?query=fixture&user=7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
   heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
 } as const;
 
@@ -68,7 +68,7 @@ const CY = {
   email: 'cy@users.test',
   role: 'curator',
   canCreateWorkspace: true,
-  openHref: '/admin/users?user=8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
+  openHref: '/keepers/users?user=8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
   heading: { eyebrow: 'User', title: 'Cy Fixturewort', qualifier: 'cy@users.test' },
 } as const;
 
@@ -195,7 +195,7 @@ describe('UserList', () => {
         });
         expect(link).toHaveAttribute(
           'href',
-          `/admin/privilege-changes?query=${encodeURIComponent(user.email)}`,
+          `/keepers/privilege-changes?query=${encodeURIComponent(user.email)}`,
         );
         expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
       }
@@ -207,7 +207,7 @@ describe('UserList', () => {
 
       expect(
         screen.getByRole('link', { name: 'Privilege changes for Ada Fixturewort' }),
-      ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
+      ).toHaveAttribute('href', '/keepers/privilege-changes?query=ada%40users.test');
     });
   });
 
@@ -331,7 +331,7 @@ describe('UserList filter', () => {
   // `awaiting=`, and All Roles `role=`: each read by the page as the filter shown.
   const SUBJECT: FilterFormSubject = {
     label: 'Filter Users',
-    path: '/admin/users',
+    path: '/keepers/users',
     searchLabel: 'Name or Email',
     push: router.push,
     none: { list: <UserList {...props()} />, sends: 'query=&role=' },
@@ -345,7 +345,7 @@ describe('UserList filter', () => {
             timedOut: true,
             paused: true,
             previousHref:
-              '/admin/users?query=fixturewort&awaiting&role=admin&timed-out&paused&before=x',
+              '/keepers/users?query=fixturewort&awaiting&role=admin&timed-out&paused&before=x',
           })}
         />
       ),
@@ -367,7 +367,7 @@ describe('UserList filter', () => {
         sends: 'query=&role=&paused=',
       },
     ],
-    searched: '/admin/users?query=Two+words&awaiting&role=admin&timed-out&paused',
+    searched: '/keepers/users?query=Two+words&awaiting&role=admin&timed-out&paused',
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
@@ -397,7 +397,7 @@ describe('UserList filter', () => {
     });
 
     expect(router.push).toHaveBeenCalledTimes(1);
-    expect(router.push).toHaveBeenCalledWith('/admin/users?role=user');
+    expect(router.push).toHaveBeenCalledWith('/keepers/users?role=user');
   });
 
   it('carries the search text typed so far when a role changes', async () => {
@@ -409,7 +409,7 @@ describe('UserList filter', () => {
       fireEvent.click(screen.getByRole('option', { name: 'User' }));
     });
 
-    expect(router.push).toHaveBeenCalledWith('/admin/users?query=bo&role=user');
+    expect(router.push).toHaveBeenCalledWith('/keepers/users?query=bo&role=user');
   });
 
   it('applies Needs Approval as a bare flag the moment it is switched, and off again', async () => {
@@ -419,7 +419,7 @@ describe('UserList filter', () => {
       fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
     });
 
-    expect(router.push).toHaveBeenCalledWith('/admin/users?awaiting');
+    expect(router.push).toHaveBeenCalledWith('/keepers/users?awaiting');
   });
 
   it('turns Needs Approval off to the list without the flag', async () => {
@@ -430,7 +430,7 @@ describe('UserList filter', () => {
       fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
     });
 
-    expect(router.push).toHaveBeenCalledWith('/admin/users');
+    expect(router.push).toHaveBeenCalledWith('/keepers/users');
   });
 
   it.each([
@@ -445,7 +445,7 @@ describe('UserList filter', () => {
       await act(async () => {
         fireEvent.click(screen.getByRole('switch', { name: label }));
       });
-      expect(router.push).toHaveBeenLastCalledWith(`/admin/users?role=user&${flag}`);
+      expect(router.push).toHaveBeenLastCalledWith(`/keepers/users?role=user&${flag}`);
       unmount();
 
       inFlight(<UserList {...props({ role: 'user', ...on })} />);
@@ -453,7 +453,7 @@ describe('UserList filter', () => {
       await act(async () => {
         fireEvent.click(screen.getByRole('switch', { name: label }));
       });
-      expect(router.push).toHaveBeenLastCalledWith('/admin/users?role=user');
+      expect(router.push).toHaveBeenLastCalledWith('/keepers/users?role=user');
     },
   );
 });

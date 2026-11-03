@@ -393,7 +393,7 @@ describe('requireSession', () => {
   });
 });
 
-// The `/admin` guard: a signed-in non-admin is answered with Next's 403 page rather than a
+// The `/keepers` guard: a signed-in non-admin is answered with Next's 403 page rather than a
 // redirect or a 404, since everyone knows the path exists (claude-docs/auth/admin-guard.md, "The admin guard").
 describe('requireAdminSession', () => {
   it('returns the session of an admin, without redirecting or refusing', async () => {
@@ -403,7 +403,7 @@ describe('requireAdminSession', () => {
 
   it('answers a signed-in user who is not an admin with the forbidden page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
+    requestHeaders.set(RETURN_PATH_HEADER, '/keepers');
 
     // Why the refusal could have been anything else: the session is live and
     // verified, so requireSession() lets it through, and only the role differs
@@ -421,7 +421,7 @@ describe('requireAdminSession', () => {
   });
 });
 
-// The guard on `/admin` and every curation page under it, the people pages excepted. A curator
+// The guard on `/keepers` and every curation page under it, the people pages excepted. A curator
 // or an admin passes; anyone else gets the forbidden page, as at requireAdminSession
 // (claude-docs/auth/admin-guard.md).
 describe('requireCuratorSession', () => {
@@ -436,7 +436,7 @@ describe('requireCuratorSession', () => {
 
   it('answers a signed-in user who holds no site role with the forbidden page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
+    requestHeaders.set(RETURN_PATH_HEADER, '/keepers');
 
     await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     await expect(requireCuratorSession()).rejects.toThrow('forbidden');

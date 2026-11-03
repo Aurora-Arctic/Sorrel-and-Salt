@@ -89,4 +89,17 @@ describe('the invitation panel page', () => {
 
     expect(landings).toEqual(['/coven/new?card=accepted']);
   });
+
+  // A site invitation grants the role it names, so its invitee lands where that role signs in to.
+  it.each([
+    ['curator', '/curator'],
+    ['admin', '/keepers'],
+  ])('lands an accepted site invitation to the %s role on %s', async (siteRole, landing) => {
+    getSession.mockResolvedValue({ userId: 'u', role: 'user' });
+    invitationStanding.mockResolvedValue({ acceptable: true, tier: 'site', siteRole });
+
+    render(await InvitationPanel({ token: 'abc', here: '/invite/abc' }));
+
+    expect(landings).toEqual([landing]);
+  });
 });

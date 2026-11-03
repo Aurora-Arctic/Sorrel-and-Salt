@@ -233,12 +233,12 @@ test(
 
     await test.step("an admin in no coven has the compendium alone, on every page, and it opens the compendium's dialog", async () => {
       await signInAs(page, 'e@story-28-admin.test', ['discord'], 'admin');
-      for (const path of ['/account', '/admin/categories']) {
+      for (const path of ['/account', '/curator/categories']) {
         await page.goto(path);
         // One destination, so a plain button with nothing to choose.
         await expect(destinationMenu(page).toggle).toHaveCount(0);
         await shellAddIngredient(page).click();
-        await expect(page).toHaveURL(/\/admin\/compendium\?new(?:[=&]|$)/);
+        await expect(page).toHaveURL(/\/curator\/compendium\?new(?:[=&]|$)/);
         await expect(page.getByRole('dialog', { name: 'Add Ingredient' })).toBeVisible();
       }
     });
@@ -518,7 +518,7 @@ test(
     // The ingredient dialogs save on Close instead of asking (M13.24), so the question is walked on an admin
     // form, which still asks (claude-docs/components/modal.md, "Unsaved changes").
     await signInAs(page, 'groups@story-32.test', ['discord'], 'admin');
-    await page.goto('/admin/category-groups');
+    await page.goto('/curator/category-groups');
     await page.getByRole('link', { name: 'Add Group' }).click();
     const dialog = page.getByRole('dialog', { name: 'Add Category Group' });
     await expect(dialog).toBeVisible();

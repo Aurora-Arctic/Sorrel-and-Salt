@@ -474,7 +474,7 @@ form, the server's before hydration included, applying the filter on its change,
 `aria-disabled` while a list is on its way. Space is the platform's and
 happy-dom does not run it, so it was checked in the workshop's Chromium; Enter is
 asserted in `tests/components/Field/switch-field.test.tsx` and walked in
-Playwright on `/admin/compendium`. The
+Playwright on `/curator/compendium`. The
 lists' tests cover `SearchField` too, found by its `searchbox` role and its
 `Search` button: the submit applying the search, and the button in the
 server's markup. They cover `FilterSelectField` by the address each

@@ -35,7 +35,7 @@ const WORKSPACES = [
 const SOLE = [WORKSPACES[0]];
 
 const AdminName = () => (
-  <PendingLink href="/admin" className="context-row__name" navigationTarget={adminTarget('/admin')}>
+  <PendingLink href="/keepers" className="context-row__name" navigationTarget={adminTarget('/keepers')}>
     Admin
   </PendingLink>
 );

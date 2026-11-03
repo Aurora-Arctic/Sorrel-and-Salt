@@ -58,7 +58,7 @@ describe('the proxy matcher', () => {
     '/terms',
     '/code-of-ethics',
     '/coven/hearth/grimoire/new?from=draft',
-    '/admin/compendium',
+    '/curator/compendium',
     '/apiary',
     '/workshop',
     '/workshop/assets/index-B4mi58lY.js',
@@ -298,7 +298,7 @@ describe('proxy', () => {
 
   it('overwrites a return path the client supplied itself', async () => {
     const response = await proxy(
-      request('/coven/hearth', `${SESSION_COOKIE}=t.s`, { [RETURN_PATH_HEADER]: '/admin' }),
+      request('/coven/hearth', `${SESSION_COOKIE}=t.s`, { [RETURN_PATH_HEADER]: '/keepers' }),
     );
     expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/coven/hearth');
   });
