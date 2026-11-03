@@ -1,5 +1,5 @@
 import { documentUpdatedMessage } from '../emails/document-updated';
-import { asksAgreement } from './agreement-documents';
+import { asksAgreement } from './agreement-version';
 import type { Message } from './types';
 
 // The site-document update mail a job's step renders from the rows when it sends, so a run carries ids and never an address or

@@ -2,7 +2,7 @@
 
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
-import { asksAgreement } from '../../lib/agreement-documents';
+import { asksAgreement } from '../../lib/agreement-version';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { Required } from '../Field';
 import ConfirmedAction from '../UserList/confirmed-action';

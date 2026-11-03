@@ -48,3 +48,7 @@ export function documentsChangedSince(
 export function agreementIsCurrent(agreed: AgreedVersion, current: AgreementVersion): boolean {
   return documentsChangedSince(agreed, current).length === 0;
 }
+
+/** Whether any of the documents is one an account agrees to, so a mailing that covers it asks each account to agree again. */
+export const asksAgreement = (documents: readonly { key: string }[]): boolean =>
+  documents.some((document) => AGREEMENT_DOCUMENTS.some(({ key }) => key === document.key));
