@@ -32,8 +32,9 @@ Run this only when the user asks to check against the board ("verify", "check th
 
 - `node scripts/task-board.mjs list` — one call, printing a JSON array of every tracked issue (`number`, `title`, `state`, `stateReason`, `milestone`, `url`). The id is what precedes the space-padded dash in the title (`<ID> — `), matched exactly as [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section describes. Completed is `state == "CLOSED"` with `stateReason == "COMPLETED"`; retired is `stateReason == "NOT_PLANNED"` or a `[RETIRED]` title.
 - Compare the board's completed set with the local one and report each disagreement.
+- **Done in git, open on the board, and the board is right:** a commit named the task in a completion form without finishing it (an edit to its entry). Offer to add that commit's full hash to `NOT_COMPLETIONS` in `tally.mjs`.
 - **Closed on the board, silent in git:** the work happened outside the repo (a dashboard or console change). Offer to add the id to the done-outside-git list in `tally.mjs`.
-- **Merged in git, open on the board:** the board is stale. Say so, but do not close it here. Status changes belong to `create-pr` and the merge.
+- **Merged in git, open on the board:** first check that the commit finished the task (the case above). If it did, the board is stale. Say so, but do not close it here. Status changes belong to `create-pr` and the merge.
 
 ## Notes
 

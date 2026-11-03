@@ -76,7 +76,9 @@ The closing is what
 exists for. GitHub's own closing keywords fire only on a PR into the default
 branch, and feature PRs target `staging`, so on a merge into `staging` the
 Action reads the closing keywords out of the PR body itself, checks each named
-issue's state, and closes the open ones with a comment naming the PR. A PR into
+issue's state, and closes the open ones with a comment naming the PR. A
+keyword counts only when it is the whole line, `Closes #N` and nothing else, so
+a sentence naming an issue ("this PR does not close #N") closes nothing. A PR into
 `main` needs nothing: GitHub does it there. The PR body is passed to the script
 as an environment variable rather than interpolated, because it is text anyone
 can write.
