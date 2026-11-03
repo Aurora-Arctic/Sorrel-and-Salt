@@ -12,4 +12,6 @@
 
 **M17.5 scopes a better editing experience for ingredients and spells**, minted on 2026-11-02 on the owner's call while M15.59 scoped the editor for the site's documents ([`tasks/m17.md`](../tasks/m17.md)). It depends on M15.71, whose editor it may reuse for the free-text fields, and is a prerequisite for nothing yet. It follows M17.3 and precedes M17.4, which waits on its trigger.
 
+**M17.6 → M17.11 follow M17.4**, minted on 2026-11-03 on the owner's call: six whole-site audits, of search engines (M17.6), design and flows (M17.7), duplicated code (M17.8), accessibility (M17.9), test speed and bloat (M17.10) and Lighthouse (M17.11). Each writes its findings to `claude-docs/audits/` and changes no code, and each finding becomes its own task after the owner reviews it. They sit last because none blocks the post-launch work before them, and an audit run later finds more of the finished site.
+
 **MB.163, MB.175 and MB.78 stay on Wave 15**, until the owner moves them: they were minted before this wave existed and nothing about them changed. MB.163 and MB.78 are unscheduled by design and trigger-based; MB.175 is v1 scope (the owner's decision of 2026-11-03) and sits before Wave 15's axe sweep.
