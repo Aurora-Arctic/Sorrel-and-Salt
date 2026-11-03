@@ -14,12 +14,12 @@ typing their own; a spelling the vocabulary lacks still needs someone to
 curate it.
 
 - **`deity_traditions`** — `id`, `name`, `slug`, `description` (NOT NULL, with
-  a non-blank CHECK), + audit. Global, admin-curated, `ingredient_form_groups`
+  a non-blank CHECK), + audit. Global, keeper-curated, `ingredient_form_groups`
   in shape: no colour, since a tradition labels a suggestion rather than a
   chip, and no order column, since traditions list alphabetically.
 - **`deities`** — `id`, `name`, `slug`, `description` (NOT NULL, with a
   non-blank CHECK), `tradition_id` (NOT NULL, a foreign key to
-  `deity_traditions`), + audit. Global, admin-curated, `ingredient_forms` in
+  `deity_traditions`), + audit. Global, keeper-curated, `ingredient_forms` in
   shape. No order column, and no `workspace_id`.
 
 **They are `form`'s pattern, groups and all, and the list stays free text.**
@@ -36,7 +36,7 @@ deleted, a tradition's delete moves its deities rather than orphaning them,
 and a rename carries onto it
 ([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md); on
 the pick since [MB.167](../design-decisions/mb.167-read-and-write-the-pick.md)).
-`tradition_id` can be a key because only an admin
+`tradition_id` can be a key because only a keeper
 writes it, as `ingredient_forms.group_id` is. MB.127 was minted to follow the
 celestial body and zodiac vocabularies, which are flat; the owner then asked for
 deities grouped by tradition, which makes them two-tier like the forms, and
@@ -45,7 +45,7 @@ the forms are the closer precedent throughout.
 **Grouped, because the tradition is what a reader needs beside the name.**
 A suggestion reads "Hecate (Greek)", as a form's reads "Wax (Substance)": the
 every tradition has its thunder god, its Moon and its Great Mother, so a
-member choosing among 216 reads the tradition to choose, and an admin curating them reads the list by
+member choosing among 216 reads the tradition to choose, and a keeper curating them reads the list by
 tradition. One tradition per deity, by the same rule as one group per form: a
 god several traditions honour is filed under one, and the description names
 the others (Apollo is Greek, and his description says Roman too). A
@@ -95,14 +95,14 @@ returns a tradition's name, and never searches it.
 **The two readers are scoped as the forms' are.** A member's autofill (MB.130)
 offers curated rows first, each with its tradition, then uncurated values in
 use in the compendium and the current workspace only, and since MB.162 every
-one of those is the workspace's. The admin's read (MB.132) is the compendium
+one of those is the workspace's. The keeper's read (MB.132) is the compendium
 tier only — the live entries picking a deity, which refuse its delete and
-take its rename — since an admin reaches no workspace's
+take its rename — since a keeper reaches no workspace's
 ingredients (M6.6). A value is uncurated when `lower(btrim(value))`
 matches no live row's `lower(name)`, and a deity is curated only while its
 tradition is live too, as a form is only while its group is.
 
-### The admin's writes (MB.132)
+### The keeper's writes (MB.132)
 
 `/curator/deities` and `/curator/deity-traditions` write the two tables through
 `vocabulary`'s `services/deities.ts` and `services/deity-traditions.ts`, the
@@ -155,7 +155,7 @@ same deity, such as Woden for Odin. They are rows of `deity_other_names`
 - **The deity form writes them as one list**, as the ingredient form writes an
   entry's common names. A save brings the live rows to the list sent: a kept
   name keeps its row, a dropped one is soft-deleted, a new one is added. Only
-  a curator or an admin writes them, through `services/deities.ts`.
+  a curator or a keeper writes them, through `services/deities.ts`.
 - **A name is refused twice on one deity, or on two live deities of one
   tradition**, in any case, and the refusal names the deity holding it. The
   same name under two traditions is allowed, since one god honoured under two
@@ -169,24 +169,24 @@ same deity, such as Woden for Odin. They are rows of `deity_other_names`
   page and in its count alike (`deityArms` in
   `src/db/repository/vocabularies.ts`).
 - **The seed loads them** from `DEITIES[].otherNames`, never re-adding a name
-  an admin removed ([the seed's doc](deity-vocabulary-seed.md#other-names)),
+  a keeper removed ([the seed's doc](deity-vocabulary-seed.md#other-names)),
   and a compendium entry file may name a deity by one of them
   ([the compendium seed's rule](compendium-seed/README.md)).
 
 ## Deity service details
 
-`src/modules/vocabulary/services/deities.ts` holds the curated deity vocabulary: public reads, like every curated vocabulary, and writes for a curator or an admin alone.
+`src/modules/vocabulary/services/deities.ts` holds the curated deity vocabulary: public reads, like every curated vocabulary, and writes for a curator or a keeper alone.
 
 - A compendium entry's deities are picks, so a deity a live entry links holds: its delete is refused (the message names the entries) and its rename is carried onto the entry's link in the same write. A deity is no part of an entry's identity or slug, so the rewrite touches the link's name alone. A change of tradition alone rewrites nothing, since a link holds the deity's name and not its tradition's.
 - A deity's slug is its name and its tradition's, as a form's is its name and its group's. A collision is cured by changing either.
-- A coven's link never holds a deity and is never rewritten: what it picked stays, and an admin writes nothing of a coven's. Deleting a deity moves its name into that coven's in-use values.
+- A coven's link never holds a deity and is never rewritten: what it picked stays, and a keeper writes nothing of a coven's. Deleting a deity moves its name into that coven's in-use values.
 - The linking entries are read before the delete's transaction, so an entry linking the deity in the instant between is left holding a deleted one, which reads as its name.
 - The list reads treat a blank query as no query, and a tradition id that is not a uuid names no tradition, so lists nothing.
 - Other names: each is refused if the list repeats it or another live deity of the tradition holds it; the refusal sits on the name's row in the list sent, so a blank row still counts. Names are compared as written, so a change of case is a new name, and a dropped name is soft-deleted before a new one is written so the per-deity index never sees both.
 
 ## Deity tradition service details
 
-`src/modules/vocabulary/services/deity-traditions.ts` holds the deity traditions, in the form groups' shape: public reads, and writes for a curator or an admin alone (claude-docs/design-decisions/mb.132-admin-deities.md).
+`src/modules/vocabulary/services/deity-traditions.ts` holds the deity traditions, in the form groups' shape: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/mb.132-admin-deities.md).
 
 - A deity's slug is its name and its tradition's. A rename therefore moves every live deity's slug under the tradition, and a delete first moves its live deities to the tradition the admin names (`moveTo`), each re-slugged there. A tradition with no live deity needs no `moveTo`.
 - The deities stay curated either way, so neither a compendium entry's pick nor a coven's is orphaned, and no ingredient is rewritten: a link holds a deity's name and id, not its slug or its tradition.

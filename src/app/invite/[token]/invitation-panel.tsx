@@ -22,7 +22,7 @@ const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
 
 // The one accept panel for `/invite/[token]` and `/i/[token]`, public in src/proxy.ts. `getSession()`,
 // not `requireSession()`: an unverified account is told why it cannot accept yet, where a redirect
-// would drop the reason (claude-docs/auth/admin-users.md, "Inviting an admin"). `here` is the path
+// would drop the reason (claude-docs/auth/admin-users.md, "Inviting a keeper"). `here` is the path
 // the visitor came by, so sign-in and the email page return to it.
 export default async function InvitationPanel({ token, here }: { token: string; here: string }) {
   const session = await getSession();

@@ -4,7 +4,7 @@ import type { getMe as GetMe } from '@/modules/identity';
 import { A, B, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 
-// The schema's second check on `User.email`, `emailVerified`, `role` and `canCreateWorkspace` (DESIGN.md §7). No query a non-admin can make reaches another user's row, since `getMe` takes no id and `users` answers an admin alone.
+// The schema's second check on `User.email`, `emailVerified`, `role` and `canCreateWorkspace` (DESIGN.md §7). No query a non-keeper can make reaches another user's row, since `getMe` takes no id and `users` answers a keeper alone.
 // So this test hands `me` B's row whoever asks, a service answering the wrong row being the bug the scope stands behind.
 // The mock names the service's file because the index re-exports it: mocking the index would leave the resolver's own import untouched.
 

@@ -274,7 +274,7 @@ describe('suggestIngredients', () => {
       await expect(namesFor(D, 'mugwort', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
     });
 
-    it('refuses a site admin, who belongs to no workspace', async () => {
+    it('refuses a site keeper, who belongs to no workspace', async () => {
       await expect(namesFor(E, 'mugwort', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
     });
   });

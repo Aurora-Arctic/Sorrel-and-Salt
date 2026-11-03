@@ -10,7 +10,7 @@ MB.165 added `ingredients.form_id` and the `ingredient_deities` table; MB.166 fi
 
 ## Decisions (owner's calls, this scoping)
 
-- **Names:** GraphQL `IngredientDeityInput { deityId, name }` and output `IngredientDeity { name, deity: Deity }`, after the table, mirroring `SubstituteInput`/`Substitute`. MB.132 keeps `DeityInput` for the admin's deity CRUD. MB.167's text is corrected to match.
+- **Names:** GraphQL `IngredientDeityInput { deityId, name }` and output `IngredientDeity { name, deity: Deity }`, after the table, mirroring `SubstituteInput`/`Substitute`. MB.132 keeps `DeityInput` for the keeper's deity CRUD. MB.167's text is corrected to match.
 - **Form text vs link:** a `formId` needs `form` text that folds (trimmed, lower-cased) to its row's name. Anything else is a field error at `form`. A match is written in the row's spelling.
 - **`Deity` type with its tradition:** `Deity { id, name, slug, description, tradition: DeityTradition! }` and `DeityTradition { id, name, slug, description }`, the tradition through a `deityTraditionsById` loader, as `IngredientFormValue.group` does.
 

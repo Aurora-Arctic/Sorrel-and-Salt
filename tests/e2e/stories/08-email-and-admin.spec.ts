@@ -7,7 +7,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
-// Proving an address, changing it, granting and revoking admin, the privilege ledger and inviting an admin by
+// Proving an address, changing it, granting and revoking admin, the privilege ledger and inviting a keeper by
 // email (claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
 // A mailed link is read from Mailpit and followed.
 test.beforeAll(async () => {
@@ -133,7 +133,7 @@ async function expectAdminArea(page: Page, reached: boolean): Promise<void> {
   }
 }
 
-/** The primary admin's id: the account an earlier test signed in at the address, or one made now (the email index admits it once). */
+/** The primary keeper's id: the account an earlier test signed in at the address, or one made now (the email index admits it once). */
 async function primaryAdminId(page: Page): Promise<string> {
   const [row] = await withSql(
     (sql) => sql`select id from users where email = ${PRIMARY_ADMIN_EMAIL}`,
@@ -174,7 +174,7 @@ async function chooseRole(
   page: Page,
   row: ReturnType<Page['getByRole']>,
   name: string,
-  role: 'User' | 'Curator' | 'Admin',
+  role: 'User' | 'Curator' | 'Keeper',
 ) {
   const modal = (await page.getByRole('dialog').count())
     ? page.getByRole('dialog')
@@ -187,11 +187,11 @@ async function chooseRole(
   return question;
 }
 
-/** Invites `email` from /keepers/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
+/** Invites `email` from /keepers/invitations as the signed-in keeper, to the admin role unless told otherwise, and answers the mailed link's path. */
 async function inviteAdmin(
   page: Page,
   email: string,
-  { reason, role = 'Admin' }: { reason?: string; role?: 'Curator' | 'Admin' } = {},
+  { reason, role = 'Keeper' }: { reason?: string; role?: 'Curator' | 'Keeper' } = {},
 ): Promise<string> {
   await visit(page, '/keepers/invitations');
   await page.getByRole('link', { name: 'New Invitation' }).click();
@@ -203,7 +203,7 @@ async function inviteAdmin(
   if (reason) await dialog.getByRole('textbox', { name: 'Reason' }).fill(reason);
   await dialog.getByRole('button', { name: 'Send Invitation' }).click();
   await expect(
-    page.getByRole('region', { name: 'Admin Invitations' }).getByRole('status'),
+    page.getByRole('region', { name: 'Keeper Invitations' }).getByRole('status'),
   ).toContainText(email);
   return mailedPath(email, INVITE_LINK);
 }
@@ -358,15 +358,15 @@ test(
     await expect(roleCell(row)).toHaveText(/^User/);
     await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-    const granting = await chooseRole(page, row, 'Fixture Person', 'Admin');
+    const granting = await chooseRole(page, row, 'Fixture Person', 'Keeper');
     await expect(granting).toContainText('Fixture Person');
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
     await assertNoAccessibilityViolations(page);
     await granting.getByRole('button', { name: 'Promote' }).click();
     await expect(granting).toHaveCount(0);
 
-    // An admin now, who may create a coven: the creation cell holds the mark alone.
-    await expect(roleCell(row)).toHaveText(/^Admin/);
+    // A keeper now, who may create a coven: the creation cell holds the mark alone.
+    await expect(roleCell(row)).toHaveText(/^Keeper/);
     await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
 
     await signInAgainAs(page, grantee);
@@ -393,7 +393,7 @@ test(
   },
 );
 
-// The three tests on the primary admin share one worker, in this order, because the last demotes every other
+// The three tests on the primary keeper share one worker, in this order, because the last demotes every other
 // admin in the worker's database, the primary included, which the two before need in place. Serial in this
 // block alone.
 test.describe('the primary admin', () => {
@@ -408,16 +408,16 @@ test.describe('the primary admin', () => {
       await signInAs(page, peerEmail, ['discord'], 'admin');
       await signInAs(page, address('acting-admin'), ['discord'], 'admin');
 
-      // Another admin's Change Role is there to be used: the guard is about the primary admin alone.
+      // Another admin's Change Role is there to be used: the guard is about the primary keeper alone.
       const peer = await userModal(page, await userRow(page, peerEmail), 'Fixture Person');
       const usable = peer.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(usable).toBeVisible();
       await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
 
-      // The primary admin's row: marked, its Change Role in view but locked, saying why.
+      // The primary keeper's row: marked, its Change Role in view but locked, saying why.
       const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
-      await expect(row.getByRole('button', { name: 'Primary Admin' })).toBeVisible();
-      await expect(roleCell(row)).toHaveText(/^Admin/);
+      await expect(row.getByRole('button', { name: 'Primary Keeper' })).toBeVisible();
+      await expect(roleCell(row)).toHaveText(/^Keeper/);
       const modal = await userModal(page, row, 'Fixture Person');
       const locked = modal.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(locked).toHaveAttribute('aria-disabled', 'true');
@@ -435,16 +435,16 @@ test.describe('the primary admin', () => {
       const result = await sendFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
       expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
 
-      // Read afresh, the primary admin is an admin still, and reaches the admin area.
+      // Read afresh, the primary keeper is a keeper still, and reaches the admin area.
       const reread = await userRow(page, PRIMARY_ADMIN_EMAIL);
-      await expect(roleCell(reread)).toHaveText(/^Admin/);
+      await expect(roleCell(reread)).toHaveText(/^Keeper/);
       await signInAgainAs(page, primary);
       await expectAdminArea(page, true);
     },
   );
 
   test(
-    "the primary admin pauses admin changes: another admin's grant is refused while the primary's works, and resuming restores it",
+    "the primary keeper pauses keeper changes: another keeper's grant is refused while the primary's works, and resuming restores it",
     { tag: '@story-60' },
     async ({ page }) => {
       const primary = await primaryAdminId(page);
@@ -457,24 +457,24 @@ test.describe('the primary admin', () => {
 
       // Another admin sees the switch, unusable, and why.
       await visit(page, list);
-      const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
+      const unusable = page.getByRole('button', { name: 'Pause Keeper Changes' });
       await expect(unusable).toHaveAttribute('aria-disabled', 'true');
       await expect(unusable).toHaveAccessibleDescription(/\S/);
       await expect(status).toHaveCount(0);
 
-      // The primary admin pauses, behind a modal asking first. Scoped to it:
+      // The primary keeper pauses, behind a modal asking first. Scoped to it:
       // the button that opens it has the same name.
       await signInAgainAs(page, primary);
       await visit(page, list);
-      await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
-      const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
-      await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
+      await page.getByRole('button', { name: 'Pause Keeper Changes' }).click();
+      const pausing = page.getByRole('dialog', { name: 'Pause Keeper Changes' });
+      await pausing.getByRole('button', { name: 'Pause Keeper Changes' }).click();
       await expect(pausing).toHaveCount(0);
       await expect(status).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+      await expect(page.getByRole('button', { name: 'Resume Keeper Changes' })).toBeEnabled();
       await assertNoAccessibilityViolations(page);
 
-      // The other admin's Change Role is locked; tried from the keyboard, it says
+      // The other keeper's Change Role is locked; tried from the keyboard, it says
       // why and asks nothing, and Approve is locked the same way.
       await signInAgainAs(page, other);
       await visit(page, list);
@@ -499,21 +499,21 @@ test.describe('the primary admin', () => {
       await expect(roleCell(row)).toHaveText(/^User/);
       await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-      // The primary admin, whom the pause does not bind, still promotes.
+      // The primary keeper, whom the pause does not bind, still promotes.
       await signInAgainAs(page, primary);
       await visit(page, list);
-      const granting = await chooseRole(page, row, 'Fixture Person', 'Admin');
+      const granting = await chooseRole(page, row, 'Fixture Person', 'Keeper');
       await granting.getByRole('button', { name: 'Promote' }).click();
       await expect(granting).toHaveCount(0);
-      await expect(roleCell(row)).toHaveText(/^Admin/);
+      await expect(roleCell(row)).toHaveText(/^Keeper/);
       await closeModal(page);
 
       // And resumes.
-      await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
-      await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+      await page.getByRole('button', { name: 'Resume Keeper Changes' }).click();
+      await expect(page.getByRole('button', { name: 'Pause Keeper Changes' })).toBeEnabled();
       await expect(status).toHaveCount(0);
 
-      // The other admin's controls work again: the revoke goes through.
+      // The other keeper's controls work again: the revoke goes through.
       await signInAgainAs(page, other);
       await visit(page, list);
       await expect(status).toHaveCount(0);
@@ -524,15 +524,15 @@ test.describe('the primary admin', () => {
     },
   );
 
-  // Last of the three, and it must stay so: it demotes every other admin in the
-  // worker's database, the primary admin included.
+  // Last of the three, and it must stay so: it demotes every other keeper in the
+  // worker's database, the primary keeper included.
   test(
-    'the last admin is refused revoking their own admin, and stays an admin',
+    'the last keeper is refused revoking their own admin, and stays an admin',
     { tag: '@story-60' },
     async ({ page }) => {
       const loneEmail = address('last-admin');
       const { userId: lone } = await signInAs(page, loneEmail, ['discord'], 'admin');
-      // Every other admin demoted as a `psql` fix would, so this one is the last.
+      // Every other keeper demoted as a `psql` fix would, so this one is the last.
       const demoted = await withSql((sql) =>
         sql.begin(async (tx) => {
           await tx`select set_config('app.privilege_route', 'manual', true)`;
@@ -547,8 +547,8 @@ test.describe('the primary admin', () => {
 
       const response = await visit(page, '/keepers/users?role=admin');
       expect(response.status()).toBe(200);
-      const admins = page.getByRole('row').filter({ has: page.getByRole('cell') });
-      await expect(admins).toHaveCount(1);
+      const keepers = page.getByRole('row').filter({ has: page.getByRole('cell') });
+      await expect(keepers).toHaveCount(1);
       const row = await userRow(page, loneEmail);
 
       // The control is offered, since the list cannot know the count stays
@@ -565,7 +565,7 @@ test.describe('the primary admin', () => {
       await assertNoAccessibilityViolations(page);
 
       const reread = await userRow(page, loneEmail);
-      await expect(roleCell(reread)).toHaveText(/^Admin/);
+      await expect(roleCell(reread)).toHaveText(/^Keeper/);
       await expectAdminArea(page, true);
     },
   );
@@ -587,7 +587,7 @@ test(
     // To the second the database stamps, a little before this test's first change.
     const started = Date.now() - 1000;
 
-    // Two changes made where an admin makes them, each with its reason.
+    // Two changes made where a keeper makes them, each with its reason.
     const row = await userRow(page, subjectEmail);
     const modal = await userModal(page, row, 'Ledger Fixturewort');
     await modal.getByRole('button', { name: 'Approve Ledger Fixturewort' }).click();
@@ -596,11 +596,11 @@ test(
     await approving.getByRole('button', { name: 'Approve' }).click();
     await expect(approving).toHaveCount(0);
     await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
-    const granting = await chooseRole(page, row, 'Ledger Fixturewort', 'Admin');
+    const granting = await chooseRole(page, row, 'Ledger Fixturewort', 'Keeper');
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
     await granting.getByRole('button', { name: 'Promote' }).click();
     await expect(granting).toHaveCount(0);
-    await expect(roleCell(row)).toHaveText(/^Admin/);
+    await expect(roleCell(row)).toHaveText(/^Keeper/);
 
     // And a break-glass fix, made outside the app as a `psql` fix is: it
     // must say it is one, may say why, and is stamped with whoever ran it.
@@ -657,7 +657,7 @@ test(
     const cells = async (index: number) => rows.nth(index).getByRole('cell').allTextContents();
     expect((await cells(0)).slice(1)).toEqual([
       'Ledger Fixturewort',
-      'Admin',
+      'Keeper',
       'Revoked',
       'Manual fix',
       'Breakglass Operator',
@@ -665,7 +665,7 @@ test(
     ]);
     expect((await cells(1)).slice(1)).toEqual([
       'Ledger Fixturewort',
-      'Admin',
+      'Keeper',
       'Granted',
       'By an admin',
       'Ledger Keeper',
@@ -715,7 +715,7 @@ test(
     await expect(rows.first().getByRole('cell').nth(1)).toHaveText('Ledger Fixturewort');
     await expect(rows.first().getByRole('cell').nth(5)).toHaveText('Ledger Keeper');
     await privilege.click();
-    await choices.getByRole('option', { name: 'Admin', exact: true }).click();
+    await choices.getByRole('option', { name: 'Keeper', exact: true }).click();
     await expect(page).toHaveURL(/privilege=admin$/);
     await expect(rows).toHaveCount(2);
 
@@ -746,7 +746,7 @@ test(
     await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
     await visit(page, '/keepers/invitations');
 
-    const section = page.getByRole('region', { name: 'Admin Invitations' });
+    const section = page.getByRole('region', { name: 'Keeper Invitations' });
     // New Invitation is the tab's action, beside the page's heading.
     await page.getByRole('link', { name: 'New Invitation' }).click();
     const dialog = page.getByRole('dialog', { name: 'New Invitation' });
@@ -776,7 +776,7 @@ test(
     await expect(row).toBeVisible();
     expect(await page.content()).not.toContain(token);
 
-    // A user is refused the page the admin has just used.
+    // A user is refused the page the keeper has just used.
     await signInAs(page, address('not-an-admin'));
     const refused = await visit(page, '/keepers/invitations?invite');
     expect(refused.status()).toBe(403);
@@ -804,8 +804,8 @@ test(
       'href',
       `/sign-in?next=${encodeURIComponent(path)}`,
     );
-    // Not even what kind of invitation it is: the word admin appears nowhere on it.
-    await expect(visitor.getByRole('main').getByText(/admin/i)).toHaveCount(0);
+    // Not even what kind of invitation it is: the word keeper appears nowhere on it.
+    await expect(visitor.getByRole('main').getByText(/keeper/i)).toHaveCount(0);
     await expect(visitor.getByRole('main')).not.toContainText(invited);
     await expect(visitor.getByRole('main')).not.toContainText('Curates the resins');
     await expect(visitor.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
@@ -814,7 +814,7 @@ test(
     await visitor.context().close();
 
     // An account that has proved a different address is refused, at the
-    // page and at the server, and is no admin after.
+    // page and at the server, and is no keeper after.
     await signInAs(page, address('stranger'), ['google']);
     const different = await expectInvitationRefused(page, path);
     await expect(page.getByRole('link', { name: 'Confirm Your Email' })).toHaveCount(0);
@@ -868,7 +868,7 @@ test(
     expect([...changes].sort((a, b) => a[1].localeCompare(b[1]))).toEqual([
       [
         'Invited Fixturewort',
-        'Admin',
+        'Coven Creation',
         'Granted',
         'Invitation accepted',
         'Invited Fixturewort',
@@ -876,7 +876,7 @@ test(
       ],
       [
         'Invited Fixturewort',
-        'Coven Creation',
+        'Keeper',
         'Granted',
         'Invitation accepted',
         'Invited Fixturewort',
@@ -907,7 +907,7 @@ test(
     await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
     expect((await visit(page, '/keepers/users')).status()).toBe(403);
 
-    // The ledger is People's, so the inviting admin reads it.
+    // The ledger is People's, so the inviting keeper reads it.
     await signInAgainAs(page, admin);
     await visit(page, `/keepers/privilege-changes?query=${encodeURIComponent(invited)}`);
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
@@ -972,7 +972,7 @@ test(
     // Withdrawn: the admin revokes it from the list after confirming.
     await signInAgainAs(page, admin);
     await visit(page, '/keepers/invitations');
-    const section = page.getByRole('region', { name: 'Admin Invitations' });
+    const section = page.getByRole('region', { name: 'Keeper Invitations' });
     await section
       .getByRole('button', { name: `Revoke the invitation to ${withdrawnEmail}` })
       .click();

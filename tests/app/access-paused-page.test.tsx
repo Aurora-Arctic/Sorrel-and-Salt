@@ -47,7 +47,7 @@ describe('/access-paused', () => {
     );
   });
 
-  it('says a pause with no end lasts until an admin lifts it', async () => {
+  it('says a pause with no end lasts until a keeper lifts it', async () => {
     getShellSession.mockResolvedValue({ session: SESSION, accessPause: { until: null } });
     await visit();
 

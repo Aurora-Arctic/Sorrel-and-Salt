@@ -254,7 +254,7 @@ const sourceMenuNode = (
   />
 );
 
-// The admin's Toxic chip open, with No Refs on the same row.
+// The keeper's Toxic chip open, with No Refs on the same row.
 const toxicMenuNode = <Panel menu="Toxic" admin start={NONE} />;
 
 // A signed-in viewer in two covens: In My Covens beside Forms and Toxic, each half the line,
@@ -269,7 +269,7 @@ const inMyCovensNode = (
   />
 );
 
-// The admin's Reviewed strip, on Needs Review: Reviewed and Needs Review with their counts.
+// The keeper's Reviewed strip, on Needs Review: Reviewed and Needs Review with their counts.
 const adminReviewedNode = (
   <Panel
     admin

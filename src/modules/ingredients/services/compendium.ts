@@ -63,7 +63,7 @@ import type {
 } from '../types';
 
 // The compendium: the public list and entry reads (claude-docs/db/compendium-read.md, "The compendium read"),
-// curator and admin writes (claude-docs/db/compendium-writes.md, "Compendium writes"),
+// curator and keeper writes (claude-docs/db/compendium-writes.md, "Compendium writes"),
 // and addresses with redirects (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 
 // The list and its count, held in the data cache under the `compendium` tag, keyed by the parsed filter (claude-docs/db/compendium-cache.md).
@@ -128,7 +128,7 @@ export async function getIngredient(
  * Creates a compendium entry with its folk names, substitutes, deities, references, categories and forms in one
  * transaction, curated values in their rows' spelling (claude-docs/db/compendium-writes.md, "Compendium service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin, checked before the input is read.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper, checked before the input is read.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`, a curated pick, a collision, an unconfirmed
  * redirect end, a dead category, or a substitute or reference outside the compendium.
  */
@@ -167,7 +167,7 @@ export async function createCompendiumEntry(
  * Replaces a compendium entry with `input`, the whole entry, so a field left out is cleared
  * (claude-docs/db/compendium-writes.md, "Compendium service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createCompendiumEntry`.
  * A save names the revision it read in `expectedRevision`: a newer one refuses it, and null writes whatever the row holds.
  *
@@ -238,7 +238,7 @@ export async function updateCompendiumEntry(
  * Swaps the display name of a compendium entry with one of its folk names, as `promoteWorkspaceFolkName` does for a
  * coven's (claude-docs/db/compendium-writes.md, "Compendium service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the new display name collides, or its address is one another entry's redirect runs from.
  * @throws {NotFound} no live compendium entry has this id, or it holds no such live folk name.
  */
@@ -284,7 +284,7 @@ export async function promoteCompendiumFolkName(
  * Marks a compendium entry reviewed by this curator, or clears the mark; the only function that writes it
  * (claude-docs/db/compendium-writes.md, "Compendium service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
  */
 export async function setCompendiumEntryReviewed(
@@ -306,7 +306,7 @@ export async function setCompendiumEntryReviewed(
 /**
  * Hides a compendium entry from the public compendium, or shows it again. Admin screens, the audit queue and a coven's cupboard still see a hidden entry.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
  */
 export async function setCompendiumEntryShown(
@@ -328,7 +328,7 @@ export async function setCompendiumEntryShown(
 /**
  * When a curator last marked a compendium entry reviewed, `null` while it needs review; uncached.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
  */
 export async function readCompendiumReview(
@@ -390,7 +390,7 @@ export function readCompendiumEntry(slug: string): Promise<CompendiumEntryPage> 
  * A curator's read of the entry page, for the address the public read found nothing at: the entry whether it is shown or hidden.
  * Not cached, since what it returns depends on who asks (claude-docs/design-decisions/m14.35-curators-see-hidden-entry-pages.md).
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} nothing live is at `slug` and nothing redirects from it.
  */
 export async function readCompendiumEntryAsCurator(
@@ -510,7 +510,7 @@ async function refuseEndingARedirect(
  * Soft-deletes a compendium entry, stamping who deleted it; its folk names and category links stay
  * (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
  */
 export async function deleteCompendiumEntry(session: Session, id: string): Promise<void> {
@@ -524,7 +524,7 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
 /**
  * How many covens hold this compendium entry in their cupboard, a count only, for the delete confirm.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {NotFound} no live compendium entry has this id.
  */
 export async function countCompendiumEntryUsers(session: Session, id: string): Promise<number> {

@@ -2,7 +2,7 @@
 
 **Status:** decided · **Date:** 2026-10-06
 
-M2.9 gave the primary admin a switch that stops every other admin granting
+M2.9 gave the primary keeper a switch that stops every other keeper granting
 or revoking admin while a rogue admin is dealt with
 ([`m2.9-granting-admin.md`](m2.9-granting-admin.md), "Granting"). It
 specified the switch as a one-row `site_settings` table, its one row seeded by
@@ -76,7 +76,7 @@ then.
 ## The repository
 
 The table is reached through three named calls, each under the `SiteAdmin`
-proof, since only an admin's act asks:
+proof, since only a keeper's act asks:
 
 - `findOpenAdminRoleChangePause(admin)`, the open pause or `undefined`;
 - the writer's `pauseAdminRoleChanges(admin)`, which opens one and returns no
@@ -95,8 +95,8 @@ seventeen, which `write.test.ts` pins as a decision.
 
 **Superseded in part by MB.198 (2026-10-10):** `NotPauseLedger` is gone. The table is marked `namedWrites` in its schema file, and every generic writer method refuses a marked table, so the refusal no longer rests on `ended_at` being a column no other table carries. The pause and the resume moved beside the finder, into `admin-roles.ts`, and `writerFor` spreads them into the writer; the writer's methods and their count are unchanged ([`db/write-path.md`](../db/write-path.md), "Table marks").
 
-Who may pause is MB.63's, as before: only the primary admin may pause or
-resume, and only the primary admin is exempt from a pause. DESIGN.md §5 had
-said the pause covered the primary admin too; M2.9's record and MB.63's entry
+Who may pause is MB.63's, as before: only the primary keeper may pause or
+resume, and only the primary keeper is exempt from a pause. DESIGN.md §5 had
+said the pause covered the primary keeper too; M2.9's record and MB.63's entry
 had the exemption, and this PR corrects §5 to match them, on the owner's
 call.

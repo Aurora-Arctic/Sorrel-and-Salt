@@ -7,13 +7,13 @@ import { adminDeclaration, liveUser } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
 import type { UserRow } from '../types';
 
-// The approval route and its undoing: an admin lets someone with no invitation create a workspace, or stops them. Each change is
+// The approval route and its undoing: a keeper lets someone with no invitation create a workspace, or stops them. Each change is
 // declared `via: 'admin'` and the trigger on `users` records it in the privilege ledger
 // (claude-docs/auth/admin-users.md, "Approving workspace creation").
 
-const REFUSAL = 'Only a site admin may change who can create a coven';
+const REFUSAL = 'Only a site keeper may change who can create a coven';
 
-/** Writes the flag as an admin's act, answering the row. The ledger row is the trigger's, carrying `note` (blank as none). */
+/** Writes the flag as a keeper's act, answering the row. The ledger row is the trigger's, carrying `note` (blank as none). */
 async function setFlag(
   session: Session,
   userId: string,
@@ -38,8 +38,8 @@ async function setFlag(
  * admin and recorded as a `grant` with `note`, the confirmation's optional
  * reason, and answers the row as written.
  *
- * @throws {Forbidden} the session's role is not `admin`; admin changes are
- * paused and the caller is not the primary admin; or the user may
+ * @throws {Forbidden} the session's role is not `admin`; keeper changes are
+ * paused and the caller is not the primary keeper; or the user may
  * already create one — a second approval would record a change that never
  * happened.
  * @throws {NotFound} no live user has this id.
@@ -60,9 +60,9 @@ export async function grantWorkspaceCreation(
  * a `revoke` with `note`, and answers the row as written. The workspaces they already
  * created stay theirs: the flag governs creating, not keeping.
  *
- * @throws {Forbidden} the session's role is not `admin`; admin changes are
- * paused and the caller is not the primary admin; the user cannot
- * create one already; or the user is an admin or a curator, whom the users
+ * @throws {Forbidden} the session's role is not `admin`; keeper changes are
+ * paused and the caller is not the primary keeper; the user cannot
+ * create one already; or the user is a keeper or a curator, whom the users
  * CHECK holds to the flag, so making them a user is the
  * route.
  * @throws {NotFound} no live user has this id.

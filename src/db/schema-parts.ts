@@ -30,7 +30,7 @@ export function liveUnique(
 
 /**
  * The identity the reference seed gave the row, null on any other; never
- * changed after, so a reseed knows a row an admin has since edited.
+ * changed after, so a reseed knows a row a keeper has since edited.
  */
 export function seedKeyColumn() {
   return text('seed_key');
@@ -44,7 +44,7 @@ export function seedKeyUnique(name: string, table: SeedKeyedTable) {
 }
 
 /**
- * What every admin-curated vocabulary row is: a display name, the slug that
+ * What every keeper-curated vocabulary row is: a display name, the slug that
  * addresses it, a description and the seed's key. A table adds its own
  * columns beside these, and spreads `...auditColumns` after them.
  */

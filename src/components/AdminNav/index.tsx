@@ -8,7 +8,7 @@ import type { AdminNavProps, AdminSection } from './types';
 export { default as AdminContents, CuratorContents } from './contents';
 
 // The two layouts' navs, in the context row and, on a phone, the bottom bar: `/curator`'s lists the curation
-// pages, `/keepers`'s Support, and People and Invitations for an admin. A page is linked at its first tab and current
+// pages, `/keepers`'s Support, and People and Invitations for a keeper. A page is linked at its first tab and current
 // on any of its tabs; the Support link carries the count of requests waiting on staff; each section after the first
 // starts a hairline-set group (claude-docs/components/admin-nav.md).
 const SUPPORT_HREF = '/keepers/support';
@@ -26,7 +26,7 @@ const items = (sections: readonly AdminSection[], needsStaff?: number): readonly
     })),
   );
 
-/** The `/curator` nav: every curation page, to a curator and an admin alike. */
+/** The `/curator` nav: every curation page, to a curator and a keeper alike. */
 export const CuratorNav = (): ReactElement => (
   <SectionNav label="Curator" sections={items(CURATOR_SECTIONS)} />
 );

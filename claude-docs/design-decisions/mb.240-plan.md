@@ -64,14 +64,14 @@ Projection at 614 ingredients, Cunningham depth (estimate: ~2 KB per ingredient 
 
 #### Constraints in the codebase (verified against `origin/staging`)
 
-- `ingredients` and `ingredient_variants` carry **no `seed_key`** (MB.171 put it on the nine tables `migrate.yml` seeds; `claude-docs/design-decisions/mb.171-seed-keys.md`). Without it an admin's relabel or formal-name edit would make the next reseed re-insert the original.
+- `ingredients` and `ingredient_variants` carry **no `seed_key`** (MB.171 put it on the nine tables `migrate.yml` seeds; `claude-docs/design-decisions/mb.171-seed-keys.md`). Without it a keeper's relabel or formal-name edit would make the next reseed re-insert the original.
 - **Nothing seeds an ingredient's references, substitutes or colours**: `SourceTargetTable` in `src/db/seed/types.ts` excludes `ingredientId` and `ingredientVariantId`; `SeedIngredient` has no `colors`, substitutes or references.
-- The admin's unsourced filter is `citesNothing('ingredientId')` (`src/db/repository/ingredients.ts:420`): it counts **entry-level** links only, so every entry needs at least one ingredient-level reference.
-- `pickedIdByName` in `standard.ts` throws when two live curated rows share a name. "Curio" is a group and a form in different tables, so nothing collides today, but picks by `seed_key` survive an admin's rename where picks by name do not.
+- The keeper's unsourced filter is `citesNothing('ingredientId')` (`src/db/repository/ingredients.ts:420`): it counts **entry-level** links only, so every entry needs at least one ingredient-level reference.
+- `pickedIdByName` in `standard.ts` throws when two live curated rows share a name. "Curio" is a group and a form in different tables, so nothing collides today, but picks by `seed_key` survive a keeper's rename where picks by name do not.
 - The curated lists the seed may name: 78 forms in 6 groups (`src/db/seed/forms.ts`), 63 categories, 216 deities in 35 traditions, 19 planets and points, 13 signs including Ophiuchus, five elements.
 - The repo cites Wikipedia as kind **`entry`** (64 rows in `sources.ts`, rendered `Wikipedia, s.v. "…"`), so the compendium does the same, with `url` the revision permalink (`?oldid=`) and `accessed` the fetch date.
 - The `standard` scenario is cloned for every db test (`tests/support/seeded-database.ts`), so the production seed is its own `db:seed:compendium` target, never folded into `standard`. `standard` uses real names (Mugwort, Rosemary, Amethyst…), so a local database always overlaps the production seed.
-- `ingredient_categories` is hard-deleted (MB.34): a reseed that re-added missing children would put back every category an admin unfiled.
+- `ingredient_categories` is hard-deleted (MB.34): a reseed that re-added missing children would put back every category a keeper unfiled.
 - `deploy.yml`'s `seed-changed` job decides a reseed from an explicit file list (lines ~82–135); it omits `idempotent.ts` today and still lists two seed docs no test reads. `migrate.yml` runs: categories, forms, astrology, deities, sources.
 - `tests/db/seed/index.test.ts`'s `SEED_ENTRIES` sweep runs three tests over every production seed (fills from empty with bootstrap stamps; a second run is byte-identical; soft-deleting one row per tombstoned table and re-running adds nothing). MB.225's acceptance says "five production seeds"; this makes six.
 - No test parses the seed docs any more (MB.225); comments in `deities.ts` and `sources.ts` saying otherwise are stale. Coverage excludes `src/db/seed/**`. Lint is oxlint with no `max-lines`; prettier formats seed TS and `claude-docs` markdown at printWidth 100 and never breaks strings. TypeScript ^7 (native) makes 10k lines of annotated literals cheap to check.
@@ -81,8 +81,8 @@ Projection at 614 ingredients, Cunningham depth (estimate: ~2 KB per ingredient 
 
 ### Design decisions
 
-1. **Write-once per entry.** The run that inserts an entry writes everything beneath it (variants, folk names, deities, categories, substitutes, reference links). A present entry is skipped with all its children. This keeps the three `SEED_ENTRIES` sweeps true without per-child keys and never re-files a category an admin removed. The cost: a correction to a landed shard's literal does not reach staging or production; corrections are made in the admin UI and the literal updated to match. The README says so.
-2. **`seed_key` on `ingredients` only.** The key is `lower(coalesce(canonical_name, name))`, the identity key as the seed wrote it. "Present" is any of: a row with that `seed_key`, live or deleted; a live compendium row with that `identity_key` (an admin's or the `standard` fixture's); a live compendium row holding the derived slug (MB.172's live-slug rule, so an index violation never aborts the CI transaction). Rows found by identity or slug are left untouched and not stamped. `standard` keeps keying on identity and writes no `seed_key`. Variants need no key under write-once.
+1. **Write-once per entry.** The run that inserts an entry writes everything beneath it (variants, folk names, deities, categories, substitutes, reference links). A present entry is skipped with all its children. This keeps the three `SEED_ENTRIES` sweeps true without per-child keys and never re-files a category a keeper removed. The cost: a correction to a landed shard's literal does not reach staging or production; corrections are made in the admin UI and the literal updated to match. The README says so.
+2. **`seed_key` on `ingredients` only.** The key is `lower(coalesce(canonical_name, name))`, the identity key as the seed wrote it. "Present" is any of: a row with that `seed_key`, live or deleted; a live compendium row with that `identity_key` (a keeper's or the `standard` fixture's); a live compendium row holding the derived slug (MB.172's live-slug rule, so an index violation never aborts the CI transaction). Rows found by identity or slug are left untouched and not stamped. `standard` keeps keying on identity and writes no `seed_key`. Variants need no key under write-once.
 3. **Picks go through `seed_key`, never the name.** Forms, deities and categories map `slugify(literal name)` to the curated row's seed key, then to its id and current spelling. Planets and signs are stored as the live row's current name (MB.162). A soft-deleted pick is skipped; a name no seed wrote throws, as `sources.ts`'s `linksOf` does.
 4. **References reuse the sources mechanism.** `insertMissingReferences` is extracted from `sources.ts` into `src/db/seed/reference-rows.ts` with no behaviour change; both seeds key references on `citationText`, so a work the sources seed already wrote is linked, not twinned. Works shared across shards (Cunningham ×2, Kynes ×2, Hall, Beyerl, Culpeper, Grieve, Kunz, Folkard, POWO, Mindat) are declared once in `src/db/seed/compendium/works.ts`; per-entry pages (Wikipedia, botanical.com) in each shard's `SOURCES` under short handles.
 5. **The literal is the source of truth; the doc records the sources.** Duplicating rows in markdown at the deity precedent's ~1.1 KB per row would add ~700 KB nothing checks. Each shard doc holds: scope; a Chicago bibliography; **one source line per entry** naming which source supports which fields; and "What is left out, and why" (the deity doc's section). CLAUDE.md's "records its sources in its seed doc" is met by the per-entry line. The owner's rule is enforced in the literal: every citation carries `supports: Field[]`, and the guard fails any populated field no citation covers.
@@ -99,7 +99,7 @@ Every entry follows `.claude/rules/task-tracking.md` "Minting a task": heading `
 
 #### MB.240 — The compendium seed: scope, sourcing rules, the candidate list and the library · 3h
 
-- **Story:** As a site admin, I want the compendium's starting entries decided and their sourcing rules written down, so that six research lanes fill one list without overlapping or inventing anything.
+- **Story:** As a site keeper, I want the compendium's starting entries decided and their sourcing rules written down, so that six research lanes fill one list without overlapping or inventing anything.
 - **Builds (docs and minting only; can start now on staging):**
   - `claude-docs/db/compendium-seed/README.md`: the entry template with a worked invented example; the field-to-`supports` names; the closed lists by reference to their seed files; the sourcing rules (below); write-once and the correction rule; mineral naming in `standard`'s form (`Quartz var. amethyst`); the library layout and reading method; the 26 `standard` names so lanes spell their formal names the same way.
   - **The candidate list** (`claude-docs/db/compendium-seed/candidates.md`): ~614 rows of label, formal name, nomenclature and shard, drawn from several works (the owner's books' indexes, Grieve's and Culpeper's indexes, Wikipedia lists), each list source a Chicago row, so the seed mirrors no single book's selection.
@@ -113,7 +113,7 @@ Every entry follows `.claude/rules/task-tracking.md` "Minting a task": heading `
 
 #### MB.241 — `seed_key` on `ingredients` · 1h
 
-- **Story:** As a maintainer, I want a seeded compendium entry to carry the key the seed gave it, so that an entry an admin renames is not seeded again beside itself.
+- **Story:** As a maintainer, I want a seeded compendium entry to carry the key the seed gave it, so that an entry a keeper renames is not seeded again beside itself.
 - **Builds:** `seedKey: seedKeyColumn()` and `seedKeyUnique('ingredients_seed_key_unique', table)` in `src/modules/ingredients/schema/ingredients.ts` (builders in `src/db/schema-parts.ts`); `db:generate` → migration 0065, additive, no sidecar.
 - **Tests first:** `tests/db/partial-unique-indexes.test.ts` gains the index row; the drift test picks the column up.
 - **Acceptance:** exactly one column and one partial unique index; drift test green; nothing reads or writes the column yet.
@@ -121,7 +121,7 @@ Every entry follows `.claude/rules/task-tracking.md` "Minting a task": heading `
 
 #### MB.242 — `db:seed:compendium`, the guard, CI and a 14-ingredient pilot · 6h
 
-- **Story:** As a site admin, I want the compendium seeded on staging and production the way the curated vocabularies are, so that every entry arrives sourced and nothing an admin changed is undone.
+- **Story:** As a site keeper, I want the compendium seeded on staging and production the way the curated vocabularies are, so that every entry arrives sourced and nothing a keeper changed is undone.
 - **Builds:**
   - Types in `src/db/seed/types.ts`: `SeedCompendiumEntry` (ingredient fields + `colors`, `folkNames`, `deities`, `categories`, `substitutes: { identity, form?, substituteForm? }[]`, `references: { source: handle, locator?, supports: Field[] }[]`, `variants[]` each with description, safety notes, the four lists, categories, substitutes, references).
   - `src/db/seed/compendium.ts` (`seedCompendium(db, entries = COMPENDIUM)`), `src/db/seed/compendium/{index.ts, works.ts, colours.ts, guard.ts}` with `COMPENDIUM = []` until the first shard; `reference-rows.ts` extracted from `sources.ts`; `identityOf` and the variant insert reused from `standard.ts` as MB.222 leaves them.
@@ -155,7 +155,7 @@ Split points come from MB.240's list, balanced by count. Each shard is ~200–30
 
 #### MB.249 — Close the compendium seed · 1h
 
-- **Builds:** reconcile seeded totals against the candidate list; consolidate "left out" across shards; DESIGN §14 and the wave file gain the final count; confirm on staging the admin's unsourced filter lists no seeded entry; a `SEED_SCENARIO`/`db:reset` note ("run `db:seed:compendium` for a populated local compendium").
+- **Builds:** reconcile seeded totals against the candidate list; consolidate "left out" across shards; DESIGN §14 and the wave file gain the final count; confirm on staging the keeper's unsourced filter lists no seeded entry; a `SEED_SCENARIO`/`db:reset` note ("run `db:seed:compendium` for a populated local compendium").
 - **Acceptance:** counts recorded; a test proves every seeded entry has ≥1 `ingredient_id` link.
 - **Calibrated against:** MB.223 (1h).
 

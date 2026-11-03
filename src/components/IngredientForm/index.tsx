@@ -1128,7 +1128,7 @@ const IngredientForm = ({
                 {/* The compendium's review row: after the last section and before the buttons, the
               same row the Quick Look ends its head with. Its words show the saved state, the
               switch the form's own value, a field that Save carries and Cancel discards. For a
-              curator or admin only (claude-docs/components/ingredient-entry.md, "Structure"). */}
+              curator or keeper only (claude-docs/components/ingredient-entry.md, "Structure"). */}
                 {compendium && review && (
                   <div data-focus-skip>
                     <ReviewRow

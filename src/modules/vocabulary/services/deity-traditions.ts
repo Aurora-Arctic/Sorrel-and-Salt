@@ -19,7 +19,7 @@ import { DeityTraditionInput } from '../validation/deity-tradition';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CuratedGroup, DeityTraditionRow, GroupFilter } from '../types';
 
-// The deity traditions: public reads, and writes for a curator or an admin alone. A rename or delete re-slugs the deities under
+// The deity traditions: public reads, and writes for a curator or a keeper alone. A rename or delete re-slugs the deities under
 // them (claude-docs/db/deity-vocabulary.md, "Deity tradition service details").
 
 /** The traditions, and the deities under them, which a rename or delete re-slugs under the tradition's name. */
@@ -67,7 +67,7 @@ export async function getDeityTraditionBySlug(slug: string): Promise<DeityTradit
 /**
  * Adds a tradition, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `DeityTraditionInput`, or its slug is a live tradition's.
  */
 export async function createDeityTradition(
@@ -90,7 +90,7 @@ export async function createDeityTradition(
  * Rewrites a tradition whole, its slug following the name, and on a rename the slug of every live deity under it
  * (claude-docs/db/deity-vocabulary.md, "Deity tradition service details"). Its `seedKey` is left as it was.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createDeityTradition` throws it, the row's own slug excepted; on `name`, a rename that would move a deity onto another's address.
  * @throws {NotFound} no live tradition has this id.
  */
@@ -110,7 +110,7 @@ export async function updateDeityTradition(
  * Soft-deletes a tradition, first moving its live deities to the tradition `moveTo` names (claude-docs/db/deity-vocabulary.md,
  * "Deity tradition service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} on `moveTo`, a missing target or a deity that would move onto another's address.
  * @throws {NotFound} no live tradition has this id.
  */

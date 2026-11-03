@@ -70,7 +70,7 @@ const readUsers = cache(
     ]);
     const users = page.edges.map(({ node }, index): UserListEntry => {
       const linked = providers[index];
-      // An admin's batch answers every slot; a refusal here is the guard's bug.
+      // A keeper's batch answers every slot; a refusal here is the guard's bug.
       if (!linked || linked instanceof Error) throw linked ?? new Error('No providers read');
       // Read from ADMIN_BOOTSTRAP_EMAIL, so the label follows the variable.
       return {
@@ -95,7 +95,7 @@ function cursorOf(after: string | undefined, before: string | undefined): PagerC
   return before ? { before } : undefined;
 }
 
-// Everyone with an account, for an admin to act on without being sent an id. A read of who has an
+// Everyone with an account, for a keeper to act on without being sent an id. A read of who has an
 // account confers no workspace access, and the page offers no control over one
 // (claude-docs/auth/admin-users.md, "The user list").
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
@@ -116,7 +116,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
   const [{ users, pageInfo, position }, adminChanges, opened] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, timedOut, paused, after, before),
-    // The pause on admin changes and whether this admin may flip it, which the switch beside the
+    // The pause on keeper changes and whether this keeper may flip it, which the switch beside the
     // heading reads too (`@action/users`).
     readPauseState(session),
     userParam ? readOpenedUser(session, userParam) : undefined,

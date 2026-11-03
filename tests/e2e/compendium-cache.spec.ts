@@ -4,7 +4,7 @@ import { test, expect } from './fixtures';
 import { COMPENDIUM_CACHE_DATABASE, e2eDatabaseUrl } from './database';
 import { signInAs } from './session';
 
-// The compendium read answered from Next's data cache, not Postgres, until an admin's write expires it. Runs
+// The compendium read answered from Next's data cache, not Postgres, until a keeper's write expires it. Runs
 // only in the `chromium-compendium-cache` project, against the one server that keeps its cache over a database
 // no spec reseeds (claude-docs/db/compendium-cache.md, "In tests"); serial, since the second test reads what the first warmed.
 test.describe.configure({ mode: 'serial' });
@@ -49,7 +49,7 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
   await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
 });
 
-// An admin's write expires the tag, so the very next load reads
+// A keeper's write expires the tag, so the very next load reads
 // Postgres — the admin's own entry, and the rename the cache was hiding above.
 test('an admin edit is visible on the next page load', async ({ page }) => {
   await signInAs(page, `writer-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);
@@ -83,8 +83,8 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
 });
 
 // A compendium entry's share card is drawn once and then served from Next's cache, under the same tag as the
-// read it draws from, so the admin's write that expires the read draws the card afresh.
-test("an entry's share card is drawn once, until an admin edit draws it again", async ({
+// read it draws from, so the keeper's write that expires the read draws the card afresh.
+test("an entry's share card is drawn once, until a keeper edit draws it again", async ({
   page,
 }) => {
   await signInAs(page, `carder-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);

@@ -33,7 +33,7 @@ build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
   same `requiredInProduction`, which `src/lib/primary-admin.ts` calls: unset at
   `NODE_ENV=production`, importing `src/lib/auth.ts` throws
   `ADMIN_BOOTSTRAP_EMAIL is not set`, so a deploy fails its build rather than
-  running with no primary admin. The three places above that build set the
+  running with no primary keeper. The three places above that build set the
   fixed placeholder `placeholder@admin-bootstrap.invalid` — `.invalid` is
   reserved (RFC 2606), so no sign-in can ever match it. `next dev` and Vitest
   are exempt, and unset there promotes nobody.

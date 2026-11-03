@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { hrefs } from '../../../support/links';
 
-// The `/curator` layout and its index page each run the curation guard themselves, which a curator and an admin
+// The `/curator` layout and its index page each run the curation guard themselves, which a curator and a keeper
 // both pass: a layout does not re-run on client-side navigation (claude-docs/auth/admin-guard.md). The guard is
 // mocked (tests/lib/request-session.test.ts's), to prove each route awaits it before rendering.
 

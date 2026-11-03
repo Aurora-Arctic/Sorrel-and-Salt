@@ -219,7 +219,7 @@ traditionName)`, because two traditions can share a name (`hecate-greek`,
 are curated words, not a fixed set: `?forms=Oil&forms=Resin`. Each value is
 trimmed, a blank is dropped, and a repeat that differs only in case is dropped
 too (the first spelling stays). It is used for forms, zodiac signs and
-celestial bodies because those three are admin-curated vocabularies that offer
+celestial bodies because those three are keeper-curated vocabularies that offer
 suggestions rather than a closed list: a form's text is not a foreign key
 (CLAUDE.md, ingredient identity), so an uncurated value stays writable and the
 address cannot reject it the way `listParam` rejects a word outside its set.
@@ -243,7 +243,7 @@ address cannot reject it the way `listParam` rejects a word outside its set.
 
 `reviewed` (M14.8) reads `1` as `'reviewed'` and `0` as `'needs_review'`, and
 anything else as no filter; the query sends `true` or `false`. Only a curator or
-an admin may send it, and the service refuses anyone else. So the coven's table,
+a keeper may send it, and the service refuses anyone else. So the coven's table,
 `COVEN_PARAMS` in `coven-params.ts`, is the compendium's with `reviewed`
 taken out, and the public page strips `?reviewed=` before it reads.
 
@@ -342,8 +342,8 @@ separated by a comma. An example with every kind:
 > form oil or resin, linked to Isis, under Aries, ruled by the Sun or Mars, of
 > the fire element, that are not toxic, classified as botanical, without references
 
-- **Joining.** Values are joined through `Intl.ListFormat` in `en-GB`, which has
-  no serial comma: "oil, resin or leaf". Forms, deities, zodiac, celestial bodies and
+- **Joining.** Values are joined through `Intl.ListFormat` in `en-US`, which puts
+  the Oxford comma before the last word: "oil, resin, or leaf" (`en-GB` leaves it out). Forms, deities, zodiac, celestial bodies and
   elements join with "or"; categories join with "and" in all-mode ("in the
   protection and healing categories") and "or" in any-mode ("in the protection or
   healing category"). `Intl.ListFormat` is Baseline Widely Available, so the
@@ -358,7 +358,7 @@ separated by a comma. An example with every kind:
   The lowering is of the display text only: the fragment's `value` keeps its own spelling.
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   celestial bodies, which belongs to the linked value ("the Sun").
-- **The viewer’s covens** (M12.55) read "held in Hearthside or Moonwell", each coven by its name with its capitals kept, joined with "or". Each is plain text, as every value in the sentence is (`SearchSentence` draws values as text, never links), and removes nothing: a coven is removed in the panel. Only an id with a label is named: the page labels the viewer’s own covens alone, and the read ignores any other id, so a foreign or malformed id in the address filters nothing and says nothing. The fragments carry the facet `covens` and the coven’s id as `value`. Under Not In (`covensNot`) the same list reads "not held in Hearthside or Moonwell". With Not In and no coven in the address at all, for a viewer with covens to name, it reads "not held in any of my covens": "not held in " is plain text, as it is with covens picked, and "any of my covens" is the one value, with the facet `covensNot`. If the address names covens and none has a label, it says nothing, under In or Not In, as the read applies nothing.
+- **The viewer’s covens** (M12.55) read "held in Hearthside or Moonwell", each coven by its name with its capitals kept, joined with "or". Each is plain text, as every value in the sentence is (`SearchSentence` draws values as text, never links), and removes nothing: a coven is removed in the panel. Only an id with a label is named: the page labels the viewer’s own covens alone, and the read ignores any other id, so a foreign or malformed id in the address filters nothing and says nothing. The fragments carry the facet `covens` and the coven’s id as `value`. Under Not In (`covensNot`) the same list reads "not held in Hearthside or Moonwell". With Not In and no coven in the address at all, for an observer with covens to name, it reads "not held in any of my covens": "not held in " is plain text, as it is with covens picked, and "any of my covens" is the one value, with the facet `covensNot`. If the address names covens and none has a label, it says nothing, under In or Not In, as the read applies nothing.
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
 - **Source, In Stock and Low Stock Only** belong to a coven's list and are named
   whenever the filter holds them. `source` (`local` or `compendium`) reads "from

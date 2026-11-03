@@ -177,7 +177,7 @@ describe('a change through withAudit', () => {
     expect(rows[0].created_at).toEqual(rows[1].created_at);
   });
 
-  it('records a revoke as a revoke, leaving the flag an admin held', async () => {
+  it('records a revoke as a revoke, leaving the flag a keeper held', async () => {
     await withAudit(
       { userId: ADMIN },
       (write) => write.updateById(users, SUBJECT, { role: 'admin', canCreateWorkspace: true }),
@@ -220,7 +220,7 @@ describe('a change through withAudit', () => {
       expect(rows[0].created_at).toEqual(rows[1].created_at);
     });
 
-    it('records curator to admin as a curator revoke and an admin grant', async () => {
+    it('records curator to admin as a curator revoke and a keeper grant', async () => {
       await roleChange('curator');
       await sql`truncate user_privilege_changes`;
 
@@ -232,7 +232,7 @@ describe('a change through withAudit', () => {
       ]);
     });
 
-    it('records admin to curator as an admin revoke and a curator grant', async () => {
+    it('records admin to curator as a keeper revoke and a curator grant', async () => {
       await roleChange('admin');
       await sql`truncate user_privilege_changes`;
 

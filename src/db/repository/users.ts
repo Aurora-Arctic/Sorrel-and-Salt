@@ -52,7 +52,7 @@ function listedUsers(filter: UserFilter): SQL | undefined {
 
 /**
  * One page of the live users under `filter`, by name then id, for the admin user list, under the `SiteAdmin` proof. The seed's
- * bootstrap user, the signed-out support sender and the job actor are left out: nobody signs in as it and nothing an admin does to a person applies to it
+ * bootstrap user, the signed-out support sender and the job actor are left out: nobody signs in as it and nothing a keeper does to a person applies to it
  * (claude-docs/auth/admin-users.md, "The user list").
  */
 export function findUserPage(
@@ -137,7 +137,7 @@ const LEDGER_ORDER: readonly SortPart[] = [
 /**
  * One page of the privilege ledger under `filter`, newest first:
  * `/keepers/privilege-changes`. Under the `SiteAdmin` proof, as the user list
- * is, since who holds which privilege is an admin's business alone.
+ * is, since who holds which privilege is a keeper's business alone.
  */
 export function findPrivilegeChangePage(
   _admin: SiteAdmin,

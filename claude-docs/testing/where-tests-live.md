@@ -362,7 +362,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     files that are _about_ seeding (`tests/db/seed/*`,
     `updated-at-trigger.test.ts`) call `truncateAllTables(sql)` from
     `seeded-database.ts` before a seed run they assert — once per file for
-    the reads, and in the test for a re-run over an admin's edit — and a
+    the reads, and in the test for a re-run over a keeper's edit — and a
     seed test that only reads what a seed wrote reads the clone, since the
     template ran the same function (MB.183;
     [`layer-ownership.md`](layer-ownership.md), "Seed content").

@@ -34,7 +34,7 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
         {canAdd ? (
           <FirstAdd covenSlug={covenSlug} />
         ) : (
-          <p>A member or owner of this coven can add them.</p>
+          <p>A practitioner or steward of this coven can add them.</p>
         )}
       </div>
     );

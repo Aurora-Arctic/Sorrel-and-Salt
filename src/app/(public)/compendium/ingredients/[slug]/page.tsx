@@ -32,7 +32,7 @@ import type { CompendiumEntryParams } from './types';
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
 // The public read first: cached, with no session. Only when it finds nothing is a session asked for, and
-// only a curator or admin gets a second, uncached read that reaches a hidden entry. Everyone else gets the 404.
+// only a curator or keeper gets a second, uncached read that reaches a hidden entry. Everyone else gets the 404.
 const entryAt = cache(async (slug: string) => {
   try {
     return await readCompendiumEntry(slug);
@@ -125,7 +125,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // name says any does, and the cupboard choices say which. Someone in no coven has none to ask.
   const holding = shell?.workspaces.length ? await covensHolding(entry.id) : [];
   const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
-  // The review switch's read, for a curator or admin only: per viewer, never in the cached read
+  // The review switch's read, for a curator or keeper only: per viewer, never in the cached read
   // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
   const review = canEdit ? await reviewOf(entry.id) : undefined;
   // Beside it, the sourcing score: the head shows it, and the edit form's Sources opens with it.

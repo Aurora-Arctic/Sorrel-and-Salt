@@ -287,7 +287,7 @@ async function insertEntries(
   );
 
   // The sources the inserted entries cite, then a link from each to the row
-  // it supports. A source an admin soft-deleted is not linked anew.
+  // it supports. A source a keeper soft-deleted is not linked anew.
   const cited: Citing[] = missing.flatMap(({ entry, sources }) => [
     ...citing(entry.references, sources, { ingredientId: ingredientIdOf(entry) }),
     ...insertedVariants(entry).flatMap(({ variant, variantId }) =>

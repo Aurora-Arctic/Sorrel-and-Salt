@@ -162,7 +162,7 @@ export async function deleteWorkspaceIngredient(
 }
 
 /**
- * One of this coven's ingredients, for any member, viewers included.
+ * One of this coven's ingredients, for any member, observers included.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  * @throws {NotFound} no such ingredient in this coven.

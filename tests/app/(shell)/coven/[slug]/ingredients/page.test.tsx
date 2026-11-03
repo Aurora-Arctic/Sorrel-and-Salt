@@ -453,7 +453,7 @@ describe("the coven Ingredients page's details modal", () => {
 
   it("draws neither the plus nor the check in the details of a held compendium entry, though another of the member's covens lacks it", async () => {
     // The window carries its card's controls and a coven's card has no plus, so a coven's window has
-    // none; the compendium's and the admin's windows do.
+    // none; the compendium's and the keeper's windows do.
     const other = { id: 'w-other', slug: 'other-coven', name: 'Other Coven' };
     viewerIfSignedIn.mockResolvedValue({
       viewer: { name: 'Fixture Member', canCurate: false },

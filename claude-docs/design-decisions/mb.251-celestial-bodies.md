@@ -2,7 +2,7 @@
 
 **Status:** decided · **Date:** 2026-10-12 (the owner's call)
 
-**Decided:** the admin-curated vocabulary that holds the Sun and the Moon, Mercury through Pluto, Earth, Chiron, Ceres, Pallas, Juno, Vesta, Lilith and the two lunar nodes is called **Celestial Bodies** on every screen. Its code, GraphQL and database names keep `planets` for now, a recorded and temporary divergence that MB.252 to MB.254 end. The scoping plan is [`mb.251-plan.md`](mb.251-plan.md).
+**Decided:** the keeper-curated vocabulary that holds the Sun and the Moon, Mercury through Pluto, Earth, Chiron, Ceres, Pallas, Juno, Vesta, Lilith and the two lunar nodes is called **Celestial Bodies** on every screen. Its code, GraphQL and database names keep `planets` for now, a recorded and temporary divergence that MB.252 to MB.254 end. The scoping plan is [`mb.251-plan.md`](mb.251-plan.md).
 
 ## Why
 

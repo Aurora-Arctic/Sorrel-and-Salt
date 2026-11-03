@@ -5,7 +5,7 @@ compendium pages are public as well; `/` stays the entry page and the
 post-sign-in landing stays `/coven`.) The post-sign-in
 landing — into their workspace, the create form, or the invite-only
 explanation (M2.8) — is its own route, **`/coven`**, protected like every
-other page. A sign-in with no `next` lands there — an admin's, since MB.113,
+other page. A sign-in with no `next` lands there — a keeper's, since MB.113,
 on `/admin` instead, and `safeReturnPath` now has no fallback, since which
 landing applies is the role's ([`auth.md`](../auth.md), "Route protection").
 

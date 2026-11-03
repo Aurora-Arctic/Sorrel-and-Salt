@@ -48,15 +48,15 @@ Next's `opengraph-image.tsx` file convention (`node_modules/next/dist/docs/01-ap
 
 ### Caching
 
-An entry's card is drawn on its first request and served from Next's cache after that, until an admin's write to the compendium expires the `compendium` tag and the next request draws it afresh. The two site cards read no data, so the build draws them once.
+An entry's card is drawn on its first request and served from Next's cache after that, until a keeper's write to the compendium expires the `compendium` tag and the next request draws it afresh. The two site cards read no data, so the build draws them once.
 
-**What the docs say.** The `opengraph-image` page says a generated image is a special Route Handler, cached by default unless it uses a request-time API or uncached data. `how-revalidation-works.md` says `revalidateTag` invalidates every cache entry carrying the tag. No doc says that a route's cached response carries the tags of the `unstable_cache` reads made while drawing it, which is what lets an admin edit reach the card.
+**What the docs say.** The `opengraph-image` page says a generated image is a special Route Handler, cached by default unless it uses a request-time API or uncached data. `how-revalidation-works.md` says `revalidateTag` invalidates every cache entry carrying the tag. No doc says that a route's cached response carries the tags of the `unstable_cache` reads made while drawing it, which is what lets a keeper edit reach the card.
 
-**What trying showed.** It does. The card reads `readCompendiumEntry`, which is cached under `compendium` ([`db/compendium-cache.md`](db/compendium-cache.md)), and the test "an entry's share card is drawn once, until an admin edit draws it again" in `tests/e2e/compendium-cache.spec.ts` shows it on the one e2e server whose cache holds:
+**What trying showed.** It does. The card reads `readCompendiumEntry`, which is cached under `compendium` ([`db/compendium-cache.md`](db/compendium-cache.md)), and the test "an entry's share card is drawn once, until a keeper edit draws it again" in `tests/e2e/compendium-cache.spec.ts` shows it on the one e2e server whose cache holds:
 
 1. It reads the card's address from the entry page's `og:image` and draws the card.
 2. It renames the entry in Postgres directly, keeping its slug, and asks again: the bytes are the same, so the card was not drawn again.
-3. It adds an entry as an admin, which expires the tag, and asks again: the bytes differ, the new name drawn.
+3. It adds an entry as a keeper, which expires the tag, and asks again: the bytes differ, the new name drawn.
 4. It asks once more and gets the same bytes as step 3.
 
 Step 2 fails if the route draws per request, and step 3 fails if the tag does not reach it. A scratch server over the same build answered the first request for a card `x-nextjs-cache: MISS` and the second `HIT`.

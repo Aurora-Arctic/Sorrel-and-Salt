@@ -7,9 +7,9 @@ and its jar of ingredients (M10.15, stories 49, 50, 57 and 77). It is a client c
 over the grimoire's list, at the default column and laid out as Add Ingredient is (`SpellDialog`, `spell-dialog.tsx`; the owner's call,
 2026-10-27, [`design-decisions/m10.12-spell-builder-modal.md`](../design-decisions/m10.12-spell-builder-modal.md)).
 The address opens it, as it opens Add Ingredient: `?new=spell-<slug>` draws it empty,
-reached from New Spell at the Grimoire's heading, which only an owner or a
+reached from New Spell at the Grimoire's heading, which only a steward or a
 member is shown, and `?edit=<id>` draws it with a saved spell, reached from a
-spell card's pencil, the recipe page's Edit (M13.10, where the dialog opens over the recipe page and closes back to it) and Quick Look's Edit (M13.21). Only a role that may update a spell is offered either control, and a viewer's `?edit` opens nothing; on the recipe page it opens only when it names that page's own spell. There is no page of its
+spell card's pencil, the recipe page's Edit (M13.10, where the dialog opens over the recipe page and closes back to it) and Quick Look's Edit (M13.21). Only a role that may update a spell is offered either control, and an observer's `?edit` opens nothing; on the recipe page it opens only when it names that page's own spell. There is no page of its
 own. `?new=spell` is the same for the grimoire the page is on, and `?new=spell-<slug>`
 on any other page is sent to that coven's grimoire with a replace
 (`NewSpellElsewhere`; the owner's call, 2026-10-28). New Spell's press writes
@@ -270,7 +270,7 @@ resolver, so a field it refuses shows its error beneath that field before
 the save, and a `VALIDATION` answer's `fieldErrors` for one of the seven
 fields, or for a pick at `['categoryIds', index]`, show beneath that field after, through the same element (`aria-invalid` and
 `aria-describedby`), as does an issue the server places on a step's
-quantity or unit (`steps.<i>.quantity`, `steps.<i>.unit`). Anything else, such as a viewer's `FORBIDDEN`, goes to
+quantity or unit (`steps.<i>.quantity`, `steps.<i>.unit`). Anything else, such as an observer's `FORBIDDEN`, goes to
 the `Notice` above the fields, in the server's words. The reading is
 `placeServerIssues`, and a section holding a refused field opens (`openErred`). Beside Save,
 `SaveStatus` says the save failed ([`save-status.md`](save-status.md)). The schema's one rule a
@@ -633,7 +633,7 @@ or staying open on a refused save or a failed steps read, and
 may create a spell, and nothing for one that may not. The
 grimoire page's test,
 `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`, covers which
-address opens which dialog for an owner and a member, and that a viewer's
+address opens which dialog for a steward and a practitioner, and that an observer's
 `?new=spell-<slug>` or `?edit=<id>` opens nothing. `visibility-field.test.tsx` covers the
 visibility control: off by default and sent as private with a create, on sent as workspace and
 shut; a new spell's first autosave stores private (`autosave.test.tsx`), a choice alone saveable, the share question kept and
@@ -656,7 +656,7 @@ and Remove said. `spells.test.ts` asserts a reorder of
 linked, one-off and instruction steps moves the same rows, none soft-deleted.
 `tests/modules/grimoire/services/spell-ingredient-steps.test.ts`
 reads the rows a save leaves, and asserts a member of another coven and a
-viewer are refused by direct id.
+observer are refused by direct id.
 Stories 47 and 48 in
 `tests/e2e/stories/06-grimoire.spec.ts` walk it in a browser; story 48 picks
 two categories, removes one, saves, and finds the one left on the spell's

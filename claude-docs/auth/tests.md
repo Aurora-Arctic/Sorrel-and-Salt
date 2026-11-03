@@ -68,7 +68,7 @@
   succeeds from the owner's session, so the refusal was the session's. Each
   stamp assertion first hands `updated_by` to the bootstrap user, because
   the create hook already stamps a new row as itself. MB.68 adds the
-  promotion's wiring: a Microsoft-only owner is promoted by following the
+  promotion's wiring: a Microsoft-only steward is promoted by following the
   link from their own session, and a change link to the bootstrap address,
   minted by hand, is sent to sign-in from no session with the row unchanged,
   then swaps the address and promotes from the row's own session. The link's
@@ -137,7 +137,7 @@
 - **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' exact
   column set with the audit spread through Drizzle's `getTableConfig()` (MB.188),
   and against the database the lower-case email CHECK, a new account landing as
-  a `user` who may not create a workspace, and the CHECK holding every admin to
+  a `user` who may not create a workspace, and the CHECK holding every keeper to
   the creation flag (MB.177); nullability, defaults and the email index's
   partiality are `tests/db/schema-drift.test.ts`'s (MB.226). It was kept out of the schema directory from
   the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s

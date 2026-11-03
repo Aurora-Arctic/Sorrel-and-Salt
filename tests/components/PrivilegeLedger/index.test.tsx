@@ -9,7 +9,7 @@ import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 
 // `/keepers/privilege-changes`' filter, table and pager: render-only,
-// so the page owns the read and this owns what an admin sees of it
+// so the page owns the read and this owns what a keeper sees of it
 // (claude-docs/components/privilege-ledger.md).
 
 // The filter applies through the App Router; Vitest hoists the mock above the imports.

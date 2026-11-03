@@ -12,7 +12,7 @@ const SCSS_DIR = fromRoot('src/scss');
 // the dark card and the light page. The test below proves the theme mixins still draw those two.
 
 // An invented pair, nowhere in the seed or the Sass map, that clears 4.5:1 against what the write
-// check tests: what an admin's ninth group might carry.
+// check tests: what a keeper's ninth group might carry.
 const NINTH = { dark: '#5f9a9f', light: '#7a3f10' } as const;
 
 function compile(source: string): string {

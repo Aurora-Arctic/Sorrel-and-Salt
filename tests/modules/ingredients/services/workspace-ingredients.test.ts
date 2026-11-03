@@ -340,7 +340,7 @@ describe('getWorkspaceIngredient', () => {
       await expect(getWorkspaceIngredient(asUser(D), WORKSPACE_X_ID, id)).rejects.toThrow(NotFound);
     });
 
-    it('refuses a site admin, who reaches no coven', async () => {
+    it('refuses a site keeper, who reaches no coven', async () => {
       await expect(getWorkspaceIngredient(asUser(E), WORKSPACE_W_ID, id)).rejects.toThrow(
         Forbidden,
       );
@@ -461,7 +461,7 @@ describe('updateWorkspaceIngredient', () => {
     expect((await rowOf(id)).name).toBe('Testwort');
   });
 
-  it('refuses the site admin, whose role reaches no coven', async () => {
+  it('refuses the site keeper, whose role reaches no coven', async () => {
     const id = await seed(local());
     // Why it could have succeeded: the row is live, and E's role is admin.
     await expect(getWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id)).resolves.toBeDefined();
@@ -637,7 +637,7 @@ describe('deleteWorkspaceIngredient', () => {
     expect(await rowOf(id)).toEqual(before);
   });
 
-  it('refuses the site admin, whose role reaches no coven', async () => {
+  it('refuses the site keeper, whose role reaches no coven', async () => {
     const id = await seed(local());
     const before = await rowOf(id);
     expect(asUser(E).role).toBe('admin');

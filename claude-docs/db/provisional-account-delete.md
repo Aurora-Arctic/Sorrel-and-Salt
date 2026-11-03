@@ -13,7 +13,7 @@ of its own. `provisionalSecondsLeft(userId, ...)` is its read-only partner: how 
 
 It skips a row holding any `user_privilege_changes` row (MB.204), as
 `not(existsIn(...))`, the negation `citesNothing` uses. Such an account is
-one an admin has vouched for, and the ledger references it with a plain
+one a keeper has vouched for, and the ledger references it with a plain
 foreign key, so deleting it would fail. The rows are not deleted with it either:
 `forbid_rewrite` refuses that, and the ledger is the history.
 

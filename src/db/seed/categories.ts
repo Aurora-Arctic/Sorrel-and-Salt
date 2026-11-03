@@ -6,7 +6,7 @@ import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
 import type { SeedCategory, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
-// The category vocabulary: eight groups and every category, a starting set an admin may edit. Inserts the bootstrap user itself. No slug is
+// The category vocabulary: eight groups and every category, a starting set a keeper may edit. Inserts the bootstrap user itself. No slug is
 // written down; each is `slugify(name)` (claude-docs/db/category-seed.md, "The category seed").
 
 /** Every category §6 lists, in §6's order, grouped as §6 groups them. */

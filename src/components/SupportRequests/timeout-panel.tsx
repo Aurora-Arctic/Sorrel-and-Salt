@@ -25,7 +25,7 @@ import { LocalDay } from './day-range';
 import type { SupportTimeoutEntry } from './types';
 import './timeout-panel.scss';
 
-// An admin's time-out of a sender: barred from the support form until an end, or with no end date until lifted. One panel
+// A keeper's time-out of a sender: barred from the support form until an end, or with no end date until lifted. One panel
 // serves the request dialog and the user modal, keyed by the user, so a repeat sender is seen as one.
 
 const TimeOutDocument = graphql(`

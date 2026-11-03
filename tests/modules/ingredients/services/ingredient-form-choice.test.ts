@@ -136,7 +136,7 @@ describe('a save carrying a picked form', () => {
     expect(await rowOf(uncurated.id)).toEqual({ form: 'rhizome', form_id: null });
   });
 
-  it('lets an admin pick a compendium entry’s form the same way', async () => {
+  it('lets a keeper pick a compendium entry’s form the same way', async () => {
     const created = await createCompendiumEntry(asUser(E), input('wax', animalWax));
 
     expect(await rowOf(created.id)).toEqual({ form: 'Wax', form_id: animalWax });

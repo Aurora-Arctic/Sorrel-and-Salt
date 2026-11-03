@@ -45,7 +45,7 @@ export function refuseOverLimit(recent: number): void {
 }
 
 /**
- * Files a support request from the signed-in, verified account. Any such account may send, a viewer or one in no coven
+ * Files a support request from the signed-in, verified account. Any such account may send, an observer or one in no coven
  * included: the form is the site's, not a coven's. The page address is stored with the coven's slug replaced.
  *
  * The limit and the time-out are read after a per-account lock taken in the insert's transaction, so two sends racing at the

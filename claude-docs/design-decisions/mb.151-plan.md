@@ -2,7 +2,7 @@
 
 ## Context
 
-MB.151 is documentation and scoping only, in MB.138's shape: it settles what DESIGN.md §5 "References" leaves open, so MB.152 (tables), MB.153 (behaviour), MB.154 (form), MB.155 (page) and MB.156 (seed) transcribe it. The owner's decisions are already recorded: Chicago bibliography form, two tiers with MB.138's tier rule, optional on an entry with an admin to-do filter, and the seed docs' sources written as rows.
+MB.151 is documentation and scoping only, in MB.138's shape: it settles what DESIGN.md §5 "References" leaves open, so MB.152 (tables), MB.153 (behaviour), MB.154 (form), MB.155 (page) and MB.156 (seed) transcribe it. The owner's decisions are already recorded: Chicago bibliography form, two tiers with MB.138's tier rule, optional on an entry with a keeper to-do filter, and the seed docs' sources written as rows.
 
 **What the research changed.** MB.156's criterion renders every source in `db/deity-vocabulary-seed.md` "to the doc's own text". The task's column list can't reach that text. Counted over the doc's 334 citation lines:
 
@@ -117,7 +117,7 @@ Two rows may be the same book. Nothing identifies a source short of a librarian:
 **v1 has no `deleteReference`.** The v1 writers are the ingredient form (`createReference`, `updateReference`, and links inside the ingredient save) and the seed. The admin vocabulary pages gain no field.
 
 - **Unlinking:** soft-deletes the link through the ingredient's save, as a folk name is replaced.
-- **A reference whose every link is gone:** stays live and suggested. A source is reusable, and sweeping it would delete a coven's record, or an admin's seeded row, behind their back.
+- **A reference whose every link is gone:** stays live and suggested. A source is reusable, and sweeping it would delete a coven's record, or a keeper's seeded row, behind their back.
 - **If a reference is ever soft-deleted** (v2, or by hand): its links are untouched, and the read joins live references only, so it leaves every bibliography and a restore returns it. The opposite of MB.138's substitute exception is the right call here. A deleted reference is a retracted source, where a deleted ingredient is a fact a member recorded. And keeping the links needs no cross-tier write and no new rule-4 exception.
 - **An edit reaches every row linking the reference.** That is the point of keeping a source once. A compendium-tier edit calls `revalidateTag('compendium')`.
 

@@ -24,7 +24,7 @@ obvious retry, going back through the provider's tab, replays a state that is
 already dead. That is how MB.12's Facebook check first failed.
 
 `next` is absent when the page was given none, or an unsafe one: there is no
-return path, and the callback lands the account by its role, `/keepers` for an admin, `/curator` for a curator, `/coven` for an
+return path, and the callback lands the account by its role, `/keepers` for a keeper, `/curator` for a curator, `/coven` for an
 admin and `/coven` for anyone else
 ([`auth/route-protection.md`](../auth/route-protection.md), "Route protection").
 `socialSignInTarget(next)` (`src/lib/sign-in.ts`) builds what the click hands

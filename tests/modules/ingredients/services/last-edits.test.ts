@@ -11,7 +11,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The latest edit a coven's card shows: the newest of the coven's live jars of the entry and, for the coven's own entry, the entry's row. A compendium entry's own editor, an admin, is never shown.
+// The latest edit a coven's card shows: the newest of the coven's live jars of the entry and, for the coven's own entry, the entry's row. A compendium entry's own editor, a keeper, is never shown.
 // The database stamps `updated_at` itself (a trigger), so each row's time is its write order, and every case writes in the order it names.
 
 // The query count, observed at the repository: the names are one read whatever the page holds.
@@ -99,7 +99,7 @@ describe('lastEditsOf', () => {
     const [newest] = await sql`
       select updated_at from inventory_items where ingredient_id = ${entry.id} and updated_by = ${B.id}`;
 
-    // Preconditions: the compendium row's editor is E, an admin, the coven's other editors differ.
+    // Preconditions: the compendium row's editor is E, a keeper, the coven's other editors differ.
     expect(entry.updatedBy).toBe(E.id);
     expect(entry.workspaceId).toBeNull();
 
@@ -253,7 +253,7 @@ describe('lastEditsOf', () => {
     await expect(sql`select 1 from ingredients where id = ${entry.id}`).resolves.toHaveLength(1);
 
     await expect(lastEditsOf(asUser(D), WORKSPACE_W_ID, [entry])).rejects.toBeInstanceOf(Forbidden);
-    // A site admin holds no seat either.
+    // A site keeper holds no seat either.
     await expect(lastEditsOf(asUser(E), WORKSPACE_W_ID, [entry])).rejects.toBeInstanceOf(Forbidden);
   });
 });

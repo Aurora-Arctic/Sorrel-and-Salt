@@ -506,7 +506,7 @@ export interface AuditWriter {
     name: string,
   ): Promise<(typeof ingredientDeities.$inferSelect)[]>;
   /**
-   * Open a pause on admin role changes, stamped from the session. No row comes back while one is open:
+   * Open a pause on keeper role changes, stamped from the session. No row comes back while one is open:
    * the one-open index refuses a second, and the call writes nothing rather than failing the transaction.
    */
   pauseAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
@@ -516,7 +516,7 @@ export interface AuditWriter {
    */
   resumeAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
   /**
-   * The live admins, locked `for update` until the transaction ends: what a revoke counts before it writes, so two admins revoking each other
+   * The live keepers, locked `for update` until the transaction ends: what a revoke counts before it writes, so two keepers revoking each other
    * at once cannot both leave the other the last. A read, in the writer because the lock must be taken in the writing transaction.
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
@@ -562,14 +562,15 @@ export interface AuditWriter {
     expectedRevision: number,
   ): Promise<DocumentVersionRow[]>;
   /**
-   * Start the mailing of a published version, sending. No row comes back for a draft, a soft-deleted or missing version, or one with a
-   * live mailing already.
+   * Start one mailing of published versions, sending, with an item for each. No row comes back, and nothing is written, when any
+   * version is a draft, soft-deleted or missing.
    */
   startDocumentMailing(
     admin: SiteAdmin,
-    versionId: string,
     mailing: DocumentMailingInput,
   ): Promise<DocumentMailingRow[]>;
+  /** Wait for any other transaction starting a mailing, then hold the start until this one ends, so two keepers start one mailing. */
+  lockDocumentMailingStart(admin: SiteAdmin): Promise<void>;
   /** Add accounts to a mailing, unsent. An account already in it is skipped, so the rows added come back; none for an empty list. */
   addDocumentMailingRecipients(
     mailingId: string,
@@ -587,16 +588,12 @@ export interface AuditWriter {
   ): Promise<DocumentMailingRecipientRow[]>;
   /** Wait for any other transaction holding the mailing's turn, then hold it until this one ends, so batch steps of one mailing take turns. */
   lockDocumentMailingTurn(mailingId: string): Promise<void>;
-  /** Mark a sending mailing replaced, for a version or document that is gone. A mailing in any other state answers `[]`. */
+  /** Mark a sending mailing replaced, once every version it covers or their documents are gone. A mailing in any other state answers `[]`. */
   replaceDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
   /** Finish a sending mailing: sent, dated now. A mailing that is sent or replaced answers `[]`. */
   finishDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
-  /** Mark the document's sending and paused mailings of versions numbered below `versionNumber` replaced; they keep what they sent. */
-  replaceOpenDocumentMailings(
-    admin: SiteAdmin,
-    documentId: string,
-    versionNumber: number,
-  ): Promise<DocumentMailingRow[]>;
+  /** Mark every live sending and paused mailing replaced; each keeps what it sent. */
+  replaceOpenDocumentMailings(admin: SiteAdmin): Promise<DocumentMailingRow[]>;
   /** Pause a sending mailing, for the provider's monthly quota. A mailing in any other state answers `[]`. */
   pauseDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
   /** Set a paused mailing sending again. A mailing in any other state answers `[]`. */
@@ -688,7 +685,7 @@ export interface AuditWriter {
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
    * The proof's workspace's live members, locked `for update` until the transaction ends: what the last-owner guard counts before a role change
-   * or removal writes, so two owners stepping down at once cannot both leave the other the last. A read, in the writer for the lock's sake.
+   * or removal writes, so two stewards stepping down at once cannot both leave the other the last. A read, in the writer for the lock's sake.
    */
   lockLiveMembers(membership: Membership): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
@@ -832,7 +829,7 @@ export interface AuditWriter {
     values: WorkspaceInvitationValues,
   ): Promise<InvitationRow[]>;
   /**
-   * Invite an address to the site role it names (curator or admin), on the site tier, where the workspace and the coven role are both null.
+   * Invite an address to the site role it names (curator or keeper), on the site tier, where the workspace and the coven role are both null.
    * On the same terms otherwise.
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
@@ -964,9 +961,9 @@ export interface IngredientFilter {
    * a jar with no quantity never is. The compendium's own read ignores it.
    */
   lowStockOnly?: boolean;
-  /** Only entries citing no live compendium reference: the admin's to-do list. */
+  /** Only entries citing no live compendium reference: the keeper's to-do list. */
   withoutReferences?: boolean;
-  /** Only entries with no live form: the admin's other to-do list, entries nobody can stock yet. */
+  /** Only entries with no live form: the keeper's other to-do list, entries nobody can stock yet. */
   withoutForms?: boolean;
   /** Only entries declaring this nomenclature. */
   nomenclature?: NomenclatureKind;
@@ -1220,10 +1217,29 @@ export type DocumentVersionRow = typeof documentVersions.$inferSelect;
 /** One `document_mailings` row. */
 export type DocumentMailingRow = typeof documentMailings.$inferSelect;
 
-/** What a mailing starts with: what changed, and how many accounts it will reach. */
+/** What a mailing starts with: each version it covers with what changed in it, and how many accounts it will reach. */
 export interface DocumentMailingInput {
-  summary: string;
+  items: readonly { versionId: string; summary: string }[];
   recipientCount: number;
+}
+
+/** A document's newest published version that no sent mailing covers, with its document. */
+export interface PendingDocumentVersion {
+  documentId: string;
+  versionId: string;
+  key: string;
+  title: string;
+  versionNumber: number;
+}
+
+/** One live item of a mailing, with the version's number and its document. */
+export interface DocumentMailingItem {
+  mailingId: string;
+  versionId: string;
+  key: string;
+  title: string;
+  versionNumber: number;
+  summary: string;
 }
 
 /** One `document_mailing_recipients` row. */
@@ -1469,7 +1485,7 @@ export interface GrimoireFacetCounts {
 export interface UserFilter {
   /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */
   query?: string;
-  /** Only the users who may not yet create a workspace: the admin's to-do list. */
+  /** Only the users who may not yet create a workspace: the keeper's to-do list. */
   awaitingApproval?: boolean;
   /** Only the users holding this site role. */
   role?: (typeof users.$inferSelect)['role'];
@@ -1507,7 +1523,7 @@ export type AstrologyList = 'celestialBodies' | 'zodiacSigns';
 /** One of the two astrology vocabularies, flat and alike. */
 export type AstrologyVocabulary = FlatTable;
 
-/** What an admin astrology list is narrowed by: a name fragment, as the forms' list is. */
+/** What a keeper astrology list is narrowed by: a name fragment, as the forms' list is. */
 export interface AstrologyValueFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
@@ -1566,13 +1582,13 @@ export interface CompendiumSlugEntry {
 }
 
 /**
- * Who reads the support list, as the finder narrows it: an admin reads every request, a curator only those marked for curators or
+ * Who reads the support list, as the finder narrows it: a keeper reads every request, a curator only those marked for curators or
  * assigned to them. The proof is the service's `assertSiteAdmin` or `assertCurator`.
  */
 export type SupportReader =
   { role: 'admin'; proof: SiteAdmin } | { role: 'curator'; proof: Curator };
 
-/** Whoever is reading a request's replies: a sender reads their own requests', a curator or admin those they may see. */
+/** Whoever is reading a request's replies: a sender reads their own requests', a curator or keeper those they may see. */
 export interface SupportViewer {
   userId: string;
   role: 'user' | 'curator' | 'admin';

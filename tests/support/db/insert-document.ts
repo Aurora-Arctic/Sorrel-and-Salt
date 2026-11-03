@@ -66,3 +66,42 @@ export async function insertDocumentVersion(
     returning id`;
   return row.id as string;
 }
+
+/** A mailing's row and its items: sending, of no accounts, started now, each item's summary invented, unless `fields` says otherwise. */
+export interface DocumentMailingSeed {
+  /** The versions the mailing covers, each with its summary. */
+  items: readonly { versionId: string; summary?: string }[];
+  status?: 'sending' | 'sent' | 'replaced' | 'paused';
+  recipient_count?: number;
+  /** Seconds before now the mailing was started, which orders the queue. */
+  startedSecondsAgo?: number;
+}
+
+/**
+ * Writes a mailing and its items stamped by `author`, as a mailing written since the items table leaves it: no version or summary
+ * of its own. A sent mailing is finished now. Returns its id.
+ */
+export async function insertDocumentMailing(
+  sql: postgres.Sql,
+  { items, status = 'sending', recipient_count = 0, startedSecondsAgo = 0 }: DocumentMailingSeed,
+  author: string,
+): Promise<string> {
+  const [row] = await sql`
+    insert into document_mailings (status, recipient_count, finished_at, created_at, created_by, updated_by)
+    values (${status}, ${recipient_count}, ${status === 'sent' ? sql`now()` : null},
+      now() - make_interval(secs => ${startedSecondsAgo}), ${author}, ${author})
+    returning id`;
+  if (items.length > 0) {
+    await sql`
+      insert into document_mailing_items ${sql(
+        items.map(({ versionId, summary = 'Fixture clause added.' }) => ({
+          mailing_id: row.id as string,
+          document_version_id: versionId,
+          summary,
+          created_by: author,
+          updated_by: author,
+        })),
+      )}`;
+  }
+  return row.id as string;
+}

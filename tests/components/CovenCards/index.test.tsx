@@ -297,11 +297,11 @@ describe('CovenCards', () => {
   // member, who has the button, is not told.
   it('names, to a viewer only, the roles that can fill an empty cupboard', () => {
     const { unmount } = render(<Cards {...props({ ...empty, canAdd: false })} />);
-    expect(emptyState()).toHaveTextContent(/\bmember\b/i);
-    expect(emptyState()).toHaveTextContent(/\bowner\b/i);
+    expect(emptyState()).toHaveTextContent(/\bpractitioner\b/i);
+    expect(emptyState()).toHaveTextContent(/\bsteward\b/i);
     unmount();
     render(<Cards {...props(empty)} />);
-    expect(emptyState()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+    expect(emptyState()).not.toHaveTextContent(/\bpractitioner\b|\bsteward\b/i);
   });
 
   it('draws a search matching nothing as the no-match state, handing the search to the Compendium', () => {

@@ -21,11 +21,11 @@ const viewerIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 
 const readCompendiumEntry = vi.fn();
-// The review switch's read, per viewer, made for a curator or admin only.
+// The review switch's read, per viewer, made for a curator or keeper only.
 const readCompendiumReview = vi.fn();
 // The row itself, for the form's shown switch.
 const getIngredient = vi.fn();
-// The sourcing score's read, for a curator or admin; its tests are slug-page.test.tsx's.
+// The sourcing score's read, for a curator or keeper; its tests are slug-page.test.tsx's.
 const readSourcingScore = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumEntry,

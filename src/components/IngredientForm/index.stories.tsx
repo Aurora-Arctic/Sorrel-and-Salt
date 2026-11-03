@@ -639,7 +639,7 @@ function saveRefusal(operation: string, variables: Record<string, unknown>) {
       ],
     });
   }
-  // A retired category, picked before an admin deleted it: the first pick's.
+  // A retired category, picked before a keeper deleted it: the first pick's.
   if (/retired/i.test(name) && input?.categoryIds?.length) {
     return refusal({
       message: 'Validation failed',
@@ -759,7 +759,7 @@ function WhatToTry() {
           open row of this coven&rsquo;s own source has Edit Source, which opens the panel filled in
           with the whole source; Save Source changes it for every entry citing it, and the row reads
           the new short form, while Cancel or the &times; at the panel&rsquo;s top closes it
-          unchanged. A compendium source has none here: it is the admins&rsquo; to change.
+          unchanged. A compendium source has none here: it is the keepers&rsquo; to change.
         </li>
         <li>
           <strong>A new reference:</strong> pick &ldquo;New Reference&rdquo;, the list&rsquo;s last

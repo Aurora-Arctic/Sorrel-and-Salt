@@ -1,7 +1,7 @@
 import type { Locator } from '@playwright/test';
 
 /**
- * Picks a mode in an admin support dialog's Send As chip: opens its menu, then clicks the option's label, since the
+ * Picks a mode in a keeper support dialog's Send As chip: opens its menu, then clicks the option's label, since the
  * native radio is drawn invisible. The dialog opens on Internal Note.
  */
 export async function sendAs(dialog: Locator, mode: 'Reply' | 'Internal Note'): Promise<void> {

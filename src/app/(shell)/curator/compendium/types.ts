@@ -55,7 +55,7 @@ export interface OpenedEntry {
   entry?: EditedEntry;
   /**
    * The Reviewed switch as a field of the form, on an add and an edit: built from the uncached
-   * review read for a curator or admin, left out for anyone else.
+   * review read for a curator or keeper, left out for anyone else.
    */
   review?: ReviewOffer;
   /** The edited entry's sourcing score and its facts, a curator's read; none for an add. */

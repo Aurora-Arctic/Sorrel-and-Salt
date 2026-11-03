@@ -27,7 +27,7 @@ describe('adminInvitationMessage', () => {
     expect(mail.html.split(`href="${URL}"`)).toHaveLength(3);
   });
 
-  it('names the admin who sent it', async () => {
+  it('names the keeper who sent it', async () => {
     const { text } = await message();
 
     expect(text).toContain(INVITER);

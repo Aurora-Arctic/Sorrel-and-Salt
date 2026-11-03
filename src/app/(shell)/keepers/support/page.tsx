@@ -19,12 +19,12 @@ export const metadata: Metadata = {
   title: 'Support',
 };
 
-// The support requests an admin may read, narrowed in SQL and paged by cursor, with the request
+// The support requests a keeper may read, narrowed in SQL and paged by cursor, with the request
 // `?request=` opens. The page and GraphQL end at the same support services, which are the guard.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const session = await requireCuratorSession();
   const { filter, cursor, request, user } = readSupportPlace(await searchParams);
-  // The user modal is the Users page's own, for an admin; a curator reaches nothing on the People pages.
+  // The user modal is the Users page's own, for a keeper; a curator reaches nothing on the People pages.
   const userId = session.role === 'admin' ? user : undefined;
   const [{ requests, pageInfo, position }, counts, opened, assignees, openedUser, adminChanges] =
     await Promise.all([

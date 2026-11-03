@@ -19,12 +19,12 @@ import { isPrimaryAdmin } from './primary-admin';
 import { mailPausedUser } from './access-pause-start';
 import { assertSiteAdmin } from './site-admin';
 
-// The site access pause: an admin closes the site but support to a user, until a time or with no end, and may lift it early.
+// The site access pause: a keeper closes the site but support to a user, until a time or with no end, and may lift it early.
 // Setting one ends every session the user holds; every signed-in request reads `standingAccessPause` through
 // src/lib/request-session.ts (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
 
-const REFUSAL = 'Only a site admin may pause or lift a user’s access';
-const PRIMARY_REFUSAL = 'The primary admin’s access cannot be paused';
+const REFUSAL = 'Only a site keeper may pause or lift a user’s access';
+const PRIMARY_REFUSAL = 'The primary keeper’s access cannot be paused';
 const SELF_REFUSAL = 'You cannot pause your own access';
 const STAND_IN_REFUSAL = 'This account is not a person, so its access cannot be paused';
 const NOTE_MAX_LENGTH = 500;
@@ -35,11 +35,11 @@ const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
 
 /**
  * Pauses a user's access until `until`, or with no end when `until` is `null`, and ends every session they hold. Pausing
- * another admin waits on admin changes being open, as revoking one does. The user is mailed, with `message` if one is written, once the pause is saved.
+ * another keeper waits on keeper changes being open, as revoking one does. The user is mailed, with `message` if one is written, once the pause is saved.
  *
- * @throws {Forbidden} the session is not an admin; the user is the primary admin, the caller, the System account or the signed-out
- * sender account; or admin changes are paused
- * and the user is an admin.
+ * @throws {Forbidden} the session is not a keeper; the user is the primary keeper, the caller, the System account or the signed-out
+ * sender account; or keeper changes are paused
+ * and the user is a keeper.
  * @throws {NotFound} no live user has this id.
  * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, the message is missing, blank or over
  * 500, or a pause already stands.
@@ -81,7 +81,7 @@ export async function pauseUserAccess(
       note: trimmed,
       message: toUser,
     });
-    // An empty answer is a pause another admin set in the same moment, which took the one live slot.
+    // An empty answer is a pause another keeper set in the same moment, which took the one live slot.
     if (!row) {
       throw new ValidationError([
         { path: ['userId'], message: 'This user is already paused; lift the pause first' },
@@ -102,7 +102,7 @@ export async function pauseUserAccess(
 /**
  * Lifts the pause standing on a user's access now, and answers it.
  *
- * @throws {Forbidden} the session is not an admin.
+ * @throws {Forbidden} the session is not a keeper.
  * @throws {NotFound} no live user has this id, or no pause stands on them: lifted already, or run out.
  */
 export async function liftUserAccessPause(
@@ -128,7 +128,7 @@ export function standingAccessPause(userId: string): Promise<UserAccessPauseRow 
 /**
  * One page of every pause set on a user, standing, run out and lifted alike, newest first: the user modal's history.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is not a site keeper.
  * @throws {ValidationError} the id is malformed.
  */
 export async function listUserAccessPauses(
@@ -143,7 +143,7 @@ export async function listUserAccessPauses(
 
 /**
  * The pause standing on each user, in the order asked, undefined where none stands: one query for a page of the user list.
- * To a site admin alone.
+ * To a site keeper alone.
  */
 export async function standingAccessPausesOf(
   session: Session,

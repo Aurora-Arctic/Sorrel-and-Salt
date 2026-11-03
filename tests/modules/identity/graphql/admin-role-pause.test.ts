@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import { A, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 
-// `pauseAdminRoleChanges` and `resumeAdminRoleChanges`, the transport's half (claude-docs/testing/layer-ownership.md): the primary admin's answer and the stamps, and one refusal, read as the browser reads them.
+// `pauseAdminRoleChanges` and `resumeAdminRoleChanges`, the transport's half (claude-docs/testing/layer-ownership.md): the primary keeper's answer and the stamps, and one refusal, read as the browser reads them.
 // Which callers the service refuses is services/admin-role-pause.test.ts's; the scope is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
@@ -18,7 +18,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await sql`truncate admin_role_change_pauses`;
-  // E is the seed's admin; the variable names it the primary admin here.
+  // E is the seed's admin; the variable names it the primary keeper here.
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', E.email);
 });
 
@@ -27,7 +27,7 @@ afterEach(() => {
 });
 
 describe('Mutation.pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
-  it('answers the primary admin the state, each stamped as it, whatever the request names', async () => {
+  it('answers the primary keeper the state, each stamped as it, whatever the request names', async () => {
     const paused = await run(asUser(E), 'mutation { pauseAdminRoleChanges }', { createdBy: A.id });
     expect(paused).toEqual({ data: { pauseAdminRoleChanges: true } });
 
@@ -39,8 +39,8 @@ describe('Mutation.pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
     ]);
   });
 
-  // E is an admin the scope admits, so the refusal is the service's.
-  it('answers another admin as FORBIDDEN', async () => {
+  // E is a keeper the scope admits, so the refusal is the service's.
+  it('answers another keeper as FORBIDDEN', async () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'somebody-else@admin-role-pause-graphql.test');
 
     const result = await run(asUser(E), 'mutation { pauseAdminRoleChanges }');

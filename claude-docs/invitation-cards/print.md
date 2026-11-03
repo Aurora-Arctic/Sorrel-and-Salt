@@ -1,6 +1,6 @@
 # Invitation card print sheets
 
-An admin downloads a batch of invitation cards as one PDF to print at home or send to a printer. This page describes what that PDF contains, where its sizes come from, and why it is built the way it is. The code is `src/lib/invitation-cards/`; its tests are `tests/lib/invitation-cards/`.
+A keeper downloads a batch of invitation cards as one PDF to print at home or send to a printer. This page describes what that PDF contains, where its sizes come from, and why it is built the way it is. The code is `src/lib/invitation-cards/`; its tests are `tests/lib/invitation-cards/`.
 
 The design is the approved card canvas: the `Main` artboard is the front and the `Back` artboard is the back. Its artboards are drawn at 192 pixels to the inch (twice 96), so a 720 × 552 px artboard is a 3.75 × 2.875 in card with its bleed, and the trim (the line the card is cut on) sits 24 px inside it. The builder keeps the canvas's pixels and scales them by 72/192 into PDF points, so every length in `layout.ts` can be checked against the canvas directly.
 

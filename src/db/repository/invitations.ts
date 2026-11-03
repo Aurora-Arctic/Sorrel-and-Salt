@@ -61,7 +61,7 @@ function onSiteTier(): SQL {
   return and(addressKind(), isNull(invitations.workspaceId)) as SQL;
 }
 
-/** The workspace tier, `workspace_id IS NOT NULL`: a coven invitation, which the site tier's admin grant is not. */
+/** The workspace tier, `workspace_id IS NOT NULL`: a coven invitation, which the site tier's keeper grant is not. */
 function onWorkspaceTier(): SQL {
   return isNotNull(invitations.workspaceId);
 }
@@ -287,7 +287,7 @@ export function findPendingWorkspaceInvitationCount(
 /**
  * One page of the pending coven invitations addressed to the session's account in a live coven, newest first.
  * No proof: the invitee holds no membership, so the scope is the session's verified address, matched in SQL. The
- * site tier is never listed; an admin invitation is accepted by its mailed link alone.
+ * site tier is never listed; a keeper invitation is accepted by its mailed link alone.
  */
 export function findReceivedInvitationPage(
   session: AuditSession,

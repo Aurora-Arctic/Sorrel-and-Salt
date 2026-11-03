@@ -58,7 +58,7 @@ const readLedger = cache(
     const people = new Map<string, LedgerPerson | null>(
       ids.map((id, index) => {
         const user = read[index];
-        // An admin's batch answers every slot; a refusal here is the guard's bug.
+        // A keeper's batch answers every slot; a refusal here is the guard's bug.
         if (user instanceof Error) throw user;
         return [
           id,
@@ -89,7 +89,7 @@ const readLedger = cache(
   },
 );
 
-// The privilege ledger: every change to who is an admin and who may create a coven, newest first.
+// The privilege ledger: every change to who is a keeper and who may create a coven, newest first.
 // One page, filtered by the subject's name or email and by privilege
 // (claude-docs/auth/admin-users.md, "The privilege ledger").
 export default async function AdminPrivilegeChangesPage({

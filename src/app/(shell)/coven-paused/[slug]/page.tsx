@@ -58,10 +58,10 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
             }
           />
           <p>
-            You can still ask the coven’s owner, or <SupportLink>Support</SupportLink>, about it.
+            You can still ask the coven’s steward, or <SupportLink>Support</SupportLink>, about it.
           </p>
-          {/* Leaving is the one thing a paused member may still do in the coven: quiet, its confirm the red. An
-            owner is never paused, so the plain confirmation serves and no successors are read. */}
+          {/* Leaving is the one thing a paused member may still do in the coven: quiet, its confirm the red. A
+            steward is never paused, so the plain confirmation serves and no successors are read. */}
           <div className="form__actions">
             <LeaveWorkspaceButton workspaceId={paused.id} name={paused.name} quiet />
           </div>

@@ -8,7 +8,7 @@ import type { FormGroupNode } from './types';
 
 // The three form-group writes over the wire: the transport's half (claude-docs/testing/layer-ownership.md).
 // That is the loaders cleared by a write, `moveTo` reaching the delete, and per write one refusal per error code. Roles and the services' own rules are services/ingredient-form-groups.test.ts's;
-// signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
+// signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {
@@ -128,7 +128,7 @@ describe('icon', () => {
 });
 
 describe('updateIngredientFormGroup', () => {
-  it("rewrites one for a site admin, and a form's group read after it in the same request reads the new name", async () => {
+  it("rewrites one for a site keeper, and a form's group read after it in the same request reads the new name", async () => {
     const id = await seedGroup('Fixture Matter');
     await seedForm('Fixture Shard', id, 'Fixture Matter');
     const session = asUser(E);

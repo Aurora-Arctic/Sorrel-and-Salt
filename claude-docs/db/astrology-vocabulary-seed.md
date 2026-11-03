@@ -25,7 +25,7 @@ element, so its themes carry it alone. A sign's description leaves out its
 ruling planet, so typing `Mars` as a zodiac sign does not offer Aries. As with the
 forms, the descriptions are pairwise distinct within each table, and the
 literal is §5's table, nineteen and thirteen — held to it by review, not a
-test (MB.225). `astrology.test.ts` keeps what a re-run leaves of an admin's
+test (MB.225). `astrology.test.ts` keeps what a re-run leaves of a keeper's
 edits.
 
 **Sources.** Researched when M4.5 settled the lists, and recast in Chicago form

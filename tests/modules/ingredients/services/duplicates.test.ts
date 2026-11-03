@@ -220,7 +220,7 @@ describe('findPossibleDuplicates', () => {
       await expect(namesFor(D, 'Mugwart', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
     });
 
-    it('refuses a site admin, who belongs to no workspace', async () => {
+    it('refuses a site keeper, who belongs to no workspace', async () => {
       await expect(namesFor(E, 'Mugwart', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
     });
 

@@ -21,7 +21,7 @@ import {
 import { editIngredientControl, editIngredientDialog } from './stories/ingredient-dialogs';
 
 // Reclassifying a named entry as None in its edit form, in a browser: Save opens, and the save sticks, for a
-// compendium entry as a site admin and for a coven's own entry as its owner.
+// compendium entry as a site keeper and for a coven's own entry as its owner.
 // Regression: choosing None left Save disabled, so the change could not be saved.
 
 test.beforeAll(async () => {

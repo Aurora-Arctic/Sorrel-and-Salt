@@ -177,7 +177,7 @@ describe('memberEmails', () => {
     await expect(memberEmails(asUser(B), coven.id, ROLL())).rejects.toBeInstanceOf(Forbidden);
   });
 
-  it('refuses a viewer, a member of another coven, and a site admin in none', async () => {
+  it('refuses a viewer, a member of another coven, and a site keeper in none', async () => {
     // Why each could have been answered: C sits here, D is a member of X,
     // and E's session carries the site role.
     await expect(

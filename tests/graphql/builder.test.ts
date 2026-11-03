@@ -48,7 +48,7 @@ describe('the Pothos schema', () => {
   });
 });
 
-describe('the admin and curator scopes', () => {
+describe('the keeper and curator scopes', () => {
   // A throwaway schema whose fields only the scopes gate, so no service refusal can stand in for them.
   async function read(
     session: NonNullable<Context['session']>,

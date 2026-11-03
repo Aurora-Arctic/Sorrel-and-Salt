@@ -104,9 +104,9 @@ table touches its own repository file, and the writer's surface,
 `write.test.ts` still pins their number.
 
 **One read sits among them** (MB.59): `adminRoleWrites` also holds
-`lockLiveAdmins`, the live admin rows locked `for update` in id order, which
+`lockLiveAdmins`, the live keeper rows locked `for update` in id order, which
 the admin revoke counts before it writes so two revokes at once cannot leave
-no admin ([`auth/admin-users.md`](../auth/admin-users.md), "Granting and
+no keeper ([`auth/admin-users.md`](../auth/admin-users.md), "Granting and
 revoking admin"). It is in the writer only because the lock must be taken in
 the transaction that writes, and it is still built by `selectFrom`, whose
 `Locked` shape runs the read in that transaction and appends `FOR UPDATE`, so
@@ -139,7 +139,7 @@ select set_config('app.current_user_id', $1, true),
        set_config('app.privilege_note', $4, true)
 ```
 
-**`app.impersonated_by` rides beside it** (MB.53): the admin acting as the
+**`app.impersonated_by` rides beside it** (MB.53): the keeper acting as the
 session's user on an impersonation session, from the session's
 `impersonatedBy` and never a request body, and empty on every other write.
 The stamps still name the user acted as, since impersonation reproduces what
@@ -327,7 +327,7 @@ go with it by `ON DELETE CASCADE`, and so do any pauses naming it, site (`user_a
 (`workspace_member_pauses`) alike: a pause means nothing once its account is gone, and keeping the account
 for it would let a squat outlast its window.
 
-An account holding a `user_privilege_changes` row is kept, because an admin has
+An account holding a `user_privilege_changes` row is kept, because a keeper has
 vouched for it, and it is not deleted with its rows: the ledger refuses the
 delete, and its plain foreign key would fail it.
 

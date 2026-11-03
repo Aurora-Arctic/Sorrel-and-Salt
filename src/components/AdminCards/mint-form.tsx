@@ -35,7 +35,7 @@ const CreateInvitationCardsDocument = graphql(`
 
 /** What the Note is for, behind its info tip. */
 const NOTE_HINT =
-  'Shown to admins beside the batch on the Invitation Cards tab, and searchable there.';
+  'Shown to keepers beside the batch on the Invitation Cards tab, and searchable there.';
 
 /** The modal's head, and the tab's action that opens it. */
 export const MINT_TITLE = 'Mint Cards';
@@ -47,7 +47,7 @@ const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 const earliestDay = (): string =>
   new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-/** The day the expiry starts at: today in UTC plus the default span, a calendar day the admin may change. */
+/** The day the expiry starts at: today in UTC plus the default span, a calendar day the keeper may change. */
 const defaultDay = (): string =>
   new Date(Date.now() + DEFAULT_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 

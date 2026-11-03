@@ -49,8 +49,8 @@ const edges = (page: Page) =>
 /** A link to press: in the named navigation, or in the page's main when `nav` is absent. */
 type Press = { nav?: string; link: string };
 
-// From the Keepers index, which is shorter than each skeleton below: the documents editor (an admin section), the
-// compendium curation page by way of the Curator index (an admin section), and the public compendium (the site's main).
+// From the Keepers index, which is shorter than each skeleton below: the documents editor (a keeper section), the
+// compendium curation page by way of the Curator index (a keeper section), and the public compendium (the site's main).
 const destinations: readonly { name: string; presses: readonly Press[] }[] = [
   { name: 'the documents editor', presses: [{ nav: 'Keepers', link: 'Documents' }] },
   {

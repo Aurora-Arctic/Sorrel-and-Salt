@@ -403,7 +403,7 @@ describe('suggestCelestialBodies', () => {
       await expect(all(suggestCelestialBodies, asUser(D), 'sedna')).rejects.toThrow(Forbidden);
     });
 
-    it('refuses a site admin, who belongs to no workspace', async () => {
+    it('refuses a site keeper, who belongs to no workspace', async () => {
       await expect(all(suggestCelestialBodies, asUser(E), 'sedna')).rejects.toThrow(Forbidden);
     });
 

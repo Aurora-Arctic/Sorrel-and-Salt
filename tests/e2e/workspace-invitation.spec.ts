@@ -67,7 +67,7 @@ async function ownerInvites(page: Page, email: string): Promise<void> {
   await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
-  await dialog.getByRole('radio', { name: 'Member' }).check();
+  await dialog.getByRole('radio', { name: 'Practitioner' }).check();
   await dialog.getByRole('button', { name: 'Send Invitation' }).click();
   await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Done' }).click();

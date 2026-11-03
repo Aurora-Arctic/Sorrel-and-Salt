@@ -69,8 +69,8 @@ describe('the demo coven seed', () => {
     ]);
   });
 
-  it('seats the system user and every admin as owner and everyone but the signed-out sender and the job actor as viewer', async () => {
-    // Preconditions: an admin, a curator and plain users exist to be told apart.
+  it('seats the system user and every keeper as owner and everyone but the signed-out sender and the job actor as viewer', async () => {
+    // Preconditions: a keeper, a curator and plain users exist to be told apart.
     const everyone = await sql<{ id: string; role: string }[]>`
       select id, role from users where deleted_at is null
     `;
@@ -112,7 +112,7 @@ describe('the demo coven seed', () => {
     expect(await countRows()).toBe(before);
   });
 
-  it('does not seat again a user whose seat is soft-deleted, an admin included', async () => {
+  it('does not seat again a user whose seat is soft-deleted, a keeper included', async () => {
     await run();
     await sql`
       update workspace_members set deleted_at = now(), deleted_by = ${FIXTURE_USERS.C.id}

@@ -213,7 +213,7 @@ describe('promoteFolkName — who may', () => {
     );
   });
 
-  it('refuses a site admin on a coven’s ingredient', async () => {
+  it('refuses a site keeper on a coven’s ingredient', async () => {
     const { id, folkNameId } = await setup();
 
     await expect(promoteFolkName(asUser(E), WORKSPACE_W_ID, id, folkNameId)).rejects.toBeInstanceOf(
@@ -231,7 +231,7 @@ describe('promoteFolkName — who may', () => {
     expect((await rowOf(id)).name).toBe('Fixture Herb');
   });
 
-  it('lets a site admin promote on a compendium entry', async () => {
+  it('lets a site keeper promote on a compendium entry', async () => {
     const id = await compendium({
       name: 'Fixture Herb',
       canonicalName: 'Fixtura testalis',

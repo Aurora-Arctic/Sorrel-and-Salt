@@ -269,7 +269,7 @@ describe('suggestCommonNames', () => {
       await expect(all(asUser(D), 'testbane')).rejects.toThrow(Forbidden);
     });
 
-    it('refuses a site admin, who belongs to no workspace', async () => {
+    it('refuses a site keeper, who belongs to no workspace', async () => {
       await expect(all(asUser(E), 'testbane')).rejects.toThrow(Forbidden);
     });
   });

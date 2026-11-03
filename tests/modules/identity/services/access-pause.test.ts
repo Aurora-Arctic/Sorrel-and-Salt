@@ -16,7 +16,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 
-// An admin pauses a user's access, dated or open-ended, and lifts it early (claude-docs/auth/admin-bootstrap.md, "Pausing a user's
+// A keeper pauses a user's access, dated or open-ended, and lifts it early (claude-docs/auth/admin-bootstrap.md, "Pausing a user's
 // access"). The sign-in refusal itself is tests/db/access-pause-sign-in.test.ts.
 
 let sql: postgres.Sql;
@@ -182,21 +182,21 @@ describe('pauseUserAccess', () => {
       expect(error).toBeInstanceOf(Forbidden);
       expect(await pauseRows(A.id)).toEqual([]);
       expect(await sessionCount(A.id)).toBe(1);
-      // The precondition: the same call by an admin pauses A, so the role is what refused it.
+      // The precondition: the same call by a keeper pauses A, so the role is what refused it.
       await pauseUserAccess(asUser(E), A.id, inADay(), 'Testnote', noPauseNotifier, PAUSE_MESSAGE);
       expect(await pauseRows(A.id)).toHaveLength(1);
     },
   );
 
-  it('refuses to pause the primary admin, saying why', async () => {
+  it('refuses to pause the primary keeper, saying why', async () => {
     const error = await refusalOf(
       pauseUserAccess(asUser(E), PRIMARY, null, 'Testnote', noPauseNotifier, PAUSE_MESSAGE),
     );
 
     expect(error).toBeInstanceOf(Forbidden);
-    expect(error.message).toBe('The primary admin’s access cannot be paused');
+    expect(error.message).toBe('The primary keeper’s access cannot be paused');
     expect(await pauseRows(PRIMARY)).toEqual([]);
-    // The precondition: once ADMIN_BOOTSTRAP_EMAIL names another address, the same admin is pausable.
+    // The precondition: once ADMIN_BOOTSTRAP_EMAIL names another address, the same keeper is pausable.
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `elsewhere${DOMAIN}`);
     await pauseUserAccess(asUser(E), PRIMARY, null, 'Testnote', noPauseNotifier, PAUSE_MESSAGE);
     expect(await pauseRows(PRIMARY)).toHaveLength(1);
@@ -206,7 +206,7 @@ describe('pauseUserAccess', () => {
     ['the System account', SYSTEM_ACTOR_ID],
     ['the signed-out sender account', SIGNED_OUT_SENDER_ID],
   ])('refuses to pause %s, which is not a person, saying why', async (_label, accountId) => {
-    // Why this could have succeeded: the account is a live user, which an admin may pause, and the call is the same one that pauses a person.
+    // Why this could have succeeded: the account is a live user, which a keeper may pause, and the call is the same one that pauses a person.
     expect(
       await sql`select id from users where id = ${accountId} and deleted_at is null`,
     ).toHaveLength(1);
@@ -222,7 +222,7 @@ describe('pauseUserAccess', () => {
     expect(await pauseRows(accountId)).toEqual([]);
   });
 
-  it('refuses an admin pausing themselves, saying why', async () => {
+  it('refuses a keeper pausing themselves, saying why', async () => {
     const error = await refusalOf(
       pauseUserAccess(asUser(E), E.id, null, 'Testnote', noPauseNotifier, PAUSE_MESSAGE),
     );
@@ -230,7 +230,7 @@ describe('pauseUserAccess', () => {
     expect(error).toBeInstanceOf(Forbidden);
     expect(error.message).toBe('You cannot pause your own access');
     expect(await pauseRows(E.id)).toEqual([]);
-    // The precondition: another admin may pause the same account.
+    // The precondition: another keeper may pause the same account.
     await pauseUserAccess(
       asUser(AS_OTHER_ADMIN),
       E.id,
@@ -353,7 +353,7 @@ describe('pauseUserAccess', () => {
     expect(rows[0]?.lifted_by).toBe(E.id);
   });
 
-  it('refuses pausing another admin while admin changes are paused, and lets the primary admin', async () => {
+  it('refuses pausing another keeper while keeper changes are paused, and lets the primary admin', async () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
 
     const error = await refusalOf(
@@ -362,10 +362,10 @@ describe('pauseUserAccess', () => {
 
     expect(error).toBeInstanceOf(Forbidden);
     expect(error.message).toBe(
-      'The primary admin has paused admin changes. Ask them to resume changes.',
+      'The primary keeper has paused keeper changes. Ask them to resume changes.',
     );
     expect(await pauseRows(OTHER_ADMIN)).toEqual([]);
-    // A plain user is not an admin change, so the switch leaves pausing them open.
+    // A plain user is not a keeper change, so the switch leaves pausing them open.
     await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier, PAUSE_MESSAGE);
     await pauseUserAccess(
       asUser(AS_PRIMARY),
@@ -429,7 +429,7 @@ describe('liftUserAccessPause', () => {
 
       expect(error).toBeInstanceOf(Forbidden);
       expect(await standingAccessPause(A.id)).toEqual(set);
-      // The precondition: the same call by an admin lifts it.
+      // The precondition: the same call by a keeper lifts it.
       expect(await liftUserAccessPause(asUser(E), A.id)).toMatchObject({ id: set.id });
     },
   );
@@ -481,7 +481,7 @@ describe('listUserAccessPauses', () => {
     ['a plain user', B],
   ])('refuses %s with Forbidden, by the paused user’s id', async (_who, caller) => {
     await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier, PAUSE_MESSAGE);
-    // The precondition: the same read by an admin answers the pause.
+    // The precondition: the same read by a keeper answers the pause.
     expect(await nodes(E)).toHaveLength(1);
 
     expect(await refusalOf(listUserAccessPauses(asUser(caller), A.id, firstPage))).toBeInstanceOf(
@@ -517,7 +517,7 @@ describe('standingAccessPausesOf', () => {
     ['a plain user', B],
   ])('refuses %s with Forbidden', async (_who, caller) => {
     await pauseUserAccess(asUser(E), A.id, null, 'Testnote', noPauseNotifier, PAUSE_MESSAGE);
-    // The precondition: the same read by an admin answers the pause.
+    // The precondition: the same read by a keeper answers the pause.
     expect((await standingAccessPausesOf(asUser(E), [A.id]))[0]).toBeDefined();
 
     expect(await refusalOf(standingAccessPausesOf(asUser(caller), [A.id]))).toBeInstanceOf(

@@ -224,7 +224,7 @@ describe('listPendingWorkspaceInvitations and countPendingWorkspaceInvitations',
     );
   });
 
-  it('refuse a member, a viewer, another coven’s member and a site admin by direct workspace id', async () => {
+  it('refuse a member, a viewer, another coven’s member and a site keeper by direct workspace id', async () => {
     await insertInvitation(coven, 'private');
     // Why B could have read it: B holds `member: read` here, and the row is pending.
     expect(

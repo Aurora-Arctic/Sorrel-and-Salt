@@ -2,6 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
 import type { UserRole } from '@/lib/session';
+import { agreedInForceSql } from '../support/db/agreement-in-force';
 import { e2eDatabaseUrl } from './database';
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { browserUrl } from './slots';
@@ -12,7 +13,7 @@ import { browserUrl } from './slots';
 
 /**
  * The address every e2e server gets as ADMIN_BOOTSTRAP_EMAIL, on the reserved `.invalid` domain: set by
- * playwright.config.ts, not `.env.local`, so a spec signs in as the primary admin the same way everywhere.
+ * playwright.config.ts, not `.env.local`, so a spec signs in as the primary keeper the same way everywhere.
  */
 export const PRIMARY_ADMIN_EMAIL = 'placeholder@admin-bootstrap.invalid';
 
@@ -63,17 +64,14 @@ export async function signInAs(
       // privilege trigger refuses an undeclared change to `role` or
       // `can_create_workspace` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
       await tx`select set_config('app.privilege_route', 'manual', true)`;
-      // Stamped as its own creator, as the sign-up hook stamps one. A curator or an admin holds the
-      // creation flag, as the users CHECK asks. An agreed account holds the terms version published in this database now.
-      // The terms version in force is the terms document's highest live published version, as the gate reads it.
-      const [{ current }] = await tx`
-        select max(v.number) as current from document_versions v join documents d on d.id = v.document_id
-        where d.key = 'terms' and d.deleted_at is null and v.status = 'published' and v.deleted_at is null`;
-      const agreed: number | null = termsAgreed ? (current as number | null) : null;
+      // Stamped as its own creator, as the sign-up hook stamps one. A curator or a keeper holds the
+      // creation flag, as the users CHECK asks. An agreed account holds the terms, disclaimer and code of ethics versions
+      // published in this database now, as the gate reads them.
       await tx`
-        insert into users (id, name, email, email_verified, role, can_create_workspace, agreed_terms_version, terms_accepted_at, created_by, updated_by)
+        insert into users (id, name, email, email_verified, role, can_create_workspace,
+          agreed_terms_version, agreed_disclaimer_version, agreed_ethics_version, terms_accepted_at, created_by, updated_by)
         values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role !== 'user'},
-          ${agreed}, ${termsAgreed ? new Date() : null}, ${userId}, ${userId})
+          ${termsAgreed ? agreedInForceSql(tx) : tx`null, null, null`}, ${termsAgreed ? new Date() : null}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

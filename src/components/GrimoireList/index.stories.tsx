@@ -56,7 +56,7 @@ const FACETS: GrimoireFacets = {
   ],
 };
 
-/** One spell as the tab hands it to its card, with every control an owner's role gets. */
+/** One spell as the tab hands it to its card, with every control a steward's role gets. */
 const spell = (
   id: string,
   title: string | null,
@@ -200,8 +200,8 @@ const STATES: Record<string, ReactNode> = {
   // No spell on the tab and no filter: the tab says so, and New Spell at the heading is the way in.
   'No Spells': <Tab spells={[]} />,
   'No Drafts': <Tab drafts spells={[]} />,
-  // The same, as a viewer sees it: a second line names who can write a spell.
-  'No Spells For A Viewer': <Tab spells={[]} canCreate={false} />,
+  // The same, as an observer sees it: a second line names who can write a spell.
+  'No Spells For An Observer': <Tab spells={[]} canCreate={false} />,
   'No Drafts For A Viewer': <Tab drafts spells={[]} canCreate={false} />,
   // A filter that matched nothing: the hint to widen it, not the empty tab's line.
   'No Matches': <Tab spells={[]} filter={{ ...PICKED, query: 'nothing' }} total={0} />,

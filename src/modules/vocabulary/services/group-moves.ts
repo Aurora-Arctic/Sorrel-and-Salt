@@ -24,7 +24,7 @@ export function refusal(rows: MovedRows, path: string[], lead: (row: GroupMove['
 
 /**
  * Refuses a move that would put a row on another live row's address, naming both. Read before the write, and again after one the slug index refused,
- * since two admins can race: then `error` is that write's, and anything but that collision passes through.
+ * since two keepers can race: then `error` is that write's, and anything but that collision passes through.
  */
 export async function refuseCollidingMoves(
   rows: MovedRows,

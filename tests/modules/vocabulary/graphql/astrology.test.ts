@@ -10,7 +10,7 @@ import type { AstrologyValueConnection, AstrologyValueNode } from './types';
 
 // `celestialBodies` and `zodiacSigns` over the wire: the two curated astrology vocabularies, a page at a time, readable signed out, and the six admin writes.
 // This is the transport's half (claude-docs/testing/layer-ownership.md): a page and its count, and per write one refusal per error code. Roles, renames and collisions are services/astrology.test.ts's;
-// signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
+// signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -114,7 +114,7 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
   });
 
   describe(`create${type}`, () => {
-    it('writes one for a site admin, answering it with its slug', async () => {
+    it('writes one for a site keeper, answering it with its slug', async () => {
       const result = await send<Record<string, AstrologyValueNode>>(asUser(E), CREATE, {
         input: input(),
       });
@@ -143,7 +143,7 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
 
   if (full) {
     describe(`update${type}`, () => {
-      it('rewrites one for a site admin, answering its new slug', async () => {
+      it('rewrites one for a site keeper, answering its new slug', async () => {
         const id = await seed('Fixture Old');
 
         const result = await send<Record<string, AstrologyValueNode>>(asUser(E), UPDATE, {
@@ -180,7 +180,7 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
     });
 
     describe(`delete${type}`, () => {
-      it('soft-deletes one for a site admin, answering its id', async () => {
+      it('soft-deletes one for a site keeper, answering its id', async () => {
         const id = await seed('Fixture Doomed');
 
         const result = await send<Record<string, string>>(asUser(E), DELETE, { id });

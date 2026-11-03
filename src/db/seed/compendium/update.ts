@@ -471,7 +471,7 @@ export interface UpdatePlan {
   variants: VariantPlan;
   /** The top-level fields that differ, scalars first, then the child lists, as the report prints them. */
   differs: string[];
-  /** The update would change `name`, `canonicalName` or the slug: the admin's to change. */
+  /** The update would change `name`, `canonicalName` or the slug: the keeper's to change. */
   identityChange: boolean;
   /** A removed form that stock or a spell layer holds. */
   formInUse: boolean;

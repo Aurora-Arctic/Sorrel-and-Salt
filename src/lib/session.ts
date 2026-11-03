@@ -1,5 +1,6 @@
 import type { createAuthMiddleware } from 'better-auth/api';
 import type { AuditSession } from '../db/types';
+import type { AgreedVersion } from './types';
 import type { users } from '../modules/identity/schema/users';
 
 // The session types. Apart from `types.ts`, which imports nothing, because they
@@ -30,8 +31,10 @@ export interface Session extends AuditSession {
 export interface SessionState {
   session: Session | null;
   emailVerified: boolean;
-  /** The account's recorded terms version is the one in force; `false` with no session. */
+  /** The account's recorded terms, disclaimer and code of ethics versions are all the ones in force; `false` with no session. */
   termsAgreed: boolean;
+  /** The versions the account recorded when it last agreed; absent with no session. */
+  agreedVersion?: AgreedVersion;
   /** Younger than Better Auth's `freshAge`, so `/unlink-account` would take it. */
   sessionFresh: boolean;
   /** Set while a pause stands on the session's user, with its end, `null` for none; absent otherwise. */

@@ -151,7 +151,7 @@ describe('timeOutSupportSender starts nothing when it writes nothing', () => {
     expect(send).not.toHaveBeenCalled();
     expect(await timeoutsOf(C.id)).toEqual([]);
 
-    // Why the refusal is the role check's: the same call from an admin writes the time-out and starts its run.
+    // Why the refusal is the role check's: the same call from a keeper writes the time-out and starts its run.
     await timeOutSupportSender(asUser(E), C.id, UNTIL, NOTE, notifier, MESSAGE);
     expect(timeoutRuns()).toHaveLength(1);
   });

@@ -8,7 +8,7 @@ import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { announced } from '../../support/click-feedback';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The user modal's Change Role and coven-creation controls, the only place an admin changes either: each asks over the
+// The user modal's Change Role and coven-creation controls, the only place a keeper changes either: each asks over the
 // modal's body, naming the user, and the service is the guard, refusing the same
 // (claude-docs/components/user-detail.md).
 
@@ -31,6 +31,8 @@ const FACTS = {
   providers: ['discord'],
   createdAt: new Date('2026-02-03T04:05:06Z'),
   agreedTermsVersion: 1,
+  agreedDisclaimerVersion: 1,
+  agreedEthicsVersion: 1,
 };
 const ADA: UserDetailUser = {
   ...FACTS,
@@ -188,7 +190,7 @@ describe('UserDetail site role', () => {
     renderDetail({ user: { ...BO, emailVerified: true } });
 
     fireEvent.click(changeRole('Bo Fixturewort'));
-    fireEvent.click(screen.getByRole('radio', { name: /^Admin/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Keeper/ }));
     const confirm = screen.getByRole('button', { name: 'Promote' });
     expect(confirm).not.toHaveAccessibleDescription();
     const reason = screen.getByRole('textbox', { name: 'Reason' });
@@ -201,7 +203,7 @@ describe('UserDetail site role', () => {
     expect(announced()).toContain(BO.name);
   });
 
-  it('demotes an admin to a curator with no reason', async () => {
+  it('demotes a keeper to a curator with no reason', async () => {
     const calls = sent();
     renderDetail({ user: ADA });
 
@@ -218,7 +220,7 @@ describe('UserDetail site role', () => {
     renderDetail({ user: CY });
 
     fireEvent.click(changeRole('Cy Fixturewort'));
-    fireEvent.click(screen.getByRole('radio', { name: /^Admin/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Keeper/ }));
     expect(screen.getByRole('button', { name: 'Promote' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: /^User/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Demote' }));
@@ -235,7 +237,7 @@ describe('UserDetail site role', () => {
     fireEvent.click(changeRole('Cy Fixturewort'));
     fireEvent.click(screen.getByRole('radio', { name: /^User/ }));
     expect(screen.getByRole('button', { name: 'Demote' })).not.toHaveAccessibleDescription();
-    fireEvent.click(screen.getByRole('radio', { name: /^Admin/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Keeper/ }));
     const confirm = screen.getByRole('button', { name: 'Promote' });
     expect(confirm).toHaveAccessibleDescription(/\S/);
 
@@ -243,7 +245,7 @@ describe('UserDetail site role', () => {
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
   });
 
-  it('marks the primary admin with a crown, whose Change Role is in view but aria-disabled, described by the reason', () => {
+  it('marks the primary keeper with a crown, whose Change Role is in view but aria-disabled, described by the reason', () => {
     renderDetail({ user: { ...ADA, primaryAdmin: true } });
 
     const open = changeRole('Ada Fixturewort');
@@ -253,7 +255,7 @@ describe('UserDetail site role', () => {
     expect(open).toHaveAccessibleDescription(PRIMARY_ADMIN_REFUSAL);
   });
 
-  it('states the reason when the primary admin’s Change Role is tried, asking nothing and sending nothing', () => {
+  it('states the reason when the primary keeper’s Change Role is tried, asking nothing and sending nothing', () => {
     const calls = sent();
     renderDetail({ user: { ...ADA, primaryAdmin: true } });
 
@@ -264,7 +266,7 @@ describe('UserDetail site role', () => {
     expect(calls).toEqual([]);
   });
 
-  it('locks Change Role for an admin the pause on admin changes binds, described by the reason', () => {
+  it('locks Change Role for a keeper the pause on keeper changes binds, described by the reason', () => {
     renderDetail({ user: ADA, changesPaused: true });
 
     const open = changeRole('Ada Fixturewort');
@@ -273,14 +275,14 @@ describe('UserDetail site role', () => {
     expect(open).toHaveAccessibleDescription(/\S/);
   });
 
-  it('locks nothing while admin changes are on', () => {
+  it('locks nothing while keeper changes are on', () => {
     renderDetail({ user: ADA, changesPaused: false });
 
     expect(changeRole('Ada Fixturewort')).not.toHaveAttribute('aria-disabled');
   });
 
   // Which of the two reasons won is told by which of the two strings it reads.
-  it('keeps the primary admin’s Change Role on its own reason while paused', () => {
+  it('keeps the primary keeper’s Change Role on its own reason while paused', () => {
     renderDetail({ user: { ...ADA, primaryAdmin: true }, changesPaused: true });
 
     expect(changeRole('Ada Fixturewort')).toHaveAccessibleDescription(PRIMARY_ADMIN_REFUSAL);

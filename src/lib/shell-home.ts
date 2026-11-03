@@ -14,7 +14,7 @@ export function firstReachable<Workspace extends Pick<ShellWorkspace, 'paused'>>
   return workspaces.find(({ paused }) => !paused) ?? workspaces[0];
 }
 
-/** The viewer's first coven they can open, or the landing for someone in none: a curator's or an admin's Your Coven link. */
+/** The viewer's first coven they can open, or the landing for someone in none: a curator's or a keeper's Your Coven link. */
 export function covenHome(workspaces: readonly Pick<ShellWorkspace, 'slug' | 'paused'>[]): Route {
   const first = firstReachable(workspaces);
   return first ? (`/coven/${first.slug}` as Route) : '/coven';

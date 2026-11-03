@@ -34,6 +34,14 @@ export const UserRef = builder.objectRef<UserRow>('User').implement({
       nullable: true,
       authScopes: selfOrAdmin,
     }),
+    agreedDisclaimerVersion: t.exposeInt('agreedDisclaimerVersion', {
+      nullable: true,
+      authScopes: selfOrAdmin,
+    }),
+    agreedEthicsVersion: t.exposeInt('agreedEthicsVersion', {
+      nullable: true,
+      authScopes: selfOrAdmin,
+    }),
     // An admin's alone, the user's own row included: the account page reads a
     // user's own from Better Auth, whose table it is.
     providers: t.stringList({
@@ -89,11 +97,20 @@ builder.mutationField('setName', (t) =>
   }),
 );
 
-// The terms page's Agree button. It names the version the page showed, and the service refuses one no longer in force.
+// The three version numbers an agreement covers, the joint version `terms.disclaimer.ethics` the terms page shows.
+const AgreementVersionInput = builder.inputType('AgreementVersionInput', {
+  fields: (t) => ({
+    terms: t.int({ required: true }),
+    disclaimer: t.int({ required: true }),
+    ethics: t.int({ required: true }),
+  }),
+});
+
+// The terms page's Agree button. It names the versions the page showed, and the service refuses any but the ones in force.
 builder.mutationField('agreeToTerms', (t) =>
   t.field({
     type: UserRef,
-    args: { version: t.arg.int({ required: true }) },
+    args: { version: t.arg({ type: AgreementVersionInput, required: true }) },
     authScopes: { signedIn: true },
     resolve: (_root, { version }, context) => agreeToTerms(sessionOf(context), version),
   }),

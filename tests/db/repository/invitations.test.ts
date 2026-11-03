@@ -114,7 +114,7 @@ describe('insertInvitation', () => {
     expect(Object.values(await rowOf(inserted!.id))).not.toContain(TOKEN);
   });
 
-  it('writes an admin’s invitation on the site tier, a null pair, with its note', async () => {
+  it('writes a keeper’s invitation on the site tier, a null pair, with its note', async () => {
     const [inserted] = await inviteToSite({ note: 'Takes over the vocabularies' });
 
     expect(inserted).toMatchObject({
@@ -148,7 +148,7 @@ describe('insertInvitation', () => {
         siteRole: 'admin',
       } as WorkspaceInvitationValues),
     );
-    const [admins] = await withAudit(asUser(E), (write) =>
+    const [keepers] = await withAudit(asUser(E), (write) =>
       write.insertInvitation(admin, {
         email: INVITED,
         token: OTHER_TOKEN,
@@ -160,7 +160,7 @@ describe('insertInvitation', () => {
     );
 
     expect(owners).toMatchObject({ workspaceId: WORKSPACE_W_ID, role: 'viewer', siteRole: null });
-    expect(admins).toMatchObject({
+    expect(keepers).toMatchObject({
       workspaceId: null,
       role: null,
       siteRole: 'curator',
@@ -172,10 +172,10 @@ describe('insertInvitation', () => {
 describe('findInvitationByToken', () => {
   it('finds an invitation on either tier by its token', async () => {
     const [owners] = await inviteIntoW();
-    const [admins] = await inviteToSite({ token: OTHER_TOKEN });
+    const [keepers] = await inviteToSite({ token: OTHER_TOKEN });
 
     expect(await findInvitationByToken(TOKEN)).toEqual(owners);
-    expect(await findInvitationByToken(OTHER_TOKEN)).toEqual(admins);
+    expect(await findInvitationByToken(OTHER_TOKEN)).toEqual(keepers);
   });
 
   // A leaked row's hash, passed where a token goes, is hashed again and so
@@ -205,7 +205,7 @@ describe('findInvitationByToken', () => {
 });
 
 describe('acceptInvitation', () => {
-  // A is no admin and B no owner: the accepter is whoever the session names.
+  // A is no keeper and B no owner: the accepter is whoever the session names.
   it.each([
     ['a workspace invitation', () => inviteIntoW()],
     ['a site invitation', () => inviteToSite()],

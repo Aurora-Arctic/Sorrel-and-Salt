@@ -56,7 +56,7 @@ function refuseScholarlyInCoven(values: { scholarly: boolean }): void {
 /**
  * Creates a reference in the compendium (`workspaceId` null) or in this coven.
  *
- * @throws {Forbidden} a compendium reference and the caller is not a site admin, or a coven's and the caller may not write its ingredients.
+ * @throws {Forbidden} a compendium reference and the caller is not a site keeper, or a coven's and the caller may not write its ingredients.
  * @throws {ValidationError} the input breaks `ReferenceInput`, pathed to the field, or marks a coven's source scholarly.
  */
 export async function createReference(

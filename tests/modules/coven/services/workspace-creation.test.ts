@@ -58,7 +58,7 @@ describe('createWorkspace', () => {
     );
   });
 
-  it('lets an admin through on the flag every admin holds', async () => {
+  it('lets a keeper through on the flag every keeper holds', async () => {
     expect(asUser(E).role).toBe('admin');
     const created = await createWorkspace(asUser(E), { name: 'Fixture Admin Creation Coven' });
     expect(await membersOf(created.id)).toEqual([{ user_id: E.id, role: 'owner' }]);

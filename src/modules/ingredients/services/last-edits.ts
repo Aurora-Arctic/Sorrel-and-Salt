@@ -7,7 +7,7 @@ import { displayNamesOf } from '@/modules/identity';
 
 // The "last edited by" of a coven's Ingredients cards. The editor shown is the coven's: a stock
 // row's, the coven's own ingredient's, or its cupboard row of a compendium entry (its annotation),
-// never the compendium entry's own, whose editor is an admin or curator.
+// never the compendium entry's own, whose editor is a keeper or curator.
 
 /** An entry of the coven's list: the row, whose own stamp counts only where the coven owns it. */
 type LastEditEntry = Pick<IngredientRow, 'id' | 'workspaceId' | 'updatedBy' | 'updatedAt'>;

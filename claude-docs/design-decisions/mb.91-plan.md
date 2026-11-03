@@ -1,10 +1,10 @@
-# Planet and zodiac as admin-curated vocabularies (MB.91)
+# Planet and zodiac as keeper-curated vocabularies (MB.91)
 
 ## Context
 
-M4.5 settled `ingredients.planet` and `ingredients.zodiac` as free text with suggested values, and put the suggestions in a TypeScript constant — `src/modules/ingredients/validation/correspondences.ts`, 19 bodies and 13 signs. The user asked what it would take to put the five hardcoded lists (`NOMENCLATURE_KINDS`, `NAMELESS_KINDS`, `INGREDIENT_ELEMENTS`, `PLANET_SUGGESTIONS`, `ZODIAC_SUGGESTIONS`) in the database so an admin can edit them without a deploy. Adding a body today is a deploy — the shape `form`'s vocabulary had before MB.35, and wrong for the same reason.
+M4.5 settled `ingredients.planet` and `ingredients.zodiac` as free text with suggested values, and put the suggestions in a TypeScript constant — `src/modules/ingredients/validation/correspondences.ts`, 19 bodies and 13 signs. The user asked what it would take to put the five hardcoded lists (`NOMENCLATURE_KINDS`, `NAMELESS_KINDS`, `INGREDIENT_ELEMENTS`, `PLANET_SUGGESTIONS`, `ZODIAC_SUGGESTIONS`) in the database so a keeper can edit them without a deploy. Adding a body today is a deploy — the shape `form`'s vocabulary had before MB.35, and wrong for the same reason.
 
-**Decided with the user:** only planet and zodiac move, and they move as _vocabularies_ like `form` — the two `ingredients` columns stay `text`, the tables feed the autofill and the admin's curation list, deleting a row rewrites no ingredient, and a value off the list stays writable (§5's rule: a vocabulary a member writes is text).
+**Decided with the user:** only planet and zodiac move, and they move as _vocabularies_ like `form` — the two `ingredients` columns stay `text`, the tables feed the autofill and the keeper's curation list, deleting a row rewrites no ingredient, and a value off the list stays writable (§5's rule: a vocabulary a member writes is text).
 
 **What the other three would take, for the record (out of scope):**
 
@@ -21,19 +21,19 @@ M4.5 settled `ingredients.planet` and `ingredients.zodiac` as free text with sug
 4. **`standard` seeds no uncurated planet** (its six values — `'Moon'`, `'Mars'`, … — all match the seeded Title Case names, case-insensitively). The suggestion task decides whether `standard` gains one, in `rhizome`'s shape.
 5. **"One-click add" cannot be one click**: `description` is NOT NULL and CHECK non-blank, so the to-do list's add control opens the create form prefilled with the value and asks for a description. M5.6a's wording gets the same correction.
 
-Two invariants decide the scopes: the member's autofill reads the compendium **and the current workspace**; the admin's to-do list reads the **compendium tier only** — an admin has no access to any workspace's ingredients (M6.6). The compendium-tier finder joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`.
+Two invariants decide the scopes: the member's autofill reads the compendium **and the current workspace**; the keeper's to-do list reads the **compendium tier only** — a keeper has no access to any workspace's ingredients (M6.6). The compendium-tier finder joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`.
 
 ## Recommended approach — five tasks, all Wave 8, ~8.5h
 
 **Status.** Approved 2026-09-28 and minted as MB.91–MB.95 (#511–#515) in the Wave 08 milestone; MB.90 had meanwhile been taken by the Day 1 guide, so every id here is one higher than the plan was drafted with.
 
-| ID    | Title                                                                  | Position in Wave 8       | Hours |
-| ----- | ---------------------------------------------------------------------- | ------------------------ | ----- |
-| MB.91 | Make the planet and zodiac suggestion lists admin-curated vocabularies | after M4.5               | 2     |
-| MB.92 | `planets` and `zodiac_signs` schema                                    | after MB.91              | 1.5   |
-| MB.93 | Seed the planet and zodiac vocabularies                                | after MB.92, before M4.7 | 1.5   |
-| MB.94 | Scoped suggestion fields for planet and zodiac                         | after M4.7a              | 1.5   |
-| MB.95 | Admin planet and zodiac CRUD                                           | after M5.6a, before M5.7 | 2     |
+| ID    | Title                                                                   | Position in Wave 8       | Hours |
+| ----- | ----------------------------------------------------------------------- | ------------------------ | ----- |
+| MB.91 | Make the planet and zodiac suggestion lists keeper-curated vocabularies | after M4.5               | 2     |
+| MB.92 | `planets` and `zodiac_signs` schema                                     | after MB.91              | 1.5   |
+| MB.93 | Seed the planet and zodiac vocabularies                                 | after MB.92, before M4.7 | 1.5   |
+| MB.94 | Scoped suggestion fields for planet and zodiac                          | after M4.7a              | 1.5   |
+| MB.95 | Admin planet and zodiac CRUD                                            | after M5.6a, before M5.7 | 2     |
 
 New Wave 8 row: `M4.5 · MB.91 · MB.92 · MB.93 · M4.7 · M4.7a · MB.94 · M4.8 · MB.81 · … · M5.6a · MB.95 · M5.6b · M5.7 · …`. Why: MB.91 precedes MB.92 under the MB.35 rule (the model is recorded before the table transcribes it); MB.92/MB.93 land straight after because both are inert until MB.94 and cheapest while empty; MB.94 follows M4.7a because it adopts that mechanism rather than building a second; MB.95 reuses M5.6a's page and precedes M5.7, which gates it.
 

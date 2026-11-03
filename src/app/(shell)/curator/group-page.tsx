@@ -87,7 +87,7 @@ function readPlace(kind: GroupKind, params: GroupSearchParams) {
 }
 
 // Every group on one page of the maximum, for the delete's move picker and, for a category group,
-// the colour pickers' near-colour warning: an admin adds a group rarely.
+// the colour pickers' near-colour warning: a keeper adds a group rarely.
 // The curated kind's own read of its groups, which its page shares (`group-readers.ts`).
 const readChoices = (kind: GroupKind) => GROUP_READERS[KINDS[kind].holds]();
 

@@ -13,7 +13,7 @@ import { citationText } from '@/lib/citation';
 import type { SeedWork } from '@/db/seed/types';
 import type { DocLink, DocLinkKind, ReferenceLinkRow, ReferenceRow } from './types';
 
-// The sources seed writes compendium references keyed by citation, a tradition's source reaching every deity under it, against the real tables emptied first: one run serves every read, and a re-run over an admin's edit empties them again.
+// The sources seed writes compendium references keyed by citation, a tradition's source reaching every deity under it, against the real tables emptied first: one run serves every read, and a re-run over a keeper's edit empties them again.
 // The shape every seed shares is index.test.ts's; which sources the docs record is the docs' to review (claude-docs/db/references.md, "How the seed reads the docs").
 
 const byLink = (a: DocLink, b: DocLink) =>
@@ -138,12 +138,12 @@ describe('seedSources', () => {
     });
   });
 
-  describe('over a database an admin has edited', () => {
+  describe('over a database a keeper has edited', () => {
     beforeEach(async () => {
       await truncateAllTables(sql);
     });
 
-    it('neither twins nor overwrites a reference an admin has since edited', async () => {
+    it('neither twins nor overwrites a reference a keeper has since edited', async () => {
       await seedAll();
       const [edited] = await allReferences();
       const before = citationText(edited);
@@ -166,11 +166,11 @@ describe('seedSources', () => {
 
     // Unkeyed is what marks a row as not the seed's; an emptied database holds
     // no user but the bootstrap one once a seed ran, so it writes the edits.
-    it('links an admin’s identical reference rather than duplicating it, and writes nothing to it', async () => {
+    it('links a keeper’s identical reference rather than duplicating it, and writes nothing to it', async () => {
       await seedDeities(db);
       await seedAstrology(db);
       const pluto = sourceTitled('Planetary Correspondences of Pluto').reference;
-      const [admins] = await sql<{ id: string; updated_at: Date }[]>`
+      const [keepers] = await sql<{ id: string; updated_at: Date }[]>`
         insert into "references" ${sql({
           kind: pluto.kind,
           title: pluto.title,
@@ -185,11 +185,11 @@ describe('seedSources', () => {
 
       await seedSources(db);
 
-      const row = await referenceById(admins.id);
+      const row = await referenceById(keepers.id);
       expect(await allReferences()).toHaveLength(SOURCES.length);
       expect(row.seed_key).toBeNull();
-      expect(row.updated_at).toEqual(admins.updated_at);
-      expect(await namesLinkedFrom(admins.id)).toEqual([
+      expect(row.updated_at).toEqual(keepers.updated_at);
+      expect(await namesLinkedFrom(keepers.id)).toEqual([
         { kind: 'celestialBody', name: 'Pluto', locator: null },
       ]);
     });
@@ -247,7 +247,7 @@ describe('seedSources', () => {
       });
     });
 
-    it('links a deity an admin has since renamed, found by its seed key', async () => {
+    it('links a deity a keeper has since renamed, found by its seed key', async () => {
       await seedDeities(db);
       await seedAstrology(db);
       await sql`update deities set name = 'Adonis Renamed', slug = 'adonis-renamed' where name = 'Adonis'`;

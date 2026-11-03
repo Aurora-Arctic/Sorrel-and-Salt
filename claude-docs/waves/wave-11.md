@@ -12,7 +12,7 @@ Of Wave 12's tasks, only M8.14 needs stock data from this wave. The old text als
 
 **M8.4 is retired** (M8.5): under rule 8 the browser never holds the whole list, so the compendium query filters in SQL, and the search UI that refetches it is M8.10 through M8.12 (M8.9 is the modals scaffold), not a client-side `filterIngredients()`. MW.11 is retired (MB.31).
 
-**M11.19 shows owners each member’s email and whether it is verified** on the coven members table. It reads two `users` columns and needs nothing else in the wave, so it sits just before M11.18, which stays last.
+**M11.19 shows stewards each member’s email and whether it is verified** on the coven members table. It reads two `users` columns and needs nothing else in the wave, so it sits just before M11.18, which stays last.
 
 **M11.20 gives admins a curator role to hand out** (minted 2026-10-15 on the owner’s backlog, placed in Wave 11 on their call). It touches only the site role, the admin checks, the admin navigation and the site invitations, and nothing else in the wave depends on it, so it sits before M11.18, which stays last.
 

@@ -17,7 +17,7 @@ import type { ModalHeading, RouteModalOpener, RouteModalProviderProps } from './
 export const RouteModalContext = createContext<RouteModalOpener | null>(null);
 
 /**
- * Holds the opening the links and the page's modal share, around every admin
+ * Holds the opening the links and the page's modal share, around every keeper
  * page (`src/app/(shell)/keepers/layout.tsx`). A provider already above, the
  * workshop's, is kept rather than shadowed.
  */

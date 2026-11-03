@@ -12,11 +12,11 @@ create choice "Create Coven"; code and these docs say workspace.
 `workspaces`: `SwitcherWorkspace[]`, every workspace the viewer is a member of,
 in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite, paused }`:
 the two flags say what the viewer's role there may open (member: read, and
-member: invite, an owner's alone), so the switcher can step back from a people
+member: invite, a steward's alone), so the switcher can step back from a people
 page the next coven would 404. The caller already holds the memberships (the
 coven layout, M6.10; the shell, MB.7, which reads the flags from `rolePermits`
 in `viewerOf`), so the component fetches nothing.
-`paused` is the pause an owner set on the viewer's seat there, `{ until }` or
+`paused` is the pause a steward set on the viewer's seat there, `{ until }` or
 null, `until` null for no end date (M15.55, M15.56). A paused coven's row
 carries a second line, "Paused until 1 January 2099, 00:00 UTC" or "Paused,
 with no end date", read as part of its name. It stays pickable, and a pick goes
@@ -72,7 +72,7 @@ with a Create Coven choice (M9.16). It defaults to false.
   `NEW_COVEN_PATH`, `/coven/new`, which no slug can equal because a slug
   holds no slash. Choosing it goes there rather than to a section. On that
   page the box shows "Choose a coven", since `covenSlugOf` reads `new` as
-  no workspace. Hiding the choice from a viewer without the right is
+  no workspace. Hiding the choice from an observer without the right is
   presentation: the creation service is the gate
   ([`create-workspace-form.md`](create-workspace-form.md)).
 - **A choice is a pending navigation, not a jump** ([`../loading.md`](../loading.md),
@@ -163,13 +163,13 @@ keyboard, and the Create Coven choice: shown only with `canCreate`, going
 to the create page from a click or the keyboard; `tests/lib/coven-path.test.ts` the two path helpers;
 `tests/components/CovenSwitchTargets/index.test.tsx` the registration and its
 clearing; `tests/modules/ingredients/services/covens-opening-entry.test.ts` which
-covens an entry opens in (live, retired, own, by direct id, an admin);
+covens an entry opens in (live, retired, own, by direct id, a keeper);
 `tests/e2e/coven-switcher.spec.ts` the walk through the real layout. Axe is asserted
 in Playwright once a `/coven` page renders the switcher (M6.10, MB.7).
 
 ## What the switcher is
 
-The switcher is a select over the viewer's workspaces, called covens on screen. Which one is current is read off the address and never kept in state, so two tabs in two workspaces do not interfere. Choosing another goes to the same page there when the page said it opens there, otherwise to the same section. The list is the caller's, since the layout already holds the memberships. A viewer holding creation rights gets one more choice, after the workspaces, that goes to the create page. Its value is that page's path, which no slug can equal since a slug holds no slash. While the switch is on its way the box shows the pick, the one thing held in state, and is busy, and the coven's body draws the destination's skeleton.
+The switcher is a select over the viewer's workspaces, called covens on screen. Which one is current is read off the address and never kept in state, so two tabs in two workspaces do not interfere. Choosing another goes to the same page there when the page said it opens there, otherwise to the same section. The list is the caller's, since the layout already holds the memberships. An observer holding creation rights gets one more choice, after the workspaces, that goes to the create page. Its value is that page's path, which no slug can equal since a slug holds no slash. While the switch is on its way the box shows the pick, the one thing held in state, and is busy, and the coven's body draws the destination's skeleton.
 
 ## Keeping the focus across the switch
 

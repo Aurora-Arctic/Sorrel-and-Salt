@@ -15,7 +15,7 @@ It replaces the one-jar `EditStock` dialog of the first build (the owner's call,
 
 ## Where it is mounted
 
-`covenCardActions` (`CovenCards/actions.tsx`, [`coven-cards.md`](coven-cards.md)) draws it in the card's foot when the entry carries `stock` (the forms and jars), so the Ingredients list and the Quick Look window, which calls the same function, show the same button, first in the foot, ahead of Edit or Annotate. The page gives `stock` only to a role that may update stock, `rolePermits(role, { inventory: ['update'] })`, so a viewer gets no Edit Stock. Hiding it is courtesy: the service refuses a viewer and a non-member whatever the page shows ([`../db/stock.md`](../db/stock.md)).
+`covenCardActions` (`CovenCards/actions.tsx`, [`coven-cards.md`](coven-cards.md)) draws it in the card's foot when the entry carries `stock` (the forms and jars), so the Ingredients list and the Quick Look window, which calls the same function, show the same button, first in the foot, ahead of Edit or Annotate. The page gives `stock` only to a role that may update stock, `rolePermits(role, { inventory: ['update'] })`, so an observer gets no Edit Stock. Hiding it is courtesy: the service refuses an observer and a non-member whatever the page shows ([`../db/stock.md`](../db/stock.md)).
 
 The entry page's Stock section carries the same dialog behind the same button in its heading (M12.29). Each jar of its shelf ([`jar-shelf.md`](jar-shelf.md)) opens it too, through `StockJarButton`.
 
@@ -81,7 +81,7 @@ A message on a jar is a plain `field__error` paragraph under its heading, linked
 
 - `tests/components/StockDialog/`: the button's and the dialog's names, the list opening on the first jar, by form from A to Z whatever order the jars arrive in, choosing a form showing its fields and keeping what was typed into the last, the Edited mark, what is sent (only changed jars; numbers; null for an empty box; zero kept), Add off until a form is picked, Add choosing the new form and focusing its Quantity, the Add row going once every form is held, the bin marking a removal (badge hidden) and Undo restoring it, a form added and then removed sending nothing, Save off until a change, busy while in flight, closing, focus back and one refresh after a save, a refusal marking and choosing the first form it names or saying itself in the alert with the typed values kept, the empty state, and Cancel with and without changes.
 - `openOn` and `StockJarButton` (M12.29): opening on a held form, on a form with no jar (a new row, chosen, Save off until filled, sent as a create), and on an unknown id (ignored); the jar button's name and the dialog it opens.
-- Story 24 (`tests/e2e/stories/03-ingredients.spec.ts`) walks it in the browser through `stockEditor` (`tests/e2e/stories/coven-ingredients.ts`), which chooses a form in the list before reaching its fields: edit, Add Form, a removal waiting for Save and its Undo, the keyboard, a refusal keeping what was typed, a network failure, Escape over Quick Look, and a viewer with no Edit Stock. Story 23 reads a jar's stock through the same helper.
+- Story 24 (`tests/e2e/stories/03-ingredients.spec.ts`) walks it in the browser through `stockEditor` (`tests/e2e/stories/coven-ingredients.ts`), which chooses a form in the list before reaching its fields: edit, Add Form, a removal waiting for Save and its Undo, the keyboard, a refusal keeping what was typed, a network failure, Escape over Quick Look, and an observer with no Edit Stock. Story 23 reads a jar's stock through the same helper.
 
 ## Stories
 
@@ -91,7 +91,7 @@ A message on a jar is a plain `field__error` paragraph under its heading, linked
 
 The stock button on a coven card is a `ModalButton` that opens a dialog. The coven's jars of the ingredient are listed down one side, and the chosen jar's fields sit beside them. A form is added from the list's foot, and a jar's Remove waits for Save. The whole dialog is sent as one `saveStock`. The service is the guard, and the dialog says its refusal. Nothing on the page changes until the save has answered: the page reads again once the dialog has closed.
 
-The shelf's door and the pencil's door open one dialog, so what is saved and how it is refused cannot differ between them. A dialog opened by something other than its pencil, such as a menu item on a compendium card (Edit Stock), has an owner that holds the question of whether it is open. Modal restores nothing itself, so `returnTo` names where the focus goes on close.
+The shelf's door and the pencil's door open one dialog, so what is saved and how it is refused cannot differ between them. A dialog opened by something other than its pencil, such as a menu item on a compendium card (Edit Stock), has a steward that holds the question of whether it is open. Modal restores nothing itself, so `returnTo` names where the focus goes on close.
 
 The `coven` prop puts the coven in the eyebrow ("Edit Stock for Whitethorn Coven" over the ingredient's name), and so in the dialog's name. It is for a dialog opened from a page that is not a coven's, where nothing else says whose jars these are. A coven's own pages leave it out, as the address and the shell already say.
 

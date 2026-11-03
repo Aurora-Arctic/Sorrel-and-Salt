@@ -6,7 +6,7 @@ import Notice from '../Notice';
 import type { MemberListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/MemberList. A member's
-// view leaves the addresses out; an owner's draws them and the Access column, where the
+// view leaves the addresses out; a steward's draws them and the Access column, where the
 // viewer's row shows a standing pause. No row holds an action: the member modal does.
 const meta = {
   title: 'Coven / Member List',
@@ -49,7 +49,7 @@ const MEMBERS: readonly MemberListEntry[] = [
 
 const defaultNode = <MemberList members={MEMBERS} currentUserId="u-bo" />;
 
-// An owner's view: the addresses, and the viewer's standing pause in the Access column. The rows hold no actions;
+// A steward's view: the addresses, and the viewer's standing pause in the Access column. The rows hold no actions;
 // those are the member modal's (Coven / Member Detail).
 const OWNER_VIEW: readonly MemberListEntry[] = MEMBERS.map((member) => ({
   ...member,
@@ -60,14 +60,14 @@ const ownerViewNode = (
   <MemberList members={OWNER_VIEW} currentUserId="u-ada" showEmail showAccess />
 );
 
-// The page's composition: the sole-owner note inside the list frame, ahead of
+// The page's composition: the sole-steward note inside the list frame, ahead of
 // the list, so the frame's gap spaces it (src/app/(shell)/coven/[slug]/
 // (people)/members/page.tsx). The note is the page's, not MemberList's.
 const SoleOwnerPage = () => (
   <ListFrame>
     <Notice kind="warn" quiet>
-      This coven has one owner. If that person loses access, nobody can manage its members. Make
-      another member an owner to be safe.
+      This coven has one steward. If that person loses access, nobody can manage its members. Make
+      another member a steward to be safe.
     </Notice>
     <ListBody>
       <MemberList members={OWNER_VIEW} currentUserId="u-ada" showEmail showAccess />
@@ -77,7 +77,7 @@ const SoleOwnerPage = () => (
 
 const soleOwnerNode = <SoleOwnerPage />;
 
-// An owner's view where an address is not on file and the editor's name is withheld.
+// A steward's view where an address is not on file and the editor's name is withheld.
 const gapsNode = (
   <MemberList
     members={[
@@ -95,8 +95,8 @@ const addressesOnlyNode = <MemberList members={MEMBERS} currentUserId="u-cy" sho
 
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
-  'Owner View': ownerViewNode,
-  'Sole Owner': soleOwnerNode,
+  'Steward View': ownerViewNode,
+  'Sole Steward': soleOwnerNode,
   'Gaps In The Record': gapsNode,
   'Addresses Without Actions': addressesOnlyNode,
 };

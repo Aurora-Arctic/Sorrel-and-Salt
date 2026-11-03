@@ -17,8 +17,8 @@ import { workspaceRoleLabel } from '../UserDetail/roles';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 
-// The only owner's Leave: a dialog asking whether to hand the coven over or delete it.
-// Promote-then-leave is two requests in that order so a failed leave leaves two owners, never none
+// The only steward's Leave: a dialog asking whether to hand the coven over or delete it.
+// Promote-then-leave is two requests in that order so a failed leave leaves two stewards, never none
 // (claude-docs/components/leave-workspace-button.md).
 
 const PromoteSuccessorDocument = graphql(`
@@ -135,7 +135,7 @@ const Options = ({
       setSending(false);
       // Said plainly: the first half happened and stands.
       report(
-        `${successor?.name ?? 'They'} is now an owner, but you did not leave. ${readGraphqlFailure(error).alert}`,
+        `${successor?.name ?? 'They'} is now a steward, but you did not leave. ${readGraphqlFailure(error).alert}`,
       );
       return;
     }
@@ -148,7 +148,7 @@ const Options = ({
   return (
     <>
       <p>
-        Leave <strong>{name}</strong>? It needs an owner, so choose what happens to it.
+        Leave <strong>{name}</strong>? It needs a steward, so choose what happens to it.
       </p>
       <RadioGroupField
         legend="What Happens to the Coven?"
@@ -157,7 +157,7 @@ const Options = ({
           {
             value: 'hand',
             label: only ? `Hand It to ${only.name}` : 'Hand It to Another Member',
-            description: 'They become an owner first, then you leave.',
+            description: 'They become a steward first, then you leave.',
           },
           {
             value: 'delete',
@@ -171,17 +171,17 @@ const Options = ({
         onChange={(next) => !sending && setWay(next)}
       />
       {way === 'hand' && !only && (
-        <FieldShell label="New Owner" required {...ownerField}>
+        <FieldShell label="New Steward" required {...ownerField}>
           <ComboboxTypeahead
             id={ownerField.controlId}
-            label="New Owner"
+            label="New Steward"
             labelId={ownerField.labelId}
             required
             value={picked}
             onChange={(userId) => !sending && setPicked(userId)}
             placeholder="Search members"
             // Each with their role now, as a form's row shows its group:
-            // "Fixture B (Member)", and what that role may do in the tooltip.
+            // "Fixture B (Practitioner)", and what that role may do in the tooltip.
             choices={successors.map(({ userId, name: member, role }) => ({
               value: userId,
               label: member,

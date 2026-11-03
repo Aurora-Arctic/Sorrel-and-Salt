@@ -265,7 +265,7 @@ const GroupForm = ({
   const typedColors = useWatch({ control, name: ['colorDark', 'colorLight'] });
   const typed = { colorDark: typedColors[0], colorLight: typedColors[1] };
   // The partner each colour last filled, so it keeps following only while
-  // the admin has not set it themselves (claude-docs/components/group-form.md,
+  // the keeper has not set it themselves (claude-docs/components/group-form.md,
   // "The pair").
   const filled = useRef<Partial<Record<GroupColorColumn, string>>>({});
   const fillPartner = (column: GroupColorColumn, value: string): void => {

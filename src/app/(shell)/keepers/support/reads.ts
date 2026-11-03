@@ -144,7 +144,7 @@ export const readViewCounts = cache(async (session: Session, filter: SupportRequ
 );
 
 /**
- * The request an address opens, with its replies and, to an admin, its sender's time-outs.
+ * The request an address opens, with its replies and, to a keeper, its sender's time-outs.
  * `undefined` where the viewer may not read it, or none has that id.
  */
 export const readOpened = cache(
@@ -189,18 +189,18 @@ export const readOpened = cache(
   },
 );
 
-/** The curators and admins a request may be assigned to: only an admin assigns, so a curator is given none. */
+/** The curators and keepers a request may be assigned to: only a keeper assigns, so a curator is given none. */
 export const readAssignees = cache(async (session: Session): Promise<SupportPerson[]> => {
   if (session.role !== 'admin') return [];
   const page = { limit: 200, inverted: false };
-  const [admins, curators] = await Promise.all([
+  const [keepers, curators] = await Promise.all([
     listUsers(session, { role: 'admin' }, page),
     listUsers(session, { role: 'curator' }, page),
   ]);
-  return [...admins, ...curators].map(({ node }) => ({ id: node.id, name: node.name }));
+  return [...keepers, ...curators].map(({ node }) => ({ id: node.id, name: node.name }));
 });
 
-/** The time-outs set on a user, newest first, with who set each; an admin's read, empty for anyone else. */
+/** The time-outs set on a user, newest first, with who set each; a keeper's read, empty for anyone else. */
 export const readTimeoutsOf = cache(
   async (session: Session, userId: string): Promise<SupportTimeoutEntry[]> => {
     if (session.role !== 'admin') return [];

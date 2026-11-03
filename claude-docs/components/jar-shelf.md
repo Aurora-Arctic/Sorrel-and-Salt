@@ -53,9 +53,9 @@ The module also exports `JarDrawing` (the drawing alone, level and tint) and `pi
 - The shelf is a `ul` named **Jars**; each jar is an `li`.
 - The SVG is `aria-hidden`: the form and amount beside it say all of it.
 - Under the drawing: the form, then the amount ("250 g", a bare number, or **Unmeasured**), or **No Jar** for a form with none. A jar that is Low or Out has its amount as a button (below); every other amount is plain text.
-- **The amount button.** For a Low or Out jar the amount is the button that opens the badge's tip, in the badge's place. It looks like text: no box, no tint, the help cursor and the app's normal focus ring. It is the badge's `StockTip`, and so `IconTip`'s: the tip opens after the pointer rests, at once on focus, and Escape closes it. The words are the badge's, from the shared `stock-words.ts` ([`stock-badge.md`](stock-badge.md), "Shared words"). Its accessible name is the amount and the state, **40 g, Low Stock** or **0 ml, Out of Stock** (the amount as written, so **3, Low Stock** with no unit). Low's description is **Low Stock at 50 g or less**, written once out of sight in a `.visually-hidden` span, since the tip's bubble is hidden from a screen reader; Out has no description, as its tip would only repeat the name. It is shown to a viewer too, who has no Edit Stock press.
+- **The amount button.** For a Low or Out jar the amount is the button that opens the badge's tip, in the badge's place. It looks like text: no box, no tint, the help cursor and the app's normal focus ring. It is the badge's `StockTip`, and so `IconTip`'s: the tip opens after the pointer rests, at once on focus, and Escape closes it. The words are the badge's, from the shared `stock-words.ts` ([`stock-badge.md`](stock-badge.md), "Shared words"). Its accessible name is the amount and the state, **40 g, Low Stock** or **0 ml, Out of Stock** (the amount as written, so **3, Low Stock** with no unit). Low's description is **Low Stock at 50 g or less**, written once out of sight in a `.visually-hidden` span, since the tip's bubble is hidden from a screen reader; Out has no description, as its tip would only repeat the name. It is shown to an observer too, who has no Edit Stock press.
 - For a role that may edit, the form's name is a button named **Edit Stock, <entry name>, <Form>**, an empty jar's too, since pressing it adds the form. The button stretches over the whole jar by its `::after`, so the jar is one target, with its focus ring on that `::after`. The amount sits beside the button and not inside it: a Low or Out amount is a button of its own, and one button cannot hold another. It is raised above the stretch (`z-index: 1`) so it can still be pressed.
-- For a viewer the jars are plain text: no button, no hover effect.
+- For an observer the jars are plain text: no button, no hover effect.
 
 ## Opening Edit Stock
 
@@ -81,8 +81,8 @@ The owner's call (2026-10-21): when the pointer is over a jar the coven can edit
 
 ## Tests
 
-- `tests/components/JarShelf/`: the pick (same result for the same name and form whatever the case, a bottle for a liquid and a jar otherwise, the name and form both moving it), `fillOf` for every row of the table above, and the shelf: one jar per form in order, each amount, Unmeasured and No Jar, the amount buttons of a Low and an Out jar (their names and descriptions, and none on any other jar, a viewer's included), `aria-hidden` drawings with unique clips, plain figures with no `edit`, and a button for every jar, an empty one too, with the amount button outside it.
-- `tests/components/IngredientEntry/`: a press on a jar opens the dialog with that form chosen, a press on an empty jar adds the form, and a viewer gets no jar buttons.
+- `tests/components/JarShelf/`: the pick (same result for the same name and form whatever the case, a bottle for a liquid and a jar otherwise, the name and form both moving it), `fillOf` for every row of the table above, and the shelf: one jar per form in order, each amount, Unmeasured and No Jar, the amount buttons of a Low and an Out jar (their names and descriptions, and none on any other jar, an observer's included), `aria-hidden` drawings with unique clips, plain figures with no `edit`, and a button for every jar, an empty one too, with the amount button outside it.
+- `tests/components/IngredientEntry/`: a press on a jar opens the dialog with that form chosen, a press on an empty jar adds the form, and an observer gets no jar buttons.
 - `tests/components/StockDialog/`: `openOn` and `StockJarButton`.
 - `tests/e2e/entry-stock.spec.ts` presses a jar by keyboard.
 
@@ -122,7 +122,7 @@ With `$items: false`, the mixin's `> li::before { content: none }` (bullets off)
 
 ## Hover, focus and motion
 
-On an editable jar the hover shakes the drawing once, gently, and the name grows a little. It applies only where there is a button, so a viewer's shelf is still, and only on a device that really hovers, so a touch screen is not left with a jar stuck mid-shake. Keyboard focus does both too, as `:focus-visible` so a mouse click does not repeat it. Those rules sit outside the hover query, since a keyboard on a touch device has no hover to wait for.
+On an editable jar the hover shakes the drawing once, gently, and the name grows a little. It applies only where there is a button, so an observer's shelf is still, and only on a device that really hovers, so a touch screen is not left with a jar stuck mid-shake. Keyboard focus does both too, as `:focus-visible` so a mouse click does not repeat it. Those rules sit outside the hover query, since a keyboard on a touch device has no hover to wait for.
 
 The rules are the `jar-press-motion` mixin in `src/scss/_jar-motion.scss`, which `JarLine` ([`jar-line.md`](jar-line.md)) includes too for the recipe page's inventory and the Complete Working preview, so a pressable jar moves the same everywhere. The amounts (how far the name grows, how long the shake lasts) are in `_variables.scss`.
 

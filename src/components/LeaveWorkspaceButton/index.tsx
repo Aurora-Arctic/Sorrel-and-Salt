@@ -10,7 +10,7 @@ import OwnerExit from './owner-exit';
 import type { LeaveWorkspaceButtonProps } from './types';
 
 // Leave on the coven index page, for every role: it asks first, sends the leave, and goes to the
-// coven landing. The service refuses the last owner, shown in a callout; the only owner gets
+// coven landing. The service refuses the last steward, shown in a callout; the only steward gets
 // `owner-exit.tsx` instead (claude-docs/components/leave-workspace-button.md).
 
 const LeaveWorkspaceButton = ({
@@ -20,7 +20,7 @@ const LeaveWorkspaceButton = ({
   quiet = false,
 }: LeaveWorkspaceButtonProps): ReactElement => {
   const { navigate, refresh } = usePendingNavigation();
-  // The sole owner would be refused, so they are shown the ways out instead.
+  // The sole steward would be refused, so they are shown the ways out instead.
   if (successors)
     return <OwnerExit workspaceId={workspaceId} name={name} successors={successors} />;
   return (
@@ -31,8 +31,8 @@ const LeaveWorkspaceButton = ({
       title="Leave Coven"
       question={
         <>
-          Leave <strong>{name}</strong>? You lose access to its ingredients and its grimoire until
-          an owner invites you back.
+          Leave <strong>{name}</strong>? You lose access to its ingredients and its grimoire until a
+          steward invites you back.
         </>
       }
       warning="Your own entries stay with the coven."

@@ -86,14 +86,14 @@ const PROBES: Record<string, ScopeProbe> = {
     source: `{ userAccessPauses(userId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
     outcome: 'refuses',
   },
-  // The seeded disclaimer, so an admin's read answers it.
+  // The seeded disclaimer, so a keeper's read answers it.
   documentForEditing: {
     source: '{ documentForEditing(key: "disclaimer") { id } }',
     outcome: 'refuses',
   },
-  // The seeded disclaimer again: what a mailing of it would take, and any mailing of it so far.
-  documentMailing: {
-    source: '{ documentMailing(key: "disclaimer") { accountCount } }',
+  // What a mailing of the documents changed since the last email would take, and the mailings so far.
+  documentMailings: {
+    source: '{ documentMailings { accountCount } }',
     outcome: 'refuses',
   },
   invitationCardBatches: {
@@ -421,15 +421,17 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   updateDocument: write(
     `mutation { updateDocument(id: "${NOWHERE}", input: { title: "Fixture", lede: "Fixture" }) { id } }`,
   ),
-  emailDocumentToEveryAccount: write(
-    `mutation { emailDocumentToEveryAccount(documentId: "${NOWHERE}", summary: "Fixture") { accountCount } }`,
+  emailDocumentsToEveryAccount: write(
+    `mutation { emailDocumentsToEveryAccount(summaries: [{ versionId: "${NOWHERE}", summary: "Fixture" }]) { accountCount } }`,
   ),
   resumeDocumentMailing: write(
     `mutation { resumeDocumentMailing(mailingId: "${NOWHERE}") { accountCount } }`,
   ),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
-  agreeToTerms: write('mutation { agreeToTerms(version: 1) { id } }'),
+  agreeToTerms: write(
+    'mutation { agreeToTerms(version: { terms: 1, disclaimer: 1, ethics: 1 }) { id } }',
+  ),
   // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
   sendSignedOutSupportRequest: {
     source:
@@ -473,7 +475,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   liftUserAccessPause: write(`mutation { liftUserAccessPause(userId: "${NOWHERE}") { id } }`),
   pauseAdminRoleChanges: write('mutation { pauseAdminRoleChanges }'),
   resumeAdminRoleChanges: write('mutation { resumeAdminRoleChanges }'),
-  // A malformed address, so an admin past the scope is refused by the service
+  // A malformed address, so a keeper past the scope is refused by the service
   // before anything is written or mailed.
   createAdminInvitation: write(
     'mutation { createAdminInvitation(email: "not-an-address", siteRole: curator) { id } }',
@@ -693,24 +695,24 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
       `mutation { updateReference(workspaceId: null, id: "${NOWHERE}", input: ${REFERENCE}) { id } }`,
     ),
   },
-  // Who may create a coven, granted and revoked by an admin.
+  // Who may create a coven, granted and revoked by a keeper.
   grantWorkspaceCreation: { governs: 'workspace creation' },
   revokeWorkspaceCreation: { governs: 'workspace creation' },
-  // Who is an admin or a curator, granted and revoked by an admin.
+  // Who is a keeper or a curator, granted and revoked by a keeper.
   setUserRole: { governs: 'site role' },
-  // A user's access to the site, paused and lifted by an admin.
+  // A user's access to the site, paused and lifted by a keeper.
   pauseUserAccess: { governs: 'site access' },
   liftUserAccessPause: { governs: 'site access' },
-  // The primary admin's pause on those changes.
+  // The primary keeper's pause on those changes.
   pauseAdminRoleChanges: { governs: 'site role' },
   resumeAdminRoleChanges: { governs: 'site role' },
-  // Inviting an address to become an admin, and withdrawing it.
+  // Inviting an address to become a keeper, and withdrawing it.
   createAdminInvitation: { governs: 'site role' },
   revokeAdminInvitation: { governs: 'site role' },
   // Printed invitation cards: minting, withdrawing one or a batch.
   createInvitationCards: { governs: 'site role' },
   revokeInvitationCardBatch: { governs: 'site role' },
-  // A sender's requests and their sanctions: an admin's alone, so a curator is refused at the scope.
+  // A sender's requests and their sanctions: a keeper's alone, so a curator is refused at the scope.
   assignSupportRequest: { governs: 'support' },
   setSupportRequestCuratorVisible: { governs: 'support' },
   setSupportRequestIssueUrl: { governs: 'support' },
@@ -720,7 +722,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   publishDocumentDraft: { governs: 'documents' },
   discardDocumentDraft: { governs: 'documents' },
   updateDocument: { governs: 'documents' },
-  emailDocumentToEveryAccount: { governs: 'documents' },
+  emailDocumentsToEveryAccount: { governs: 'documents' },
   resumeDocumentMailing: { governs: 'documents' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
@@ -812,7 +814,7 @@ const OPEN_WRITES = [
   'sendSupportMessage',
   // Any verified session may resolve a request; the service finds only the sender's own.
   'resolveMySupportRequest',
-  // A curator's scope admits; the service decides which requests (an admin any, a curator one assigned to them).
+  // A curator's scope admits; the service decides which requests (a keeper any, a curator one assigned to them).
   'replyToSupportRequest',
   'resolveSupportRequest',
   'addSupportInternalNote',
@@ -826,9 +828,9 @@ const OPEN_WRITES = [
 const adminProbe = (field: string): ScopeProbe =>
   ADMIN_WRITES[field].probe ?? MUTATION_PROBES[field];
 
-describe('a signed-in non-admin at every admin write', () => {
-  // E as the primary admin, so the pause's two writes, which the service
-  // allows the primary admin alone, admit the admin past the scope.
+describe('a signed-in non-keeper at every keeper write', () => {
+  // E as the primary keeper, so the pause's two writes, which the service
+  // allows the primary keeper alone, admit the admin past the scope.
   beforeEach(() => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', E.email);
   });
@@ -844,13 +846,13 @@ describe('a signed-in non-admin at every admin write', () => {
     expect(fields).toEqual([...new Set([...Object.keys(ADMIN_WRITES), ...OPEN_WRITES])].sort());
   });
 
-  // The check reads the site role alone, so one non-admin stands for every
+  // The check reads the site role alone, so one non-keeper stands for every
   // one (claude-docs/testing/layer-ownership.md, rule 6): A, who owns a coven
   // and so holds the most a role of `user` can.
-  it.each(Object.keys(ADMIN_WRITES))('%s refuses a non-admin at the scope', async (field) => {
+  it.each(Object.keys(ADMIN_WRITES))('%s refuses a non-keeper at the scope', async (field) => {
     const probe = adminProbe(field);
 
-    // Preconditions: the field admits a site admin past the scope, so the
+    // Preconditions: the field admits a site keeper past the scope, so the
     // refusal below is the role's; and the service would refuse in other
     // words than the scope's default, so the message says which check spoke.
     const admitted = await run(asUser(E), probe.source, probe.variables);
@@ -873,7 +875,7 @@ describe('a signed-in non-admin at every admin write', () => {
   });
 });
 
-// The people page's writes, and the site's documents, are an admin's alone; every other admin write is curation, which a curator's
+// The people page's writes, and the site's documents, are a keeper's alone; every other keeper write is curation, which a curator's
 // scope admits. A write added to ADMIN_WRITES lands on one side or the other.
 const PEOPLE_PAGE: readonly Governed[] = [
   'workspace creation',
@@ -890,7 +892,7 @@ const CURATION_WRITES = Object.keys(ADMIN_WRITES).filter((field) => !governsPeop
 const codesOf = (result: Awaited<ReturnType<typeof run>>) =>
   result.errors?.map((error) => error.extensions?.code) ?? [];
 
-describe('a curator at every admin write, and at the people page’s reads', () => {
+describe('a curator at every keeper write, and at the people page’s reads', () => {
   beforeEach(() => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', E.email);
   });
@@ -914,7 +916,7 @@ describe('a curator at every admin write, and at the people page’s reads', () 
 
   it.each(CURATION_WRITES)('%s admits a curator past the scope and the service', async (field) => {
     const probe = adminProbe(field);
-    // Why F could have been refused: the role is not an admin's.
+    // Why F could have been refused: the role is not a keeper's.
     expect(asUser(F).role).toBe('curator');
     expect(() => assertSiteAdmin(asUser(F))).toThrow(Forbidden);
 
@@ -925,7 +927,7 @@ describe('a curator at every admin write, and at the people page’s reads', () 
 
   it.each(PEOPLE_WRITES)('%s refuses a curator at the scope', async (field) => {
     const probe = adminProbe(field);
-    // Preconditions: the field admits an admin, and F holds a proof that
+    // Preconditions: the field admits a keeper, and F holds a proof that
     // curates, so the refusal below is the scope's line between the two.
     expect(codesOf(await run(asUser(E), probe.source, probe.variables))).not.toContain('FORBIDDEN');
     expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
@@ -945,7 +947,7 @@ describe('a curator at every admin write, and at the people page’s reads', () 
     'privilegeChanges',
     'userAccessPauses',
     'documentForEditing',
-    'documentMailing',
+    'documentMailings',
   ])('%s refuses a curator, answering an admin', async (field) => {
     const { source } = PROBES[field];
     expect(codesOf(await run(asUser(E), source))).toEqual([]);

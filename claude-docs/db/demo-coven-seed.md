@@ -21,10 +21,10 @@ In one seed transaction, as the bootstrap system user:
 A seat is inserted only when no `workspace_members` row exists for the pair
 (demo coven, user). A soft-deleted row counts as existing. This is the
 never-re-add rule: someone who used Leave stays out, and so does an ex-admin
-whose seat was removed, until another owner invites and promotes them. The seed
+whose seat was removed, until another steward invites and promotes them. The seed
 never updates a row, so a second run inserts nothing.
 
-A new account is seated as a viewer at sign-up by
+A new account is seated as an observer at sign-up by
 `databaseHooks.user.create.after`; the seed's step 3 backfills any account that
 hook missed.
 
@@ -46,13 +46,13 @@ An entry the environment's compendium lacks, or lacks a jar's form of, is skippe
 
 ### Changing the contents
 
-The seed is additive: a row that exists is never updated, so an admin's hand edit to a live row stands, and an admin edits the live rows by hand. A new row, or a change every environment should get, is a PR to `demo-coven-content.ts` that adds it; a change to a row already seeded does not reach environments that hold it.
+The seed is additive: a row that exists is never updated, so a keeper's hand edit to a live row stands, and a keeper edits the live rows by hand. A new row, or a change every environment should get, is a PR to `demo-coven-content.ts` that adds it; a change to a row already seeded does not reach environments that hold it.
 
-## How an admin gains and loses the seat
+## How a keeper gains and loses the seat
 
-Making someone an admin seats them as `owner` of the demo coven, in the same
+Making someone a keeper seats them as `owner` of the demo coven, in the same
 `withAudit` transaction as the role change. If the role write fails, no seat is
-written. This covers every admin grant: `setUserRole`, the primary admin's
+written. This covers every keeper grant: `setUserRole`, the primary keeper's
 promotion, and an accepted admin invitation.
 
 - No seat row: it is inserted as `owner`.
@@ -61,7 +61,7 @@ promotion, and an accepted admin invitation.
 - A `viewer` or `member` seat: it is promoted to `owner`.
 - No demo coven: nothing is written.
 
-Demoting an admin sets their live seat back to `viewer`. Making or unmaking a
+Demoting a keeper sets their live seat back to `viewer`. Making or unmaking a
 curator changes no seat. The writer for the role change is `setSeatRole`, a
 write that takes no `Membership` proof, because a site-tier action has none.
 
@@ -75,13 +75,13 @@ Each throws `Forbidden` with a message that explains it.
   changed."
 - `updateMemberRole` refuses `BOOTSTRAP_USER_ID` with the same message.
 
-These hold even when another owner exists, so the last-owner guard is not what
+These hold even when another steward exists, so the last-owner guard is not what
 stops them.
 
 ## The slug refusal
 
 If a coven that is not the demo coven already holds the slug, the seed throws an
-error naming that coven and writes nothing. It does not take `-2`. An admin
+error naming that coven and writes nothing. It does not take `-2`. A keeper
 renames one of the two and seeds again. The seed cannot reuse `freeSlug`
 because that lives in a `server-only` service.
 

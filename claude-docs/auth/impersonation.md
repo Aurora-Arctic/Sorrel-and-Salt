@@ -1,6 +1,6 @@
 ## Impersonation (MB.53)
 
-An admin can sign in as a specific user, in local development, on staging and
+A keeper can sign in as a specific user, in local development, on staging and
 on a hotfix preview, to reproduce what that user sees rather than guess at it.
 Better Auth's `admin` plugin already does this: `impersonate-user` creates a
 session for the target user and remembers the admin's own session in a signed
@@ -28,7 +28,7 @@ so one mis-scoped Vercel variable is not the whole defence.
   [`secrets.md`](../secrets.md).
 - A hotfix preview cannot finish an OAuth sign-in until MB.78's proxy lands,
   which is post-launch work ([`waves/wave-15.md`](../waves/wave-15.md)),
-  so an admin cannot yet sign in there to impersonate anyone.
+  so a keeper cannot yet sign in there to impersonate anyone.
 
 ### Only the two impersonation endpoints are mounted
 
@@ -37,7 +37,7 @@ Registering the plugin as shipped would also mount `set-role`, `update-user`,
 the session listing and revoking endpoints, the ban endpoints, and
 `has-permission`. Each writes through the adapter, outside `withAudit`.
 `set-role` would be a second way to grant admin, past M2.9's ledger and the
-primary admin's protection, and `remove-user` could hard-delete the primary
+primary keeper's protection, and `remove-user` could hard-delete the primary
 admin ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)).
 So `impersonation()` keeps `impersonateUser` and `stopImpersonating` from the
 plugin's endpoints and drops the rest.
@@ -53,7 +53,7 @@ The task left two questions to answer from running code. Both answers:
   `user_role` enum has a third value since M11.20, `curator`, which the plugin
   does not know and so treats as a user: `adminRoles` stays `['admin']`, so an
   admin may impersonate, and neither a user nor a curator may, with no `roles`
-  option needed. A curator can be impersonated like any non-admin.
+  option needed. A curator can be impersonated like any non-keeper.
 - **The ban endpoints and columns can be declined.** The endpoints go with
   the rest. The narrowed plugin's schema keeps only `session.impersonatedBy`,
   so Better Auth expects no `banned`, `banReason` or `banExpires` column on
@@ -63,11 +63,11 @@ The task left two questions to answer from running code. Both answers:
 ### Who may impersonate whom
 
 The endpoint is the guard. The control on `/keepers/users` only puts it where
-an admin looks.
+a keeper looks.
 
-- **A non-admin, a curator included, is refused** with a 403, even where the plugin is registered:
+- **A non-keeper, a curator included, is refused** with a 403, even where the plugin is registered:
   the default `user` role has no `impersonate` permission.
-- **An admin cannot impersonate another admin**, the primary admin included.
+- **A keeper cannot impersonate another keeper**, the primary keeper included.
   `allowImpersonatingAdmins` stays at its default, off, and the default `admin`
   role lacks `impersonate-admins`.
 - **A user whose site access is paused is impersonated into what they see while paused.**
@@ -88,7 +88,7 @@ an admin looks.
 
 A write made while impersonating B stamps B in `created_by` and `updated_by`.
 That is the point: impersonation reproduces what B would see and do, and an
-admin stamp would not. So the acting admin is not lost when the session row
+admin stamp would not. So the acting keeper is not lost when the session row
 goes, the service session carries them as `impersonatedBy`.
 `request-session.ts` reads it off Better Auth's session, and `withAudit`
 publishes it as `app.impersonated_by` beside `app.current_user_id`, from the
@@ -103,12 +103,12 @@ reader in v1. It is empty on every write that is not an impersonation.
 Impersonation swaps the session cookie, which a GraphQL mutation cannot do
 cleanly, and it lives under `/api/auth/*`, the one exception rule 1 already
 names ([`graphql-only-exception.md`](graphql-only-exception.md)). Nothing else
-moves off GraphQL. The user list an admin picks a target from is MB.52's
+moves off GraphQL. The user list a keeper picks a target from is MB.52's
 ordinary read.
 
 ### The way out: a banner on every page
 
-Impersonating a non-admin costs the admin `/keepers` until they stop, so the way
+Impersonating a non-keeper costs the admin `/keepers` until they stop, so the way
 out cannot live in the admin nav. `ImpersonationBanner` names the user, by
 name and address, and carries Stop Impersonating, at the top of every page
 ([`components/impersonation-banner.md`](../components/impersonation-banner.md)).
@@ -131,11 +131,11 @@ name and address, and carries Stop Impersonating, at the top of every page
 - `tests/lib/impersonation.test.ts`: the gate in every combination, the
   mounted set against the allowlist where the gate is open, the endpoints
   absent where it is shut (one environment each way, the gate's matrix
-  covering the rest), and the declined ban columns. That an admin target is refused is the
+  covering the rest), and the declined ban columns. That a keeper target is refused is the
   db file's, through the endpoint, not a pin of `allowImpersonatingAdmins`
   (MB.188).
-- `tests/db/impersonation.test.ts`: through `auth.handler`, a non-admin is
-  refused, an admin target is refused, and the impersonation session is B's
+- `tests/db/impersonation.test.ts`: through `auth.handler`, a non-keeper is
+  refused, a keeper target is refused, and the impersonation session is B's
   with E recorded. B's coven is what the session sees, and `/keepers`'s check
   refuses it. Stop restores E's own session. A paused user is handed over, the session reads as paused, a
   signed-in GraphQL call through the real route answers `ACCESS_PAUSED` while a public read answers, Stop restores E, and

@@ -21,7 +21,7 @@ export interface ScopeProbe {
   outcome: Outcome;
 }
 
-/** What an admin write changes: the closed list of what a site admin governs (CLAUDE.md, "Admins curate …"), so a write outside it is a new entry a reviewer reads. A coven's contents are never on it. */
+/** What a keeper write changes: the closed list of what a site keeper governs (CLAUDE.md, "Admins curate …"), so a write outside it is a new entry a reviewer reads. A coven's contents are never on it. */
 export type Governed =
   | 'support'
   | 'compendium'
@@ -39,7 +39,7 @@ export type Governed =
   | 'site access'
   | 'documents';
 
-/** A `Mutation` field only a site admin's scope admits. `probe` replaces the null-session probe where that one does not ask for the admin's tier. */
+/** A `Mutation` field only a site admin's scope admits. `probe` replaces the null-session probe where that one does not ask for the keeper's tier. */
 export interface AdminWrite {
   governs: Governed;
   probe?: ScopeProbe;

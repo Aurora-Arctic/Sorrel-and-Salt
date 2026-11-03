@@ -448,7 +448,7 @@ describe('listWorkspaceIngredients', () => {
     await expect(listed(asUser(D))).rejects.toThrow(Forbidden);
   });
 
-  it('refuses the site admin, who belongs to no coven', async () => {
+  it('refuses the site keeper, who belongs to no coven', async () => {
     await add('Covenwort', { workspaceId: WORKSPACE_W_ID });
     expect(await listed(asUser(B))).toEqual(['Covenwort']);
 

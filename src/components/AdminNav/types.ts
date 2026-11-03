@@ -10,7 +10,7 @@ export interface AdminPage {
   icon: SectionIconName;
   description: string;
   tabs: readonly [PageTab, ...PageTab[]];
-  /** Shown to an admin alone: a curator manages no one and sends no invitation. */
+  /** Shown to a keeper alone: a curator manages no one and sends no invitation. */
   adminOnly?: true;
 }
 
@@ -21,7 +21,7 @@ export interface AdminSection {
   pages: readonly AdminPage[];
 }
 
-// What the nav and the index take: whether the viewer is an admin, and so
+// What the nav and the index take: whether the viewer is a keeper, and so
 // sees the People page, or a curator, who does not.
 export interface AdminNavProps {
   managesPeople: boolean;

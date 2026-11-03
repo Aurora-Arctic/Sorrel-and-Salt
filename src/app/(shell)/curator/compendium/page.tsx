@@ -55,7 +55,7 @@ const ADD_TITLE = 'Add Ingredient';
 /** The add dialog's head, "Add Ingredient to Compendium": the destination over the action. */
 const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
 
-// The global compendium, for an admin to add to, edit and retire. A modal over the list does the
+// The global compendium, for a keeper to add to, edit and retire. A modal over the list does the
 // writing, opened by `?new=ingredient-compendium` (or a bare `?new`) or `?edit=<slug>`; any
 // other `?new` is the shell's Add Ingredient. Each filter shows how many entries each choice lists.
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
@@ -112,7 +112,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // The open details' sections, read uncached as the entry's page reads them, and only while the
   // details are open; none for an entry gone since.
   const summary = detailed && (await readOrMissing(() => ingredientDetailOf(session, detailed)));
-  // The admin's or curator's own covens that hold it, and only those.
+  // The keeper's or curator's own covens that hold it, and only those.
   const covens = summary ? await covensHolding(detailed.id) : [];
   // The entry's review mark, the admin's own read: the compendium's cached reads leave it out.
   const review = summary
@@ -128,7 +128,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const editShown = editing
     ? await readOrMissing(() => getIngredient(session, editing.id))
     : undefined;
-  // The plus beside the pencil, for the covens the admin or curator is a member of and may add in:
+  // The plus beside the pencil, for the covens the keeper or curator is a member of and may add in:
   // none for one in no coven, so neither the plus nor its check shows.
   const detailsPlus = summary ? await plusCovensOf(covens) : undefined;
   // The form open, if one is: a near match's Quick Look opens over it, and the details close back

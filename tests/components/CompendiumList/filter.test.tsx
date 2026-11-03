@@ -279,7 +279,7 @@ describe('CompendiumList filter', () => {
       vi.useRealTimers();
     });
 
-    it("opens the admin's details by slug over the page and filter shown, not the text typed", async () => {
+    it("opens the keeper's details by slug over the page and filter shown, not the text typed", async () => {
       render(<FilterRow {...props({ filter: SHOWN })} cursor={PAGE} />);
 
       await pickTestwort('Name');

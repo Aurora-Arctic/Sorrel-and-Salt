@@ -50,7 +50,7 @@ It follows WCAG 1.4.13, content on hover or focus:
 
 **`useTip`** (`use-tip.ts`) holds that behaviour, the open state, the
 handlers and the Escape listener, so another tip beside a control behaves the
-same without being an ⓘ: `UserList`'s history link, the primary admin's
+same without being an ⓘ: `UserList`'s history link, the primary keeper's
 crown and its locked Revoke use it too ([`user-list.md`](user-list.md),
 MB.200, MB.59), as does [`IconTip`](icon-tip.md), the Edit pencils' tooltip, and Combobox's entry and qualifier tooltips
 ([`combobox.md`](combobox.md)). It takes an optional `canOpen`, asked each

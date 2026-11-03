@@ -5,7 +5,7 @@ import type { WorkspaceRole } from '@/modules/coven';
 export interface PendingInvitationEntry {
   id: string;
   email: string;
-  /** The role the invitation grants; never an owner. */
+  /** The role the invitation grants; never a steward. */
   role: WorkspaceRole;
   expiresAt: Date;
   /** When the invitee declined it, from their account page; `null` while it is pending. */

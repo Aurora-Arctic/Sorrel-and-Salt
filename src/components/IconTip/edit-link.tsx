@@ -43,7 +43,7 @@ export const EditLink = ({
   <IconLink {...props} className={className} verb="Edit" icon={<PencilIcon />} />
 );
 
-/** Edit on a compendium entry for an admin or a curator: named and tipped "Edit in Compendium", so it cannot be taken for a coven's own choice. */
+/** Edit on a compendium entry for a keeper or a curator: named and tipped "Edit in Compendium", so it cannot be taken for a coven's own choice. */
 export const CompendiumEditLink = ({
   className,
   ...props

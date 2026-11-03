@@ -156,7 +156,7 @@ describe('CovenAccessPanel, while access stands open', () => {
     expect(message).not.toBeRequired();
     expect(message).toHaveAccessibleDescription(/email/i);
     expect(within(section()).getByRole('textbox', { name: 'Note' })).toHaveAccessibleDescription(
-      /Seen by the coven's owners only/,
+      /Seen by the coven's stewards only/,
     );
   });
 

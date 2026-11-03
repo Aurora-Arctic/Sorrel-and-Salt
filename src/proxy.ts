@@ -74,7 +74,7 @@ function isWorkshop(pathname: string): boolean {
  * used. Storybook reads its own `index.json` and `project.json` that way, so
  * `'none'` would break it. A source with a path ending `/` matches that prefix
  * alone, so /api/graphql and every other path stay refused, though the
- * scripts carry an admin's cookie. Not `'self'`, which cannot take a path.
+ * scripts carry a keeper's cookie. Not `'self'`, which cannot take a path.
  * Nothing else is restricted: the manager frames its own `iframe.html`, and
  * no header here or in next.config.ts forbids framing.
  */

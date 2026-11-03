@@ -2,7 +2,7 @@
 
 `src/components/PendingInvitations/` — a coven's open invitations, one row each (M7.6, story 5):
 address, role and status, with a Revoke or a Remove on each and the pager beneath. Open (M10.34) is
-pending, or declined by the invitee and not yet removed by the owner. The Invitations tab of the
+pending, or declined by the invitee and not yet removed by a steward. The Invitations tab of the
 coven's Members page renders it (`claude-docs/auth/coven-guard.md`, "The invitations page").
 
 ## Props
@@ -19,7 +19,7 @@ for the pager's "Page X of Y".
   <time>" for one the invitee declined. "Declined" is a badge in the `attention` palette's red,
   the account menu's count's, so a declined row stands out among the expiry dates (the owner's
   call). It replaced the Expires column. A declined row stays listed past its expiry, since an
-  answer is something to read and not a link that lapses, until the owner removes it.
+  answer is something to read and not a link that lapses, until a steward removes it.
 - **The Action column** (heading "Action", it was "Revoke") offers Revoke on a pending row and
   Remove on a declined one.
 - **Revoke** (`revoke-control.tsx`) is a `ConfirmedAction`, as admin's invitation Revoke and the
@@ -62,6 +62,6 @@ badge bringing it back.
 
 ## What the table lists
 
-Under the members roll, the table lists the invitations an owner has sent and nobody has accepted: address, role and status, newest first, with its own pager. A pending invitation shows when it expires and offers Revoke. One the invitee declined shows when, and offers Remove.
+Under the members roll, the table lists the invitations a steward has sent and nobody has accepted: address, role and status, newest first, with its own pager. A pending invitation shows when it expires and offers Revoke. One the invitee declined shows when, and offers Remove.
 
-The table carries the name "Pending Invitations" and has no region around it to repeat that, because the page's heading and its open tab already say what the page is. The page draws the table for owners only and reads it through the services that check `member: invite`; nothing in the component decides who may see it.
+The table carries the name "Pending Invitations" and has no region around it to repeat that, because the page's heading and its open tab already say what the page is. The page draws the table for stewards only and reads it through the services that check `member: invite`; nothing in the component decides who may see it.

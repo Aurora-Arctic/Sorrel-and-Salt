@@ -11,7 +11,7 @@ import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { RoleControlProps } from './types';
 
 // The members page's Change Role: a modal asking which role the member moves to, then
-// `updateMemberRole`. Owners only; the service refuses leaving no owner, said in a callout
+// `updateMemberRole`. Stewards only; the service refuses leaving no steward, said in a callout
 // (claude-docs/components/member-list.md).
 
 const UpdateMemberRoleDocument = graphql(`
@@ -25,7 +25,7 @@ const UpdateMemberRoleDocument = graphql(`
   }
 `);
 
-// Viewer, member, owner: the order the choices are drawn in.
+// Observer, practitioner, steward: the order the choices are drawn in.
 const ROLES: readonly WorkspaceRole[] = ['viewer', 'member', 'owner'];
 
 const RoleControl = ({

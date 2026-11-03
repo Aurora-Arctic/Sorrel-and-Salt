@@ -39,6 +39,8 @@ const USERS: readonly UserListEntry[] = [
     canCreateWorkspace: true,
     createdAt: new Date('2026-03-04T05:06:07Z'),
     agreedTermsVersion: 1,
+    agreedDisclaimerVersion: 1,
+    agreedEthicsVersion: 1,
     providers: ['discord', 'google'],
     emailVerified: true,
     primaryAdmin: false,
@@ -52,6 +54,8 @@ const USERS: readonly UserListEntry[] = [
     createdAt: new Date('2026-05-06T07:08:09Z'),
     // Never agreed, so the Terms column says so.
     agreedTermsVersion: null,
+    agreedDisclaimerVersion: null,
+    agreedEthicsVersion: null,
     providers: ['microsoft'],
     emailVerified: false,
     primaryAdmin: false,
@@ -65,6 +69,8 @@ const USERS: readonly UserListEntry[] = [
     canCreateWorkspace: true,
     createdAt: new Date('2026-06-07T08:09:10Z'),
     agreedTermsVersion: 1,
+    agreedDisclaimerVersion: 1,
+    agreedEthicsVersion: 1,
     // Facebook among them, so its mark shows.
     providers: ['facebook', 'google'],
     emailVerified: true,
@@ -73,11 +79,11 @@ const USERS: readonly UserListEntry[] = [
 ];
 
 // Each story sits inside the admin layout's frame and the People page, Users tab
-// open, with the switch on admin changes beside the heading where a story gives it.
+// open, with the switch on keeper changes beside the heading where a story gives it.
 
 // The page as /keepers/users draws it where impersonation is registered: nine columns,
 // facts no control changes muted, Impersonate red in its red-ruled column at the right.
-// Impersonate and Pause Admin Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
+// Impersonate and Pause Keeper Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
 // shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
 const defaultNode = (
   <ShellFrame area="admin">
@@ -91,8 +97,8 @@ const defaultNode = (
   </ShellFrame>
 );
 
-// The same page for the primary admin, the one admin who may pause: the switch
-// is a usable red Pause Admin Changes rather than the dashed, locked resting button.
+// The same page for the primary keeper, the one keeper who may pause: the switch
+// is a usable red Pause Keeper Changes rather than the dashed, locked resting button.
 const primaryAdminNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
@@ -123,6 +129,8 @@ const PAGE_TWO: readonly UserListEntry[] = Array.from({ length: 25 }, (_, index)
     canCreateWorkspace: index % 4 !== 0,
     createdAt: new Date(Date.UTC(2026, 2, 4) + index * 86_400_000),
     agreedTermsVersion: 1,
+    agreedDisclaimerVersion: 1,
+    agreedEthicsVersion: 1,
     providers: index % 2 === 0 ? ['google'] : ['discord'],
     emailVerified: true,
     primaryAdmin: false,
@@ -170,8 +178,8 @@ const withoutImpersonationNode = (
   </AdminTabbedFrame>
 );
 
-// The primary admin, labelled with the crown and its tip. Dee is a curator, in bold
-// as an admin is, and Yes under Can Create, as every curator holds it. Change Role
+// The primary keeper, labelled with the crown and its tip. Dee is a curator, in bold
+// as a keeper is, and Yes under Can Create, as every curator holds it. Change Role
 // is the user modal's (UserDetail's stories).
 const adminRolesNode = (
   <AdminTabbedFrame page="people">
@@ -186,6 +194,8 @@ const adminRolesNode = (
           canCreateWorkspace: true,
           createdAt: new Date('2026-08-09T10:11:12Z'),
           agreedTermsVersion: 1,
+          agreedDisclaimerVersion: 1,
+          agreedEthicsVersion: 1,
           providers: ['google'],
           emailVerified: true,
           primaryAdmin: false,
@@ -198,6 +208,8 @@ const adminRolesNode = (
           canCreateWorkspace: true,
           createdAt: new Date('2026-08-10T11:12:13Z'),
           agreedTermsVersion: 1,
+          agreedDisclaimerVersion: 1,
+          agreedEthicsVersion: 1,
           providers: ['discord'],
           emailVerified: true,
           primaryAdmin: false,
@@ -235,8 +247,8 @@ const LISTED_STATES: Record<string, ReactNode> = {
   'No Matches': noMatchesNode,
   'Without Impersonation': withoutImpersonationNode,
   'Admin Roles': adminRolesNode,
-  'Admin Changes Paused': adminChangesPausedNode,
-  'Admin Changes Not Primary': adminChangesNotPrimaryNode,
+  'Keeper Changes Paused': adminChangesPausedNode,
+  'Keeper Changes Not Primary': adminChangesNotPrimaryNode,
 };
 
 export const States: Story = {

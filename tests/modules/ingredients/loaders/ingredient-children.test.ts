@@ -420,7 +420,7 @@ describe('who the ingredient-children loaders answer', () => {
       ['signed out, the compendium', null, compendium.ref, 'children'],
       ['another coven, the compendium', asUser(D), compendium.ref, 'children'],
       ['another coven, by direct id', asUser(D), local.ref, 'Forbidden'],
-      ['a site admin, who reaches no coven', asUser(E), local.ref, 'Forbidden'],
+      ['a site keeper, who reaches no coven', asUser(E), local.ref, 'Forbidden'],
       ['signed out', null, local.ref, 'Forbidden'],
       // The key names the tier, so a caller could lie about it: the check then
       // passes, and only the read's own scope stands between D and W's rows.

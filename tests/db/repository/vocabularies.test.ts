@@ -223,7 +223,7 @@ describe('findAstrologyValueCount', () => {
   });
 });
 
-// The deity vocabulary as the admin's deities page lists it: every live deity under a live tradition (the same "curated" the autofill means), by tradition name then its own,
+// The deity vocabulary as the keeper's deities page lists it: every live deity under a live tradition (the same "curated" the autofill means), by tradition name then its own,
 // narrowed by a name fragment and a tradition.
 describe('findDeityPage and findDeityCount', () => {
   afterEach(async () => {

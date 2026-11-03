@@ -23,7 +23,7 @@ export async function withSql<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise
 
 /**
  * A verified user signed in on `page`, renamed from `signInAs`'s shared "Fixture Person" so the members table
- * can tell rows apart, holding the right to create a coven when `canCreate` says so (a curator or admin
+ * can tell rows apart, holding the right to create a coven when `canCreate` says so (a curator or keeper
  * already does, by the database's own check).
  */
 export async function makeUser(

@@ -79,7 +79,7 @@ export async function heldCompendiumEntry(
 
 /**
  * The coven's live cupboard entry for this compendium entry, or null (claude-docs/db/workspace-compendium-entries.md,
- * "Cupboard entry service details"). Any member, viewers included.
+ * "Cupboard entry service details"). Any member, observers included.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  */

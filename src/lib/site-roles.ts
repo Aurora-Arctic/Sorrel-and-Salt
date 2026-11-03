@@ -9,7 +9,7 @@ export function curates(role: UserRole): boolean {
 }
 
 /**
- * The site roles from least to most, each holding what the one before does. Change Role offers them in this order and reads a promotion by it; an admin invitation
+ * The site roles from least to most, each holding what the one before does. Change Role offers them in this order and reads a promotion by it; a keeper invitation
  * is refused when the address holds the invited role or one above.
  */
 export const SITE_ROLES: readonly UserRole[] = ['user', 'curator', 'admin'];

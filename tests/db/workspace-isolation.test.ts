@@ -21,9 +21,9 @@ import { insertStock } from '../support/db/insert-stock';
 import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 
-// An outsider and a site admin are both refused a coven's ingredients and grimoire, by direct id and on every write, without learning whether the row exists (rule 4).
+// An outsider and a site keeper are both refused a coven's ingredients and grimoire, by direct id and on every write, without learning whether the row exists (rule 4).
 // This is the per-entity sweep; each rule behind a refusal is its service's, and the Membership mechanism is tests/db/repository/finders.test.ts's.
-// Actors reach for **W** (owned by A, worked in by B and C); **D**'s own workspace is X and **E** is a site admin in none: neither buys a byte of W.
+// Actors reach for **W** (owned by A, worked in by B and C); **D**'s own workspace is X and **E** is a site keeper in none: neither buys a byte of W.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -276,7 +276,7 @@ describe('Grimoire — the spell and what it is made of', () => {
   });
 });
 
-// The compendium's writes check the site role alone, so `assertMembership` must neither special-case nor penalize the admin role (membership.ts, "A site admin gets no bypass").
+// The compendium's writes check the site role alone, so `assertMembership` must neither special-case nor penalize the admin role (membership.ts, "A site keeper gets no bypass").
 // E's refusal of each entity is the ordinary stranger's, and F, the curator, is held to the same: curating buys no coven.
 describe('E’s and F’s site roles carry no bypass and no penalty from the membership check', () => {
   const stranger = asUser({ id: '00000000-0000-0000-0000-0000000000fe', role: 'user' });
@@ -349,7 +349,7 @@ describe('E’s and F’s site roles carry no bypass and no penalty from the mem
     },
   );
 
-  // Both halves sit in one test, so it fails if either changes: the admin may read which covens a user
+  // Both halves sit in one test, so it fails if either changes: the keeper may read which covens a user
   // is in, and may still not read what those covens hold.
   it('lets E list D’s covens by name and role while refusing X’s ingredients by direct id', async () => {
     const ingredientId = await insertIngredient(

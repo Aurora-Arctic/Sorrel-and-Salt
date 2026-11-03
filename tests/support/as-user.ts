@@ -8,7 +8,7 @@ import type { SessionUser } from './types';
 
 /**
  * The cast: **A** owner of W · **B** member of W · **C** viewer in W · **D** member of unrelated X ·
- * **E** site admin · **F** site curator. Only the site role travels on a session; the workspace
+ * **E** site keeper · **F** site curator. Only the site role travels on a session; the workspace
  * roles are `workspace_members` rows.
  */
 export const { A, B, C, D, E, F } = FIXTURE_USERS;

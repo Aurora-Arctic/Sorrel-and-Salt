@@ -4,7 +4,7 @@
 
 MB.156 was to seed the vocabulary docs' sources as `references` rows,
 idempotent by the rendered citation. Scoping it, the owner asked what a reseed
-does to a seeded reference an admin has since edited. The answer was that it
+does to a seeded reference a keeper has since edited. The answer was that it
 no longer recognises the row and inserts the original again as a twin, and
 that every vocabulary seed has the same gap: they key by slug, the slug is
 derived from the name, and M5.6, M5.6a, M5.6b, MB.95 and MB.132 all rename a
@@ -20,7 +20,7 @@ the alternatives.
 
 **Each seeded table carries `seed_key`, the identity the seed gave the row at
 insert, never changed after.** A vocabulary row's is its slug at insert; a
-reference's is the citation the seed rendered. A row an admin or a member
+reference's is the citation the seed rendered. A row a keeper or a member
 writes holds null. A partial unique index covers live keyed rows, as rule 4
 asks of every unique index. Nothing outside `src/db/seed/` writes it, and no
 input, service or GraphQL field names it.
@@ -29,14 +29,14 @@ The four options put to the owner:
 
 - **A, accept the twin and document it.** This is how the vocabularies already
   behave: simple and exact, with no schema change. But a twin carries the
-  original's links, sits beside the edit until an admin notices it and
+  original's links, sits beside the edit until a keeper notices it and
   soft-deletes it, and nothing flags it.
 - **B, skip a source whose rows already carry links.** No schema change, but
   it guesses. It would silently skip a genuinely new source added for an
   already-sourced deity, which is the commonest reason to touch the seed. A
   missing source is worse than a visible twin, because nothing shows it.
 - **C, a stable key on each seeded row — chosen.** The seed recognises its
-  own row whatever an admin did to it, never twins, and still adds what is
+  own row whatever a keeper did to it, never twins, and still adds what is
   new. It costs a seed-only column on nine domain tables, and three PRs where
   there was one.
 - **D, run once.** It never twins, and it never delivers a later addition to a
@@ -62,7 +62,7 @@ carries the slug the seed gave it. `references` holds no seeded row yet.
 
 **What a reseed takes as present** (MB.172, MB.156) is a matching key, live
 or soft-deleted. It also takes as present a live row holding the slug, so a
-row an admin created under a seed name does not trip the slug index.
+row a keeper created under a seed name does not trip the slug index.
 
 ## What it changed
 

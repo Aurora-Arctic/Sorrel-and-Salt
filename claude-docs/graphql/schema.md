@@ -95,7 +95,7 @@ the session can outlive the row.
 are private: `email`, `emailVerified`, `role` and `canCreateWorkspace` are the
 user's own business, not a co-member's, and carry the `self`-or-`admin` scope
 below. `providers`, the ids of the sign-in providers linked to the account,
-is an admin's alone, through the `providersByUser` loader: a user reads their
+is a keeper's alone, through the `providersByUser` loader: a user reads their
 own from Better Auth, on `/account` (MB.52). They stay
 non-null, so a query for another user's email fails with `Forbidden` rather
 than returning the user without it — ask for what you may read.
@@ -105,7 +105,7 @@ not `identity`, because `identity` may import no module
 ([`modules.md`](../modules.md)). It resolves through the `membershipsByUser`
 loader, whose service, `membershipsOf(session, userIds)`, answers each id with
 that user's live memberships in live workspaces — or a `Forbidden` in that
-id's slot for anyone but the caller, unless the caller is a site admin, who
+id's slot for anyone but the caller, unless the caller is a site keeper, who
 may list anyone's by name and role (M9.19) and reaches none of those
 workspaces' contents. A `WorkspaceMember` carries `role`, `joinedAt`,
 `workspace`, `user` and `audit`; `Workspace` is `id`, `name`, `slug`,
@@ -145,7 +145,7 @@ holds the refusals, and `graphql/workspace-members.test.ts` the field.
 its scope and no second path. `query` matches a substring of the name or the
 email, `awaitingApproval` narrows to `canCreateWorkspace = false`, and `role`
 to one site role. Its
-service, `listUsers`, refuses anyone but a site admin, and the query carries
+service, `listUsers`, refuses anyone but a site keeper, and the query carries
 no scope of its own: it is a read, which M5.7's mutation sweep does not reach
 ([`auth/admin-users.md`](../auth/admin-users.md), "The user list").
 
@@ -157,7 +157,7 @@ nullable `note`, `audit`, and `subject` and `actor` as the ordinary `User`,
 nullable where no live account holds the id. The two share the
 `usersByIdForAdmin` loader, so a page reads its users once. The query carries
 the `admin` scope, the first paged connection to, and its service,
-`listPrivilegeChanges`, refuses anyone but a site admin again
+`listPrivilegeChanges`, refuses anyone but a site keeper again
 ([`auth/admin-users.md`](../auth/admin-users.md), "The privilege ledger").
 
 `setEmail(email: String!, next: String): User!` is the schema's first
@@ -190,8 +190,8 @@ password").
 `revokeWorkspaceCreation(userId: ID!): User!` are M5.8's approval and its
 undoing: each writes `canCreateWorkspace` on a live user and a row in MB.193's
 ledger, and answers the row. Each carries the `admin` scope, and its service
-refuses anyone but a site admin again, as it refuses a change that changes
-nothing and an admin's flag, as `FORBIDDEN` with a message naming the user ([`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
+refuses anyone but a site keeper again, as it refuses a change that changes
+nothing and a keeper's flag, as `FORBIDDEN` with a message naming the user ([`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
 creation").
 
 Their GraphQL files hold the transport's half (MB.180, MB.186;
@@ -206,8 +206,8 @@ refused the list is `services/user-list.test.ts`'s. `user-private-fields.test.ts
 holds the four private fields' `self`-or-`admin` scope, below.
 `set-email.test.ts` holds `next` reaching the sender, and one `VALIDATION`;
 every refusal's rule is `services/email.test.ts`'s.
-`workspace-creation.test.ts` holds, per write, an admin's answer and one
-refusal per error code the service gives an admin; who is refused, and the
+`workspace-creation.test.ts` holds, per write, a keeper's answer and one
+refusal per error code the service gives a keeper; who is refused, and the
 `admin` scope, are `services/workspace-creation.test.ts`'s and the sweep's.
 `privilege-changes.test.ts` holds every field, the filters reaching the
 service, one user read per page, and one non-admin's `FORBIDDEN`; the order and
@@ -240,11 +240,11 @@ type CorrespondenceSuggestion {
 - **Two refusals, one type.** Signed out, the resolver's `sessionOf` refuses with
   `Forbidden` before the service is reached. Signed in, `assertMembership`
   refuses a workspace the caller does not belong to with the same
-  `Forbidden`, a site admin included. The field carries no scope, because the
+  `Forbidden`, a site keeper included. The field carries no scope, because the
   resolver's null check is the same early refusal.
 - **A null `workspaceId` reads the compendium alone** (M5.5): the curated
   rows, then the values in use in the compendium, under no proof, so no
-  membership is asked and any signed-in caller is answered. It is the admin's
+  membership is asked and any signed-in caller is answered. It is the keeper's
   compendium form, which names no coven; signed out is still refused, because
   MB.80's public line is drawn field by field and no public page reads these.
   The form, not the field, keeps a compendium entry to the curated rows
@@ -317,7 +317,7 @@ type SuggestionClaimant {
   every in-scope entry's display name and live folk names: "Cat's Claw" is the
   display name of five seeded rows, and the story's own example.
 - The refusals are `celestialBodySuggestions`': `Forbidden` from the resolver when
-  signed out, from `assertMembership` when signed in elsewhere, a site admin
+  signed out, from `assertMembership` when signed in elsewhere, a site keeper
   included. So is a null `workspaceId`, which reads the compendium alone
   (M5.5), its claimants included.
 
@@ -372,13 +372,13 @@ M12.20's question before a duplicate: `compendiumMatches(workspaceId, name)`
 lists the compendium entries whose name or formal name is exactly the typed
 one, folded to lower case, and no other tier, so no coven's own entry is ever
 offered. `findCompendiumMatches` asserts read membership of the coven first,
-so a viewer is answered and a non-member is `FORBIDDEN` by direct id. It is
+so an observer is answered and a non-member is `FORBIDDEN` by direct id. It is
 paged (`t.pagedConnection`, ordered by name, the form asks for five), and a
 blank name answers empty. Its node is the `Ingredient`, whose
 `inCupboard(workspaceId)` says whether that coven's cupboard holds it
 (through the batched `cupboardEntryByIngredient` loader, so a page is one
 read); `possibleDuplicates` nodes carry it too. `workspaceId` is nullable
-there, answering false, so the admin's call shares the document.
+there, answering false, so the keeper's call shares the document.
 
 ### `possibleDuplicates`
 
@@ -419,7 +419,7 @@ type QueryPossibleDuplicatesConnectionEdge {
 - **The refusals are `celestialBodySuggestions`'.** The resolver refuses a signed-out
   caller with `Forbidden`. For a signed-in caller the check is the service's
   `assertMembership` for `ingredient: ['read']`, which refuses a coven the
-  caller is not in, a site admin included. A viewer is answered, because every
+  caller is not in, a site keeper included. An observer is answered, because every
   row the field returns is one a reader of the coven could already list.
 - **A null `workspaceId` matches the compendium alone** (M5.5), asking no
   membership, as `celestialBodySuggestions` does: the admin's compendium form,
@@ -452,8 +452,8 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
 - **`categoryIds` keeps entries carrying any of the ids**, on the entry or on one of its variants, through the compendium filter's `any` mode. Null or empty is no filter. The spell builder's Add to Jar picker sends the categories pressed above its box; the list is paged, so a filter applied after fetching would miss matches.
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
-  A viewer is answered, a coven the caller is not in is refused, and so is a
-  site admin, who belongs to no coven.
+  An observer is answered, a coven the caller is not in is refused, and so is a
+  site keeper, who belongs to no coven.
 
 ### `compendium`, `ingredient` and `ingredientFormValues`
 
@@ -490,7 +490,7 @@ type QueryCompendiumConnectionEdge {
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `elements` (M8.13, `[IngredientElement!]`, lower case) matches an entry whose
   `elements`, or those of any live variant, hold any one listed, among others or alone, by array overlap
-  in SQL (MB.157, MB.215). On `workspaceIngredients` too. The admin's two to-do lists, which M5.5
+  in SQL (MB.157, MB.215). On `workspaceIngredients` too. The keeper's two to-do lists, which M5.5
   puts on `/curator/compendium`: `withoutReferences: true` (MB.153), only the
   entries citing no live compendium reference, so an entry whose one link is
   unlinked, or cites a soft-deleted reference, is on it, as its bibliography
@@ -524,7 +524,7 @@ type QueryCompendiumConnectionEdge {
   asked for without its coven all read the same, since a workspace entry's
   existence is private. `workspaceId` names the coven whose own entry may be
   asked for — the service asks `assertMembership(…, { ingredient: ['read'] })`,
-  refusing a non-member, a site admin and a signed-out caller with
+  refusing a non-member, a site keeper and a signed-out caller with
   `Forbidden` — and without it the read is the compendium alone. A malformed
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
@@ -600,8 +600,8 @@ type QueryCompendiumConnectionEdge {
   whose `workspaceId` is `ID!`, is classified as refused by the SDL before
   any resolver runs. Each table must equal the schema's field list, and none
   may be empty, so no resolver file holds a signed-out test of its own. Since
-  M5.7 every `Mutation` field is also named as an admin write or one any
-  session may reach, and each admin write is run signed in as A, a coven's
+  M5.7 every `Mutation` field is also named as a keeper write or one any
+  session may reach, and each keeper write is run signed in as A, a coven's
   owner who holds no site role, with E admitted and the service's own refusal
   as the preconditions in the same case
   (["Auth scopes: the second check"](#auth-scopes-the-second-check) says how it tells
@@ -628,9 +628,9 @@ refused are their services' tests' (MB.187).
 
 ### `compendiumSourcingScore` and the `sort` argument
 
-`compendiumSourcingScore(id: ID!): SourcingScore` is a curator's read of one compendium entry's sourcing score: `score`, an integer, and `facts`, each a `SourcingFact` with its `fact` (the `SourcingFactKind` enum), its Title Case `label` and its `points`. Every fact is listed, zero-point ones too, and the points add up to the score. The field carries the `curator` scope with an `unauthorizedResolver` that answers `null`, so a member, a viewer or a signed-out request reads `null` rather than an error, by direct id too. The resolver calls `readSourcingScore`, which checks the curator again (rule 1) and reads the entry's forms and citations through the per-request loaders. `Ingredient` has no score field, so a coven's ingredient, the public read, `llms.txt` and the `.well-known` files never carry one. `tests/modules/ingredients/services/compendium-sourcing.test.ts` and the `nulls` probe in `tests/db/graphql-query-scopes.test.ts` hold this.
+`compendiumSourcingScore(id: ID!): SourcingScore` is a curator's read of one compendium entry's sourcing score: `score`, an integer, and `facts`, each a `SourcingFact` with its `fact` (the `SourcingFactKind` enum), its Title Case `label` and its `points`. Every fact is listed, zero-point ones too, and the points add up to the score. The field carries the `curator` scope with an `unauthorizedResolver` that answers `null`, so a practitioner, an observer or a signed-out request reads `null` rather than an error, by direct id too. The resolver calls `readSourcingScore`, which checks the curator again (rule 1) and reads the entry's forms and citations through the per-request loaders. `Ingredient` has no score field, so a coven's ingredient, the public read, `llms.txt` and the `.well-known` files never carry one. `tests/modules/ingredients/services/compendium-sourcing.test.ts` and the `nulls` probe in `tests/db/graphql-query-scopes.test.ts` hold this.
 
-`compendium` takes an optional `sort: CompendiumSort` and `order: CompendiumOrder`. `sort` is `name` (A to Z, even under a search) or `sourcing_score` (lowest first); `order: desc` reverses either, and `asc` or no order keeps the first direction ([`../db/compendium-read.md`](../db/compendium-read.md), "The sourcing sort"). The score sort refuses anyone who is not a curator or admin with `Forbidden`. No edge carries the score itself: the admin list reads it through the service, beside its rows.
+`compendium` takes an optional `sort: CompendiumSort` and `order: CompendiumOrder`. `sort` is `name` (A to Z, even under a search) or `sourcing_score` (lowest first); `order: desc` reverses either, and `asc` or no order keeps the first direction ([`../db/compendium-read.md`](../db/compendium-read.md), "The sourcing sort"). The score sort refuses anyone who is not a curator or keeper with `Forbidden`. No edge carries the score itself: the admin list reads it through the service, beside its rows.
 
 ### The workspace ingredient mutations
 
@@ -645,8 +645,8 @@ signatures DESIGN.md §7's sketch gives them.
   stamp.** Neither input type declares `workspaceId` or an audit column, and
   GraphQL refuses a field its type does not declare before any resolver runs. The
   service asks the proof for the argument's coven, `{ ingredient: ['create'] }`,
-  `['update']` or `['delete']`, which owners and members hold and viewers,
-  site admins and non-members do not. All three carry the `signedIn` scope. A coven id
+  `['update']` or `['delete']`, which stewards and practitioners hold and observers,
+  site keepers and non-members do not. All three carry the `signedIn` scope. A coven id
   that is not a uuid answers `FORBIDDEN`, as it does at every field taking a
   `workspaceId`
   ([`db/membership-proof.md`](../db/membership-proof.md#what-the-check-asks),
@@ -777,7 +777,7 @@ own forms.
 mutations' half: the input that names a tier, or leaves a field out, refused
 before any resolver runs; the answer equal to a fresh read; the child
 loaders cleared between two updates in one request; and per mutation one
-`VALIDATION`, one `FORBIDDEN` (a viewer, who reads the row) and, for the update
+`VALIDATION`, one `FORBIDDEN` (an observer, who reads the row) and, for the update
 and the delete, one `NOT_FOUND`.
 
 ### `workspaceIngredients`
@@ -793,7 +793,7 @@ Two more arguments are the coven's alone (M9.7), left out of `compendium`: `sour
 compendium entries it holds), where leaving it out lists both; and `inStock`, which keeps an
 entry only when one of the coven's jars of it is not at 0, a jar with no quantity counting as
 held, so a local entry with no jar leaves; and `lowStockOnly` (M9.8), which keeps an
-entry only when one of its jars is at 0 or at or under a threshold above 0 (Out of Stock or Low Stock). A coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
+entry only when one of its jars is at 0 or at or under a threshold above 0 (Out of Stock or Low Stock). A coven the caller is not in answers `FORBIDDEN`; any practitioner, observers included,
 may read it. An entry's jars are its `stock` field, below, so a page reads its
 stock in one batch whatever its length.
 
@@ -840,7 +840,7 @@ out. It is null, with no error, for anyone who neither curates nor
 administers, so the public panel and a signed-out caller can ask for the
 facets and learn nothing of the mark. Both `compendium` and
 `compendiumFacets` take a `reviewed: Boolean` argument; sent by anyone but a
-curator or an admin it is `FORBIDDEN`, refused by `compendiumFilterFor` in the
+curator or a keeper it is `FORBIDDEN`, refused by `compendiumFilterFor` in the
 service ([`db/compendium-read.md`](../db/compendium-read.md), `reviewed`).
 
 A coven's `IngredientFacets` also carries two counts that a compendium list has no
@@ -857,7 +857,7 @@ type CompendiumFacets {
   # the seven fields of IngredientFacets, then:
   withoutReferences: Int!
   withoutForms: Int!
-  reviewed: [ReviewFacetCount!] # null to anyone but a curator or an admin
+  reviewed: [ReviewFacetCount!] # null to anyone but a curator or a keeper
 }
 
 type ReviewFacetCount {
@@ -907,7 +907,7 @@ public compendium): count only the entries that a live
 resolver hands it to `compendiumFacetsHeldIn` (`services/compendium-held-in.ts`),
 which deduplicates the ids, keeps the first 20, and asks
 `assertMembership` for each against the caller's session with
-`ingredient:read`, which every role holds, viewers included. An id the caller is not a member of, or one that is not a uuid, is
+`ingredient:read`, which every role holds, observers included. An id the caller is not a member of, or one that is not a uuid, is
 dropped without an error, so a foreign coven's id narrows nothing and says
 nothing about that coven. With no id left, or none given, or no session, the
 answer is the cached, public one above. With at least one, it is read per
@@ -920,7 +920,7 @@ page reads the narrowed list through the service, `listCompendiumHeldIn` and
 `countCompendiumHeldIn`, never through the GraphQL list.
 `workspaceIngredientFacets` refuses as `workspaceIngredients` does: a
 signed-out caller and a coven the caller is not in both answer `FORBIDDEN`,
-and any member, viewers included, may read it. It is never cached.
+and any practitioner, observers included, may read it. It is never cached.
 
 `tests/modules/ingredients/graphql/ingredient-facets.test.ts` holds the
 transport's half: the arguments reaching each service, each value typed as
@@ -984,7 +984,7 @@ the stock service ([`db/stock.md`](../db/stock.md), "The stock service").
   entry page and anything saving one jar still use them.
 
 All four writes carry the `signedIn` scope, and the service asks the proof for
-`inventory: update`, which viewers do not hold. The add, the update and `saveStock`
+`inventory: update`, which observers do not hold. The add, the update and `saveStock`
 clear the changed jar's (or the ingredient's) `stockByIngredient` key, so a second write in one request
 answers its own stock; the delete answers no row to key by, so it clears the
 loader whole.
@@ -1015,7 +1015,7 @@ A coven's own say over a compendium entry it holds (M12.14), registered by
   `cupboardEntryByIngredient` loader ([`loaders.md`](loaders.md)), so a page of
   entries makes one read per coven named. A coven the caller is not in refuses
   at the field, `FORBIDDEN` with the field's path, as `Ingredient.stock` does.
-  Any member reads it, viewers included.
+  Any member reads it, observers included.
 
 The field answers the row beside the entry rather than merged into it, so
 `Ingredient` itself still answers the compendium's values and `isGlobal` stays
@@ -1035,7 +1035,7 @@ them through `ingredientDetailOf` instead
 half.
 
 `tests/modules/ingredients/graphql/cupboard-entries.test.ts` holds the
-transport's half: the answer and its `annotated`, a viewer answered, the
+transport's half: the answer and its `annotated`, an observer answered, the
 refusal at the field, the nulls, and one repository read for a page of entries,
 counted by a spy.
 
@@ -1053,7 +1053,7 @@ answer is a fresh read:
   `ingredientId`, as the other deletes answer the id. It is refused with
   `VALIDATION` while the coven holds a jar of the entry.
 
-A viewer is `FORBIDDEN`, an entry the coven does not hold is `NOT_FOUND`,
+An observer is `FORBIDDEN`, an entry the coven does not hold is `NOT_FOUND`,
 and a taken label is `VALIDATION` beside `label`
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
 "Writing it").
@@ -1063,7 +1063,7 @@ ingredientId)`, makes a compendium entry the coven holds into the coven's
 own, the entry page's Make It Ours, and answers a `ConvertedCompendium`:
 `entry`, the new own `Ingredient`, and `dropped`, the same
 `DroppedOnConvert`, in which only `folkNames` can be non-empty (a folk name
-the new name took). A viewer is `FORBIDDEN`, an entry the coven does not
+the new name took). An observer is `FORBIDDEN`, an entry the coven does not
 hold `NOT_FOUND`, and a taken label or an own entry of the same identity
 `VALIDATION` beside `label`, `canonicalName` or `name`
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
@@ -1166,7 +1166,7 @@ never reaches a resolver: it is left out of a list in SQL, and by id it is
     nullable `Int`, and the service refuses a save that leaves it out as
     `VALIDATION`. Null writes whatever the revision is. A revision no longer
     current is `STALE_WRITE`, with `extensions.currentRevision`.
-  - A viewer is `FORBIDDEN`; a spell the caller cannot read is `NOT_FOUND`.
+  - An observer is `FORBIDDEN`; a spell the caller cannot read is `NOT_FOUND`.
 
 A page of spells with all three lists costs the same reads as one spell: the
 page, then eight batched reads (three for the steps, two for the assigned
@@ -1257,7 +1257,7 @@ the entry needs review. It carries `authScopes: { curator: true }` and the
 service's `assertCurator` refuses again; a coven's ingredient, a deleted
 entry and an unknown id are `NOT_FOUND`. It answers the entry, but no field
 of `Ingredient` carries the mark or the reviewer: the compendium's reads are
-cached and shared by every viewer (CLAUDE.md, rule 6), so the admin's
+cached and shared by every viewer (CLAUDE.md, rule 6), so the keeper's
 details read the mark on the server through `readCompendiumReview`
 ([`db/compendium-read.md`](../db/compendium-read.md)), never through the
 type. Create, update and promote set the mark in their services
@@ -1275,7 +1275,7 @@ coven ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries
 writes' half: the input left short refused before any resolver runs, the
 loaders cleared between two updates, `endRedirect` reaching the update's
 service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
-for the create. A non-admin at the `admin` scope is the sweep's; who the
+for the create. A non-keeper at the `admin` scope is the sweep's; who the
 service refuses is `services/compendium-entries.test.ts`'s, and every collision
 is `services/compendium-entry-slugs.test.ts`'s.
 
@@ -1315,14 +1315,14 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
 - **The tier is the `workspaceId` argument.** Null writes the compendium,
   under `assertSiteAdmin`; a coven's is written under
   `assertMembership(…, { ingredient: ['create'] })` or `['update']`, which
-  owners and members hold and viewers, site admins and non-members do not.
+  stewards and practitioners hold and observers, site keepers and non-members do not.
   The scope follows the same argument: a null one carries `admin`, a coven's
   `signedIn` (M5.7). A member citing a compendium reference cannot edit
   it: under their coven the id names nothing there, `NOT_FOUND`, and without
   one the admin check is `FORBIDDEN`. `updateReference` reaches every row
   citing it, so it clears `referencesByIngredient` whole. There is no
   `deleteReference` in v1. A compendium-tier write
-  expires the `compendium` tag, as every admin write does (M8.7).
+  expires the `compendium` tag, as every keeper write does (M8.7).
 - **`reference(id, workspaceId)` reads one source whole**, for the
   ingredient form's edit panel to open on (MB.115): a null `workspaceId`
   the compendium's alone, a coven's its own or the compendium's, never
@@ -1353,7 +1353,7 @@ at the compendium tier's `admin` scope is the sweep's. The tier rule, the order 
 
 ### Curated vocabularies: one factory for the seven
 
-Every admin-curated vocabulary — categories and their groups, forms and
+Every keeper-curated vocabulary — categories and their groups, forms and
 their groups, deities and their traditions, celestial bodies and signs — is the same
 type, input and three writes, so `vocabulary/graphql/curated.ts`'s
 `curatedVocabularyWrites` registers them, on the precedent of the loop the
@@ -1405,7 +1405,7 @@ sketch, as the chips read them (MB.36).
   and `groupId`, all required. There is no slug, which follows the name
   (M4.3). An update replaces the category and keeps a seeded row's
   `seedKey` (MB.171).
-- **The writes carry `admin`**, the scope M5.7 puts on every admin
+- **The writes carry `admin`**, the scope M5.7 puts on every keeper
   mutation, and `assertSiteAdmin` refuses again in the service, which is the
   gate. A slug collision is `VALIDATION` on `name`, naming the category
   holding the address (MB.43). A retired or unknown group is `VALIDATION` on
@@ -1419,8 +1419,8 @@ sketch, as the chips read them (MB.36).
 `tests/modules/vocabulary/graphql/categories.test.ts` holds their half (MB.186):
 a page with its groups in one read, the count, the two filters reaching the
 read and the count, and per write one refusal per error code the service gives
-an admin — `VALIDATION` on the create and the update, `NOT_FOUND` on the
-update and the delete, and the delete's in-use `FORBIDDEN`. A non-admin at the
+a keeper — `VALIDATION` on the create and the update, `NOT_FOUND` on the
+update and the delete, and the delete's in-use `FORBIDDEN`. A non-keeper at the
 `admin` scope is the sweep's; who the service refuses, what a filter matches, a
 malformed `groupId` and every collision are `services/categories.test.ts`'s.
 
@@ -1526,7 +1526,7 @@ the browser.
 `ingredient-form-groups.test.ts` hold the writes' half: the loaders cleared by
 an update, `moveTo` reaching the delete, and per write one refusal per error
 code — `VALIDATION` (a colour, a collision or `moveTo`), and `NOT_FOUND` on the
-update and the delete. A non-admin at the `admin` scope is the sweep's; who the
+update and the delete. A non-keeper at the `admin` scope is the sweep's; who the
 service refuses, each colour and every collision are
 `services/category-groups.test.ts`'s and `services/ingredient-form-groups.test.ts`'s.
 
@@ -1586,19 +1586,19 @@ role and rule is `services/deities.test.ts`'s and
 `@pothos/plugin-scope-auth` gives the schema four scopes, all read off the
 context without a query:
 
-| Scope      | Holds when                                      |
-| ---------- | ----------------------------------------------- |
-| `signedIn` | the request has a session                       |
-| `curator`  | the session's role is curator or admin (M11.20) |
-| `admin`    | the session's role is admin                     |
-| `self`     | the user id it is given is the session's own    |
+| Scope      | Holds when                                       |
+| ---------- | ------------------------------------------------ |
+| `signedIn` | the request has a session                        |
+| `curator`  | the session's role is curator or keeper (M11.20) |
+| `admin`    | the session's role is admin                      |
+| `self`     | the user id it is given is the session's own     |
 
 A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
 either does; every people mutation (roles, creation approval, pause, admin invitations) carries `admin`, each from the task that
-built it, M5.8's two creation writes included, and every compendium and vocabulary write carries `curator`, which an admin holds too (M11.20); `createReference` and
+built it, M5.8's two creation writes included, and every compendium and vocabulary write carries `curator`, which a keeper holds too (M11.20); `createReference` and
 `updateReference` carry `curator` when their `workspaceId` is null, the compendium's
 tier, and `signedIn` otherwise. `ok` and the
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
@@ -1613,17 +1613,17 @@ no (MB.43).
 **The sweep proves the two checks apart (M5.7).**
 `tests/db/graphql-query-scopes.test.ts` names every `Mutation` field as an
 admin write, with what it governs, or one any session may reach, so a write
-added later says which it is. It runs each admin write signed in as A — a
+added later says which it is. It runs each keeper write signed in as A — a
 coven's owner, the highest workspace role and still no site role — with E
 admitted past the scope and the service's own refusal as the preconditions in
 the same case. The code cannot tell the checks
 apart, since both answer `FORBIDDEN`, but the message can: the scope's
 refusal is `Forbidden`'s default message, and `assertSiteAdmin` says "Only a
-site admin may do this". So a non-admin hearing the default was refused by
+site keeper may do this". So a non-keeper hearing the default was refused by
 the scope before the service ran, and the field fails the sweep the moment
 its `admin` scope goes. What the service refuses, and to whom, stays its own
-test's (MB.180). What an admin governs is a closed type, `Governed`, beside
-the sweep, so an admin write outside it is a visible change. The admin's
+test's (MB.180). What a keeper governs is a closed type, `Governed`, beside
+the sweep, so a keeper write outside it is a visible change. The keeper's
 reach into no coven is M6.6's (`tests/db/workspace-isolation.test.ts`).
 
 ### The SDL snapshot

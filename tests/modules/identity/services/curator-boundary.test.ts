@@ -87,7 +87,7 @@ beforeEach(async () => {
   `;
   adminInvitationId = await invite(`pending${DOMAIN}`, E.id, null);
   covenInvitationId = await invite(`pending-coven${DOMAIN}`, A.id, WORKSPACE_W_ID);
-  // E as the primary admin, so the pause and its resume answer E too.
+  // E as the primary keeper, so the pause and its resume answer E too.
   const [{ email }] = await sql`select email from users where id = ${E.id}`;
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', email as string);
   send.mockClear();
@@ -103,7 +103,7 @@ type Call = (session: Session) => Promise<unknown>;
 
 // Every people-page service that throws. Each row's state is set above so
 // E's call succeeds: PLAIN holds no role and no flag, A holds the flag, and
-// one admin invitation is pending.
+// one keeper invitation is pending.
 const PEOPLE_PAGE: [string, Call][] = [
   ['listUsers', (session) => listUsers(session, {}, PAGE)],
   ['countUsers', (session) => countUsers(session, {}, undefined)],
@@ -179,7 +179,7 @@ describe('a curator on the people page', () => {
   );
 
   it.each(DETAILS)(
-    '%s answers a curator Forbidden for another user, and an admin the user',
+    '%s answers a curator Forbidden for another user, and a keeper the user',
     async (_service, call) => {
       expect(assertCurator(asUser(F))).toMatchObject({ userId: F.id });
 

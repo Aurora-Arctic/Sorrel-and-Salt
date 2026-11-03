@@ -1,6 +1,6 @@
 import type { WorkspaceRole } from '@/modules/coven';
 
-/** A member the only owner could hand the coven to. */
+/** A member the only steward could hand the coven to. */
 export interface Successor {
   userId: string;
   /** The name the picker shows. */
@@ -15,8 +15,8 @@ export interface LeaveWorkspaceButtonProps {
   /** The workspace's name, which the confirmation repeats back. */
   name: string;
   /**
-   * Given only to the coven's sole owner, whom the last-owner guard would stop: the members
-   * they could make an owner, empty when they are the only member. Its presence, even empty,
+   * Given only to the coven's sole steward, whom the last-steward guard would stop: the members
+   * they could make a steward, empty when they are the only member. Its presence, even empty,
    * turns the confirmation into the guided exit; absent, Leave is the plain confirmation.
    */
   successors?: readonly Successor[];
@@ -28,5 +28,5 @@ export interface OwnerExitProps extends Pick<LeaveWorkspaceButtonProps, 'workspa
   successors: readonly Successor[];
 }
 
-/** What the only owner chooses happens to the coven as they leave. */
+/** What the only steward chooses happens to the coven as they leave. */
 export type WayOut = 'hand' | 'delete';

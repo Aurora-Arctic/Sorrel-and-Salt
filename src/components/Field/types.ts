@@ -222,7 +222,7 @@ export interface FormActionsProps {
   aside?: ReactNode;
 }
 
-/** An admin change's optional Reason, held by the caller in plain state. */
+/** A keeper change's optional Reason, held by the caller in plain state. */
 export interface ReasonFieldProps {
   value: string;
   onChange: (value: string) => void;

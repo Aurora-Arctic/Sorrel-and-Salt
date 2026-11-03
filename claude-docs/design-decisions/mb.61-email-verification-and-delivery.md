@@ -23,7 +23,7 @@ The work is six new tasks, three rewritten in place, and one re-scoped:
 - MB.65 builds the mail transport.
 - MB.66 turns Better Auth's verification on, audited and session-bound.
 - MB.67 makes unverified accounts provisional and sweeps expired ones.
-- MB.68 promotes the primary admin at first-party verification.
+- MB.68 promotes the primary keeper at first-party verification.
 - MB.54 is re-scoped to build the email page on those.
 - MB.69 and MB.70 are the admin invitation's table and behaviour (story 62).
 - M7.3, M7.4 and M7.5 are rewritten for delivery by mail.
@@ -360,7 +360,7 @@ sweep reaches the seeded bootstrap admin, which is unverified and referenced
 by every seeded category, and the foreign key fails the whole statement on
 every callback. Marking the seed verified instead was rejected: a verified
 row takes an implicit link from any provider vouching for its address, and
-that row is an admin.
+that row is a keeper.
 
 **The sweep runs in `hooks.before` on `/callback/:id`.** It runs before the
 code exchange, on every OAuth callback, and removes every expired row in one
@@ -503,7 +503,7 @@ mutations M7.5 and M7.6 always needed and the sketch never named.
 
 ## The admin invitation (story 62)
 
-**Superseded in part by MB.201 and MB.202 (2026-10-10):** `admin_invitations` and `workspace_invitations` became one two-tier `invitations` table, an admin invitation being its site tier, a null workspace and role. One accept service and one route, `/invite/[token]`, serve both tiers, landing by tier, so there is no `/admin-invite/[token]`; MB.70 keeps the pause, the note and its pending list on `/admin/users` ([`mb.201-two-tier-invitations.md`](mb.201-two-tier-invitations.md); [`db/invitations.md`](../db/invitations.md)).
+**Superseded in part by MB.201 and MB.202 (2026-10-10):** `admin_invitations` and `workspace_invitations` became one two-tier `invitations` table, a keeper invitation being its site tier, a null workspace and role. One accept service and one route, `/invite/[token]`, serve both tiers, landing by tier, so there is no `/admin-invite/[token]`; MB.70 keeps the pause, the note and its pending list on `/admin/users` ([`mb.201-two-tier-invitations.md`](mb.201-two-tier-invitations.md); [`db/invitations.md`](../db/invitations.md)).
 
 M2.9's option B, now buildable, as a table task and a behaviour task.
 `admin_invitations` (MB.69) is shaped like `workspace_invitations`: only the
@@ -526,7 +526,7 @@ admin list's controls.
   [`m2.9-granting-admin.md`](m2.9-granting-admin.md).
 - **MB.68** adds a second way to become the primary admin: verifying the
   bootstrap address by mail, from a session that holds the row. A Microsoft-
-  or Facebook-only owner can now be promoted. It is safe only because of the
+  or Facebook-only steward can now be promoted. It is safe only because of the
   session binding above, and it is the one place first-party verification
   touches promotion.
 - **Kept:** the sign-in promotion still decides on the callback's fresh
@@ -541,17 +541,17 @@ admin list's controls.
 
 The squat closes for every address, MB.54 becomes a page rather than a
 pre-session interstitial, the two things MB.60 cut from its first draft land
-in MB.67, and both invitation flows exist. Notifying admins of a grant becomes
+in MB.67, and both invitation flows exist. Notifying keepers of a grant becomes
 possible and stays unscheduled.
 
-**The hole:** an owner whose address is squatted waits up to one hour, and is
+**The hole:** a steward whose address is squatted waits up to one hour, and is
 told so. A leaked verification token is good for one hour and one boolean. A
 verification mail that a user did not request is refused when they click it,
 which is correct and will read as a broken link; the mail says why.
 
 ## Out of scope
 
-- **Notifying existing admins of a grant.** Possible now; not scheduled.
+- **Notifying existing keepers of a grant.** Possible now; not scheduled.
 - **Rate-limiting resends** beyond what Better Auth does. The email page's
   resend is a mutation like any other, and a few mails a week never meets a
   cap.

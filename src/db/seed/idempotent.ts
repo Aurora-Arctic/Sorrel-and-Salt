@@ -226,7 +226,7 @@ export function requireFrom<K, V>(map: Map<K, V>, key: K, describe: () => string
 
 /**
  * What a vocabulary seed takes as present: every row's `seed_key`, live or soft-deleted (a renamed or retired seed row stays
- * its own), and every live row's slug (an admin's row under a seed name is not met by a second the slug index refuses).
+ * its own), and every live row's slug (a keeper's row under a seed name is not met by a second the slug index refuses).
  * Typed on the union, which Drizzle's `from()` accepts where it cannot narrow a generic.
  */
 export async function presentKeys(

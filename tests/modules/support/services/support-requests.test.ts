@@ -289,7 +289,7 @@ describe('mySupportRequests', () => {
 });
 
 describe('supportRequests', () => {
-  it('lists open ahead of resolved, newest first within each, for an admin who reads all', async () => {
+  it('lists open ahead of resolved, newest first within each, for a keeper who reads all', async () => {
     const oldOpen = await send(C);
     const resolved = await send(C);
     const newOpen = await send(D);
@@ -312,7 +312,7 @@ describe('supportRequests', () => {
     expect(ids).not.toContain(plain.id);
   });
 
-  it('shows the coven in a page to an admin and the sender, and hides it from a curator, in a list and by id', async () => {
+  it('shows the coven in a page to a keeper and the sender, and hides it from a curator, in a list and by id', async () => {
     const REAL = '/coven/whitethorn-coven/grimoire';
     const request = await send(C, { ...INPUT, path: REAL });
     await setSupportRequestCuratorVisible(asUser(E), request.id, true);
@@ -330,7 +330,7 @@ describe('supportRequests', () => {
     expect(await listed(F)).toBe('/coven/[coven]/grimoire');
   });
 
-  it('gives an admin a signed-out sender’s address and a curator none, in a list and by id', async () => {
+  it('gives a keeper a signed-out sender’s address and a curator none, in a list and by id', async () => {
     const address = 'visitor@example.test';
     await sql`delete from support_send_counts`;
     await sendSignedOutSupportRequest(
@@ -353,7 +353,7 @@ describe('supportRequests', () => {
     expect(await listed(F)).toBeNull();
   });
 
-  it('names an account sender to an admin with the address and to a curator without it', async () => {
+  it('names an account sender to a keeper with the address and to a curator without it', async () => {
     const request = await send(C);
     await setSupportRequestCuratorVisible(asUser(E), request.id, true);
     // The curator can read this request, and the account holds an address.
@@ -413,7 +413,7 @@ describe('supportRequests', () => {
 });
 
 describe('replyToSupportRequest', () => {
-  it('lets an admin reply to any request, stores the reply and starts its notice with ids alone', async () => {
+  it('lets a keeper reply to any request, stores the reply and starts its notice with ids alone', async () => {
     const request = await send(C);
     const mail = notifier();
     const reply = await replyToSupportRequest(asUser(E), request.id, 'A secret answer.', mail);
@@ -632,7 +632,7 @@ describe('admin-only changes', () => {
     ['a curator', F],
     ['a plain user', B],
   ])('refuses %s setting or lifting a time-out by direct id', async (_who, caller) => {
-    // The precondition: an admin may set the same open-ended time-out on the same sender, and lift it.
+    // The precondition: a keeper may set the same open-ended time-out on the same sender, and lift it.
     const set = await timeOutSupportSender(
       asUser(E),
       C.id,
@@ -668,7 +668,7 @@ describe('admin-only changes', () => {
     ).toBeInstanceOf(ValidationError);
   });
 
-  it('reads a sender’s time-outs for an admin alone', async () => {
+  it('reads a sender’s time-outs for a keeper alone', async () => {
     await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE);
     expect((await timeoutsForSenders(asUser(E), [C.id]))[0]).toHaveLength(1);
     expect((await timeoutsForSenders(asUser(F), [C.id]))[0]).toBeInstanceOf(Forbidden);
@@ -696,7 +696,7 @@ describe('standingTimeoutsOf', () => {
     ['a plain user', B],
   ])('refuses %s with Forbidden', async (_who, caller) => {
     await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE);
-    // The precondition: the same read by an admin answers the time-out.
+    // The precondition: the same read by a keeper answers the time-out.
     expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeDefined();
 
     expect(await failureOf(standingTimeoutsOf(asUser(caller), [C.id]))).toBeInstanceOf(Forbidden);
@@ -704,7 +704,7 @@ describe('standingTimeoutsOf', () => {
 });
 
 describe('resolveSupportRequest', () => {
-  it('records who and when, for an admin on any request', async () => {
+  it('records who and when, for a keeper on any request', async () => {
     const request = await send(C);
     const resolved = await resolveSupportRequest(asUser(E), request.id, notifier());
     expect(resolved).toMatchObject({ status: 'resolved', resolvedBy: E.id });

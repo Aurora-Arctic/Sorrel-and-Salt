@@ -371,7 +371,7 @@ describe('internal notes', () => {
     expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 
-  it('are written by an admin, and by a curator on any request they can read, assigned to them or not', async () => {
+  it('are written by a keeper, and by a curator on any request they can read, assigned to them or not', async () => {
     const request = await send();
     await sql`update support_requests set curator_visible = true where id = ${request.id}`;
     // The precondition: the curator can read the request, and it is assigned to no one.
@@ -392,7 +392,7 @@ describe('internal notes', () => {
 
   it('are refused to a curator on a request not marked for curators, by direct id, and to a plain user', async () => {
     const request = await send();
-    // The preconditions: the request exists and an admin can read it, while the curator cannot.
+    // The preconditions: the request exists and a keeper can read it, while the curator cannot.
     expect((await getSupportRequest(asUser(E), request.id)).curatorVisible).toBe(false);
     expect(await failureOf(getSupportRequest(asUser(F), request.id))).toBeInstanceOf(NotFound);
     expect(await failureOf(addSupportInternalNote(asUser(F), request.id, 'Note.'))).toBeInstanceOf(
@@ -551,7 +551,7 @@ describe('an anonymised request', () => {
     return row;
   };
 
-  it('takes no assignee, and the same admin assigns a request that is not anonymised', async () => {
+  it('takes no assignee, and the same keeper assigns a request that is not anonymised', async () => {
     const plain = await closed();
     await assignSupportRequest(asUser(E), plain.id, F.id);
     expect((await settings(plain.id))!.assigned_to).toBe(F.id);
@@ -565,7 +565,7 @@ describe('an anonymised request', () => {
     expect(await settings(request.id)).toEqual(before);
   });
 
-  it('cannot be shared with curators, and the same admin shares a request that is not anonymised', async () => {
+  it('cannot be shared with curators, and the same keeper shares a request that is not anonymised', async () => {
     const plain = await closed();
     await setSupportRequestCuratorVisible(asUser(E), plain.id, true);
     expect((await settings(plain.id))!.curator_visible).toBe(true);
@@ -580,7 +580,7 @@ describe('an anonymised request', () => {
     expect(await settings(request.id)).toEqual(before);
   });
 
-  it('takes no issue link, and the same admin links one to a request that is not anonymised', async () => {
+  it('takes no issue link, and the same keeper links one to a request that is not anonymised', async () => {
     const plain = await closed();
     await setSupportRequestIssueUrl(asUser(E), plain.id, ISSUE);
     expect((await settings(plain.id))!.issue_url).toBe(ISSUE);

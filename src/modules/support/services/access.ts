@@ -16,7 +16,7 @@ export function requireVerified(session: Session): void {
 }
 
 /**
- * A curator or an admin, as the list finder narrows it.
+ * A curator or a keeper, as the list finder narrows it.
  *
  * @throws {Forbidden} the address is unverified, or the role is neither `curator` nor `admin`.
  */

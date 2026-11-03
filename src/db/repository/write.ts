@@ -300,7 +300,7 @@ export async function withAudit<T>(
   return db.transaction(async (tx) => {
     // The privilege trigger on `users` reads `app.current_user_id` as the ledger row's actor and refuses a privilege change
     // whose `app.privilege_route` is empty; the GUC is also what lets a history trigger and RLS arrive as one migration. **Do not
-    // remove it.** `app.impersonated_by` names the admin acting as `userId` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
+    // remove it.** `app.impersonated_by` names the keeper acting as `userId` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
     await publishActor(tx, {
       userId: session.userId,
       impersonatedBy: session.impersonatedBy,

@@ -7,7 +7,7 @@ import { E } from '../../support/as-user';
 import { insertDocument, insertDocumentVersion } from '../../support/db/insert-document';
 
 // What running the documents seed writes: each file as its document and published version 1, dated by its front matter, and
-// nothing once a document holds a version, so an admin's published text is never overwritten. The shape every seed shares —
+// nothing once a document holds a version, so a keeper's published text is never overwritten. The shape every seed shares —
 // stamps, idempotency, no resurrection, the dry run — is index.test.ts's; that the shipped files read clean is documents-files.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
@@ -91,7 +91,7 @@ describe('seedDocuments', () => {
   });
 
   it('never overwrites a document that already has a version, and still seeds the rest', async () => {
-    // An admin's document: renamed, and on its second published version.
+    // A keeper's document: renamed, and on its second published version.
     const id = await insertDocument(sql, { key: 'privacy', title: 'Fixture Edited' }, E.id);
     await insertDocumentVersion(sql, id, { number: 1, body: 'Fixture first.' }, E.id);
     await insertDocumentVersion(

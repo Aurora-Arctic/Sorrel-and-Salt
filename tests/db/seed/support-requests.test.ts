@@ -197,7 +197,7 @@ describe('the support request seed', () => {
       expect(active.map((r) => r.user_id)).not.toContain(expired[0].user_id);
     });
 
-    it('sets every time-out by an admin on a sender who has sent a request', async () => {
+    it('sets every time-out by a keeper on a sender who has sent a request', async () => {
       const bad = await sql`
         select t.id from support_timeouts t
         join users a on a.id = t.created_by

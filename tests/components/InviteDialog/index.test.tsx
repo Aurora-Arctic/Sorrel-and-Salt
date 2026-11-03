@@ -113,9 +113,9 @@ describe('InviteDialog', () => {
     const roles = within(dialog()).getByRole('group', { name: 'Role' });
     const radios = within(roles).getAllByRole('radio');
     expect(radios.map((radio) => (radio as HTMLInputElement).value)).toEqual(['viewer', 'member']);
-    expect(within(roles).getByRole('radio', { name: /Viewer/ })).toBeChecked();
-    expect(within(dialog()).queryByRole('radio', { name: /Owner/ })).toBeNull();
-    expect(within(dialog()).queryByRole('option', { name: /Owner/ })).toBeNull();
+    expect(within(roles).getByRole('radio', { name: /Observer/ })).toBeChecked();
+    expect(within(dialog()).queryByRole('radio', { name: /Steward/ })).toBeNull();
+    expect(within(dialog()).queryByRole('option', { name: /Steward/ })).toBeNull();
   });
 
   it('sends the address, trimmed, with the chosen role for this coven, then says so and refreshes the page behind it', async () => {
@@ -123,7 +123,7 @@ describe('InviteDialog', () => {
     open();
 
     type('  ada@example.test ');
-    fireEvent.click(within(dialog()).getByRole('radio', { name: /Member/ }));
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /Practitioner/ }));
     fireEvent.click(send());
 
     const sent = await screen.findByRole('status');

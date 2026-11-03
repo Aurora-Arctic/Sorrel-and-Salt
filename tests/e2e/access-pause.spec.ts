@@ -9,8 +9,8 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-// An admin pauses a user's access from the People page's user modal; the user still signs in, by password through the
-// sign-in page, into support and nothing else, told on every page they reach that they are paused, and once the admin lifts
+// A keeper pauses a user's access from the People page's user modal; the user still signs in, by password through the
+// sign-in page, into support and nothing else, told on every page they reach that they are paused, and once the keeper lifts
 // the pause the rest of the site opens (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
 
 test.beforeAll(async () => {

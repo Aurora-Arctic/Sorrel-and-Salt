@@ -1,7 +1,7 @@
 ## Spell visibility (M10.3)
 
 DESIGN.md §5: a `workspace` spell is readable by every member of its coven,
-viewers included; a `private` spell is readable by its **author alone**, owners
+observers included; a `private` spell is readable by its **author alone**, stewards
 not excepted. `spells.visibility` is a `spell_visibility` enum —
 `'private' | 'workspace'` — `NOT NULL DEFAULT 'workspace'`.
 
@@ -54,11 +54,11 @@ live spell: once the spell is marked, the steps' `EXISTS` no longer reaches them
 
 **Proved as one matrix, held by one guard (M10.6).**
 `tests/db/repository/readable-spells.test.ts` runs every relationship against
-both visibilities — the author, the owner, another member, a viewer, the author
-after demotion to viewer, a member of another coven by direct id, and the author
+both visibilities — the author, the owner, another practitioner, an observer, the author
+after demotion to observer, a member of another coven by direct id, and the author
 of a soft-deleted spell — and requires `findOneSpell` and `findManyInSpell` over
 both child tables to give the same answer in each cell.
-A site admin and a site curator are refused at the service, because
+A site keeper and a site curator are refused at the service, because
 `assertMembership` refuses anyone outside the coven before a finder runs: its
 site-admin arm is proved in `tests/modules/coven/services/membership.test.ts`,
 and `tests/db/workspace-isolation.test.ts` sweeps both roles across the
@@ -178,7 +178,7 @@ boundary. Each new method is a decision argued for in its own PR rather than
 a convenience.
 
 **`updateById` is the ninth** (MB.60), for the same reason on a table no proof
-scopes: the primary admin's promotion writes `users.role` by the signed-in
+scopes: the primary keeper's promotion writes `users.role` by the signed-in
 user's own id, and the service cannot build `id = $1` either. It is the
 unscoped twin, typed to refuse a table carrying `workspace_id`, so a scoped
 update cannot take this route around the proof.
@@ -203,8 +203,8 @@ nothing and returned as nothing. Like `updateByIdInWorkspace` it admits
 ### The spell service (M10.5)
 
 `src/modules/grimoire/services/spells.ts` is where a coven's members meet the
-grimoire. Owners and members hold `spell: create` and `update`, a viewer holds
-`read` alone, and `assertMembership` refuses everyone else, a site admin
+grimoire. Stewards and members hold `spell: create` and `update`, an observer holds
+`read` alone, and `assertMembership` refuses everyone else, a site keeper
 included.
 
 | Call                               | Does                                                                                                |

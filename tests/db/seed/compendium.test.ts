@@ -163,7 +163,7 @@ async function ingredientId(seedKey: string): Promise<string> {
   return row.id;
 }
 
-/** An admin's own compendium entry, which no seed wrote. */
+/** A keeper's own compendium entry, which no seed wrote. */
 async function insertAdminEntry(name: string, canonicalName: string): Promise<void> {
   await sql`
     insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
@@ -360,7 +360,7 @@ describe('seedCompendium', () => {
         ].map((table) => countOf(table, `where ingredient_id = '${id}'`)),
       );
 
-    it('by its seed key, after an admin renamed and retired it', async () => {
+    it('by its seed key, after a keeper renamed and retired it', async () => {
       await seedCompendium(db, fixtureFiles());
       const testwort = await ingredientId('fixtura testalis');
       await sql`
@@ -375,7 +375,7 @@ describe('seedCompendium', () => {
       expect(await compendiumRows()).toEqual(before);
     });
 
-    it('by a live identity an admin wrote, which is not stamped', async () => {
+    it('by a live identity a keeper wrote, which is not stamped', async () => {
       await insertAdminEntry('Admin Testwort', 'Fixtura testalis');
 
       await seedCompendium(db, fixtureFiles());
@@ -389,7 +389,7 @@ describe('seedCompendium', () => {
       expect(await countOf('ingredients', `where seed_key = 'fixtura exemplaris'`)).toBe(1);
     });
 
-    it('by a live slug an admin holds under another identity', async () => {
+    it('by a live slug a keeper holds under another identity', async () => {
       await insertAdminEntry('Testwort', 'Fixtura-testalis');
 
       await seedCompendium(db, fixtureFiles());
@@ -418,10 +418,10 @@ describe('seedCompendium', () => {
 
   // Retiring the picks changes the shared vocabularies, so this describe
   // seeds them afresh for whatever runs after it.
-  describe('with a pick an admin retired', () => {
+  describe('with a pick a keeper retired', () => {
     afterAll(seedSharedVocabularies);
 
-    it('skips a pick an admin retired: the form with all it carries, and the deity', async () => {
+    it('skips a pick a keeper retired: the form with all it carries, and the deity', async () => {
       await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'oil'`;
       await sql`update deities set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where seed_key = 'hecate'`;
 

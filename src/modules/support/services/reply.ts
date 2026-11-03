@@ -11,12 +11,12 @@ import { scheduleReplyNotice } from './retention-start';
 import { refuseAnonymised, requestToAnswer } from './staff';
 
 /**
- * Replies to a request and tells its sender one is waiting. An admin may reply to any request, a curator only to one assigned
+ * Replies to a request and tells its sender one is waiting. A keeper may reply to any request, a curator only to one assigned
  * to them. Marking the reply `waitingOnSender` moves an open request to waiting_on_sender; any other reply leaves the status alone.
  * The notice carries no reply text: the reply is read on the sender's support page, behind their sign-in. A signed-out sender, who has
  * no such page, is mailed the reply whole. Either goes out through a retried job, which stamps the reply once the mail is taken.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin, or a curator and the request is not assigned to them, or
+ * @throws {Forbidden} the session is neither a curator nor a keeper, or a curator and the request is not assigned to them, or
  * the reply is marked waiting on the sender and the request is not open, or the request is closed or anonymised (nothing is saved).
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.

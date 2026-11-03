@@ -8,11 +8,11 @@ export type PickerFormat = NonNullable<ColorPickerRootProps['format']>;
 /** The colour the picker holds, which the hex box is written from. */
 export type PickerColor = Color;
 
-/** A channel the admin types into: the three of whichever format is chosen. */
+/** A channel the keeper types into: the three of whichever format is chosen. */
 export type PickerChannel =
   'hue' | 'saturation' | 'brightness' | 'lightness' | 'red' | 'green' | 'blue';
 
-/** A format the admin can choose, its name, and the channels it is typed in. */
+/** A format the keeper can choose, its name, and the channels it is typed in. */
 export interface FormatOption {
   format: PickerFormat;
   name: string;

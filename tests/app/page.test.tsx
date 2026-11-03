@@ -60,7 +60,7 @@ describe('the / page', () => {
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
   });
 
-  it('continues a signed-in admin to the keepers area', async () => {
+  it('continues a signed-in keeper to the keepers area', async () => {
     getSession.mockResolvedValue({ userId: USER_ID, role: 'admin' });
 
     render(await HomePage());

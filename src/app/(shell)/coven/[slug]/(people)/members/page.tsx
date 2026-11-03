@@ -31,8 +31,8 @@ export const metadata: Metadata = {
 };
 
 // Who is in the coven and what each may do; a name opens the member's modal, which holds what the viewer may do
-// to them. A viewer gets the stranger's 404. The read is
-// `listMembers`, which GraphQL ends at too (rule 1). An address is an owner's alone, asked only when
+// to them. An observer gets the stranger's 404. The read is
+// `listMembers`, which GraphQL ends at too (rule 1). An address is a steward's alone, asked only when
 // the role holds `member: readEmail` and checked again by `memberEmails`.
 export default async function MembersPage({
   params,
@@ -57,7 +57,7 @@ export default async function MembersPage({
     throw error;
   }
 
-  // Read to the end, since one page of the list cannot say how many owners there are.
+  // Read to the end, since one page of the list cannot say how many stewards there are.
   const soleOwner =
     (await memberRoster(session, workspace)).filter(({ role }) => role === 'owner').length === 1;
 
@@ -142,8 +142,8 @@ export default async function MembersPage({
             frame, so the tabbed panel's own gap spaces it from the list. */}
         {soleOwner && (
           <Notice kind="warn" quiet>
-            This coven has one owner. If that person loses access, nobody can manage its members.
-            Make another member an owner to be safe.
+            This coven has one steward. If that person loses access, nobody can manage its members.
+            Make another member a steward to be safe.
           </Notice>
         )}
         <ListBody>

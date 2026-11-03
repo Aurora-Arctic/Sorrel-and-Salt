@@ -3,13 +3,17 @@ import type postgres from 'postgres';
 import { documentMailing } from '@/modules/documents/jobs/document-mailing';
 import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
+import {
+  insertDocument,
+  insertDocumentMailing,
+  insertDocumentVersion,
+} from '../../../support/db/insert-document';
 import { run } from '../../../support/graphql/run';
 
-// Emailing every account about a document, over the wire. This is the transport's half (claude-docs/testing/layer-ownership.md):
-// each field's shape, that a write hands the context's origin to the run it starts, and per field one refusal per error code.
-// Which roles are refused, and why, is services/document-mailing.test.ts's; the signed-out caller and the curator are refused at
-// the scope in tests/db/graphql-query-scopes.test.ts.
+// Emailing every account about the documents changed since the last email, over the wire. This is the transport's half
+// (claude-docs/testing/layer-ownership.md): each field's shape, that a write hands the context's origin to the run it starts, and
+// per field one refusal per error code. Which roles are refused, and why, is services/document-mailing.test.ts's; the signed-out
+// caller and the curator are refused at the scope in tests/db/graphql-query-scopes.test.ts.
 
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
@@ -19,7 +23,11 @@ vi.mock('@/lib/jobs', () => ({ startJob, jobTokenActive: vi.fn(async () => false
 const MAILING = /* GraphQL */ `
   fragment Mailing on DocumentMailing {
     id
-    versionNumber
+    documents {
+      key
+      title
+      versionNumber
+    }
     state
     reached
     recipientCount
@@ -30,13 +38,21 @@ const MAILING = /* GraphQL */ `
 
 const OVERVIEW = /* GraphQL */ `
   fragment Overview on DocumentMailingOverview {
-    versionNumber
+    pending {
+      documentId
+      versionId
+      key
+      title
+      versionNumber
+      inMailing
+    }
     accountCount
     days
-    current {
+    canSend
+    open {
       ...Mailing
     }
-    inProgress {
+    lastSent {
       ...Mailing
     }
   }
@@ -44,8 +60,8 @@ const OVERVIEW = /* GraphQL */ `
 `;
 
 const READ = /* GraphQL */ `
-  query DocumentMailing($key: String!) {
-    documentMailing(key: $key) {
+  query DocumentMailings {
+    documentMailings {
       ...Overview
     }
   }
@@ -53,8 +69,8 @@ const READ = /* GraphQL */ `
 `;
 
 const EMAIL = /* GraphQL */ `
-  mutation EmailDocumentToEveryAccount($documentId: ID!, $summary: String!) {
-    emailDocumentToEveryAccount(documentId: $documentId, summary: $summary) {
+  mutation EmailDocumentsToEveryAccount($summaries: [DocumentMailingSummaryInput!]!) {
+    emailDocumentsToEveryAccount(summaries: $summaries) {
       ...Overview
     }
   }
@@ -85,64 +101,78 @@ beforeEach(async () => {
   startJob.mockClear();
   await sql`truncate documents cascade`;
   documentId = await insertDocument(sql, { key: 'disclaimer', title: 'Fixture Disclaimer' }, E.id);
-  versionId = await insertDocumentVersion(sql, documentId, { number: 1 }, E.id);
+  await insertDocumentVersion(sql, documentId, { number: 1 }, E.id);
+  versionId = await insertDocumentVersion(sql, documentId, { number: 2 }, E.id);
 });
 
 const codeOf = (result: Awaited<ReturnType<typeof run>>) =>
   (result.errors?.[0]?.extensions as { code?: string } | undefined)?.code;
 
-describe('documentMailing', () => {
-  it('answers the published version, the accounts a mailing would reach, the days it would take, and no mailing yet', async () => {
-    const result = await run(asUser(E), READ, { key: 'disclaimer' });
+describe('documentMailings', () => {
+  it('answers the pending documents, the accounts a mailing would reach, the days it would take, and no mailing yet', async () => {
+    const result = await run(asUser(E), READ);
 
     expect(result.errors).toBeUndefined();
     expect(result.data).toEqual({
-      documentMailing: {
-        versionNumber: 1,
+      documentMailings: {
+        pending: [
+          {
+            documentId,
+            versionId,
+            key: 'disclaimer',
+            title: 'Fixture Disclaimer',
+            versionNumber: 2,
+            inMailing: false,
+          },
+        ],
         accountCount: expect.any(Number),
         days: expect.any(Number),
-        current: null,
-        inProgress: null,
+        canSend: true,
+        open: [],
+        lastSent: null,
       },
     });
   });
 
   it('answers FORBIDDEN to an account with no site role', async () => {
-    expect(codeOf(await run(asUser(A), READ, { key: 'disclaimer' }))).toBe('FORBIDDEN');
-  });
-
-  it('answers NOT_FOUND for a key with no document', async () => {
-    expect(codeOf(await run(asUser(E), READ, { key: 'terms' }))).toBe('NOT_FOUND');
+    expect(codeOf(await run(asUser(A), READ))).toBe('FORBIDDEN');
   });
 });
 
-describe('emailDocumentToEveryAccount', () => {
+describe('emailDocumentsToEveryAccount', () => {
   it('answers the mailing it started, sending and having reached no one, and starts its run on the context’s origin', async () => {
     const result = await run(
       asUser(E),
       EMAIL,
-      { documentId, summary: 'Fixture summary.' },
+      { summaries: [{ versionId, summary: 'Fixture summary.' }] },
       { documents },
     );
 
     expect(result.errors).toBeUndefined();
-    const overview = (result.data as { emailDocumentToEveryAccount: Record<string, unknown> })
-      .emailDocumentToEveryAccount;
-    expect(overview.current).toEqual({
-      id: expect.any(String),
-      versionNumber: 1,
-      state: 'sending',
-      reached: 0,
-      recipientCount: overview.accountCount,
-      startedAt: expect.any(String),
-      finishedAt: null,
-    });
-    const id = (overview.current as { id: string }).id;
+    const overview = (result.data as { emailDocumentsToEveryAccount: Record<string, unknown> })
+      .emailDocumentsToEveryAccount;
+    expect(overview.open).toEqual([
+      {
+        id: expect.any(String),
+        documents: [{ key: 'disclaimer', title: 'Fixture Disclaimer', versionNumber: 2 }],
+        state: 'sending',
+        reached: 0,
+        recipientCount: overview.accountCount,
+        startedAt: expect.any(String),
+        finishedAt: null,
+      },
+    ]);
+    const [{ id }] = overview.open as { id: string }[];
     expect(startJob).toHaveBeenCalledExactlyOnceWith(documentMailing, [id, ORIGIN]);
   });
 
   it('answers VALIDATION for a blank summary', async () => {
-    const result = await run(asUser(E), EMAIL, { documentId, summary: ' ' }, { documents });
+    const result = await run(
+      asUser(E),
+      EMAIL,
+      { summaries: [{ versionId, summary: ' ' }] },
+      { documents },
+    );
 
     expect(codeOf(result)).toBe('VALIDATION');
     expect(startJob).not.toHaveBeenCalled();
@@ -152,7 +182,7 @@ describe('emailDocumentToEveryAccount', () => {
     const result = await run(
       asUser(A),
       EMAIL,
-      { documentId, summary: 'Fixture forged.' },
+      { summaries: [{ versionId, summary: 'Fixture forged.' }] },
       { documents },
     );
 
@@ -164,11 +194,11 @@ describe('emailDocumentToEveryAccount', () => {
 describe('resumeDocumentMailing', () => {
   let pausedId: string;
   beforeEach(async () => {
-    const [row] = await sql`
-      insert into document_mailings (document_version_id, summary, status, recipient_count, created_by, updated_by)
-      values (${versionId}, 'Fixture summary.', 'paused', 0, ${E.id}, ${E.id})
-      returning id`;
-    pausedId = row!.id as string;
+    pausedId = await insertDocumentMailing(
+      sql,
+      { items: [{ versionId }], status: 'paused', recipient_count: 0 },
+      E.id,
+    );
   });
 
   it('answers the mailing sending again, and starts its run on the context’s origin', async () => {
@@ -176,7 +206,7 @@ describe('resumeDocumentMailing', () => {
 
     expect(result.errors).toBeUndefined();
     expect(result.data).toMatchObject({
-      resumeDocumentMailing: { current: { id: pausedId, state: 'sending' } },
+      resumeDocumentMailing: { open: [{ id: pausedId, state: 'sending' }] },
     });
     expect(startJob).toHaveBeenCalledExactlyOnceWith(documentMailing, [pausedId, ORIGIN]);
   });

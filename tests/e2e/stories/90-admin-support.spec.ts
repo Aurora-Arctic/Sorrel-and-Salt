@@ -5,7 +5,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
 
-// Story 90: an admin works through a support request on /keepers/support, and times its sender out. The sender's refused send
+// Story 90: a keeper works through a support request on /keepers/support, and times its sender out. The sender's refused send
 // is made through the API with the sender's own session, since the form that sends one is story 89's.
 
 test.beforeAll(async () => {
@@ -14,7 +14,7 @@ test.beforeAll(async () => {
 
 const ISSUES = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues';
 
-test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@story-90' }, () => {
+test.describe('Story 90: A Keeper Works Through a Support Request', { tag: '@story-90' }, () => {
   test('an admin replies, assigns, shares, links an issue, resolves and times a sender out', async ({
     page,
     browser,

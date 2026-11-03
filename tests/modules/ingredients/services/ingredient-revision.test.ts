@@ -145,7 +145,7 @@ describe("a coven ingredient's save", () => {
 });
 
 describe("a compendium entry's save", () => {
-  it('refuses a stale revision with StaleWrite, for an admin and a curator, and writes nothing', async () => {
+  it('refuses a stale revision with StaleWrite, for a keeper and a curator, and writes nothing', async () => {
     const made = await createCompendiumEntry(asUser(E), compendiumInput());
     await updateCompendiumEntry(
       asUser(F),

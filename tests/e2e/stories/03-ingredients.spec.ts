@@ -341,7 +341,7 @@ test(
     });
 
     await test.step('the low-stock filter keeps the low rows, in the address', async () => {
-      // `lowStockOnly`, a switch as the admin's Without References is
+      // `lowStockOnly`, a switch as the keeper's Without References is
       // (claude-docs/components/compendium-list.md); "Low Stock Only" is this spec's choice.
       const panel = await openFilters(page);
       await panel.getByRole('switch', { name: 'Low Stock Only' }).click();

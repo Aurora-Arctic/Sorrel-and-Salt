@@ -384,7 +384,7 @@ async function ingredientWithForm(
   const ingredientId = await insertIngredient(
     sql,
     makeIngredient({ workspaceId, name, nomenclature: 'none', variants: [makeVariant()] }),
-    // The compendium's rows are the admin's to write.
+    // The compendium's rows are the keeper's to write.
     workspaceId === null ? E.id : author.id,
   );
   return { ingredientId, variantId: await variantIdOf(sql, ingredientId, 'Testform') };

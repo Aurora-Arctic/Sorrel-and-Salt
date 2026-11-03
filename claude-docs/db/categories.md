@@ -10,12 +10,12 @@ pgEnum that could not take a ninth group.
 - **`categories`** — `groupId` an FK to `category_groups`; §6 seeds 52.
   **No colour of its own** — see below.
 - **`category_groups`** — `color`; §6 seeds eight, and
-  an admin may add more.
+  a keeper may add more.
 - **`ingredient_forms`** — as in the [identity section](identity-model.md), with `groupId`
   (FK to `ingredient_form_groups`) in place of the earlier `group` text.
 - **`ingredient_form_groups`** — seeds §5's six; no colour (§5); each carries an `icon`, one of six icon names or NULL for the generic (M12.6).
 
-Each is global and admin-curated, carries the columns §5 lists, and lists
+Each is global and keeper-curated, carries the columns §5 lists, and lists
 alphabetically by `name`.
 
 A category reaches an ingredient through
@@ -23,7 +23,7 @@ A category reaches an ingredient through
 [`spell_categories`](spell-categories.md) (M10.4), both join tables and so both
 hard-deleted — each has its own section.
 
-**Groups are rows, not enums, because an admin mutation cannot run DDL** —
+**Groups are rows, not enums, because a keeper mutation cannot run DDL** —
 the argument, and why there is no order column, is §14's.
 
 **Two group tables, not one with a `kind` column**, so a category pointing at
@@ -31,7 +31,7 @@ a form group is a foreign-key violation rather than an empty chip section
 (§5, §14).
 
 **Both `groupId`s are foreign keys, and a variant's `form` is not — that is
-a rule, not an inconsistency**: a member writes `form`, and only admins write
+a rule, not an inconsistency**: a member writes `form`, and only keepers write
 either side of a group link (§5, §14).
 
 **A group's colour is §5's pair of hexes on the row, not a build-time
@@ -50,7 +50,7 @@ not a CHECK constraint, because the failure needs a readable message and the
 ground to compare against:
 `colorDark` is checked against the dark card only, `colorLight` against
 the light page, the harder of each theme's two surfaces, so each floor is
-exact and holds wherever a chip sits (MB.36). What an admin adds is legible in both
+exact and holds wherever a chip sits (MB.36). What a keeper adds is legible in both
 themes but does not join the rotation — the accepted cost of an open set,
 stated in §6 rather than glossed.
 
@@ -93,7 +93,7 @@ in favour of MB.35's slug-only rule for two reasons: a unique index on `name`
 is case-sensitive, so it would still admit "Root" beside "root" — two
 identical strings once `ingredient_variants_form_unique` lowercases `form` — and _wax_ is
 legitimately both a part of the bee and a preparation of it, which the index
-would force an admin to rename their way out of. **The disambiguation moved to
+would force a keeper to rename their way out of. **The disambiguation moved to
 the autofill instead**, as §5 specifies: M4.7a returns each curated
 suggestion's group and M5.10a renders it, and MB.165 keeps a pick, as
 a variant's `form_id` beside the text. The schema test asserts the same-named pair is _accepted_, so
@@ -173,7 +173,7 @@ first.` The entries are read through the compendium's own category filter,
   the category.
 - **A coven's links never block the delete, and the delete removes no link.**
   The links in `ingredient_categories` and `spell_categories` belong to the
-  covens, and an admin writes nothing of a coven's (M6.6). Every read already
+  covens, and a keeper writes nothing of a coven's (M6.6). Every read already
   drops a deleted category: `categoriesOf` reads the link, then the category
   through `findManyByIds`, which filters it. A coven's ingredient therefore
   stops showing the chip and keeps the link, which a v2 restore would bring
@@ -235,7 +235,7 @@ keep it one after the write.
 - **A coven's ingredient is never written.** One whose variant picked the
   form keeps its `form_id` and its text through a rename, and through a
   delete reads its form as no pick, its text moving into that coven's in-use
-  values. An admin writes nothing of a coven's (M6.6). A pick whose row was
+  values. A keeper writes nothing of a coven's (M6.6). A pick whose row was
   renamed since is the member's to settle, on M8.17's modal.
 - **The clash check reads before the transaction**, as the category delete's
   does; the carry itself matches `form_id` in its one statement, so a variant
@@ -317,7 +317,7 @@ Each write expires the `compendium` tag once it has committed (M8.7;
 
 ## Category group service details
 
-`src/modules/vocabulary/services/category-groups.ts` holds the category groups: public reads, and writes for a curator or an admin alone (claude-docs/design-decisions/m5.6b-admin-groups.md).
+`src/modules/vocabulary/services/category-groups.ts` holds the category groups: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/m5.6b-admin-groups.md).
 
 - Each colour is held to 4.5:1 against its own theme's harder surface by the input schema, on its own column.
 - A category's slug is its own name alone, so a group's rename touches no category. A group is deleted only once its live categories have somewhere to go: the admin names a group (`moveTo`) and they move there in the same write, since a category under a deleted group is read by nothing yet still holds its address. Their slugs and every link to them, a compendium entry's or a coven's, stay as they were. A group with no live category needs no `moveTo`.
@@ -328,8 +328,8 @@ Each write expires the `compendium` tag once it has committed (M8.7;
 
 Facts the comments in `src/modules/vocabulary/schema/` and `validation/` cite.
 
-- **Not foreign key targets.** The astrology, deity and form vocabularies are deliberately not foreign key targets for the ingredient text columns that draw on them: a member must be able to write `Eris`, a god or `rhizome` before anyone curates it. A pick is keyed beside its text (`ingredient_deities.deity_id`, `ingredient_variants.form_id`). A parent key such as `traditionId` or `groupId` can be a real key because only an admin writes it.
+- **Not foreign key targets.** The astrology, deity and form vocabularies are deliberately not foreign key targets for the ingredient text columns that draw on them: a member must be able to write `Eris`, a god or `rhizome` before anyone curates it. A pick is keyed beside its text (`ingredient_deities.deity_id`, `ingredient_variants.form_id`). A parent key such as `traditionId` or `groupId` can be a real key because only a keeper writes it.
 - **Astrology.** Two tables rather than one with a `kind`, so a suggestion query has no predicate to forget. One tier, no colour, and a nullable `position` that sets where a facet lists a row: calendar order for signs, Sun outward for bodies, null for any a curator adds, which sort after by name. The description is search surface served by the trigram index: Lilith's carries "Black Moon".
-- **Category groups.** A table rather than an enum so an admin can add a ninth without DDL. Two colours, because one hex cannot clear 4.5:1 on both grounds; stored as hexes because a runtime group has no build-time Sass token. No CHECK on the contrast: the service (and the form, before the request) validates, so the refusal can name the column and the ratio. Refused, never corrected, as `unitConvert` refuses. No order column: groups list alphabetically. The slug is unique alone because two groups may both display "Protection". A category's slug is unique globally rather than per group, because a chip filter and the seed's idempotency key both read the slug alone; it carries no `workspaceId` and no colour of its own, which makes assigned-versus-derived comparable.
+- **Category groups.** A table rather than an enum so a keeper can add a ninth without DDL. Two colours, because one hex cannot clear 4.5:1 on both grounds; stored as hexes because a runtime group has no build-time Sass token. No CHECK on the contrast: the service (and the form, before the request) validates, so the refusal can name the column and the ratio. Refused, never corrected, as `unitConvert` refuses. No order column: groups list alphabetically. The slug is unique alone because two groups may both display "Protection". A category's slug is unique globally rather than per group, because a chip filter and the seed's idempotency key both read the slug alone; it carries no `workspaceId` and no colour of its own, which makes assigned-versus-derived comparable.
 - **Deity traditions and deities.** A tradition is `ingredient_form_groups` in shape: a people or a religion, never a region; no colour (it labels a suggestion, not a chip); no order column; no trigram index. A deity's slug is unique globally rather than per tradition, and its display name is deliberately unindexed: one god honoured under two traditions is two rows, and the autofill tells them apart by tradition. The description and `deity_other_names` are search surface. Other names are rows rather than `text[]` because a `text` row takes a trigram index; full `auditColumns`, so removing one leaves a tombstone. The deity input's `otherNames` is the whole list the form shows, each trimmed, an absent list read as empty, because a save brings the stored names to the list sent; the schema has no refinement so the form can still `omit` and `extend` it.
 - **Forms and form groups.** A form group sections a dropdown rather than colouring a chip, so it has no colour pair; it carries the icon that stands for it, as data on the row, and a NULL `icon` is the generic icon. The icon is an enum rather than a CHECK because adding one is then `ALTER TYPE … ADD VALUE`, expand-only. The form slug is unique globally rather than per group, and the display name is unindexed: two live forms may both be "Wax". The trigram index lets the autofill match a description as well as a name: typing `salve` offers Ointment. The icon list is written once in `schema/form-group-icons.ts`, which imports nothing, so a client component can reach it; the generic icon is not in it. A group's input takes the icon as one of the six or none (null and absent both mean none, since the service writes the group whole).

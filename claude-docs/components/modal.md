@@ -3,7 +3,7 @@
 `src/components/Modal/` — a dialog over the page (M5.6), the project's first.
 It is the native `<dialog>` in its modal mode, with the `.modal` primitive's
 surface and a heading that names it. M5.6's category page opens it from the
-address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
+address; M8.16, M8.17 and M7.4 are its next stewards. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
 | File                       | What it holds                                                                                   |
@@ -45,7 +45,7 @@ is the wrapper every admin page opens it through (below).
 
 - **Open is a mount, closed is an unmount.** The effect calls `showModal()`
   when the component mounts and `close()` when it unmounts. No prop says
-  whether it is open. An owner shows the modal by rendering it.
+  whether it is open. A steward shows the modal by rendering it.
 - **The owner decides when it closes.** Close and Escape both call `onClose`,
   and Escape's `cancel` event is `preventDefault`ed, so the element never
   shuts itself. A URL-driven modal closes by navigating away from its address.
@@ -154,7 +154,7 @@ and a Modal's owner closes it by unmounting it, so Modal does it instead
    hidden. An item of a menu that has since closed is still on the page but
    hidden, so it counts as gone.
 3. **If the opener is gone**, it asks its owner's `returnTo` for a place.
-   An owner whose opener sits in a menu that closed, or is drawn afresh,
+   A steward whose opener sits in a menu that closed, or is drawn afresh,
    names its trigger there: `ModalButton` its button, Add Ingredient the
    page's main area, `CupboardActions` its menu's button.
    `RouteModal` (a dialog opened by its address, such as `?edit`) looks for
@@ -201,7 +201,7 @@ user modal) never reaches step 4: the modal stays open, and the overlay
 gives the focus back inside it.
 
 A modal that left the focus somewhere else, on a page it navigated to, say,
-is left alone: the return never steals the focus. An owner never calls
+is left alone: the return never steals the focus. A steward never calls
 `.focus()` to bring the focus back itself.
 The lint rule `sorrel/modal-focus-return-through-modal` (`lint/source-sweeps.js`) fails a file that draws a dialog and
 does, bar three named exceptions: the Filters panel (`FacetPanel`), a
@@ -382,7 +382,7 @@ owner's call of 2026-10-20) are drawn through it, never a second dialog.
   The cell is as tall as the taller of the two, so a short form's dialog
   grows to hold a question rather than scrolling it. Outside a modal there
   is no layer, and the card stands in the form's flow with no scrim
-  (`.confirm-overlay--in-place`); every admin form is in a modal.
+  (`.confirm-overlay--in-place`); every keeper form is in a modal.
 - **The form behind is held.** As the card comes, the modal sets `inert` on
   its body and on the control beside its title, so Tab, a click and typing
   cannot reach the form until the question is answered; the scrim, the
@@ -624,8 +624,8 @@ Coven. `ModalButtonProps` (`types.ts`):
 | `ariaLabel` | The button's name where its text repeats down a list: "Edit Stock, Rosemary"                   |
 | `tip`       | A tip over an icon button, "Edit Stock" over the pencil; it wraps the button, never the dialog |
 | `size`      | As `Modal`'s                                                                                   |
-| `ref`       | The button, for an owner that anchors something to it: a ClickFeedback callout                 |
-| `onOpen`    | Runs on the press before the modal opens, where an owner clears an earlier refusal             |
+| `ref`       | The button, for a steward that anchors something to it: a ClickFeedback callout                |
+| `onOpen`    | Runs on the press before the modal opens, where a steward clears an earlier refusal            |
 | `children`  | A function of the modal's close, so a form can close it once it has sent                       |
 
 It gives the focus back through Modal's own return
@@ -651,7 +651,7 @@ the ingredient, so the dialog is named as the button is.
 
 The shell’s Add Ingredient control (`AppShell/add-ingredient-button.tsx`,
 M8.16) opens a `Modal` holding an `IngredientForm` for one coven. A
-_destination_ is the compendium (for a viewer who can curate) or a coven the
+_destination_ is the compendium (for an observer who can curate) or a coven the
 viewer may write to; a coven they may only read is never one. With one
 destination the control is a plain button. With two or more it is a split
 button: the main part opens the default destination, and a chevron (`Choose

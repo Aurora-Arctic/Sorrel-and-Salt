@@ -24,7 +24,7 @@ warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
 // What the editor does around a write: a publish reads the page again, so what the page drew from the server (the version
-// number, the mailing panel) describes the version just published; and typed text is not lost to a link, a tab close or a reload.
+// number) describes the version just published; and typed text is not lost to a link, a tab close or a reload.
 
 beforeEach(() => {
   router.push.mockClear();
@@ -61,7 +61,7 @@ async function renderOnPage({ revision = null }: { revision?: number | null } = 
   return screen.findByRole('textbox', { name: 'Document Text' });
 }
 
-/** Changes the text as an admin does, by bolding a word, and waits until the editor reads it as unsaved. */
+/** Changes the text as a keeper does, by bolding a word, and waits until the editor reads it as unsaved. */
 async function change(text: HTMLElement): Promise<void> {
   const node = document.createTreeWalker(text, NodeFilter.SHOW_TEXT).nextNode() as Text;
   const range = document.createRange();

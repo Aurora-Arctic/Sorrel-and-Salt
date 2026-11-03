@@ -4,7 +4,7 @@ import type { WorkspaceRole } from '@/modules/coven';
 // (DESIGN.md §5, the roles table). A statement of the role, never a rank.
 export const WORKSPACE_ROLE_ACCESS: Record<WorkspaceRole, string> = {
   owner:
-    'Everything a member can do, plus inviting and removing people, changing roles, renaming the coven and deleting it.',
+    'Everything a practitioner can do, plus inviting and removing people, changing roles, renaming the coven and deleting it.',
   member: 'Reads and writes the ingredients and the grimoire, and sees who else is in the coven.',
-  viewer: 'Reads only. A viewer writes nothing.',
+  viewer: 'Reads only. An observer writes nothing.',
 };

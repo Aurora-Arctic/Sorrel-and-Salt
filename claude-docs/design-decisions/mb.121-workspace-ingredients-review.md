@@ -18,15 +18,15 @@ run, not an agent's. The work is committed on
 
 ## The owner's answers (2026-10-23)
 
-| Question                                        | Answer                                                                    |
-| ----------------------------------------------- | ------------------------------------------------------------------------- |
-| Keep the focus-ring commit                      | Keep it                                                                   |
-| Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                      |
-| A viewer's empty cupboard                       | Add "A member or owner of this coven can add them." Built in this branch  |
-| The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                  |
-| Remove the mocks                                | Yes: removed 2026-10-23                                                   |
-| Proposal P1, the symbol on the shelf            | P1, the symbol                                                            |
-| Stock set apart more clearly                    | C plus A, 2026-10-23: Stock first, and a rule under every section heading |
+| Question                                        | Answer                                                                           |
+| ----------------------------------------------- | -------------------------------------------------------------------------------- |
+| Keep the focus-ring commit                      | Keep it                                                                          |
+| Wrap Tab inside the Edit Stock dialog by script | No: keep the browser's own behaviour                                             |
+| An observer's empty cupboard                    | Add "A practitioner or steward of this coven can add them." Built in this branch |
+| The empty page announcing its state three times | Leave it; noted for the M9.1 story audit                                         |
+| Remove the mocks                                | Yes: removed 2026-10-23                                                          |
+| Proposal P1, the symbol on the shelf            | P1, the symbol                                                                   |
+| Stock set apart more clearly                    | C plus A, 2026-10-23: Stock first, and a rule under every section heading        |
 
 ## What was changed
 
@@ -44,7 +44,7 @@ run, not an agent's. The work is committed on
 | A viewer's empty cupboard says which roles can add                                                | Owner's answer                | No                   |
 
 Behaviour is unchanged by all of them: no press, route, name or saved value
-differs. The viewer's added line changes what a viewer reads, nothing else.
+differs. The viewer's added line changes what an observer reads, nothing else.
 
 ## The Stock section without its panel
 
@@ -148,7 +148,7 @@ icon is now in, and the word (P1b) stays out.
 
 **The mocks were removed on 2026-10-23, at the owner's word.** The Storybook
 stories under `Proposals / MB.121` (`.storybook/mb121-proposals.stories.tsx`
-and its stylesheet) showed the shelf before P1, P1, P1b, P1c and a viewer's
+and its stylesheet) showed the shelf before P1, P1, P1b, P1c and an observer's
 empty cupboard. They are deleted, with `$mb121-mock-mark-stroke`, the token
 only P1c used. P1 is shown by the real `JarShelf`, `StockBadge` and
 `IngredientEntry` stories, and the viewer's line by the `CovenCards` story
@@ -170,7 +170,7 @@ only P1c used. P1 is shown by the real `JarShelf`, `StockBadge` and
   dialog of the section: the list, the filters, the Edit Stock dialog (opened,
   and with an unsaved change), Quick Look, the edit dialog, the delete
   question, the entry page (a compendium entry and the coven's own), the empty
-  cupboard and its Add dialog, a search with no match, and a viewer's list and
+  cupboard and its Add dialog, a search with no match, and an observer's list and
   entry page. Each in the light and the dark theme, at 1280px and 375px wide:
   56 runs.
 - **Sideways scroll:** the same 56 runs measured the page's scroll width
@@ -236,18 +236,18 @@ wrapping by hand is the trap code the Modal deliberately does without
 
 ### A viewer's empty cupboard
 
-A viewer, who may add nothing, sees only "There are no ingredients here yet."
+An observer, who may add nothing, sees only "There are no ingredients here yet."
 Kaplan's first guideline for empty states is to "tell the user what could be
-displayed, and how to populate the area".[^kaplan] A viewer cannot populate it,
-but can be told who can. A mock, since removed, added "A member or owner of
+displayed, and how to populate the area".[^kaplan] An observer cannot populate it,
+but can be told who can. A mock, since removed, added "A practitioner or steward of
 this coven can add them."
 
-**The owner's answer (2026-10-23): add the line.** It tells a viewer the empty
+**The owner's answer (2026-10-23): add the line.** It tells an observer the empty
 cupboard is not a fault and who to ask. Built: `CovenCards/empty.tsx` draws it
 in the `No Ingredients` region in place of the Add Ingredient button when the
 viewer cannot add, and the `Empty For A Viewer` story shows it
 ([`coven-cards.md`](../components/coven-cards.md), "The empty and no-match
-states"). The test checks that a viewer's region names the roles that can add
+states"). The test checks that an observer's region names the roles that can add
 and a member's does not: the roles named are the only thing that tells the
 state apart, which is the exception in
 [`layer-ownership.md`](../testing/layer-ownership.md), "What a test may
@@ -284,7 +284,7 @@ not;[^baymard] the sentence is that overview. No change.
 | Criterion                                                                 | How it is met                                                                                                                                             |
 | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A jar being edited reads differently, and an unsaved change shows         | The chosen jar's fill and `aria-current`; "Edited" beside a changed jar                                                                                   |
-| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; a viewer is told which roles can add                                                 |
+| The empty state says what to do next                                      | "There are no ingredients here yet." with the Add Ingredient button; an observer is told which roles can add                                              |
 | The Stock section has no `.panel`, and the record says what sets it apart | Removed; it is the first section and every section's h2 has a short hairline rule, with the side column beside it ("The Stock section without its panel") |
 | The DRY merges are listed                                                 | "The DRY merges", above                                                                                                                                   |
 | Each jar and amount button has a distinct name and description            | "Names a screen reader can tell apart", above                                                                                                             |

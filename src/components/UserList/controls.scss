@@ -21,7 +21,7 @@
   margin-block: space(5) space(6);
 }
 
-// The primary admin's Revoke and the tip saying why it cannot be used, the
+// The primary keeper's Revoke and the tip saying why it cannot be used, the
 // tip placed against this wrapper.
 .user-list__locked {
   @include tip-anchor;

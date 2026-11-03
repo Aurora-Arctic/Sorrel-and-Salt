@@ -174,7 +174,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // An old address opens the entry at its new one, keeping the search.
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
-  // The review switch's read, for a curator or admin only: per viewer, never inside the cached
+  // The review switch's read, for a curator or keeper only: per viewer, never inside the cached
   // reads, so no review date reaches anyone else from here. The entry's own badge is in the cached read.
   const reviewOf = async (id: string | undefined) => {
     if (!canEdit || !id) return undefined;
@@ -202,14 +202,14 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     categories: new Map(categories.map((category) => [category.id, category])),
   });
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
-  // in its address, so the default is the first the viewer may write in. A viewer-only account and a
+  // in its address, so the default is the first the viewer may write in. An observer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
   const mine = viewer?.workspaces.map(({ id, name, paused }) => ({ id, name, paused })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
   // What the role in each of those covens permits, for the three dots on the cards and in the
-  // window: one read, per request, for both, and none for a visitor or a viewer.
+  // window: one read, per request, for both, and none for a visitor or an observer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
   // Asked of every coven, not only the writable ones, for the holding count; read only where
   // there is a plus or a check to count on. Not of a paused one: its read is refused, which
@@ -270,7 +270,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         holding: mine.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ name }) => name),
       }),
       // The three dots: the covens that hold it and let the viewer annotate, make it theirs or
-      // remove it. None for a visitor, a viewer and a coven without the entry.
+      // remove it. None for a visitor, an observer and a coven without the entry.
       places: cardPlacesOf(
         cardCovens,
         (id) => held?.get(id)?.has(node.id) === true,

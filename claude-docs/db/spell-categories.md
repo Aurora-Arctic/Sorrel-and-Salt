@@ -23,7 +23,7 @@ nothing can: the two are the same pair of columns pointing at the same
 - **Both sides are foreign keys** — `spell_categories_spell_id_spells_id_fk` and
   `spell_categories_category_id_categories_id_fk`. `categories` is referenced by
   **id**, unlike the free text `spells` uses for moon phase and wax colour:
-  §5's rule is that a vocabulary a member writes is text and one only an admin
+  §5's rule is that a vocabulary a member writes is text and one only a keeper
   writes is a foreign key, and a link has no vocabulary question to ask. The
   test proves which table each key names rather
   than asserting it twice — a real category id in the spell column is refused,

@@ -7,9 +7,9 @@ invitations it leaves, each with its address, its reason, when it expires and
 **Revoke**, and the pager beneath them. Render-only: the page reads the
 filter and the cursor off its address (`invitations/filter.ts`), one page of
 the list and its count through `listPendingAdminInvitations` and
-`countPendingAdminInvitations` under them, and whether this admin is held by
+`countPendingAdminInvitations` under them, and whether this keeper is held by
 the pause (`invitations/lock.ts`), and hands them down. The rules are
-[`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
+[`auth/admin-users.md`](../auth/admin-users.md), "Inviting a keeper".
 
 ## Contracts
 
@@ -63,7 +63,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `previousHref` and `nextHref`, the pager's ends, each absent where there
   is no page; `position`, the pager's `{ page, pages }`;
   `locked`, the pause's reason (`ADMIN_CHANGES_PAUSED_REFUSAL`) while
-  admin changes are paused and this admin is not the primary one, absent
+  keeper changes are paused and this keeper is not the primary one, absent
   otherwise; and `inviting`, whether the address is `?invite`. The page
   sets `locked` from `adminRoleChangePauseState`, paused and not
   `canToggle`, and `inviting` only while not locked. `InviteAdmin` takes
@@ -83,7 +83,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `RadioGroupField` ([`field.md`](field.md)) offering Curator and Admin,
   each with the line Change Role shows beside it (`UserList/roles.ts`'s
   `SITE_ROLE_ACCESS`), Curator chosen to begin with so that granting the
-  People page is a choice the admin makes; and a **Reason**, labelled plainly: a field
+  People page is a choice the keeper makes; and a **Reason**, labelled plainly: a field
   is optional unless it carries the required mark, so no label says
   "(Optional)". What it is for, "Kept with the invitation, and in the record
   of who changed what once it is accepted.", is its hint, behind an
@@ -104,7 +104,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   this component's state, set by the form before it closes, so the notice
   outlasts `?invite` without the address riding in the URL; opening the
   form again clears it. No link is ever shown: the mutation answers none.
-- **No invitation waiting is a sentence**: "There are no admin
+- **No invitation waiting is a sentence**: "There are no keeper
   invitations yet." Under a filter it names the filters in use, as the user list's
   and the compendium's do, through the one wording `noMatchText`
   (`src/lib/text.ts`): "No invitations match “fern” and Expires in 24 Hrs.
@@ -178,7 +178,7 @@ revokes against the built server, with axe.
 
 ## The Invitations tab
 
-`/keepers/invitations` is the People page's Invitations tab. It shows a filter by address and by expiry within 24 hours, a page of the pending invitations the filter leaves (address, site role granted, reason, expiry, Revoke), the pager, and the invite form that `?invite` opens over them. New Invitation is the tab's action, beside the heading. While admin changes are paused both are in view but locked for any admin but the primary one, with the pause as the reason. The confirmation and the locked control are the user list's own, each bringing its own rules.
+`/keepers/invitations` is the People page's Invitations tab. It shows a filter by address and by expiry within 24 hours, a page of the pending invitations the filter leaves (address, site role granted, reason, expiry, Revoke), the pager, and the invite form that `?invite` opens over them. New Invitation is the tab's action, beside the heading. While keeper changes are paused both are in view but locked for any keeper but the primary one, with the pause as the reason. The confirmation and the locked control are the user list's own, each bringing its own rules.
 
 The region is named as a heading would name it, though it shows none: the page's heading and open tab already say what it holds, and the name keeps the sent notice and the rows findable as one. The sent notice is this component's state, set before the form closes, so it outlasts `?invite` and names the address without carrying it in one.
 

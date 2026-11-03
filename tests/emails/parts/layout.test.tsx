@@ -134,8 +134,18 @@ const MAILS: {
       documentUpdatedMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/terms`,
-        title: 'Terms of Service',
-        summary: 'We changed how we describe refunds.',
+        documents: [
+          {
+            title: 'Terms of Service',
+            summary: 'We changed how we describe refunds.',
+            url: `${ORIGIN}/terms`,
+          },
+          {
+            title: 'Privacy Policy',
+            summary: 'We name the mail provider.',
+            url: `${ORIGIN}/privacy`,
+          },
+        ],
         asksAgreement: true,
       }),
   },

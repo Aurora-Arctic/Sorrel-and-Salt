@@ -11,7 +11,7 @@ import type { ReferenceNode } from './types';
 
 // Over the wire: a reference's two writes, its read by id, the picker's search, `Ingredient.references` and the compendium's to-do filter (the transport's half, claude-docs/testing/layer-ownership.md).
 // That is the tier the `workspaceId` argument names, the loader cleared by a write, the filter reaching the read, and one refusal per error code per field.
-// Roles, the tier rule and the order are references.test.ts's and ingredient-references.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
+// Roles, the tier rule and the order are references.test.ts's and ingredient-references.test.ts's; signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -62,7 +62,7 @@ describe('createReference', () => {
     });
   });
 
-  it('writes a compendium reference for a site admin, with no workspaceId', async () => {
+  it('writes a compendium reference for a site keeper, with no workspaceId', async () => {
     const result = await run<{ createReference: ReferenceNode }>(asUser(E), CREATE, {
       input: WEB_PAGE,
     });

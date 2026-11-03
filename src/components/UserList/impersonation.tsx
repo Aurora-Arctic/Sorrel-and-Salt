@@ -5,7 +5,7 @@ import { impersonateUser } from '../../lib/auth-client';
 // it: the users list's row button and the user modal's action. One
 // wording and one send, so the two cannot drift apart.
 
-/** Where an admin lands as the user: a full load of the home page. */
+/** Where a keeper lands as the user: a full load of the home page. */
 export const IMPERSONATION_LANDING = '/';
 
 /** The question both ask before acting as someone else. */

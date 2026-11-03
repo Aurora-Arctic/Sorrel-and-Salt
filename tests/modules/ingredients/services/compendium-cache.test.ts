@@ -84,7 +84,7 @@ describe('the compendium read is cached under the compendium tag', () => {
 describe('the compendium facets are cached under the compendium tag', () => {
   const forms = async () => (await compendiumFacets({})).forms;
 
-  it('answers a repeat read from the cache, and reads Postgres again after an admin delete', async () => {
+  it('answers a repeat read from the cache, and reads Postgres again after a keeper delete', async () => {
     const deleting = await seed('Fixture Alpha');
     expect(await forms()).toEqual([{ value: 'Testform', count: 1 }]);
 

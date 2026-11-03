@@ -91,7 +91,7 @@ describe('the /coven/[slug] layout', () => {
     const noticeWith = (text: RegExp) =>
       screen.queryAllByRole('status').find((el) => text.test(el.textContent ?? '')) ?? null;
     const demoNotice = () => noticeWith(/This is a demo coven/);
-    const ownerNotice = () => noticeWith(/You own this coven as a site admin/);
+    const ownerNotice = () => noticeWith(/You are a steward of this coven as a Keeper/);
     const renderLayout = async () =>
       render(
         await CovenLayout({ children: <p>The page itself</p>, params: params('fixture-coven') }),

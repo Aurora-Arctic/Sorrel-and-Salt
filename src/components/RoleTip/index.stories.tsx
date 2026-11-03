@@ -8,9 +8,9 @@ const meta = { title: 'Lists / Role Tip', component: RoleTip } satisfies Meta<ty
 export default meta;
 
 export const SiteAdmin: StoryObj<typeof RoleTip> = {
-  args: { label: 'Admin', description: SITE_ROLE_ACCESS.admin, emphasis: true },
+  args: { label: 'Keeper', description: SITE_ROLE_ACCESS.admin, emphasis: true },
 };
 
-export const CovenViewer: StoryObj<typeof RoleTip> = {
-  args: { label: 'Viewer', description: WORKSPACE_ROLE_ACCESS.viewer },
+export const CovenObserver: StoryObj<typeof RoleTip> = {
+  args: { label: 'Observer', description: WORKSPACE_ROLE_ACCESS.viewer },
 };
