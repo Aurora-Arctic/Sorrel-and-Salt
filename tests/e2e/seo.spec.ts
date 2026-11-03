@@ -66,6 +66,50 @@ test('canonicals are absolute, carry no query string, and name the page they sit
   expect(new URL(canonicalOf(filtered)).search).toBe('');
 });
 
+test('a later page of the list names itself, and a Quick Look its entry, as canonical', async ({
+  request,
+}) => {
+  const list = await (await request.get('/compendium')).text();
+  // The pager's Next link, and the first card's Quick Look, as the list serves them.
+  const next = /href="(\/compendium\?after=[^"]+)"/.exec(list)?.[1]?.replace(/&amp;/g, '&');
+  const quickLook = /href="(\/compendium\?entry=[^"]+)"/.exec(list)?.[1]?.replace(/&amp;/g, '&');
+  expect(next).toBeDefined();
+  expect(quickLook).toBeDefined();
+
+  const later = canonicalOf(await (await request.get(next!)).text());
+  expect(new URL(later).pathname + new URL(later).search).toBe(next);
+
+  const opened = new URL(canonicalOf(await (await request.get(quickLook!)).text()));
+  expect(opened.pathname).toMatch(/^\/compendium\/ingredients\/[^/]+$/);
+  expect(opened.search).toBe('');
+  expect((await request.get(opened.pathname)).status()).toBe(200);
+});
+
+// The seed publishes each document as version 1, so its version page is the current version.
+test('a version page is titled with its document and number, the current one canonical to the document', async ({
+  request,
+}) => {
+  const html = await (await request.get('/terms/versions/1')).text();
+  expect(titleOf(html)).toMatch(/^Terms of Use, Version 1\b/);
+  expect(canonicalOf(html)).toBe('https://sorrelandsalt.com/terms');
+});
+
+// robots.txt blocks `/?support=` and `/account`, so a crawler is asked not to follow a link to either.
+test('every Support link, and the terms link to the acceptance page, is nofollow', async ({
+  request,
+}) => {
+  const anchors = (html: string, href: RegExp) =>
+    [...html.matchAll(/<a [^>]*>/g)].map(([tag]) => tag).filter((tag) => href.test(tag));
+
+  const home = anchors(await (await request.get('/')).text(), /href="[^"]*[?&]support=/);
+  expect(home.length).toBeGreaterThan(0);
+  for (const tag of home) expect(tag).toMatch(/rel="nofollow"/);
+
+  const terms = anchors(await (await request.get('/terms')).text(), /href="\/account\/terms"/);
+  expect(terms.length).toBeGreaterThan(0);
+  for (const tag of terms) expect(tag).toMatch(/rel="nofollow"/);
+});
+
 test('each public page names its share card for link previews, absolute, sized and described', async ({
   request,
 }) => {
