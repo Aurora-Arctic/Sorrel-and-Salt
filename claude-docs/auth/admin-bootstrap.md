@@ -557,15 +557,18 @@ the tests [`tests.md`](tests.md).
 (the text is the public page `/terms`). It shows the version and date, links
 the text, and has one Agree & Continue button.
 
-- **The version is one constant.** `TERMS_VERSION` in
-  `src/lib/terms-version.ts` is printed by `/terms` and compared by the gate.
-  Raising it sends every account back through the acceptance page.
-- **The record is two nullable columns on `users`.** `terms_version` and
-  `terms_accepted_at` are null until an account agrees. `agreeToTerms`
+- **The version is a number.** The terms in force are the highest published
+  version of the terms document, read by `currentTermsVersion`
+  (`src/lib/current-terms-version.ts`), which answers 0 when none is
+  published. Publishing a new version sends every account back through the
+  acceptance page.
+- **The record is two nullable columns on `users`.** `agreed_terms_version`
+  and `terms_accepted_at` are null until an account agrees. `agreeToTerms`
   (`src/modules/identity/services/terms.ts`) writes both for the caller's own
-  row through `withAudit`, and takes no version: it records the one in force,
-  so a caller cannot record another. The GraphQL mutation of the same name
-  returns the row.
+  row through `withAudit`. It takes the version number the page showed and
+  refuses any number but the one in force, so a page left open across a
+  publish cannot agree to text it did not show. The GraphQL mutation of the
+  same name returns the row.
 - **The gate is in `requireSession()`, after the email check.** An account
   whose stored version is not the current one is redirected to
   `/account/terms?next=<path>`, the path coming from the same
@@ -630,7 +633,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   (`SignOutButton`,
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
-- **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one `TabbedPage` titled Account, with the tabs Account, Sign-In and Support Requests (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH`, `ACCOUNT_TWO_FACTOR_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
+- **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one `TabbedPage` titled Account, with the tabs Account, Sign-In and Support Requests (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
 - **Two-Factor Sign-In (M16.10, Story 75).** Its own section; for an account with no password it says so and links to the Password section, since two-factor guards password sign-ins alone. The page writes its heading and intro and hands `TwoFactorSettings` (`components/PasswordSection/two-factor.tsx`) whether it is on ([`components/password-section.md`](../components/password-section.md), "Two-factor").
 - **Sign-In Methods lists the password and the passkeys too.** After the providers come a Password row (Set or Not Set, linking to the Password section) and a Passkeys row (how many, linking to the Passkeys section), so the list matches its sentence ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
 - **Passkeys (M16.8, Story 74).** A Passkeys section follows Password and Two-Factor Sign-In, at `/account/sign-in#passkeys`. Its intro says a passkey is tied

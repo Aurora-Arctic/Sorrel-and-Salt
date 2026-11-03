@@ -745,9 +745,8 @@ export const auth = betterAuth({
       role: { type: 'string', input: false },
       canCreateWorkspace: { type: 'boolean', input: false },
       // The terms the account agreed to: read into the session so the page gate can compare it with the terms version in force,
-      // written only by the `agreeToTerms` service. `termsVersion` is the older text form, still written until it is dropped.
+      // written only by the `agreeToTerms` service.
       agreedTermsVersion: { type: 'number', required: false, input: false },
-      termsVersion: { type: 'string', required: false, input: false },
       termsAcceptedAt: { type: 'date', required: false, input: false, returned: false },
       // Declared so the update hook below can clear it; nothing reads it here.
       verificationSentAt: { type: 'date', required: false, input: false, returned: false },

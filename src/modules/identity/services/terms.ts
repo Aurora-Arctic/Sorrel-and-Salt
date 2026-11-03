@@ -3,7 +3,6 @@ import { withAudit } from '../../../db/repository';
 import { NotFound, fieldRefusal } from '../../../lib/errors';
 import { currentTermsVersion } from '../../../lib/current-terms-version';
 import type { Session } from '../../../lib/session';
-import { TERMS_VERSION } from '../../../lib/terms-version';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
@@ -33,7 +32,6 @@ export async function agreeToTerms(session: Session, version: number): Promise<U
   const [row] = await withAudit(session, (write) =>
     write.updateById(users, session.userId, {
       agreedTermsVersion: version,
-      termsVersion: TERMS_VERSION,
       termsAcceptedAt: new Date(),
     }),
   );

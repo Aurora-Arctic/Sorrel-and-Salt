@@ -56,11 +56,10 @@ export const users = pgTable(
     formerEmail: text('former_email'),
     // The `twoFactor` plugin's user flag: true once an authenticator is confirmed.
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
-    // The terms of use the account agreed to, and when: both null until it does. A version other than `TERMS_VERSION` (src/lib/terms-version.ts)
-    // counts as not agreed (claude-docs/auth/admin-bootstrap.md, "The terms page").
-    termsVersion: text('terms_version'),
+    // When the account agreed to the terms of use; null until it does.
     termsAcceptedAt: timestamp('terms_accepted_at'),
-    // The number of the published terms version the account agreed to; null until it does. Beside `terms_version`, which stays.
+    // The number of the published terms version the account agreed to; null until it does. A number other than the newest
+    // published one counts as not agreed (claude-docs/auth/admin-bootstrap.md, "The terms page").
     agreedTermsVersion: integer('agreed_terms_version'),
     ...auditColumns,
   },

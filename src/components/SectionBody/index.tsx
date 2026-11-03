@@ -7,6 +7,7 @@ import {
   SkeletonCover,
   SkeletonOverlay,
   heldPage,
+  skeletonCoverHost,
   skeletonFadeHost,
   useLeavingSkeleton,
 } from '../SkeletonFade';
@@ -48,7 +49,7 @@ export default function SectionBody({
   // the section's own frame keeps the page as its direct children, so its flex column and gap
   // are untouched, and the skeleton stands in a copy of that frame.
   return (
-    <div className="skeleton-cover-host">
+    <div className={skeletonCoverHost(skeleton !== null)}>
       <div {...heldPage(skeleton !== null, `${className} ${skeletonFadeHost(leaving !== null)}`)}>
         {children}
         {leaving && <SkeletonOverlay>{leaving}</SkeletonOverlay>}
