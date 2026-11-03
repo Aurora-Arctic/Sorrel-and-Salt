@@ -31,7 +31,11 @@ import {
   stockEditor,
   withSql,
 } from './coven-ingredients';
-import { editIngredientControl, editIngredientDialog } from './ingredient-dialogs';
+import {
+  editIngredientControl,
+  editIngredientDialog,
+  openAddIngredient,
+} from './ingredient-dialogs';
 
 // Stories 20–27: the coven's ingredient list at /coven/[slug]/ingredients,
 // and everything a member does from it. Every story here walks it. Each story writes its own coven, so one story's rows
@@ -681,7 +685,7 @@ test(
 );
 
 test(
-  "deleting the coven's own ingredient asks first, naming it; Cancel keeps it, Delete removes its card in place and marks it deleted, and a viewer is offered no Delete",
+  "deleting the coven's own ingredient asks first, naming it; Cancel keeps it, Delete removes its card in place and marks it deleted, the same name can be added again, and a viewer is offered no Delete",
   { tag: '@story-25' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Story 25', 'story-25.test', {
@@ -754,6 +758,39 @@ test(
       // Soft: the row is marked deleted, not removed; the other entry is untouched.
       expect(await deletedAt(testwort.ingredientId)).not.toBeNull();
       expect(await deletedAt(keptwort.ingredientId)).toBeNull();
+    });
+
+    await test.step('the same name and formal name added again save as a new entry, its card appearing, and the deleted row stays marked deleted', async () => {
+      const dialog = await openAddIngredient(page);
+      await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill('Testwort');
+      await dialog.getByRole('combobox', { name: 'Classification', exact: true }).click();
+      await page
+        .getByRole('listbox', { name: 'Classification choices', exact: true })
+        .getByRole('option', { name: 'Botanical', exact: true })
+        .click();
+      await dialog
+        .getByRole('textbox', { name: 'Formal Name', exact: true })
+        .fill('Fixtura testalis');
+      await dialog.getByRole('button', { name: 'Save Ingredient', exact: true }).click();
+      await expect(dialog).toHaveCount(0);
+
+      // A save opens the new entry's own page; its card is then back in the list.
+      await expect(page.getByRole('heading', { level: 1, name: 'Testwort' })).toBeVisible();
+      await page.goto(listPath(coven));
+      await expect(rowOf(list, 'Testwort', 'Fixtura testalis')).toHaveCount(1);
+      const rows = await withSql(
+        (sql) => sql<{ id: string; deleted_at: Date | null }[]>`
+          select id, deleted_at from ingredients
+          where workspace_id = ${coven.id}
+            and name = 'Testwort' and canonical_name = 'Fixtura testalis'
+          order by created_at`,
+      );
+      // The deleted row is kept, still marked deleted, and the new entry is its own row.
+      expect(rows).toHaveLength(2);
+      expect(rows[0]).toMatchObject({ id: testwort.ingredientId });
+      expect(rows[0].deleted_at).not.toBeNull();
+      expect(rows[1].id).not.toBe(testwort.ingredientId);
+      expect(rows[1].deleted_at).toBeNull();
     });
 
     await test.step('a viewer is offered no Delete, and one sent by direct id is refused', async () => {
