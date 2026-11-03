@@ -2,7 +2,7 @@ import 'server-only';
 import { withAudit } from '../../../db/repository';
 import { agreementIsCurrent } from '../../../lib/agreement-version';
 import { NotFound, fieldRefusal } from '../../../lib/errors';
-import { currentAgreementVersion } from '../../../lib/current-agreement-version';
+import { agreementVersionInForce } from '../../../lib/current-agreement-version';
 import type { Session } from '../../../lib/session';
 import type { AgreementVersion } from '../../../lib/types';
 import { users } from '../schema/users';
@@ -20,7 +20,7 @@ import type { UserRow } from '../types';
  * @throws {NotFound} the row is gone, though the session outlives it.
  */
 export async function agreeToTerms(session: Session, version: AgreementVersion): Promise<UserRow> {
-  if (!agreementIsCurrent(version, await currentAgreementVersion())) {
+  if (!agreementIsCurrent(version, await agreementVersionInForce())) {
     throw fieldRefusal(
       'version',
       'The terms changed while you were reading them. Reload the page and read the new version.',

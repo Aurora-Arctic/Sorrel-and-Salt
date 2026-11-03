@@ -15,14 +15,18 @@ async function publishedNumberOf(key: string): Promise<number> {
   return version?.publishedAt ? version.number : 0;
 }
 
-async function readCurrentAgreementVersion(): Promise<AgreementVersion> {
+/**
+ * The version numbers in force, read from the database. For the acceptance page and the agreement it records, which must never
+ * meet an answer from before a publish: Next can serve a cached read once more while it refreshes it.
+ */
+export async function agreementVersionInForce(): Promise<AgreementVersion> {
   const numbers = await Promise.all(AGREEMENT_DOCUMENTS.map(({ key }) => publishedNumberOf(key)));
   const [terms = 0, disclaimer = 0, ethics = 0] = numbers;
   return { terms, disclaimer, ethics };
 }
 
-/** The version numbers in force, each 0 while its document has none published. Takes no session, and is cached under the documents tag. */
+/** The version numbers in force, each 0 while its document has none published. Takes no session, and is cached under the documents tag, for the gate. */
 export const currentAgreementVersion = cachedDocumentRead(
   'agreement-current-version',
-  readCurrentAgreementVersion,
+  agreementVersionInForce,
 );

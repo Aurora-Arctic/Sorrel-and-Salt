@@ -4,7 +4,7 @@ import { documentsChangedSince } from '../../../../lib/agreement-version';
 import { requireSession, sessionAgreedVersion } from '../../../../lib/request-session';
 import { signedInLanding } from '../../../../lib/landing';
 import { safeReturnPath } from '../../../../lib/sign-in';
-import { currentAgreementVersion, readDocument } from '@/modules/documents';
+import { agreementVersionInForce, readDocument } from '@/modules/documents';
 import type { TermsPageProps } from './types';
 
 // Out of search results and unfollowed: the public Terms of Use link here, and a signed-out crawler
@@ -24,7 +24,7 @@ export default async function TermsAcceptancePage({ searchParams }: TermsPagePro
     requireSession(),
     searchParams,
     readDocument('terms'),
-    currentAgreementVersion(),
+    agreementVersionInForce(),
     sessionAgreedVersion(),
   ]);
   const destination = safeReturnPath(params.next) ?? (await signedInLanding(session));

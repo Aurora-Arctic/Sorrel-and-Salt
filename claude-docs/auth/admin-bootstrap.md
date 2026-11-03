@@ -563,8 +563,13 @@ Continue button.
   each agreed document's highest published version, read by
   `currentAgreementVersion` (`src/lib/current-agreement-version.ts`) as
   `{ terms, disclaimer, ethics }`, with 0 for a document that has none
-  published. It is cached under the `documents` tag, so a publish clears it.
-  The page and the keepers' screens show it as one joint version,
+  published. It is cached under the `documents` tag, so a publish clears it,
+  and the gate reads it there. The acceptance page and `agreeToTerms` read
+  the same numbers uncached, through `agreementVersionInForce`: Next can
+  serve a cached read once more while it refreshes it, which `next dev` does
+  after a publish whenever the process's monotonic clock lags the wall clock,
+  and a check against that answer refused the version the page showed. The
+  gate may still let one request through on the old numbers. The page and the keepers' screens show it as one joint version,
   `terms.disclaimer.ethics` (for example `1.4.2`), through
   `formatAgreementVersion` (`src/lib/agreement-version.ts`). Publishing a new
   version of any of the three sends every account back through the
