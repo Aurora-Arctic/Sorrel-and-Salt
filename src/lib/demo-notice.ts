@@ -4,4 +4,4 @@
 export const DEMO_NOTICE =
   'This is a demo coven, so you can see how Sorrel & Salt works. You can look at everything and change nothing. A coven of your own starts with an invitation from someone who has one.';
 export const DEMO_OWNER_NOTICE =
-  'You are a steward of this coven as a site admin: what you change here is what every new account sees.';
+  'You are a steward of this coven as a Keeper: what you change here is what every new account sees.';

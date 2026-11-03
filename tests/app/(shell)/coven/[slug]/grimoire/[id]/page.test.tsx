@@ -225,7 +225,7 @@ describe('the spell recipe page', () => {
       as('owner', true);
       await draw();
       expect(screen.getByRole('status')).toHaveTextContent(
-        /^You are a steward of this coven as a site admin/,
+        /^You are a steward of this coven as a Keeper/,
       );
     });
 
