@@ -36,7 +36,7 @@ function Page() {
   const [pushes, setPushes] = useState(0);
   return (
     <>
-      <BackLink href={'/coven/x/grimoire' as Route}>Grimoire</BackLink>
+      <BackLink href={'/coven/x/grimoire' as Route} label="Grimoire" />
       <HistoryWrite pushes={pushes} />
       <button onClick={() => setPushes(1)}>Navigate</button>
     </>

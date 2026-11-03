@@ -47,9 +47,10 @@ FROM development AS testing
 
 # What the Alpine base lacks and CI needs: bash (`shell: bash`, pipefail),
 # git (actions/checkout), GNU tar and zstd (actions/cache runs inside this
-# container, and busybox tar rejects `--posix`).
+# container, and busybox tar rejects `--posix`), and jq, which the deploy's
+# snapshot step calls when tests/github/workflows/migrate.test.ts runs it.
 USER root
-RUN apk add --no-cache bash git tar zstd
+RUN apk add --no-cache bash git tar zstd jq
 USER node
 
 ENV NODE_ENV=test

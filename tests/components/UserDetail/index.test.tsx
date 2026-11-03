@@ -42,6 +42,7 @@ const FACTS = {
   canCreateWorkspace: false,
   providers: ['google', 'discord'],
   createdAt: new Date('2026-02-03T04:05:06Z'),
+  termsVersion: '2026-11-02',
 };
 const BO: UserDetailUser = {
   ...FACTS,
@@ -95,13 +96,33 @@ const renderDetail = (overrides: Partial<UserDetailProps> = {}) =>
     </Modal>,
   );
 
+// Bo as one who never agreed to any terms.
+const NEVER_AGREED = { ...BO, termsVersion: null };
+
+/** The value beside the fact with this term. */
+function factOf(term: string): HTMLElement {
+  const found = screen.getAllByRole('term').find((dt) => dt.textContent === term);
+  expect(found, `a fact termed ${term}`).toBeDefined();
+  return found!.nextElementSibling as HTMLElement;
+}
+
 describe('UserDetail', () => {
+  it('states the terms version the user last agreed to, or that they never agreed', () => {
+    const { unmount } = renderDetail();
+    expect(factOf('Terms')).toHaveTextContent('2026-11-02');
+    unmount();
+
+    renderDetail({ user: NEVER_AGREED });
+    expect(factOf('Terms')).toHaveTextContent('Not agreed');
+    expect(factOf('Terms')).not.toHaveTextContent('2026-11-02');
+  });
+
   it('shows each fact of the users table as a term with its value', () => {
     renderDetail();
 
-    expect(screen.getAllByRole('term')).toHaveLength(5);
-    expect(screen.getAllByRole('definition')).toHaveLength(5);
-    const signedUp = within(screen.getAllByRole('definition')[4]!).getByText('2026-02-03');
+    expect(screen.getAllByRole('term')).toHaveLength(6);
+    expect(screen.getAllByRole('definition')).toHaveLength(6);
+    const signedUp = within(factOf('Signed Up')).getByText('2026-02-03');
     expect(signedUp).toHaveAttribute('datetime', BO.createdAt.toISOString());
   });
 

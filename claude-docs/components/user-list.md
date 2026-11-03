@@ -24,7 +24,7 @@ the hrefs of the pages either side
 | `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default              |
 
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
-`createdAt` and `emailVerified`, plus `providers`, the provider ids the service
+`createdAt`, `emailVerified` and `termsVersion` (the terms version they agreed to most recently, `null` for one who never agreed), plus `providers`, the provider ids the service
 read beside it, and `primaryAdmin`, which the page asks of the identity
 service's `isPrimaryAdmin` for each row as it reads it (MB.59). Since M9.19
 it also carries `openHref`, this page with the user's modal open over it
@@ -67,11 +67,11 @@ head, both built by the page per row, as the other admin lists carry
   `awaiting=1`, and opens it softly. Before
   hydration the form submits natively, with each switch as `awaiting=`, `timed-out=` or `paused=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
-- **Eight columns, in the owner's order**: Name, Email, Role, Can Create,
-  Support, Access, Logins and Signed Up, each heading in title case (DESIGN.md §9).
+- **Nine columns, in the owner's order**: Name, Email, Role, Can Create,
+  Support, Access, Logins, Terms and Signed Up, each heading in title case (DESIGN.md §9).
   The headings are short so the table needs less width (the owner's call,
   2026-11-02); each cell's hidden text still says the whole fact, "Not timed
-  out" or "Paused with no end date", so a screen reader loses nothing.
+  out" or "Paused with no end date", so a screen reader loses nothing. Terms is the version the user agreed to most recently, or a red cross, read as "Not agreed" by a screen reader, for one who never has (MB.288).
   The table is [`StackTable`](data-table.md), so each heading is also the
   `data-label` its cells carry as a card at phone width, and the table writes
   out its roles (MB.115, "Tables at phone width" in

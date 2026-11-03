@@ -267,7 +267,11 @@ const CUPBOARD = {
 };
 
 // The way back every entry page has, so the head shows its badge row beside it as the site does.
-const COMPENDIUM_BACK = { href: '/compendium' as Route, label: 'Compendium' };
+const COMPENDIUM_BACK = {
+  href: '/compendium' as Route,
+  label: 'Compendium',
+  also: [{ path: '/admin/compendium', label: 'Admin Compendium' }],
+};
 
 // The head's three lines: the way back with New, the safety
 // badge just right of New; the formal name with the Edit pencil at its end; the name alone.
@@ -300,7 +304,7 @@ const PublicEntry = (props: Partial<IngredientEntryProps>) => (
 // bundle typed, so its heading takes the spoon.
 const defaultNode = <PublicEntry />;
 
-// No naming system names it: a sentence where the formal name would be, with the
+// No naming system names it and it has no formal name: no formal-name line is drawn, with the
 // cupboard buttons beside the name.
 const noFormalNameNode = (
   <Entry

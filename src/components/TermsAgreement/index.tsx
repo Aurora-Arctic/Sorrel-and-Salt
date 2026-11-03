@@ -7,6 +7,7 @@ import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { dayInUtc } from '../../lib/utc';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { TermsAgreementProps } from './types';
@@ -34,6 +35,9 @@ const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps
     onError: (failure) => setAlert(readGraphqlFailure(failure, []).alert),
   });
 
+  // Busy through the navigation too: the page stays up until the next one loads, and a second press would ask again.
+  const recording = mutation.isPending || mutation.isSuccess;
+
   return (
     <div className="terms-agreement">
       <PageHeader
@@ -60,17 +64,18 @@ const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps
         <Link className="btn btn--quiet" href="/terms" target="_blank">
           Read the Terms of Use
         </Link>
-        <button
-          type="button"
+        <BusyButton
           className="btn btn--solid"
-          disabled={mutation.isPending}
+          busy={recording}
+          busyLabel="Agreeing"
+          disabled={recording}
           onClick={() => {
             setAlert(undefined);
             mutation.mutate();
           }}
         >
-          {mutation.isPending ? 'Agreeing' : 'Agree & Continue'}
-        </button>
+          Agree & Continue
+        </BusyButton>{' '}
       </p>
     </div>
   );

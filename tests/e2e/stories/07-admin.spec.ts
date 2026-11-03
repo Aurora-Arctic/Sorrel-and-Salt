@@ -1192,8 +1192,17 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       const row = page.getByRole('row').filter({ hasText: name });
       const shown = row.getByRole('switch', { name: `Shown in Compendium: ${name}`, exact: true });
       await expect(shown).toBeChecked();
+      // The switch moves at the press; the write has landed once the mutation answers.
+      const saved = () =>
+        page.waitForResponse(
+          (response) =>
+            response.url().includes('/api/graphql') &&
+            (response.request().postData() ?? '').includes('SetCompendiumEntryShown'),
+        );
+      const hidden = saved();
       await shown.click();
       await expect(shown).not.toBeChecked();
+      await hidden;
 
       // A visitor with no account no longer finds it, in the list or at its address.
       const visitor = await browser.newContext({ baseURL });
@@ -1208,8 +1217,10 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByText(/^Hidden in the Compendium\./)).toBeVisible();
 
       await page.goto('/curator/compendium');
+      const restored = saved();
       await shown.click();
       await expect(shown).toBeChecked();
+      await restored;
       expect((await page.goto(entryPage))?.status()).toBe(200);
       await expect(page.getByText(/^Hidden in the Compendium\./)).toHaveCount(0);
     },

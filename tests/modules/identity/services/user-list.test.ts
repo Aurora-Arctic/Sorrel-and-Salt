@@ -3,7 +3,8 @@ import type postgres from 'postgres';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
-import { countUsers, listUsers, providersOf } from '@/modules/identity';
+import { Forbidden } from '@/lib/errors';
+import { countUsers, listUsers, providersOf, usersForAdmin } from '@/modules/identity';
 import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
@@ -275,5 +276,43 @@ describe('providersOf', () => {
     const answer = await providersOf(asUser(E), [B.id, A.id, C.id, A.id]);
 
     expect(answer).toEqual([['microsoft'], ['discord', 'google'], [], ['discord', 'google']]);
+  });
+});
+
+// The terms version each user last agreed to, which the user table and the user modal show: the version on their row,
+// none for one who never agreed.
+describe('the terms version a user agreed to', () => {
+  const AGREED = '1999-01-01';
+
+  beforeAll(async () => {
+    await sql`update users set terms_version = ${AGREED}, terms_accepted_at = now() where id = ${WILDCARD}`;
+    const [never] = await sql`select terms_version from users where id = ${PENDING}`;
+    expect(never?.terms_version).toBeNull();
+  });
+
+  it('lists each user with the version they agreed to, and none for one who never agreed', async () => {
+    const page = await listUsers(asUser(E), {}, PAGE);
+    const listed = (id: string) => page.find((entry) => entry.node.id === id)?.node;
+
+    expect(listed(WILDCARD)).toMatchObject({ termsVersion: AGREED });
+    expect(listed(PENDING)).toMatchObject({ termsVersion: null });
+  });
+
+  it('reads one user by id with the version they agreed to, for the user modal', async () => {
+    const [agreed, never] = await usersForAdmin(asUser(E), [WILDCARD, PENDING]);
+
+    expect(agreed).toMatchObject({ id: WILDCARD, termsVersion: AGREED });
+    expect(never).toMatchObject({ id: PENDING, termsVersion: null });
+  });
+
+  it('refuses the version to anyone but a site admin, asked by id', async () => {
+    // The precondition: the row holds a version, and the same ask as an admin reads it.
+    const [admitted] = await usersForAdmin(asUser(E), [WILDCARD]);
+    expect(admitted).toMatchObject({ termsVersion: AGREED });
+    expect(A.role).toBe('user');
+
+    const [refused] = await usersForAdmin(asUser(A), [WILDCARD]);
+    expect(refused).toBeInstanceOf(Forbidden);
+    await expect(listUsers(asUser(A), {}, PAGE)).rejects.toBeInstanceOf(Forbidden);
   });
 });

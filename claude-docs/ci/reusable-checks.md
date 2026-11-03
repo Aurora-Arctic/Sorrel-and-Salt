@@ -47,6 +47,10 @@
       which `actions/cache` needed inside the container, where the Alpine
       image's busybox `tar` rejects `--posix`. No step in that image uses
       them now; they go the next time `Docker/Dockerfile.node` changes.
+    - **The `testing` stage carries `jq`**, which the production snapshot
+      step in `.github/workflows/migrate.yml` calls. `tests/github/workflows/migrate.test.ts`
+      runs that step's script inside this image, and without `jq` it stops
+      with exit code 127, command not found.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
       `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes
       prerendering `/_global-error` under anything but `production`/unset —
