@@ -57,7 +57,7 @@ An empty table cell or footnote definition is serialised by the markdown package
 
 ## Props
 
-`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `publishedBody` (the published text, or empty when nothing is published), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take) and `mailing`, drawn under the lede, above the text (the page passes the [Document Mailing Panel](document-mailing-panel.md)).
+`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `publishedBody` (the published text, or empty when nothing is published), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take) and `mailing`, an optional block drawn under the lede, above the text, which no page passes: the [Document Mailing Panel](document-mailing-panel.md) has its own page, `/keepers/documents`.
 
 ## Leaving the text box with the keyboard
 
