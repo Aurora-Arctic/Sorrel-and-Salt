@@ -24,19 +24,25 @@
   font-size: type-size('small');
 }
 
-// The editable text: a bordered field, since it is a field, with the focus ring the app's fields use.
-.document-editor__text [role='textbox'] {
+// The editor's box: a bordered field holding the toolbar and the text, on the page's own background so a table's banded rows
+// show. The text's focus ring is drawn on the box, as the text has no border of its own.
+.document-editor__text {
   @include field-box;
 
-  // The public page's text size, in a box as wide as the column, on the page's own background so a table's banded rows show.
-  min-height: 24rem;
-  font-size: type-size('body');
-  padding-inline: 1.125rem;
+  padding: 0;
   background-color: transparent;
 
-  &:focus-visible {
+  &:has([role='textbox']:focus-visible) {
     @include focus-ring;
   }
+}
+
+// The editable text, at the public page's text size, in a box as wide as the column.
+.document-editor__text [role='textbox'] {
+  min-height: 24rem;
+  padding: space(2) 1.125rem;
+  font-size: type-size('body');
+  outline: none;
 }
 
 // The row of formatting buttons above the text box, in the same column. It sticks just under the site bar while the text box
@@ -49,12 +55,20 @@
   padding-block: space(2);
   // An opaque raised ground, so the text scrolls under it, with a line in the body ink beneath: white in dark, as white would vanish on parchment.
   border-bottom: 1px solid $text-primary;
+  // The box's top corners, so the ground stays inside the box's rounded border.
+  border-start-start-radius: radius('control');
+  border-start-end-radius: radius('control');
   background-color: $surface-card;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: space(1);
-  margin-block-end: space(2);
+  gap: space(3);
+
+  // A pressed button (Bold on bold text) keeps the quiet button's pointed-at look.
+  .btn--quiet[aria-pressed='true'] {
+    border-color: $edge-highlight;
+    background-color: $fill-highlight-field;
+  }
 }
 
 // A source mark's number is no link here, as it leads nowhere while editing, but it wears the public page's link look.

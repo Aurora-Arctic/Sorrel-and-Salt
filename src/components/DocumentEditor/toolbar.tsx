@@ -220,7 +220,7 @@ const Toolbar = (): ReactElement => {
                 buttons.current[index] = node;
               }}
               type="button"
-              className="btn btn--quiet btn--small btn--icon"
+              className="btn btn--quiet btn--icon"
               aria-label={button.label}
               tabIndex={index === stop ? 0 : -1}
               aria-pressed={pressed}
