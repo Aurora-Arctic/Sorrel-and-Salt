@@ -15,7 +15,7 @@ const DEMO_PATH = `/coven/${DEMO_SLUG}`;
 const VIEWER_NOTICE =
   'This is a demo coven, so you can see how Sorrel & Salt works. You can look at everything and change nothing. A coven of your own starts with an invitation from someone who has one.';
 const OWNER_NOTICE =
-  'You own this coven as a site admin: what you change here is what every new account sees.';
+  'You are a steward of this coven as a site admin: what you change here is what every new account sees.';
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

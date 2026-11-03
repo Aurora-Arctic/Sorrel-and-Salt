@@ -868,7 +868,7 @@ test(
     expect([...changes].sort((a, b) => a[1].localeCompare(b[1]))).toEqual([
       [
         'Invited Fixturewort',
-        'Keeper',
+        'Coven Creation',
         'Granted',
         'Invitation accepted',
         'Invited Fixturewort',
@@ -876,7 +876,7 @@ test(
       ],
       [
         'Invited Fixturewort',
-        'Coven Creation',
+        'Keeper',
         'Granted',
         'Invitation accepted',
         'Invited Fixturewort',
