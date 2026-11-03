@@ -45,9 +45,14 @@ const heading = (tag: 'h2' | 'h3' | 'h4' | 'h5' | 'h6') =>
   };
 
 // A list item's paragraph is a `div`, since the list wrapper draws a `<ul>` inside it and a `<p>` cannot hold one.
+// It drops the indent plugin's margin, as the list's own padding is the indent the public page draws.
 function Paragraph(props: PlateElementProps): ReactElement {
   const listed = Boolean((props.element as { listStyleType?: string }).listStyleType);
-  return <PlateElement as={listed ? 'div' : 'p'} {...props} />;
+  return listed ? (
+    <PlateElement as="div" {...props} style={{ ...props.style, marginLeft: undefined }} />
+  ) : (
+    <PlateElement as="p" {...props} />
+  );
 }
 
 function Quote(props: PlateElementProps): ReactElement {
@@ -127,17 +132,28 @@ function FootnoteEntry(
 
 /** The list around a paragraph the list plugin marks as a list item. */
 function List(props: PlateElementProps): ReactElement {
-  const { listStyleType, listStart } = props.element as {
+  const {
+    listStyleType,
+    listStart,
+    indent = 1,
+  } = props.element as {
     listStyleType?: string;
     listStart?: number;
+    indent?: number;
   };
+  // The public page's list indent, once per level.
+  const inset = `calc(${indent} * 1.25rem)`;
   const ordered = listStyleType === 'decimal';
   const Tag = ordered ? 'ol' : 'ul';
   // A bulleted list keeps the typography's drawn ✦ alone, as the public page does; a browser bullet would sit behind it.
   return (
     <Tag
       start={listStart}
-      style={ordered ? { listStyleType, margin: 0, paddingInlineStart: '1.5rem' } : { margin: 0 }}
+      style={{
+        listStyleType: ordered ? listStyleType : undefined,
+        margin: 0,
+        paddingInlineStart: inset,
+      }}
     >
       <li>{props.children}</li>
     </Tag>

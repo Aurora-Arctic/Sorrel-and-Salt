@@ -2,17 +2,12 @@
 @use '../../scss/mixins' as *;
 
 // The documents' heading, tabs and editor share one column the text box's width, centred on the page, each starting at its edge.
-// The width is the measure in a paragraph's own font, the light weight included, so it is the public page's text width; what is inside takes the normal weight back.
+// The measure in the page's own font, so it is the public page's text width.
 .document-editor-column {
   width: 100%;
   max-width: $measure;
   margin-inline: auto;
   font-size: type-size('body');
-  font-weight: 300;
-
-  > * {
-    font-weight: normal;
-  }
 }
 
 .document-editor__bar {
@@ -33,9 +28,10 @@
 .document-editor__text [role='textbox'] {
   @include field-box;
 
-  // The public page's text size, in a box as wide as the column.
+  // The public page's text size, in a box as wide as the column, on the page's own background so a table's banded rows show.
   min-height: 24rem;
   font-size: type-size('body');
+  background-color: transparent;
 
   &:focus-visible {
     @include focus-ring;
