@@ -120,9 +120,14 @@ function List(props: PlateElementProps): ReactElement {
     listStyleType?: string;
     listStart?: number;
   };
-  const Tag = listStyleType === 'decimal' ? 'ol' : 'ul';
+  const ordered = listStyleType === 'decimal';
+  const Tag = ordered ? 'ol' : 'ul';
+  // A bulleted list keeps the typography's drawn ✦ alone, as the public page does; a browser bullet would sit behind it.
   return (
-    <Tag start={listStart} style={{ listStyleType, margin: 0, paddingInlineStart: '1.5rem' }}>
+    <Tag
+      start={listStart}
+      style={ordered ? { listStyleType, margin: 0, paddingInlineStart: '1.5rem' } : { margin: 0 }}
+    >
       <li>{props.children}</li>
     </Tag>
   );
