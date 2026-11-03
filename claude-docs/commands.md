@@ -24,22 +24,27 @@ inner one waits for it, and the run deadlocks forever. A direct
 `flock /tmp/sorrel-vitest.lock npx vitest run …`. `test:debug` and `test:ui`
 take no lock. [`testing/e2e.md`](testing/e2e.md) explains the locks.
 
-**Every local Playwright run sets `BETTER_AUTH_SECRET` on its command line.**
-This covers `npm run e2e`, `npm run test:stories` and a named spec. Next reads
-`.env.local` for the server it starts, but the Playwright runner reads nothing
-from it, and the runner signs each test's session cookie with the same secret
-(`tests/e2e/session.ts` throws without it). Read the value from `.env.local`,
-so runner and server agree, and never print it:
+**Every local Playwright run sets `BETTER_AUTH_SECRET` on its command line, to
+the placeholder `local-dev-not-a-real-secret`.** This covers `npm run e2e`,
+`npm run test:stories`, and a named spec. The Playwright runner signs each
+test's session cookie with that secret (`tests/e2e/session.ts` throws without
+it), and does not read `.env.local`. The servers it starts get the same value:
+Playwright passes its own environment on to them, and Next never lets
+`.env.local` replace a variable that is already set. So a made-up value works,
+and the real secret is never read for a test run. It is the placeholder CI's
+Playwright jobs set too.
 
 ```sh
-BETTER_AUTH_SECRET="$(grep -m1 '^BETTER_AUTH_SECRET=' .env.local | cut -d= -f2-)" \
-  npm run test:stories
+BETTER_AUTH_SECRET=local-dev-not-a-real-secret npm run test:stories
 ```
 
 A bare `npx playwright test <spec>` takes no lock, so wrap it:
-`flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=… npx playwright test <spec>`.
+`flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test <spec>`.
+Locally a run reuses an e2e server already listening on its port
+(`reuseExistingServer`), so a server left running under a different secret
+refuses every cookie the run signs: stop it, or pick another `E2E_PORT_BASE`.
 A worktree has no `.env.local`, since the file is not committed: copy `/app`'s
-in before the run. CI sets the secret at job level and needs none of this.
+in before the run, for the server's other settings.
 
 **Deploys are CI-only (M0.26).** `.github/workflows/deploy.yml` deploys via the
 Vercel CLI (`vercel pull`/`build`/`deploy --prebuilt`/`alias`) on a push to

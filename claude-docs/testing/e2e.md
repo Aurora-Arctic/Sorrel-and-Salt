@@ -508,7 +508,7 @@ during it, at the cost of one image pull and no CI minutes. The pieces:
 did). Two runs collide on `sorrel_e2e_template`, which global setup drops and
 rebuilds, even when their ports differ, and a second session's run may be
 invisible to `ps`. So a run from a session is
-`flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=… npx playwright test …`;
+`flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test …`;
 `npm run e2e:audit` takes the lock itself, and the path is fixed so that
 every session takes the same one. Vitest serialises on
 `/tmp/sorrel-vitest.lock`, for the same reason: its `db` project shares one
@@ -605,7 +605,7 @@ median, and say whether the servers were already up.
 cd /app  # or the worktree
 (
   flock 9
-  time env BETTER_AUTH_SECRET="$(grep -m1 '^BETTER_AUTH_SECRET=' .env.local | cut -d= -f2-)" npx playwright test
+  time env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test
 ) 9>/tmp/sorrel-e2e.lock
 
 node -e '
