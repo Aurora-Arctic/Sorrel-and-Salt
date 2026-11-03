@@ -1,7 +1,13 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The editor starts at the content column's edge, under the heading and tabs, with its Save Draft and Publish above the text.
+// The documents' heading, tabs and editor share one column the text box's width, centred on the page, each starting at its edge.
+.document-editor-column {
+  width: 100%;
+  max-width: calc(#{$measure} + #{space(3)} * 2 + 2px);
+  margin-inline: auto;
+  font-size: type-size('body');
+}
 
 .document-editor__bar {
   display: flex;
