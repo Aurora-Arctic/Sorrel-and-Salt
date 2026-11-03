@@ -232,6 +232,8 @@ test('a curator is refused every document editor and the Email Updates page with
 test('an admin publishes the privacy policy and the code of ethics, then emails every account one email about both', async ({
   page,
 }) => {
+  // Two publishes, a fresh agreement and a mailing in one flow: more than the default 30 seconds on CI under coverage.
+  test.setTimeout(90_000);
   await signInAs(page, 'mail-admin@admin-documents.test', ['discord'], 'admin');
   const main = page.getByRole('main');
 
