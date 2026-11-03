@@ -92,6 +92,11 @@ function errorName(body: string): string | null {
   return null;
 }
 
+/** True for an address under `.invalid`, which RFC 2606 reserves: no mailbox exists there, so `deliver` refuses it. */
+export function isUndeliverableAddress(address: string): boolean {
+  return /\.invalid$/i.test(address);
+}
+
 /**
  * Hands the message to MAIL_TRANSPORT once. True when the transport took it, or when MAIL_TRANSPORT is unset outside a deployment
  * and the message is logged in its place; false when it is refused before any transport is tried (a recipient under `.invalid`, or
@@ -103,7 +108,7 @@ export async function deliver(message: Message): Promise<boolean> {
   // RFC 2606 reserves `.invalid`: no mailbox exists under it, so the address
   // is the placeholder a provider that shared none is stored under
   // (src/modules/identity/services/email.ts), and nothing can receive this.
-  if (/\.invalid$/i.test(message.to)) {
+  if (isUndeliverableAddress(message.to)) {
     console.error(`mail: refused a recipient under .invalid; "${message.subject}" not sent`);
     return false;
   }

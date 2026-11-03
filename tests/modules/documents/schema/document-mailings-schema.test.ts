@@ -62,14 +62,15 @@ describe('document_mailing_recipients schema', () => {
 
   it('has its columns and the full audit spread, and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['id', 'mailing_id', 'user_id', 'sent_at', ...AUDIT_COLUMNS].sort(),
+      ['id', 'mailing_id', 'user_id', 'sent_at', 'skipped_at', ...AUDIT_COLUMNS].sort(),
     );
   });
 
-  it('declares the mailing and the account required, and the sent time nullable', () => {
+  it('declares the mailing and the account required, and the sent and skipped times nullable', () => {
     expect(byName.mailing_id.notNull).toBe(true);
     expect(byName.user_id.notNull).toBe(true);
     expect(byName.sent_at.notNull).toBe(false);
+    expect(byName.skipped_at.notNull).toBe(false);
   });
 
   it('declares its one-row-per-account index, unique and partial', () => {
@@ -242,6 +243,32 @@ describe('document_mailing_recipients table', () => {
 
     const [{ count }] = await sql`select count(*)::int as count from document_mailing_recipients`;
     expect(count).toBe(3);
+  });
+
+  it('takes an account skipped, unsent', async () => {
+    const [row] = await sql`
+      insert into document_mailing_recipients (mailing_id, user_id, skipped_at, created_by, updated_by)
+      values (${mailingId}, ${A.id}, now(), ${ADMIN}, ${ADMIN})
+      returning *
+    `;
+
+    expect(row).toMatchObject({ sent_at: null, skipped_at: expect.any(Date) });
+  });
+
+  it('refuses an account both sent and skipped', async () => {
+    // Precondition: each time alone is taken, so the refusal below is of the pair.
+    await sql`
+      insert into document_mailing_recipients (mailing_id, user_id, sent_at, created_by, updated_by)
+      values (${mailingId}, ${A.id}, now(), ${ADMIN}, ${ADMIN})
+    `;
+
+    const error = await failureOf(sql`
+      insert into document_mailing_recipients (mailing_id, user_id, sent_at, skipped_at, created_by, updated_by)
+      values (${mailingId}, ${B.id}, now(), now(), ${ADMIN}, ${ADMIN})
+    `);
+
+    // 23514 is check_violation.
+    expect(error.code).toBe('23514');
   });
 
   it('refuses a recipient of no mailing', async () => {

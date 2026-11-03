@@ -571,6 +571,15 @@ export interface AuditWriter {
     mailingId: string,
     userIds: readonly string[],
   ): Promise<DocumentMailingRecipientRow[]>;
+  /** Give up on one account of a mailing, which can never be mailed: stamped skipped now, never sent. One already sent or skipped is left as it is. */
+  skipDocumentMailingRecipient(
+    mailingId: string,
+    userId: string,
+  ): Promise<DocumentMailingRecipientRow[]>;
+  /** Wait for any other transaction holding the mailing's turn, then hold it until this one ends, so batch steps of one mailing take turns. */
+  lockDocumentMailingTurn(mailingId: string): Promise<void>;
+  /** Mark a sending mailing replaced, for a version or document that is gone. A mailing in any other state answers `[]`. */
+  replaceDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
   /** Finish a sending mailing: sent, dated now. A mailing that is sent or replaced answers `[]`. */
   finishDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
   /** Mark the document's sending and paused mailings of versions numbered below `versionNumber` replaced; they keep what they sent. */

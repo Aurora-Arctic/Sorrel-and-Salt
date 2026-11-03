@@ -129,6 +129,7 @@ export function findUnsentDocumentMailingRecipientPage(
     and(
       eq(documentMailingRecipients.mailingId, mailingId),
       isNull(documentMailingRecipients.sentAt),
+      isNull(documentMailingRecipients.skippedAt),
     ),
   );
 }
@@ -260,6 +261,9 @@ export function documentWrites({
   | 'startDocumentMailing'
   | 'addDocumentMailingRecipients'
   | 'markDocumentMailingRecipientsSent'
+  | 'skipDocumentMailingRecipient'
+  | 'lockDocumentMailingTurn'
+  | 'replaceDocumentMailing'
   | 'finishDocumentMailing'
   | 'replaceOpenDocumentMailings'
   | 'pauseDocumentMailing'
@@ -368,6 +372,29 @@ export function documentWrites({
               isNull(documentMailingRecipients.sentAt),
             ),
           ),
+    skipDocumentMailingRecipient: (mailingId, userId) =>
+      update(
+        documentMailingRecipients,
+        { skippedAt: sql`now()` },
+        and(
+          eq(documentMailingRecipients.mailingId, mailingId),
+          eq(documentMailingRecipients.userId, userId),
+          isNull(documentMailingRecipients.sentAt),
+          isNull(documentMailingRecipients.skippedAt),
+        ),
+      ),
+    // An advisory lock, not a row lock, so a replace or pause of the mailing is never held up behind a send in progress.
+    lockDocumentMailingTurn: async (mailingId) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext(${'document-mailing:' + mailingId}))`,
+      );
+    },
+    replaceDocumentMailing: (mailingId) =>
+      update(
+        documentMailings,
+        { status: 'replaced' },
+        and(eq(documentMailings.id, mailingId), eq(documentMailings.status, 'sending')),
+      ),
     finishDocumentMailing: (mailingId) =>
       update(
         documentMailings,
