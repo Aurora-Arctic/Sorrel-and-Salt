@@ -90,7 +90,13 @@ export const ADMIN_PAGES = {
     adminOnly: true,
     description:
       'The privacy policy, disclaimer, code of ethics and terms of use: edit a draft, then publish it as a new version.',
-    tabs: [{ href: '/keepers/documents', label: 'Documents' }],
+    // One tab per document, in the order the footer lists them; each is that document's editor.
+    tabs: [
+      { href: '/keepers/documents/privacy', label: 'Privacy Policy' },
+      { href: '/keepers/documents/disclaimer', label: 'Disclaimer' },
+      { href: '/keepers/documents/code-of-ethics', label: 'Code of Ethics' },
+      { href: '/keepers/documents/terms', label: 'Terms of Use' },
+    ],
   },
 } as const satisfies Record<string, AdminPage>;
 
