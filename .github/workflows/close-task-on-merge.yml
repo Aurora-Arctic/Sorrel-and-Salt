@@ -29,9 +29,11 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -eo pipefail
-          numbers=$(printf '%s\n' "$PR_BODY" \
-            | grep -oiE '\b(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved):? +#[0-9]+' \
-            | grep -oE '[0-9]+$' \
+          # A keyword closes only when it is the whole line, as `Closes #N` is:
+          # a sentence that names an issue ("does not close #N") closes nothing.
+          numbers=$(printf '%s\n' "$PR_BODY" | tr -d '\r' \
+            | grep -oiE '^ *(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved):? +#[0-9]+ *$' \
+            | grep -oE '#[0-9]+' | tr -d '#' \
             | sort -un || true)
           if [ -z "$numbers" ]; then
             echo "PR #${PR_NUMBER} names no issue to close."
