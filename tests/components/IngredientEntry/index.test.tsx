@@ -2,9 +2,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { ReactElement } from 'react';
+import { renderToString } from 'react-dom/server';
 import type { Route } from 'next';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
+import { detailsHeading } from '@/components/IngredientEntry/details';
 import type { IngredientEntryProps } from '@/components/IngredientEntry/types';
 import type { IngredientFormProps } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
@@ -330,19 +332,58 @@ describe('IngredientEntry', () => {
     expect(value.querySelector('i, em')).toBeNull();
   });
 
-  it.each([
-    ['none', 'none'],
-    ['unknown, with no formal name', 'unknown'],
-  ] as const)('never leaves the formal name blank for %s', (_, nomenclature) => {
+  it('never leaves the formal name blank for unknown, with no formal name', () => {
     render(
       <IngredientEntry
-        detail={detail({ entry: entryRow({ nomenclature, canonicalName: null }) })}
+        detail={detail({ entry: entryRow({ nomenclature: 'unknown', canonicalName: null }) })}
         hrefOf={hrefOf}
       />,
     );
 
     expect(formalValue().textContent!.trim()).not.toBe('');
     expect(formalValue().querySelector('i, em')).toBeNull();
+  });
+
+  // Regression: an entry classified None with no formal name drew a formal-name line reading None, with its label and tip.
+  describe('an entry classified none, with no formal name', () => {
+    const nameless = { nomenclature: 'none', canonicalName: null } as const;
+
+    it('draws no formal-name line, label or tip over the entry page heading', () => {
+      // The precondition: the same entry with a formal name draws the line in this head.
+      const { unmount } = renderEntry();
+      const head = () => screen.getByRole('heading', { level: 1 }).closest('header')!;
+      expect(within(head()).getAllByRole('term').length).toBeGreaterThan(0);
+      unmount();
+
+      render(<IngredientEntry detail={detail({ entry: entryRow(nameless) })} hrefOf={hrefOf} />);
+
+      expect(within(head()).queryAllByRole('term')).toEqual([]);
+      expect(within(head()).queryAllByRole('definition')).toEqual([]);
+      expect(within(head()).queryByRole('button', { name: /^About / })).toBeNull();
+    });
+
+    it('draws nothing in the details modal head', () => {
+      // The precondition: a named entry's head draws its formal name with its tip.
+      const { unmount } = render(
+        <>
+          {
+            detailsHeading({
+              name: 'Testwort',
+              nomenclature: 'botanical',
+              canonicalName: 'Fixtura testalis',
+            }).formalName
+          }
+        </>,
+      );
+      expect(screen.getAllByRole('term').length).toBeGreaterThan(0);
+      unmount();
+
+      const { container } = render(
+        <>{detailsHeading({ name: 'Testwort', ...nameless }).formalName}</>,
+      );
+
+      expect(container).toBeEmptyDOMElement();
+    });
   });
 
   it("badges a coven's own entry Local, and not a compendium entry", () => {
@@ -690,6 +731,75 @@ describe('IngredientEntry back link', () => {
       'href',
       '/compendium',
     );
+  });
+
+  describe('with the page before it in the history', () => {
+    /** A Navigation API whose history is `previous`, if any, then this entry's page. */
+    const history = (previous?: string) => {
+      const urls = [
+        ...(previous ? [`${window.location.origin}${previous}`] : []),
+        `${window.location.origin}/compendium/ingredients/testwort`,
+      ];
+      Object.defineProperty(window, 'navigation', {
+        configurable: true,
+        value: Object.assign(new EventTarget(), {
+          currentEntry: { index: urls.length - 1 },
+          entries: () => urls.map((url) => ({ url })),
+        }),
+      });
+    };
+    // As the public entry page passes it: the compendium list, and the admin's list of it under its own label.
+    // A variable rather than a literal, so the admin list reaches the link however the prop is typed.
+    const compendiumBack = {
+      href: '/compendium' as Route,
+      label: 'Compendium',
+      also: [{ path: '/curator/compendium', label: 'Curator Compendium' }],
+    };
+    const backLink = (name: string) => screen.getByRole('link', { name });
+    afterEach(() => {
+      Reflect.deleteProperty(window, 'navigation');
+    });
+
+    // Regression: an entry opened from the admin compendium list went back to the public compendium.
+    it('returns to the admin compendium list it was opened from, with its query, under its name', () => {
+      history('/curator/compendium?query=wax&status=hidden');
+      renderEntry({ back: compendiumBack });
+      expect(backLink('Back to Curator Compendium')).toHaveAttribute(
+        'href',
+        '/curator/compendium?query=wax&status=hidden',
+      );
+      expect(screen.queryByRole('link', { name: 'Back to Compendium' })).toBeNull();
+    });
+
+    it('draws the public compendium on the server, before the history is read', () => {
+      history('/curator/compendium?query=wax&status=hidden');
+      const page = document.createElement('div');
+      page.innerHTML = renderToString(
+        <IngredientEntry detail={detail()} hrefOf={hrefOf} back={compendiumBack} />,
+      );
+      expect(within(page).getByRole('link', { name: 'Back to Compendium' })).toHaveAttribute(
+        'href',
+        '/compendium',
+      );
+    });
+
+    it('returns to the public compendium it was opened from, with its query', () => {
+      history('/compendium?query=wax');
+      renderEntry({ back: compendiumBack });
+      expect(backLink('Back to Compendium')).toHaveAttribute('href', '/compendium?query=wax');
+    });
+
+    it('returns to the bare public compendium with no page before it', () => {
+      history();
+      renderEntry({ back: compendiumBack });
+      expect(backLink('Back to Compendium')).toHaveAttribute('href', '/compendium');
+    });
+
+    it('returns to the bare public compendium from a page that is neither list', () => {
+      history('/keepers/users?query=wax');
+      renderEntry({ back: compendiumBack });
+      expect(backLink('Back to Compendium')).toHaveAttribute('href', '/compendium');
+    });
   });
 });
 

@@ -91,6 +91,7 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
       canCreateWorkspace: found.canCreateWorkspace,
       providers,
       createdAt: found.createdAt,
+      termsVersion: found.termsVersion,
     },
     memberships: memberships.map((row) => ({
       workspaceId: row.workspaceId,

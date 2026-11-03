@@ -141,7 +141,12 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
       <IngredientEntry
         detail={detail}
         hrefOf={hrefOf}
-        back={{ href: '/compendium' as Route, label: 'Compendium' }}
+        back={{
+          href: '/compendium' as Route,
+          label: 'Compendium',
+          // The admin list is the same list under its own name.
+          also: [{ path: '/curator/compendium', label: 'Curator Compendium' }],
+        }}
         accessPause={shell?.viewer.accessPause}
         edit={
           canEdit

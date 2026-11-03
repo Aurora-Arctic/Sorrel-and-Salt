@@ -10,7 +10,8 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
-import { press, type } from '../../support/interact';
+import { openSections } from '../../support/ingredient-sections';
+import { choose, press, type } from '../../support/interact';
 import {
   ENTRY_ID,
   WORKSPACE_ID,
@@ -104,6 +105,23 @@ describe("IngredientForm editing a coven's own entry", () => {
       { id: ENTRY_ID, name: 'Mockwort', slug: 'mockwort-fixtura-testalis', revision: 1 },
       'open',
     );
+  });
+
+  // Regression: choosing None on an entry that had a formal name blocked Save.
+  it('saves an entry reclassified as None, sending the kind and no formal name', async () => {
+    const calls = acceptCovenUpdate();
+    const { onSaved } = renderEdit();
+    openSections('Identity');
+    expect(textbox('Formal Name')).toHaveValue('Fixtura testalis');
+
+    choose('Classification', 'None');
+    expect(textbox('Formal Name')).toHaveValue('');
+    press('Save Ingredient');
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input).toMatchObject({ nomenclature: 'none' });
+    expect(calls[0]?.input.canonicalName || null).toBeNull();
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
   });
 
   // Delete sits at the dialog's foot as the compendium's does,

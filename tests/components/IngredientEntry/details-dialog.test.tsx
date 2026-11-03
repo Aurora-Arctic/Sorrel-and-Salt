@@ -110,8 +110,23 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
+  it('draws no formal name over the title for an entry classified None with no formal name', () => {
+    render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{
+          heading: detailsHeading({ name: 'Testwort', canonicalName: null, nomenclature: 'none' }),
+          pageHref: PAGE,
+        }}
+      />,
+    );
+
+    const dlg = screen.getByRole('dialog', { name: 'Testwort' });
+    expect(within(dlg).queryByText('None', { exact: false })).not.toBeInTheDocument();
+    expect(within(dlg).queryByRole('button', { name: /^About / })).not.toBeInTheDocument();
+  });
+
   it.each([
-    [{ canonicalName: null, nomenclature: 'none' as const }, 'None', 'Formal Name'],
     [
       { canonicalName: null, nomenclature: 'botanical' as const },
       'Not yet looked up',
