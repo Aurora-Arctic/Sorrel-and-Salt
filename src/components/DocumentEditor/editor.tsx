@@ -126,6 +126,18 @@ const DocumentEditor = ({
     <div className="document-editor">
       <h2>{title}</h2>
       <p className="lede">{lede}</p>
+      {mailing}
+      <div className="document-page__body document-editor__text">
+        <Plate
+          editor={editor}
+          onValueChange={({ value }) =>
+            setDirty(editorValueToMarkdown(value as never) !== savedRef.current)
+          }
+        >
+          <Toolbar />
+          <PlateContent aria-label="Document Text" />
+        </Plate>
+      </div>
       <div className="document-editor__bar">
         <BusyButton
           className="btn"
@@ -160,18 +172,6 @@ const DocumentEditor = ({
       </div>
       {failure && <Notice kind="error">{failure}</Notice>}
       {published !== undefined && <Notice kind="success">Published as version {published}.</Notice>}
-      {mailing}
-      <div className="document-page__body document-editor__text">
-        <Plate
-          editor={editor}
-          onValueChange={({ value }) =>
-            setDirty(editorValueToMarkdown(value as never) !== savedRef.current)
-          }
-        >
-          <Toolbar />
-          <PlateContent aria-label="Document Text" />
-        </Plate>
-      </div>
     </div>
   );
 };

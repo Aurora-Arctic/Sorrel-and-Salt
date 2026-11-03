@@ -1,6 +1,6 @@
 # Document Mailing Panel
 
-`src/components/DocumentMailingPanel/` — the block under the editor's Save Draft and Publish row, above the text, at `/keepers/documents/[key]` that emails every account about the
+`src/components/DocumentMailingPanel/` — the block under the editor's lede, above the text, at `/keepers/documents/[key]` that emails every account about the
 published version (M15.63). The page hands it to `DocumentEditor` as `mailing`, only when the document has a published version, because
 `readDocumentMailing` has nothing to read without one. Admin only: the service is the guard.
 

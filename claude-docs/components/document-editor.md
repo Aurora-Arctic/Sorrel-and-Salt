@@ -4,6 +4,7 @@
 
 ## What it does
 
+- **The Save Draft and Publish row sits under the text**, with its messages, at the end of the form.
 - **Save Draft** stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text differs from what was last opened or saved, compared as markdown, so undoing back to it disables Save Draft again (and Publish, when there is no draft).
 - **Publish** opens a confirmation, then publishes the draft as the next version (saving first when there are unsaved changes). The confirmation for the terms says that every account will be asked to agree again; no other document's confirmation says so.
 - A save and a publish send the draft's `revision`. A second admin's save in between makes the next one fail with an explaining message rather than overwrite it.
@@ -54,7 +55,7 @@ An empty table cell or footnote definition is serialised by the markdown package
 
 ## Props
 
-`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take) and `mailing`, drawn under the Save Draft and Publish row, above the text (the page passes the [Document Mailing Panel](document-mailing-panel.md)).
+`DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `revision` (the draft's revision, or `null` when there is no draft) `nextNumber` (the number the next publish will take) and `mailing`, drawn under the lede, above the text (the page passes the [Document Mailing Panel](document-mailing-panel.md)).
 
 ## Leaving the text box with the keyboard
 
