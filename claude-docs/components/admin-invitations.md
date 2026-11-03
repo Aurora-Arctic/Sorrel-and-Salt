@@ -9,7 +9,7 @@ filter and the cursor off its address (`invitations/filter.ts`), one page of
 the list and its count through `listPendingAdminInvitations` and
 `countPendingAdminInvitations` under them, and whether this keeper is held by
 the pause (`invitations/lock.ts`), and hands them down. The rules are
-[`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
+[`auth/admin-users.md`](../auth/admin-users.md), "Inviting a keeper".
 
 ## Contracts
 

@@ -10,7 +10,7 @@ import {
 import type { AdminInvitationProps } from './types';
 
 // The one place a keeper invitation's link exists outside the reader's inbox: only
-// its token's hash is stored (claude-docs/auth/admin-users.md, "Inviting an admin").
+// its token's hash is stored (claude-docs/auth/admin-users.md, "Inviting a keeper").
 // The subject names the site role it grants, curator or keeper.
 
 /** The role as the mail names it, with its article: "an admin". */

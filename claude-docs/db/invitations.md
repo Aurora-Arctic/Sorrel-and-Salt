@@ -267,7 +267,7 @@ the workspace or on `/keepers` by tier (M7.5, MB.70). The accept reads
 MB.62's open pause under the site-tier invitation itself, since the invitee
 holds no `SiteAdmin` proof: `findOpenAdminRoleChangePause` takes either. How
 MB.70 built the site tier's half is
-[`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
+[`auth/admin-users.md`](../auth/admin-users.md), "Inviting a keeper".
 
 ### Inviting into a coven (M7.3)
 
@@ -490,7 +490,7 @@ column is nullable and nothing would read it until the behaviour landed with it.
 
 ## Invitation acceptance details
 
-`src/modules/identity/services/invitation-acceptance.ts` is the one accept service for both tiers of `invitations`. Holding the token names the invitation, and the session's verified address is what admits. No message names a workspace, since the reader is not yet a member of it (claude-docs/auth/admin-users.md, "Inviting an admin").
+`src/modules/identity/services/invitation-acceptance.ts` is the one accept service for both tiers of `invitations`. Holding the token names the invitation, and the session's verified address is what admits. No message names a workspace, since the reader is not yet a member of it (claude-docs/auth/admin-users.md, "Inviting a keeper").
 
 - **Dead-link order.** A link reports one reason: accepted before declined before revoked before expired, so a link in two states always reports the same one. An act beats the clock, and the invitee's answer beats the owner's Remove that may follow a decline. Accepted and declined cannot coexist: the writers match a pending row only and a CHECK holds it. The database's CHECK ties a role to a workspace, so a row with one has both.
 - **Deleted coven.** A link into a deleted coven is refused as `closed`, after the dead-link and address checks, so an accepted invitation into a since-deleted coven still says accepted and a stranger learns nothing of the coven. The person never sees an Accept that fails on click; the repository write's own live-workspace check is the backstop. Workspaces are only soft-deleted, so no live coven means a deleted one and no finder of deleted rows is needed. The account page lists live covens only, so an id into a deleted one reads as none; only the link names the reason.

@@ -1,5 +1,5 @@
 // The live keeper whose email matches ADMIN_BOOTSTRAP_EMAIL, read at each check and not stored on the row, so a change needs no data fix
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin"). Here, not in auth.ts, so the role service need not load Better Auth.
+// (claude-docs/design-decisions/m2.9-granting-admin.md, "The primary keeper"). Here, not in auth.ts, so the role service need not load Better Auth.
 import { requiredInProduction } from './env';
 
 /**

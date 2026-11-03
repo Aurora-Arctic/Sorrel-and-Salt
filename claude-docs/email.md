@@ -333,5 +333,5 @@ the owner reads them in the clients.
 The verification flow itself is
 [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "First-party verification"
 and "The email page". MB.70's admin invitation is
-[`auth/admin-users.md`](auth/admin-users.md), "Inviting an admin"; M7.3's coven
+[`auth/admin-users.md`](auth/admin-users.md), "Inviting a keeper"; M7.3's coven
 invitation is [`db/invitations.md`](db/invitations.md), "Inviting into a coven".

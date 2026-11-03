@@ -6,7 +6,7 @@ import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
 // Who the primary keeper is: read from ADMIN_BOOTSTRAP_EMAIL at each check, never stored (claude-docs/design-decisions/m2.9-granting-admin.md,
-// "The primary admin"). Its own file so the role service and the pause both ask it without importing each other.
+// "The primary keeper"). Its own file so the role service and the pause both ask it without importing each other.
 
 /**
  * Whether `user` is the primary admin: a live keeper whose email matches

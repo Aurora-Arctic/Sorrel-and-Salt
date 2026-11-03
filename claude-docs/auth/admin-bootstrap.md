@@ -14,7 +14,7 @@ for verification.
 The primary keeper is promoted at a **sign-in**, not when the account is
 created, and only when that sign-in's provider vouches for the address
 ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md),
-"The primary admin"):
+"The primary keeper"):
 
 - **Google and Discord qualify; Microsoft and Facebook never do**, since
   only those two verify an address in a way that can be trusted
@@ -716,7 +716,7 @@ tasks that build the rest:
 - **MB.58 and MB.59** (built): the ledger, `user_privilege_changes` since
   MB.194, and granting and revoking any other keeper from `/keepers/users`. The
   primary keeper can be neither revoked nor deleted, and a revoke that would
-  leave zero keepers is refused (the record's "The primary admin" and
+  leave zero keepers is refused (the record's "The primary keeper" and
   "Revoking").
 - **MB.62 and MB.63** (built): the `admin_role_change_pauses` ledger through which
   the primary keeper pauses granting and revoking for every other keeper (the

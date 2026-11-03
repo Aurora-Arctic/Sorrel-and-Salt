@@ -5,7 +5,7 @@ one route an invitation's mailed link opens (MB.70 built it with the site
 tier, M7.5 added the workspace's). Server component `src/app/invite/[token]/page.tsx` reads where the
 visitor stands and hands down one of three states; this component shows it
 and sends the accept. The rules it shows are
-[`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
+[`auth/admin-users.md`](../auth/admin-users.md), "Inviting a keeper".
 
 ## The three states
 

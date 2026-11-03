@@ -10,7 +10,7 @@ and rename rules for deities, on the pick since MB.167
 [`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
 The task entry left one question open, and building it raised three more.
 The owner settled all four. [`db/deity-vocabulary.md`](../db/deity-vocabulary.md),
-"The admin's writes", carries the rules as built.
+"The keeper's writes", carries the rules as built.
 
 ## A tradition with live deities
 

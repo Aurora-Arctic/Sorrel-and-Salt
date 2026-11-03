@@ -22,7 +22,7 @@ import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
 
 // A keeper invites an address to become a keeper. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
-// Creating and revoking are a site admin's alone and paused with the rest of the keeper changes for every keeper but the primary one (claude-docs/auth/admin-users.md, "Inviting an admin").
+// Creating and revoking are a site admin's alone and paused with the rest of the keeper changes for every keeper but the primary one (claude-docs/auth/admin-users.md, "Inviting a keeper").
 // The real sender builds the link and hands it to a mocked `send`, so what reaches the address is what the test reads.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));

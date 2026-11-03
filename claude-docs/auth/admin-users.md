@@ -214,7 +214,7 @@ can and reaches no people page
 ([`admin-guard.md`](admin-guard.md), "The curator guard"). The rules, and the
 approaches rejected, are
 [`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)'s
-"The primary admin", "Granting" and "Revoking", and
+"The primary keeper", "Granting" and "Revoking", and
 [`m11.20-curator-role.md`](../design-decisions/m11.20-curator-role.md); this is
 the shape.
 
