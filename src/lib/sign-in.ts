@@ -157,7 +157,6 @@ export const ACCOUNT_SIGN_IN_PATH = '/account/sign-in';
 
 /** The Sign-In tab's sections, by their ids: the sign-in methods' rows and the two-factor note link to them. */
 export const ACCOUNT_PASSWORD_PATH = `${ACCOUNT_SIGN_IN_PATH}#password` as Route;
-export const ACCOUNT_TWO_FACTOR_PATH = `${ACCOUNT_SIGN_IN_PATH}#two-factor` as Route;
 export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route;
 
 /** The account page's tabs, in their order along the row. */

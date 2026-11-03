@@ -2,18 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 
-/** The day Expires On opens on, 90 days from today (UTC), as the cards list prints it: "28 January 2027". */
-export function defaultExpiry(now = new Date()): string {
-  const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 90));
-  return day.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-}
-
-/** The same day as `defaultExpiry`, as the batch table's Expires column prints it: "2027-01-28". */
+/** The day Expires On opens on, 90 days from today (UTC), as the batch table's Expires column prints it: "2027-01-28". */
 export function defaultExpiryDay(now = new Date()): string {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 90))
     .toISOString()

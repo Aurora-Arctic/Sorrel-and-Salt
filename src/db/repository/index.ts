@@ -173,7 +173,6 @@ export {
   findStandingSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
-export type { MailingAccount } from './documents';
 export {
   countDocumentMailingAccounts,
   countDocumentMailingReached,
@@ -208,15 +207,13 @@ export {
   provisionalSecondsLeft,
 } from './provisional-users';
 export { removePasskeyKeepingAWayIn } from './passkeys';
-export type { PasskeyRemoval } from './passkeys';
 export {
   clearSignInFailures,
   lockPasswordSignIn,
   readSignInFailure,
   recordSignInFailure,
 } from './sign-in-failures';
-export type { SignInFailureRow } from './sign-in-failures';
-export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
+export type { PrivilegeDeclaration } from '../types';
 export type {
   StandingTimeout,
   WorkingDeductionRow,
@@ -256,7 +253,6 @@ export type {
   SimilarityScore,
   SiteInvitationFilter,
   AddressInvitationRow,
-  CardArrivalRow,
   CardAttemptReason,
   CardAttemptRow,
   CardArrivalFilter,
@@ -264,7 +260,6 @@ export type {
   CardBatchStatus,
   CardBatchTotal,
   CardPosition,
-  CardInvitationValues,
   CardRow,
   SiteInvitationRow,
   SiteInvitationValues,
@@ -281,11 +276,4 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
-export type {
-  DocumentMailingInput,
-  DocumentMailingRecipientRow,
-  DocumentMailingRow,
-  DocumentRow,
-  DocumentTextInput,
-  DocumentVersionRow,
-} from './types';
+export type { DocumentMailingRow } from './types';

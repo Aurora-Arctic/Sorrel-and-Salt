@@ -15,15 +15,4 @@ export {
 } from './services/document-mailing';
 export { currentTermsVersion } from '../../lib/current-terms-version';
 export * from './graphql/documents';
-export type {
-  DocumentDraft,
-  DocumentForEditing,
-  DocumentKey,
-  DocumentMailingNotifier,
-  DocumentMailingOverview,
-  DocumentMailingState,
-  DocumentMailingSummary,
-  DocumentVersionSummary,
-  PublishedDocument,
-  PublishedDocumentVersion,
-} from './types';
+export type { DocumentKey, DocumentMailingNotifier, DocumentMailingOverview } from './types';

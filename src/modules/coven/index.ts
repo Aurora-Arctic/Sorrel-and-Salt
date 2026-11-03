@@ -23,8 +23,6 @@ export type {
   CovenMembership,
   MemberPauseMail,
   MemberPauseNotifier,
-  PausedCoven,
-  WorkspaceMemberPauseRow,
   WorkspaceRole,
   WorkspaceRow,
   WorkspaceSeat,
