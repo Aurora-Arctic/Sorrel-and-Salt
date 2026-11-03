@@ -6,7 +6,9 @@ import type {
   SaveDocumentDraftMutation,
   SaveDocumentDraftMutationVariables,
 } from '@/gql/graphql';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { HttpResponse } from 'msw/http';
+import { graphqlLink, mockGraphQLMutation } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -122,7 +124,8 @@ describe('leaving with unsaved changes', () => {
 
     expect(unload()).toBe(true);
     fireEvent.click(link());
-    expect(asking()).toBeInTheDocument();
+    // The question takes the focus from the editor, which updates after the click, so the question is awaited.
+    expect(await screen.findByRole('dialog', { name: 'Discard Changes?' })).toBeInTheDocument();
     expect(router.push).not.toHaveBeenCalled();
   });
 
@@ -149,5 +152,46 @@ describe('leaving with unsaved changes', () => {
     fireEvent.click(link());
     expect(asking()).toBeNull();
     expect(router.push).toHaveBeenCalledExactlyOnceWith('/compendium');
+  });
+
+  // A publish with changed text saves them first, so they are on their way to the server, as a save in flight is.
+  it('lets a tab close go while a publish of the changed text is in flight', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const saved: string[] = [];
+    server.use(
+      graphqlLink.mutation<SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables>(
+        'SaveDocumentDraft',
+        async ({ variables }) => {
+          saved.push(variables.body);
+          await gate;
+          return HttpResponse.json({ data: { saveDocumentDraft: { id: 'd1', revision: 1 } } });
+        },
+      ),
+    );
+    mockGraphQLMutation<PublishDocumentDraftMutation, PublishDocumentDraftMutationVariables>(
+      'PublishDocumentDraft',
+      () => ({ publishDocumentDraft: { number: 2 } }),
+    );
+    const text = await renderOnPage();
+    await change(text);
+    // Precondition: the change is held before the publish starts.
+    expect(unload()).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Publish' }));
+    const question = await screen.findByRole('dialog', { name: 'Publish Disclaimer' });
+    fireEvent.click(within(question).getByRole('button', { name: 'Publish' }));
+    // Precondition: the publish is in flight, its save sent and not yet answered.
+    await waitFor(() => expect(saved).toHaveLength(1));
+
+    // Released even when the check fails, so the request ends before the test does.
+    try {
+      expect(unload()).toBe(false);
+    } finally {
+      release();
+    }
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
   });
 });
