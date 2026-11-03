@@ -87,7 +87,8 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     name: /Fixture Person Verified an-admin@admin-users\.test/,
   });
   // The name, the address, the role, the creation flag, no standing time-out or pause, both sign-in
-  // methods and the joining date: the account's state as the row carries it.
+  // methods, the terms version signing in agreed to, and the joining date: the account's state as the
+  // row carries it.
   await expect(admin.getByRole('cell')).toHaveText([
     /Fixture Person$/,
     /an-admin@admin-users\.test$/,
@@ -98,6 +99,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     'Not timed out',
     'Not paused',
     /Discord.*Google/,
+    /^\d{4}-\d{2}-\d{2}$/,
     /\d/,
   ]);
   // The mark's tip bubble shows on hover, a real browser's CSS.
