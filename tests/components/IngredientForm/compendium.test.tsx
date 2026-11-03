@@ -664,6 +664,23 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
+    // Regression: choosing None on an entry that had a formal name blocked Save.
+    it('saves an entry reclassified as None, sending the kind and no formal name', async () => {
+      const calls = acceptUpdate();
+      const { onSaved } = renderEntry();
+      openSections('Identity');
+      expect(textbox('Formal Name')).toHaveValue('Fixtura testalis');
+
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).toHaveValue('');
+      press('Save Ingredient');
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ nomenclature: 'none' });
+      expect(calls[0]?.input.canonicalName || null).toBeNull();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    });
+
     // An edit renames what exists rather than making another, so a near
     // match warns and holds nothing, and the entry
     // is never its own near match.

@@ -5,6 +5,7 @@ import type { ReactElement } from 'react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
+import { detailsHeading } from '@/components/IngredientEntry/details';
 import type { IngredientEntryProps } from '@/components/IngredientEntry/types';
 import type { IngredientFormProps } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
@@ -330,19 +331,58 @@ describe('IngredientEntry', () => {
     expect(value.querySelector('i, em')).toBeNull();
   });
 
-  it.each([
-    ['none', 'none'],
-    ['unknown, with no formal name', 'unknown'],
-  ] as const)('never leaves the formal name blank for %s', (_, nomenclature) => {
+  it('never leaves the formal name blank for unknown, with no formal name', () => {
     render(
       <IngredientEntry
-        detail={detail({ entry: entryRow({ nomenclature, canonicalName: null }) })}
+        detail={detail({ entry: entryRow({ nomenclature: 'unknown', canonicalName: null }) })}
         hrefOf={hrefOf}
       />,
     );
 
     expect(formalValue().textContent!.trim()).not.toBe('');
     expect(formalValue().querySelector('i, em')).toBeNull();
+  });
+
+  // Regression: an entry classified None with no formal name drew a formal-name line reading None, with its label and tip.
+  describe('an entry classified none, with no formal name', () => {
+    const nameless = { nomenclature: 'none', canonicalName: null } as const;
+
+    it('draws no formal-name line, label or tip over the entry page heading', () => {
+      // The precondition: the same entry with a formal name draws the line in this head.
+      const { unmount } = renderEntry();
+      const head = () => screen.getByRole('heading', { level: 1 }).closest('header')!;
+      expect(within(head()).getAllByRole('term').length).toBeGreaterThan(0);
+      unmount();
+
+      render(<IngredientEntry detail={detail({ entry: entryRow(nameless) })} hrefOf={hrefOf} />);
+
+      expect(within(head()).queryAllByRole('term')).toEqual([]);
+      expect(within(head()).queryAllByRole('definition')).toEqual([]);
+      expect(within(head()).queryByRole('button', { name: /^About / })).toBeNull();
+    });
+
+    it('draws nothing in the details modal head', () => {
+      // The precondition: a named entry's head draws its formal name with its tip.
+      const { unmount } = render(
+        <>
+          {
+            detailsHeading({
+              name: 'Testwort',
+              nomenclature: 'botanical',
+              canonicalName: 'Fixtura testalis',
+            }).formalName
+          }
+        </>,
+      );
+      expect(screen.getAllByRole('term').length).toBeGreaterThan(0);
+      unmount();
+
+      const { container } = render(
+        <>{detailsHeading({ name: 'Testwort', ...nameless }).formalName}</>,
+      );
+
+      expect(container).toBeEmptyDOMElement();
+    });
   });
 
   it("badges a coven's own entry Local, and not a compendium entry", () => {

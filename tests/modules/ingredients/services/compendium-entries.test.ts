@@ -217,6 +217,22 @@ describe('updateCompendiumEntry', () => {
     expect((await rowOf(id)).description).toBeNull();
   });
 
+  // Regression: reclassifying a named entry as None did not save.
+  it('reclassifies a named entry as none, its formal name blank as the form sends it', async () => {
+    const id = await seed({ nomenclature: 'botanical' });
+    expect((await rowOf(id)).canonical_name).not.toBeNull();
+
+    await updateCompendiumEntry(admin, id, {
+      ...entry(),
+      nomenclature: 'none',
+      canonicalName: '',
+    });
+
+    const row = await rowOf(id);
+    expect(row.nomenclature).toBe('none');
+    expect(row.canonical_name).toBeNull();
+  });
+
   it('replaces each list whole, an empty one clearing it', async () => {
     const id = await seed({
       elements: ['water'],
