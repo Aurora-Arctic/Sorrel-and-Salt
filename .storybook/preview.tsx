@@ -5,6 +5,12 @@ import { startMockWorker } from './mock-api';
 import Providers from '../src/app/providers';
 import { StatusRegionProvider } from '../src/components/ClickFeedback/status-region';
 import { STORAGE_KEY, applyTheme } from '../src/components/ThemeToggle';
+// The app's two typefaces, bundled into the build as next/font self-hosts them for the app, so the workshop
+// asks no font server; the weights are src/app/fonts.ts's. typography.scss names the families.
+import '@fontsource-variable/lexend/wght.css';
+import '@fontsource/cormorant-unicase/latin-500.css';
+import '@fontsource/cormorant-unicase/latin-600.css';
+import '@fontsource/cormorant-unicase/latin-700.css';
 import './theme.scss';
 import './story-frame.scss';
 import './typography.scss';

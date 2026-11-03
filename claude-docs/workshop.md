@@ -186,9 +186,14 @@ The viewport is a Storybook global, like the theme, so a link can set both:
     and the `matchMedia` patch alone doesn't stop a real transition from running
     and firing its own `transitionend`. The patch is undone on cleanup so it can't
     leak into the next story.
-- **`preview-head.html`** — injected into `<head>`; loads Cormorant Unicase +
-  Lexend by name from Google Fonts so the workshop's type matches the app's (the
-  app self-hosts them via `next/font`, which the workshop has no equivalent of).
+- **The typefaces.** `preview.tsx` imports Cormorant Unicase and Lexend from the
+  `@fontsource` packages (`@fontsource/cormorant-unicase`, its latin 500, 600 and
+  700 files, and `@fontsource-variable/lexend`), so the workshop's type matches the
+  app's. The app self-hosts them through `next/font`, which the workshop has no
+  equivalent of. The build bundles the font files beside its own and links them
+  relative to the page, so they load under `/workshop/` as well, and no workshop
+  page asks Google's font servers. `tests/e2e/workshop/fonts.spec.ts` checks both
+  faces load with no such request.
 - **`theme.scss`** — a trimmed copy of `globals.scss`: the three theme blocks
   and the `body` surface, minus its `@use './typography'`. Importing
   `globals.scss` whole drags `_typography.scss`'s document-wide element rules
@@ -578,15 +583,12 @@ The workshop's font plumbing substitutes, Vite-side, for what `next/font` +
 
 - **`--font-body` / `--font-display` are redefined in `.storybook/typography.scss`'s
   `:root` block.** When the app exposes these in a shared partial, delete the
-  `.storybook/` copy and `@use` that instead. The family names (`'Lexend'`,
-  `'Cormorant Unicase'`) are currently written in three places that must agree:
-  the `$font-*` stacks in `src/scss/_variables.scss`, the Google Fonts URL in
-  `.storybook/preview-head.html`, and this `:root` override.
-- **`.storybook/preview-head.html` pulls the faces from `fonts.googleapis.com`** — the
-  one place in the project that does, against the app's self-hosting rule. Switch to
-  self-hosted `@fontsource` so `workshop:build` needs no network access.
+  `.storybook/` copy and `@use` that instead. The override names the families the
+  `@fontsource` stylesheets declare, `'Lexend Variable'` and `'Cormorant Unicase'`,
+  so it must change with the imports in `.storybook/preview.tsx`; the weights those
+  imports take must agree with `src/app/fonts.ts`.
 - **That `:root` override sits in `.storybook/typography.scss`** (prose rules).
-  Move it to its own `.storybook/fonts.scss`, alongside the `preview-head.html` concern.
+  Move it to its own `.storybook/fonts.scss`, with the `@fontsource` imports.
 
 ## The `state` dropdown story
 

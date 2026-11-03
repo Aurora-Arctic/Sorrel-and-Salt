@@ -27,6 +27,8 @@
   // knip reads the `--require` list in deploy.yml's assert-pulled-env step as a file path.
   "ignoreUnresolved": ["DATABASE_URL,BETTER_AUTH_SECRET,ADMIN_BOOTSTRAP_EMAIL"],
   "ignoreIssues": {
+    // The db project's Vitest runner, loaded by path from tests/support/db-project.mts; as an entry it stalls knip's run.
+    "tests/support/db-runner.ts": ["files"],
     // Resolved from .design-sync/.ds-sync/package.json on purpose, not from this package.json.
     ".design-sync/remote-chromium.mjs": ["unlisted"],
   },
