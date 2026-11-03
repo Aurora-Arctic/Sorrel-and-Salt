@@ -45,13 +45,13 @@
   outline: none;
 }
 
-// One group of related buttons, a little closer than the groups are to each other, with a line between it and the group before.
+// One group of related buttons, with a line between it and the group before, as far from each as the buttons are apart.
 .document-editor__group {
   display: flex;
-  gap: space(3);
+  gap: space(2);
 
   & + & {
-    padding-inline-start: space(4);
+    padding-inline-start: space(2);
     border-inline-start: 1px solid $hairline;
   }
 }
@@ -73,7 +73,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: space(4);
+  gap: space(2);
 
   // The space either side of the formatting groups splits evenly, so they sit centred and Undo and Redo at the right end.
   .document-editor__group:first-child,
