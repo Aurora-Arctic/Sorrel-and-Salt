@@ -557,15 +557,18 @@ the tests [`tests.md`](tests.md).
 (the text is the public page `/terms`). It shows the version and date, links
 the text, and has one Agree & Continue button.
 
-- **The version is one constant.** `TERMS_VERSION` in
-  `src/lib/terms-version.ts` is printed by `/terms` and compared by the gate.
-  Raising it sends every account back through the acceptance page.
-- **The record is two nullable columns on `users`.** `terms_version` and
-  `terms_accepted_at` are null until an account agrees. `agreeToTerms`
+- **The version is a number.** The terms in force are the highest published
+  version of the terms document, read by `currentTermsVersion`
+  (`src/lib/current-terms-version.ts`), which answers 0 when none is
+  published. Publishing a new version sends every account back through the
+  acceptance page.
+- **The record is two nullable columns on `users`.** `agreed_terms_version`
+  and `terms_accepted_at` are null until an account agrees. `agreeToTerms`
   (`src/modules/identity/services/terms.ts`) writes both for the caller's own
-  row through `withAudit`, and takes no version: it records the one in force,
-  so a caller cannot record another. The GraphQL mutation of the same name
-  returns the row.
+  row through `withAudit`. It takes the version number the page showed and
+  refuses any number but the one in force, so a page left open across a
+  publish cannot agree to text it did not show. The GraphQL mutation of the
+  same name returns the row.
 - **The gate is in `requireSession()`, after the email check.** An account
   whose stored version is not the current one is redirected to
   `/account/terms?next=<path>`, the path coming from the same
