@@ -56,6 +56,10 @@ A support request keeps what you chose to write (its subject and message), the p
 
 When an admin times you out of support, pauses your access to the site, or a coven owner pauses your access to their coven, a record is kept about you. It holds the end date if there is one, who set it, the note they wrote, and the message they wrote to you, where they wrote one. You are emailed once when one is set, at the address on your account. The email carries the message and the end date, never the note, which only staff or the coven's owners see. Lifting one sends no email.
 
+### Emails About Document Changes
+
+When an admin emails every account about a change to a site document, a record is kept for each account the mailing goes to. It holds which mailing it belongs to, your account's id, and the time your email went out, with the usual stamps of who created and last changed it. It does not hold your email address or the email's text: the address is read from your account at the moment the email is sent. No screen shows these records to anyone. An admin sees only how many accounts a mailing has reached.
+
 ## Who Sees It
 
 ### Who Can See What
@@ -91,6 +95,8 @@ Some rows are removed outright:
 - A row that only pairs two things, an ingredient with a category or a spell with a category, is removed when the pairing is removed.
 - A passkey you remove is removed.
 - The counters that slow down repeated sign-in attempts are removed once they are out of date.
+
+The record that an email about a document change was sent to you is kept indefinitely. Nothing deletes or anonymises it. It goes only if your account row is removed outright, which today happens only to the unverified accounts above, and those are never emailed.
 
 ### How to Ask for Removal
 

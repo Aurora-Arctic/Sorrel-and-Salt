@@ -177,7 +177,7 @@ describe('/privacy hands DocumentPage the access cards', () => {
   /** Six roles and ten kinds of data, as the page drew them before the text moved into the database. */
   function expectTheAccessData({ roles, rows }: ReturnType<typeof accessCardsProps>): void {
     expect(roles).toHaveLength(6);
-    expect(rows).toHaveLength(10);
+    expect(rows).toHaveLength(11);
     for (const row of rows) expect(row.cells).toHaveLength(roles.length);
   }
 

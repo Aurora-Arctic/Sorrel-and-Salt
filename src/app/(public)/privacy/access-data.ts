@@ -108,6 +108,17 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
     ],
   },
   {
+    data: 'Which emails about a document change were sent to you, and when',
+    cells: [
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'part', text: 'Only how many accounts a mailing has reached, never which' },
+      { mark: 'yes', text: 'Yes' },
+    ],
+  },
+  {
     data: 'Who wrote or changed a row, and when',
     cells: [
       { mark: 'yes', text: 'Yes, within the coven' },
