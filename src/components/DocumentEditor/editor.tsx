@@ -161,8 +161,6 @@ const DocumentEditor = ({
         expectedRevision: revisionRef.current,
       });
     }
-    // With nothing to delete the dialog would close in the click's own tick; a turn later lets the editor's value change land first.
-    else await new Promise((resolve) => setTimeout(resolve, 0));
     const restored = markdownToEditorValue(publishedBody);
     const text = editorValueToMarkdown(restored as never);
     savedRef.current = text;

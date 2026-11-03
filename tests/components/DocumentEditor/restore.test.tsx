@@ -118,11 +118,17 @@ function unload(): boolean {
   return event.defaultPrevented;
 }
 
+/** Confirms the question, in `act`: the restore's updates follow the click by a few promise turns. */
+async function confirm(question: HTMLElement): Promise<void> {
+  await act(async () => {
+    fireEvent.click(within(question).getByRole('button', { name: RESTORE }));
+  });
+}
+
 /** Presses Restore and confirms it in the question it opens. */
 async function restoreAndConfirm(): Promise<void> {
   fireEvent.click(restore()!);
-  const question = await screen.findByRole('dialog', { name: RESTORE });
-  fireEvent.click(within(question).getByRole('button', { name: RESTORE }));
+  await confirm(await screen.findByRole('dialog', { name: RESTORE }));
 }
 
 /** Leaves the editor time to autosave anything it held, and the answers to land. */
@@ -145,7 +151,7 @@ describe('Restore Published Version', () => {
     const question = await screen.findByRole('dialog', { name: RESTORE });
     // It asks: nothing is sent until the admin confirms.
     expect(discards).toEqual([]);
-    fireEvent.click(within(question).getByRole('button', { name: RESTORE }));
+    await confirm(question);
 
     await waitFor(() => expect(discards).toEqual([{ documentId: 'd1', expectedRevision: 3 }]));
     await waitFor(() => expect(text).toHaveTextContent(PUBLISHED));

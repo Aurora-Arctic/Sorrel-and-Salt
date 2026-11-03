@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { GraphQLClientError, StaleWriteError } from '@/lib/graphql-client-error';
 import { useLeaveGuard } from '@/lib/navigation';
 import { clearMirror, writeMirror } from './mirror';
@@ -282,7 +282,9 @@ export function useAutosave<TValue>({
   const key = JSON.stringify(value);
 
   const latest = useRef<Latest<TValue>>({ value, save, enabled, mirror, delay, maxWait });
-  useEffect(() => {
+  // Layout effects, here and in the change check below: a passive effect can run after the committed form is clicked, and a
+  // `flush()` from that click would find the change not yet marked and save nothing.
+  useLayoutEffect(() => {
     latest.current = { value, save, enabled, mirror, delay, maxWait };
   });
 
@@ -297,7 +299,7 @@ export function useAutosave<TValue>({
 
   // The first render is what the form opened with, not a change.
   const previous = useRef<{ key: string; enabled: boolean; dirty: boolean } | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const before = previous.current;
     previous.current = { key, enabled, dirty };
     if (!before) return;

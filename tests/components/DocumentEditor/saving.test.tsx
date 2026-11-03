@@ -147,7 +147,8 @@ describe('leaving with unsaved changes', () => {
     const save = screen.getByRole('button', { name: 'Save Draft' });
     fireEvent.click(save);
     await waitFor(() => expect(saved).toHaveLength(1));
-    await waitFor(() => expect(save).toBeDisabled());
+    // Found by name: while the save is in flight the button is named Saving Draft, so this waits for the save to land.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled());
 
     expect(unload()).toBe(false);
     fireEvent.click(link());
