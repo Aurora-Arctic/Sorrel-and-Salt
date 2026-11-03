@@ -26,7 +26,10 @@ export const documentMailingRecipients = namedWrites(
       ...auditColumns,
     },
     (table) => [
-      check('document_mailing_recipients_sent_or_skipped', sql`num_nonnulls(${table.sentAt}, ${table.skippedAt}) <= 1`),
+      check(
+        'document_mailing_recipients_sent_or_skipped',
+        sql`num_nonnulls(${table.sentAt}, ${table.skippedAt}) <= 1`,
+      ),
       liveUnique(
         'document_mailing_recipients_mailing_user_unique',
         table,
