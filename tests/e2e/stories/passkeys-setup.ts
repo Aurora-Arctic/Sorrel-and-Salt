@@ -5,6 +5,7 @@ import { test as base } from '../fixtures';
 import { assertNoAccessibilityViolations, settleTransitions } from '../axe';
 import { serverUrl, slotPort } from '../slots';
 import { withSql } from './accounts-setup';
+import { agreedInForceSql } from '../../support/db/agreement-in-force';
 
 // What the passkey stories share. WebAuthn runs only in a secure context, and the one plain-http host that counts
 // as one is localhost, so a passkey story reaches its slot server at localhost: the remote browser through
@@ -48,9 +49,10 @@ async function accountWithPasskey(email: string, key: ReturnType<typeof passkeyP
   const id = randomUUID();
   await withSql(async (sql) => {
     await sql`
-      insert into users (id, name, email, email_verified, role, agreed_terms_version, terms_accepted_at, created_by, updated_by)
+      insert into users (id, name, email, email_verified, role,
+        agreed_terms_version, agreed_disclaimer_version, agreed_ethics_version, terms_accepted_at, created_by, updated_by)
       values (${id}, 'Fixture Passkeyholder', ${email}, true, 'user',
-        (select max(v.number) from document_versions v join documents d on d.id = v.document_id where d.key = 'terms' and d.deleted_at is null and v.status = 'published' and v.deleted_at is null), now(), ${id}, ${id})
+        ${agreedInForceSql(sql)}, now(), ${id}, ${id})
     `;
     await sql`
       insert into passkeys (name, public_key, user_id, credential_id, counter, device_type, backed_up, transports)

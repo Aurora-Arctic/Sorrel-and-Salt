@@ -554,29 +554,45 @@ the tests [`tests.md`](tests.md).
 ### The terms page (M15.57)
 
 `/account/terms`, protected, is where an account agrees to the terms of use
-(the text is the public page `/terms`). It shows the version and date, links
-the text, and has one Agree & Continue button.
+(the text is the public page `/terms`). The terms include the disclaimer and
+the code of ethics, so agreeing covers all three documents at once. The page
+shows the joint version and the date, links the text, and has one Agree &
+Continue button.
 
-- **The version is a number.** The terms in force are the highest published
-  version of the terms document, read by `currentTermsVersion`
-  (`src/lib/current-terms-version.ts`), which answers 0 when none is
-  published. Publishing a new version sends every account back through the
-  acceptance page.
-- **The record is two nullable columns on `users`.** `agreed_terms_version`
-  and `terms_accepted_at` are null until an account agrees. `agreeToTerms`
-  (`src/modules/identity/services/terms.ts`) writes both for the caller's own
-  row through `withAudit`. It takes the version number the page showed and
-  refuses any number but the one in force, so a page left open across a
+- **The version is three numbers, shown as one.** The version in force is
+  each agreed document's highest published version, read by
+  `currentAgreementVersion` (`src/lib/current-agreement-version.ts`) as
+  `{ terms, disclaimer, ethics }`, with 0 for a document that has none
+  published. It is cached under the `documents` tag, so a publish clears it.
+  The page and the keepers' screens show it as one joint version,
+  `terms.disclaimer.ethics` (for example `1.4.2`), through
+  `formatAgreementVersion` (`src/lib/agreement-version.ts`). Publishing a new
+  version of any of the three sends every account back through the
+  acceptance page; publishing the privacy policy does not
+  ([`m15.79-agreement-covers-three-documents.md`](../design-decisions/m15.79-agreement-covers-three-documents.md)).
+- **The record is four nullable columns on `users`.** `agreed_terms_version`,
+  `agreed_disclaimer_version`, `agreed_ethics_version` and
+  `terms_accepted_at` are null until an account agrees. `agreeToTerms`
+  (`src/modules/identity/services/terms.ts`) writes all four for the caller's
+  own row through `withAudit`. It takes the three numbers the page showed and
+  refuses any combination but the one in force, so a page left open across a
   publish cannot agree to text it did not show. The GraphQL mutation of the
-  same name returns the row.
+  same name takes them as an `AgreementVersionInput` and returns the row.
 - **The gate is in `requireSession()`, after the email check.** An account
-  whose stored version is not the current one is redirected to
-  `/account/terms?next=<path>`, the path coming from the same
-  proxy-forwarded header and the same `safeReturnPath` guard the email page
-  uses. An unverified account proves its address first and agrees second; the
-  email page and the acceptance page are each exempt, so the two redirects
-  never chase each other. `requireAdminSession()` goes through
+  is agreed only when all three stored numbers equal the three in force
+  (`agreementIsCurrent`); a stored null counts as 0, so a document with
+  nothing published asks nothing. The stored numbers travel in Better Auth's
+  session, so the gate adds no query of its own. An account that has not
+  agreed is redirected to `/account/terms?next=<path>`, the path coming from
+  the same proxy-forwarded header and the same `safeReturnPath` guard the
+  email page uses. An unverified account proves its address first and agrees
+  second; the email page and the acceptance page are each exempt, so the two
+  redirects never chase each other. `requireAdminSession()` goes through
   `requireSession()`, so admin pages are gated too.
+- **The page names what changed.** Under the joint version it lists each of
+  the three documents whose version in force differs from the account's
+  stored one, each linking its public page (`documentsChangedSince`). A new
+  account sees all three.
 - **After agreeing the browser makes a full navigation** to `next`, or to the
   signed-in landing page when there is none, so the router does not reuse the
   cached redirect.
@@ -587,8 +603,9 @@ the text, and has one Agree & Continue button.
   account that has not agreed; the gate covers pages only, as the entry for
   M15.57 specifies.
 - **Fixtures have agreed.** The seeded fixture cast and the e2e `signInAs`
-  helper record the current version, so a spec lands where it asks; pass
-  `termsAgreed: false` to walk the gate.
+  helper record the three versions in force (`agreedInForceSql`,
+  `tests/support/db/agreement-in-force.ts`), so a spec lands where it asks;
+  pass `termsAgreed: false` to walk the gate.
 
 ### The account page (MB.88)
 

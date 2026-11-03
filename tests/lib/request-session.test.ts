@@ -36,11 +36,11 @@ const membershipBySlugMock = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipBySlug: membershipBySlugMock }));
 // The pause lookup is the service's, proved against Postgres in tests/db/impersonation.test.ts; here only what the helpers do with its answer.
 const standingAccessPauseMock = vi.fn();
-// The terms version in force is the documents module's, proved against Postgres in tests/modules/identity/services/terms.test.ts;
-// here only how the gate compares an account's agreement with it.
-const CURRENT_TERMS = 3;
-const currentTermsVersionMock = vi.fn(async () => CURRENT_TERMS);
-vi.mock('@/modules/documents', () => ({ currentTermsVersion: currentTermsVersionMock }));
+// The versions in force are the documents module's, proved against Postgres in tests/modules/identity/services/terms.test.ts;
+// here only how the gate compares an account's agreement with them.
+const IN_FORCE = { terms: 3, disclaimer: 4, ethics: 2 };
+const currentAgreementVersionMock = vi.fn(async () => IN_FORCE);
+vi.mock('@/modules/documents', () => ({ currentAgreementVersion: currentAgreementVersionMock }));
 vi.mock('@/modules/identity', async (actual) => ({
   ...(await actual<typeof import('@/modules/identity')>()),
   standingAccessPause: standingAccessPauseMock,
@@ -57,6 +57,7 @@ const {
   requireSession,
   requireSignedIn,
   sessionFromHeaders,
+  sessionAgreedVersion,
   sessionIsFresh,
   sessionIsVerified,
 } = await import('@/lib/request-session');
@@ -69,7 +70,7 @@ function betterAuthSession(
   role: unknown,
   emailVerified = true,
   createdAt = new Date(),
-  agreedTermsVersion: number | null = CURRENT_TERMS,
+  agreed: typeof IN_FORCE | null = IN_FORCE,
 ) {
   return {
     session: { id: 's', token: 't', userId: USER_ID, expiresAt: new Date(), createdAt },
@@ -79,7 +80,9 @@ function betterAuthSession(
       name: 'Fixture',
       role,
       emailVerified,
-      agreedTermsVersion,
+      agreedTermsVersion: agreed?.terms ?? null,
+      agreedDisclaimerVersion: agreed?.disclaimer ?? null,
+      agreedEthicsVersion: agreed?.ethics ?? null,
     },
   };
 }
@@ -321,11 +324,19 @@ describe('requireSession', () => {
     });
   });
 
-  // An account that has not agreed to the terms in force reaches the acceptance page and nothing else; the same account, having
-  // agreed, passes the same page, so the redirect is the guard's doing and nothing else's.
+  // An account that has not agreed to all three versions in force reaches the acceptance page and nothing else; the same account,
+  // having agreed, passes the same page, so the redirect is the guard's doing and nothing else's.
   describe.each([
     ['never agreed', null],
-    ['agreed to an earlier version', CURRENT_TERMS - 1],
+    ['agreed to an earlier terms version', { ...IN_FORCE, terms: IN_FORCE.terms - 1 }],
+    [
+      'agreed to an earlier disclaimer version alone',
+      { ...IN_FORCE, disclaimer: IN_FORCE.disclaimer - 1 },
+    ],
+    [
+      'agreed to an earlier code of ethics version alone',
+      { ...IN_FORCE, ethics: IN_FORCE.ethics - 1 },
+    ],
   ])('an account that %s', (_label, stored) => {
     beforeEach(() => {
       getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), stored));
@@ -341,7 +352,7 @@ describe('requireSession', () => {
 
     it('passes that page once it has agreed to the current version', async () => {
       requestHeaders.set(RETURN_PATH_HEADER, '/coven/hearth?tab=mine');
-      getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), CURRENT_TERMS));
+      getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), IN_FORCE));
 
       await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     });
@@ -379,17 +390,47 @@ describe('requireSession', () => {
     );
   });
 
-  // The account and its agreement stay as they were; only the published terms move on.
-  it('sends an account that agreed to the terms in force there again once a newer version is published', async () => {
-    getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), CURRENT_TERMS));
-    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
-    await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+  // The account and its agreement stay as they were; only one published document moves on.
+  it.each([
+    ['terms', { ...IN_FORCE, terms: IN_FORCE.terms + 1 }],
+    ['disclaimer', { ...IN_FORCE, disclaimer: IN_FORCE.disclaimer + 1 }],
+    ['code of ethics', { ...IN_FORCE, ethics: IN_FORCE.ethics + 1 }],
+  ])(
+    'sends an account that agreed to the versions in force there again once a newer %s is published',
+    async (_label, moved) => {
+      getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), IN_FORCE));
+      requestHeaders.set(RETURN_PATH_HEADER, '/coven');
+      await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
 
-    currentTermsVersionMock.mockResolvedValueOnce(CURRENT_TERMS + 1);
+      currentAgreementVersionMock.mockResolvedValueOnce(moved);
 
-    await expect(requireSession()).rejects.toThrow(
-      `redirect:/account/terms?next=${encodeURIComponent('/coven')}`,
+      await expect(requireSession()).rejects.toThrow(
+        `redirect:/account/terms?next=${encodeURIComponent('/coven')}`,
+      );
+    },
+  );
+});
+
+// The acceptance page names what changed since the account last agreed, from the versions the session already carries.
+describe('sessionAgreedVersion', () => {
+  it('is the three versions the account stored, with no query of its own', async () => {
+    getSessionMock.mockResolvedValue(
+      betterAuthSession('user', true, new Date(), { terms: 3, disclaimer: 1, ethics: 2 }),
     );
+
+    await expect(sessionAgreedVersion()).resolves.toEqual({ terms: 3, disclaimer: 1, ethics: 2 });
+  });
+
+  it('is nulls for an account that never agreed, and absent signed out', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), null));
+    await expect(sessionAgreedVersion()).resolves.toEqual({
+      terms: null,
+      disclaimer: null,
+      ethics: null,
+    });
+
+    getSessionMock.mockResolvedValue(null);
+    await expect(sessionAgreedVersion()).resolves.toBeUndefined();
   });
 });
 

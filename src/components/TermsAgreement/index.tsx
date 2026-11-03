@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
+import { formatAgreementVersion } from '../../lib/agreement-version';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { dayInUtc } from '../../lib/utc';
@@ -17,10 +18,12 @@ import './index.scss';
 // shown, and the server refuses one no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
 const AgreeToTermsDocument = graphql(`
-  mutation AgreeToTerms($version: Int!) {
+  mutation AgreeToTerms($version: AgreementVersionInput!) {
     agreeToTerms(version: $version) {
       id
       agreedTermsVersion
+      agreedDisclaimerVersion
+      agreedEthicsVersion
     }
   }
 `);
@@ -45,7 +48,7 @@ const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps
         lede="Read the terms of use, then agree to them to carry on. You agree again only when they change."
       />
       <p className="terms-agreement__version">
-        Version {version}, last updated{' '}
+        Version {formatAgreementVersion(version)}, last updated{' '}
         <time dateTime={updatedOn}>{dayInUtc(new Date(updatedOn))}</time>
       </p>
       <p>

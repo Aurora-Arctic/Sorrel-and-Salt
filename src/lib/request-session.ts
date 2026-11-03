@@ -2,13 +2,9 @@ import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { type CovenMembership, membershipBySlug } from '@/modules/coven';
-import { currentTermsVersion } from '@/modules/documents';
-import {
-  assertCurator,
-  assertSiteAdmin,
-  hasAgreedToTerms,
-  standingAccessPause,
-} from '@/modules/identity';
+import { currentAgreementVersion } from '@/modules/documents';
+import { assertCurator, assertSiteAdmin, standingAccessPause } from '@/modules/identity';
+import { agreementIsCurrent } from './agreement-version';
 import { auth } from './auth';
 import { ACCESS_PAUSED_PATH, covenPausedPath, isPausedViewPage } from './access-paused';
 import { AccessPaused, Forbidden } from './errors';
@@ -19,7 +15,7 @@ import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
 import { isRosterProvider } from './social-providers';
 import { toUserRole } from './session-role';
 import { isFreshSession } from './session-fresh';
-import type { AccountPasskey, LinkedAccount } from './types';
+import type { AccountPasskey, AgreedVersion, LinkedAccount } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
@@ -45,6 +41,16 @@ async function accessPauseOf(userId: string): Promise<SessionState['accessPause'
   return pause && { until: pause.until };
 }
 
+/** The versions the account stored when it last agreed, which Better Auth reads into the session with the row. */
+function agreedVersionOf(user: object): AgreedVersion {
+  const part = (field: string) => Reflect.get(user, field) as number | null | undefined;
+  return {
+    terms: part('agreedTermsVersion') ?? null,
+    disclaimer: part('agreedDisclaimerVersion') ?? null,
+    ethics: part('agreedEthicsVersion') ?? null,
+  };
+}
+
 /**
  * Everything Better Auth knows of the request's session, the standing pause included, read from the headers given. For
  * the GraphQL context, which has no `headers()`; a page reads it through the guards below.
@@ -57,6 +63,7 @@ export async function sessionStateFromHeaders(requestHeaders: Headers): Promise<
   // an impersonation; the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
   const accessPause = await accessPauseOf(result.user.id);
+  const agreedVersion = agreedVersionOf(result.user);
   return {
     session: {
       userId: result.user.id,
@@ -65,10 +72,8 @@ export async function sessionStateFromHeaders(requestHeaders: Headers): Promise<
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,
-    termsAgreed: hasAgreedToTerms(
-      Reflect.get(result.user, 'agreedTermsVersion') as number | null | undefined,
-      await currentTermsVersion(),
-    ),
+    termsAgreed: agreementIsCurrent(agreedVersion, await currentAgreementVersion()),
+    agreedVersion,
     sessionFresh: await isFresh(result.session.createdAt),
     ...(accessPause && { accessPause }),
   };
@@ -130,6 +135,14 @@ export async function sessionIsVerified(): Promise<boolean> {
  */
 export async function sessionIsFresh(): Promise<boolean> {
   return (await getSessionState()).sessionFresh;
+}
+
+/**
+ * The versions the signed-in account last agreed to, each null until it agrees; absent with no session. For the acceptance page,
+ * which names what changed since, from the same per-request lookup.
+ */
+export async function sessionAgreedVersion(): Promise<AgreedVersion | undefined> {
+  return (await getSessionState()).agreedVersion;
 }
 
 /** The page's own path, which the proxy forwarded, since a page cannot read its URL. */

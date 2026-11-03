@@ -11,6 +11,16 @@ import { server } from '../../support/msw/server';
 // The acceptance page's body: it links the terms, and its one button records agreement to the version it showed, then goes to where
 // the account was headed. The server refuses a version no longer in force (tests/modules/identity/services/terms.test.ts).
 
+// Terms 3, disclaimer 1, code of ethics 2.
+const IN_FORCE = { terms: 3, disclaimer: 1, ethics: 2 };
+
+const AGREED = {
+  id: 'u1',
+  agreedTermsVersion: 3,
+  agreedDisclaimerVersion: 1,
+  agreedEthicsVersion: 2,
+};
+
 const assign = vi.fn();
 
 beforeEach(() => {
@@ -21,7 +31,7 @@ beforeEach(() => {
 function renderAgreement() {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
-      <TermsAgreement version={3} updatedOn="2026-11-02" destination="/coven/hearth" />
+      <TermsAgreement version={IN_FORCE} updatedOn="2026-11-02" destination="/coven/hearth" />
     </QueryClientProvider>,
   );
 }
@@ -34,21 +44,21 @@ describe('TermsAgreement', () => {
       'href',
       '/terms',
     );
-    expect(screen.getByText(/Version 3\b/)).toBeInTheDocument();
+    expect(screen.getByText(/Version 3\.1\.2\b/)).toBeInTheDocument();
   });
 
   it('records agreement to the version it showed, then goes to the destination', async () => {
     const sent = vi.fn();
     mockGraphQLMutation('AgreeToTerms', (variables) => {
       sent(variables);
-      return { agreeToTerms: { id: 'u1', agreedTermsVersion: 3 } };
+      return { agreeToTerms: AGREED };
     });
     renderAgreement();
 
     await userEvent.click(screen.getByRole('button', { name: 'Agree & Continue' }));
 
     await waitFor(() => expect(assign).toHaveBeenCalledWith('/coven/hearth'));
-    expect(sent).toHaveBeenCalledWith({ version: 3 });
+    expect(sent).toHaveBeenCalledWith({ version: IN_FORCE });
   });
 
   // Regression: Agree showed no loading state while it saved, and took a second press once saved.
@@ -69,7 +79,7 @@ describe('TermsAgreement', () => {
           calls.push(variables);
           await held;
           return HttpResponse.json({
-            data: { agreeToTerms: { id: 'u1', agreedTermsVersion: 3 } },
+            data: { agreeToTerms: AGREED },
           });
         }),
       );
