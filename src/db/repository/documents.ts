@@ -113,19 +113,20 @@ export function findDocumentDraft(
 const newerVersion = alias(documentVersions, 'newer_version');
 
 // A live item of a live sent mailing covering the outer version: a replaced, sending or paused mailing leaves it to be mailed.
-const mailedVersion = existsIn(
-  documentMailingItems,
-  and(
-    eq(documentMailingItems.documentVersionId, documentVersions.id),
-    existsIn(
-      documentMailings,
-      and(
-        eq(documentMailings.id, documentMailingItems.mailingId),
-        eq(documentMailings.status, 'sent'),
+const mailedVersion = () =>
+  existsIn(
+    documentMailingItems,
+    and(
+      eq(documentMailingItems.documentVersionId, documentVersions.id),
+      existsIn(
+        documentMailings,
+        and(
+          eq(documentMailings.id, documentMailingItems.mailingId),
+          eq(documentMailings.status, 'sent'),
+        ),
       ),
     ),
-  ),
-);
+  );
 
 /**
  * Each live document's newest published version, when it is not the first and no sent mailing covers it: what the next mailing
@@ -148,7 +149,7 @@ export function findPendingDocumentVersions(): Promise<PendingDocumentVersion[]>
           ),
         ),
       ),
-      not(mailedVersion),
+      not(mailedVersion()),
     ),
     {
       aggregate: {
@@ -294,14 +295,14 @@ export function findDocumentMailingById(
 }
 
 // A mailing still going: sending, or paused until a keeper resumes it.
-const openMailing = and(
-  notSoftDeleted(documentMailings),
-  inArray(documentMailings.status, ['sending', 'paused']),
-);
+const openMailingStatus = () => inArray(documentMailings.status, ['sending', 'paused']);
 
 /** The live sending and paused mailings, oldest first: what a new mailing replaces. */
 export async function findOpenDocumentMailings(): Promise<DocumentMailingRow[]> {
-  const open = await selectFrom(documentMailings, openMailing);
+  const open = await selectFrom(
+    documentMailings,
+    and(notSoftDeleted(documentMailings), openMailingStatus()),
+  );
   return open.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 }
 
@@ -512,7 +513,11 @@ export function documentWrites({
         and(eq(documentMailings.id, mailingId), eq(documentMailings.status, 'sending')),
       ),
     replaceOpenDocumentMailings: () =>
-      update(documentMailings, { status: 'replaced' }, openMailing),
+      update(
+        documentMailings,
+        { status: 'replaced' },
+        and(notSoftDeleted(documentMailings), openMailingStatus()),
+      ),
     pauseDocumentMailing: (mailingId) =>
       update(
         documentMailings,
