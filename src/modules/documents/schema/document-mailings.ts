@@ -4,11 +4,13 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 import { auditColumns } from '../../identity/schema/users';
 import { documentVersions } from './document-versions';
 
-// `replaced` marks a mailing that a newer mailing of the same document stopped before it finished.
+// `replaced` marks a mailing that a newer mailing of the same document stopped before it finished; `paused` one the mail provider's
+// monthly quota stopped, until an admin resumes it.
 export const documentMailingStatus = pgEnum('document_mailing_status', [
   'sending',
   'sent',
   'replaced',
+  'paused',
 ]);
 
 // A published version emailed to every account, at most once per version. Marked `namedWrites`: its status and finish time are
