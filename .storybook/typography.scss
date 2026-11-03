@@ -7,11 +7,11 @@
 @use '../src/scss/typography' as *;
 
 // next/font defines these on <html>; the workshop has no equivalent, so point
-// them at the families head.html loads. Without this a bare `var(--font-body)`
+// them at the @fontsource families preview.tsx imports. Without this a bare `var(--font-body)`
 // resolving to nothing takes the whole `font-family` declaration down and does
 // NOT fall through to the named families. claude-docs/styling.md, "Known issue".
 :root {
-  --font-body: 'Lexend';
+  --font-body: 'Lexend Variable';
   --font-display: 'Cormorant Unicase';
 }
 
