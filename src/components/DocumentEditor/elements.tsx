@@ -33,7 +33,7 @@ import {
   type RenderNodeWrapper,
   type PlateLeafProps,
 } from 'platejs/react';
-import type { ReactElement } from 'react';
+import { Children, type ReactElement } from 'react';
 import remarkGfm from 'remark-gfm';
 
 // The editor's nodes drawn as the public page draws them, so the text is edited looking as it will read: the same elements
@@ -71,10 +71,15 @@ function Link(
   );
 }
 
+// In the public page's scrolling frame and table style, its first row the header row as the markdown's is.
 function Table(props: PlateElementProps): ReactElement {
+  const [head, ...body] = Children.toArray(props.children);
   return (
-    <PlateElement as="table" {...props}>
-      <tbody>{props.children}</tbody>
+    <PlateElement {...props} className="data-table-frame">
+      <table className="data-table">
+        <thead>{head}</thead>
+        <tbody>{body}</tbody>
+      </table>
     </PlateElement>
   );
 }
