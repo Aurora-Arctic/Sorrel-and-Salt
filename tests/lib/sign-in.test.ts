@@ -18,7 +18,7 @@ import {
 // callback has run. Not `/`: `/` is the public front door, and someone who just signed in has
 // been through it already (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
 describe('postSignInLanding', () => {
-  it('sends an admin to the keepers area', () => {
+  it('sends a keeper to the keepers area', () => {
     expect(postSignInLanding('admin')).toBe('/keepers');
   });
 

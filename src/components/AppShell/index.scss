@@ -97,7 +97,7 @@
 
 // Under the tablet width the site links move into the account panel, where
 // the name has already gone (AccountMenu/index.scss): with them in the bar
-// an admin's bar ran past the window from 642px up.
+// a keeper's bar ran past the window from 642px up.
 @media (max-width: $shell-tablet-width) {
   .app-shell__nav {
     display: none;

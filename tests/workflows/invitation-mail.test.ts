@@ -147,7 +147,7 @@ describe('the invitation mail run', () => {
     }
   });
 
-  it('mails a site invitation with its site role and the admin who sent it', async () => {
+  it('mails a site invitation with its site role and the keeper who sent it', async () => {
     made += 1;
     const email = `curator${made}${DOMAIN}`;
     const [row] = await sql`

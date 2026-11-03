@@ -8,7 +8,7 @@ import { db } from '../connection';
 import { notSoftDeleted } from './predicates';
 import { existsIn } from './select';
 
-/** The rows a lapse can reach: unverified, holding a provider, and not vouched for by an admin. */
+/** The rows a lapse can reach: unverified, holding a provider, and not vouched for by a keeper. */
 function provisional(userId?: string) {
   return and(
     userId === undefined ? undefined : eq(users.id, userId),

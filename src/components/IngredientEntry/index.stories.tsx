@@ -1127,7 +1127,7 @@ export const QuickLook: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// The admin's review switch, in the foot of an entry's details on the
+// The keeper's review switch, in the foot of an entry's details on the
 // admin list: an entry no curator has reviewed, then one a curator has. The
 // workshop has no server, so the switch's change is refused and the switch goes back.
 export const ReviewMarkNeedsReview: Story = {

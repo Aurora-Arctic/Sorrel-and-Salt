@@ -7,7 +7,7 @@ published: 2026-11-02
 
 When these terms change, the site asks you to agree to the new version before you use it again.
 
-These terms include two other pages, and agreeing to these terms is agreeing to them too. The [Disclaimer](/disclaimer) says what the site's information is and is not. The [Code of Ethics](/code-of-ethics) says what the site stands for: its section "What Everyone Agrees To" binds every account, and its sections for curators, admins, developers and the owner bind whoever holds that role.
+These terms include two other pages, and agreeing to these terms is agreeing to them too. The [Disclaimer](/disclaimer) says what the site's information is and is not. The [Code of Ethics](/code-of-ethics) says what the site stands for: its section "What Everyone Agrees To" binds every account, and its sections for curators, keepers, developers and the owner bind whoever holds that role.
 
 ## The Short Version
 
@@ -37,15 +37,15 @@ A coven's steward may delete the coven, and may remove any member from it. Any m
 
 ### The Compendium
 
-The compendium is written and checked by the site's admins and curators. Every entry records where its information came from, and an entry with no source stays on the curators' list of work to do. It is a reference for people who practise, and it is offered as one, as the [Disclaimer](/disclaimer) sets out.
+The compendium is written and checked by the site's keepers and curators. Every entry records where its information came from, and an entry with no source stays on the curators' list of work to do. It is a reference for people who practise, and it is offered as one, as the [Disclaimer](/disclaimer) sets out.
 
 ### How to Treat Each Other
 
 The [Code of Ethics](/code-of-ethics) says what the site stands for. Its section "What Everyone Agrees To" binds every account, and agreeing to these terms is agreeing to it. In short: no bigotry, in any form, towards anyone.
 
-The Code of Ethics goes on to ask more of the people who run the site. Its sections for curators, for admins and for the site's owner each add to the one before, and bind whoever holds that role for as long as they hold it.
+The Code of Ethics goes on to ask more of the people who run the site. Its sections for curators, for keepers and for the site's owner each add to the one before, and bind whoever holds that role for as long as they hold it.
 
-The tools the site has today for keeping to this are small, and we name them rather than promise more. A coven's steward may remove a member from the coven. The steward may also pause a member's access to the coven for as long as the steward decides. A paused member keeps their place in the coven but cannot open it. Their other covens are not affected. A site admin may stop a person sending support requests for as long as an admin decides, and may take away the right to create covens. Accounts are never closed. A site admin may pause an account's access to the site for as long as an admin decides. A paused account can still sign in to ask for support, but cannot open anything else. The compendium stays open to it, as it does to everyone. When you are stopped from sending support requests, or your access to the site or a coven is paused, the site emails you at the address on your account. Lifting one sends no email.
+The tools the site has today for keeping to this are small, and we name them rather than promise more. A coven's steward may remove a member from the coven. The steward may also pause a member's access to the coven for as long as the steward decides. A paused member keeps their place in the coven but cannot open it. Their other covens are not affected. A site keeper may stop a person sending support requests for as long as a keeper decides, and may take away the right to create covens. Accounts are never closed. A site keeper may pause an account's access to the site for as long as a keeper decides. A paused account can still sign in to ask for support, but cannot open anything else. The compendium stays open to it, as it does to everyone. When you are stopped from sending support requests, or your access to the site or a coven is paused, the site emails you at the address on your account. Lifting one sends no email.
 
 ## What the Site Owes You
 
@@ -93,7 +93,7 @@ These terms are refreshed from time to time, and only ever by a new version with
 
 ### Leaving
 
-You may stop using the site at any time. You can leave any coven from its page. To have your account or anything in it erased, ask through the [support form](?support=privacy), and the site's admin does it and tells you when it is done. What you delete yourself is marked deleted rather than erased, as the Privacy Policy explains.
+You may stop using the site at any time. You can leave any coven from its page. To have your account or anything in it erased, ask through the [support form](?support=privacy), and the site's keeper does it and tells you when it is done. What you delete yourself is marked deleted rather than erased, as the Privacy Policy explains.
 
 [^1]: United States. _Children's Online Privacy Protection Act_, 15 U.S.C. § 6501 (Definitions). Legal Information Institute, Cornell Law School. Accessed 2 November 2026. https://www.law.cornell.edu/uscode/text/15/6501.
 

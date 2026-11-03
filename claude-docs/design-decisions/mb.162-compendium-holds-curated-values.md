@@ -19,7 +19,7 @@ in-use values from both tiers: a compendium entry could carry `rhizome`, and
 the box would offer it under "From Coven". The headings were true only while
 no compendium entry held an uncurated value, and nothing kept that so.
 
-Nothing is lost by making it so. The admin who writes the compendium is the
+Nothing is lost by making it so. The keeper who writes the compendium is the
 one who curates the lists, so a value missing from one is added there first,
 with the description the vocabularies require, and the entry is written
 after. A coven cannot curate, which is why its ingredients stay free text: a
@@ -43,7 +43,7 @@ member must be able to write `rhizome` before anyone has curated it (§5,
 - **Refused beside the field**, as a `ValidationError` from
   `createCompendiumEntry` and `updateCompendiumEntry`: `['form']`, or
   `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry the
-  caller sent, blanks counted. Every refusal at once, so the admin sees the
+  caller sent, blanks counted. Every refusal at once, so the keeper sees the
   whole list to add.
 - **The service's, not Zod's or a key's.** The check reads the database, and
   the shared schemas are client-safe, `zod` alone
@@ -54,15 +54,15 @@ member must be able to write `rhizome` before anyone has curated it (§5,
   MB.95 and MB.132 were each to list the compendium's in-use values outside
   the vocabulary; under this rule that list could never hold anything, so it
   is dropped from all three. A coven's uncurated values were never on it,
-  since an admin reads no workspace's ingredients (M6.6).
+  since a keeper reads no workspace's ingredients (M6.6).
 
 ## What happens to a held row
 
-A rule checked only at the write would break the moment an admin deleted or
+A rule checked only at the write would break the moment a keeper deleted or
 renamed a row an entry holds. The owner chose, for each:
 
 **A delete is refused while a live compendium entry holds the row**, with an
-error naming the entries, and the admin edits them first. So is deleting a
+error naming the entries, and the keeper edits them first. So is deleting a
 form group or deity tradition with such a row under it, since a form under a
 deleted group, or a deity under a deleted tradition, is no longer curated.
 Amended by M5.6b for form groups: deleting one first moves its forms to
@@ -117,9 +117,9 @@ alone.
   decides how the window between the rename and the rewrite keeps the rule.
 - **The check is read before the write.** Until MB.148 puts a read inside
   `withAudit` on the write's transaction, the compendium services read the
-  curated rows on another connection, so an admin deleting a row at the
-  instant another admin writes an entry holding it can see that entry written
-  once. Two admins and a few milliseconds; the service says so where it reads.
+  curated rows on another connection, so a keeper deleting a row at the
+  instant another keeper writes an entry holding it can see that entry written
+  once. Two keepers and a few milliseconds; the service says so where it reads.
 
 ## What it changed
 

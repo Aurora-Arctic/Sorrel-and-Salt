@@ -99,10 +99,10 @@ export interface PasswordSetter {
   sessionIsFresh(): Promise<boolean>;
 }
 
-/** Whether admin changes are paused, and whether the asking admin may switch that. */
+/** Whether keeper changes are paused, and whether the asking admin may switch that. */
 export interface AdminRoleChangePauseState {
   paused: boolean;
-  /** Only the primary admin may pause or resume. */
+  /** Only the primary keeper may pause or resume. */
   canToggle: boolean;
 }
 
@@ -155,7 +155,7 @@ export type InvitationRefusal =
 
 /** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =
-  /** The site role accepting grants, curator or admin. */
+  /** The site role accepting grants, curator or keeper. */
   | { acceptable: true; tier: 'site'; siteRole: InvitableSiteRole }
   /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
   | { acceptable: true; tier: 'workspace'; slug: string; name: string }

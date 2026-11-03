@@ -112,7 +112,7 @@ describe('invitations schema', () => {
   });
 });
 
-// A owns W; E is the site admin.
+// A owns W; E is the site keeper.
 const OWNER = FIXTURE_USERS.A.id;
 const ADMIN = FIXTURE_USERS.E.id;
 const COVEN = WORKSPACE_W_ID;
@@ -214,7 +214,7 @@ describe('invitations table', () => {
 
     // Why the refusals above could have succeeded: the column is nullable and
     // the enum admits `user`, and a coven invitation without one is well-formed.
-    it('accepts curator and admin on the site tier, and none on a coven invitation', async () => {
+    it('accepts curator and keeper on the site tier, and none on a coven invitation', async () => {
       await inviteToSite({ siteRole: 'curator' });
       await inviteToSite({ siteRole: 'admin', tokenHash: HASH_B });
       await invite('member', { tokenHash: 'c'.repeat(64) });
@@ -314,7 +314,7 @@ describe('invitations table', () => {
     });
   });
 
-  // A decline is the invitee's answer to a coven invitation. An admin
+  // A decline is the invitee's answer to a coven invitation. A keeper
   // invitation is accepted by its link alone and never listed to its invitee,
   // and one invitation is answered once.
   describe('the answer', () => {

@@ -24,7 +24,7 @@ import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-wr
 import { refuseWhileHeld } from './held-entries';
 import type { CuratedVocabulary, DeityFilter, DeityRow } from '../types';
 
-// The curated deity vocabulary: public reads, and writes for a curator or an admin alone. A deity a live compendium entry links
+// The curated deity vocabulary: public reads, and writes for a curator or a keeper alone. A deity a live compendium entry links
 // holds, and a rename reaches the link (claude-docs/db/deity-vocabulary.md, "Deity service details").
 
 // The list and its count, held in the data cache under the `compendium` tag (claude-docs/db/compendium-cache.md).
@@ -67,7 +67,7 @@ export async function getDeityBySlug(slug: string): Promise<DeityRow> {
 /**
  * Adds a deity, its slug derived from the name and the tradition's name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `DeityInput`, names no live tradition, or its slug is a live deity's.
  */
 export async function createDeity(session: Session, input: DeityInput): Promise<DeityRow> {
@@ -88,7 +88,7 @@ export async function createDeity(session: Session, input: DeityInput): Promise<
  * Rewrites a deity whole, its slug following the name and the tradition, and carries a rename onto every live compendium
  * entry's link to it (claude-docs/db/deity-vocabulary.md, "Deity service details"). Its `seedKey` is left as it was.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createDeity` throws it, the row's own slug excepted.
  * @throws {NotFound} no live deity has this id.
  */
@@ -116,7 +116,7 @@ export async function updateDeity(
 /**
  * Soft-deletes a deity no live compendium entry links (claude-docs/db/deity-vocabulary.md, "Deity service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin, or a live entry links the deity.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper, or a live entry links the deity.
  * @throws {NotFound} no live deity has this id.
  */
 export async function deleteDeity(session: Session, id: string): Promise<void> {

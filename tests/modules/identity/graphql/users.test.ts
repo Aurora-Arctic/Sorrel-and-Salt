@@ -64,7 +64,7 @@ const PAGE_OF_USERS = `
 `;
 
 describe('Query.users', () => {
-  it('answers an admin the default page of 25, with every listed field', async () => {
+  it('answers a keeper the default page of 25, with every listed field', async () => {
     const [{ count }] = await sql<{ count: number }[]>`
       select count(*)::int as count from users where deleted_at is null
     `;
@@ -88,7 +88,7 @@ describe('Query.users', () => {
     });
   });
 
-  it('resolves an admin the coven memberships of a listed user', async () => {
+  it('resolves a keeper the coven memberships of a listed user', async () => {
     const result = await usersAs(
       asUser(E),
       `query ($query: String) {
@@ -154,7 +154,7 @@ describe('User.providers and User.emailVerified', () => {
   const ME = '{ me { id emailVerified providers } }';
 
   it("refuses the providers on a user's own row, whose account page reads them instead", async () => {
-    // Why it could have answered: the same query answers a site admin, on theirs.
+    // Why it could have answered: the same query answers a site keeper, on theirs.
     const admin = await usersAs(asUser(E), ME);
     expect(admin.errors).toBeUndefined();
     expect(admin.data?.me).toMatchObject({ id: E.id, providers: expect.any(Array) });

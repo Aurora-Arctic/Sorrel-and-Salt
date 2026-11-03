@@ -322,7 +322,7 @@ only through an entry above. That is the rule for a private helper, applied
 the other way round:
 
 - `findCompendiumMatchesByName` reads it through `compendiumNamed`.
-- `citesNothing` (MB.153, the admin's to-do filter) and `citesNowhere` in
+- `citesNothing` (MB.153, the keeper's to-do filter) and `citesNowhere` in
   `ingredients.ts` are `cites` negated.
 - `findWorkspaceIngredientPage`, `findWorkspaceIngredientCount` and
   `findWorkspaceIngredientFacets` read it through
@@ -529,9 +529,9 @@ instead ("No folk names recorded."), since a field is filled in rather than adde
 `noun` is the plural, matched by a plural verb. One wording serves all six lists;
 before it the compendium said "No entry matches", the invitations "No invitation
 matches", the users "No users match", the group and value lists "No category
-matches that filter. Try another name." and the ledger "No admin changes for “x”."
+matches that filter. Try another name." and the ledger "No keeper changes for “x”."
 The plural reads true however many rows the list could have held, and naming each
-filter, not calling it "that filter", shows an admin which one to change.
+filter, not calling it "that filter", shows a keeper which one to change.
 
 ### Moving a page to another coven
 

@@ -55,7 +55,7 @@ async function renderEditor({ body, revision }: { body: string; revision: number
   return screen.findByRole('textbox', { name: 'Document Text' });
 }
 
-/** Changes the text as an admin does, by bolding a word, and waits until the editor reads it as unsaved. */
+/** Changes the text as a keeper does, by bolding a word, and waits until the editor reads it as unsaved. */
 async function change(text: HTMLElement): Promise<void> {
   const node = document.createTreeWalker(text, NodeFilter.SHOW_TEXT).nextNode() as Text;
   const range = document.createRange();

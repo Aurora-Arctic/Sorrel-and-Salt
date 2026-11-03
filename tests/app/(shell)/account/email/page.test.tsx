@@ -5,7 +5,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
 
 // Where the email page's Continue goes once a followed link has proved the address: the `next` the account was sent with, or with none, the landing for the role it holds now,
-// a primary admin promoted by that very link included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and row are mocked (tests/lib/request-session.test.ts's and the identity service's);
+// a primary keeper promoted by that very link included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and row are mocked (tests/lib/request-session.test.ts's and the identity service's);
 // which landing a role gets and which `next` is safe are tests/lib/sign-in.test.ts's.
 
 const requireSession = vi.fn<() => Promise<Session>>();
@@ -46,7 +46,7 @@ beforeEach(() => {
 });
 
 describe('the /account/email page', () => {
-  it("continues an admin's confirmed address to the keepers area when it was going nowhere else", async () => {
+  it("continues a keeper's confirmed address to the keepers area when it was going nowhere else", async () => {
     await renderPage('admin', { verified: '' });
 
     expect(continueLink()).toHaveAttribute('href', '/keepers');
@@ -59,7 +59,7 @@ describe('the /account/email page', () => {
   });
 
   // Why the one above could have gone elsewhere: the request's `next`.
-  it('continues an admin to the next it was sent with, /coven included', async () => {
+  it('continues a keeper to the next it was sent with, /coven included', async () => {
     await renderPage('admin', { verified: '', next: '/coven' });
 
     expect(continueLink()).toHaveAttribute('href', '/coven');

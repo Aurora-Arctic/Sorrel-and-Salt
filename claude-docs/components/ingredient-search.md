@@ -219,7 +219,7 @@ traditionName)`, because two traditions can share a name (`hecate-greek`,
 are curated words, not a fixed set: `?forms=Oil&forms=Resin`. Each value is
 trimmed, a blank is dropped, and a repeat that differs only in case is dropped
 too (the first spelling stays). It is used for forms, zodiac signs and
-celestial bodies because those three are admin-curated vocabularies that offer
+celestial bodies because those three are keeper-curated vocabularies that offer
 suggestions rather than a closed list: a form's text is not a foreign key
 (CLAUDE.md, ingredient identity), so an uncurated value stays writable and the
 address cannot reject it the way `listParam` rejects a word outside its set.
@@ -243,7 +243,7 @@ address cannot reject it the way `listParam` rejects a word outside its set.
 
 `reviewed` (M14.8) reads `1` as `'reviewed'` and `0` as `'needs_review'`, and
 anything else as no filter; the query sends `true` or `false`. Only a curator or
-an admin may send it, and the service refuses anyone else. So the coven's table,
+a keeper may send it, and the service refuses anyone else. So the coven's table,
 `COVEN_PARAMS` in `coven-params.ts`, is the compendium's with `reviewed`
 taken out, and the public page strips `?reviewed=` before it reads.
 

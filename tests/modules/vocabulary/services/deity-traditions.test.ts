@@ -33,12 +33,12 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// The site role is the one thing a vocabulary write turns on, so one non-admin
+// The site role is the one thing a vocabulary write turns on, so one non-keeper
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
 // A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
-// a curator's success proves the write calls assertCurator, and that an admin
+// a curator's success proves the write calls assertCurator, and that a keeper
 // passes assertCurator is proved once in identity's site-admin tests.
 const CURATORS = [['a curator', F]] as const;
 

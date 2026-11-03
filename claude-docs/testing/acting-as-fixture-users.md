@@ -29,7 +29,7 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
 - **An id alone cannot make a session** — the role has to come off the row.
   `tests/support/as-user.type-check.ts` holds that as a `@ts-expect-error`
   compile assertion, which `npm run typecheck` reads and nothing runs (MB.224).
-- **One non-admin stands for every one where the check reads the site role
+- **One non-keeper stands for every one where the check reads the site role
   alone.** A refusal that `assertSiteAdmin` or the `admin` scope decides is
   asserted once, as A — a steward, the highest workspace role, and still no
   site role — with its precondition (A's role is `user`, and E's same call

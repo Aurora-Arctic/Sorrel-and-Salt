@@ -12,7 +12,7 @@ handlers beside the paths.
 
 All three read `listCompendiumSlugs()` (MB.84): every current compendium
 entry, with no session, held in the data cache under the `compendium` tag, so
-an admin write refreshes them ([`../db/compendium-cache.md`](../db/compendium-cache.md)).
+a keeper write refreshes them ([`../db/compendium-cache.md`](../db/compendium-cache.md)).
 The read leaves out soft-deleted rows and every workspace's own ingredients in
 SQL. Every URL is built on `siteUrl()` in `src/lib/site.ts`, production's
 origin, never on the request's host. Off production the proxy sets

@@ -7,20 +7,20 @@ import { SITE_ROLE_ACCESS } from '@/components/UserList/roles';
 import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
 
 // Each Role column carries a tip per row saying what the role may do, in the words Change Role shows:
-// the site roles on the admin's People page, the coven roles on a coven's members page.
+// the site roles on the keeper's People page, the coven roles on a coven's members page.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('an admin opens a role tip on the People page and reads what the role may do', async ({
+test('a keeper opens a role tip on the People page and reads what the role may do', async ({
   page,
 }) => {
   await signInAs(page, 'admin@role-tooltips.test', ['discord'], 'admin');
   await page.goto('/keepers/users?query=role-tooltips.test');
 
   const row = page.getByRole('row', { name: /admin@role-tooltips\.test/ });
-  const button = row.getByRole('button', { name: 'About Admin' });
+  const button = row.getByRole('button', { name: 'About Keeper' });
   await button.focus();
   const tip = page.getByRole('tooltip');
   await expect(tip).toBeVisible();

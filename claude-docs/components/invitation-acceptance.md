@@ -22,7 +22,7 @@ and sends the accept. The rules it shows are
   Invitation**. A site invitation names its role, `siteRole`, curator or
   admin (M11.20). The click sends `acceptInvitation`, which checks everything
   again and decides; the button stays busy, with a spinner, until
-  `router.push` reaches `landing` (`/keepers` for an admin's site invitation, `/curator` for a curator's,
+  `router.push` reaches `landing` (`/keepers` for a keeper's site invitation, `/curator` for a curator's,
   `/coven/[slug]` for a coven's, the slug coming from the standing; the
   sentence names the coven, `covenName`, which only this state carries: the
   standing reaches it after the address checks, so no refusal can say it). A

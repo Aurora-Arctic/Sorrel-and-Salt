@@ -54,8 +54,8 @@ describe('the /keepers layout', () => {
     expect(lead).toHaveAttribute('href', '/keepers');
   });
 
-  // Why the curator's nav could have listed more: the same layout lists People and Invitations to an admin.
-  it('shows a curator Support alone and an admin Support, People and Invitations, around the page', async () => {
+  // Why the curator's nav could have listed more: the same layout lists People and Invitations to a keeper.
+  it('shows a curator Support alone and a keeper Support, People and Invitations, around the page', async () => {
     requireCuratorSession.mockResolvedValue(CURATOR);
     const { unmount } = render(await KeepersLayout({ children: <p>The page itself</p> }));
     expect(navHrefs()).toEqual([SUPPORT]);
@@ -77,7 +77,7 @@ describe('the /keepers layout', () => {
 });
 
 describe('the /keepers page', () => {
-  it('renders for an admin under the heading Keepers', async () => {
+  it('renders for a keeper under the heading Keepers', async () => {
     requireCuratorSession.mockResolvedValue(ADMIN);
 
     render(await KeepersPage());
@@ -88,7 +88,7 @@ describe('the /keepers page', () => {
 
   // The index is a table of contents read from the nav's own list,
   // so the two name the same pages in the same order.
-  it('links an admin to every page the Keepers nav does, in its order', async () => {
+  it('links a keeper to every page the Keepers nav does, in its order', async () => {
     requireCuratorSession.mockResolvedValue(ADMIN);
 
     render(await KeepersLayout({ children: await KeepersPage() }));

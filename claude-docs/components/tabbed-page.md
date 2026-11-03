@@ -3,7 +3,7 @@
 `src/components/TabbedPage/` — a page divided into tabs, each tab at its own
 address: the page's `h1` with a row of links, one per tab, drawn as small
 pills beside it on the same line, the open tab's action at the line's end, and
-the open tab's content beneath. On the owner's call after MB.115's design review, each admin
+the open tab's content beneath. On the owner's call after MB.115's design review, each keeper
 list shares a page with the group list that organises it: the Categories page
 has a Categories tab at `/curator/categories` and a Groups tab at
 `/curator/category-groups`. Every admin page but the compendium is one
@@ -33,7 +33,7 @@ shared [`Skeleton`](skeleton.md) that the content area shows while a pressed tab
 to draw a filter row. A list reuses it, with no filter row, while a filter
 or a pager press is on its way ([`list-frame.md`](list-frame.md)), so it
 imports its own stylesheet, `index.scss`, and its shapes are drawn wherever
-it renders. A tab's `shape`, `table` by default, is the skeleton's shape while that tab is on its way: the admin's four Documents tabs set `document`, the editor's own shape (M15.71); the Grimoire's Spells and Drafts tabs set `cards` (M10.11), so a pressed tab shows cards under the filter rather than a table, `density: 'compact'` and `card: 'spell'`, so those cards are the compact spell-sized ones the list opens at.
+it renders. A tab's `shape`, `table` by default, is the skeleton's shape while that tab is on its way: the keeper's four Documents tabs set `document`, the editor's own shape (M15.71); the Grimoire's Spells and Drafts tabs set `cards` (M10.11), so a pressed tab shows cards under the filter rather than a table, `density: 'compact'` and `card: 'spell'`, so those cards are the compact spell-sized ones the list opens at.
 
 ## Contracts
 
@@ -50,7 +50,7 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
   action and the content swap.
 - **The action belongs to the tab, at the end of the page's heading line** (the owner's
   call): Add Category on Categories, Add Group on its Groups tab, Add Form,
-  Add Deity, Add Tradition, Add Celestial Body, Add Zodiac Sign, Pause Admin Changes
+  Add Deity, Add Tradition, Add Celestial Body, Add Zodiac Sign, Pause Keeper Changes
   on Users, New Invitation on Invitations, and nothing on Privilege Changes.
   The heading is drawn by `PageHeader` ([`page-header.md`](page-header.md));
   the pills and the action are handed to it together as its trailing
@@ -71,7 +71,7 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
   admin page does. The value and group pages' actions are `ValueAction` and
   `GroupAction`, beside `ValuePage` and `GroupPage`, reading the same
   address the same way, so the Add keeps the list's filter and cursor. Pause
-  Admin Changes reads the pause through a per-request cache the Users page
+  Keeper Changes reads the pause through a per-request cache the Users page
   shares (`src/app/(shell)/keepers/(people)/pause-state.ts`), so it is read once.
   New Invitation is a link to `?invite`, which opens its form over the list
   ([`admin-invitations.md`](admin-invitations.md)).
@@ -301,7 +301,7 @@ With a single route the pill navigation is left out (MB.106's extra item): one p
 
 ## What a tabbed page is
 
-A page in tabs is its heading with a row of links, one per tab, beside it on the same line, the open tab's action at the line's end, and the open tab's content beneath. Each tab is at its own address, so it can be bookmarked and its `?edit=` and cursor links keep working. A route group's shared layout renders this, so pressing a tab swaps only the action and the content. The action is the group's `@action` slot, so it changes with the tab (Add Category, New Invitation, Pause Admin Changes). A tab with none leaves the wrapper empty, and the stylesheet takes an empty item out of the line.
+A page in tabs is its heading with a row of links, one per tab, beside it on the same line, the open tab's action at the line's end, and the open tab's content beneath. Each tab is at its own address, so it can be bookmarked and its `?edit=` and cursor links keep working. A route group's shared layout renders this, so pressing a tab swaps only the action and the content. The action is the group's `@action` slot, so it changes with the tab (Add Category, New Invitation, Pause Keeper Changes). A tab with none leaves the wrapper empty, and the stylesheet takes an empty item out of the line.
 
 The row is a `nav` named for the page, not a `role="tablist"`. Each tab is a navigation to another address, not a panel shown in place, and a tablist promises arrow keys it would not have. A page with a single tab (a member who cannot invite sees only Members) draws no row. The row rides in `PageHeader`'s trailing children with the action, a fragment spreading into the header's flex row in the order heading, tabs, action, so the header needs no slot of its own for it.
 
@@ -343,7 +343,7 @@ While a tab is on its way every tab takes the muted, faded look a disabled contr
 
 ## The header at narrow widths
 
-A `framed` page (the account) differs at every width. Its tabs hold a `.page-with-nav`, which centres a menu and a column of sections, so the head stands over the sections' column: its start is offset by the same arithmetic as the grid (half the menu and its gap right of the middle, less half the column; at the three-column width the column is simply centred), up to `$narrow-column` wide. Its pills sit on a line of their own beneath the heading at every width, by the forced break described below for a labelled action. Phone widths need no offset, as the page-with-nav is then a single column. A framed page is its own frame, as no `.page-column` wraps it (the admin's and a coven's tabbed pages sit in one), so `.tabbed-page--framed` carries the frames' side gutter, `space(4)` a side, at every width.
+A `framed` page (the account) differs at every width. Its tabs hold a `.page-with-nav`, which centres a menu and a column of sections, so the head stands over the sections' column: its start is offset by the same arithmetic as the grid (half the menu and its gap right of the middle, less half the column; at the three-column width the column is simply centred), up to `$narrow-column` wide. Its pills sit on a line of their own beneath the heading at every width, by the forced break described below for a labelled action. Phone widths need no offset, as the page-with-nav is then a single column. A framed page is its own frame, as no `.page-column` wraps it (the keeper's and a coven's tabbed pages sit in one), so `.tabbed-page--framed` carries the frames' side gutter, `space(4)` a side, at every width.
 
 The primitives' `.page-header` spreads its children to the two ends and nudges every non-heading item down to the heading's baseline. Here the heading is followed by its tabs, only the action is pushed to the end, and the tabs are centred on the line. The selector is doubled to outweigh the primitives' narrow-width rules, which would stretch the row across its line as they do an action. A row at a phone's width drops under the heading at its own size instead. The track sits 0.125rem lower than the nudge's cancelling, where it was found level with the heading's text, and it shrinks below its pills' width rather than overflow the line, so the row inside scrolls.
 
@@ -351,7 +351,7 @@ Under the forms' column `.page-header` puts an action on a line of its own benea
 
 From `$tabbed-reflow-width-labelled` down the wide line is too short for the heading, the pills and an action, so an action that is not the Add takes a line of its own at the line's start rather than wrapping to the line's end (it was found pushed right at 500px). The Add keeps its place at the heading's end.
 
-A header whose action keeps its label (People's Pause Admin Changes) works differently from the same width down: the heading and the action keep the line and the pills drop beneath at their own size. A flex box cannot put an item on a line of its own at its own width, so a line break is forced by a pseudo-element the width of the line and no height, ordered between the action and the pills. The line it makes would take a row gap above and below (a flex line is never shorter than nothing), so the pills give one back. Under the forms' column the primitive gives the heading the line to itself; a tabbed page with a labelled action keeps the two on one line down to `$tabbed-action-below-width`, where the action goes beneath the heading at the line's start, the auto margin cancelled.
+A header whose action keeps its label (People's Pause Keeper Changes) works differently from the same width down: the heading and the action keep the line and the pills drop beneath at their own size. A flex box cannot put an item on a line of its own at its own width, so a line break is forced by a pseudo-element the width of the line and no height, ordered between the action and the pills. The line it makes would take a row gap above and below (a flex line is never shorter than nothing), so the pills give one back. Under the forms' column the primitive gives the heading the line to itself; a tabbed page with a labelled action keeps the two on one line down to `$tabbed-action-below-width`, where the action goes beneath the heading at the line's start, the auto margin cancelled.
 
 From `$tabbed-reflow-width` down the pills drop beneath the heading and its plus: the heading takes the line less the plus, and the pills, first in the markup, are ordered after the action. This is apart from the plus's own switch at `$tabbed-plus-width`, on purpose. At `$add-below-width` and under, the Add is the labelled button again and goes beneath the heading, which has the line to itself (the reflow rule gave it the line less the plus), and the pills follow. The labelled Add and the pills would share a line, so the same forced break as under a labelled action keeps the pills on their own, and the pills give back the row gap it takes twice.
 

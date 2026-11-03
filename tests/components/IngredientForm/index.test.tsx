@@ -98,7 +98,7 @@ const statusesSaying = (text: string) =>
   screen.queryAllByRole('status').filter((status) => status.textContent?.includes(text));
 
 // Invented groups, given out of order: the picker sorts them, and
-// knows none of them by name, as it knows no group an admin adds.
+// knows none of them by name, as it knows no group a keeper adds.
 const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
 const CRAFT = { id: 'b7f2d0c3-1e5a-4b9f-8d82-6c3a7f9e1b22', name: 'Craft of Tests' };
 const colours = { colorDark: '#8fb8de', colorLight: '#2f5d86' };

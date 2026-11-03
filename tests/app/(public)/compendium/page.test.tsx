@@ -52,7 +52,7 @@ vi.mock('@/lib/request-session', () => ({ getSession }));
 // The viewer's own covens that hold the open entry, for the details' In Your Cupboards.
 // Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
-// The review switch's read, per viewer, made for a curator or admin only.
+// The review switch's read, per viewer, made for a curator or keeper only.
 const readCompendiumReview = vi.fn();
 // The curator's read of the row itself, for the form's shown switch.
 const getIngredient = vi.fn();

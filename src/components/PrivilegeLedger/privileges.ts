@@ -7,7 +7,7 @@ import type { LedgerPrivilege } from './types';
 
 /** Each privilege and its label, in the order the filter offers them. */
 export const PRIVILEGE_LABELS: readonly (SelectOption & { value: LedgerPrivilege })[] = [
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Keeper' },
   { value: 'curator', label: 'Curator' },
   { value: 'create_workspace', label: 'Coven Creation' },
 ];

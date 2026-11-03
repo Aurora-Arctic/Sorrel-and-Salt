@@ -169,7 +169,7 @@ test: `0.000` and `NULL` are asserted to be distinguishable on the row.
   which a default cannot see.
 - `source` is where the _stock_ came from — "Miller's farm stand", "foraged by
   the creek" — free text and member-written, per §5's rule that a vocabulary a
-  member writes is text while one only an admin writes is a foreign key. It is
+  member writes is text while one only a keeper writes is a foreign key. It is
   **not** story 27's local-versus-compendium distinction, which M9.7 reads off
   `ingredients.workspace_id` and which never touches this column: that is where
   the _entry_ came from, this is where the stock did.

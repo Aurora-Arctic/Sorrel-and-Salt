@@ -180,7 +180,7 @@ export async function requireSession(): Promise<Session> {
 }
 
 /**
- * `requireSession()` then the site-role check: a signed-in non-admin gets Next's forbidden page (403), not a redirect or 404,
+ * `requireSession()` then the site-role check: a signed-in non-keeper gets Next's forbidden page (403), not a redirect or 404,
  * as `/keepers` is a known path (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it,
  * since a layout does not re-run on client-side navigation.
  */
@@ -196,7 +196,7 @@ export async function requireAdminSession(): Promise<Session> {
 }
 
 /**
- * `requireSession()` then the curation check: a curator or an admin passes, anyone else gets the forbidden page. The people
+ * `requireSession()` then the curation check: a curator or a keeper passes, anyone else gets the forbidden page. The people
  * pages call `requireAdminSession()`, which a curator fails (claude-docs/auth/admin-guard.md, "The curator guard").
  */
 export async function requireCuratorSession(): Promise<Session> {

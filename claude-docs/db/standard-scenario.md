@@ -25,7 +25,7 @@ implementation, exactly as every other slug in the repo.
 
 **E's absence from every workspace is the fixture, not an omission.** "A site
 admin has no access to any workspace's ingredients or grimoire" (CLAUDE.md,
-asserted by M6.6) is only assertable against an admin who is in none, and W and
+asserted by M6.6) is only assertable against a keeper who is in none, and W and
 X sharing no member is what makes a cross-workspace denial test say something.
 
 **F is the curator (M11.20)**: the fixture that proves a curator reaches the compendium's writes and refuses the people ones, and, like E, belongs to no workspace. F is seeded with the flag `true`, since the CHECK that replaced MB.177's (`users_privileged_can_create_workspace`) refuses any non-`user` role without it.
@@ -36,7 +36,7 @@ X sharing no member is what makes a cross-workspace denial test say something.
 are seeded `true` because each is in a workspace, and under §5 that is how the
 flag comes to be true — an invitation was accepted. E has never been invited,
 and holds the flag by being an admin: E is seeded `true`, since MB.177's CHECK
-refuses an admin without the flag and M6.7's gate reads the flag alone
+refuses a keeper without the flag and M6.7's gate reads the flag alone
 ([`mb.177-admins-hold-workspace-creation.md`](../design-decisions/mb.177-admins-hold-workspace-creation.md)).
 
 **The cast's privileges are in `user_privilege_changes` from the start.** The
@@ -46,7 +46,7 @@ around the insert, `bootstrap` (`declaringBootstrapPrivileges`). A–D are
 inserted as the seed's own user, so each has one `create_workspace` grant
 stamped as it; E and F are each inserted alone with themselves published as the acting user,
 so E's `admin` and `create_workspace` grants, and F's `curator` and `create_workspace` ones, are stamped as themselves, as a primary
-admin's promotion is stamped as that admin. A second run inserts no user, so
+admin's promotion is stamped as that keeper. A second run inserts no user, so
 the trigger records nothing more (MB.195;
 [`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
 
@@ -115,10 +115,10 @@ that form's own description and safety note. The literal has no form of its
 own, and neither has the row. After the entries,
 `insertMissingVariants(tx, entries, formIds?)` writes each one, given each
 entry's id beside the forms its literal lists. With `formIds`, the curated
-rows by name, each form is picked by name, as an admin's compendium form must
+rows by name, each form is picked by name, as a keeper's compendium form must
 be (MB.162); without it, as for `demo`'s coven entries, a form is typed. It
 keys on the entry and the folded form, `(ingredient_id, lower(form))`, the
-variant's unique index, through `insertMissingBy`: a variant an admin removed
+variant's unique index, through `insertMissingBy`: a variant a keeper removed
 counts as present and is not restored, and one already there is not
 rewritten. Every seeded entry holds exactly the live variants its literal
 names, Rosemary's `Herb` and `Oil` among them, and a second run writes no variant.
@@ -197,7 +197,7 @@ Idempotency is the category seed's, keyed on identity and **ignoring
 composite key, compendium entries by identity (below), folk names
 by ingredient plus `lower(name)`, assignments by their pair. Nothing already
 present is updated, so a renamed workspace or a retitled entry survives a
-reseed, and an entry an admin soft-deleted stays deleted rather than coming
+reseed, and an entry a keeper soft-deleted stays deleted rather than coming
 back on the next run, since the partial unique indexes stop only a second
 _live_ row and would let it through. `tests/db/seed/index.test.ts`'s sweep
 asserts it of the production seeds this one shares its helpers with; a
@@ -223,7 +223,7 @@ under the same formal name, so it keeps that label rather than failing.
 ### A reseed of `standard` puts a deity pick back; `demo` does not
 
 The owner's call: `standard` is the fixture scenario, so a reseed resets the
-fixtures, and a compendium deity pick an admin deleted comes back on the next
+fixtures, and a compendium deity pick a keeper deleted comes back on the next
 run. `demo` is explored by a person, so a deletion there is theirs and stays,
 as a deleted spell does. Staging and production run neither — only the five
 vocabulary seeds (`.github/workflows/migrate.yml`) — so the restoring run is
@@ -243,7 +243,7 @@ picks it keeps, so a pick removed through the app from anywhere but the end
 leaves its index held by the pick below it, and an insert there would fail
 `ingredient_deities_position_unique` and with it the whole scenario, on every
 compose `db-init` until a `db:reset`. Resetting the list to the literal's
-order instead would move rows an admin ordered, which a seed that adds what is
+order instead would move rows a keeper ordered, which a seed that adds what is
 missing has never done. On an entry with no live pick the end is the literal
 index, so a fresh database is seeded exactly as the literal reads, and a pick
 deleted from the end of its list returns to the position it held.

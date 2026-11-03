@@ -19,7 +19,7 @@ import { issueLabel } from './issue-link';
 import type { SupportRequestDetailEntry } from './types';
 import { useSupportAction } from './use-support-action';
 
-// An admin tracks a bug in GitHub by hand and pastes the issue's address here to link it. Nothing is
+// A keeper tracks a bug in GitHub by hand and pastes the issue's address here to link it. Nothing is
 // copied from the request into GitHub, as its message could hold private information.
 
 const SetIssueUrlDocument = graphql(`

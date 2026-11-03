@@ -4,7 +4,7 @@ import { recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
 
-// Story 91: a sender sends a request, an admin replies and waits on them, the sender answers, the admin resolves it, and the
+// Story 91: a sender sends a request, a keeper replies and waits on them, the sender answers, the admin resolves it, and the
 // sender's reply to the resolved request opens it again.
 
 test.beforeAll(async () => {

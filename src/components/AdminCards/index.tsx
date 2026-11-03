@@ -42,7 +42,7 @@ export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
   );
 };
 
-/** The empty list, naming the filters in use so an admin sees what to change. */
+/** The empty list, naming the filters in use so a keeper sees what to change. */
 function emptyText({
   batch,
   status,

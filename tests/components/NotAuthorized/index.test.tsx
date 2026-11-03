@@ -2,15 +2,15 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import NotAuthorized from '@/components/NotAuthorized';
 
-// What a signed-in non-admin sees at `/keepers`: a refusal that says why,
-// and nothing that names an admin or asks one for anything
+// What a signed-in non-keeper sees at `/keepers`: a refusal that says why,
+// and nothing that names a keeper or asks one for anything
 // (claude-docs/components/not-authorized.md).
 
 describe('NotAuthorized', () => {
   // Nothing to press and no one to write to: a request control or an address
-  // would be a way to request access, and a name would say who the admins are.
+  // would be a way to request access, and a name would say who the keepers are.
   // The one way on is back to the front page.
-  it('names no admin and offers no way to request access, only the way back', () => {
+  it('names no keeper and offers no way to request access, only the way back', () => {
     const { container } = render(<NotAuthorized />);
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();

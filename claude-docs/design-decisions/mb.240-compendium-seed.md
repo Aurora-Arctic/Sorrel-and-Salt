@@ -4,13 +4,13 @@
 
 **Note, 2026-10-12 (MB.115):** an entry heading is now cited `under "Mugwort"` rather than `s.v. Mugwort`, following the 18th edition of the _Chicago Manual of Style_ (14.130); every seed locator was converted, and [`db/references.md`](../db/references.md) holds the form in force.
 
-Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium an admin fills by hand. This record says why the seed is shaped as it is and what was turned down. The scoping plan is [`mb.240-plan.md`](mb.240-plan.md); the rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.241 to MB.249 build it.
+Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium a keeper fills by hand. This record says why the seed is shaped as it is and what was turned down. The scoping plan is [`mb.240-plan.md`](mb.240-plan.md); the rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.241 to MB.249 build it.
 
 ## The problem
 
 Every compendium task so far built the machinery around the compendium: its tables, its admin page, its references. None wrote its real entries. `waves/wave-08.md` said the compendium would be "populated by hand rather than by editing seed files", and the only compendium content in the repo is the `standard` test fixture's 26 entries, which staging and production never run (`db/standard-scenario.md`; `.github/workflows/migrate.yml` seeds the five curated vocabularies and their sources only).
 
-The owner reversed the wave file on 2026-10-11 and asked for "a decently large catalog", researched and sourced, with the research done by agents. The binding rule is the owner's: **"Do not make stuff up. All claims must have sources."** So the problem is not only the size of the list but holding six research lanes to that rule, and keeping a reseed from undoing what an admin later changes.
+The owner reversed the wave file on 2026-10-11 and asked for "a decently large catalog", researched and sourced, with the research done by agents. The binding rule is the owner's: **"Do not make stuff up. All claims must have sources."** So the problem is not only the size of the list but holding six research lanes to that rule, and keeping a reseed from undoing what a keeper later changes.
 
 ## The decisions
 

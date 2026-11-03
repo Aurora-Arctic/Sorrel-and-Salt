@@ -13,7 +13,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { CreationChangeRow, CreationFlagRow } from './types';
 
-// An admin approves someone who has no invitation, or revokes the approval, by writing `canCreateWorkspace` on their row, declared `via: 'admin'` so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Approving workspace creation").
+// A keeper approves someone who has no invitation, or revokes the approval, by writing `canCreateWorkspace` on their row, declared `via: 'admin'` so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Approving workspace creation").
 // A non-admin's refusal is curator-boundary.test.ts's, once for every people-page service.
 
 let sql: postgres.Sql;
@@ -63,7 +63,7 @@ async function flagOf(id: string): Promise<CreationFlagRow> {
 }
 
 describe('grantWorkspaceCreation', () => {
-  it('lets a user awaiting approval create a coven, stamped as the admin who approved', async () => {
+  it('lets a user awaiting approval create a coven, stamped as the keeper who approved', async () => {
     const before = await flagOf(PENDING);
     expect(before).toMatchObject({ can_create_workspace: false, updated_by: PENDING });
 
@@ -76,7 +76,7 @@ describe('grantWorkspaceCreation', () => {
   });
 
   // The row's stamps go with its next update; the ledger's row does not.
-  it('records the approval in the ledger as an admin’s act, naming the user and the admin', async () => {
+  it('records the approval in the ledger as a keeper’s act, naming the user and the admin', async () => {
     expect(await changes()).toEqual([]);
 
     await grantWorkspaceCreation(asUser(E), PENDING);
@@ -117,7 +117,7 @@ describe('the reason an approval or a revoke gives', () => {
     where user_id = ${PENDING} order by created_at, id
   `;
 
-  it('is kept as the ledger row’s note, trimmed, by the admin’s act, and a blank one as none', async () => {
+  it('is kept as the ledger row’s note, trimmed, by the keeper’s act, and a blank one as none', async () => {
     expect(await notes()).toEqual([]);
 
     await grantWorkspaceCreation(asUser(E), PENDING, '  Runs the Tuesday circle ');
@@ -169,7 +169,7 @@ describe('revokeWorkspaceCreation', () => {
   });
 
   // The CHECK would refuse the write; the service says why first.
-  it("refuses an admin's flag as Forbidden, before the CHECK would", async () => {
+  it("refuses a keeper's flag as Forbidden, before the CHECK would", async () => {
     expect(await flagOf(E.id)).toMatchObject({ can_create_workspace: true });
     expect(E.role).toBe('admin');
 
@@ -191,10 +191,10 @@ describe('revokeWorkspaceCreation', () => {
   });
 });
 
-// While the primary admin has paused admin
+// While the primary keeper has paused admin
 // changes, approving and revoking coven creation are paused too, for every
 // admin but the primary one.
-describe('approving and revoking while admin changes are paused', () => {
+describe('approving and revoking while keeper changes are paused', () => {
   const PRIMARY = '00000000-0000-0000-0000-0000000000b3';
   const PRIMARY_EMAIL = 'primary@creation-pause.test';
   const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
@@ -218,9 +218,9 @@ describe('approving and revoking while admin changes are paused', () => {
     await sql`truncate admin_role_change_pauses`;
   });
 
-  // E is a live admin, not the primary one; the same calls succeed once
+  // E is a live keeper, not the primary one; the same calls succeed once
   // resumed, so it is the pause that refuses.
-  it('refuses another admin approving or revoking, writing no ledger row', async () => {
+  it('refuses another keeper approving or revoking, writing no ledger row', async () => {
     expect(E.role).toBe('admin');
 
     await expect(grantWorkspaceCreation(asUser(E), PENDING)).rejects.toThrow(Forbidden);
@@ -238,7 +238,7 @@ describe('approving and revoking while admin changes are paused', () => {
     });
   });
 
-  it('lets the primary admin approve and revoke, each recorded as usual', async () => {
+  it('lets the primary keeper approve and revoke, each recorded as usual', async () => {
     await grantWorkspaceCreation(asUser(AS_PRIMARY), PENDING);
     await revokeWorkspaceCreation(asUser(AS_PRIMARY), PENDING);
 

@@ -4,7 +4,7 @@ import { cachedCompendiumRead } from '../../../lib/compendium-cache';
 import type { CompendiumSlugEntry } from '../types';
 
 // Held in the data cache under the `compendium` tag like the list and its
-// count, so an admin write expires it with them (claude-docs/db/compendium-cache.md).
+// count, so a keeper write expires it with them (claude-docs/db/compendium-cache.md).
 const cachedSlugs = cachedCompendiumRead('compendium-slugs', findCompendiumSlugs);
 
 /**

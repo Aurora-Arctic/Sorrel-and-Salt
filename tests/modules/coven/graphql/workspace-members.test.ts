@@ -318,7 +318,7 @@ describe('WorkspaceMember.email', () => {
     }
   });
 
-  it("answers FORBIDDEN to a site admin who reads an owner's covens, and no address", async () => {
+  it("answers FORBIDDEN to a site keeper who reads an owner's covens, and no address", async () => {
     const ADMIN = /* GraphQL */ `
       query ($query: String) {
         users(first: 1, query: $query) {
@@ -341,7 +341,7 @@ describe('WorkspaceMember.email', () => {
         }
       }
     `;
-    // Why this could have reached the roll: an admin reads anyone's covens
+    // Why this could have reached the roll: a keeper reads anyone's covens
     // , so E is handed A's W.
     const covens = await run<{
       users: { edges: { node: { memberships: { workspace: { id: string } }[] } }[] };

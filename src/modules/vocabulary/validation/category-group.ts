@@ -4,7 +4,7 @@ import { MAX_HUE_DISTANCE, hueDistance, isAchromatic } from '../../../lib/group-
 import type { GroupColorColumn } from '../../../lib/types';
 import { curatedValueInput } from '../../../lib/validation';
 
-// A category group as an admin writes one: a curated value's name and description, and the chip's two colours; an `icon` is dropped.
+// A category group as a keeper writes one: a curated value's name and description, and the chip's two colours; an `icon` is dropped.
 // Each colour is held to 4.5:1 against the harder of its own theme's surfaces here, not by a CHECK, so the refusal can name the column and ratio.
 // Refused, never corrected, as `unitConvert` refuses (§11; claude-docs/db/categories.md, "Vocabulary schema details").
 

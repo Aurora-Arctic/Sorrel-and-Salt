@@ -20,7 +20,7 @@ declare const curatorBrand: unique symbol;
 declare const adminBrand: unique symbol;
 
 /**
- * Proof that `assertCurator` found this user a curator or an admin.
+ * Proof that `assertCurator` found this user a curator or a keeper.
  * It names no workspace: a curator curates the compendium and reaches no coven.
  */
 export type Curator = {
@@ -29,15 +29,15 @@ export type Curator = {
 };
 
 /**
- * Proof that `assertSiteAdmin` found this user a site admin. It is a `Curator` with a brand of its own; a curator's proof is not one.
+ * Proof that `assertSiteAdmin` found this user a site keeper. It is a `Curator` with a brand of its own; a curator's proof is not one.
  */
 export type SiteAdmin = Curator & {
   readonly [adminBrand]: true;
 };
 
 /**
- * The curation check, for everything a curator may do and an admin with them:
- * the compendium-tier writes and the admin-curated vocabularies. Reads the
+ * The curation check, for everything a curator may do and a keeper with them:
+ * the compendium-tier writes and the keeper-curated vocabularies. Reads the
  * session's role and nothing else, as `assertSiteAdmin` does.
  *
  * @throws {Forbidden} the session's email address is unverified, or its role is neither `curator` nor `admin`.
@@ -49,7 +49,7 @@ export function assertCurator(session: Session, reason = 'Only a curator may do 
 }
 
 /**
- * The site-role check, for everything only a site admin may do: the people
+ * The site-role check, for everything only a site keeper may do: the people
  * page — the user list, roles, coven creation, invitations, the pause and the
  * privilege ledger — and the workshop. Reads the session's role and nothing
  * else, which the request read off the user's row. `reason` is what the
@@ -59,7 +59,7 @@ export function assertCurator(session: Session, reason = 'Only a curator may do 
  */
 export function assertSiteAdmin(
   session: Session,
-  reason = 'Only a site admin may do this',
+  reason = 'Only a site keeper may do this',
 ): SiteAdmin {
   refuseUnverified(session);
   if (!isSiteAdmin(session)) throw new Forbidden(reason);

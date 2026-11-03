@@ -32,7 +32,7 @@ import type {
   DocumentMailingSummary,
 } from '../types';
 
-// Emailing every account about a document's published version. The reads and writes are an admin's alone; the daily start is the
+// Emailing every account about a document's published version. The reads and writes are a keeper's alone; the daily start is the
 // cron route's and runs as the System account. The run that sends the mail is jobs/document-mailing.ts.
 
 /** Recipient rows written per insert, so a statement stays under the driver's parameter limit. */
@@ -85,7 +85,7 @@ async function overviewOf(documentId: string): Promise<DocumentMailingOverview> 
  * The document's published version, how many accounts a mailing would reach and in how many days, and the mailings of that version
  * and of an earlier one still going.
  *
- * @throws {Forbidden} the session is not a site admin.
+ * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no live document holds the key, or it has no published version.
  */
 export async function readDocumentMailing(
@@ -102,7 +102,7 @@ export async function readDocumentMailing(
  * Starts the mailing of the document's published version to every account it counts, replaces its sending and paused mailings of
  * earlier versions, and starts the run that sends the mail.
  *
- * @throws {Forbidden} the session is not a site admin.
+ * @throws {Forbidden} the session is not a site keeper.
  * @throws {ValidationError} the summary is blank, or the version has been mailed already.
  * @throws {NotFound} the document is missing or has no published version.
  */
@@ -149,7 +149,7 @@ export async function emailDocumentToEveryAccount(
 /**
  * Sets a paused mailing sending again, keeping what it has sent, and starts its run.
  *
- * @throws {Forbidden} the session is not a site admin.
+ * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no mailing holds the id.
  * @throws {ValidationError} the mailing is not paused.
  */

@@ -159,7 +159,7 @@ describe('requireSignedIn', () => {
 });
 
 // A paused user signs in to a view of the site with support in it and nothing else (claude-docs/design-decisions/m15.52-site-access-pause.md,
-// "A paused user may sign in to reach support"); an admin impersonating them is shown the same.
+// "A paused user may sign in to reach support"); a keeper impersonating them is shown the same.
 describe('a paused session', () => {
   const UNTIL = new Date('2030-01-01T00:00:00.000Z');
   const PAUSED_PAGE = /^redirect:\/access-paused$/;
@@ -393,15 +393,15 @@ describe('requireSession', () => {
   });
 });
 
-// The `/keepers` guard: a signed-in non-admin is answered with Next's 403 page rather than a
+// The `/keepers` guard: a signed-in non-keeper is answered with Next's 403 page rather than a
 // redirect or a 404, since everyone knows the path exists (claude-docs/auth/admin-guard.md, "The admin guard").
 describe('requireAdminSession', () => {
-  it('returns the session of an admin, without redirecting or refusing', async () => {
+  it('returns the session of a keeper, without redirecting or refusing', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('admin'));
     await expect(requireAdminSession()).resolves.toEqual({ userId: USER_ID, role: 'admin' });
   });
 
-  it('answers a signed-in user who is not an admin with the forbidden page', async () => {
+  it('answers a signed-in user who is not a keeper with the forbidden page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
     requestHeaders.set(RETURN_PATH_HEADER, '/keepers');
 
@@ -422,7 +422,7 @@ describe('requireAdminSession', () => {
 });
 
 // The guard on `/keepers` and every curation page under it, the people pages excepted. A curator
-// or an admin passes; anyone else gets the forbidden page, as at requireAdminSession
+// or a keeper passes; anyone else gets the forbidden page, as at requireAdminSession
 // (claude-docs/auth/admin-guard.md).
 describe('requireCuratorSession', () => {
   it.each([

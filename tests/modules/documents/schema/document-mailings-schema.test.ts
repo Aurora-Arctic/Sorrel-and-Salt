@@ -39,7 +39,7 @@ describe('document_mailings schema', () => {
   });
 
   // `replaced` marks a mailing a newer mailing of the same document stopped before it finished; `paused` one the mail provider's
-  // monthly quota stopped, until an admin resumes it.
+  // monthly quota stopped, until a keeper resumes it.
   it('takes a status of sending, sent, replaced or paused', () => {
     expect(documentMailings.status.enumValues).toEqual(['sending', 'sent', 'replaced', 'paused']);
   });

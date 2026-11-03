@@ -63,7 +63,7 @@ function statusIs(status: (typeof supportRequests.$inferSelect)['status']): SQL 
   return eq(supportRequests.status, status);
 }
 
-/** What a curator reads: a request marked for curators, or assigned to them. An admin reads every request. */
+/** What a curator reads: a request marked for curators, or assigned to them. A keeper reads every request. */
 function readerScope(reader: SupportReader): SQL | undefined {
   if (reader.role === 'admin') return undefined;
   return or(
@@ -457,7 +457,7 @@ export function findSupportRequestsDueToAnonymise(
   );
 }
 
-/** A time-out by id, for an admin to lift. */
+/** A time-out by id, for a keeper to lift. */
 export function findSupportTimeoutById(id: string) {
   return selectOne(
     supportTimeouts,
@@ -490,7 +490,7 @@ export function findSupportRepliesFor(viewer: SupportViewer, requestIds: readonl
 }
 
 /**
- * An internal note is staff's: a sender never reads one, even on their own request. An admin reads every note, a curator those on
+ * An internal note is staff's: a sender never reads one, even on their own request. A keeper reads every note, a curator those on
  * a request marked for curators or assigned to them. A public reply passes for everyone.
  */
 function internalNotesScope(viewer: SupportViewer): SQL | undefined {
@@ -525,7 +525,7 @@ export async function findCardAcceptorIds(userIds: readonly string[]): Promise<S
   return new Set(rows.flatMap((row) => (row.acceptedBy ? [row.acceptedBy] : [])));
 }
 
-/** The live time-outs set on these senders, newest first. The service lets an admin alone ask. */
+/** The live time-outs set on these senders, newest first. The service lets a keeper alone ask. */
 export function findSupportTimeoutsFor(userIds: readonly string[]) {
   if (userIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -536,7 +536,7 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
 
 /**
  * The time-out standing on each of these senders, not lifted and not yet ended, in one query: the user list's Support
- * Time-Out column for a page of users. Under the `SiteAdmin` proof: who is timed out is an admin's to read.
+ * Time-Out column for a page of users. Under the `SiteAdmin` proof: who is timed out is a keeper's to read.
  */
 export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: readonly string[]) {
   if (userIds.length === 0) return Promise.resolve([]);

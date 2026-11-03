@@ -3,7 +3,7 @@
 Three services in `ingredients`' `services/compendium.ts`, beside the reads:
 `createCompendiumEntry(session, input)`, `updateCompendiumEntry(session, id,
 input)` and `deleteCompendiumEntry(session, id)`. Each opens with
-`assertSiteAdmin`, before the input is parsed, so a non-admin is refused the
+`assertSiteAdmin`, before the input is parsed, so a non-keeper is refused the
 same way whatever they sent, and writes through the compendium-tier methods
 under its proof (["The SiteAdmin proof"](site-admin-proof.md)). A workspace
 role counts for nothing: a coven's steward is refused as its observer is.
@@ -95,7 +95,7 @@ one `ValidationError`, beside its field — `['variants', i, 'form']` or
 the row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
 group and a deity only under a live tradition, as the autofill reads them
 ([`validation.md`](../validation.md), "The two ingredient variants"). The
-rows are read before `withAudit` opens, on the bare client, so an admin
+rows are read before `withAudit` opens, on the bare client, so a keeper
 deleting a row at the same instant can see one entry written with it, the
 window MB.148 would let a lock close
 ([`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
@@ -108,7 +108,7 @@ another live one first, so they stay curated and no entry's pick is rewritten
 
 **The reach is the compendium's live rows.** A coven's ingredient, a
 soft-deleted entry, an id that names nothing and one that is not a uuid are
-all `NotFound`. So the site admin reaches no coven's ingredients by id — the
+all `NotFound`. So the site keeper reaches no coven's ingredients by id — the
 invariant in `CLAUDE.md` — and the service test asserts it on update and
 delete with the row first shown reachable by its own coven. A delete is soft
 and stamps `deleted_by`; the entry's folk names and category links stay,
@@ -129,7 +129,7 @@ write: the curator's user id and the time of the write. A coven member
 promoting a folk name on the coven's own entry writes no mark. A delete
 does not set it, and nor does a write to a child row alone.
 **`setCompendiumEntryReviewed(session, id, reviewed)`** sets or clears the
-mark and nothing else: `assertCurator` (an admin or a curator), then
+mark and nothing else: `assertCurator` (a keeper or a curator), then
 `withAudit` and `updateByIdInCompendium` with `reviewMark(...)` or
 `NEEDS_REVIEW` (both null), then `expireCompendium()`. It moves neither
 `updated_at` nor `updated_by`: the row's trigger (`set_updated_at`, as migration 0081 redefines it) leaves
@@ -212,11 +212,11 @@ these services are M5.5's: `createCompendiumIngredient`,
 
 - **Parsing.** `listCompendium` parses its filter because the browser is not the only caller, and because a category or deity id reaches a `uuid` comparison inside the keyset query, whose one client text was the cursor: an unchecked malformed id would come back as "Invalid cursor". A query shorter than `MIN_QUERY_LENGTH` is no search. `countCompendium` parses the same way, so it counts the rows the list's pages hold. `viewer` is needed only for the Reviewed setting, which a curator alone may set; the rest of the list takes no session.
 - **`getIngredient`.** Without `workspaceId` the read is the compendium alone, so a coven's row answers `NotFound` to whoever asks. A compendium entry the curators have retired answers only a coven whose cupboard names it, and `NotFound` to everyone else. An id that is not a uuid names nothing and would be a driver error at the comparison, so it is `NotFound` first.
-- **Create and update.** Forms, deities, celestial bodies and signs are picked from their curated vocabularies and written in the curated row's spelling. The slug is set from the label and the formal name. Create clears the compendium's lapsed retirements in the same write. Update replaces the whole entry, so a field left out is cleared, with a form kept by its id or else its folded text. When the slug moves the old one is retired as this admin's and redirects for 180 days. The row is read before the transaction for the slug it holds, so two admins saving at one instant can retire the older slug rather than the one the other just wrote.
+- **Create and update.** Forms, deities, celestial bodies and signs are picked from their curated vocabularies and written in the curated row's spelling. The slug is set from the label and the formal name. Create clears the compendium's lapsed retirements in the same write. Update replaces the whole entry, so a field left out is cleared, with a form kept by its id or else its folded text. When the slug moves the old one is retired as this keeper's and redirects for 180 days. The row is read before the transaction for the slug it holds, so two keepers saving at one instant can retire the older slug rather than the one the other just wrote.
 - **Promote a folk name.** The folk name becomes the display name and the old one a folk name, kept once whatever its case. The change is global. A slug another entry's redirect still runs from refuses the promotion, since this write has no way to confirm ending it.
-- **Reviewed mark.** `setCompendiumReviewed` is the only function that writes the mark; creating, editing or promoting leaves it as it was. Marking an entry already reviewed keeps its original date and reviewer. The seed never overwrites a reviewed entry (claude-docs/db/compendium-seed/README.md). The `set_updated_at` trigger leaves `updated_at` and `updated_by` as they were, so the entry is not shown as Updated. The admin's read of the mark is uncached, since the compendium's cached reads are the public ones, and does not read the reviewer.
+- **Reviewed mark.** `setCompendiumReviewed` is the only function that writes the mark; creating, editing or promoting leaves it as it was. Marking an entry already reviewed keeps its original date and reviewer. The seed never overwrites a reviewed entry (claude-docs/db/compendium-seed/README.md). The `set_updated_at` trigger leaves `updated_at` and `updated_by` as they were, so the entry is not shown as Updated. The keeper's read of the mark is uncached, since the compendium's cached reads are the public ones, and does not read the reviewer.
 - **Public entry read.** `getCompendiumEntryPage` takes no session and is cached whole under the `compendium` tag: every viewer sees the compendium alike, which a coven's route cannot do with the same assembly (it reads `getIngredient` and `ingredientDetailOf` uncached, per viewer). A refusal is never cached.
-- **Curated lists (`checkCuratedLists`).** A compendium entry holds curated values alone: each form and each deity a pick of a curated row, and the celestial bodies and signs of the entry and each form in the spelling of the live row they fold to. A refusal is placed at the entry the input sent, blanks counted, since parsing drops blank bodies and signs and numbers a form's rows by what it sent. It is read before the write, so an admin retiring a row while another saves an entry naming it can leave that entry holding it. Every refusal is reported at once, in the form's order.
-- **Redirect guard.** A write whose slug another entry's redirect runs from is refused unless the admin confirmed ending it with `endRedirect`, so the form can ask and send again. It is read before the write, so two admins saving at once can both pass it.
+- **Curated lists (`checkCuratedLists`).** A compendium entry holds curated values alone: each form and each deity a pick of a curated row, and the celestial bodies and signs of the entry and each form in the spelling of the live row they fold to. A refusal is placed at the entry the input sent, blanks counted, since parsing drops blank bodies and signs and numbers a form's rows by what it sent. It is read before the write, so a keeper retiring a row while another saves an entry naming it can leave that entry holding it. Every refusal is reported at once, in the form's order.
+- **Redirect guard.** A write whose slug another entry's redirect runs from is refused unless the admin confirmed ending it with `endRedirect`, so the form can ask and send again. It is read before the write, so two keepers saving at once can both pass it.
 - **Delete and count.** Delete soft-deletes and leaves the folk names and category links. The held-in count for the delete confirm is a number only, never a coven's name or id, and sits beside `deleteCompendiumEntry` because the cupboard's own services are the coven's, under a membership.
 - **Unique-index errors.** An identity collision (a second entry under a formal name the compendium holds, an oil beside the herb) is reported on `canonicalName`, or on `name` for an entry with none, naming the holder and pointing at adding the form to it. A label with no formal name keys as another entry's formal name (DESIGN.md §5), so the input alone would not say which entry. A slug collision names the entry holding the address, unless another entry holds the identity too, which is the collision to report: Postgres names the first broken index and the address index is older, so the oil written under the herb's label meets the address first. `id` is the entry an update writes, never its own collision.

@@ -73,12 +73,12 @@ export const CompendiumFilter = z.object({
     .enum(TOXIC_FILTERS)
     .nullish()
     .transform((setting) => (setting === 'any' ? undefined : (setting ?? undefined))),
-  // The admin's to-do list: entries citing nothing. False is no filter.
+  // The keeper's to-do list: entries citing nothing. False is no filter.
   withoutReferences: z
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
-  // The admin's other to-do list: entries with no live form. False is no filter.
+  // The keeper's other to-do list: entries with no live form. False is no filter.
   withoutForms: z
     .boolean()
     .nullish()
@@ -120,7 +120,7 @@ export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;
 export type CompendiumFilter = z.output<typeof CompendiumFilter>;
 
 // The coven's ingredient list takes the compendium's search, categories and
-// facets, but not the admin's two to-do lists, so it parses
+// facets, but not the keeper's two to-do lists, so it parses
 // them exactly as the compendium does; the two settings that need a coven's
 // own rows and jars are its alone.
 export const WorkspaceIngredientFilter = CompendiumFilter.pick({

@@ -63,7 +63,7 @@ const ContrastIcon = (): ReactElement => (
   </svg>
 );
 
-/** Each format the admin can choose, its name, and the channels it is typed in. */
+/** Each format the keeper can choose, its name, and the channels it is typed in. */
 const FORMATS: FormatOption[] = [
   {
     format: 'hsba',

@@ -818,7 +818,7 @@ function searchMatch(
 }
 
 /**
- * The entry shows no reference, on itself or on any of its live forms: the admin's to-do list. An entry whose only source is on its oil is sourced, so it is not on the list.
+ * The entry shows no reference, on itself or on any of its live forms: the keeper's to-do list. An entry whose only source is on its oil is sourced, so it is not on the list.
  */
 export function citesNowhere(): SQL | undefined {
   return and(
@@ -833,7 +833,7 @@ export function citesNowhere(): SQL | undefined {
 }
 
 /**
- * The entry has no live form: the admin's to-do list of entries nobody can stock or put in a spell yet. A soft-deleted variant is none, through `existsIn`.
+ * The entry has no live form: the keeper's to-do list of entries nobody can stock or put in a spell yet. A soft-deleted variant is none, through `existsIn`.
  */
 export function hasNoForm(): SQL {
   return not(existsIn(ingredientVariants, eq(ingredientVariants.ingredientId, ingredients.id)));

@@ -5,7 +5,7 @@ import { auditColumns } from '../../identity/schema/users';
 import { documentVersions } from './document-versions';
 
 // `replaced` marks a mailing that a newer mailing of the same document stopped before it finished; `paused` one the mail provider's
-// monthly quota stopped, until an admin resumes it.
+// monthly quota stopped, until a keeper resumes it.
 export const documentMailingStatus = pgEnum('document_mailing_status', [
   'sending',
   'sent',
@@ -23,7 +23,7 @@ export const documentMailings = namedWrites(
       documentVersionId: uuid('document_version_id')
         .notNull()
         .references(() => documentVersions.id),
-      // What changed, in the admin's words, as the mail carries it.
+      // What changed, in the keeper's words, as the mail carries it.
       summary: text('summary').notNull(),
       status: documentMailingStatus('status').notNull().default('sending'),
       recipientCount: integer('recipient_count').notNull(),

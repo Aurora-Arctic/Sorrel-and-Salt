@@ -33,7 +33,7 @@ const RecordCardAttemptDocument = graphql(`
 /** What a site invitation grants, by the role it names. */
 const SITE_GRANTS = {
   curator: "You've been invited to be a curator of Sorrel & Salt.",
-  admin: "You've been invited to be an admin of Sorrel & Salt.",
+  admin: "You've been invited to be a keeper of Sorrel & Salt.",
 } as const;
 
 /** What a coven's invitation grants when the page has not the coven's own name. */

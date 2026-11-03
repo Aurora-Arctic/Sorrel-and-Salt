@@ -36,7 +36,7 @@ import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
 import type { CardState, MintedCards } from '../types';
 
-// The admin's half of the invitation cards: minting a batch by the sheet, listing the cards and the batches, revoking a batch, and the arrivals list with its CSV.
+// The keeper's half of the invitation cards: minting a batch by the sheet, listing the cards and the batches, revoking a batch, and the arrivals list with its CSV.
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/m15.17-invitation-cards.md).
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -67,7 +67,7 @@ function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
   return { query: filter.query?.trim() || undefined };
 }
 
-const REFUSAL = 'Only a site admin may mint, list or revoke invitation cards';
+const REFUSAL = 'Only a site keeper may mint, list or revoke invitation cards';
 
 /**
  * Mints `sheets` sheets of `CARDS_PER_SHEET` pending cards each, sharing one batch and `expiresAt`, and answers their tokens: the only time any of them

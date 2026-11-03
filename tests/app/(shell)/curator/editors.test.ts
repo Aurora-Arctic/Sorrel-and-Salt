@@ -66,7 +66,7 @@ describe('editorStamps', () => {
     ]);
   });
 
-  it('passes on the refusal a non-admin session gets', async () => {
+  it('passes on the refusal a non-keeper session gets', async () => {
     editorNamesForCurator.mockRejectedValueOnce(
       new Forbidden('Only a curator may read editor names'),
     );

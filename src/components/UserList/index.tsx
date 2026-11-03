@@ -23,7 +23,7 @@ import './index.scss';
 
 /**
  * The empty list, naming the filters in use, so
- * an admin sees what to change: "No users match “ada” and the role Admin.
+ * a keeper sees what to change: "No users match “ada” and the role Keeper.
  * Change or clear the filter to see more."
  */
 function noMatch({ query, role, awaitingApproval, timedOut, paused }: UserListFilterProps): string {
@@ -46,7 +46,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   {
     heading: 'Name',
     // The way into their privilege history, then the name, on every
-    // row: an admin's changes are the ones most worth reading. The name opens
+    // row: a keeper's changes are the ones most worth reading. The name opens
     // the user's modal, their covens and Impersonate.
     cell: (user) => (
       <span className="user-list__name">
@@ -71,7 +71,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   },
   {
     heading: 'Role',
-    // An admin's or curator's role in bold, each role with the tip saying what it may do. The primary
+    // A keeper's or curator's role in bold, each role with the tip saying what it may do. The primary
     // admin carries a crown with a tip. Change Role is the user modal's, so the row is an index into it.
     cell: (user) => (
       <span className="user-list__role-name">
@@ -153,7 +153,7 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
       </time>
     ),
   },
-  // Not on an admin's row: the endpoint refuses one. Ruled in red,
+  // Not on a keeper's row: the endpoint refuses one. Ruled in red,
   // as acting as someone else is the table's one dangerous control.
   canImpersonate && {
     heading: 'Impersonate',

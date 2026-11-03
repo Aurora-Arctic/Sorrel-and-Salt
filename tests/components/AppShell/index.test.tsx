@@ -72,7 +72,7 @@ describe('AppShell', () => {
     );
   });
 
-  it('offers a curator or an admin the Compendium, Your Covens, Curator and Keepers links', () => {
+  it('offers a curator or a keeper the Compendium, Your Covens, Curator and Keepers links', () => {
     shell(ADMIN);
 
     const nav = screen.getByRole('navigation', { name: 'Site' });
@@ -88,7 +88,7 @@ describe('AppShell', () => {
     );
   });
 
-  it('sends an admin in no coven to the /coven landing, which offers the create page', () => {
+  it('sends a keeper in no coven to the /coven landing, which offers the create page', () => {
     shell(ADMIN, []);
 
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute('href', '/coven');

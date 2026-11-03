@@ -149,7 +149,7 @@ describe('a save carrying references', () => {
     ]);
   });
 
-  it('lets an admin cite compendium references from a compendium entry', async () => {
+  it('lets a keeper cite compendium references from a compendium entry', async () => {
     const book = await compendiumBook('Fixture Herbal');
 
     const created = await createCompendiumEntry(

@@ -124,10 +124,10 @@ export async function resolveMySupportRequest(
 }
 
 /**
- * Adds a note only staff read. It never changes the request's status and is never mailed. An admin may on any request, a
+ * Adds a note only staff read. It never changes the request's status and is never mailed. A keeper may on any request, a
  * curator on any request they can read, assigned to them or not.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin, or the request is anonymised.
+ * @throws {Forbidden} the session is neither a curator nor a keeper, or the request is anonymised.
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.
  */
@@ -156,13 +156,13 @@ export type SupportSenderTier = 'beta_tester' | 'standard';
  * Each sender's tier, in the order asked: `beta_tester` for an account that accepted a printed card, `standard` for any other.
  * Derived from the invitation on each read and never stored, so it cannot drift. Staff alone may ask.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin.
+ * @throws {Forbidden} the session is neither a curator nor a keeper.
  */
 export async function supportTiersForSenders(
   session: Session,
   userIds: readonly string[],
 ): Promise<SupportSenderTier[]> {
-  readerOf(session, 'Only a curator or a site admin may read a sender’s tier');
+  readerOf(session, 'Only a curator or a site keeper may read a sender’s tier');
   const cards = await findCardAcceptorIds(userIds);
   return userIds.map((id) => (cards.has(id) ? 'beta_tester' : 'standard'));
 }

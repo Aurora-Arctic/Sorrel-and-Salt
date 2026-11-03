@@ -39,7 +39,7 @@ const CreationControl = ({
   action,
   inModal = false,
 }: CreationControlProps): ReactElement =>
-  // Locked while admin changes are paused, as Change Role is.
+  // Locked while keeper changes are paused, as Change Role is.
   paused ? (
     <LockedControl
       label={action === 'approve' ? 'Approve' : 'Revoke'}

@@ -88,7 +88,7 @@ const writeMessage = (message = MESSAGE) =>
   });
 
 describe('UserDetail, Site Access', () => {
-  it('draws no Site Access section when no pauses are given, as for the primary admin and the admin’s own account', () => {
+  it('draws no Site Access section when no pauses are given, as for the primary keeper and the admin’s own account', () => {
     renderDetail();
     expect(screen.queryByRole('region', { name: 'Site Access' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Pause Access' })).toBeNull();

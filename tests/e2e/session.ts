@@ -12,7 +12,7 @@ import { browserUrl } from './slots';
 
 /**
  * The address every e2e server gets as ADMIN_BOOTSTRAP_EMAIL, on the reserved `.invalid` domain: set by
- * playwright.config.ts, not `.env.local`, so a spec signs in as the primary admin the same way everywhere.
+ * playwright.config.ts, not `.env.local`, so a spec signs in as the primary keeper the same way everywhere.
  */
 export const PRIMARY_ADMIN_EMAIL = 'placeholder@admin-bootstrap.invalid';
 
@@ -63,7 +63,7 @@ export async function signInAs(
       // privilege trigger refuses an undeclared change to `role` or
       // `can_create_workspace` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
       await tx`select set_config('app.privilege_route', 'manual', true)`;
-      // Stamped as its own creator, as the sign-up hook stamps one. A curator or an admin holds the
+      // Stamped as its own creator, as the sign-up hook stamps one. A curator or a keeper holds the
       // creation flag, as the users CHECK asks. An agreed account holds the terms version published in this database now.
       // The terms version in force is the terms document's highest live published version, as the gate reads it.
       const [{ current }] = await tx`

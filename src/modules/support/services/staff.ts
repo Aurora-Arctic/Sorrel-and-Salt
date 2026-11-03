@@ -28,14 +28,14 @@ import { readerOf } from './access';
 import { mailSender } from './mail-sender';
 import { redactPathForCurator } from './redact-path';
 
-// What the staff do to a request. An admin reads every request and may do everything; a curator reads the requests marked for
+// What the staff do to a request. A keeper reads every request and may do everything; a curator reads the requests marked for
 // curators or assigned to them, and may reply to and resolve the ones assigned to them. Both are checked here, by direct call.
 
-const READ_REFUSAL = 'Only a curator or a site admin may read support requests';
-const ADMIN_REFUSAL = 'Only a site admin may do this to a support request';
+const READ_REFUSAL = 'Only a curator or a site keeper may read support requests';
+const ADMIN_REFUSAL = 'Only a site keeper may do this to a support request';
 
 /**
- * The request as this session reads it: a curator sees no coven slug in its page and no signed-out sender’s address, an admin
+ * The request as this session reads it: a curator sees no coven slug in its page and no signed-out sender’s address, a keeper
  * sees both as stored. The reply flow mails the stored address on its own read, so a curator need not see it to answer.
  */
 function asRead(session: Session, row: SupportRequestRow): SupportRequestRow {
@@ -44,7 +44,7 @@ function asRead(session: Session, row: SupportRequestRow): SupportRequestRow {
     : row;
 }
 
-/** An admin's or curator's page of requests under `filter`: open ahead of resolved, newest first within each. */
+/** A keeper's or curator's page of requests under `filter`: open ahead of resolved, newest first within each. */
 export async function listSupportRequests(
   session: Session,
   filter: SupportRequestFilter,
@@ -77,7 +77,7 @@ export async function countSupportViews(
 /**
  * A request the reader may see, by id. One outside a curator's scope reads as absent.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin.
+ * @throws {Forbidden} the session is neither a curator nor a keeper.
  * @throws {NotFound} no request the reader may see has this id.
  */
 export async function getSupportRequest(session: Session, id: string): Promise<SupportRequestRow> {
@@ -94,7 +94,7 @@ async function visibleRequest(reader: SupportReader, id: string): Promise<Suppor
 }
 
 /**
- * The request, for an act an admin may do on any request and a curator only on one assigned to them.
+ * The request, for an act a keeper may do on any request and a curator only on one assigned to them.
  *
  * @throws {Forbidden} a curator, and the request is not assigned to them.
  */
@@ -126,7 +126,7 @@ export function refuseAnonymised(request: SupportRequestRow): void {
   }
 }
 
-/** The request an admin is about to change, read before the write so an anonymised one is refused first. */
+/** The request a keeper is about to change, read before the write so an anonymised one is refused first. */
 async function changeable(session: Session, id: string): Promise<string> {
   const row = await visibleRequest(readerOf(session, READ_REFUSAL), id);
   refuseAnonymised(row);
@@ -144,11 +144,11 @@ async function change(
 }
 
 /**
- * Assigns the request to a curator or admin, or to no one. The assignee must be a live curator or admin.
+ * Assigns the request to a curator or keeper, or to no one. The assignee must be a live curator or keeper.
  *
- * @throws {Forbidden} the session is not an admin, or the request is anonymised.
+ * @throws {Forbidden} the session is not a keeper, or the request is anonymised.
  * @throws {NotFound} no request has this id, or the assignee is not a live account.
- * @throws {ValidationError} the assignee is neither a curator nor an admin.
+ * @throws {ValidationError} the assignee is neither a curator nor a keeper.
  */
 export async function assignSupportRequest(
   session: Session,
@@ -172,7 +172,7 @@ export async function assignSupportRequest(
 /**
  * Marks the request visible or hidden to curators.
  *
- * @throws {Forbidden} the session is not an admin, or the request is anonymised.
+ * @throws {Forbidden} the session is not a keeper, or the request is anonymised.
  * @throws {NotFound} no request has this id.
  */
 export async function setSupportRequestCuratorVisible(
@@ -187,7 +187,7 @@ export async function setSupportRequestCuratorVisible(
 }
 
 /**
- * Marks an open or waiting request resolved, by whom and when. An admin may on any request, a curator on one assigned to them.
+ * Marks an open or waiting request resolved, by whom and when. A keeper may on any request, a curator on one assigned to them.
  *
  * @throws {Forbidden} a curator, and the request is not assigned to them; or the request is already resolved or closed.
  * @throws {NotFound} the reader may not see a request with this id.
@@ -259,7 +259,7 @@ export async function moveOrRefuse(
 /**
  * Links the request to a GitHub issue on this repository, or clears the link with null.
  *
- * @throws {Forbidden} the session is not an admin, or the request is anonymised.
+ * @throws {Forbidden} the session is not a keeper, or the request is anonymised.
  * @throws {NotFound} no request has this id.
  */
 export async function setSupportRequestIssueUrl(

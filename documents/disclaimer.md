@@ -10,7 +10,7 @@ This disclaimer is part of the [Terms of Use](/terms): agreeing to the terms is 
 ## The Short Version
 
 - Sorrel & Salt is folklore and reference. Nothing on it is medical, legal or other professional advice.
-- The compendium is how its admins and curators read their sources. It is not an authority, and spirituality is personal.
+- The compendium is how its keepers and curators read their sources. It is not an authority, and spirituality is personal.
 - The site comes with no warranty. Its text can be wrong, out of date or incomplete.
 - Safety notes do not list every risk. If an ingredient has no safety note, that does not mean it is safe.
 - An ingredient can harm in a way its usual use does not suggest. Something eaten every day can burn the skin as an oil or irritate the lungs in the air.
@@ -25,7 +25,7 @@ If you are ill, pregnant, breastfeeding, taking medicine or caring for someone w
 
 ### An Interpretation, Not an Authority
 
-What the compendium says is its admins' and curators' understanding of the sources they have read. They choose which sources to cite and decide what each one means for an entry, and another reader of the same books could decide differently. The site is not an authority on any tradition or practice.
+What the compendium says is its keepers' and curators' understanding of the sources they have read. They choose which sources to cite and decide what each one means for an entry, and another reader of the same books could decide differently. The site is not an authority on any tradition or practice.
 
 Spirituality is personal. Your own practice, tradition and experience may differ from what you read here, and they are yours to follow.
 
@@ -52,7 +52,7 @@ These are just some examples about how risk changes with use. Please do your own
 
 ## Other Sites
 
-The compendium links to the sources it cites. The site does not control those pages and does not vouch for them. Curators and admins try to use reputable sources but cannot control the words of other authors.
+The compendium links to the sources it cites. The site does not control those pages and does not vouch for them. Curators and keepers try to use reputable sources but cannot control the words of other authors.
 
 ## Questions
 

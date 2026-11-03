@@ -22,7 +22,7 @@ import {
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// An admin mints a batch of cards, lists them and withdraws one or the batch; the token is returned once and the row holds its hash.
+// A keeper mints a batch of cards, lists them and withdraws one or the batch; the token is returned once and the row holds its hash.
 // The curator boundary is the first describe; what a card admits is invitation-acceptance-by-token.test.ts's.
 
 let sql: postgres.Sql;
@@ -41,11 +41,11 @@ beforeEach(async () => {
 });
 
 describe('who may mint, list and revoke', () => {
-  it('refuses a curator, a member and a non-admin each call, with a card there to be reached', async () => {
+  it('refuses a curator, a member and a non-keeper each call, with a card there to be reached', async () => {
     const { batchId } = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     const rows = await cards();
     expect(rows.every((row) => row.revoked_at === null)).toBe(true);
-    // Filters that name the batch and an arrival it holds, so an admin's call would answer a row.
+    // Filters that name the batch and an arrival it holds, so a keeper's call would answer a row.
     await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${rows[0]!.id}`;
     const FILTERED_BATCHES = { batch: batchId.slice(0, 4), status: 'live' as const };
     const FILTERED_ARRIVALS = { query: batchId.slice(0, 4) };

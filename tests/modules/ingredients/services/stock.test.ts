@@ -21,7 +21,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// The stock service: members and owners write a coven's stock, viewers read it, and nobody outside the coven reaches it, the site admin included.
+// The stock service: members and owners write a coven's stock, viewers read it, and nobody outside the coven reaches it, the site keeper included.
 // The ingredient tables are emptied per test and the cascade empties `inventory_items` with them, so every jar a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
@@ -209,7 +209,7 @@ describe('createStock', () => {
     expect(await jars()).toHaveLength(0);
   });
 
-  it('refuses the site admin, who belongs to no coven', async () => {
+  it('refuses the site keeper, who belongs to no coven', async () => {
     await expect(createStock(asUser(E), WORKSPACE_W_ID, compendiumForm, {})).rejects.toThrow(
       Forbidden,
     );
@@ -519,7 +519,7 @@ describe('stockOf', () => {
     expect(inX).toMatchObject([{ id: theirs.id }]);
   });
 
-  it('answers the site admin Forbidden', async () => {
+  it('answers the site keeper Forbidden', async () => {
     await seedJar();
     const [answer] = await stockOf(asUser(E), [
       { ingredientId: compendiumIngredient, workspaceId: WORKSPACE_W_ID },

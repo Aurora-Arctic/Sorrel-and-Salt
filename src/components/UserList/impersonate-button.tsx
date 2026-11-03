@@ -11,7 +11,7 @@ import {
 import type { ImpersonateButtonProps } from './types';
 
 // The row's Impersonate, asking first: acting as someone else is the table's one dangerous control.
-// Better Auth's endpoint is the guard, refusing a non-admin and an admin target. A success swaps
+// Better Auth's endpoint is the guard, refusing a non-keeper and a keeper target. A success swaps
 // the session cookie, so the next page is a full load as the user.
 
 const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactElement => (

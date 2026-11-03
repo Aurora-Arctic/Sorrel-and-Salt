@@ -243,7 +243,7 @@ describe('the document mailing batch step', () => {
   it('sends nothing more once the mailing is replaced partway through a batch', async () => {
     const { versionId } = await publishedDocument();
     const mailingId = await mailing(versionId, await accounts(5));
-    // What the service leaves when an admin mails the document again while this batch is sending.
+    // What the service leaves when a keeper mails the document again while this batch is sending.
     beforeTake = async () => {
       await sql`update document_mailings set status = 'replaced' where id = ${mailingId}`;
     };

@@ -321,7 +321,7 @@ describe('its forms', () => {
     protection = row.id as string;
   });
 
-  /** One whole form as the admin's input sends it: picked Herb, `overrides` over blanks. */
+  /** One whole form as the keeper's input sends it: picked Herb, `overrides` over blanks. */
   const formOf = (overrides: Partial<VariantInput>) =>
     variantInput(makeVariant({ form: 'Herb' }), { formId: herb, ...overrides });
 

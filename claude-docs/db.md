@@ -75,15 +75,15 @@ In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## Categories, and the two group vocabularies (MB.35; tables M4.2, M4.2a)
 
-`categories`, `category_groups`, `ingredient_forms` and `ingredient_form_groups`: groups are admin-curated rows rather than enums, a category group carries a colour for each theme, and a vocabulary only admins write is a foreign key; then the admin's writes to each, a deleted group's rows moving to a group the admin picks. [`db/categories.md`](db/categories.md)
+`categories`, `category_groups`, `ingredient_forms` and `ingredient_form_groups`: groups are keeper-curated rows rather than enums, a category group carries a colour for each theme, and a vocabulary only keepers write is a foreign key; then the keeper's writes to each, a deleted group's rows moving to a group the admin picks. [`db/categories.md`](db/categories.md)
 
 ## The astrology vocabularies (MB.91; tables MB.92)
 
-`celestial_bodies` and `zodiac_signs`, the admin-curated vocabularies behind the lists `ingredients.celestial_bodies` and `.zodiac_signs` (MB.136), whose entries stay free text as `form` does, and the member's autofill, whose finders suggest celestial bodies, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
+`celestial_bodies` and `zodiac_signs`, the keeper-curated vocabularies behind the lists `ingredients.celestial_bodies` and `.zodiac_signs` (MB.136), whose entries stay free text as `form` does, and the member's autofill, whose finders suggest celestial bodies, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
 
 ## The deity vocabulary (MB.127; tables MB.128)
 
-`deities`, the admin-curated vocabulary behind an ingredient's deities, the rows of `ingredient_deities` since MB.167, whose names stay free text with the curated row picked beside them as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description, and its other spellings as `deity_other_names` rows (M14.22, M14.23). [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
+`deities`, the keeper-curated vocabulary behind an ingredient's deities, the rows of `ingredient_deities` since MB.167, whose names stay free text with the curated row picked beside them as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description, and its other spellings as `deity_other_names` rows (M14.22, M14.23). [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
 
 ### The member's autofill (MB.94)
 

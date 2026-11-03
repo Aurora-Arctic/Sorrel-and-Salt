@@ -5,7 +5,7 @@ lede: What Sorrel & Salt values, and how it handles the cultures, sourcing and a
 published: 2026-11-02
 ---
 
-This code is part of the [Terms of Use](/terms). Its section "What Everyone Agrees To" binds every account that agrees to the terms, and its sections for curators, admins, developers and the owner bind whoever holds that role.
+This code is part of the [Terms of Use](/terms). Its section "What Everyone Agrees To" binds every account that agrees to the terms, and its sections for curators, keepers, developers and the owner bind whoever holds that role.
 
 ## The Short Version
 
@@ -20,7 +20,7 @@ This code is part of the [Terms of Use](/terms). Its section "What Everyone Agre
 
 ### What Everyone Agrees To
 
-The [Terms of Use](/terms) make this section part of what every account agrees to. It is kept short on purpose. The sections after it say why each rule is here; the three at the end add to it for curators, admins and the site's owner, and bind whoever holds that role.
+The [Terms of Use](/terms) make this section part of what every account agrees to. It is kept short on purpose. The sections after it say why each rule is here; the three at the end add to it for curators, keepers and the site's owner, and bind whoever holds that role.
 
 - Treat everyone here with respect. Racism, misogyny, transphobia, homophobia, ableism, antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry have no place on the site, in a coven or in a support request.
 - Read the [Disclaimer](/disclaimer) before you act on anything the compendium says.
@@ -79,24 +79,24 @@ We ask the same of you: be honest about what you know and where you learned it, 
 
 ### Curators
 
-A curator curates the compendium, its vocabularies and its references, and reads the support requests an admin has marked for curators or assigned to them. A curator agrees to everything above, and to this:
+A curator curates the compendium, its vocabularies and its references, and reads the support requests a keeper has marked for curators or assigned to them. A curator agrees to everything above, and to this:
 
 - Every entry you write or change says where it comes from. You add no claim you cannot source, and you leave an unsourced entry on the to-do list rather than guessing a source for it.
 - You describe a closed practice in its own people's words, cited to them where a source exists, and you do not describe its ceremonies.
 - You keep the compendium's safety notes honest: you write what a source says, you mark what has not been checked, and you never soften a hazard.
 - A support request shows you what a requestor chose to write, without the requestor's email or the coven named in the page address. You read it only to help, and you repeat nothing to anyone who is not authorised to view it.
-- Your curator role gives you nothing in any coven but your own. You do not use it, or ask an admin to use theirs, to reach another coven's ingredients or grimoire.
+- Your curator role gives you nothing in any coven but your own. You do not use it, or ask a keeper to use theirs, to reach another coven's ingredients or grimoire.
 
-### Admins
+### Keepers
 
-An admin can do everything a curator can, and also manages who uses the site: an admin sees which covens a person belongs to, by name and role, grants and revokes the right to create covens, changes site roles, times out a support requestor, mints invitations and holds a steward's seat in the demo coven. An admin agrees to everything above, and to this:
+A keeper can do everything a curator can, and also manages who uses the site: a keeper sees which covens a person belongs to, by name and role, grants and revokes the right to create covens, changes site roles, times out a support requestor, mints invitations and holds a steward's seat in the demo coven. A keeper agrees to everything above, and to this:
 
 - You use each of those powers for the site's sake and never for your own: to keep people safe, to keep the compendium honest and to keep the site running. A grudge is not a reason.
 - Every change you make to a person's role or rights is recorded with your name, and you write a note saying why wherever the screen offers one.
 - You see a requestor's email and which covens a person belongs to. You use neither for anything but the request in front of you, and you share neither.
 - A time-out on a support requestor is the site's one sanction today, and you use it for abuse of the support form, not for disagreement.
 - Your steward seat in the demo coven is for showing people the site. Everyone who signs in can see what you write there, so keep it suitable for everyone who signs in.
-- An admin's role gives you nothing in any other coven. The site's code refuses it, and so do you.
+- A keeper's role gives you nothing in any other coven. The site's code refuses it, and so do you.
 
 ### Developers
 
@@ -113,7 +113,7 @@ A developer writes and runs the site's code, and may be able to reach its databa
 
 ### The Owner and Everyone Who Runs the Site
 
-The owner holds the primary admin account, which no one can revoke. The site relies on outside companies for things such as its hosting and its mail; the owner tries to choose ethical ones, but cannot hold them to this page. The owner, and every admin, curator and developer who helps run the site, agrees to everything above, and to this:
+The owner holds the primary keeper account, which no one can revoke. The site relies on outside companies for things such as its hosting and its mail; the owner tries to choose ethical ones, but cannot hold them to this page. The owner, and every keeper, curator and developer who helps run the site, agrees to everything above, and to this:
 
 - The site stays free of advertising, sells no data and uses nothing anyone writes here to train anything. If any of that could ever change, the owner emails every account to say so, in writing, before it does.
 - Anyone who reaches the database does so only to do what a person has asked for, such as an erasure, or to fix a fault, and says so when it is done.

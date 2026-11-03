@@ -37,7 +37,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The compendium's search box, a typeahead labelled "Name" as the admin's is. */
+/** The compendium's search box, a typeahead labelled "Name" as the keeper's is. */
 function compendiumSearch(page: Page) {
   return filterOf(page).getByRole('combobox', { name: 'Name' });
 }
@@ -121,7 +121,7 @@ test(
 
     await test.step('a form keeps only the entries holding it: bark is the two Uncaria', async () => {
       await page.goto('/compendium');
-      // The form filter, a type-ahead labelled "Form" as the admin's is
+      // The form filter, a type-ahead labelled "Form" as the keeper's is
       // (claude-docs/components/compendium-list.md).
       const panel = await openFilters(page);
       await panel.getByRole('combobox', { name: 'Form' }).fill('bark');

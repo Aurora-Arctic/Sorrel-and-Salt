@@ -5,7 +5,7 @@ A coven's own ingredients are written and read by four services in
 `createWorkspaceIngredient`, `updateWorkspaceIngredient` and
 `deleteWorkspaceIngredient` ask `{ ingredient: ['create'] }`, `['update']` and
 `['delete']`, which stewards and practitioners hold, and
-`getWorkspaceIngredient` asks `['read']`, which observers hold too. A site admin
+`getWorkspaceIngredient` asks `['read']`, which observers hold too. A site keeper
 holds none of them, as everywhere in a coven.
 
 **The tier is the proof's, so nothing here promotes a row to the compendium.**
@@ -87,7 +87,7 @@ The slug is derived from the name, so it moves either way. On the compendium
 tier the old slug is retired for the 180-day redirect, and a new slug sitting
 under another entry's live redirect is refused (`refuseEndingARedirect`)
 without offering to end it; M12.1's control may need to. Coven slugs redirect
-nowhere. Admins promote on the compendium, stewards and practitioners on their coven's
+nowhere. Keepers promote on the compendium, stewards and practitioners on their coven's
 rows, and an observer is `Forbidden`.
 
 **Every child is written by one call, the compendium's own** (MB.211). Each

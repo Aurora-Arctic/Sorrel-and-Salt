@@ -5,7 +5,7 @@ import { fromRoot } from '../../support/paths';
 
 // The document editor holds a document as the editor's own value and stores it as markdown, so opening a document and saving it
 // unedited must store the markdown it opened: otherwise every save would rewrite text nobody changed, and every published version
-// would differ from the last in ways no admin made. Proved over the four shipped documents, which use every construct the
+// would differ from the last in ways no keeper made. Proved over the four shipped documents, which use every construct the
 // editor is given: headings, lists, links, emphasis and footnotes.
 
 const documents = loadDocuments(fromRoot('documents'));

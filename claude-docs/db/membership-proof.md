@@ -31,7 +31,7 @@ what that costs while most of the services are still unwritten:
 [`m6.3-permission-statements.md`](../design-decisions/m6.3-permission-statements.md).
 
 The **site role** is not consulted. `session.role` is `'user' | 'curator' | 'admin'` and a
-curator or site admin curates the compendium and reaches no workspace at all, so
+curator or site keeper curates the compendium and reaches no workspace at all, so
 `assertMembership` never reads it — which is what makes that invariant true by
 construction rather than by a branch someone could add later.
 
@@ -97,7 +97,7 @@ whose workspace is live too — the workspace's `deleted_at` is a correlated
 `EXISTS`, as in `findManyInSpell`, because the repository keeps one select
 builder. Who may ask about which ids is the calling service's decision:
 `membershipsOf` in `coven` answers the caller's own id and refuses every
-other, an admin's included.
+other, a keeper's included.
 
 `findUserByEmail(email)` is the third (MB.54), for the same kind of reason
 again: an address is claimed site-wide, so there is no workspace to hold a proof
@@ -109,7 +109,7 @@ other live row holds (`auth/admin-bootstrap.md`, "The email page").
 
 `findInvitationByToken(token)` is the fourth (MB.69, both tiers since
 MB.202), for a different reason: the one asking is an invitee who is not yet
-a member of the workspace nor an admin, so there is no proof of either kind
+a member of the workspace nor a keeper, so there is no proof of either kind
 to hold. What admits is holding the token, which the read hashes itself, so a
 hash out of a dumped row finds nothing. It answers the live invitation the
 token names, on either tier and whatever its state; the accept beside it
@@ -184,7 +184,7 @@ voluntary leave (M6.15).
 
 It reads the workspace's live members through `write.lockLiveMembers(membership)`,
 which locks them `for update` in user-id order, as `lockLiveAdmins` does for
-admins. Two stewards stepping down at once therefore queue on the first row, and
+keepers. Two stewards stepping down at once therefore queue on the first row, and
 the second counts the first's committed change instead of both seeing two stewards.
 
 The refusal is a `LastOwner`, a subclass of `Forbidden` that carries what M6.16

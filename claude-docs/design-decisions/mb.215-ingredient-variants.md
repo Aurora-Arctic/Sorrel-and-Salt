@@ -40,7 +40,7 @@ It is decided now because nearly everything that reads the shape is unbuilt. The
 - `ingredient_substitutes` gains `variant_id`, the form a row is a substitute _for_, and `substitute_variant_id`, the form of the linked ingredient it names, which needs a link beside it.
 - `reference_links` gains one more sourced column, `ingredient_variant_id`, through the registry of sourced tables that already builds the others.
 
-**The union rule, as code.** `Ingredient.categories`, `substitutes` and `references` are the ingredient's own rows, those with no variant; `IngredientVariant`'s are that form's additions; nothing merges the two. The compendium's category filter matches the union for free, since a variant's pair also carries the `ingredient_id`. An entry counts as sourced, for the admin's to-do list, if it or one of its live variants cites a reference. A spell's derived categories are the ingredient's pairs plus the layer's variant's.
+**The union rule, as code.** `Ingredient.categories`, `substitutes` and `references` are the ingredient's own rows, those with no variant; `IngredientVariant`'s are that form's additions; nothing merges the two. The compendium's category filter matches the union for free, since a variant's pair also carries the `ingredient_id`. An entry counts as sourced, for the keeper's to-do list, if it or one of its live variants cites a reference. A spell's derived categories are the ingredient's pairs plus the layer's variant's.
 
 **An example.** Rosemary, _Salvia rosmarinus_, is one compendium entry at `/compendium/ingredients/rosemary-salvia-rosmarinus`. The ingredient holds its description, `Fire`, the Sun, its folk names, its deities and the categories every form shares. Its Herb variant adds nothing it does not need to. Its Oil variant adds the oil's own description, the safety note "dilute before it touches the skin", the monograph that covers the oil, and "for anointing". The page shows the ingredient, then a section for each form, the oil's at `#form-oil`.
 
@@ -63,7 +63,7 @@ The question was which of an ingredient's properties belong to a form. The answe
 ## What it costs
 
 - **A window in which two models coexist.** From MB.216 to MB.223 the row keeps `canonical_key`, `form` and `form_id` beside `identity_key` and the variants. MB.219 writes both until MB.222 stops reading the old columns, and `tests/db/schema-drift.test.ts` declares each column awaiting its drop in `PENDING_DROPS` until MB.223 removes it.
-- **A refusal before the switch.** The identity index lands with MB.216, before MB.220 maps it to a field error, so for that short window an admin trying to add "Rosemary, oil" as an entry beside the herb is refused with an unmapped index name. It is admin-only, and the answer is the variant MB.219 adds.
+- **A refusal before the switch.** The identity index lands with MB.216, before MB.220 maps it to a field error, so for that short window a keeper trying to add "Rosemary, oil" as an entry beside the herb is refused with an unmapped index name. It is admin-only, and the answer is the variant MB.219 adds.
 - **A guard that may stop a deploy.** MB.216's migration refuses a database holding two live entries of one formal name in a tier, rather than merging them. No seeded or live database holds such a group, so the guard is expected never to fire; if it does, the procedure below is how to clear it.
 
 ## Merging a group

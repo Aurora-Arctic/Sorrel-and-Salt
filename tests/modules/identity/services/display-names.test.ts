@@ -116,7 +116,7 @@ describe('displayNamesOf', () => {
     await expect(displayNamesOf(asUser(A), [H.id])).resolves.toEqual([null]);
   });
 
-  it('gives a site admin no reach past their own covens', async () => {
+  it('gives a site keeper no reach past their own covens', async () => {
     await expect(rowsOf(A.id)).resolves.toEqual([
       expect.objectContaining({ name: A.name, deleted_at: null }),
     ]);

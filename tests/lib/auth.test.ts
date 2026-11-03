@@ -211,7 +211,7 @@ describe('user field mapping', () => {
 });
 
 // The one write to `users` outside withAudit: there is no session yet, so the new user is its
-// own creator (`createdBy` is NOT NULL with no default). It never sets `role`: the primary admin
+// own creator (`createdBy` is NOT NULL with no default). It never sets `role`: the primary keeper
 // is promoted at sign-in, through withAudit (tests/modules/identity/services/admin-role.test.ts).
 describe('sign-up hook', () => {
   afterEach(() => {
@@ -331,7 +331,7 @@ describe('sign-up hook seat', () => {
   });
 });
 
-// Everything the primary admin's protection rests on holds only while the
+// Everything the primary keeper's protection rests on holds only while the
 // variable is set, so a deployed build refuses to start without it; the check
 // keys on NODE_ENV=production, as BETTER_AUTH_SECRET's does.
 describe('ADMIN_BOOTSTRAP_EMAIL', () => {
@@ -350,7 +350,7 @@ describe('ADMIN_BOOTSTRAP_EMAIL', () => {
 });
 
 // Each of these, turned on, would let the address on an account change under
-// the primary admin and move the protection to whoever now holds it.
+// the primary keeper and move the protection to whoever now holds it.
 describe('options that would move the primary admin', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -485,7 +485,7 @@ describe('session cookie cache', () => {
     vi.unstubAllEnvs();
   });
 
-  // A revoked admin's next request reads `role` off the users row, so `/keepers` and every admin
+  // A revoked admin's next request reads `role` off the users row, so `/keepers` and every keeper
   // mutation close to them at once. A cookie cache would answer from the cookie until its TTL ran
   // out (claude-docs/auth/admin-users.md).
   it('keeps the session cookie cache off, so every request reads the role afresh', async () => {

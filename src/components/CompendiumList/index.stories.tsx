@@ -192,7 +192,7 @@ const firstPageNode = (
   </Page>
 );
 
-// The admin's two to-do lists at once, the unknown kind and the unsourced,
+// The keeper's two to-do lists at once, the unknown kind and the unsourced,
 // narrowed to one form, a deity, two elements and two categories, the Filters button counting
 // them and the sentence above the results saying so.
 const FilteredView = () => (

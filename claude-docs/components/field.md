@@ -65,7 +65,7 @@ owner, 2026-10-20).
 | `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row    |
 | `CharacterCount`    | The characters a field has left, in a polite live region, shown once it passes 75% of its limit               |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
-| `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
+| `ReasonField`       | A keeper change's optional Reason, in a plain-state form                                                      |
 | `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
 | `FilterSelectField` | A list filter's closed set: a native select from the server, a select-only box or type-ahead once hydrated    |
 
@@ -94,7 +94,7 @@ than its own. `noun` still names Delete, on a form that has one.
 
 ### `ReasonField`
 
-The optional Reason an admin gives a change (MB.115): a text box under
+The optional Reason a keeper gives a change (MB.115): a text box under
 "Reason", "Add a reason" its placeholder, held by the caller in plain state,
 its hint behind the ⓘ saying where the reason is kept, by default "Kept with
 the change in the record of who changed what." The invitation form passes its

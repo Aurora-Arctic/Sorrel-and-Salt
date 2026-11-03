@@ -253,7 +253,7 @@ describe('the repository', () => {
     expect(await findStandingUserAccessPause(PAUSED)).toBeUndefined();
   });
 
-  // A is no admin, but the writer stamps whoever the session names: the stamps below can only have come from the session, not from E's proof.
+  // A is no keeper, but the writer stamps whoever the session names: the stamps below can only have come from the session, not from E's proof.
   it('lifts the standing pause, stamping lifted_by and updated_by from the session', async () => {
     const [set] = await withAudit(asUser(E), (write) =>
       write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
@@ -272,7 +272,7 @@ describe('the repository', () => {
     expect(await findStandingUserAccessPause(PAUSED)).toBeUndefined();
   });
 
-  // A pause that ran out ended by itself; lifting it would record an admin ending what had already ended.
+  // A pause that ran out ended by itself; lifting it would record a keeper ending what had already ended.
   it('lifts nothing when no pause stands, an expired one included', async () => {
     await sql`
       insert into user_access_pauses (user_id, note, until, created_by, updated_by)

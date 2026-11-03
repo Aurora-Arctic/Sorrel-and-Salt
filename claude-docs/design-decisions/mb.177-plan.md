@@ -2,17 +2,17 @@
 
 ## Context
 
-The spec already says admins may create a coven "regardless of the flag" (DESIGN.md §5), and M6.7's planned gate is "`canCreateWorkspace` **or** the admin role". The rows do not say so:
+The spec already says keepers may create a coven "regardless of the flag" (DESIGN.md §5), and M6.7's planned gate is "`canCreateWorkspace` **or** the admin role". The rows do not say so:
 
-- `grantAdmin` in `src/modules/identity/services/admin-role.ts:75-77` writes only `role`, so the primary admin promoted through `ADMIN_BOOTSTRAP_EMAIL` holds `false`.
+- `grantAdmin` in `src/modules/identity/services/admin-role.ts:75-77` writes only `role`, so the primary keeper promoted through `ADMIN_BOOTSTRAP_EMAIL` holds `false`.
 - Fixture E is seeded `role: 'admin', canCreateWorkspace: false` on purpose (`src/db/seed/standard.ts:71-78`, `claude-docs/db/standard-scenario.md`), so that it exercises M6.7's "or admin" branch.
-- No migration backfilled existing admins. Migration 0043 wrote ledger rows only.
-- As a result, admins show "No" on `/admin/users` and appear under `?awaiting` (`src/db/repository/users.ts:80`).
+- No migration backfilled existing keepers. Migration 0043 wrote ledger rows only.
+- As a result, keepers show "No" on `/admin/users` and appear under `?awaiting` (`src/db/repository/users.ts:80`).
 
 **Decision (the user's):** make it an invariant rather than a second rule.
 
 - A CHECK constraint on `users` makes "admin without the flag" impossible.
-- Existing admins are backfilled.
+- Existing keepers are backfilled.
 - Promotion sets both columns in one write.
 - E is seeded `true`.
 - M6.7's gate reads the flag alone, and the "or admin" prong is dropped.
@@ -35,7 +35,7 @@ Nothing creates a workspace yet (M6.7 is Wave 9), so no runtime gate changes. Th
 Add to the table's extras, beside `users_email_lower_case`:
 
 ```ts
-// Every admin may create a workspace, held by the row rather than by a second
+// Every keeper may create a workspace, held by the row rather than by a second
 // rule beside the flag (claude-docs/design-decisions/mb.177-…md).
 check('users_admin_can_create_workspace', sql`${table.role} <> 'admin' or ${table.canCreateWorkspace}`),
 ```
@@ -47,8 +47,8 @@ The constraint covers soft-deleted rows too. It is a fact about the row, not a u
 Hand-edit the generated file so that the backfill precedes `ADD CONSTRAINT`. 0043 is the model for comments and stamping:
 
 ```sql
--- MB.177: … every admin row, soft-deleted included, since the CHECK binds them all;
--- stamped as that admin, as 0043's backfill was.
+-- MB.177: … every keeper row, soft-deleted included, since the CHECK binds them all;
+-- stamped as that keeper, as 0043's backfill was.
 UPDATE "users" SET "can_create_workspace" = true, "updated_by" = "id"
 WHERE "role" = 'admin' AND "can_create_workspace" = false;--> statement-breakpoint
 ALTER TABLE "users" ADD CONSTRAINT "users_admin_can_create_workspace" CHECK (…);
@@ -63,7 +63,7 @@ ALTER TABLE "users" ADD CONSTRAINT "users_admin_can_create_workspace" CHECK (…
 
 ### 4. Seed
 
-- `src/db/seed/standard.ts`: set E's `canCreateWorkspace` to `true`, and rewrite the `FIXTURE_USERS` doc comment. A–D earned the flag by membership, and E holds it as every admin must.
+- `src/db/seed/standard.ts`: set E's `canCreateWorkspace` to `true`, and rewrite the `FIXTURE_USERS` doc comment. A–D earned the flag by membership, and E holds it as every keeper must.
 - `src/db/seed/minimal.ts` and `bootstrap-admin.ts` seed `role: 'user'`, so they need no change. Verify this.
 
 ### 5. Tests
@@ -75,9 +75,9 @@ ALTER TABLE "users" ADD CONSTRAINT "users_admin_can_create_workspace" CHECK (…
   - An `update users set role = 'admin'` on a flag-less user fails the same way.
   - Preconditions are asserted, so the test cannot pass vacuously: the same row inserts with the flag set, and a `user` without the flag inserts. Use the existing `failureOf` helper.
 - The backfill, in the same file or beside it, following `admin-role-changes-schema.test.ts`'s "the backfill" pattern (`statementsOfMigrationContaining` plus `sql.unsafe`):
-  - Drop the constraint inside the test DB, or insert before re-adding it, to plant a flag-less live admin and a flag-less soft-deleted admin plus a flag-less user.
+  - Drop the constraint inside the test DB, or insert before re-adding it, to plant a flag-less live keeper and a flag-less soft-deleted admin plus a flag-less user.
   - Run the `update` statement.
-  - Assert that both admins are now `true` and stamped as themselves, and that the user is untouched.
+  - Assert that both keepers are now `true` and stamped as themselves, and that the user is untouched.
   - The test databases are per-worker clones, so altering the constraint in-test is safe. Confirm in `tests/support/db/database.ts`.
 - `tests/modules/identity/services/admin-role.test.ts`: both promotions leave `can_create_workspace = true` on a user who started `false`, with the precondition asserted.
 
@@ -94,16 +94,16 @@ ALTER TABLE "users" ADD CONSTRAINT "users_admin_can_create_workspace" CHECK (…
 
 ### 6. Docs, in the same PR
 
-- **`claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md`** (new): the decision, why an invariant beats "flag or admin", and what it costs. E no longer distinguishes the two prongs, which is acceptable because there is only one prong. M5.8 cannot revoke an admin's flag.
+- **`claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md`** (new): the decision, why an invariant beats "flag or admin", and what it costs. E no longer distinguishes the two prongs, which is acceptable because there is only one prong. M5.8 cannot revoke a keeper's flag.
 - **`claude-docs/design-decisions/mb.177-plan.md`**: a copy of this plan (memory: store the plan beside the records).
 - **`claude-docs/DESIGN.md`**:
-  - Rewrite the §5 `canCreateWorkspace` paragraph (~:245). The flag is what lets anyone create, admins included. Every admin holds it, by a CHECK (MB.177). Granting admin sets it, and revoking admin leaves it.
+  - Rewrite the §5 `canCreateWorkspace` paragraph (~:245). The flag is what lets anyone create, keepers included. Every admin holds it, by a CHECK (MB.177). Granting admin sets it, and revoking admin leaves it.
   - Drop "or admin" from the `createWorkspace` SDL comment (~:820) and from the Story 3 acceptance line (~:1380).
-- **`CLAUDE.md` domain invariant (line 68)**: "…or being made admin (MB.59)" becomes "or being made admin, which a CHECK makes every admin hold (MB.177)". Keep it to one line.
+- **`CLAUDE.md` domain invariant (line 68)**: "…or being made admin (MB.59)" becomes "or being made admin, which a CHECK makes every keeper hold (MB.177)". Keep it to one line.
 - **`claude-docs/tasks/m6.md` M6.7**:
-  - The gate becomes "gated on `canCreateWorkspace`, which every admin holds (MB.177)".
+  - The gate becomes "gated on `canCreateWorkspace`, which every keeper holds (MB.177)".
   - The acceptance criterion "An admin can create without holding the flag" becomes "The gate reads the flag alone, never `role`; E creates through it".
-- **`claude-docs/tasks/m5.md` M5.8**: add a criterion. Revoking the flag from an admin is refused with an explaining error, not a constraint violation, and revoking admin first is the route.
+- **`claude-docs/tasks/m5.md` M5.8**: add a criterion. Revoking the flag from a keeper is refused with an explaining error, not a constraint violation, and revoking admin first is the route.
 - **`claude-docs/tasks/mb.md`**:
   - Add a new **MB.177** entry (story, notes and acceptance criteria as below) and a summary-table row.
   - Add a note on MB.59 that the constraint already enforces its "grant sets `canCreateWorkspace`".
@@ -119,10 +119,10 @@ ALTER TABLE "users" ADD CONSTRAINT "users_admin_can_create_workspace" CHECK (…
 **MB.177 acceptance criteria (for the entry):**
 
 - A CHECK on `users` refuses any row with `role = 'admin'` and `can_create_workspace = false`, asserted by insert and by update, with the preconditions shown.
-- The migration sets the flag on every existing admin, soft-deleted included, before adding the constraint.
+- The migration sets the flag on every existing keeper, soft-deleted included, before adding the constraint.
 - Promotion at sign-in or at verification sets both columns in one audited write.
-- Fixture E is seeded with the flag. `/admin/users?awaiting` lists no admin.
-- DESIGN.md, CLAUDE.md, M6.7, M5.8 and the M2.9 record say "the flag, which every admin holds".
+- Fixture E is seeded with the flag. `/admin/users?awaiting` lists no keeper.
+- DESIGN.md, CLAUDE.md, M6.7, M5.8 and the M2.9 record say "the flag, which every keeper holds".
 
 ## Verification
 

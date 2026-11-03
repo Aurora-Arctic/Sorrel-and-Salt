@@ -50,7 +50,7 @@ import type {
 // (five "Cat's Claw" rows, mineral varieties, `none` and `unknown`). Writes use the handle `seed()` was given, not `withAudit`. (claude-docs/db/standard-scenario.md, "The compendium is awkward on purpose")
 
 /**
- * A owns W, B is a practitioner, C an observer, D a practitioner of unrelated X, E a site admin and F a site curator in no
+ * A owns W, B is a practitioner, C an observer, D a practitioner of unrelated X, E a site keeper and F a site curator in no
  * workspace, G an unverified account. A–D hold `canCreateWorkspace` by membership, E and F by their roles
  * (the users CHECK requires it of every role but `user`).
  */
@@ -532,7 +532,7 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
 
 /**
  * The same scenario inside a caller's transaction, so `demo` writes its grimoire alongside these rows. Assumes
- * the GUC is published and the bootstrap user exists. `restoreDeletedDeityPicks` brings back a deity pick an admin
+ * the GUC is published and the bootstrap user exists. `restoreDeletedDeityPicks` brings back a deity pick a keeper
  * deleted (`standard` resets its fixtures; `demo` does not, since a deletion there is the explorer's own). (claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity pick back; demo does not")
  */
 export async function seedStandardContent(
@@ -694,7 +694,7 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
 /**
  * The slug backfill run on every seed over its own entries: each live entry's slug is re-derived and written
  * where it differs, so a reseed with nothing to change writes nothing. A compendium entry's old slug is retired
- * for the 180-day redirect; a slug another live row holds is left alone, so a reseed never fails on an admin's row. (claude-docs/db/standard-scenario.md, "Slug backfill")
+ * for the 180-day redirect; a slug another live row holds is left alone, so a reseed never fails on a keeper's row. (claude-docs/db/standard-scenario.md, "Slug backfill")
  */
 export async function reslugIngredients(
   tx: SeedTransaction,

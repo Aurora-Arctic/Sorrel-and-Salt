@@ -279,7 +279,7 @@ export function documentWrites({
   return {
     updateDocument: (_admin, documentId, values) =>
       update(documents, values, eq(documents.id, documentId)),
-    // The document row is locked first, so two admins opening at once take turns and the second finds the first's draft.
+    // The document row is locked first, so two keepers opening at once take turns and the second finds the first's draft.
     openDocumentDraft: async (_admin, documentId, givenBody) => {
       const [document] = await selectFrom(
         documents,

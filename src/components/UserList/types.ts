@@ -17,7 +17,7 @@ export interface UserListEntry {
   /** Provider ids, as the service sorted them. */
   providers: readonly string[];
   emailVerified: boolean;
-  /** Whether this is the primary admin, whom no one can revoke. */
+  /** Whether this is the primary keeper, whom no one can revoke. */
   primaryAdmin: boolean;
   /** This page with the user’s modal open over it, `?user=<id>`. */
   openHref: Route;
@@ -45,7 +45,7 @@ export interface UserListProps extends Partial<PagerHrefs<Route>> {
 
   /** Where this page stands, the pager's "Page X of Y"; none when left out. */
   position?: PagePosition;
-  /** Whether impersonation is registered here, so each non-admin row offers it. */
+  /** Whether impersonation is registered here, so each non-keeper row offers it. */
   canImpersonate?: boolean;
 }
 
@@ -163,18 +163,18 @@ export interface ConfirmAnswersProps {
   onCancel: () => void;
 }
 
-/** What a row's role control does: make a user an admin, or stop one being one. */
+/** What a row's role control does: make a user a keeper, or stop one being one. */
 export interface RoleControlProps {
   userId: string;
   /** The user's name, completing the button's accessible name and the question. */
   name: string;
   /** Whether the user's address is verified; a promotion warns when it is not. */
   emailVerified: boolean;
-  /** Whether this is the primary admin, whose Change Role says why it cannot be used. */
+  /** Whether this is the primary keeper, whose Change Role says why it cannot be used. */
   primaryAdmin: boolean;
   /**
-   * Whether admin changes are paused for the viewing admin: paused,
-   * and the viewer not the primary admin, whom the pause exempts. Change
+   * Whether keeper changes are paused for the viewing admin: paused,
+   * and the viewer not the primary keeper, whom the pause exempts. Change
    * Role then says why it cannot be used.
    */
   paused?: boolean;
@@ -191,7 +191,7 @@ export interface CreationControlProps {
   /** Whether the user's address is verified; Approve warns when it is not. */
   emailVerified: boolean;
   /**
-   * Whether admin changes are paused for the viewing admin, coven creation
+   * Whether keeper changes are paused for the viewing keeper, coven creation
    * included: its Approve or Revoke then
    * says why it cannot be used.
    */
@@ -201,10 +201,10 @@ export interface CreationControlProps {
   inModal?: boolean;
 }
 
-/** The pause on admin grants and revokes, as the page read it. */
+/** The pause on keeper grants and revokes, as the page read it. */
 export interface PauseControlProps {
   paused: boolean;
-  /** Whether the viewing admin is the primary admin, the only one who may flip it. */
+  /** Whether the viewing keeper is the primary keeper, the only one who may flip it. */
   canToggle: boolean;
 }
 

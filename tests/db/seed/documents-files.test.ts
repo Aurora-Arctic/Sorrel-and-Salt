@@ -84,7 +84,7 @@ describe('the document files', () => {
     expect(section).not.toMatch(/^\s*\|/m);
   });
 
-  // An admin may email every account about a published change, so the privacy policy says so where it says how it changes. The
+  // A keeper may email every account about a published change, so the privacy policy says so where it says how it changes. The
   // wording is the owner’s; what is checked is that the section holds more than its one dating paragraph, and that the addition is
   // about email.
   it('say, under the privacy policy’s Changes to This Policy, that a change may be emailed to every account', () => {

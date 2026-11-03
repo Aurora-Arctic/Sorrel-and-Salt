@@ -17,8 +17,8 @@ import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 
-// The admin's editing of the four documents: the read the editor opens on, saving into a draft (opening one when none is open),
-// publishing that draft, and changing the title and lede. Each is an admin's alone, through assertSiteAdmin, so a curator who
+// The keeper's editing of the four documents: the read the editor opens on, saving into a draft (opening one when none is open),
+// publishing that draft, and changing the title and lede. Each is a keeper's alone, through assertSiteAdmin, so a curator who
 // curates the compendium reaches none of it (claude-docs/design-decisions/m15.59-document-editor-scope.md). That a publish
 // empties the cached public reads is documents-cache.test.ts's; the signed-out caller is refused at the GraphQL scope
 // (tests/db/graphql-query-scopes.test.ts), since a service is never called without a session.
@@ -163,7 +163,7 @@ describe('saveDocumentDraft', () => {
     });
   });
 
-  // The editor opened on no draft, and another admin opened one since: saving would overwrite text this editor never saw.
+  // The editor opened on no draft, and another keeper opened one since: saving would overwrite text this editor never saw.
   it('refuses to open a draft when one was opened since the editor loaded', async () => {
     const refusal = await saveDocumentDraft(asUser(E), privacyId, {
       body: 'Fixture overwrite.',
@@ -342,7 +342,7 @@ describe('updateDocument', () => {
 
 // Each call is made by direct id, as a forged request would make it. E's same call succeeds, A holds no site role, and F passes
 // the curation check, so each refusal is the admin check's and would fail with it removed.
-describe('the editing services are an admin’s alone', () => {
+describe('the editing services are a keeper’s alone', () => {
   const CALLS: [string, (session: Session) => Promise<unknown>][] = [
     ['readDocumentForEditing', (session) => readDocumentForEditing(session, 'privacy')],
     [

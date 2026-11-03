@@ -114,7 +114,7 @@ export async function getMySupportDialogState(
 }
 
 /**
- * What the account menu counts for the viewer: open requests assigned to them (a curator's or an admin's alone; anyone else
+ * What the account menu counts for the viewer: open requests assigned to them (a curator's or a keeper's alone; anyone else
  * is assigned none) and their own requests waiting on their answer. Read per request and never cached, as both are the viewer's.
  *
  * @throws {Forbidden} the address is unverified.

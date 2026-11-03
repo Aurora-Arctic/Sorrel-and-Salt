@@ -105,7 +105,7 @@ async function names(filter: UserFilter): Promise<string[]> {
 }
 
 describe('listUsers', () => {
-  it('lists every live user to an admin, by name and then id', async () => {
+  it('lists every live user to a keeper, by name and then id', async () => {
     const expected = await listableUsers();
     // The cast and this file's two live users.
     expect(expected.map((row) => row.id)).toEqual(
@@ -125,7 +125,7 @@ describe('listUsers', () => {
     });
   });
 
-  // It stamps the seeded rows and nobody signs in as it: nothing an admin does
+  // It stamps the seeded rows and nobody signs in as it: nothing a keeper does
   // to a person applies to it.
   it("leaves out the seed's bootstrap user, though it is a live row", async () => {
     const [row] = await sql`select name, deleted_at from users where id = ${BOOTSTRAP_USER_ID}`;
@@ -205,7 +205,7 @@ describe('listUsers', () => {
     expect(await names({ role: 'user', awaitingApproval: true, query: 'pending' })).toEqual([
       'Pending Fixturewort',
     ]);
-    // Every admin and curator holds the flag, so none awaits approval.
+    // Every keeper and curator holds the flag, so none awaits approval.
     expect(await names({ role: 'admin', awaitingApproval: true })).toEqual([]);
     expect(await names({ role: 'curator', awaitingApproval: true })).toEqual([]);
   });
@@ -305,8 +305,8 @@ describe('the terms version a user agreed to', () => {
     expect(never).toMatchObject({ id: PENDING, agreedTermsVersion: null });
   });
 
-  it('refuses the version to anyone but a site admin, asked by id', async () => {
-    // The precondition: the row holds a version, and the same ask as an admin reads it.
+  it('refuses the version to anyone but a site keeper, asked by id', async () => {
+    // The precondition: the row holds a version, and the same ask as a keeper reads it.
     const [admitted] = await usersForAdmin(asUser(E), [WILDCARD]);
     expect(admitted).toMatchObject({ agreedTermsVersion: AGREED });
     expect(A.role).toBe('user');

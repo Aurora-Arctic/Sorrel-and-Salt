@@ -137,7 +137,7 @@
 - **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' exact
   column set with the audit spread through Drizzle's `getTableConfig()` (MB.188),
   and against the database the lower-case email CHECK, a new account landing as
-  a `user` who may not create a workspace, and the CHECK holding every admin to
+  a `user` who may not create a workspace, and the CHECK holding every keeper to
   the creation flag (MB.177); nullability, defaults and the email index's
   partiality are `tests/db/schema-drift.test.ts`'s (MB.226). It was kept out of the schema directory from
   the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s

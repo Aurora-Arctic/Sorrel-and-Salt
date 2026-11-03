@@ -99,14 +99,14 @@ const noCovensNode = inDialog(BO, <UserDetail user={BO} memberships={[]} canImpe
 // Several providers and an unverified address.
 const severalProvidersNode = inDialog(MANY, <UserDetail user={MANY} memberships={COVENS} />);
 
-// The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one.
+// The primary keeper carries the crown. No Impersonate on an admin: the endpoint refuses one.
 const adminNode = inDialog(ADA, <UserDetail user={ADA} memberships={COVENS} canImpersonate />);
 
 const curatorNode = inDialog(DEE, <UserDetail user={DEE} memberships={[]} canImpersonate />);
 
 const withoutImpersonationNode = inDialog(BO, <UserDetail user={BO} memberships={COVENS} />);
 
-// Admin changes are locked for the viewing admin: the controls say why.
+// Keeper changes are locked for the viewing admin: the controls say why.
 const changesPausedNode = inDialog(
   BO,
   <UserDetail user={BO} memberships={COVENS} canImpersonate changesPaused />,
@@ -118,7 +118,7 @@ const mayCreateCovensNode = inDialog(
   <UserDetail user={{ ...BO, canCreateWorkspace: true }} memberships={COVENS} canImpersonate />,
 );
 
-// An admin who is not the primary one: no crown.
+// A keeper who is not the primary one: no crown.
 const otherAdminNode = inDialog(
   { name: 'Eve Fixturewort', email: 'eve@fixture.test' },
   <UserDetail

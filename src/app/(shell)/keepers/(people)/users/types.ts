@@ -31,7 +31,7 @@ export interface OpenedUser {
   user: UserDetailUser;
   memberships: readonly UserCoven[];
   timeouts: SupportTimeoutEntry[];
-  /** The user's access pauses; undefined for the primary admin and the admin's own account, which no one pauses. */
+  /** The user's access pauses; undefined for the primary keeper and the admin's own account, which no one pauses. */
   pauses: AccessPauseEntry[] | undefined;
 }
 
@@ -42,7 +42,7 @@ export interface UserDialogProps {
   opened?: OpenedUser;
   /** Whether impersonation is registered here, so the body offers it. */
   canImpersonate: boolean;
-  /** Whether admin changes are locked for this admin, as the list's controls read it. */
+  /** Whether keeper changes are locked for this keeper, as the list's controls read it. */
   changesPaused: boolean;
   /** The modal place it shows in, where the page has another modal; unnamed on the Users page. */
   place?: string;

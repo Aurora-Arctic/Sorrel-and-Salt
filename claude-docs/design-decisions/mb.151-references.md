@@ -14,7 +14,7 @@ references section and that a reference is one table any sourced row links,
 rather than a child of `ingredients`. DESIGN.md §5, "References", records the
 owner's decisions: Chicago bibliography form; two tiers, as ingredients are,
 with MB.138's rule on what a row may link; optional on an entry, with an
-admin's to-do filter; and the vocabulary seeds' sources written as rows. This
+keeper's to-do filter; and the vocabulary seeds' sources written as rows. This
 record settles what those leave open, and why. The build is MB.152 (the
 tables), MB.153 (the services and the renderer), MB.154 (the form), MB.155
 (the page) and MB.156 (the seed). DESIGN.md §5 carries the model; this record
@@ -188,7 +188,7 @@ vocabulary pages gain no field, since MB.156 writes theirs.
 
 - _Unlinking_ soft-deletes the link through the ingredient's save.
 - _A reference whose every link is gone_ stays live and suggested. A source
-  is reusable, and sweeping it would delete a coven's record, or an admin's
+  is reusable, and sweeping it would delete a coven's record, or a keeper's
   seeded row, behind their back.
 - _Should a reference ever be soft-deleted_ (by hand, or by v2): its links
   are untouched, and the read joins live references only, so it leaves every

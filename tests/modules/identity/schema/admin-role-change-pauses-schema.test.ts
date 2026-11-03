@@ -112,7 +112,7 @@ describe('the repository', () => {
     expect(await findOpenAdminRoleChangePause(admin)).toEqual(opened[0]);
   });
 
-  // A is no admin, but the writer stamps whoever the session names: the
+  // A is no keeper, but the writer stamps whoever the session names: the
   // stamps below can only have come from the session, not from E's proof.
   it('ends the open pause, stamping ended_by and updated_by from the session', async () => {
     const [opened] = await withAudit(asUser(E), (write) => write.pauseAdminRoleChanges(admin));

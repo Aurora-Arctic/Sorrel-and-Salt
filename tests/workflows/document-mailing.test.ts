@@ -209,7 +209,7 @@ describe('the document mailing run', () => {
     const sleepId = await waitForSleep(run);
     // Precondition: recipients are left, so a run that ignored the status would mail them.
     expect(await sentCount(mailingId)).toBe(MAILING_BATCH_SIZE);
-    // What the service leaves when an admin mails the document again.
+    // What the service leaves when a keeper mails the document again.
     await sql`update document_mailings set status = 'replaced' where id = ${mailingId}`;
     await getRun(run.runId).wakeUp({ correlationIds: [sleepId] });
 

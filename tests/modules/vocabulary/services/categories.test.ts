@@ -21,7 +21,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The category writes, which only the site admin makes, and the reads the admin page lists them by (claude-docs/db/categories.md, "Category writes").
+// The category writes, which only the site keeper makes, and the reads the admin page lists them by (claude-docs/db/categories.md, "Category writes").
 // The seeded vocabulary stays, so every row a test writes carries a name of its own.
 
 // The page and count finders wrapped, passing through to the real ones, to see
@@ -60,12 +60,12 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// The site role is the one thing a vocabulary write turns on, so one non-admin
+// The site role is the one thing a vocabulary write turns on, so one non-keeper
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
 // A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
-// a curator's success proves the write calls assertCurator, and that an admin
+// a curator's success proves the write calls assertCurator, and that a keeper
 // passes assertCurator is proved once in identity's site-admin tests.
 const CURATORS = [['a curator', F]] as const;
 

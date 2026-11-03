@@ -17,9 +17,9 @@ import type { DocumentEditorProps } from './types';
 import '../DocumentPage/index.scss';
 import './index.scss';
 
-// The admin's editor for one site document: the text as the public page will draw it, saved as a draft only its admin
+// The keeper's editor for one site document: the text as the public page will draw it, saved as a draft only its admin
 // sees (by the shared autosave, or at once by Save Draft), then published as the next version. A save, a publish and a
-// restore send the draft's revision, so a second admin's save in between is refused rather than overwritten (claude-docs/components/document-editor.md).
+// restore send the draft's revision, so a second keeper's save in between is refused rather than overwritten (claude-docs/components/document-editor.md).
 
 const SaveDraftDocument = graphql(`
   mutation SaveDocumentDraft($documentId: ID!, $body: String!, $expectedRevision: Int) {

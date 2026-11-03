@@ -100,7 +100,7 @@ describe('heldFormsOf', () => {
     expect(await formsOf(ask(WORKSPACE_W_ID, retired))).toEqual(['Herb', 'Oil']);
 
     expect(await formsOf(ask(WORKSPACE_W_ID, retired, D))).toBeInstanceOf(Forbidden);
-    // An admin has no access to any coven.
+    // A keeper has no access to any coven.
     expect(await formsOf(ask(WORKSPACE_W_ID, retired, E as never))).toBeInstanceOf(Forbidden);
   });
 

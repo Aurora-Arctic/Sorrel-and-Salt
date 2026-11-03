@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// An admin edits the site's documents in place, one tab each under /keepers/documents: a saved draft is the admin's alone, and a publish is what a
+// A keeper edits the site's documents in place, one tab each under /keepers/documents: a saved draft is the keeper's alone, and a publish is what a
 // reader sees, as a new version with the old one in its history. Publishing the terms asks every account to agree again, and the
 // confirmation says so first (claude-docs/design-decisions/m15.59-document-editor-scope.md).
 
@@ -203,13 +203,13 @@ test('a curator is refused every document editor with the styled not-authorised 
 test('/keepers/documents is not a page, even for an admin', async ({ page }) => {
   await signInAs(page, 'list-admin@admin-documents.test', ['discord'], 'admin');
 
-  // Precondition: this admin reaches the documents' editors.
+  // Precondition: this keeper reaches the documents' editors.
   expect((await page.goto('/keepers/documents/privacy'))?.status()).toBe(200);
 
   expect((await page.goto('/keepers/documents'))?.status()).toBe(404);
 });
 
-// A published change is emailed to every account only when an admin asks: the edit page offers it, the confirmation says what will be
+// A published change is emailed to every account only when a keeper asks: the edit page offers it, the confirmation says what will be
 // sent to how many and over how many days, and the mailing it starts is recorded on the page (claude-docs/design-decisions/m15.59-
 // document-editor-scope.md, "M15.63: emailing every account").
 test('an admin publishes a change to the code of ethics, then emails every account about it', async ({

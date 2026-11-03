@@ -5,8 +5,8 @@ import { expect, type Mock, vi } from 'vitest';
 import Modal from '@/components/Modal';
 import { makeQueryClient } from '@/lib/graphql-client';
 
-// The guard over an admin form's unsaved changes: its shape is tests/components/Modal's, on a form of
-// that test's own; each admin form's test asserts its wiring through this, the form in a modal as its
+// The guard over a keeper form's unsaved changes: its shape is tests/components/Modal's, on a form of
+// that test's own; each keeper form's test asserts its wiring through this, the form in a modal as its
 // page puts it, its close the modal's own (claude-docs/components/modal.md, "Unsaved changes").
 
 /**

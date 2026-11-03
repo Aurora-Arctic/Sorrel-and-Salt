@@ -31,7 +31,7 @@ export interface IngredientEntryEdit {
   opened?: EditedIngredient;
   /** The Reviewed switch as a field of the compendium's edit form: Save carries it; left out for a coven's entry and for anyone who cannot curate. */
   review?: ReviewOffer;
-  /** The compendium entry's sourcing score, shown at the head of the form's Sources and on the page's head; read for a curator or admin only, so left out for anyone else and for a coven's entry. */
+  /** The compendium entry's sourcing score, shown at the head of the form's Sources and on the page's head; read for a curator or keeper only, so left out for anyone else and for a coven's entry. */
   sourcing?: SourcingScore | null;
   /** A coven's own entry: the form writes to this coven and its near matches open in it; `mayPromote` is the role's answer to making a folk name the display name; left out, the entry is the compendium's. */
   coven?: {
@@ -49,9 +49,9 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
-  /** Set on the public entry page when a curator or admin is reading an entry hidden from the compendium: a notice under the heading says so. */
+  /** Set on the public entry page when a curator or keeper is reading an entry hidden from the compendium: a notice under the heading says so. */
   hiddenFromPublic?: boolean;
-  /** The Reviewed switch as the last row of the page's head, built for a curator or admin from the uncached review read; it saves on flip. */
+  /** The Reviewed switch as the last row of the page's head, built for a curator or keeper from the uncached review read; it saves on flip. */
   reviewControl?: ReactNode;
   /** Who last edited the entry in this coven and when, from `lastEditsOf`; none draws no line. */
   lastEdit?: LastEditProps | null;

@@ -13,8 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { PauseRow } from './types';
 
-// The primary admin switches admin grants and revokes off for every other admin while a rogue one is dealt with, and back on. Only the primary admin may flip it, and only the primary admin is exempt from it
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting"; claude-docs/auth/admin-users.md, "Pausing admin changes").
+// The primary keeper switches keeper grants and revokes off for every other keeper while a rogue one is dealt with, and back on. Only the primary keeper may flip it, and only the primary keeper is exempt from it
+// (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting"; claude-docs/auth/admin-users.md, "Pausing keeper changes").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -73,7 +73,7 @@ async function roleOf(id: string): Promise<string> {
 }
 
 describe('pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
-  it('lets the primary admin pause, stamped as it, and resume, stamping the end', async () => {
+  it('lets the primary keeper pause, stamped as it, and resume, stamping the end', async () => {
     expect(await adminRoleChangePauseState(asUser(AS_PRIMARY))).toEqual({
       paused: false,
       canToggle: true,
@@ -103,8 +103,8 @@ describe('pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
     expect(await pauses()).toHaveLength(1);
   });
 
-  // E is a live admin who may grant, as the last line proves, so the refusal
-  // is the primary admin's alone.
+  // E is a live keeper who may grant, as the last line proves, so the refusal
+  // is the primary keeper's alone.
   it('refuses a non-primary admin as Forbidden, writing nothing', async () => {
     await expect(pauseAdminRoleChanges(asUser(E))).rejects.toThrow(Forbidden);
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
@@ -127,13 +127,13 @@ describe('pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
   });
 });
 
-describe('setUserRole while admin changes are paused', () => {
+describe('setUserRole while keeper changes are paused', () => {
   beforeEach(async () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
   it.each([['a grant', GRANTEE, 'admin' as const]])(
-    'refuses %s by another admin, naming nobody, and records nothing',
+    'refuses %s by another keeper, naming nobody, and records nothing',
     async (_what, target, role) => {
       const before = await roleOf(target);
 
@@ -150,7 +150,7 @@ describe('setUserRole while admin changes are paused', () => {
     },
   );
 
-  it('lets the primary admin grant and revoke, each recorded as usual', async () => {
+  it('lets the primary keeper grant and revoke, each recorded as usual', async () => {
     await setUserRole(asUser(AS_PRIMARY), GRANTEE, 'admin');
     await setUserRole(asUser(AS_PRIMARY), OTHER_ADMIN, 'user');
 

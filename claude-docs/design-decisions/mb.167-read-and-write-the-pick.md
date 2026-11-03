@@ -15,7 +15,7 @@ this record carries the calls and the alternatives.
 
 **The GraphQL names follow the table: `IngredientDeityInput` and
 `IngredientDeity`.** The task text named them `DeityInput` and `DeityRef`, but
-MB.132 already plans a `DeityInput`, with its tradition, for the admin's deity
+MB.132 already plans a `DeityInput`, with its tradition, for the keeper's deity
 CRUD.
 
 - `IngredientDeityInput { deityId, name }` is exactly one of the two, held by
@@ -40,7 +40,7 @@ description, tradition: DeityTradition! }`, the tradition through a
 what MB.169's "Hecate (Greek)" pill reads.
 
 **A held deity link is kept, as a substitute's is** (decided on the plan's
-review). The question was what a save does with a pick whose deity an admin
+review). The question was what a save does with a pick whose deity a keeper
 has since retired.
 
 - A deity row the ingredient already holds is kept whether or not its deity is
@@ -52,7 +52,7 @@ has since retired.
   `deityId` matches its row too.
 - _Convert it to a typed name (turned down):_ every save after the retirement
   would tombstone the row and insert an unlinked twin at the same position,
-  losing a link an admin's restore (v2) would otherwise bring back.
+  losing a link a keeper's restore (v2) would otherwise bring back.
 
 ## The calls made in the plan
 
@@ -93,7 +93,7 @@ No row is tombstoned for moving, and no 23505 can occur. A list that changes
 nothing writes nothing.
 
 **The picks are read before the write**, on another connection, as MB.162's
-spelling check already is. An admin retiring a row at the instant a member
+spelling check already is. A keeper retiring a row at the instant a member
 picks it can see that pick written; MB.148 is what moves reads into the write's
 transaction.
 

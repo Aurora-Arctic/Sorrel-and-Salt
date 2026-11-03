@@ -48,7 +48,7 @@ the code that names the old tables and MB.197 drops them, sweeping again with
 
 It is not §13's edit history. That records every column of every table as a
 revision; this records two columns of one table as a privilege's account, the
-question an admin asks when misuse is suspected.
+question a keeper asks when misuse is suspected.
 
 ## Why a trigger
 
@@ -72,7 +72,7 @@ seed and a `psql` fix stamp themselves.
 ## Why the route is declared, and refused when absent
 
 The trigger knows which column changed and who changed it, but not how the
-change came about: an admin's act, an invitation accepted, the primary
+change came about: a keeper's act, an invitation accepted, the primary
 admin's bootstrap and a hand-run fix all set the same column. The service
 knows, so it says, through a setting published in the same `set_config`
 statement as the actor, transaction-local as that is. A missing route is an

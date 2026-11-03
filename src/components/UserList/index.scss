@@ -146,7 +146,7 @@
   z-index: $tip-layer;
 }
 
-// The role cell: the role and the primary admin's crown, side by side.
+// The role cell: the role and the primary keeper's crown, side by side.
 .user-list__role-name {
   display: inline-flex;
   align-items: center;
@@ -169,7 +169,7 @@
   }
 }
 
-// The pause on admin changes, beside the page's heading as its `.page-header`
+// The pause on keeper changes, beside the page's heading as its `.page-header`
 // child: the warning while paused and the button on one line. At a
 // phone's width the page header spans them across the line, a line each.
 .user-list__pause {

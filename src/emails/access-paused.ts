@@ -7,7 +7,7 @@ const SUBJECT = 'Your Access Was Paused';
 
 const PREVIEW = 'An admin paused your access to Sorrel & Salt.';
 
-// Sent when an admin pauses a user's site access. It states the end and the message written to the user when there is one, never the admin's note, and links to the support page, the one
+// Sent when a keeper pauses a user's site access. It states the end and the message written to the user when there is one, never the keeper's note, and links to the support page, the one
 // page a paused account can still reach after signing in.
 export function AccessPaused({
   url,
@@ -22,7 +22,7 @@ export function AccessPaused({
     h(
       Paragraph,
       null,
-      `A site admin paused your access to Sorrel & Salt. ${pauseEnd(until)} You have been signed out everywhere.`,
+      `A site keeper paused your access to Sorrel & Salt. ${pauseEnd(until)} You have been signed out everywhere.`,
     ),
     message ? h(Paragraph, null, message) : null,
     h(

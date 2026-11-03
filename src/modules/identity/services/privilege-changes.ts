@@ -17,10 +17,10 @@ import type { PrivilegeChangeFilter, PrivilegeChangeRow, UserRow } from '../type
 
 // The privilege ledger's reads, behind `/keepers/privilege-changes`
 // and GraphQL's `privilegeChanges`: the database writes the ledger,
-// and only a site admin reads it, checked here by direct call
+// and only a site keeper reads it, checked here by direct call
 // (claude-docs/auth/admin-users.md, "The privilege ledger").
 
-const REFUSAL = 'Only a site admin may read the privilege ledger';
+const REFUSAL = 'Only a site keeper may read the privilege ledger';
 
 /**
  * One page of the privilege ledger under `filter`, newest first, to a site

@@ -4,7 +4,7 @@
 
 The support form, its admin page and the sender's list shipped as M15.26 to
 M15.31 ([`m15.1-support-form.md`](m15.1-support-form.md)). The owner then
-reviewed them in a browser, as a sender and as an admin, in both themes and
+reviewed them in a browser, as a sender and as a keeper, in both themes and
 at phone width, and chose what to change. This record lists the decisions;
 the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
 "Support revision". The decisions are the owner's, made on 2026-10-31.
@@ -51,7 +51,7 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
   it later.
 
 - **No Create Issue link** (the owner, 2026-10-31): the prefilled GitHub link copied the message, which could hold private
-  information. The admin makes the issue by hand and pastes its address back.
+  information. The keeper makes the issue by hand and pastes its address back.
 - **The opened request's layout is the owner's call of 2026-10-31:** two columns, a thread of the sender's message and
   the replies, one composer with Resolve opposite Reply, a settings column beside it, and Time-Out folded. The Internal
   note mode and tag, the "Sender Replied" and "Beta Tester" badges and the sender's later messages in the thread are
@@ -116,7 +116,7 @@ The owner approved a redraw on reviewing the PR. The form asks "For" first, with
 - **The words.** Every place that shows a time-out's end says "with no end date" when it has none: the send and reply refusals ("you are timed out with no end date"), the support page and the Support dialog, the sender's reply box, the staff reply form's notice, the Users table's Time-Out column ("Timed out with no end date") and the panel's card. The email sent when a time-out is set names its end (as UTC), or says it has none, and carries the optional message the admin wrote to the user (`support_timeouts.message`), never the note. It is sent by the `supportTimeoutMail` durable job, started after the write commits (M15.66).
 - **The panel.** The time-out panel offers No End Date beside the dated spans and marks Note required, keeping Time Out Sender off until a note is written. It draws its fields, its end and its earlier time-outs from the site access pause panel's parts (`access-pause-parts.tsx`), so the two read alike.
 - **The seed.** Fixture I's time-out has no end date, in place of the year-long stand-in.
-- **The Terms of Use** say an admin may stop a person sending support requests "for as long as an admin decides", in place of "for a time" (the owner's wording, 2026-11-02). `TERMS_VERSION` stays 2026-11-02, by the owner's decision, so an account that has agreed is not asked again.
+- **The Terms of Use** say a keeper may stop a person sending support requests "for as long as a keeper decides", in place of "for a time" (the owner's wording, 2026-11-02). `TERMS_VERSION` stays 2026-11-02, by the owner's decision, so an account that has agreed is not asked again.
 
 ### The Footer Row (2026-10-31)
 
@@ -152,7 +152,7 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 
 - **Where the address reached a curator.** The stored `sender_email` of a signed-out request on every staff read; the sender’s account email through `usersNamedOnRequests`, which fed the admin page’s From fact; and the dialog’s From fact itself. The list’s Sender column showed only a name. `User.email` in GraphQL was already self-or-admin, and `SupportRequest` exposes no address field.
 - **The service decides.** `asRead` in `services/staff.ts` returns `senderEmail` as null for a curator, beside the path redaction, so one place says what a curator sees. `usersNamedOnRequests` blanks other people’s addresses for a curator. The reply flow reads the stored address on its own unredacted read and mails it, so a curator answers without seeing it.
-- **Components.** An account sender is named alone; a signed-out request reads "Signed-out sender" with no address, to a curator, and to an admin with the address beside it.
+- **Components.** An account sender is named alone; a signed-out request reads "Signed-out sender" with no address, to a curator, and to a keeper with the address beside it.
 - **The issue link.** A curator reads the linked issue as a read-only link; only `setSupportRequestIssueUrl`, admin-only in the service, changes it.
 
 ### The Footer Is Drawn Once, by the Root Layout (the owner's call of 2026-10-31)
@@ -175,4 +175,4 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 
 ### Internal Notes On Any Readable Request (2026-10-31)
 
-The owner's call: a curator may add an internal note to any request they can read, assigned to them or not; an admin on any. A reply to the sender and Resolve stay assigned-only. A request outside the curator's scope still reads as absent. The note has its own guard, the staff read by id, in place of `requestToAnswer`.
+The owner's call: a curator may add an internal note to any request they can read, assigned to them or not; a keeper on any. A reply to the sender and Resolve stay assigned-only. A request outside the curator's scope still reads as absent. The note has its own guard, the staff read by id, in place of `requestToAnswer`.

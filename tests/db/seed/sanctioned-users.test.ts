@@ -52,7 +52,7 @@ describe('the held-back accounts seed', () => {
       expect(fixtureIds).not.toContain(I.id);
     });
 
-    it('gives H one standing pause with no end and a note, set by an admin, and I none', async () => {
+    it('gives H one standing pause with no end and a note, set by a keeper, and I none', async () => {
       const pauses = await sql<
         { user_id: string; until: Date | null; lifted: boolean; note: string; by_admin: boolean }[]
       >`

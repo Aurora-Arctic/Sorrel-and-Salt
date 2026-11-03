@@ -7,7 +7,7 @@ import { USER_MODAL_PLACE } from './href';
 import type { SupportSender } from './types';
 
 /**
- * The sender's name; for an admin a link that opens the sender's user modal over this page, which a curator
+ * The sender's name; for a keeper a link that opens the sender's user modal over this page, which a curator
  * cannot reach, so theirs stays text. A deleted account has no one to open.
  */
 const SenderName = ({

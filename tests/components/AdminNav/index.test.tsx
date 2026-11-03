@@ -28,11 +28,11 @@ const CURATION = [
   '/curator/deities',
   '/curator/celestial-bodies',
 ];
-// People and Invitations, each at its first tab: an admin's alone.
+// People and Invitations, each at its first tab: a keeper's alone.
 const PEOPLE = '/keepers/users';
 const INVITATIONS = '/keepers/invitations';
 const SUPPORT = '/keepers/support';
-// The documents, opened at their first tab, the privacy policy: an admin's alone.
+// The documents, opened at their first tab, the privacy policy: a keeper's alone.
 const DOCUMENTS = '/keepers/documents/privacy';
 
 const sorted = (list: (string | null)[]) => [...list].sort();
@@ -68,7 +68,7 @@ describe('AdminNav, the Keepers nav', () => {
     pathname.mockReturnValue('/keepers');
   });
 
-  it('links an admin to Support, People, Invitations and Documents, and to no curation page', () => {
+  it('links a keeper to Support, People, Invitations and Documents, and to no curation page', () => {
     render(<AdminNav managesPeople />);
 
     const links = hrefs(linksIn(keepersNav()));

@@ -98,7 +98,7 @@ describe('PublicFrame', () => {
   it('offers nothing workspace-shaped', () => {
     frame();
 
-    for (const name of ['Your Coven', 'Admin', 'Add Ingredient']) {
+    for (const name of ['Your Coven', 'Keepers', 'Add Ingredient']) {
       expect(screen.queryByRole('link', { name })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
     }

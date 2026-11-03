@@ -69,7 +69,7 @@ beforeEach(async () => {
   send.mockClear();
   sent.length = 0;
   await sql`truncate user_access_pauses`;
-  // A primary admin who is none of the fixture users, so pausing A is refused by nothing but the role check.
+  // A primary keeper who is none of the fixture users, so pausing A is refused by nothing but the role check.
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'nobody@access-pause-mail.test');
   // Set, so a pause starts its job rather than trying the mail once here.
   vi.stubEnv('MAIL_TRANSPORT', 'smtp');
@@ -144,7 +144,7 @@ describe('pauseUserAccess starts nothing when it writes nothing', () => {
     expect(send).not.toHaveBeenCalled();
     expect(await pausesOf(A.id)).toEqual([]);
 
-    // Why the refusal is the role check's: the same call from an admin writes the pause and starts its run.
+    // Why the refusal is the role check's: the same call from a keeper writes the pause and starts its run.
     await pauseUserAccess(asUser(E), A.id, UNTIL, NOTE, notifier, MESSAGE);
     expect(pauseRuns()).toHaveLength(1);
   });

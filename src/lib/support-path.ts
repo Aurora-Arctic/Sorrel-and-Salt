@@ -20,7 +20,7 @@ export function isSitePage(value: string): boolean {
   return page.length === SITE_ORIGIN.length || /^[/?#]/.test(page.slice(SITE_ORIGIN.length));
 }
 
-/** The repository whose issues an admin may attach to a request. */
+/** The repository whose issues a keeper may attach to a request. */
 export const ISSUE_REPOSITORY = 'Aurora-Arctic/Sorrel-and-Salt';
 
 /** What the GitHub Issue field says when its value is neither an issue link nor a project-board link. */

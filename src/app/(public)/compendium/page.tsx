@@ -174,7 +174,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // An old address opens the entry at its new one, keeping the search.
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
-  // The review switch's read, for a curator or admin only: per viewer, never inside the cached
+  // The review switch's read, for a curator or keeper only: per viewer, never inside the cached
   // reads, so no review date reaches anyone else from here. The entry's own badge is in the cached read.
   const reviewOf = async (id: string | undefined) => {
     if (!canEdit || !id) return undefined;

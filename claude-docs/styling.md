@@ -53,7 +53,7 @@ to.
   against the page surface plus 3:1 against both surfaces; tinted needs 4.5:1
   foreground-on-background plus 3:1 on the border.
 - **The group hues sit at odd multiples of 22.5° off `$sorrel`**, so none
-  collides with accent (96°) or secondary (8°). A ninth group is a row an admin
+  collides with accent (96°) or secondary (8°). A ninth group is a row a keeper
   adds at `/curator/category-groups`, outside the rotation, its two colours
   refused on write below 4.5:1 on their own grounds (M5.6b, below).
 - **`badge()` takes no variant argument, deliberately.** The mixins set colour,
@@ -253,7 +253,7 @@ reads as mud rather than as colour.
 one saturation per theme and trimmed lightness per group, which the hand-tuned
 pairs no longer follow, and it had been nothing but the seed's source since
 MB.35 put a group's colours on its `category_groups` row as a pair of hexes; a
-chip reads the row (MB.36). A ninth group is a row an admin adds with M5.6b's two pickers, each previewing
+chip reads the row (MB.36). A ninth group is a row a keeper adds with M5.6b's two pickers, each previewing
 its chip and ratio on its own ground and each refused on write below 4.5:1
 against the harder of its own theme's two surfaces; it is legible in both
 themes but does not join the rotation (§6).
@@ -405,7 +405,7 @@ eight seeded pairs on both surfaces of each theme, the lowest ratio in each is:
 | Light | card (`#f9f5ea`) | 5.92:1 | Mind & Spirit    |
 | Light | page (`#efe9da`) | 5.37:1 | Mind & Spirit    |
 
-A group an admin adds is held to 4.5:1 for its colour alone (M5.6b), a looser test than the
+A group a keeper adds is held to 4.5:1 for its colour alone (M5.6b), a looser test than the
 eight seeded ones passed; the stirred label is checked against the seeded eight only, so a very
 pale or very dark admin colour is worth a look in the colour field's preview.
 
@@ -591,7 +591,7 @@ chip is the chip's ink faded over the chip's wash. For the seeded group
 colours it clears 3.53 to 3.91 in dark and 3.17 to 3.31 in light (lowest:
 `#606c2f`, light). The write-time check on a group's colours
 (`src/lib/contrast.ts`) holds the colour itself at 4.5:1 against its theme's
-harder surface, not this faded mix, so a colour an admin adds could put the
+harder surface, not this faded mix, so a colour a keeper adds could put the
 ring under 3:1. Noted, not fixed.
 
 ## Type
@@ -747,7 +747,7 @@ Four variants:
   the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
   call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
   (`tests/scss/tokens.test.ts`).
-- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only four exist: Impersonate (on the row, in the user modal and on its confirm), Pause Admin Changes (Pause, Resume and its confirm), Revoke Batch (its column on the invitation cards table and its confirm) and Email Every Account (the button and its confirm). The wax,
+- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only four exist: Impersonate (on the row, in the user modal and on its confirm), Pause Keeper Changes (Pause, Resume and its confirm), Revoke Batch (its column on the invitation cards table and its confirm) and Email Every Account (the button and its confirm). The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 - **`.btn--caution`**, the same outline in the warning ochre (`$warning`): an act that reaches every reader at once and is not undone, but destroys nothing. One control wears it: a document's Publish, on the button and its confirm.
@@ -961,7 +961,7 @@ fading in over `$motion-short`. How it is placed, held and focused is
 **A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
 
 The pieces around a field and a form's buttons that more than one form
-shares (MB.115), each written once in `_primitives.scss` where every admin
+shares (MB.115), each written once in `_primitives.scss` where every keeper
 form had kept its own copy. The `Field` component draws the first two around
 a control ([`components/field.md`](components/field.md)), and `FilterForm`
 draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):

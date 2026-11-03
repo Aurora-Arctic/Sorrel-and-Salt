@@ -86,8 +86,8 @@ for `celestial_bodies` and once for `zodiac_signs`, the two tables `FLAT` lists.
 vocabularies and `references` — carries `seed_key`, the identity the seed
 gave a row when it inserted it: a vocabulary row's slug at insert, a
 reference's rendered citation. It is never changed after, and null on a row
-an admin or a member wrote, under a partial unique index on live keyed rows.
-Keyed by the slug alone, a reseed after an admin renamed a row would not
+a keeper or a member wrote, under a partial unique index on live keyed rows.
+Keyed by the slug alone, a reseed after a keeper renamed a row would not
 recognise it, since the slug follows the name, and would put the original
 back beside it; a reference's citation follows every field the same way.
 `0045_seed-keys` backfilled each row the bootstrap user created with its
@@ -95,7 +95,7 @@ slug, exact because no rename writer had shipped. Nothing outside
 `src/db/seed/` writes the column, and no input, service or GraphQL field
 names it. The two helpers above key on it from MB.172: `presentKeys` takes a
 row as present by its key, live or soft-deleted, or by a live row's slug, so
-an admin's own row under a seed name is not met by a second the slug index
+a keeper's own row under a seed name is not met by a second the slug index
 would refuse; each row they insert carries its key; and an item finds its
 group by the group's key, so a renamed group still takes it.
 `ingredients` carries the column too since MB.241, for the compendium seed
@@ -103,7 +103,7 @@ group by the group's key, so a renamed group still takes it.
 `0047_refill-seed-keys` keys any bootstrap-created row still unkeyed, one
 seeded between the two deploys. The sources seed keys on it from MB.156 ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
 
-**The production compendium is a target, not a scenario** (MB.240). Its starting entries are seeded by `db:seed:compendium`, which MB.242 adds to `scripts/db-seed.ts` beside `categories`, `forms`, `astrology`, `deities` and `sources`, and which `migrate.yml` runs after them on staging and production. `db:seed:reference` (M14.26) runs all six in one transaction, for the hand-started `seed-environment.yml`, so a dry run of the six rolls back once. It is never folded into `standard`, since `standard` is cloned for every db test (`tests/support/seeded-database.ts`). It writes each entry once, keyed by a `seed_key` on `ingredients` (MB.241), and skips an entry already present together with everything beneath it, so a reseed undoes none of an admin's edits. The rules its entries are written to are [`compendium-seed/README.md`](compendium-seed/README.md).
+**The production compendium is a target, not a scenario** (MB.240). Its starting entries are seeded by `db:seed:compendium`, which MB.242 adds to `scripts/db-seed.ts` beside `categories`, `forms`, `astrology`, `deities` and `sources`, and which `migrate.yml` runs after them on staging and production. `db:seed:reference` (M14.26) runs all six in one transaction, for the hand-started `seed-environment.yml`, so a dry run of the six rolls back once. It is never folded into `standard`, since `standard` is cloned for every db test (`tests/support/seeded-database.ts`). It writes each entry once, keyed by a `seed_key` on `ingredients` (MB.241), and skips an entry already present together with everything beneath it, so a reseed undoes none of a keeper's edits. The rules its entries are written to are [`compendium-seed/README.md`](compendium-seed/README.md).
 
 **`minimal`** (`src/db/seed/minimal.ts`): one system user, one user, empty
 compendium. The system user is the bootstrap user under the fixed
@@ -111,7 +111,7 @@ compendium. The system user is the bootstrap user under the fixed
 `created_by`/`updated_by` in a single self-satisfying statement — that insert
 lives in `src/db/seed/bootstrap-admin.ts` since M4.3, because every seeded row
 needs a creator and the category seed runs without `minimal` having gone
-first. It is `role: 'user'`, not an admin, since MB.58: it has no OAuth
+first. It is `role: 'user'`, not a keeper, since MB.58: it has no OAuth
 account and is unverified, so Better Auth refuses to link a sign-in to it and
 nobody can sign in as it (`tests/db/account-linking.test.ts` pins the refusal;
 [`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)), so an

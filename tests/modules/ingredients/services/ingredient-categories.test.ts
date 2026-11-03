@@ -161,7 +161,7 @@ describe('a save carrying categories', () => {
     expect(await categoryIdsOf(saved.id)).toEqual([protection]);
   });
 
-  it('lets an admin file a compendium entry', async () => {
+  it('lets a keeper file a compendium entry', async () => {
     const created = await createCompendiumEntry(asUser(E), input([love]));
 
     expect(await pairRows(created.id)).toEqual([

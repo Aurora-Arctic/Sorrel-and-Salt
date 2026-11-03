@@ -97,7 +97,7 @@ export const invitations = namedWrites(
         'invitations_site_role_invitable',
         sql`${table.siteRole} is null or ${table.siteRole}::text in ('curator', 'admin')`,
       ),
-      // Only a coven invitation is declined: an admin invitation is never
+      // Only a coven invitation is declined: a keeper invitation is never
       // listed to its invitee, so it is accepted by its link or not at all.
       check(
         'invitations_declined_coven',

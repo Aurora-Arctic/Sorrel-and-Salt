@@ -40,7 +40,7 @@ export type Membership = {
  * await withAudit(session, (write) => write.insertInWorkspace(membership, spells, { title }));
  * ```
  *
- * A site admin gets no bypass: admins curate the compendium and reach no
+ * A site keeper gets no bypass: keepers curate the compendium and reach no
  * workspace (CLAUDE.md's domain invariants), so `session.role` is not read.
  *
  * @throws {Forbidden} the session's email address is unverified, with a message that says to verify it; or the user holds no live membership of `workspaceId` —

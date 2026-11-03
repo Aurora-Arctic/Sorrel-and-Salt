@@ -6,7 +6,7 @@ import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
-// What an admin's change to a user, and an admin's batch read of users, are
+// What a keeper's change to a user, and a keeper's batch read of users, are
 // made of, written once for the role service, coven creation's approval and
 // the admin invitations. Internal to the module; the index exports
 // no part of it.
@@ -32,7 +32,7 @@ export async function liveUser(userId: string): Promise<UserRow> {
   return user;
 }
 
-/** An admin's change as the privilege trigger records it: `via: 'admin'`, with the confirmation's optional `note`, trimmed, blank as none. */
+/** A keeper's change as the privilege trigger records it: `via: 'admin'`, with the confirmation's optional `note`, trimmed, blank as none. */
 export function adminDeclaration(note: string | undefined): PrivilegeDeclaration {
   return { via: 'admin', note: note?.trim() || undefined };
 }

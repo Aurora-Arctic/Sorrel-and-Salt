@@ -83,4 +83,4 @@ Commit titles: "MB.115: The compendium list filters by form, a type-ahead over t
 ## Verification
 
 - Per commit: `npm run pre-commit`. Per lane end: `flock /tmp/sorrel-vitest.lock npm run test:coverage` (80% threshold), `npm run build`; Lane B also the e2e spec (its axe scan now covers the Form box).
-- After the merge, in the running app (`npm run dev`, signed in as a site admin): search `storax` — Storax first at 1.0, Sweet Gum below at 0.8; search `oil` — form matches at 0.6 below any name match; Form → Oil narrows the list and the address reads `?form=Oil`; the table reads Name, Formal Name, Classification, Form; the filter reads Name, Form, Classification, Without References.
+- After the merge, in the running app (`npm run dev`, signed in as a site keeper): search `storax` — Storax first at 1.0, Sweet Gum below at 0.8; search `oil` — form matches at 0.6 below any name match; Form → Oil narrows the list and the address reads `?form=Oil`; the table reads Name, Formal Name, Classification, Form; the filter reads Name, Form, Classification, Without References.

@@ -87,17 +87,17 @@ describe('createReference', () => {
     expect(row).toEqual({ title: 'A Herbal of Fixture Covens', edition: '2nd ed.' });
   });
 
-  // The same input the admin's write above saves: the proof is what refuses.
-  // The compendium tier reads the site role alone, so one non-admin — the
+  // The same input the keeper's write above saves: the proof is what refuses.
+  // The compendium tier reads the site role alone, so one non-keeper — the
   // coven's owner, the highest workspace role — stands for every one.
-  it('refuses a compendium reference to a non-admin, writing nothing', async () => {
+  it('refuses a compendium reference to a non-keeper, writing nothing', async () => {
     expect(asUser(A).role).toBe('user');
 
     await expect(createReference(asUser(A), null, BOOK)).rejects.toThrow(Forbidden);
     expect(await sql`select id from "references"`).toHaveLength(0);
   });
 
-  it('refuses a compendium reference to a non-admin before reading the input', async () => {
+  it('refuses a compendium reference to a non-keeper before reading the input', async () => {
     await expect(createReference(asUser(B), null, { kind: 'book' } as never)).rejects.toThrow(
       Forbidden,
     );
@@ -106,7 +106,7 @@ describe('createReference', () => {
   it.each([
     ['a viewer of the coven', C],
     ['a member of another coven', D],
-    ['a site admin, who reaches no coven', E],
+    ['a site keeper, who reaches no coven', E],
   ])('refuses a coven’s reference to %s', async (_who, user) => {
     await expect(createReference(asUser(user), WORKSPACE_W_ID, BOOK)).rejects.toThrow(Forbidden);
   });
@@ -158,7 +158,7 @@ describe('updateReference', () => {
 
   // The precondition: B's ingredient cites it, and B reads it there. Citing a
   // reference is not owning it, under either argument a member could send. The
-  // null arm reads the site role alone, so B stands for every non-admin.
+  // null arm reads the site role alone, so B stands for every non-keeper.
   it('refuses a member the compendium reference their ingredient cites, by direct id', async () => {
     const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
     const ingredient = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
@@ -191,7 +191,7 @@ describe('updateReference', () => {
     expect(await rowOf(id)).toMatchObject({ title: 'W Herbal' });
   });
 
-  it('refuses a coven’s reference to a site admin, who writes only the compendium', async () => {
+  it('refuses a coven’s reference to a site keeper, who writes only the compendium', async () => {
     const id = await insertReference(
       sql,
       { workspace_id: WORKSPACE_W_ID, title: 'W Herbal' },
@@ -353,7 +353,7 @@ describe('suggestReferences', () => {
     expect(await titles(asUser(C), WORKSPACE_W_ID, ' ')).toEqual(['Asheleaf', 'Bitterroot']);
   });
 
-  it('refuses someone outside the coven, a site admin included', async () => {
+  it('refuses someone outside the coven, a site keeper included', async () => {
     await expect(suggestReferences(asUser(D), WORKSPACE_W_ID, '', anyPage)).rejects.toThrow(
       Forbidden,
     );

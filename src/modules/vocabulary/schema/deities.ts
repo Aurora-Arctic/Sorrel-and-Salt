@@ -2,7 +2,7 @@ import { pgTable, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 
-// Traditions: global, admin-curated, `ingredient_form_groups` in shape: a people or a religion, never a region (claude-docs/db/deity-vocabulary.md).
+// Traditions: global, keeper-curated, `ingredient_form_groups` in shape: a people or a religion, never a region (claude-docs/db/deity-vocabulary.md).
 // No colour, no order column and no trigram index (claude-docs/db/categories.md, "Vocabulary schema details").
 export const deityTraditions = pgTable(
   'deity_traditions',

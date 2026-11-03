@@ -46,7 +46,7 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// The compendium's writes, which only the site admin makes whatever their standing in a coven (claude-docs/db/compendium-writes.md, "Compendium writes").
+// The compendium's writes, which only the site keeper makes whatever their standing in a coven (claude-docs/db/compendium-writes.md, "Compendium writes").
 // The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
@@ -83,11 +83,11 @@ const liveFolkNames = async (ingredientId: string) =>
     .map((row) => row.name as string)
     .sort();
 
-// The site role is the one thing a compendium write turns on, so one non-admin
+// The site role is the one thing a compendium write turns on, so one non-keeper
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-// Every other case calls as the site admin, E, so the curator alone stands
+// Every other case calls as the site keeper, E, so the curator alone stands
 // here for the second role a compendium write admits.
 const CURATORS = [['a curator', F]] as const;
 
@@ -152,7 +152,7 @@ describe('createCompendiumEntry', () => {
     expect(await countIngredients()).toBe(0);
   });
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
+  it('refuses a non-keeper before reading the input, so a bad one earns the same refusal', async () => {
     await expect(
       createCompendiumEntry(asUser(B), { ...entry(), name: '   ' }),
     ).rejects.toBeInstanceOf(Forbidden);
@@ -363,7 +363,7 @@ describe('deleteCompendiumEntry', () => {
   });
 });
 
-// The number the delete confirm shows. Only a curator or admin may ask,
+// The number the delete confirm shows. Only a curator or keeper may ask,
 // and only of a compendium entry, because the count is a fact about covens.
 describe('countCompendiumEntryUsers', () => {
   it.each(CURATORS)('answers how many covens hold the entry for %s', async (_who, user) => {

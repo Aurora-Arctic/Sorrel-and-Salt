@@ -466,7 +466,7 @@ no Docker: the compose edits are reasoned from Storybook's and Vite's behaviour.
 ## On staging (M2.10)
 
 Staging serves the workshop at `https://staging.sorrelandsalt.com/workshop`,
-to admins only. The local `npm run workshop` (see "Commands and gates") is
+to keepers only. The local `npm run workshop` (see "Commands and gates") is
 unchanged and asks for no sign-in — local development is the one relaxed
 environment. Production and hotfix previews never carry the workshop.
 
@@ -494,7 +494,7 @@ environment. Production and hotfix previews never carry the workshop.
   | A cookie Better Auth rejects             | The same redirect                                                      |
   | A live session, role `user` or `curator` | 403, plain text                                                        |
   | A live session, role `admin`             | The file, with the workshop's Content Security Policy (below)          |
-  | The same admin, at bare `/workshop`      | 307 to `/workshop/index.html`, query kept, with the same policy header |
+  | The same keeper, at bare `/workshop`     | 307 to `/workshop/index.html`, query kept, with the same policy header |
 
   The 403 is plain rather than the styled page `/keepers` shows: it answers
   requests for scripts and JSON as well as for the page. The lookup module is
@@ -516,7 +516,7 @@ environment. Production and hotfix previews never carry the workshop.
   invented rows ([`components/ingredient-form.md`](components/ingredient-form.md), "Stories"),
   so the request never leaves the page and the policy below has nothing to
   refuse. The workshop's own scripts nonetheless run on the app's origin
-  carrying an admin's cookie, so every workshop response the gate lets
+  carrying a keeper's cookie, so every workshop response the gate lets
   through carries a Content Security Policy (a header telling the browser
   what the page may load) of `connect-src <host>/workshop/`, for example
   `connect-src staging.sorrelandsalt.com/workshop/`. It covers
@@ -539,7 +539,7 @@ environment. Production and hotfix previews never carry the workshop.
     no header in the proxy, `next.config.ts` or `vercel.json` forbids framing.
   - One limit, from the CSP specification itself: after a redirect the path
     is no longer checked, only the origin. Nothing under `/workshop/`
-    redirects off it for an admin; the only redirect is to `/sign-in` once a
+    redirects off it for a keeper; the only redirect is to `/sign-in` once a
     session has died, which returns the sign-in page and no data.
 
   `tests/proxy.test.ts` checks the header against the specification's

@@ -38,13 +38,13 @@ export interface UserDetailProps {
   timeouts?: SupportTimeoutEntry[];
   /**
    * The user's access pauses, newest first; the Site Access section shows when this is given, which is never for the
-   * primary admin or the viewing admin's own account.
+   * primary keeper or the viewing admin's own account.
    */
   pauses?: AccessPauseEntry[];
   /** Whether impersonation is registered here; off by default. */
   canImpersonate?: boolean;
   /**
-   * Whether admin changes are locked for the viewing admin, as the list reads it: the role
+   * Whether keeper changes are locked for the viewing keeper, as the list reads it: the role
    * and creation controls then say why they cannot be used.
    */
   changesPaused?: boolean;
@@ -65,9 +65,9 @@ export interface AccessPauseEntry {
   /** When it was set. */
   createdAt: Date;
   liftedAt: Date | null;
-  /** The admin who set it; null if no live account holds the id. */
+  /** The keeper who set it; null if no live account holds the id. */
   setBy: AccessPausePerson | null;
-  /** The admin who lifted it; null while it stands, or if no live account holds the id. */
+  /** The keeper who lifted it; null while it stands, or if no live account holds the id. */
   liftedBy: AccessPausePerson | null;
 }
 

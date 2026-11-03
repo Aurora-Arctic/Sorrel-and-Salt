@@ -47,7 +47,7 @@ export function describeEntry(entry: { name: string; canonicalName: string | nul
 
 /**
  * The refusal of a write moving entries onto slugs other entries' redirects still run from, naming each address, its entry and when its window closes; `undefined` when none does.
- * On `endRedirect`, so the form can ask and send again once the admin confirms. Read before the write, as two admins saving at once can both pass it.
+ * On `endRedirect`, so the form can ask and send again once the admin confirms. Read before the write, as two keepers saving at once can both pass it.
  */
 export async function redirectRefusal(
   slugs: readonly { slug: string; entryId?: string }[],

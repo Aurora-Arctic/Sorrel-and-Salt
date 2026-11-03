@@ -506,7 +506,7 @@ export interface AuditWriter {
     name: string,
   ): Promise<(typeof ingredientDeities.$inferSelect)[]>;
   /**
-   * Open a pause on admin role changes, stamped from the session. No row comes back while one is open:
+   * Open a pause on keeper role changes, stamped from the session. No row comes back while one is open:
    * the one-open index refuses a second, and the call writes nothing rather than failing the transaction.
    */
   pauseAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
@@ -516,7 +516,7 @@ export interface AuditWriter {
    */
   resumeAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
   /**
-   * The live admins, locked `for update` until the transaction ends: what a revoke counts before it writes, so two admins revoking each other
+   * The live keepers, locked `for update` until the transaction ends: what a revoke counts before it writes, so two keepers revoking each other
    * at once cannot both leave the other the last. A read, in the writer because the lock must be taken in the writing transaction.
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
@@ -832,7 +832,7 @@ export interface AuditWriter {
     values: WorkspaceInvitationValues,
   ): Promise<InvitationRow[]>;
   /**
-   * Invite an address to the site role it names (curator or admin), on the site tier, where the workspace and the coven role are both null.
+   * Invite an address to the site role it names (curator or keeper), on the site tier, where the workspace and the coven role are both null.
    * On the same terms otherwise.
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
@@ -963,9 +963,9 @@ export interface IngredientFilter {
    * a jar with no quantity never is. The compendium's own read ignores it.
    */
   lowStockOnly?: boolean;
-  /** Only entries citing no live compendium reference: the admin's to-do list. */
+  /** Only entries citing no live compendium reference: the keeper's to-do list. */
   withoutReferences?: boolean;
-  /** Only entries with no live form: the admin's other to-do list, entries nobody can stock yet. */
+  /** Only entries with no live form: the keeper's other to-do list, entries nobody can stock yet. */
   withoutForms?: boolean;
   /** Only entries declaring this nomenclature. */
   nomenclature?: NomenclatureKind;
@@ -1468,7 +1468,7 @@ export interface GrimoireFacetCounts {
 export interface UserFilter {
   /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */
   query?: string;
-  /** Only the users who may not yet create a workspace: the admin's to-do list. */
+  /** Only the users who may not yet create a workspace: the keeper's to-do list. */
   awaitingApproval?: boolean;
   /** Only the users holding this site role. */
   role?: (typeof users.$inferSelect)['role'];
@@ -1506,7 +1506,7 @@ export type AstrologyList = 'celestialBodies' | 'zodiacSigns';
 /** One of the two astrology vocabularies, flat and alike. */
 export type AstrologyVocabulary = FlatTable;
 
-/** What an admin astrology list is narrowed by: a name fragment, as the forms' list is. */
+/** What a keeper astrology list is narrowed by: a name fragment, as the forms' list is. */
 export interface AstrologyValueFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
@@ -1565,13 +1565,13 @@ export interface CompendiumSlugEntry {
 }
 
 /**
- * Who reads the support list, as the finder narrows it: an admin reads every request, a curator only those marked for curators or
+ * Who reads the support list, as the finder narrows it: a keeper reads every request, a curator only those marked for curators or
  * assigned to them. The proof is the service's `assertSiteAdmin` or `assertCurator`.
  */
 export type SupportReader =
   { role: 'admin'; proof: SiteAdmin } | { role: 'curator'; proof: Curator };
 
-/** Whoever is reading a request's replies: a sender reads their own requests', a curator or admin those they may see. */
+/** Whoever is reading a request's replies: a sender reads their own requests', a curator or keeper those they may see. */
 export interface SupportViewer {
   userId: string;
   role: 'user' | 'curator' | 'admin';

@@ -720,7 +720,7 @@ export const auth = betterAuth({
   // "The account page").
   disabledPaths: ['/update-user'],
   user: {
-    // Off, pinned by test: on, a user could move the primary admin's address
+    // Off, pinned by test: on, a user could move the primary keeper's address
     // to another account. An email changes through the verified flow.
     changeEmail: { enabled: false },
     // Never refuses: it only records what the provider said, for the hook below.
@@ -852,7 +852,7 @@ export const auth = betterAuth({
         // worse than a missing seat; the demo coven seed's backfill repairs it.
         after: async (user, ctx) => {
           // One run per unverified sign-up removes the row once its window lapses. A failed start is logged, as the sign-up stands
-          // either way and the account then holds its address until an admin removes it.
+          // either way and the account then holds its address until a keeper removes it.
           if (!user.emailVerified) {
             try {
               await scheduleProvisionalExpiry(user.id);

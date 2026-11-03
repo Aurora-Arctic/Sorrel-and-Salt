@@ -30,7 +30,7 @@ Change Role, Coven Access and Remove.
   does on `/keepers/users`. It is still a link, so a new tab opens the address.
 - **Roles are told apart by their word**, from `workspaceRoleLabel`
   (`UserDetail/roles.ts`). A steward is
-  also bold, as the user list sets an admin, but weight is never the only cue.
+  also bold, as the user list sets a keeper, but weight is never the only cue.
 - **Every role carries a tip saying what it may do**: the word is a
   [`RoleTip`](role-tip.md), its text `WORKSPACE_ROLE_ACCESS[role]`, the same
   sentence Change Role shows beside that role, on every row, so a member reads

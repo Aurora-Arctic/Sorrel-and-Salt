@@ -40,8 +40,8 @@ visitors four ways, all from the server:
 - **Any role is let in.** The guard asks for `workspace: read`, which observer,
   practitioner and steward all hold. A page that needs more — the members page, which
   an observer gets a 404 from — asks the service for that itself.
-- **A site admin gets no way in.** Admins curate the compendium and reach no
-  workspace, so an admin in no coven gets the 404 like anyone else.
+- **A site keeper gets no way in.** Keepers curate the compendium and reach no
+  workspace, so a keeper in no coven gets the 404 like anyone else.
 - **The layout calls it, and so does every page beneath it,** with the slug
   from its own `params`, for the reason the admin pages do: a layout does not
   re-run on client-side navigation. The lookup is wrapped in React's
@@ -144,7 +144,7 @@ members' addresses stay with stewards.
   for the coven's own live members and nobody else, in SQL. The page asks for
   them only when `rolePermits(role, { member: ['readEmail'] })`; a member gets
   no Email column, and the service refuses them even though they hold
-  `member: read`. A site admin in no coven is refused like any non-member.
+  `member: read`. A site keeper in no coven is refused like any non-member.
   Over GraphQL the address is its own field, `WorkspaceMember.email`, never
   part of `CoMember`, which every member reads: it resolves through the
   `memberEmailsByMember` loader, one read per page of members, and answers

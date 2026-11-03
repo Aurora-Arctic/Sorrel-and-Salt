@@ -9,7 +9,7 @@ import { test, expect } from '../fixtures';
 import { holdSaves } from './ingredient-dialogs';
 import { signInAgainAs, signInAs } from '../session';
 
-// What a site admin curates and how, what everyone else is refused, and what an admin does not reach (a
+// What a site keeper curates and how, what everyone else is refused, and what a keeper does not reach (a
 // coven's own pages). Setup goes straight to the database; each flow's own step goes through the pages.
 
 test.beforeAll(async () => {
@@ -83,15 +83,15 @@ const ADMIN_ROUTES = [
   '/curator/zodiac-signs',
 ];
 
-test.describe('story 17: everyone but an admin is kept from editing the compendium', () => {
+test.describe('story 17: everyone but a keeper is kept from editing the compendium', () => {
   test(
-    'a coven owner who is not an admin meets the 403 page on every admin page an admin opens',
+    'a coven owner who is not a keeper meets the 403 page on every admin page a keeper opens',
     { tag: '@story-17' },
     async ({ page }) => {
       // A longer limit for this flow, which opens every admin page twice and signs in twice: 27 loads at
       // about a second each ran 28.5s to 32.2s in CI against the default 30s.
       test.setTimeout(60_000);
-      // Why each refusal below is the guard's: the same addresses answer an admin.
+      // Why each refusal below is the guard's: the same addresses answer a keeper.
       await signInAs(page, 'admin@story-17.test', ['discord'], 'admin');
       for (const path of ADMIN_ROUTES) {
         const response = await page.goto(path);
@@ -124,7 +124,7 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
   );
 
   test(
-    'a coven owner who is not an admin finds no way to edit a compendium entry an admin edits',
+    'a coven owner who is not a keeper finds no way to edit a compendium entry a keeper edits',
     { tag: '@story-17' },
     async ({ page }) => {
       const { userId: adminId } = await signInAs(
@@ -144,7 +144,7 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
         ),
       );
 
-      // The entry is live in the compendium, and its edit address opens it for an admin.
+      // The entry is live in the compendium, and its edit address opens it for a keeper.
       await page.goto(`/curator/compendium?edit=${slug}`);
       const editing = page.getByRole('dialog', { name: `Edit Ingredient, ${name}`, exact: true });
       await expect(editing).toBeVisible();
@@ -156,12 +156,12 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
 
-      // The edit addresses refuse a non-admin.
+      // The edit addresses refuse a non-keeper.
       await expectNotAuthorized(page, `/curator/compendium?edit=${slug}`);
       await expect(page.getByRole('textbox')).toHaveCount(0);
       await expectNotAuthorized(page, '/curator/compendium?new=ingredient-compendium');
 
-      // The entry's public page shows the same non-admin its content and no way
+      // The entry's public page shows the same non-keeper its content and no way
       // to change it: no Edit, no Delete, anywhere on it.
       const entry = await page.goto(`/compendium/ingredients/${slug}`);
       expect(entry?.status()).toBe(200);
@@ -178,7 +178,7 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
   );
 });
 
-test.describe('story 19: an admin sees a user’s covens but reaches none of them', () => {
+test.describe('story 19: a keeper sees a user’s covens but reaches none of them', () => {
   test(
     'an admin opens a user from the list and sees each coven they hold by name and role, linked to none',
     { tag: '@story-19' },
@@ -211,7 +211,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
       await expect(
         covens.getByRole('listitem').filter({ hasText: 'Fixture Watched Coven' }),
       ).toContainText('Observer');
-      // Text, never a link: an admin is no member, so the coven's page would be a 404 (below).
+      // Text, never a link: a keeper is no member, so the coven's page would be a 404 (below).
       await expect(covens.getByRole('link')).toHaveCount(0);
       // Impersonation is not registered in this run, so there is no Impersonate.
       await expect(dialog.getByRole('button', { name: /Impersonate/ })).toHaveCount(0);
@@ -231,7 +231,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
   ];
   const W = 'Fixture Hearth Coven';
 
-  for (const visitor of ['a member of another coven', 'a site admin in no coven'] as const) {
+  for (const visitor of ['a member of another coven', 'a site keeper in no coven'] as const) {
     test(
       `${visitor} meets the 404 page at each of a coven’s pages its owner opens`,
       { tag: '@story-19' },
@@ -252,7 +252,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
           expect((await page.goto(`/coven/${other}`))?.status()).toBe(200);
         } else {
           await signInAs(page, `visitor-${tag}@story-19.test`, ['discord'], 'admin');
-          // An admin, as the keepers area answers them.
+          // A keeper, as the keepers area answers them.
           expect((await page.goto('/keepers'))?.status()).toBe(200);
         }
 
@@ -330,7 +330,7 @@ async function moveAndDelete(page: Page, dialog: Locator, picker: string, destin
   await confirm.click();
 }
 
-test.describe('story 18: an admin adds, edits and soft-deletes what the compendium is built from', () => {
+test.describe('story 18: a keeper adds, edits and soft-deletes what the compendium is built from', () => {
   test(
     'an admin adds a compendium entry, edits it, and deletes it, the list following each',
     { tag: '@story-18' },
@@ -657,7 +657,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByRole('table', { name: 'Category Groups' })).toBeVisible();
       await expect(rowOf(page, 'Category Groups', 'Aaa Testwort Bulwarks')).toHaveCount(0);
 
-      // The category lives on, in the group the admin picked.
+      // The category lives on, in the group the keeper picked.
       await page.goto('/curator/categories?query=Aaa+Hearthcraft+Moved');
       await expect(
         rowOf(page, 'Categories', 'Aaa Hearthcraft Moved').getByRole('cell', {
@@ -893,7 +893,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByRole('table', { name: 'Form Groups' })).toBeVisible();
       await expect(page.getByRole('row', { name: /Aaa Fixture/ })).toHaveCount(0);
 
-      // The form lives on, in the group the admin picked.
+      // The form lives on, in the group the keeper picked.
       await page.goto('/curator/forms');
       await expect(grit.getByRole('cell', { name: 'Substance', exact: true })).toBeVisible();
     },
@@ -1041,7 +1041,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByRole('table', { name: 'Deity Traditions' })).toBeVisible();
       await expect(page.getByRole('row', { name: /Aaa Mockish/ })).toHaveCount(0);
 
-      // The deity lives on, under the tradition the admin picked.
+      // The deity lives on, under the tradition the keeper picked.
       // Filtered by name: the list runs by tradition, so Greek is pages on.
       await page.goto('/curator/deities?query=Aaa+Testra');
       await expect(testra.getByRole('cell', { name: 'Greek', exact: true })).toBeVisible();

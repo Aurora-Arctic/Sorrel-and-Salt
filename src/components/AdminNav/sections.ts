@@ -105,7 +105,7 @@ export const ADMIN_PAGES = {
   },
 } as const satisfies Record<string, AdminPage>;
 
-/** The `/curator` area: the curation pages, for a curator and an admin alike. */
+/** The `/curator` area: the curation pages, for a curator and a keeper alike. */
 export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
     name: 'Compendium',
@@ -119,7 +119,7 @@ export const CURATOR_SECTIONS: readonly AdminSection[] = [
   },
 ];
 
-/** The `/keepers` area: the people, invitation and document pages, which are an admin's, and Support, which a curator has too. */
+/** The `/keepers` area: the people, invitation and document pages, which are a keeper's, and Support, which a curator has too. */
 export const KEEPERS_SECTIONS: readonly AdminSection[] = [
   {
     name: 'People & Support',
@@ -133,7 +133,7 @@ export const KEEPERS_SECTIONS: readonly AdminSection[] = [
 ];
 
 /**
- * The Keepers sections a viewer is shown: every page to an admin, and a curator Support alone. Only what the
+ * The Keepers sections a viewer is shown: every page to a keeper, and a curator Support alone. Only what the
  * nav lists; each people and invitation page refuses a curator itself (claude-docs/auth/admin-guard.md,
  * "The curator guard").
  */

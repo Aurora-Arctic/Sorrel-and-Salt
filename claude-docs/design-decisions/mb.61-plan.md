@@ -58,7 +58,7 @@ Match `m2.9-granting-admin.md`'s shape: `# MB.61 — …`, then `**Decided 2026-
 - **The admin invitation (story 62)** — `admin_invitations` table, hashed `randomBytes` token, mailed link, `/admin-invite/[token]`, acceptance as a grant through MB.59's `setUserRole` (ledger row naming the invitation, `canCreateWorkspace`, pause check on create and accept), revocation from `/admin/users`, M7.7-style distinct rejections.
 - **Which of MB.60's restrictions each follow-up lifts** — MB.67 lifts "have the owner sign in first" and the squat; MB.66 lifts "an address is verified only when a provider says so" for every ordinary purpose; MB.68 adds a second promotion event, verification of the bootstrap address, safe only because of the session binding above. Kept: the fresh-profile Google-or-Discord rule on the sign-in path, Microsoft and Facebook never vouch, the three pinned options.
 - **What is simplified, and the hole it leaves** — the window of `account_not_linked` for the real owner (one token lifetime), JWT replay within the hour, the phishing residual is closed by session binding.
-- **Out of scope** — notifying admins of a grant, resend rate limits beyond Better Auth's, a mail log table, email/password sign-in, DMARC beyond what Resend's domain setup asks.
+- **Out of scope** — notifying keepers of a grant, resend rate limits beyond Better Auth's, a mail log table, email/password sign-in, DMARC beyond what Resend's domain setup asks.
 - **The follow-up** — the list below with wave placement and the one-line reason for each position.
 
 ### 3. Follow-up tasks (ids MB.65 onward; MB.64 is the highest today)
@@ -70,13 +70,13 @@ Wave 6, after MB.61 and before MB.54, in this order:
 - **MB.65 — Mail transport: Resend, Mailtrap Sandbox and Mailpit over HTTP** · 2h. Deps none; needed by MB.66, M7.3, MB.70.
 - **MB.66 — Turn on Better Auth email verification, audited** · 3h (bigger: config, three hooks, session binding, two test files, one doc). Deps MB.65.
 - **MB.67 — Provisional accounts: expire unverified rows and sweep them at the next callback** · 2h. Deps MB.66.
-- **MB.68 — Promote the primary admin at first-party verification** · 1h. Deps MB.66.
+- **MB.68 — Promote the primary keeper at first-party verification** · 1h. Deps MB.66.
 - **MB.54** — re-scoped in place, 3h.
 
 Wave 8, after MB.63:
 
 - **MB.69 — `admin_invitations` schema** · 1h. Deps MB.58.
-- **MB.70 — Invite an admin by email** · 3h (bigger). Deps MB.69, MB.59, MB.63, MB.65.
+- **MB.70 — Invite a keeper by email** · 3h (bigger). Deps MB.69, MB.59, MB.63, MB.65.
 
 Wave 10, rewritten in place with the same ids and sizes: **M7.3** (createInvitation mails the link; deps M7.2, MB.65), **M7.4** (InviteDialog) and **M7.5** (the acceptance page), 2h each.
 
@@ -103,7 +103,7 @@ Doc-only change, so per the project's own rule: `npm run format:check` and `npm 
 
 ## Risks
 
-- The session-binding claim in MB.66 is the security argument the whole "lift the provider restriction" rests on; if review rejects it, MB.68 is dropped and the primary admin stays Google-or-Discord.
+- The session-binding claim in MB.66 is the security argument the whole "lift the provider restriction" rests on; if review rejects it, MB.68 is dropped and the primary keeper stays Google-or-Discord.
 - The sweep must key on last-send time and remove `accounts`/`sessions`, or a resend deletes its own row mid-window and a soft-deleted user signs in through a live account row.
 - Free-tier figures are re-verified with sources at execution; Resend's pause-at-cap behaviour and the Sandbox's 50/mo (shared by staging and every hotfix preview) are the two that matter. If the Sandbox cap proves too tight, the fallback is a second sandbox on a paid tier, not delivery.
 - The transport guard is what keeps a preview from ever mailing a stranger; it must be pinned by test in MB.65, not left to configuration.

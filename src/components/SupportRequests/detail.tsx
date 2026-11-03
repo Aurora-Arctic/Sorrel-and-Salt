@@ -18,8 +18,8 @@ import SenderName from './sender-name';
 import SupportFacts from './facts';
 import SupportThread from './thread';
 
-// A request opened: the facts and the thread for anyone who may read it, Reply and Resolve for an admin or
-// the curator it is assigned to, and for an admin alone a side column of settings: Assign, Shared With
+// A request opened: the facts and the thread for anyone who may read it, Reply and Resolve for a keeper or
+// the curator it is assigned to, and for a keeper alone a side column of settings: Assign, Shared With
 // Curators, the issue link and the sender's time-outs. The service is the guard; what a viewer may not do
 // is not drawn.
 
@@ -49,7 +49,7 @@ const ResolveDocument = graphql(`
 
 const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps): ReactElement => {
   const isAdmin = viewer.role === 'admin';
-  // An anonymised request is refused every change, so an admin sees it as a curator does: the issue read-only, no settings.
+  // An anonymised request is refused every change, so a keeper sees it as a curator does: the issue read-only, no settings.
   const edits = isAdmin && !request.anonymised;
   const answers = isAdmin || request.assignee?.id === viewer.id;
   const open = request.status === 'open';

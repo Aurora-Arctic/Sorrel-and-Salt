@@ -19,7 +19,7 @@ import { CategoryGroupInput } from '../validation/category-group';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CategoryGroupRow, CuratedGroup } from '../types';
 
-// The category groups: public reads, and writes for a curator or an admin alone (claude-docs/db/categories.md, "Category group service details").
+// The category groups: public reads, and writes for a curator or a keeper alone (claude-docs/db/categories.md, "Category group service details").
 
 /** The groups, and the categories filed under them, which a delete moves and a rename leaves alone: a category's slug is its own name alone. */
 const GROUPS: CuratedGroup<typeof categoryGroups> = {
@@ -60,7 +60,7 @@ export async function getCategoryGroupBySlug(slug: string): Promise<CategoryGrou
 /**
  * Adds a category group, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `CategoryGroupInput` (a colour under the floor on its own column), or its slug is a live group's.
  */
 export async function createCategoryGroup(
@@ -82,7 +82,7 @@ export async function createCategoryGroup(
 /**
  * Rewrites a category group whole, its slug following the name; no category is touched. Its `seedKey` is left as it was.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createCategoryGroup` throws it, the row's own slug excepted.
  * @throws {NotFound} no live group has this id.
  */
@@ -102,7 +102,7 @@ export async function updateCategoryGroup(
  * Soft-deletes a category group, first moving its live categories to the group `moveTo` names (claude-docs/db/categories.md,
  * "Category group service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} on `moveTo`, the group has live categories and `moveTo` names no other live group.
  * @throws {NotFound} no live group has this id.
  */

@@ -62,7 +62,7 @@ type Paused = { pauseUserAccess: { id: string } | null };
 beforeEach(async () => {
   startJob.mockClear();
   await sql`truncate user_access_pauses`;
-  // A primary admin who is none of the fixture users, so pausing C is refused by nothing here.
+  // A primary keeper who is none of the fixture users, so pausing C is refused by nothing here.
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'nobody@access-pause-graphql.test');
   vi.stubEnv('MAIL_TRANSPORT', 'smtp');
 });

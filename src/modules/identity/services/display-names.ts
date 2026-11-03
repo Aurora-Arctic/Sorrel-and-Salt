@@ -5,13 +5,13 @@ import { RowId } from '../../../lib/validation';
 import { inIdOrder } from '../../../lib/in-id-order';
 
 // The display names a member reads: a members list, and a row's last
-// editor. Gated to co-members, not to site admins, whose ledger reads whole
+// editor. Gated to co-members, not to site keepers, whose ledger reads whole
 // rows through `usersForAdmin` under a rule of its own
 // (claude-docs/auth/display-names.md, "Display names").
 
 /**
  * The display name of each user named, in order: a DataLoader's batch. Anyone who holds or has held a seat in a coven the caller sits in
- * now is named; anyone else, or a non-id, is null. A site admin gets no reach past their own covens.
+ * now is named; anyone else, or a non-id, is null. A site keeper gets no reach past their own covens.
  */
 export async function displayNamesOf(
   session: Session,

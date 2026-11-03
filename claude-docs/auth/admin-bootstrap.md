@@ -1,7 +1,7 @@
 ## Admin bootstrap and the self-created user (M2.3, MB.60)
 
 DESIGN.md §5: the account matching `ADMIN_BOOTSTRAP_EMAIL`
-(`claude-docs/secrets.md`) is the **primary admin**. Everyone else gets the
+(`claude-docs/secrets.md`) is the **primary keeper**. Everyone else gets the
 column defaults (`role: 'user'`, `canCreateWorkspace: false`) on sign-up.
 This file is the shape; the argument is
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)
@@ -11,7 +11,7 @@ for verification.
 
 ### Promotion at sign-in, from Google or Discord only (MB.60)
 
-The primary admin is promoted at a **sign-in**, not when the account is
+The primary keeper is promoted at a **sign-in**, not when the account is
 created, and only when that sign-in's provider vouches for the address
 ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md),
 "The primary admin"):
@@ -64,16 +64,16 @@ created, and only when that sign-in's provider vouches for the address
   route and stamped as the user; the promotion writes no ledger row itself
   (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
   revoke make the same kind of write, declared `admin`.
-- **Every admin grant also seats the steward of the demo coven**, in the same
+- **Every keeper grant also seats the steward of the demo coven**, in the same
   `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
   MB.59 grant and an accepted admin invitation. See
-  [`db/demo-coven-seed.md`](../db/demo-coven-seed.md), "How an admin gains and
+  [`db/demo-coven-seed.md`](../db/demo-coven-seed.md), "How a keeper gains and
   loses the seat".
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
-  already exists. The previous primary admin keeps `role: 'admin'` and
+  already exists. The previous primary keeper keeps `role: 'admin'` and
   simply stops being protected (MB.59). It is also how to recover from a
-  primary admin who has lost their OAuth account.
+  primary keeper who has lost their OAuth account.
 
 ### Promotion at first-party verification (MB.68)
 
@@ -104,7 +104,7 @@ Microsoft- or Facebook-only steward is promoted too.
 
 **Three Better Auth options stay off, pinned by `tests/lib/auth.test.ts`**,
 since each would let the address on an account change and carry the
-primary admin's protection to whoever holds it then:
+primary keeper's protection to whoever holds it then:
 
 - `user.changeEmail.enabled`, set `false` explicitly: an email changes
   through the email page instead.
@@ -202,7 +202,7 @@ or Facebook sign-in over an existing row is refused with
 - **Afterwards the provider signs in by its account id.** Better Auth
   resolves `(providerId, accountId)` before any email lookup, so the linked
   account's address claim is never consulted again and nOAuth cannot reach
-  it. A primary admin who signed up through Discord and linked Microsoft
+  it. A primary keeper who signed up through Discord and linked Microsoft
   signs in through either, still admin.
 
 **Inside a link every provider vouches.** The link branch refuses a
@@ -315,8 +315,8 @@ verification window, and three hours at most. The argument is
   Vercel Cron Job starts once a day, deletes it
   (`src/modules/identity/jobs/provisional-cleanup.ts`). The job runs the delete as its own step with
   retries, so a step that fails is tried again rather than lost.
-- **An account an admin has vouched for is not removed** (MB.204). Approving
-  an unverified account for coven creation (M5.8) or making it an admin
+- **An account a keeper has vouched for is not removed** (MB.204). Approving
+  an unverified account for coven creation (M5.8) or making it a keeper
   (MB.59) writes a `user_privilege_changes` row naming it with a plain
   foreign key, and the job skips any account holding one. Deleted, it
   would fail on that key, and
@@ -335,7 +335,7 @@ verification window, and three hours at most. The argument is
 - **Seeded rows are never removed.** They hold no `accounts` row, so nobody
   can sign in to them. The seeded bootstrap user stays unverified on
   purpose: verified, it would take an implicit link from any provider
-  vouching for its address, into a row that is an admin until MB.58
+  vouching for its address, into a row that is a keeper until MB.58
   demotes it.
 - **The refusal.** `account_not_linked` maps in `src/lib/sign-in.ts` to one
   sentence whatever the cause: _"We couldn't sign you in this way. Use the
@@ -361,7 +361,7 @@ the tests [`tests.md`](tests.md).
   and `assertMembership` refuses such a session with an explaining
   `Forbidden`, and `membershipsOf` answers an empty list, so no coven data or name is reachable through `/api/graphql` by
   skipping the page redirect. `me`, `setEmail` and sign-out take no
-  membership and still work. `assertSiteAdmin` and `assertCurator` refuse it too, so an unverified admin or curator reaches no
+  membership and still work. `assertSiteAdmin` and `assertCurator` refuse it too, so an unverified keeper or curator reaches no
   curation or people operation either (the `usersById` loader batch is left as it is), and the GraphQL `admin` and `curator` scopes are false for it, so `selfOrAdmin` falls back to `self`. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
@@ -521,7 +521,7 @@ the tests [`tests.md`](tests.md).
   `src/lib/account-email.ts`'s `verifyErrorMessage` (one sentence per code
   Better Auth or the gate appends, never the code), and the session's
   `signedInLanding` as `landing`, which Continue takes when there is no
-  `next`. That is `/keepers` for an admin, `/curator` for a curator, a primary admin a followed link
+  `next`. That is `/keepers` for a keeper, `/curator` for a curator, a primary keeper a followed link
   has just promoted included, since the page reads the role after the
   link's write; a member's first coven; or `/coven` for someone in none
   (MB.257). `EmailForm` has two views: `?verified` on a verified row is
@@ -678,25 +678,25 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   `tests/app/account/page.test.tsx`, and the browser, an axe scan of all
   three sections included, `tests/e2e/account.spec.ts`.
 
-### Granting a second admin (M2.9, MB.59)
+### Granting a second keeper (M2.9, MB.59)
 
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
-An admin grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/keepers/users`
+A keeper grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/keepers/users`
 (MB.59; [`admin-users.md`](admin-users.md), "Changing a site role"),
-where the primary admin cannot be revoked and a demotion that would leave no
-admin is refused. Changing who the primary admin is, is that section's too.
+where the primary keeper cannot be revoked and a demotion that would leave no
+admin is refused. Changing who the primary keeper is, is that section's too.
 
-A hand fix in `psql` stays possible, for a database no admin can sign in to.
+A hand fix in `psql` stays possible, for a database no keeper can sign in to.
 It sets `can_create_workspace` with `role`, since the `users_privileged_can_create_workspace` CHECK (MB.177, M11.20) refuses an
-admin or curator without the flag, and declares itself first, since the trigger on
+keeper or curator without the flag, and declares itself first, since the trigger on
 `users` refuses a privilege change that names no route (MB.195):
 
 ```sql
 begin;
 select set_config('app.privilege_route', 'manual', true);
 -- optional: why, kept on the ledger row as its note
-select set_config('app.privilege_note', 'Second admin while no admin can sign in', true);
+select set_config('app.privilege_note', 'Second admin while no keeper can sign in', true);
 update users set role = 'admin', can_create_workspace = true, updated_by = '<your user id>'
 where id = '<their user id>';
 commit;
@@ -710,19 +710,19 @@ is what names you as the actor. The route is refused rather than defaulted so
 that no write, a hand-run one included, changes a privilege without saying how
 ([`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
 The same holds for any hand fix to either column, a revoke included, and a
-hand fix checks neither the primary admin nor the count the service does. The
+hand fix checks neither the primary keeper nor the count the service does. The
 tasks that build the rest:
 
 - **MB.58 and MB.59** (built): the ledger, `user_privilege_changes` since
-  MB.194, and granting and revoking any other admin from `/keepers/users`. The
-  primary admin can be neither revoked nor deleted, and a revoke that would
-  leave zero admins is refused (the record's "The primary admin" and
+  MB.194, and granting and revoking any other keeper from `/keepers/users`. The
+  primary keeper can be neither revoked nor deleted, and a revoke that would
+  leave zero keepers is refused (the record's "The primary admin" and
   "Revoking").
 - **MB.62 and MB.63** (built): the `admin_role_change_pauses` ledger through which
-  the primary admin pauses granting and revoking for every other admin (the
+  the primary keeper pauses granting and revoking for every other keeper (the
   record's "Granting"; MB.62 built the table,
   [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
-- **MB.69 and MB.70**: inviting an admin by email, story 62
+- **MB.69 and MB.70**: inviting a keeper by email, story 62
   ([`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
   "The admin invitation (story 62)"; MB.69 built the table, now the site tier of `invitations`,
   [`db/invitations.md`](../db/invitations.md), "Admin invitations").
@@ -739,11 +739,11 @@ The table is DESIGN.md §5's `user_access_pauses` (M15.51).
 **Who and whom.** `pauseUserAccess(userId, until, note)` and `liftUserAccessPause(userId)` are admin-only
 (`assertSiteAdmin`), in `src/modules/identity/services/access-pause.ts`. Each refusal explains itself:
 
-- a curator or a user: `Forbidden`, "Only a site admin may pause or lift a user’s access";
-- the primary admin, the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL`: `Forbidden`, "The primary admin’s access cannot be paused";
+- a curator or a user: `Forbidden`, "Only a site keeper may pause or lift a user’s access";
+- the primary keeper, the live keeper whose email matches `ADMIN_BOOTSTRAP_EMAIL`: `Forbidden`, "The primary keeper’s access cannot be paused";
 - the admin themselves: `Forbidden`, "You cannot pause your own access";
-- the System account or the signed-out sender account (neither is a person; `isStandInAccount` in `src/lib/system-actor.ts`): `Forbidden`, "This account is not a person, so its access cannot be paused". The service refuses; no table constraint does, as for the primary admin and the admin themselves, and neither account is listed on the Users page;
-- another admin while admin changes are paused (MB.62), unless the caller is the primary admin: the same refusal a revoke of admin gets;
+- the System account or the signed-out sender account (neither is a person; `isStandInAccount` in `src/lib/system-actor.ts`): `Forbidden`, "This account is not a person, so its access cannot be paused". The service refuses; no table constraint does, as for the primary keeper and the admin themselves, and neither account is listed on the Users page;
+- another keeper while keeper changes are paused (MB.62), unless the caller is the primary admin: the same refusal a revoke of admin gets;
 - a user already paused: a validation error, "This user is already paused; lift the pause first";
 - an `until` that is not in the future: a validation error on `until`, "Choose a time in the future";
 - a note missing, blank, or over 500 characters: a validation error on `note`, "Write a note saying why" or "Keep the note to 500 characters".
@@ -778,7 +778,7 @@ pause on every session, an impersonation's included, as `accessPause`. From ther
   `agreeToTerms` while the pause stands, so the acceptance page could only send it back to the paused page, and an
   account that has not agreed to the current terms would never reach its support pages.
 
-The paused page's address carries nothing: the page reads the pause itself. An admin impersonating a paused user is shown all of this as the user is
+The paused page's address carries nothing: the page reads the pause itself. A keeper impersonating a paused user is shown all of this as the user is
 (`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
 
 **The paused page.** `/access-paused` is public in the proxy (`src/proxy.ts`), since the proxy reads a paused session as
@@ -796,9 +796,9 @@ to `/account/support`. It also links to the compendium, which it reads as any si
 **Ending.** A dated pause ends by itself once `until` passes, with no write, and a lift stamps `lifted_at` and `lifted_by`.
 Either way the next request of a session signed in while paused reaches the whole site.
 **In the user modal.** The People page's user modal has a Site Access section (`claude-docs/components/user-detail.md`)
-where an admin sets a pause, lifts the one that stands, and reads the earlier ones with who set and who lifted each. It is
-absent on the primary admin and on the admin's own account. The history is read through `listUserAccessPauses`, a
-keyset page newest first, which GraphQL serves as the paged `userAccessPauses` query for site admins.
+where a keeper sets a pause, lifts the one that stands, and reads the earlier ones with who set and who lifted each. It is
+absent on the primary keeper and on the admin's own account. The history is read through `listUserAccessPauses`, a
+keyset page newest first, which GraphQL serves as the paged `userAccessPauses` query for site keepers.
 
 ### The self-created user
 
@@ -851,7 +851,7 @@ with `kind = 'card'`: no email, workspace or role, a `batch_id` shared by the ba
 only the token's hash. Accepting a card follows the invitation-token rules in CLAUDE.md: the link is
 `/i/<token>`, and nothing but the mint ever holds the token.
 
-- **Who may.** Only a site admin. Every service in `src/modules/identity/services/invitation-cards.ts`
+- **Who may.** Only a site keeper. Every service in `src/modules/identity/services/invitation-cards.ts`
   opens with `assertSiteAdmin`, so a curator, a practitioner and a steward are refused by direct call, and the
   GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
   `requireAdminSession()`, which answers a curator with the styled not-authorized page.
@@ -865,7 +865,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   counted in SQL. The Invitation Cards tab at `/keepers/invitation-cards` shows it; the QR codes cannot be
   redrawn from it.
 - **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
-  account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
+  account owns (read as a keeper may read anyone's memberships). `cardArrivalsCsv` returns the same as
   CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
   would read as a formula. The Card Sign-Ups tab at `/keepers/card-sign-ups` offers it as a download.
 - **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,

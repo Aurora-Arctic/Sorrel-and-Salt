@@ -42,7 +42,7 @@ export type DocumentForEditing = {
 
 /**
  * Where a mailing stands: `queued` behind an older mailing of another document, `sending`, `waiting` for tomorrow's allowance once
- * today's is used, `paused` by the provider's monthly quota until an admin resumes it, `sent`, or `replaced` by a newer mailing.
+ * today's is used, `paused` by the provider's monthly quota until a keeper resumes it, `sent`, or `replaced` by a newer mailing.
  */
 export type DocumentMailingState =
   'queued' | 'sending' | 'waiting' | 'paused' | 'sent' | 'replaced';

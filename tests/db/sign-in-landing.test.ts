@@ -15,7 +15,7 @@ import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance, Profile } from '../support/types';
 
-// Where the callback lands a sign-in: a return path wins; otherwise an admin goes to /keepers, a curator to /curator, a coven member into the first coven the switcher lists, anyone else to /coven;
+// Where the callback lands a sign-in: a return path wins; otherwise a keeper goes to /keepers, a curator to /curator, a coven member into the first coven the switcher lists, anyone else to /coven;
 // an unverified account lands on the email page first. Driven through Better Auth's real endpoints (claude-docs/auth/route-protection.md, "Route protection").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -47,7 +47,7 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
-// Provider credentials at import; the primary admin's address is read per
+// Provider credentials at import; the primary keeper's address is read per
 // request, so it is stubbed beside them for the whole file.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
@@ -74,7 +74,7 @@ beforeEach(async () => {
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 
   send.mockReset();
-  // Microsoft never vouches, so the primary admin's sign-in through it logs a refusal.
+  // Microsoft never vouches, so the primary keeper's sign-in through it logs a refusal.
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
@@ -94,7 +94,7 @@ async function roleOf(email: string): Promise<string | undefined> {
 
 /** A verified row with no provider account yet: a verified Google sign-in links to it. */
 async function insertVerified(email: string, role: UserRole): Promise<void> {
-  // A curator or an admin inserted by hand declares itself, as a `psql` fix
+  // A curator or a keeper inserted by hand declares itself, as a `psql` fix
   // must, and holds the flag the CHECK asks of them.
   await asManualFix(
     sql,
@@ -150,7 +150,7 @@ describe('a sign-in with no return path', () => {
     expect(await roleOf(CURATOR)).toBe('curator');
   });
 
-  // Why the admin's could have been /coven: the same sign-in, differing only
+  // Why the keeper's could have been /coven: the same sign-in, differing only
   // in the row's role, lands there.
   it('lands anyone else on /coven, as it always has', async () => {
     await insertVerified(MEMBER, 'user');
@@ -183,7 +183,7 @@ describe('a sign-in with no return path', () => {
     expect(landingOf(response)).toBe('/coven');
   });
 
-  it('lands an admin who is in a coven on the keepers area all the same', async () => {
+  it('lands a keeper who is in a coven on the keepers area all the same', async () => {
     await insertVerified(ADMIN, 'admin');
     await seat(ADMIN, 'Adminhold');
 
@@ -195,13 +195,13 @@ describe('a sign-in with no return path', () => {
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
-    // An admin holds the creation flag, which the users CHECK requires.
+    // A keeper holds the creation flag, which the users CHECK requires.
     await asManualFix(
       sql,
       (tx) =>
         tx`update users set role = 'admin', can_create_workspace = true where email = ${ADMIN}`,
     );
-    // The preconditions: an admin, and still unverified — Microsoft never vouches.
+    // The preconditions: a keeper, and still unverified — Microsoft never vouches.
     const [row] =
       await sql`select role::text as role, email_verified from users where email = ${ADMIN}`;
     expect(row).toEqual({ role: 'admin', email_verified: false });
@@ -230,13 +230,13 @@ describe('a sign-in with a return path', () => {
     expect(landingOf(response)).toBe('/compendium?q=rue');
   });
 
-  it('lands an admin on it, /coven included', async () => {
+  it('lands a keeper on it, /coven included', async () => {
     await insertVerified(ADMIN, 'admin');
     const admin = { sub: 'g-admin', email: ADMIN, verified: true };
 
     expect(landingOf(await signIn('google', admin, '/coven'))).toBe('/coven');
     expect(landingOf(await signIn('google', admin, '/compendium?q=rue'))).toBe('/compendium?q=rue');
-    // The same admin with no return path, so the two above were the return path's doing.
+    // The same keeper with no return path, so the two above were the return path's doing.
     expect(landingOf(await signIn('google', admin))).toBe('/keepers');
   });
 

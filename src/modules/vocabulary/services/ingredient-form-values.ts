@@ -25,7 +25,7 @@ import type {
   IngredientFormValueRow,
 } from '../types';
 
-// The curated form vocabulary: public reads, and writes for a curator or an admin alone. A form a live entry's variant picked
+// The curated form vocabulary: public reads, and writes for a curator or a keeper alone. A form a live entry's variant picked
 // holds, and a rename reaches the variant (claude-docs/db/form-vocabulary-seed.md, "Form value service details").
 
 // The list and its count, held in the data cache under the `compendium` tag (claude-docs/db/compendium-cache.md).
@@ -71,7 +71,7 @@ export async function getIngredientFormValueBySlug(slug: string): Promise<Ingred
 /**
  * Adds a form, its slug derived from the name and the group's name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `IngredientFormValueInput`, names no live group, or its slug is a live form's.
  */
 export async function createIngredientFormValue(
@@ -94,7 +94,7 @@ export async function createIngredientFormValue(
  * Rewrites a form whole, its slug following the name and the group, and carries a rename onto every live variant picking it
  * (claude-docs/db/form-vocabulary-seed.md, "Form value service details"). Its `seedKey` is left as it was.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createIngredientFormValue` throws it, the row's own slug excepted; on `name`, a rename that would give an entry two forms of one name.
  * @throws {NotFound} no live form has this id.
  */
@@ -128,7 +128,7 @@ export async function updateIngredientFormValue(
 /**
  * Soft-deletes a form no live compendium entry picked (claude-docs/db/form-vocabulary-seed.md, "Form value service details").
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin, or a live entry picked the form.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper, or a live entry picked the form.
  * @throws {NotFound} no live form has this id.
  */
 export async function deleteIngredientFormValue(session: Session, id: string): Promise<void> {

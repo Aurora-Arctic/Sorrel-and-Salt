@@ -428,7 +428,7 @@ export function ReferencesField({
                   <div className="ingredient-form__tier-row">
                     <span className="ingredient-form__tier">
                       {sourceTierOf(entry.link)}
-                      {!editable && '. Only the site’s admins can edit it.'}
+                      {!editable && '. Only the site’s keepers can edit it.'}
                     </span>
                     {editable && (
                       <IconTip tip="Edit Source">

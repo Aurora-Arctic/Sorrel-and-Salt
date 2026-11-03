@@ -195,7 +195,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     about: 'bug',
     subject: 'The members page lists a role I do not hold',
     message:
-      'The members page of the demo coven lists me as a practitioner, but I am an admin and expected a steward seat. Is my role wrong, or is the page?',
+      'The members page of the demo coven lists me as a practitioner, but I am a keeper and expected a steward seat. Is my role wrong, or is the page?',
     path: '/coven/whitethorn-coven/members',
     assignedTo: F.id,
     curatorVisible: true,
@@ -406,7 +406,7 @@ interface SeedTimeout {
   note: string;
 }
 
-// D has a time-out in force and an earlier one an admin lifted, C one that has run out, B one an admin lifted early, and I
+// D has a time-out in force and an earlier one a keeper lifted, C one that has run out, B one a keeper lifted early, and I
 // (seeded beside H's site access pause, `sanctioned-users.ts`) one with no end date.
 const SUPPORT_TIMEOUTS: readonly SeedTimeout[] = [
   {

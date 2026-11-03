@@ -434,7 +434,7 @@ describe('FacetPanel', () => {
     });
   });
 
-  it('shows No Refs to an admin only', () => {
+  it('shows No Refs to a keeper only', () => {
     stubViewport(true);
     const { rerender } = render(<FacetPanel {...props()} />);
     fireEvent.click(filtersButton());
@@ -860,7 +860,7 @@ describe('FacetPanel', () => {
     expect(onChange).toHaveBeenLastCalledWith({ withoutReferences: true });
   });
 
-  it('offers No Form with its count to an admin only, and reports it as a patch of its own', () => {
+  it('offers No Form with its count to a keeper only, and reports it as a patch of its own', () => {
     stubViewport(true);
     const onChange = vi.fn();
     const { unmount } = render(<FacetPanel {...props({}, { admin: true, onChange })} />);

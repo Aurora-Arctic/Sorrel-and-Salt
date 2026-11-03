@@ -19,7 +19,7 @@ import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-wr
 import { refuseWhileHeld } from './held-entries';
 import type { CategoryFilter, CategoryRow, CuratedVocabulary } from '../types';
 
-// The category vocabulary: public reads, and writes for a curator or an admin alone. A delete leaves every link in place and
+// The category vocabulary: public reads, and writes for a curator or a keeper alone. A delete leaves every link in place and
 // every read drops a deleted category (claude-docs/db/categories.md, "Category writes"). The list and its count are held in the
 // data cache under the `compendium` tag (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('category-page', findCategoryPage);
@@ -63,7 +63,7 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryRow> {
 /**
  * Adds a category, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `CategoryInput`, names no live group, or its slug is a live category's.
  */
 export async function createCategory(session: Session, input: CategoryInput): Promise<CategoryRow> {
@@ -82,7 +82,7 @@ export async function createCategory(session: Session, input: CategoryInput): Pr
 /**
  * Rewrites a category whole, its slug following the name. Its `seedKey` is left as it was.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createCategory` throws it, the row's own slug excepted.
  * @throws {NotFound} no live category has this id.
  */
@@ -106,10 +106,10 @@ export async function updateCategory(
 }
 
 /**
- * Soft-deletes a category nothing in the compendium is filed under. A coven's links stay and read as nothing; an admin writes
+ * Soft-deletes a category nothing in the compendium is filed under. A coven's links stay and read as nothing; a keeper writes
  * nothing of a coven's. The entries are read before the transaction, so one filed in the instant between is left holding a deleted category.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium entry is filed under the category.
+ * @throws {Forbidden} the caller is neither a curator nor a keeper, or a live compendium entry is filed under the category.
  * @throws {NotFound} no live category has this id.
  */
 export async function deleteCategory(session: Session, id: string): Promise<void> {

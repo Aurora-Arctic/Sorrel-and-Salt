@@ -604,7 +604,7 @@ export const HistoryButtons: Story = {
   ),
 };
 
-// An admin change's optional Reason, held in plain state, its hint behind the ⓘ.
+// A keeper change's optional Reason, held in plain state, its hint behind the ⓘ.
 export const Reason: Story = {
   render: () => {
     const [reason, setReason] = useState('');

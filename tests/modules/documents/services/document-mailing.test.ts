@@ -25,8 +25,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 
 // Emailing every account about a document's published version: the read the edit page and its confirmation show, the write that
-// starts a mailing, an admin's resume of a paused one, and the daily start that carries a mailing on to the next UTC day. Each
-// is an admin's alone, through assertSiteAdmin. The run that sends the mail is tests/workflows/document-mailing.test.ts; the
+// starts a mailing, a keeper's resume of a paused one, and the daily start that carries a mailing on to the next UTC day. Each
+// is a keeper's alone, through assertSiteAdmin. The run that sends the mail is tests/workflows/document-mailing.test.ts; the
 // signed-out caller is refused at the GraphQL scope (tests/db/graphql-query-scopes.test.ts).
 
 const { startJob, jobTokenActive } = vi.hoisted(() => ({
@@ -420,7 +420,7 @@ describe('startDailyDocumentMailing', () => {
 
 // Each call is made by direct id, as a forged request would make it. E's same call succeeds, A owns a coven and holds no site
 // role, B is a member, and F passes assertCurator, so each refusal is the admin check's.
-describe('the mailing services are an admin’s alone', () => {
+describe('the mailing services are a keeper’s alone', () => {
   let pausedId: string;
   beforeEach(async () => {
     pausedId = await mailing(privacyV1, await accounts(2), { status: 'paused' });

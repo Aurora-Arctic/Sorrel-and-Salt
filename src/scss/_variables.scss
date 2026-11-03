@@ -932,7 +932,7 @@ $shell-phone-width: $table-stack-width;
 // view and tucks the rest behind More (Priority+), between the phone shape
 // and a desktop where all six fit the row. Also the width at or under which
 // the site links leave the bar for the account panel: with the Compendium
-// link an admin's bar outran an 882px window.
+// link a keeper's bar outran an 882px window.
 $shell-tablet-width: 56rem;
 // Under this the bar's brand is its initials: a narrow phone, since the bar
 // has room for the full name wider than that once the site links have gone.
@@ -942,7 +942,7 @@ $tabbed-plus-width: 42.5rem;
 // Under this width of its own (a 568px window's header) a tabbed page's pills drop beneath the
 // heading and the plus, a concern of its own, apart from the plus's switch.
 $tabbed-reflow-width: 33.5rem;
-// The same for a tabbed page whose action keeps its label (People's Pause Admin Changes): under
+// The same for a tabbed page whose action keeps its label (People's Pause Keeper Changes): under
 // 700px of the header's own width the pills drop beneath the heading and the action.
 $tabbed-reflow-width-labelled: 43.75rem;
 // Under 400px of the header's own width that labelled action goes beneath the heading, at the line's

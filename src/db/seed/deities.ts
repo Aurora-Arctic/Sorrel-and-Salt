@@ -13,7 +13,7 @@ import type {
   SeedTransaction,
 } from './types';
 
-// The deity vocabulary: 88 traditions and the deities under them, a starting set an admin may edit. Reference data, so it inserts
+// The deity vocabulary: 88 traditions and the deities under them, a starting set a keeper may edit. Reference data, so it inserts
 // the bootstrap user itself. Transcribed by hand from the seed doc, where a row is argued; names are copied as written, and a slug is derived
 // here and re-derived on every seed (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 

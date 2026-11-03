@@ -2,40 +2,40 @@
 
 **Status:** decided · **Date:** 2026-10-07
 
-The owner's call: every admin can create a coven. The spec already said so,
-as a second rule beside the flag, and no admin row agreed with it. This
+The owner's call: every keeper can create a coven. The spec already said so,
+as a second rule beside the flag, and no keeper row agreed with it. This
 record says why the rule became an invariant on the row rather than a second
 prong in the gate. DESIGN.md §5, `canCreateWorkspace`, carries the model.
 
 ## Where things stood
 
-DESIGN.md §5 let an admin create a workspace "regardless of the flag", and
+DESIGN.md §5 let a keeper create a workspace "regardless of the flag", and
 M6.7 was written to gate on `canCreateWorkspace` **or** the admin role. M2.9
 had a grant set the flag as well, "so the row states what the person may do"
 ([`m2.9-granting-admin.md`](m2.9-granting-admin.md), "Granting"), but MB.59,
-which carries that rule, is not built. In the meantime nothing gave an admin
+which carries that rule, is not built. In the meantime nothing gave a keeper
 the flag:
 
-- the primary admin's promotion (MB.60, MB.68) writes `role` alone;
+- the primary keeper's promotion (MB.60, MB.68) writes `role` alone;
 - fixture E is seeded `role: 'admin'` with the flag `false`, on purpose, so
   that M6.7's admin prong had a fixture
   ([`standard-scenario.md`](../db/standard-scenario.md));
-- MB.58's migration backfilled the ledger for every admin, but not the flag.
+- MB.58's migration backfilled the ledger for every keeper, but not the flag.
 
-So every admin read "No" in MB.52's `/admin/users` and sat in M5.8's
+So every keeper read "No" in MB.52's `/admin/users` and sat in M5.8's
 awaiting-approval filter, which reads the flag alone. Two readers of the same
 question had two answers.
 
 ## Decision
 
-The flag is what lets anyone create a workspace, admins included, and every
+The flag is what lets anyone create a workspace, keepers included, and every
 admin holds it:
 
 - A CHECK on `users`, `users_admin_can_create_workspace`, refuses a row with
   `role = 'admin'` and `can_create_workspace = false`. It binds soft-deleted
   rows too, since it states a fact about the row, not uniqueness.
-- Its migration first sets the flag on every admin row, soft-deleted
-  included, stamped as that admin as MB.58's backfill was, then adds the
+- Its migration first sets the flag on every keeper row, soft-deleted
+  included, stamped as that keeper as MB.58's backfill was, then adds the
   constraint.
 - Promotion writes both columns in its one audited update; MB.59's
   `setUserRole` inherits that. Revoking admin leaves the flag, as before.
@@ -54,11 +54,11 @@ admin holds it:
   it is.
 - **No new fixture lost.** E existed to exercise the admin prong. With no
   prong there is nothing for it to distinguish, and E now proves the other
-  thing: an admin creates through the flag like anyone else.
+  thing: a keeper creates through the flag like anyone else.
 
 ## What it costs
 
-- **M5.8 cannot revoke an admin's flag.** The CHECK would refuse it; M5.8's
+- **M5.8 cannot revoke a keeper's flag.** The CHECK would refuse it; M5.8's
   service refuses it first with an explaining error, and revoking admin is
   the route. Revoking admin leaves the flag, so a former admin keeps it — the
   grant was a vouching too ([`m2.9-granting-admin.md`](m2.9-granting-admin.md),
@@ -66,13 +66,13 @@ admin holds it:
 - **A hand-promoted admin needs both columns.** The stop-gap `psql` route
   ([`admin-bootstrap.md`](../auth/admin-bootstrap.md), "Granting a second
   admin") sets `can_create_workspace` with `role`, or the CHECK refuses it.
-- **Test rows that insert an admin set the flag**, through the raw client as
+- **Test rows that insert a keeper set the flag**, through the raw client as
   every setup row is.
 
 **Superseded in part by M11.20 (2026-10-16):** the CHECK now covers curators
 too. Its migration replaced `users_admin_can_create_workspace` with
 `users_privileged_can_create_workspace`, `role = 'user' or can_create_workspace`,
-so every admin and every curator holds the flag and the gate still reads the
+so every keeper and every curator holds the flag and the gate still reads the
 flag alone. The reasoning above stands for both roles; what changed is the
 name the CHECK uses, `user` in place of `admin`
 ([`m11.20-curator-role.md`](m11.20-curator-role.md)).

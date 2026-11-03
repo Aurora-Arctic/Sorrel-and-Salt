@@ -4,7 +4,7 @@
 
 ## Context
 
-An admin who signed up through Discord clicks "Continue with Microsoft" and gets
+A keeper who signed up through Discord clicks "Continue with Microsoft" and gets
 `Sign-in didn't work. Please try again.` The row is verified (by Discord, or by
 MB.66's mail), and the question was whether first-party verification now makes a
 Microsoft sign-in linkable.
@@ -17,7 +17,7 @@ Verification fixes the second half; the first half is the one that refuses.
 Microsoft is pinned `emailVerified: false` (`src/lib/auth.ts`) because with
 `tenantId: 'common'` any Entra tenant can mint an id token carrying any `email`
 (nOAuth, MB.60). Trusting Microsoft for implicit linking would let such a token
-sign in as **any verified row**, the admin's included. The row being verified is
+sign in as **any verified row**, the keeper's included. The row being verified is
 the wrong side of the equation: what is unproven is the Microsoft account's claim
 on the address, and no amount of verifying the row changes that.
 
@@ -188,5 +188,5 @@ Size becomes ~3h.
 - Manual on `make docker-up`: sign in with Discord, open `/account`, add
   Microsoft, sign out, sign in with Microsoft → same account, `/admin` still
   admin. Then, signed out, "Continue with Microsoft" on a _second_ Microsoft
-  account whose address equals the admin's → the one generic
+  account whose address equals the keeper's → the one generic
   `account_not_linked` sentence, no new session.

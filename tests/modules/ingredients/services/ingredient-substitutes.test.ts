@@ -130,7 +130,7 @@ describe('a save carrying substitutes', () => {
     ]);
   });
 
-  it('lets an admin link one compendium entry from another', async () => {
+  it('lets a keeper link one compendium entry from another', async () => {
     const mockleaf = await seed(entry({ name: 'Mockleaf' }));
 
     const created = await createCompendiumEntry(

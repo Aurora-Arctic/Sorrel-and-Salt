@@ -128,7 +128,7 @@ statements (the last of which takes a trailing `--> statement-breakpoint`):
 CREATE OR REPLACE TRIGGER set_updated_at BEFORE UPDATE ON "invitations" FOR EACH ROW EXECUTE FUNCTION set_updated_at();--> statement-breakpoint
 -- Both old tables, with their ids and stamps, so MB.203's final sweep can
 -- re-run this with `ON CONFLICT (id) DO NOTHING`. A workspace invitation keeps
--- its workspace and role and has no note; an admin invitation is the site
+-- its workspace and role and has no note; a keeper invitation is the site
 -- tier, a null pair, and keeps its note. Production holds no row in either.
 INSERT INTO "invitations" ("id", "workspace_id", "email", "role", "token_hash", "expires_at", "accepted_at", "accepted_by", "revoked_at", "note", "created_at", "created_by", "updated_at", "updated_by", "deleted_at", "deleted_by")
 SELECT "id", "workspace_id", "email", "role", "token_hash", "expires_at", "accepted_at", "accepted_by", "revoked_at", NULL::text, "created_at", "created_by", "updated_at", "updated_by", "deleted_at", "deleted_by" FROM "workspace_invitations"

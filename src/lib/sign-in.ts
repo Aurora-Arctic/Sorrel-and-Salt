@@ -14,7 +14,7 @@ import { SUPPORT_LIST_PATH } from './support-path';
  */
 export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 
-/** An admin's landing instead: the keepers' area. */
+/** A keeper's landing instead: the keepers' area. */
 export const ADMIN_LANDING = '/keepers' satisfies Route;
 
 /** A curator's landing: the curation area. */
@@ -44,7 +44,7 @@ export function safeReturnPath(raw: string | string[] | undefined): string | und
 
 /**
  * What a sign-in with no return path tells the callback, in Better Auth's `additionalData`, so it lands the account by role.
- * A flag, not a landing path: `/coven` asked for by name must still win for an admin.
+ * A flag, not a landing path: `/coven` asked for by name must still win for a keeper.
  */
 export const NO_RETURN_PATH = { noReturnPath: true } as const;
 

@@ -26,7 +26,7 @@ Keeping them would have cost:
 - `vocabularies.test.ts` reading one table under a different name prefix
 - a second rename migration and sidecar in MB.253, and the work to undo the two-name mapping
 
-Renaming now costs one message. During the rollout, and after a rollback to the earlier deploy, an admin adding a duplicate celestial body sees a generic error instead of "name taken". The duplicate is still refused, by the same index under its new name, and the screen is admin-only. The owner chose to rename now.
+Renaming now costs one message. During the rollout, and after a rollback to the earlier deploy, a keeper adding a duplicate celestial body sees a generic error instead of "name taken". The duplicate is still refused, by the same index under its new name, and the screen is admin-only. The owner chose to rename now.
 
 ## What it leaves for MB.253 and MB.254
 

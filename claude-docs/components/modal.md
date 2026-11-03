@@ -382,7 +382,7 @@ owner's call of 2026-10-20) are drawn through it, never a second dialog.
   The cell is as tall as the taller of the two, so a short form's dialog
   grows to hold a question rather than scrolling it. Outside a modal there
   is no layer, and the card stands in the form's flow with no scrim
-  (`.confirm-overlay--in-place`); every admin form is in a modal.
+  (`.confirm-overlay--in-place`); every keeper form is in a modal.
 - **The form behind is held.** As the card comes, the modal sets `inert` on
   its body and on the control beside its title, so Tab, a click and typing
   cannot reach the form until the question is answered; the scrim, the

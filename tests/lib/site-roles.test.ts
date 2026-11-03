@@ -5,7 +5,7 @@ import { userRole } from '@/modules/identity/schema/users';
 // The one statement of which site roles curate, read by the curator proof, the GraphQL scope
 // and the shell's Admin link.
 describe('curates', () => {
-  it('holds for a curator and an admin, and for no other role', () => {
+  it('holds for a curator and a keeper, and for no other role', () => {
     expect(userRole.enumValues.filter(curates)).toEqual(['curator', 'admin']);
   });
 });

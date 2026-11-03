@@ -10,7 +10,7 @@ import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../support/email-verification';
 
-// Through Better Auth's real endpoints with the plugin registered: an admin becomes the user they impersonate (role, coven, stamps) and Stop returns their own session
+// Through Better Auth's real endpoints with the plugin registered: a keeper becomes the user they impersonate (role, coven, stamps) and Stop returns their own session
 // (claude-docs/auth/impersonation.md, "Impersonation").
 
 let sql: ReturnType<typeof postgres>;
@@ -75,7 +75,7 @@ async function insertUser(role: 'user' | 'admin'): Promise<string> {
 }
 
 describe('impersonating a user', () => {
-  it('refuses a non-admin, where the same call answers an admin', async () => {
+  it('refuses a non-keeper, where the same call answers an admin', async () => {
     const asA = await signedInAs(A.id);
     const asE = await signedInAs(E.id);
 
@@ -90,12 +90,12 @@ describe('impersonating a user', () => {
     expect(count).toBe(0);
   });
 
-  it('refuses impersonating an admin, where the same user as a non-admin is handed over', async () => {
+  it('refuses impersonating a keeper, where the same user as a non-keeper is handed over', async () => {
     const asE = await signedInAs(E.id);
     const target = await insertUser('user');
     expect((await impersonate(asE, target)).status).toBe(200);
 
-    // An admin holds the creation flag, which the users CHECK requires.
+    // A keeper holds the creation flag, which the users CHECK requires.
     await asManualFix(
       sql,
       (tx) => tx`update users set role = 'admin', can_create_workspace = true where id = ${target}`,
@@ -124,8 +124,8 @@ describe('impersonating a user', () => {
   });
 
   // The plugin shields only its admin roles, so a curator is handed over as
-  // any non-admin is.
-  it('hands a curator over to an admin, as any non-admin is', async () => {
+  // any non-keeper is.
+  it('hands a curator over to a keeper, as any non-keeper is', async () => {
     const response = await impersonate(await signedInAs(E.id), F.id);
     expect(response.status).toBe(200);
 
@@ -151,7 +151,7 @@ describe('impersonating a user', () => {
     expect(rows).toContainEqual({ user_id: B.id, impersonated_by: E.id });
   });
 
-  it('sees what the user sees: their coven, and no admin rights', async () => {
+  it('sees what the user sees: their coven, and no keeper rights', async () => {
     // After the reset, so the class is the one the service throws.
     const { Forbidden } = await import('@/lib/errors');
     const { assertSiteAdmin } = await import('@/modules/identity');
@@ -159,7 +159,7 @@ describe('impersonating a user', () => {
     const asE = await signedInAs(E.id);
     const admin = await requestSession.sessionFromHeaders(new Headers({ cookie: asE }));
     if (!admin) throw new Error('E has no session');
-    // The precondition: E is a site admin in no coven.
+    // The precondition: E is a site keeper in no coven.
     expect(() => assertSiteAdmin(admin)).not.toThrow();
     expect(await membershipsOf(admin, [E.id])).toEqual([[]]);
 

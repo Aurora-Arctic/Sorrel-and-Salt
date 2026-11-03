@@ -36,7 +36,7 @@ export interface VerifyEmailProps extends BaseEmailProps {
 export interface AdminInvitationProps extends BaseEmailProps {
   /** The site role the invitation grants. */
   siteRole: 'curator' | 'admin';
-  /** The admin who sent the invitation. */
+  /** The keeper who sent the invitation. */
   inviterName: string;
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;
@@ -126,7 +126,7 @@ export interface SupportEmailReplyProps extends BaseEmailProps {
   body: string;
 }
 
-/** Told to a user that an admin timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */
+/** Told to a user that a keeper timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */
 export interface SupportTimedOutProps extends BaseEmailProps {
   url: string;
   /** When the time-out ends, or `null` when it has no end date. */
@@ -135,7 +135,7 @@ export interface SupportTimedOutProps extends BaseEmailProps {
   message: string | null;
 }
 
-/** Told to a user that an admin paused their site access. `url` opens the support page, which a paused account can still reach. */
+/** Told to a user that a keeper paused their site access. `url` opens the support page, which a paused account can still reach. */
 export interface AccessPausedProps extends BaseEmailProps {
   url: string;
   /** When the pause ends, or `null` when it has no end date. */
@@ -158,7 +158,7 @@ export interface CovenAccessPausedProps extends BaseEmailProps {
 export interface DocumentUpdatedProps extends BaseEmailProps {
   /** The document's title, as the page shows it. */
   title: string;
-  /** What changed, in the admin's words. */
+  /** What changed, in the keeper's words. */
   summary: string;
   /** The terms ask each account to agree again at its next visit; the other documents do not. */
   asksAgreement: boolean;

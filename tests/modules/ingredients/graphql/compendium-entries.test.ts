@@ -21,14 +21,14 @@ import type { WorkspaceIngredientNode } from './types';
 
 // Over the wire: the site admin's three compendium writes (the transport's half, claude-docs/testing/layer-ownership.md).
 // That is the SDL's own refusals, the loaders cleared between two writes in one request, `endRedirect` reaching the service, and one refusal per error code per mutation.
-// Who is refused is services/compendium-entries.test.ts's, collisions are services/compendium-entry-slugs.test.ts's, and signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
+// Who is refused is services/compendium-entries.test.ts's, collisions are services/compendium-entry-slugs.test.ts's, and signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
-// The curated forms an entry here picks, as the admin's autofill would.
+// The curated forms an entry here picks, as the keeper's autofill would.
 let herb: string;
 let earth: string;
 beforeAll(async () => {
@@ -148,7 +148,7 @@ const countIngredients = async () => {
 };
 
 describe('createCompendiumIngredient', () => {
-  it('writes an entry for a site admin, in the compendium and stamped by them', async () => {
+  it('writes an entry for a site keeper, in the compendium and stamped by them', async () => {
     const result = await create(asUser(E), testwort({ folkNames: ['Fixture Root'] }));
 
     expect(result.errors).toBeUndefined();
@@ -227,7 +227,7 @@ describe('updateCompendiumIngredient', () => {
     );
   });
 
-  it('replaces the entry for a site admin, stamping updated_by and keeping created_by', async () => {
+  it('replaces the entry for a site keeper, stamping updated_by and keeping created_by', async () => {
     const id = await seed();
 
     const result = await update(asUser(E), id, testwort({ description: 'Redescribed' }));
@@ -286,7 +286,7 @@ describe('updateCompendiumIngredient', () => {
   });
 
   // An address another entry moved off redirects to it for a window,
-  // and taking it is the admin's to confirm.
+  // and taking it is the keeper's to confirm.
   describe('onto an address another entry moved off, inside its window', () => {
     let movedId: string;
 
@@ -336,7 +336,7 @@ describe('deleteCompendiumIngredient', () => {
     return result.data?.compendium.edges.map((edge) => edge.node.id) ?? [];
   }
 
-  it('soft-deletes an entry for a site admin, answering its id and stamping who deleted it', async () => {
+  it('soft-deletes an entry for a site keeper, answering its id and stamping who deleted it', async () => {
     const id = await seed();
     // Why its absence below is the delete's: the entry lists before it.
     expect(await listedIds()).toContain(id);

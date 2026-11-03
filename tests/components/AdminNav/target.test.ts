@@ -31,7 +31,7 @@ describe('adminTarget', () => {
     });
   });
 
-  it('draws any other admin address, a later tab, as a titled table with no filter', () => {
+  it('draws any other keeper address, a later tab, as a titled table with no filter', () => {
     const target = adminTarget('/curator/category-groups');
 
     expect(target).toMatchObject({ region: 'admin', shape: 'table', title: true });

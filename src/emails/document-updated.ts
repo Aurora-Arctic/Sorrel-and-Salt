@@ -4,7 +4,7 @@ import type { DocumentUpdatedProps } from './types';
 
 const subjectOf = (title: string): string => `We Updated Our ${title}`;
 
-// Sent to every account when an admin mails a published document. It carries the admin's summary of what changed and a link to the
+// Sent to every account when a keeper mails a published document. It carries the keeper's summary of what changed and a link to the
 // document; the terms add that the account will be asked to agree at its next visit.
 export function DocumentUpdated({
   url,

@@ -10,7 +10,7 @@ import type { DeityNode, FilteredDeities } from './types';
 
 // `deities` and `deityTraditions` over the wire, readable signed out, and the six admin writes: the transport's half (claude-docs/testing/layer-ownership.md).
 // That is a filtered page and its count, each deity's tradition, `moveTo` reaching the delete, the loaders cleared by a write, and one refusal per error code per write.
-// Roles and the services' rules are services/deities.test.ts's and services/deity-traditions.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
+// Roles and the services' rules are services/deities.test.ts's and services/deity-traditions.test.ts's; signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {
@@ -170,7 +170,7 @@ describe('createDeity', () => {
 });
 
 describe('updateDeity', () => {
-  it("rewrites one for a site admin, and an entry's deity read after it in the same request reads the new name", async () => {
+  it("rewrites one for a site keeper, and an entry's deity read after it in the same request reads the new name", async () => {
     const id = await seedDeity('Fixture Hekate');
     const entry = await picking(id);
     const session = asUser(E);
@@ -236,7 +236,7 @@ describe('deleteDeity', () => {
 });
 
 describe('createDeityTradition and updateDeityTradition', () => {
-  it("write one for a site admin, and a deity's tradition read after a rename in the same request reads the new name", async () => {
+  it("write one for a site keeper, and a deity's tradition read after a rename in the same request reads the new name", async () => {
     const session = asUser(E);
     const created = await run<{ createDeityTradition: { id: string; slug: string } }>(
       session,

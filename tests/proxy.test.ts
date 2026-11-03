@@ -329,7 +329,7 @@ describe('the workshop', () => {
 
   /**
    * Each refusal below is the gate reading who is asking, not a path the proxy never sees or a response that would have failed anyway:
-   * the same request with an admin's live session reaches the files.
+   * the same request with a keeper's live session reaches the files.
    */
   async function expectAnAdminReaches(path: string) {
     expect(matches(path)).toBe(true);
@@ -391,7 +391,7 @@ describe('the workshop', () => {
     '/workshop/project.json',
     '/workshop/sb-manager/runtime.js',
     '/workshop/assets/iframe-B4mi58lY.js',
-  ])('lets an admin through to %s', async (path) => {
+  ])('lets a keeper through to %s', async (path) => {
     actAs('admin');
 
     const response = await proxy(signedIn(path));
@@ -405,7 +405,7 @@ describe('the workshop', () => {
   // Storybook's build links its files relative to the page, so a page at /workshop would ask for
   // /iframe.html; Next serves no directory index and its trailing-slash redirect sends /workshop/
   // back to /workshop. So the bare path goes to the manager's file, where relative paths resolve.
-  it('sends an admin at the bare path to the manager page, query kept', async () => {
+  it('sends a keeper at the bare path to the manager page, query kept', async () => {
     actAs('admin');
 
     const response = await proxy(signedIn('/workshop?path=/story/layout-theme-toggle--states'));
@@ -504,7 +504,7 @@ describe('the workshop', () => {
     },
   );
 
-  // The workshop's own code runs on this origin with an admin's cookie. The
+  // The workshop's own code runs on this origin with a keeper's cookie. The
   // policy lets it fetch Storybook's own files and nothing else on the origin.
   describe.each(['/workshop', '/workshop/index.html', '/workshop/iframe.html'])(
     "the admin's policy at %s",

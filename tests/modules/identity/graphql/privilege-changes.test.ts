@@ -6,7 +6,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { run } from '../../../support/graphql/run';
 import type { PrivilegeChangesResult } from './types';
 
-// `privilegeChanges`, the transport's half (claude-docs/testing/layer-ownership.md): an admin's page with every field, the filters reaching the service, subject and actor in one read per page, and the `admin` scope's refusal.
+// `privilegeChanges`, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's page with every field, the filters reaching the service, subject and actor in one read per page, and the `admin` scope's refusal.
 // The order, the page boundary and who the service refuses are services/privilege-changes.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
 
 // The query count, observed at the repository: the user read is wrapped so
@@ -65,7 +65,7 @@ const PAGE_OF_CHANGES = `
 `;
 
 describe('Query.privilegeChanges', () => {
-  it('answers an admin the ledger, newest first, with every field', async () => {
+  it('answers a keeper the ledger, newest first, with every field', async () => {
     const result = await run<PrivilegeChangesResult>(asUser(E), PAGE_OF_CHANGES);
 
     expect(result.errors).toBeUndefined();
@@ -123,8 +123,8 @@ describe('Query.privilegeChanges', () => {
   });
 
   // One non-admin: the scope reads the site role alone. The same query
-  // answers an admin these rows, the caller's own among them.
-  it('refuses a non-admin as FORBIDDEN', async () => {
+  // answers a keeper these rows, the caller's own among them.
+  it('refuses a non-keeper as FORBIDDEN', async () => {
     expect(asUser(A).role).toBe('user');
     const asAdmin = await run<PrivilegeChangesResult>(asUser(E), PAGE_OF_CHANGES, {
       userId: A.id,

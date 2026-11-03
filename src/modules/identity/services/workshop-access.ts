@@ -11,5 +11,5 @@ import { assertSiteAdmin } from './site-admin';
  * check itself, in the workshop's words, so the role is read in one place.
  */
 export function assertWorkshopAccess(session: Session): void {
-  assertSiteAdmin(session, 'The workshop is open to admins only');
+  assertSiteAdmin(session, 'The workshop is open to keepers only');
 }

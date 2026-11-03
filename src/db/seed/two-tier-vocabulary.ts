@@ -84,7 +84,7 @@ function itemRow(
 
 /**
  * Groups, with the name each holds now, by the key an item's group is known by: a live group's slug, then each group's `seed_key`
- * over it, so a seeded group takes its items whatever it is renamed, and an admin's group under a seed name takes them if the seed wrote none.
+ * over it, so a seeded group takes its items whatever it is renamed, and a keeper's group under a seed name takes them if the seed wrote none.
  */
 async function groupsByItemKey(
   tx: SeedTransaction,

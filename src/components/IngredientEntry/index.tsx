@@ -363,7 +363,7 @@ const IngredientEntry = ({
         )}
         {hiddenFromPublic && (
           <Notice kind="warn" quiet block>
-            Hidden in the Compendium. Only curators and admins can see this page.
+            Hidden in the Compendium. Only curators and keepers can see this page.
           </Notice>
         )}
         {movedAway && (
@@ -501,7 +501,7 @@ const IngredientEntry = ({
 
         {/* Last, so v2's notes section, appended beneath it, moves nothing. */}
         <ReferencesSection model={notes}>
-          {/* The curator's sourcing score ends the section; the page reads it for a curator or admin alone. */}
+          {/* The curator's sourcing score ends the section; the page reads it for a curator or keeper alone. */}
           {edit?.sourcing && <SourcingScore sourcing={edit.sourcing} headingLevel={3} />}
         </ReferencesSection>
       </div>

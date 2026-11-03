@@ -37,7 +37,7 @@ const PARTS: Record<string, Parts> = {
   '/keepers/users': CURATED,
 };
 
-// Any other admin address (a later tab) is a titled table with no filter.
+// Any other keeper address (a later tab) is a titled table with no filter.
 const FALLBACK: Parts = { shape: 'table', title: true };
 
 export const adminTarget = (href: string): NavigationTarget => ({

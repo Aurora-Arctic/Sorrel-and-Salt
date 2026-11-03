@@ -101,7 +101,7 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
       { mark: 'no', text: 'No' },
       {
         mark: 'part',
-        text: "Only requests an admin marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
+        text: "Only requests a keeper marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
       },
       { mark: 'yes', text: 'Yes, with your email' },
       { mark: 'yes', text: 'Yes' },
@@ -137,6 +137,6 @@ export const PRIVACY_ACCESS_ROLES: AccessRole[] = [
   { name: 'Coven Practitioner', short: 'Prac' },
   { name: 'Coven Observer', short: 'Obs' },
   { name: 'Site Curator', short: 'Cur' },
-  { name: 'Site Admin', short: 'Adm' },
+  { name: 'Site Keeper', short: 'Keep' },
   { name: 'A Developer with Database Access', short: 'Dev' },
 ];

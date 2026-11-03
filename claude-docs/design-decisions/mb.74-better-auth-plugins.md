@@ -27,7 +27,7 @@ The approved plan that produced this record is beside it as
 ## The frame
 
 The site signs in through four OAuth providers and nothing else, and it is
-invite-gated: an account earns nothing until an invitation or an admin grants
+invite-gated: an account earns nothing until an invitation or a keeper grants
 it (DESIGN.md §2, §8). Most of Better Auth's roster exists to secure a
 credential the site holds itself, such as a password or a mailed code, or to
 serve a client that is not a browser. This app has neither. So each plugin has
@@ -104,7 +104,7 @@ not from its documentation.
   redirect URI registered in advance, and a hotfix slug does not exist until
   its PR does (`secrets.md`, "Hotfix previews still can't complete a real
   sign-in with any provider"). That also leaves MB.53's impersonation unusable
-  on a hotfix preview, since an admin has to sign in before they can
+  on a hotfix preview, since a keeper has to sign in before they can
   impersonate anyone.
 - **Passkeys, SSO, API keys and the OIDC provider are separate packages.**
   None ships in `better-auth` itself and none is installed.
@@ -253,7 +253,7 @@ If v2 adds account deletion, it is a service of our own under `withAudit`:
   matched, so no sign-in finds it;
 - hard-delete its `accounts` and `sessions` rows, Better Auth's adapter
   tables, which cascade already;
-- refuse the primary admin (MB.59).
+- refuse the primary keeper (MB.59).
 
 No task is minted: v1 has no deletion story.
 

@@ -1,13 +1,13 @@
 import type { UserRole } from '../../lib/session';
 import type { SelectOption } from '../Field/types';
 
-// The three site roles as every admin surface names them:
+// The three site roles as every keeper surface names them:
 // the role filter's choices, the role column's text and the users page's
 // reading of `?role`, one list so the three cannot drift apart.
 
 /** Each role and its label, in the order the filter offers them. */
 export const ROLE_LABELS: readonly (SelectOption & { value: UserRole })[] = [
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Keeper' },
   { value: 'curator', label: 'Curator' },
   { value: 'user', label: 'User' },
 ];
@@ -22,6 +22,6 @@ export const SITE_ROLE_ACCESS: Record<UserRole, string> = {
   admin: 'Everything a curator can do, plus managing who uses the site and who may create covens.',
 };
 
-/** A role's label: "Admin" for `admin`. */
+/** A role's label: "Keeper" for `admin`. */
 export const roleLabel = (role: UserRole): string =>
   ROLE_LABELS.find(({ value }) => value === role)?.label ?? role;

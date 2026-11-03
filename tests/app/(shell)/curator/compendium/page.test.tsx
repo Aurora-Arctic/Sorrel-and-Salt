@@ -19,7 +19,7 @@ vi.mock('@/lib/request-session', () => ({
 }));
 
 // The plus beside the details' pencil is for covens the viewer may add in, tests/app/plus-covens.test.ts's;
-// an admin in no coven has none, so the details draw neither it nor its check.
+// a keeper in no coven has none, so the details draw neither it nor its check.
 vi.mock('@/lib/viewer', () => ({
   viewerIfSignedIn: async () => undefined,
   covenRolesIfSignedIn: async () => undefined,
@@ -192,7 +192,7 @@ async function readPage(params: Record<string, string | string[]> = {}) {
 
 const lastRequest = (): PageRequest => listCompendium.mock.lastCall?.[1] as PageRequest;
 
-/** The filter the list and its count were last read under, which must agree, without the `listing` every admin read carries or the score every admin row carries. */
+/** The filter the list and its count were last read under, which must agree, without the `listing` every keeper read carries or the score every keeper row carries. */
 function lastFilter(): unknown {
   const listed = (listCompendium.mock.lastCall?.[0] ?? {}) as {
     listing?: string;

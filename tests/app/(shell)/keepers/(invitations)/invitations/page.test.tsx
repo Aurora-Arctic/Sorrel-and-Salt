@@ -83,7 +83,7 @@ describe('the /keepers/invitations page', () => {
     expect(adminRoleChangePauseState).not.toHaveBeenCalled();
   });
 
-  it('lists the pending invitations with what an admin acts on, and never the hash', async () => {
+  it('lists the pending invitations with what a keeper acts on, and never the hash', async () => {
     await renderPage();
 
     expect(listPendingAdminInvitations).toHaveBeenCalledWith(
@@ -96,7 +96,7 @@ describe('the /keepers/invitations page', () => {
       { email: '', expiringSoon: false },
       entry(1).cursor,
     );
-    const section = screen.getByRole('region', { name: 'Admin Invitations' });
+    const section = screen.getByRole('region', { name: 'Keeper Invitations' });
     expect(within(section).getByText('invited@users.test')).toBeInTheDocument();
     expect(within(section).getByText('Curates the resins')).toBeInTheDocument();
     expect(document.body).not.toHaveTextContent(PENDING.tokenHash);
@@ -170,7 +170,7 @@ describe('the /keepers/invitations page', () => {
     expect(screen.getByRole('dialog', { name: 'New Invitation' })).toBeInTheDocument();
   });
 
-  it('locks Invite and Revoke while paused, for an admin who is not the primary one', async () => {
+  it('locks Invite and Revoke while paused, for a keeper who is not the primary one', async () => {
     adminRoleChangePauseState.mockResolvedValue({ paused: true, canToggle: false });
 
     await renderPage({ invite: '' });
@@ -178,7 +178,7 @@ describe('the /keepers/invitations page', () => {
     expect(adminRoleChangePauseState).toHaveBeenCalledWith(ADMIN);
     // Not opened even by the form's address.
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    const section = screen.getByRole('region', { name: 'Admin Invitations' });
+    const section = screen.getByRole('region', { name: 'Keeper Invitations' });
     expect(screen.getByRole('button', { name: 'New Invitation' })).toHaveAttribute(
       'aria-disabled',
       'true',

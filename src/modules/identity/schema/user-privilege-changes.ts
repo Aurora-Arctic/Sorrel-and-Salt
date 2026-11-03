@@ -10,8 +10,8 @@ export const userPrivilege = pgEnum('user_privilege', ['admin', 'create_workspac
 
 export const userPrivilegeChange = pgEnum('user_privilege_change', ['grant', 'revoke']);
 
-// How a change came about: `bootstrap` is the primary admin's promotion by
-// ADMIN_BOOTSTRAP_EMAIL, `admin` an admin's act on `/keepers/users`,
+// How a change came about: `bootstrap` is the primary keeper's promotion by
+// ADMIN_BOOTSTRAP_EMAIL, `admin` a keeper's act on `/keepers/users`,
 // `invitation` an acceptance, `card` a card's, and `manual` a `psql` fix that declared itself.
 export const userPrivilegeRoute = pgEnum('user_privilege_route', [
   'bootstrap',

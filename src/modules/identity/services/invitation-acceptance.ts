@@ -46,7 +46,7 @@ const MESSAGES: Record<InvitationRefusal, string> = {
     'This invitation was sent to a different email address. Sign in with the account that uses that address.',
   unverified:
     "Your email address isn't confirmed yet. Confirm it, then open this link again to accept.",
-  paused: "Admin changes are paused, so this invitation can't be accepted until they are resumed.",
+  paused: "Keeper changes are paused, so this invitation can't be accepted until they are resumed.",
 };
 
 const JOIN_BY_INVITATION = 'You can still join by invitation: ask a coven to invite you.';
@@ -86,7 +86,7 @@ function isWorkspaceTier(invitation: InvitationRow): invitation is WorkspaceInvi
   return invitation.workspaceId !== null && invitation.role !== null;
 }
 
-/** Whether the admin-change pause holds this invitation: while paused, only one the primary admin sent is accepted. */
+/** Whether the admin-change pause holds this invitation: while paused, only one the primary keeper sent is accepted. */
 async function heldByPause(invitation: SiteInvitationRow): Promise<boolean> {
   if (!(await findOpenAdminRoleChangePause(invitation))) return false;
   const inviter = await findOneById(users, invitation.createdBy);

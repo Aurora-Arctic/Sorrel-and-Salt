@@ -73,11 +73,11 @@ const USERS: readonly UserListEntry[] = [
 ];
 
 // Each story sits inside the admin layout's frame and the People page, Users tab
-// open, with the switch on admin changes beside the heading where a story gives it.
+// open, with the switch on keeper changes beside the heading where a story gives it.
 
 // The page as /keepers/users draws it where impersonation is registered: nine columns,
 // facts no control changes muted, Impersonate red in its red-ruled column at the right.
-// Impersonate and Pause Admin Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
+// Impersonate and Pause Keeper Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
 // shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
 const defaultNode = (
   <ShellFrame area="admin">
@@ -91,8 +91,8 @@ const defaultNode = (
   </ShellFrame>
 );
 
-// The same page for the primary admin, the one admin who may pause: the switch
-// is a usable red Pause Admin Changes rather than the dashed, locked resting button.
+// The same page for the primary keeper, the one keeper who may pause: the switch
+// is a usable red Pause Keeper Changes rather than the dashed, locked resting button.
 const primaryAdminNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
@@ -170,8 +170,8 @@ const withoutImpersonationNode = (
   </AdminTabbedFrame>
 );
 
-// The primary admin, labelled with the crown and its tip. Dee is a curator, in bold
-// as an admin is, and Yes under Can Create, as every curator holds it. Change Role
+// The primary keeper, labelled with the crown and its tip. Dee is a curator, in bold
+// as a keeper is, and Yes under Can Create, as every curator holds it. Change Role
 // is the user modal's (UserDetail's stories).
 const adminRolesNode = (
   <AdminTabbedFrame page="people">
@@ -235,8 +235,8 @@ const LISTED_STATES: Record<string, ReactNode> = {
   'No Matches': noMatchesNode,
   'Without Impersonation': withoutImpersonationNode,
   'Admin Roles': adminRolesNode,
-  'Admin Changes Paused': adminChangesPausedNode,
-  'Admin Changes Not Primary': adminChangesNotPrimaryNode,
+  'Keeper Changes Paused': adminChangesPausedNode,
+  'Keeper Changes Not Primary': adminChangesNotPrimaryNode,
 };
 
 export const States: Story = {

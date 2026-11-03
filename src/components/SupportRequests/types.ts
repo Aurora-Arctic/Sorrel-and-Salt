@@ -11,7 +11,7 @@ export interface SupportPerson {
   name: string;
 }
 
-/** The account that sent a request: named, with the address an admin replies to; a curator is given none. */
+/** The account that sent a request: named, with the address a keeper replies to; a curator is given none. */
 export interface SupportSender extends SupportPerson {
   email: string | null;
 }
@@ -64,13 +64,13 @@ export interface SupportTimeoutEntry {
   liftedAt: Date | null;
   /** When it was set. */
   createdAt: Date;
-  /** The admin who set it; null if no live account holds the id. */
+  /** The keeper who set it; null if no live account holds the id. */
   setBy: SupportPerson | null;
-  /** The admin who lifted it; null while it stands, or if no live account holds the id. */
+  /** The keeper who lifted it; null while it stands, or if no live account holds the id. */
   liftedBy: SupportPerson | null;
 }
 
-/** A request opened to its message, replies and, for an admin, the sender's time-outs. */
+/** A request opened to its message, replies and, for a keeper, the sender's time-outs. */
 export interface SupportRequestDetailEntry extends SupportRequestEntry {
   message: string;
   path: string | null;
@@ -113,7 +113,7 @@ export interface SupportRequestsProps extends Partial<PagerHrefs<Route>> {
   position?: PagePosition;
   /** The request `?request=` opens; none when the address names none. */
   opened?: SupportRequestDetailEntry;
-  /** The curators and admins a request may be assigned to. */
+  /** The curators and keepers a request may be assigned to. */
   assignees?: SupportPerson[];
 }
 

@@ -5,7 +5,7 @@ import { writeSiteRoleGrant } from './user-role';
 import type { Session } from '../../../lib/session';
 import type { PrimaryAdminOutcome, SignInProfile } from '../types';
 
-// The primary admin is promoted at sign-in, by a provider that vouches for the
+// The primary keeper is promoted at sign-in, by a provider that vouches for the
 // address, or at first-party verification, by our own mail:
 // claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin",
 // and claude-docs/auth/admin-bootstrap.md, "Admin bootstrap".
@@ -59,8 +59,8 @@ export async function promotePrimaryAdminAtVerification(
   return 'promoted';
 }
 
-// The primary admin's role write. A grant sets the creation flag in the same
-// write, since the users CHECK refuses an admin without it, and the
+// The primary keeper's role write. A grant sets the creation flag in the same
+// write, since the users CHECK refuses a keeper without it, and the
 // trigger on `users` records both, by the route declared here.
 async function grantAdmin(session: Session): Promise<void> {
   await withAudit(session, (write) => writeSiteRoleGrant(write, session.userId, 'admin'), {

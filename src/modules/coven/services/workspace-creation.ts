@@ -12,7 +12,7 @@ import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRow } from '../types';
 
 // A signed-in user with the right makes a workspace and is its owner.
-// The right is `users.can_create_workspace` and nothing else — every admin
+// The right is `users.can_create_workspace` and nothing else — every keeper
 // holds it, so `role` is never read. DESIGN.md §9 and
 // claude-docs/auth/admin-users.md, "Approving workspace creation".
 

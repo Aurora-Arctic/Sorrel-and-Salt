@@ -99,7 +99,7 @@ const UserDetail = ({
             <Answer value={user.canCreateWorkspace}>
               {user.canCreateWorkspace ? 'Yes' : 'No'}
             </Answer>
-            {/* None for an admin or a curator, whom the users CHECK holds to the flag. */}
+            {/* None for a keeper or a curator, whom the users CHECK holds to the flag. */}
             {user.role === 'user' && (
               <CreationControl
                 key={user.canCreateWorkspace ? 'revoke' : 'approve'}
@@ -149,7 +149,7 @@ const UserDetail = ({
         <ul className="user-detail__covens" aria-labelledby="user-detail-covens">
           {ordered(memberships).map((coven) => (
             <li key={coven.workspaceId}>
-              {/* Text, never a link: an admin is no member of these covens,
+              {/* Text, never a link: a keeper is no member of these covens,
                   so `/coven/[slug]` would answer them 404. */}
               <span className="user-detail__coven-name">{coven.name}</span>
               <span className="user-detail__coven-meta">

@@ -17,7 +17,7 @@ export function parseOptionalPauseMessage(message: string | null | undefined): s
 }
 
 /**
- * The message an admin writes to a user they time out or pause on the site: trimmed, and required.
+ * The message a keeper writes to a user they time out or pause on the site: trimmed, and required.
  *
  * @throws {ValidationError} on `['message']` when it is missing, blank or over 500 characters.
  */

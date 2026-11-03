@@ -98,7 +98,7 @@ Sources are numbered notes in section 6. A decision with no note has "no externa
 
 **D41. Impersonate.** Made plain first (4689e3ea1), then the owner chose red again and the change was reverted (064c7aba3). Built: the rule gained a high-risk clause (section 3). Source: [8].
 
-**D42. Pause Admin Changes.** Owner: stays red. Not built. Source: [8].
+**D42. Pause Keeper Changes.** Owner: stays red. Not built. Source: [8].
 
 ### Rule-driven changes (no owner question)
 
@@ -118,7 +118,7 @@ These followed from rules already in force.
 
 ## 3. Rules changed
 
-- **Destructive controls.** `.claude/rules/components.md`, section "Destructive controls": Delete and Remove live in the edit dialog, not on a card (a lone bin is the carve-out); a row's Remove or Revoke is drawn plain (`btn btn--quiet btn--small`) and the red belongs to the confirm; red also marks a high-risk control that destroys nothing, and only two exist: Impersonate (row, user modal, confirm) and Pause Admin Changes (Pause, Resume, confirm). The same clause is in `claude-docs/styling.md`. The `CovenSwitchTargets` story exemption is in the same file.
+- **Destructive controls.** `.claude/rules/components.md`, section "Destructive controls": Delete and Remove live in the edit dialog, not on a card (a lone bin is the carve-out); a row's Remove or Revoke is drawn plain (`btn btn--quiet btn--small`) and the red belongs to the confirm; red also marks a high-risk control that destroys nothing, and only two exist: Impersonate (row, user modal, confirm) and Pause Keeper Changes (Pause, Resume, confirm). The same clause is in `claude-docs/styling.md`. The `CovenSwitchTargets` story exemption is in the same file.
 - **Page heads.** `claude-docs/styling.md`, "A page head is a PageHeader, always", and `claude-docs/components/page-header.md`. The guard is `tests/guards/page-heads.test.ts`; its one named exemption is the hidden "Loading" heading in `SectionBody/index.tsx` and `AppShell/main-body.tsx`.
 - **Stylelint.** `.stylelintrc.json` gained `declaration-property-value-allowed-list` (font-family, font, font-size, z-index) and `declaration-property-value-disallowed-list` (number-first colour functions). `_variables.scss` is cleared. Docs: `claude-docs/styling.md` and `claude-docs/commands.md`.
 - **knip in CI.** `.github/workflows/checks.yml` has an `unused` leg, labelled "Unused Code (Non-Blocking)", that comments on the PR (`pr-comment`, minimize mode) and uses `continue-on-error`. `checks / unused` must never be a required check. Docs: `claude-docs/commands.md` and `claude-docs/ci/reusable-checks.md`. The lint filter in `pr-gate.yml` now includes `knip.json`.

@@ -18,7 +18,7 @@ const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The body of the modal over `/keepers/users`: render-only, so the page
-// owns the read and this owns what an admin sees of it
+// owns the read and this owns what a keeper sees of it
 // (claude-docs/components/user-detail.md).
 
 beforeEach(() => {
@@ -136,13 +136,13 @@ describe('UserDetail', () => {
     expect(screen.queryAllByText('Google')).toHaveLength(0);
   });
 
-  it('marks the primary admin, and no one else', () => {
+  it('marks the primary keeper, and no one else', () => {
     const { unmount } = renderDetail({ user: { ...ADA, primaryAdmin: true } });
-    expect(screen.getByRole('button', { name: 'Primary Admin' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Primary Keeper' })).toBeInTheDocument();
     unmount();
 
     renderDetail({ user: ADA });
-    expect(screen.queryByRole('button', { name: 'Primary Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Primary Keeper' })).not.toBeInTheDocument();
   });
 
   it('states whether the address is verified and whether they may create covens', () => {
@@ -158,7 +158,7 @@ describe('UserDetail', () => {
     expect(screen.getByText('No')).toBeInTheDocument();
   });
 
-  it('offers Change Role and Approve beside the facts they change, and no creation control on an admin or a curator', () => {
+  it('offers Change Role and Approve beside the facts they change, and no creation control on a keeper or a curator', () => {
     const { unmount } = renderDetail();
     expect(screen.getByRole('button', { name: 'Change Role for Bo Fixturewort' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
@@ -231,7 +231,7 @@ describe('UserDetail', () => {
     expect(calls).toEqual([{ userId: BO.id, note: 'Left the circle' }]);
   });
 
-  it('locks Revoke while admin changes are paused for this admin, saying why', () => {
+  it('locks Revoke while keeper changes are paused for this keeper, saying why', () => {
     renderDetail({ user: { ...BO, canCreateWorkspace: true }, changesPaused: true });
 
     const revoke = screen.getByRole('button', { name: 'Revoke approval for Bo Fixturewort' });
@@ -239,7 +239,7 @@ describe('UserDetail', () => {
     expect(revoke).toHaveAccessibleDescription(/\S/);
   });
 
-  it('locks both controls while admin changes are paused for this admin', () => {
+  it('locks both controls while keeper changes are paused for this admin', () => {
     renderDetail({ changesPaused: true });
 
     for (const name of ['Change Role for Bo Fixturewort', 'Approve Bo Fixturewort'])
@@ -265,7 +265,7 @@ describe('UserDetail', () => {
     );
   });
 
-  it('names a coven in text, never a link: an admin is no member of it', () => {
+  it('names a coven in text, never a link: a keeper is no member of it', () => {
     renderDetail();
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
@@ -286,7 +286,7 @@ describe('UserDetail', () => {
     expect(screen.getByRole('button', { name: 'Impersonate Cy Fixturewort' })).toBeEnabled();
   });
 
-  it('offers no Impersonate on an admin, or where it is not registered', () => {
+  it('offers no Impersonate on a keeper, or where it is not registered', () => {
     const { unmount } = renderDetail({ user: ADA, canImpersonate: true });
     expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
     unmount();

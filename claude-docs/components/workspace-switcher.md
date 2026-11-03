@@ -163,7 +163,7 @@ keyboard, and the Create Coven choice: shown only with `canCreate`, going
 to the create page from a click or the keyboard; `tests/lib/coven-path.test.ts` the two path helpers;
 `tests/components/CovenSwitchTargets/index.test.tsx` the registration and its
 clearing; `tests/modules/ingredients/services/covens-opening-entry.test.ts` which
-covens an entry opens in (live, retired, own, by direct id, an admin);
+covens an entry opens in (live, retired, own, by direct id, a keeper);
 `tests/e2e/coven-switcher.spec.ts` the walk through the real layout. Axe is asserted
 in Playwright once a `/coven` page renders the switcher (M6.10, MB.7).
 

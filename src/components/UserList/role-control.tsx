@@ -14,7 +14,7 @@ import { unverifiedWarning } from './warning';
 import type { RoleControlProps } from './types';
 
 // The user modal's Change Role (one control for every role, curator included): it asks which role the
-// user moves to, with an optional ledger reason. The primary admin's, and every one while admin
+// user moves to, with an optional ledger reason. The primary keeper's, and every one while admin
 // changes are paused, stays in view but locked, its reason in a tip
 // (claude-docs/components/user-list.md).
 

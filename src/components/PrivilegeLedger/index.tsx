@@ -33,7 +33,7 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
 
 /**
  * The empty ledger, naming the filters in use as every admin list does: "No privilege changes
- * match “ada” and the privilege Admin. Change or clear the filter to see more."
+ * match “ada” and the privilege Keeper. Change or clear the filter to see more."
  */
 function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
   const filters = [

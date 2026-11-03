@@ -532,7 +532,7 @@ describe('the compendium tier, under the Curator proof', () => {
       // @ts-expect-error — a Curator is assertCurator's alone; an object literal is not one.
       write.softDeleteByIdInCompendium({ userId: session.userId }, tinctures, workspaceId);
 
-    // The people page's writes stay the admin's: a curator's proof is refused there.
+    // The people page's writes stay the keeper's: a curator's proof is refused there.
     const curator = assertCurator({ ...session, role: 'curator' });
     const aCuratorLocksAdmins = (write: AuditWriter) =>
       // @ts-expect-error — lockLiveAdmins takes a SiteAdmin, and a Curator is not one.

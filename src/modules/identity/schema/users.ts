@@ -26,7 +26,7 @@ export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencin
 // keeps for a saved snapshot (claude-docs/db/grimoire.md, "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
 export const revisionColumn = () => integer('revision').notNull().default(1);
 
-// Admins curate the global vocabularies and manage the people page; curators
+// Keepers curate the global vocabularies and manage the people page; curators
 // curate the same vocabularies and reach no people page. A closed set
 // of site roles, so a column is enough.
 export const userRole = pgEnum('user_role', ['user', 'curator', 'admin']);

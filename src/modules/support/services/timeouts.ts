@@ -11,7 +11,7 @@ import { supportTimeouts } from '../schema/support-timeouts';
 import type { SupportTimeoutRow, TimeoutNotifier } from '../types';
 import { mailTimedOutSender } from './timeout-start';
 
-const REFUSAL = 'Only a site admin may time out or restore a support sender';
+const REFUSAL = 'Only a site keeper may time out or restore a support sender';
 const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
 const NOTE_MAX_LENGTH = 500;
 const PAST_END = 'Choose a time in the future';
@@ -23,7 +23,7 @@ const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
  * gives. Their earlier requests stay, and staff may still reply to them. Each refusal's sentence is also the error's message,
  * which is what the panel shows. The user is mailed, with `message` if one is written, once the time-out is saved.
  *
- * @throws {Forbidden} the session is not an admin, or the user is the System account or the signed-out sender account, which are
+ * @throws {Forbidden} the session is not a keeper, or the user is the System account or the signed-out sender account, which are
  * not people.
  * @throws {NotFound} no live user has this id.
  * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, or the message is missing, blank or over 500.
@@ -73,7 +73,7 @@ export async function timeOutSupportSender(
 /**
  * Ends a time-out now. Lifting one already lifted leaves it as it was.
  *
- * @throws {Forbidden} the session is not an admin.
+ * @throws {Forbidden} the session is not a keeper.
  * @throws {NotFound} no time-out has this id.
  */
 export async function liftSupportTimeout(session: Session, id: string): Promise<SupportTimeoutRow> {

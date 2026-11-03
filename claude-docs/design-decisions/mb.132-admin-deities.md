@@ -43,7 +43,7 @@ Weighed:
 ## A deity's slug is its name and its tradition's
 
 The seed slugged a deity by its name alone, and the slug index is global, so
-an admin could not add a Roman Hecate beside the Greek one — yet
+a keeper could not add a Roman Hecate beside the Greek one — yet
 `deities.ts` says one god honoured under two traditions is two rows, and
 MB.167's example is exactly those two Hecates. M5.6a met the same gap for
 forms, two "Wax" rows, and made a form's slug its name and its group's.

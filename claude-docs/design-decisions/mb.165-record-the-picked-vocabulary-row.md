@@ -24,7 +24,7 @@ member writes is text" gains its link rather than losing its text.
 
 - _Why not replace the text with a key:_ the reason `form` is text still
   holds. A key would put identity on an id and make an unlisted value
-  unwritable until an admin curates it.
+  unwritable until a keeper curates it.
 - _Why not leave the text alone:_ the autofill already tells the two rows
   apart, and the save threw that away. A name shared by two curated rows is
   the case the vocabularies allow on purpose, so the text alone can never
@@ -61,7 +61,7 @@ meant.
 **A link to a soft-deleted row reads as its text.** The repository drops the
 row, so the form reads as no pick and the deity as a typed name, and the value
 moves into the in-use bucket, as §5 already says a soft-deleted vocabulary row's
-value does. Nothing rewrites the ingredient, so an admin's delete still
+value does. Nothing rewrites the ingredient, so a keeper's delete still
 reaches no coven's rows (M6.6).
 
 **The indexes**, all partial on live rows:

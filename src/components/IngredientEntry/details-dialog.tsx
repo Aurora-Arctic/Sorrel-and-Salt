@@ -82,7 +82,7 @@ export function headingOf({
   };
 }
 
-/** The compendium card's Edit: Edit in Compendium on the public list, plain Edit on the admin's. */
+/** The compendium card's Edit: Edit in Compendium on the public list, plain Edit on the keeper's. */
 const EditAction = ({
   inCompendium,
   ...link

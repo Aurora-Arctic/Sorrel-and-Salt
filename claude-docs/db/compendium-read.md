@@ -215,7 +215,7 @@ precision`, and while the keyset casts its sort back to `real`, the score
   How a form's delete finds the entries holding it (M5.6a). The repository's
   filter alone: the public `compendium` query takes no such argument.
 - **`nomenclature`** (M5.5) is equality on the column, so `unknown` lists the
-  formal names still to look up: the admin's to-do list beside
+  formal names still to look up: the keeper's to-do list beside
   `withoutReferences`' (["References"](references.md)).
 - **`celestialBodies`** and **`zodiacSigns`** match an entry whose own list
   holds any of the values given, compared entry by entry under the
@@ -263,7 +263,7 @@ compendium read and is the same for every viewer (CLAUDE.md, rule 6). The review
 every finder over `ingredients` selects `readColumns(ingredients)` from
 `src/db/repository/unread-columns.ts`, which leaves out `curator_reviewed_by`, and the row types
 leave it out too (`UnreadIngredientColumn`). The mutation `setCompendiumEntryReviewed` calls
-`expireCompendium()`, so a change shows at once. The admin's switch reads the mark with
+`expireCompendium()`, so a change shows at once. The keeper's switch reads the mark with
 **`findCompendiumReview(curator, id)`** through `readCompendiumReview(session, id)`, which throws
 `Forbidden` for anyone who does not curate. The Reviewed filter and its counts stay curator-only.
 
@@ -659,7 +659,7 @@ the facets, so they cannot disagree.
   `curator_reviewed_by` is. `findCompendiumReview` returns that time as epoch
   milliseconds, as a column inside an aggregate loses Drizzle's date mapping and
   a `Date` holds no finer anyway.
-- `citesNowhere` is the admin's to-do list: an entry whose only source is on its
+- `citesNowhere` is the keeper's to-do list: an entry whose only source is on its
   oil is sourced (the union rule), so it is not on the list. `hasNoForm` lists
   entries nobody can stock or put in a spell yet; a soft-deleted variant is none,
   through `existsIn`.
@@ -670,7 +670,7 @@ the facets, so they cannot disagree.
 
 The admin list also shows the score. `filter.withSourcingScore` makes `findCompendiumPage` select `sourcingScoreExpression` beside each row, in the same query, and hand it back on the row's edge as `sourcingScore`; without it no score is computed.
 
-The score sort and the carried score are a curator's: `compendiumFilterFor` refuses either with `Forbidden` for a signed-out request or anyone not a curator or admin, as it does the Reviewed filter, because the cache is keyed by the parsed filter. The name sort is open to anyone. `tests/db/repository/sourcing-score.test.ts` lists eight fixture entries under the sort and checks the order and each row's sort key against the pure function, checks each direction is the reverse of the other, pages two rows at a time across a boundary forwards and backwards in each of the four orders, checks the carried score equals `readSourcingScore`, and checks a practitioner, an observer, a non-member and a signed-out read are refused the score where the unguarded repository call returns it.
+The score sort and the carried score are a curator's: `compendiumFilterFor` refuses either with `Forbidden` for a signed-out request or anyone not a curator or keeper, as it does the Reviewed filter, because the cache is keyed by the parsed filter. The name sort is open to anyone. `tests/db/repository/sourcing-score.test.ts` lists eight fixture entries under the sort and checks the order and each row's sort key against the pure function, checks each direction is the reverse of the other, pages two rows at a time across a boundary forwards and backwards in each of the four orders, checks the carried score equals `readSourcingScore`, and checks a practitioner, an observer, a non-member and a signed-out read are refused the score where the unguarded repository call returns it.
 
 ## Hidden entries (M14.35)
 
