@@ -5219,7 +5219,9 @@ _Acceptance criteria:_
 
 **MB.175 — Help and FAQ articles** · 1h
 
-_Story:_ As a visitor or a member, I want an FAQ and help articles on how the site works, so that I can find my way without asking someone.
+_Story:_ As a visitor or a member, I want an FAQ, help articles and a glossary of the site's terms on how the site works, so that I can find my way and know what a word means without asking someone.
+
+**Amended 2026-11-03, the owner's call:** the help articles gain a glossary. A glossary entry is a third `kind` of help article, `term`: one row per term, its `title` the term and its `body` a short Markdown definition, so an admin adds or edits a term as they would an article. `/help/glossary` lists every term from A to Z, each with an anchor from its `slug`, so a page or an article can link to one term (`/help/glossary#steward`). `position` is not used for a term. The slug `glossary` is reserved, so no article can take that address. The `help` seed ships the site's own terms, each defined the way `CLAUDE.md`'s Vocabulary and domain invariants use it: at least Compendium, Ingredients, Grimoire, Coven, Steward, Practitioner and Observer (M15.79), Curator, Spell, Working, Variant and Form.
 
 Minted during MB.154 on the owner's request. **v1 scope, the owner's decision of 2026-11-03 (it was first marked post-launch), in its current place in Wave 15.** The shape was decided at minting so the build is transcription, recorded in DESIGN.md §10 ("Help and FAQ articles"): the articles are rows an admin edits, not files in the repo, so one changes without a deploy — a `help_articles` table (`id`, `kind` of `faq` or `article`, `title`, `slug` from `slugify`, `summary`, `body` as Markdown, `position` for the FAQ's order, `seedKey`, + audit; `slug` unique among live rows on a partial index), written under `assertSiteAdmin` alone through `withAudit`, read by a finder taking no session and cached under a tag of its own, as the compendium is; `/admin/help` on M5.6a's page shape with a body field and a preview; `/help`, the FAQ and the article index, and `/help/[slug]`, an article rendered through the standard sanitising Markdown renderer, both public and indexable on MB.83's frame with its signed-in island, in `PUBLIC_ROUTES` and the sitemap as MB.84 has them, linked from `Welcome`, the public frame, `AppShell` and M11.10's 404; the articles themselves shipped as a `help` seed target keyed on `seed_key` (MB.171), in `migrate.yml`'s step and `deploy.yml`'s paths; and a story, numbered next free when it runs (MB.176 took 65), with its acceptance file. Two CLAUDE.md lines widen for it, each an architecture decision to record rather than route around: "Admins curate the compendium … and nothing else" gains the help articles, and "The compendium is the one public surface" gains `/help`, which carries no workspace data. Whether a sixth module `help` owns the table, or `identity` does, is decided then (claude-docs/modules.md, "Adding a module"). This task is the scoping record and the minting: the build follows as five PRs, one per task — the table, the services and GraphQL, the admin page, the public pages, the seed — under the table-then-behaviour rule.
 
@@ -5227,7 +5229,8 @@ _Acceptance criteria:_
 
 - The model is recorded in DESIGN.md §5, §7, §9 and §10, and in a `design-decisions/mb.175-help-articles.md` weighing rows against files in the repo, with the two invariants it widens
 - CLAUDE.md's two lines are amended in the same PR; the out-of-scope list already no longer names it (the owner's decision of 2026-11-03)
-- The five build tasks are minted with estimates, placed after this one, and each names its prerequisite
+- The glossary is recorded in the same places: the `term` kind, the A-to-Z `/help/glossary` page with an anchor per term, the reserved `glossary` slug, and the seeded list of terms
+- The five build tasks are minted with estimates, placed after this one, and each names its prerequisite; the public-pages task builds `/help/glossary` and the seed task ships the terms
 - Nothing is built in this task
 
 **MB.176 — ~~Bug reports~~** · **RETIRED 2026-10-31, not done**
