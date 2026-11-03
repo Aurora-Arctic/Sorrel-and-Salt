@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { WARM_IMPORT_TIMEOUT } from '../../../support/warm-import';
 
 const ENDPOINT = 'https://sorrelandsalt.com/api/graphql';
 const written = vi.hoisted(() => ({ count: 0 }));
@@ -36,7 +37,7 @@ let GET: (typeof import('@/app/api/graphql/route'))['GET'];
 beforeAll(async () => {
   vi.stubEnv('NODE_ENV', 'production');
   ({ POST, GET } = await import('@/app/api/graphql/route'));
-});
+}, WARM_IMPORT_TIMEOUT);
 afterAll(() => vi.unstubAllEnvs());
 beforeEach(() => {
   written.count = 0;
