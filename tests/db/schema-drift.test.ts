@@ -55,7 +55,7 @@ const PENDING_DROPS: readonly {
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table' | 'view';
   name: string;
   droppedBy: string;
-}[] = [{ table: 'users', kind: 'column', name: 'terms_version', droppedBy: 'M15.72' }];
+}[] = [];
 
 const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) =>
   new Set(
