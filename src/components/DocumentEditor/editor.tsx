@@ -9,6 +9,7 @@ import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { editorPlugins } from './elements';
+import Toolbar from './toolbar';
 import { editorValueToMarkdown, markdownToEditorValue } from './markdown';
 import type { DocumentEditorProps } from './types';
 import '../DocumentPage/index.scss';
@@ -154,6 +155,7 @@ const DocumentEditor = ({
       {published !== undefined && <Notice kind="success">Published as version {published}.</Notice>}
       <div className="document-page__body document-editor__text">
         <Plate editor={editor} onValueChange={() => setDirty(true)}>
+          <Toolbar />
           <PlateContent aria-label="Document Text" />
         </Plate>
       </div>

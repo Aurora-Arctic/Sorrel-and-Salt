@@ -37,3 +37,12 @@
     @include focus-ring;
   }
 }
+
+// The row of formatting buttons above the text box, as wide as the box.
+.document-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1);
+  max-width: calc(#{$measure} + #{space(3)} * 2 + 2px);
+  margin-block-end: space(2);
+}
