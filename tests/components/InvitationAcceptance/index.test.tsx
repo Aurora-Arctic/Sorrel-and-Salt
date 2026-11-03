@@ -130,14 +130,14 @@ describe('InvitationAcceptance', () => {
         token="abc"
         tier="site"
         siteRole="admin"
-        landing="/admin"
+        landing="/keepers"
       />,
     );
     const button = accept();
 
     fireEvent.click(button);
 
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/admin'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/keepers'));
     expect(calls).toEqual([{ token: 'abc' }]);
     // Off with `aria-disabled` rather than `disabled`, so the focus stays on it.
     expect(button).toHaveAttribute('aria-disabled', 'true');
@@ -154,7 +154,7 @@ describe('InvitationAcceptance', () => {
         token="abc"
         tier="site"
         siteRole="curator"
-        landing="/admin"
+        landing="/keepers"
       />,
     );
 
@@ -186,7 +186,7 @@ describe('InvitationAcceptance', () => {
         token="abc"
         tier="site"
         siteRole="admin"
-        landing="/admin"
+        landing="/keepers"
       />,
     );
     const button = accept();
@@ -218,7 +218,7 @@ describe('InvitationAcceptance', () => {
         token="abc"
         tier="site"
         siteRole="admin"
-        landing="/admin"
+        landing="/keepers"
       />,
     );
     const button = accept();
@@ -243,7 +243,7 @@ describe('InvitationAcceptance', () => {
       ).toBeNull(),
     );
     expect(button).not.toHaveAccessibleDescription();
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/admin'));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/keepers'));
   });
 });
 

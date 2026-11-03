@@ -753,7 +753,7 @@ describe('IngredientEntry back link', () => {
     const compendiumBack = {
       href: '/compendium' as Route,
       label: 'Compendium',
-      also: [{ path: '/admin/compendium', label: 'Admin Compendium' }],
+      also: [{ path: '/curator/compendium', label: 'Curator Compendium' }],
     };
     const backLink = (name: string) => screen.getByRole('link', { name });
     afterEach(() => {
@@ -762,17 +762,17 @@ describe('IngredientEntry back link', () => {
 
     // Regression: an entry opened from the admin compendium list went back to the public compendium.
     it('returns to the admin compendium list it was opened from, with its query, under its name', () => {
-      history('/admin/compendium?query=wax&status=hidden');
+      history('/curator/compendium?query=wax&status=hidden');
       renderEntry({ back: compendiumBack });
-      expect(backLink('Back to Admin Compendium')).toHaveAttribute(
+      expect(backLink('Back to Curator Compendium')).toHaveAttribute(
         'href',
-        '/admin/compendium?query=wax&status=hidden',
+        '/curator/compendium?query=wax&status=hidden',
       );
       expect(screen.queryByRole('link', { name: 'Back to Compendium' })).toBeNull();
     });
 
     it('draws the public compendium on the server, before the history is read', () => {
-      history('/admin/compendium?query=wax&status=hidden');
+      history('/curator/compendium?query=wax&status=hidden');
       const page = document.createElement('div');
       page.innerHTML = renderToString(
         <IngredientEntry detail={detail()} hrefOf={hrefOf} back={compendiumBack} />,
@@ -796,7 +796,7 @@ describe('IngredientEntry back link', () => {
     });
 
     it('returns to the bare public compendium from a page that is neither list', () => {
-      history('/admin/users?query=wax');
+      history('/keepers/users?query=wax');
       renderEntry({ back: compendiumBack });
       expect(backLink('Back to Compendium')).toHaveAttribute('href', '/compendium');
     });

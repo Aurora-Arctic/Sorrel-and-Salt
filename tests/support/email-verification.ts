@@ -1,4 +1,5 @@
 import type { MemberPauseNotifier } from '@/modules/coven';
+import type { DocumentMailingNotifier } from '@/modules/documents';
 import type {
   AccessPauseNotifier,
   EmailVerificationSender,
@@ -36,6 +37,11 @@ export const noSupportNotifier: SupportNotifier = {
 
 /** For a test that sets a time-out or pause and does not look at the mail: it gives the origin a pause mail's run carries. */
 export const noPauseNotifier: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier = {
+  origin: async () => 'http://localhost:3000',
+};
+
+/** The origin a document mailing’s links are built on, for a test that starts no real run. */
+export const noDocumentMailingNotifier: DocumentMailingNotifier = {
   origin: async () => 'http://localhost:3000',
 };
 

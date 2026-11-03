@@ -25,7 +25,7 @@ test('the views are links that open each view, and every view is accessible', as
     await sql.end();
   }
 
-  await page.goto('/admin/support');
+  await page.goto('/keepers/support');
   const views = page.getByRole('navigation', { name: 'Support', exact: true }).getByRole('link');
   await expect(views).toHaveCount(6);
   await expect(views.first()).toHaveAttribute('aria-current', 'page');
@@ -42,6 +42,6 @@ test('the views are links that open each view, and every view is accessible', as
     await assertNoAccessibilityViolations(page);
   }
   await views.first().click();
-  await expect(page).toHaveURL(/\/admin\/support$/);
+  await expect(page).toHaveURL(/\/keepers\/support$/);
   await expect(page.getByRole('main')).toContainText('Wobbling Cauldron');
 });

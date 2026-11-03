@@ -8,7 +8,7 @@ import type {
   PagerHrefs,
 } from './types';
 
-// The address of a list page under its filter, at a cursor, with a modal open or not (`/admin/users?query=wort&awaiting`). Joined by hand,
+// The address of a list page under its filter, at a cursor, with a modal open or not (`/keepers/users?query=wort&awaiting`). Joined by hand,
 // not through `URLSearchParams`, which would write a bare flag such as `new` as `new=`; each name and value is still encoded by it.
 
 const pair = (name: string, value: string) => new URLSearchParams({ [name]: value }).toString();

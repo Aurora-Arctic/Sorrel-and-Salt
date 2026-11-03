@@ -8,4 +8,6 @@
 
 **M17.4 follows M17.3**, minted on 2026-11-02 on the owner's call: hourly cron jobs for the unverified-account expiry and the address-change lapse, which replace two runs that sleep. Its trigger is the move to Vercel Pro, since Hobby runs a cron job at most once a day; it needs M15.68.
 
+**M17.5 scopes a better editing experience for ingredients and spells**, minted on 2026-11-02 on the owner's call while M15.59 scoped the editor for the site's documents ([`tasks/m17.md`](../tasks/m17.md)). It depends on M15.71, whose editor it may reuse for the free-text fields, and is a prerequisite for nothing yet.
+
 **MB.163, MB.175 and MB.78 stay on Wave 15**, unscheduled by design and trigger-based, until the owner moves them: they were minted before this wave existed and nothing about them changed.

@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { NEW, spellValue } from '@/components/AppShell/add-href';
 import { covenSlugOf } from '@/lib/coven-path';
-import AddAction from '@/app/(shell)/admin/add-action';
+import AddAction from '@/app/(shell)/curator/add-action';
 import { newSpellHeading } from '@/components/SpellBuilder/spell-dialog';
 import type { NewSpellActionProps } from './types';
 

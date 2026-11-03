@@ -13,11 +13,11 @@ describe('the categoryMode parameter', () => {
   });
 
   it('writes any into the address and all as nothing', () => {
-    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { categoryMode: 'any' })).toBe(
-      '/admin/compendium?categoryMode=any',
+    expect(COMPENDIUM_PARAMS.href('/curator/compendium', { categoryMode: 'any' })).toBe(
+      '/curator/compendium?categoryMode=any',
     );
-    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { categoryMode: 'all' })).toBe(
-      '/admin/compendium',
+    expect(COMPENDIUM_PARAMS.href('/curator/compendium', { categoryMode: 'all' })).toBe(
+      '/curator/compendium',
     );
   });
 
@@ -28,7 +28,7 @@ describe('the categoryMode parameter', () => {
   });
 });
 
-const PATH = '/admin/compendium';
+const PATH = '/curator/compendium';
 const entries = COMPENDIUM_PARAMS.entries;
 
 describe('the forms parameter', () => {
@@ -44,7 +44,7 @@ describe('the forms parameter', () => {
 
   it('round-trips through the address as repeated parameters', () => {
     const href = COMPENDIUM_PARAMS.href(PATH, { forms: ['Oil', 'Tincture'] });
-    expect(href).toBe('/admin/compendium?forms=Oil&forms=Tincture');
+    expect(href).toBe('/curator/compendium?forms=Oil&forms=Tincture');
     const params = new URL(href, 'http://x').searchParams;
     expect(COMPENDIUM_PARAMS.read({ forms: params.getAll('forms') }).forms).toEqual([
       'Oil',
@@ -79,7 +79,7 @@ describe('the deities parameter', () => {
 
   it('writes slugs, never ids', () => {
     expect(COMPENDIUM_PARAMS.href(PATH, { deities: ['hecate-greek', 'hecate-roman'] })).toBe(
-      '/admin/compendium?deities=hecate-greek&deities=hecate-roman',
+      '/curator/compendium?deities=hecate-greek&deities=hecate-roman',
     );
   });
 
@@ -143,9 +143,9 @@ describe('the toxic parameter', () => {
 
   it('writes the setting into the address and no filter as nothing', () => {
     expect(COMPENDIUM_PARAMS.href(PATH, { toxic: 'not_toxic' })).toBe(
-      '/admin/compendium?toxic=not_toxic',
+      '/curator/compendium?toxic=not_toxic',
     );
-    expect(COMPENDIUM_PARAMS.href(PATH, { toxic: '' })).toBe('/admin/compendium');
+    expect(COMPENDIUM_PARAMS.href(PATH, { toxic: '' })).toBe('/curator/compendium');
   });
 
   it('is the toxic variable, absent for no filter', () => {
@@ -161,11 +161,11 @@ describe('the No Form parameter', () => {
     expect(COMPENDIUM_PARAMS.read({ withoutForms: '1' }).withoutForms).toBe(true);
     expect(COMPENDIUM_PARAMS.read({ withoutForms: 'true' }).withoutForms).toBe(false);
     expect(COMPENDIUM_PARAMS.read({}).withoutForms).toBe(false);
-    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { withoutForms: true })).toBe(
-      '/admin/compendium?withoutForms=1',
+    expect(COMPENDIUM_PARAMS.href('/curator/compendium', { withoutForms: true })).toBe(
+      '/curator/compendium?withoutForms=1',
     );
-    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { withoutForms: false })).toBe(
-      '/admin/compendium',
+    expect(COMPENDIUM_PARAMS.href('/curator/compendium', { withoutForms: false })).toBe(
+      '/curator/compendium',
     );
   });
 
@@ -181,11 +181,11 @@ describe('the Hidden parameter', () => {
   it('reads 1 as on and anything else as off, and writes only the on', () => {
     expect(COMPENDIUM_PARAMS.read({ hidden: '1' }).hidden).toBe(true);
     expect(COMPENDIUM_PARAMS.read({ hidden: 'true' }).hidden).toBe(false);
-    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { hidden: true })).toBe(
-      '/admin/compendium?hidden=1',
+    expect(COMPENDIUM_PARAMS.href('/curator/compendium', { hidden: true })).toBe(
+      '/curator/compendium?hidden=1',
     );
-    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { hidden: false })).toBe(
-      '/admin/compendium',
+    expect(COMPENDIUM_PARAMS.href('/curator/compendium', { hidden: false })).toBe(
+      '/curator/compendium',
     );
   });
 
@@ -214,12 +214,12 @@ describe('the Reviewed parameter', () => {
       expect(COMPENDIUM_PARAMS.read(query).reviewed).toBe(setting);
     }
     expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: 'reviewed' })).toBe(
-      '/admin/compendium?reviewed=1',
+      '/curator/compendium?reviewed=1',
     );
     expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: 'needs_review' })).toBe(
-      '/admin/compendium?reviewed=0',
+      '/curator/compendium?reviewed=0',
     );
-    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: '' })).toBe('/admin/compendium');
+    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: '' })).toBe('/curator/compendium');
   });
 
   it('is the reviewed variable, true or false, and absent for no filter', () => {

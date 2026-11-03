@@ -16,7 +16,7 @@ import { NO_ARRIVALS_FILTER } from './href';
 import type { AdminArrivalsProps, ArrivalsActionsProps, ArrivalsFilter } from './types';
 import './index.scss';
 
-// The People page's Card Sign-Ups tab, `/admin/card-sign-ups`: every account that accepted a card, with the date, the
+// The People page's Card Sign-Ups tab, `/keepers/card-sign-ups`: every account that accepted a card, with the date, the
 // batch and the covens it owns, and a CSV of them (claude-docs/components/admin-cards.md).
 
 const ArrivalsCsvDocument = graphql(`

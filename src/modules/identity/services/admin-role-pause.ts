@@ -51,7 +51,7 @@ async function assertPrimaryAdmin(session: Session): Promise<SiteAdmin> {
 
 /**
  * Whether admin changes are paused, and whether the session's admin may
- * switch that: what `/admin/users` states beside its control, to any admin.
+ * switch that: what `/keepers/users` states beside its control, to any admin.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */

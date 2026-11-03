@@ -27,12 +27,12 @@ describe('siteLinkTarget', () => {
     });
   });
 
-  it('draws the admin index as wide sections of links', () => {
-    expect(siteLinkTarget('/admin', '/admin')).toMatchObject({ shape: 'contents', frame: 'wide' });
+  it.each(['/curator', '/keepers'])('draws the %s index as wide sections of links', (base) => {
+    expect(siteLinkTarget(base, base)).toMatchObject({ shape: 'contents', frame: 'wide' });
   });
 
   it('waits in the main region for every link', () => {
-    for (const base of ['/compendium', '/coven', '/admin', '/other']) {
+    for (const base of ['/compendium', '/coven', '/curator', '/keepers', '/other']) {
       expect(siteLinkTarget(base, base).region).toBe('main');
     }
   });

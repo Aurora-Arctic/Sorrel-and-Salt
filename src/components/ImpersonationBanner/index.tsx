@@ -8,12 +8,12 @@ import type { ImpersonationBannerProps } from './types';
 import './index.scss';
 
 // The way out, on every page while a session is an impersonation. It cannot live in the
-// admin nav: impersonating a non-admin costs the admin `/admin` until they stop
+// admin nav: impersonating a non-admin costs the admin `/keepers` until they stop
 // (claude-docs/components/impersonation-banner.md).
 
 // Where the admin picked the user, as a full load: the session cookie is the
 // admin's again, and every server component must read it afresh.
-const RETURN_TO = '/admin/users';
+const RETURN_TO = '/keepers/users';
 
 const STOP_FAILED = "Impersonation didn't stop. Please try again, or sign out to end it.";
 

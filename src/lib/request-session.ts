@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { type CovenMembership, membershipBySlug } from '@/modules/coven';
+import { currentTermsVersion } from '@/modules/documents';
 import {
   assertCurator,
   assertSiteAdmin,
@@ -65,7 +66,8 @@ export async function sessionStateFromHeaders(requestHeaders: Headers): Promise<
     },
     emailVerified: result.user.emailVerified === true,
     termsAgreed: hasAgreedToTerms(
-      Reflect.get(result.user, 'termsVersion') as string | null | undefined,
+      Reflect.get(result.user, 'agreedTermsVersion') as number | null | undefined,
+      await currentTermsVersion(),
     ),
     sessionFresh: await isFresh(result.session.createdAt),
     ...(accessPause && { accessPause }),
@@ -142,7 +144,11 @@ async function forwardedReturnPath(): Promise<string | undefined> {
  * loops the router (claude-docs/auth/route-protection.md, "Where the email redirect is thrown").
  */
 export async function requireSignedIn(): Promise<Session> {
-  const { session, accessPause } = await getSessionState();
+  return signedInFrom(await getSessionState());
+}
+
+// The sign-in and pause checks on a state already read, so `requireSession` reads the state once.
+async function signedInFrom({ session, accessPause }: SessionState): Promise<Session> {
   const returnPath = await forwardedReturnPath();
   if (accessPause && !isPausedViewPage(returnPath ?? '')) {
     redirect(ACCESS_PAUSED_PATH);
@@ -157,8 +163,9 @@ export async function requireSignedIn(): Promise<Session> {
  * (claude-docs/auth/admin-bootstrap.md, "The email page").
  */
 export async function requireSession(): Promise<Session> {
-  const session = await requireSignedIn();
-  const { emailVerified, termsAgreed, accessPause } = await getSessionState();
+  const state = await getSessionState();
+  const session = await signedInFrom(state);
+  const { emailVerified, termsAgreed, accessPause } = state;
   const returnPath = await forwardedReturnPath();
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));
@@ -174,7 +181,7 @@ export async function requireSession(): Promise<Session> {
 
 /**
  * `requireSession()` then the site-role check: a signed-in non-admin gets Next's forbidden page (403), not a redirect or 404,
- * as `/admin` is a known path (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it,
+ * as `/keepers` is a known path (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it,
  * since a layout does not re-run on client-side navigation.
  */
 export async function requireAdminSession(): Promise<Session> {

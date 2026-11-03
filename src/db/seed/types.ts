@@ -519,3 +519,13 @@ export interface CovenTarget {
   workspaceId: string;
   authorId: string;
 }
+
+/** One of the site's documents as its markdown file holds it: the front matter's fields, and the text below it as the body. */
+export interface SeedDocument {
+  key: string;
+  title: string;
+  lede: string;
+  /** The day version 1 is dated, at midnight UTC. */
+  publishedOn: Date;
+  body: string;
+}

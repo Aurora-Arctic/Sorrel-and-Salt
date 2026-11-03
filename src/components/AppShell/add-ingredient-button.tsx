@@ -30,6 +30,13 @@ const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
  * A sentence for what a save left behind. The form's own Saved notice goes
  * with the form when the modal closes, so the button announces the save.
  */
+/** True on the curator and keepers pages, where the add button files into the compendium. */
+function onCuratedPage(pathname: string): boolean {
+  return ['/curator', '/keepers'].some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`),
+  );
+}
+
 function savedMessage(saved: SavedIngredient): string {
   const jars = (saved.stock ?? []).map(
     ({ variant, quantityOnHand, unit }) =>
@@ -104,7 +111,7 @@ function destinationsOf(
   const all = [...compendium, ...covens];
   const slug = covenSlugOf(pathname);
   const named = covens.find((d) => d.kind === 'coven' && d.workspace.slug === slug);
-  const onAdmin = pathname.startsWith('/admin') && compendium.length > 0;
+  const onAdmin = onCuratedPage(pathname) && compendium.length > 0;
   const coven = named ?? covens[0];
   return {
     all,
@@ -142,7 +149,7 @@ const AddIngredientButton = ({
     { compendium, coven: covens },
     covenSlugOf(pathname) ? 'coven' : 'compendium',
   );
-  const onAdmin = pathname.startsWith('/admin');
+  const onAdmin = onCuratedPage(pathname);
   // The coven whose dialog the address opens: `?new=ingredient` (or a bare `?new`
   // off an admin page) the default coven, `?new=ingredient-coven-<slug>` that
   // coven, and nothing for a slug the viewer cannot write to or any other value.
@@ -167,7 +174,7 @@ const AddIngredientButton = ({
     // request: the route-modal provider that would open it at once sits below
     // the shell.
     if (destination.kind === 'compendium') {
-      navigate(`/admin/compendium?${NEW}=${NEW_COMPENDIUM_ENTRY}` as Route);
+      navigate(`/curator/compendium?${NEW}=${NEW_COMPENDIUM_ENTRY}` as Route);
     } else {
       leaving.current = false;
       setCreated(null);

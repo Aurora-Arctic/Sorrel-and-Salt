@@ -19,7 +19,7 @@ carries Stop Impersonating
 - **An `<aside>` named "Impersonation"**, holding "You are impersonating
   _name_ (_email_)." and a Stop Impersonating button.
 - **Stop calls `stopImpersonating`** from `src/lib/auth-client.ts`. On success
-  it does a full load of `/admin/users`, since the session cookie is the
+  it does a full load of `/keepers/users`, since the session cookie is the
   admin's again and every server component must read it. While the request
   is out the button is a `BusyButton` ([`busy-button.md`](busy-button.md)):
   `aria-busy`, the spinner and "Stopping", and `aria-disabled` rather than

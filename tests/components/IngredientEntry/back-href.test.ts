@@ -40,7 +40,7 @@ describe('listReturnHref', () => {
   it('refuses another route on this origin', () => {
     for (const path of [
       '/',
-      '/admin/compendium?query=Testwort',
+      '/curator/compendium?query=Testwort',
       '/compendium/ingredients/testwort',
       '/compendiumx',
       '/compendium/',

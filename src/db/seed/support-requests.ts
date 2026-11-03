@@ -268,7 +268,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     staffActivityDaysAgo: 395,
     daysAgo: 398.4,
   },
-  // Closed just over twelve months ago and not yet anonymised, so the sweep a visit to /admin/support runs anonymises it.
+  // Closed just over twelve months ago and not yet anonymised, so the sweep a visit to /keepers/support runs anonymises it.
   {
     id: '00000000-0000-0000-0005-000000000019',
     sender: C.id,

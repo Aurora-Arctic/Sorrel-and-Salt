@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { KINDS as VALUE_KINDS } from '../GroupedValueList/kinds';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
 import { capitalise } from '../../lib/text';
@@ -19,7 +20,7 @@ const groupTab = (kind: GroupKind): PageTab => ({
   label: capitalise(GROUP_KINDS[kind].plural),
 });
 
-// Every admin page, its tabs and section: the one list the nav, the `/admin` index and each tabbed layout
+// Every admin page, its tabs and section: the one list the two navs, the two indexes and each tabbed layout
 // read. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`);
 // the others are checked against built routes (typedRoutes). A `filtered` tab's loading skeleton draws a filter.
 export const ADMIN_PAGES = {
@@ -27,7 +28,7 @@ export const ADMIN_PAGES = {
     label: 'Compendium',
     icon: 'compendium',
     description: 'Every ingredient in the shared reference, with its forms and sources.',
-    tabs: [{ href: '/admin/compendium', label: 'Compendium' }],
+    tabs: [{ href: '/curator/compendium', label: 'Compendium' }],
   },
   categories: {
     label: 'Categories',
@@ -58,27 +59,54 @@ export const ADMIN_PAGES = {
     label: 'People',
     icon: 'people',
     adminOnly: true,
-    description:
-      'Every account and its role, the admin invitations waiting, the printed invitation cards and who arrived by them, and who changed which privilege.',
+    description: 'Every account and its role, and who changed which privilege.',
     tabs: [
-      { href: '/admin/users', label: 'Users', filtered: true },
-      { href: '/admin/invitations', label: 'Invitations' },
-      // Printed cards that admit one account each, and who arrived by them.
-      { href: '/admin/invitation-cards', label: 'Invitation Cards' },
-      { href: '/admin/card-sign-ups', label: 'Card Sign-Ups' },
+      { href: '/keepers/users', label: 'Users', filtered: true },
       // Who holds which privilege, and who changed it.
-      { href: '/admin/privilege-changes', label: 'Privilege Changes', filtered: true },
+      { href: '/keepers/privilege-changes', label: 'Privilege Changes', filtered: true },
+    ],
+  },
+  invitations: {
+    label: 'Invitations',
+    icon: 'invitations',
+    adminOnly: true,
+    description:
+      'The admin invitations waiting, the printed invitation cards, and who arrived by them.',
+    tabs: [
+      { href: '/keepers/invitations', label: 'Invitations' },
+      // Printed cards that admit one account each, and who arrived by them.
+      { href: '/keepers/invitation-cards', label: 'Invitation Cards' },
+      { href: '/keepers/card-sign-ups', label: 'Card Sign-Ups' },
     ],
   },
   support: {
     label: 'Support',
     icon: 'support',
     description: 'The help requests people have sent, with replies, assignment and time-outs.',
-    tabs: [{ href: '/admin/support', label: 'Support' }],
+    tabs: [{ href: '/keepers/support', label: 'Support' }],
+  },
+  documents: {
+    label: 'Documents',
+    icon: 'documents',
+    adminOnly: true,
+    description:
+      'The privacy policy, disclaimer, code of ethics and terms of use: edit a draft, then publish it as a new version.',
+    // One tab per document, in the footer's order; each is that document's editor. The cast is because typed routes know the address only as `[key]`.
+    tabs: [
+      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy', shape: 'document' },
+      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer', shape: 'document' },
+      { href: '/keepers/documents/terms' as Route, label: 'Terms of Use', shape: 'document' },
+      {
+        href: '/keepers/documents/code-of-ethics' as Route,
+        label: 'Code of Ethics',
+        shape: 'document',
+      },
+    ],
   },
 } as const satisfies Record<string, AdminPage>;
 
-export const ADMIN_SECTIONS: readonly AdminSection[] = [
+/** The `/curator` area: the curation pages, for a curator and an admin alike. */
+export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
     name: 'Compendium',
     pages: [
@@ -89,17 +117,28 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.astrology,
     ],
   },
-  { name: 'People & Support', pages: [ADMIN_PAGES.people, ADMIN_PAGES.support] },
+];
+
+/** The `/keepers` area: the people, invitation and document pages, which are an admin's, and Support, which a curator has too. */
+export const KEEPERS_SECTIONS: readonly AdminSection[] = [
+  {
+    name: 'People & Support',
+    pages: [
+      ADMIN_PAGES.people,
+      ADMIN_PAGES.invitations,
+      ADMIN_PAGES.support,
+      ADMIN_PAGES.documents,
+    ],
+  },
 ];
 
 /**
- * The sections a viewer is shown: every page to an admin, and a curator all but
- * People, which leaves its section with Support alone. Only what the nav lists;
- * each people page refuses a curator itself (claude-docs/auth/admin-guard.md,
+ * The Keepers sections a viewer is shown: every page to an admin, and a curator Support alone. Only what the
+ * nav lists; each people and invitation page refuses a curator itself (claude-docs/auth/admin-guard.md,
  * "The curator guard").
  */
 export const adminSections = (managesPeople: boolean): readonly AdminSection[] =>
-  ADMIN_SECTIONS.map((section) => ({
+  KEEPERS_SECTIONS.map((section) => ({
     ...section,
     pages: section.pages.filter(({ adminOnly }) => managesPeople || !adminOnly),
   })).filter(({ pages }) => pages.length > 0);

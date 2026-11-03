@@ -16,7 +16,7 @@ type Story = StoryObj;
 export const Default: Story = {
   render: () => (
     <>
-      <ShellFrame area="none" open="/admin" workspaces={[]} viewer={{ canCreate: false }}>
+      <ShellFrame area="none" open="/keepers" workspaces={[]} viewer={{ canCreate: false }}>
         <main className="page-frame">
           <NotAuthorized />
         </main>

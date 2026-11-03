@@ -60,6 +60,8 @@ export const users = pgTable(
     // counts as not agreed (claude-docs/auth/admin-bootstrap.md, "The terms page").
     termsVersion: text('terms_version'),
     termsAcceptedAt: timestamp('terms_accepted_at'),
+    // The number of the published terms version the account agreed to; null until it does. Beside `terms_version`, which stays.
+    agreedTermsVersion: integer('agreed_terms_version'),
     ...auditColumns,
   },
   (table) => [

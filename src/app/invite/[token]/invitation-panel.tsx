@@ -4,7 +4,7 @@ import InvitationAcceptance from '../../../components/InvitationAcceptance';
 import type { InvitationAcceptanceProps } from '../../../components/InvitationAcceptance/types';
 import { emailPagePath } from '../../../lib/account-email';
 import { getSession } from '../../../lib/request-session';
-import { ADMIN_LANDING, signInPath } from '../../../lib/sign-in';
+import { ADMIN_LANDING, CURATOR_LANDING, signInPath } from '../../../lib/sign-in';
 import { invitationStanding } from '@/modules/identity';
 
 // Cached so a second render in the request reads once (CLAUDE.md rule 1).
@@ -51,7 +51,7 @@ export default async function InvitationPanel({ token, here }: { token: string; 
         token,
         tier: 'site',
         siteRole: standing.siteRole,
-        landing: ADMIN_LANDING,
+        landing: standing.siteRole === 'admin' ? ADMIN_LANDING : CURATOR_LANDING,
       };
     } else if (standing.tier === 'card') {
       panel = { status: 'acceptable', token, tier: 'card', landing: CARD_ACCEPTED_LANDING };

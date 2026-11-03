@@ -67,6 +67,18 @@ for (const { path, title, link } of DOCUMENTS) {
   });
 }
 
+// Who can see what is drawn from code into the placeholder the privacy markdown holds: one card per kind of data, and no placeholder
+// text left on the page.
+test('/privacy draws the access cards under Who Can See What', async ({ page }) => {
+  await page.goto('/privacy');
+  const article = page.getByRole('main');
+  await expect(article.getByRole('heading', { name: 'Who Can See What' })).toBeVisible();
+
+  await expect(article.getByRole('group')).toHaveCount(11);
+  await expect(article.getByText('{access-cards}')).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+});
+
 // Signed in: the signed-out page offers its short form with no subject chosen, whatever the address asks.
 test('the code of ethics opens the support form on an accessibility bug', async ({ page }) => {
   await signInAs(page, 'reporter@document-pages.test', ['discord']);

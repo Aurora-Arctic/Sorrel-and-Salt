@@ -136,7 +136,7 @@ const LEDGER_ORDER: readonly SortPart[] = [
 
 /**
  * One page of the privilege ledger under `filter`, newest first:
- * `/admin/privilege-changes`. Under the `SiteAdmin` proof, as the user list
+ * `/keepers/privilege-changes`. Under the `SiteAdmin` proof, as the user list
  * is, since who holds which privilege is an admin's business alone.
  */
 export function findPrivilegeChangePage(

@@ -55,7 +55,7 @@ describe('a daily job starts from its cron route alone', () => {
   });
 
   it('the admin Support page starts no support job', () => {
-    const page = readFileSync(join(REPO_ROOT, 'src/app/(shell)/admin/support/page.tsx'), 'utf8');
+    const page = readFileSync(join(REPO_ROOT, 'src/app/(shell)/keepers/support/page.tsx'), 'utf8');
     // Precondition: the page is the one that reads the support requests.
     expect(page).toMatch(/requireCuratorSession/);
     expect(page).not.toMatch(/Retention|Sweep|\bafter\(/);

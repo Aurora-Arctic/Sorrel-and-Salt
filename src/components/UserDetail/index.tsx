@@ -12,7 +12,7 @@ import { workspaceRoleLabel, workspaceRoleRank } from './roles';
 import type { UserCoven, UserDetailProps } from './types';
 import './index.scss';
 
-// The body of the modal over `/admin/users` on a user: the table's facts read-only, their covens
+// The body of the modal over `/keepers/users` on a user: the table's facts read-only, their covens
 // and the action to act as them (claude-docs/components/user-detail.md). Laid out as the ingredient
 // modal is, in hairline-parted sections; render-only.
 

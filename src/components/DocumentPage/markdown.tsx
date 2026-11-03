@@ -1,0 +1,234 @@
+import type { Element, ElementContent, Root, RootContent } from 'hast';
+import type { Root as MarkdownRoot, RootContent as MarkdownContent } from 'mdast';
+import type { ReactNode } from 'react';
+import * as runtime from 'react/jsx-runtime';
+import rehypeReact from 'rehype-react';
+import remarkGfm from 'remark-gfm';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import { unified } from 'unified';
+import { slugify } from '../../lib/slugify';
+import type { PageNavEntry } from '../PageNav/types';
+import type { DocumentPlaceholders } from './types';
+
+// A document's markdown, drawn on the server. Raw HTML in a body is turned into text before it
+// reaches an element (there is no rehype-raw), a link is kept only for an address the site opens,
+// and each footnote becomes a numbered source in the page's Sources list.
+
+/** A link is drawn only for these addresses: relative, a fragment, `https:` and `mailto:`. */
+const OPENABLE_ADDRESS = /^(\/(?!\/)|#|\?|https:|mailto:)/i;
+
+const FLOW_PARENTS = new Set(['root', 'blockquote', 'listItem', 'footnoteDefinition']);
+
+/** Raw HTML becomes the text it was written as; where a block is expected, a paragraph holds it. */
+function htmlAsText() {
+  return (tree: MarkdownRoot): void => {
+    const visit = (parent: { type: string; children?: MarkdownContent[] }): void => {
+      const { children } = parent;
+      if (!children) return;
+      children.forEach((child, index) => {
+        if (child.type === 'html') {
+          const text = { type: 'text' as const, value: child.value };
+          children[index] = FLOW_PARENTS.has(parent.type)
+            ? { type: 'paragraph', children: [text] }
+            : text;
+        } else {
+          visit(child as { type: string; children?: MarkdownContent[] });
+        }
+      });
+    };
+    visit(tree);
+  };
+}
+
+const markdownProcessor = unified()
+  .use(remarkParse)
+  .use(remarkGfm)
+  .use(htmlAsText)
+  .use(remarkRehype, {
+    footnoteLabel: 'Sources',
+    footnoteLabelProperties: {},
+  });
+
+/** The tag a placeholder paragraph becomes, so the React step can swap it for the node the page mapped. */
+const PLACEHOLDER_TAG = 'document-placeholder';
+
+const PLACEHOLDER_TEXT = /^\{([^{}\s]+)\}$/;
+
+/** Turns each top-level paragraph that is only `{name}` into a placeholder for a name the page mapped; any other stays a paragraph. */
+function markPlaceholders(
+  children: ElementContent[],
+  placeholders: DocumentPlaceholders,
+): ElementContent[] {
+  return children.map((child) => {
+    if (!isElement(child) || child.tagName !== 'p') return child;
+    const text = child.children.length === 1 ? textOf(child).trim() : '';
+    const name = PLACEHOLDER_TEXT.exec(text)?.[1];
+    if (name === undefined || !Object.prototype.hasOwnProperty.call(placeholders, name))
+      return child;
+    return { type: 'element', tagName: PLACEHOLDER_TAG, properties: { name }, children: [] };
+  });
+}
+
+function reactProcessorFor(placeholders: DocumentPlaceholders) {
+  return unified().use(rehypeReact, {
+    Fragment: runtime.Fragment,
+    jsx: runtime.jsx,
+    jsxs: runtime.jsxs,
+    components: {
+      [PLACEHOLDER_TAG]: ({ name }: { name: string }) => placeholders[name],
+    },
+  });
+}
+
+function textOf(node: RootContent | ElementContent | Root): string {
+  if (node.type === 'text') return node.value;
+  return 'children' in node ? (node.children as ElementContent[]).map(textOf).join('') : '';
+}
+
+function isElement(node: RootContent | ElementContent | Root): node is Element {
+  return node.type === 'element';
+}
+
+function classes(node: Element, ...added: string[]): void {
+  const existing = node.properties.className;
+  node.properties.className = [...(Array.isArray(existing) ? existing.map(String) : []), ...added];
+}
+
+/** Draws the footnote marks and the Sources list the way the page's styles expect. */
+function shapeFootnotes(node: Element): void {
+  if (node.tagName === 'a' && node.properties.dataFootnoteRef !== undefined) {
+    const number = textOf(node);
+    node.properties.ariaLabel = `Source ${number}`;
+    delete node.properties.ariaDescribedBy;
+    node.children = [{ type: 'text', value: `#${number}` }];
+  }
+  if (node.tagName === 'sup') classes(node, 'document-page__marks');
+  if (node.tagName === 'section' && node.properties.dataFootnotes !== undefined) {
+    for (const list of node.children.filter(isElement)) {
+      if (list.tagName !== 'ol') continue;
+      classes(list, 'document-page__sources');
+      for (const item of list.children.filter(isElement)) {
+        if (item.tagName !== 'li') continue;
+        classes(item, 'document-page__source');
+        const backs: Element[] = [];
+        const collect = (parent: Element): void => {
+          for (const child of parent.children.filter(isElement)) {
+            if (child.tagName === 'a' && child.properties.dataFootnoteBackref !== undefined) {
+              backs.push(child);
+            } else collect(child);
+          }
+        };
+        collect(item);
+        backs.forEach((back, index) => {
+          back.properties.className = ['document-page__return'];
+          back.properties.ariaLabel =
+            backs.length > 1 ? `Back to citation ${index + 1}` : 'Back to the text';
+          back.children = [
+            { type: 'element', tagName: 'wbr', properties: {}, children: [] },
+            {
+              type: 'element',
+              tagName: 'span',
+              properties: { ariaHidden: 'true' },
+              children: [{ type: 'text', value: '↩' }],
+            },
+          ];
+        });
+      }
+    }
+  }
+}
+
+/** Keeps a link for an address the site opens; any other becomes its words. */
+function openableLinks(children: ElementContent[]): ElementContent[] {
+  return children.flatMap((child) => {
+    if (!isElement(child)) return [child];
+    child.children = openableLinks(child.children);
+    if (child.tagName !== 'a') return [child];
+    const href = child.properties.href;
+    return typeof href === 'string' && OPENABLE_ADDRESS.test(href) ? [child] : child.children;
+  });
+}
+
+/**
+ * Seats each table in the scrolling frame the page's styles give a wide table, so it never widens the page.
+ * The frame takes focus and is named for the heading above it, so a keyboard can scroll it.
+ */
+function frameTables(children: ElementContent[]): ElementContent[] {
+  let heading = '';
+  const frame = (nodes: ElementContent[]): ElementContent[] =>
+    nodes.map((child) => {
+      if (!isElement(child)) return child;
+      if (/^h[1-6]$/.test(child.tagName)) heading = textOf(child);
+      if (child.tagName !== 'table') {
+        child.children = frame(child.children);
+        return child;
+      }
+      classes(child, 'data-table');
+      return {
+        type: 'element',
+        tagName: 'div',
+        properties: {
+          className: ['data-table-frame'],
+          role: 'region',
+          tabIndex: 0,
+          ...(heading ? { ariaLabel: heading } : {}),
+        },
+        children: [child],
+      };
+    });
+  return frame(children);
+}
+
+function visitElements(node: Root | Element, visit: (element: Element) => void): void {
+  for (const child of node.children) {
+    if (!isElement(child)) continue;
+    visit(child);
+    visitElements(child, visit);
+  }
+}
+
+/** Gives every `h2` and `h3` its anchor and returns the page menu: an `h2` with `h3`s after it is a group label. */
+function sectionsOf(tree: Root): PageNavEntry[] {
+  const headings: Element[] = [];
+  visitElements(tree, (element) => {
+    if (element.tagName === 'h2' || element.tagName === 'h3') headings.push(element);
+  });
+  const entries: PageNavEntry[] = [];
+  // The page's own ids are taken first, so a body heading never claims one; a repeated text gets -2, -3 after the first.
+  const taken = new Set(['document-title', 'document-history']);
+  let group: string | null = null;
+  headings.forEach((heading, index) => {
+    const label = textOf(heading);
+    const base = slugify(label);
+    let id = base;
+    for (let n = 2; taken.has(id); n += 1) id = `${base}-${n}`;
+    taken.add(id);
+    heading.properties.id = id;
+    const href = `#${id}` as const;
+    if (heading.tagName === 'h2') {
+      const hasParts = headings[index + 1]?.tagName === 'h3';
+      group = hasParts ? label : null;
+      if (!hasParts) entries.push({ href, label });
+    } else {
+      entries.push({ href, label, ...(group === null ? {} : { group }) });
+    }
+  });
+  return entries;
+}
+
+export function renderMarkdown(
+  body: string,
+  placeholders: DocumentPlaceholders = {},
+): { content: ReactNode; entries: PageNavEntry[] } {
+  const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
+  tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
+  tree.children = markPlaceholders(
+    tree.children as ElementContent[],
+    placeholders,
+  ) as RootContent[];
+  tree.children = frameTables(tree.children as ElementContent[]) as RootContent[];
+  visitElements(tree, shapeFootnotes);
+  const entries = sectionsOf(tree);
+  return { content: reactProcessorFor(placeholders).stringify(tree) as ReactNode, entries };
+}

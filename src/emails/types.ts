@@ -153,3 +153,13 @@ export interface CovenAccessPausedProps extends BaseEmailProps {
   /** What the owner wrote to the member, or `null` when they wrote none. */
   message: string | null;
 }
+
+/** Told every account that a published document changed. `url` is the document's page. */
+export interface DocumentUpdatedProps extends BaseEmailProps {
+  /** The document's title, as the page shows it. */
+  title: string;
+  /** What changed, in the admin's words. */
+  summary: string;
+  /** The terms ask each account to agree again at its next visit; the other documents do not. */
+  asksAgreement: boolean;
+}

@@ -6,7 +6,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { sendAs } from './send-as';
 
-// What a curator sees of /admin/support (M15.31): the requests marked for curators and the ones assigned to them, and nothing
+// What a curator sees of /keepers/support (M15.31): the requests marked for curators and the ones assigned to them, and nothing
 // else. Story 90 walks the admin side; this proves what no story walks, the curator's narrower page.
 
 test.beforeAll(async () => {
@@ -43,7 +43,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
     }
 
     await test.step('the list shows the marked and the assigned request and not the other', async () => {
-      await page.goto('/admin/support');
+      await page.goto('/keepers/support');
       await expect(page.getByRole('link', { name: 'Marked For Curators' })).toBeVisible();
       await expect(page.getByRole('link', { name: 'Assigned To The Curator' })).toBeVisible();
       await expect(page.getByText('Kept From Curators')).toHaveCount(0);
@@ -51,7 +51,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
     });
 
     await test.step('a request only shared with the curator has no controls', async () => {
-      await page.goto(`/admin/support?request=${marked}`);
+      await page.goto(`/keepers/support?request=${marked}`);
       const dialog = page.getByRole('dialog', { name: 'Marked For Curators' });
       await expect(dialog).toBeVisible();
       await expect(dialog.getByLabel(/^Your Reply/)).toHaveCount(0);
@@ -67,7 +67,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
     });
 
     await test.step('the curator replies to and resolves the assigned request', async () => {
-      await page.goto(`/admin/support?request=${assigned}`);
+      await page.goto(`/keepers/support?request=${assigned}`);
       const dialog = page.getByRole('dialog', { name: 'Assigned To The Curator' });
       await expect(dialog.getByLabel('Assignee')).toHaveCount(0);
       await expect(dialog.getByLabel('GitHub Issue')).toHaveCount(0);
@@ -90,7 +90,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
     await test.step('a request neither marked nor assigned is not found by its id, though it exists and is open', async () => {
       const [row] = await sql`select status from support_requests where id = ${hidden}`;
       expect(row?.status).toBe('open');
-      await page.goto(`/admin/support?request=${hidden}`);
+      await page.goto(`/keepers/support?request=${hidden}`);
       await expect(page.getByText('Kept From Curators')).toHaveCount(0);
       await expect(page.getByText(/No support request has that address/).first()).toBeVisible();
     });

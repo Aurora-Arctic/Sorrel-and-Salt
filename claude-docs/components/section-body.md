@@ -7,7 +7,7 @@ the page below changes:
 
 - the coven's `[slug]` layout, `region="coven"` with `className="coven-layout"`,
   where it had a bare `<div>`;
-- the `/admin` layout, `region="admin"` with `className="page-column"`.
+- the `/curator` and `/keepers` layouts, `region="admin"` with `className="page-column"`.
 
 The classes and their styling are unchanged.
 

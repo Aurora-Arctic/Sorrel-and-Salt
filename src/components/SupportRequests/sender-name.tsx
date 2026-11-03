@@ -23,7 +23,7 @@ const SenderName = ({
 }): ReactElement => {
   const href = sender && userHref ? userHref(sender.id) : undefined;
   const onClick = useOpenModalClick(
-    href ?? '/admin/support',
+    href ?? '/keepers/support',
     { title: sender?.name ?? '' },
     USER_MODAL_PLACE,
   );

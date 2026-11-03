@@ -26,6 +26,7 @@ describe('users schema', () => {
         'verification_sent_at',
         'two_factor_enabled',
         'terms_version',
+        'agreed_terms_version',
         'terms_accepted_at',
         'pending_email',
         'former_email',
@@ -37,6 +38,7 @@ describe('users schema', () => {
   // Null until the account agrees: the terms gate reads null as 'not agreed to the terms in force'.
   it('leaves the agreement columns empty until an account agrees', () => {
     expect(byName.terms_version.notNull).toBe(false);
+    expect(byName.agreed_terms_version.notNull).toBe(false);
     expect(byName.terms_accepted_at.notNull).toBe(false);
   });
 

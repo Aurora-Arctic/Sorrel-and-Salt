@@ -1,0 +1,1 @@
+ALTER TYPE "public"."document_mailing_status" ADD VALUE 'paused';

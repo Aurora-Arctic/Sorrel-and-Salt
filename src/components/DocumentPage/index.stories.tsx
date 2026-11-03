@@ -7,24 +7,32 @@ const meta = { title: 'Pages / Document Page', component: DocumentPage } satisfi
 >;
 export default meta;
 
+const BODY = [
+  '## What Is Kept',
+  '### The Row',
+  'A fixture row, and the day it was written.[^herbal]',
+  '### The Details',
+  '- The name the fixture gave.\n- The address it was reached at.',
+  '## Who Reads It',
+  "Only the fixture's owner.",
+  '[^herbal]: Fixture, Author. _A Fixture Herbal_. Fixture Press, 1988.',
+].join('\n\n');
+
 export const Default: StoryObj<typeof DocumentPage> = {
   args: {
     title: 'Fixture Policy',
     lede: 'What the fixture keeps, and who may read it.',
     updatedOn: new Date('2026-03-04T00:00:00Z'),
-    children: (
-      <>
-        <h2>What Is Kept</h2>
-        <h3>The Row</h3>
-        <p>A fixture row, and the day it was written.</p>
-        <h3>The Details</h3>
-        <ul>
-          <li>The name the fixture gave.</li>
-          <li>The address it was reached at.</li>
-        </ul>
-        <h2>Who Reads It</h2>
-        <p>Only the fixture's owner.</p>
-      </>
-    ),
+    body: BODY,
+  },
+};
+
+export const WithEarlierVersions: StoryObj<typeof DocumentPage> = {
+  args: {
+    ...Default.args,
+    history: [
+      { number: 2, publishedAt: new Date('2026-02-01T00:00:00Z'), href: '/fixture/versions/2' },
+      { number: 1, publishedAt: new Date('2026-01-15T00:00:00Z'), href: '/fixture/versions/1' },
+    ],
   },
 };

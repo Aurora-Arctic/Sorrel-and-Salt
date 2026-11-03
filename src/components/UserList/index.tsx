@@ -16,7 +16,7 @@ import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
-// `/admin/users`' filter, table and pager. Render-only: the page reads
+// `/keepers/users`' filter, table and pager. Render-only: the page reads
 // the list through the identity service and hands this one page of it. The
 // filter is a GET form to the page itself, so a filtered page is an address
 // (claude-docs/components/user-list.md).

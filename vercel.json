@@ -13,6 +13,10 @@
     {
       "path": "/api/cron/provisional-cleanup",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/document-mailing",
+      "schedule": "0 5 * * *"
     }
   ]
 }

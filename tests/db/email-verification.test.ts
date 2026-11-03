@@ -216,17 +216,17 @@ describe('Story 58: following the link', () => {
 });
 
 describe('Story 58: the link carries on to where the account was going', () => {
-  const ADMIN_LANDING = '/account/email?verified&next=%2Fadmin';
+  const ADMIN_LANDING = '/account/email?verified&next=%2Fkeepers';
 
-  /** A Microsoft sign-up headed for /admin, with its session and its mailed link. */
+  /** A Microsoft sign-up headed for /keepers, with its session and its mailed link. */
   async function signUpHeadedForAdmin() {
     const response = await signIn(
       'microsoft',
       { sub: 'ms-next', email: OWNER, verified: true },
-      '/admin',
+      '/keepers',
     );
     // The `next` the account was sent with: the email page it landed on carries it.
-    expect(landingOf(response)).toBe('/account/email?next=%2Fadmin');
+    expect(landingOf(response)).toBe('/account/email?next=%2Fkeepers');
     expect((await userRow(OWNER))?.email_verified).toBe(false);
     return { cookie: cookieHeader(response), link: mailedLink() };
   }
@@ -249,7 +249,7 @@ describe('Story 58: the link carries on to where the account was going', () => {
     expectSignedIn(other);
 
     expect((await follow(link, cookieHeader(other))).headers.get('location')).toBe(
-      '/account/email?next=%2Fadmin&error=SIGN_IN_TO_VERIFY',
+      '/account/email?next=%2Fkeepers&error=SIGN_IN_TO_VERIFY',
     );
     expect((await follow(link)).headers.get('location')).toBe(
       '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',

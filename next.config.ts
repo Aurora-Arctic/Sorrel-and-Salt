@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
     // partial behind `@use` until it was deleted. Builds keep their own cache
     // (claude-docs/debugging.md, "A restart compiles from the files").
     turbopackFileSystemCacheForDev: false,
-    // `forbidden()` and `src/app/(shell)/forbidden.tsx`: the `/admin` guard's 403
+    // `forbidden()` and `src/app/(shell)/forbidden.tsx`: the `/curator` and `/keepers` guard's 403
     // (claude-docs/auth/admin-guard.md, "The admin guard").
     authInterrupts: true,
     // Off for the e2e servers, which share one build directory and so would

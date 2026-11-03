@@ -177,7 +177,7 @@ test.describe("a coven's Ingredients page", () => {
 
 test.describe('the admin compendium list', () => {
   // Regression: an entry opened from the admin compendium list went back to the public compendium.
-  test('Back to Admin Compendium returns to the searched admin list the entry was opened from', async ({
+  test('Back to Curator Compendium returns to the searched admin list the entry was opened from', async ({
     page,
   }) => {
     const NAME = 'Fixture Curatewort';
@@ -194,7 +194,7 @@ test.describe('the admin compendium list', () => {
       );
     });
 
-    await page.goto('/admin/compendium?query=Curatewort');
+    await page.goto('/curator/compendium?query=Curatewort');
     const listAddress = pathAndQuery(page.url());
     // Why the return could fail: the list holds a search the bare admin list does not.
     expect(new URL(page.url()).searchParams.get('query')).toBe('Curatewort');
@@ -202,7 +202,7 @@ test.describe('the admin compendium list', () => {
     await page.getByRole('link', { name: NAME, exact: true }).click();
     await expect(page).toHaveURL(/\/compendium\/ingredients\//);
 
-    const back = page.getByRole('link', { name: 'Back to Admin Compendium' });
+    const back = page.getByRole('link', { name: 'Back to Curator Compendium' });
     await expect(back).toHaveAttribute('href', listAddress);
     await back.click();
     await expect(page).toHaveURL((url) => `${url.pathname}${url.search}` === listAddress);

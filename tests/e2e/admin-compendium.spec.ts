@@ -49,7 +49,7 @@ test('the page behind an open modal does not scroll', async ({ page, isMobile })
   test.skip(isMobile, 'Mouse wheel is not supported in mobile WebKit');
   await page.setViewportSize({ width: 1280, height: 600 });
   await signInAs(page, 'scroll-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   // The precondition: the list is taller than the window, so the page can scroll.
   await page.mouse.wheel(0, 300);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
@@ -86,14 +86,14 @@ test('the page behind an open modal does not scroll', async ({ page, isMobile })
   await page.getByRole('dialog', { name: 'Add Ingredient' }).waitFor();
   await page.mouse.click(8, 300);
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page).toHaveURL(/\/admin\/compendium$/);
+  await expect(page).toHaveURL(/\/curator\/compendium$/);
 });
 
 test('the compendium form stands inside the viewport on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await signInAs(page, 'phone-admin@admin-compendium.test', ['discord'], 'admin');
 
-  await page.goto('/admin/compendium?new=ingredient-compendium');
+  await page.goto('/curator/compendium?new=ingredient-compendium');
 
   await expectInsideViewport(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
   await assertNoAccessibilityViolations(page);
@@ -106,7 +106,7 @@ test('the compendium form stands inside the viewport and keeps its pickers insid
 }) => {
   await signInAs(page, 'an-admin@admin-compendium.test', ['discord'], 'admin');
 
-  const response = await page.goto('/admin/compendium?new=ingredient-compendium');
+  const response = await page.goto('/curator/compendium?new=ingredient-compendium');
   expect(response?.status()).toBe(200);
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
@@ -139,7 +139,7 @@ test('Enter turns the No Refs switch, as Space does, and Apply Filters applies i
   page,
 }) => {
   await signInAs(page, 'keyboard-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   // Hydrated first: before it, Enter submits the form natively with the switch off.
   await openFilters(page);
 
@@ -165,7 +165,7 @@ test('Enter turns the No Refs switch, as Space does, and Apply Filters applies i
 // choice as a list of one, so the box still narrows the list by its form.
 test('the Form box keeps only the entries holding the form chosen', async ({ page }) => {
   await signInAs(page, 'form-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   const editOf = (formalName: string) =>
     page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
   // Why the filter could have kept it: the thorn Cat's Claw is listed beside the bark ones.
@@ -191,7 +191,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await signInAs(page, 'source-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium?new=ingredient-compendium');
+  await page.goto('/curator/compendium?new=ingredient-compendium');
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
 
@@ -244,7 +244,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
 // (tests/modules/ingredients/services/toxic-flags.test.ts).
 test('the toxic toggle starts off, saves, and reads back on reopening', async ({ page }) => {
   await signInAs(page, 'toxic-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium?new=ingredient-compendium');
+  await page.goto('/curator/compendium?new=ingredient-compendium');
   // The autosave creates the entry once the name is set and the form pauses, which moves the address
   // to ?edit= and the heading to Edit Ingredient while the same form stays open, so match either.
   const adding = page.getByRole('dialog', {
@@ -287,7 +287,7 @@ test('a name typed shows matching rows, and a pick opens its Quick Look over the
   page,
 }) => {
   await signInAs(page, 'search-pick-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium?withoutReferences=1');
+  await page.goto('/curator/compendium?withoutReferences=1');
   // Hydrated first: before it, the box is a plain text field with no dropdown.
   await page.waitForLoadState('networkidle');
 
@@ -330,7 +330,7 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
   } finally {
     await sql.end();
   }
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   await page.waitForLoadState('networkidle');
 
   const name = page.getByRole('combobox', { name: 'Name' });
@@ -367,7 +367,7 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
 
 test('Enter in the Name box applies the name, keeping No Refs', async ({ page }) => {
   await signInAs(page, 'search-enter-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   await page.waitForLoadState('networkidle');
 
   await openFilters(page);
@@ -402,7 +402,7 @@ test('the filter form works with JavaScript off: a name and the Search button se
   try {
     const page = await context.newPage();
     await signInAs(page, 'search-nojs-admin@admin-compendium.test', ['discord'], 'admin');
-    await page.goto('/admin/compendium');
+    await page.goto('/curator/compendium');
 
     const edit = (formalName: string) =>
       page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
@@ -457,17 +457,17 @@ test('?elements= in the address filters the list, survives the pager and another
   const main = page.getByRole('main');
 
   // One element finds an entry holding it among others; two find either.
-  await page.goto('/admin/compendium?query=Elementwort&elements=earth');
+  await page.goto('/curator/compendium?query=Elementwort&elements=earth');
   await expect(row(29)).toBeVisible();
   await expect(row(30)).toHaveCount(0);
   await expect(row(1)).toHaveCount(0);
-  await page.goto('/admin/compendium?query=Elementwort&elements=earth&elements=water');
+  await page.goto('/curator/compendium?query=Elementwort&elements=earth&elements=water');
   await expect(row(29)).toBeVisible();
   await expect(row(30)).toBeVisible();
   await expect(row(1)).toHaveCount(0);
 
   // 28 hold fire: two pages, and the pager carries the filter to the second.
-  await page.goto('/admin/compendium?query=Elementwort&elements=fire');
+  await page.goto('/curator/compendium?query=Elementwort&elements=fire');
   await expect(row(1)).toBeVisible();
   await main.getByRole('link', { name: 'Next' }).click();
   // Why the cursor below could have survived the change: this page holds one.
@@ -519,7 +519,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
   }
 
   const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
-  await page.goto('/admin/compendium?query=Categorywort');
+  await page.goto('/curator/compendium?query=Categorywort');
   await openFilters(page);
   // Why the filter could have dropped them: all three are listed unfiltered.
   await expect(edit('Categorywort Both')).toBeVisible();
@@ -563,7 +563,7 @@ test('the Categories picker filters by AND, writes repeated slugs, restores on r
 
   // An unknown slug is dropped and the rest still filter.
   await page.goto(
-    '/admin/compendium?query=Categorywort&categories=nosuchslug&categories=protection',
+    '/curator/compendium?query=Categorywort&categories=nosuchslug&categories=protection',
   );
   await expect(edit('Categorywort One')).toBeVisible();
   await expect(edit('Categorywort None')).toHaveCount(0);
@@ -574,7 +574,7 @@ test('the Categories picker is usable at 375px and has no accessibility violatio
 }) => {
   await page.setViewportSize({ width: 375, height: 800 });
   await signInAs(page, 'category-axe-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium?categories=protection');
+  await page.goto('/curator/compendium?categories=protection');
   await openFilters(page);
 
   const box = page.getByRole('combobox', { name: 'Category' });
@@ -615,7 +615,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
 
   const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
   const match = page.getByRole('group', { name: 'Match' });
-  await page.goto('/admin/compendium?query=Modewort&categories=protection');
+  await page.goto('/curator/compendium?query=Modewort&categories=protection');
   await openFilters(page);
   // One category: the mode stays, on All, and cannot be changed.
   await expect(match.getByRole('button', { name: /All/ })).toBeDisabled();
@@ -692,7 +692,7 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
   } finally {
     await sql.end();
   }
-  const editUrl = `/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`;
+  const editUrl = `/curator/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`;
   await page.goto(editUrl);
   const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Promotewort/ });
   await expect(dialog).toBeVisible();
@@ -729,7 +729,7 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
   await expect(folk.getByRole('button', { name: 'Remove Hedge Promote' })).toHaveCount(0);
 
   // What the list reads from the database, not from the open form.
-  await page.goto('/admin/compendium?query=Promote');
+  await page.goto('/curator/compendium?query=Promote');
   await expect(page.getByRole('link', { name: /^Edit Hedge Promote/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /^Edit Fixture Promotewort/ })).toHaveCount(0);
 });
@@ -843,7 +843,7 @@ test('two forms list the entries holding either, and a form with a deity lists t
     'admin',
   );
   await seedFacetworts(userId);
-  await page.goto('/admin/compendium?query=Facetwort');
+  await page.goto('/curator/compendium?query=Facetwort');
   await openFilters(page);
   // Why a filter could drop rows: all five are listed unfiltered.
   await expect.poll(() => listed(page)).toBe('ABCDE');
@@ -916,7 +916,7 @@ test('the panel takes focus in, gives it back on Escape, and a reload and Back b
     'admin',
   );
   await seedFacetworts(userId);
-  await page.goto('/admin/compendium?query=Facetwort');
+  await page.goto('/curator/compendium?query=Facetwort');
   const button = page.getByRole('button', { name: /^Filters/ });
   const panel = await openFilters(page);
   expect(await panel.evaluate((el) => el.contains(document.activeElement))).toBe(true);
@@ -962,7 +962,7 @@ test('at 375px the panel is a modal sheet that closes on Escape, with no accessi
     'admin',
   );
   await seedFacetworts(userId);
-  await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Alpha');
+  await page.goto('/curator/compendium?query=Facetwort&forms=Facetform+Alpha');
   const panel = await openFilters(page);
 
   // A sheet, not an overlay: the browser holds the rest of the page inert behind it.
@@ -989,7 +989,7 @@ test('the panel opens with its top at its final place from the first frame', asy
   await seedFacetworts(userId);
   // The suite runs with reduced motion, which skips the slide this test is about.
   await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await page.goto('/admin/compendium?query=Facetwort');
+  await page.goto('/curator/compendium?query=Facetwort');
   const button = page.getByRole('button', { name: /^Filters/ });
   await button.waitFor();
   // The pre-paint script that hides the open no-script panel until hydration has run.
@@ -1028,7 +1028,7 @@ for (const [label, width, height] of [
     await page.setViewportSize({ width, height });
     // Two categories chosen, so Match can open; it ends its row on every panel, which is
     // where a menu hung from the chip's left edge ran past the panel's right edge.
-    await page.goto('/admin/compendium?categories=protection&categories=cleansing');
+    await page.goto('/curator/compendium?categories=protection&categories=cleansing');
     const panel = await openFilters(page);
     const match = panel.getByRole('group', { name: 'Match' });
     await match.locator('summary').click();
@@ -1058,7 +1058,7 @@ for (const [label, width, height] of [
   test(`the Match tip opens whole inside the panel at ${label}px`, async ({ page }) => {
     await signInAs(page, `match-tip-${label}@admin-compendium.test`, ['discord'], 'admin');
     await page.setViewportSize({ width, height });
-    await page.goto('/admin/compendium?categories=protection&categories=cleansing');
+    await page.goto('/curator/compendium?categories=protection&categories=cleansing');
     const panel = await openFilters(page);
     const match = panel.getByRole('group', { name: 'Match' });
     await expect(match).toBeVisible();
@@ -1122,7 +1122,7 @@ for (const [name, viewport] of [
       'admin',
     );
     await seedChipwort(userId);
-    await page.goto('/admin/compendium');
+    await page.goto('/curator/compendium');
     const more = page.getByRole('button', { name: /more categories? for Aaa Chipwort/i }).first();
     await expect(more).toBeVisible();
     const row = page.getByRole('row').filter({ has: more });
@@ -1164,7 +1164,7 @@ test('the Edit column stays pinned at the frame edge while the table scrolls sid
   // Wide enough to be a table (above the stacking width), narrow enough that it scrolls.
   await page.setViewportSize({ width: 700, height: 900 });
   await signInAs(page, 'pinned-edit@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   const frame = page.locator('.data-table-frame');
   const scrollable = await frame.evaluate((el) => el.scrollWidth > el.clientWidth);
   // Why the pin could have failed: the table does overflow its frame.
@@ -1225,7 +1225,7 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
       .sort()
       .join('');
 
-  await page.goto('/admin/compendium?query=Formlesswort');
+  await page.goto('/curator/compendium?query=Formlesswort');
   // Why the filter could have mattered: all three are listed before it.
   await expect.poll(shownNames).toBe('ABC');
   const panel = await openFilters(page);
@@ -1241,7 +1241,7 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
   await expect.poll(shownNames).toBe('AB');
 
   // A link opens it, and Back keeps the page before it.
-  await page.goto('/admin/compendium?query=Formlesswort&withoutForms=1');
+  await page.goto('/curator/compendium?query=Formlesswort&withoutForms=1');
   await expect.poll(shownNames).toBe('AB');
   await openFilters(page);
   await expect(page.getByRole('switch', { name: /^No Form/ })).toBeChecked();
@@ -1254,7 +1254,7 @@ test('the Sourcing Score heading sorts lowest first, then highest first, and eac
   page,
 }) => {
   await signInAs(page, 'sort-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
+  await page.goto('/curator/compendium');
   const nameHead = page.getByRole('columnheader', { name: /^Name/ });
   const scoreHead = page.getByRole('columnheader', { name: /^Sourcing Score/ });
   // The precondition: the list starts in its default order, by name, with the score unsorted.

@@ -127,7 +127,7 @@ const openedByItsAddressNode = (
   <Reopenable>
     {() => (
       <RouteModal
-        closeHref={'/admin/categories' as Route}
+        closeHref={'/curator/categories' as Route}
         content={{
           heading: { eyebrow: 'Edit Category', title: 'Testcraft' },
           body: (done) => (
@@ -156,7 +156,7 @@ const LoadingView = () => (
           cancel: () => undefined,
         }}
       >
-        <RouteModal closeHref={'/admin/categories' as Route} />
+        <RouteModal closeHref={'/curator/categories' as Route} />
       </RouteModalContext.Provider>
     )}
   </Reopenable>

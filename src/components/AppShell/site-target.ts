@@ -21,7 +21,8 @@ export const siteLinkTarget = (base: string, href: string = base): NavigationTar
       ? { region: 'main', shape: 'page', frame: 'narrow' }
       : { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   }
-  if (base === '/admin') return { region: 'main', shape: 'contents', frame: 'wide' };
+  if (base === '/curator' || base === '/keepers')
+    return { region: 'main', shape: 'contents', frame: 'wide' };
   return { region: 'main', shape: 'page' };
 };
 

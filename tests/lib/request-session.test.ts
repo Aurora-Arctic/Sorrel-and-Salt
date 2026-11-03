@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
-import { TERMS_VERSION } from '@/lib/terms-version';
 
 // The helper turns Better Auth's session into the service-level `Session` and nothing more.
 // Better Auth is mocked: whether a cookie is a real session is its job, and
@@ -37,6 +36,11 @@ const membershipBySlugMock = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipBySlug: membershipBySlugMock }));
 // The pause lookup is the service's, proved against Postgres in tests/db/impersonation.test.ts; here only what the helpers do with its answer.
 const standingAccessPauseMock = vi.fn();
+// The terms version in force is the documents module's, proved against Postgres in tests/modules/identity/services/terms.test.ts;
+// here only how the gate compares an account's agreement with it.
+const CURRENT_TERMS = 3;
+const currentTermsVersionMock = vi.fn(async () => CURRENT_TERMS);
+vi.mock('@/modules/documents', () => ({ currentTermsVersion: currentTermsVersionMock }));
 vi.mock('@/modules/identity', async (actual) => ({
   ...(await actual<typeof import('@/modules/identity')>()),
   standingAccessPause: standingAccessPauseMock,
@@ -65,7 +69,7 @@ function betterAuthSession(
   role: unknown,
   emailVerified = true,
   createdAt = new Date(),
-  termsVersion: string | null = TERMS_VERSION,
+  agreedTermsVersion: number | null = CURRENT_TERMS,
 ) {
   return {
     session: { id: 's', token: 't', userId: USER_ID, expiresAt: new Date(), createdAt },
@@ -75,7 +79,7 @@ function betterAuthSession(
       name: 'Fixture',
       role,
       emailVerified,
-      termsVersion,
+      agreedTermsVersion,
     },
   };
 }
@@ -321,7 +325,7 @@ describe('requireSession', () => {
   // agreed, passes the same page, so the redirect is the guard's doing and nothing else's.
   describe.each([
     ['never agreed', null],
-    ['agreed to an earlier version', '2020-01-01'],
+    ['agreed to an earlier version', CURRENT_TERMS - 1],
   ])('an account that %s', (_label, stored) => {
     beforeEach(() => {
       getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), stored));
@@ -337,7 +341,7 @@ describe('requireSession', () => {
 
     it('passes that page once it has agreed to the current version', async () => {
       requestHeaders.set(RETURN_PATH_HEADER, '/coven/hearth?tab=mine');
-      getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), TERMS_VERSION));
+      getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), CURRENT_TERMS));
 
       await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     });
@@ -374,9 +378,22 @@ describe('requireSession', () => {
       `redirect:/account/email?next=${encodeURIComponent('/coven')}`,
     );
   });
+
+  // The account and its agreement stay as they were; only the published terms move on.
+  it('sends an account that agreed to the terms in force there again once a newer version is published', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true, new Date(), CURRENT_TERMS));
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
+    await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+
+    currentTermsVersionMock.mockResolvedValueOnce(CURRENT_TERMS + 1);
+
+    await expect(requireSession()).rejects.toThrow(
+      `redirect:/account/terms?next=${encodeURIComponent('/coven')}`,
+    );
+  });
 });
 
-// The `/admin` guard: a signed-in non-admin is answered with Next's 403 page rather than a
+// The `/keepers` guard: a signed-in non-admin is answered with Next's 403 page rather than a
 // redirect or a 404, since everyone knows the path exists (claude-docs/auth/admin-guard.md, "The admin guard").
 describe('requireAdminSession', () => {
   it('returns the session of an admin, without redirecting or refusing', async () => {
@@ -386,7 +403,7 @@ describe('requireAdminSession', () => {
 
   it('answers a signed-in user who is not an admin with the forbidden page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
+    requestHeaders.set(RETURN_PATH_HEADER, '/keepers');
 
     // Why the refusal could have been anything else: the session is live and
     // verified, so requireSession() lets it through, and only the role differs
@@ -404,7 +421,7 @@ describe('requireAdminSession', () => {
   });
 });
 
-// The guard on `/admin` and every curation page under it, the people pages excepted. A curator
+// The guard on `/keepers` and every curation page under it, the people pages excepted. A curator
 // or an admin passes; anyone else gets the forbidden page, as at requireAdminSession
 // (claude-docs/auth/admin-guard.md).
 describe('requireCuratorSession', () => {
@@ -419,7 +436,7 @@ describe('requireCuratorSession', () => {
 
   it('answers a signed-in user who holds no site role with the forbidden page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user'));
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
+    requestHeaders.set(RETURN_PATH_HEADER, '/keepers');
 
     await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     await expect(requireCuratorSession()).rejects.toThrow('forbidden');

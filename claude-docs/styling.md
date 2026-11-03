@@ -54,7 +54,7 @@ to.
   foreground-on-background plus 3:1 on the border.
 - **The group hues sit at odd multiples of 22.5° off `$sorrel`**, so none
   collides with accent (96°) or secondary (8°). A ninth group is a row an admin
-  adds at `/admin/category-groups`, outside the rotation, its two colours
+  adds at `/curator/category-groups`, outside the rotation, its two colours
   refused on write below 4.5:1 on their own grounds (M5.6b, below).
 - **`badge()` takes no variant argument, deliberately.** The mixins set colour,
   edge and geometry only — never width, margin, layout or a modal backdrop. A
@@ -747,9 +747,10 @@ Four variants:
   the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
   call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
   (`tests/scss/tokens.test.ts`).
-- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only two exist: Impersonate (on the row, in the user modal and on its confirm) and Pause Admin Changes (Pause, Resume and its confirm). The wax,
+- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only four exist: Impersonate (on the row, in the user modal and on its confirm), Pause Admin Changes (Pause, Resume and its confirm), Revoke Batch (its column on the invitation cards table and its confirm) and Email Every Account (the button and its confirm). The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
+- **`.btn--caution`**, the same outline in the warning ochre (`$warning`): an act that reaches every reader at once and is not undone, but destroys nothing. One control wears it: a document's Publish, on the button and its confirm.
 
 **Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant; a class list names the variant before the size (`btn btn--quiet btn--small`), so one search finds every use. `.btn--small` has half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
@@ -799,7 +800,7 @@ hidden, so neither moves. The markup is the `Pager` component's
 GroupList, CompendiumList and UserList render.
 
 **`.page-header` puts a page's heading and its one primary action on one
-line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
+line**, the action at the end (the owner's call, M5.6): `/curator/categories`'
 Add Category beside its H1. The row is centred and the action brought down
 0.25rem, the owner's measure: a heading's box carries room below its letters,
 so a centred button reads high and one on the baseline low. The row wraps on
@@ -1030,7 +1031,7 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
 
 ## The page column
 
-`.page-column` is the frame every `/admin` page sits in (MB.115), and the
+`.page-column` is the frame every `/keepers` page sits in (MB.115), and the
 (public) layout's compendium pages too (MB.83): the page's
 children a `space(5)` apart. The admin nav is no longer inside it but in the
 shell's context row above it (MB.7). It is a column as wide as
@@ -1042,7 +1043,7 @@ the owner's call at MB.115's review: the user list's seven columns need
 about 77rem before they stop scrolling inside their frame, the privilege
 ledger has seven too, and at the old 64rem the user list's sticky Impersonate
 column sat over Signed Up on a 1280px window. Only `.page-column` and
-`.coven-layout` read the token, so nothing outside `/admin`, `/coven/` and the
+`.coven-layout` read the token, so nothing outside `/keepers`, `/coven/` and the
 public compendium widens with it. Its paragraphs
 still stop at the measure. The width and its cap sit inside `:where()`, as
 the page frame's do, so a single class can change them. It is a primitive

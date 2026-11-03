@@ -173,6 +173,24 @@ export {
   findStandingSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
+export type { MailingAccount } from './documents';
+export {
+  countDocumentMailingAccounts,
+  countDocumentMailingReached,
+  countDocumentMailsSentToday,
+  findDocumentMailingAccountPage,
+  findDocumentMailingById,
+  findDocumentMailingRecipientUsers,
+  findOldestSendingDocumentMailing,
+  findOpenDocumentMailingBefore,
+  findCurrentDocumentVersion,
+  findDocumentByKey,
+  findDocumentDraft,
+  findDocumentMailingForVersion,
+  findPublishedDocumentVersion,
+  findPublishedDocumentVersionPage,
+  findUnsentDocumentMailingRecipientPage,
+} from './documents';
 export {
   findStandingUserAccessPause,
   findStandingUserAccessPausesFor,
@@ -262,4 +280,12 @@ export type {
   UserFilter,
   VocabularySuggestion,
   WorkspaceInvitationValues,
+} from './types';
+export type {
+  DocumentMailingInput,
+  DocumentMailingRecipientRow,
+  DocumentMailingRow,
+  DocumentRow,
+  DocumentTextInput,
+  DocumentVersionRow,
 } from './types';

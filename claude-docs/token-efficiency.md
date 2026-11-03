@@ -59,7 +59,7 @@ Playwright run to a log as above.
 
 ## When a full suite is worth running
 
-Run one spec at a time while working: it is fast and its output is small. Run
+While working, run the specs a change touches, named together in one command: the servers start once, and the output stays small. Run
 the full coverage, stories and e2e suites only when the owner says so, because
 the 80% threshold and cross-file breakage only show there. Saving tokens never
 justifies a thinner test.

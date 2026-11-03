@@ -148,7 +148,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   - `next/link` and `next/navigation` need no alias: the framework supplies them.
     Its decorator wraps each story in the App Router's contexts (a router whose
     calls go nowhere), and `preview.tsx` sets the page it pretends to be on
-    (`/admin/users`, `parameters.nextjs.navigation.pathname`).
+    (`/keepers/users`, `parameters.nextjs.navigation.pathname`).
   - No HMR settings: Vite's reload socket shares the HTTP port, so `--base` and a
     second published port are not needed.
 - **`preview.tsx`** — the load-once entry and the **decorator**. Imports
@@ -491,7 +491,7 @@ environment. Production and hotfix previews never carry the workshop.
   | A live session, role `admin`             | The file, with the workshop's Content Security Policy (below)          |
   | The same admin, at bare `/workshop`      | 307 to `/workshop/index.html`, query kept, with the same policy header |
 
-  The 403 is plain rather than the styled page `/admin` shows: it answers
+  The 403 is plain rather than the styled page `/keepers` shows: it answers
   requests for scripts and JSON as well as for the page. The lookup module is
   imported inside the workshop branch only, so no other request loads the
   database client in the proxy.

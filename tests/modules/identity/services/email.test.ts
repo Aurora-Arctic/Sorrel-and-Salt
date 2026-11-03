@@ -325,13 +325,13 @@ describe('setEmail', () => {
   // Where the page was sent from rides on the link's landing; guarding it is
   // the sender's, where the link is built, so the service passes it as given.
   it('hands the sender the return path on both the change and the resend path', async () => {
-    await setEmail(asUser(B), NEW, sender, '/admin');
+    await setEmail(asUser(B), NEW, sender, '/keepers');
 
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.id, '/admin');
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.id, '/keepers');
 
     await setSentAt(B.id, null);
-    await setEmail(asUser(B), B.email, sender, '/admin');
+    await setEmail(asUser(B), B.email, sender, '/keepers');
 
-    expect(sender.resend).toHaveBeenCalledExactlyOnceWith(B.email, '/admin');
+    expect(sender.resend).toHaveBeenCalledExactlyOnceWith(B.email, '/keepers');
   });
 });

@@ -65,11 +65,17 @@ export async function signInAs(
       // `can_create_workspace` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
       await tx`select set_config('app.privilege_route', 'manual', true)`;
       // Stamped as its own creator, as the sign-up hook stamps one. A curator or an admin holds the
-      // creation flag, as the users CHECK asks.
+      // creation flag, as the users CHECK asks. An agreed account holds the terms version published in this database now, and the older text `terms_version` that `agreeToTerms` still writes
+      // and the admin users table still shows.
+      // The terms version in force is the terms document's highest live published version, as the gate reads it.
+      const [{ current }] = await tx`
+        select max(v.number) as current from document_versions v join documents d on d.id = v.document_id
+        where d.key = 'terms' and d.deleted_at is null and v.status = 'published' and v.deleted_at is null`;
+      const agreed: number | null = termsAgreed ? (current as number | null) : null;
       await tx`
-        insert into users (id, name, email, email_verified, role, can_create_workspace, terms_version, terms_accepted_at, created_by, updated_by)
+        insert into users (id, name, email, email_verified, role, can_create_workspace, agreed_terms_version, terms_version, terms_accepted_at, created_by, updated_by)
         values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role !== 'user'},
-          ${termsAgreed ? TERMS_VERSION : null}, ${termsAgreed ? new Date() : null}, ${userId}, ${userId})
+          ${agreed}, ${termsAgreed ? TERMS_VERSION : null}, ${termsAgreed ? new Date() : null}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

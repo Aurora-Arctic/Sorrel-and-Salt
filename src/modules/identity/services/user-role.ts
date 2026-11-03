@@ -11,7 +11,7 @@ import { isPrimaryAdmin } from './primary-admin';
 import type { SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
-// An admin sets a user's site role from `/admin/users`. Each change is declared `via: 'admin'` and the trigger on `users` records it;
+// An admin sets a user's site role from `/keepers/users`. Each change is declared `via: 'admin'` and the trigger on `users` records it;
 // the service writes no ledger row. Rules: claude-docs/design-decisions/m2.9-granting-admin.md and m11.20-curator-role.md;
 // shape: claude-docs/auth/admin-users.md, "Changing a site role".
 

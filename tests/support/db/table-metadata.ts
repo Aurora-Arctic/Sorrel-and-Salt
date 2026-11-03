@@ -35,6 +35,10 @@ export const AUDITED_TABLES = [
   'deities',
   'deity_other_names',
   'deity_traditions',
+  'document_mailing_recipients',
+  'document_mailings',
+  'document_versions',
+  'documents',
   'ingredient_categories',
   'ingredient_deities',
   'ingredient_folk_names',
@@ -100,7 +104,9 @@ export function tableFacts(table: PgTable) {
     primaryKeys,
     foreignKeys,
     byName: Object.fromEntries(columns.map((column) => [column.name, column])),
-    byIndexName: Object.fromEntries(indexes.map((index) => [index.config.name, index])),
+    byIndexName: Object.fromEntries(
+      indexes.map((index) => [index.config.name as string, index] as const),
+    ),
     foreignKeyByColumn: Object.fromEntries(facts.map((fk) => [fk.column, fk])),
     /** The table's own references — the ones that are not an audit id pointing at `users`. */
     nonAuditForeignKeys: facts.filter((fk) => !auditColumnNames.has(fk.column)),

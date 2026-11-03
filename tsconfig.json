@@ -54,7 +54,9 @@
     // reaches the component stories; the dot-directory is named because a
     // `**` glob skips it otherwise.
     ".storybook/**/*.ts",
-    ".storybook/**/*.tsx"
+    ".storybook/**/*.tsx",
+    ".next-view/types/**/*.ts",
+    ".next-view/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

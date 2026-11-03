@@ -485,7 +485,7 @@ describe('session cookie cache', () => {
     vi.unstubAllEnvs();
   });
 
-  // A revoked admin's next request reads `role` off the users row, so `/admin` and every admin
+  // A revoked admin's next request reads `role` off the users row, so `/keepers` and every admin
   // mutation close to them at once. A cookie cache would answer from the cookie until its TTL ran
   // out (claude-docs/auth/admin-users.md).
   it('keeps the session cookie cache off, so every request reads the role afresh', async () => {

@@ -199,6 +199,17 @@
     }
   }
 
+  // What takes effect for every reader at once and needs care, not undoing: a document's Publish.
+  // In the warning ochre, the step short of the destructive red.
+  .btn--caution {
+    border-color: $warning;
+    color: $warning;
+
+    &:hover {
+      background-color: $warning;
+    }
+  }
+
   // A size, not a colour, so it composes with every variant: for a compact
   // strip — a banner, a table row — that the full button would make taller.
   .btn--small {
@@ -767,7 +778,7 @@
   }
 
   // A table of contents: titled sections of links, each link with its one
-  // line beneath it in the muted ink. The `/admin` index's (AdminNav's
+  // line beneath it in the muted ink. The `/curator` and `/keepers` indexes (AdminNav's
   // `contents.tsx`) and the coven index's. Not bulleted: a list of links, so
   // typography-base's marker and indent go. Here among the primitives rather
   // than in a component's stylesheet, since a route loads a component's
@@ -776,7 +787,7 @@
     @include stack;
   }
 
-  // The `/admin` index in the reading column, centred in the admin area's wider one as the account page's sections are in the
+  // The curator and keepers indexes in the reading column, centred in the admin area's wider one as the account page's sections are in the
   // page; the text inside stays left-aligned.
   .admin-index {
     box-sizing: border-box;

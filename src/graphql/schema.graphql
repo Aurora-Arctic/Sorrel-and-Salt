@@ -337,6 +337,71 @@ input DeityTraditionInput {
   name: String!
 }
 
+"""A site document’s title and lede."""
+type Document {
+  id: ID!
+  lede: String!
+  title: String!
+}
+
+"""
+The open draft of a document. `revision` is what a save or publish sends back.
+"""
+type DocumentDraft {
+  body: String!
+  id: ID!
+  number: Int!
+  revision: Int!
+}
+
+"""
+A document as the admin editor opens it: its public version and its draft.
+"""
+type DocumentForEditing {
+  draft: DocumentDraft
+  id: ID!
+  key: String!
+  lede: String!
+  published: DocumentVersion
+  title: String!
+}
+
+input DocumentInput {
+  lede: String!
+  title: String!
+}
+
+"""
+One mailing of a document version to every account. `state` is queued, sending, waiting, paused, sent or replaced.
+"""
+type DocumentMailing {
+  finishedAt: DateTime
+  id: ID!
+  reached: Int!
+  recipientCount: Int!
+  startedAt: DateTime!
+  state: String!
+  versionNumber: Int!
+}
+
+"""
+What the editor needs to email a document: its published version, whom a mailing would reach and in how many days, and the mailings that matter.
+"""
+type DocumentMailingOverview {
+  accountCount: Int!
+  current: DocumentMailing
+  days: Int!
+  inProgress: DocumentMailing
+  versionNumber: Int!
+}
+
+"""A published version of a document."""
+type DocumentVersion {
+  body: String!
+  number: Int!
+  publishedAt: DateTime!
+}
+
 """
 What Make It Ours could not carry onto the coven's new own entry, by name, each list sorted: a folk name its new name took. The other lists stay empty.
 """
@@ -927,7 +992,7 @@ type Mutation {
   Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.
   """
   addSupportInternalNote(body: String!, requestId: ID!): SupportReply!
-  agreeToTerms: User!
+  agreeToTerms(version: Int!): User!
 
   """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
@@ -1078,9 +1143,15 @@ type Mutation {
   deleteZodiacSign(id: ID!): ID!
 
   """
+  Throws the document's open draft away, answering its id. Refused as STALE_WRITE when the draft has moved on from `expectedRevision`.
+  """
+  discardDocumentDraft(documentId: ID!, expectedRevision: Int!): ID!
+
+  """
   Copies a spell into a new private draft in the same coven, with its categories and live steps; the original is untouched.
   """
   duplicateSpell(id: ID!, workspaceId: ID!): Spell!
+  emailDocumentToEveryAccount(documentId: ID!, summary: String!): DocumentMailingOverview!
 
   """Lets a user with no invitation create a coven. Refused once they may."""
   grantWorkspaceCreation(note: String, userId: ID!): User!
@@ -1139,6 +1210,7 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+  publishDocumentDraft(documentId: ID!, expectedRevision: Int): DocumentVersion!
 
   """
   Notes that the signed-in account opened this card link and was refused. Takes the token alone: the account is the session's and the reason is worked out here. Answers true whether or not anything was recorded.
@@ -1185,6 +1257,7 @@ type Mutation {
   Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.
   """
   resumeAdminRoleChanges: Boolean!
+  resumeDocumentMailing(mailingId: ID!): DocumentMailingOverview!
 
   """
   Withdraws a pending admin invitation, so its link says so. Refused while admin changes are paused, but to the primary admin.
@@ -1205,6 +1278,7 @@ type Mutation {
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
   """
   revokeWorkspaceCreation(note: String, userId: ID!): User!
+  saveDocumentDraft(body: String!, documentId: ID!, expectedRevision: Int): DocumentDraft!
 
   """
   Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
@@ -1302,6 +1376,7 @@ type Mutation {
   Replaces the tradition; the slug follows the name, and so does the slug of every deity under it.
   """
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
+  updateDocument(id: ID!, input: DocumentInput!): Document!
   updateIngredient(
     """
     The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
@@ -1615,6 +1690,8 @@ type Query {
   The live traditions by name: the tradition a deity is filed under is picked from these.
   """
   deityTraditions(after: String, before: String, first: Int, last: Int): QueryDeityTraditionsConnection!
+  documentForEditing(key: String!): DocumentForEditing!
+  documentMailing(key: String!): DocumentMailingOverview!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
 
   """
@@ -2826,6 +2903,7 @@ input UpdateSpellInput {
 }
 
 type User {
+  agreedTermsVersion: Int
   audit: AuditInfo!
   canCreateWorkspace: Boolean!
   email: String!

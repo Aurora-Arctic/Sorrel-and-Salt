@@ -491,7 +491,7 @@ type QueryCompendiumConnectionEdge {
   `filterIngredients()` was retired (DESIGN.md §14). `elements` (M8.13, `[IngredientElement!]`, lower case) matches an entry whose
   `elements`, or those of any live variant, hold any one listed, among others or alone, by array overlap
   in SQL (MB.157, MB.215). On `workspaceIngredients` too. The admin's two to-do lists, which M5.5
-  puts on `/admin/compendium`: `withoutReferences: true` (MB.153), only the
+  puts on `/curator/compendium`: `withoutReferences: true` (MB.153), only the
   entries citing no live compendium reference, so an entry whose one link is
   unlinked, or cites a soft-deleted reference, is on it, as its bibliography
   reads empty; and `nomenclature` (M5.5), only the entries so classified, so

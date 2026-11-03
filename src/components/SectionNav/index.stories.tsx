@@ -53,11 +53,11 @@ const SECTION_STATES: Record<string, ReactNode> = {
   'Coven Ingredients Current': coven('/coven/fixture-coven/ingredients', true),
   'Coven Members Current': coven('/coven/fixture-coven/members', true),
   'Coven As A Viewer': coven('/coven/fixture-coven', false),
-  'Admin Categories Current': admin('/admin/category-groups'),
-  'Admin Compendium Current': admin('/admin/compendium'),
-  'Admin Astrology Current': admin('/admin/zodiac-signs'),
-  'Admin People Current': admin('/admin/users'),
-  'Admin As A Curator': admin('/admin/compendium', false),
+  'Admin Categories Current': admin('/curator/category-groups'),
+  'Admin Compendium Current': admin('/curator/compendium'),
+  'Admin Astrology Current': admin('/curator/zodiac-signs'),
+  'Admin People Current': admin('/keepers/users'),
+  'Admin As A Curator': admin('/curator/compendium', false),
 };
 
 export const States: Story = {
@@ -72,7 +72,7 @@ export const States: Story = {
 // width stays pinned (700px) because this state exists only at tablet width: wider
 // shows every link, narrower moves the nav to the bottom bar.
 export const AdminOnAHiddenPage: Story = {
-  render: () => admin('/admin/users'),
+  render: () => admin('/keepers/users'),
   globals: { viewport: { value: 'w700', isRotated: false } },
 };
 
@@ -83,7 +83,7 @@ const MoreOpen = ({ path }: { path: string }): ReactElement => {
 };
 
 export const TabletMoreOpen: Story = {
-  render: () => <MoreOpen path="/admin/compendium" />,
+  render: () => <MoreOpen path="/curator/compendium" />,
   globals: { viewport: { value: 'w700', isRotated: false } },
 };
 
@@ -94,11 +94,11 @@ export const PhoneBottomBar: Story = {
 };
 
 export const PhoneAdminBottomBar: Story = {
-  render: () => admin('/admin/compendium'),
+  render: () => admin('/curator/compendium'),
   globals: { viewport: { value: 'w375', isRotated: false } },
 };
 
 export const PhoneMoreOpen: Story = {
-  render: () => <MoreOpen path="/admin/compendium" />,
+  render: () => <MoreOpen path="/curator/compendium" />,
   globals: { viewport: { value: 'w375', isRotated: false } },
 };

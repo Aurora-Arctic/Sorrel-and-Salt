@@ -164,6 +164,33 @@ async function cupboardEntry(): Promise<Row> {
 
 const address = () => `${token()}@partial-unique.test`;
 
+/** A site document under a fresh key and seed key. */
+const documentRow = async () => {
+  const t = token();
+  return stamped({
+    key: `testdoc-${t}`,
+    title: `Testwort Charter ${t}`,
+    lede: 'Testwort.',
+    seed_key: `fixture-${t}`,
+  });
+};
+/** A version of a fresh document under a random number: published and dated, or the draft. */
+const documentVersion = (status: 'draft' | 'published') => async () =>
+  stamped({
+    document_id: await idOf('documents', await documentRow()),
+    number: 1 + Math.floor(Math.random() * 1_000_000),
+    body: 'Testwort',
+    status,
+    published_at: status === 'published' ? new Date() : null,
+  });
+/** A mailing of a fresh published version. */
+const documentMailing = async () =>
+  stamped({
+    document_version_id: await idOf('document_versions', await documentVersion('published')()),
+    summary: 'Testwort clause added.',
+    recipient_count: 1,
+  });
+
 // Keyed by index rather than table: one table's indexes can hold rows on
 // opposite sides of a predicate (`deity_id IS NULL` against `IS NOT NULL`).
 const ROWS: Record<string, PartialIndexRow> = {
@@ -183,6 +210,20 @@ const ROWS: Record<string, PartialIndexRow> = {
   },
   deity_traditions_seed_key_unique: { row: tradition },
   deity_traditions_slug_unique: { row: tradition },
+  document_mailing_recipients_mailing_user_unique: {
+    row: async () =>
+      stamped({
+        mailing_id: await idOf('document_mailings', await documentMailing()),
+        user_id: AUTHOR,
+      }),
+  },
+  document_mailings_version_unique: { row: documentMailing },
+  // A published version, so the clash on its number is not refused first as a second draft.
+  document_versions_number_unique: { row: documentVersion('published') },
+  // A draft under a fresh number each time, so the number index never refuses first.
+  document_versions_one_draft: { row: documentVersion('draft') },
+  documents_key_unique: { row: documentRow },
+  documents_seed_key_unique: { row: documentRow },
   ingredient_deities_link_unique: { row: () => ingredientDeity(true) },
   ingredient_deities_name_unique: { row: () => ingredientDeity(false) },
   ingredient_deities_position_unique: { row: () => ingredientDeity(false) },

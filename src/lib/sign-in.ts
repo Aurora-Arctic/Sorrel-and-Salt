@@ -1,7 +1,6 @@
 import type { Route } from 'next';
 import type { UserRole } from './session';
 import type { PageTab } from '../components/TabbedPage/types';
-import { curates } from './site-roles';
 import { SUPPORT_LIST_PATH } from './support-path';
 
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
@@ -15,12 +14,16 @@ import { SUPPORT_LIST_PATH } from './support-path';
  */
 export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 
-/** A curator's or an admin's landing instead: curating starts in the admin area. */
-export const ADMIN_LANDING = '/admin' satisfies Route;
+/** An admin's landing instead: the keepers' area. */
+export const ADMIN_LANDING = '/keepers' satisfies Route;
+
+/** A curator's landing: the curation area. */
+export const CURATOR_LANDING = '/curator' satisfies Route;
 
 /** Where a sign-in with no return path lands, by the role the account holds once it has signed in. */
 export function postSignInLanding(role: UserRole): Route {
-  return curates(role) ? ADMIN_LANDING : POST_SIGN_IN_LANDING;
+  if (role === 'admin') return ADMIN_LANDING;
+  return role === 'curator' ? CURATOR_LANDING : POST_SIGN_IN_LANDING;
 }
 
 /**

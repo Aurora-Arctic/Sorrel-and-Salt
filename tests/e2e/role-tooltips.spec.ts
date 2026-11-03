@@ -17,7 +17,7 @@ test('an admin opens a role tip on the People page and reads what the role may d
   page,
 }) => {
   await signInAs(page, 'admin@role-tooltips.test', ['discord'], 'admin');
-  await page.goto('/admin/users?query=role-tooltips.test');
+  await page.goto('/keepers/users?query=role-tooltips.test');
 
   const row = page.getByRole('row', { name: /admin@role-tooltips\.test/ });
   const button = row.getByRole('button', { name: 'About Admin' });

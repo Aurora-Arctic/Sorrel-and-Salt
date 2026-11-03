@@ -4,6 +4,10 @@ import { is } from 'drizzle-orm';
 import { PgTable, getTableConfig } from 'drizzle-orm/pg-core';
 import { useTestDatabase } from '../support/db/database';
 import { tableFacts } from '../support/db/table-metadata';
+import * as documentMailingRecipients from '@/modules/documents/schema/document-mailing-recipients';
+import * as documentMailings from '@/modules/documents/schema/document-mailings';
+import * as documentVersions from '@/modules/documents/schema/document-versions';
+import * as documents from '@/modules/documents/schema/documents';
 import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-attempts';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaceMemberPauses from '@/modules/coven/schema/workspace-member-pauses';
@@ -61,6 +65,10 @@ const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) 
   );
 
 const MODULES = [
+  documentMailingRecipients,
+  documentMailings,
+  documentVersions,
+  documents,
   cardInvitationAttempts,
   invitations,
   workspaceMemberPauses,

@@ -18,13 +18,13 @@ import {
 // callback has run. Not `/`: `/` is the public front door, and someone who just signed in has
 // been through it already (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
 describe('postSignInLanding', () => {
-  it('sends an admin to the admin area', () => {
-    expect(postSignInLanding('admin')).toBe('/admin');
+  it('sends an admin to the keepers area', () => {
+    expect(postSignInLanding('admin')).toBe('/keepers');
   });
 
-  // A curator's work is in the admin area too.
-  it('sends a curator to the admin area', () => {
-    expect(postSignInLanding('curator')).toBe('/admin');
+  // A curator's work is the curation pages, which have their own area.
+  it('sends a curator to the curator area', () => {
+    expect(postSignInLanding('curator')).toBe('/curator');
   });
 
   it('sends everyone else to the /coven landing', () => {

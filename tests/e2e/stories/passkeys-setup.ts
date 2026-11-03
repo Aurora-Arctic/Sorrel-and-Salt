@@ -1,7 +1,6 @@
 import { generateKeyPairSync, randomBytes, randomUUID } from 'node:crypto';
 import { isoCBOR } from '@simplewebauthn/server/helpers';
 import type { CDPSession, Page } from '@playwright/test';
-import { TERMS_VERSION } from '@/lib/terms-version';
 import { test as base } from '../fixtures';
 import { assertNoAccessibilityViolations, settleTransitions } from '../axe';
 import { serverUrl, slotPort } from '../slots';
@@ -49,8 +48,9 @@ async function accountWithPasskey(email: string, key: ReturnType<typeof passkeyP
   const id = randomUUID();
   await withSql(async (sql) => {
     await sql`
-      insert into users (id, name, email, email_verified, role, terms_version, terms_accepted_at, created_by, updated_by)
-      values (${id}, 'Fixture Passkeyholder', ${email}, true, 'user', ${TERMS_VERSION}, now(), ${id}, ${id})
+      insert into users (id, name, email, email_verified, role, agreed_terms_version, terms_accepted_at, created_by, updated_by)
+      values (${id}, 'Fixture Passkeyholder', ${email}, true, 'user',
+        (select max(v.number) from document_versions v join documents d on d.id = v.document_id where d.key = 'terms' and d.deleted_at is null and v.status = 'published' and v.deleted_at is null), now(), ${id}, ${id})
     `;
     await sql`
       insert into passkeys (name, public_key, user_id, credential_id, counter, device_type, backed_up, transports)

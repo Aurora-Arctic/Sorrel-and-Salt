@@ -31,6 +31,10 @@ export const UserRef = builder.objectRef<UserRow>('User').implement({
     canCreateWorkspace: t.exposeBoolean('canCreateWorkspace', { authScopes: selfOrAdmin }),
     emailVerified: t.exposeBoolean('emailVerified', { authScopes: selfOrAdmin }),
     termsVersion: t.exposeString('termsVersion', { nullable: true, authScopes: selfOrAdmin }),
+    agreedTermsVersion: t.exposeInt('agreedTermsVersion', {
+      nullable: true,
+      authScopes: selfOrAdmin,
+    }),
     // An admin's alone, the user's own row included: the account page reads a
     // user's own from Better Auth, whose table it is.
     providers: t.stringList({
@@ -86,12 +90,13 @@ builder.mutationField('setName', (t) =>
   }),
 );
 
-// The terms page's Agree button. It takes no version: the service records the one in force, so the browser cannot claim another.
+// The terms page's Agree button. It names the version the page showed, and the service refuses one no longer in force.
 builder.mutationField('agreeToTerms', (t) =>
   t.field({
     type: UserRef,
+    args: { version: t.arg.int({ required: true }) },
     authScopes: { signedIn: true },
-    resolve: (_root, _args, context) => agreeToTerms(sessionOf(context)),
+    resolve: (_root, { version }, context) => agreeToTerms(sessionOf(context), version),
   }),
 );
 

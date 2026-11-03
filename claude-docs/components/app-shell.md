@@ -2,7 +2,7 @@
 
 `src/components/AppShell/` is the frame around every signed-in page (MB.7):
 a skip link, the global bar, and the page. Its layout is
-`src/app/(shell)/layout.tsx`, over `/account`, `/coven` and `/admin`. It is a
+`src/app/(shell)/layout.tsx`, over `/account`, `/coven` and `/keepers`. It is a
 server component; only the account menu and the current-page marking in the
 bar's links are client code.
 
@@ -71,7 +71,7 @@ requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in whil
   `/coven` landing (M2.8) for someone in none, which offers the create page or
   explains the invitation. The links go into the coven themselves rather than
   to `/coven`, which would only redirect a member there and leave the browser
-  a stop with nothing on it, most visibly from `/admin` (MB.257). At or
+  a stop with nothing on it, most visibly from `/keepers` (MB.257). At or
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.
@@ -79,7 +79,7 @@ requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in whil
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
   offered in the account panel.
-- **Add Ingredient** is `add-ingredient-button.tsx`, a client part: a plain button for one destination (the compendium for a curator, each coven they may write to), a split button with a menu of them all, each “to” its name, for two or more, and nothing without one. The menu draws the places in two labelled groups, **Compendium** and **Coven**, when the viewer may add to both, and as a plain list when to one kind alone (the owner’s call, 2026-10-20). The side the viewer is on comes first, learned from the address alone (`usePathname()`): a coven’s pages (`covenSlugOf`) put the covens first, any other page the compendium, as the bar has always led with it. The groups are made by the shared `sectionsFor` ([`menu-button.md`](menu-button.md), "Sections"); the chevron and its menu are a `MenuButton` (`add-ingredient-menu.tsx`, M14.27), the chevron alone shown as its `icon` and named “Choose Where to Add”, its menu named “Add Ingredient To” (`menuLabel`), so the groups, the keys and the look are MenuButton’s own. A coven opens a modal headed by its name over “Add Ingredient”, named “Add Ingredient to” the coven; the compendium navigates to `/admin/compendium?new` (claude-docs/components/modal.md, "Add Ingredient").
+- **Add Ingredient** is `add-ingredient-button.tsx`, a client part: a plain button for one destination (the compendium for a curator, each coven they may write to), a split button with a menu of them all, each “to” its name, for two or more, and nothing without one. The menu draws the places in two labelled groups, **Compendium** and **Coven**, when the viewer may add to both, and as a plain list when to one kind alone (the owner’s call, 2026-10-20). The side the viewer is on comes first, learned from the address alone (`usePathname()`): a coven’s pages (`covenSlugOf`) put the covens first, any other page the compendium, as the bar has always led with it. The groups are made by the shared `sectionsFor` ([`menu-button.md`](menu-button.md), "Sections"); the chevron and its menu are a `MenuButton` (`add-ingredient-menu.tsx`, M14.27), the chevron alone shown as its `icon` and named “Choose Where to Add”, its menu named “Add Ingredient To” (`menuLabel`), so the groups, the keys and the look are MenuButton’s own. A coven opens a modal headed by its name over “Add Ingredient”, named “Add Ingredient to” the coven; the compendium navigates to `/curator/compendium?new` (claude-docs/components/modal.md, "Add Ingredient").
   Its target will follow the area: a coven page adds to that coven, an admin
   page to the compendium, anywhere else to the viewer's only coven or a choice.
 - **An unverified viewer** gets the brand link, the account menu with Sign
@@ -99,7 +99,7 @@ requests waiting on them (`claude-docs/auth/admin-bootstrap.md`, "Signed in whil
   from where the click was. [`PublicFrame`](public-frame.md) draws the same
   span before its page wrapper, `.app-shell__main` too. `tests/e2e/skip-target.spec.ts` walks both.
 - **The context row** is the layouts' to render: the coven layout puts the
-  switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
+  switcher and `CovenNav` in it, the admin layout "Admin" linking to `/keepers` and
   `AdminNav` ([`context-row.md`](context-row.md)).
 - **The paused notice.** For a paused viewer, an error `Notice` (red, and `quiet`, so a status rather than an alert)
   above the page, in its own `aside` labelled `Site Access`, since the page owns `main`: "Your site access is paused
@@ -154,7 +154,7 @@ the account menu's link. `tests/lib/shell-home.test.ts` and
 
 ## The Add Ingredient button
 
-The bar's one global action. The places a new ingredient can go are the compendium, for someone who curates, and each coven they may write to. One place makes a plain button. Two or more make a split button, whose main part opens the default place and whose chevron opens a menu of them all. A coven's dialog is opened by the page's address (`?new=ingredient-coven-<slug>`), written with the browser's own `pushState`, which Next's router follows, since nothing on the server needs re-reading to draw the form. The compendium's New Entry lives on `/admin/compendium`, so choosing it is a navigation there (`claude-docs/components/modal.md`, "Add Ingredient").
+The bar's one global action. The places a new ingredient can go are the compendium, for someone who curates, and each coven they may write to. One place makes a plain button. Two or more make a split button, whose main part opens the default place and whose chevron opens a menu of them all. A coven's dialog is opened by the page's address (`?new=ingredient-coven-<slug>`), written with the browser's own `pushState`, which Next's router follows, since nothing on the server needs re-reading to draw the form. The compendium's New Entry lives on `/curator/compendium`, so choosing it is a navigation there (`claude-docs/components/modal.md`, "Add Ingredient").
 
 ## The main body during a navigation
 

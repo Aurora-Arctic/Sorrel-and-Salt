@@ -264,18 +264,18 @@ test('a site link from a tabbed page shows nothing of the held page through the 
 // These three start from a control the wait takes away: the pressed link sits in the region the swap
 // unmounts, so the wait must still last until the server answers (the navigation provider owns it).
 
-test("an admin nav link keeps the admin page's wait until the server answers, though the nav is swapped out", async ({
+test("a curator nav link keeps the curator page's wait until the server answers, though the nav is swapped out", async ({
   page,
 }) => {
   await signInAgainAs(page, admin);
-  await page.goto('/admin/categories');
+  await page.goto('/curator/categories');
   const pills = page.getByRole('navigation', { name: 'Categories', exact: true });
   await expect(pills).toBeVisible();
   const link = page
-    .getByRole('navigation', { name: 'Admin', exact: true })
+    .getByRole('navigation', { name: 'Curator', exact: true })
     .getByRole('link', { name: 'Forms', exact: true });
   const href = await link.getAttribute('href');
-  expect(href).toMatch(/^\/admin\//);
+  expect(href).toMatch(/^\/curator\//);
   const server = await holdServerAnswers(page);
 
   server.hold();
@@ -288,7 +288,7 @@ test("an admin nav link keeps the admin page's wait until the server answers, th
   await page.waitForTimeout(500);
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
-  expect(new URL(page.url()).pathname).toBe('/admin/categories');
+  expect(new URL(page.url()).pathname).toBe('/curator/categories');
   await assertNoAccessibilityViolations(page);
 
   await server.release();

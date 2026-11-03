@@ -1,9 +1,9 @@
 # GroupedValueList
 
 `src/components/GroupedValueList/` — a curated vocabulary's filter, table and
-pager, grouped or flat: `/admin/categories`' (M5.6, MB.178), `/admin/forms`'
-(M5.6a) and `/admin/deities`' (MB.132), each value filed under a group, and
-`/admin/celestial-bodies`' and `/admin/zodiac-signs`' (MB.95), filed under nothing.
+pager, grouped or flat: `/curator/categories`' (M5.6, MB.178), `/curator/forms`'
+(M5.6a) and `/curator/deities`' (MB.132), each value filed under a group, and
+`/curator/celestial-bodies`' and `/curator/zodiac-signs`' (MB.95), filed under nothing.
 One component serves every such vocabulary, `kind: 'category' | 'form' |
 'deity' | 'celestialBody' | 'zodiacSign'`, as [`GroupList`](group-list.md) serves
 the groups; the flat kinds had a copy of their own, `VocabularyValueList`,
@@ -120,8 +120,8 @@ for a rule only one kind's rows need.
   ([`workshop.md`](../workshop.md), "`.storybook/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Celestial Body and the rest, the tab's action beside the
-  page's heading (`ValueAction` in `src/app/(shell)/admin/value-page.tsx`, from the
-  route group's `@action` slot, built on `AddAction` in `src/app/(shell)/admin/add-action.tsx`,
+  page's heading (`ValueAction` in `src/app/(shell)/curator/value-page.tsx`, from the
+  route group's `@action` slot, built on `AddAction` in `src/app/(shell)/curator/add-action.tsx`,
   which takes the dialog's `heading` apart from the button's label, M9.18) and so the page's rather than this
   component's, is `?new`.
   `href.ts`'s `groupedValuesHref(kind, place, dialog?)`, on the shared
@@ -227,7 +227,7 @@ filter shown run as the shared filter rows (`tests/support/filter-form.tsx`,
 [`filter-form.md`](filter-form.md), "Testing"); its loading state is
 CompendiumList's, the type-ahead's narrowing Combobox's, paging Pager's, and the category chip's colours
 presentation. A form's group icon, or the spoon beside a group with none and none beside a deity's, is asserted by comparing the rendered `.form-icon` to `FormIcon`'s own.
-`tests/app/(shell)/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
+`tests/app/(shell)/curator/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
 ([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"):
 the guard refusing before any read; the first page of 25 read (26, to know of
 a next) and an unreadable cursor read as the first page; every group read on

@@ -35,7 +35,7 @@ describe('GroupList', () => {
     expect(within(row).getByText('An invented group')).toBeInTheDocument();
     expect(within(row).getByRole('link', { name: 'Edit Fixture Wards' })).toHaveAttribute(
       'href',
-      '/admin/category-groups?edit=fixture-wards',
+      '/curator/category-groups?edit=fixture-wards',
     );
   });
 
@@ -60,7 +60,7 @@ describe('GroupList, searched by name', () => {
     router.push.mockReset();
   });
 
-  const path = '/admin/deity-traditions';
+  const path = '/curator/deity-traditions';
   const SUBJECT: FilterFormSubject = {
     label: 'Filter Deity Traditions',
     path,
@@ -101,16 +101,16 @@ describe('GroupList, searched by name', () => {
 
 describe('groupsHref', () => {
   it("builds each page's address, keeping the cursor under a modal", () => {
-    expect(groupsHref('form', {})).toBe('/admin/form-groups');
-    expect(groupsHref('tradition', {}, 'new')).toBe('/admin/deity-traditions?new');
-    expect(groupsHref('form', { after: 'c' }, 'new')).toBe('/admin/form-groups?after=c&new');
+    expect(groupsHref('form', {})).toBe('/curator/form-groups');
+    expect(groupsHref('tradition', {}, 'new')).toBe('/curator/deity-traditions?new');
+    expect(groupsHref('form', { after: 'c' }, 'new')).toBe('/curator/form-groups?after=c&new');
     expect(groupsHref('category', { before: 'c' }, { edit: 'a b' })).toBe(
-      '/admin/category-groups?before=c&edit=a+b',
+      '/curator/category-groups?before=c&edit=a+b',
     );
     // The search goes ahead of the cursor and the modal, and a blank one is none.
     expect(groupsHref('tradition', { query: 'wort', after: 'c' }, 'new')).toBe(
-      '/admin/deity-traditions?query=wort&after=c&new',
+      '/curator/deity-traditions?query=wort&after=c&new',
     );
-    expect(groupsHref('tradition', { query: '' })).toBe('/admin/deity-traditions');
+    expect(groupsHref('tradition', { query: '' })).toBe('/curator/deity-traditions');
   });
 });

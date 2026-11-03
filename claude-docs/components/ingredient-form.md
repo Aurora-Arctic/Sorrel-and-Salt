@@ -480,7 +480,7 @@ links. In both substitute lists, the ingredient's and each variant's:
 - **It links the entry's page where the form is given one** (`entryHref`),
   in a new tab, so the form and its unsaved changes stay where they are. The
   admin's compendium page gives the entry's own modal,
-  `/admin/compendium?edit=<slug>`. The shell's add button gives the public
+  `/curator/compendium?edit=<slug>`. The shell's add button gives the public
   compendium's entry page, `/compendium/ingredients/[slug]`, for a compendium
   substitute and nothing for a coven's own, since the summary is given a slug
   and not an id and a coven's page is addressed by id.
@@ -1661,8 +1661,8 @@ workspaceId)`, busy until the answer, and calls
   and its Delete and End Redirect & Save questions the shared
   [`ConfirmQuestion`](modal.md), which also puts the unsaved changes' first.
 
-**On the admin page.** `/admin/compendium` opens the form in `Modal`'s wide
-size from its address, as `/admin/categories` opens GroupedValueForm: `?new` an
+**On the admin page.** `/curator/compendium` opens the form in `Modal`'s wide
+size from its address, as `/curator/categories` opens GroupedValueForm: `?new` an
 empty form, `?edit=<slug>` the entry at that slug, through
 `resolveCompendiumSlug`. An edit's head is the eyebrow "Edit Ingredient" over the entry's saved name and its formal name, in italics for a binomial (`editHeading` in `page.tsx`; [`modal.md`](modal.md), "An edit dialog's head"), so it follows a rename once Save Ingredient re-reads the entry. An old address redirects to the entry's current
 `?edit=`, and one naming nothing opens nothing and says so in an alert above

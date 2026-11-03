@@ -145,7 +145,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
           href: '/compendium' as Route,
           label: 'Compendium',
           // The admin list is the same list under its own name.
-          also: [{ path: '/admin/compendium', label: 'Admin Compendium' }],
+          also: [{ path: '/curator/compendium', label: 'Curator Compendium' }],
         }}
         accessPause={shell?.viewer.accessPause}
         edit={

@@ -57,9 +57,44 @@ function outgoing(transport: string, message: Message): Outgoing | string {
   }
 }
 
-/** Thrown by `deliver` when the transport did not take a message, so a job step's retry tries it again. */
+/** What a refusing transport said: the HTTP status, and the error name in its JSON body (Resend's `daily_quota_exceeded`). */
+export interface MailNotSentDetails {
+  status?: number | null;
+  code?: string | null;
+}
+
+/**
+ * Thrown by `deliver` when the transport did not take a message, so a job step's retry tries it again. `status` and `code` are
+ * null when the transport could not be reached, or its answer named no error.
+ */
 export class MailNotSent extends Error {
   override name = 'MailNotSent';
+  readonly status: number | null;
+  readonly code: string | null;
+
+  constructor(message: string, details: MailNotSentDetails = {}) {
+    super(message);
+    this.status = details.status ?? null;
+    this.code = details.code ?? null;
+  }
+}
+
+/** The `name` of a JSON error body, or null when the body is not JSON or names none. */
+function errorName(body: string): string | null {
+  try {
+    const parsed: unknown = JSON.parse(body);
+    if (typeof parsed === 'object' && parsed !== null && 'name' in parsed) {
+      return typeof parsed.name === 'string' ? parsed.name : null;
+    }
+  } catch {
+    // Not JSON: there is no name to read.
+  }
+  return null;
+}
+
+/** True for an address under `.invalid`, which RFC 2606 reserves: no mailbox exists there, so `deliver` refuses it. */
+export function isUndeliverableAddress(address: string): boolean {
+  return /\.invalid$/i.test(address);
 }
 
 /**
@@ -73,7 +108,7 @@ export async function deliver(message: Message): Promise<boolean> {
   // RFC 2606 reserves `.invalid`: no mailbox exists under it, so the address
   // is the placeholder a provider that shared none is stored under
   // (src/modules/identity/services/email.ts), and nothing can receive this.
-  if (/\.invalid$/i.test(message.to)) {
+  if (isUndeliverableAddress(message.to)) {
     console.error(`mail: refused a recipient under .invalid; "${message.subject}" not sent`);
     return false;
   }
@@ -113,10 +148,14 @@ export async function deliver(message: Message): Promise<boolean> {
     throw new MailNotSent(`${transport} could not be reached`);
   }
   if (!response.ok) {
+    const body = await response.text();
     console.error(
-      `mail: ${transport} answered ${response.status}; "${message.subject}" not sent: ${await response.text()}`,
+      `mail: ${transport} answered ${response.status}; "${message.subject}" not sent: ${body}`,
     );
-    throw new MailNotSent(`${transport} answered ${response.status}`);
+    throw new MailNotSent(`${transport} answered ${response.status}`, {
+      status: response.status,
+      code: errorName(body),
+    });
   }
   return true;
 }

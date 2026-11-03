@@ -25,7 +25,7 @@ test('a long unbroken subject does not push the columns off screen, and a filter
     await sql.end();
   }
 
-  await page.goto('/admin/support');
+  await page.goto('/keepers/support');
   const table = page.getByRole('table');
   await expect(table).toBeVisible();
   const fits = await page.evaluate(() => {

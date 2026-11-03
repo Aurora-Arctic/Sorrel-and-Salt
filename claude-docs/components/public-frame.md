@@ -20,7 +20,7 @@ request and draws [`AppShell`](app-shell.md) instead for a signed-in one, so
 - **`.app-shell__main`**, a wrapper `div` round the page, as the shell's is, with the
   shell's [`MainBody`](app-shell.md) inside it. The frame does not own the
   `main` landmark: the `(public)` layout renders `<main>` round the page, in
-  `.page-column`, the top-left wide column `/admin/compendium` uses, so M8.18's
+  `.page-column`, the top-left wide column `/curator/compendium` uses, so M8.18's
   page lands in it. The wrapper was chosen over a frame-owned `main` whose
   skeleton dropped its own, so that `MainBody` is reused unchanged: during a
   wait it swaps the layout's `main` for the skeleton's, and a `main` on the
