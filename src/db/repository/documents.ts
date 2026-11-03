@@ -1,4 +1,17 @@
-import { and, desc, eq, ilike, inArray, isNotNull, isNull, lt, max, not, notInArray, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  max,
+  not,
+  notInArray,
+  sql,
+} from 'drizzle-orm';
 import { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
 import { documentMailings } from '../../modules/documents/schema/document-mailings';
 import { documentVersions } from '../../modules/documents/schema/document-versions';
@@ -68,7 +81,11 @@ export function findPublishedDocumentVersion(
 ): Promise<DocumentVersionRow | undefined> {
   return selectOne(
     documentVersions,
-    and(publishedOf(documentId), eq(documentVersions.number, number)),
+    and(
+      notSoftDeleted(documentVersions),
+      publishedOf(documentId),
+      eq(documentVersions.number, number),
+    ),
   );
 }
 
@@ -147,7 +164,9 @@ export function findDocumentMailingAccountPage(
 }
 
 /** The named live accounts, for the mail's address and greeting. */
-export function findDocumentMailingRecipientUsers(userIds: readonly string[]): Promise<MailingAccount[]> {
+export function findDocumentMailingRecipientUsers(
+  userIds: readonly string[],
+): Promise<MailingAccount[]> {
   if (userIds.length === 0) return Promise.resolve([]);
   return selectFrom(users, and(notSoftDeleted(users), inArray(users.id, [...userIds])));
 }
@@ -180,7 +199,9 @@ export async function countDocumentMailingReached(mailingId: string): Promise<nu
 }
 
 /** A live mailing by id, or `undefined`. */
-export function findDocumentMailingById(mailingId: string): Promise<DocumentMailingRow | undefined> {
+export function findDocumentMailingById(
+  mailingId: string,
+): Promise<DocumentMailingRow | undefined> {
   return selectOne(
     documentMailings,
     and(notSoftDeleted(documentMailings), eq(documentMailings.id, mailingId)),
@@ -192,7 +213,10 @@ export function findOpenDocumentMailingBefore(
   documentId: string,
   versionNumber: number,
 ): Promise<DocumentMailingRow | undefined> {
-  return selectOne(documentMailings, openMailingBefore(documentId, versionNumber));
+  return selectOne(
+    documentMailings,
+    and(notSoftDeleted(documentMailings), openMailingBefore(documentId, versionNumber)),
+  );
 }
 
 /** The longest-waiting sending mailing of any document, which the day's run carries on first, or `undefined`. */
