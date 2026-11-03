@@ -37,3 +37,10 @@
     @include focus-ring;
   }
 }
+
+// A source mark's number is no link here, as it leads nowhere while editing, but it wears the public page's link look.
+.document-editor__text .document-page__marks span {
+  padding-inline: space(1);
+  color: $text-primary;
+  @include faded-underline;
+}
