@@ -137,6 +137,19 @@ describe('readDocumentVersion', () => {
       );
     }
   });
+
+  // The column is a Postgres integer, so a number past its largest is one no version can have, not a database error.
+  it('throws NotFound for a whole number past the largest a version number can hold', async () => {
+    await policyWithDraft();
+    // Precondition: the document is readable by number, so the refusal is about the number alone.
+    await expect(readDocumentVersion('privacy', 1)).resolves.toMatchObject({ number: 1 });
+
+    for (const number of [2_147_483_648, 9_999_999_999, Number.MAX_SAFE_INTEGER]) {
+      await expect(readDocumentVersion('privacy', number), String(number)).rejects.toThrow(
+        NotFound,
+      );
+    }
+  });
 });
 
 describe('listDocumentVersions', () => {
