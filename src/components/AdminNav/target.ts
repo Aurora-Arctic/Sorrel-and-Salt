@@ -31,8 +31,8 @@ const PARTS: Record<string, Parts> = {
     fields: SUPPORT_FIELDS,
     columns: SUPPORT_COLUMNS,
   },
-  // The four document editors under a tab row, with no action or filter.
-  '/keepers/documents/privacy': { shape: 'table', title: true, tabs: true },
+  // The four document editors, the tab row on a line beneath the heading, with no action or filter.
+  '/keepers/documents/privacy': { shape: 'document', title: true, tabs: true, tabsBelow: true },
   // Its action is the pause control; the filter is the user search.
   '/keepers/users': CURATED,
 };

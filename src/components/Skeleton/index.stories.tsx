@@ -62,6 +62,10 @@ const swapPendingNode = (
   </SwapPanel>
 );
 
+const documentNode = <Skeleton shape="document" />;
+
+const documentPageNode = <Skeleton shape="document" title tabs tabsBelow />;
+
 const pageWithMenuNode = <Skeleton shape="page" menu />;
 
 const SKELETON_STATES: Record<string, ReactNode> = {
@@ -78,6 +82,8 @@ const SKELETON_STATES: Record<string, ReactNode> = {
   Contents: contentsNode,
   'Page With Menu': pageWithMenuNode,
   'Tabbed Page': tabsNode,
+  Document: documentNode,
+  'Document Page': documentPageNode,
   'Entry With Menu': entryNode,
   'Page With Eyebrow Head': eyebrowHeadNode,
   'Page With Title Head': titleHeadNode,
