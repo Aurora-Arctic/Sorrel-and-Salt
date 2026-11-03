@@ -18,8 +18,9 @@
     margin-block-start: space(3);
   }
 
-  // The space under the reach warning, before the first summary.
-  &__reach {
+  // The space under the reach warning, before the first summary; two classes, as the global `.notice` sets `margin: 0`
+  // and loads after this sheet.
+  & > &__reach {
     margin-block-end: space(3);
   }
 
