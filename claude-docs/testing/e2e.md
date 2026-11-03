@@ -266,7 +266,8 @@ Auth would have set. The value is the token, a dot, and its base64
 HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
 `signCookieValue` does it. The runner and the served build share that
 secret: `playwright.yml` and compose set it at job level, and a local run
-sets it on the command line, or the helper throws. The name is
+sets it on the command line, read from `.env.local`, or the helper throws
+([`../commands.md`](../commands.md) has the command). The name is
 `better-auth.session_token`, not the `__Secure-` name a production build's https base URL would give it, because no browser sends a `Secure` cookie to a plain-http origin such as `devcontainer:<port>`. Every e2e server is started with `E2E_PLAIN_SESSION_COOKIE=true` (`tests/e2e/servers.ts`), which `src/lib/auth.ts` reads through `plainSessionCookie()` (`src/lib/e2e-session-cookie.ts`) as `advanced.useSecureCookies: false`. The helper puts the cookie in the context's jar with the host alone (a cookie ignores the port, so any slot's server gets it), so every engine sends it and a followed redirect keeps it. The flag does nothing wherever `VERCEL_ENV` is set, so no deploy can lose the prefix. A `next start` left running from an earlier run may keep its names, so stop it first. The other shape, https in front of each slot server, was left: a certificate and a proxy per port, to test one cookie name. Give each call a fresh address:
 the email index is unique. To switch back to a user already made,
 `signInAgainAs(page, userId)` gives the browser a new session for it
@@ -604,7 +605,7 @@ median, and say whether the servers were already up.
 cd /app  # or the worktree
 (
   flock 9
-  time env ENABLE_IMPERSONATION= BETTER_AUTH_SECRET="$(grep -m1 '^BETTER_AUTH_SECRET=' .env.local | cut -d= -f2-)" npx playwright test
+  time env BETTER_AUTH_SECRET="$(grep -m1 '^BETTER_AUTH_SECRET=' .env.local | cut -d= -f2-)" npx playwright test
 ) 9>/tmp/sorrel-e2e.lock
 
 node -e '

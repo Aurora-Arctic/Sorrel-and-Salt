@@ -8,6 +8,7 @@ import { type ReactElement, Suspense, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
 import { sectionsFor } from '../MenuButton/sections';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { joinList } from '@/lib/join-list';
 import type { ShellWorkspace } from '../../lib/types';
 import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
@@ -45,10 +46,7 @@ function savedMessage(saved: SavedIngredient): string {
       }`,
   );
   if (jars.length === 0) return `Saved ${saved.name}`;
-  // Plain joining: the compiler’s library has no Intl.ListFormat.
-  const list =
-    jars.length > 1 ? `${jars.slice(0, -1).join(', ')} and ${jars[jars.length - 1]}` : jars[0];
-  return `Saved ${saved.name}, with ${list}`;
+  return `Saved ${saved.name}, with ${joinList(jars, 'and')}`;
 }
 
 /** The form for one coven. */
