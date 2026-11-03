@@ -589,7 +589,7 @@ Continue button.
   second; the email page and the acceptance page are each exempt, so the two
   redirects never chase each other. `requireAdminSession()` goes through
   `requireSession()`, so admin pages are gated too.
-- **The page names what changed.** Under the joint version, a list headed "New Since You Last Agreed" names each of
+- **The page names what changed.** Under the joint version, a list headed "Updated Since You Last Agreed" names each of
   the three documents whose version in force differs from the account's
   stored one, each linking its public page (`documentsChangedSince`). A new
   account sees all three.

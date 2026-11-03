@@ -77,7 +77,7 @@ const TermsAgreement = ({
       </p>
       {changed.length > 0 && (
         <section className="terms-agreement__changed" aria-labelledby="terms-agreement-changed">
-          <h2 id="terms-agreement-changed">New Since You Last Agreed</h2>
+          <h2 id="terms-agreement-changed">Updated Since You Last Agreed</h2>
           <ul>
             {changed.map((key) => (
               <li key={key}>
