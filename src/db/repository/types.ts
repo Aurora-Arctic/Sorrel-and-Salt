@@ -934,6 +934,11 @@ export interface IngredientFilter {
   /** Any of these signs, read from the entry's `zodiacSigns` as `celestialBodies` reads its list. */
   zodiacSigns?: readonly string[];
   /**
+   * Also count an entry whose live variant's list holds a value of `celestialBodies` or `zodiacSigns`: how a body's or sign's delete finds every entry holding it.
+   * The compendium's own facets leave it off and read the entry's list alone.
+   */
+  variantsHold?: boolean;
+  /**
    * Any of these elements: an entry matches when its own `elements` list, or a live variant's, holds one of them.
    * A soft-deleted variant's list counts for nothing. An empty list is no filter.
    */

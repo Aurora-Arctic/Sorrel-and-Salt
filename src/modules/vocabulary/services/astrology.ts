@@ -35,7 +35,7 @@ const VOCABULARY = {
     noun: 'celestial body',
     listNoun: 'celestial bodies',
     slugIndex: 'celestial_bodies_slug_unique',
-    holding: (name: string) => ({ celestialBodies: [name] }),
+    holding: (name: string) => ({ celestialBodies: [name], variantsHold: true }),
   },
   zodiacSigns: {
     table: zodiacSigns,
@@ -43,7 +43,7 @@ const VOCABULARY = {
     noun: 'sign',
     listNoun: 'zodiac signs',
     slugIndex: 'zodiac_signs_slug_unique',
-    holding: (name: string) => ({ zodiacSigns: [name] }),
+    holding: (name: string) => ({ zodiacSigns: [name], variantsHold: true }),
   },
 } as const satisfies Record<CuratedField, unknown>;
 
@@ -151,7 +151,7 @@ export async function updateAstrologyValue(
 }
 
 /**
- * Soft-deletes a celestial body or a sign no live compendium entry's list holds (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
+ * Soft-deletes a celestial body or a sign no live compendium entry's list, or live variant's, holds (claude-docs/db/astrology-vocabularies.md, "Astrology service details").
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin, or a live entry holds the value.
  * @throws {NotFound} no live row of the vocabulary has this id.

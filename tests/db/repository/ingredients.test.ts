@@ -1737,6 +1737,74 @@ describe('write.carryAstrologyRename', () => {
       zodiac_signs: ['The Ram', 'Leo'],
     });
   });
+
+  // Each variant carries its own lists, which the compendium save holds to the curated rows as it does the entry's.
+  const variantOf = async (id: string) =>
+    (await sql`select * from ingredient_variants where id = ${id}`)[0];
+  const onlyVariantOf = async (ingredientId: string) =>
+    (await sql`select id from ingredient_variants where ingredient_id = ${ingredientId}`)[0]
+      .id as string;
+
+  it.each([
+    ['celestialBodies', 'celestial_bodies', 'zodiac_signs'],
+    ['zodiacSigns', 'zodiac_signs', 'celestial_bodies'],
+  ] as const)(
+    'rewrites each live compendium variant’s %s in place, by the fold, its other values kept in order, stamped by the session',
+    async (field, column, other) => {
+      const entry = await add('Testwort', {
+        variants: [makeVariant({ [field]: ['Venus', ' mars ', 'Moon'], [other]: ['Mars'] })],
+      });
+      const first = await onlyVariantOf(entry);
+      const second = await insertVariant(sql, entry, { form: 'Testroot', [field]: ['Mars'] }, A.id);
+      const before = await variantOf(first);
+      // Why each could only be reached through its variant: the entry's own lists hold nothing.
+      expect(await rowOf(entry)).toMatchObject({ celestial_bodies: null, zodiac_signs: null });
+      expect(before[column]).toEqual(['Venus', ' mars ', 'Moon']);
+
+      await rename(field, 'Mars', 'Ares');
+
+      expect(await variantOf(first)).toMatchObject({
+        [column]: ['Venus', 'Ares', 'Moon'],
+        // The other list holds a "Mars" too, and is not the one renamed.
+        [other]: ['Mars'],
+        form: before.form,
+        created_by: A.id,
+        updated_by: E.id,
+        deleted_at: null,
+      });
+      expect((await variantOf(second))[column]).toEqual(['Ares']);
+    },
+  );
+
+  // Why each could have been written: each variant holds the old spelling in the list renamed. The live
+  // compendium variant beside them is rewritten, so the carry reached the variants and passed these over.
+  it('leaves a coven’s variant, a dropped variant and a deleted entry’s variant as they were', async () => {
+    const bodies = { variants: [makeVariant({ celestialBodies: ['Mars'] })] };
+    const live = await onlyVariantOf(await add('Testwort', bodies));
+    const coven = await onlyVariantOf(
+      await add('Testcoven', { ...bodies, workspaceId: WORKSPACE_W_ID }),
+    );
+    const goneEntry = await add('Testgone', bodies);
+    const gone = await onlyVariantOf(goneEntry);
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${goneEntry}`;
+    const dropping = await add('Testdrop');
+    const dropped = await insertVariant(
+      sql,
+      dropping,
+      { form: 'Testroot', celestialBodies: ['Mars'] },
+      A.id,
+    );
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
+    const ids = [coven, gone, dropped];
+    const before = await Promise.all(ids.map(variantOf));
+    expect(before.map((row) => row.celestial_bodies)).toEqual([['Mars'], ['Mars'], ['Mars']]);
+
+    await rename('celestialBodies', 'Mars', 'Ares');
+
+    expect((await variantOf(live)).celestial_bodies).toEqual(['Ares']);
+    expect(await Promise.all(ids.map(variantOf))).toEqual(before);
+  });
 });
 
 describe('write.carryDeityRename', () => {
