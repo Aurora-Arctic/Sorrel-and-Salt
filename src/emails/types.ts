@@ -154,12 +154,20 @@ export interface CovenAccessPausedProps extends BaseEmailProps {
   message: string | null;
 }
 
-/** Told every account that a published document changed. `url` is the document's page. */
-export interface DocumentUpdatedProps extends BaseEmailProps {
+/** One document an update mail lists. */
+export interface UpdatedDocument {
   /** The document's title, as the page shows it. */
   title: string;
   /** What changed, in the keeper's words. */
   summary: string;
-  /** The terms ask each account to agree again at its next visit; the other documents do not. */
+  /** The document's page. */
+  url: string;
+}
+
+/** Told every account which published documents changed. `url` is the first document's page. */
+export interface DocumentUpdatedProps extends BaseEmailProps {
+  /** Every document changed since the last mailing, in the order the mail lists them. */
+  documents: UpdatedDocument[];
+  /** One of the documents is one an account agrees to, so each is asked to agree again at its next visit. */
   asksAgreement: boolean;
 }

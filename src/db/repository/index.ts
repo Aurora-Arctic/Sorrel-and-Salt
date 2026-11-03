@@ -181,11 +181,13 @@ export {
   findDocumentMailingById,
   findDocumentMailingRecipientUsers,
   findOldestSendingDocumentMailing,
-  findOpenDocumentMailingBefore,
+  findOpenDocumentMailings,
+  findLatestSentDocumentMailing,
+  findDocumentMailingItems,
+  findPendingDocumentVersions,
   findCurrentDocumentVersion,
   findDocumentByKey,
   findDocumentDraft,
-  findDocumentMailingForVersion,
   findPublishedDocumentVersion,
   findPublishedDocumentVersionPage,
   findUnsentDocumentMailingRecipientPage,
@@ -276,4 +278,4 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
-export type { DocumentMailingRow } from './types';
+export type { DocumentMailingItem, DocumentMailingRow, PendingDocumentVersion } from './types';

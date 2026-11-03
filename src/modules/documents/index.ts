@@ -9,11 +9,17 @@ export {
   updateDocument,
 } from './services/editing';
 export {
-  emailDocumentToEveryAccount,
-  readDocumentMailing,
+  emailDocumentsToEveryAccount,
+  readDocumentMailings,
   resumeDocumentMailing,
   startDailyDocumentMailing,
 } from './services/document-mailing';
 export { currentTermsVersion } from '../../lib/current-terms-version';
 export * from './graphql/documents';
-export type { DocumentKey, DocumentMailingNotifier, DocumentMailingOverview } from './types';
+export type {
+  DocumentKey,
+  DocumentMailingNotifier,
+  DocumentMailingOverview,
+  DocumentMailingSummary,
+  PendingDocument,
+} from './types';

@@ -6,11 +6,14 @@ import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { A, B, E } from '../../../support/as-user';
 import { documentMailings } from '@/modules/documents/schema/document-mailings';
 import { documentMailingRecipients } from '@/modules/documents/schema/document-mailing-recipients';
+import { documentMailingItems } from '@/modules/documents/schema/document-mailing-items';
 
-// A published version emailed to every account: one mailing per version, and one row per account in it, so a retried batch mails no one twice.
+// One email to every account about every document changed since the last: a mailing, one item per document version it covers,
+// and one row per account in it, so a retried batch mails no one twice.
 
 const VERSION_UNIQUE = 'document_mailings_version_unique';
 const MAILING_USER_UNIQUE = 'document_mailing_recipients_mailing_user_unique';
+const ITEM_UNIQUE = 'document_mailing_items_mailing_version_unique';
 const ADMIN = E.id;
 
 describe('document_mailings schema', () => {
@@ -30,11 +33,15 @@ describe('document_mailings schema', () => {
     );
   });
 
-  it('declares every column required but the finish time, and a mailing sending by default', () => {
-    for (const column of ['document_version_id', 'summary', 'status', 'recipient_count']) {
+  // A mailing names its versions through its items; the version and summary columns hold only what a mailing written before
+  // the items carried.
+  it('declares the status and count required, the version, summary and finish time nullable, and a mailing sending by default', () => {
+    for (const column of ['status', 'recipient_count']) {
       expect(byName[column].notNull, column).toBe(true);
     }
-    expect(byName.finished_at.notNull).toBe(false);
+    for (const column of ['document_version_id', 'summary', 'finished_at']) {
+      expect(byName[column].notNull, column).toBe(false);
+    }
     expect(byName.status.default).toBe('sending');
   });
 
@@ -92,6 +99,39 @@ describe('document_mailing_recipients schema', () => {
       (fk) => fk.reference().columns[0].name === 'user_id',
     );
     expect(userKey?.onDelete).toBe('cascade');
+  });
+});
+
+describe('document_mailing_items schema', () => {
+  const { byName, byIndexName, nonAuditForeignKeys } = tableFacts(documentMailingItems);
+
+  it('has its columns and the full audit spread, and nothing else', () => {
+    expect(Object.keys(byName).sort()).toEqual(
+      ['id', 'mailing_id', 'document_version_id', 'summary', ...AUDIT_COLUMNS].sort(),
+    );
+  });
+
+  it('declares the mailing, the version and the summary required', () => {
+    for (const column of ['mailing_id', 'document_version_id', 'summary']) {
+      expect(byName[column].notNull, column).toBe(true);
+    }
+  });
+
+  it('declares its one-item-per-version index, unique and partial', () => {
+    expect(Object.keys(byIndexName)).toEqual([ITEM_UNIQUE]);
+    expect(byIndexName[ITEM_UNIQUE].config.unique).toBe(true);
+    expect(byIndexName[ITEM_UNIQUE].config.where).toBeDefined();
+  });
+
+  it('references its mailing and the version it covers', () => {
+    expect(
+      nonAuditForeignKeys
+        .map((fk) => [fk.column, getTableName(fk.foreignTable)])
+        .sort((a, b) => a[0].localeCompare(b[0])),
+    ).toEqual([
+      ['document_version_id', 'document_versions'],
+      ['mailing_id', 'document_mailings'],
+    ]);
   });
 });
 
@@ -180,7 +220,17 @@ describe('document_mailings table', () => {
     expect(paused).toMatchObject({ status: 'paused', finished_at: null });
   });
 
-  it('refuses a mailing of no version', async () => {
+  it('takes a mailing that names no version and carries no summary', async () => {
+    const [mailing] = await sql`
+      insert into document_mailings (recipient_count, created_by, updated_by)
+      values (3, ${ADMIN}, ${ADMIN})
+      returning *
+    `;
+
+    expect(mailing).toMatchObject({ document_version_id: null, summary: null, status: 'sending' });
+  });
+
+  it('refuses a mailing of a version that does not exist', async () => {
     const error = await failureOf(aMailing(crypto.randomUUID()));
 
     // 23503 is foreign_key_violation.
@@ -275,5 +325,79 @@ describe('document_mailing_recipients table', () => {
     const error = await failureOf(aRecipient(crypto.randomUUID(), A.id));
 
     expect(error.code).toBe('23503');
+  });
+});
+
+function anItem(mailingId: string, versionId: string) {
+  return sql`
+    insert into document_mailing_items (mailing_id, document_version_id, summary, created_by, updated_by)
+    values (${mailingId}, ${versionId}, 'Testwort clause added.', ${ADMIN}, ${ADMIN})
+    returning *
+  `;
+}
+
+describe('document_mailing_items table', () => {
+  let mailingId: string;
+
+  beforeEach(async () => {
+    await sql`truncate documents cascade`;
+    [{ id: mailingId }] = await sql`
+      insert into document_mailings (recipient_count, created_by, updated_by)
+      values (3, ${ADMIN}, ${ADMIN})
+      returning id
+    `;
+  });
+
+  it('takes two versions in one mailing, each with its summary', async () => {
+    await anItem(mailingId, await aPublishedVersion());
+    await anItem(mailingId, await aPublishedVersion());
+
+    const [{ count }] = await sql`select count(*)::int as count from document_mailing_items`;
+    expect(count).toBe(2);
+  });
+
+  it('refuses one version twice in one mailing, and takes it once the first item is deleted', async () => {
+    const versionId = await aPublishedVersion();
+    const [first] = await anItem(mailingId, versionId);
+
+    const second = await failureOf(anItem(mailingId, versionId));
+
+    expect(second.code).toBe('23505');
+    expect(second.constraint_name).toBe(ITEM_UNIQUE);
+    await softDelete('document_mailing_items', first.id);
+    await anItem(mailingId, versionId);
+  });
+
+  it('takes one version in two mailings', async () => {
+    const versionId = await aPublishedVersion();
+    const [other] = await sql`
+      insert into document_mailings (recipient_count, created_by, updated_by)
+      values (3, ${ADMIN}, ${ADMIN})
+      returning id
+    `;
+
+    await anItem(mailingId, versionId);
+    await anItem(other.id, versionId);
+
+    const [{ count }] = await sql`select count(*)::int as count from document_mailing_items`;
+    expect(count).toBe(2);
+  });
+
+  it('refuses an item of no mailing, and an item of no version', async () => {
+    const noMailing = await failureOf(anItem(crypto.randomUUID(), await aPublishedVersion()));
+    const noVersion = await failureOf(anItem(mailingId, crypto.randomUUID()));
+
+    expect(noMailing.code).toBe('23503');
+    expect(noVersion.code).toBe('23503');
+  });
+
+  it('refuses an item with no summary', async () => {
+    const error = await failureOf(sql`
+      insert into document_mailing_items (mailing_id, document_version_id, created_by, updated_by)
+      values (${mailingId}, ${await aPublishedVersion()}, ${ADMIN}, ${ADMIN})
+    `);
+
+    // 23502 is not_null_violation.
+    expect(error.code).toBe('23502');
   });
 });

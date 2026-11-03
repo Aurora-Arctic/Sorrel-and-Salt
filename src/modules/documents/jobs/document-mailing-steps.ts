@@ -4,9 +4,9 @@ import {
   countDocumentMailingReached,
   countDocumentMailsSentToday,
   findDocumentMailingById,
+  findDocumentMailingItems,
   findDocumentMailingRecipientUsers,
   findOldestSendingDocumentMailing,
-  findOneById,
   findUnsentDocumentMailingRecipientPage,
   withAudit,
 } from '@/db/repository';
@@ -14,8 +14,6 @@ import { documentUpdateNotice } from '@/lib/document-mail';
 import { deliver, isUndeliverableAddress, MailNotSent } from '@/lib/mail-transport';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '../mailing-pace';
-import { documentVersions } from '../schema/document-versions';
-import { documents } from '../schema/documents';
 
 // The steps of the document mailing job. A file of its own, so the workflow bundle keeps only the calls to them and never the
 // database code they reach.
@@ -66,9 +64,9 @@ async function mailNext(
 
   if (MAILING_DAILY_CAP - (await countDocumentMailsSentToday()) <= 0) return 'tomorrow';
 
-  const version = await findOneById(documentVersions, mailing.documentVersionId);
-  const document = version ? await findOneById(documents, version.documentId) : null;
-  if (!version || !document) {
+  // The items whose version and document are still live; with none left, there is nothing to tell anyone.
+  const items = await findDocumentMailingItems([mailingId]);
+  if (items.length === 0) {
     await write.replaceDocumentMailing(mailingId);
     return 'replaced';
   }
@@ -90,13 +88,7 @@ async function mailNext(
   }
 
   try {
-    const taken = await deliver(
-      await documentUpdateNotice(origin, user.email, {
-        key: document.key,
-        title: document.title,
-        summary: mailing.summary,
-      }),
-    );
+    const taken = await deliver(await documentUpdateNotice(origin, user.email, items));
     if (!taken) {
       // The transport refused the send before trying it, and would refuse the next too: pause, rather than ask for more.
       await write.pauseDocumentMailing(mailingId);

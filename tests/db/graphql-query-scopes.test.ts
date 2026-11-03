@@ -91,9 +91,9 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ documentForEditing(key: "disclaimer") { id } }',
     outcome: 'refuses',
   },
-  // The seeded disclaimer again: what a mailing of it would take, and any mailing of it so far.
-  documentMailing: {
-    source: '{ documentMailing(key: "disclaimer") { accountCount } }',
+  // What a mailing of the documents changed since the last email would take, and the mailings so far.
+  documentMailings: {
+    source: '{ documentMailings { accountCount } }',
     outcome: 'refuses',
   },
   invitationCardBatches: {
@@ -421,8 +421,8 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   updateDocument: write(
     `mutation { updateDocument(id: "${NOWHERE}", input: { title: "Fixture", lede: "Fixture" }) { id } }`,
   ),
-  emailDocumentToEveryAccount: write(
-    `mutation { emailDocumentToEveryAccount(documentId: "${NOWHERE}", summary: "Fixture") { accountCount } }`,
+  emailDocumentsToEveryAccount: write(
+    `mutation { emailDocumentsToEveryAccount(summaries: [{ versionId: "${NOWHERE}", summary: "Fixture" }]) { accountCount } }`,
   ),
   resumeDocumentMailing: write(
     `mutation { resumeDocumentMailing(mailingId: "${NOWHERE}") { accountCount } }`,
@@ -720,7 +720,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   publishDocumentDraft: { governs: 'documents' },
   discardDocumentDraft: { governs: 'documents' },
   updateDocument: { governs: 'documents' },
-  emailDocumentToEveryAccount: { governs: 'documents' },
+  emailDocumentsToEveryAccount: { governs: 'documents' },
   resumeDocumentMailing: { governs: 'documents' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
@@ -945,7 +945,7 @@ describe('a curator at every keeper write, and at the people page’s reads', ()
     'privilegeChanges',
     'userAccessPauses',
     'documentForEditing',
-    'documentMailing',
+    'documentMailings',
   ])('%s refuses a curator, answering an admin', async (field) => {
     const { source } = PROBES[field];
     expect(codesOf(await run(asUser(E), source))).toEqual([]);

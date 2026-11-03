@@ -5,7 +5,7 @@ import { waitForSleep } from '@workflow/vitest';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { documentMailing } from '@/modules/documents/jobs/document-mailing';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '@/modules/documents/mailing-pace';
-import { insertDocumentVersion } from '../support/db/insert-document';
+import { insertDocumentMailing, insertDocumentVersion } from '../support/db/insert-document';
 
 // The run that emails every account about a published document, end to end in the SDK's local world. The run carries the
 // mailing's id and the origin alone, and mails the mailing's recipient rows, so each test writes exactly the rows it mails. Mail
@@ -136,18 +136,22 @@ interface MailingSeed {
   allSent?: boolean;
 }
 
-/** A mailing of `versionId` to `recipients`, written raw as the service would leave it. */
+/** A mailing of the version or versions to `recipients`, written raw as the service would leave it. */
 async function mailing(
-  versionId: string,
+  versionIds: string | readonly string[],
   recipients: { id: string }[],
   { status = 'sending', startedSecondsAgo = 0, allSent = false }: MailingSeed = {},
 ): Promise<string> {
-  const [{ id }] = await sql`
-    insert into document_mailings
-      (document_version_id, summary, status, recipient_count, finished_at, created_at, created_by, updated_by)
-    values (${versionId}, ${SUMMARY}, ${status}, ${recipients.length}, ${status === 'sent' ? sql`now()` : null},
-      now() - make_interval(secs => ${startedSecondsAgo}), ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
-    returning id`;
+  const id = await insertDocumentMailing(
+    sql,
+    {
+      items: [versionIds].flat().map((versionId) => ({ versionId, summary: SUMMARY })),
+      status,
+      recipient_count: recipients.length,
+      startedSecondsAgo,
+    },
+    BOOTSTRAP_USER_ID,
+  );
   await sql`
     insert into document_mailing_recipients ${sql(
       recipients.map((recipient) => ({
@@ -422,15 +426,41 @@ describe('the document mailing run', () => {
     expect(received[0]!.text).not.toMatch(/agree/i);
   });
 
-  it('tells each account, for the terms, that it will be asked to agree at its next visit', async () => {
-    const { versionId } = await publishedVersion('terms');
-    const [reader] = await accounts(1);
-    const mailingId = await mailing(versionId, [reader!]);
+  it.each([['terms'], ['disclaimer'], ['code-of-ethics']])(
+    'tells each account, for the %s, that it will be asked to agree at its next visit',
+    async (key) => {
+      const { versionId } = await publishedVersion(key);
+      const [reader] = await accounts(1);
+      const mailingId = await mailing(versionId, [reader!]);
+
+      const run = await start(documentMailing, [mailingId, ORIGIN]);
+
+      await expect(run.returnValue).resolves.toBe('sent');
+      expect(received[0]!.text).toContain(`${ORIGIN}/${key}`);
+      expect(received[0]!.text).toMatch(/agree/i);
+    },
+  );
+
+  it('mails a joint mailing through to sent, one mail to each account listing every document it covers', async () => {
+    const privacy = await publishedVersion('privacy');
+    const terms = await publishedVersion('terms');
+    const readers = await accounts(2);
+    const mailingId = await mailing([privacy.versionId, terms.versionId], readers);
 
     const run = await start(documentMailing, [mailingId, ORIGIN]);
 
     await expect(run.returnValue).resolves.toBe('sent');
-    expect(received[0]!.text).toContain(`${ORIGIN}/terms`);
-    expect(received[0]!.text).toMatch(/agree/i);
+    expect(await mailingRow(mailingId)).toMatchObject({ status: 'sent' });
+    expect(received.map((mail) => mail.to).sort()).toEqual(
+      readers.map((reader) => reader.email).sort(),
+    );
+    for (const mail of received) {
+      expect(mail.text).toContain(privacy.title);
+      expect(mail.text).toContain(terms.title);
+      expect(mail.text).toContain(`${ORIGIN}/privacy`);
+      expect(mail.text).toContain(`${ORIGIN}/terms`);
+      // The terms are among the items, so the mail asks for agreement.
+      expect(mail.text).toMatch(/agree/i);
+    }
   });
 });
