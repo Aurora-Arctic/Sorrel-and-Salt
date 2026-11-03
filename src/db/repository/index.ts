@@ -173,7 +173,16 @@ export {
   findStandingSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
+export type { MailingAccount } from './documents';
 export {
+  countDocumentMailingAccounts,
+  countDocumentMailingReached,
+  countDocumentMailsSentToday,
+  findDocumentMailingAccountPage,
+  findDocumentMailingById,
+  findDocumentMailingRecipientUsers,
+  findOldestSendingDocumentMailing,
+  findOpenDocumentMailingBefore,
   findCurrentDocumentVersion,
   findDocumentByKey,
   findDocumentDraft,

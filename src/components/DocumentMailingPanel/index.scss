@@ -1,0 +1,22 @@
+@use '../../scss/variables' as *;
+
+.document-mailing {
+  display: grid;
+  gap: space(2);
+  max-inline-size: $measure;
+  margin-inline: auto;
+  margin-block-start: space(6);
+
+  &__progress {
+    block-size: 0.5rem;
+    border-radius: 0.25rem;
+    background: $text-muted;
+    overflow: hidden;
+  }
+
+  &__bar {
+    display: block;
+    block-size: 100%;
+    background: currentcolor;
+  }
+}
