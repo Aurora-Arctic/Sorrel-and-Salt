@@ -23,7 +23,7 @@ const FACTS = {
   canCreateWorkspace: false,
   providers: ['google'],
   createdAt: new Date('2026-02-03T04:05:06Z'),
-  termsVersion: '2026-11-02',
+  agreedTermsVersion: 1,
 };
 const BO: UserDetailUser = {
   ...FACTS,

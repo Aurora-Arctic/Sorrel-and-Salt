@@ -18,9 +18,7 @@ export * from './loaders/users-on-requests';
 export type {
   SupportAbout,
   SupportNotifier,
-  SupportReplyRow,
   SupportRequestFilter,
-  SupportViewCounts,
   SupportRequestRow,
   SupportStatus,
   SupportStatusMail,

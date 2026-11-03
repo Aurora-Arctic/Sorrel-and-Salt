@@ -42,6 +42,10 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
 export const skeletonFadeHost = (leaving: boolean): string =>
   leaving ? 'skeleton-fade-host skeleton-fade-host--fading' : 'skeleton-fade-host';
 
+/** The class of the box holding the page and its cover: while waiting, both share one grid cell, so the box is as tall as the taller. */
+export const skeletonCoverHost = (waiting: boolean): string =>
+  waiting ? 'skeleton-cover-host skeleton-cover-host--waiting' : 'skeleton-cover-host';
+
 /**
  * The props holding the page during a wait: mounted at full height, unseen (`visibility`, not `display: none`) and `inert`, because Back needs the scroll position kept
  * (claude-docs/components/skeleton-fade.md, "Holding the page during a wait").

@@ -58,7 +58,6 @@ export type {
   IngredientVariantRow,
   LastEdit,
   SaveStockValues,
-  SourcingFact,
   SourcingInput,
   SourcingScore,
   StockKey,

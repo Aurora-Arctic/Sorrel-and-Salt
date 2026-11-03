@@ -157,7 +157,7 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
     'Not timed out',
     'Not paused',
     /Discord.*Google/,
-    /^\d{4}-\d{2}-\d{2}$/,
+    /^Version \d+$/,
     /\d/,
   ]);
   // The mark's tip bubble shows on hover, a real browser's CSS.

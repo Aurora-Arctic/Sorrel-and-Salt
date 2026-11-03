@@ -282,33 +282,33 @@ describe('providersOf', () => {
 // The terms version each user last agreed to, which the user table and the user modal show: the version on their row,
 // none for one who never agreed.
 describe('the terms version a user agreed to', () => {
-  const AGREED = '1999-01-01';
+  const AGREED = 7;
 
   beforeAll(async () => {
-    await sql`update users set terms_version = ${AGREED}, terms_accepted_at = now() where id = ${WILDCARD}`;
-    const [never] = await sql`select terms_version from users where id = ${PENDING}`;
-    expect(never?.terms_version).toBeNull();
+    await sql`update users set agreed_terms_version = ${AGREED}, terms_accepted_at = now() where id = ${WILDCARD}`;
+    const [never] = await sql`select agreed_terms_version from users where id = ${PENDING}`;
+    expect(never?.agreed_terms_version).toBeNull();
   });
 
   it('lists each user with the version they agreed to, and none for one who never agreed', async () => {
     const page = await listUsers(asUser(E), {}, PAGE);
     const listed = (id: string) => page.find((entry) => entry.node.id === id)?.node;
 
-    expect(listed(WILDCARD)).toMatchObject({ termsVersion: AGREED });
-    expect(listed(PENDING)).toMatchObject({ termsVersion: null });
+    expect(listed(WILDCARD)).toMatchObject({ agreedTermsVersion: AGREED });
+    expect(listed(PENDING)).toMatchObject({ agreedTermsVersion: null });
   });
 
   it('reads one user by id with the version they agreed to, for the user modal', async () => {
     const [agreed, never] = await usersForAdmin(asUser(E), [WILDCARD, PENDING]);
 
-    expect(agreed).toMatchObject({ id: WILDCARD, termsVersion: AGREED });
-    expect(never).toMatchObject({ id: PENDING, termsVersion: null });
+    expect(agreed).toMatchObject({ id: WILDCARD, agreedTermsVersion: AGREED });
+    expect(never).toMatchObject({ id: PENDING, agreedTermsVersion: null });
   });
 
   it('refuses the version to anyone but a site admin, asked by id', async () => {
     // The precondition: the row holds a version, and the same ask as an admin reads it.
     const [admitted] = await usersForAdmin(asUser(E), [WILDCARD]);
-    expect(admitted).toMatchObject({ termsVersion: AGREED });
+    expect(admitted).toMatchObject({ agreedTermsVersion: AGREED });
     expect(A.role).toBe('user');
 
     const [refused] = await usersForAdmin(asUser(A), [WILDCARD]);

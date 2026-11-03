@@ -7,6 +7,7 @@ import {
   SkeletonCover,
   SkeletonOverlay,
   heldPage,
+  skeletonCoverHost,
   skeletonFadeHost,
   useLeavingSkeleton,
 } from '../SkeletonFade';
@@ -55,7 +56,7 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   // position the browser saves for Back is the page's
   // (claude-docs/components/skeleton-fade.md).
   return (
-    <div className={skeletonFadeHost(leaving !== null)}>
+    <div className={`${skeletonCoverHost(frame !== null)} ${skeletonFadeHost(leaving !== null)}`}>
       <div {...heldPage(frame !== null)}>{children}</div>
       {frame && (
         <SkeletonCover>

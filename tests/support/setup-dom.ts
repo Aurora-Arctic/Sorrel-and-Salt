@@ -88,6 +88,4 @@ vi.mock('@/lib/jobs/runtime', () => ({
   createHook: () => undefined,
   sleep: async () => undefined,
   start: async () => ({ runId: 'run-stub' }),
-  FatalError: class FatalError extends Error {},
-  RetryableError: class RetryableError extends Error {},
 }));

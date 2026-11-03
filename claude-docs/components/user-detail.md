@@ -10,12 +10,12 @@ coven service and builds the modal around it; this draws only the body.
 
 `UserDetailProps` (`types.ts`):
 
-| Prop             | What it is                                                                                                                                                            |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `user`           | `UserDetailUser`: a `Pick` of the list's `UserListEntry` (id, name, email, emailVerified, role, primaryAdmin, canCreateWorkspace, providers, createdAt, termsVersion) |
-| `memberships`    | The user's live covens as `UserCoven`s, in any order                                                                                                                  |
-| `pauses`         | The user's access pauses as `AccessPauseEntry`s, newest first; left out for the primary admin and the viewing admin's own account                                     |
-| `canImpersonate` | Whether impersonation is registered here (MB.53); off by default                                                                                                      |
+| Prop             | What it is                                                                                                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user`           | `UserDetailUser`: a `Pick` of the list's `UserListEntry` (id, name, email, emailVerified, role, primaryAdmin, canCreateWorkspace, providers, createdAt, agreedTermsVersion) |
+| `memberships`    | The user's live covens as `UserCoven`s, in any order                                                                                                                        |
+| `pauses`         | The user's access pauses as `AccessPauseEntry`s, newest first; left out for the primary admin and the viewing admin's own account                                           |
+| `canImpersonate` | Whether impersonation is registered here (MB.53); off by default                                                                                                            |
 
 A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 `joinedAt`.
