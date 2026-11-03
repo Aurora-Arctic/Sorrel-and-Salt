@@ -74,7 +74,7 @@ test('/privacy draws the access cards under Who Can See What', async ({ page }) 
   const article = page.getByRole('main');
   await expect(article.getByRole('heading', { name: 'Who Can See What' })).toBeVisible();
 
-  await expect(article.getByRole('group')).toHaveCount(10);
+  await expect(article.getByRole('group')).toHaveCount(11);
   await expect(article.getByText('{access-cards}')).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 });

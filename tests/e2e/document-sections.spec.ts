@@ -37,6 +37,8 @@ const DOCUMENTS: readonly DocumentShape[] = [
           'Who Wrote What',
           'What a Coven Holds',
           'Support Requests',
+          'Time-Outs and Pauses',
+          'Emails About Document Changes',
         ],
       },
       { heading: 'Who Sees It', parts: ['Who Can See What', 'Who Processes It'] },

@@ -153,6 +153,9 @@ test('the editor’s toolbar takes one tab stop, and the arrow keys move between
   // Precondition: buttons enough for an arrow to move between.
   await expect(buttons.first()).toBeVisible();
   expect(await buttons.count()).toBeGreaterThan(2);
+  // Hydrated first: the editor loads as a separate chunk, and before it hydrates the toolbar is server HTML whose
+  // arrow keys do nothing.
+  await page.waitForLoadState('networkidle');
   /** Whether focus is on one of the toolbar's buttons. */
   const focusInToolbar = () =>
     toolbarOf(page).evaluate((toolbar) => toolbar.contains(document.activeElement));
