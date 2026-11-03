@@ -134,6 +134,12 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     ),
   },
   {
+    heading: 'Terms',
+    className: 'user-list__fact',
+    // The version agreed to most recently, or that none was.
+    cell: ({ termsVersion }) => termsVersion ?? 'Not agreed',
+  },
+  {
     heading: 'Signed Up',
     className: 'user-list__fact',
     cell: (user) => (
