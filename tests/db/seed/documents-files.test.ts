@@ -42,7 +42,7 @@ describe('the document files', () => {
     expect(days).toEqual({
       'code-of-ethics': '2026-11-02T00:00:00.000Z',
       disclaimer: '2026-11-02T00:00:00.000Z',
-      privacy: '2026-11-01T00:00:00.000Z',
+      privacy: '2026-11-03T00:00:00.000Z',
       terms: '2026-11-02T00:00:00.000Z',
     });
   });

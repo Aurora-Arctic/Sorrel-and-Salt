@@ -2,7 +2,7 @@
 key: privacy
 title: Privacy Policy
 lede: What Sorrel & Salt keeps about you, who processes it, how long it is kept and who can see it.
-published: 2026-11-02
+published: 2026-11-03
 ---
 
 ## The Short Version
@@ -106,3 +106,5 @@ You can leave a coven yourself from the coven's page, and a coven's owner can de
 ## Changes to This Policy
 
 When the text changes, the date at the top changes with it.
+
+An admin may also email every account about a change once it is published. Nothing is sent on its own: an admin chooses whether a change is worth an email, so a small fix may not bring one. The email goes to the verified address on your account. It names the document, says in a line the admin writes what changed, and links to the page; it does not carry the text. When the terms change, it also says you will be asked to agree to them the next time you visit. You cannot turn these emails off. A paused account is still emailed; a deleted one is not.
