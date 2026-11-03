@@ -244,6 +244,11 @@ test('an admin publishes a change to the code of ethics, then emails every accou
   await main.getByRole('button', { name: 'Publish', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  // The terms include the code of ethics, so the keeper too agrees again before the editor answers.
+  await page.goto('/keepers/documents/code-of-ethics');
+  await expect(page).toHaveURL(/\/account\/terms\?next=/);
+  await page.getByRole('button', { name: 'Agree & Continue' }).click();
+  await expect(page).toHaveURL(/\/keepers\/documents\/code-of-ethics$/);
 
   // The published change has not been emailed: the page offers it, and shows no mailing.
   const email = main.getByRole('button', { name: 'Email Every Account' });
