@@ -77,14 +77,20 @@ const DocumentEditor = ({
   const [published, setPublished] = useState<number>();
   // The revision a write must send, kept in a ref too: a publish that saves first reads the revision that save returned.
   const revisionRef = useRef(openRevision);
+  // The markdown last opened or saved, so undoing back to it leaves nothing to save; read from the editor, not `body`,
+  // as the editor writes markdown a little differently from how it was read.
+  const savedRef = useRef<string | null>(null);
+  savedRef.current ??= editorValueToMarkdown(editor.children as never);
 
   /** Writes the editor's text as the draft. */
   async function writeDraft(): Promise<void> {
+    const markdown = editorValueToMarkdown(editor.children as never);
     const { saveDocumentDraft } = await graphqlRequest(SaveDraftDocument, {
       documentId,
-      body: editorValueToMarkdown(editor.children as never),
+      body: markdown,
       expectedRevision: revisionRef.current,
     });
+    savedRef.current = markdown;
     revisionRef.current = saveDocumentDraft.revision;
     setRevision(saveDocumentDraft.revision);
     setDirty(false);
@@ -154,7 +160,12 @@ const DocumentEditor = ({
       {failure && <Notice kind="error">{failure}</Notice>}
       {published !== undefined && <Notice kind="success">Published as version {published}.</Notice>}
       <div className="document-page__body document-editor__text">
-        <Plate editor={editor} onValueChange={() => setDirty(true)}>
+        <Plate
+          editor={editor}
+          onValueChange={({ value }) =>
+            setDirty(editorValueToMarkdown(value as never) !== savedRef.current)
+          }
+        >
           <Toolbar />
           <PlateContent aria-label="Document Text" />
         </Plate>

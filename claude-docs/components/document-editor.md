@@ -4,7 +4,7 @@
 
 ## What it does
 
-- **Save Draft** stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text changes, and again after a save.
+- **Save Draft** stores the text as the admin's own draft. No reader sees a draft. The button is disabled until the text differs from what was last opened or saved, compared as markdown, so undoing back to it disables Save Draft again (and Publish, when there is no draft).
 - **Publish** opens a confirmation, then publishes the draft as the next version (saving first when there are unsaved changes). The confirmation for the terms says that every account will be asked to agree again; no other document's confirmation says so.
 - A save and a publish send the draft's `revision`. A second admin's save in between makes the next one fail with an explaining message rather than overwrite it.
 

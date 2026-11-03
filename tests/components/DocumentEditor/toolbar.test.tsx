@@ -209,6 +209,35 @@ describe('the document editor’s toolbar', () => {
     expect(await saveDraft(saved)).toBe('**Fixturewort** grows here.');
   });
 
+  // Undoing back to the text last loaded or saved leaves nothing to save or publish.
+  it('Undo back to the opened text leaves nothing to save or publish', async () => {
+    const { text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+    await press('Bold');
+    expect(screen.getByRole('button', { name: 'Save Draft' })).toBeEnabled();
+
+    await press('Undo');
+
+    expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled();
+  });
+
+  it('Undo back to the saved draft leaves nothing to save', async () => {
+    const { saved, text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+    await press('Bold');
+    await saveDraft(saved);
+    await select(text, 'grows');
+    await press('Italic');
+    expect(screen.getByRole('button', { name: 'Save Draft' })).toBeEnabled();
+
+    await press('Undo');
+
+    expect(screen.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
+    // The saved draft is still there to publish.
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+  });
+
   it('Undo with nothing to undo changes nothing', async () => {
     const { saved, text } = await renderEditor('Fixturewort grows here.');
     await select(text, 'Fixturewort');
