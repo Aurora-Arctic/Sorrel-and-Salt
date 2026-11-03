@@ -221,8 +221,8 @@ const DocumentEditor = ({
           title="Restore Published Version"
           question={
             <>
-              Throw away this draft and show the published text again? Readers see no change, and
-              the draft cannot be brought back.
+              Throw away every change since the last publish and show the published text again?
+              Readers see no change, and the changes cannot be brought back.
             </>
           }
           busy="Restoring"
