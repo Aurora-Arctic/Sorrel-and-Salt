@@ -1,6 +1,6 @@
 # InviteDialog
 
-`src/components/InviteDialog/` — an owner's Invite button and the dialog it opens (M7.4, story 4). A
+`src/components/InviteDialog/` — a steward's Invite button and the dialog it opens (M7.4, story 4). A
 client component taking the `workspaceId` of the coven invited into. It is a [`ModalButton`](modal.md)
 around the form, so the button takes the focus back when the dialog closes. M7.6 mounts it for stewards only, as the
 `@action` of the coven's People page, so it sits beside the heading on both the Members and
@@ -67,7 +67,7 @@ sending reaches no server, so it shows the failure.
 
 `tests/components/InviteDialog/index.test.tsx`: the validation (four malformed addresses, each
 refused with no request made), the payload (trimmed address, chosen role, this coven), the role group
-holding exactly viewer and member, its description, the confirmation naming the address and
+holding exactly observer and practitioner, its description, the confirmation naming the address and
 refreshing the page, no link at any point, Done, Escape, Cancel and Close with focus returned, the
 guard over a typed address, a blank reopening, and a field refusal against an alert one.
 

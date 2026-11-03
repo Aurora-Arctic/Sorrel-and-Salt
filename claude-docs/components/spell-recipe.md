@@ -117,7 +117,7 @@ may update stock (`rolePermits(role, { inventory: ['update'] })`, the permission
 asserts), Edit Stock behind the jar and the name, a `StockJarButton` ([`stock-dialog.md`](stock-dialog.md))
 named "Edit Stock, <name>" and opening on the step's form, with the ingredient's forms
 (`variantsOf`, read only for such a role) and the coven's jars through `stockDialogOf`. A
-viewer gets the eye and no button; an ingredient or form deleted since gets neither. The
+observer gets the eye and no button; an ingredient or form deleted since gets neither. The
 button is the name stretched over the line, as the shelf's jar button is, with the eye and the
 verdict raised above it. The builder's own inventory carries no doors.
 

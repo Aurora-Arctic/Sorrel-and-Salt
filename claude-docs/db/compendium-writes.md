@@ -6,7 +6,7 @@ input)` and `deleteCompendiumEntry(session, id)`. Each opens with
 `assertSiteAdmin`, before the input is parsed, so a non-admin is refused the
 same way whatever they sent, and writes through the compendium-tier methods
 under its proof (["The SiteAdmin proof"](site-admin-proof.md)). A workspace
-role counts for nothing: a coven's owner is refused as its viewer is.
+role counts for nothing: a coven's steward is refused as its observer is.
 
 **They mirror the coven's writes**
 (["Workspace ingredients"](workspace-ingredients.md)) in everything but

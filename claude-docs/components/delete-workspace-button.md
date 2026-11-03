@@ -23,7 +23,7 @@ component taking the workspace's `workspaceId` and `name`.
 The optional `inModal` prop asks the confirmation over the dialog the button sits in rather than
 opening a second modal on top, and `onlyOwner` leaves "other stewards included" out of the question,
 since there are none. With `inModal`, a refusal is a plain error `Notice` inside the dialog,
-on its own line above the dialog's buttons (the shared `.modal__actions` style), with no badge (the owner's call, 2026-10-20). The only owner's guided exit
+on its own line above the dialog's buttons (the shared `.modal__actions` style), with no badge (the owner's call, 2026-10-20). The only steward's guided exit
 (M6.16, [`leave-workspace-button.md`](leave-workspace-button.md)) passes both.
 
 ## Styling
@@ -44,6 +44,6 @@ story.
 
 `tests/components/DeleteWorkspaceButton/index.test.tsx` asserts that nothing is sent until the
 confirmation, then that the named coven's id is sent and the landing replaces the page, and that a refusal is said under the button, with the focus on it and the badge
-bringing it back, and the page stays. The only owner's route through it is
+bringing it back, and the page stays. The only steward's route through it is
 `tests/components/LeaveWorkspaceButton/owner-exit.test.tsx`; the page's choice to show it by
 permission is `tests/app/(shell)/coven/page.test.tsx`.

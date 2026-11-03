@@ -12,7 +12,7 @@ create choice "Create Coven"; code and these docs say workspace.
 `workspaces`: `SwitcherWorkspace[]`, every workspace the viewer is a member of,
 in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite, paused }`:
 the two flags say what the viewer's role there may open (member: read, and
-member: invite, an owner's alone), so the switcher can step back from a people
+member: invite, a steward's alone), so the switcher can step back from a people
 page the next coven would 404. The caller already holds the memberships (the
 coven layout, M6.10; the shell, MB.7, which reads the flags from `rolePermits`
 in `viewerOf`), so the component fetches nothing.

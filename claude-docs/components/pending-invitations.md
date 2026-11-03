@@ -2,7 +2,7 @@
 
 `src/components/PendingInvitations/` — a coven's open invitations, one row each (M7.6, story 5):
 address, role and status, with a Revoke or a Remove on each and the pager beneath. Open (M10.34) is
-pending, or declined by the invitee and not yet removed by the owner. The Invitations tab of the
+pending, or declined by the invitee and not yet removed by a steward. The Invitations tab of the
 coven's Members page renders it (`claude-docs/auth/coven-guard.md`, "The invitations page").
 
 ## Props
@@ -19,7 +19,7 @@ for the pager's "Page X of Y".
   <time>" for one the invitee declined. "Declined" is a badge in the `attention` palette's red,
   the account menu's count's, so a declined row stands out among the expiry dates (the owner's
   call). It replaced the Expires column. A declined row stays listed past its expiry, since an
-  answer is something to read and not a link that lapses, until the owner removes it.
+  answer is something to read and not a link that lapses, until a steward removes it.
 - **The Action column** (heading "Action", it was "Revoke") offers Revoke on a pending row and
   Remove on a declined one.
 - **Revoke** (`revoke-control.tsx`) is a `ConfirmedAction`, as admin's invitation Revoke and the

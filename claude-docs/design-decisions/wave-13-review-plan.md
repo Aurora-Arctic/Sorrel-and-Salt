@@ -34,9 +34,9 @@ Files edited: `claude-docs/tasks/m13.md`, `claude-docs/tasks/m10.md` (M10.1, M10
 - Recommended: reopening stays allowed; existing workings keep their records and deductions; no new working can be recorded until the spell is complete again, with an explaining error. Written into M10.20 and M13.5.
 - Alternative: refuse reopening while any working exists.
 
-**D5. The working permission.** `access-control.ts` has `spell: [read create update delete]` for member and owner and `spell: ['read']` for viewer; nothing for workings. A permission is a per-role statement, never a rank.
+**D5. The working permission.** `access-control.ts` has `spell: [read create update delete]` for practitioner and steward and `spell: ['read']` for observer; nothing for workings. A permission is a per-role statement, never a rank.
 
-- Recommended: M13.5 adds a `working` statement (`read create update delete` for member and owner, `read` for viewer) to `access-control.ts` and its tests, so observers write nothing and the check reads as what it is.
+- Recommended: M13.5 adds a `working` statement (`read create update delete` for practitioner and steward, `read` for observer) to `access-control.ts` and its tests, so observers write nothing and the check reads as what it is.
 - Alternative: reuse `spell: ['update']` for recording a working (reads as editing the recipe, which it is not).
 
 ## Corrections (no decision needed; applied by the lanes)

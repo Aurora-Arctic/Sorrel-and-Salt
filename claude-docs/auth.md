@@ -90,7 +90,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The create page (M9.16)
 
-`/coven/new` is where someone holding `canCreateWorkspace` names a new coven and lands in it as owner. It runs `requireSession()` and reads the right from the user row; a user without it gets a notice and no form, and the creation service refuses them anyway. `new` is kept from ever being a coven's slug, so a coven named "New" is `new-2`. [`auth/coven-guard.md`](auth/coven-guard.md)
+`/coven/new` is where someone holding `canCreateWorkspace` names a new coven and lands in it as a steward. It runs `requireSession()` and reads the right from the user row; a user without it gets a notice and no form, and the creation service refuses them anyway. `new` is kept from ever being a coven's slug, so a coven named "New" is `new-2`. [`auth/coven-guard.md`](auth/coven-guard.md)
 
 ## Display names (MB.10)
 

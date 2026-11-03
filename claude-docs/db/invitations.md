@@ -77,7 +77,7 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   predicate is weak here, since nothing re-proposes a random hash, but the
   rule is absolute and the predicate is free.
 - **Five lifecycle columns, not one `status` enum.** `expiresAt` is a clock
-  comparison, `revokedAt` is an owner's or an admin's act,
+  comparison, `revokedAt` is a steward's or an admin's act,
   `acceptedAt`/`acceptedBy` are the redeemer's, and `declinedAt` (M10.34) is
   the invitee's no. Story 7 wants the dead states told
   apart with a deterministic answer when two apply at once, and collapsing
@@ -174,7 +174,7 @@ that forgot to check, and no stamp overwrites another; a call that matches
 nothing returns no row, as MB.62's resume does. The revoke stamp matches an
 **open** row instead: not accepted, not revoked, and either declined or
 unexpired. A declined invitation is an answer for the owner to read, not a link
-that lapses, so it stays open past its expiry until the owner removes it; a
+that lapses, so it stays open past its expiry until a steward removes it; a
 pending one that has lapsed is not open, as before.
 
 **The token goes in, never the hash.** `hashToken` in the repository's
@@ -257,7 +257,7 @@ it reads the spelling ([`modules.md`](../modules.md), "The tier seam").
 
 Who may invite, the pause, what accepting grants and where it lands stay in
 two services, while the mechanics above exist once: `coven`'s
-`createInvitation` / `revokeWorkspaceInvitation`, owner only, role chosen (M7.2,
+`createInvitation` / `revokeWorkspaceInvitation`, steward only, role chosen (M7.2,
 M7.3, M7.6), and `identity`'s `createAdminInvitation` /
 `revokeAdminInvitation`, admin only and refused while admin changes are
 paused (MB.70). One accept service in `identity`, `acceptInvitation(session,
@@ -416,7 +416,7 @@ unchanged.
 the seat or the revived seat, `invited_by`, the `canCreateWorkspace` grant
 declared `via: 'invitation'`, and the recheck after a race. An id the
 address does not hold, an unverified match, a site-tier id, a deleted row or
-coven and a malformed id are `NotFound` alike, so an id read off an owner's
+coven and a malformed id are `NotFound` alike, so an id read off a steward's
 list tells a stranger nothing; an accepted, declined, revoked or expired row is
 `Forbidden` in the link's own words. `listReceivedInvitations(session, page)`
 and `countReceivedInvitations(session, start)`, in `received-invitations.ts`,
@@ -461,12 +461,12 @@ column is nullable and nothing would read it until the behaviour landed with it.
   dead-link order is now **accepted, declined, revoked, expired**. The
   invitee's answer outranks the owner's Remove that may follow it, so a
   declined link keeps saying "This invitation was declined. If you change your
-  mind, ask whoever sent it for a new one." after the owner clears the row,
+  mind, ask whoever sent it for a new one." after a steward clears the row,
   instead of turning into "withdrawn". The by-token accept refuses it with that
   reason too.
-- **Gone from the invitee, kept for the owner.** The pending filter now
+- **Gone from the invitee, kept for the steward.** The pending filter now
   excludes declined rows, so the account page's list and the shell's count
-  drop it at once. The owner's list uses the new open filter instead, so it
+  drop it at once. The steward's list uses the new open filter instead, so it
   keeps the row, marked declined, past its expiry until they remove it.
 - **In GraphQL**, `Invitation.declinedAt` and the mutation
   `declineInvitationById(id: ID!): Invitation!`, open to any signed-in account

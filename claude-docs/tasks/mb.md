@@ -4310,7 +4310,7 @@ _Acceptance criteria:_
 
 _Story:_ As a coven member, I want the coven's pages to feel like one place I belong to, so that finding members and inviting someone is obvious.
 
-Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last owner's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.7's.
+Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last steward's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.7's.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
@@ -4331,7 +4331,7 @@ _Acceptance criteria:_
 - Each component's doc adds or updates its Styling section, and its stories show the reviewed design
 - The section's user-facing copy uses one noun for a workspace, settled with the owner
 - `ActionFailure` has a doc and a story
-- Owner-only controls read as such, and a viewer's page shows no control it cannot use
+- Owner-only controls read as such, and an observer's page shows no control it cannot use
 - The acceptance page reads correctly signed in, signed out, and for an expired or used link, or an invitation into a deleted coven
 
 **MB.120 — Design review: the public compendium and shared ingredient components** · 10h

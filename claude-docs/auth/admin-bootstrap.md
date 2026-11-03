@@ -64,7 +64,7 @@ created, and only when that sign-in's provider vouches for the address
   route and stamped as the user; the promotion writes no ledger row itself
   (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
   revoke make the same kind of write, declared `admin`.
-- **Every admin grant also seats the owner of the demo coven**, in the same
+- **Every admin grant also seats the steward of the demo coven**, in the same
   `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
   MB.59 grant and an accepted admin invitation. See
   [`db/demo-coven-seed.md`](../db/demo-coven-seed.md), "How an admin gains and

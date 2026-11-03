@@ -55,7 +55,7 @@ live spell: once the spell is marked, the steps' `EXISTS` no longer reaches them
 **Proved as one matrix, held by one guard (M10.6).**
 `tests/db/repository/readable-spells.test.ts` runs every relationship against
 both visibilities — the author, the owner, another practitioner, an observer, the author
-after demotion to viewer, a member of another coven by direct id, and the author
+after demotion to observer, a member of another coven by direct id, and the author
 of a soft-deleted spell — and requires `findOneSpell` and `findManyInSpell` over
 both child tables to give the same answer in each cell.
 A site admin and a site curator are refused at the service, because

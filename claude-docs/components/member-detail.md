@@ -48,7 +48,7 @@ have been removed, or be listed on another page."
   the click feedback's callout, so nothing moves. It is keyed by the role, so
   the page's read after a change mounts a fresh control offering the others,
   and the modal stays open on the new role.
-- **A member or viewer sees the facts alone**, with no actions: the same
+- **A practitioner or observer sees the facts alone**, with no actions: the same
   facts the table shows them.
 - **Remove is last**, in the action row (`user-detail__actions`), plain
   (`btn btn--quiet`), the red kept for its confirm. It is the member list's
@@ -58,7 +58,7 @@ have been removed, or be listed on another page."
 
 ## Coven Access
 
-Where `canPause`, and the member is not a steward (an owner's access is never
+Where `canPause`, and the member is not a steward (a steward's access is never
 paused), a folded section, Coven Access, holds `CovenAccessPanel`
 (`coven-access-panel.tsx`): the user modal's `PausePanel`
 (`UserDetail/pause-panel.tsx`) given the coven's words and writes, so the two
@@ -83,15 +83,15 @@ ask and list alike ([`user-detail.md`](user-detail.md), "Site Access").
 ## Stories
 
 [`index.stories.tsx`](../../src/components/MemberDetail/index.stories.tsx),
-`Coven / Member Detail`, wrapped in a query client: Owner (an owner's view of
+`Coven / Member Detail`, wrapped in a query client: Owner (a steward's view of
 a member, every action), Paused (a standing pause), On an Owner (no Coven
 Access), Own Row (no Remove), and As a Member (the facts alone). The workshop
 serves no GraphQL, so Earlier Pauses stays empty there.
 
 ## Tests
 
-`tests/components/MemberDetail/index.test.tsx`: the facts, an owner's three
-actions, no Coven Access on an owner's modal, no Remove on the viewer's own,
+`tests/components/MemberDetail/index.test.tsx`: the facts, a steward's three
+actions, no Coven Access on a steward's modal, no Remove on the observer's own,
 a member's modal with no actions, and a removal sent only once confirmed and
 then closing through `onRemoved`.
 `tests/components/MemberDetail/coven-access-panel.test.tsx`: Earlier Pauses

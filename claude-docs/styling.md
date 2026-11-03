@@ -868,7 +868,7 @@ The class layer every form is built from, in `_primitives.scss`:
 - **A radio group takes the form's gap, not a margin of its own.**
   `.fieldset.radio-group` (`RadioGroupField`) has a `space(5)` block margin
   that sets it apart from the text around it where nothing else spaces it, as
-  in a confirm's modal (a member's Change Role, the only owner's Leave Coven).
+  in a confirm's modal (a member's Change Role, the only steward's Leave Coven).
   Inside a `.form`, whose `space(5)` gap already spaces every field,
   `.form > .fieldset.radio-group` clears it, so the margin would not add to the
   gap.

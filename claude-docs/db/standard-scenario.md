@@ -9,10 +9,10 @@ every suite, and an id a test can name beats one this run happened to produce.
 
 | User | Id      | Role      | Where                                   |
 | ---- | ------- | --------- | --------------------------------------- |
-| A    | `…0003` | `user`    | owner of W                              |
-| B    | `…0004` | `user`    | member of W                             |
-| C    | `…0005` | `user`    | viewer in W                             |
-| D    | `…0006` | `user`    | member of unrelated X                   |
+| A    | `…0003` | `user`    | steward of W                            |
+| B    | `…0004` | `user`    | practitioner in W                       |
+| C    | `…0005` | `user`    | observer in W                           |
+| D    | `…0006` | `user`    | practitioner in unrelated X             |
 | E    | `…0007` | `admin`   | no workspace at all                     |
 | F    | `…0008` | `curator` | no workspace at all (M11.20)            |
 | G    | `…0009` | `user`    | no workspace; email unverified (MB.268) |

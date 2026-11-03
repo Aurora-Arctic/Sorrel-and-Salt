@@ -24,11 +24,11 @@ is a secondary action, set above the list of other covens; the confirm stays `bt
   then `router.refresh()`, as `CreateWorkspaceForm` does after creating: a re-read of the coven
   would be a 404, since the leaver has no seat in it any more, and the refresh brings the shell's
   switcher a list without it. The landing opens the leaver's next coven if they have one, and tells
-  them how to get into one if not. The only owner's hand-over lands the same way.
+  them how to get into one if not. The only steward's hand-over lands the same way.
 - **Every role sees it.** The page shows it unconditionally, so an observer, who cannot open the members
   page, can still go.
 
-## The only owner's guided exit (M6.16)
+## The only steward's guided exit (M6.16)
 
 The last-owner guard is right and would read as a bug if it only refused. So the coven page reads the
 roll for a steward (`memberRoster`, which pages through `listMembers` to the end), and when they are

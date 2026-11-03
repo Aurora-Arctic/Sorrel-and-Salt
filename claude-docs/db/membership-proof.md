@@ -137,7 +137,7 @@ slug and the inviter's name for those alone ([`invitations.md`](invitations.md),
 `insertMembership(workspaceId, userId, role)` (M6.7) is the one membership write
 with no proof, for the reason `findWorkspaceRole` is the read with none: a
 proof is minted from a membership row, so the row that makes a workspace's
-creator its owner has none to be written under. It lives in
+creator its steward has none to be written under. It lives in
 `src/db/repository/memberships.ts` and is spread into the writer beside
 `invitationWrites` (MB.198), so it runs inside `withAudit` and is stamped from
 the session. `createWorkspace` calls it in the same transaction as the
@@ -177,8 +177,8 @@ the type looks like it closes more than it does.
 
 `assertNotLastOwner(write, membership, userId, becomes)` in
 `src/modules/coven/services/last-owner.ts` refuses any change that would leave a
-workspace with no owner. `becomes` is the role the person ends up with, or
-`null` when they are removed or leave. Every write that can take the owner role
+workspace with no steward. `becomes` is the role the person ends up with, or
+`null` when they are removed or leave. Every write that can take the steward role
 calls it inside `withAudit`: the role change (M9.14), the removal and the
 voluntary leave (M6.15).
 
@@ -189,7 +189,7 @@ the second counts the first's committed change instead of both seeing two stewar
 
 The refusal is a `LastOwner`, a subclass of `Forbidden` that carries what M6.16
 needs to offer a way out: `remedy` is `'promote'` when other members exist
-(`promotable` lists their user ids) and `'delete'` when the owner is the only
+(`promotable` lists their user ids) and `'delete'` when the steward is the only
 member. A change that keeps a steward a steward, or touches someone who is not the
 last steward, passes.
 

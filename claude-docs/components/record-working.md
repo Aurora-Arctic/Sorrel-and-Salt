@@ -18,7 +18,7 @@
 `RecordWorkingButton` takes `{ workspaceId, spellId, spellName, spellVisibility, recorder, steps }`;
 `spellName` ends the button's name, "Record a Working of <spell>", as the Preview and More buttons beside it end with
 the spell's name. The recipe
-page shows it to a role that may create a working (owner and member) on a complete spell, and
+page shows it to a role that may create a working (steward and practitioner) on a complete spell, and
 passes `recorder` (`{ userId, name }`, the signed-in member, named from `viewerOf()`, which the shell
 layout already read that request) and `steps` (`{ id, name }` for each ingredient step). A spell card's
 Record a Working holds the same form but reads `steps` itself once its dialog opens

@@ -37,8 +37,8 @@ visitors four ways, all from the server:
   "current workspace" stored on the session: two browser tabs can sit in two
   covens without disagreeing (M6.9's switcher rewrites the address for the
   same reason).
-- **Any role is let in.** The guard asks for `workspace: read`, which viewer,
-  member and owner all hold. A page that needs more — the members page, which
+- **Any role is let in.** The guard asks for `workspace: read`, which observer,
+  practitioner and steward all hold. A page that needs more — the members page, which
   an observer gets a 404 from — asks the service for that itself.
 - **A site admin gets no way in.** Admins curate the compendium and reach no
   workspace, so an admin in no coven gets the 404 like anyone else.
@@ -109,19 +109,19 @@ beside the one that ends a coven.
   `LeaveWorkspaceButton` ([`components/leave-workspace-button.md`](../components/leave-workspace-button.md)).
   It is enabled for every role, so a test finds it by role and name with no
   test id, and a disabled control is what M6.16 forbids. The coven's only
-  owner is shown both ways out on click, a hand-over or the deletion (M6.16;
+  steward is shown both ways out on click, a hand-over or the deletion (M6.16;
   [`components/leave-workspace-button.md`](../components/leave-workspace-button.md),
-  "The only owner's guided exit").
+  "The only steward's guided exit").
 
 Tests: `tests/app/(shell)/coven/page.test.tsx` (the page guards its own slug; Leave
-for every role, Delete in its own section for the owner alone, Contents and the jump
+for every role, Delete in its own section for the steward alone, Contents and the jump
 menu by role) and `tests/e2e/coven.spec.ts`
 (the same in a browser, keyboard reach and an axe scan).
 
 ## The members page (M6.13)
 
 `/coven/[slug]/members` lists who is in the coven, with each person's role
-and joining date. Stewards and members see it; an observer gets the same 404 a
+and joining date. Stewards and practitioners see it; an observer gets the same 404 a
 stranger does, so the page's existence says nothing about anyone's role (the
 owner's call, 2026-10-12). The `member` role holds `member: read` and no
 other `member` statement, so inviting, changing a role, removing and reading
@@ -134,7 +134,7 @@ members' addresses stay with stewards.
 - **Role controls are the owner's.** The page passes Change Role to
   `MemberList` only when the caller holds `member: update`. They are client
   components that send `updateMemberRole` through `/api/graphql`; the service
-  refuses anyone else, and a change that would leave no owner. It moves a
+  refuses anyone else, and a change that would leave no steward. It moves a
   member to any other role, and only ever an existing member:
   invitations cannot grant ownership, so this is the only route to it.
 - **Addresses are the owner's** (M11.19). A steward sees an Email column with
@@ -150,7 +150,7 @@ members' addresses stay with stewards.
   `memberEmailsByMember` loader, one read per page of members, and answers
   `FORBIDDEN` to everyone but a steward. Nothing is stored on
   `workspace_members`.
-- **A quiet note when there is one owner** (M6.16): if that person loses
+- **A quiet note when there is one steward** (M6.16): if that person loses
   access nobody can manage members. A status, not an alert, drawn above the
   table from the whole roll (`memberRoster`), since one page cannot count stewards.
 - **The heading, tabs and Invite are the `(people)` layout's** (M7.6): the Members
@@ -165,7 +165,7 @@ Tests: `tests/app/(shell)/coven/members.test.tsx` (who gets controls, the
 `tests/modules/coven/services/members.test.ts` and
 `tests/modules/coven/graphql/workspace-members.test.ts` (who may read the
 addresses, directly and over GraphQL),
-and `tests/e2e/coven.spec.ts` (walks story 9, untagged: a viewer's 404, a promotion, the
+and `tests/e2e/coven.spec.ts` (walks story 9, untagged: an observer's 404, a promotion, the
 axe scan).
 
 ## The invitations page (M7.6)
@@ -197,8 +197,8 @@ heading line on both tabs.
   row stays listed until then, past its expiry.
 - **The Members link in the coven nav** stays current on this page (`matches`).
 
-Tests: `tests/app/(shell)/coven/invitations.test.tsx` (owner reads, member and
-viewer get the 404 and read nothing, the cursor keys),
+Tests: `tests/app/(shell)/coven/invitations.test.tsx` (steward reads, practitioner and
+observer get the 404 and read nothing, the cursor keys),
 `tests/components/PendingInvitations/index.test.tsx` (Revoke asks, sends,
 refreshes, reports a refusal), and `tests/e2e/coven.spec.ts` (`@story-5`: the
 tab, the list, Invite on both tabs, a revoke, a member's missing tab and 404,
@@ -212,14 +212,14 @@ sits behind the tab's coven guard. The tab (`grimoire/(list)/grimoire-tab.tsx`)
 opens it empty under `?new=spell` only when
 `rolePermits(role, { spell: ['create'] })`, and reads a saved spell under
 `?edit=<id>` only when `rolePermits(role, { spell: ['update'] })`, so a
-viewer, who writes nothing, gets the tab with no dialog and no spell is read
+observer, who writes nothing, gets the tab with no dialog and no spell is read
 for them. Hiding the dialog is a convenience: `createSpell` and `updateSpell`
 check the permission again, so an observer is refused by the API too. New Spell,
 drawn by `grimoire/(list)/layout.tsx` under the same `rolePermits` check, is
 never shown to an observer.
 
 Tests: `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx` (an
-owner and a member get the dialog under either address, an observer gets
+steward and a practitioner get the dialog under either address, an observer gets
 neither and nothing is read; a steward and a practitioner get New Spell, an observer
 does not).
 
@@ -242,7 +242,7 @@ coven. It is `src/app/(shell)/coven/new/page.tsx`, and it is reached two ways: f
 `/coven`, which offers it to a rights holder with no coven yet (M2.8), and
 from the switcher's Create Workspace choice, offered to anyone holding the
 right (M6.9). A successful create lands on the new coven's index page as its
-owner ([`components/create-workspace-form.md`](../components/create-workspace-form.md)).
+steward ([`components/create-workspace-form.md`](../components/create-workspace-form.md)).
 
 - **A context row only for someone with a coven.** The switcher alone, with no
   section nav, since the page belongs to no one coven; a first-time creator has

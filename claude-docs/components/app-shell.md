@@ -145,7 +145,7 @@ link.
 ## Testing
 
 `tests/components/AppShell/index.test.tsx` covers who sees the Admin and Your
-Coven links (a verified member or viewer of a coven sees Your Coven and not Admin; a verified account in no coven sees neither unless it curates; an unverified one sees neither), the brand's target (`/`), the Your Coven label for one coven or several, Add Ingredient’s target, the unverified
+Coven links (a verified practitioner or observer of a coven sees Your Coven and not Admin; a verified account in no coven sees neither unless it curates; an unverified one sees neither), the brand's target (`/`), the Your Coven label for one coven or several, Add Ingredient’s target, the unverified
 viewer's bar, the skip link's target, and the viewer's invitation count reaching
 the account menu's link. `tests/lib/shell-home.test.ts` and
 `tests/lib/viewer.test.ts` cover the two helpers, the latter including the count
