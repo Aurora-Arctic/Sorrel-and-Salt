@@ -7,6 +7,7 @@ import { graphql } from '../../gql';
 import { formatAgreementVersion } from '../../lib/agreement-version';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
+import type { AgreementDocumentKey } from '../../lib/types';
 import { dayInUtc } from '../../lib/utc';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
@@ -16,6 +17,13 @@ import './index.scss';
 
 // The acceptance page's body: where to read the terms, and the one button that records agreement. The mutation names the version
 // shown, and the server refuses one no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
+
+/** Each agreed document's title, as its public page heads it; each page is at `/<key>`. */
+const DOCUMENT_TITLES: Record<AgreementDocumentKey, string> = {
+  terms: 'Terms of Use',
+  disclaimer: 'Disclaimer',
+  'code-of-ethics': 'Code of Ethics',
+};
 
 const AgreeToTermsDocument = graphql(`
   mutation AgreeToTerms($version: AgreementVersionInput!) {
@@ -28,7 +36,12 @@ const AgreeToTermsDocument = graphql(`
   }
 `);
 
-const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps): ReactElement => {
+const TermsAgreement = ({
+  version,
+  changed,
+  updatedOn,
+  destination,
+}: TermsAgreementProps): ReactElement => {
   const [alert, setAlert] = useState<string>();
 
   const mutation = useMutation({
@@ -62,6 +75,20 @@ const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps
         </Link>
         , and agreeing to the terms is agreeing to them too.
       </p>
+      {changed.length > 0 && (
+        <section className="terms-agreement__changed" aria-labelledby="terms-agreement-changed">
+          <h2 id="terms-agreement-changed">New Since You Last Agreed</h2>
+          <ul>
+            {changed.map((key) => (
+              <li key={key}>
+                <Link href={`/${key}`} target="_blank">
+                  {DOCUMENT_TITLES[key]}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {alert && <Notice kind="error">{alert}</Notice>}
       <p className="terms-agreement__actions">
         <Link className="btn btn--quiet" href="/terms" target="_blank">

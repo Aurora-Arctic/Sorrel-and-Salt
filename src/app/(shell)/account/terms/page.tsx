@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import TermsAgreement from '../../../../components/TermsAgreement';
-import { requireSession } from '../../../../lib/request-session';
+import { documentsChangedSince } from '../../../../lib/agreement-version';
+import { requireSession, sessionAgreedVersion } from '../../../../lib/request-session';
 import { signedInLanding } from '../../../../lib/landing';
 import { safeReturnPath } from '../../../../lib/sign-in';
 import { currentAgreementVersion, readDocument } from '@/modules/documents';
@@ -15,12 +16,16 @@ export const metadata: Metadata = {
 
 // Where an account that has not agreed to the current terms lands from every other protected page. It is exempt from the
 // terms check itself (`requireSession`), and an account that has already agreed is let through, so a stale tab does no harm.
+/** The stored agreement of an account that never agreed, which has every published document still to read. */
+const NEVER_AGREED = { terms: null, disclaimer: null, ethics: null };
+
 export default async function TermsAcceptancePage({ searchParams }: TermsPageProps) {
-  const [session, params, terms, version] = await Promise.all([
+  const [session, params, terms, version, agreed] = await Promise.all([
     requireSession(),
     searchParams,
     readDocument('terms'),
     currentAgreementVersion(),
+    sessionAgreedVersion(),
   ]);
   const destination = safeReturnPath(params.next) ?? (await signedInLanding(session));
 
@@ -29,6 +34,7 @@ export default async function TermsAcceptancePage({ searchParams }: TermsPagePro
       <div className="panel">
         <TermsAgreement
           version={version}
+          changed={documentsChangedSince(agreed ?? NEVER_AGREED, version)}
           updatedOn={terms.publishedAt.toISOString().slice(0, 10)}
           destination={destination}
         />

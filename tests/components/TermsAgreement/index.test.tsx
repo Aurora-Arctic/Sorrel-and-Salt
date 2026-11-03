@@ -1,8 +1,9 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TermsAgreement from '@/components/TermsAgreement';
+import type { TermsAgreementProps } from '@/components/TermsAgreement/types';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -28,13 +29,24 @@ beforeEach(() => {
   vi.spyOn(window.location, 'assign').mockImplementation(assign);
 });
 
-function renderAgreement() {
+function renderAgreement(changed: TermsAgreementProps['changed'] = ['terms']) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
-      <TermsAgreement version={IN_FORCE} updatedOn="2026-11-02" destination="/coven/hearth" />
+      <TermsAgreement
+        version={IN_FORCE}
+        changed={changed}
+        updatedOn="2026-11-02"
+        destination="/coven/hearth"
+      />
     </QueryClientProvider>,
   );
 }
+
+/** Where each link in the list of changed documents goes, in order. */
+const changedHrefs = () =>
+  within(screen.getByRole('list'))
+    .getAllByRole('link')
+    .map((link) => link.getAttribute('href'));
 
 describe('TermsAgreement', () => {
   it('links the terms and names the version', () => {
@@ -45,6 +57,18 @@ describe('TermsAgreement', () => {
       '/terms',
     );
     expect(screen.getByText(/Version 3\.1\.2\b/)).toBeInTheDocument();
+  });
+
+  it('links each document that changed since the account last agreed, and no other', () => {
+    renderAgreement(['disclaimer', 'code-of-ethics']);
+
+    expect(changedHrefs()).toEqual(['/disclaimer', '/code-of-ethics']);
+  });
+
+  it('links all three documents for an account agreeing for the first time', () => {
+    renderAgreement(['terms', 'disclaimer', 'code-of-ethics']);
+
+    expect(changedHrefs()).toEqual(['/terms', '/disclaimer', '/code-of-ethics']);
   });
 
   it('records agreement to the version it showed, then goes to the destination', async () => {
