@@ -82,7 +82,13 @@ export const ADMIN_PAGES = {
     adminOnly: true,
     description:
       'The privacy policy, disclaimer, code of ethics and terms of use: edit a draft, then publish it as a new version.',
-    tabs: [{ href: '/admin/documents', label: 'Documents' }],
+    // One tab per document, in the order the footer lists them; each is that document's editor.
+    tabs: [
+      { href: '/admin/documents/privacy', label: 'Privacy Policy' },
+      { href: '/admin/documents/disclaimer', label: 'Disclaimer' },
+      { href: '/admin/documents/code-of-ethics', label: 'Code of Ethics' },
+      { href: '/admin/documents/terms', label: 'Terms of Use' },
+    ],
   },
 } as const satisfies Record<string, AdminPage>;
 

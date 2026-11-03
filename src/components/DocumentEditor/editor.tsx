@@ -7,7 +7,6 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
-import PageHeader from '../PageHeader';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { editorPlugins } from './elements';
 import { editorValueToMarkdown, markdownToEditorValue } from './markdown';
@@ -116,8 +115,9 @@ const DocumentEditor = ({
   }
 
   return (
-    <main className="document-editor">
-      <PageHeader title={title} lede={lede} />
+    <div className="document-editor">
+      <h2>{title}</h2>
+      <p className="lede">{lede}</p>
       <div className="document-editor__bar">
         <BusyButton
           className="btn"
@@ -157,7 +157,7 @@ const DocumentEditor = ({
           <PlateContent aria-label="Document Text" />
         </Plate>
       </div>
-    </main>
+    </div>
   );
 };
 

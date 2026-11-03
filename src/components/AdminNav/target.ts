@@ -30,6 +30,8 @@ const PARTS: Record<string, Parts> = {
     fields: SUPPORT_FIELDS,
     columns: SUPPORT_COLUMNS,
   },
+  // The four document editors under a tab row, with no action or filter.
+  '/admin/documents/privacy': { shape: 'table', title: true, tabs: true },
   // Its action is the pause control; the filter is the user search.
   '/admin/users': CURATED,
 };
