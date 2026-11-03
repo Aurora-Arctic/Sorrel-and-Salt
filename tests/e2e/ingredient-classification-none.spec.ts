@@ -66,7 +66,9 @@ test('a compendium entry reclassified as None saves, as a site admin', async ({ 
   });
   const id = await withSql((sql) => insertIngredient(sql, fixture, userId));
 
-  await page.goto(`/curator/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`);
+  await page.goto(
+    `/curator/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`,
+  );
   const dialog = editIngredientDialog(page, fixture.name, fixture.canonicalName!);
   await expect(dialog).toBeVisible();
   const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });

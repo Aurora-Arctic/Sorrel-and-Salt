@@ -4,14 +4,14 @@ Every page is protected unless it is named public, and two layers do the
 protecting: a cheap one that owns the redirect, and a secure one that owns the
 answer.
 
-| Layer                                                | Where                        | Checks                                           | On failure                                                                        |
-| ---------------------------------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Proxy (optimistic)                                   | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>`                                           |
-| `requireSession()` (secure)                          | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page                                                  |
-| `requireSignedIn()`, the shell                       | `src/lib/request-session.ts` | The secure check, without the email check        | The same redirect, from the shell layout                                          |
-| Proxy, `/workshop/*` only                            | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin                                              |
+| Layer                                                                | Where                        | Checks                                           | On failure                                                                        |
+| -------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Proxy (optimistic)                                                   | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>`                                           |
+| `requireSession()` (secure)                                          | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page                                                  |
+| `requireSignedIn()`, the shell                                       | `src/lib/request-session.ts` | The secure check, without the email check        | The same redirect, from the shell layout                                          |
+| Proxy, `/workshop/*` only                                            | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin                                              |
 | `requireCuratorSession()`, `/curator/*` pages and `/keepers/support` | `src/lib/request-session.ts` | The secure check, then `assertCurator()`         | The redirect, or a 403 page for a user (["The curator guard"](admin-guard.md))    |
-| `requireAdminSession()`, `/keepers` people pages      | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-admin (["The admin guard"](admin-guard.md)) |
+| `requireAdminSession()`, `/keepers` people pages                     | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-admin (["The admin guard"](admin-guard.md)) |
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
