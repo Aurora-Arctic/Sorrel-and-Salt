@@ -90,11 +90,12 @@ const DocumentMailingPanel = ({
   const id = useId();
   const agreement = documentKey === 'terms';
 
+  // On its own line, in the warning's colour, as how many it reaches is what makes the mailing high-risk.
+  const reach = `That is ${count(accountCount)} ${accountCount === 1 ? 'account' : 'accounts'}, sent over ${days} ${days === 1 ? 'day' : 'days'}.`;
+
   const question = (
     <>
-      Email every account about version {versionNumber} of <strong>{title}</strong>? That is{' '}
-      {count(accountCount)} {accountCount === 1 ? 'account' : 'accounts'}, sent over {days}{' '}
-      {days === 1 ? 'day' : 'days'}.
+      Email every account about version {versionNumber} of <strong>{title}</strong>?
       {agreement && ' Each account is also asked to agree to the terms at its next visit.'}
       {inProgress &&
         ` The mailing of version ${inProgress.versionNumber} has reached ${count(inProgress.reached)} of ${count(inProgress.recipientCount)} accounts and stops here.`}
@@ -152,6 +153,7 @@ const DocumentMailingPanel = ({
             openClass="btn btn--destructive"
             title="Email Every Account"
             question={question}
+            warning={reach}
             busy="Sending"
             confirmClass="btn btn--destructive"
             confirmDisabled={summary.trim() === ''}
