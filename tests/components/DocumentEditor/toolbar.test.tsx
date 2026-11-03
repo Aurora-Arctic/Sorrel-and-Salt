@@ -25,6 +25,8 @@ const BUTTONS = [
   'Numbered List',
   'Table',
   'Footnote',
+  'Undo',
+  'Redo',
 ];
 
 /** Renders the editor on `body`, and records the markdown each Save Draft sends. */
@@ -112,6 +114,9 @@ describe('the document editor’s toolbar', () => {
     await renderEditor('Fixturewort grows here.');
 
     for (const name of BUTTONS) expect(button(name)).toBeEnabled();
+    // Undo and Redo stay in the tab order with nothing to undo or redo, so they say so rather than being disabled.
+    expect(button('Undo')).toHaveAttribute('aria-disabled', 'true');
+    expect(button('Redo')).toHaveAttribute('aria-disabled', 'true');
     // Nothing else: no image, underline, raw HTML or any other button the page could not draw.
     expect(within(toolbar()).getAllByRole('button')).toHaveLength(BUTTONS.length);
     for (const name of BUTTONS) expect(button(name).querySelector('svg')).not.toBeNull();
@@ -188,6 +193,32 @@ describe('the document editor’s toolbar', () => {
     expect(markdown).toMatch(/\[\^2\]/);
     expect(markdown).toMatch(/^\[\^2\]:/m);
     expect(markdown).toMatch(/^\[\^1\]: A cited source\.$/m);
+  });
+
+  it('Undo takes back the last change and Redo makes it again', async () => {
+    const { saved, text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+    await press('Bold');
+    expect(button('Undo')).toHaveAttribute('aria-disabled', 'false');
+
+    await press('Undo');
+    expect(button('Undo')).toHaveAttribute('aria-disabled', 'true');
+    expect(button('Redo')).toHaveAttribute('aria-disabled', 'false');
+    await press('Redo');
+
+    expect(await saveDraft(saved)).toBe('**Fixturewort** grows here.');
+  });
+
+  it('Undo with nothing to undo changes nothing', async () => {
+    const { saved, text } = await renderEditor('Fixturewort grows here.');
+    await select(text, 'Fixturewort');
+    await press('Bold');
+    await press('Undo');
+    await press('Undo');
+    await press('Redo');
+    await press('Redo');
+
+    expect(await saveDraft(saved)).toBe('**Fixturewort** grows here.');
   });
 
   describe('reports whether the selection already has what a toggle button applies', () => {

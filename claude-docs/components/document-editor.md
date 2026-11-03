@@ -16,19 +16,31 @@ The stored text is markdown, the same text `DocumentPage` renders, so the editor
 
 ## The toolbar
 
-`toolbar.tsx` is a `role="toolbar"` named "Document Text Formatting", above the text box. It has nine icon buttons (`btn--icon`, marks from [`icons.tsx`](icon-tip.md), "The icons"), each named by `aria-label` and tipped below with its name through `IconTip`, one for each thing the public page draws that a person can add, and no others: Heading 2, Heading 3, Bold, Italic, Link, Bulleted List, Numbered List, Table and Footnote. Each is a Plate transform, not a hand-written edit:
+`toolbar.tsx` is a `role="toolbar"` named "Document Text Formatting", above the text box. It has eleven quiet icon buttons (`btn btn--quiet btn--icon`, 2.5rem square, marks from [`icons.tsx`](icon-tip.md), "The icons"), each named by `aria-label` and tipped below with its name through `IconTip`. Nine are one for each thing the public page draws that a person can add, and no others; the last two are Undo and Redo. They sit in five `role="group"` rows, each named, with a hairline between groups and more space between groups than within one:
 
-| Button                       | What it calls                                                                                                                      | Pressed when                                    |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Heading 2, Heading 3         | `editor.tf.toggleBlock`                                                                                                            | the block holding the selection is that heading |
-| Bold, Italic                 | `editor.tf.toggleMark`                                                                                                             | `editor.api.hasMark`                            |
-| Link                         | opens an "Add Link" dialog (`Modal`) asking for an Address, then `upsertLink` on the selection kept when it opened                 | never                                           |
-| Bulleted List, Numbered List | `toggleList` (`disc`, `decimal`)                                                                                                   | `someList`                                      |
-| Table                        | `insertTable`, two columns and two rows with a header row, after the top-level block holding the caret                             | never                                           |
-| Footnote                     | `editor.tf.insert.footnote`: the next unused number's reference at the caret and its definition, the caret going to the definition | never                                           |
+| Group    | Buttons                                 |
+| -------- | --------------------------------------- |
+| Headings | Heading 2, Heading 3                    |
+| Text     | Bold, Italic, Link                      |
+| Lists    | Bulleted List, Numbered List            |
+| Insert   | Table, Footnote                         |
+| History  | Undo, Redo, at the right end of the row |
+
+The first four groups sit centred in the space left of History. Each button is a Plate transform, not a hand-written edit:
+
+| Button                       | What it calls                                                                                                                                                | Pressed when                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| Heading 2, Heading 3         | `editor.tf.toggleBlock`                                                                                                                                      | the block holding the selection is that heading |
+| Bold, Italic                 | `editor.tf.toggleMark`                                                                                                                                       | `editor.api.hasMark`                            |
+| Link                         | opens an "Add Link" dialog (`Modal`) asking for an Address, then `upsertLink` on the selection kept when it opened                                           | never                                           |
+| Bulleted List, Numbered List | `toggleList` (`disc`, `decimal`)                                                                                                                             | `someList`                                      |
+| Table                        | `insertTable`, two columns and two rows with a header row, after the top-level block holding the caret                                                       | never                                           |
+| Footnote                     | `editor.tf.insert.footnote`: the next unused number's reference at the caret and its definition, the caret going to the definition                           | never                                           |
+| Undo, Redo                   | `editor.tf.undo`, `editor.tf.redo`, from Plate's built-in history; the keys do the same: Ctrl+Z, and Ctrl+Y or Ctrl+Shift+Z (Cmd+Z and Cmd+Shift+Z on a Mac) | never                                           |
 
 - **A press keeps the selection.** Each button cancels `mousedown`, so the focus stays in the text and the button acts on what was selected.
 - **The row sticks.** `.document-editor__toolbar` is `position: sticky` at `var(--sticky-top)`, just under the site bar, on `$surface-page` so the text scrolls under it. It stays while the text box is on screen, as its parent `.document-editor__text` ends with the box. No ancestor sets `overflow`, which would stop it.
+- **Undo and Redo say when they have nothing to do.** With an empty history stack, the button carries `aria-disabled="true"` and a press does nothing. It is not `disabled`, which would drop it from the arrow-key order.
 - **One tab stop.** The toolbar follows the WAI-ARIA toolbar pattern: only the last-focused button is in the tab order, and the arrow keys, Home and End move focus between the buttons.
 - **A link needs a full web address.** `upsertLink` refuses an address the link plugin cannot validate, and the dialog says so and stays open.
 

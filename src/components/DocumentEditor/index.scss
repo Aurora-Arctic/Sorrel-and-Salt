@@ -45,6 +45,17 @@
   outline: none;
 }
 
+// One group of related buttons, a little closer than the groups are to each other, with a line between it and the group before.
+.document-editor__group {
+  display: flex;
+  gap: space(3);
+
+  & + & {
+    padding-inline-start: space(4);
+    border-inline-start: 1px solid $hairline;
+  }
+}
+
 // The row of formatting buttons above the text box, in the same column. It sticks just under the site bar while the text box
 // is on screen, on the page's own fill so the text scrolls under it.
 .document-editor__toolbar {
@@ -52,7 +63,7 @@
   // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
   top: var(--sticky-top, 0px);
   z-index: layer('sticky-row');
-  padding-block: space(2);
+  padding: space(2);
   // An opaque raised ground, so the text scrolls under it, with a line in the body ink beneath: white in dark, as white would vanish on parchment.
   border-bottom: 1px solid $text-primary;
   // The box's top corners, so the ground stays inside the box's rounded border.
@@ -61,8 +72,20 @@
   background-color: $surface-card;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: space(3);
+  align-items: center;
+  gap: space(4);
+
+  // The space either side of the formatting groups splits evenly, so they sit centred and Undo and Redo at the right end.
+  .document-editor__group:first-child,
+  .document-editor__group:last-child {
+    margin-inline-start: auto;
+  }
+
+  .btn--icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    min-height: 2.5rem;
+  }
 
   // A pressed button (Bold on bold text) keeps the quiet button's pointed-at look.
   .btn--quiet[aria-pressed='true'] {
