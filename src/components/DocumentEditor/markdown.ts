@@ -44,10 +44,16 @@ export function markdownToEditorValue(markdown: string): Value {
   return markdownEditor().getApi(MarkdownPlugin).markdown.deserialize(markdown) as Value;
 }
 
+// The serialiser writes an empty table cell or footnote definition as a lone zero-width space; both are written empty.
+const emptyCell = /(\| )\u200B(?= \|)/g;
+const emptyDefinition = /^(\[\^[^\]]+\]:) \u200B$/gm;
+
 export function editorValueToMarkdown(value: Value): string {
   const editor = markdownEditor();
   return editor
     .getApi(MarkdownPlugin)
     .markdown.serialize({ value, remarkStringifyOptions: stringifyOptions })
+    .replace(emptyCell, '$1')
+    .replace(emptyDefinition, '$1')
     .trimEnd();
 }

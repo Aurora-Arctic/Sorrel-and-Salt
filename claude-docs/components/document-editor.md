@@ -14,6 +14,27 @@ The stored text is markdown, the same text `DocumentPage` renders, so the editor
 
 `markdown.ts` uses only Plate's base (headless) plugins, so it also runs under Vitest with no DOM. `elements.tsx` holds the React plugins that draw each node (headings `h2` to `h6`, quote, rule, marks, link, lists, tables, footnotes). A list is drawn by a `belowNodes` wrapper around each paragraph the list plugin marks as a list item, since Plate's list plugin is indent based and draws nothing itself.
 
+## The toolbar
+
+`toolbar.tsx` is a `role="toolbar"` named "Document Text Formatting", above the text box. It has nine text buttons, one for each thing the public page draws that a person can add, and no others: Heading 2, Heading 3, Bold, Italic, Link, Bulleted List, Numbered List, Table and Footnote. Each is a Plate transform, not a hand-written edit:
+
+| Button                       | What it calls                                                                                                                      | Pressed when                                    |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Heading 2, Heading 3         | `editor.tf.toggleBlock`                                                                                                            | the block holding the selection is that heading |
+| Bold, Italic                 | `editor.tf.toggleMark`                                                                                                             | `editor.api.hasMark`                            |
+| Link                         | opens an "Add Link" dialog (`Modal`) asking for an Address, then `upsertLink` on the selection kept when it opened                 | never                                           |
+| Bulleted List, Numbered List | `toggleList` (`disc`, `decimal`)                                                                                                   | `someList`                                      |
+| Table                        | `insertTable`, two columns and two rows with a header row, after the top-level block holding the caret                             | never                                           |
+| Footnote                     | `editor.tf.insert.footnote`: the next unused number's reference at the caret and its definition, the caret going to the definition | never                                           |
+
+- **A press keeps the selection.** Each button cancels `mousedown`, so the focus stays in the text and the button acts on what was selected.
+- **One tab stop.** The toolbar follows the WAI-ARIA toolbar pattern: only the last-focused button is in the tab order, and the arrow keys, Home and End move focus between the buttons.
+- **A link needs a full web address.** `upsertLink` refuses an address the link plugin cannot validate, and the dialog says so and stays open.
+
+## Empty cells and notes
+
+An empty table cell or footnote definition is serialised by the markdown package as a lone zero-width space. `editorValueToMarkdown` removes it, so a table or note the toolbar adds and nobody fills in saves as `|  |` and `[^2]:`.
+
 ## Loading
 
 `index.tsx` loads `editor.tsx` with `next/dynamic`, so the editor's code is fetched only on this page and never reaches a public page's bundle.
@@ -21,3 +42,7 @@ The stored text is markdown, the same text `DocumentPage` renders, so the editor
 ## Props
 
 `DocumentEditorProps` (`types.ts`): `documentId`, `documentKey`, `title`, `lede`, `body` (the draft's text, else the published text, else empty), `revision` (the draft's revision, or `null` when there is no draft) and `nextNumber` (the number the next publish will take).
+
+## Leaving the text box with the keyboard
+
+The indent plugin takes Shift+Tab on a block with no indent and does nothing with it, which would trap a keyboard user in the text. `TabEscapePlugin` in `elements.tsx` lets that key through, so focus returns to the toolbar. A block that is indented, or inside a quote, still outdents or lifts as before.

@@ -39,6 +39,14 @@
   }
 }
 
+// The row of formatting buttons above the text box, in the same column.
+.document-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1);
+  margin-block-end: space(2);
+}
+
 // A source mark's number is no link here, as it leads nowhere while editing, but it wears the public page's link look.
 .document-editor__text .document-page__marks span {
   padding-inline: space(1);

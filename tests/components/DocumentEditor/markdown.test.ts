@@ -59,4 +59,17 @@ describe('the document editor’s markdown', () => {
       }
     },
   );
+
+  // A table the toolbar inserts, and a footnote it adds, start empty: the markdown must hold nothing invisible in them.
+  it('writes an empty table cell and an empty footnote definition with no zero-width space', () => {
+    const value = markdownToEditorValue(
+      'Text.[^1]\n\n| A | B |\n| - | - |\n| x | y |\n\n[^1]: note',
+    );
+    const emptied = JSON.parse(JSON.stringify(value).replace('"note"', '""').replace('"x"', '""'));
+
+    const markdown = editorValueToMarkdown(emptied);
+
+    expect(markdown).not.toContain('\u200B');
+    expect(markdown).toMatch(/^\[\^1\]:$/m);
+  });
 });

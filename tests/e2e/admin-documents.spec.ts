@@ -19,6 +19,10 @@ const DOCUMENT_KEYS = ['privacy', 'disclaimer', 'terms', 'code-of-ethics'] as co
 const editorOf = (page: Page) =>
   page.getByRole('main').getByRole('textbox', { name: 'Document Text' });
 
+/** The editor's formatting toolbar. */
+const toolbarOf = (page: Page) =>
+  page.getByRole('main').getByRole('toolbar', { name: 'Document Text Formatting' });
+
 /** Puts the caret at the end of the paragraph holding `anchor`, and types `addition` there. */
 async function appendTo(page: Page, anchor: string, addition: string): Promise<void> {
   await editorOf(page).getByText(anchor).click();
@@ -49,6 +53,8 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   }
   await expect(tabs.nth(0)).toHaveAttribute('aria-current', 'page');
   await expect(editorOf(page)).toBeVisible();
+  // The scan covers the editor's toolbar too, so it waits for it.
+  await expect(toolbarOf(page).getByRole('button').first()).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
   // Before: the seed's one version, so the public page lists no earlier one.
@@ -134,6 +140,42 @@ test('publishing the terms warns that every account will agree again, and sends 
   await reader.getByRole('button', { name: 'Agree & Continue' }).click();
   await expect(reader).not.toHaveURL(/\/account\/terms/);
   await reader.context().close();
+});
+
+// The toolbar is one stop in the tab order, and the arrow keys move between its buttons, as the WAI-ARIA toolbar pattern has it:
+// a keyboard user passes it with one Tab, and comes back to the button they left.
+test('the editor’s toolbar takes one tab stop, and the arrow keys move between its buttons', async ({
+  page,
+}) => {
+  await signInAs(page, 'toolbar-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/keepers/documents/privacy');
+  const buttons = toolbarOf(page).getByRole('button');
+  // Precondition: buttons enough for an arrow to move between.
+  await expect(buttons.first()).toBeVisible();
+  expect(await buttons.count()).toBeGreaterThan(2);
+  /** Whether focus is on one of the toolbar's buttons. */
+  const focusInToolbar = () =>
+    toolbarOf(page).evaluate((toolbar) => toolbar.contains(document.activeElement));
+
+  await buttons.first().focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(buttons.nth(1)).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(buttons.first()).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(buttons.last()).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(buttons.first()).toBeFocused();
+
+  // One stop: Tab leaves the toolbar from any button, and Shift+Tab comes back to the button left, not the first or last.
+  await page.keyboard.press('ArrowRight');
+  await expect(buttons.nth(1)).toBeFocused();
+  await page.keyboard.press('Tab');
+  expect(await focusInToolbar()).toBe(false);
+  await page.keyboard.press('Shift+Tab');
+  await expect(buttons.nth(1)).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  expect(await focusInToolbar()).toBe(false);
 });
 
 // A curator curates the compendium and does not govern the site's documents: each page refuses them itself, whatever the nav shows.
