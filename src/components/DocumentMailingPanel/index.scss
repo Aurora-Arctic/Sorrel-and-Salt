@@ -18,9 +18,9 @@
     margin-block-start: space(3);
   }
 
-  // The status paragraph above brings its own `space(2)` margin; this matches it below.
+  // The space under the reach warning, before the first summary.
   &__reach {
-    margin-block-end: space(2);
+    margin-block-end: space(3);
   }
 
   &__mailing {
