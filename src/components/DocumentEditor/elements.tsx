@@ -44,8 +44,10 @@ const heading = (tag: 'h2' | 'h3' | 'h4' | 'h5' | 'h6') =>
     return <PlateElement as={tag} {...props} />;
   };
 
+// A list item's paragraph is a `div`, since the list wrapper draws a `<ul>` inside it and a `<p>` cannot hold one.
 function Paragraph(props: PlateElementProps): ReactElement {
-  return <PlateElement as="p" {...props} />;
+  const listed = Boolean((props.element as { listStyleType?: string }).listStyleType);
+  return <PlateElement as={listed ? 'div' : 'p'} {...props} />;
 }
 
 function Quote(props: PlateElementProps): ReactElement {
