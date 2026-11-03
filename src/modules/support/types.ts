@@ -2,7 +2,7 @@ import type { supportReplies } from './schema/support-replies';
 import type { supportRequests } from './schema/support-requests';
 import type { supportTimeouts } from './schema/support-timeouts';
 
-export type { SupportRequestFilter, SupportViewCounts } from '../../db/repository';
+export type { StandingTimeout, SupportRequestFilter } from '../../db/repository';
 
 export type SupportRequestRow = typeof supportRequests.$inferSelect;
 export type SupportReplyRow = typeof supportReplies.$inferSelect;
@@ -12,23 +12,48 @@ export type SupportAbout = SupportRequestRow['about'];
 export type SupportStatus = SupportRequestRow['status'];
 
 /**
- * How a reply's notice reaches the sender. Built per request by the GraphQL context, as `InvitationSender` is, because a service
- * may not import the origin resolution the link needs.
+ * The origin a support time-out mail links from, which the mail job carries. Handed to the service by the GraphQL context, because
+ * a service may not import the origin resolution the link needs.
  */
-export interface SupportNotifier {
-  /** Mails `to` that a reply to the request `requestId`, headed `subject`, is waiting; the link opens that request. Carries no reply text; never throws on a failed send. */
-  replyWaiting(to: string, subject: string, requestId: string): Promise<void>;
-  /** Mails the sender that the request arrived, with the 5-working-day promise. `requestId` is null for a signed-out sender, whose mail links to the support page. Never throws on a failed send. */
-  received(to: string, subject: string, requestId: string | null): Promise<void>;
-  /** Mails the sender that the request is resolved and that a reply reopens it. `requestId` is null for a signed-out sender. Never throws on a failed send. */
-  resolved(to: string, subject: string, requestId: string | null): Promise<void>;
-  /** Mails the sender that the resolved request closes in two days. `requestId` is null for a signed-out sender. Never throws on a failed send. */
-  closingSoon(to: string, subject: string, requestId: string | null): Promise<void>;
-  /** Mails a signed-out visitor a staff reply in full, since they have no page to read it on. Never throws on a failed send. */
-  signedOutReply(to: string, body: string): Promise<void>;
+export interface TimeoutNotifier {
+  /** The origin a mailed link is built on. @throws {Error} where none resolves. */
+  origin(): Promise<string>;
 }
 
-/** What the Support dialog offers a visitor: `until` is set only for `timedOut`. */
+/** One support time-out mail, as its job carries it: the time-out's id and the origin, and nothing of the user's. */
+export type SupportTimeoutMail = {
+  kind: 'support-time-out';
+  timeoutId: string;
+  origin: string;
+};
+
+export interface SupportNotifier {
+  /** The origin a mailed link is built on, which a job that mails later carries with it. @throws {Error} where none resolves. */
+  origin(): Promise<string>;
+}
+
+/** One received or resolved mail, as its job carries it: the request id and the origin, and nothing of the sender's. */
+export type SupportStatusMail = {
+  kind: 'received' | 'resolved';
+  requestId: string;
+  origin: string;
+};
+
+/** One support-retention stage: the closing-soon notice, the close, or the anonymising. */
+export type RetentionStage = 'notice' | 'close' | 'anonymise';
+
+/**
+ * What one support-retention batch run is given: its stage, its page of request ids, the job's `now` in milliseconds, so every
+ * batch of one day reads the same cutoffs, and the origin the notices link from. Ids, a kind, a number and the site origin.
+ */
+export interface RetentionBatch {
+  kind: RetentionStage;
+  ids: string[];
+  now: number;
+  origin: string;
+}
+
+/** What the Support dialog offers a visitor: `until` is set only for a dated `timedOut`, and null for one with no end date. */
 export interface SupportDialogAnswer {
   kind: 'signedOut' | 'unverified' | 'timedOut' | 'form';
   until: Date | null;

@@ -6,7 +6,8 @@ export interface EmailLayoutProps {
   heading: string;
   /** The site's origin, which serves the images and fonts under /email/. */
   origin: string;
-  children: ReactNode;
+  /** Optional in the type because `createElement` passes children apart from the props. */
+  children?: ReactNode;
 }
 
 /** A run of text in the anchor Zoho Mail leaves alone (`Ink` in layout.tsx). */
@@ -16,7 +17,8 @@ export interface InkProps {
   color: string;
   /** Repeated on the anchor for Word, which does not always inherit it. */
   font?: string;
-  children: ReactNode;
+  /** Optional in the type because `createElement` passes children apart from the props. */
+  children?: ReactNode;
 }
 
 /**

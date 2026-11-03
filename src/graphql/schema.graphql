@@ -337,6 +337,71 @@ input DeityTraditionInput {
   name: String!
 }
 
+"""A site document’s title and lede."""
+type Document {
+  id: ID!
+  lede: String!
+  title: String!
+}
+
+"""
+The open draft of a document. `revision` is what a save or publish sends back.
+"""
+type DocumentDraft {
+  body: String!
+  id: ID!
+  number: Int!
+  revision: Int!
+}
+
+"""
+A document as the admin editor opens it: its public version and its draft.
+"""
+type DocumentForEditing {
+  draft: DocumentDraft
+  id: ID!
+  key: String!
+  lede: String!
+  published: DocumentVersion
+  title: String!
+}
+
+input DocumentInput {
+  lede: String!
+  title: String!
+}
+
+"""
+One mailing of a document version to every account. `state` is queued, sending, waiting, paused, sent or replaced.
+"""
+type DocumentMailing {
+  finishedAt: DateTime
+  id: ID!
+  reached: Int!
+  recipientCount: Int!
+  startedAt: DateTime!
+  state: String!
+  versionNumber: Int!
+}
+
+"""
+What the editor needs to email a document: its published version, whom a mailing would reach and in how many days, and the mailings that matter.
+"""
+type DocumentMailingOverview {
+  accountCount: Int!
+  current: DocumentMailing
+  days: Int!
+  inProgress: DocumentMailing
+  versionNumber: Int!
+}
+
+"""A published version of a document."""
+type DocumentVersion {
+  body: String!
+  number: Int!
+  publishedAt: DateTime!
+}
+
 """
 What Make It Ours could not carry onto the coven's new own entry, by name, each list sorted: a folk name its new name took. The other lists stay empty.
 """
@@ -927,7 +992,7 @@ type Mutation {
   Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.
   """
   addSupportInternalNote(body: String!, requestId: ID!): SupportReply!
-  agreeToTerms: User!
+  agreeToTerms(version: Int!): User!
 
   """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
@@ -1078,9 +1143,15 @@ type Mutation {
   deleteZodiacSign(id: ID!): ID!
 
   """
+  Throws the document's open draft away, answering its id. Refused as STALE_WRITE when the draft has moved on from `expectedRevision`.
+  """
+  discardDocumentDraft(documentId: ID!, expectedRevision: Int!): ID!
+
+  """
   Copies a spell into a new private draft in the same coven, with its categories and live steps; the original is untouched.
   """
   duplicateSpell(id: ID!, workspaceId: ID!): Spell!
+  emailDocumentToEveryAccount(documentId: ID!, summary: String!): DocumentMailingOverview!
 
   """Lets a user with no invitation create a coven. Refused once they may."""
   grantWorkspaceCreation(note: String, userId: ID!): User!
@@ -1090,8 +1161,18 @@ type Mutation {
   """
   leaveWorkspace(workspaceId: ID!): Boolean!
 
+  """
+  Lifts the pause standing on a member’s access to a coven now, and answers it. Owners only.
+  """
+  liftMemberAccessPause(userId: ID!, workspaceId: ID!): WorkspaceMemberPause!
+
   """Ends a time-out now. Site admins only."""
   liftSupportTimeout(id: ID!): SupportTimeout!
+
+  """
+  Lifts the pause standing on a user’s access now, and answers it. Site admins only.
+  """
+  liftUserAccessPause(userId: ID!): UserAccessPause!
 
   """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
@@ -1099,9 +1180,37 @@ type Mutation {
   pauseAdminRoleChanges: Boolean!
 
   """
+  Pauses a member’s access to a coven until `until`, or with no end when it is left out. Owners only; an owner cannot be paused.
+  """
+  pauseMemberAccess(
+    """
+    What the user is emailed, up to 500 characters; the note is never mailed.
+    """
+    message: String
+    note: String
+    until: DateTime
+    userId: ID!
+    workspaceId: ID!
+  ): WorkspaceMemberPause!
+
+  """
+  Pauses a user’s access until `until`, or with no end when it is left out, with a note saying why, and ends every session they hold. Site admins only.
+  """
+  pauseUserAccess(
+    """
+    What the user is emailed, 1 to 500 characters; the note is never mailed.
+    """
+    message: String!
+    note: String!
+    until: DateTime
+    userId: ID!
+  ): UserAccessPause!
+
+  """
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+  publishDocumentDraft(documentId: ID!, expectedRevision: Int): DocumentVersion!
 
   """
   Notes that the signed-in account opened this card link and was refused. Takes the token alone: the account is the session's and the reason is worked out here. Answers true whether or not anything was recorded.
@@ -1148,6 +1257,7 @@ type Mutation {
   Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.
   """
   resumeAdminRoleChanges: Boolean!
+  resumeDocumentMailing(mailingId: ID!): DocumentMailingOverview!
 
   """
   Withdraws a pending admin invitation, so its link says so. Refused while admin changes are paused, but to the primary admin.
@@ -1168,6 +1278,7 @@ type Mutation {
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
   """
   revokeWorkspaceCreation(note: String, userId: ID!): User!
+  saveDocumentDraft(body: String!, documentId: ID!, expectedRevision: Int): DocumentDraft!
 
   """
   Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
@@ -1216,9 +1327,17 @@ type Mutation {
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
   """
-  Bars a user from sending support requests until `until`. Site admins only.
+  Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.
   """
-  timeOutSupportSender(note: String, until: DateTime!, userId: ID!): SupportTimeout!
+  timeOutSupportSender(
+    """
+    What the user is emailed, 1 to 500 characters; the note is never mailed.
+    """
+    message: String!
+    note: String!
+    until: DateTime
+    userId: ID!
+  ): SupportTimeout!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
@@ -1257,6 +1376,7 @@ type Mutation {
   Replaces the tradition; the slug follows the name, and so does the slug of every deity under it.
   """
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
+  updateDocument(id: ID!, input: DocumentInput!): Document!
   updateIngredient(
     """
     The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
@@ -1570,6 +1690,8 @@ type Query {
   The live traditions by name: the tradition a deity is filed under is picked from these.
   """
   deityTraditions(after: String, before: String, first: Int, last: Int): QueryDeityTraditionsConnection!
+  documentForEditing(key: String!): DocumentForEditing!
+  documentMailing(key: String!): DocumentMailingOverview!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
 
   """
@@ -1676,7 +1798,26 @@ type Query {
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
   """
   supportRequests(about: SupportAbout, after: String, before: String, errorCode: Int, first: Int, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
-  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+
+  """
+  Every pause set on a user’s access, standing, run out and lifted alike, newest first. Site admins only.
+  """
+  userAccessPauses(after: String, before: String, first: Int, last: Int, userId: ID!): QueryUserAccessPausesConnection!
+  users(
+    after: String
+    awaitingApproval: Boolean
+    before: String
+    first: Int
+    last: Int
+
+    """Only the users a site access pause stands on."""
+    paused: Boolean
+    query: String
+    role: UserRole
+
+    """Only the users a support time-out stands on."""
+    timedOut: Boolean
+  ): QueryUsersConnection!
 
   """
   What completing a working of this spell would take from the coven’s jars now: the plan completion follows, read and not applied.
@@ -2073,6 +2214,16 @@ type QuerySupportRequestsConnection {
 type QuerySupportRequestsConnectionEdge {
   cursor: String!
   node: SupportRequest!
+}
+
+type QueryUserAccessPausesConnection {
+  edges: [QueryUserAccessPausesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryUserAccessPausesConnectionEdge {
+  cursor: String!
+  node: UserAccessPause!
 }
 
 type QueryUsersConnection {
@@ -2563,7 +2714,9 @@ A message on a support request: a reply from staff, a note only staff read, or a
 type SupportReply {
   audit: AuditInfo!
 
-  """Who wrote the reply; null if no live account holds the id."""
+  """
+  Who wrote the reply; null if no live account holds the id, or for an anonymised sender reply, which the System account holds.
+  """
   author: User
   authorRole: SupportReplyAuthorRole!
   body: String!
@@ -2622,6 +2775,10 @@ type SupportRequest {
   replies: [SupportReply!]!
   resolvedAt: DateTime
   resolvedBy: User
+
+  """
+  Who sent it; null if no live account holds the id, or for an anonymised request, which the System account holds.
+  """
   sender: User
 
   """The sender’s tier. Staff only."""
@@ -2670,14 +2827,14 @@ enum SupportStatus {
 }
 
 """
-A bar on a user sending support requests until `until`, unless lifted sooner.
+A bar on a user sending support requests until `until`, or with no end when `until` is null, unless lifted sooner.
 """
 type SupportTimeout {
   audit: AuditInfo!
   id: ID!
   liftedAt: DateTime
-  note: String
-  until: DateTime!
+  note: String!
+  until: DateTime
   userId: ID!
 }
 
@@ -2746,6 +2903,7 @@ input UpdateSpellInput {
 }
 
 type User {
+  agreedTermsVersion: Int
   audit: AuditInfo!
   canCreateWorkspace: Boolean!
   email: String!
@@ -2758,7 +2916,19 @@ type User {
   """The sign-in providers linked to the account, by id, sorted."""
   providers: [String!]!
   role: UserRole!
-  termsVersion: String
+}
+
+"""
+A pause on a user’s access to the site: nothing but support until `until`, or with no end when `until` is null, unless lifted sooner. `note` says why, for staff.
+"""
+type UserAccessPause {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+  liftedBy: ID
+  note: String!
+  until: DateTime
+  userId: ID!
 }
 
 """
@@ -2865,6 +3035,11 @@ type Workspace {
   id: ID!
 
   """
+  Every pause set on one member of the coven, standing, run out and lifted alike, newest first. Owners only.
+  """
+  memberPauses(after: String, before: String, first: Int, last: Int, userId: ID!): WorkspaceMemberPausesConnection!
+
+  """
   The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.
   """
   members(after: String, before: String, first: Int, last: Int, query: String): WorkspaceMembersConnection!
@@ -2884,6 +3059,37 @@ type WorkspaceMember {
   role: WorkspaceRole!
   user: CoMember!
   workspace: Workspace!
+}
+
+"""
+A pause on one member’s access to a coven: every read and write in it is refused until `until`, or with no end when `until` is null, unless lifted sooner. The member keeps their seat.
+"""
+type WorkspaceMemberPause {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+
+  """
+  The owner who lifted the pause; null while it stands or after it ran out by itself.
+  """
+  liftedBy: CoMember
+  note: String
+
+  """The owner who set the pause."""
+  setBy: CoMember!
+  until: DateTime
+  userId: ID!
+  workspaceId: ID!
+}
+
+type WorkspaceMemberPausesConnection {
+  edges: [WorkspaceMemberPausesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WorkspaceMemberPausesConnectionEdge {
+  cursor: String!
+  node: WorkspaceMemberPause!
 }
 
 type WorkspaceMembersConnection {

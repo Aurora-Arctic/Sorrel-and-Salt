@@ -1,8 +1,8 @@
 ## The user list (MB.52)
 
-`/admin/users` lists everyone with an account, so an admin can act on a person
+`/keepers/users` lists everyone with an account, so an admin can act on a person
 without being sent their id: M5.8's approval control and MB.59's grant control
-act on its rows (Change Role since M11.20), and MB.53 picks an impersonation target from it. Each row
+(Change Role since M11.20) act on a user from the modal each row's name opens, and MB.53 picks an impersonation target from it. Each row
 shows the name, the email, the role, whether the user may create a workspace,
 when the account was made, the providers linked to it, and whether its address
 is verified. The last two are what an admin changing a role is asked to judge
@@ -44,7 +44,7 @@ may _change_.
   is not counted. `?after=` and `?before=` carry the cursor. A cursor the codec
   cannot read, or one it reads that names no row of this list, as a cursor
   copied from another list does, gets the first page rather than an error.
-- **Three filters, all in SQL.** `?query=` matches a substring of the name or
+- **Five filters, all in SQL.** `?query=` matches a substring of the name or
   the email, case-insensitively, with `%` and `_` read literally, through
   the repository's `containsText`, which the category and form lists share (MB.178). It
   is an `ilike` rather than a trigram match, because an admin looks a person
@@ -52,7 +52,16 @@ may _change_.
   its presence (MB.53), narrows to `canCreateWorkspace = false`, the to-do
   list M5.8 acts on. `?role=admin`, `?role=curator` or `?role=user` narrows to that site role
   (M5.8, on the owner's review); any other value is no role, since only a
-  hand-edited address carries one. The filter is a GET form to the page
+  hand-edited address carries one. `?timed-out` narrows to the users a support
+  time-out stands on, and `?paused` to those a site access pause stands on, each a
+  flag read by its presence (M15.56). "Stands" is the test the Support and Access
+  columns read by: not lifted, not deleted, and `until` null or still ahead, so a
+  time-out or pause that has run out or been lifted narrows to nothing. Each is a
+  semi-join (`EXISTS`) in `findUserPage` and `findUserCount`, sharing
+  `timeoutStands` (`support.ts`) and `pauseStands` (`user-access-pauses.ts`)
+  with the column reads, so the filter and the marks cannot disagree and paging
+  stays in the cursor helper. GraphQL's `users` takes them as `timedOut` and
+  `paused`. The filter is a GET form to the page
   itself, so a filtered page is an address.
 - **Soft-deleted users never appear.** `findUserPage` drops them, like every
   finder (rule 4); the service has no predicate to add, and no way to build
@@ -107,9 +116,9 @@ workspace's contents, and which covens someone belongs to is not among them
   the qualifier. The body is `UserDetail`
   ([`components/user-detail.md`](../components/user-detail.md)): every fact
   the list's row shows (the page reads them with the user, so the modal holds
-  the whole row), with the row's Change Role and Approve or Revoke
-  beside the facts they change, asking inside the modal and going through the
-  same mutations and services as the row's, then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
+  the whole row), with Change Role and Approve or Revoke
+  beside the facts they change, asking inside the modal; the modal is the one
+  place they are, the rows holding the facts alone. Then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
   by name. Coven names are text, not links: an admin reaches no coven, and
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under
@@ -138,9 +147,9 @@ tagged `@story-19`, which passes an axe scan with the modal open.
 
 ## Approving workspace creation (M5.8)
 
-An admin approves someone who has no invitation from that person's row on
-`/admin/users`, so a person starting a coven of their own gets in without
-knowing an existing user, and can revoke the approval from the same row. It is
+An admin approves someone who has no invitation from that person's user modal on
+`/keepers/users`, so a person starting a coven of their own gets in without
+knowing an existing user, and can revoke the approval from the same modal. It is
 the second of the flag's routes: the first is accepting a workspace invitation
 (M7.5), and being made a curator or an admin sets it in its own write (MB.177, M11.20). Neither act
 touches anything but the flag: it confers no workspace access on the admin,
@@ -199,7 +208,7 @@ session's whatever the request carries.
 ## Changing a site role (MB.59, M11.20)
 
 An admin gives another user a site role, `user`, `curator` or `admin`, from
-that person's row on `/admin/users`, so a second admin is no longer an `UPDATE`
+that person's row on `/keepers/users`, so a second admin is no longer an `UPDATE`
 in `psql`. A curator is between the two: it uses every curation screen an admin
 can and reaches no people page
 ([`admin-guard.md`](admin-guard.md), "The curator guard"). The rules, and the
@@ -214,9 +223,9 @@ the shape.
   by direct call, and the `setUserRole` mutation in front of it carries the
   `admin` scope as the second check ([`graphql/schema.md`](../graphql/schema.md),
   "Auth scopes"). A curator is refused at both: changing roles is a people-page
-  act. The page has no path of its own: the row's control sends the mutation.
-- **One dialog, every role but the one held.** The row's Change Role button
-  opens a dialog naming the user and listing the roles they do not hold, each
+  act. The page has no path of its own: the user modal's control sends the mutation.
+- **One question, every role but the one held.** The user modal's Change Role button
+  asks over the modal, naming the user and listing the roles they do not hold, each
   with a line on what it allows, and an optional reason. Nothing is preselected,
   and the confirm button reads Promote or Demote by the ladder `user` <
   `curator` < `admin`, a demotion styled as destructive
@@ -358,7 +367,7 @@ the good ones while it is dealt with, and back on. The argument is
   its grants and revokes go through and are recorded as usual. The exemption
   costs nothing, since the primary admin is the one account a rogue admin
   cannot become: the variable names it, and it cannot be revoked.
-- **On `/admin/users`**, the People page's Users tab, every admin sees the
+- **On `/keepers/users`**, the People page's Users tab, every admin sees the
   control as the tab's action, beside the page's heading, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
@@ -413,19 +422,24 @@ filter, page)` is one page of the pending list, newest first, and
   `{ email, expiringSoon }`: a fragment of the address, trimmed, and only
   the invitations lapsing within 24 hours, each narrowed in the
   repository's SQL ([`db/invitations.md`](../db/invitations.md)).
-- **The token is the mail's alone.** `crypto.randomBytes(32)`, base64url,
-  goes to the repository's `insertInvitation(admin, …)`, which stores its
-  hash, and to the sender, which mails the link; the row the mutation answers
-  carries neither, and `Invitation` has no field that could. The sender,
-  `invitationSender(request)` in `src/lib/invitation-mail.ts`, is built per
-  request by the GraphQL context as the email page's is, because the link's
+- **The token is the mail's alone.** The invitation is inserted through the
+  repository's `insertInvitation(admin, …)` holding the hash of a token
+  nobody is told, and after the commit the service hands the sender the row's
+  id. The sender, `invitationSender(request)` in `src/lib/invitation-mail.ts`,
+  is built per request by the GraphQL context as the email page's is, and
+  starts the secret-link job with the id and the origin, because the link's
   origin is Better Auth's to resolve against its allowed hosts: a forged
-  `Host` cannot have a live token mailed on a link to another site. The mail
-  is `src/emails/admin-invitation.tsx` ([`email.md`](../email.md)); the
-  service hands the sender the inviting admin's name, read from their `users`
-  row, for the mail to open with. A failed
-  send is logged by the transport and never thrown, so the invitation stays
-  pending, to be withdrawn and sent again.
+  `Host` cannot have a live token mailed on a link to another site. The job's
+  step mints the token (`crypto.randomBytes(32)`, base64url) through
+  `rotateInvitationToken`, stores its hash, reads the inviting admin's name
+  for the mail to open with, and mails `src/emails/admin-invitation.ts`
+  ([`email.md`](../email.md)). Each retry mints again, so only the newest
+  mailed link works
+  ([m15.50-invitation-token-rotation.md](../design-decisions/m15.50-invitation-token-rotation.md)).
+  The row the mutation answers carries neither the token nor its hash, and
+  `Invitation` has no field that could. A mail that fails every attempt is
+  logged by invitation id, and the invitation stays pending, to be withdrawn
+  and sent again.
 - **The role is the invitation's.** `siteRole` is `curator` or `admin`,
   stored on the row (`invitations.site_role`), named in the mail's subject
   and body, and on the Accept page; GraphQL takes it as the
@@ -505,8 +519,8 @@ filter, page)` is one page of the pending list, newest first, and
   lands a new curator or admin on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
-- **On `/admin/invitations`**, the People page's Invitations tab (beneath
-  the user list on `/admin/users` until MB.115), every admin sees Invite
+- **On `/keepers/invitations`**, the People page's Invitations tab (beneath
+  the user list on `/keepers/users` until MB.115), every admin sees Invite
   Admin, whose form asks for the address, the role (Curator chosen to begin
   with, so granting the People page is a choice) and an optional reason, and
   the pending invitations 25 to a page, each with
@@ -545,7 +559,7 @@ story 62's browser flow is in `tests/e2e/stories/08-email-and-admin.spec.ts`.
 Every change to who is an admin or a curator and who may create a coven is a row of
 `user_privilege_changes`, which the database writes and nothing in the
 application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read
-and MB.200 its page, `/admin/privilege-changes`, now the People page's
+and MB.200 its page, `/keepers/privilege-changes`, now the People page's
 Privilege Changes tab (MB.115): the whole ledger, newest
 first, for the admin who suspects misuse (story 61).
 
@@ -573,9 +587,9 @@ first, for the admin who suspects misuse (story 61).
   whose service, `usersForAdmin(session, userIds)`, answers a site admin each
   live user, null where none is live, and refuses every slot to anyone else.
   It is the admin's whole row, not MB.10's display-name `usersById`.
-- **One page, not one per privilege.** `/admin/privilege-changes` is one
+- **One page, not one per privilege.** `/keepers/privilege-changes` is one
   ledger, filtered by part of the subject's name or email (`?query=`, which
-  the privilege changes icon before each name on `/admin/users` opens with
+  the privilege changes icon before each name on `/keepers/users` opens with
   that user's address) and by privilege (`?privilege=admin|curator|create_workspace`,
   a dropdown). The page takes no `?user=`: the read's `userId` is GraphQL's.
   It is not merged with the pause or the invitations, which stay where they
@@ -586,7 +600,7 @@ first, for the admin who suspects misuse (story 61).
   users a page names in one `usersForAdmin` call. A hand-edited privilege is
   no filter, and a cursor from another list reads the first page
   ([`components/privilege-ledger.md`](../components/privilege-ledger.md)).
-- **A row links its people to their `/admin/users` rows**, the list filtered
+- **A row links its people to their `/keepers/users` rows**, the list filtered
   to their address, except the seed's bootstrap user, which the list leaves
   out (`listedOnUserList`).
 - **No index beyond the key.** The plan does not want one: the ledger holds a

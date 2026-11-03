@@ -15,6 +15,7 @@ const ALLOWED = {
   ingredients: ['identity', 'coven', 'vocabulary'],
   grimoire: ['identity', 'coven', 'vocabulary', 'ingredients'],
   support: ['identity'],
+  documents: ['identity'],
 };
 const moduleOf = (path) => /^src\/modules\/([^/]+)\/?(.*)$/.exec(path);
 
@@ -50,8 +51,9 @@ export default {
       }),
     },
     // CLAUDE.md rule 1: a route handler is a file, so only its path can be checked.
-    // The exemption is three public files that take no session and serve only what
-    // the public compendium already shows, as robots.ts and sitemap.ts do (claude-docs/seo/ai-discovery.md).
+    // The exemptions are three public files that take no session and serve only what
+    // the public compendium already shows, as robots.ts and sitemap.ts do (claude-docs/seo/ai-discovery.md),
+    // and the daily cron routes, which carry no application data and only start a job.
     'route-allowlist': {
       create: (context) => ({
         Program(program) {
@@ -59,7 +61,12 @@ export default {
           if (
             /^src\/app\/.*\/route\.(?:[jt]sx?|mjs)$/.test(file) &&
             !/^src\/app\/api\/(?:graphql|auth\/\[\.\.\.all\])\/route\./.test(file) &&
-            !/^src\/app\/(?:llms\.txt|\.well-known\/(?:ai-catalog|ard)\.json)\/route\./.test(file)
+            !/^src\/app\/(?:llms\.txt|\.well-known\/(?:ai-catalog|ard)\.json)\/route\./.test(
+              file,
+            ) &&
+            !file.startsWith('src/app/api/cron/support-retention/route.') &&
+            !file.startsWith('src/app/api/cron/provisional-cleanup/route.') &&
+            !file.startsWith('src/app/api/cron/document-mailing/route.')
           ) {
             context.report({
               node: program,

@@ -127,6 +127,8 @@ jobs:
             src/db/bootstrap.ts \
             src/db/seed/compendium/ \
             compendium/ \
+            documents/ \
+            src/db/seed/documents.ts \
             src/db/seed/idempotent.ts \
             src/lib/citation.ts \
             claude-docs/db/deity-vocabulary-seed.md \

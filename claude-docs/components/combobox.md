@@ -256,7 +256,7 @@ offer; it takes no typed text, so it has no "no match". Both draw the same
   The popup is a panel and does not scroll; the `<ul>` does, in both cases,
   because Downshift scrolls the highlighted row into view within the menu
   element, and a scroller outside it is never moved (the Name box on
-  `/admin/compendium` once left an arrowed-to row hidden that way).
+  `/curator/compendium` once left an arrowed-to row hidden that way).
 - Styling stops at the tokens: the message takes a row's padding
   inside the popup's surface, and the section's design review does the rest.
 

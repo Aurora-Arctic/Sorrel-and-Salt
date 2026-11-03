@@ -40,6 +40,7 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: true,
     canWrite: true,
+    paused: null,
   },
   {
     id: 'w2',
@@ -48,6 +49,7 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: true,
     canWrite: true,
+    paused: null,
   },
   {
     id: 'w3',
@@ -56,6 +58,7 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
     canReadMembers: false,
     canInvite: false,
     canWrite: false,
+    paused: null,
   },
 ];
 
@@ -63,7 +66,7 @@ const OPEN_COVEN = 'fixture-coven';
 
 const DEFAULT_OPEN = {
   coven: '/coven/fixture-coven',
-  admin: '/admin/users',
+  admin: '/keepers/users',
   new: '/coven/new',
   none: '/account',
 };
@@ -109,9 +112,9 @@ export const ShellFrame = ({
             <ContextRow
               lead={
                 <PendingLink
-                  href="/admin"
+                  href="/keepers"
                   className="context-row__name"
-                  navigationTarget={adminTarget('/admin')}
+                  navigationTarget={adminTarget('/keepers')}
                 >
                   Admin
                 </PendingLink>

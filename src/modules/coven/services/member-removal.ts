@@ -4,7 +4,7 @@ import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import { assertNotLastOwner } from './last-owner';
-import { assertMembership } from './membership';
+import { assertMembership, assertSeatToLeave } from './membership';
 import { assertNotSystemSeat } from './system-seat';
 
 // A member goes, removed by an owner or leaving. Both soft-delete the row and run the last-owner guard in the writing transaction.
@@ -40,15 +40,15 @@ export async function removeMember(
 /**
  * The caller leaves the workspace. Every role may, a viewer included, so no
  * `member` statement is asked for: `workspace: read`, which every role holds,
- * only proves the caller is a live member. The row left is the session's own
- * and there is no argument to name another's, so leaving cannot reach anyone
- * else.
+ * only proves the caller is a live member. A member whose access is paused may
+ * leave too (`assertSeatToLeave`). The row left is the session's own and there
+ * is no argument to name another's, so leaving cannot reach anyone else.
  *
  * @throws {Forbidden} the caller is not a member of the workspace.
  * @throws {LastOwner} the caller is its only owner.
  */
 export async function leaveWorkspace(session: Session, workspaceId: string): Promise<void> {
-  const membership = await assertMembership(session, workspaceId, { workspace: ['read'] });
+  const membership = await assertSeatToLeave(session, workspaceId);
 
   await withAudit(session, async (write) => {
     await assertNotLastOwner(write, membership, session.userId, null);

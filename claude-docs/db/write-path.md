@@ -63,8 +63,11 @@ filtering and the partial-index convention"](soft-delete.md).
 Some tables are written only through named writer methods, because a row
 authorises something or holds a state only a named call may move:
 `admin_role_change_pauses` (MB.62), opened and ended by
-`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, and `invitations`
-(MB.201), made, accepted and revoked by its named insert, accept and revoke. Such a table says so once, in its schema file:
+`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, `invitations`
+(MB.201), made, accepted and revoked by its named insert, accept and revoke,
+`user_access_pauses` (M15.51), set and lifted by `setUserAccessPause` and
+`liftUserAccessPause`, and `workspace_member_pauses` (M15.54), set and lifted
+under a `Membership` by `setWorkspaceMemberPause` and `liftWorkspaceMemberPause`. Such a table says so once, in its schema file:
 
 ```ts
 export const adminRoleChangePauses = namedWrites(pgTable('admin_role_change_pauses', { … }));
@@ -318,9 +321,11 @@ list is tested, so adding another is a decision, not an edit.
 
 `deleteLapsedProvisionalUser` hard-deletes one provisional account when it has lapsed: unverified,
 holding a provider `accounts` row, and either untouched for `lifetimeSeconds` or
-created more than `capSeconds` ago. The expiry job's step calls it. Both ages use the database's own clock, so a
+created more than `capSeconds` ago. The expiry job's step calls it, and so does each batch of the daily cleanup, for every id of its page. Both ages use the database's own clock, so a
 seeded row nobody can sign in to is never one. Its `accounts` and `sessions` rows
-go with it by `ON DELETE CASCADE`.
+go with it by `ON DELETE CASCADE`, and so do any pauses naming it, site (`user_access_pauses`) and coven
+(`workspace_member_pauses`) alike: a pause means nothing once its account is gone, and keeping the account
+for it would let a squat outlast its window.
 
 An account holding a `user_privilege_changes` row is kept, because an admin has
 vouched for it, and it is not deleted with its rows: the ledger refuses the

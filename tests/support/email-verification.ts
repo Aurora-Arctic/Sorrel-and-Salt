@@ -1,5 +1,12 @@
-import type { EmailVerificationSender, InvitationSender, PasswordSetter } from '@/modules/identity';
-import type { SupportNotifier } from '@/modules/support';
+import type { MemberPauseNotifier } from '@/modules/coven';
+import type { DocumentMailingNotifier } from '@/modules/documents';
+import type {
+  AccessPauseNotifier,
+  EmailVerificationSender,
+  InvitationSender,
+  PasswordSetter,
+} from '@/modules/identity';
+import type { SupportNotifier, TimeoutNotifier } from '@/modules/support';
 
 // The sender for a hand-built GraphQL context in a test that sends nothing:
 // a call is the test's mistake, so it throws rather than passing silently.
@@ -16,8 +23,7 @@ export const noSender: EmailVerificationSender = {
 };
 
 export const noInvitationSender: InvitationSender = {
-  siteInvitation: async () => unexpected('mail an invitation'),
-  workspaceInvitation: async () => unexpected('mail a coven invitation'),
+  invitation: async () => unexpected('mail an invitation'),
 };
 
 export const noPasswordSetter: PasswordSetter = {
@@ -26,9 +32,18 @@ export const noPasswordSetter: PasswordSetter = {
 };
 
 export const noSupportNotifier: SupportNotifier = {
-  replyWaiting: async () => unexpected('mail a support reply notice'),
-  received: async () => unexpected('mail a receipt'),
-  resolved: async () => unexpected('mail a resolved notice'),
-  closingSoon: async () => unexpected('mail a closing-soon notice'),
-  signedOutReply: async () => unexpected('mail a signed-out reply'),
+  origin: async () => unexpected('resolve an origin'),
 };
+
+/** For a test that sets a time-out or pause and does not look at the mail: it gives the origin a pause mail's run carries. */
+export const noPauseNotifier: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier = {
+  origin: async () => 'http://localhost:3000',
+};
+
+/** The origin a document mailing’s links are built on, for a test that starts no real run. */
+export const noDocumentMailingNotifier: DocumentMailingNotifier = {
+  origin: async () => 'http://localhost:3000',
+};
+
+/** The message to the user that a time-out or site access pause must carry, for a test that does not look at the mail. */
+export const PAUSE_MESSAGE = 'A fixture message to the user.';

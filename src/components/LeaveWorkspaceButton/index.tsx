@@ -17,6 +17,7 @@ const LeaveWorkspaceButton = ({
   workspaceId,
   name,
   successors,
+  quiet = false,
 }: LeaveWorkspaceButtonProps): ReactElement => {
   const { navigate, refresh } = usePendingNavigation();
   // The sole owner would be refused, so they are shown the ways out instead.
@@ -26,7 +27,7 @@ const LeaveWorkspaceButton = ({
     <ConfirmedAction
       label="Leave Coven"
       accessibleName="Leave Coven"
-      openClass="btn"
+      openClass={quiet ? 'btn btn--quiet' : 'btn'}
       title="Leave Coven"
       question={
         <>

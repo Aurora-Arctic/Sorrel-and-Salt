@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
+import type { ReactElement } from 'react';
 import { signIn } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
@@ -11,18 +11,23 @@ const NAME = 'Sign In with a Passkey';
 
 // "Sign In with a Passkey": the browser's own passkey prompt, started only by pressing it.
 // A failure is said in a callout under the button, the focus kept on it.
-const PasskeyButton = ({ next, lastUsed }: PasskeyButtonProps): ReactElement => {
+const PasskeyButton = ({
+  next,
+  lastUsed,
+  signingIn,
+  onSigningIn,
+}: PasskeyButtonProps): ReactElement => {
   const { anchorRef, report, feedback } = useClickFeedback({ name: NAME });
-  const [busy, setBusy] = useState(false);
+  const busy = signingIn === 'passkey';
 
   const press = async (): Promise<void> => {
     if (busy) return;
     report(undefined);
-    setBusy(true);
+    onSigningIn('passkey');
     // A dropped connection throws rather than answering `error`; both say so.
     const result = await signIn.passkey().catch((thrown: unknown) => ({ error: thrown }));
     if (result?.error) {
-      setBusy(false);
+      onSigningIn(null);
       report(PASSKEY_SIGN_IN_ERROR);
       return;
     }
@@ -38,6 +43,8 @@ const PasskeyButton = ({ next, lastUsed }: PasskeyButtonProps): ReactElement => 
         className="btn sign-in-panel__button sign-in-panel__button--passkey"
         // Not `disabled` while busy, which would drop the focus a failure's callout is placed against.
         aria-disabled={busy || undefined}
+        // Held while another sign-in is under way, as the providers are.
+        disabled={signingIn !== null && !busy}
         onClick={() => void press()}
       >
         {NAME}

@@ -32,12 +32,12 @@ import {
   readCompendiumReview,
 } from '../../../modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
-import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
+import CompendiumDialog from '../../(shell)/curator/compendium/compendium-dialog';
 import { readEntryStock, stockKey } from '../../entry-stock';
 import { cardPlacesOf, readCardCovens } from './card-places';
-import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
-import { readEditPlace } from '../../(shell)/admin/list-page';
-import MissingNotice from '../../(shell)/admin/missing-notice';
+import { readCompendiumEntry } from '../../(shell)/curator/compendium/read-entry';
+import { readEditPlace } from '../../(shell)/curator/list-page';
+import MissingNotice from '../../(shell)/curator/missing-notice';
 import {
   readCardCategories,
   readCategories,
@@ -76,6 +76,13 @@ const LIST_DESCRIPTION =
 const isFiltered = (params: PublicCompendiumSearchParams) =>
   JSON.stringify(COMPENDIUM_PARAMS.read(publicParams(params))) !==
   JSON.stringify(COMPENDIUM_PARAMS.read({}));
+
+/**
+ * Whether the address is the list's own: unfiltered, with no Quick Look open and no pager cursor.
+ * Presence, not a readable value, decides, as it does for the noindex the proxy sends.
+ */
+const isListAddress = (params: PublicCompendiumSearchParams) =>
+  !isFiltered(params) && [params.entry, params.after, params.before].every((v) => v === undefined);
 
 /** A filtered view is a thin copy: kept out of search results, with the unfiltered page canonical. */
 export async function generateMetadata({
@@ -180,7 +187,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
   // in its address, so the default is the first the viewer may write in. A viewer-only account and a
   // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
-  const mine = viewer?.workspaces.map(({ id, name }) => ({ id, name })) ?? [];
+  const mine = viewer?.workspaces.map(({ id, name, paused }) => ({ id, name, paused })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
@@ -188,10 +195,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // window: one read, per request, for both, and none for a visitor or a viewer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
   // Asked of every coven, not only the writable ones, for the holding count; read only where
-  // there is a plus or a check to count on.
+  // there is a plus or a check to count on. Not of a paused one: its read is refused, which
+  // would blank the count for every coven.
   const held = defaultCoven
     ? await heldEntryIds(
-        mine.map(({ id }) => id),
+        mine.filter(({ paused }) => !paused).map(({ id }) => id),
         page.edges.map(({ node }) => node.id),
       )
     : undefined;
@@ -264,7 +272,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   return (
     // Holds a pressed Edit's opening, as the admin layout does; a plain wrapper for anyone else.
     <RouteModalProvider>
-      {!isFiltered(params) && (
+      {isListAddress(params) && (
         <script
           type="application/ld+json"
           // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).

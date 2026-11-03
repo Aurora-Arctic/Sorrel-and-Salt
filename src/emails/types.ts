@@ -115,10 +115,51 @@ export type SupportReceivedProps = SupportStatusProps;
 /** Told a sender that their support request is resolved. */
 export type SupportResolvedProps = SupportStatusProps;
 /** Told a sender that their resolved support request is about to close. */
-export type SupportClosingSoonProps = SupportStatusProps;
+export interface SupportClosingSoonProps extends SupportStatusProps {
+  /** How long until it closes, in milliseconds, as of the send. */
+  timeLeftMs: number;
+}
 
 /** A staff reply to a signed-out visitor, whose only way to read it is this mail. `url` is the support page, for writing again. */
 export interface SupportEmailReplyProps extends BaseEmailProps {
   /** What staff wrote. */
   body: string;
+}
+
+/** Told to a user that an admin timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */
+export interface SupportTimedOutProps extends BaseEmailProps {
+  url: string;
+  /** When the time-out ends, or `null` when it has no end date. */
+  until: Date | null;
+  /** What the admin wrote to the user, or `null` when they wrote none. */
+  message: string | null;
+}
+
+/** Told to a user that an admin paused their site access. `url` opens the support page, which a paused account can still reach. */
+export interface AccessPausedProps extends BaseEmailProps {
+  url: string;
+  /** When the pause ends, or `null` when it has no end date. */
+  until: Date | null;
+  /** What the admin wrote to the user, or `null` when they wrote none. */
+  message: string | null;
+}
+
+/** Told to a member that a coven owner paused their access to the coven. */
+export interface CovenAccessPausedProps extends BaseEmailProps {
+  url: string;
+  covenName: string;
+  /** When the pause ends, or `null` when it has no end date. */
+  until: Date | null;
+  /** What the owner wrote to the member, or `null` when they wrote none. */
+  message: string | null;
+}
+
+/** Told every account that a published document changed. `url` is the document's page. */
+export interface DocumentUpdatedProps extends BaseEmailProps {
+  /** The document's title, as the page shows it. */
+  title: string;
+  /** What changed, in the admin's words. */
+  summary: string;
+  /** The terms ask each account to agree again at its next visit; the other documents do not. */
+  asksAgreement: boolean;
 }

@@ -38,8 +38,8 @@ const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
     <ListFrame>
       <FilterForm
         label="Filter Categories"
-        action="/admin/categories"
-        searchHref={() => '/admin/categories'}
+        action="/curator/categories"
+        searchHref={() => '/curator/categories'}
         shown={['test']}
         clear={clear}
         sorrel={sorrel}

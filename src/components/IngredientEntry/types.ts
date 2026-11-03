@@ -61,8 +61,10 @@ export interface IngredientEntryProps {
   hrefOf: (ingredient: LinkedIngredient) => Route | undefined;
   /** Edit for a viewer who may edit this entry, opening the edit modal over this page; left out, nothing is offered, and Delete is only inside the modal. */
   edit?: IngredientEntryEdit;
-  /** A quiet way back to the list, at the head's top left; `label` is the destination alone, and the link reads "Back to" it. Left out, no link. */
-  back?: { href: Route; label: string };
+  /** A quiet way back to the list, at the head's top left; `label` is the destination alone, and the link reads "Back to" it. `also` lists other lists the entry may be opened from, each under its own label: the link returns to and names the one the page before it was, and the server draws `label`. Left out, no link. */
+  back?: { href: Route; label: string; also?: readonly { path: string; label: string }[] };
+  /** A paused viewer's standing site pause: the entry draws the shell's notice at the top of its text column, where the shell's own band cannot line up with it. */
+  accessPause?: { until: Date | null };
   /** The entry that moved off this address while its redirect's window is open: its name, and its page now. */
   movedAway?: { name: string; href: Route };
   /** The side column's "In the Compendium" block (claude-docs/components/ingredient-entry.md, "Props in detail"); left out for a local with no match. */

@@ -28,7 +28,7 @@ export const NEW_SPELL = 'spell';
 export const NEW_INGREDIENT = 'ingredient';
 
 /**
- * The value of `?new` that opens the compendium's New Entry on `/admin/compendium`. A bare
+ * The value of `?new` that opens the compendium's New Entry on `/curator/compendium`. A bare
  * `?new` there still reads as it, so a link saved before the value existed keeps working.
  */
 export const NEW_COMPENDIUM_ENTRY = 'ingredient-compendium';

@@ -20,6 +20,7 @@ const PUBLIC_ROUTES = [
   '/sign-in',
   '/forgot-password', // asking for a password reset link
   '/reset-password', // where the mailed reset link lands
+  '/access-paused', // where a paused account's pages send it; the page reads the session itself
   '/invite/*', // accepting an invitation
   '/i/*', // a card's short link, accepting like /invite/*
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
@@ -27,9 +28,13 @@ const PUBLIC_ROUTES = [
   '/compendium/*',
   '/support', // offers a signed-out visitor Sign In and holds no data
   '/privacy', // a public document, holding no application data
+  '/privacy/versions/*', // an earlier version of it
   '/disclaimer',
+  '/disclaimer/versions/*',
   '/terms',
+  '/terms/versions/*',
   '/code-of-ethics',
+  '/code-of-ethics/versions/*',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
   // The icon and manifest files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.
@@ -144,15 +149,27 @@ async function route(request: NextRequest): Promise<NextResponse> {
 }
 
 /**
+ * Query parameters that make an address a copy of a real page, kept out of
+ * search results with their links still followed: `entry` opens Quick Look over
+ * the compendium, `support` the support dialog over any page, and `after` and
+ * `before` turn the compendium's pages, whose contents drift as entries change.
+ */
+const NOINDEX_PARAMS = ['entry', 'support', 'after', 'before'];
+
+/**
  * Anything but a production deploy tells search engines to index nothing,
  * because staging is a public URL that would otherwise be indexed as a
- * duplicate of the compendium . `VERCEL_ENV`, not `NODE_ENV`, which is
+ * duplicate of the compendium. `VERCEL_ENV`, not `NODE_ENV`, which is
  * `production` on every deploy, staging included (the test impersonation
  * uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.
+ * On production only an address carrying one of NOINDEX_PARAMS is marked.
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const response = await route(request);
   if (process.env.VERCEL_ENV !== 'production') response.headers.set('X-Robots-Tag', 'noindex');
+  else if (NOINDEX_PARAMS.some((name) => request.nextUrl.searchParams.has(name))) {
+    response.headers.set('X-Robots-Tag', 'noindex, follow');
+  }
   return response;
 }
 

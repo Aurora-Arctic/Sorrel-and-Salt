@@ -1,24 +1,17 @@
-import type { InvitationSender } from '@/modules/identity';
-import { adminInvitationMessage } from '../emails/admin-invitation';
-import { covenInvitationMessage } from '../emails/coven-invitation';
+import { scheduleSecretLinkMail, type InvitationSender } from '@/modules/identity';
 import { requestOrigin } from './request-origin';
 
-// Where an invitation's token becomes a link and a mail. The origin is Better Auth's, resolved against its allowed hosts, so a forged Host cannot send a link
+// How an invitation's mail is started from a request. The origin is Better Auth's, resolved against its allowed hosts, so a forged Host cannot send a link
 // to another site carrying a live token. Handed to the service by the GraphQL context (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 export function invitationSender(request: Request): InvitationSender {
-  const linkFor = async (token: string) =>
-    `${await requestOrigin(request, '/')}/invite/${encodeURIComponent(token)}`;
   return {
-    async siteInvitation(to, token, { siteRole, inviterName }) {
-      const url = await linkFor(token);
-      const { send } = await import('./mail');
-      await send(await adminInvitationMessage({ to, url, siteRole, inviterName }));
-    },
-    async workspaceInvitation(to, token, { name, role, inviterName }) {
-      const url = await linkFor(token);
-      const { send } = await import('./mail');
-      await send(await covenInvitationMessage({ to, url, covenName: name, role, inviterName }));
+    async invitation(invitationId) {
+      await scheduleSecretLinkMail({
+        kind: 'invitation',
+        invitationId,
+        origin: await requestOrigin(request, '/'),
+      });
     },
   };
 }

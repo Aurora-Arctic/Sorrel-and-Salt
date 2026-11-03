@@ -3,7 +3,6 @@ import { applyAudit } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
-import { TERMS_VERSION } from '../../lib/terms-version';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -16,6 +15,7 @@ import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
 import { seedDeityVocabulary } from './deities';
+import { seedDocumentFiles } from './documents';
 import { seedVocabularySources } from './sources';
 import { seedFormVocabulary } from './forms';
 import {
@@ -546,6 +546,7 @@ export async function seedStandardContent(
   await seedAstrologyVocabularies(tx);
   await seedDeityVocabulary(tx);
   await seedVocabularySources(tx);
+  await seedDocumentFiles(tx);
 
   await insertMissingUsers(tx);
   await insertMissingWorkspaces(tx);
@@ -611,7 +612,7 @@ async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
   await declaringBootstrapPrivileges(tx, E.id, () => insertMissingFixtureUsers(tx, [E]));
 }
 
-async function insertMissingFixtureUsers(
+export async function insertMissingFixtureUsers(
   tx: SeedTransaction,
   wanted: readonly FixtureUser[],
 ): Promise<void> {
@@ -620,7 +621,7 @@ async function insertMissingFixtureUsers(
     // The cast has agreed to the terms in force, so a test lands on its page rather than the acceptance page.
     toRow: (user) => ({
       emailVerified: true,
-      termsVersion: TERMS_VERSION,
+      agreedTermsVersion: 1,
       termsAcceptedAt: new Date(),
       ...user,
     }),

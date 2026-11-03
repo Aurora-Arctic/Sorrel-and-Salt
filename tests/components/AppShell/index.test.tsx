@@ -1,5 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { longMinuteInZone } from '@/lib/utc';
+import { printed } from '../../support/printed-text';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
@@ -34,6 +36,7 @@ const COVENS: ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: true,
     canWrite: true,
+    paused: null,
   },
   {
     id: 'w2',
@@ -42,6 +45,7 @@ const COVENS: ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: false,
     canWrite: true,
+    paused: null,
   },
 ];
 
@@ -68,13 +72,15 @@ describe('AppShell', () => {
     );
   });
 
-  it('offers an admin the Compendium, Your Covens and Admin links', () => {
+  it('offers a curator or an admin the Compendium, Your Covens, Curator and Keepers links', () => {
     shell(ADMIN);
 
     const nav = screen.getByRole('navigation', { name: 'Site' });
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Compendium' }));
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Your Covens' }));
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+    expect(within(nav).getByRole('link', { name: 'Curator' })).toHaveAttribute('href', '/curator');
+    expect(within(nav).getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
+    expect(within(nav).queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
     // Into the first coven, not via the /coven landing's redirect.
     expect(screen.getByRole('link', { name: 'Your Covens' })).toHaveAttribute(
       'href',
@@ -88,7 +94,7 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute('href', '/coven');
   });
 
-  it('offers a verified member of a coven Your Coven and not Admin', () => {
+  it('offers a verified member of a coven Your Coven and neither Curator nor Keepers', () => {
     shell(MEMBER, COVENS.slice(0, 1));
 
     // The precondition: a verified viewer does get the rest of the bar.
@@ -98,14 +104,16 @@ describe('AppShell', () => {
       'href',
       '/coven/fixture-coven',
     );
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
   });
 
-  it('offers a verified viewer in a coven Your Coven and not Admin', () => {
+  it('offers a verified viewer in a coven Your Coven and neither Curator nor Keepers', () => {
     shell(MEMBER, [{ ...COVENS[0], canWrite: false, canInvite: false }]);
 
     expect(screen.getByRole('link', { name: 'Your Coven' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
   });
 
   it('offers a verified account in no coven, who is not a curator, the Compendium alone', () => {
@@ -113,7 +121,8 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('link', { name: 'Compendium' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /^Your Covens?$/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
   });
 
   it('names the coven link for one coven or several', () => {
@@ -141,7 +150,8 @@ describe('AppShell', () => {
     shell({ ...UNVERIFIED, canCurate: true });
 
     expect(screen.getByRole('link', { name: 'Compendium' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Curator' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Keepers' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
   });
 
@@ -160,5 +170,25 @@ describe('AppShell', () => {
     expect(skip.compareDocumentPosition(screen.getByRole('banner'))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+  });
+
+  it('tells a paused viewer their access is paused, in a landmark of its own', () => {
+    const until = new Date('2027-01-02T03:04:00Z');
+    shell({ ...MEMBER, accessPause: { until } }, []);
+
+    const pause = screen.getByRole('complementary', { name: 'Site Access' });
+    expect(pause).toHaveTextContent(
+      `Your site access is paused until ${printed(longMinuteInZone(until))}.`,
+    );
+    expect(screen.getByRole('link', { name: 'What This Means' })).toHaveAttribute(
+      'href',
+      '/access-paused',
+    );
+  });
+
+  it('shows no pause notice to a viewer who is not paused', () => {
+    shell(MEMBER);
+
+    expect(screen.queryByRole('complementary', { name: 'Site Access' })).not.toBeInTheDocument();
   });
 });

@@ -81,7 +81,7 @@ describe('AdminInvitations', () => {
 
     expect(screen.getByRole('link', { name: 'New Invitation' })).toHaveAttribute(
       'href',
-      '/admin/invitations?invite',
+      '/keepers/invitations?invite',
     );
   });
 
@@ -119,7 +119,7 @@ describe('AdminInvitations', () => {
       { email: 'cass@example.test', siteRole: 'curator', note: 'Knows the celestial bodies' },
     ]);
     await waitFor(() =>
-      expect(router.replace).toHaveBeenCalledWith('/admin/invitations', { scroll: false }),
+      expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false }),
     );
     expect(router.refresh).toHaveBeenCalled();
 
@@ -165,7 +165,7 @@ describe('AdminInvitations', () => {
         target: { value: 'Knows the celestial bodies' },
       }),
     );
-    expect(router.replace).toHaveBeenCalledWith('/admin/invitations', { scroll: false });
+    expect(router.replace).toHaveBeenCalledWith('/keepers/invitations', { scroll: false });
   });
 
   it('says a refused address beside the field and keeps the form open', async () => {
@@ -258,7 +258,7 @@ describe('AdminInvitations', () => {
 });
 
 // The filter: FilterForm's loading state and Clear are CompendiumList's to test, and the shared rows assert the address this one builds and which values count as a filter.
-// This file proves the switch carries the email and the invite form keeps the filter and the page shown. It is a soft navigation from the first page, as every page under /admin runs its own guard.
+// This file proves the switch carries the email and the invite form keeps the filter and the page shown. It is a soft navigation from the first page, as every page under /keepers runs its own guard.
 describe('AdminInvitations filter', () => {
   const FERN = { email: 'fern', expiringSoon: true };
   const email = () => screen.getByRole('searchbox', { name: 'Email' });
@@ -268,7 +268,7 @@ describe('AdminInvitations filter', () => {
   // sends `expiring=`, which the page reads as the bare flag.
   const SUBJECT: FilterFormSubject = {
     label: 'Filter Invitations',
-    path: '/admin/invitations',
+    path: '/keepers/invitations',
     searchLabel: 'Email',
     push: router.push,
     none: { list: <AdminInvitations invitations={INVITATIONS} />, sends: 'email=' },
@@ -278,7 +278,7 @@ describe('AdminInvitations filter', () => {
           invitations={INVITATIONS}
           filter={FERN}
           cursor={{ after: 'c25' }}
-          previousHref="/admin/invitations?email=fern&expiring&before=c1"
+          previousHref="/keepers/invitations?email=fern&expiring&before=c1"
         />
       ),
       sends: 'email=fern&expiring=',
@@ -293,7 +293,7 @@ describe('AdminInvitations filter', () => {
         sends: 'email=&expiring=',
       },
     ],
-    searched: '/admin/invitations?email=Two+words&expiring',
+    searched: '/keepers/invitations?email=Two+words&expiring',
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
@@ -304,7 +304,7 @@ describe('AdminInvitations filter', () => {
         <AdminInvitations
           invitations={INVITATIONS}
           cursor={{ after: 'c25' }}
-          previousHref="/admin/invitations?before=c1"
+          previousHref="/keepers/invitations?before=c1"
         />
       </Navigating>,
     );
@@ -315,7 +315,7 @@ describe('AdminInvitations filter', () => {
     });
 
     expect(router.push).toHaveBeenCalledTimes(1);
-    expect(router.push).toHaveBeenCalledWith('/admin/invitations?email=Fern&expiring');
+    expect(router.push).toHaveBeenCalledWith('/keepers/invitations?email=Fern&expiring');
   });
 
   it('keeps the filter and the page shown in New Invitation and in the invite form’s close', () => {
@@ -329,11 +329,11 @@ describe('AdminInvitations filter', () => {
 
     expect(screen.getByRole('link', { name: 'New Invitation' })).toHaveAttribute(
       'href',
-      '/admin/invitations?email=fern&expiring&after=c25&invite',
+      '/keepers/invitations?email=fern&expiring&after=c25&invite',
     );
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     expect(router.replace).toHaveBeenCalledWith(
-      '/admin/invitations?email=fern&expiring&after=c25',
+      '/keepers/invitations?email=fern&expiring&after=c25',
       { scroll: false },
     );
   });

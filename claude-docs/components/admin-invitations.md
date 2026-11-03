@@ -1,7 +1,7 @@
 # Admin Invitations
 
 `src/components/AdminInvitations/` — the People page's Invitations tab,
-`/admin/invitations` (MB.70; a section beneath the user list until MB.115
+`/keepers/invitations` (MB.70; a section beneath the user list until MB.115
 gave it a tab of its own): **New Invitation**, a filter row, a page of the pending
 invitations it leaves, each with its address, its reason, when it expires and
 **Revoke**, and the pager beneath them. Render-only: the page reads the
@@ -33,7 +33,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   Enter, the switch the moment it changes, each carrying the other and
   opening the first page, since they name no cursor
   ([`filter-form.md`](filter-form.md#contracts)). Clear, offered only while a filter is
-  shown, opens `/admin/invitations`.
+  shown, opens `/keepers/invitations`.
 - **25 to a page, with the shared [`Pager`](pager.md)** (MB.115, on the
   owner's call: a fixed number per page with a pager, as the Users list has;
   CLAUDE.md rule 8). Newest first, Prev and Next carrying the filter and a
@@ -45,9 +45,9 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `readNumberedPage`. A list of one page shows no pager.
 - **New Invitation is the tab's action, beside the page's heading** (MB.115,
   on the owner's call), exported as `InviteAdmin` and drawn by
-  `src/app/(shell)/admin/(people)/@action/invitations/page.tsx`. The heading line
+  `src/app/(shell)/keepers/(people)/@action/invitations/page.tsx`. The heading line
   and the list are rendered apart, so the button can no longer hold the
-  form's state: New Invitation is a link to `/admin/invitations?invite`
+  form's state: New Invitation is a link to `/keepers/invitations?invite`
   (`href.ts`), and the page opens the form over the list by that address,
   as a value page's `?new` opens its own. A plain press opens the modal at
   once instead (M9.18; [`modal.md`](modal.md), "Opening at once"): `InviteAdmin`
@@ -162,7 +162,7 @@ reason; and the filter: the address a change or the magnifier opens, from the fi
 page whatever page is shown, the email trimmed and the switch a bare flag,
 which values offer Clear, the row starting again from a filter shown anew, and New Invitation and
 the form's close keeping the filter and the page. The cards at phone width are presentation.
-`tests/app/(shell)/admin/(people)/invitations/page.test.tsx` covers the tab's page:
+`tests/app/(shell)/keepers/(people)/invitations/page.test.tsx` covers the tab's page:
 the guard first, the hash never rendered, the filter read off the address
 and handed to the service, the first page of 25 and its count, `after` and
 `before` read off the address, a cursor of another list reading the first
@@ -178,7 +178,7 @@ revokes against the built server, with axe.
 
 ## The Invitations tab
 
-`/admin/invitations` is the People page's Invitations tab. It shows a filter by address and by expiry within 24 hours, a page of the pending invitations the filter leaves (address, site role granted, reason, expiry, Revoke), the pager, and the invite form that `?invite` opens over them. New Invitation is the tab's action, beside the heading. While admin changes are paused both are in view but locked for any admin but the primary one, with the pause as the reason. The confirmation and the locked control are the user list's own, each bringing its own rules.
+`/keepers/invitations` is the People page's Invitations tab. It shows a filter by address and by expiry within 24 hours, a page of the pending invitations the filter leaves (address, site role granted, reason, expiry, Revoke), the pager, and the invite form that `?invite` opens over them. New Invitation is the tab's action, beside the heading. While admin changes are paused both are in view but locked for any admin but the primary one, with the pause as the reason. The confirmation and the locked control are the user list's own, each bringing its own rules.
 
 The region is named as a heading would name it, though it shows none: the page's heading and open tab already say what it holds, and the name keeps the sent notice and the rows findable as one. The sent notice is this component's state, set before the form closes, so it outlasts `?invite` and names the address without carrying it in one.
 
@@ -188,4 +188,4 @@ New Invitation is a link to `?invite`, which opens the form over the list, or it
 
 ## The filter
 
-The filter is on the shared `FilterForm`, as the user list's is. Only the email text is held in state, until the magnifier or Enter sends it. The Expires in 24 Hrs switch is uncontrolled and applies as it changes, carrying the email. Both open the first page softly, because the admin layout's guard runs on every page under `/admin`, and there is no Filter button. Before hydration the form submits natively (`email=`, `expiring=`), which the page reads the same as the bare flag. The list keys on the filter shown, so another page starts again from that one.
+The filter is on the shared `FilterForm`, as the user list's is. Only the email text is held in state, until the magnifier or Enter sends it. The Expires in 24 Hrs switch is uncontrolled and applies as it changes, carrying the email. Both open the first page softly, because the admin layout's guard runs on every page under `/keepers`, and there is no Filter button. Before hydration the form submits natively (`email=`, `expiring=`), which the page reads the same as the bare flag. The list keys on the filter shown, so another page starts again from that one.

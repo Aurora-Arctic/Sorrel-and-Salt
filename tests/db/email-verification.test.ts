@@ -24,6 +24,8 @@ import type { AuthInstance, Profile } from '../support/types';
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
+// A secret-link mail is tried once through the mocked `send` while MAIL_TRANSPORT is unset; its job is tests/workflows/secret-link-mail.test.ts.
+vi.stubEnv('MAIL_TRANSPORT', '');
 
 const DOMAIN = '@email-verification.test';
 const OWNER = `owner${DOMAIN}`;
@@ -137,6 +139,16 @@ describe('Story 58: sign-up mails a verification link and still signs in', () =>
   });
 });
 
+describe('the verification link a job signs', () => {
+  it('is signed with the secret Better Auth verifies its own links with', async () => {
+    const { verificationSigningSecret } = await import('@/lib/auth-secrets');
+    const ctx = await auth.$context;
+
+    // The choice under each setting is tests/lib/auth-secrets.test.ts; this holds it to the secret Better Auth chose here.
+    expect(verificationSigningSecret()).toBe(ctx.secret);
+  });
+});
+
 describe('Story 58: following the link', () => {
   it('verifies the row and stamps it with its own id, from a session holding that row', async () => {
     const { cookie, link, before } = await signUpUnverified();
@@ -204,17 +216,17 @@ describe('Story 58: following the link', () => {
 });
 
 describe('Story 58: the link carries on to where the account was going', () => {
-  const ADMIN_LANDING = '/account/email?verified&next=%2Fadmin';
+  const ADMIN_LANDING = '/account/email?verified&next=%2Fkeepers';
 
-  /** A Microsoft sign-up headed for /admin, with its session and its mailed link. */
+  /** A Microsoft sign-up headed for /keepers, with its session and its mailed link. */
   async function signUpHeadedForAdmin() {
     const response = await signIn(
       'microsoft',
       { sub: 'ms-next', email: OWNER, verified: true },
-      '/admin',
+      '/keepers',
     );
     // The `next` the account was sent with: the email page it landed on carries it.
-    expect(landingOf(response)).toBe('/account/email?next=%2Fadmin');
+    expect(landingOf(response)).toBe('/account/email?next=%2Fkeepers');
     expect((await userRow(OWNER))?.email_verified).toBe(false);
     return { cookie: cookieHeader(response), link: mailedLink() };
   }
@@ -237,7 +249,7 @@ describe('Story 58: the link carries on to where the account was going', () => {
     expectSignedIn(other);
 
     expect((await follow(link, cookieHeader(other))).headers.get('location')).toBe(
-      '/account/email?next=%2Fadmin&error=SIGN_IN_TO_VERIFY',
+      '/account/email?next=%2Fkeepers&error=SIGN_IN_TO_VERIFY',
     );
     expect((await follow(link)).headers.get('location')).toBe(
       '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
@@ -371,6 +383,8 @@ describe('the primary admin is promoted at first-party verification', () => {
     const response = await signIn('microsoft', { sub: 'ms-7', email: STRANGER, verified: true });
     expectSignedIn(response);
     const cookie = cookieHeader(response);
+    // The change as setEmail records it, which the link must match to be honoured.
+    await sql`update users set pending_email = ${OWNER} where email = ${STRANGER}`;
     const before = (await userRow(STRANGER))!;
     const { secret } = await auth.$context;
     const token = await createEmailVerificationToken(secret, STRANGER, OWNER, 3600, {

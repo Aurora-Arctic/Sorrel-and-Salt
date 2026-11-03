@@ -1,5 +1,8 @@
 import type { ProviderId } from '../../lib/types';
 
+/** A sign-in under way on the panel: a provider's hop, or the passkey prompt. */
+export type SignInAttempt = ProviderId | 'passkey';
+
 export interface SignInPanelProps {
   /** Where a successful sign-in returns to, already run through safeReturnPath; absent, the landing is the account's role's. */
   next?: string;
@@ -15,8 +18,8 @@ export interface ProviderButtonProps {
   available: boolean;
   /** Whether this browser last signed in with it. */
   lastUsed: boolean;
-  /** The provider whose sign-in is under way, if any. */
-  signingIn: ProviderId | null;
+  /** The sign-in under way on the panel, if any. */
+  signingIn: SignInAttempt | null;
   /** Starts the sign-in; resolves to the failure's sentence, or nothing once the redirect starts. */
   onSignIn: (providerId: ProviderId) => Promise<string | undefined>;
 }
@@ -42,6 +45,10 @@ export interface PasskeyButtonProps {
   next?: string;
   /** Whether this browser last signed in with a passkey. */
   lastUsed: boolean;
+  /** The sign-in under way on the panel, if any: `'passkey'` while this button's prompt is open. */
+  signingIn: SignInAttempt | null;
+  /** Records the prompt opening (`'passkey'`) or failing (`null`), so the panel holds every other control. */
+  onSigningIn: (attempt: 'passkey' | null) => void;
 }
 
 export interface TwoFactorStepProps {

@@ -36,7 +36,7 @@ parts, and the table passes through them from the server.
   press cannot send a second request. `kind` is the caller's. A filter's is
   always `soft`, through FilterForm's `useApplyFilter`, on every list,
   the three that once filtered by a full load too, since every page under
-  `/admin` runs the guard itself (`src/app/(shell)/admin/layout.tsx`; MB.115, the
+  `/keepers` runs the guard itself (`src/app/(shell)/keepers/layout.tsx`; MB.115, the
   owner's call). A pager's `soft` says which its ends take: `page` for a soft
   end, `full` for a plain one.
   - `soft` pushes the address through `usePendingNavigation`
@@ -51,7 +51,7 @@ parts, and the table passes through them from the server.
     term and facets `target` carries, read through the same parameter table
     the page uses, not from the filter on screen.
   - `page` is a pager end's soft navigation. It pushes with `{ scroll: false }`,
-    so Next does not scroll to the page top (on `/admin/compendium` that
+    so Next does not scroll to the page top (on `/curator/compendium` that
     brings the Admin section menu back into view), and once the transition
     ends it brings the start of `.list-frame__body` to the top of the visible
     area, only if that start is above the line now. The line is the root's

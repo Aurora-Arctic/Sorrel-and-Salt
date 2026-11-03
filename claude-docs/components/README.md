@@ -40,6 +40,7 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | [`site-footer.md`](site-footer.md)             | The line under every page in both frames, holding the document links and the Support link                                                    |
 | [`disclaimer-notice.md`](disclaimer-notice.md) | The line under an ingredient's safety notes saying they are not complete, linking the disclaimer                                             |
 | [`document-page.md`](document-page.md)         | The page a public document is read on: title, when it last changed, then its sections                                                        |
+| [`document-editor.md`](document-editor.md)     | The admin editor for one site document: edit as rich text, save a draft, publish a new version                                               |
 | [`access-cards.md`](access-cards.md)           | The privacy policy's who-can-see-what: one card per kind of data, a mark per role, full wording inside                                       |
 
 ## Lists

@@ -1,17 +1,18 @@
 import type { ReactElement, ReactNode } from 'react';
 import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import CreationControl from '../UserList/creation-control';
-import { ProviderLogo } from '../UserList/marks';
+import { Mark, ProviderLogo } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';
 import RoleControl from '../UserList/role-control';
 import { roleLabel } from '../UserList/roles';
 import TimeoutPanel from '../SupportRequests/timeout-panel';
+import AccessPausePanel from './access-pause-panel';
 import ImpersonateAction from './impersonate-action';
 import { workspaceRoleLabel, workspaceRoleRank } from './roles';
 import type { UserCoven, UserDetailProps } from './types';
 import './index.scss';
 
-// The body of the modal over `/admin/users` on a user: the table's facts read-only, their covens
+// The body of the modal over `/keepers/users` on a user: the table's facts read-only, their covens
 // and the action to act as them (claude-docs/components/user-detail.md). Laid out as the ingredient
 // modal is, in hairline-parted sections; render-only.
 
@@ -47,6 +48,7 @@ const UserDetail = ({
   user,
   memberships,
   timeouts,
+  pauses,
   canImpersonate = false,
   changesPaused = false,
 }: UserDetailProps): ReactElement => (
@@ -120,6 +122,16 @@ const UserDetail = ({
           </dd>
         </div>
         <div>
+          <dt>Terms</dt>
+          <dd>
+            {user.agreedTermsVersion === null ? (
+              <Mark value={false} label="Not agreed" />
+            ) : (
+              `Version ${user.agreedTermsVersion}`
+            )}
+          </dd>
+        </div>
+        <div>
           <dt>Signed Up</dt>
           <dd>
             <Day at={user.createdAt} />
@@ -155,6 +167,11 @@ const UserDetail = ({
     {timeouts && (
       <section aria-label="Support Time-Out" className="user-detail__section">
         <TimeoutPanel userId={user.id} name={user.name} timeouts={timeouts} />
+      </section>
+    )}
+    {pauses && (
+      <section aria-label="Site Access" className="user-detail__section">
+        <AccessPausePanel userId={user.id} name={user.name} pauses={pauses} />
       </section>
     )}
     {/* Not on an admin: the endpoint refuses one. */}

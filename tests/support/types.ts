@@ -148,7 +148,7 @@ export type GroupedValueFormCase = [
 /** One kind of the grouped-value list, as tests/components/GroupedValueList drives it. */
 export interface GroupedValueListSubject {
   kind: GroupedValueKind;
-  /** The page the list is on, which its links and its filter address: `/admin/categories`. */
+  /** The page the list is on, which its links and its filter address: `/curator/categories`. */
   path: string;
   /** The filter form's name: `Filter categories`. */
   filterName: string;
@@ -198,7 +198,7 @@ export interface FilterShown {
 export interface FilterFormSubject {
   /** The form's accessible name: `Filter Users`. */
   label: string;
-  /** The page itself, which the form submits to and Clear opens: `/admin/users`. */
+  /** The page itself, which the form submits to and Clear opens: `/keepers/users`. */
   path: string;
   /** The search box's label: `Name or Email`. */
   searchLabel: string;

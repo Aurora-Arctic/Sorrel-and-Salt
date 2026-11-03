@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, RateLimited, ValidationError } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
@@ -11,6 +11,8 @@ import {
   sendSignedOutSupportRequest,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
+import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
@@ -22,9 +24,24 @@ useTestDatabase((client) => {
   sql = client;
 });
 
+// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+const replyNotices = () =>
+  startJob.mock.calls.filter(([job]) => job === supportReplyNotice).map(([, args]) => args);
+
 beforeEach(async () => {
+  startJob.mockClear();
+  // Set, so the receipt starts its job rather than being tried once here.
+  vi.stubEnv('MAIL_TRANSPORT', 'smtp');
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
   await sql`delete from support_send_counts`;
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 const INPUT = {
@@ -34,21 +51,13 @@ const INPUT = {
   message: 'The code never arrives.',
 } as const;
 
+// The receipt goes out through its job too, whose mail is tested in tests/modules/support/services/support-status-mail.test.ts.
+const receipts = () =>
+  startJob.mock.calls.filter(([job]) => job === supportStatusMail).map(([, args]) => args);
+
 function notifier() {
-  const received: { to: string; subject: string; requestId: string | null }[] = [];
-  const replies: { to: string; body: string }[] = [];
-  const mail: SupportNotifier = {
-    replyWaiting: async () => undefined,
-    received: async (to, subject, requestId) => {
-      received.push({ to, subject, requestId });
-    },
-    resolved: async () => undefined,
-    closingSoon: async () => undefined,
-    signedOutReply: async (to, body) => {
-      replies.push({ to, body });
-    },
-  };
-  return { mail, received, replies };
+  const mail: SupportNotifier = { origin: async () => 'http://localhost:3000' };
+  return { mail };
 }
 
 const send = (
@@ -65,7 +74,7 @@ const count = async () => (await sql`select count(*)::int as n from support_requ
 
 describe('sendSignedOutSupportRequest', () => {
   it('stores the request under the signed-out sender with the address beside it, and mails a receipt', async () => {
-    const { mail, received } = notifier();
+    const { mail } = notifier();
 
     await send(INPUT, { mail });
 
@@ -74,9 +83,11 @@ describe('sendSignedOutSupportRequest', () => {
     expect(row!.sender_email).toBe('visitor@example.test');
     expect(row!.about).toBe('account');
     expect(row!.status).toBe('open');
-    expect(received).toEqual([
-      { to: 'visitor@example.test', subject: INPUT.subject, requestId: null },
+    // The run carries the request id and the origin; its step reads the address from the row.
+    expect(receipts()).toEqual([
+      [{ kind: 'received', requestId: row!.id, origin: 'http://localhost:3000' }],
     ]);
+    expect(JSON.stringify(receipts())).not.toContain('visitor@example.test');
   });
 
   it.each(['accessibility', 'account', 'bug', 'privacy', 'question'] as const)(
@@ -113,6 +124,29 @@ describe('sendSignedOutSupportRequest', () => {
     ]);
   });
 
+  it('stores neither the email address nor the client address in its counts, only a keyed hash of each', async () => {
+    await send(INPUT);
+
+    const rows =
+      await sql`select kind, key, row_to_json(c)::text as whole from support_send_counts c order by kind`;
+    // Precondition: both keys were counted, so a stored address would have a row to sit in.
+    expect(rows.map((row) => row.kind)).toEqual(['address', 'client']);
+    for (const row of rows) {
+      expect(row.key).toMatch(/^[0-9a-f]{64}$/);
+      expect(row.whole).not.toContain(INPUT.email);
+      expect(row.whole).not.toContain('visitor@');
+      expect(row.whole).not.toContain('203.0.113.7');
+    }
+  });
+
+  it('counts one address however its case and spacing are written', async () => {
+    await send(INPUT);
+    await send({ ...INPUT, email: '  Visitor@Example.TEST ' });
+
+    const rows = await sql`select count from support_send_counts where kind = 'address'`;
+    expect(rows.map((row) => row.count)).toEqual([2]);
+  });
+
   it('refuses an address that is not one', async () => {
     const error = await failureOf(send({ ...INPUT, email: 'not an address' }));
 
@@ -121,12 +155,12 @@ describe('sendSignedOutSupportRequest', () => {
   });
 
   it('drops a send whose hidden field is filled, storing, counting and mailing nothing', async () => {
-    const { mail, received } = notifier();
+    const { mail } = notifier();
 
     await send({ ...INPUT, website: 'https://spam.example' }, { mail });
 
     expect(await count()).toBe(0);
-    expect(received).toEqual([]);
+    expect(receipts()).toEqual([]);
     expect(await sql`select 1 from support_send_counts`).toHaveLength(0);
   });
 
@@ -188,18 +222,18 @@ describe('sendSignedOutSupportRequest', () => {
 });
 
 describe('a reply to a signed-out request', () => {
-  it('is mailed to the visitor in full, and the account notice is not sent', async () => {
+  it('starts its notice with the reply’s id and the origin, and nothing of the visitor’s', async () => {
     await send();
     const [request] = await sql`select id from support_requests`;
-    const { mail, replies } = notifier();
-    let notices = 0;
-    mail.replyWaiting = async () => {
-      notices += 1;
-    };
+    const { mail } = notifier();
 
-    await replyToSupportRequest(asUser(E), request!.id as string, 'Try the recovery link.', mail);
+    const reply = await replyToSupportRequest(
+      asUser(E),
+      request!.id as string,
+      'Try the recovery link.',
+      mail,
+    );
 
-    expect(replies).toEqual([{ to: 'visitor@example.test', body: 'Try the recovery link.' }]);
-    expect(notices).toBe(0);
+    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 });

@@ -5,6 +5,7 @@ export interface EmailUserRow {
   updated_by: string;
   updated_at: Date;
   verification_sent_at: Date | null;
+  pending_email: string | null;
 }
 
 export interface ProvisionalUserRow {

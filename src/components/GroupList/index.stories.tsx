@@ -40,15 +40,15 @@ const CategoryGroupsView = () => (
   />
 );
 
-// The Groups tab as the route draws it (`/admin/category-groups`): the app shell, the admin row,
+// The Groups tab as the route draws it (`/curator/category-groups`): the app shell, the admin row,
 // the Categories heading with its Categories and Groups toggle, and the tab's Add.
 const defaultNode = (
   <AdminTabbedFrame
     shell
     page="categories"
-    open="/admin/category-groups"
+    open="/curator/category-groups"
     action={
-      <Link className="btn btn--solid" href={'/admin/category-groups?new' as Route}>
+      <Link className="btn btn--solid" href={'/curator/category-groups?new' as Route}>
         Add Category Group
       </Link>
     }

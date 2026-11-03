@@ -12,6 +12,7 @@ import type { COVEN_PARAMS } from '../IngredientSearch/coven-params';
 import type { COMPENDIUM_PARAMS, REVIEW_SETTINGS } from './params';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
+import type { MyCoven } from '../FacetPanel/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /**
@@ -199,5 +200,5 @@ export type CompendiumListFilterProps = Pick<
    * The signed-in viewer's covens, every membership, which In My Covens offers by name and the
    * sentence names. The public list only; left out, the field is not drawn.
    */
-  covens?: readonly { id: string; name: string }[];
+  covens?: readonly MyCoven[];
 };

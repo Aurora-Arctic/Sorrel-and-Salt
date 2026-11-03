@@ -49,7 +49,7 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   }
 }
 
-// The area's name as its home link: "Admin", to /admin. Set as the heading it reads
+// The area's name as its home link: "Curator" or "Keepers", to its index. Set as the heading it reads
 // as; the underline arrives on hover and focus.
 .context-row__name {
   margin: 0;

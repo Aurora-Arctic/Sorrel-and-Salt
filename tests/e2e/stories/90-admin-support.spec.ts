@@ -5,7 +5,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
 
-// Story 90: an admin works through a support request on /admin/support, and times its sender out. The sender's refused send
+// Story 90: an admin works through a support request on /keepers/support, and times its sender out. The sender's refused send
 // is made through the API with the sender's own session, since the form that sends one is story 89's.
 
 test.beforeAll(async () => {
@@ -52,7 +52,7 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     }
 
     await test.step('the admin opens the list and the request', async () => {
-      await page.goto('/admin/support');
+      await page.goto('/keepers/support');
       const row = page.getByRole('row').filter({ hasText: 'Wobbling Cauldron' });
       await expect(row).toContainText('Fixture Person');
       await expect(row).toContainText('500');
@@ -117,6 +117,9 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     await test.step('the admin times the sender out, and their send is refused with the end time', async () => {
       await dialog.getByRole('button', { name: 'Time-Out', expanded: false }).click();
       await dialog.getByRole('textbox', { name: 'Note' }).fill('Repeated test messages');
+      await dialog
+        .getByRole('textbox', { name: /^Message to User/ })
+        .fill('Please keep each request to one problem.');
       await dialog.getByRole('button', { name: 'Time Out Sender' }).click();
       await page.getByRole('button', { name: 'Time Out', exact: true }).click();
       await expect(dialog.getByRole('button', { name: 'Lift' })).toBeVisible();
@@ -146,7 +149,7 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     page,
   }) => {
     await signInAs(page, 'plain@story-90.test');
-    const response = await page.goto('/admin/support');
+    const response = await page.goto('/keepers/support');
     expect(response?.status()).toBe(403);
   });
 });

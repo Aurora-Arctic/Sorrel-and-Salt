@@ -5,6 +5,7 @@ import { NEW_COVEN_PATH } from '../../../lib/coven-path';
 import PageHeader from '../../../components/PageHeader';
 import { PendingLink } from '../../../lib/navigation';
 import { requireSession } from '../../../lib/request-session';
+import { firstReachable } from '../../../lib/shell-home';
 import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
 
@@ -12,14 +13,14 @@ export const metadata: Metadata = {
   title: 'Your Coven',
 };
 
-// The post-sign-in landing for someone with no return path. A member goes into the first coven; one who
+// The post-sign-in landing for someone with no return path. A member goes into the first coven they can open; one who
 // may create a coven is offered the create page; anyone else is told how to get in. The right is read
 // from the row via `viewerOf`, as accepting an invitation sets it mid-session.
 export default async function CovenLandingPage() {
   await requireSession();
   const { viewer, workspaces } = await viewerOf();
 
-  const [first] = workspaces;
+  const first = firstReachable(workspaces);
   if (first) redirect(`/coven/${first.slug}`);
 
   const pending = viewer.pendingInvitations;

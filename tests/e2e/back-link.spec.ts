@@ -174,3 +174,37 @@ test.describe("a coven's Ingredients page", () => {
     await fresh.close();
   });
 });
+
+test.describe('the admin compendium list', () => {
+  // Regression: an entry opened from the admin compendium list went back to the public compendium.
+  test('Back to Curator Compendium returns to the searched admin list the entry was opened from', async ({
+    page,
+  }) => {
+    const NAME = 'Fixture Curatewort';
+    const { userId } = await signInAs(page, 'admin@back-link.test', ['discord'], 'admin');
+    await withSql(async (sql) => {
+      await insertIngredient(
+        sql,
+        makeIngredient({
+          name: NAME,
+          nomenclature: 'none',
+          variants: [makeVariant({ form: 'Herb' })],
+        }),
+        userId,
+      );
+    });
+
+    await page.goto('/curator/compendium?query=Curatewort');
+    const listAddress = pathAndQuery(page.url());
+    // Why the return could fail: the list holds a search the bare admin list does not.
+    expect(new URL(page.url()).searchParams.get('query')).toBe('Curatewort');
+
+    await page.getByRole('link', { name: NAME, exact: true }).click();
+    await expect(page).toHaveURL(/\/compendium\/ingredients\//);
+
+    const back = page.getByRole('link', { name: 'Back to Curator Compendium' });
+    await expect(back).toHaveAttribute('href', listAddress);
+    await back.click();
+    await expect(page).toHaveURL((url) => `${url.pathname}${url.search}` === listAddress);
+  });
+});

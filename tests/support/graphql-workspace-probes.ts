@@ -13,7 +13,7 @@ import { insertReference } from './db/insert-reference';
 import { insertSpell } from './db/insert-spell';
 import { insertStock } from './db/insert-stock';
 import { variantIdOf } from './db/read-variants';
-import { noSender, noSupportNotifier } from './email-verification';
+import { noPauseNotifier, noSender, noSupportNotifier } from './email-verification';
 import {
   makeIngredient,
   makeSpell,
@@ -39,6 +39,9 @@ let deletableWorkspaceId: string;
 // Covens of their own for the removal and leave probes, whose admitted calls take B out of one.
 let removableWorkspaceId: string;
 let leavableWorkspaceId: string;
+// Covens of their own for the pause probes, whose admitted calls pause B in one and lift the pause standing on B in the other.
+let pausableWorkspaceId: string;
+let liftableWorkspaceId: string;
 // W's pending invitation, which the revoke probe's admitted call revokes.
 let revocableInvitationId: string;
 // W's own reference, which the read probe reads and the update probe replaces.
@@ -157,6 +160,11 @@ export function useProbeRows(): void {
     deletableWorkspaceId = await insertCoven('Fixture Deletable Coven');
     removableWorkspaceId = await insertCoven('Fixture Removable Coven');
     leavableWorkspaceId = await insertCoven('Fixture Leavable Coven');
+    pausableWorkspaceId = await insertCoven('Fixture Pausable Coven');
+    liftableWorkspaceId = await insertCoven('Fixture Liftable Coven');
+    await sql`
+    insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)
+    values (${liftableWorkspaceId}, ${B.id}, ${A.id}, ${A.id})`;
     const [invitation] = await sql`
     insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)
     values ('revoked@workspace-ids.test', 'workspace-ids-hash', ${WORKSPACE_W_ID}, 'viewer', ${A.id}, ${A.id})
@@ -346,6 +354,22 @@ export const PROBES: Record<string, WorkspaceIdProbe> = {
     asOwner: true,
     admittedTo: () => removableWorkspaceId,
   },
+  pauseMemberAccess: {
+    source: `mutation ($workspaceId: ID!, $userId: ID!) {
+      pauseMemberAccess(workspaceId: $workspaceId, userId: $userId) { id }
+    }`,
+    variables: () => ({ userId: B.id }),
+    asOwner: true,
+    admittedTo: () => pausableWorkspaceId,
+  },
+  liftMemberAccessPause: {
+    source: `mutation ($workspaceId: ID!, $userId: ID!) {
+      liftMemberAccessPause(workspaceId: $workspaceId, userId: $userId) { id }
+    }`,
+    variables: () => ({ userId: B.id }),
+    asOwner: true,
+    admittedTo: () => liftableWorkspaceId,
+  },
   leaveWorkspace: {
     source: `mutation ($workspaceId: ID!) {
       leaveWorkspace(workspaceId: $workspaceId)
@@ -461,8 +485,7 @@ export const PROBES: Record<string, WorkspaceIdProbe> = {
 
 // The admitted createInvitation reaches its sender; this one mails no one.
 const mailsNothing: InvitationSender = {
-  siteInvitation: async () => {},
-  workspaceInvitation: async () => {},
+  invitation: async () => {},
 };
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
@@ -490,6 +513,7 @@ export async function runProbe(
       emailVerification: noSender,
       invitations: mailsNothing,
       support: noSupportNotifier,
+      pauses: noPauseNotifier,
     },
   );
   return (await response.json()) as Answer;

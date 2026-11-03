@@ -28,11 +28,7 @@ beforeEach(async () => {
 
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
-  replyWaiting: async () => undefined,
-  received: async () => undefined,
-  resolved: async () => undefined,
-  closingSoon: async () => undefined,
-  signedOutReply: async () => undefined,
+  origin: async () => 'http://localhost:3000',
 };
 
 const sendAs = (user: typeof C) => sendSupportRequest(asUser(user), INPUT, mail);

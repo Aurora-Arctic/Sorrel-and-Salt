@@ -46,7 +46,7 @@ test('a sender resolves a waiting request, the menu count goes out and the admin
   const adminContext = await browser.newContext();
   const adminPage = await adminContext.newPage();
   await signInAs(adminPage, 'admin@support-resolve.test', ['discord'], 'admin');
-  await adminPage.goto('/admin/support?view=resolved');
+  await adminPage.goto('/keepers/support?view=resolved');
   await expect(
     adminPage
       .getByRole('row', { name: new RegExp(subject) })

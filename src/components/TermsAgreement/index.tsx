@@ -7,19 +7,20 @@ import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { dayInUtc } from '../../lib/utc';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { TermsAgreementProps } from './types';
 import './index.scss';
 
-// The acceptance page's body: where to read the terms, and the one button that records agreement. The mutation takes no
-// version; the server records the one in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
+// The acceptance page's body: where to read the terms, and the one button that records agreement. The mutation names the version
+// shown, and the server refuses one no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
 const AgreeToTermsDocument = graphql(`
-  mutation AgreeToTerms {
-    agreeToTerms {
+  mutation AgreeToTerms($version: Int!) {
+    agreeToTerms(version: $version) {
       id
-      termsVersion
+      agreedTermsVersion
     }
   }
 `);
@@ -28,11 +29,14 @@ const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps
   const [alert, setAlert] = useState<string>();
 
   const mutation = useMutation({
-    mutationFn: () => graphqlRequest(AgreeToTermsDocument, {}),
+    mutationFn: () => graphqlRequest(AgreeToTermsDocument, { version }),
     // A full navigation, not the router's: the router may hold the redirect to this page as the answer for the page asked for.
     onSuccess: () => window.location.assign(destination),
     onError: (failure) => setAlert(readGraphqlFailure(failure, []).alert),
   });
+
+  // Busy through the navigation too: the page stays up until the next one loads, and a second press would ask again.
+  const recording = mutation.isPending || mutation.isSuccess;
 
   return (
     <div className="terms-agreement">
@@ -60,17 +64,18 @@ const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps
         <Link className="btn btn--quiet" href="/terms" target="_blank">
           Read the Terms of Use
         </Link>
-        <button
-          type="button"
+        <BusyButton
           className="btn btn--solid"
-          disabled={mutation.isPending}
+          busy={recording}
+          busyLabel="Agreeing"
+          disabled={recording}
           onClick={() => {
             setAlert(undefined);
             mutation.mutate();
           }}
         >
-          {mutation.isPending ? 'Agreeing' : 'Agree & Continue'}
-        </button>
+          Agree & Continue
+        </BusyButton>{' '}
       </p>
     </div>
   );

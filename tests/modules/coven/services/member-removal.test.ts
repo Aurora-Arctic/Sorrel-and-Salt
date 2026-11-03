@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { findWorkspaceRole, withAudit } from '@/db/repository';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { Forbidden } from '@/lib/errors';
+import { AccessPaused, Forbidden } from '@/lib/errors';
 import { LastOwner, leaveWorkspace, removeMember, updateMemberRole } from '@/modules/coven';
+import { createWorkspaceIngredient } from '@/modules/ingredients';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
@@ -175,6 +176,79 @@ describe('leaveWorkspace', () => {
     await sql`update workspace_members set role = 'owner' where workspace_id = ${covenId} and user_id = ${B.id}`;
     await leaveWorkspace(asUser(A), covenId);
     expect((await seat(covenId, A.id)).deleted_at).toBeInstanceOf(Date);
+  });
+
+  describe('with access to the coven paused', () => {
+    async function pause(covenId: string, userId: string, until: string | null) {
+      await sql`
+        insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+        values (${covenId}, ${userId}, ${until}, ${A.id}, ${A.id})`;
+    }
+    const write = (userId: typeof C, covenId: string) =>
+      createWorkspaceIngredient(asUser(userId), covenId, {
+        name: 'Testwort',
+        nomenclature: 'none',
+      });
+
+    it('lets a paused member leave by the coven id, and still refuses them every other write', async () => {
+      const covenId = await insertCoven('Fixture Leave Paused Coven', [
+        [A.id, 'owner'],
+        [C.id, 'member'],
+      ]);
+      // Why the write could have passed: the member's role creates ingredients, and does so here before the pause.
+      await expect(write(C, covenId)).resolves.toBeDefined();
+      await pause(covenId, C.id, null);
+      await expect(write(C, covenId)).rejects.toBeInstanceOf(AccessPaused);
+
+      await leaveWorkspace(asUser(C), covenId);
+
+      const left = await seat(covenId, C.id);
+      expect(left.deleted_at).toBeInstanceOf(Date);
+      expect(left.deleted_by).toBe(C.id);
+      expect((await seat(covenId, A.id)).deleted_at).toBeNull();
+    });
+
+    it('lets a member leave with a dated pause standing, and with a pause lifted or run out, as any member', async () => {
+      const dated = await insertCoven('Fixture Leave Dated Coven', [
+        [A.id, 'owner'],
+        [C.id, 'viewer'],
+      ]);
+      await pause(dated, C.id, '2099-01-01T00:00:00Z');
+      await leaveWorkspace(asUser(C), dated);
+      expect((await seat(dated, C.id)).deleted_at).toBeInstanceOf(Date);
+
+      const lifted = await insertCoven('Fixture Leave Lifted Coven', [
+        [A.id, 'owner'],
+        [C.id, 'member'],
+      ]);
+      await pause(lifted, C.id, null);
+      await sql`update workspace_member_pauses set lifted_at = now(), lifted_by = ${A.id} where workspace_id = ${lifted}`;
+      await expect(write(C, lifted)).resolves.toBeDefined();
+      await leaveWorkspace(asUser(C), lifted);
+      expect((await seat(lifted, C.id)).deleted_at).toBeInstanceOf(Date);
+
+      const runOut = await insertCoven('Fixture Leave Run Out Coven', [
+        [A.id, 'owner'],
+        [C.id, 'member'],
+      ]);
+      await pause(runOut, C.id, '2000-01-01T00:00:00Z');
+      await expect(write(C, runOut)).resolves.toBeDefined();
+      await leaveWorkspace(asUser(C), runOut);
+      expect((await seat(runOut, C.id)).deleted_at).toBeInstanceOf(Date);
+    });
+
+    it('still refuses a stranger the leave, and a paused member another coven they are not in', async () => {
+      const covenId = await insertCoven('Fixture Leave Paused Stranger Coven', [
+        [A.id, 'owner'],
+        [C.id, 'member'],
+      ]);
+      await pause(covenId, C.id, null);
+      const other = await insertCoven('Fixture Leave Other Coven', [[A.id, 'owner']]);
+
+      await expect(leaveWorkspace(asUser(D), covenId)).rejects.toThrow(Forbidden);
+      await expect(leaveWorkspace(asUser(C), other)).rejects.toThrow(Forbidden);
+      expect((await seat(covenId, C.id)).deleted_at).toBeNull();
+    });
   });
 
   it('refuses a second leave from the same seat', async () => {

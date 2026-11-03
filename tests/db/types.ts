@@ -35,7 +35,9 @@ export type Governed =
   | 'deities'
   | 'deity traditions'
   | 'workspace creation'
-  | 'site role';
+  | 'site role'
+  | 'site access'
+  | 'documents';
 
 /** A `Mutation` field only a site admin's scope admits. `probe` replaces the null-session probe where that one does not ask for the admin's tier. */
 export interface AdminWrite {

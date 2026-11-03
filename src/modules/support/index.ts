@@ -7,6 +7,7 @@ export * from './services/own';
 export * from './services/staff';
 export * from './services/reply';
 export * from './services/lifecycle';
+export { startSupportRetention } from './services/retention-start';
 export * from './services/timeouts';
 export * from './services/reads';
 export * from './graphql/support';
@@ -17,10 +18,11 @@ export * from './loaders/users-on-requests';
 export type {
   SupportAbout,
   SupportNotifier,
-  SupportReplyRow,
   SupportRequestFilter,
-  SupportViewCounts,
   SupportRequestRow,
   SupportStatus,
+  SupportStatusMail,
+  SupportTimeoutMail,
   SupportTimeoutRow,
+  TimeoutNotifier,
 } from './types';

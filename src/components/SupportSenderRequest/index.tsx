@@ -45,7 +45,7 @@ const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElem
         <SupportSenderResolveButton requestId={request.id} />
       )}
       {request.status !== 'closed' ? (
-        <SupportSenderReplyBox requestId={request.id} timedOutUntil={request.timedOutUntil} />
+        <SupportSenderReplyBox requestId={request.id} timedOut={request.timedOut} />
       ) : (
         <p className="support-sender-request__closed">
           This request is closed.{' '}

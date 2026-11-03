@@ -3,16 +3,16 @@
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { utcMinute } from '../../lib/utc';
 import BusyButton from '../BusyButton';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import { FieldShell, fieldDescription } from '../Field';
+import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from '../SupportRequests/use-support-action';
 import type { SupportSenderReplyBoxProps } from './types';
 
 // The sender's answer on their own request, sent through /api/graphql. While they are timed out the box and the button are
-// shut and a notice above them says when it ends; the service refuses the message too.
+// shut and a notice above them says when it ends, or that it has no end date; the service refuses the message too.
 
 const SendDocument = graphql(`
   mutation SendSupportMessage($requestId: ID!, $body: String!) {
@@ -24,13 +24,13 @@ const SendDocument = graphql(`
 
 const SupportSenderReplyBox = ({
   requestId,
-  timedOutUntil,
+  timedOut,
 }: SupportSenderReplyBoxProps): ReactElement => {
   const [body, setBody] = useState('');
   const { busy, failure, run } = useSupportAction('body');
   const discard = useDiscardGuard(body.trim() !== '');
   const { aria, ...field } = fieldDescription({ id: useId(), error: failure.field?.message });
-  const shut = timedOutUntil !== null;
+  const shut = timedOut !== null;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,9 +47,15 @@ const SupportSenderReplyBox = ({
       noValidate
       onSubmit={(event) => void submit(event)}
     >
-      {shut && (
-        <Notice kind="caution" quiet>
-          You cannot reply until {utcMinute(timedOutUntil)}.
+      {timedOut && (
+        <Notice kind="warn" quiet>
+          {timedOut.until ? (
+            <>
+              You cannot reply until <LocalTime at={timedOut.until} long />.
+            </>
+          ) : (
+            'You cannot reply: you are timed out with no end date.'
+          )}
         </Notice>
       )}
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}

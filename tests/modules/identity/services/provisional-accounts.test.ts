@@ -2,6 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { expireStep } from '@/modules/identity/jobs/provisional-expiry-steps';
 import {
   ORIGIN,
@@ -27,6 +28,8 @@ vi.mock('@/lib/mail', () => ({ send }));
 
 const startJob = vi.hoisted(() => vi.fn<(job: unknown, args: unknown[]) => Promise<string>>());
 vi.mock('@/lib/jobs', () => ({ startJob }));
+// A mail job starts only while MAIL_TRANSPORT is set; set here, so the resend's run is seen whatever the machine's own env.
+vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
 
 const DOMAIN = '@provisional-accounts.test';
 const OWNER = `owner${DOMAIN}`;
@@ -67,6 +70,8 @@ beforeEach(async () => {
   // The ledger goes before the users its rows name, and by truncate, since
   // `forbid_rewrite` refuses a delete.
   await sql`truncate user_privilege_changes`;
+  await sql`delete from user_access_pauses where user_id in (${mine})`;
+  await sql`delete from workspace_member_pauses where user_id in (${mine})`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
@@ -165,15 +170,18 @@ describe('Story 58: an unverified account lapses so the address owner can sign i
   });
 });
 
+// The auth module is imported afresh, so a job is named rather than compared by identity. A sign-up also starts its
+// verification mail's job, which these tests do not count as an expiry run.
+const runsOf = (name: string): unknown[] =>
+  startJob.mock.calls
+    .filter(([job]) => (job as { name: string }).name === name)
+    .map(([, args]) => args);
+
 describe('Story 58: the job starts at an unverified sign-up', () => {
   it('starts one expiry run for the new account, named by its id', async () => {
     const squatter = await squat(OWNER);
 
-    expect(startJob).toHaveBeenCalledTimes(1);
-    // The auth module is imported afresh, so the job is named rather than compared by identity.
-    const [job, args] = startJob.mock.calls[0];
-    expect((job as { name: string }).name).toBe('provisionalAccountExpiry');
-    expect(args).toEqual([squatter.row.id]);
+    expect(runsOf('provisionalAccountExpiry')).toEqual([[squatter.row.id]]);
   });
 
   it('starts none for a sign-up whose provider verified the address', async () => {
@@ -192,7 +200,7 @@ describe('Story 58: the job starts at an unverified sign-up', () => {
 
     expectSignedIn(response);
     expect((await userRow(OWNER))?.email_verified).toBe(false);
-    expect(startJob).toHaveBeenCalledTimes(1);
+    expect(runsOf('provisionalAccountExpiry')).toHaveLength(1);
   });
 });
 
@@ -322,6 +330,64 @@ describe('Story 58: an account an admin has vouched for is not removed', () => {
   });
 });
 
+// A pause names the account it stops and means nothing without it, so it goes with the account, as its sessions do, rather than
+// keeping a squat alive the way a privilege change does.
+describe('Story 58: a paused account is still removed, with its pauses', () => {
+  async function pauseRows(userId: string) {
+    const [{ site, coven }] = await sql`
+      select
+        (select count(*)::int from user_access_pauses where user_id = ${userId}) as site,
+        (select count(*)::int from workspace_member_pauses where user_id = ${userId}) as coven
+    `;
+    return { site, coven } as { site: number; coven: number };
+  }
+
+  it('removes a lapsed account holding a site pause and a coven pause, and the pauses with it', async () => {
+    const squatter = await squat(OWNER);
+    await sql`
+      insert into user_access_pauses (user_id, note, created_by, updated_by)
+      values (${squatter.row.id}, 'Testnote', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `;
+    await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)
+      values (${WORKSPACE_W_ID}, ${squatter.row.id}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `;
+    await backdate(squatter.row.id, EXPIRED);
+    // Why this could have been kept: both pause rows name the account.
+    expect(await pauseRows(squatter.row.id)).toEqual({ site: 1, coven: 1 });
+
+    expect(await expireStep(squatter.row.id)).toBeNull();
+
+    expect(await linkedRows(squatter.row.id)).toEqual({ users: 0, accounts: 0, sessions: 0 });
+    expect(await pauseRows(squatter.row.id)).toEqual({ site: 0, coven: 0 });
+  });
+});
+
+// A support time-out sanctions the sender it names and means nothing without it, so it goes with the account, as a pause does.
+describe('Story 58: an account under a support time-out is still removed, with its time-outs', () => {
+  async function timeoutRows(userId: string): Promise<number> {
+    const [{ count }] =
+      await sql`select count(*)::int as count from support_timeouts where user_id = ${userId}`;
+    return count as number;
+  }
+
+  it('removes a lapsed account holding a standing support time-out, and the time-out with it', async () => {
+    const squatter = await squat(OWNER);
+    await sql`
+      insert into support_timeouts (user_id, until, note, created_by, updated_by)
+      values (${squatter.row.id}, now() + interval '1 day', 'Spam', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `;
+    await backdate(squatter.row.id, EXPIRED);
+    // Why this could have been kept: the time-out row names the account.
+    expect(await timeoutRows(squatter.row.id)).toBe(1);
+
+    expect(await expireStep(squatter.row.id)).toBeNull();
+
+    expect(await linkedRows(squatter.row.id)).toEqual({ users: 0, accounts: 0, sessions: 0 });
+    expect(await timeoutRows(squatter.row.id)).toBe(0);
+  });
+});
+
 describe('Story 58: a resend restarts the window', () => {
   function resend(cookie: string | undefined, email: string): Promise<Response> {
     return auth.handler(
@@ -349,6 +415,7 @@ describe('Story 58: a resend restarts the window', () => {
     const before = (await userRow(OWNER))!;
     expect(before).toMatchObject({ email_verified: false, updated_by: BOOTSTRAP_USER_ID });
     send.mockReset();
+    startJob.mockClear();
     return { id, before, cookie: cookieHeader(response) };
   }
 
@@ -358,7 +425,10 @@ describe('Story 58: a resend restarts the window', () => {
     const response = await resend(cookie, OWNER);
 
     expect(response.status, await response.clone().text()).toBe(200);
-    expect(send).toHaveBeenCalledTimes(1);
+    // The link is mailed through its job, started with the account's id and never the link.
+    expect(runsOf('secretLinkMail')).toEqual([
+      [expect.objectContaining({ kind: 'verification', userId: id })],
+    ]);
     const touched = (await userRow(OWNER))!;
     expect(touched.updated_at.getTime()).toBeGreaterThan(before.updated_at.getTime());
     expect(touched.updated_by).toBe(id);
@@ -413,6 +483,7 @@ describe('Story 58: a resend restarts the window', () => {
 
     expect(response.status).toBe(401);
     expect(send).not.toHaveBeenCalled();
+    expect(runsOf('secretLinkMail')).toEqual([]);
     expect(await userRow(OWNER)).toEqual(before);
     expect(await expireStep(id)).toBeNull();
     expect((await linkedRows(id)).users).toBe(0);

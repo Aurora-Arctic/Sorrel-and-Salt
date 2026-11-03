@@ -827,6 +827,111 @@
       "when": 1793586951144,
       "tag": "0117_compendium-hide-uncategorised-live",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1793608126875,
+      "tag": "0118_user-access-pauses",
+      "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1793610844590,
+      "tag": "0119_workspace-member-pauses",
+      "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1793631934826,
+      "tag": "0120_support-timeouts-cascade",
+      "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1793636373705,
+      "tag": "0121_support-timeouts-open-ended",
+      "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1793637761063,
+      "tag": "0122_user-access-pause-note-required",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1793642514958,
+      "tag": "0123_support-closing-notice",
+      "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1793642516415,
+      "tag": "0124_support-reply-notice",
+      "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1793642517191,
+      "tag": "0125_support-send-counts-drop-address-keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1793642517930,
+      "tag": "0126_users-pending-email",
+      "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1793642518682,
+      "tag": "0127_users-former-email",
+      "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1793657270625,
+      "tag": "0128_pause-messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1793660000000,
+      "tag": "0129_documents-tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 130,
+      "version": "7",
+      "when": 1793660001000,
+      "tag": "0130_agreed-terms-version",
+      "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1793664289233,
+      "tag": "0131_document-mailing-paused",
+      "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1793677692210,
+      "tag": "0132_productive_sue_storm",
+      "breakpoints": true
     }
   ]
 }

@@ -25,6 +25,8 @@ export interface SupportRequestEntry {
   sender: SupportSender | null;
   /** Sent by a visitor who was signed out: the sender is a shared stand-in account, and `sender.email` is the visitor’s own address. */
   signedOut: boolean;
+  /** Sent by the System account: an anonymised request, whose sender is not shown, so `sender` is null. */
+  anonymised: boolean;
   assignee: SupportPerson | null;
   curatorVisible: boolean;
   errorCode: number | null;
@@ -55,8 +57,10 @@ export interface SupportReplyEntry {
 
 export interface SupportTimeoutEntry {
   id: string;
-  until: Date;
-  note: string | null;
+  /** When the time-out ends by itself; null for one with no end date. */
+  until: Date | null;
+  /** Why it was set, for staff: every time-out has one. */
+  note: string;
   liftedAt: Date | null;
   /** When it was set. */
   createdAt: Date;

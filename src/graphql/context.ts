@@ -1,21 +1,37 @@
 import { emailVerificationSender } from '../lib/email-verification';
 import { invitationSender } from '../lib/invitation-mail';
 import { passwordSetter } from '../lib/password-setter';
+import { pauseNotifier } from '../lib/pause-mail';
+import { documentMailingNotifier } from '../lib/document-mailing-mail';
 import { supportNotifier } from '../lib/support-mail';
-import { sessionFromHeaders } from '../lib/request-session';
+import { sessionStateFromHeaders } from '../lib/request-session';
 import { createLoaders } from './loaders';
+import { isSupportOperation, type OperationParams } from './paused-operations';
 import type { Context } from './types';
 
 /** Yoga's `context` option, called once per request. */
-export async function createContext({ request }: { request: Request }): Promise<Context> {
-  const session = await sessionFromHeaders(request.headers);
+export async function createContext({
+  request,
+  params,
+}: {
+  request: Request;
+  params?: OperationParams;
+}): Promise<Context> {
+  const state = await sessionStateFromHeaders(request.headers);
+  // A paused session acts as itself for the signed-in support form alone; elsewhere it acts as nobody, so a public read
+  // answers as signed out and the rest are refused with the pause.
+  const paused = state.accessPause && !isSupportOperation(params) ? state.accessPause : undefined;
+  const session = paused ? null : state.session;
   return {
     session,
+    ...(paused && { accessPause: paused }),
     loaders: createLoaders(session),
     emailVerification: emailVerificationSender(request),
     invitations: invitationSender(request),
     passwords: passwordSetter(request),
     support: supportNotifier(request),
+    pauses: pauseNotifier(request),
+    documents: documentMailingNotifier(request),
     clientIp: request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() || null,
   };
 }

@@ -1,6 +1,6 @@
 # PrivilegeLedger
 
-`src/components/PrivilegeLedger/` — `/admin/privilege-changes`' filter, table
+`src/components/PrivilegeLedger/` — `/keepers/privilege-changes`' filter, table
 and pager (MB.200). It is render-only and a server component: the page reads
 one page of the privilege ledger through the identity service and hands it
 over, with the filter as asked and the hrefs of the pages either side
@@ -20,13 +20,13 @@ over, with the filter as asked and the hrefs of the pages either side
 
 A `PrivilegeLedgerEntry` is the row's `id`, `at`, `privilege`, `change`, `via`
 and `note`, and its `subject` and `actor` as a `LedgerPerson`, a name and the
-`href` of their `/admin/users` row, or null when no live account holds the
+`href` of their `/keepers/users` row, or null when no live account holds the
 id.
 
 ## Contracts
 
 - **One ledger, filtered, not a page per privilege.** The filter is a GET
-  form to `/admin/privilege-changes` (`PRIVILEGE_CHANGES_PATH`, `href.ts`), named "Filter Privilege Changes" inside
+  form to `/keepers/privilege-changes` (`PRIVILEGE_CHANGES_PATH`, `href.ts`), named "Filter Privilege Changes" inside
   a `<search>` landmark, as the user list's is
   ([`user-list.md`](user-list.md)): a search box labelled "Name or Email"
   (`query`), matching part of the subject's name or email, a Privilege
@@ -41,7 +41,7 @@ id.
   dropdown look (the owner's call). The dropdown applies the moment a choice
   is picked, and the search from its magnifier or Enter, each carrying the other. Clear, offered
   only while the page shows a query or a privilege, opens
-  `/admin/privilege-changes` with neither. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
+  `/keepers/privilege-changes` with neither. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
   over the shared `listHref` (`src/lib/list-href.ts`), builds every address here, the
   submit's, the pager's and each `UserList` row's history link included:
   `?query=` and `?privilege=admin|create_workspace`. A user row's
@@ -63,7 +63,7 @@ id.
   Seeded, By an admin, Invitation accepted or Manual fix. Seeded covers every
   user the seed inserts holding a privilege, the fixture users as well as the
   bootstrap admin, so it names the seed rather than the primary admin.
-- **User and Changed By link to the person's `/admin/users` row**, the list
+- **User and Changed By link to the person's `/keepers/users` row**, the list
   filtered to their address. A person the user list leaves out, the seed's
   bootstrap user, is named without a link, and an id no live account holds
   reads "Deleted account".
@@ -108,7 +108,7 @@ the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filt
 address a change or the magnifier opens, Clear offered by a query or a privilege and absent
 with neither, the row starting again from a filter shown anew, no table when there is nothing to show, and
 `privilegeLedgerHref`. Paging is Pager's.
-`tests/app/(shell)/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
+`tests/app/(shell)/keepers/(people)/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built
 server, with axe.
 

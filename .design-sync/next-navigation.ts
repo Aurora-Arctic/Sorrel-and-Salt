@@ -26,7 +26,7 @@ const noParams = {};
 const noSearch = new URLSearchParams();
 
 export const useRouter = () => useContext(AppRouterContext) ?? router;
-export const usePathname = () => useContext(PathnameContext) ?? '/admin/users';
+export const usePathname = () => useContext(PathnameContext) ?? '/keepers/users';
 export const useSearchParams = () => useContext(SearchParamsContext) ?? noSearch;
 export const useParams = () => useContext(PathParamsContext) ?? noParams;
 export const useSelectedLayoutSegment = () => null;

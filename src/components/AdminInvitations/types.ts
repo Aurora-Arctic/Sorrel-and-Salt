@@ -4,7 +4,7 @@ import type { PagePosition, PagerHrefs } from '../../lib/types';
 /** A site role an invitation may grant: never `user`, which every account holds. */
 export type InvitableSiteRole = 'curator' | 'admin';
 
-/** One pending admin invitation, as `/admin/invitations` lists it. */
+/** One pending admin invitation, as `/keepers/invitations` lists it. */
 export interface AdminInvitationEntry {
   id: string;
   email: string;

@@ -99,14 +99,14 @@ describe('AccountMenu', () => {
         verified
         links={[
           { label: 'Your Coven', href: '/coven/fixture-coven' as Route, base: '/coven' },
-          { label: 'Admin', href: '/admin', base: '/admin' },
+          { label: 'Keepers', href: '/keepers', base: '/keepers' },
         ]}
       />,
     );
 
     fireEvent.click(button());
 
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+    expect(screen.getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven',
@@ -176,20 +176,43 @@ describe('AccountMenu support link', () => {
   });
 
   describe('support counts', () => {
-    const ADMIN = [{ label: 'Admin', href: '/admin' as Route, base: '/admin' }];
+    const ADMIN = [{ label: 'Keepers', href: '/keepers' as Route, base: '/keepers' }];
     const open = (): void => {
       fireEvent.click(screen.getByRole('button', { name: /^Fixture Owner/ }));
     };
+
+    // The count belongs to the support pages, which are under Keepers; a curator's Curator link carries none.
+    it('carries the assigned count on the Keepers link alone, never on Curator', () => {
+      const CURATOR = { label: 'Curator', href: '/curator' as Route, base: '/curator' };
+      const { unmount } = render(
+        <AccountMenu name="Fixture Owner" verified links={[CURATOR]} assignedSupport={3} />,
+      );
+      open();
+      expect(screen.getByRole('link', { name: 'Curator' })).toHaveAttribute('href', '/curator');
+      expect(screen.queryByRole('link', { name: '3 requests assigned to you' })).toBeNull();
+      unmount();
+
+      render(
+        <AccountMenu
+          name="Fixture Owner"
+          verified
+          links={[CURATOR, ...ADMIN]}
+          assignedSupport={3}
+        />,
+      );
+      open();
+      expect(screen.getAllByRole('link', { name: '3 requests assigned to you' })).toHaveLength(1);
+    });
 
     it('wears no dot and shows no count when nothing waits', () => {
       const { container } = render(<AccountMenu name="Fixture Owner" verified links={ADMIN} />);
       open();
       expect(container.querySelector('.account-menu__dot')).toBeNull();
       expect(screen.getByRole('link', { name: 'Support' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+      expect(screen.getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
     });
 
-    it('counts requests assigned to a staff viewer in a link of its own beside Admin, and dots the avatar', () => {
+    it('counts requests assigned to a staff viewer in a link of its own beside Keepers, and dots the avatar', () => {
       const { container } = render(
         <AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />,
       );
@@ -198,13 +221,13 @@ describe('AccountMenu support link', () => {
         screen.getByRole('button', { name: 'Fixture Owner, 3 requests assigned to you' }),
       ).toBeInTheDocument();
       open();
-      expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+      expect(screen.getByRole('link', { name: 'Keepers' })).toHaveAttribute('href', '/keepers');
       const count = screen.getByRole('link', { name: '3 requests assigned to you' });
-      expect(count).toHaveAttribute('href', '/admin/support?view=mine');
+      expect(count).toHaveAttribute('href', '/keepers/support?view=mine');
       expect(count).toHaveTextContent('3');
     });
 
-    it('opens a tip over the Admin count after the pointer rests on it', () => {
+    it('opens a tip over the Keepers count after the pointer rests on it', () => {
       vi.useFakeTimers();
       try {
         render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />);
@@ -266,7 +289,7 @@ describe('AccountMenu support link', () => {
       ).toBeInTheDocument();
     });
 
-    it('caps the Admin count the same way', () => {
+    it('caps the Keepers count the same way', () => {
       render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={250} />);
       open();
       expect(screen.getByText('99+')).toBeInTheDocument();

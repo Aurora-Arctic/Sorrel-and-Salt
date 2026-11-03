@@ -118,18 +118,18 @@ const ACCEPT_INVITATION = `
   }
 `;
 
-/** Whether `page`'s account reaches the admin area: the layout's nav, or the 403 page. */
+/** Whether `page`'s account reaches the keepers area: the layout's nav, or the 403 page. */
 async function expectAdminArea(page: Page, reached: boolean): Promise<void> {
-  const response = await visit(page, '/admin');
+  const response = await visit(page, '/keepers');
   if (reached) {
     expect(response.status()).toBe(200);
-    await expect(page.getByRole('navigation', { name: 'Admin' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Keepers' })).toBeVisible();
   } else {
     expect(response.status()).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
     ).toBeVisible();
-    await expect(page.getByRole('navigation', { name: 'Admin' })).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: 'Keepers' })).toHaveCount(0);
   }
 }
 
@@ -144,7 +144,7 @@ async function primaryAdminId(page: Page): Promise<string> {
 
 /** The users list narrowed to one address, and that address's row. */
 async function userRow(page: Page, email: string) {
-  const response = await visit(page, `/admin/users?query=${encodeURIComponent(email)}`);
+  const response = await visit(page, `/keepers/users?query=${encodeURIComponent(email)}`);
   expect(response.status()).toBe(200);
   return page.getByRole('row', { name: new RegExp(email.replace(/[.+]/g, '\\$&')) });
 }
@@ -152,27 +152,48 @@ async function userRow(page: Page, email: string) {
 /** The role cell, the third: its text opens with the role. */
 const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(2);
 
-/** Opens `name`'s Change Role dialog from `row`, picks `role` and answers the dialog for the caller to confirm. */
+/** Opens `name`'s user modal from their row's name, where Change Role and coven creation's controls are, and answers it. */
+async function userModal(page: Page, row: ReturnType<Page['getByRole']>, name: string) {
+  await row.getByRole('link', { name, exact: true }).click();
+  const modal = page.getByRole('dialog', { name: new RegExp(name) });
+  await expect(modal).toBeVisible();
+  return modal;
+}
+
+/** Closes the open user modal, back to the list. */
+async function closeModal(page: Page) {
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+}
+
+/**
+ * Presses Change Role in `name`'s user modal, opening it from `row` unless it is open, picks `role`, and answers
+ * the question asked over the modal's body for the caller to confirm.
+ */
 async function chooseRole(
   page: Page,
   row: ReturnType<Page['getByRole']>,
   name: string,
   role: 'User' | 'Curator' | 'Admin',
 ) {
-  await row.getByRole('button', { name: `Change Role for ${name}` }).click();
-  const dialog = page.getByRole('dialog', { name: 'Change Role' });
+  const modal = (await page.getByRole('dialog').count())
+    ? page.getByRole('dialog')
+    : await userModal(page, row, name);
+  await modal.getByRole('button', { name: `Change Role for ${name}` }).click();
+  // Named by its sentence, which names the user.
+  const question = modal.getByRole('group', { name: new RegExp(name) });
   // The radio's name opens with the role, its description following.
-  await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
-  return dialog;
+  await question.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
+  return question;
 }
 
-/** Invites `email` from /admin/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
+/** Invites `email` from /keepers/invitations as the signed-in admin, to the admin role unless told otherwise, and answers the mailed link's path. */
 async function inviteAdmin(
   page: Page,
   email: string,
   { reason, role = 'Admin' }: { reason?: string; role?: 'Curator' | 'Admin' } = {},
 ): Promise<string> {
-  await visit(page, '/admin/invitations');
+  await visit(page, '/keepers/invitations');
   await page.getByRole('link', { name: 'New Invitation' }).click();
   const dialog = page.getByRole('dialog', { name: 'New Invitation' });
   await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
@@ -361,9 +382,11 @@ test(
     await expect(revoking).toHaveCount(0);
     await expect(roleCell(again)).toHaveText(/^User/);
     await expect(again.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+    // The modal stays open on the new role, its Change Role there to be used again.
     await expect(
-      again.getByRole('button', { name: 'Change Role for Fixture Person' }),
+      page.getByRole('dialog').getByRole('button', { name: 'Change Role for Fixture Person' }),
     ).toBeVisible();
+    await closeModal(page);
 
     await signInAgainAs(page, grantee);
     await expectAdminArea(page, false);
@@ -386,7 +409,7 @@ test.describe('the primary admin', () => {
       await signInAs(page, address('acting-admin'), ['discord'], 'admin');
 
       // Another admin's Change Role is there to be used: the guard is about the primary admin alone.
-      const peer = await userRow(page, peerEmail);
+      const peer = await userModal(page, await userRow(page, peerEmail), 'Fixture Person');
       const usable = peer.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(usable).toBeVisible();
       await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
@@ -395,16 +418,17 @@ test.describe('the primary admin', () => {
       const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
       await expect(row.getByRole('button', { name: 'Primary Admin' })).toBeVisible();
       await expect(roleCell(row)).toHaveText(/^Admin/);
-      const locked = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      const modal = await userModal(page, row, 'Fixture Person');
+      const locked = modal.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(locked).toHaveAttribute('aria-disabled', 'true');
       await expect(locked).toHaveAccessibleDescription(/\S/);
 
       // Pressed anyway, from the keyboard since a pointer click waits for an
-      // enabled control, it says why again and opens nothing.
+      // enabled control, it says why again and asks nothing.
       await locked.focus();
       await page.keyboard.press('Enter');
-      await expect(row.getByRole('alert')).toBeVisible();
-      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(modal.getByRole('alert')).toBeVisible();
+      await expect(modal.getByRole('radio')).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
       // Sent straight to the server, the revoke is refused there too.
@@ -427,7 +451,7 @@ test.describe('the primary admin', () => {
       const granteeEmail = address('paused-grantee');
       const { userId: grantee } = await signInAs(page, granteeEmail);
       const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
-      const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
+      const list = `/keepers/users?query=${encodeURIComponent(granteeEmail)}`;
       // The page's statement while paused, and none while open.
       const status = page.getByRole('main').getByRole('status');
 
@@ -451,20 +475,21 @@ test.describe('the primary admin', () => {
       await assertNoAccessibilityViolations(page);
 
       // The other admin's Change Role is locked; tried from the keyboard, it says
-      // why and opens nothing, and Approve is locked the same way.
+      // why and asks nothing, and Approve is locked the same way.
       await signInAgainAs(page, other);
       await visit(page, list);
       await expect(status).toBeVisible();
       const row = page.getByRole('row', { name: new RegExp(granteeEmail.replace(/[.]/g, '\\.')) });
-      const grant = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      const modal = await userModal(page, row, 'Fixture Person');
+      const grant = modal.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(grant).toHaveAttribute('aria-disabled', 'true');
       await expect(grant).toHaveAccessibleDescription(/\S/);
       await grant.focus();
       await page.keyboard.press('Enter');
-      await expect(row.getByRole('alert')).toBeVisible();
+      await expect(modal.getByRole('alert')).toBeVisible();
       await assertNoAccessibilityViolations(page);
-      await expect(page.getByRole('dialog')).toHaveCount(0);
-      const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
+      await expect(modal.getByRole('radio')).toHaveCount(0);
+      const approve = modal.getByRole('button', { name: 'Approve Fixture Person' });
       await expect(approve).toHaveAttribute('aria-disabled', 'true');
       await expect(approve).toHaveAccessibleDescription(/\S/);
       // Sent straight to the server, the grant is refused there too.
@@ -481,6 +506,7 @@ test.describe('the primary admin', () => {
       await granting.getByRole('button', { name: 'Promote' }).click();
       await expect(granting).toHaveCount(0);
       await expect(roleCell(row)).toHaveText(/^Admin/);
+      await closeModal(page);
 
       // And resumes.
       await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
@@ -519,21 +545,22 @@ test.describe('the primary admin', () => {
       );
       expect(demoted.length).toBeGreaterThan(0);
 
-      const response = await visit(page, '/admin/users?role=admin');
+      const response = await visit(page, '/keepers/users?role=admin');
       expect(response.status()).toBe(200);
       const admins = page.getByRole('row').filter({ has: page.getByRole('cell') });
       await expect(admins).toHaveCount(1);
       const row = await userRow(page, loneEmail);
 
       // The control is offered, since the list cannot know the count stays
-      // above one; pressed, the server refuses and the row says why.
+      // above one; pressed, the server refuses and the modal says why.
       const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
       await revoking.getByRole('button', { name: 'Demote' }).click();
       await expect(revoking).toHaveCount(0);
-      await expect(row.getByRole('alert')).toBeVisible();
-      // Said under the Change Role that opened the dialog, which has the focus back.
+      const modal = page.getByRole('dialog');
+      await expect(modal.getByRole('alert')).toBeVisible();
+      // Said under the Change Role that asked, which has the focus back.
       await expect(
-        row.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
+        modal.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
       ).toBeFocused();
       await assertNoAccessibilityViolations(page);
 
@@ -548,6 +575,8 @@ test(
   'an admin reads every privilege change newest first, with who, how, when and why, narrows it to one user, and a user meets the 403',
   { tag: '@story-61' },
   async ({ page }) => {
+    // A longer limit for this flow, which signs in four times and runs axe checks: it ran past the default 30s on CI.
+    test.setTimeout(60_000);
     const subjectEmail = address('ledger-subject');
     const { userId: subject } = await signInAs(page, subjectEmail);
     await rename(subject, 'Ledger Fixturewort');
@@ -560,8 +589,9 @@ test(
 
     // Two changes made where an admin makes them, each with its reason.
     const row = await userRow(page, subjectEmail);
-    await row.getByRole('button', { name: 'Approve Ledger Fixturewort' }).click();
-    const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
+    const modal = await userModal(page, row, 'Ledger Fixturewort');
+    await modal.getByRole('button', { name: 'Approve Ledger Fixturewort' }).click();
+    const approving = modal.getByRole('group', { name: /Ledger Fixturewort/ });
     await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
     await approving.getByRole('button', { name: 'Approve' }).click();
     await expect(approving).toHaveCount(0);
@@ -583,12 +613,12 @@ test(
     );
 
     // The ledger, by its tab on the People page beside Users.
-    await visit(page, '/admin/users');
+    await visit(page, '/keepers/users');
     const tab = page
       .getByRole('navigation', { name: 'People' })
       .getByRole('link', { name: 'Privilege Changes' });
     await tab.click();
-    await expect(page).toHaveURL(/\/admin\/privilege-changes$/);
+    await expect(page).toHaveURL(/\/keepers\/privilege-changes$/);
     await expect(tab).toHaveAttribute('aria-current', 'page');
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     // Every user's changes, not only this subject's: the seed's and each
@@ -614,7 +644,7 @@ test(
     }
     await history.click();
     await expect(page).toHaveURL(
-      `/admin/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
+      `/keepers/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
     );
     await expect(
       page.getByRole('search', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
@@ -679,7 +709,7 @@ test(
     await privilege.click();
     await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
     await expect(page).toHaveURL(
-      `/admin/privilege-changes?query=${encodeURIComponent(part)}&privilege=create_workspace`,
+      `/keepers/privilege-changes?query=${encodeURIComponent(part)}&privilege=create_workspace`,
     );
     await expect(rows).toHaveCount(1);
     await expect(rows.first().getByRole('cell').nth(1)).toHaveText('Ledger Fixturewort');
@@ -699,7 +729,7 @@ test(
 
     // The subject, a user again, is refused the ledger it has just been shown in.
     await signInAgainAs(page, subject);
-    const refused = await visit(page, '/admin/privilege-changes');
+    const refused = await visit(page, '/keepers/privilege-changes');
     expect(refused.status()).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
@@ -714,7 +744,7 @@ test(
   async ({ page }) => {
     const invited = address('invited');
     await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
-    await visit(page, '/admin/invitations');
+    await visit(page, '/keepers/invitations');
 
     const section = page.getByRole('region', { name: 'Admin Invitations' });
     // New Invitation is the tab's action, beside the page's heading.
@@ -742,13 +772,13 @@ test(
     const token = path.split('/').pop()!;
     expect(await page.content()).not.toContain(token);
     await assertNoAccessibilityViolations(page);
-    await visit(page, '/admin/invitations');
+    await visit(page, '/keepers/invitations');
     await expect(row).toBeVisible();
     expect(await page.content()).not.toContain(token);
 
     // A user is refused the page the admin has just used.
     await signInAs(page, address('not-an-admin'));
-    const refused = await visit(page, '/admin/invitations?invite');
+    const refused = await visit(page, '/keepers/invitations?invite');
     expect(refused.status()).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
@@ -758,7 +788,7 @@ test(
 );
 
 test(
-  'an invitation is accepted only by an account that has proved the invited address, which then lands on /admin as an admin',
+  'an invitation is accepted only by an account that has proved the invited address, which then lands on /keepers as an admin',
   { tag: '@story-62' },
   async ({ page, browser, baseURL }) => {
     const invited = address('invitee');
@@ -821,13 +851,13 @@ test(
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
     await accept.click();
-    await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.getByRole('heading', { level: 1, name: 'Admin' })).toBeVisible();
+    await expect(page).toHaveURL(/\/keepers$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Keepers' })).toBeVisible();
     await expectAdminArea(page, true);
 
     // The ledger records both grants as the invitation's, made by the
     // invitee, with the inviting admin's reason.
-    await visit(page, `/admin/privilege-changes?query=${encodeURIComponent(invited)}`);
+    await visit(page, `/keepers/privilege-changes?query=${encodeURIComponent(invited)}`);
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     await expect(rows).toHaveCount(2);
     const changes = await Promise.all(
@@ -859,7 +889,7 @@ test(
 // The same invitation, to the curator role. The acceptance is the
 // admin's above; this proves what accepting it grants, and what it does not.
 test(
-  'an invitation to the curator role lands its invitee on /admin with the curation pages and no People, both grants in the ledger',
+  'an invitation to the curator role lands its invitee on /curator with the curation pages, and Keepers without People, both grants in the ledger',
   { tag: '@story-62' },
   async ({ page }) => {
     const invited = address('curator-invitee');
@@ -870,16 +900,16 @@ test(
     await rename(invitee, 'Curator Fixturewort');
     await visit(page, path);
     await page.getByRole('button', { name: 'Accept Invitation' }).click();
-    await expect(page).toHaveURL(/\/admin$/);
-    await expectAdminArea(page, true);
-    const nav = page.getByRole('navigation', { name: 'Admin' });
+    await expect(page).toHaveURL(/\/curator$/);
+    const nav = page.getByRole('navigation', { name: 'Curator' });
     await expect(nav.getByRole('link', { name: 'Compendium', exact: true })).toBeVisible();
+    await expectAdminArea(page, true);
     await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
-    expect((await visit(page, '/admin/users')).status()).toBe(403);
+    expect((await visit(page, '/keepers/users')).status()).toBe(403);
 
     // The ledger is People's, so the inviting admin reads it.
     await signInAgainAs(page, admin);
-    await visit(page, `/admin/privilege-changes?query=${encodeURIComponent(invited)}`);
+    await visit(page, `/keepers/privilege-changes?query=${encodeURIComponent(invited)}`);
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     await expect(rows).toHaveCount(2);
     const changes = await Promise.all(
@@ -936,12 +966,12 @@ test(
     await signInAgainAs(page, accounts[usedEmail]);
     await visit(page, used);
     await page.getByRole('button', { name: 'Accept Invitation' }).click();
-    await expect(page).toHaveURL(/\/admin$/);
+    await expect(page).toHaveURL(/\/keepers$/);
     const usedReason = await expectInvitationRefused(page, used);
 
     // Withdrawn: the admin revokes it from the list after confirming.
     await signInAgainAs(page, admin);
-    await visit(page, '/admin/invitations');
+    await visit(page, '/keepers/invitations');
     const section = page.getByRole('region', { name: 'Admin Invitations' });
     await section
       .getByRole('button', { name: `Revoke the invitation to ${withdrawnEmail}` })

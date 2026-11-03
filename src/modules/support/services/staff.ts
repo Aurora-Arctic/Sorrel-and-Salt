@@ -16,6 +16,7 @@ import type {
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
@@ -110,6 +111,28 @@ export async function requestToAnswer(
   return row;
 }
 
+/**
+ * Refuses any change to an anonymised request, one whose sender was anonymised and which the System account now owns: a note,
+ * a reply, its assignee, its curator visibility or its issue link. It is never reopened, so there is no one to write to and
+ * nothing more to record.
+ *
+ * @throws {Forbidden} the request is anonymised.
+ */
+export function refuseAnonymised(request: SupportRequestRow): void {
+  if (request.createdBy === SYSTEM_ACTOR_ID) {
+    throw new Forbidden(
+      'This request is anonymised and can no longer be changed or written on; its sender is no longer on record',
+    );
+  }
+}
+
+/** The request an admin is about to change, read before the write so an anonymised one is refused first. */
+async function changeable(session: Session, id: string): Promise<string> {
+  const row = await visibleRequest(readerOf(session, READ_REFUSAL), id);
+  refuseAnonymised(row);
+  return row.id;
+}
+
 async function change(
   session: Session,
   id: string,
@@ -123,7 +146,7 @@ async function change(
 /**
  * Assigns the request to a curator or admin, or to no one. The assignee must be a live curator or admin.
  *
- * @throws {Forbidden} the session is not an admin.
+ * @throws {Forbidden} the session is not an admin, or the request is anonymised.
  * @throws {NotFound} no request has this id, or the assignee is not a live account.
  * @throws {ValidationError} the assignee is neither a curator nor an admin.
  */
@@ -133,7 +156,7 @@ export async function assignSupportRequest(
   assigneeId: string | null,
 ): Promise<SupportRequestRow> {
   assertSiteAdmin(session, ADMIN_REFUSAL);
-  const requestId = parseInput(RowId, id);
+  const requestId = await changeable(session, parseInput(RowId, id));
   if (assigneeId !== null) {
     const assignee = await findOneById(users, parseInput(RowId, assigneeId));
     if (!assignee) throw new NotFound('No such user');
@@ -146,14 +169,21 @@ export async function assignSupportRequest(
   return change(session, requestId, { assignedTo: assigneeId });
 }
 
-/** Marks the request visible or hidden to curators. */
+/**
+ * Marks the request visible or hidden to curators.
+ *
+ * @throws {Forbidden} the session is not an admin, or the request is anonymised.
+ * @throws {NotFound} no request has this id.
+ */
 export async function setSupportRequestCuratorVisible(
   session: Session,
   id: string,
   visible: boolean,
 ): Promise<SupportRequestRow> {
   assertSiteAdmin(session, ADMIN_REFUSAL);
-  return change(session, parseInput(RowId, id), { curatorVisible: visible });
+  return change(session, await changeable(session, parseInput(RowId, id)), {
+    curatorVisible: visible,
+  });
 }
 
 /**
@@ -193,11 +223,18 @@ export async function closeSupportRequest(
 ): Promise<SupportRequestRow> {
   const row = await requestToAnswer(session, id, 'close');
   const now = new Date();
-  return moveOrRefuse(session, row, ['open', 'waiting_on_sender', 'resolved'], 'close', {
-    status: 'closed',
-    closedAt: now,
-    lastStaffActivityAt: now,
-  });
+  const closed = await moveOrRefuse(
+    session,
+    row,
+    ['open', 'waiting_on_sender', 'resolved'],
+    'close',
+    {
+      status: 'closed',
+      closedAt: now,
+      lastStaffActivityAt: now,
+    },
+  );
+  return closed;
 }
 
 /** One guarded status move by staff; an explaining refusal when the status is not one the move starts from. */
@@ -219,14 +256,19 @@ export async function moveOrRefuse(
   return asRead(session, moved);
 }
 
-/** Links the request to a GitHub issue on this repository, or clears the link with null. */
+/**
+ * Links the request to a GitHub issue on this repository, or clears the link with null.
+ *
+ * @throws {Forbidden} the session is not an admin, or the request is anonymised.
+ * @throws {NotFound} no request has this id.
+ */
 export async function setSupportRequestIssueUrl(
   session: Session,
   id: string,
   issueUrl: string | null,
 ): Promise<SupportRequestRow> {
   assertSiteAdmin(session, ADMIN_REFUSAL);
-  const requestId = parseInput(RowId, id);
   const url = issueUrl === null ? null : parseInput(IssueUrlInput, issueUrl);
+  const requestId = await changeable(session, parseInput(RowId, id));
   return change(session, requestId, { issueUrl: url });
 }

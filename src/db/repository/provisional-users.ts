@@ -1,4 +1,4 @@
-import { and, eq, lt, not, or, sql } from 'drizzle-orm';
+import { and, eq, gt, lt, not, or, sql } from 'drizzle-orm';
 import { accounts } from '../../modules/identity/schema/auth';
 import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
@@ -22,7 +22,7 @@ function provisional(userId?: string) {
  * Hard-deletes one provisional account if it has lapsed (unverified, with a
  * provider `accounts` row, idle or older than the cap), outside `withAudit`:
  * a tombstone would block Better Auth's sign-in. A user with a privilege-ledger
- * row is kept. Returns whether the row went. (claude-docs/db/write-path.md, "Sweeping provisional accounts")
+ * row is kept. Returns whether the row went. (claude-docs/db/write-path.md, "Removing a lapsed provisional account")
  */
 export async function deleteLapsedProvisionalUser(
   userId: string,
@@ -67,12 +67,15 @@ export async function provisionalSecondsLeft(
 }
 
 /**
- * The ids of provisional accounts that have lapsed, oldest first, at most `limit`, by the
- * database's clock. The daily cleanup deletes each through `deleteLapsedProvisionalUser`.
+ * One page of the ids of provisional accounts that have lapsed, by the database's clock: in id
+ * order after `after` (from the start when null), at most `limit`. The daily cleanup deletes each
+ * through `deleteLapsedProvisionalUser`; paging by id keeps a page deleted meanwhile from moving
+ * the next one.
  */
 export async function findLapsedProvisionalUserIds(
   lifetimeSeconds: number,
   capSeconds: number,
+  after: string | null,
   limit: number,
 ): Promise<string[]> {
   const rows = await db
@@ -82,13 +85,14 @@ export async function findLapsedProvisionalUserIds(
       and(
         notSoftDeleted(users),
         provisional(),
+        after === null ? undefined : gt(users.id, after),
         or(
           lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
           lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
         ),
       ),
     )
-    .orderBy(users.createdAt)
+    .orderBy(users.id)
     .limit(limit);
   return rows.map((row) => row.id);
 }

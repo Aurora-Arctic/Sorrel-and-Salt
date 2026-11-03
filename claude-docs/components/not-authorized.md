@@ -1,6 +1,6 @@
 # NotAuthorized
 
-`src/components/NotAuthorized/` — what a signed-in non-admin sees at `/admin`:
+`src/components/NotAuthorized/` — what a signed-in non-admin sees at `/curator` or `/keepers`:
 a level-one "Not Authorized", two sentences saying what the area is for and
 that the account does not have admin rights, and a link back to `/`. It
 takes no props. `src/app/(shell)/forbidden.tsx` wraps it in `<main className="page-frame">` and Next renders that,
@@ -15,7 +15,7 @@ Two things are left out on purpose, and the test holds both:
   not something a refused visitor needs, and naming them invites the mail the
   next point rules out.
 - **No way to request access.** No button, no form, no contact link. An admin
-  is granted by another admin from `/admin/users` or invited by one (MB.59,
+  is granted by another admin from `/keepers/users` or invited by one (MB.59,
   MB.69), never requested, so a request control would promise a path that does
   not exist.
 

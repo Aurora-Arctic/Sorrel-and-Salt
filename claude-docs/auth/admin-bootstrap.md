@@ -309,10 +309,11 @@ verification window, and three hours at most. The argument is
   `users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
   hold only unverified rows, one for each half of the predicate. The
   mechanism is [`design-decisions/m15.49-job-mechanism.md`](../design-decisions/m15.49-job-mechanism.md).
-- **A run that is lost leaves its account in place.** A failed start is
-  logged at `error` and the sign-up carries on. That account then holds its
-  address until an admin removes it, as the callback sweep this job replaced would have removed it
-  at the next callback. The job runs the delete as its own step with
+- **A run that is lost leaves its account in place until the next daily
+  cleanup.** A failed start is logged at `error` and the sign-up carries on.
+  That account then holds its address until the daily cleanup, which a
+  Vercel Cron Job starts once a day, deletes it
+  (`src/modules/identity/jobs/provisional-cleanup.ts`). The job runs the delete as its own step with
   retries, so a step that fails is tried again rather than lost.
 - **An account an admin has vouched for is not removed** (MB.204). Approving
   an unverified account for coven creation (M5.8) or making it an admin
@@ -364,7 +365,9 @@ the tests [`tests.md`](tests.md).
   curation or people operation either (the `usersById` loader batch is left as it is), and the GraphQL `admin` and `curator` scopes are false for it, so `selfOrAdmin` falls back to `self`. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
-  `src/modules/identity/services/email.ts` writes nothing to `users.email`.
+  `src/modules/identity/services/email.ts` writes nothing to `users.email`:
+  the address asked for goes to `users.pending_email` until its link is
+  followed, replaced or lapses (below).
   It normalises and validates the address (`ValidationError` on `email`),
   refuses a change from a session created more than
   `EMAIL_CHANGE_WINDOW_SECONDS` ago (a day, as Better Auth's `freshAge` is for
@@ -377,17 +380,31 @@ the tests [`tests.md`](tests.md).
   `after`), so the call does not wait for either and a free address does not
   take longer to answer than a taken one. It tells the address being left that a
   change was asked for (`sender.notifyChangeRequested`: when, and the new
-  address's domain only, with no link in it), stamps the row as mailed (`recordVerificationSent`, which is also
-  what restarts a provisional caller's window), and asks the sender to mail
-  the new address a change link. The row's own, still-unverified address is
+  address's domain only, with no link in it), stamps the row as mailed and records the address as pending in one write
+  (`recordEmailChange`, which is also what restarts a provisional caller's window), and asks the sender to mail
+  the pending address a change link. A held address is recorded as pending too, so the two cases write alike; no link is
+  sent to it. The row's own, still-unverified address is
   mailed again instead; verified, there is nothing to do. Either way `next`
   is handed to the sender as given, for the link's landing.
-- **The address being left is told twice.** `src/emails/email-change-notice.tsx`
-  goes to the old address when the change is asked for and again when
-  `afterEmailVerification` runs on a change link (`noticeCompletedChange` in
-  `src/lib/auth.ts`, which reads the old address from the link's token). The
-  mail carries no action: a link in it would be one a thief could press.
-  Nothing is sent to a `.invalid` placeholder.
+- **The address being left is told twice.** `src/emails/email-change-notice.ts`
+  goes to the old address when the change is asked for and again once the
+  change completes. The swap's own write holds the old address in
+  `users.former_email`, and `afterEmailVerification` starts the account-notice
+  job (`kind: 'change-completed'`) with the account id and the origin alone
+  (`noticeCompletedChange` in `src/lib/auth.ts`). Its step reads
+  `former_email` when it sends, and clears it as the System account once the
+  transport took the mail, or once every attempt failed, since nothing sends
+  it again; with no run started, the one try in the request clears it after.
+  The clear matches the address mailed and the address the mail named, so a
+  move made while the notice was going out is still told. A second change that
+  completes before the first notice is sent keeps the first address left,
+  which is the one the notice is owed to, and that notice names the address
+  the account holds when it is sent. `former_email` has no unique index, so the
+  address is free for another account to sign up with or change to the moment
+  the change completes: the sign-up and the `EMAIL_TAKEN` gate read
+  `users.email` alone. The mail carries no action: a link in it would be one a
+  thief could press. Nothing is sent to a `.invalid` placeholder, and none is
+  held.
 - **One verification mail a minute per account.** `users.verification_sent_at`
   is set by every mail sent for the row's own account, and `setEmail`
   refuses the next within `RESEND_COOLDOWN_SECONDS` with a `VALIDATION`
@@ -401,13 +418,24 @@ the tests [`tests.md`](tests.md).
   held back by it. The page hands the form the seconds left, so a sign-up
   that lands on it sees the countdown from the start rather than a refusal
   on its first submit.
-- **The change link is Better Auth's own.** `src/lib/email-verification.ts`
-  mints `/verify-email`'s change token — `createEmailVerificationToken` with
-  `updateTo` and `requestType: 'change-email-verification'` — under the same
-  secret and the request's own base URL (`resolveBaseURL`, so a preview host
-  links to itself), and sends `verify-email.tsx` with `purpose: 'change'`.
+- **The change link is Better Auth's own, signed when it is sent.** `src/lib/email-verification.ts`
+  starts the secret-link job (`kind: 'change'`, [`email.md`](../email.md), "Secret links") with the account's id, the
+  request's own base URL (`resolveBaseURL`, so a preview host links to itself) and the guarded `next`, never an address.
+  Its step reads `users.email` and `users.pending_email`, mints `/verify-email`'s change token —
+  `createEmailVerificationToken` with `updateTo` set to the pending address and
+  `requestType: 'change-email-verification'` — under the same secret, and sends `verify-email.tsx` with
+  `purpose: 'change'` to the pending address; one a verified account has come to hold is sent nothing.
   Following it, `/verify-email` swaps `email` and sets `emailVerified` in
-  one adapter write, stamped by the update hook. `user.changeEmail` stays
+  one adapter write, stamped by the update hook, which clears `pending_email` in the same write.
+- **Only the newest change is honoured, and only while its link lasts.** A second change overwrites `pending_email`
+  and the stamp, so the first link is refused at the gate (`?error=CHANGE_REPLACED`) and the second is honoured. The job
+  sleeps for the link's lifetime after sending, then clears `pending_email` as the System account, but only while the
+  row still carries the stamp it was sent under, so a later change keeps its own address; a link followed after that is
+  refused as `?error=TOKEN_EXPIRED`. With `MAIL_TRANSPORT` unset, or a job that did not start, nothing lapses the
+  column: it stays until the next change or the swap, and the link itself has expired by then.
+- **A pending address blocks nobody.** `pending_email` has no unique index, so an address pending on one account is
+  still free for another to sign up with or ask for: the unique index on `email` decides only at verification, and the
+  gate refuses `EMAIL_TAKEN` from `users.email` alone, as before (MB.67's provisional sweep reads neither address). `user.changeEmail` stays
   off: this replaces it, and nothing on `/api/auth` is added.
 - **Every link lands on the confirmed view, carrying where the account was
   going** (MB.111). Better Auth would land a sign-up's link where the
@@ -440,7 +468,8 @@ the tests [`tests.md`](tests.md).
   `src/lib/auth.ts`, decodes the token's claims (not verified: it only ever
   refuses, and the endpoint verifies the signature after), refuses unless
   the session holds the row named by `email` (`?error=SIGN_IN_TO_VERIFY`,
-  or 403 with no `callbackURL`), refuses while
+  or 403 with no `callbackURL`), refuses unless `updateTo` is the row's `pending_email` (`CHANGE_REPLACED`, or
+  `TOKEN_EXPIRED` once it was cleared), refuses while
   another live row holds `updateTo` (`?error=EMAIL_TAKEN`, which the unique
   index would otherwise 500 on), and records the acting user so the write
   is stamped and `afterEmailVerification` runs — so a change to the
@@ -464,8 +493,8 @@ the tests [`tests.md`](tests.md).
   `src/graphql/context.ts` and passed to the service by the `setEmail`
   resolver — the way loaders are. `resend` calls
   `auth.api.sendVerificationEmail` with the request's own headers, so the
-  existing hook restarts the window and mails; `requestChange` mints and
-  sends as above. Each takes the `next` `setEmail` was given and lands its
+  existing hook restarts the window and mails; `requestChange` starts the
+  secret-link job as above, and `notifyChangeRequested` the account notice job, each with the account's id. Each takes the `next` `setEmail` was given and lands its
   link at `verifiedLanding(next)`. `auth` is imported at call time there,
   since the route is built at `NODE_ENV=production` in its tests.
 - **A provider that shared no address gets a placeholder.** `orPlaceholder`
@@ -492,7 +521,7 @@ the tests [`tests.md`](tests.md).
   `src/lib/account-email.ts`'s `verifyErrorMessage` (one sentence per code
   Better Auth or the gate appends, never the code), and the session's
   `signedInLanding` as `landing`, which Continue takes when there is no
-  `next`. That is `/admin` for an admin, a primary admin a followed link
+  `next`. That is `/keepers` for an admin, `/curator` for a curator, a primary admin a followed link
   has just promoted included, since the page reads the role after the
   link's write; a member's first coven; or `/coven` for someone in none
   (MB.257). `EmailForm` has two views: `?verified` on a verified row is
@@ -528,15 +557,18 @@ the tests [`tests.md`](tests.md).
 (the text is the public page `/terms`). It shows the version and date, links
 the text, and has one Agree & Continue button.
 
-- **The version is one constant.** `TERMS_VERSION` in
-  `src/lib/terms-version.ts` is printed by `/terms` and compared by the gate.
-  Raising it sends every account back through the acceptance page.
-- **The record is two nullable columns on `users`.** `terms_version` and
-  `terms_accepted_at` are null until an account agrees. `agreeToTerms`
+- **The version is a number.** The terms in force are the highest published
+  version of the terms document, read by `currentTermsVersion`
+  (`src/lib/current-terms-version.ts`), which answers 0 when none is
+  published. Publishing a new version sends every account back through the
+  acceptance page.
+- **The record is two nullable columns on `users`.** `agreed_terms_version`
+  and `terms_accepted_at` are null until an account agrees. `agreeToTerms`
   (`src/modules/identity/services/terms.ts`) writes both for the caller's own
-  row through `withAudit`, and takes no version: it records the one in force,
-  so a caller cannot record another. The GraphQL mutation of the same name
-  returns the row.
+  row through `withAudit`. It takes the version number the page showed and
+  refuses any number but the one in force, so a page left open across a
+  publish cannot agree to text it did not show. The GraphQL mutation of the
+  same name returns the row.
 - **The gate is in `requireSession()`, after the email check.** An account
   whose stored version is not the current one is redirected to
   `/account/terms?next=<path>`, the path coming from the same
@@ -548,8 +580,9 @@ the text, and has one Agree & Continue button.
 - **After agreeing the browser makes a full navigation** to `next`, or to the
   signed-in landing page when there is none, so the router does not reuse the
   cached redirect.
-- **Not gated:** signed-out visitors, `/terms`, the other document pages and
-  the public compendium.
+- **Not gated:** signed-out visitors, `/terms`, the other document pages,
+  the public compendium, and a paused account, which reaches only the support
+  pages and cannot agree while paused ("Pausing a user's access").
 - **The API is not gated the same way.** `/api/graphql` does not refuse an
   account that has not agreed; the gate covers pages only, as the entry for
   M15.57 specifies.
@@ -600,7 +633,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   (`SignOutButton`,
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
-- **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one `TabbedPage` titled Account, with the tabs Account, Sign-In and Support Requests (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH`, `ACCOUNT_TWO_FACTOR_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
+- **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one `TabbedPage` titled Account, with the tabs Account, Sign-In and Support Requests (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
 - **Two-Factor Sign-In (M16.10, Story 75).** Its own section; for an account with no password it says so and links to the Password section, since two-factor guards password sign-ins alone. The page writes its heading and intro and hands `TwoFactorSettings` (`components/PasswordSection/two-factor.tsx`) whether it is on ([`components/password-section.md`](../components/password-section.md), "Two-factor").
 - **Sign-In Methods lists the password and the passkeys too.** After the providers come a Password row (Set or Not Set, linking to the Password section) and a Passkeys row (how many, linking to the Passkeys section), so the list matches its sentence ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
 - **Passkeys (M16.8, Story 74).** A Passkeys section follows Password and Two-Factor Sign-In, at `/account/sign-in#passkeys`. Its intro says a passkey is tied
@@ -649,7 +682,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
-An admin grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/admin/users`
+An admin grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/keepers/users`
 (MB.59; [`admin-users.md`](admin-users.md), "Changing a site role"),
 where the primary admin cannot be revoked and a demotion that would leave no
 admin is refused. Changing who the primary admin is, is that section's too.
@@ -681,7 +714,7 @@ hand fix checks neither the primary admin nor the count the service does. The
 tasks that build the rest:
 
 - **MB.58 and MB.59** (built): the ledger, `user_privilege_changes` since
-  MB.194, and granting and revoking any other admin from `/admin/users`. The
+  MB.194, and granting and revoking any other admin from `/keepers/users`. The
   primary admin can be neither revoked nor deleted, and a revoke that would
   leave zero admins is refused (the record's "The primary admin" and
   "Revoking").
@@ -696,6 +729,76 @@ tasks that build the rest:
 - **MB.53** (built): Better Auth's `admin` plugin, with only its two
   impersonation endpoints reachable, since the rest would grant admin or
   delete users outside `withAudit` ([`impersonation.md`](impersonation.md)).
+
+### Pausing a user's access (M15.52)
+
+Specified in DESIGN.md §8, "An admin can pause a user's access", and argued in
+[`design-decisions/m15.52-site-access-pause.md`](../design-decisions/m15.52-site-access-pause.md).
+The table is DESIGN.md §5's `user_access_pauses` (M15.51).
+
+**Who and whom.** `pauseUserAccess(userId, until, note)` and `liftUserAccessPause(userId)` are admin-only
+(`assertSiteAdmin`), in `src/modules/identity/services/access-pause.ts`. Each refusal explains itself:
+
+- a curator or a user: `Forbidden`, "Only a site admin may pause or lift a user’s access";
+- the primary admin, the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL`: `Forbidden`, "The primary admin’s access cannot be paused";
+- the admin themselves: `Forbidden`, "You cannot pause your own access";
+- the System account or the signed-out sender account (neither is a person; `isStandInAccount` in `src/lib/system-actor.ts`): `Forbidden`, "This account is not a person, so its access cannot be paused". The service refuses; no table constraint does, as for the primary admin and the admin themselves, and neither account is listed on the Users page;
+- another admin while admin changes are paused (MB.62), unless the caller is the primary admin: the same refusal a revoke of admin gets;
+- a user already paused: a validation error, "This user is already paused; lift the pause first";
+- an `until` that is not in the future: a validation error on `until`, "Choose a time in the future";
+- a note missing, blank, or over 500 characters: a validation error on `note`, "Write a note saying why" or "Keep the note to 500 characters".
+
+Every pause, dated or open-ended, needs a note saying why: the GraphQL argument is required, the service refuses one blank once trimmed, and the column is NOT NULL with a CHECK that it holds a character other than whitespace. The note is stored trimmed. Lifting a user with no standing pause, a run-out one included, answers `NotFound`.
+
+**What a pause does.** Setting it lifts any run-out live row, deletes every row in `sessions` for the user and inserts
+the new pause, all in one `withAudit` transaction (`setUserAccessPause` in `src/db/repository/user-access-pauses.ts`).
+The session rows have no audit columns and no `deleted_at`, so they are deleted as Better Auth's own sign-out deletes them.
+
+**Signed in while paused.** A paused account signs in by every method, as any other does: nothing in `src/lib/auth.ts`
+reads the pause, so a wrong password still answers 401 and counts as a failed sign-in, and a right one counts as none. The
+pause is read once per request, in `sessionStateFromHeaders` in `src/lib/request-session.ts`, which records the standing
+pause on every session, an impersonation's included, as `accessPause`. From there:
+
+- **Pages.** `requireSignedIn()`, and every guard built on it, redirects to `/access-paused` from every page but
+  `/support` and `/account/support` and the pages beneath them (`isPausedViewPage` in `src/lib/access-paused.ts`).
+  `getSession()` answers the session on those pages and on `/` and `/sign-in`, which only send the account on to
+  `?next=` or its landing, and `null` on every other public page, so the compendium draws its signed-out view.
+- **The shell.** `getShellSession()` answers the session with the pause beside it, and `viewerOf` and `viewerIfSignedIn`
+  in `src/lib/viewer.ts` draw a paused viewer with no coven, curation, creation or invitation, keeping the count of their
+  own requests waiting on them. AppShell draws a caution notice above the page, in its own `Site Access` landmark:
+  "Your site access is paused until …" in UTC, or "with no end date", linking to the paused page.
+- **The API.** `createContext` in `src/graphql/context.ts` keeps the session for an operation whose every root field is one
+  the signed-in support form uses (`isSupportOperation` in `src/graphql/paused-operations.ts`: `supportDialogState`,
+  `mySupportRequests`, `mySupportRequest`, `sendSupportRequest`, `sendSupportMessage`, `resolveMySupportRequest`). Any
+  other operation, a fragment at the root, or a document that does not parse runs with no session and `accessPause` set, so a
+  public field answers as signed out and the rest answer `ACCESS_PAUSED` with `pausedUntil`.
+- **Support time-outs.** A paused user who is also timed out still reaches the support pages and reads their requests and
+  threads; only the send is refused, by the time-out, with its own sentence.
+- **The terms gate.** `requireSession()` does not send a paused account to `/account/terms`: the API refuses
+  `agreeToTerms` while the pause stands, so the acceptance page could only send it back to the paused page, and an
+  account that has not agreed to the current terms would never reach its support pages.
+
+The paused page's address carries nothing: the page reads the pause itself. An admin impersonating a paused user is shown all of this as the user is
+(`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
+
+**The paused page.** `/access-paused` is public in the proxy (`src/proxy.ts`), since the proxy reads a paused session as
+signed out, and it sits outside the app shell and is not indexed. It reads the viewer's own standing pause through
+`getShellSession()`, as the shell does: a dated pause names its end with `LocalTime`, the format the site prints an end in,
+and an open-ended one says it has no end date. A visitor with no session is sent to `/sign-in`, and a session with no pause
+standing, lifted or ended, to `/`. Its Support link is a `SupportLink`, so it opens the Support dialog over the page as the
+footer's does; a paused account sends from it signed in. The page has no account menu, so it also links "your requests" to
+`/account/support` itself. It reads the viewer's standing support time-out through `getMySupportTimeout`, skipped for an
+unverified account, whose support reads refuse it. With one standing, the page drops that paragraph and its Support link,
+since the dialog could send nothing, and says instead "You cannot send a support request until …", in `LocalTime`'s long
+form, or with no end "You cannot send a support request: you are timed out with no end date.", then "You can still read your requests.", with "read your requests" linking
+to `/account/support`. It also links to the compendium, which it reads as any signed-out visitor.
+
+**Ending.** A dated pause ends by itself once `until` passes, with no write, and a lift stamps `lifted_at` and `lifted_by`.
+Either way the next request of a session signed in while paused reaches the whole site.
+**In the user modal.** The People page's user modal has a Site Access section (`claude-docs/components/user-detail.md`)
+where an admin sets a pause, lifts the one that stands, and reads the earlier ones with who set and who lifted each. It is
+absent on the primary admin and on the admin's own account. The history is read through `listUserAccessPauses`, a
+keyset page newest first, which GraphQL serves as the paged `userAccessPauses` query for site admins.
 
 ### The self-created user
 
@@ -759,12 +862,12 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
 - **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a
   card already accepted stays accepted. A single card is never revoked on its own.
 - **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, cards, accepted, pending),
-  counted in SQL. The Invitation Cards tab at `/admin/invitation-cards` shows it; the QR codes cannot be
+  counted in SQL. The Invitation Cards tab at `/keepers/invitation-cards` shows it; the QR codes cannot be
   redrawn from it.
 - **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
   account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
   CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
-  would read as a formula. The Card Sign-Ups tab at `/admin/card-sign-ups` offers it as a download.
+  would read as a formula. The Card Sign-Ups tab at `/keepers/card-sign-ups` offers it as a download.
 - **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
   expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
   and the service writes one row per card, account and reason, counting repeats

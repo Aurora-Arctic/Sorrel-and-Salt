@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { afterEach, beforeEach, vi } from 'vitest';
 import type postgres from 'postgres';
 import { E } from '../as-user';
-import { TERMS_VERSION } from '@/lib/terms-version';
 import { asManualFix } from './privileges';
 import { useTestDatabase } from './database';
 import type {
@@ -44,8 +43,9 @@ export function setUpInvitationAcceptance(onClient: (client: postgres.Sql) => vo
   ) {
     await asManualFix(sql, async (tx) => {
       await tx`
-      insert into users (id, name, email, email_verified, role, can_create_workspace, terms_version, terms_accepted_at, created_by, updated_by)
-      values (${id}, 'Fixture Person', ${email}, ${verified}, ${role}, ${role !== 'user'}, ${TERMS_VERSION}, now(), ${id}, ${id})
+      insert into users (id, name, email, email_verified, role, can_create_workspace, agreed_terms_version, terms_accepted_at, created_by, updated_by)
+      values (${id}, 'Fixture Person', ${email}, ${verified}, ${role}, ${role !== 'user'},
+        (select max(v.number) from document_versions v join documents d on d.id = v.document_id where d.key = 'terms' and d.deleted_at is null and v.status = 'published' and v.deleted_at is null), now(), ${id}, ${id})
     `;
     });
   }

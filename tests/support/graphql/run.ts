@@ -6,9 +6,11 @@ import { schema } from '@/graphql/schema';
 import type { Context } from '@/graphql/types';
 import type { Session } from '@/lib/session';
 import {
+  noDocumentMailingNotifier,
   noInvitationSender,
   noPasswordSetter,
   noSender,
+  noPauseNotifier,
   noSupportNotifier,
 } from '../email-verification';
 import type { Answer, ContextOverrides } from './types';
@@ -45,6 +47,8 @@ function runnerOn(target: GraphQLSchema) {
         invitations: noInvitationSender,
         passwords: noPasswordSetter,
         support: noSupportNotifier,
+        pauses: noPauseNotifier,
+        documents: noDocumentMailingNotifier,
         ...context,
       },
     );

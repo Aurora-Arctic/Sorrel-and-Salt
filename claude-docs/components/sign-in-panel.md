@@ -24,7 +24,7 @@ obvious retry, going back through the provider's tab, replays a state that is
 already dead. That is how MB.12's Facebook check first failed.
 
 `next` is absent when the page was given none, or an unsafe one: there is no
-return path, and the callback lands the account by its role, `/admin` for an
+return path, and the callback lands the account by its role, `/keepers` for an admin, `/curator` for a curator, `/coven` for an
 admin and `/coven` for anyone else
 ([`auth/route-protection.md`](../auth/route-protection.md), "Route protection").
 `socialSignInTarget(next)` (`src/lib/sign-in.ts`) builds what the click hands
@@ -168,14 +168,18 @@ compare by value, so a real provider id is stable too.
 Each provider button is a `BusyButton` in its own `ProviderButton`
 (`provider-button.tsx`). The one pressed goes busy ("Signing In", with the
 spinner and `aria-busy`) and `aria-disabled`, not `disabled`, so the focus
-stays on it for a failure's callout; its handler refuses a second press. The
-others are `disabled` while it is, since a page being left has no use for
-their tab stops. Once
+stays on it for a failure's callout; its handler refuses a second press. Every
+other control on the panel, the other providers, Sign In with a Passkey and
+Continue with Email, is `disabled` while it is, since a page being left has no
+use for their tab stops. The panel holds the one attempt under way, a
+provider's or the passkey's (`SignInAttempt` in `types.ts`), so the same holds
+while the passkey prompt is open. Once
 `signIn.social` answers without an error the redirect has started, and the panel
 calls `reportLeaving()` so the page bar stays up until the browser leaves; a
 back-forward cache return (`pageshow` with `persisted`) clears the busy button.
 A failure before the redirect frees every button and says so under the one
-pressed ("Error state").
+pressed ("Error state"). The password form's submit is on the email view, which
+shows none of these, so it holds only itself.
 
 ## Error state
 
@@ -368,7 +372,10 @@ with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
 explicit `/coven`;
 no alert exists without an error and one appears with a passed-in error;
 the pressed button goes busy and `aria-disabled` with the focus kept, the
-others `disabled`, and a second press is refused; a failing or throwing
+others `disabled`, and a second press is refused; Sign In with a Passkey and
+Continue with Email are `disabled` while a provider's hop is under way and
+freed by its failure (and `passkey-button.test.tsx` holds the providers and
+Continue with Email while the prompt is open, freeing them when it fails); a failing or throwing
 `signIn.social` opens one alert under the pressed button, keeps the focus
 there, frees every button, describes the button, and Dismiss and the badge
 close and reopen it; the badge is named without the last-used mark; the next

@@ -36,7 +36,7 @@ test.describe('Story 91: A Sender Answers in the Thread', { tag: '@story-91' }, 
     });
 
     await test.step('the admin replies and waits on the sender', async () => {
-      await adminPage.goto('/admin/support');
+      await adminPage.goto('/keepers/support');
       await adminPage.getByRole('link', { name: subject }).click();
       const adminDialog = adminPage.getByRole('dialog', { name: subject });
       await sendAs(adminDialog, 'Reply');

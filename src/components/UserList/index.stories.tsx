@@ -22,8 +22,8 @@ const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntr
 });
 
 // Render-only; behaviour is asserted in tests/components/UserList. The filter, the
-// pager and each name's privilege changes icon reach `/admin/users` and
-// `/admin/privilege-changes`, which the workshop does not serve.
+// pager and each name's privilege changes icon reach `/keepers/users` and
+// `/keepers/privilege-changes`, which the workshop does not serve.
 const meta = {
   title: 'Admin / User List',
 } satisfies Meta;
@@ -38,6 +38,7 @@ const USERS: readonly UserListEntry[] = [
     role: 'admin',
     canCreateWorkspace: true,
     createdAt: new Date('2026-03-04T05:06:07Z'),
+    agreedTermsVersion: 1,
     providers: ['discord', 'google'],
     emailVerified: true,
     primaryAdmin: false,
@@ -49,11 +50,13 @@ const USERS: readonly UserListEntry[] = [
     role: 'user',
     canCreateWorkspace: false,
     createdAt: new Date('2026-05-06T07:08:09Z'),
+    // Never agreed, so the Terms column says so.
+    agreedTermsVersion: null,
     providers: ['microsoft'],
     emailVerified: false,
     primaryAdmin: false,
   }),
-  // Approved, so the row shows Yes and no control: Revoke is in the user modal alone.
+  // Approved, so the row shows Yes.
   listed({
     id: 'u-cy',
     name: 'Cy Fixturewort',
@@ -61,6 +64,7 @@ const USERS: readonly UserListEntry[] = [
     role: 'user',
     canCreateWorkspace: true,
     createdAt: new Date('2026-06-07T08:09:10Z'),
+    agreedTermsVersion: 1,
     // Facebook among them, so its mark shows.
     providers: ['facebook', 'google'],
     emailVerified: true,
@@ -71,7 +75,7 @@ const USERS: readonly UserListEntry[] = [
 // Each story sits inside the admin layout's frame and the People page, Users tab
 // open, with the switch on admin changes beside the heading where a story gives it.
 
-// The page as /admin/users draws it where impersonation is registered: seven columns,
+// The page as /keepers/users draws it where impersonation is registered: nine columns,
 // facts no control changes muted, Impersonate red in its red-ruled column at the right.
 // Impersonate and Pause Admin Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
 // shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
@@ -118,6 +122,7 @@ const PAGE_TWO: readonly UserListEntry[] = Array.from({ length: 25 }, (_, index)
     role: 'user',
     canCreateWorkspace: index % 4 !== 0,
     createdAt: new Date(Date.UTC(2026, 2, 4) + index * 86_400_000),
+    agreedTermsVersion: 1,
     providers: index % 2 === 0 ? ['google'] : ['discord'],
     emailVerified: true,
     primaryAdmin: false,
@@ -165,36 +170,9 @@ const withoutImpersonationNode = (
   </AdminTabbedFrame>
 );
 
-// Two users awaiting approval, one unverified and one verified. Approve
-// on the first opens a confirmation warning that nobody has proved who holds
-// the address; on the second, none.
-const unverifiedApprovalNode = (
-  <AdminTabbedFrame page="people">
-    <UserList
-      users={[
-        USERS[1] as UserListEntry,
-        listed({
-          id: 'u-di',
-          name: 'Di Fixturewort',
-          email: 'di@users.test',
-          role: 'user',
-          canCreateWorkspace: false,
-          createdAt: new Date('2026-07-08T09:10:11Z'),
-          providers: ['discord'],
-          emailVerified: true,
-          primaryAdmin: false,
-        }),
-      ]}
-      query=""
-      awaitingApproval
-    />
-  </AdminTabbedFrame>
-);
-
-// The primary admin, labelled, with Change Role in view but unusable (reason
-// beside it). Every other row's Change Role opens the roles the user lacks, with
-// a promotion warning on Bo's unverified address. Dee is a curator, in bold as an
-// admin is, with no coven-creation control since every curator holds it.
+// The primary admin, labelled with the crown and its tip. Dee is a curator, in bold
+// as an admin is, and Yes under Can Create, as every curator holds it. Change Role
+// is the user modal's (UserDetail's stories).
 const adminRolesNode = (
   <AdminTabbedFrame page="people">
     <UserList
@@ -207,6 +185,7 @@ const adminRolesNode = (
           role: 'admin',
           canCreateWorkspace: true,
           createdAt: new Date('2026-08-09T10:11:12Z'),
+          agreedTermsVersion: 1,
           providers: ['google'],
           emailVerified: true,
           primaryAdmin: false,
@@ -218,6 +197,7 @@ const adminRolesNode = (
           role: 'curator',
           canCreateWorkspace: true,
           createdAt: new Date('2026-08-10T11:12:13Z'),
+          agreedTermsVersion: 1,
           providers: ['discord'],
           emailVerified: true,
           primaryAdmin: false,
@@ -230,29 +210,19 @@ const adminRolesNode = (
   </AdminTabbedFrame>
 );
 
-// The switch as the Users tab's action beside the heading, as /admin/users draws it.
-// Paused: the warning and a usable Resume, and every row's control usable.
+// The switch as the Users tab's action beside the heading, as /keepers/users draws it.
+// Paused: the warning and a usable Resume.
 const adminChangesPausedNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
-    <UserList
-      users={USERS}
-      query=""
-      awaitingApproval={false}
-      adminChanges={{ paused: true, canToggle: true }}
-    />
+    <UserList users={USERS} query="" awaitingApproval={false} />
   </AdminTabbedFrame>
 );
 
-// Paused, to another admin: the warning, Resume locked with its reason in a
-// tip, and every Change Role and Approve locked with the pause's reason.
+// Paused, to another admin: the warning, and Resume locked with its reason in a
+// tip.
 const adminChangesNotPrimaryNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
-    <UserList
-      users={USERS}
-      query=""
-      awaitingApproval={false}
-      adminChanges={{ paused: true, canToggle: false }}
-    />
+    <UserList users={USERS} query="" awaitingApproval={false} />
   </AdminTabbedFrame>
 );
 
@@ -264,7 +234,6 @@ const LISTED_STATES: Record<string, ReactNode> = {
   'Role Filter': roleFilterNode,
   'No Matches': noMatchesNode,
   'Without Impersonation': withoutImpersonationNode,
-  'Unverified Approval': unverifiedApprovalNode,
   'Admin Roles': adminRolesNode,
   'Admin Changes Paused': adminChangesPausedNode,
   'Admin Changes Not Primary': adminChangesNotPrimaryNode,

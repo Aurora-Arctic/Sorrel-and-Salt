@@ -8,21 +8,27 @@ import { USERS_PATH, userListHref } from './href';
 import { ROLES, ROLE_LABELS } from './roles';
 import type { UserListFilterProps, UserListFilterValue } from './types';
 
-// The user list's filter in `FilterForm`: search text is sent by the magnifier or Enter; Role and Needs Approval apply on change
+// The user list's filter in `FilterForm`: search text is sent by the magnifier or Enter; Role and the three switches apply on change
 // (claude-docs/components/user-list.md, "The user link and the filter").
-const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps): ReactElement => {
+const UserListFilter = ({
+  query,
+  awaitingApproval,
+  role,
+  timedOut = false,
+  paused = false,
+}: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();
   /** The filter shown with one field changed, the search text typed carried, from the first page. */
   const hrefWith = (change: Partial<UserListFilterValue>) =>
-    userListHref({ query: draftQuery.trim(), awaitingApproval, role, ...change });
+    userListHref({ query: draftQuery.trim(), awaitingApproval, role, timedOut, paused, ...change });
 
   return (
     <FilterForm
       label="Filter Users"
       action={USERS_PATH}
       searchHref={() => hrefWith({})}
-      shown={[query, role, awaitingApproval]}
+      shown={[query, role, awaitingApproval, timedOut, paused]}
     >
       <SearchField
         label="Name or Email"
@@ -45,6 +51,20 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
         value=""
         defaultChecked={awaitingApproval}
         onChange={(checked) => apply(hrefWith({ awaitingApproval: checked }))}
+      />
+      <SwitchField
+        label="Support Timed Out"
+        name="timed-out"
+        value=""
+        defaultChecked={timedOut}
+        onChange={(checked) => apply(hrefWith({ timedOut: checked }))}
+      />
+      <SwitchField
+        label="Access Paused"
+        name="paused"
+        value=""
+        defaultChecked={paused}
+        onChange={(checked) => apply(hrefWith({ paused: checked }))}
       />
     </FilterForm>
   );

@@ -5,6 +5,7 @@ import { emailPagePath } from '../../lib/account-email';
 import { signedInLanding } from '../../lib/landing';
 import { getSession, sessionIsVerified } from '../../lib/request-session';
 import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
+import { siteUrl } from '../../lib/site';
 // Server-only, as social-providers-config.ts's own header says. This page is a server component, so
 // the env var names this reads never reach the client bundle; only the resulting `configured` ids are
 // passed as a prop.
@@ -12,9 +13,18 @@ import { safeReturnPath, signInErrorMessage } from '../../lib/sign-in';
 import { configuredProviders } from '../../lib/social-providers-config';
 import type { SignInPageProps } from './types';
 
-export const metadata: Metadata = {
-  title: 'Sign In',
-};
+/**
+ * The bare address is the one to index. `?next=` and `?error=` show the same form, so they name it
+ * as canonical and stay out of search results, their links still followed.
+ */
+export async function generateMetadata({ searchParams }: SignInPageProps): Promise<Metadata> {
+  const { next, error } = await searchParams;
+  return {
+    title: 'Sign In',
+    alternates: { canonical: siteUrl('/sign-in') },
+    ...((next !== undefined || error !== undefined) && { robots: { index: false, follow: true } }),
+  };
+}
 
 // No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is
 // reachable while signed out.

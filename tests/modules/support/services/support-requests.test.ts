@@ -1,12 +1,16 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
-import type { PageRequest } from '@/lib/types';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
+import type { Cursor, PageEntry, PageRequest } from '@/lib/types';
 import {
   assignSupportRequest,
+  closeSupportRequest,
+  countSupportRequests,
   getMySupportRequest,
   countMySupportRequestsByStatus,
-  getMySupportTimeoutEnd,
+  getMySupportTimeout,
   getSupportRequest,
   liftSupportTimeout,
   listMySupportRequests,
@@ -20,16 +24,27 @@ import {
   setSupportRequestIssueUrl,
   timeOutSupportSender,
   timeoutsForSenders,
+  standingTimeoutsOf,
   usersNamedOnRequests,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
+import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 
 // The support services by direct call: who may send, read, answer and manage a request, each refusal paired with the
 // same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
+
+// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+const replyNotices = () =>
+  startJob.mock.calls.filter(([job]) => job === supportReplyNotice).map(([, args]) => args);
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -37,6 +52,7 @@ useTestDatabase((client) => {
 });
 
 beforeEach(async () => {
+  startJob.mockClear();
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
 });
 
@@ -44,23 +60,9 @@ const PAGE: PageRequest = { limit: 101, inverted: false };
 const FUTURE = () => new Date(Date.now() + 3_600_000);
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 
-function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids: string[] } {
-  const sent: string[] = [];
-  const subjects: string[] = [];
-  const ids: string[] = [];
+function notifier(): SupportNotifier {
   return {
-    sent,
-    subjects,
-    ids,
-    replyWaiting: async (to, subject, requestId) => {
-      ids.push(requestId);
-      sent.push(to);
-      subjects.push(subject);
-    },
-    received: async () => undefined,
-    resolved: async () => undefined,
-    closingSoon: async () => undefined,
-    signedOutReply: async () => undefined,
+    origin: async () => 'http://localhost:3000',
   };
 }
 
@@ -68,17 +70,8 @@ const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest
   sendSupportRequest(asUser(user), input, notifier());
 
 const mail: SupportNotifier = {
-  replyWaiting: async () => undefined,
-  received: async () => undefined,
-  resolved: async () => undefined,
-  closingSoon: async () => undefined,
-  signedOutReply: async () => undefined,
+  origin: async () => 'http://localhost:3000',
 };
-
-async function emailOf(user: SessionUser): Promise<string> {
-  const [row] = await sql`select email from users where id = ${user.id}`;
-  return row!.email as string;
-}
 
 describe('sendSupportRequest', () => {
   it('lets a viewer and an account in no coven send', async () => {
@@ -165,12 +158,36 @@ describe('sendSupportRequest', () => {
 
   it('refuses a send during a time-out, naming its end, and allows it once lifted', async () => {
     const until = new Date(Date.now() + 7_200_000);
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
+    const timeout = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      until,
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
     const refusal = await failureOf(send(C));
     expect(refusal).toBeInstanceOf(Forbidden);
     expect((refusal as Forbidden).message).toContain(
       until.toISOString().slice(0, 16).replace('T', ' '),
     );
+
+    await liftSupportTimeout(asUser(E), timeout.id);
+    expect(await send(C)).toBeDefined();
+  });
+
+  it('refuses a send during a time-out with no end date, saying so, and allows it once lifted', async () => {
+    const timeout = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      null,
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+    const refusal = await failureOf(send(C));
+    expect(refusal).toBeInstanceOf(Forbidden);
+    expect((refusal as Forbidden).message).toContain('timed out with no end date');
 
     await liftSupportTimeout(asUser(E), timeout.id);
     expect(await send(C)).toBeDefined();
@@ -396,7 +413,7 @@ describe('supportRequests', () => {
 });
 
 describe('replyToSupportRequest', () => {
-  it('lets an admin reply to any request, stores the reply and notifies the sender without its text', async () => {
+  it('lets an admin reply to any request, stores the reply and starts its notice with ids alone', async () => {
     const request = await send(C);
     const mail = notifier();
     const reply = await replyToSupportRequest(asUser(E), request.id, 'A secret answer.', mail);
@@ -406,9 +423,7 @@ describe('replyToSupportRequest', () => {
       body: 'A secret answer.',
       createdBy: E.id,
     });
-    expect(mail.sent).toEqual([await emailOf(C)]);
-    expect(mail.subjects).toEqual([INPUT.subject]);
-    expect(mail.ids).toEqual([request.id]);
+    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 
   it('lets a curator reply only to a request assigned to them', async () => {
@@ -419,7 +434,7 @@ describe('replyToSupportRequest', () => {
     expect(
       await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hi.', mail)),
     ).toBeInstanceOf(Forbidden);
-    expect(mail.sent).toEqual([]);
+    expect(replyNotices()).toEqual([]);
 
     await assignSupportRequest(asUser(E), request.id, F.id);
     expect((await replyToSupportRequest(asUser(F), request.id, 'Hi.', mail)).createdBy).toBe(F.id);
@@ -500,26 +515,191 @@ describe('admin-only changes', () => {
 
   it('times a sender out and lifts it, refusing a curator both', async () => {
     expect(asUser(F).role).toBe('curator');
-    expect(await failureOf(timeOutSupportSender(asUser(F), C.id, FUTURE(), null))).toBeInstanceOf(
-      Forbidden,
+    expect(
+      await failureOf(
+        timeOutSupportSender(asUser(F), C.id, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE),
+      ),
+    ).toBeInstanceOf(Forbidden);
+    const timeout = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      FUTURE(),
+      ' spam ',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
     );
-    const timeout = await timeOutSupportSender(asUser(E), C.id, FUTURE(), ' spam ');
     expect(timeout).toMatchObject({ userId: C.id, note: 'spam', liftedAt: null });
 
     expect(await failureOf(liftSupportTimeout(asUser(F), timeout.id))).toBeInstanceOf(Forbidden);
     expect((await liftSupportTimeout(asUser(E), timeout.id)).liftedAt).toBeInstanceOf(Date);
   });
 
+  it.each([
+    ['the System account', SYSTEM_ACTOR_ID],
+    ['the signed-out sender account', SIGNED_OUT_SENDER_ID],
+  ])('refuses to time out %s, which is not a person, saying why', async (_label, accountId) => {
+    // Why this could have succeeded: the account is a live user, and the same call times a person out.
+    expect(
+      await sql`select id from users where id = ${accountId} and deleted_at is null`,
+    ).toHaveLength(1);
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE);
+    expect(await sql`select id from support_timeouts where user_id = ${C.id}`).toHaveLength(1);
+
+    const error = await failureOf(
+      timeOutSupportSender(asUser(E), accountId, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE),
+    );
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toBe(
+      'This account is not a person, so it cannot be timed out of support',
+    );
+    expect(await sql`select id from support_timeouts where user_id = ${accountId}`).toHaveLength(0);
+  });
+
+  it('times a sender out with no end date, and the time-out stands until lifted', async () => {
+    const timeout = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      null,
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+    expect(timeout).toMatchObject({ userId: C.id, until: null, note: 'Spam', liftedAt: null });
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(timeout.id);
+
+    await liftSupportTimeout(asUser(E), timeout.id);
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeUndefined();
+  });
+
+  it('lists the open-ended time-out for a sender who also holds a dated one', async () => {
+    await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      new Date(Date.now() + 86_400_000),
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+    const open = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      null,
+      'Spam again',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+    await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      new Date(Date.now() + 2 * 86_400_000),
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(open.id);
+  });
+
+  it.each([
+    ['no note', undefined],
+    ['a null note', null],
+    ['a blank note', '   '],
+  ])('refuses a time-out with %s, in its own sentence, and sets none', async (_what, note) => {
+    const refusal = await failureOf(
+      timeOutSupportSender(
+        asUser(E),
+        C.id,
+        null,
+        note as unknown as string,
+        noPauseNotifier,
+        PAUSE_MESSAGE,
+      ),
+    );
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as Error).message).toBe('Write a note saying why');
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeUndefined();
+  });
+
+  it('refuses a note over 500 characters, in its own sentence', async () => {
+    const refusal = await failureOf(
+      timeOutSupportSender(asUser(E), C.id, null, 'x'.repeat(501), noPauseNotifier, PAUSE_MESSAGE),
+    );
+    expect((refusal as Error).message).toBe('Keep the note to 500 characters');
+  });
+
+  it.each([
+    ['a curator', F],
+    ['a plain user', B],
+  ])('refuses %s setting or lifting a time-out by direct id', async (_who, caller) => {
+    // The precondition: an admin may set the same open-ended time-out on the same sender, and lift it.
+    const set = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      null,
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+    expect(set.userId).toBe(C.id);
+
+    expect(
+      await failureOf(
+        timeOutSupportSender(asUser(caller), C.id, null, 'Spam', noPauseNotifier, PAUSE_MESSAGE),
+      ),
+    ).toBeInstanceOf(Forbidden);
+    expect(await failureOf(liftSupportTimeout(asUser(caller), set.id))).toBeInstanceOf(Forbidden);
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]?.id).toBe(set.id);
+    expect((await liftSupportTimeout(asUser(E), set.id)).liftedAt).toBeInstanceOf(Date);
+  });
+
   it('refuses a time-out that ends in the past', async () => {
     expect(
-      await failureOf(timeOutSupportSender(asUser(E), C.id, new Date(Date.now() - 1000), null)),
+      await failureOf(
+        timeOutSupportSender(
+          asUser(E),
+          C.id,
+          new Date(Date.now() - 1000),
+          'Spam',
+          noPauseNotifier,
+          PAUSE_MESSAGE,
+        ),
+      ),
     ).toBeInstanceOf(ValidationError);
   });
 
   it('reads a sender’s time-outs for an admin alone', async () => {
-    await timeOutSupportSender(asUser(E), C.id, FUTURE(), null);
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE);
     expect((await timeoutsForSenders(asUser(E), [C.id]))[0]).toHaveLength(1);
     expect((await timeoutsForSenders(asUser(F), [C.id]))[0]).toBeInstanceOf(Forbidden);
+  });
+});
+
+describe('standingTimeoutsOf', () => {
+  it('answers each sender’s standing time-out in the order asked, and none where none stands', async () => {
+    const standing = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      FUTURE(),
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+
+    const answered = await standingTimeoutsOf(asUser(E), [D.id, C.id]);
+
+    expect(answered.map((row) => row?.id)).toEqual([undefined, standing.id]);
+  });
+
+  it.each([
+    ['a curator', F],
+    ['a plain user', B],
+  ])('refuses %s with Forbidden', async (_who, caller) => {
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE);
+    // The precondition: the same read by an admin answers the time-out.
+    expect((await standingTimeoutsOf(asUser(E), [C.id]))[0]).toBeDefined();
+
+    expect(await failureOf(standingTimeoutsOf(asUser(caller), [C.id]))).toBeInstanceOf(Forbidden);
   });
 });
 
@@ -559,21 +739,93 @@ describe('the cursor', () => {
   });
 });
 
-describe('getMySupportTimeoutEnd', () => {
+describe('an anonymised request in the staff list', () => {
+  // Two ordinary closed requests and an anonymised one sent after both: newest first alone would put it ahead of them.
+  const closedTrio = async () => {
+    const older = await send(C);
+    const newer = await send(D);
+    const anonymised = await send(C);
+    for (const request of [older, newer, anonymised]) {
+      await closeSupportRequest(asUser(E), request.id);
+    }
+    await sql`update support_requests set created_at = now() - interval '2 hours' where id = ${older.id}`;
+    await sql`update support_requests set created_at = now() - interval '1 hour' where id = ${newer.id}`;
+    await sql`update support_requests set created_by = ${SYSTEM_ACTOR_ID} where id = ${anonymised.id}`;
+    return { older, newer, anonymised };
+  };
+
+  it('comes after every ordinary request in the same view, though it is the newest', async () => {
+    const { older, newer, anonymised } = await closedTrio();
+    const [{ created_at: anonymisedAt }] =
+      await sql`select created_at from support_requests where id = ${anonymised.id}`;
+    const [{ created_at: newerAt }] =
+      await sql`select created_at from support_requests where id = ${newer.id}`;
+    expect(anonymisedAt.getTime()).toBeGreaterThan(newerAt.getTime());
+
+    const ids = (await listSupportRequests(asUser(E), { view: 'closed' }, PAGE)).map(
+      (entry) => entry.node.id,
+    );
+
+    expect(ids).toEqual([newer.id, older.id, anonymised.id]);
+  });
+
+  it('pages across the boundary one row at a time, every row once and in order, and counts the rows before it', async () => {
+    const { older, newer, anonymised } = await closedTrio();
+    const seen: PageEntry<{ id: string }>[] = [];
+    let after: Cursor | undefined;
+    for (let page = 0; page < 10; page += 1) {
+      const entries = await listSupportRequests(
+        asUser(E),
+        { view: 'closed' },
+        { limit: 1, inverted: false, ...(after ? { after } : {}) },
+      );
+      if (entries.length === 0) break;
+      seen.push(...entries);
+      after = entries[entries.length - 1]!.cursor;
+    }
+
+    expect(seen.map((entry) => entry.node.id)).toEqual([newer.id, older.id, anonymised.id]);
+    // The anonymised row's page starts after both ordinary rows, so its position counts them.
+    expect(await countSupportRequests(asUser(E), { view: 'closed' }, seen[2]!.cursor)).toEqual({
+      totalCount: 3,
+      countBefore: 2,
+    });
+  });
+});
+
+describe('getMySupportTimeout', () => {
   it('names when the sender’s live time-out ends, and nothing once it is lifted', async () => {
-    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+    expect(await getMySupportTimeout(asUser(C))).toBeNull();
     const until = FUTURE();
-    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
-    expect((await getMySupportTimeoutEnd(asUser(C)))?.getTime()).toBe(until.getTime());
+    const timeout = await timeOutSupportSender(
+      asUser(E),
+      C.id,
+      until,
+      'Spam',
+      noPauseNotifier,
+      PAUSE_MESSAGE,
+    );
+    expect((await getMySupportTimeout(asUser(C)))?.until?.getTime()).toBe(until.getTime());
     // Another sender's time-out is outside the query.
-    expect(await getMySupportTimeoutEnd(asUser(B))).toBeNull();
+    expect(await getMySupportTimeout(asUser(B))).toBeNull();
     await liftSupportTimeout(asUser(E), timeout.id);
-    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+    expect(await getMySupportTimeout(asUser(C))).toBeNull();
+  });
+
+  it('answers a time-out with no end date as standing, with no end', async () => {
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam', noPauseNotifier, PAUSE_MESSAGE);
+    expect(await getMySupportTimeout(asUser(C))).toEqual({ until: null });
+  });
+
+  it('answers no end when a dated and an open-ended time-out both stand', async () => {
+    await timeOutSupportSender(asUser(E), C.id, FUTURE(), 'Spam', noPauseNotifier, PAUSE_MESSAGE);
+    await timeOutSupportSender(asUser(E), C.id, null, 'Spam again', noPauseNotifier, PAUSE_MESSAGE);
+    expect(await getMySupportTimeout(asUser(C))).toEqual({ until: null });
   });
 
   it('refuses an unverified account', async () => {
     const unverified = { ...asUser(C), emailUnverified: true as const };
-    expect(await failureOf(getMySupportTimeoutEnd(unverified))).toBeInstanceOf(Forbidden);
-    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+    expect(await failureOf(getMySupportTimeout(unverified))).toBeInstanceOf(Forbidden);
+    expect(await getMySupportTimeout(asUser(C))).toBeNull();
   });
 });

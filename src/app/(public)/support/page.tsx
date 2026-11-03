@@ -12,15 +12,18 @@ import {
   errorReferenceOf,
   supportAboutOf,
 } from '../../../lib/support-path';
-import { getMySupportTimeoutEnd } from '../../../modules/support';
+import { getMySupportTimeout } from '../../../modules/support';
 import type { SupportPageProps } from './types';
 
+// Crawlable, so a search engine reads this and drops the bare address it would otherwise list from
+// links; the page holds nothing worth a result.
 export const metadata: Metadata = {
   title: 'Support',
+  robots: { index: false, follow: true },
 };
 
 // Open to a signed-out visitor, who is offered Sign In in place of the form. An unverified account is
-// sent to confirm its address; a timed-out sender is told when that ends.
+// sent to confirm its address; a timed-out sender is told when that ends, or that it has no end date.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);
   let state: SupportPanelState;
@@ -28,10 +31,10 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
     state = { kind: 'signed-out', support: supportAboutOf(single(params.support) ?? null) };
   } else {
     if (!(await sessionIsVerified())) redirect(emailPagePath(undefined));
-    const until = await getMySupportTimeoutEnd(session);
+    const timedOut = await getMySupportTimeout(session);
     const asked = single(params.support);
-    state = until
-      ? { kind: 'timed-out', until }
+    state = timedOut
+      ? { kind: 'timed-out', until: timedOut.until }
       : {
           kind: 'form',
           support: supportAboutOf(asked ?? null),
@@ -39,14 +42,15 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           errorReference: errorReferenceOf(single(params.ref) ?? null),
         };
   }
+  // The form keeps to the column the account's support tab uses (`.page-with-nav`), not the frame's wide one.
   return (
-    <>
+    <div className="page-with-nav">
       <PageHeader
         eyebrow="Help"
         title="Support"
         lede="Tell us about something you cannot use, something broken, or ask a question."
       />
       <SupportPanel state={state} path={single(params.from) ?? SUPPORT_PATH} />
-    </>
+    </div>
   );
 }

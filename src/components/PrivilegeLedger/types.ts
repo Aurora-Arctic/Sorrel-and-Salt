@@ -10,7 +10,7 @@ export type LedgerChange = 'grant' | 'revoke';
 /** How a change came about. */
 export type LedgerRoute = 'bootstrap' | 'admin' | 'invitation' | 'card' | 'manual';
 
-/** Someone a row names: their name, and their `/admin/users` row where the list has one. */
+/** Someone a row names: their name, and their `/keepers/users` row where the list has one. */
 export interface LedgerPerson {
   name: string;
   href?: string;

@@ -49,13 +49,13 @@ const SignedOutView = () => <Page status="signed-out" signInHref={SIGN_IN} />;
 export const SignedOut: Story = { render: SignedOutView };
 
 const AcceptableView = () => (
-  <Page status="acceptable" token="workshop" tier="site" siteRole="admin" landing="/admin" />
+  <Page status="acceptable" token="workshop" tier="site" siteRole="admin" landing="/keepers" />
 );
 
 const defaultNode = <AcceptableView />;
 
 const acceptableCuratorNode = (
-  <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
+  <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/curator" />
 );
 
 // Accept pressed and refused: the fake API answers with the service's own

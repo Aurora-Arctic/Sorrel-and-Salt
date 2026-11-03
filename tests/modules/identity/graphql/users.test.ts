@@ -38,8 +38,22 @@ const usersAs = (session: Session | null, source: string, variables = {}) =>
   run(session, source, variables);
 
 const PAGE_OF_USERS = `
-  query ($query: String, $awaitingApproval: Boolean, $role: UserRole, $after: String) {
-    users(query: $query, awaitingApproval: $awaitingApproval, role: $role, after: $after) {
+  query (
+    $query: String
+    $awaitingApproval: Boolean
+    $role: UserRole
+    $timedOut: Boolean
+    $paused: Boolean
+    $after: String
+  ) {
+    users(
+      query: $query
+      awaitingApproval: $awaitingApproval
+      role: $role
+      timedOut: $timedOut
+      paused: $paused
+      after: $after
+    ) {
       edges {
         cursor
         node { id name email role canCreateWorkspace emailVerified providers audit { createdAt } }
@@ -110,6 +124,29 @@ describe('Query.users', () => {
     expect(users.edges.map((edge) => edge.node.name)).toEqual(
       Array.from({ length: 10 }, (_, index) => `Listed Fixture 0${index}`),
     );
+  });
+
+  it('passes the time-out and pause filters to the service', async () => {
+    await sql`
+      insert into support_timeouts (user_id, note, created_by, updated_by)
+      values ('00000000-0000-0000-0000-000000000103', 'Testnote', ${E.id}, ${E.id})
+    `;
+    await sql`
+      insert into user_access_pauses (user_id, note, created_by, updated_by)
+      values ('00000000-0000-0000-0000-000000000104', 'Testnote', ${E.id}, ${E.id})
+    `;
+    const namesUnder = async (variables: Record<string, unknown>) => {
+      const result = await usersAs(asUser(E), PAGE_OF_USERS, {
+        query: 'listed fixture',
+        ...variables,
+      });
+      expect(result.errors).toBeUndefined();
+      const { users } = result.data as unknown as UsersQueryResult;
+      return users.edges.map((edge) => edge.node.name);
+    };
+
+    expect(await namesUnder({ timedOut: true })).toEqual(['Listed Fixture 03']);
+    expect(await namesUnder({ paused: true })).toEqual(['Listed Fixture 04']);
   });
 });
 

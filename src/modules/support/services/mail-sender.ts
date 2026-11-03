@@ -1,23 +1,25 @@
 import 'server-only';
-import { findOneById } from '../../../db/repository';
-import { users } from '../../identity/schema/users';
-import type { SupportNotifier, SupportRequestRow } from '../types';
+import { send } from '../../../lib/mail';
+import { startMailJob } from '../../../lib/mail-job';
+import { supportStatusMail } from '../jobs/support-status-mail';
+import { supportStatusMessageFor } from './status-mail';
+import type { SupportNotifier, SupportRequestRow, SupportStatusMail } from '../types';
 
-type StatusMail = 'received' | 'resolved' | 'closingSoon';
+// Where the received and resolved mails start, apart from the step's service so the job and the service import no cycle.
 
 /**
- * Mails a request's sender one of the status mails: the address a signed-out sender gave, or the account's address. A sender
- * who has left gets none, and the request is already saved, so neither is lost.
+ * Mails a request's sender one of the status mails, through a job whose run carries the request id, the kind and the origin; its
+ * step reads the address and the subject when it sends. Tried once here instead while MAIL_TRANSPORT is unset, or when the run
+ * cannot be started. The request is already saved, so a lost mail loses nothing.
  */
 export async function mailSender(
   notifier: SupportNotifier,
   request: SupportRequestRow,
-  mail: StatusMail,
+  kind: SupportStatusMail['kind'],
 ): Promise<void> {
-  if (request.senderEmail) {
-    await notifier[mail](request.senderEmail, request.subject, null);
-    return;
-  }
-  const sender = await findOneById(users, request.createdBy);
-  if (sender) await notifier[mail](sender.email, request.subject, request.id);
+  const mail: SupportStatusMail = { kind, requestId: request.id, origin: await notifier.origin() };
+  await startMailJob(supportStatusMail, [mail], `support ${kind}`, async () => {
+    const message = await supportStatusMessageFor(mail);
+    if (message) await send(message);
+  });
 }

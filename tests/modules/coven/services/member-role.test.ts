@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { findWorkspaceRole } from '@/db/repository';
-import { Forbidden } from '@/lib/errors';
+import { Forbidden, ValidationError } from '@/lib/errors';
 import { LastOwner, updateMemberRole } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
@@ -34,6 +34,36 @@ const roleOf = async (workspaceId: string, userId: string) => {
 };
 
 describe('updateMemberRole', () => {
+  it('refuses to make a paused member an owner, saying to lift the pause first, and makes them one once it is lifted', async () => {
+    const covenId = await insertCoven('Fixture Paused Promotion Coven', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+    ]);
+    const [pause] = await sql`
+      insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)
+      values (${covenId}, ${B.id}, ${A.id}, ${A.id})
+      returning id`;
+    // Why it could have succeeded: A owns the coven and B holds a live seat, so every other check passes.
+    expect(await roleOf(covenId, A.id)).toBe('owner');
+    expect(await roleOf(covenId, B.id)).toBe('member');
+
+    const refusal = await updateMemberRole(asUser(A), covenId, B.id, 'owner').catch(
+      (error: unknown) => error,
+    );
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as Error).message).toMatch(/lift the pause first/);
+    expect(await roleOf(covenId, B.id)).toBe('member');
+
+    // A role change that is not a promotion to owner still goes through while the pause stands.
+    await updateMemberRole(asUser(A), covenId, B.id, 'viewer');
+    expect(await roleOf(covenId, B.id)).toBe('viewer');
+
+    await sql`update workspace_member_pauses set lifted_at = now(), lifted_by = ${A.id} where id = ${pause.id}`;
+    await updateMemberRole(asUser(A), covenId, B.id, 'owner');
+    expect(await roleOf(covenId, B.id)).toBe('owner');
+  });
+
   it('moves a member between any two roles, in either direction', async () => {
     const covenId = await insertCoven('Fixture Role Change Coven', [
       [A.id, 'owner'],

@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { InvitationSender } from '@/modules/identity';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
@@ -14,17 +13,12 @@ useRawClient();
 
 const INVITED = 'invited@coven-invitations-graphql.test';
 
-const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
-
-/** A sender that records what it was asked to mail, so a test holds the token the inbox would. */
+/** A sender that records the invitations it was asked to mail, by id: the token is minted by the mail's step, never here. */
 function recordingSender() {
-  const sent: { to: string; token: string; role: string; name: string; inviterName: string }[] = [];
+  const sent: string[] = [];
   const sender: InvitationSender = {
-    siteInvitation: async () => {
-      throw new Error('a coven invitation mails no admin');
-    },
-    workspaceInvitation: async (to, token, { name, role, inviterName }) => {
-      sent.push({ to, token, role, name, inviterName });
+    invitation: async (invitationId) => {
+      sent.push(invitationId);
     },
   };
   return { sent, sender };
@@ -51,7 +45,7 @@ beforeEach(async () => {
 });
 
 describe('Mutation.createInvitation', () => {
-  it('answers an owner the invitation, stamped as the session, and the link only to the sender', async () => {
+  it('answers an owner the invitation, stamped as the session, and hands the sender its id and no token', async () => {
     const { sent, sender } = recordingSender();
 
     const result = await run<CreateInvitationResult>(
@@ -68,19 +62,10 @@ describe('Mutation.createInvitation', () => {
       workspace: { id: WORKSPACE_W_ID },
       audit: { createdBy: A.id },
     });
-    expect(sent).toEqual([
-      {
-        to: INVITED,
-        token: expect.any(String),
-        role: 'member',
-        name: expect.any(String),
-        // The acting owner's own name, read from their row.
-        inviterName: (await sql`select name from users where id = ${A.id}`)[0].name,
-      },
-    ]);
-    const [{ token }] = sent;
-    expect(JSON.stringify(result)).not.toContain(token);
-    expect(JSON.stringify(result)).not.toContain(sha256(token));
+    const [stored] = await sql`select id, token_hash from invitations`;
+    expect(sent).toEqual([stored!.id]);
+    expect(result.data?.createInvitation).toMatchObject({ id: stored!.id });
+    expect(JSON.stringify(result)).not.toContain(stored!.token_hash);
   });
 
   // The schema's enum has no owner, so the query is invalid before any service runs.

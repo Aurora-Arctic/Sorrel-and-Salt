@@ -8,7 +8,9 @@ import type {
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { HttpResponse } from 'msw/http';
+import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -60,6 +62,42 @@ describe('ShownToggle', () => {
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
     expect(calls).toEqual([{ id: ID, shown: true }]);
+  });
+
+  // Regression: off then straight back on saved the off and lost the on.
+  it('keeps the last position when flipped twice while the first save is still out', async () => {
+    // The entry as the server holds it, each write setting it; the first write's answer is held
+    // back so the second press lands while it is still out.
+    let stored = true;
+    const calls: SetCompendiumEntryShownMutationVariables[] = [];
+    let releaseFirst: () => void = () => undefined;
+    const firstHeld = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    server.use(
+      graphqlLink.mutation<
+        SetCompendiumEntryShownMutation,
+        SetCompendiumEntryShownMutationVariables
+      >('SetCompendiumEntryShown', async ({ variables }) => {
+        calls.push(variables);
+        stored = variables.shown;
+        if (calls.length === 1) await firstHeld;
+        return HttpResponse.json({ data: { setCompendiumEntryShown: { id: ID } } });
+      }),
+    );
+    renderToggle(true);
+    const toggle = () => screen.getByRole('switch', { name: 'Shown in Compendium: Testwort' });
+
+    press(toggle());
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({ id: ID, shown: false });
+    // Straight back on, before the off has answered.
+    press(toggle());
+    releaseFirst();
+
+    await waitFor(() => expect(stored).toBe(true), { timeout: 3000 });
+    await waitFor(() => expect(toggle()).toBeChecked());
+    expect(calls[calls.length - 1]).toEqual({ id: ID, shown: true });
   });
 
   it("shows the service's refusal and does not read the page again", async () => {

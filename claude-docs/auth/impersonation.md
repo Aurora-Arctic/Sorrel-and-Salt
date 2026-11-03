@@ -62,7 +62,7 @@ The task left two questions to answer from running code. Both answers:
 
 ### Who may impersonate whom
 
-The endpoint is the guard. The control on `/admin/users` only puts it where
+The endpoint is the guard. The control on `/keepers/users` only puts it where
 an admin looks.
 
 - **A non-admin, a curator included, is refused** with a 403, even where the plugin is registered:
@@ -70,11 +70,19 @@ an admin looks.
 - **An admin cannot impersonate another admin**, the primary admin included.
   `allowImpersonatingAdmins` stays at its default, off, and the default `admin`
   role lacks `impersonate-admins`.
+- **A user whose site access is paused is impersonated into what they see while paused.**
+  `sessionStateFromHeaders` in `src/lib/request-session.ts` records the standing pause on the
+  impersonation session as on the user's own: support's pages and API calls act as the user, every
+  other signed-in page redirects to `/access-paused`, another public page draws the signed-out view
+  under the shell's paused notice, and every other signed-in GraphQL call answers `ACCESS_PAUSED`.
+  The banner, drawn by the root layout, stays on every page, so Stop still works. Once the pause is
+  lifted or runs out the same impersonation reaches the normal pages
+  (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
 - **An impersonation lasts an hour**, Better Auth's default. The session row
   expires on its own if Stop is never pressed.
 - **No target check beyond the role.** Better Auth looks the target up by id
   with its own adapter, so it would hand over a soft-deleted user or the seed's
-  bootstrap user if asked for one by id. `/admin/users` offers neither.
+  bootstrap user if asked for one by id. `/keepers/users` offers neither.
 
 ### The audit follows the impersonated user
 
@@ -100,7 +108,7 @@ ordinary read.
 
 ### The way out: a banner on every page
 
-Impersonating a non-admin costs the admin `/admin` until they stop, so the way
+Impersonating a non-admin costs the admin `/keepers` until they stop, so the way
 out cannot live in the admin nav. `ImpersonationBanner` names the user, by
 name and address, and carries Stop Impersonating, at the top of every page
 ([`components/impersonation-banner.md`](../components/impersonation-banner.md)).
@@ -114,7 +122,7 @@ name and address, and carries Stop Impersonating, at the top of every page
   no page pays for the session read. A static page applies the check at
   build time. On Vercel the build and the deployment have the same variables,
   so the answer is the same.
-- **Impersonate lands on `/`, and Stop on `/admin/users`.** Both are full
+- **Impersonate lands on `/`, and Stop on `/keepers/users`.** Both are full
   loads, because the session cookie has just changed and every server
   component must read it again.
 
@@ -128,8 +136,10 @@ name and address, and carries Stop Impersonating, at the top of every page
   (MB.188).
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-admin is
   refused, an admin target is refused, and the impersonation session is B's
-  with E recorded. B's coven is what the session sees, and `/admin`'s check
-  refuses it. Stop restores E's own session. The file builds Better Auth once,
+  with E recorded. B's coven is what the session sees, and `/keepers`'s check
+  refuses it. Stop restores E's own session. A paused user is handed over, the session reads as paused, a
+  signed-in GraphQL call through the real route answers `ACCESS_PAUSED` while a public read answers, Stop restores E, and
+  the same impersonation reads as signed in once the pause is lifted. The file builds Better Auth once,
   with the flags on, in its `beforeAll` (MB.188).
 - `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
   under an impersonation stamped as the user acted as — the session above is

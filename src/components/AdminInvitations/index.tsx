@@ -24,7 +24,7 @@ import type {
 } from './types';
 import './index.scss';
 
-// The People page's Invitations tab, `/admin/invitations`: a filter, a page of pending invitations
+// The People page's Invitations tab, `/keepers/invitations`: a filter, a page of pending invitations
 // (address, site role, reason, expiry, Revoke), the pager, and the invite form `?invite` opens. While
 // admin changes are paused both are locked for any admin but the primary (claude-docs/components/admin-invitations.md).
 

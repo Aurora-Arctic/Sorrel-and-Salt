@@ -4,6 +4,10 @@ import { server } from '../support/msw/server';
 import { send } from '@/lib/mail';
 import type { Captured } from './types';
 
+// `send` is the one try a mail job falls back to; it never starts a job, so the mock is here to prove it is not called.
+const startJob = vi.hoisted(() => vi.fn(async () => 'run-id'));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+
 const MESSAGE = {
   to: 'recipient@example.test',
   subject: 'Verify your email',
@@ -67,6 +71,7 @@ let error: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   requests = [];
+  startJob.mockClear();
   responseStatus = 200;
   captureEverything();
   clearMailEnv();
@@ -261,5 +266,20 @@ describe('when nothing can be sent', () => {
       expect.stringContaining('mailpit send failed'),
       expect.any(Error),
     );
+  });
+});
+
+describe('send tries once', () => {
+  it('delivers itself and starts no run, so the message never enters a job', async () => {
+    configure('mailpit');
+    await send(MESSAGE);
+    expect(startJob).not.toHaveBeenCalled();
+    expect(requests).toHaveLength(1);
+  });
+
+  it('only logs the mail while MAIL_TRANSPORT is unset', async () => {
+    await send(MESSAGE);
+    expect(startJob).not.toHaveBeenCalled();
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('MAIL_TRANSPORT is unset'), MESSAGE);
   });
 });

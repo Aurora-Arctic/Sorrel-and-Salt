@@ -1,0 +1,29 @@
+import 'server-only';
+import { findOneById, findWorkspaceMemberPauseForMail } from '../../../db/repository';
+import { deliver } from '../../../lib/mail-transport';
+import { memberPauseNotice } from '../../../lib/pause-job-mail';
+import { users } from '../../identity/schema/users';
+import { workspaces } from '../schema/workspaces';
+import type { Message } from '../../../lib/types';
+import type { MemberPauseMail } from '../types';
+
+// The coven access pause mail, built from the rows when it is sent, so the job that retries it carries ids alone.
+
+/** The mail for `mail` as the rows stand, or null when there is none to send: the pause is gone or lifted, or its member or coven has gone. */
+export async function memberPauseMessageFor(mail: MemberPauseMail): Promise<Message | null> {
+  const pause = await findWorkspaceMemberPauseForMail(mail.pauseId);
+  if (!pause || pause.liftedAt) return null;
+  const [member, coven] = await Promise.all([
+    findOneById(users, pause.userId),
+    findOneById(workspaces, pause.workspaceId),
+  ]);
+  if (!member || !coven) return null;
+  return memberPauseNotice(mail.origin, member.email, coven.name, pause);
+}
+
+/** Builds and sends `mail`; true once the transport took it, false when there was none to send. A transport failure throws, so a job's step is retried. */
+export async function sendMemberPauseMail(mail: MemberPauseMail): Promise<boolean> {
+  const message = await memberPauseMessageFor(mail);
+  if (!message) return false;
+  return deliver(message);
+}

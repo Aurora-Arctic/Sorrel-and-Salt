@@ -3,6 +3,7 @@
 // internal to the module.
 export * from './services/admin-invitations';
 export * from './services/admin-role';
+export * from './services/access-pause';
 export * from './services/admin-role-pause';
 export * from './services/display-names';
 export * from './services/editor-names';
@@ -17,6 +18,8 @@ export * from './services/profile';
 export * from './services/provisional-accounts';
 export * from './services/provisional-cleanup';
 export * from './services/provisional-expiry';
+export { scheduleAccountNotice } from './services/account-notice-start';
+export { scheduleSecretLinkMail } from './services/secret-link-start';
 export * from './services/received-invitations';
 export * from './services/sign-in-lockout';
 export * from './services/site-admin';
@@ -26,6 +29,7 @@ export * from './services/user-role';
 export * from './services/workshop-access';
 export * from './services/workspace-creation';
 export * from './graphql/user';
+export * from './graphql/access-pause';
 export * from './graphql/co-member';
 export * from './graphql/invitations';
 export * from './graphql/invitation-cards';
@@ -36,6 +40,8 @@ export * from './loaders/providers-by-user';
 export * from './loaders/users-by-id';
 export * from './loaders/users-by-id-for-admin';
 export type {
+  AccessPauseMail,
+  AccessPauseNotifier,
   AdminInvitationFilter,
   CardArrivalFilter,
   CardBatchFilter,
@@ -44,6 +50,8 @@ export type {
   MintedCards,
   AdminRoleChangePauseState,
   EmailVerificationSender,
+  SecretLink,
+  AccountNotice,
   InvitationRefusal,
   InvitationSender,
   InvitationStanding,
@@ -53,6 +61,7 @@ export type {
   PrivilegeChangeRow,
   ReceivedInvitation,
   SignInProfile,
+  UserAccessPauseRow,
   UserFilter,
   UserRow,
 } from './types';

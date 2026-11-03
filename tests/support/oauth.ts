@@ -222,5 +222,5 @@ export function landingOf(response: Response): string {
  */
 export function expectSignedIn(response: Response): void {
   expect(response.status).toBe(302);
-  expect(['/coven', '/admin', EMAIL_PAGE]).toContain(landingOf(response));
+  expect(['/coven', '/keepers', '/curator', EMAIL_PAGE]).toContain(landingOf(response));
 }

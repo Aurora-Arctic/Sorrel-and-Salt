@@ -21,7 +21,7 @@ const CovenStub = (): ReactElement => (
   </main>
 );
 
-// The admin index page, in the admin layout's column (src/app/(shell)/admin/page.tsx).
+// The admin index page, in the admin layout's column (src/app/(shell)/keepers/page.tsx).
 const AdminStub = (): ReactElement => (
   <main>
     <h1>Admin</h1>
@@ -69,12 +69,12 @@ const STATES: Record<string, ReactNode> = {
     </ShellFrame>
   ),
   'Admin Page': (
-    <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', canCurate: true }} open="/admin">
+    <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', canCurate: true }} open="/keepers">
       <AdminStub />
     </ShellFrame>
   ),
   'Curator Page': (
-    <ShellFrame area="admin" role="curator" viewer={CURATOR} open="/admin">
+    <ShellFrame area="admin" role="curator" viewer={CURATOR} open="/keepers">
       <AdminStub />
     </ShellFrame>
   ),

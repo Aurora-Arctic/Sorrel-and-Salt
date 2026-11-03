@@ -32,13 +32,14 @@ const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
 const FORMAL_NAME_TIP = 'Its formal name; which naming system it belongs to is not yet settled.';
 const NO_FORMAL_NAME_TIP = 'No naming system names it.';
 
-/** The formal name beside the label, never blank (claude-docs/components/ingredient-entry.md, "Structure"). */
+/** The formal name beside the label; nothing for an entry no naming system names and that has no name (claude-docs/components/ingredient-entry.md, "Structure"). */
 export default function FormalName({
   entry,
 }: {
   entry: Pick<IngredientRow, 'canonicalName' | 'nomenclature'>;
-}): ReactElement {
+}): ReactElement | null {
   const formal = (entry.canonicalName ?? '').trim();
+  if (entry.nomenclature === NAMELESS_KIND && formal === '') return null;
   const label = NAME_LABELS[entry.nomenclature] ?? 'Formal Name';
   const tip =
     entry.nomenclature === NAMELESS_KIND

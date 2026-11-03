@@ -1,6 +1,13 @@
 import { GraphQLError } from 'graphql';
 import { maskError as yogaMaskError, type YogaServerOptions } from 'graphql-yoga';
-import { Forbidden, NotFound, RateLimited, StaleWrite, ValidationError } from '../lib/errors';
+import {
+  AccessPaused,
+  Forbidden,
+  NotFound,
+  RateLimited,
+  StaleWrite,
+  ValidationError,
+} from '../lib/errors';
 import type { ErrorExtensions } from './types';
 
 // The transport's half of src/lib/errors.ts: each service error leaves with a
@@ -18,6 +25,10 @@ function extensionsFor(error: unknown): ErrorExtensions | null {
       code: 'RATE_LIMITED',
       http: { status: 429, headers: { 'Retry-After': String(error.retryAfterSeconds) } },
     };
+  }
+  // Before `Forbidden`, which it extends.
+  if (error instanceof AccessPaused) {
+    return { code: 'ACCESS_PAUSED', pausedUntil: error.until?.toISOString() ?? null };
   }
   if (error instanceof Forbidden) return { code: 'FORBIDDEN' };
   if (error instanceof NotFound) return { code: 'NOT_FOUND' };

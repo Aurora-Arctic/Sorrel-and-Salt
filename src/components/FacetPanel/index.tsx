@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 import type { IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
 import FacetCombobox from '../FacetCombobox';
 import FormIcon from '../FormIcon';
+import { pauseNote } from '../../lib/pause-note';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import { ChoiceChip } from './choice-chip';
 import { FacetSwitch } from './facet-switch';
@@ -274,7 +275,12 @@ export default function FacetPanel({
                 removeNoun="Coven"
                 loading={loading}
                 counts={false}
-                choices={covens.map(({ id: value, name: label }) => ({ value, label }))}
+                // A paused coven is listed but not pickable: the filter cannot read what it holds.
+                choices={covens.map(({ id: value, name: label, paused }) => ({
+                  value,
+                  label,
+                  ...(paused && { disabled: true, note: pauseNote(paused) }),
+                }))}
                 values={filter.covens ?? []}
                 // Removing the last coven switches the choice back to In, so it never turns into
                 // "not held in any of my covens" unasked.

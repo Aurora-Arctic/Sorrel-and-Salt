@@ -49,7 +49,7 @@ async function makeCoven(name: string, members: [userId: string, role: Role][]):
   return slug;
 }
 
-/** The page `forbidden()` draws: a 403 at the address asked for, with none of the admin area. */
+/** The page `forbidden()` draws: a 403 at the address asked for, with none of the curator or keepers areas. */
 async function expectNotAuthorized(page: Page, path: string) {
   const response = await page.goto(path);
   expect(response?.status(), path).toBe(403);
@@ -57,26 +57,30 @@ async function expectNotAuthorized(page: Page, path: string) {
   await expect(
     page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
   ).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Admin' })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Curator' })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Keepers' })).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-// Every page under `/admin` (claude-docs/auth/admin-guard.md, "The admin
-// guard"). A page added there joins this list.
+// Every page under `/curator` and `/keepers` (claude-docs/auth/admin-guard.md). A page added there joins this list.
 const ADMIN_ROUTES = [
-  '/admin',
-  '/admin/compendium',
-  '/admin/users',
-  '/admin/invitations',
-  '/admin/privilege-changes',
-  '/admin/categories',
-  '/admin/category-groups',
-  '/admin/forms',
-  '/admin/form-groups',
-  '/admin/deities',
-  '/admin/deity-traditions',
-  '/admin/celestial-bodies',
-  '/admin/zodiac-signs',
+  '/curator',
+  '/keepers',
+  '/keepers/support',
+  '/curator/compendium',
+  '/keepers/users',
+  '/keepers/privilege-changes',
+  '/keepers/invitations',
+  '/keepers/invitation-cards',
+  '/keepers/card-sign-ups',
+  '/curator/categories',
+  '/curator/category-groups',
+  '/curator/forms',
+  '/curator/form-groups',
+  '/curator/deities',
+  '/curator/deity-traditions',
+  '/curator/celestial-bodies',
+  '/curator/zodiac-signs',
 ];
 
 test.describe('story 17: everyone but an admin is kept from editing the compendium', () => {
@@ -92,7 +96,9 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       for (const path of ADMIN_ROUTES) {
         const response = await page.goto(path);
         expect(response?.status(), path).toBe(200);
-        await expect(page.getByRole('navigation', { name: 'Admin' })).toBeVisible();
+        // Each area draws its own nav.
+        const area = path.startsWith('/curator') ? 'Curator' : 'Keepers';
+        await expect(page.getByRole('navigation', { name: area })).toBeVisible();
       }
 
       // The highest seat a coven has, so nothing but the site role is left to refuse it.
@@ -100,13 +106,15 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       const slug = await makeCoven('Fixture Story Seventeen Coven', [[userId, 'owner']]);
       expect((await page.goto(`/coven/${slug}`))?.status()).toBe(200);
       // The shell offers no way in.
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
 
       for (const path of ADMIN_ROUTES) await expectNotAuthorized(page, path);
       // The 403 is drawn inside the shell: the bar stays, still with no way into
       // the admin area, and the site nav still leads out to the compendium.
       await expect(page.getByRole('banner')).toBeVisible();
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
       await expect(
         page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
       ).toBeVisible();
@@ -137,7 +145,7 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       );
 
       // The entry is live in the compendium, and its edit address opens it for an admin.
-      await page.goto(`/admin/compendium?edit=${slug}`);
+      await page.goto(`/curator/compendium?edit=${slug}`);
       const editing = page.getByRole('dialog', { name: `Edit Ingredient, ${name}`, exact: true });
       await expect(editing).toBeVisible();
       await expect(editing.getByRole('button', { name: 'Delete Ingredient' })).toBeVisible();
@@ -145,12 +153,13 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       const { userId } = await signInAs(page, 'holder@story-17.test');
       const coven = await makeCoven('Fixture Guarded Coven', [[userId, 'owner']]);
       expect((await page.goto(`/coven/${coven}`))?.status()).toBe(200);
-      await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Curator' })).toHaveCount(0);
+      await expect(page.getByRole('banner').getByRole('link', { name: 'Keepers' })).toHaveCount(0);
 
       // The edit addresses refuse a non-admin.
-      await expectNotAuthorized(page, `/admin/compendium?edit=${slug}`);
+      await expectNotAuthorized(page, `/curator/compendium?edit=${slug}`);
       await expect(page.getByRole('textbox')).toHaveCount(0);
-      await expectNotAuthorized(page, '/admin/compendium?new=ingredient-compendium');
+      await expectNotAuthorized(page, '/curator/compendium?new=ingredient-compendium');
 
       // The entry's public page shows the same non-admin its content and no way
       // to change it: no Edit, no Delete, anywhere on it.
@@ -163,7 +172,7 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
 
       // The entry is as the admin left it: it still opens, under its own name.
       await signInAgainAs(page, adminId);
-      await page.goto(`/admin/compendium?edit=${slug}`);
+      await page.goto(`/curator/compendium?edit=${slug}`);
       await expect(editing).toBeVisible();
     },
   );
@@ -184,7 +193,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
       ]);
       await signInAs(page, 'admin@story-19.test', ['google'], 'admin');
 
-      await page.goto(`/admin/users?query=${encodeURIComponent(email)}`);
+      await page.goto(`/keepers/users?query=${encodeURIComponent(email)}`);
       await page
         .getByRole('row')
         .getByRole('link', { name: 'Fixture Person', exact: true })
@@ -210,7 +219,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
 
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
-      await expect(page).toHaveURL(/\/admin\/users\?query=[^&]*$/);
+      await expect(page).toHaveURL(/\/keepers\/users\?query=[^&]*$/);
     },
   );
 
@@ -243,8 +252,8 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
           expect((await page.goto(`/coven/${other}`))?.status()).toBe(200);
         } else {
           await signInAs(page, `visitor-${tag}@story-19.test`, ['discord'], 'admin');
-          // An admin, as the admin area answers them.
-          expect((await page.goto('/admin'))?.status()).toBe(200);
+          // An admin, as the keepers area answers them.
+          expect((await page.goto('/keepers'))?.status()).toBe(200);
         }
 
         for (const path of covenPages(slug)) {
@@ -331,21 +340,21 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       // The trace shows the app quick throughout, so the time is the flow's own work.
       test.setTimeout(60_000);
       await signInAs(page, 'compendium@story-18.test', ['discord'], 'admin');
-      expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
+      expect((await page.goto('/curator/compendium'))?.status()).toBe(200);
       const add = page.getByRole('link', { name: 'Add Ingredient' });
       await expect(add).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
       // Add opens its modal on the press, before the page that fills it arrives.
-      const gate = await holdModalRequests(page, '/admin/compendium', 'new');
+      const gate = await holdModalRequests(page, '/curator/compendium', 'new');
       await add.click();
       const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
       await expect(adding).toBeVisible();
       await expect(adding.getByRole('status')).toHaveCount(1);
       await expect(busy(adding)).toHaveCount(1);
-      await expect(page).toHaveURL(/\/admin\/compendium$/);
+      await expect(page).toHaveURL(/\/curator\/compendium$/);
       await gate.release();
-      await expect(page).toHaveURL(/\/admin\/compendium\?new=ingredient-compendium$/);
+      await expect(page).toHaveURL(/\/curator\/compendium\?new=ingredient-compendium$/);
       const name = adding.getByRole('textbox', { name: 'Name', exact: true });
       await expect(name).toBeVisible();
       await expect(busy(adding)).toHaveCount(0);
@@ -378,7 +387,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
         exact: true,
       });
       await expect(editing).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/compendium\?edit=aaa-testwort$/);
+      await expect(page).toHaveURL(/\/curator\/compendium\?edit=aaa-testwort$/);
       await editing.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(editing).toHaveCount(0);
       // In the list, with the form it was given.
@@ -437,7 +446,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(renamed).toBeVisible();
       await deleteFrom(renamed, 'Ingredient');
       await expect(renamed).toHaveCount(0);
-      await expect(page).toHaveURL(/\/admin\/compendium$/);
+      await expect(page).toHaveURL(/\/curator\/compendium$/);
       await expect(page.getByRole('table')).toBeVisible();
       await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
     },
@@ -448,13 +457,13 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     { tag: '@story-18' },
     async ({ page }) => {
       await signInAs(page, 'categories@story-18.test', ['discord'], 'admin');
-      expect((await page.goto('/admin/categories'))?.status()).toBe(200);
+      expect((await page.goto('/curator/categories'))?.status()).toBe(200);
       const add = page.getByRole('link', { name: 'Add Category' });
       await expect(page.getByRole('table', { name: 'Categories' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
       // Closed while it loads, it stays closed once its page lands.
-      const newGate = await holdModalRequests(page, '/admin/categories', 'new');
+      const newGate = await holdModalRequests(page, '/curator/categories', 'new');
       await add.click();
       const adding = page.getByRole('dialog', { name: 'Add Category' });
       await expect(adding.getByRole('status')).toHaveCount(1);
@@ -462,7 +471,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(adding).toHaveCount(0);
       await newGate.release();
       await expect(adding).toHaveCount(0);
-      await expect(page).toHaveURL(/\/admin\/categories$/);
+      await expect(page).toHaveURL(/\/curator\/categories$/);
       await page.unrouteAll();
       // The list beneath is whole: the seeded first page, 25 rows and the header.
       await expect(page.getByRole('table', { name: 'Categories' }).getByRole('row')).toHaveCount(
@@ -472,15 +481,15 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       // Opened and left untouched, Escape closes it, and the address loses `?new`.
       await add.click();
       await expect(adding.getByRole('textbox', { name: 'Name' })).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/categories\?new$/);
+      await expect(page).toHaveURL(/\/curator\/categories\?new$/);
       await page.keyboard.press('Escape');
       await expect(adding).toHaveCount(0);
-      await expect(page).toHaveURL(/\/admin\/categories$/);
+      await expect(page).toHaveURL(/\/curator\/categories$/);
 
       // Added: first by name, so on the first page, with its group and description.
       await add.click();
       await expect(adding).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/categories\?new$/);
+      await expect(page).toHaveURL(/\/curator\/categories\?new$/);
       await expect(adding.getByRole('button', { name: 'Save Category' })).toBeDisabled();
       await assertNoAccessibilityViolations(page);
       await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
@@ -495,7 +504,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
 
       // Edited: its Edit opens the modal on the press, and the form fills that same dialog.
-      const editGate = await holdModalRequests(page, '/admin/categories', 'edit');
+      const editGate = await holdModalRequests(page, '/curator/categories', 'edit');
       await row.getByRole('link', { name: 'Edit Aaa Testcraft' }).click();
       // An edit dialog is named by its eyebrow and the saved name.
       const editing = page.getByRole('dialog', {
@@ -506,11 +515,11 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(editing.getByRole('status')).toHaveCount(1);
       await expect(busy(editing)).toHaveCount(1);
       await expect(editing.getByRole('textbox')).toHaveCount(0);
-      await expect(page).toHaveURL(/\/admin\/categories$/);
+      await expect(page).toHaveURL(/\/curator\/categories$/);
       await assertNoAccessibilityViolations(page);
       const pressed = await editing.elementHandle();
       await editGate.release();
-      await expect(page).toHaveURL(/\/admin\/categories\?edit=aaa-testcraft$/);
+      await expect(page).toHaveURL(/\/curator\/categories\?edit=aaa-testcraft$/);
       await expect(editing.getByRole('textbox', { name: 'Name' })).toBeFocused();
       await expect(busy(editing)).toHaveCount(0);
       // The dialog the press opened is the one the form arrived in.
@@ -530,7 +539,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(rowOf(page, 'Categories', 'Aaa Testcraft')).toHaveCount(0);
 
       // Deleted, at the address its new name gives it.
-      await page.goto('/admin/categories?edit=aaa-testcraft-renamed');
+      await page.goto('/curator/categories?edit=aaa-testcraft-renamed');
       const deleting = page.getByRole('dialog', {
         name: 'Edit Category, Aaa Testcraft Renamed',
         exact: true,
@@ -542,7 +551,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
 
       // One the compendium files entries under is refused, naming them: the
       // standard seed files Bay Laurel under Protection.
-      await page.goto('/admin/categories?edit=protection');
+      await page.goto('/curator/categories?edit=protection');
       const held = page.getByRole('dialog', { name: 'Edit Category, Protection', exact: true });
       await deleteFrom(held, 'Category');
       await expect(held.getByRole('alert')).toContainText('Bay Laurel');
@@ -550,7 +559,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await assertNoAccessibilityViolations(page);
       await held.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(held).toHaveCount(0);
-      await page.goto('/admin/categories?query=Protection');
+      await page.goto('/curator/categories?query=Protection');
       await expect(rowOf(page, 'Categories', 'Protection')).toBeVisible();
     },
   );
@@ -565,14 +574,14 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
         ['discord'],
         'admin',
       );
-      expect((await page.goto('/admin/category-groups'))?.status()).toBe(200);
+      expect((await page.goto('/curator/category-groups'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Category Groups' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Group' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Category Group' });
       await expect(adding).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/category-groups\?new$/);
+      await expect(page).toHaveURL(/\/curator\/category-groups\?new$/);
       await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Wards');
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       await adding.getByRole('textbox', { name: 'Dark Theme Colour', exact: true }).fill('#4e8bc2');
@@ -641,7 +650,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
             ${userId}, ${userId}
           from category_groups where name = 'Aaa Testwort Bulwarks' and deleted_at is null`,
       );
-      await page.goto('/admin/category-groups?edit=aaa-testwort-bulwarks');
+      await page.goto('/curator/category-groups?edit=aaa-testwort-bulwarks');
       await expect(bulwarks).toBeVisible();
       await moveAndDelete(page, bulwarks, 'Move Its 1 Category To', 'Cleansing & Release');
       await expect(bulwarks).toHaveCount(0);
@@ -649,7 +658,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(rowOf(page, 'Category Groups', 'Aaa Testwort Bulwarks')).toHaveCount(0);
 
       // The category lives on, in the group the admin picked.
-      await page.goto('/admin/categories?query=Aaa+Hearthcraft+Moved');
+      await page.goto('/curator/categories?query=Aaa+Hearthcraft+Moved');
       await expect(
         rowOf(page, 'Categories', 'Aaa Hearthcraft Moved').getByRole('cell', {
           name: 'Cleansing & Release',
@@ -663,7 +672,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     { tag: '@story-18' },
     async ({ page }) => {
       await signInAs(page, 'undo@story-18.test', ['discord'], 'admin');
-      expect((await page.goto('/admin/category-groups'))?.status()).toBe(200);
+      expect((await page.goto('/curator/category-groups'))?.status()).toBe(200);
       const groupRow = rowOf(page, 'Category Groups', 'Cleansing & Release');
       await groupRow.getByRole('link', { name: 'Edit Cleansing & Release' }).click();
       const group = page.getByRole('dialog', {
@@ -725,7 +734,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByRole('button', { name: 'Discard Changes' })).toHaveCount(0);
 
       // A category's group, through the combobox.
-      await page.goto('/admin/categories?edit=protection');
+      await page.goto('/curator/categories?edit=protection');
       const category = page.getByRole('dialog', { name: 'Edit Category, Protection', exact: true });
       const picker = category.getByRole('combobox', { name: 'Group' });
       const saveCategory = category.getByRole('button', { name: 'Save Category' });
@@ -757,14 +766,14 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     { tag: '@story-18' },
     async ({ page }) => {
       await signInAs(page, 'forms@story-18.test', ['discord'], 'admin');
-      expect((await page.goto('/admin/forms'))?.status()).toBe(200);
+      expect((await page.goto('/curator/forms'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Forms' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Form' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Form' });
       await expect(adding).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/forms\?new$/);
+      await expect(page).toHaveURL(/\/curator\/forms\?new$/);
       await expect(adding.getByRole('button', { name: 'Save Form' })).toBeDisabled();
       await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Shard');
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
@@ -786,7 +795,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await expect(page).toHaveURL(
-        `/admin/forms?edit=${formSlug('Aaa Testwort Shard', 'Mineral')}`,
+        `/curator/forms?edit=${formSlug('Aaa Testwort Shard', 'Mineral')}`,
       );
       // A rename carries onto the compendium, and Save says so before it is pressed.
       const save = editing.getByRole('button', { name: 'Save Form' });
@@ -805,7 +814,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       // Its Edit follows it to the address the new name and group make.
       await renamed.getByRole('link', { name: 'Edit Aaa Testwort Sliver' }).click();
       await expect(page).toHaveURL(
-        `/admin/forms?edit=${formSlug('Aaa Testwort Sliver', 'Substance')}`,
+        `/curator/forms?edit=${formSlug('Aaa Testwort Sliver', 'Substance')}`,
       );
       const sliver = page.getByRole('dialog', {
         name: 'Edit Form, Aaa Testwort Sliver',
@@ -823,14 +832,14 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     { tag: '@story-18' },
     async ({ page }) => {
       const { userId } = await signInAs(page, 'form-groups@story-18.test', ['discord'], 'admin');
-      expect((await page.goto('/admin/form-groups'))?.status()).toBe(200);
+      expect((await page.goto('/curator/form-groups'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Form Groups' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Group' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Form Group' });
       await expect(adding).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/form-groups\?new$/);
+      await expect(page).toHaveURL(/\/curator\/form-groups\?new$/);
       // A form group carries no colours: only a category's chip is drawn in one.
       await expect(
         adding.getByRole('textbox', { name: 'Dark Theme Colour', exact: true }),
@@ -867,13 +876,13 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(rowOf(page, 'Form Groups', 'Aaa Fixture Stuff')).toBeVisible();
       await expect(rowOf(page, 'Form Groups', 'Aaa Fixture Matter')).toHaveCount(0);
       // The form is listed under the group's new name.
-      await page.goto('/admin/forms');
+      await page.goto('/curator/forms');
       const grit = rowOf(page, 'Forms', 'Aaa Fixture Grit');
       await expect(
         grit.getByRole('cell', { name: 'Aaa Fixture Stuff', exact: true }),
       ).toBeVisible();
 
-      await page.goto('/admin/form-groups?edit=aaa-fixture-stuff');
+      await page.goto('/curator/form-groups?edit=aaa-fixture-stuff');
       const renamed = page.getByRole('dialog', {
         name: 'Edit Form Group, Aaa Fixture Stuff',
         exact: true,
@@ -885,7 +894,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByRole('row', { name: /Aaa Fixture/ })).toHaveCount(0);
 
       // The form lives on, in the group the admin picked.
-      await page.goto('/admin/forms');
+      await page.goto('/curator/forms');
       await expect(grit.getByRole('cell', { name: 'Substance', exact: true })).toBeVisible();
     },
   );
@@ -894,14 +903,14 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
   // so each walks the same flow rather than one standing in for the other.
   for (const { path, title, label, added, renamedTo } of [
     {
-      path: '/admin/celestial-bodies',
+      path: '/curator/celestial-bodies',
       title: 'Celestial Bodies',
       label: 'Celestial Body',
       added: 'Aaa Testwort Star',
       renamedTo: 'Aaa Testwort Comet',
     },
     {
-      path: '/admin/zodiac-signs',
+      path: '/curator/zodiac-signs',
       title: 'Zodiac Signs',
       label: 'Zodiac Sign',
       added: 'Aaa Testwort Sign',
@@ -970,14 +979,14 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     { tag: '@story-18' },
     async ({ page }) => {
       const { userId } = await signInAs(page, 'traditions@story-18.test', ['discord'], 'admin');
-      expect((await page.goto('/admin/deity-traditions'))?.status()).toBe(200);
+      expect((await page.goto('/curator/deity-traditions'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Deity Traditions' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
 
       await page.getByRole('link', { name: 'Add Tradition' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Tradition' });
       await expect(adding).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/deity-traditions\?new$/);
+      await expect(page).toHaveURL(/\/curator\/deity-traditions\?new$/);
       await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixtural');
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       const saveNew = adding.getByRole('button', { name: 'Save Tradition' });
@@ -1010,16 +1019,18 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(rowOf(page, 'Deity Traditions', 'Aaa Mockish')).toBeVisible();
       await expect(rowOf(page, 'Deity Traditions', 'Aaa Fixtural')).toHaveCount(0);
       // The deity is listed under its tradition's new name, at the address that name makes.
-      await page.goto('/admin/deities');
+      await page.goto('/curator/deities');
       const testra = rowOf(page, 'Deities', 'Aaa Testra');
       await expect(testra.getByRole('cell', { name: 'Aaa Mockish', exact: true })).toBeVisible();
       await testra.getByRole('link', { name: 'Edit Aaa Testra' }).click();
-      await expect(page).toHaveURL(`/admin/deities?edit=${deitySlug('Aaa Testra', 'Aaa Mockish')}`);
+      await expect(page).toHaveURL(
+        `/curator/deities?edit=${deitySlug('Aaa Testra', 'Aaa Mockish')}`,
+      );
       await expect(
         page.getByRole('dialog', { name: 'Edit Deity, Aaa Testra, Aaa Mockish', exact: true }),
       ).toBeVisible();
 
-      await page.goto('/admin/deity-traditions?edit=aaa-mockish');
+      await page.goto('/curator/deity-traditions?edit=aaa-mockish');
       const renamed = page.getByRole('dialog', {
         name: 'Edit Tradition, Aaa Mockish',
         exact: true,
@@ -1032,7 +1043,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
 
       // The deity lives on, under the tradition the admin picked.
       // Filtered by name: the list runs by tradition, so Greek is pages on.
-      await page.goto('/admin/deities?query=Aaa+Testra');
+      await page.goto('/curator/deities?query=Aaa+Testra');
       await expect(testra.getByRole('cell', { name: 'Greek', exact: true })).toBeVisible();
       await testra.getByRole('link', { name: 'Edit Aaa Testra' }).click();
       // The filter rides along in the address, beside the deity's new slug.
@@ -1048,17 +1059,17 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     { tag: '@story-18' },
     async ({ page }) => {
       const { userId } = await signInAs(page, 'deities@story-18.test', ['discord'], 'admin');
-      expect((await page.goto('/admin/deities'))?.status()).toBe(200);
+      expect((await page.goto('/curator/deities'))?.status()).toBe(200);
       await expect(page.getByRole('table', { name: 'Deities' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
       // Narrowed to the name it will add: the list runs by tradition, then name,
       // so a deity under Greek sits pages in.
-      await page.goto('/admin/deities?query=Aaa+Testri');
+      await page.goto('/curator/deities?query=Aaa+Testri');
 
       await page.getByRole('link', { name: 'Add Deity' }).click();
       const adding = page.getByRole('dialog', { name: 'Add Deity' });
       await expect(adding).toBeVisible();
-      await expect(page).toHaveURL(/\/admin\/deities\?query=Aaa\+Testri&new$/);
+      await expect(page).toHaveURL(/\/curator\/deities\?query=Aaa\+Testri&new$/);
       await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testris');
       await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
       const tradition = adding.getByRole('combobox', { name: 'Tradition' });
@@ -1081,7 +1092,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       });
       await expect(editing).toBeVisible();
       await expect(page).toHaveURL(
-        `/admin/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testris', 'Greek')}`,
+        `/curator/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testris', 'Greek')}`,
       );
       await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testrix');
       await assertNoAccessibilityViolations(page);
@@ -1128,7 +1139,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(renamed).toBeVisible();
 
       // Freed: taken off the entry's deities, as the refusal's remedy says.
-      await page.goto(`/admin/compendium?edit=${slugify(entry)}`);
+      await page.goto(`/curator/compendium?edit=${slugify(entry)}`);
       const entryDialog = page.getByRole('dialog', {
         name: `Edit Ingredient, ${entry}`,
         exact: true,
@@ -1147,12 +1158,14 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(saveEntry).toBeDisabled();
 
       // Now it goes, and the list no longer holds it.
-      await page.goto(`/admin/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testrix', 'Greek')}`);
+      await page.goto(
+        `/curator/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testrix', 'Greek')}`,
+      );
       await expect(held).toBeVisible();
       await deleteFrom(held, 'Deity');
       await expect(held).toHaveCount(0);
       // Back on the list narrowed to its name, which no longer finds it.
-      await expect(page).toHaveURL(/\/admin\/deities\?query=Aaa\+Testri$/);
+      await expect(page).toHaveURL(/\/curator\/deities\?query=Aaa\+Testri$/);
       await expect(page.getByRole('link', { name: 'Add Deity' })).toBeVisible();
       await expect(page.getByRole('row', { name: /Aaa Testri/ })).toHaveCount(0);
     },
@@ -1175,12 +1188,21 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       const entryPage = `/compendium/ingredients/${slug}`;
       expect((await page.goto(entryPage))?.status()).toBe(200);
 
-      await page.goto('/admin/compendium');
+      await page.goto('/curator/compendium');
       const row = page.getByRole('row').filter({ hasText: name });
       const shown = row.getByRole('switch', { name: `Shown in Compendium: ${name}`, exact: true });
       await expect(shown).toBeChecked();
+      // The switch moves at the press; the write has landed once the mutation answers.
+      const saved = () =>
+        page.waitForResponse(
+          (response) =>
+            response.url().includes('/api/graphql') &&
+            (response.request().postData() ?? '').includes('SetCompendiumEntryShown'),
+        );
+      const hidden = saved();
       await shown.click();
       await expect(shown).not.toBeChecked();
+      await hidden;
 
       // A visitor with no account no longer finds it, in the list or at its address.
       const visitor = await browser.newContext({ baseURL });
@@ -1194,9 +1216,11 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       expect((await page.goto(entryPage))?.status()).toBe(200);
       await expect(page.getByText(/^Hidden in the Compendium\./)).toBeVisible();
 
-      await page.goto('/admin/compendium');
+      await page.goto('/curator/compendium');
+      const restored = saved();
       await shown.click();
       await expect(shown).toBeChecked();
+      await restored;
       expect((await page.goto(entryPage))?.status()).toBe(200);
       await expect(page.getByText(/^Hidden in the Compendium\./)).toHaveCount(0);
     },

@@ -199,6 +199,17 @@
     }
   }
 
+  // What takes effect for every reader at once and needs care, not undoing: a document's Publish.
+  // In the warning ochre, the step short of the destructive red.
+  .btn--caution {
+    border-color: $warning;
+    color: $warning;
+
+    &:hover {
+      background-color: $warning;
+    }
+  }
+
   // A size, not a colour, so it composes with every variant: for a compact
   // strip — a banner, a table row — that the full button would make taller.
   .btn--small {
@@ -470,6 +481,12 @@
     > :is(.field:has(> .select), .filter-row__choice) {
       flex: 1 1 $filter-choice-width;
       min-width: 0;
+    }
+
+    // A choice marked to fit (`FilterSelectField`'s `fit`) is as wide as its longest option: the native select sizes so
+    // itself, and the hydrated box stacks every label unseen in its value's place. Same weight as the rule above, later.
+    > .filter-row__choice.filter-row__choice--fit {
+      flex: none;
     }
   }
 
@@ -761,7 +778,7 @@
   }
 
   // A table of contents: titled sections of links, each link with its one
-  // line beneath it in the muted ink. The `/admin` index's (AdminNav's
+  // line beneath it in the muted ink. The `/curator` and `/keepers` indexes (AdminNav's
   // `contents.tsx`) and the coven index's. Not bulleted: a list of links, so
   // typography-base's marker and indent go. Here among the primitives rather
   // than in a component's stylesheet, since a route loads a component's
@@ -770,7 +787,7 @@
     @include stack;
   }
 
-  // The `/admin` index in the reading column, centred in the admin area's wider one as the account page's sections are in the
+  // The curator and keepers indexes in the reading column, centred in the admin area's wider one as the account page's sections are in the
   // page; the text inside stays left-aligned.
   .admin-index {
     box-sizing: border-box;
@@ -823,6 +840,7 @@
   // claude-docs/auth/admin-bootstrap.md, "The account page".
   .page-with-nav {
     @include stack(6);
+    @include page-with-nav-grid;
   }
 
   .page-with-nav > * {
@@ -831,12 +849,6 @@
   }
 
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-    .page-with-nav {
-      display: grid;
-      grid-template-columns: calc(#{space(8)} * 3) minmax(0, $narrow-column);
-      place-content: start center;
-    }
-
     .page-with-nav > :not(.page-nav) {
       grid-column: 2;
     }
@@ -853,17 +865,6 @@
     // A page with no head of its own, such as a tab inside `TabbedPage` whose heading stands above: the menu starts on the first row.
     .page-with-nav--headless > .page-nav {
       grid-row: 1 / span 3;
-    }
-  }
-
-  // On a wide screen the sections sit at the window's centre, the menu hanging to their left: an empty
-  // third column the menu's width balances the first. Not from a tablet up, which lacks the room for
-  // three columns and the frame's padding; below this the pair is centred instead.
-  @media (min-width: calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
-    .page-with-nav {
-      grid-template-columns:
-        calc(#{space(8)} * 3) minmax(0, $narrow-column)
-        calc(#{space(8)} * 3);
     }
   }
 

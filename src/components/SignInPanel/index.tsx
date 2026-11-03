@@ -12,7 +12,7 @@ import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
 import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
-import type { SignInPanelProps } from './types';
+import type { SignInAttempt, SignInPanelProps } from './types';
 import './index.scss';
 
 // A cookie announces no change, and only a callback, a full navigation away,
@@ -85,7 +85,8 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     }
   };
 
-  const [signingIn, setSigningIn] = useState<ProviderId | null>(null);
+  // The sign-in under way, a provider's or the passkey's: every other control waits for it.
+  const [signingIn, setSigningIn] = useState<SignInAttempt | null>(null);
   useEffect(() => {
     const restored = (event: PageTransitionEvent) => {
       if (event.persisted) setSigningIn(null);
@@ -155,8 +156,18 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
                 onSignIn={signInWith}
               />
             ))}
-            <PasskeyButton next={next} lastUsed={passkeyLastUsed} />
-            <button type="button" className="btn btn--solid" onClick={() => showView(true)}>
+            <PasskeyButton
+              next={next}
+              lastUsed={passkeyLastUsed}
+              signingIn={signingIn}
+              onSigningIn={setSigningIn}
+            />
+            <button
+              type="button"
+              className="btn btn--solid"
+              disabled={signingIn !== null}
+              onClick={() => showView(true)}
+            >
               Continue with Email
             </button>
           </div>

@@ -6,8 +6,15 @@ import type {
   ObjectRef,
 } from '@pothos/core';
 import type { FieldAuthScopes } from '@pothos/plugin-scope-auth';
-import type { EmailVerificationSender, InvitationSender, PasswordSetter } from '@/modules/identity';
-import type { SupportNotifier } from '@/modules/support';
+import type { MemberPauseNotifier } from '@/modules/coven';
+import type {
+  AccessPauseNotifier,
+  EmailVerificationSender,
+  InvitationSender,
+  PasswordSetter,
+} from '@/modules/identity';
+import type { DocumentMailingNotifier } from '@/modules/documents';
+import type { SupportNotifier, TimeoutNotifier } from '@/modules/support';
 import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
 import type { Loaders } from './loaders';
@@ -16,6 +23,8 @@ import type { Loaders } from './loaders';
 export interface Context {
   /** `null` when signed out: the endpoint answers, and a scope or service refuses. */
   session: Session | null;
+  /** Set while a pause stands on the signed-in user: `session` is then `null`, and a refusal says the access is paused. */
+  accessPause?: { until: Date | null };
   loaders: Loaders;
   /** Bound to this request's host and cookie: the email page's mail goes out through it. */
   emailVerification: EmailVerificationSender;
@@ -25,6 +34,10 @@ export interface Context {
   passwords: PasswordSetter;
   /** Bound to this request's host: a reply's notice to the sender goes out through it. */
   support: SupportNotifier;
+  /** Bound to this request's host: the notice of a support time-out, a site access pause or a coven access pause goes out through it. */
+  pauses: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier;
+  /** Bound to this request's host: the mailing of a document goes out on links to this site. */
+  documents: DocumentMailingNotifier;
   /** The caller's address from the platform's forwarded-for header; `null` when there is none. Only the signed-out support send reads it. */
   clientIp: string | null;
 }
@@ -56,7 +69,8 @@ export interface SchemaTypes {
   };
 }
 
-export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
+export type ErrorCode =
+  'VALIDATION' | 'FORBIDDEN' | 'ACCESS_PAUSED' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
 
 /**
  * What a mapped error carries under `extensions`: `fieldErrors` only on
@@ -66,6 +80,8 @@ export interface ErrorExtensions {
   code: ErrorCode;
   fieldErrors?: ValidationIssue[];
   currentRevision?: number;
+  /** Set with `ACCESS_PAUSED`: when the pause ends, as an ISO string, or `null` for a pause with no end. */
+  pausedUntil?: string | null;
   /** Set with `RATE_LIMITED`: the HTTP status and the Retry-After header Yoga sends. */
   http?: { status: number; headers: Record<string, string> };
 }

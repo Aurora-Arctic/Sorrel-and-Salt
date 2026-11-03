@@ -34,15 +34,12 @@ const INVITED = `grantee${DOMAIN}`;
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
-/** A sender that records what it was asked to mail, so a test holds the token the inbox would. */
+/** A sender that records the invitations it was asked to mail, by id: the token is minted by the mail's step, never here. */
 function recordingSender() {
-  const sent: { to: string; token: string; inviterName: string }[] = [];
+  const sent: string[] = [];
   const sender: InvitationSender = {
-    siteInvitation: async (to, token, { inviterName }) => {
-      sent.push({ to, token, inviterName });
-    },
-    workspaceInvitation: async () => {
-      throw new Error('an admin invitation mails no coven');
+    invitation: async (invitationId) => {
+      sent.push(invitationId);
     },
   };
   return { sent, sender };
@@ -79,7 +76,7 @@ const CREATE = `
 const ACCEPT = `mutation ($token: String!) { acceptInvitation(token: $token) { id acceptedAt } }`;
 
 describe('Mutation.createAdminInvitation', () => {
-  it('answers an admin the invitation, stamped as the session, and the link only to the sender', async () => {
+  it('answers an admin the invitation, stamped as the session, and hands the sender its id and no token', async () => {
     const { sent, sender } = recordingSender();
 
     const result = await run<CreateAdminInvitationResult>(
@@ -96,17 +93,10 @@ describe('Mutation.createAdminInvitation', () => {
       note: 'Curates the resins',
       audit: { createdBy: E.id },
     });
-    expect(sent).toEqual([
-      {
-        to: INVITED,
-        token: expect.any(String),
-        // The acting admin's own name, read from their row.
-        inviterName: (await sql`select name from users where id = ${E.id}`)[0].name,
-      },
-    ]);
-    const [{ token }] = sent;
-    expect(JSON.stringify(result)).not.toContain(token);
-    expect(JSON.stringify(result)).not.toContain(sha256(token));
+    const [stored] = await sql`select id, token_hash from invitations`;
+    expect(sent).toEqual([stored!.id]);
+    expect(result.data?.createAdminInvitation).toMatchObject({ id: stored!.id });
+    expect(JSON.stringify(result)).not.toContain(stored!.token_hash);
   });
 
   // Not merely absent from this answer: no field could carry them. The one exception is the card mint, whose result
@@ -205,10 +195,11 @@ describe('Mutation.revokeAdminInvitation', () => {
 
 describe('Mutation.acceptInvitation', () => {
   it('answers the invited account the invitation accepted, and a second use as FORBIDDEN', async () => {
-    const { sent, sender } = recordingSender();
+    const { sender } = recordingSender();
     await run(asUser(E), CREATE, { email: INVITED }, { invitations: sender });
-    const [{ token }] = sent;
-    const [{ id }] = await sql`select id from invitations`;
+    // The token the mail's step would have minted, set through the raw client in its place.
+    const token = 'fixture-token-cccccccccccccccccccccccccccccccc';
+    const [{ id }] = await sql`update invitations set token_hash = ${sha256(token)} returning id`;
     const grantee = { id: GRANTEE, role: 'user' as const };
 
     const accepted = await run<AcceptInvitationResult>(asUser(grantee), ACCEPT, { token });

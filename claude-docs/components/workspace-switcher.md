@@ -10,12 +10,21 @@ create choice "Create Coven"; code and these docs say workspace.
 ## Props
 
 `workspaces`: `SwitcherWorkspace[]`, every workspace the viewer is a member of,
-in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite }`:
+in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite, paused }`:
 the two flags say what the viewer's role there may open (member: read, and
 member: invite, an owner's alone), so the switcher can step back from a people
 page the next coven would 404. The caller already holds the memberships (the
 coven layout, M6.10; the shell, MB.7, which reads the flags from `rolePermits`
 in `viewerOf`), so the component fetches nothing.
+`paused` is the pause an owner set on the viewer's seat there, `{ until }` or
+null, `until` null for no end date (M15.55, M15.56). A paused coven's row
+carries a second line, "Paused until 1 January 2099, 00:00 UTC" or "Paused,
+with no end date", read as part of its name. It stays pickable, and a pick goes
+straight to `/coven-paused/[slug]`, which says the same, drawing that page's
+skeleton (a `form` on a panel in the narrow column, as Create Coven's) while it
+loads. The coven layout would send the viewer there anyway; going direct skips
+the hop and draws the right skeleton rather than the coven's.
+`viewerOf` also reads both flags false for a paused coven.
 
 `canCreate`: whether the viewer holds `canCreateWorkspace`, which the caller
 reads from the user row, never from the session. When true, the list ends
@@ -26,7 +35,9 @@ with a Create Coven choice (M9.16). It defaults to false.
 - **The current workspace is read from the address, never kept.** The value is
   `covenSlugOf(usePathname())` (`src/lib/coven-path.ts`). Nothing is stored in
   session, cookie or local state, so two tabs in two workspaces cannot disagree
-  through it. Outside `/coven/…` the box shows "Choose a coven".
+  through it. On a coven's paused page, `/coven-paused/<slug>`, the value is that coven
+  (`pausedCovenSlugOf`, `src/lib/access-paused.ts`), and a choice goes to the chosen coven's home.
+  Anywhere else outside `/coven/…` the box shows "Choose a coven".
 - **A choice keeps the page when the page exists in the other workspace**
   (M9.12, the owner's call, 2026-10-21). `pathInCoven(pathname, slug, options)`
   decides, in this order:

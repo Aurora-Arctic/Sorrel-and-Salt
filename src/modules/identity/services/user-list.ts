@@ -45,8 +45,8 @@ export async function countUsers(
 }
 
 /** The filter as the repository takes it, a blank query no query. */
-function trimmedFilter({ query, awaitingApproval, role }: UserFilter): UserFilter {
-  return { query: query?.trim() || undefined, awaitingApproval, role };
+function trimmedFilter(filter: UserFilter): UserFilter {
+  return { ...filter, query: filter.query?.trim() || undefined };
 }
 
 /**

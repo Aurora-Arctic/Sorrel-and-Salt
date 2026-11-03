@@ -1006,6 +1006,10 @@ $space-steps: (
 // Shared with the entry's wait (Skeleton) so the two lay out alike.
 $side-column: calc(#{space(8)} * 5);
 
+// A document page's menu column, half as wide again as `.page-with-nav`'s: a document's section headings run to a
+// clause or two. Shared with the shell's paused notice, which stands over the document's column (AppShell).
+$document-menu-column: calc(#{space(8)} * 4 + #{space(6)});
+
 // The jar shelf's measures, shared with the entry's wait (Skeleton) so the stand-in jars are the real
 // ones' size and the page does not drop when Stock loads: the cell's top padding, the drawing's size,
 // the plank's thickness, and the narrowest a cell goes, on a wide and on a narrow screen.

@@ -2,30 +2,35 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { longMinuteInZone } from '../../lib/utc';
 import { CollapsibleSection } from '../CollapsibleSection';
-import DateField from '../DateField';
-import { today } from '../DateField/day';
-import { FieldShell, fieldDescription } from '../Field';
 import IconTip from '../IconTip';
 import { HistoryIcon } from '../IconTip/icons';
-import LocalTime from '../LocalTime';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import ConfirmedAction from '../UserList/confirmed-action';
-import { DayRange, LocalDay } from './day-range';
+import {
+  Ledger,
+  PauseFields,
+  Until,
+  endOf,
+  pauseReady,
+  stands,
+} from '../UserDetail/access-pause-parts';
+import type { PauseSpan } from '../UserDetail/types';
+import { LocalDay } from './day-range';
 import type { SupportTimeoutEntry } from './types';
 import './timeout-panel.scss';
 
-// An admin's time-out of a sender: barred from the support form until an end, or until lifted. One panel
+// An admin's time-out of a sender: barred from the support form until an end, or with no end date until lifted. One panel
 // serves the request dialog and the user modal, keyed by the user, so a repeat sender is seen as one.
 
 const TimeOutDocument = graphql(`
-  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {
-    timeOutSupportSender(userId: $userId, until: $until, note: $note) {
+  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {
+    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {
       id
     }
   }
@@ -39,36 +44,7 @@ const LiftDocument = graphql(`
   }
 `);
 
-const NOTE_HINT = 'Seen by staff only.';
-
-type Span = 'day' | 'week' | 'month' | 'date';
-
-const SPANS: readonly { value: Span; label: string }[] = [
-  { value: 'day', label: '1 Day' },
-  { value: 'week', label: '1 Week' },
-  { value: 'month', label: '1 Month' },
-  { value: 'date', label: 'Until a Date' },
-];
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-/** The instant a time-out of this span ends: counted from `now`, or the end of the picked day in the admin's own zone. */
-function endOf(span: Span, day: string, now: Date): Date | undefined {
-  if (span === 'day') return new Date(now.getTime() + DAY_MS);
-  if (span === 'week') return new Date(now.getTime() + 7 * DAY_MS);
-  if (span === 'month') {
-    const end = new Date(now);
-    end.setMonth(end.getMonth() + 1);
-    return end;
-  }
-  if (!day) return undefined;
-  const end = new Date(`${day}T23:59:59.999`);
-  return Number.isNaN(end.getTime()) ? undefined : end;
-}
-
-/** Whether a time-out still bars the sender. */
-const isActive = (timeout: SupportTimeoutEntry, now: number): boolean =>
-  timeout.liftedAt === null && timeout.until.getTime() > now;
+const NOTE_HINT = 'Seen by staff only, up to 500 characters.';
 
 const LiftButton = ({
   timeout,
@@ -108,10 +84,10 @@ const StandingCard = ({
     <p className="timeout-panel__head">
       <span className="badge badge--caution">Timed Out</span>
       <span>
-        until <LocalTime at={timeout.until} long />
+        <Until until={timeout.until} />
       </span>
     </p>
-    {timeout.note && <p className="timeout-panel__muted">{timeout.note}</p>}
+    <p className="timeout-panel__muted">{timeout.note}</p>
     <p className="timeout-panel__muted">
       {timeout.setBy ? `Set by ${timeout.setBy.name}, ` : 'Set '}
       <LocalDay at={timeout.createdAt} />
@@ -120,98 +96,38 @@ const StandingCard = ({
   </div>
 );
 
-/** Earlier time-outs, each as its dates, a Lifted tag where lifted, and its note beneath. */
-const Ledger = ({ timeouts }: { timeouts: SupportTimeoutEntry[] }): ReactElement => (
-  <div className="timeout-panel__ledger">
-    <h4 className="timeout-panel__ledger-title">Earlier</h4>
-    <ul className="timeout-panel__list">
-      {timeouts.map((timeout) => (
-        <li key={timeout.id}>
-          <span className="timeout-panel__ledger-line">
-            <span className="timeout-panel__range">
-              <DayRange from={timeout.createdAt} to={timeout.until} />
-            </span>
-            {timeout.liftedAt && (
-              <span className="badge badge--muted">
-                {'Lifted\u00a0'}
-                <LocalDay at={timeout.liftedAt} year={false} />
-              </span>
-            )}
-          </span>
-          {timeout.note && <span className="timeout-panel__muted">{timeout.note}</span>}
-          <span className="timeout-panel__muted">
-            {timeout.setBy ? `Set by ${timeout.setBy.name}` : 'Set'}
-            {timeout.liftedAt && ` · Lifted by ${timeout.liftedBy?.name ?? 'a removed account'}`}
-          </span>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
-
 /** The form that sets a time-out: how long, the note, and a confirm before it is sent. */
 const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactElement => {
   const { refresh } = usePendingNavigation();
-  const [span, setSpan] = useState<Span>('day');
+  const [span, setSpan] = useState<PauseSpan>('day');
   const [day, setDay] = useState('');
   const [note, setNote] = useState('');
-  const spanId = useId();
-  const dayId = useId();
-  const noteId = useId();
-  const { aria: spanAria, ...spanField } = fieldDescription({ id: spanId });
-  const { aria: dayAria, ...dayField } = fieldDescription({ id: dayId });
-  const { aria: noteAria, ...noteField } = fieldDescription({
-    id: noteId,
-    hint: NOTE_HINT,
-  });
-  const discard = useDiscardGuard(span !== 'day' || day !== '' || note.trim() !== '');
+  const [message, setMessage] = useState('');
+  const discard = useDiscardGuard(
+    span !== 'day' || day !== '' || note.trim() !== '' || message.trim() !== '',
+  );
 
-  // The end is worked out when the question opens or the answer is sent, never during render.
-  const endNow = (): Date | undefined => endOf(span, day, new Date());
-  const ready = span !== 'date' || (endNow()?.getTime() ?? 0) > Date.now();
-  const end = endNow();
+  // The end is worked out when the question opens or the answer is sent, never kept in state.
+  const end = endOf(span, day, new Date());
+  const ready = pauseReady(span, day) && note.trim() !== '' && message.trim() !== '';
 
   return (
     <div className="form">
-      <FieldShell label="For" {...spanField}>
-        <select
-          id={spanField.controlId}
-          className="select"
-          {...spanAria}
-          value={span}
-          onChange={(event) => setSpan(event.target.value as Span)}
-        >
-          {SPANS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </FieldShell>
-      {span === 'date' && (
-        <FieldShell label="Until" {...dayField}>
-          <DateField
-            id={dayField.controlId}
-            labelledBy={dayField.labelId}
-            value={day}
-            min={today()}
-            onChange={setDay}
-            {...dayAria}
-          />
-        </FieldShell>
-      )}
-      <FieldShell label="Note" hint={NOTE_HINT} {...noteField}>
-        <input
-          id={noteField.controlId}
-          className="input"
-          type="text"
-          autoComplete="off"
-          placeholder="Why, for staff"
-          {...noteAria}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </FieldShell>
+      <PauseFields
+        span={span}
+        onSpan={setSpan}
+        day={day}
+        onDay={setDay}
+        note={note}
+        onNote={setNote}
+        noteHint={NOTE_HINT}
+        notePlaceholder="Why"
+        noteRequired
+        message={message}
+        onMessage={setMessage}
+        messageLabel="Message to User"
+        messagePlaceholder="For them"
+      />
       <div className="form__actions">
         <ConfirmedAction
           label="Time Out Sender"
@@ -220,24 +136,30 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
           openClass="btn btn--quiet"
           disabled={!ready}
           title={`Time Out ${name}?`}
-          question={`They cannot send a support request until ${end ? longMinuteInZone(end) : 'then'}. You can lift it sooner.`}
+          question={
+            end
+              ? `They cannot send a support request until ${longMinuteInZone(end)}. You can lift it sooner.`
+              : 'They cannot send a support request until you lift the time-out.'
+          }
           busy="Timing Out"
           confirmClass="btn btn--destructive"
           announcement="Sender timed out."
           inModal
           send={() => {
             const until = endOf(span, day, new Date());
-            if (!until) return Promise.reject(new Error('No end chosen'));
+            if (until === undefined) return Promise.reject(new Error('No end chosen'));
             return graphqlRequest(TimeOutDocument, {
               userId,
-              until: until.toISOString(),
-              note: note.trim() || undefined,
+              until: until?.toISOString() ?? null,
+              note: note.trim(),
+              message: message.trim(),
             });
           }}
           onSent={() => {
             setSpan('day');
             setDay('');
             setNote('');
+            setMessage('');
             refresh();
           }}
         />
@@ -266,7 +188,7 @@ const TimeoutPanel = ({
   // Read once per render of the panel: a time-out that lapses while it is open shows as past on the next.
   const [now] = useState(() => Date.now());
   const [folded, setFolded] = useState(false);
-  const standing = timeouts.find((timeout) => isActive(timeout, now));
+  const standing = timeouts.find((timeout) => stands(timeout, now));
   const earlier = timeouts.filter((timeout) => timeout !== standing);
 
   return (
@@ -279,7 +201,7 @@ const TimeoutPanel = ({
             <span className="timeout-panel__muted">
               {standing ? (
                 <>
-                  · until <LocalTime at={standing.until} long />
+                  · <Until until={standing.until} />
                 </>
               ) : (
                 '· none'
@@ -304,7 +226,9 @@ const TimeoutPanel = ({
         ) : (
           <TimeoutForm userId={userId} name={name} />
         )}
-        {earlier.length > 0 && !earlierHref && <Ledger timeouts={earlier} />}
+        {earlier.length > 0 && !earlierHref && (
+          <Ledger pauses={earlier} title="Earlier Time-Outs" />
+        )}
       </CollapsibleSection>
     </div>
   );

@@ -13,6 +13,7 @@ import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
+import { seedDocuments } from '@/db/seed/documents';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
@@ -135,7 +136,7 @@ describe('resolveScenario', () => {
 });
 
 // Every entry point opens with `beginSeedTransaction`, which inserts the bootstrap row when it is missing.
-// That row is no admin: it has no OAuth account and nobody can sign in as it, so as an admin it would only be a revocable row on /admin/users.
+// That row is no admin: it has no OAuth account and nobody can sign in as it, so as an admin it would only be a revocable row on /keepers/users.
 // Each entry names the tables it fills from empty: the six `migrate.yml` runs on staging and production; the dev-only scenarios are a developer's to see working.
 const SEED_ENTRIES: SeedEntry[] = (
   [
@@ -197,6 +198,12 @@ const SEED_ENTRIES: SeedEntry[] = (
         'references',
         'reference_links',
       ],
+    },
+    {
+      // The site's four documents, read from the real files under `documents/`: there are few enough for every sweep.
+      name: 'the documents seed',
+      seed: seedDocuments,
+      tables: ['documents', 'document_versions'],
     },
   ] satisfies Omit<SeedEntry, 'run'>[]
 ).map((entry: Omit<SeedEntry, 'run'>) => ({

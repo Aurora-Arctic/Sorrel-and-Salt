@@ -14,7 +14,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   page,
 }) => {
   await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
-  await page.goto('/admin/invitation-cards');
+  await page.goto('/keepers/invitation-cards');
 
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
@@ -60,7 +60,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 
-  await page.goto('/admin/card-sign-ups');
+  await page.goto('/keepers/card-sign-ups');
   await expect(page.getByText('No one has accepted a card yet.')).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
@@ -82,7 +82,7 @@ test('on a phone, Escape shuts the range calendar and the status list and leaves
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
-  await page.goto('/admin/invitation-cards');
+  await page.goto('/keepers/invitation-cards');
   await page.getByRole('button', { name: /^Filters/ }).click();
   const drawer = page.getByRole('dialog', { name: 'Filters' });
   await expect(drawer).toBeVisible();
@@ -107,7 +107,7 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
   page,
 }, testInfo) => {
   await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
-  await page.goto('/admin/invitation-cards');
+  await page.goto('/keepers/invitation-cards');
   const before = await page.getByRole('button', { name: /^Revoke Batch / }).count();
 
   await page.getByRole('link', { name: 'Mint Cards' }).click();
@@ -124,7 +124,7 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
 
   const links = await decodePdfLinks(page, path);
   expect(links, 'every code on the sheet decodes').toHaveLength(9);
-  await page.goto('/admin/invitation-cards');
+  await page.goto('/keepers/invitation-cards');
 
   // The newest batch is the first row.
   await page

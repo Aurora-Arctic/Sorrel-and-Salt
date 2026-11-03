@@ -1,11 +1,11 @@
 'use step';
 
-import { sweepLapsedProvisionalAccounts } from '../services/provisional-accounts';
+import { findLapsedProvisionalPage } from '../services/provisional-accounts';
 
-// The step of the daily provisional-cleanup job. A file of its own, so the workflow bundle keeps
-// only the call to it and never the database code it reaches.
+// The step of the daily provisional-cleanup job. A file of its own, so the workflow bundle keeps only the call to it and never the
+// database code it reaches.
 
-/** Deletes every provisional account whose window has lapsed; the count removed. */
-export async function sweepStep(): Promise<number> {
-  return sweepLapsedProvisionalAccounts();
+/** One page of the ids of lapsed provisional accounts, after `after`: ids alone, so the run's event log holds nothing else. */
+export async function lapsedPageStep(after: string | null): Promise<string[]> {
+  return findLapsedProvisionalPage(after);
 }

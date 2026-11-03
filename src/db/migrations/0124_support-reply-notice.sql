@@ -1,0 +1,1 @@
+ALTER TABLE "support_replies" ADD COLUMN "notice_sent_at" timestamp;

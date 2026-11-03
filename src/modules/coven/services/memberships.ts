@@ -3,17 +3,17 @@ import { findManyByIds, findMembershipsOfUsers } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { workspaces } from '../schema/workspaces';
-import type { MembershipWithWorkspace } from '../types';
+import type { MembershipOfUser } from '../types';
 
 /**
  * The live memberships of each user named, in order: a DataLoader's batch. A caller lists their own covens and a site admin anyone's, by workspace and role alone;
- * any other id is a `Forbidden` in its own slot. A session whose address is unverified is told of no covens, an empty list in every slot, not a refusal:
+ * any other id is a `Forbidden` in its own slot. Each membership carries the pause standing on its seat, or null. A session whose address is unverified is told of no covens, an empty list in every slot, not a refusal:
  * the shell draws the email page and the public pages from this same call, so a refusal would break them. The admin read yields no `Membership` proof (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
  */
 export async function membershipsOf(
   session: Session,
   userIds: readonly string[],
-): Promise<(MembershipWithWorkspace[] | Forbidden)[]> {
+): Promise<(MembershipOfUser[] | Forbidden)[]> {
   if (session.emailUnverified)
     return userIds.map((id) =>
       id === session.userId || session.role === 'admin' ? [] : new Forbidden(),
@@ -49,9 +49,15 @@ export function byCovenName(
   return Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 }
 
-/** The slug of the first coven the switcher lists for this account, or `undefined` for one in none. */
+/**
+ * The slug of the first coven the switcher lists for this account that it can open, passing over one whose access is
+ * paused; the first when every one is, or `undefined` for an account in none.
+ */
 export async function firstCovenSlugOf(session: Session): Promise<string | undefined> {
   const [memberships] = await membershipsOf(session, [session.userId]);
   if (!memberships || memberships instanceof Error) return undefined;
-  return memberships.map(({ workspace }) => workspace).sort(byCovenName)[0]?.slug;
+  const listed = memberships
+    .map(({ workspace, pause }) => ({ ...workspace, pause }))
+    .sort(byCovenName);
+  return (listed.find(({ pause }) => !pause) ?? listed[0])?.slug;
 }

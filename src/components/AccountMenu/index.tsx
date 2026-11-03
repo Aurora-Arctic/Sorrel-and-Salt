@@ -25,7 +25,7 @@ const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head:
 // The most a menu count shows; a larger one reads "99+".
 const COUNT_CAP = 99;
 
-const ADMIN_ASSIGNED_PATH = '/admin/support?view=mine';
+const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
 
 function countText(count: number, what: string): string {
   return count > COUNT_CAP
@@ -174,7 +174,7 @@ const AccountMenu = ({
         )}
         {verified &&
           links.map(({ label, href, base }) => {
-            const counted = base === '/admin' && staffCount > 0;
+            const counted = base === '/keepers' && staffCount > 0;
             const { shown, tip } = supportTip(staffCount, 'Assigned to You');
             return (
               <li
@@ -196,8 +196,8 @@ const AccountMenu = ({
                 >
                   {label}
                 </PendingLink>
-                {/* A link of its own beside Admin, as the invitations count is beside Your Account:
-                    a press on the circle opens the requests assigned to the viewer, on the rest of the row /admin. */}
+                {/* A link of its own beside Keepers, as the invitations count is beside Your Account:
+                    a press on the circle opens the requests assigned to the viewer, on the rest of the row /keepers. */}
                 {counted && (
                   <span className="account-menu__count">
                     <IconTip tip={tip} placement="below">

@@ -46,17 +46,17 @@ async function run(variables: Record<string, unknown>) {
 
 describe('the setEmail mutation', () => {
   it('hands the sender the next it was sent', async () => {
-    const { result, requestChange } = await run({ email: NEW, next: '/admin' });
+    const { result, requestChange } = await run({ email: NEW, next: '/keepers' });
 
     expect(result.errors).toBeUndefined();
-    expect(requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, '/admin');
+    expect(requestChange).toHaveBeenCalledExactlyOnceWith(B.id, '/keepers');
   });
 
   it('hands the sender no next when it was sent none', async () => {
     const { result, requestChange } = await run({ email: NEW });
 
     expect(result.errors).toBeUndefined();
-    expect(requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
+    expect(requestChange).toHaveBeenCalledExactlyOnceWith(B.id, undefined);
   });
 
   // Why it could have been sent: the two above, the same session and sender,

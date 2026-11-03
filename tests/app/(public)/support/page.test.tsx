@@ -9,8 +9,8 @@ const getSession = vi.fn<() => Promise<Session | null>>();
 const sessionIsVerified = vi.fn<() => Promise<boolean>>();
 vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
 
-const getMySupportTimeoutEnd = vi.fn<() => Promise<Date | null>>();
-vi.mock('@/modules/support', () => ({ getMySupportTimeoutEnd }));
+const getMySupportTimeout = vi.fn<() => Promise<{ until: Date | null } | null>>();
+vi.mock('@/modules/support', () => ({ getMySupportTimeout }));
 
 const redirect = vi.fn((path: string) => {
   throw new Error(`redirect:${path}`);
@@ -21,7 +21,7 @@ vi.mock('@/components/SupportPanel', () => ({
   default: ({ state }: { state: { kind: string } }) => <p>{`panel:${state.kind}`}</p>,
 }));
 
-const { default: SupportPage } = await import('@/app/(public)/support/page');
+const { default: SupportPage, metadata } = await import('@/app/(public)/support/page');
 
 const SESSION = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'user' } as Session;
 
@@ -30,11 +30,11 @@ const show = async () => render(await SupportPage({ searchParams: Promise.resolv
 beforeEach(() => {
   getSession.mockReset();
   sessionIsVerified.mockReset();
-  getMySupportTimeoutEnd.mockReset();
+  getMySupportTimeout.mockReset();
   redirect.mockClear();
   getSession.mockResolvedValue(SESSION);
   sessionIsVerified.mockResolvedValue(true);
-  getMySupportTimeoutEnd.mockResolvedValue(null);
+  getMySupportTimeout.mockResolvedValue(null);
 });
 
 describe('the /support page', () => {
@@ -43,7 +43,7 @@ describe('the /support page', () => {
     await show();
 
     expect(screen.getByText('panel:signed-out')).toBeVisible();
-    expect(getMySupportTimeoutEnd).not.toHaveBeenCalled();
+    expect(getMySupportTimeout).not.toHaveBeenCalled();
   });
 
   // Why the form could have shown: the account holds a session.
@@ -51,11 +51,18 @@ describe('the /support page', () => {
     sessionIsVerified.mockResolvedValue(false);
 
     await expect(show()).rejects.toThrow('redirect:/account/email');
-    expect(getMySupportTimeoutEnd).not.toHaveBeenCalled();
+    expect(getMySupportTimeout).not.toHaveBeenCalled();
   });
 
   it('tells a timed-out sender when it ends', async () => {
-    getMySupportTimeoutEnd.mockResolvedValue(new Date('2030-01-01T00:00:00Z'));
+    getMySupportTimeout.mockResolvedValue({ until: new Date('2030-01-01T00:00:00Z') });
+    await show();
+
+    expect(screen.getByText('panel:timed-out')).toBeVisible();
+  });
+
+  it('tells a sender timed out with no end date, in place of the form', async () => {
+    getMySupportTimeout.mockResolvedValue({ until: null });
     await show();
 
     expect(screen.getByText('panel:timed-out')).toBeVisible();
@@ -65,5 +72,13 @@ describe('the /support page', () => {
     await show();
 
     expect(screen.getByText('panel:form')).toBeVisible();
+  });
+});
+
+// robots.txt lets a crawler fetch /support so it can read this; the page itself holds no content
+// worth a search result.
+describe('the /support page metadata', () => {
+  it('keeps the page out of search results, its links followed', () => {
+    expect(metadata.robots).toEqual({ index: false, follow: true });
   });
 });

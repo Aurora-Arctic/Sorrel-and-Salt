@@ -12,9 +12,27 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: true },
-  { slug: 'my-own-grimoire', name: 'My Own Grimoire', canReadMembers: true, canInvite: true },
+  {
+    slug: 'fixture-coven',
+    name: 'Fixture Coven',
+    canReadMembers: true,
+    canInvite: true,
+    paused: null,
+  },
+  {
+    slug: 'testwort-circle',
+    name: 'Testwort Circle',
+    canReadMembers: true,
+    canInvite: true,
+    paused: null,
+  },
+  {
+    slug: 'my-own-grimoire',
+    name: 'My Own Grimoire',
+    canReadMembers: true,
+    canInvite: true,
+    paused: null,
+  },
 ];
 
 // In a workspace: its name is the value. Outside any workspace, on the account page: nothing chosen

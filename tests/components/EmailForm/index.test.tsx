@@ -74,7 +74,7 @@ describe('EmailForm', () => {
         verified
         confirmed
         next="/coven/hearth"
-        landing="/admin"
+        landing="/keepers"
       />,
     );
 
@@ -86,8 +86,8 @@ describe('EmailForm', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     unmount();
 
-    renderForm(<EmailForm email="ada@example.test" verified confirmed landing="/admin" />);
-    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
+    renderForm(<EmailForm email="ada@example.test" verified confirmed landing="/keepers" />);
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/keepers');
   });
 
   // Back later to change it: neither the confirmation nor Continue, since
@@ -141,13 +141,13 @@ describe('EmailForm', () => {
   it('sends where Continue goes with the address, so the mailed link carries it', async () => {
     const calls = acceptSetEmail();
     renderForm(
-      <EmailForm email="ada@example.test" verified={false} next="/admin" landing="/coven" />,
+      <EmailForm email="ada@example.test" verified={false} next="/keepers" landing="/coven" />,
     );
 
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
     await screen.findByRole('status');
-    expect(calls).toEqual([{ email: 'ada@example.test', next: '/admin' }]);
+    expect(calls).toEqual([{ email: 'ada@example.test', next: '/keepers' }]);
   });
 
   // The form sends one mail per minute, so a held-down Enter key or a nervous reader cannot fill an inbox.

@@ -4,13 +4,16 @@ import { adminTarget } from '@/components/AdminNav/target';
 // The wait under the admin menu is drawn as the page that arrives: its
 // heading, its Add or other action, its filter row, then the list.
 describe('adminTarget', () => {
-  it('draws the index as sections of links, which carries its own heading and has no cards', () => {
-    expect(adminTarget('/admin')).toMatchObject({ shape: 'contents' });
-    expect(adminTarget('/admin').title).toBeFalsy();
-  });
+  it.each(['/curator', '/keepers'])(
+    'draws the %s index as sections of links, which carries its own heading and has no cards',
+    (index) => {
+      expect(adminTarget(index)).toMatchObject({ shape: 'contents' });
+      expect(adminTarget(index).title).toBeFalsy();
+    },
+  );
 
   it('draws the compendium as cards under a heading with Add, and a filter', () => {
-    expect(adminTarget('/admin/compendium')).toMatchObject({
+    expect(adminTarget('/curator/compendium')).toMatchObject({
       shape: 'cards',
       title: true,
       action: true,
@@ -19,7 +22,7 @@ describe('adminTarget', () => {
   });
 
   it('draws a curated list as a table under a heading with a tab row, Add and a filter', () => {
-    expect(adminTarget('/admin/categories')).toMatchObject({
+    expect(adminTarget('/curator/categories')).toMatchObject({
       shape: 'table',
       title: true,
       tabs: true,
@@ -29,7 +32,7 @@ describe('adminTarget', () => {
   });
 
   it('draws any other admin address, a later tab, as a titled table with no filter', () => {
-    const target = adminTarget('/admin/category-groups');
+    const target = adminTarget('/curator/category-groups');
 
     expect(target).toMatchObject({ region: 'admin', shape: 'table', title: true });
     expect(target.filter).toBeFalsy();
@@ -39,7 +42,7 @@ describe('adminTarget', () => {
 
 describe('adminTarget for Support', () => {
   it('draws the support list as a titled table with its view tabs beneath the heading, a filter and its columns', () => {
-    expect(adminTarget('/admin/support')).toMatchObject({
+    expect(adminTarget('/keepers/support')).toMatchObject({
       region: 'admin',
       shape: 'table',
       title: true,
@@ -47,6 +50,22 @@ describe('adminTarget for Support', () => {
       tabsBelow: true,
       filter: true,
     });
-    expect(adminTarget('/admin/support').columns).toBeGreaterThan(3);
+    expect(adminTarget('/keepers/support').columns).toBeGreaterThan(3);
+  });
+});
+
+describe('adminTarget for the documents', () => {
+  it('draws a document editor under a heading with its tabs beneath it, and no filter or action', () => {
+    const target = adminTarget('/keepers/documents/privacy');
+
+    expect(target).toMatchObject({
+      region: 'admin',
+      shape: 'document',
+      title: true,
+      tabs: true,
+      tabsBelow: true,
+    });
+    expect(target.filter).toBeFalsy();
+    expect(target.action).toBeFalsy();
   });
 });

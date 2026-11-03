@@ -293,7 +293,7 @@ const filterRowTop = (page: Page, waiting: boolean) =>
 
 const adminLink = (page: Page, name: string) =>
   page
-    .getByRole('navigation', { name: 'Admin', exact: true })
+    .getByRole('navigation', { name: 'Curator', exact: true })
     .getByRole('link', { name, exact: true })
     .click();
 
@@ -346,16 +346,16 @@ const listPages: {
   {
     name: 'the admin Compendium',
     admin: true,
-    start: () => '/admin/categories',
+    start: () => '/curator/categories',
     press: (page) => adminLink(page, 'Compendium'),
-    arrived: (page) => expect(page).toHaveURL(/\/admin\/compendium$/),
+    arrived: (page) => expect(page).toHaveURL(/\/curator\/compendium$/),
   },
   {
     name: 'an admin table list',
     admin: true,
-    start: () => '/admin/compendium',
+    start: () => '/curator/compendium',
     press: (page) => adminLink(page, 'Categories'),
-    arrived: (page) => expect(page).toHaveURL(/\/admin\/categories$/),
+    arrived: (page) => expect(page).toHaveURL(/\/curator\/categories$/),
   },
 ];
 

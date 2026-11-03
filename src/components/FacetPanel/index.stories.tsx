@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
-import type { FacetPanelFilter } from './types';
+import type { FacetPanelFilter, FacetPanelProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/FacetPanel. A change is held
 // until Apply Filters or a close, and marks the chips "loading" briefly. Counts are
@@ -97,7 +97,7 @@ function Panel({
   /** The chip whose menu is opened once the panel is, so the menu is seen without a click. */
   menu?: string;
   /** The viewer's covens, for the In My Covens field. */
-  covens?: readonly { id: string; name: string }[];
+  covens?: FacetPanelProps['covens'];
 }) {
   const [filter, setFilter] = useState(start);
   const [loading, setLoading] = useState(false);
@@ -262,8 +262,8 @@ const toxicMenuNode = <Panel menu="Toxic" admin start={NONE} />;
 const inMyCovensNode = (
   <Panel
     covens={[
-      { id: 'coven-one', name: 'Test Coven One' },
-      { id: 'coven-two', name: 'Test Coven Two' },
+      { id: 'coven-one', name: 'Test Coven One', paused: null },
+      { id: 'coven-two', name: 'Test Coven Two', paused: null },
     ]}
     start={{ ...NONE, covens: ['coven-one'] }}
   />

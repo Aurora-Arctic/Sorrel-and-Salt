@@ -25,6 +25,11 @@ type Documents = {
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceDocument,
     "\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n    $expectedRevision: Int\n  ) {\n    annotateCupboardEntry(\n      workspaceId: $workspaceId\n      ingredientId: $ingredientId\n      input: $input\n      expectedRevision: $expectedRevision\n    ) {\n      id\n      revision\n    }\n  }\n": typeof types.AnnotateCupboardEntryDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.DeleteWorkspaceDocument,
+    "\n  mutation SaveDocumentDraft($documentId: ID!, $body: String!, $expectedRevision: Int) {\n    saveDocumentDraft(documentId: $documentId, body: $body, expectedRevision: $expectedRevision) {\n      id\n      revision\n    }\n  }\n": typeof types.SaveDocumentDraftDocument,
+    "\n  mutation DiscardDocumentDraft($documentId: ID!, $expectedRevision: Int!) {\n    discardDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision)\n  }\n": typeof types.DiscardDocumentDraftDocument,
+    "\n  mutation PublishDocumentDraft($documentId: ID!, $expectedRevision: Int) {\n    publishDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision) {\n      number\n    }\n  }\n": typeof types.PublishDocumentDraftDocument,
+    "\n  mutation EmailDocumentToEveryAccount($documentId: ID!, $summary: String!) {\n    emailDocumentToEveryAccount(documentId: $documentId, summary: $summary) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n": typeof types.EmailDocumentToEveryAccountDocument,
+    "\n  mutation ResumeDocumentMailing($mailingId: ID!) {\n    resumeDocumentMailing(mailingId: $mailingId) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n": typeof types.ResumeDocumentMailingDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryGroupDocument,
@@ -90,6 +95,9 @@ type Documents = {
     "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": typeof types.CreateInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.LeaveWorkspaceDocument,
     "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": typeof types.PromoteSuccessorDocument,
+    "\n  mutation PauseMemberAccess(\n    $workspaceId: ID!\n    $userId: ID!\n    $until: DateTime\n    $note: String\n    $message: String\n  ) {\n    pauseMemberAccess(\n      workspaceId: $workspaceId\n      userId: $userId\n      until: $until\n      note: $note\n      message: $message\n    ) {\n      id\n    }\n  }\n": typeof types.PauseMemberAccessDocument,
+    "\n  mutation LiftMemberAccessPause($workspaceId: ID!, $userId: ID!) {\n    liftMemberAccessPause(workspaceId: $workspaceId, userId: $userId) {\n      id\n    }\n  }\n": typeof types.LiftMemberAccessPauseDocument,
+    "\n  query MemberPauses($workspaceId: ID!, $userId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      memberPauses(userId: $userId, first: 25) {\n        edges {\n          node {\n            id\n            until\n            note\n            liftedAt\n            audit {\n              createdAt\n            }\n            setBy {\n              id\n              name\n            }\n            liftedBy {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.MemberPausesDocument,
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": typeof types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": typeof types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": typeof types.SetNameDocument,
@@ -122,11 +130,13 @@ type Documents = {
     "\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestIssueUrlDocument,
     "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n": typeof types.ReplyToSupportRequestDocument,
     "\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.AddSupportInternalNoteDocument,
-    "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": typeof types.TimeOutSupportSenderDocument,
+    "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": typeof types.TimeOutSupportSenderDocument,
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": typeof types.LiftSupportTimeoutDocument,
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveMySupportRequestDocument,
-    "\n  mutation AgreeToTerms {\n    agreeToTerms {\n      id\n      termsVersion\n    }\n  }\n": typeof types.AgreeToTermsDocument,
+    "\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n": typeof types.AgreeToTermsDocument,
+    "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": typeof types.PauseUserAccessDocument,
+    "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": typeof types.LiftUserAccessPauseDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
@@ -145,6 +155,11 @@ const documents: Documents = {
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceDocument,
     "\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n    $expectedRevision: Int\n  ) {\n    annotateCupboardEntry(\n      workspaceId: $workspaceId\n      ingredientId: $ingredientId\n      input: $input\n      expectedRevision: $expectedRevision\n    ) {\n      id\n      revision\n    }\n  }\n": types.AnnotateCupboardEntryDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": types.DeleteWorkspaceDocument,
+    "\n  mutation SaveDocumentDraft($documentId: ID!, $body: String!, $expectedRevision: Int) {\n    saveDocumentDraft(documentId: $documentId, body: $body, expectedRevision: $expectedRevision) {\n      id\n      revision\n    }\n  }\n": types.SaveDocumentDraftDocument,
+    "\n  mutation DiscardDocumentDraft($documentId: ID!, $expectedRevision: Int!) {\n    discardDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision)\n  }\n": types.DiscardDocumentDraftDocument,
+    "\n  mutation PublishDocumentDraft($documentId: ID!, $expectedRevision: Int) {\n    publishDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision) {\n      number\n    }\n  }\n": types.PublishDocumentDraftDocument,
+    "\n  mutation EmailDocumentToEveryAccount($documentId: ID!, $summary: String!) {\n    emailDocumentToEveryAccount(documentId: $documentId, summary: $summary) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n": types.EmailDocumentToEveryAccountDocument,
+    "\n  mutation ResumeDocumentMailing($mailingId: ID!) {\n    resumeDocumentMailing(mailingId: $mailingId) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n": types.ResumeDocumentMailingDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryGroupDocument,
@@ -210,6 +225,9 @@ const documents: Documents = {
     "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": types.CreateInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": types.LeaveWorkspaceDocument,
     "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": types.PromoteSuccessorDocument,
+    "\n  mutation PauseMemberAccess(\n    $workspaceId: ID!\n    $userId: ID!\n    $until: DateTime\n    $note: String\n    $message: String\n  ) {\n    pauseMemberAccess(\n      workspaceId: $workspaceId\n      userId: $userId\n      until: $until\n      note: $note\n      message: $message\n    ) {\n      id\n    }\n  }\n": types.PauseMemberAccessDocument,
+    "\n  mutation LiftMemberAccessPause($workspaceId: ID!, $userId: ID!) {\n    liftMemberAccessPause(workspaceId: $workspaceId, userId: $userId) {\n      id\n    }\n  }\n": types.LiftMemberAccessPauseDocument,
+    "\n  query MemberPauses($workspaceId: ID!, $userId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      memberPauses(userId: $userId, first: 25) {\n        edges {\n          node {\n            id\n            until\n            note\n            liftedAt\n            audit {\n              createdAt\n            }\n            setBy {\n              id\n              name\n            }\n            liftedBy {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n": types.MemberPausesDocument,
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": types.SetNameDocument,
@@ -242,11 +260,13 @@ const documents: Documents = {
     "\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n": types.SetSupportRequestIssueUrlDocument,
     "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n": types.ReplyToSupportRequestDocument,
     "\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.AddSupportInternalNoteDocument,
-    "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": types.TimeOutSupportSenderDocument,
+    "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": types.TimeOutSupportSenderDocument,
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": types.LiftSupportTimeoutDocument,
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveMySupportRequestDocument,
-    "\n  mutation AgreeToTerms {\n    agreeToTerms {\n      id\n      termsVersion\n    }\n  }\n": types.AgreeToTermsDocument,
+    "\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n": types.AgreeToTermsDocument,
+    "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": types.PauseUserAccessDocument,
+    "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": types.LiftUserAccessPauseDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
@@ -312,6 +332,26 @@ export function graphql(source: "\n  mutation AnnotateCupboardEntry(\n    $works
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SaveDocumentDraft($documentId: ID!, $body: String!, $expectedRevision: Int) {\n    saveDocumentDraft(documentId: $documentId, body: $body, expectedRevision: $expectedRevision) {\n      id\n      revision\n    }\n  }\n"): (typeof documents)["\n  mutation SaveDocumentDraft($documentId: ID!, $body: String!, $expectedRevision: Int) {\n    saveDocumentDraft(documentId: $documentId, body: $body, expectedRevision: $expectedRevision) {\n      id\n      revision\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DiscardDocumentDraft($documentId: ID!, $expectedRevision: Int!) {\n    discardDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision)\n  }\n"): (typeof documents)["\n  mutation DiscardDocumentDraft($documentId: ID!, $expectedRevision: Int!) {\n    discardDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PublishDocumentDraft($documentId: ID!, $expectedRevision: Int) {\n    publishDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision) {\n      number\n    }\n  }\n"): (typeof documents)["\n  mutation PublishDocumentDraft($documentId: ID!, $expectedRevision: Int) {\n    publishDocumentDraft(documentId: $documentId, expectedRevision: $expectedRevision) {\n      number\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation EmailDocumentToEveryAccount($documentId: ID!, $summary: String!) {\n    emailDocumentToEveryAccount(documentId: $documentId, summary: $summary) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation EmailDocumentToEveryAccount($documentId: ID!, $summary: String!) {\n    emailDocumentToEveryAccount(documentId: $documentId, summary: $summary) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResumeDocumentMailing($mailingId: ID!) {\n    resumeDocumentMailing(mailingId: $mailingId) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation ResumeDocumentMailing($mailingId: ID!) {\n    resumeDocumentMailing(mailingId: $mailingId) {\n      versionNumber\n      accountCount\n      days\n      current {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n      inProgress {\n        id\n        versionNumber\n        state\n        reached\n        recipientCount\n        startedAt\n        finishedAt\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -575,6 +615,18 @@ export function graphql(source: "\n  mutation PromoteSuccessor($workspaceId: ID!
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation PauseMemberAccess(\n    $workspaceId: ID!\n    $userId: ID!\n    $until: DateTime\n    $note: String\n    $message: String\n  ) {\n    pauseMemberAccess(\n      workspaceId: $workspaceId\n      userId: $userId\n      until: $until\n      note: $note\n      message: $message\n    ) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation PauseMemberAccess(\n    $workspaceId: ID!\n    $userId: ID!\n    $until: DateTime\n    $note: String\n    $message: String\n  ) {\n    pauseMemberAccess(\n      workspaceId: $workspaceId\n      userId: $userId\n      until: $until\n      note: $note\n      message: $message\n    ) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation LiftMemberAccessPause($workspaceId: ID!, $userId: ID!) {\n    liftMemberAccessPause(workspaceId: $workspaceId, userId: $userId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation LiftMemberAccessPause($workspaceId: ID!, $userId: ID!) {\n    liftMemberAccessPause(workspaceId: $workspaceId, userId: $userId) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query MemberPauses($workspaceId: ID!, $userId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      memberPauses(userId: $userId, first: 25) {\n        edges {\n          node {\n            id\n            until\n            note\n            liftedAt\n            audit {\n              createdAt\n            }\n            setBy {\n              id\n              name\n            }\n            liftedBy {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query MemberPauses($workspaceId: ID!, $userId: ID!) {\n    workspace(id: $workspaceId) {\n      id\n      memberPauses(userId: $userId, first: 25) {\n        edges {\n          node {\n            id\n            until\n            note\n            liftedAt\n            audit {\n              createdAt\n            }\n            setBy {\n              id\n              name\n            }\n            liftedBy {\n              id\n              name\n            }\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n"): (typeof documents)["\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -703,7 +755,7 @@ export function graphql(source: "\n  mutation AddSupportInternalNote($requestId:
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"];
+export function graphql(source: "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -719,7 +771,15 @@ export function graphql(source: "\n  mutation ResolveMySupportRequest($id: ID!) 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation AgreeToTerms {\n    agreeToTerms {\n      id\n      termsVersion\n    }\n  }\n"): (typeof documents)["\n  mutation AgreeToTerms {\n    agreeToTerms {\n      id\n      termsVersion\n    }\n  }\n"];
+export function graphql(source: "\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n"): (typeof documents)["\n  mutation AgreeToTerms($version: Int!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

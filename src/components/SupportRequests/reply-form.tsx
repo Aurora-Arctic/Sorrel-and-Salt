@@ -6,8 +6,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
-import { utcMinute } from '../../lib/utc';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
+import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
 
@@ -43,18 +43,28 @@ const NoteDocument = graphql(`
   }
 `);
 
+/** How long a timed-out sender cannot answer: until the end, or with no end date. */
+const cannotAnswer = (until: Date | null): ReactNode =>
+  until ? (
+    <>
+      until <LocalTime at={until} long />
+    </>
+  ) : (
+    'while timed out with no end date'
+  );
+
 const ReplyForm = ({
   requestId,
   resolve,
   canWait = false,
-  senderTimedOutUntil,
+  senderTimedOut,
   noteOnly = false,
 }: {
   requestId: string;
   /** The request is open, so the reply may be marked waiting on the sender. */
   canWait?: boolean;
-  /** When the sender's standing time-out ends; the form says they cannot answer until then. */
-  senderTimedOutUntil?: Date;
+  /** The sender's standing time-out; the form says they cannot answer until it ends, or that it has no end date. */
+  senderTimedOut?: { until: Date | null };
   resolve?: ReactNode;
   /** The viewer may add an internal note but not reply: no mode choice, and the form is a note form. */
   noteOnly?: boolean;
@@ -89,7 +99,7 @@ const ReplyForm = ({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!note && senderTimedOutUntil) setAsking(true);
+    if (!note && senderTimedOut) setAsking(true);
     else void send();
   }
 
@@ -135,9 +145,9 @@ const ReplyForm = ({
           onChange={setWaiting}
         />
       )}
-      {!note && senderTimedOutUntil && (
+      {!note && senderTimedOut && (
         <Notice kind="caution" quiet>
-          The sender cannot answer until {utcMinute(senderTimedOutUntil)}.
+          The sender cannot answer {cannotAnswer(senderTimedOut.until)}.
         </Notice>
       )}
       <div className="support-detail__actions">
@@ -153,10 +163,10 @@ const ReplyForm = ({
         {resolve}
       </div>
       {discard.asking && <DiscardQuestion guard={discard} />}
-      {asking && senderTimedOutUntil && (
+      {asking && senderTimedOut && (
         <ConfirmQuestion
           question="Reply to a sender who is timed out?"
-          details={`They cannot answer until ${utcMinute(senderTimedOutUntil)}.`}
+          details={<>They cannot answer {cannotAnswer(senderTimedOut.until)}.</>}
           tone="solid"
           confirmLabel="Send Reply"
           busyLabel="Sending"

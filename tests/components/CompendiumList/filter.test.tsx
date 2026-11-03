@@ -146,15 +146,15 @@ describe('CompendiumList filter', () => {
   it.each([
     {
       toggle: 'No Refs',
-      on: '/admin/compendium?withoutReferences=1',
+      on: '/curator/compendium?withoutReferences=1',
       shown: SHOWN,
-      off: '/admin/compendium?query=test&forms=Fixture+Oil',
+      off: '/curator/compendium?query=test&forms=Fixture+Oil',
     },
     {
       toggle: 'No Form',
-      on: '/admin/compendium?withoutForms=1',
+      on: '/curator/compendium?withoutForms=1',
       shown: { ...SHOWN, withoutForms: true },
-      off: '/admin/compendium?query=test&forms=Fixture+Oil&withoutReferences=1',
+      off: '/curator/compendium?query=test&forms=Fixture+Oil&withoutReferences=1',
     },
   ])('writes $toggle as 1 and the toggle off by leaving it out', ({ toggle, on, shown, off }) => {
     const facets = { ...FACETS, withoutForms: 3 };
@@ -217,14 +217,14 @@ describe('CompendiumList filter', () => {
   it('applies Clear All beside the Filters button at once, and Clear All in the panel too', () => {
     const { unmount } = render(<FilterRow {...props({ filter: SHOWN })} />);
     fireEvent.click(screen.getAllByRole('link', { name: 'Clear All' })[0]);
-    expect(router.push.mock.calls).toEqual([['/admin/compendium']]);
+    expect(router.push.mock.calls).toEqual([['/curator/compendium']]);
     unmount();
     router.push.mockReset();
 
     render(<FilterRow {...props({ filter: SHOWN })} />);
     openPanel();
     fireEvent.click(within(panel()).getByRole('link', { name: 'Clear All' }));
-    expect(router.push.mock.calls).toEqual([['/admin/compendium']]);
+    expect(router.push.mock.calls).toEqual([['/curator/compendium']]);
   });
 
   it('applies the name on its Search submit with the facets shown', () => {
@@ -234,7 +234,7 @@ describe('CompendiumList filter', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     expect(router.push.mock.calls).toEqual([
-      ['/admin/compendium?query=Two+words&forms=Fixture+Oil&withoutReferences=1'],
+      ['/curator/compendium?query=Two+words&forms=Fixture+Oil&withoutReferences=1'],
     ]);
   });
 
@@ -359,8 +359,8 @@ describe('CompendiumList filter', () => {
 
   describe('In My Covens on the public list', () => {
     const COVENS = [
-      { id: 'coven-w', name: 'Testhollow' },
-      { id: 'coven-v', name: 'Testwren' },
+      { id: 'coven-w', name: 'Testhollow', paused: null },
+      { id: 'coven-v', name: 'Testwren', paused: null },
     ];
     const publicFilter = (filter: CompendiumListFilter = NO_FILTER) =>
       render(<FilterRow {...props({ filter })} audience="public" covens={COVENS} />);

@@ -159,7 +159,7 @@ export async function selectFrom(
       .for('update');
   }
 
-  if (order && 'limit' in order) {
+  if (order && 'limit' in order && !('aggregate' in order)) {
     return readUnder({ similarity: SIMILARITY_THRESHOLD, word: WORD_SIMILARITY_THRESHOLD }, (tx) =>
       build(tx)
         .orderBy(...order.orderBy)
@@ -176,11 +176,12 @@ export async function selectFrom(
   }
 
   if (aggregated) {
-    const { groupBy = [], orderBy = [] } = aggregated;
+    const { groupBy = [], orderBy = [], limit } = aggregated;
     return readKeyed(aggregated.over, (executor) => {
       const query = build(executor);
       if (groupBy.length > 0) query.groupBy(...groupBy);
       if (orderBy.length > 0) query.orderBy(...orderBy);
+      if (limit !== undefined) query.limit(limit);
       return query;
     });
   }

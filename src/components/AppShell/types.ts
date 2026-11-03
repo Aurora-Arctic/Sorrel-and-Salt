@@ -30,3 +30,10 @@ export interface AddIngredientButtonProps {
 export type AddDestination =
   | { kind: 'compendium'; key: string; name: string }
   | { kind: 'coven'; key: string; name: string; workspace: ShellWorkspace };
+
+export interface PausedNoticeProps {
+  /** When the viewer's standing site pause ends; null for a pause with no end date. */
+  until: Date | null;
+  /** Where the notice stands: the shell's band above the page, or a page that sets it in its own column. */
+  className: string;
+}

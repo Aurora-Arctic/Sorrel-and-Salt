@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import {
   addSupportInternalNote,
@@ -7,8 +7,14 @@ import {
   sendSignedOutSupportRequest,
   sendSupportRequest,
 } from '@/modules/support';
-import type { SupportNotifier } from '@/modules/support';
+import type { SupportNotifier, SupportStatusMail } from '@/modules/support';
+import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
+import { supportStatusStep } from '@/modules/support/jobs/support-status-mail-steps';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { supportNotifier } from '@/lib/support-mail';
+import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
+import { replyNoticeStep } from '@/modules/support/jobs/support-reply-notice-steps';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
@@ -22,130 +28,164 @@ vi.mock('@/lib/mail', () => ({
   },
 }));
 
+// The reply notice and the closing-soon notice are sent by jobs, through the transport itself. The jobs are not run here: a test
+// calls the reply notice's step, or the daily support-retention job's notice batch step, as the runs would.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+vi.mock('@/lib/mail-transport', () => ({
+  deliver: async (message: (typeof sent)[number]) => {
+    sent.push(message);
+    return true;
+  },
+}));
+
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 beforeEach(async () => {
+  startJob.mockClear();
+  sent.length = 0;
   await sql`truncate support_replies, support_timeouts, support_requests, support_send_counts cascade`;
 });
 
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const NOTE = 'Internal: the sender looks like a repeat caller.';
-
-function recorder() {
-  const calls: { kind: string; args: unknown[] }[] = [];
-  const record =
-    (kind: string) =>
-    async (...args: unknown[]) => {
-      calls.push({ kind, args });
-    };
-  const mail: SupportNotifier = {
-    replyWaiting: record('replyWaiting'),
-    received: record('received'),
-    resolved: record('resolved'),
-    closingSoon: record('closingSoon'),
-    signedOutReply: record('signedOutReply'),
-  };
-  return { mail, calls };
-}
+/** Day 6 after a request resolved just now, inside its closing-soon window, as the daily job would see it. */
+const noticeDay = () => Date.now() + 6 * 24 * 60 * 60 * 1000;
 
 const emailOf = async (userId: string) =>
   (await sql`select email from users where id = ${userId}`)[0]!.email as string;
 
+const mail: SupportNotifier = { origin: async () => 'http://localhost:3000' };
+
+/** The status mail runs started so far, each run's one argument. */
+const statusRuns = () =>
+  startJob.mock.calls
+    .filter(([job]) => job === supportStatusMail)
+    .map(([, args]) => (args as [SupportStatusMail])[0]);
+
+/** Runs each started status mail's step, as the job would, and returns the mails the transport took. */
+async function sendStatusRuns() {
+  sent.length = 0;
+  for (const run of statusRuns()) await supportStatusStep(run);
+  return [...sent];
+}
+
+const SIGNED_OUT = {
+  about: 'account',
+  email: 'visitor@example.test',
+  subject: 'I cannot sign in',
+  message: 'No code.',
+} as const;
+
 describe('the received mail', () => {
-  it('goes to a signed-in sender once the request is saved, linking to the request', async () => {
-    const { mail, calls } = recorder();
-
-    const request = await sendSupportRequest(asUser(C), INPUT, mail);
-
-    expect(calls).toEqual([
-      { kind: 'received', args: [await emailOf(C.id), INPUT.subject, request.id] },
-    ]);
+  beforeEach(() => {
+    // Set, so the mail starts its job rather than being tried once here.
+    vi.stubEnv('MAIL_TRANSPORT', 'smtp');
   });
 
-  it('goes to a signed-out sender with no request id, so it links to nothing behind a sign-in', async () => {
-    const { mail, calls } = recorder();
+  it('starts a run holding the request id and the origin alone, whose step mails a signed-in sender a link to the request', async () => {
+    const request = await sendSupportRequest(asUser(C), INPUT, mail);
 
-    await sendSignedOutSupportRequest(
-      {
-        about: 'account',
-        email: 'visitor@example.test',
-        subject: 'I cannot sign in',
-        message: 'No code.',
-      },
-      { clientIp: '203.0.113.7', notifier: mail },
-    );
-
-    expect(calls).toEqual([
-      { kind: 'received', args: ['visitor@example.test', 'I cannot sign in', null] },
+    expect(statusRuns()).toEqual([
+      { kind: 'received', requestId: request.id, origin: 'http://localhost:3000' },
     ]);
+    const [message] = await sendStatusRuns();
+    expect(message!.to).toBe(await emailOf(C.id));
+    expect(message!.subject).toContain(INPUT.subject);
+    expect(message!.text).toContain(`/account/support?request=${request.id}`);
+  });
+
+  it('carries no address or subject of a signed-out sender in its run, and its step mails them a link to the support page', async () => {
+    await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier: mail });
+
+    const [row] = await sql`select id from support_requests`;
+    expect(statusRuns()).toEqual([
+      { kind: 'received', requestId: row!.id, origin: 'http://localhost:3000' },
+    ]);
+    expect(JSON.stringify(statusRuns())).not.toContain(SIGNED_OUT.email);
+    expect(JSON.stringify(statusRuns())).not.toContain(SIGNED_OUT.subject);
+    const [message] = await sendStatusRuns();
+    expect(message!.to).toBe(SIGNED_OUT.email);
+    expect(message!.text).toContain('http://localhost:3000/support');
+    expect(message!.text).not.toContain('/account');
+  });
+
+  it('reads the address when it sends, so a run for an anonymised request sends nothing', async () => {
+    await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier: mail });
+    // Precondition: the run was started, and the step would have mailed the sender.
+    expect(statusRuns()).toHaveLength(1);
+    await sql`update support_requests set sender_email = null, created_by = ${SYSTEM_ACTOR_ID}`;
+
+    expect(await sendStatusRuns()).toEqual([]);
   });
 });
 
 describe('the resolved mail', () => {
-  it('goes to the sender when staff resolve the request, and not when the move is refused', async () => {
-    const request = await sendSupportRequest(asUser(C), INPUT, recorder().mail);
-    const { mail, calls } = recorder();
+  beforeEach(() => {
+    vi.stubEnv('MAIL_TRANSPORT', 'smtp');
+  });
+
+  it('starts a run when staff resolve the request, and none when the move is refused', async () => {
+    const request = await sendSupportRequest(asUser(C), INPUT, mail);
+    startJob.mockClear();
 
     await resolveSupportRequest(asUser(E), request.id, mail);
-    expect(calls).toEqual([
-      { kind: 'resolved', args: [await emailOf(C.id), INPUT.subject, request.id] },
+    expect(statusRuns()).toEqual([
+      { kind: 'resolved', requestId: request.id, origin: 'http://localhost:3000' },
     ]);
+    const [message] = await sendStatusRuns();
+    expect(message!.to).toBe(await emailOf(C.id));
+    expect(message!.subject).toContain(INPUT.subject);
 
     // Precondition: the request is now resolved, so a second resolve is refused by the guarded move.
     await expect(resolveSupportRequest(asUser(E), request.id, mail)).rejects.toThrow();
-    expect(calls).toHaveLength(1);
+    expect(statusRuns()).toHaveLength(1);
   });
 
-  it('goes to a signed-out sender with no request id', async () => {
-    await sendSignedOutSupportRequest(
-      {
-        about: 'account',
-        email: 'visitor@example.test',
-        subject: 'I cannot sign in',
-        message: 'No code.',
-      },
-      { clientIp: '203.0.113.7', notifier: recorder().mail },
-    );
-    const [row] = await sql`select id from support_requests`;
-    const { mail, calls } = recorder();
+  it('sends nothing from a run whose request is no longer resolved when its step runs', async () => {
+    const request = await sendSupportRequest(asUser(C), INPUT, mail);
+    startJob.mockClear();
+    await resolveSupportRequest(asUser(E), request.id, mail);
+    // Precondition: sent now, the step would mail the sender.
+    expect(await sendStatusRuns()).toHaveLength(1);
+    await sql`update support_requests set status = 'open' where id = ${request.id}`;
 
-    await resolveSupportRequest(asUser(E), row!.id as string, mail);
-
-    expect(calls).toEqual([
-      { kind: 'resolved', args: ['visitor@example.test', 'I cannot sign in', null] },
-    ]);
+    expect(await sendStatusRuns()).toEqual([]);
   });
 });
 
 describe('an internal note', () => {
-  it('reaches none of the mails a request sends', async () => {
-    const { mail, calls } = recorder();
+  it('reaches none of the runs a request starts', async () => {
+    vi.stubEnv('MAIL_TRANSPORT', 'smtp');
     const request = await sendSupportRequest(asUser(C), INPUT, mail);
     // Precondition: the note is saved on the request before the mails go.
     await addSupportInternalNote(asUser(E), request.id, NOTE);
     expect(await sql`select 1 from support_replies where body = ${NOTE}`).toHaveLength(1);
 
-    await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail);
+    const reply = await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail);
     await resolveSupportRequest(asUser(E), request.id, mail);
 
-    expect(calls.map((call) => call.kind)).toEqual(['received', 'replyWaiting', 'resolved']);
-    expect(JSON.stringify(calls)).not.toContain('repeat caller');
+    expect(statusRuns().map((run) => run.kind)).toEqual(['received', 'resolved']);
+    const replyRuns = startJob.mock.calls.filter(([job]) => job === supportReplyNotice);
+    expect(replyRuns.map(([, args]) => args)).toEqual([[reply.id, 'http://localhost:3000']]);
+    expect(JSON.stringify(startJob.mock.calls)).not.toContain('repeat caller');
   });
 });
 
 describe('the rendered mails', () => {
   const real = () => supportNotifier(new Request('http://localhost:8000/api/graphql'));
-  const SIGNED_OUT = {
-    about: 'account',
-    email: 'visitor@example.test',
-    subject: 'I cannot sign in',
-    message: 'No code.',
-  } as const;
-
   beforeEach(() => {
+    // Unset, so the received and resolved mails are tried once here rather than started as jobs.
+    vi.stubEnv('MAIL_TRANSPORT', '');
     sent.length = 0;
   });
 
@@ -155,9 +195,17 @@ describe('the rendered mails', () => {
     // Precondition: the note is saved on the request, so a leak would have text to carry.
     await addSupportInternalNote(asUser(E), request.id, NOTE);
     expect(await sql`select 1 from support_replies where body = ${NOTE}`).toHaveLength(1);
-    await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
+    const reply = await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
+    expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
     await resolveSupportRequest(asUser(E), request.id, notifier);
-    await notifier.closingSoon(await emailOf(C.id), INPUT.subject, request.id);
+    expect(
+      await retentionBatchStep({
+        kind: 'notice',
+        ids: [request.id],
+        now: noticeDay(),
+        origin: 'http://localhost:8000',
+      }),
+    ).toBe(1);
 
     expect(sent).toHaveLength(4);
     for (const message of sent) {
@@ -172,9 +220,22 @@ describe('the rendered mails', () => {
     await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier });
     const [row] = await sql`select id from support_requests`;
     await addSupportInternalNote(asUser(E), row!.id as string, NOTE);
-    await replyToSupportRequest(asUser(E), row!.id as string, 'Use the card.', notifier);
+    const reply = await replyToSupportRequest(
+      asUser(E),
+      row!.id as string,
+      'Use the card.',
+      notifier,
+    );
+    expect(await replyNoticeStep(reply.id, 'http://localhost:8000')).toBe(true);
     await resolveSupportRequest(asUser(E), row!.id as string, notifier);
-    await notifier.closingSoon(SIGNED_OUT.email, SIGNED_OUT.subject, null);
+    expect(
+      await retentionBatchStep({
+        kind: 'notice',
+        ids: [row!.id as string],
+        now: noticeDay(),
+        origin: 'http://localhost:8000',
+      }),
+    ).toBe(1);
 
     // received, replied, resolved, closing soon
     expect(sent).toHaveLength(4);

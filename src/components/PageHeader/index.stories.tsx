@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import { AdminFrame as InAdminLayout } from '../../../.storybook/admin-frame';
 import { ShellFrame } from '../../../.storybook/shell-frame';
-import AddAction from '../../app/(shell)/admin/add-action';
+import AddAction from '../../app/(shell)/curator/add-action';
 import PageHeader from '.';
 
 // Render-only: a heading and its action are the whole component, so this is for the
@@ -19,7 +19,7 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 // others went into tabs.
 const AddIngredient = () => (
   <AddAction
-    href={'/admin/compendium?new=ingredient-compendium' as Route}
+    href={'/curator/compendium?new=ingredient-compendium' as Route}
     heading={{ title: 'Add Ingredient' }}
   >
     Add Ingredient
@@ -27,7 +27,7 @@ const AddIngredient = () => (
 );
 
 const defaultNode = (
-  <InAdminLayout open="/admin/compendium">
+  <InAdminLayout open="/curator/compendium">
     <main>
       <PageHeader title="Compendium" action={<AddIngredient />} />
     </main>
@@ -35,7 +35,7 @@ const defaultNode = (
 );
 
 const headingAloneNode = (
-  <InAdminLayout open="/admin/compendium">
+  <InAdminLayout open="/curator/compendium">
     <main>
       <PageHeader title="Compendium" />
     </main>
@@ -45,12 +45,12 @@ const headingAloneNode = (
 // A heading long enough to wrap beside its action when narrow,
 // standing in for any.
 const Long = () => (
-  <InAdminLayout open="/admin/deity-traditions">
+  <InAdminLayout open="/curator/deity-traditions">
     <PageHeader
       title="Deity Traditions"
       action={
         <AddAction
-          href={'/admin/deity-traditions?new' as Route}
+          href={'/curator/deity-traditions?new' as Route}
           heading={{ title: 'Add Tradition' }}
         >
           Add Tradition
@@ -64,7 +64,7 @@ const longHeadingWithActionNode = <Long />;
 
 // The entry page's mark before the heading, on its own line.
 const withLeadNode = (
-  <InAdminLayout open="/admin/compendium">
+  <InAdminLayout open="/curator/compendium">
     <main>
       <PageHeader
         title="Testwort"

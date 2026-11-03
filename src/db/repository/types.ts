@@ -1,10 +1,17 @@
 import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+import type { supportReplies } from '../../modules/support/schema/support-replies';
 import type { supportRequests } from '../../modules/support/schema/support-requests';
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
+import type { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
+import type { documentMailings } from '../../modules/documents/schema/document-mailings';
+import type { documentVersions } from '../../modules/documents/schema/document-versions';
+import type { documents } from '../../modules/documents/schema/documents';
+import type { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
+import type { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -223,6 +230,8 @@ export interface Aggregate<TRow extends Record<string, unknown>> {
   joins?: readonly AggregateJoin[];
   groupBy?: readonly (SQL | AnyPgColumn)[];
   orderBy?: readonly (SQL | AnyPgColumn)[];
+  /** The most rows read, after `orderBy`; every row without. */
+  limit?: number;
 }
 
 /** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table too. */
@@ -288,6 +297,13 @@ export interface WriterContext {
   insert(table: PgTable, values: object): Promise<never>;
   update(table: PgTable, values: object, where: SQL | undefined): Promise<never>;
   softDelete(table: PgTable, where: SQL | undefined): Promise<never>;
+  /** `update` for a table carrying `revision`, with `updateRevisioned`'s contract over `where` alone: no scope, a stale row throws `StaleWrite`. */
+  updateAtRevision(
+    table: PgTable & Identified & Revisioned,
+    where: SQL | undefined,
+    expectedRevision: number | null,
+    values: object,
+  ): Promise<never>;
 }
 
 /** What `withAudit` hands its callback: every write, stamped from the session. */
@@ -504,6 +520,119 @@ export interface AuditWriter {
    * at once cannot both leave the other the last. A read, in the writer because the lock must be taken in the writing transaction.
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
+  /** Write a document's title and lede, stamped from the session. No row comes back for a soft-deleted or missing document. */
+  updateDocument(
+    admin: SiteAdmin,
+    documentId: string,
+    values: DocumentTextInput,
+  ): Promise<DocumentRow[]>;
+  /**
+   * Open the document's draft: the next number past every version it ever held, deleted ones included, with `body` when one is given, else
+   * the body of the latest live published version, or empty when it has none. A given body is written in the insert, so the draft
+   * starts at revision 1. No row comes back while a draft is open, or for a soft-deleted or missing document.
+   */
+  openDocumentDraft(
+    admin: SiteAdmin,
+    documentId: string,
+    body?: string,
+  ): Promise<DocumentVersionRow[]>;
+  /**
+   * Write a draft's body while it is at `expectedRevision`: a draft that has moved on throws `StaleWrite` with its revision now, and
+   * `null` writes whatever the draft holds. A published, deleted or missing version answers `[]`, never `StaleWrite`.
+   */
+  saveDocumentDraft(
+    admin: SiteAdmin,
+    versionId: string,
+    expectedRevision: number | null,
+    body: string,
+  ): Promise<DocumentVersionRow[]>;
+  /** Publish a draft, dated now, under `saveDocumentDraft`'s revision contract. An already published version answers `[]`. */
+  publishDocumentDraft(
+    admin: SiteAdmin,
+    versionId: string,
+    expectedRevision: number | null,
+  ): Promise<DocumentVersionRow[]>;
+  /**
+   * Soft-delete a draft while it is at `expectedRevision`: a draft that has moved on throws `StaleWrite` with its revision now. A
+   * published, deleted or missing version answers `[]`, never `StaleWrite`.
+   */
+  discardDocumentDraft(
+    admin: SiteAdmin,
+    versionId: string,
+    expectedRevision: number,
+  ): Promise<DocumentVersionRow[]>;
+  /**
+   * Start the mailing of a published version, sending. No row comes back for a draft, a soft-deleted or missing version, or one with a
+   * live mailing already.
+   */
+  startDocumentMailing(
+    admin: SiteAdmin,
+    versionId: string,
+    mailing: DocumentMailingInput,
+  ): Promise<DocumentMailingRow[]>;
+  /** Add accounts to a mailing, unsent. An account already in it is skipped, so the rows added come back; none for an empty list. */
+  addDocumentMailingRecipients(
+    mailingId: string,
+    userIds: readonly string[],
+  ): Promise<DocumentMailingRecipientRow[]>;
+  /** Stamp the named accounts of a mailing sent now. One already sent is left as it is, so the first send time stands. */
+  markDocumentMailingRecipientsSent(
+    mailingId: string,
+    userIds: readonly string[],
+  ): Promise<DocumentMailingRecipientRow[]>;
+  /** Give up on one account of a mailing, which can never be mailed: stamped skipped now, never sent. One already sent or skipped is left as it is. */
+  skipDocumentMailingRecipient(
+    mailingId: string,
+    userId: string,
+  ): Promise<DocumentMailingRecipientRow[]>;
+  /** Wait for any other transaction holding the mailing's turn, then hold it until this one ends, so batch steps of one mailing take turns. */
+  lockDocumentMailingTurn(mailingId: string): Promise<void>;
+  /** Mark a sending mailing replaced, for a version or document that is gone. A mailing in any other state answers `[]`. */
+  replaceDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
+  /** Finish a sending mailing: sent, dated now. A mailing that is sent or replaced answers `[]`. */
+  finishDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
+  /** Mark the document's sending and paused mailings of versions numbered below `versionNumber` replaced; they keep what they sent. */
+  replaceOpenDocumentMailings(
+    admin: SiteAdmin,
+    documentId: string,
+    versionNumber: number,
+  ): Promise<DocumentMailingRow[]>;
+  /** Pause a sending mailing, for the provider's monthly quota. A mailing in any other state answers `[]`. */
+  pauseDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
+  /** Set a paused mailing sending again. A mailing in any other state answers `[]`. */
+  resumeDocumentMailing(admin: SiteAdmin, mailingId: string): Promise<DocumentMailingRow[]>;
+  /**
+   * Pause a user's access, stamped from the session: `until` null for no end date. The user's live pause, standing or run out, is
+   * lifted first from the session, so the one-live index takes the new row. No row comes back when a pause set alongside took the slot.
+   */
+  setUserAccessPause(
+    admin: SiteAdmin,
+    userId: string,
+    pause: UserAccessPauseInput,
+  ): Promise<UserAccessPauseRow[]>;
+  /**
+   * Lift the pause standing on a user's access, stamping `lifted_at` now and `lifted_by` from the session. No row comes back when
+   * none stands; a pause that has run out is left as it is.
+   */
+  liftUserAccessPause(admin: SiteAdmin, userId: string): Promise<UserAccessPauseRow[]>;
+  /**
+   * Pause a member's access to the proof's coven, stamped from the session: `until` null for no end date. The member's live pause
+   * there, standing or run out, is lifted first from the session, so the one-live index takes the new row. No row comes back when a
+   * pause set alongside took the slot. The permission the proof must carry is the service's to check.
+   */
+  setWorkspaceMemberPause(
+    membership: Membership,
+    userId: string,
+    pause: WorkspaceMemberPauseInput,
+  ): Promise<WorkspaceMemberPauseRow[]>;
+  /**
+   * Lift the pause standing on a member's access to the proof's coven, stamping `lifted_at` now and `lifted_by` from the session.
+   * No row comes back when none stands there; a pause that has run out is left as it is.
+   */
+  liftWorkspaceMemberPause(
+    membership: Membership,
+    userId: string,
+  ): Promise<WorkspaceMemberPauseRow[]>;
   /**
    * Soft-delete the proof's own workspace, stamped from the session; the `workspaces` row is the proof's `workspaceId` (it has no `workspace_id` column).
    * Membership rows are untouched. An empty result means the workspace was already deleted.
@@ -569,21 +698,21 @@ export interface AuditWriter {
   lockCovenStock(membership: Membership): Promise<void>;
   /**
    * Takes the account's support-send lock until the transaction ends, then reads what a send decides on: the account's requests
-   * in the last `windowSeconds` and the end of its active time-out. Taken first, so two sends from one account queue and the
+   * in the last `windowSeconds` and the end of the time-out standing on it. Taken first, so two sends from one account queue and the
    * second counts the first; another account's send is not held up.
    */
   lockSupportSender(
     userId: string,
     windowSeconds: number,
-  ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  ): Promise<{ recent: number; timedOut: StandingTimeout | undefined }>;
   /**
-   * Counts one signed-out send against an email address and a client address, each in its own row of `support_send_counts`,
-   * and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
+   * Counts one signed-out send against the keys of an email address and of a client address (`src/lib/send-count-key.ts`, never
+   * the addresses themselves), each in its own row of `support_send_counts`, and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
    * starts over at one. Takes a lock per key until the transaction ends, so sends racing each other all count.
    */
   countSignedOutSend(
-    address: string,
-    client: string,
+    addressKey: string,
+    clientKey: string,
     now: Date,
     windowSeconds: number,
   ): Promise<{ address: number; client: number }>;
@@ -598,10 +727,34 @@ export interface AuditWriter {
     from: readonly SupportRequestStatus[],
     values: SupportRequestMove,
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
-  /** Closes every resolved request whose `resolved_at` is at or before `cutoff`, stamping `closed_at`; returns the rows closed. */
+  /**
+   * Closes those of requests `ids` still resolved with `resolved_at` at or before `cutoff`, stamping `closed_at` as the
+   * day its seven days ended; returns the rows closed.
+   */
   closeIdleResolvedSupportRequests(
     cutoff: Date,
-    closedAt: Date,
+    ids: readonly string[],
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Stamps the closing-soon notice on request `id` while it is still resolved and unstamped; none when it was not. */
+  markClosingNoticeSent(id: string, sentAt: Date): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Clears account `userId`'s pending address while the row is still stamped `sentAt`, the change mailed then; none when a later change or the swap moved it. */
+  lapseEmailChange(userId: string, sentAt: Date): Promise<(typeof users.$inferSelect)[]>;
+  /** Clears account `userId`'s former address while it is still `formerEmail` and the row still at `email`, the move its notice named; none when either changed. */
+  clearFormerEmail(
+    userId: string,
+    formerEmail: string,
+    email: string,
+  ): Promise<(typeof users.$inferSelect)[]>;
+  /** Stamps the sender's notice of staff reply `id` while it is unstamped; none when it already was. */
+  markReplyNoticeSent(id: string, sentAt: Date): Promise<(typeof supportReplies.$inferSelect)[]>;
+  /**
+   * Strips those of requests `ids` still closed with `closed_at` at or before `cutoff` of what each holds of its
+   * sender: subject, message, path, address and sender id, and its replies' text. Topic, status, dates and the rows stay, so the
+   * counts do. A request already stripped is left alone; returns the rows stripped.
+   */
+  anonymiseClosedSupportRequests(
+    cutoff: Date,
+    ids: readonly string[],
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
@@ -1051,6 +1204,52 @@ export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredie
  * A row as the generic finders read it: the table's whole row, less any column `unread-columns.ts` keeps out of reads.
  * Writers' `returning()` still hold the whole row.
  */
+/** One `documents` row. */
+export type DocumentRow = typeof documents.$inferSelect;
+
+/** What a document's title and lede are written with. */
+export interface DocumentTextInput {
+  title: string;
+  lede: string;
+}
+
+/** One `document_versions` row. */
+export type DocumentVersionRow = typeof documentVersions.$inferSelect;
+
+/** One `document_mailings` row. */
+export type DocumentMailingRow = typeof documentMailings.$inferSelect;
+
+/** What a mailing starts with: what changed, and how many accounts it will reach. */
+export interface DocumentMailingInput {
+  summary: string;
+  recipientCount: number;
+}
+
+/** One `document_mailing_recipients` row. */
+export type DocumentMailingRecipientRow = typeof documentMailingRecipients.$inferSelect;
+
+/** One `user_access_pauses` row. */
+export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
+
+/** What a site access pause is set with: `until` null for no end date, and always a note saying why. */
+export interface UserAccessPauseInput {
+  until: Date | null;
+  note: string;
+  /** What the user is mailed, or `null`/absent for none. */
+  message?: string | null;
+}
+
+/** One `workspace_member_pauses` row. */
+export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
+
+/** What a coven pause is set with: `until` null for no end date, and a note or none. */
+export interface WorkspaceMemberPauseInput {
+  until: Date | null;
+  note: string | null;
+  /** What the member is mailed, or `null`/absent for none. */
+  message?: string | null;
+}
+
 export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
   ? IngredientRow
   : TTable['$inferSelect'];
@@ -1273,6 +1472,10 @@ export interface UserFilter {
   awaitingApproval?: boolean;
   /** Only the users holding this site role. */
   role?: (typeof users.$inferSelect)['role'];
+  /** Only the users a support time-out stands on: not lifted, and with no end date or one still ahead. */
+  timedOut?: boolean;
+  /** Only the users a site access pause stands on: not lifted, and with no end date or one still ahead. */
+  paused?: boolean;
 }
 
 /** What the privilege ledger is narrowed by. Each part is optional, and absent means no filter. */
@@ -1382,6 +1585,7 @@ export interface SupportRequestMove {
   resolvedAt?: Date | null;
   resolvedBy?: string | null;
   closedAt?: Date | null;
+  closingNoticeSentAt?: null;
   lastSenderActivityAt?: Date;
   lastStaffActivityAt?: Date;
 }
@@ -1399,6 +1603,11 @@ export interface SupportRequestFilter {
 
 /** How many requests each view holds. */
 export type SupportViewCounts = Record<SupportView, number>;
+
+/** The end of the time-out standing on a sender: `until` null when it has no end date. */
+export interface StandingTimeout {
+  until: Date | null;
+}
 
 /** What the account menu counts for one viewer. */
 export interface SupportMenuCounts {

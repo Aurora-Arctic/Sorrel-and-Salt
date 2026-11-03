@@ -192,7 +192,7 @@ function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL
 }
 
 /**
- * One page of the site tier's pending invitations, newest first, for `/admin/invitations`, narrowed in SQL by a
+ * One page of the site tier's pending invitations, newest first, for `/keepers/invitations`, narrowed in SQL by a
  * `SiteInvitationFilter`. Typed as site-tier rows, since the CHECKs give each one a site role.
  */
 export function findPendingSiteInvitationPage(
@@ -778,4 +778,18 @@ export function invitationWrites({
         ),
       ),
   };
+}
+
+/**
+ * The token swap the invitation mail makes, beside the invitation's other writes but on no `AuditWriter`: only
+ * `write.ts` builds it, for the one caller that takes no proof. A pending address invitation only, in a live coven or on
+ * the site tier; a card's token is handed out once at minting and never changes.
+ */
+export function invitationTokenRotation({ update }: WriterContext) {
+  return (invitationId: string, token: string): Promise<InvitationRow[]> =>
+    update(
+      invitations,
+      { tokenHash: hashToken(token) },
+      pendingInvitation(addressKind(), eq(invitations.id, invitationId), inLiveWorkspaceOrSite()),
+    );
 }

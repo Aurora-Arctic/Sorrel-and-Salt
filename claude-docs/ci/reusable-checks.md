@@ -47,6 +47,10 @@
       which `actions/cache` needed inside the container, where the Alpine
       image's busybox `tar` rejects `--posix`. No step in that image uses
       them now; they go the next time `Docker/Dockerfile.node` changes.
+    - **The `testing` stage carries `jq`**, which the production snapshot
+      step in `.github/workflows/migrate.yml` calls. `tests/github/workflows/migrate.test.ts`
+      runs that step's script inside this image, and without `jq` it stops
+      with exit code 127, command not found.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
       `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes
       prerendering `/_global-error` under anything but `production`/unset —
@@ -174,7 +178,7 @@
   run for both.
   `DATABASE_URL` is `postgres://sorrel:sorrel@postgres:5432/sorrel`, the same
   credentials `Docker/docker-compose.yaml`'s `app` service uses locally;
-  `tests/support/db-global-setup.ts`/`db-setup.ts` rewrite the database name per
+  `tests/support/db-global-setup.ts`/`db-runner.ts` rewrite the database name per
   worker from there. Coverage JSON (`--reporter=json`) and the `vitest`
   project's `json-summary` coverage reporter feed
   `.github/scripts/summarize-vitest.mjs` (ported from resume-2026, alongside

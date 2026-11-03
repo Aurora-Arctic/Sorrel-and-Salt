@@ -246,7 +246,7 @@ with the value already put back.
   wide page. The account links are a page with the jump menu.
 - The admin navigation, and the `Admin` lead in the admin context row, use
   `adminTarget` (`src/components/AdminNav/target.ts`), the `admin` region, so
-  the row and its nav stay while the page changes: `page` for `/admin`, `cards` for `/admin/compendium`, and `table` for the
+  the row and its nav stay while the page changes: `page` for `/curator` and `/keepers`, `cards` for `/curator/compendium`, and `table` for the
   rest.
 - The coven's section links (each carries a `target` in `SectionNav`'s props)
   and the Contents on the coven home name the `coven` target `covenTarget` gives for the section's address.

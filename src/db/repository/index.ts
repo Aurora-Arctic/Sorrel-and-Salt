@@ -2,7 +2,7 @@
 // `db` is not re-exported, so `withAudit`'s `AuditWriter` is the sole write mechanism. Rule 4: every exported finder applies `deleted_at IS NULL`
 // bar the named `…IncludingSoftDeleted` hatches and the internal ones, which tests/guards/soft-delete-finder-guard.test.ts holds. Import this file, never a sibling.
 
-export { withAudit } from './write';
+export { rotateInvitationToken, withAudit } from './write';
 export {
   findMany,
   findManyByIds,
@@ -109,10 +109,14 @@ export {
   findMemberPage,
   findMembershipsOfUsers,
   findWorkspaceRole,
+  findWorkspaceSeat,
 } from './memberships';
 export { findDemoWorkspace } from './workspaces';
 export {
   findCoMemberNamesIncludingSoftDeleted,
+  findHoldsPasskey,
+  findNewestResetToken,
+  findOwnProviderIds,
   findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,
@@ -145,7 +149,7 @@ export {
   findPendingSiteInvitationPage,
 } from './invitations';
 export {
-  findActiveSupportTimeoutEnd,
+  findStandingSupportTimeout,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
@@ -153,6 +157,11 @@ export {
   findSupportMenuCounts,
   findOwnSupportRequestPage,
   findCardAcceptorIds,
+  findClosingNoticesDue,
+  findClosingNoticesDueAmong,
+  findSupportRequestsDueToAnonymise,
+  findSupportRequestsDueToClose,
+  findReplyAwaitingNotice,
   findSupportRepliesFor,
   findSupportRequestCount,
   findSupportViewCounts,
@@ -160,24 +169,53 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  RESOLVED_CLOSES_AFTER_DAYS,
+  findStandingSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
+export {
+  countDocumentMailingAccounts,
+  countDocumentMailingReached,
+  countDocumentMailsSentToday,
+  findDocumentMailingAccountPage,
+  findDocumentMailingById,
+  findDocumentMailingRecipientUsers,
+  findOldestSendingDocumentMailing,
+  findOpenDocumentMailingBefore,
+  findCurrentDocumentVersion,
+  findDocumentByKey,
+  findDocumentDraft,
+  findDocumentMailingForVersion,
+  findPublishedDocumentVersion,
+  findPublishedDocumentVersionPage,
+  findUnsentDocumentMailingRecipientPage,
+} from './documents';
+export {
+  findStandingUserAccessPause,
+  findStandingUserAccessPausesFor,
+  findUserAccessPausePage,
+} from './user-access-pauses';
+export {
+  findStandingWorkspaceMemberPause,
+  findWorkspaceMemberPauseForMail,
+  findStandingWorkspaceMemberPauses,
+  findWorkspaceMemberPausePage,
+} from './workspace-member-pauses';
 export {
   deleteLapsedProvisionalUser,
   findLapsedProvisionalUserIds,
   provisionalSecondsLeft,
 } from './provisional-users';
 export { removePasskeyKeepingAWayIn } from './passkeys';
-export type { PasskeyRemoval } from './passkeys';
 export {
   clearSignInFailures,
   lockPasswordSignIn,
   readSignInFailure,
   recordSignInFailure,
 } from './sign-in-failures';
-export type { SignInFailureRow } from './sign-in-failures';
-export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
+export type { PrivilegeDeclaration } from '../types';
 export type {
+  StandingTimeout,
   WorkingDeductionRow,
   WorkingParticipantRow,
   WorkingRow,
@@ -215,7 +253,6 @@ export type {
   SimilarityScore,
   SiteInvitationFilter,
   AddressInvitationRow,
-  CardArrivalRow,
   CardAttemptReason,
   CardAttemptRow,
   CardArrivalFilter,
@@ -223,7 +260,6 @@ export type {
   CardBatchStatus,
   CardBatchTotal,
   CardPosition,
-  CardInvitationValues,
   CardRow,
   SiteInvitationRow,
   SiteInvitationValues,
@@ -240,3 +276,4 @@ export type {
   VocabularySuggestion,
   WorkspaceInvitationValues,
 } from './types';
+export type { DocumentMailingRow } from './types';

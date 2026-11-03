@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { supportClosingSoonMessage } from '@/emails/support-closing-soon';
+import { supportClosingSoonMessage, timeLeft } from '@/emails/support-closing-soon';
 import { supportReceivedMessage } from '@/emails/support-received';
 import { supportResolvedMessage } from '@/emails/support-resolved';
 
@@ -11,10 +11,15 @@ const REQUEST_PAGE = `${ORIGIN}/account/support?request=req-1`;
 const SUPPORT_PAGE = `${ORIGIN}/support`;
 const SUBJECT = 'The jar will not open';
 
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+const closingSoon = (props: Omit<Parameters<typeof supportClosingSoonMessage>[0], 'timeLeftMs'>) =>
+  supportClosingSoonMessage({ ...props, timeLeftMs: 2 * DAY });
+
 const MAILS = [
   ['received', supportReceivedMessage],
   ['resolved', supportResolvedMessage],
-  ['closing soon', supportClosingSoonMessage],
+  ['closing soon', closingSoon],
 ] as const;
 
 const hrefsOf = (html: string) => [...html.matchAll(/href="([^"]*)"/g)].map((match) => match[1]);
@@ -84,5 +89,29 @@ describe('the resolved mail', () => {
 
     expect(message.text).toMatch(/reply from you reopens it/);
     expect(message.html).toMatch(/reply from you reopens it/);
+  });
+});
+
+describe('the closing-soon mail', () => {
+  it('says how long is left as of the send, in both parts', async () => {
+    const message = await supportClosingSoonMessage({
+      to: 'sender@status.test',
+      url: REQUEST_PAGE,
+      requestSubject: SUBJECT,
+      timeLeftMs: 12 * HOUR,
+    });
+
+    expect(message.text).toContain('closes in 12 hours');
+    expect(message.html).toContain('closes in 12 hours');
+  });
+
+  it.each([
+    [2 * DAY, '2 days'],
+    [DAY + 2 * HOUR, '1 day'],
+    [23 * HOUR, '23 hours'],
+    [HOUR, '1 hour'],
+    [10 * 60 * 1000, 'less than an hour'],
+  ])('puts %d ms as %s', (ms, words) => {
+    expect(timeLeft(ms)).toBe(words);
   });
 });

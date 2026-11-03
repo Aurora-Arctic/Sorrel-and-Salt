@@ -8,7 +8,7 @@ import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 
-// `/admin/privilege-changes`' filter, table and pager: render-only,
+// `/keepers/privilege-changes`' filter, table and pager: render-only,
 // so the page owns the read and this owns what an admin sees of it
 // (claude-docs/components/privilege-ledger.md).
 
@@ -19,11 +19,11 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 const GRANT: PrivilegeLedgerEntry = {
   id: 'c1',
   at: new Date('2026-03-04T05:06:07Z'),
-  subject: { name: 'Ada Fixturewort', href: '/admin/users?query=ada%40users.test' },
+  subject: { name: 'Ada Fixturewort', href: '/keepers/users?query=ada%40users.test' },
   privilege: 'admin',
   change: 'grant',
   via: 'admin',
-  actor: { name: 'Bram Testwort', href: '/admin/users?query=bram%40users.test' },
+  actor: { name: 'Bram Testwort', href: '/keepers/users?query=bram%40users.test' },
   note: 'Covering the spring audit',
 };
 
@@ -63,11 +63,11 @@ describe('PrivilegeLedger', () => {
     const [first, second] = rows();
     expect(within(first).getByRole('link', { name: 'Ada Fixturewort' })).toHaveAttribute(
       'href',
-      '/admin/users?query=ada%40users.test',
+      '/keepers/users?query=ada%40users.test',
     );
     expect(within(first).getByRole('link', { name: 'Bram Testwort' })).toHaveAttribute(
       'href',
-      '/admin/users?query=bram%40users.test',
+      '/keepers/users?query=bram%40users.test',
     );
     expect(within(second).queryAllByRole('link')).toEqual([]);
   });
@@ -88,7 +88,7 @@ describe('PrivilegeLedger', () => {
     // the page reads as no privilege.
     const SUBJECT: FilterFormSubject = {
       label: 'Filter Privilege Changes',
-      path: '/admin/privilege-changes',
+      path: '/keepers/privilege-changes',
       searchLabel: 'Name or Email',
       push: router.push,
       none: { list: <PrivilegeLedger changes={[GRANT]} filter={{}} />, sends: 'query=&privilege=' },
@@ -170,9 +170,9 @@ describe('PrivilegeLedger', () => {
 
 describe('privilegeLedgerHref', () => {
   it('writes the filter and the cursor, and nothing for none', () => {
-    expect(privilegeLedgerHref({})).toBe('/admin/privilege-changes');
+    expect(privilegeLedgerHref({})).toBe('/keepers/privilege-changes');
     expect(privilegeLedgerHref({ query: 'a b', privilege: 'admin' }, { before: 'b' })).toBe(
-      '/admin/privilege-changes?query=a+b&privilege=admin&before=b',
+      '/keepers/privilege-changes?query=a+b&privilege=admin&before=b',
     );
   });
 });

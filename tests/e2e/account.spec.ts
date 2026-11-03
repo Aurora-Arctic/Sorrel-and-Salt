@@ -107,7 +107,9 @@ test('settles an unverified account on the email page after a link into the shel
 
 // The same by the admin landing, whose own layout under the shell also sends
 // an unverified account to the email page.
-test('settles an unverified admin on the email page after a link into /admin', async ({ page }) => {
+test('settles an unverified admin on the email page after a link into /keepers', async ({
+  page,
+}) => {
   const { userId } = await signInAs(
     page,
     'unverified-admin-link@account-page.test',
@@ -120,5 +122,5 @@ test('settles an unverified admin on the email page after a link into /admin', a
 
   await markUnverified(userId);
   await proceed.click();
-  await expectSettledOnEmailPage(page, '%2Fadmin');
+  await expectSettledOnEmailPage(page, '%2Fkeepers');
 });

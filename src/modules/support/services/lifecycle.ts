@@ -9,7 +9,7 @@ import type { SupportReplyRow, SupportRequestRow } from '../types';
 import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
 import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
-import { getSupportRequest } from './staff';
+import { getSupportRequest, refuseAnonymised } from './staff';
 
 // The request lifecycle. The transitions, and who may make each:
 //
@@ -18,15 +18,10 @@ import { getSupportRequest } from './staff';
 //   open, waiting      -> resolved           the sender, on their own request              (resolveMySupportRequest)
 //   open, waiting, res -> closed             staff                                         (closeSupportRequest)
 //   waiting, resolved  -> open               the sender's public message; keeps the assignee
-//   resolved           -> closed             closeResolvedRequests, after seven idle days
+//   resolved           -> closed             the request’s job, seven days after resolving (retention.ts)
 //   closed             -> (new request)      the sender's message opens one linked to it
 //
 // Staff replies and internal notes change nothing else. Each move is one guarded update, so a refused move writes nothing.
-
-/** How long a resolved request sits before it closes, in days. */
-export const CLOSE_AFTER_DAYS = 7;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * The sender's message on one of their own requests. On an open request it is added to the thread; on a waiting or resolved one
@@ -50,19 +45,22 @@ export async function sendSenderMessage(
   if (!request) throw new NotFound('No such support request');
 
   return withAudit(session, async (write) => {
-    const { recent, timedOutUntil } = await write.lockSupportSender(
-      session.userId,
-      SEND_WINDOW_SECONDS,
-    );
+    const { recent, timedOut } = await write.lockSupportSender(session.userId, SEND_WINDOW_SECONDS);
     // A closed request's message opens a new request, so it is refused in the new-request wording.
-    if (request.status === 'closed') refuseTimedOut(timedOutUntil);
-    else refuseTimedOutReply(timedOutUntil);
+    if (request.status === 'closed') refuseTimedOut(timedOut);
+    else refuseTimedOutReply(timedOut);
 
     const [moved] = await write.moveSupportRequest(
       id,
       session.userId,
       ['open', 'waiting_on_sender', 'resolved'],
-      { status: 'open', resolvedAt: null, resolvedBy: null, lastSenderActivityAt: new Date() },
+      {
+        status: 'open',
+        resolvedAt: null,
+        resolvedBy: null,
+        closingNoticeSentAt: null,
+        lastSenderActivityAt: new Date(),
+      },
     );
     if (moved) {
       await write.insert(supportReplies, {
@@ -129,7 +127,7 @@ export async function resolveMySupportRequest(
  * Adds a note only staff read. It never changes the request's status and is never mailed. An admin may on any request, a
  * curator on any request they can read, assigned to them or not.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin.
+ * @throws {Forbidden} the session is neither a curator nor an admin, or the request is anonymised.
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.
  */
@@ -139,6 +137,7 @@ export async function addSupportInternalNote(
   body: string,
 ): Promise<SupportReplyRow> {
   const request = await getSupportRequest(session, requestId);
+  refuseAnonymised(request);
   const text = parseInput(SupportMessage, body);
   return withAudit(session, async (write) => {
     const [row] = await write.insert(supportReplies, {
@@ -149,18 +148,6 @@ export async function addSupportInternalNote(
     });
     return row as SupportReplyRow;
   });
-}
-
-/**
- * Closes every resolved request that has sat resolved for seven days as of `now`, and returns them. The job that calls it is
- * its own task; `actor` is the account the audit columns name.
- */
-export async function closeResolvedRequests(
-  actor: Session,
-  now: Date,
-): Promise<SupportRequestRow[]> {
-  const cutoff = new Date(now.getTime() - CLOSE_AFTER_DAYS * DAY_MS);
-  return withAudit(actor, (write) => write.closeIdleResolvedSupportRequests(cutoff, now));
 }
 
 export type SupportSenderTier = 'beta_tester' | 'standard';

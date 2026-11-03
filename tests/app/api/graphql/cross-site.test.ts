@@ -1,9 +1,17 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { WARM_IMPORT_TIMEOUT } from '../../../support/warm-import';
 
 const ENDPOINT = 'https://sorrelandsalt.com/api/graphql';
 const written = vi.hoisted(() => ({ count: 0 }));
 
-vi.mock('@/lib/request-session', () => ({ sessionFromHeaders: async () => null }));
+vi.mock('@/lib/request-session', () => ({
+  sessionStateFromHeaders: async () => ({
+    session: null,
+    emailVerified: false,
+    termsAgreed: false,
+    sessionFresh: false,
+  }),
+}));
 
 // A schema with one mutation that counts its calls, so "no resolver ran" is a state the test reads.
 vi.mock('@/graphql/schema', async () => {
@@ -29,7 +37,7 @@ let GET: (typeof import('@/app/api/graphql/route'))['GET'];
 beforeAll(async () => {
   vi.stubEnv('NODE_ENV', 'production');
   ({ POST, GET } = await import('@/app/api/graphql/route'));
-});
+}, WARM_IMPORT_TIMEOUT);
 afterAll(() => vi.unstubAllEnvs());
 beforeEach(() => {
   written.count = 0;

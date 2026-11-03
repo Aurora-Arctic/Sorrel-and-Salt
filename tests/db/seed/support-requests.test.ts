@@ -5,15 +5,24 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
 import { beginSeedTransaction } from '@/db/seed/idempotent';
+import { SANCTIONED_USERS, seedSanctionedUsers } from '@/db/seed/sanctioned-users';
 import { seedSupportRequests } from '@/db/seed/support-requests';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
+import { retentionDueStep } from '@/modules/support/jobs/support-retention-steps';
+import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
 
-// The fake support requests the `demo` scenario seeds for the admin Support tab and the account's own requests, run against the `standard` cast.
+// The fake support requests the `demo` scenario seeds for the admin Support tab and the account's own requests, run against the `standard` cast
+// and the held-back accounts the demo seeds before it.
 
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-const run = () => beginSeedTransaction(drizzle(sql), seedSupportRequests);
+const run = () =>
+  beginSeedTransaction(drizzle(sql), async (tx) => {
+    await seedSanctionedUsers(tx);
+    await seedSupportRequests(tx);
+  });
 
 const counts = async () => {
   const [row] = await sql<{ requests: number; replies: number; timeouts: number }[]>`
@@ -169,17 +178,23 @@ describe('the support request seed', () => {
       expect(bad).toHaveLength(0);
     });
 
-    it('seeds one sender with an active time-out and one whose time-out has expired', async () => {
+    it("seeds D and I with a time-out in force, I's with no end date, and another sender with one that has expired", async () => {
       const rows = await sql<{ user_id: string; active: boolean; expired: boolean }[]>`
-        select user_id, (until > now() and lifted_at is null) as active,
+        select user_id, ((until is null or until > now()) and lifted_at is null) as active,
                (until <= now() and lifted_at is null) as expired
         from support_timeouts
       `;
       const active = rows.filter((r) => r.active);
       const expired = rows.filter((r) => r.expired);
-      expect(active).toHaveLength(1);
+      expect(active.map((r) => r.user_id).sort()).toEqual(
+        [FIXTURE_USERS.D.id, SANCTIONED_USERS.I.id].sort(),
+      );
       expect(expired.length).toBeGreaterThanOrEqual(1);
-      expect(active[0].user_id).not.toBe(expired[0].user_id);
+      const [open] = await sql<{ user_id: string }[]>`
+        select user_id from support_timeouts where until is null and lifted_at is null
+      `;
+      expect(open?.user_id).toBe(SANCTIONED_USERS.I.id);
+      expect(active.map((r) => r.user_id)).not.toContain(expired[0].user_id);
     });
 
     it('sets every time-out by an admin on a sender who has sent a request', async () => {
@@ -206,6 +221,49 @@ describe('the support request seed', () => {
       await run();
       expect(await counts()).toEqual(before);
       expect(await sql`select id, created_at from support_requests order by id`).toEqual(times);
+    });
+
+    // Last, as the daily run changes a row.
+    it('seeds one request already anonymised and one the daily run anonymises, which it leaves as the seed left the first', async () => {
+      const ANONYMISED = '00000000-0000-0000-0005-000000000018';
+      const DUE = '00000000-0000-0000-0005-000000000019';
+      const shape = (id: string) => sql`
+        select q.about, q.status, q.subject, q.message, q.path, q.sender_email, q.resolved_by, q.assigned_to,
+               q.created_by, q.updated_by, q.closed_at < now() - interval '12 months' as past_cutoff,
+               (select json_agg(json_build_object('body', r.body, 'created_by', r.created_by, 'updated_by', r.updated_by))
+                  from support_replies r where r.request_id = q.id) as replies
+        from support_requests q where q.id = ${id}`;
+      const [due] = await shape(DUE);
+      // Precondition: the due one holds its sender's words and is past the twelve months.
+      expect(due).toMatchObject({ created_by: FIXTURE_USERS.C.id, past_cutoff: true });
+      expect(due.subject).not.toBe('');
+
+      const now = Date.now();
+      // The seed leaves nothing due to close, and of these two only the one not yet anonymised is due.
+      expect(await retentionDueStep('close', now, null)).toEqual([]);
+      const page = await retentionDueStep('anonymise', now, null);
+      expect(page).toContain(DUE);
+      expect(page).not.toContain(ANONYMISED);
+      expect(
+        await retentionBatchStep({
+          kind: 'anonymise',
+          ids: page,
+          now,
+          origin: 'http://localhost:3000',
+        }),
+      ).toBe(page.length);
+
+      const [anonymised] = await shape(ANONYMISED);
+      const [swept] = await shape(DUE);
+      expect(anonymised).toMatchObject({
+        subject: 'Anonymised support request.',
+        message: '',
+        path: '',
+        created_by: SYSTEM_ACTOR_ID,
+      });
+      const { about: _a, ...sweptFields } = swept;
+      const { about: _b, ...seededFields } = anonymised;
+      expect(sweptFields).toEqual(seededFields);
     });
   });
 });

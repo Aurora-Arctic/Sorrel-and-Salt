@@ -13,7 +13,7 @@ const { DETAILS_PLACE, detailsHeading } = await import('@/components/IngredientE
 // An entry's Quick Look in a list: the icon beside its name, a link to the list's own address with `?entry=`.
 // A plain press opens it at once as the details modal over the list; a new tab, or a press before the script loads, opens that address (claude-docs/components/ingredient-entry.md, "The details modal").
 
-const DETAILS: Route = '/admin/compendium?entry=testwort';
+const DETAILS: Route = '/curator/compendium?entry=testwort';
 const heading = detailsHeading({
   name: 'Testwort',
   canonicalName: 'Fixtura testalis',
@@ -32,8 +32,8 @@ describe('DetailsLink', () => {
       <Navigating push={router.push}>
         <RouteModalProvider>
           <DetailsLink opens={{ href: DETAILS, heading }} name="Testwort, Fixtura testalis" />
-          <RouteModal place={DETAILS_PLACE} closeHref="/admin/compendium" />
-          <RouteModal closeHref="/admin/compendium" />
+          <RouteModal place={DETAILS_PLACE} closeHref="/curator/compendium" />
+          <RouteModal closeHref="/curator/compendium" />
         </RouteModalProvider>
       </Navigating>,
     );

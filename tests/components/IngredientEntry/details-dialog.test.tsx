@@ -17,9 +17,9 @@ const { covenCardActions } = await import('@/components/CovenCards/actions');
 // The details modal over a list: a summary of the entry, a way through to its full page, and, for whoever may edit it, an Edit that opens the edit modal over it
 // (claude-docs/components/ingredient-entry.md, "The details modal").
 
-const LIST: Route = '/admin/compendium';
+const LIST: Route = '/curator/compendium';
 const PAGE = '/compendium/ingredients/testwort' as Route;
-const EDIT: Route = '/admin/compendium?entry=testwort&edit=testwort';
+const EDIT: Route = '/curator/compendium?entry=testwort&edit=testwort';
 const ENTRY = {
   name: 'Testwort',
   canonicalName: 'Fixtura testalis',
@@ -110,8 +110,23 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
+  it('draws no formal name over the title for an entry classified None with no formal name', () => {
+    render(
+      <DetailsDialog
+        closeHref={LIST}
+        opened={{
+          heading: detailsHeading({ name: 'Testwort', canonicalName: null, nomenclature: 'none' }),
+          pageHref: PAGE,
+        }}
+      />,
+    );
+
+    const dlg = screen.getByRole('dialog', { name: 'Testwort' });
+    expect(within(dlg).queryByText('None', { exact: false })).not.toBeInTheDocument();
+    expect(within(dlg).queryByRole('button', { name: /^About / })).not.toBeInTheDocument();
+  });
+
   it.each([
-    [{ canonicalName: null, nomenclature: 'none' as const }, 'None', 'Formal Name'],
     [
       { canonicalName: null, nomenclature: 'botanical' as const },
       'Not yet looked up',

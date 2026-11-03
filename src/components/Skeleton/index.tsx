@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactElement } from 'react';
 import type { SkeletonHead, SkeletonProps, SkeletonShape } from './types';
+import '../DocumentEditor/index.scss';
 import './index.scss';
 
 // The one skeleton every region wait uses, shaped as the layout it stands in for. The shapes are
@@ -16,6 +17,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   line: 1,
   recipe: 1,
   detail: 1,
+  document: 1,
 };
 
 // The admin index's two sections: Compendium's five pages and People's one.
@@ -200,10 +202,17 @@ const Skeleton = ({
   const many = count ?? DEFAULT_COUNT[shape];
   const listed = shape === 'table' || shape === 'cards';
   return (
-    <div className={`skeleton skeleton--${shape}`} data-density={density}>
+    <div
+      className={
+        shape === 'document'
+          ? `skeleton skeleton--${shape} document-editor-column`
+          : `skeleton skeleton--${shape}`
+      }
+      data-density={density}
+    >
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
-        {listed && title && (
+        {(listed || shape === 'document') && title && (
           // A list page with an eyebrow and a lede (the public Compendium) holds its heading row in the
           // same column, as the page does, so the filter row below lands where the page's does.
           <div className={head === 'eyebrow' ? 'skeleton__intro' : undefined}>
@@ -431,6 +440,18 @@ const Skeleton = ({
                 ))}
               </div>
             )}
+          </div>
+        )}
+        {shape === 'document' && (
+          // A site document's editor: its title, a lede line, the Save Draft and Publish buttons, then the text box.
+          <div className="skeleton__document">
+            <span className="skeleton__title" />
+            <span className="skeleton__line" />
+            <div className="skeleton__actions">
+              <span />
+              <span />
+            </div>
+            <span className="skeleton__box" />
           </div>
         )}
         {shape === 'line' &&

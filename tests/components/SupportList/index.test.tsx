@@ -28,7 +28,7 @@ const opened = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderReq
   errorCode: null,
   replies: [],
   followUpId: null,
-  timedOutUntil: null,
+  timedOut: null,
   ...over,
 });
 

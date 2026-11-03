@@ -20,13 +20,13 @@ describe('LocalTime', () => {
 
     expect(screen.getByText('31 October 2026, 8:05 am')).toBeInTheDocument();
     expect(renderToString(<LocalTime at={AT} timeZone="Asia/Tokyo" long />)).toContain(
-      '30 October 2026, 11:05 pm',
+      '30 October 2026, 11:05\u00a0pm',
     );
   });
 
   it('prints UTC on the server, whatever zone is asked for', () => {
     expect(renderToString(<LocalTime at={AT} timeZone="Asia/Tokyo" />)).toContain(
-      '2026-10-30 11:05 pm',
+      '2026-10-30 11:05\u00a0pm',
     );
   });
 });
