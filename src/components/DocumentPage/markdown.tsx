@@ -18,6 +18,12 @@ import type { DocumentPlaceholders } from './types';
 /** A link is drawn only for these addresses: relative, a fragment, `https:` and `mailto:`. */
 const OPENABLE_ADDRESS = /^(\/(?!\/)|#|\?|https:|mailto:)/i;
 
+/**
+ * An address in the account pages, which robots.txt blocks and which send a signed-out visitor to
+ * sign-in, so a crawler is asked not to follow a link to one.
+ */
+const ACCOUNT_ADDRESS = /^\/account(?:[/?#]|$)/;
+
 const FLOW_PARENTS = new Set(['root', 'blockquote', 'listItem', 'footnoteDefinition']);
 
 /** Raw HTML becomes the text it was written as; where a block is expected, a paragraph holds it. */
@@ -139,14 +145,16 @@ function shapeFootnotes(node: Element): void {
   }
 }
 
-/** Keeps a link for an address the site opens; any other becomes its words. */
+/** Keeps a link for an address the site opens, `nofollow` into the account pages; any other becomes its words. */
 function openableLinks(children: ElementContent[]): ElementContent[] {
   return children.flatMap((child) => {
     if (!isElement(child)) return [child];
     child.children = openableLinks(child.children);
     if (child.tagName !== 'a') return [child];
     const href = child.properties.href;
-    return typeof href === 'string' && OPENABLE_ADDRESS.test(href) ? [child] : child.children;
+    if (typeof href !== 'string' || !OPENABLE_ADDRESS.test(href)) return child.children;
+    if (ACCOUNT_ADDRESS.test(href)) child.properties.rel = ['nofollow'];
+    return [child];
   });
 }
 

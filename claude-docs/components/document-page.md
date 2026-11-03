@@ -10,13 +10,13 @@ A document route is listed in three places beside its page: `PUBLIC_ROUTES` in `
 
 `DocumentPageProps` (`types.ts`):
 
-| Prop        | What it is                                                                                                                                                                                                                              |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `title`     | The document's title: the page's one `h1`, title case                                                                                                                                                                                   |
-| `lede`      | Optional: a sentence under the title saying what the document is for                                                                                                                                                                    |
-| `updatedOn` | The day the text last changed, a `Date`; the page shows it in UTC, so no server zone moves it                                                                                                                                           |
-| `body`      | The document's markdown, rendered on the server: `##` and `###` headings, paragraphs, lists, tables and footnotes; raw HTML is shown as text and a link that is not a site path, `#`, `?`, `https:` or `mailto:` is dropped to its text |
-| `history`   | Optional: earlier versions as `{ number, publishedAt, href }`, listed under "Earlier Versions"                                                                                                                                          |
+| Prop        | What it is                                                                                                                                                                                                                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`     | The document's title: the page's one `h1`, title case                                                                                                                                                                                                                                        |
+| `lede`      | Optional: a sentence under the title saying what the document is for                                                                                                                                                                                                                         |
+| `updatedOn` | The day the text last changed, a `Date`; the page shows it in UTC, so no server zone moves it                                                                                                                                                                                                |
+| `body`      | The document's markdown, rendered on the server: `##` and `###` headings, paragraphs, lists, tables and footnotes; raw HTML is shown as text and a link that is not a site path, `#`, `?`, `https:` or `mailto:` is dropped to its text, and a link into `/account` carries `rel="nofollow"` |
+| `history`   | Optional: earlier versions as `{ number, publishedAt, href }`, listed under "Earlier Versions"                                                                                                                                                                                               |
 
 ## The jump menu
 

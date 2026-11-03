@@ -245,6 +245,24 @@ describe('DocumentPage', () => {
       });
     });
 
+    // robots.txt blocks the account pages and a signed-out crawler is sent to sign-in from them, so a
+    // crawler that followed the link would report a blocked page.
+    it('asks a crawler not to follow a link into the account pages, and follows any other', () => {
+      show(
+        [
+          '[Fixture Agreement](/account/terms), [Fixture Account](/account) and [Fixture Return](/account?tab=email).',
+          '[Fixture Terms](/terms), [Fixture Accounting](/accounting) and [Fixture Site](https://example.test/account/terms).',
+        ].join('\n\n'),
+      );
+
+      for (const name of ['Fixture Agreement', 'Fixture Account', 'Fixture Return']) {
+        expect(screen.getByRole('link', { name }), name).toHaveAttribute('rel', 'nofollow');
+      }
+      for (const name of ['Fixture Terms', 'Fixture Accounting', 'Fixture Site']) {
+        expect(screen.getByRole('link', { name }), name).not.toHaveAttribute('rel');
+      }
+    });
+
     it('prints any other address as plain text, keeping the words', () => {
       const refused = {
         'Fixture Script': 'javascript:alert(1)',

@@ -6,8 +6,11 @@ import { safeReturnPath } from '../../../../lib/sign-in';
 import { readDocument } from '@/modules/documents';
 import type { TermsPageProps } from './types';
 
+// Out of search results and unfollowed: the public Terms of Use link here, and a signed-out crawler
+// is sent on to sign-in.
 export const metadata: Metadata = {
   title: 'Terms of Use',
+  robots: { index: false, follow: false },
 };
 
 // Where an account that has not agreed to the current terms lands from every other protected page. It is exempt from the
