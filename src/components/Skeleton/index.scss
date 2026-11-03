@@ -883,3 +883,17 @@
 .skeleton__recipe-aside {
   @include entry-side;
 }
+
+// A site document's editor: the title, lede line and buttons stacked as the editor lays them, the buttons
+// at the start, over a box the text box's minimum height.
+.skeleton__document {
+  @include stack(4);
+
+  .skeleton__actions {
+    justify-content: flex-start;
+  }
+}
+
+.skeleton__shapes .skeleton__document .skeleton__box {
+  height: 24rem;
+}
