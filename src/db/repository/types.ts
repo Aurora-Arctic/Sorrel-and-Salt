@@ -927,17 +927,13 @@ export interface IngredientFilter {
    */
   formId?: string;
   /**
-   * Any of these celestial bodies: an entry matches when its `celestialBodies` list holds one, compared under the suggestions' fold;
-   * how a body's delete and rename find the entries holding it, with a one-item list. Blank entries are skipped, an empty list is no filter.
+   * Any of these celestial bodies: an entry matches when its own `celestialBodies` list, or a live variant's, holds one, compared under the suggestions' fold;
+   * how a body's delete and rename find the entries holding it, with a one-item list. A soft-deleted variant's list counts for nothing.
+   * Blank entries are skipped, an empty list is no filter.
    */
   celestialBodies?: readonly string[];
-  /** Any of these signs, read from the entry's `zodiacSigns` as `celestialBodies` reads its list. */
+  /** Any of these signs, read from the entry's and its live variants' `zodiacSigns` as `celestialBodies` reads its lists. */
   zodiacSigns?: readonly string[];
-  /**
-   * Also count an entry whose live variant's list holds a value of `celestialBodies` or `zodiacSigns`: how a body's or sign's delete finds every entry holding it.
-   * The compendium's own facets leave it off and read the entry's list alone.
-   */
-  variantsHold?: boolean;
   /**
    * Any of these elements: an entry matches when its own `elements` list, or a live variant's, holds one of them.
    * A soft-deleted variant's list counts for nothing. An empty list is no filter.

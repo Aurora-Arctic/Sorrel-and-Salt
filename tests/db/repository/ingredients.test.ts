@@ -1171,6 +1171,78 @@ describe('findCompendiumPage', () => {
       expect(await namesOf({ celestialBodies: [] })).toHaveLength(4);
       expect(await namesOf({ zodiacSigns: ['', ' '] })).toHaveLength(4);
     });
+
+    // As with elements, a live form holding the value makes the entry hold it,
+    // and a retired form's list counts for nothing.
+    describe('held on a form', () => {
+      beforeEach(async () => {
+        await add('Fixture Form Held', {
+          variants: [
+            makeVariant(),
+            makeVariant({
+              form: 'Fixture Oil',
+              celestialBodies: [' MARS'],
+              zodiacSigns: ['Aries'],
+            }),
+          ],
+        });
+        const retired = await add('Fixture Retired Held', {
+          variants: [
+            makeVariant(),
+            makeVariant({ form: 'Fixture Oil', celestialBodies: ['Mars'], zodiacSigns: ['Aries'] }),
+          ],
+        });
+        await sql`
+          update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+          where ingredient_id = ${retired} and form = 'Fixture Oil'`;
+        await add('Fixture Both Held', {
+          celestialBodies: ['Mars'],
+          zodiacSigns: ['Aries'],
+          variants: [
+            makeVariant({ form: 'Fixture Oil', celestialBodies: ['Mars'], zodiacSigns: ['Aries'] }),
+            makeVariant({
+              form: 'Fixture Resin',
+              celestialBodies: ['mars'],
+              zodiacSigns: ['aries'],
+            }),
+          ],
+        });
+        await add('Fixture Coven Form', {
+          workspaceId: WORKSPACE_W_ID,
+          variants: [
+            makeVariant({ form: 'Fixture Oil', celestialBodies: ['Mars'], zodiacSigns: ['Aries'] }),
+          ],
+        });
+      });
+
+      it('lists an entry whose live form holds the value, once, and not one whose retired form or coven entry does', async () => {
+        // Why the retired and coven entries could have been listed: each has a
+        // form whose lists really hold Mars and Aries.
+        const [{ count }] = await sql`
+          select count(*)::int as count from ingredient_variants v
+          join ingredients i on i.id = v.ingredient_id
+          where i.name in ('Fixture Retired Held', 'Fixture Coven Form')
+            and 'Mars' = any(v.celestial_bodies) and 'Aries' = any(v.zodiac_signs)`;
+        expect(count).toBe(2);
+
+        const bodies = ['Fixture Both Held', 'Fixture Folded', 'Fixture Form Held', 'Fixture Held'];
+        expect(await namesOf({ celestialBodies: ['mars'] })).toEqual(bodies);
+        await expect(
+          findCompendiumCount({ celestialBodies: ['mars'] }, undefined),
+        ).resolves.toEqual({ totalCount: bodies.length, countBefore: null });
+        const signs = ['Fixture Both Held', 'Fixture Form Held', 'Fixture Other', 'Fixture Sign'];
+        expect(await namesOf({ zodiacSigns: ['ARIES'] })).toEqual(signs);
+        await expect(findCompendiumCount({ zodiacSigns: ['ARIES'] }, undefined)).resolves.toEqual({
+          totalCount: signs.length,
+          countBefore: null,
+        });
+      });
+
+      it("reads the form's list it names, a sign from the form's signs alone", async () => {
+        expect(await namesOf({ celestialBodies: ['Aries'] })).toEqual([]);
+        expect(await namesOf({ zodiacSigns: ['Mars'] })).toEqual([]);
+      });
+    });
   });
 
   // The two toxic flags, read together: an entry is toxic when its own flag or a live form's is on, and

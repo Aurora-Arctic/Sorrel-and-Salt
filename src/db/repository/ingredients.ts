@@ -621,16 +621,8 @@ export function compendiumList(
       ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
       formArm(filter.forms),
       pickedFormArm(filter.formId),
-      listArm(
-        columns.celestialBodies,
-        filter.celestialBodies,
-        filter.variantsHold && ingredientVariants.celestialBodies,
-      ),
-      listArm(
-        columns.zodiacSigns,
-        filter.zodiacSigns,
-        filter.variantsHold && ingredientVariants.zodiacSigns,
-      ),
+      listArm(columns.celestialBodies, ingredientVariants.celestialBodies, filter.celestialBodies),
+      listArm(columns.zodiacSigns, ingredientVariants.zodiacSigns, filter.zodiacSigns),
       elementArm(filter.elements, columns.elements),
       deityArm(filter.deityIds),
       toxicArm(filter.toxic),
@@ -888,34 +880,41 @@ export function stated(values: readonly string[] | undefined): string[] {
 }
 
 /**
- * `list` holds an entry folding to any of `values`, both sides trimmed and lower-cased as the suggestions fold one. One `IN` per value, ORed, rather than an array overlap,
- * since the list's side is folded entry by entry (`listFolds`). Blank values are skipped, and none means no filter.
- * With `variantList`, an entry whose live variant's list holds one counts too, by a correlated `EXISTS` that skips a soft-deleted form; only a delete's hold check passes it.
+ * The entry's `list`, or a live variant's `variantList`, holds a value folding to any of `values`, as `listOrVariantHolds` reads one. One match per value, ORed,
+ * rather than an array overlap, since the list's side is folded entry by entry (`listFolds`). Blank values are skipped, and none means no filter.
  */
 function listArm(
   list: SQLWrapper,
+  variantList: SQLWrapper,
   values: readonly string[] | undefined,
-  variantList?: SQLWrapper | false,
 ): SQL | undefined {
   const wanted = stated(values);
   if (wanted.length === 0) return undefined;
-  return or(
-    ...wanted.map((value) => listHolds(list, value)),
-    ...(variantList
-      ? wanted.map((value) =>
-          existsIn(
-            ingredientVariants,
-            and(eq(ingredientVariants.ingredientId, ingredients.id), listHolds(variantList, value)),
-          ),
-        )
-      : []),
-  );
+  return or(...wanted.map((value) => listOrVariantHolds(list, variantList, value)));
 }
 
 /**
- * `list` holds an entry folding as `value` does: one value of `listArm`, and how a facet matches a curated row's name to the list.
+ * The entry's `list` holds `value` under `listHolds`' fold, or a live variant's `variantList` does, by a correlated `EXISTS` that skips a soft-deleted form,
+ * as `elementArm` reads elements: how the filter and its facet both match a sign or a body.
  */
-export function listHolds(list: SQLWrapper, value: SQLWrapper | string): SQL {
+export function listOrVariantHolds(
+  list: SQLWrapper,
+  variantList: SQLWrapper,
+  value: SQLWrapper | string,
+): SQL {
+  return or(
+    listHolds(list, value),
+    existsIn(
+      ingredientVariants,
+      and(eq(ingredientVariants.ingredientId, ingredients.id), listHolds(variantList, value)),
+    ),
+  ) as SQL;
+}
+
+/**
+ * `list` holds an entry folding as `value` does, both sides trimmed and lower-cased as the suggestions fold one.
+ */
+function listHolds(list: SQLWrapper, value: SQLWrapper | string): SQL {
   return inArray(fold(value), listFolds(list));
 }
 

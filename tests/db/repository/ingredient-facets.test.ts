@@ -481,6 +481,41 @@ describe('findCompendiumFacets', () => {
     expect(counts(facets, 'toxic')).toEqual({ toxic: 2, not_toxic: 2 });
   });
 
+  it("counts a sign or body a live form holds, as the list reads it, and a retired form's for nothing", async () => {
+    const onForm = { celestialBodies: ['Mars'], zodiacSigns: ['Aries'] };
+    await add('Alphawort', { variants: [makeVariant(), makeVariant({ form: 'Oil', ...onForm })] });
+    // Held by the entry and two forms, it counts once.
+    await add('Betawort', {
+      ...onForm,
+      variants: [makeVariant({ ...onForm }), makeVariant({ form: 'Oil', ...onForm })],
+    });
+    const retired = await add('Gammawort', {
+      variants: [makeVariant(), makeVariant({ form: 'Oil', ...onForm })],
+    });
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+      where ingredient_id = ${retired} and form = 'Oil'`;
+    await add('Covenwort', { workspaceId: WORKSPACE_W_ID, variants: [makeVariant({ ...onForm })] });
+    // Why Gammawort and Covenwort could have counted: each has a form holding both.
+    const [{ count }] = await sql`
+      select count(distinct ingredient_id)::int as count from ingredient_variants
+      where 'Mars' = any(celestial_bodies) and 'Aries' = any(zodiac_signs)`;
+    expect(count).toBe(4);
+
+    const facets = await findCompendiumFacets({});
+
+    expect(counts(facets, 'celestialBodies')).toMatchObject({ Mars: 2 });
+    expect(counts(facets, 'zodiacSigns')).toMatchObject({ Aries: 2 });
+    await expect(findCompendiumCount({ celestialBodies: ['Mars'] }, undefined)).resolves.toEqual({
+      totalCount: 2,
+      countBefore: null,
+    });
+    await expect(findCompendiumCount({ zodiacSigns: ['Aries'] }, undefined)).resolves.toEqual({
+      totalCount: 2,
+      countBefore: null,
+    });
+  });
+
   it('leaves the other forms as they were when a form is chosen', async () => {
     await seedEntries();
 
