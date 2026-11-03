@@ -39,12 +39,12 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   const ADDITION = ' Fixturewort sentence from the editor.';
 
   // The nav's Documents opens the privacy policy's editor, under a tab row with one tab per document in the footer's order.
-  await page.goto('/admin');
+  await page.goto('/keepers');
   await page
-    .getByRole('navigation', { name: 'Admin' })
+    .getByRole('navigation', { name: 'Keepers' })
     .getByRole('link', { name: 'Documents' })
     .click();
-  await expect(page).toHaveURL(/\/admin\/documents\/privacy$/);
+  await expect(page).toHaveURL(/\/keepers\/documents\/privacy$/);
   const main = page.getByRole('main');
   const tabs = main.getByRole('navigation', { name: 'Documents' }).getByRole('link');
   await expect(tabs).toHaveText(['Privacy Policy', 'Disclaimer', 'Code of Ethics', 'Terms of Use']);
@@ -66,7 +66,7 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
     .getByRole('navigation', { name: 'Documents' })
     .getByRole('link', { name: 'Disclaimer', exact: true })
     .click();
-  await expect(page).toHaveURL(/\/admin\/documents\/disclaimer$/);
+  await expect(page).toHaveURL(/\/keepers\/documents\/disclaimer$/);
   await expect(tabs.nth(1)).toHaveAttribute('aria-current', 'page');
   await expect(editorOf(page)).toContainText('agreeing to the terms is agreeing to it');
   const save = main.getByRole('button', { name: 'Save Draft' });
@@ -185,7 +185,7 @@ test('a curator is refused every document editor with the styled not-authorised 
   await signInAs(page, 'a-curator@admin-documents.test', ['discord'], 'curator');
 
   // Precondition: the curator reaches the admin pages that curate.
-  expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
+  expect((await page.goto('/curator/compendium'))?.status()).toBe(200);
 
   for (const path of ['/keepers/documents/privacy', '/keepers/documents/disclaimer']) {
     expect((await page.goto(path))?.status(), path).toBe(403);

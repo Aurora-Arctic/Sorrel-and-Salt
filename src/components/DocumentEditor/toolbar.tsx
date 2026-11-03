@@ -72,7 +72,11 @@ const BUTTONS: ToolbarButton[] = [
   {
     label: 'Table',
     run: (editor) =>
-      insertTable(editor, { colCount: 2, rowCount: 2, header: true }, { at: nextBlockPath(editor) }),
+      insertTable(
+        editor,
+        { colCount: 2, rowCount: 2, header: true },
+        { at: nextBlockPath(editor) },
+      ),
   },
   { label: 'Footnote', run: (editor) => editor.tf.insert.footnote() },
 ];
