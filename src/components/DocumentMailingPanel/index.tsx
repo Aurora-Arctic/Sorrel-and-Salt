@@ -6,6 +6,7 @@ import { asksAgreement } from '../../lib/agreement-version';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { Required } from '../Field';
 import ConfirmedAction from '../UserList/confirmed-action';
+import Notice from '../Notice';
 import type { DocumentMailingPanelProps, MailingProgressProps } from './types';
 import './index.scss';
 
@@ -119,11 +120,11 @@ const DocumentMailingPanel = ({ overview }: DocumentMailingPanelProps): ReactEle
       )}
       {canSend && (
         <>
-          <p className="document-mailing__status">
-            Changed since the last email: the {titles}. {count(accountCount)}{' '}
-            {accountCount === 1 ? 'account' : 'accounts'} would be reached over {days}{' '}
-            {days === 1 ? 'day' : 'days'}.
-          </p>
+          <p className="document-mailing__status">Changed since the last email: the {titles}.</p>
+          <Notice kind="warn" quiet className="document-mailing__reach">
+            {count(accountCount)} {accountCount === 1 ? 'account' : 'accounts'} would be reached
+            over {days} {days === 1 ? 'day' : 'days'}.
+          </Notice>
           {pending.map((document) => (
             <div className="field" key={document.versionId}>
               <label className="field__label" htmlFor={`${id}-${document.versionId}`}>

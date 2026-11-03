@@ -12,6 +12,17 @@
     margin-block-end: 0;
   }
 
+  // Email Every Account stands apart from the last summary, at its own width rather than the grid's.
+  > .btn {
+    justify-self: start;
+    margin-block-start: space(3);
+  }
+
+  // The status paragraph above brings its own `space(2)` margin; this matches it below.
+  &__reach {
+    margin-block-end: space(2);
+  }
+
   &__mailing {
     display: grid;
     gap: space(2);
