@@ -18,15 +18,15 @@ The stored text is markdown, the same text `DocumentPage` renders, so the editor
 
 `toolbar.tsx` is a `role="toolbar"` named "Document Text Formatting", above the text box. It has eleven quiet icon buttons (`btn btn--quiet btn--icon`, 2.5rem square, marks from [`icons.tsx`](icon-tip.md), "The icons"), each named by `aria-label` and tipped below with its name through `IconTip`. Nine are one for each thing the public page draws that a person can add, and no others; the last two are Undo and Redo. They sit in five `role="group"` rows, each named, with a hairline between groups, 0.5rem from the buttons on each side, and 0.25rem between the buttons in a group:
 
-| Group    | Buttons                                 |
-| -------- | --------------------------------------- |
-| Headings | Heading 2, Heading 3                    |
-| Text     | Bold, Italic, Link                      |
-| Lists    | Bulleted List, Numbered List            |
-| Insert   | Table, Footnote                         |
-| History  | Undo, Redo, at the right end of the row |
+| Group    | Buttons                      |
+| -------- | ---------------------------- |
+| Headings | Heading 2, Heading 3         |
+| Text     | Bold, Italic, Link           |
+| Lists    | Bulleted List, Numbered List |
+| Insert   | Table, Footnote              |
+| History  | Undo, Redo                   |
 
-The first four groups sit centred in the space left of History. Each button is a Plate transform, not a hand-written edit:
+The groups sit centred in the row, in that order. Each button is a Plate transform, not a hand-written edit:
 
 | Button                       | What it calls                                                                                                                                                | Pressed when                                    |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- |

@@ -73,13 +73,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: space(2);
-
-  // The space either side of the formatting groups splits evenly, so they sit centred and Undo and Redo at the right end.
-  .document-editor__group:first-child,
-  .document-editor__group:last-child {
-    margin-inline-start: auto;
-  }
 
   .btn--icon {
     width: 2.5rem;
