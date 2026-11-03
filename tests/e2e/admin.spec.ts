@@ -49,7 +49,7 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['Support', '/keepers/support'],
     ['People', '/keepers/users'],
     ['Invitations', '/keepers/invitations'],
-    // The documents open on the privacy policy, their first tab.
+    // The documents open on the terms of use, their first tab.
     ['Documents', '/keepers/documents/terms'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);

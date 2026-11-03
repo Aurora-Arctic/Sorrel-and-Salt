@@ -79,7 +79,6 @@ const DocumentEditor = ({
   publishedBody,
   revision: openRevision,
   nextNumber,
-  mailing,
 }: DocumentEditorProps): ReactElement => {
   const editor = usePlateEditor({
     plugins: editorPlugins,
@@ -188,7 +187,6 @@ const DocumentEditor = ({
     <div className="document-editor">
       <h2>{title}</h2>
       <p className="lede">{lede}</p>
-      {mailing}
       <div className="document-page__body document-editor__text">
         <Plate
           editor={editor}

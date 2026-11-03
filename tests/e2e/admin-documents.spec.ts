@@ -5,15 +5,16 @@ import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
 // A keeper edits the site's documents in place, one tab each under /keepers/documents: a saved draft is the keeper's alone, and a publish is what a
-// reader sees, as a new version with the old one in its history. Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again, and the
-// confirmation says so first (claude-docs/design-decisions/m15.59-document-editor-scope.md).
+// reader sees, as a new version with the old one in its history. Publishing the terms, or the disclaimer or code of ethics they include, asks every
+// account to agree again, and the confirmation says so first (claude-docs/design-decisions/m15.59-document-editor-scope.md). The Email Updates tab
+// emails every account one email about every document changed since the last (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 // The four documents, in the order their tabs and the footer list them.
-const DOCUMENT_KEYS = ['privacy', 'disclaimer', 'terms', 'code-of-ethics'] as const;
+const DOCUMENT_KEYS = ['terms', 'disclaimer', 'code-of-ethics', 'privacy'] as const;
 
 /** The editor's editable text. */
 const editorOf = (page: Page) =>
@@ -43,19 +44,26 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await member.goto('/account');
   await expect(member).not.toHaveURL(/\/account\/terms/);
 
-  // The nav's Documents opens the privacy policy's editor, under a tab row with one tab per document in the footer's order.
+  // The nav's Documents opens the terms of use's editor, under a tab row with one tab per document in the footer's order, then Email Updates.
   await page.goto('/keepers');
   await page
     .getByRole('navigation', { name: 'Keepers' })
     .getByRole('link', { name: 'Documents' })
     .click();
-  await expect(page).toHaveURL(/\/keepers\/documents\/privacy$/);
+  await expect(page).toHaveURL(/\/keepers\/documents\/terms$/);
   const main = page.getByRole('main');
   const tabs = main.getByRole('navigation', { name: 'Documents' }).getByRole('link');
-  await expect(tabs).toHaveText(['Privacy Policy', 'Disclaimer', 'Terms of Use', 'Code of Ethics']);
+  await expect(tabs).toHaveText([
+    'Terms of Use',
+    'Disclaimer',
+    'Code of Ethics',
+    'Privacy Policy',
+    'Email Updates',
+  ]);
   for (const [index, key] of DOCUMENT_KEYS.entries()) {
     await expect(tabs.nth(index)).toHaveAttribute('href', `/keepers/documents/${key}`);
   }
+  await expect(tabs.nth(DOCUMENT_KEYS.length)).toHaveAttribute('href', '/keepers/documents');
   await expect(tabs.nth(0)).toHaveAttribute('aria-current', 'page');
   await expect(editorOf(page)).toBeVisible();
   // The scan covers the editor's toolbar too, so it waits for it.
@@ -197,7 +205,7 @@ test('the editor’s toolbar takes one tab stop, and the arrow keys move between
 });
 
 // A curator curates the compendium and does not govern the site's documents: each page refuses them itself, whatever the nav shows.
-test('a curator is refused every document editor with the styled not-authorised page', async ({
+test('a curator is refused every document editor and the Email Updates page with the styled not-authorised page', async ({
   page,
 }) => {
   await signInAs(page, 'a-curator@admin-documents.test', ['discord'], 'curator');
@@ -205,7 +213,11 @@ test('a curator is refused every document editor with the styled not-authorised 
   // Precondition: the curator reaches the admin pages that curate.
   expect((await page.goto('/curator/compendium'))?.status()).toBe(200);
 
-  for (const path of ['/keepers/documents/privacy', '/keepers/documents/disclaimer']) {
+  for (const path of [
+    '/keepers/documents/privacy',
+    '/keepers/documents/disclaimer',
+    '/keepers/documents',
+  ]) {
     expect((await page.goto(path))?.status(), path).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
@@ -214,65 +226,83 @@ test('a curator is refused every document editor with the styled not-authorised 
   await assertNoAccessibilityViolations(page);
 });
 
-// The documents open on their first tab, so no list page stands at /keepers/documents: the address answers as one never built.
-test('/keepers/documents is not a page, even for an admin', async ({ page }) => {
-  await signInAs(page, 'list-admin@admin-documents.test', ['discord'], 'admin');
-
-  // Precondition: this keeper reaches the documents' editors.
-  expect((await page.goto('/keepers/documents/privacy'))?.status()).toBe(200);
-
-  expect((await page.goto('/keepers/documents'))?.status()).toBe(404);
-});
-
-// A published change is emailed to every account only when a keeper asks: the edit page offers it, the confirmation says what will be
-// sent to how many and over how many days, and the mailing it starts is recorded on the page (claude-docs/design-decisions/m15.59-
-// document-editor-scope.md, "M15.63: emailing every account").
-test('an admin publishes a change to the code of ethics, then emails every account about it', async ({
+// A published change is emailed to every account only when a keeper asks, on the Email Updates page: one email covers every document
+// changed since the last, each with its own summary, and the mailing it starts is recorded on the page
+// (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
+test('an admin publishes the privacy policy and the code of ethics, then emails every account one email about both', async ({
   page,
 }) => {
   await signInAs(page, 'mail-admin@admin-documents.test', ['discord'], 'admin');
-  await page.goto('/keepers/documents/code-of-ethics');
   const main = page.getByRole('main');
 
-  await appendTo(
-    page,
+  /** Appends `addition` to the paragraph holding `anchor` in the `key` document, and publishes it. */
+  async function publish(key: string, anchor: string, addition: string): Promise<void> {
+    await page.goto(`/keepers/documents/${key}`);
+    await appendTo(page, anchor, addition);
+    await main.getByRole('button', { name: 'Save Draft' }).click();
+    await expect(main.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
+    await main.getByRole('button', { name: 'Publish', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Publish', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+
+  // Publishing mails nothing: the editor offers no email, and the change waits on the Email Updates page.
+  await publish(
+    'privacy',
+    'Until then the old email stays',
+    ' Fixturewort promise from the editor.',
+  );
+  await expect(main.getByRole('button', { name: 'Email Every Account' })).toHaveCount(0);
+  await publish(
+    'code-of-ethics',
     'Everyone is welcome here, and bigotry is not.',
     ' Fixturewort duty from the editor.',
   );
-  await main.getByRole('button', { name: 'Save Draft' }).click();
-  await expect(main.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
-  await main.getByRole('button', { name: 'Publish', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Publish', exact: true }).click();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  // The terms include the code of ethics, so the keeper too agrees again before the editor answers.
-  await page.goto('/keepers/documents/code-of-ethics');
+  // The code of ethics is one of the documents an account agrees to, so the keeper too agrees again before the next page answers.
+  await page.goto('/keepers/documents');
   await expect(page).toHaveURL(/\/account\/terms\?next=/);
   await page.getByRole('button', { name: 'Agree & Continue' }).click();
-  await expect(page).toHaveURL(/\/keepers\/documents\/code-of-ethics$/);
-
-  // The published change has not been emailed: the page offers it, and shows no mailing.
-  const email = main.getByRole('button', { name: 'Email Every Account' });
-  await expect(email).toBeEnabled();
+  await expect(page).toHaveURL(/\/keepers\/documents$/);
+  await expect(
+    main
+      .getByRole('navigation', { name: 'Documents' })
+      .getByRole('link', { name: 'Email Updates' }),
+  ).toHaveAttribute('aria-current', 'page');
   await expect(main.getByRole('progressbar')).toHaveCount(0);
+
+  // Each changed document asks for its own summary, and the button waits for every one. The other tests in this file may have published
+  // the disclaimer and the terms first, so every summary on the page is written.
+  const email = main.getByRole('button', { name: 'Email Every Account' });
+  const privacy = main.getByRole('textbox', { name: 'Summary of the Privacy Policy' });
+  const ethics = main.getByRole('textbox', { name: 'Summary of the Code of Ethics' });
+  await expect(privacy).toBeVisible();
+  await expect(ethics).toBeVisible();
+  await expect(email).toBeDisabled();
+  await assertNoAccessibilityViolations(page);
+  await privacy.fill('A new promise about your email.');
+  await ethics.fill('A new duty to name your sources.');
+  for (const summary of await main.getByRole('textbox', { name: /^Summary of the / }).all()) {
+    if ((await summary.inputValue()) === '') await summary.fill('A Fixturewort change.');
+  }
+  await expect(email).toBeEnabled();
 
   await email.click();
   const confirmation = page.getByRole('dialog', { name: 'Email Every Account' });
+  await expect(confirmation).toContainText('Privacy Policy');
   await expect(confirmation).toContainText('Code of Ethics');
-  const send = confirmation.getByRole('button', { name: 'Send Emails' });
-  await expect(send).toBeDisabled();
-  await confirmation
-    .getByRole('textbox', { name: 'Summary' })
-    .fill('A new duty to name your sources.');
-  await expect(send).toBeEnabled();
   await assertNoAccessibilityViolations(page);
-  await send.click();
+  await confirmation.getByRole('button', { name: 'Send Emails' }).click();
   await expect(confirmation).toHaveCount(0);
 
-  // Recorded: the mailing's progress stands where the offer was, and still does when the page is read again.
-  await expect(main.getByRole('progressbar')).toBeVisible();
-  await expect(email).toHaveCount(0);
+  // Recorded: one mailing covers both documents, nothing is left to send, and the page reads the same again.
+  const progress = main.getByRole('progressbar', {
+    name: /Privacy Policy.*Code of Ethics|Code of Ethics.*Privacy Policy/,
+  });
+  await expect(progress).toHaveCount(1);
+  await expect(main.getByRole('textbox', { name: /^Summary of the / })).toHaveCount(0);
+  await expect(main.getByRole('button', { name: 'Email Every Account' })).toHaveCount(0);
   await page.reload();
-  await expect(main.getByRole('progressbar')).toBeVisible();
+  await expect(progress).toHaveCount(1);
   await expect(main.getByRole('button', { name: 'Email Every Account' })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 });

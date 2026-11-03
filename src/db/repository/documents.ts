@@ -2,16 +2,18 @@ import {
   and,
   desc,
   eq,
+  gt,
   ilike,
   inArray,
   isNotNull,
   isNull,
-  lt,
   max,
   not,
   notInArray,
   sql,
 } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { documentMailingItems } from '../../modules/documents/schema/document-mailing-items';
 import { documentMailingRecipients } from '../../modules/documents/schema/document-mailing-recipients';
 import { documentMailings } from '../../modules/documents/schema/document-mailings';
 import { documentVersions } from '../../modules/documents/schema/document-versions';
@@ -29,10 +31,12 @@ import { findPage } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
 import type {
   AuditWriter,
+  DocumentMailingItem,
   DocumentMailingRecipientRow,
   DocumentMailingRow,
   DocumentRow,
   DocumentVersionRow,
+  PendingDocumentVersion,
   SortPart,
   WriterContext,
 } from './types';
@@ -105,16 +109,95 @@ export function findDocumentDraft(
   );
 }
 
-/** The live mailing of a version, or `undefined`. */
-export function findDocumentMailingForVersion(
-  documentVersionId: string,
-): Promise<DocumentMailingRow | undefined> {
-  return selectOne(
-    documentMailings,
-    and(
-      notSoftDeleted(documentMailings),
-      eq(documentMailings.documentVersionId, documentVersionId),
+// A newer published version of the same document, which makes the outer one no longer its document's newest.
+const newerVersion = alias(documentVersions, 'newer_version');
+
+// A live item of a live sent mailing covering the outer version: a replaced, sending or paused mailing leaves it to be mailed.
+const mailedVersion = existsIn(
+  documentMailingItems,
+  and(
+    eq(documentMailingItems.documentVersionId, documentVersions.id),
+    existsIn(
+      documentMailings,
+      and(
+        eq(documentMailings.id, documentMailingItems.mailingId),
+        eq(documentMailings.status, 'sent'),
+      ),
     ),
+  ),
+);
+
+/**
+ * Each live document's newest published version, when it is not the first and no sent mailing covers it: what the next mailing
+ * tells every account about. By title.
+ */
+export function findPendingDocumentVersions(): Promise<PendingDocumentVersion[]> {
+  return selectFrom(
+    documentVersions,
+    and(
+      notSoftDeleted(documentVersions),
+      eq(documentVersions.status, 'published'),
+      gt(documentVersions.number, 1),
+      not(
+        existsIn(
+          newerVersion,
+          and(
+            eq(newerVersion.documentId, documentVersions.documentId),
+            eq(newerVersion.status, 'published'),
+            gt(newerVersion.number, documentVersions.number),
+          ),
+        ),
+      ),
+      not(mailedVersion),
+    ),
+    {
+      aggregate: {
+        documentId: sql<string>`${documentVersions.documentId}`,
+        versionId: sql<string>`${documentVersions.id}`,
+        key: sql<string>`${documents.key}`,
+        title: sql<string>`${documents.title}`,
+        versionNumber: sql<number>`${documentVersions.number}`,
+      },
+      over: {},
+      joins: [
+        { type: 'inner', table: documents, on: eq(documents.id, documentVersions.documentId) },
+      ],
+      orderBy: [documents.title],
+    },
+  );
+}
+
+/** The live items of the mailings, each with its version's number and document; an item whose version or document is gone is left out. */
+export function findDocumentMailingItems(
+  mailingIds: readonly string[],
+): Promise<DocumentMailingItem[]> {
+  if (mailingIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    documentMailingItems,
+    and(
+      notSoftDeleted(documentMailingItems),
+      inArray(documentMailingItems.mailingId, [...mailingIds]),
+    ),
+    {
+      aggregate: {
+        mailingId: sql<string>`${documentMailingItems.mailingId}`,
+        versionId: sql<string>`${documentMailingItems.documentVersionId}`,
+        key: sql<string>`${documents.key}`,
+        title: sql<string>`${documents.title}`,
+        versionNumber: sql<number>`${documentVersions.number}`,
+        summary: sql<string>`${documentMailingItems.summary}`,
+      },
+      over: {},
+      joins: [
+        {
+          type: 'inner',
+          table: documentVersions,
+          on: eq(documentVersions.id, documentMailingItems.documentVersionId),
+        },
+        { type: 'inner', table: documents, on: eq(documents.id, documentVersions.documentId) },
+      ],
+      orderBy: [documents.title],
+    },
   );
 }
 
@@ -210,15 +293,27 @@ export function findDocumentMailingById(
   );
 }
 
-/** The sending or paused mailing of a document's version numbered below `versionNumber`, which a newer mailing would replace. */
-export function findOpenDocumentMailingBefore(
-  documentId: string,
-  versionNumber: number,
-): Promise<DocumentMailingRow | undefined> {
-  return selectOne(
+// A mailing still going: sending, or paused until a keeper resumes it.
+const openMailing = and(
+  notSoftDeleted(documentMailings),
+  inArray(documentMailings.status, ['sending', 'paused']),
+);
+
+/** The live sending and paused mailings, oldest first: what a new mailing replaces. */
+export async function findOpenDocumentMailings(): Promise<DocumentMailingRow[]> {
+  const open = await selectFrom(documentMailings, openMailing);
+  return open.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+}
+
+/** The newest live mailing that has reached every account, or `undefined`. */
+export async function findLatestSentDocumentMailing(): Promise<DocumentMailingRow | undefined> {
+  const [latest] = await findPage(
     documentMailings,
-    and(notSoftDeleted(documentMailings), openMailingBefore(documentId, versionNumber)),
+    [documentMailings.createdAt],
+    { limit: 1, inverted: true },
+    eq(documentMailings.status, 'sent'),
   );
+  return latest?.node;
 }
 
 /** The longest-waiting sending mailing of any document, which the day's run carries on first, or `undefined`. */
@@ -230,21 +325,6 @@ export async function findOldestSendingDocumentMailing(): Promise<DocumentMailin
     eq(documentMailings.status, 'sending'),
   );
   return oldest?.node;
-}
-
-function openMailingBefore(documentId: string, versionNumber: number) {
-  return and(
-    notSoftDeleted(documentMailings),
-    inArray(documentMailings.status, ['sending', 'paused']),
-    existsIn(
-      documentVersions,
-      and(
-        eq(documentVersions.id, documentMailings.documentVersionId),
-        eq(documentVersions.documentId, documentId),
-        lt(documentVersions.number, versionNumber),
-      ),
-    ),
-  );
 }
 
 /** The documents' named writes, beside their finders. `writerFor` spreads them into the writer. */
@@ -262,6 +342,7 @@ export function documentWrites({
   | 'publishDocumentDraft'
   | 'discardDocumentDraft'
   | 'startDocumentMailing'
+  | 'lockDocumentMailingStart'
   | 'addDocumentMailingRecipients'
   | 'markDocumentMailingRecipientsSent'
   | 'skipDocumentMailingRecipient'
@@ -341,30 +422,41 @@ export function documentWrites({
       if (current) throw new StaleWrite(current.revision);
       return [];
     },
-    // The version's row is locked, so a publish or delete alongside cannot slip between the check and the insert; a mailing started
-    // alongside meets the one-per-version index and writes nothing.
-    startDocumentMailing: async (_admin, versionId, { summary, recipientCount }) => {
-      const [version] = await selectFrom(
+    // The versions' rows are locked, so a delete alongside cannot slip between the check and the inserts.
+    startDocumentMailing: async (_admin, { items, recipientCount }) => {
+      const versionIds = [...new Set(items.map((item) => item.versionId))];
+      if (versionIds.length === 0) return [];
+      const versions = await selectFrom(
         documentVersions,
         and(
           notSoftDeleted(documentVersions),
-          eq(documentVersions.id, versionId),
+          inArray(documentVersions.id, versionIds),
           eq(documentVersions.status, 'published'),
         ),
         { lockIn: tx, lockOrder: documentVersions.id },
       );
-      if (!version) return [];
-      return tx
+      if (versions.length !== versionIds.length) return [];
+      const started: DocumentMailingRow[] = await tx
         .insert(documentMailings)
-        .values(
-          applyAudit(
-            'insert',
-            { documentVersionId: versionId, summary, recipientCount },
-            session,
-          ) as never,
-        )
-        .onConflictDoNothing()
+        .values(applyAudit('insert', { recipientCount }, session) as never)
         .returning();
+      await tx
+        .insert(documentMailingItems)
+        .values(
+          items.map(
+            ({ versionId, summary }) =>
+              applyAudit(
+                'insert',
+                { mailingId: started[0]!.id, documentVersionId: versionId, summary },
+                session,
+              ) as never,
+          ),
+        );
+      return started;
+    },
+    // An advisory lock rather than a row lock: no one row is read by every start.
+    lockDocumentMailingStart: async () => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'document-mailing:start'}))`);
     },
     addDocumentMailingRecipients: (mailingId, userIds) => {
       if (userIds.length === 0) return Promise.resolve([]);
@@ -419,12 +511,8 @@ export function documentWrites({
         { status: 'sent', finishedAt: sql`now()` },
         and(eq(documentMailings.id, mailingId), eq(documentMailings.status, 'sending')),
       ),
-    replaceOpenDocumentMailings: (_admin, documentId, versionNumber) =>
-      update(
-        documentMailings,
-        { status: 'replaced' },
-        openMailingBefore(documentId, versionNumber),
-      ),
+    replaceOpenDocumentMailings: () =>
+      update(documentMailings, { status: 'replaced' }, openMailing),
     pauseDocumentMailing: (mailingId) =>
       update(
         documentMailings,

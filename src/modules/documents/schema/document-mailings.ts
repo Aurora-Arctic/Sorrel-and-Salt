@@ -4,7 +4,7 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 import { auditColumns } from '../../identity/schema/users';
 import { documentVersions } from './document-versions';
 
-// `replaced` marks a mailing that a newer mailing of the same document stopped before it finished; `paused` one the mail provider's
+// `replaced` marks a mailing that a newer mailing stopped before it finished; `paused` one the mail provider's
 // monthly quota stopped, until a keeper resumes it.
 export const documentMailingStatus = pgEnum('document_mailing_status', [
   'sending',
@@ -13,18 +13,17 @@ export const documentMailingStatus = pgEnum('document_mailing_status', [
   'paused',
 ]);
 
-// A published version emailed to every account, at most once per version. Marked `namedWrites`: its status and finish time are
-// stamped by its own methods alone.
+// One email to every account, listing the versions its `document_mailing_items` name. Marked `namedWrites`: its status and
+// finish time are stamped by its own methods alone.
 export const documentMailings = namedWrites(
   pgTable(
     'document_mailings',
     {
       id: idColumn(),
-      documentVersionId: uuid('document_version_id')
-        .notNull()
-        .references(() => documentVersions.id),
-      // What changed, in the keeper's words, as the mail carries it.
-      summary: text('summary').notNull(),
+      // The one version, and its summary, of a mailing written before its versions were items; null on every newer mailing,
+      // and read by nothing but the migration that copied them to items.
+      documentVersionId: uuid('document_version_id').references(() => documentVersions.id),
+      summary: text('summary'),
       status: documentMailingStatus('status').notNull().default('sending'),
       recipientCount: integer('recipient_count').notNull(),
       finishedAt: timestamp('finished_at'),

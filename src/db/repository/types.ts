@@ -562,14 +562,15 @@ export interface AuditWriter {
     expectedRevision: number,
   ): Promise<DocumentVersionRow[]>;
   /**
-   * Start the mailing of a published version, sending. No row comes back for a draft, a soft-deleted or missing version, or one with a
-   * live mailing already.
+   * Start one mailing of published versions, sending, with an item for each. No row comes back, and nothing is written, when any
+   * version is a draft, soft-deleted or missing.
    */
   startDocumentMailing(
     admin: SiteAdmin,
-    versionId: string,
     mailing: DocumentMailingInput,
   ): Promise<DocumentMailingRow[]>;
+  /** Wait for any other transaction starting a mailing, then hold the start until this one ends, so two keepers start one mailing. */
+  lockDocumentMailingStart(admin: SiteAdmin): Promise<void>;
   /** Add accounts to a mailing, unsent. An account already in it is skipped, so the rows added come back; none for an empty list. */
   addDocumentMailingRecipients(
     mailingId: string,
@@ -587,16 +588,12 @@ export interface AuditWriter {
   ): Promise<DocumentMailingRecipientRow[]>;
   /** Wait for any other transaction holding the mailing's turn, then hold it until this one ends, so batch steps of one mailing take turns. */
   lockDocumentMailingTurn(mailingId: string): Promise<void>;
-  /** Mark a sending mailing replaced, for a version or document that is gone. A mailing in any other state answers `[]`. */
+  /** Mark a sending mailing replaced, once every version it covers or their documents are gone. A mailing in any other state answers `[]`. */
   replaceDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
   /** Finish a sending mailing: sent, dated now. A mailing that is sent or replaced answers `[]`. */
   finishDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
-  /** Mark the document's sending and paused mailings of versions numbered below `versionNumber` replaced; they keep what they sent. */
-  replaceOpenDocumentMailings(
-    admin: SiteAdmin,
-    documentId: string,
-    versionNumber: number,
-  ): Promise<DocumentMailingRow[]>;
+  /** Mark every live sending and paused mailing replaced; each keeps what it sent. */
+  replaceOpenDocumentMailings(admin: SiteAdmin): Promise<DocumentMailingRow[]>;
   /** Pause a sending mailing, for the provider's monthly quota. A mailing in any other state answers `[]`. */
   pauseDocumentMailing(mailingId: string): Promise<DocumentMailingRow[]>;
   /** Set a paused mailing sending again. A mailing in any other state answers `[]`. */
@@ -1220,10 +1217,29 @@ export type DocumentVersionRow = typeof documentVersions.$inferSelect;
 /** One `document_mailings` row. */
 export type DocumentMailingRow = typeof documentMailings.$inferSelect;
 
-/** What a mailing starts with: what changed, and how many accounts it will reach. */
+/** What a mailing starts with: each version it covers with what changed in it, and how many accounts it will reach. */
 export interface DocumentMailingInput {
-  summary: string;
+  items: readonly { versionId: string; summary: string }[];
   recipientCount: number;
+}
+
+/** A document's newest published version that no sent mailing covers, with its document. */
+export interface PendingDocumentVersion {
+  documentId: string;
+  versionId: string;
+  key: string;
+  title: string;
+  versionNumber: number;
+}
+
+/** One live item of a mailing, with the version's number and its document. */
+export interface DocumentMailingItem {
+  mailingId: string;
+  versionId: string;
+  key: string;
+  title: string;
+  versionNumber: number;
+  summary: string;
 }
 
 /** One `document_mailing_recipients` row. */

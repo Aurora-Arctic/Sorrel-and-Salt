@@ -210,6 +210,14 @@ const ROWS: Record<string, PartialIndexRow> = {
   },
   deity_traditions_seed_key_unique: { row: tradition },
   deity_traditions_slug_unique: { row: tradition },
+  document_mailing_items_mailing_version_unique: {
+    row: async () =>
+      stamped({
+        mailing_id: await idOf('document_mailings', await documentMailing()),
+        document_version_id: await idOf('document_versions', await documentVersion('published')()),
+        summary: 'Testwort clause added.',
+      }),
+  },
   document_mailing_recipients_mailing_user_unique: {
     row: async () =>
       stamped({

@@ -4,6 +4,7 @@ import { is } from 'drizzle-orm';
 import { PgTable, getTableConfig } from 'drizzle-orm/pg-core';
 import { useTestDatabase } from '../support/db/database';
 import { tableFacts } from '../support/db/table-metadata';
+import * as documentMailingItems from '@/modules/documents/schema/document-mailing-items';
 import * as documentMailingRecipients from '@/modules/documents/schema/document-mailing-recipients';
 import * as documentMailings from '@/modules/documents/schema/document-mailings';
 import * as documentVersions from '@/modules/documents/schema/document-versions';
@@ -65,6 +66,7 @@ const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) 
   );
 
 const MODULES = [
+  documentMailingItems,
   documentMailingRecipients,
   documentMailings,
   documentVersions,

@@ -5,6 +5,7 @@ import { documents } from '@/modules/documents/schema/documents';
 import { documentVersions } from '@/modules/documents/schema/document-versions';
 import { documentMailings } from '@/modules/documents/schema/document-mailings';
 import { documentMailingRecipients } from '@/modules/documents/schema/document-mailing-recipients';
+import { documentMailingItems } from '@/modules/documents/schema/document-mailing-items';
 
 // Compile assertions, checked by `npm run typecheck` and run by nothing: each `@ts-expect-error` fails the typecheck the moment
 // its constraint is loosened, which a runtime assertion cannot see. `tsconfig.json` includes `tests/`, which is what reads this.
@@ -15,6 +16,7 @@ export const marked: NamedWrites[] = [
   documentVersions,
   documentMailings,
   documentMailingRecipients,
+  documentMailingItems,
 ];
 
 const id = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
@@ -63,8 +65,6 @@ export const mailingWrites = [
   (write: AuditWriter) =>
     // @ts-expect-error — the mark: no generic insert, so a mailing cannot go in already sent.
     write.insert(documentMailings, {
-      documentVersionId: id,
-      summary: '',
       status: 'sent',
       recipientCount: 0,
     }),
@@ -83,4 +83,10 @@ export const mailingWrites = [
   (write: AuditWriter) =>
     // @ts-expect-error — the mark: no hard delete.
     write.delete(documentMailingRecipients, ofMailing),
+  (write: AuditWriter) =>
+    // @ts-expect-error — the mark: no generic insert, so a version cannot join a mailing already under way.
+    write.insert(documentMailingItems, { mailingId: id, documentVersionId: id, summary: '' }),
+  (write: AuditWriter) =>
+    // @ts-expect-error — the mark: no generic update, so a summary cannot be rewritten after it is mailed.
+    write.update(documentMailingItems, { summary: '' }, eq(documentMailingItems.mailingId, id)),
 ];
