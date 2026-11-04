@@ -105,7 +105,7 @@
     "next": "^16.4.3",
     "pdf-lib": "^1.17.1",
     "platejs": "^53.5.2",
-    "postgres": "^3.4.9",
+    "postgres": "^4.0.0",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-day-picker": "^10.0.2",
