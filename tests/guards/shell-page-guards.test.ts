@@ -3,8 +3,8 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
-// The proxy reads only whether a session cookie is present, so an anonymous sender's cookie passes it on every path; what
-// keeps that session off a protected page is the page itself calling a session guard (claude-docs/design-decisions/m15.48-anonymous-sender.md).
+// The proxy reads only whether a session cookie is present, so any cookie passes it on every path; what keeps a session off a
+// page it may not reach is the page itself calling a session guard.
 // A page counts as guarded when it, or a file it imports from inside src/app, calls one.
 
 const SHELL_PAGE = /^src\/app\/\(shell\)\/.*\/page\.tsx$/;

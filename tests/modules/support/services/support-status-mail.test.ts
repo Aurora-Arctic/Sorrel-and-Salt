@@ -17,7 +17,6 @@ import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice'
 import { replyNoticeStep } from '@/modules/support/jobs/support-reply-notice-steps';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { anonymousMinter } from '../../../support/db/insert-anonymous-user';
 
 // Which status mail each service move sends, to whom, and that no internal note reaches any of them.
 
@@ -109,8 +108,7 @@ describe('the received mail', () => {
     await sendSignedOutSupportRequest(SIGNED_OUT, {
       clientIp: '203.0.113.7',
       notifier: mail,
-      anonymous: anonymousMinter(sql),
-    });
+    } as Parameters<typeof sendSignedOutSupportRequest>[1]);
 
     const [row] = await sql`select id from support_requests`;
     expect(statusRuns()).toEqual([
@@ -128,8 +126,7 @@ describe('the received mail', () => {
     await sendSignedOutSupportRequest(SIGNED_OUT, {
       clientIp: '203.0.113.7',
       notifier: mail,
-      anonymous: anonymousMinter(sql),
-    });
+    } as Parameters<typeof sendSignedOutSupportRequest>[1]);
     // Precondition: the run was started, and the step would have mailed the sender.
     expect(statusRuns()).toHaveLength(1);
     await sql`update support_requests set sender_email = null, created_by = ${SYSTEM_ACTOR_ID}`;
@@ -229,8 +226,7 @@ describe('the rendered mails', () => {
     await sendSignedOutSupportRequest(SIGNED_OUT, {
       clientIp: '203.0.113.7',
       notifier,
-      anonymous: anonymousMinter(sql),
-    });
+    } as Parameters<typeof sendSignedOutSupportRequest>[1]);
     const [row] = await sql`select id from support_requests`;
     await addSupportInternalNote(asUser(E), row!.id as string, NOTE);
     const reply = await replyToSupportRequest(

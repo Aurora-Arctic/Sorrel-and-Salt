@@ -15,22 +15,18 @@ export interface SupportTimeoutFixture {
   address?: string;
 }
 
-/** Writes the time-out on `userId`, stamped by keeper E, and returns its id. */
+/** Writes the time-out on `userId`, or on the address alone when `userId` is null, stamped by keeper E, and returns its id. */
 export async function insertSupportTimeout(
   sql: postgres.Sql,
-  userId: string,
+  userId: string | null,
   { endsIn = null, lifted = false, address }: SupportTimeoutFixture = {},
 ): Promise<string> {
   const keeper = FIXTURE_USERS.E.id;
   const [row] = await sql`
-    insert into support_timeouts (user_id, until, note, lifted_at, created_by, updated_by)
-    values (${userId}, ${endsIn === null ? null : sql`now() + ${endsIn}::interval`}, 'Fixture time-out note',
+    insert into support_timeouts (user_id, address_key, until, note, lifted_at, created_by, updated_by)
+    values (${userId}, ${address === undefined ? null : addressCountKey(address)},
+      ${endsIn === null ? null : sql`now() + ${endsIn}::interval`}, 'Fixture time-out note',
       ${lifted ? sql`now()` : null}, ${keeper}, ${keeper})
     returning id`;
-  const id = row!.id as string;
-  // A separate write, so a time-out with no address names no column the address binding adds.
-  if (address !== undefined) {
-    await sql`update support_timeouts set address_key = ${addressCountKey(address)} where id = ${id}`;
-  }
-  return id;
+  return row!.id as string;
 }

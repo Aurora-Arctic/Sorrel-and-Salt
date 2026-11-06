@@ -33,14 +33,14 @@ const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
 const ADMIN_ONLY = ['Assignee', 'GitHub Issue', 'For'];
 
-const ROW: SupportRequestEntry = {
+// Asserted rather than declared, so the fixture compiles while the entry type still carries fields this page no longer reads.
+const ROW = {
   id: 'r1',
   about: 'bug',
   subject: 'The moon icon is missing',
   status: 'open',
   sender: { id: 'u1', name: 'Ada Wortley', email: 'ada@example.test' },
   signedOut: false,
-  anonymousSender: false,
   anonymised: false,
   assignee: null,
   curatorVisible: false,
@@ -51,7 +51,7 @@ const ROW: SupportRequestEntry = {
   senderReplied: false,
   betaTester: false,
   resolvedBySender: false,
-};
+} as SupportRequestEntry;
 
 const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
@@ -674,31 +674,50 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
   });
 
-  it('offers a keeper no Time-Out for a signed-out sender, and does for a signed-in one', () => {
+  it('offers a keeper the Time-Out for a signed-out sender with an address, as for a signed-in one', () => {
     const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
     const { unmount } = open(ADMIN);
     expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
     unmount();
     open(ADMIN, { sender: visitor, signedOut: true });
-    expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
+    expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
   });
 
-  it('offers a keeper the Time-Out for a signed-out sender whose own anonymous account sent it, and none for the stand-in', () => {
-    const anonymous = { id: 'anon-1', name: 'Anonymous', email: 'visitor@example.test' };
-    const standIn = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
-    const { unmount } = open(ADMIN, {
-      sender: anonymous,
-      signedOut: true,
-      anonymousSender: true,
+  // Every signed-out request is written as the one stand-in account, so the time-out names the request, whose address the
+  // server keys it by, never the stand-in.
+  it('sends a signed-out sender’s time-out by the request, not the stand-in account, after asking', async () => {
+    const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    const byRequest: { requestId: string; note: string }[] = [];
+    const byAccount: unknown[] = [];
+    mockGraphQLMutation<
+      { timeOutSignedOutSender: { __typename: 'SupportTimeout'; id: string } },
+      { requestId: string; note: string }
+    >('TimeOutSignedOutSender', (variables) => {
+      byRequest.push(variables);
+      return { timeOutSignedOutSender: { __typename: 'SupportTimeout', id: 't' } };
     });
-    expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
-    unmount();
-    open(ADMIN, {
-      sender: standIn,
-      signedOut: true,
-      anonymousSender: false,
+    mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
+      'TimeOutSupportSender',
+      (variables) => {
+        byAccount.push(variables);
+        return { timeOutSupportSender: { __typename: 'SupportTimeout', id: 't' } };
+      },
+    );
+    open(ADMIN, { sender: visitor, signedOut: true });
+    openTimeOut();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Note/ }), {
+      target: { value: 'Repeated sends' },
     });
-    expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Message to User/ }), {
+      target: { value: 'Please keep each request to one problem.' },
+    });
+    fireEvent.click(timeOutSubmit());
+    confirmTimeOut();
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(byRequest).toHaveLength(1);
+    expect(byRequest[0]).toMatchObject({ requestId: 'r1', note: 'Repeated sends' });
+    expect(byAccount).toEqual([]);
   });
 
   it('offers no note or reply on an anonymised request, which the System account owns, and does on another', () => {

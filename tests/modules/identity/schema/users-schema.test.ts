@@ -31,7 +31,6 @@ describe('users schema', () => {
         'terms_accepted_at',
         'pending_email',
         'former_email',
-        'is_anonymous',
         ...AUDIT_COLUMNS,
       ].sort(),
     );

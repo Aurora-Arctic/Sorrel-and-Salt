@@ -20,7 +20,6 @@ import { retentionBatchStep } from '@/modules/support/jobs/support-retention-bat
 import { C, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { anonymousMinter } from '../../../support/db/insert-anonymous-user';
 
 // The link in each mail about a signed-out request, which opens that one request with no session: the mail's step mints the
 // token afresh on every send and stores only its SHA-256 hash, so only the newest mailed link works
@@ -94,7 +93,9 @@ const hashOf = async (id: string) =>
 async function sendSignedOut(email = 'visitor@example.test', subject = 'The Testwort code') {
   await sendSignedOutSupportRequest(
     { about: 'account', email, subject, message: 'It never arrives.' },
-    { clientIp: '203.0.113.7', notifier: mail, anonymous: anonymousMinter(sql) },
+    { clientIp: '203.0.113.7', notifier: mail } as Parameters<
+      typeof sendSignedOutSupportRequest
+    >[1],
   );
   const [row] = await sql`select id from support_requests where subject = ${subject}`;
   const [receipt] = await runStatusMails();
@@ -237,28 +238,21 @@ describe('the GraphQL schema', () => {
     expect(fields.filter((name) => /viewToken|tokenHash/i.test(name))).toEqual([]);
   });
 
-  it('carries neither the token nor its hash in the sender’s or a keeper’s answer about the request', async () => {
+  it('carries neither the token nor its hash in the mailed-link page’s or a keeper’s answer about the request', async () => {
     const { id, token } = await sendSignedOut();
-    const [{ created_by: senderId }] =
-      await sql`select created_by from support_requests where id = ${id}`;
     const request = schema.getType('SupportRequest') as GraphQLObjectType;
     const reply = schema.getType('SupportReply') as GraphQLObjectType;
-    const selection = (staff: boolean) =>
-      `{ ${scalarsOf(request, staff)} replies { ${scalarsOf(reply, staff)} } }`;
-    // Precondition: the keeper's selection reaches the staff-only fields the sender's leaves out.
-    expect(selection(true)).toContain('errorReference');
-    expect(selection(false)).not.toContain('errorReference');
+    // Every scalar a keeper may select, staff-only fields included.
+    const selection = `{ ${scalarsOf(request, true)} replies { ${scalarsOf(reply, true)} } }`;
+    expect(selection).toContain('errorReference');
     await replyToSupportRequest(asUser(E), id, 'Which code?', mail);
 
     const answers = [
-      await run(asUser(E), `query ($id: ID!) { supportRequest(id: $id) ${selection(true)} }`, {
+      await run(asUser(E), `query ($id: ID!) { supportRequest(id: $id) ${selection} }`, {
         id,
       }),
-      await run(
-        { userId: senderId as string, role: 'user', anonymous: true },
-        `query ($id: ID!) { mySupportRequest(id: $id) ${selection(false)} }`,
-        { id },
-      ),
+      // The signed-out sender has no session; the mailed-link page reads the request through its token.
+      { errors: undefined, data: await getSupportRequestByViewToken(token) },
     ];
 
     for (const answer of answers) {

@@ -31,7 +31,6 @@ import type { SupportNotifier } from '@/modules/support';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { anonymousMinter } from '../../../support/db/insert-anonymous-user';
 import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
@@ -336,7 +335,9 @@ describe('supportRequests', () => {
     await sql`delete from support_send_counts`;
     await sendSignedOutSupportRequest(
       { about: 'account', email: address, subject: 'No code', message: 'It never comes.' },
-      { clientIp: '203.0.113.7', notifier: notifier(), anonymous: anonymousMinter(sql) },
+      { clientIp: '203.0.113.7', notifier: notifier() } as Parameters<
+        typeof sendSignedOutSupportRequest
+      >[1],
     );
     const [sent] = await sql`select id from support_requests where sender_email = ${address}`;
     await setSupportRequestCuratorVisible(asUser(E), sent.id, true);

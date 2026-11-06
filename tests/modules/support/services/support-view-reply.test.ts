@@ -18,13 +18,12 @@ import { supportStatusStep } from '@/modules/support/jobs/support-status-mail-st
 import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
 import { B, C, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { anonymousMinter, insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
 import { insertSupportRequest } from '../../../support/db/insert-support-request';
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { run } from '../../../support/graphql/run';
 
 // A signed-out sender's reply from the mailed-link page: the token alone finds the request, the reply is written as the
-// request's own sender account, and every way the token could be stale answers the same not-found
+// seeded signed-out sender, and every way the token could be stale answers the same not-found
 // (claude-docs/design-decisions/m15.48-anonymous-sender.md, "A signed-out reply through the mailed link"). The page itself
 // is tests/e2e/support-view-link.spec.ts's.
 
@@ -72,7 +71,7 @@ async function sendSignedOut(email = 'visitor@example.test', clientIp = IP) {
   const subject = `Testwort request ${randomBytes(4).toString('hex')}`;
   await sendSignedOutSupportRequest(
     { about: 'account', email, subject, message: 'It never arrives.' },
-    { clientIp, notifier: mail, anonymous: anonymousMinter(sql) },
+    { clientIp, notifier: mail } as Parameters<typeof sendSignedOutSupportRequest>[1],
   );
   const [row] = await sql`select id, created_by from support_requests where subject = ${subject}`;
   const runs = startJob.mock.calls
@@ -83,7 +82,7 @@ async function sendSignedOut(email = 'visitor@example.test', clientIp = IP) {
   for (const statusRun of runs) await supportStatusStep(statusRun);
   const token = sent.map(({ text }) => text.match(VIEW_LINK)?.[1]).find(Boolean);
   expect(token).toBeDefined();
-  return { id: row!.id as string, senderId: row!.created_by as string, token: token! };
+  return { id: row!.id as string, token: token! };
 }
 
 const reply = (token: string, body = 'It still sticks.', clientIp: string | null = IP) =>
@@ -93,12 +92,12 @@ const repliesOn = (requestId: string) =>
   sql`select author_role, visibility, body, created_by, updated_by from support_replies where request_id = ${requestId}`;
 
 describe('a reply through the mailed link', () => {
-  it('is written as the request’s anonymous sender, needing no session', async () => {
-    const { id, senderId, token } = await sendSignedOut();
-    // Precondition: the request is the anonymous account's and has no reply yet.
+  it('is written as the seeded signed-out sender, needing no session', async () => {
+    const { id, token } = await sendSignedOut();
+    // Precondition: the request is the stand-in's and has no reply yet.
     expect(
-      (await sql`select is_anonymous from users where id = ${senderId}`)[0]?.is_anonymous,
-    ).toBe(true);
+      (await sql`select created_by from support_requests where id = ${id}`)[0]?.created_by,
+    ).toBe(SIGNED_OUT_SENDER_ID);
     expect(await repliesOn(id)).toHaveLength(0);
 
     await reply(token);
@@ -108,24 +107,9 @@ describe('a reply through the mailed link', () => {
         author_role: 'sender',
         visibility: 'public',
         body: 'It still sticks.',
-        created_by: senderId,
-        updated_by: senderId,
+        created_by: SIGNED_OUT_SENDER_ID,
+        updated_by: SIGNED_OUT_SENDER_ID,
       },
-    ]);
-  });
-
-  it('is written as the seeded signed-out sender on a request from before anonymous accounts', async () => {
-    const token = randomBytes(32).toString('base64url');
-    const id = await insertSupportRequest(sql, {
-      createdBy: SIGNED_OUT_SENDER_ID,
-      senderEmail: 'older@example.test',
-    });
-    await sql`update support_requests set view_token_hash = ${sha256Hex(token)} where id = ${id}`;
-
-    await reply(token);
-
-    expect(await repliesOn(id)).toMatchObject([
-      { author_role: 'sender', created_by: SIGNED_OUT_SENDER_ID, updated_by: SIGNED_OUT_SENDER_ID },
     ]);
   });
 
@@ -279,14 +263,16 @@ describe('the mutation', () => {
   });
 });
 
-// The token proves which request; a keeper's time-out on the request's sender still holds, as it does for a signed-in reply.
-describe('a reply through the mailed link from a timed-out sender', () => {
+// The token proves which request; a keeper's time-out on the request's address still holds, as it does for a signed-in
+// reply. The stand-in account is shared by every signed-out sender, so the time-out names the address key, not an account.
+describe('a reply through the mailed link from a timed-out address', () => {
   it('is refused as a signed-in reply is, not as not-found, writing no reply, and goes through once lifted', async () => {
-    const { id, senderId, token } = await sendSignedOut();
+    const { id, token } = await sendSignedOut('rebound@example.test');
     // Precondition: the token is valid, so a refusal below is the time-out's.
     await reply(token, 'Before the time-out.');
     expect(await repliesOn(id)).toHaveLength(1);
-    const timeout = await insertSupportTimeout(sql, senderId);
+    // Spelt differently from the send, so the match is on the normalised address's key.
+    const timeout = await insertSupportTimeout(sql, null, { address: ' Rebound@Example.TEST ' });
     // The wording a timed-out signed-in sender's reply on an open request is refused with, from the same kind of time-out.
     const own = await insertSupportRequest(sql, { createdBy: C.id });
     await insertSupportTimeout(sql, C.id);
@@ -306,29 +292,13 @@ describe('a reply through the mailed link from a timed-out sender', () => {
     await reply(token, 'After the time-out.');
     expect(await repliesOn(id)).toHaveLength(2);
   });
-});
 
-// A time-out binds the address as well as the account, so a request from that address sent as a new account is held too.
-describe('a reply through the mailed link from a timed-out address', () => {
-  it('is refused when another account’s standing time-out binds the request’s address, and goes through once lifted', async () => {
-    const address = 'rebound@example.test';
-    const { id, senderId, token } = await sendSignedOut(address);
-    // Precondition: the token is valid and its sender holds no time-out, so a refusal below is the address's.
-    await reply(token, 'Before the time-out.');
+  it('is not refused by a time-out on another address', async () => {
+    const { id, token } = await sendSignedOut('rebound@example.test');
+    await insertSupportTimeout(sql, null, { address: 'someone-else@example.test' });
+
+    await reply(token, 'Not timed out.');
+
     expect(await repliesOn(id)).toHaveLength(1);
-    const earlier = await insertAnonymousUser(sql);
-    expect(earlier).not.toBe(senderId);
-    const timeout = await insertSupportTimeout(sql, earlier, { address: 'Rebound@Example.test' });
-    expect(await sql`select 1 from support_timeouts where user_id = ${senderId}`).toHaveLength(0);
-
-    const refusal = await failureOf(reply(token, 'During the time-out.'));
-
-    expect(refusal).not.toBeInstanceOf(NotFound);
-    expect(refusal).toBeInstanceOf(Forbidden);
-    expect(await repliesOn(id)).toHaveLength(1);
-
-    await sql`update support_timeouts set lifted_at = now() where id = ${timeout}`;
-    await reply(token, 'After the time-out.');
-    expect(await repliesOn(id)).toHaveLength(2);
   });
 });
