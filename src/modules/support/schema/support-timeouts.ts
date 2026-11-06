@@ -18,6 +18,9 @@ export const supportTimeouts = pgTable(
     // Why it was set, for staff: every time-out has one.
     note: text('note').notNull(),
     message: text('message'),
+    // The HMAC key of the address the sender wrote from (`src/lib/send-count-key.ts`), never the address, so the time-out also binds
+    // a new anonymous account writing from it; null when the sender has no address on a request.
+    addressKey: text('address_key'),
     liftedAt: timestamp('lifted_at'),
     ...auditColumns,
   },
@@ -26,6 +29,10 @@ export const supportTimeouts = pgTable(
     // The active-time-out read: a sender's rows not yet lifted, by end.
     index('support_timeouts_user_until_idx')
       .on(table.userId, table.until)
+      .where(sql`${table.liftedAt} is null`),
+    // The address check: the time-outs not lifted that bind a key.
+    index('support_timeouts_address_key_idx')
+      .on(table.addressKey)
       .where(sql`${table.liftedAt} is null`),
   ],
 );

@@ -1,5 +1,6 @@
 import 'server-only';
 import { withAudit } from '../../../db/repository';
+import { addressCountKey } from '../../../lib/send-count-key';
 
 /**
  * Hands an anonymous sender's support rows to the account it signed in as, written as that account, so the anonymous account
@@ -21,6 +22,6 @@ export async function claimSignedOutRequests(user: {
 }): Promise<number> {
   if (!user.emailVerified || user.isAnonymous) return 0;
   return withAudit({ userId: user.id }, (write) =>
-    write.claimSupportRequestsByEmail(user.id, user.email),
+    write.claimSupportRequestsByEmail(user.id, user.email, addressCountKey(user.email)),
   );
 }

@@ -9,8 +9,9 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { asUser } from '../../../support/as-user';
 import { supportTimeouts } from '@/modules/support/schema/support-timeouts';
 
-const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'message', 'lifted_at'];
+const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'message', 'lifted_at', 'address_key'];
 const ACTIVE_INDEX = 'support_timeouts_user_until_idx';
+const ADDRESS_INDEX = 'support_timeouts_address_key_idx';
 const ADMIN = FIXTURE_USERS.E.id;
 const SENDER = FIXTURE_USERS.A.id;
 
@@ -29,8 +30,9 @@ describe('support_timeouts schema', () => {
   });
 
   it('declares its index over rows not yet lifted', () => {
-    expect(Object.keys(byIndexName)).toEqual([ACTIVE_INDEX]);
+    expect(Object.keys(byIndexName).sort()).toEqual([ADDRESS_INDEX, ACTIVE_INDEX].sort());
     expect(byIndexName[ACTIVE_INDEX].config.where).toBeDefined();
+    expect(byIndexName[ADDRESS_INDEX].config.where).toBeDefined();
   });
 
   it('has a foreign key to the account', () => {

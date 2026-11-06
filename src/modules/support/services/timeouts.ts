@@ -1,8 +1,14 @@
 import 'server-only';
-import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
+import {
+  findNewestSenderAddress,
+  findOneById,
+  findSupportTimeoutById,
+  withAudit,
+} from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { parseRequiredPauseMessage } from '../../../lib/pause-message';
+import { addressCountKey } from '../../../lib/send-count-key';
 import { isStandInAccount } from '../../../lib/system-actor';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
@@ -51,12 +57,15 @@ export async function timeOutSupportSender(
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
   if (isStandInAccount(id)) throw new Forbidden(STAND_IN_REFUSAL);
+  // The address the sender wrote from, if it wrote from one, so the time-out also holds a new account using it.
+  const address = await findNewestSenderAddress(id);
   const row = await withAudit(session, async (write) => {
     const [inserted] = await write.insert(supportTimeouts, {
       userId: id,
       until: until ?? null,
       note: trimmed,
       message: toUser,
+      addressKey: address === undefined ? null : addressCountKey(address),
     });
     return inserted as SupportTimeoutRow;
   });

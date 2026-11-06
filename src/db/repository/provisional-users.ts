@@ -3,10 +3,12 @@ import { accounts } from '../../modules/identity/schema/auth';
 import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
 import { supportRequests } from '../../modules/support/schema/support-requests';
+import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 // The database client; why only the repository may import it: see `select.ts`.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { notSoftDeleted } from './predicates';
+import { timeoutStands } from './support';
 import { existsIn } from './select';
 
 /** The rows a lapse can reach: unverified, holding a provider, and not vouched for by a keeper. */
@@ -23,7 +25,7 @@ function provisional(userId?: string) {
 const ANONYMOUS_IDLE_DAYS = 7;
 
 /**
- * An anonymous sender's account that has lapsed: it holds no request (retention hands each one it sent to the System account
+ * An anonymous sender's account that has lapsed: it holds no request and no standing time-out (retention hands each one it sent to the System account
  * when it anonymises it), and is older than the idle days, so a fresh account whose first send is still being written stays.
  */
 function lapsedAnonymous(userId?: string) {
@@ -32,6 +34,8 @@ function lapsedAnonymous(userId?: string) {
     eq(users.isAnonymous, true),
     lt(users.createdAt, sql`now() - make_interval(days => ${ANONYMOUS_IDLE_DAYS})`),
     not(existsIn(supportRequests, eq(supportRequests.createdBy, users.id))),
+    // A time-out goes with its account by cascade, and binds the address it was set for, so it keeps the account.
+    not(existsIn(supportTimeouts, and(eq(supportTimeouts.userId, users.id), timeoutStands))),
   );
 }
 

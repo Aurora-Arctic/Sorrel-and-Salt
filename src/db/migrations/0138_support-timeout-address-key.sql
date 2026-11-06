@@ -1,0 +1,2 @@
+ALTER TABLE "support_timeouts" ADD COLUMN "address_key" text;--> statement-breakpoint
+CREATE INDEX "support_timeouts_address_key_idx" ON "support_timeouts" USING btree ("address_key") WHERE "support_timeouts"."lifted_at" is null;

@@ -384,6 +384,38 @@ export async function findStandingSupportTimeout(
   return latestEnd(rows);
 }
 
+/**
+ * The end of the time-out standing on the address whose count key is `addressKey`, latest first, `until` null when one has no end
+ * date; `undefined` when none stands. A time-out set on an anonymous sender binds the address it wrote from.
+ */
+export async function findStandingSupportTimeoutByAddress(
+  addressKey: string,
+): Promise<StandingTimeout | undefined> {
+  const rows = await selectFrom(
+    supportTimeouts,
+    and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.addressKey, addressKey), timeoutStands),
+  );
+  return latestEnd(rows);
+}
+
+/** The address on the sender's newest request that carries one, or `undefined` when none does. */
+export async function findNewestSenderAddress(userId: string): Promise<string | undefined> {
+  const carriesAddress = and(
+    notSoftDeleted(supportRequests),
+    eq(supportRequests.createdBy, userId),
+    isNotNull(supportRequests.senderEmail),
+  ) as SQL;
+  // The newest by the database, so only that row leaves it.
+  const rows = await selectFrom(
+    supportRequests,
+    and(
+      carriesAddress,
+      sql`${supportRequests.createdAt} = (select max(r.created_at) from support_requests r where r.created_by = ${userId} and r.deleted_at is null and r.sender_email is not null)`,
+    ),
+  );
+  return rows[0]?.senderEmail ?? undefined;
+}
+
 /** The latest end among standing time-outs: none at all wins over any date. */
 function latestEnd(rows: readonly { until: Date | null }[]): StandingTimeout | undefined {
   if (rows.length === 0) return undefined;
@@ -722,7 +754,7 @@ export function supportWrites({
       return moved;
     },
     // Only a signed-out sender's rows (an anonymous account's, or the stand-in's) whose address is the verified account's own.
-    claimSupportRequestsByEmail: async (realId, email) => {
+    claimSupportRequestsByEmail: async (realId, email, addressKey) => {
       const signedOutSender = or(
         eq(supportRequests.createdBy, SIGNED_OUT_SENDER_ID),
         sql`${supportRequests.createdBy} in (select id from users where is_anonymous)`,
@@ -742,12 +774,16 @@ export function supportWrites({
         ) as SQL,
         realId,
       );
-      if (anonymousIds.length > 0) {
-        await tx
-          .update(supportTimeouts)
-          .set({ userId: realId })
-          .where(inArray(supportTimeouts.userId, anonymousIds));
-      }
+      // Those of the senders, and the standing ones that bind this address though their account holds none of the claimed requests.
+      await tx
+        .update(supportTimeouts)
+        .set({ userId: realId })
+        .where(
+          or(
+            anonymousIds.length > 0 ? inArray(supportTimeouts.userId, anonymousIds) : undefined,
+            and(eq(supportTimeouts.addressKey, addressKey), timeoutStands),
+          ),
+        );
       return moved;
     },
     countSignedOutSend: async (addressKey, clientKey, now, windowSeconds) => ({

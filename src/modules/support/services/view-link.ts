@@ -4,6 +4,7 @@ import {
   findOneById,
   countSenderRepliesSince,
   findPublicSupportReplies,
+  findStandingSupportTimeoutByAddress,
   findSupportRequestByViewTokenHash,
   withAudit,
 } from '../../../db/repository';
@@ -126,6 +127,12 @@ export async function replyToSupportRequestByViewToken(
   if (counts.client > SIGNED_OUT_IP_LIMIT || counts.address > SIGNED_OUT_ADDRESS_LIMIT)
     throw tooMany();
 
+  // A time-out set on an earlier account of this address binds the request's address too.
+  if (request.senderEmail) {
+    refuseTimedOutReply(
+      await findStandingSupportTimeoutByAddress(addressCountKey(request.senderEmail)),
+    );
+  }
   await withAudit({ userId: senderId }, async (write) => {
     // The token proves which request; a keeper’s time-out on its sender still holds, as for a signed-in reply.
     const { timedOut } = await write.lockSupportSender(senderId, SEND_WINDOW_SECONDS);

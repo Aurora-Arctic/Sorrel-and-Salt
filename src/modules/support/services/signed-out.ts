@@ -1,5 +1,5 @@
 import 'server-only';
-import { withAudit } from '../../../db/repository';
+import { findStandingSupportTimeoutByAddress, withAudit } from '../../../db/repository';
 import { Forbidden, RateLimited } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
@@ -60,6 +60,9 @@ export async function sendSignedOutSupportRequest(
       'Without an account you can write to us about Accessibility, Bug, Account & Sign-In, Privacy & Data or a Question. Sign in to write about anything else.',
     );
   }
+
+  // A keeper's time-out also binds the address it was set for, so a new account from it is refused before any is minted.
+  refuseTimedOut(await findStandingSupportTimeoutByAddress(addressCountKey(values.email)));
 
   const now = context.now ?? new Date();
   const counts = await withAudit(SIGNED_OUT_SESSION, (write) =>

@@ -150,6 +150,8 @@ export {
 } from './invitations';
 export {
   findStandingSupportTimeout,
+  findStandingSupportTimeoutByAddress,
+  findNewestSenderAddress,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
