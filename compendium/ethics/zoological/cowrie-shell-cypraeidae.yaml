@@ -1,5 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: zoological/cowrie-shell-cypraeidae
-status: needs-review
+status: approved
 questions:
   - 'Wikipedia (Cowrie, oldid 1374245397) says Ojibwe miigis shells are used in Midewiwin ceremonies. No source read states that the use of cowrie shells is closed or restricted to initiates, and no Ojibwe or museum authority was found that says so (the sources found were 19th-century ethnography). Nothing is recorded as a closed practice. Owner: say whether to look for an Ojibwe authority, or leave it. Recommendation: leave it.'
+  - 'Answered by the owner 2026-11-06: no mark. The Canadian Encyclopedia (canadian-encyclopedia-midewiwin) says that while the Midewiwin "is a structured society with various classes of leaders, it does offer services to the public", and that colonials may have called it secretive "because they did not understand the society''s practices or because they were not welcome at Midewiwin ceremonies". It calls migiis shells sacred, "used in the healing practices and ceremonies of the Midewiwin", and does not say their use is restricted. The record is claude-docs/design-decisions/m17.2-closed-practice-warning.md.'

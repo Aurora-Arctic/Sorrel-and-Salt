@@ -1,9 +1,10 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: unknown/onycha
-status: needs-review
+status: approved
 animalPart:
   - quote: Some writers believe that onycha was Unguis odoratus, the fingernail-like operculum, or trap door, of certain sea snails, such as Strombus lentiginosus, Murex anguliferus, and Onyx marinus.
     source: wikipedia-onycha
     locator: Contenders for the identity of onycha, Operculum
 questions:
   - The Onycha page says the ketoret formula "was not to be duplicated for non-sacred use". That restricts the formula, not onycha as one ingredient, and the page does not name a tradition's rule for onycha alone. I did not record a closedPractice row. Should the Jewish ketoret restriction be recorded for each ingredient named in Exodus 30:34-36? I recommend no, unless a source restricts the ingredient itself.
+  - 'Answered by the owner 2026-11-06: no mark. No source read restricts onycha on its own. Exodus 30:37 (sefaria-exodus-30) forbids making the incense "in the same proportions for yourselves"; the Talmud (hadran-keritot-6, Keritot 6a) and Maimonides (sefaria-mishneh-torah-vessels-of-the-sanctuary-2, halachot 9 and 10) make liability turn on the compound prepared to its formula to smell it; Wikipedia (wikipedia-incense-offering-in-rabbinic-literature, section Penalty for misuse) says households "were permitted to burn aromatic incense in their homes" if it "did not follow the exact formula used in the Temple service". The rule binds Jews and is not a people''s claim against outsiders. Stacte has the same answer. The record is claude-docs/design-decisions/m17.2-closed-practice-warning.md.'

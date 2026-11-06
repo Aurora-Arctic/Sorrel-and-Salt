@@ -1,8 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: unknown/stacte
-status: needs-review
-closedPractice:
-  - tradition: Jewish
-    quote: This incense was considered restricted for sacred purposes honoring Yahweh; the trivial or profane use of it was punishable by exile
-    source: wikipedia-stacte
-    locator: lead
+status: approved
+questions:
+  - 'M14.29 recorded a closedPractice row, tradition Jewish, from Wikipedia (wikipedia-stacte, lead): "This incense was considered restricted for sacred purposes honoring Yahweh; the trivial or profane use of it was punishable by exile". The sentence restates Exodus 30:38, which is about the compound incense, not stacte alone, and Wikipedia alone may not establish a closed practice. The file was needs-review.'
+  - 'Answered by the owner 2026-11-06: no mark, and the closedPractice row is removed. The rule restricts the Temple incense compounded in its proportions, not any single ingredient, and it binds Jews; it is not a people''s claim against outsiders. Exodus 30:37 (sefaria-exodus-30): "you must not make any in the same proportions for yourselves". The Talmud (hadran-keritot-6, Keritot 6a): "One who blends the incense in order to teach himself how to prepare it or in order to transfer it to the community is exempt from liability." Maimonides (sefaria-mishneh-torah-vessels-of-the-sanctuary-2, halacha 9) makes liability turn on incense prepared "from these eleven spices according to these proportions". Wikipedia (wikipedia-incense-offering-in-rabbinic-literature, section Use in antiquity) says that to burn incense "by making use of part of the same components" to scent clothing or a house "was permitted in Judaism". The Temple Institute (temple-institute-incense) forbids preparing the Ketoret for any use outside the Temple and says nothing of one spice. The record is claude-docs/design-decisions/m17.2-closed-practice-warning.md.'

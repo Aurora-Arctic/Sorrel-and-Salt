@@ -35,8 +35,9 @@
 
 ### V Fast Follow
 
-- [ ] Closed practice warning, scoped by M17.2. When it is built, update the Code of Ethics
-      (`src/app/(public)/code-of-ethics/page.tsx`) in the same PR: the Short
+- [ ] Closed practice warning, scoped by M17.2; built by M19.4 to M19.8 and M19.10 on Wave 19.
+      When it is built, update the Code of Ethics (`documents/code-of-ethics.md`,
+      a document a keeper edits and publishes) in the same PR: the Short
       Version's closed-practices line and the list in "Closed Practices and
       Where Lore Comes From" say no entry is marked yet and the warning is
       planned. Say what the warning shows instead, and add the promise that an
