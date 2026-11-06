@@ -6,6 +6,7 @@ import { db } from '../connection';
 import { InvalidCursor } from '../../lib/errors';
 import type { Cursor, PageCount, PageEntry } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
+import { currentWriteTransaction } from './unit-of-work';
 import { hidesColumns, readColumns } from './unread-columns';
 import type {
   Aggregate,
@@ -186,7 +187,7 @@ export async function selectFrom(
     });
   }
 
-  if (!keyset) return build(db);
+  if (!keyset) return build(currentWriteTransaction() ?? db);
 
   // An inverted read of a descending key reads it ascending, and the other way round.
   const direction = keyset.request.inverted !== Boolean(keyset.descending) ? desc : asc;
@@ -266,8 +267,8 @@ function readKeyed<T>(
 }
 
 /**
- * Runs a read under these pg_trgm thresholds, each left at the server's when absent, in a transaction setting them with
- * `set_config(…, true)` (`SET LOCAL` with a bind parameter), so they end with it and never ride a pooled connection.
+ * Runs a read under these pg_trgm thresholds, each left at the server's when absent, in a transaction (a savepoint, inside a
+ * write) setting them with `set_config(…, true)` (`SET LOCAL` with a bind parameter), so they end with it and never ride a pooled connection.
  */
 function readUnder<T>(
   thresholds: { similarity?: number; word?: number },
@@ -279,8 +280,10 @@ function readUnder<T>(
     thresholds.word !== undefined &&
       sql`set_config('pg_trgm.word_similarity_threshold', ${String(thresholds.word)}, true)`,
   ].filter((setting): setting is SQL => Boolean(setting));
-  if (settings.length === 0) return Promise.resolve(run(db));
-  return db.transaction(async (tx) => {
+  const inWrite = currentWriteTransaction();
+  if (settings.length === 0) return Promise.resolve(run(inWrite ?? db));
+  // Inside a write the thresholds go in a savepoint on its transaction, which ends them with the read.
+  return (inWrite ?? db).transaction(async (tx) => {
     await tx.execute(sql`select ${sql.join(settings, sql`, `)}`);
     return run(tx);
   });
