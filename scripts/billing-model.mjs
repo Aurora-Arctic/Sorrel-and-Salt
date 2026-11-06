@@ -91,7 +91,7 @@ const I = {
     { id: 'B*', name: 'B* S corporation ($190,000 wage, distributions)', year: 260868 },
     {
       id: 'C',
-      name: 'C sole proprietor or single-member LLC (recommended as a tax structure, pending the accountant)',
+      name: 'C sole proprietor or single-member LLC (cheapest in the model)',
       year: 252950,
     },
   ],
@@ -146,9 +146,9 @@ const I = {
     i_personal: 3.5, // (i) solo coven bought alone, above the practitioner seat
     i_emp: 3, // (i) practitioner seat when each member pays
     i_disc: 1, // (i) dollars off a seat a person pays for themselves beyond their first
-    i_payerShare: 0.5, // assumption: share of covens on each-member-pays (range 0-100%; no source)
+    i_payerShare: 0.6666, // owner estimate (2026-11-06), no source; range 0-100%
     observerTakeUp: 0.2, // assumption: share of observers who add a solo coven (range 5-40%; no source)
-    observerShare: 0.3, // assumption, range 0.15-0.50; not researched
+    observerShare: 0.2, // owner estimate (2026-11-06), no source; range 0.15-0.50
   },
 };
 const resend = [
@@ -720,6 +720,55 @@ for (const k of ROWS) {
     (s) => s.cash + labourLoaded(s.P) + I.onCallMonth,
   );
 }
+// What the owner earns while the salary line is out of reach (model (i)): the owner does every hour up to one
+// person's 160 a month, engineering (fixed) hours first, valued at the loaded rates the labour line uses. The draw
+// is the smaller of that value and what is left of net revenue after cash costs and any hired help, never below zero.
+const ownerDrawAt = (k, P) =>
+  withRow(k, () => {
+    const s = scale.find((x) => x.P === P);
+    const total = hoursAt(k, P);
+    const hours = Math.min(total, I.oneFteHours);
+    const eng = Math.min(hours, I.fixedHours[k]);
+    const value = eng * I.rates.dev.median + (hours - eng) * I.rates.support.living;
+    const hiredCost = hiredHours(P) * I.rates.support.living + aiCost(P);
+    const afterCash = netAt(models.i, P).net - (s.cash + models.i.extraCash(P)) - hiredCost;
+    const draw = Math.max(0, Math.min(value, afterCash));
+    return { P, hours, value, afterCash, draw, hourly: hours > 0 ? draw / hours : 0 };
+  });
+out.push('', '## What the Owner Earns Before the Salary Is Affordable (model (i); USD a month)');
+out.push(
+  row([
+    'Paying seats',
+    'Hours low',
+    'Hours median',
+    'Value low',
+    'Value median',
+    'After cash low',
+    'After cash median',
+    'Draw low',
+    'Draw median',
+    'Per hour low',
+    'Per hour median',
+  ]),
+  row(['---', ...Array(10).fill('---:')]),
+  ...SIZES.map((P) => {
+    const a = ownerDrawAt('low', P);
+    const b = ownerDrawAt('median', P);
+    return row([
+      P.toLocaleString('en-US'),
+      a.hours.toFixed(1),
+      b.hours.toFixed(1),
+      f(a.value),
+      f(b.value),
+      f(a.afterCash),
+      f(b.afterCash),
+      f(a.draw),
+      f(b.draw),
+      f(a.hourly, 2),
+      f(b.hourly, 2),
+    ]);
+  }),
+);
 ROW = 'low';
 out.push('', '## Salary Structures (with employer benefits)');
 out.push(
@@ -779,8 +828,14 @@ out.push(
   row(['Share of seats that are a second or later membership', pct(extraSeatShare)]),
   row(['Share of seats discounted (product of the two)', pct(discountedSeatShare)]),
   row(['Seat price factor after the 50% discount', memberSeatFactor.toFixed(4)]),
-  row(['Practitioner seats per coven (70%)', practitionersPerCoven.toFixed(2)]),
-  row(['Observer seats per coven (30%)', observersPerCoven.toFixed(2)]),
+  row([
+    `Practitioner seats per coven (${Math.round((1 - I.price.observerShare) * 100)}%)`,
+    practitionersPerCoven.toFixed(2),
+  ]),
+  row([
+    `Observer seats per coven (${Math.round(I.price.observerShare * 100)}%)`,
+    observersPerCoven.toFixed(2),
+  ]),
   row([
     'Extra practitioner seats above the 3 in the base',
     Math.max(0, practitionersPerCoven - I.price.c_incl).toFixed(2),
@@ -1099,6 +1154,7 @@ if (process.argv.includes('--json')) {
             ROWS.map((k) => [k, withRow(k, () => SIZES.map((P) => aiAgents(P)))]),
           ),
         },
+        ownerDraw: Object.fromEntries(ROWS.map((k) => [k, SIZES.map((P) => ownerDrawAt(k, P))])),
         hoursMedian: SIZES.map((P) => hoursAt('median', P)),
         hoursLow: SIZES.map((P) => hoursAt('low', P)),
         perSeatLabour: Object.fromEntries(
