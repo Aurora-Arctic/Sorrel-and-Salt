@@ -64,33 +64,33 @@ Real spells and ingredients per coven are unknown. The two coven sizes above are
 
 ### Prices
 
-| Input                                           | Value                                                       | Label      | Source                                                                                                           |
-| ----------------------------------------------- | ----------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
-| Vercel Pro                                      | $20 a month, includes $20 of usage credit                   | sourced    | [2]                                                                                                              |
-| Function invocations over the allowance         | $0.60 per million                                           | sourced    | [1]                                                                                                              |
-| Active CPU                                      | $0.128 per hour                                             | sourced    | [1]                                                                                                              |
-| Provisioned memory                              | $0.0106 per GB-hour                                         | sourced    | [1]                                                                                                              |
-| Fast Data Transfer                              | 1 TB included, then $0.15 per GB                            | sourced    | [1]                                                                                                              |
-| Edge requests                                   | $2 per million over the allowance (see open item 1)         | sourced    | [1]                                                                                                              |
-| Vercel Workflows events                         | $20 per million; 3 events per step, 1 more per retry        | sourced    | [4]                                                                                                              |
-| Workflow events from daily jobs                 | 270 a month                                                 | assumption | 3 jobs a day, 3 events each                                                                                      |
-| Vercel Observability Plus                       | $1.20 per million events                                    | sourced    | [5]                                                                                                              |
-| Neon Launch                                     | $0.106 per CU-hour                                          | sourced    | [6]                                                                                                              |
-| Neon Scale                                      | $0.222 per CU-hour                                          | sourced    | [6]                                                                                                              |
-| Neon average compute                            | 0.25 CU at 100 and 1,000; 0.5 CU at 10,000; 2 CU at 100,000 | assumption | Range half to double                                                                                             |
-| Neon hours awake a month                        | 360, 540, 720, 720                                          | assumption | Autosuspend while idle                                                                                           |
-| Resend                                          | Free 3,000 a month (100 a day); Pro 50K $20; Pro 100K $35   | sourced    | [8]                                                                                                              |
-| Domain, `.com`                                  | $11.81 a year                                               | sourced    | [9] (Porkbun; Vercel's price not found)                                                                          |
-| Claude Ultra                                    | $200 a month                                                | sourced    | [10]                                                                                                             |
-| GitHub Free                                     | $0                                                          | sourced    | [11]                                                                                                             |
-| Operations stack                                | $12.07 / $27.44 / $36.12 / $163.90                          | derived    | Lanes B and H: error events, uptime, log drain, restore test, DMARC reports and tracing (see "Operations Stack") |
-| Maintenance hours a month (low / median / high) | 27.9 / 29.9 / 39.8                                          | derived    | Lane D, from 2,388 build hours                                                                                   |
-| Incident hours a month (low / median / high)    | 2.4 / 19.5 / 36.6                                           | derived    | Lane D                                                                                                           |
-| Contractor hourly rate                          | $95 / $122.50 / $150                                        | sourced    | [29] and Lane D's rate sources                                                                                   |
-| Loaded-salary hourly rate                       | $137.97 / $147.81 / $157.65                                 | derived    | $286,977 to $327,922 a year ÷ 2,080 h, [29]                                                                      |
-| Washington retailing B&O                        | 0.471%, less a credit of up to $55 a month                  | sourced    | [26]                                                                                                             |
-| Stripe card fee                                 | 2.9% + 30¢; Billing 0.7%; Tax Basic 0.5%                    | sourced    | [30] [31]                                                                                                        |
-| Managed Payments                                | +3.5% per charge, tax included                              | sourced    | [32]                                                                                                             |
+| Input                                                              | Value                                                       | Label      | Source                                                                                                           |
+| ------------------------------------------------------------------ | ----------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| Vercel Pro                                                         | $20 a month, includes $20 of usage credit                   | sourced    | [2]                                                                                                              |
+| Function invocations over the allowance                            | $0.60 per million                                           | sourced    | [1]                                                                                                              |
+| Active CPU                                                         | $0.128 per hour                                             | sourced    | [1]                                                                                                              |
+| Provisioned memory                                                 | $0.0106 per GB-hour                                         | sourced    | [1]                                                                                                              |
+| Fast Data Transfer                                                 | 1 TB included, then $0.15 per GB                            | sourced    | [1]                                                                                                              |
+| Edge requests                                                      | $2 per million over the allowance (see open item 1)         | sourced    | [1]                                                                                                              |
+| Vercel Workflows events                                            | $20 per million; 3 events per step, 1 more per retry        | sourced    | [4]                                                                                                              |
+| Workflow events from daily jobs                                    | 270 a month                                                 | assumption | 3 jobs a day, 3 events each                                                                                      |
+| Vercel Observability Plus                                          | $1.20 per million events                                    | sourced    | [5]                                                                                                              |
+| Neon Launch                                                        | $0.106 per CU-hour                                          | sourced    | [6]                                                                                                              |
+| Neon Scale                                                         | $0.222 per CU-hour                                          | sourced    | [6]                                                                                                              |
+| Neon average compute                                               | 0.25 CU at 100 and 1,000; 0.5 CU at 10,000; 2 CU at 100,000 | assumption | Range half to double                                                                                             |
+| Neon hours awake a month                                           | 360, 540, 720, 720                                          | assumption | Autosuspend while idle                                                                                           |
+| Resend                                                             | Free 3,000 a month (100 a day); Pro 50K $20; Pro 100K $35   | sourced    | [8]                                                                                                              |
+| Domain, `.com`                                                     | $11.81 a year                                               | sourced    | [9] (Porkbun; Vercel's price not found)                                                                          |
+| Claude Ultra                                                       | $200 a month                                                | sourced    | [10]                                                                                                             |
+| GitHub Free                                                        | $0                                                          | sourced    | [11]                                                                                                             |
+| Operations stack                                                   | $12.07 / $27.44 / $36.12 / $163.90                          | derived    | Lanes B and H: error events, uptime, log drain, restore test, DMARC reports and tracing (see "Operations Stack") |
+| Fixed labour hours a month (low / median / high)                   | 24.8 / 44.4 / 70.4                                          | derived    | Lane I: maintenance, incident response and recurring chores that do not grow with users                          |
+| Variable labour hours per 1,000 paying seats (low / median / high) | 7.1 / 31.6 / 113.0                                          | derived    | Lane I: support, disputes, privacy requests, abuse reports                                                       |
+| Contractor hourly rate                                             | $95 / $122.50 / $150                                        | sourced    | [29] and Lane D's rate sources                                                                                   |
+| Loaded-salary hourly rate                                          | $137.97 / $147.81 / $157.65                                 | derived    | $286,977 to $327,922 a year ÷ 2,080 h, [29]                                                                      |
+| Washington retailing B&O                                           | 0.471%, less a credit of up to $55 a month                  | sourced    | [26]                                                                                                             |
+| Stripe card fee                                                    | 2.9% + 30¢; Billing 0.7%; Tax Basic 0.5%                    | sourced    | [30] [31]                                                                                                        |
+| Managed Payments                                                   | +3.5% per charge, tax included                              | sourced    | [32]                                                                                                             |
 
 B&O means business and occupation tax, Washington's tax on gross receipts rather than profit. CU-hour means one compute unit running for one hour (a compute unit is Neon's measure of CPU and memory).
 
@@ -247,19 +247,24 @@ Lane H, fetched 2026-11-06, covers eight things Lane B left open. Its sizes were
 
 **8. Incident communication and runbooks.** Included: UptimeRobot Solo's public status page on its own domain, without subscribers, and Resend's mail path to every account [H8]. Pick: the Solo status page on a `status.` subdomain, a Resend mail to the accounts an incident affects, and a one-page runbook in `claude-docs/ops/` using PagerDuty's structure and Google's postmortem headings. Price: $0 beyond Solo. Reason: no subscriber addresses go to a new processor. Statuspage, Instatus and UptimeRobot Team each hold subscriber addresses; Team adds $27 a month.
 
-## Maintenance and Incident Response
+## Labour
 
-Lane D estimated maintenance from 2,388 build hours at 27.9 / 29.9 / 39.8 hours a month, and incident hours at 2.4 / 19.5 / 36.6. Incident hours already include a 2-hour emergency share that maintenance also counts, so I subtract it once. Median: 29.9 + 19.5 − 2 = **47.4 hours**.
+Hours a month = fixed hours + variable hours × (paying seats ÷ 1,000), using Lane I's figures (sources dated 2026-11-06). This replaces the flat 47.4 hours I used before. Lane D's flat figure came from build hours (maintenance 29.9 + incident 19.5 − a shared 2-hour emergency share) and so held the same at every size; Lane I adds the work that grows with users: support, payment disputes, privacy requests and abuse reports. The fixed hours below are Lane D's kind of work, re-derived by Lane I.
 
-Two rates price the hours. The contractor rate is what an outside developer would charge ($95 / $122.50 / $150 an hour). The loaded-salary rate is what an employee costs the owner once payroll tax and benefits are added: $286,977 to $327,922 a year for a $250,000 salary, divided by 2,080 hours, gives $137.97 to $157.65 an hour. Each case pairs its hours with its rate.
+| Case   | Fixed hours | Variable hours per 1,000 seats | Hours at 100 | Hours at 1000 | Hours at 10000 | Hours at 100000 | One-person ceiling (seats) |
+| ------ | ----------: | -----------------------------: | -----------: | ------------: | -------------: | --------------: | -------------------------: |
+| low    |        24.8 |                            7.1 |         25.5 |          31.9 |           96.1 |           737.8 |                     18,962 |
+| median |        44.4 |                           31.6 |         47.6 |          76.0 |          360.7 |          3207.4 |                      3,655 |
+| high   |        70.4 |                          113.0 |         81.7 |         183.4 |         1200.2 |         11368.4 |                        793 |
 
-| Case   | Hours |       At contractor rate |      At loaded-salary rate |
-| ------ | ----: | -----------------------: | -------------------------: |
-| low    |  28.3 |    $2,688 (28.3 h x $95) |  $3,905 (28.3 h x $137.97) |
-| median |  47.4 | $5,807 (47.4 h x $122.5) |  $7,006 (47.4 h x $147.81) |
-| high   |  74.4 |  $11,160 (74.4 h x $150) | $11,729 (74.4 h x $157.65) |
+Two rates price the hours. The contractor rate is what an outside developer would charge ($95 / $122.50 / $150 an hour; median $122.50). The loaded-salary rate is what an employee costs the owner once payroll tax and benefits are added: $286,977 to $327,922 a year for a $250,000 salary, divided by 2,080 hours, gives $137.97 to $157.65 an hour (median $147.81).
 
-Full-time job: $23,915 a month (loaded low) to $27,327 (loaded high); promised on-call alternative $2,340 a month.
+- **Contractor line:** cash + every hour at the median contractor rate.
+- **Salary line:** cash + the loaded salary ($23,915 a month low, $27,327 high) + hired help for every hour above 160 a month, bought at the median contractor rate. One full-time person is 160 hours a month.
+- **One-person ceiling:** the paying-seat count where the median hours reach 160 a month: **3,655** (low case 18,962, high case 793).
+- **Variable labour per paying seat** at the median is 31.6 h ÷ 1,000 × $122.50 = about **$3.87 a month**. That is more than any model earns per seat after fees, so no model breaks even on a labour line (see subscription-models.md).
+
+Promised on-call alternative: $2,340 a month.
 
 ## Payment Processing and Taxes
 
@@ -276,16 +281,17 @@ A merchant of record is the company legally selling to the customer, which colle
 
 ## Totals
 
-All rows are dollars a month. Cash costs are the Platform total plus Claude Ultra. The labour rows add the median maintenance case (47.4 hours, above). The full-time row is a $250,000 salary with payroll tax and benefits ($286,977 a year loaded, low estimate, divided by 12), as the target if this became a full-time job. The on-call row is a separate best-effort-versus-promised comparison.
+All rows are dollars a month. Cash costs are the Platform total plus Claude Ultra. The labour rows use the median case of the Labour section, so they grow with paying seats. The full-time rows are a $250,000 salary with payroll tax and benefits ($286,977 a year loaded, low estimate, divided by 12) plus hired help for hours above 160 a month. The on-call row is a separate best-effort-versus-promised comparison.
 
-| Row                                                       |     100 |    1000 |   10000 |  100000 |
-| --------------------------------------------------------- | ------: | ------: | ------: | ------: |
-| Cash costs                                                |    $243 |    $284 |    $325 |  $1,174 |
-| Cash + maintenance at contractor rate                     |  $6,049 |  $6,090 |  $6,132 |  $6,981 |
-| Cash + maintenance at loaded-salary rate                  |  $7,249 |  $7,290 |  $7,332 |  $8,181 |
-| Cash + full-time job (loaded $250k, low)                  | $24,157 | $24,199 | $24,240 | $25,089 |
-| Cash + full-time job (loaded $250k, high)                 | $27,570 | $27,611 | $27,652 | $28,501 |
-| Cash + median maintenance + promised on-call (contractor) |  $8,389 |  $8,430 |  $8,472 |  $9,321 |
+| Row                                                     |     100 |    1000 |   10000 |   100000 |
+| ------------------------------------------------------- | ------: | ------: | ------: | -------: |
+| Cash costs                                              |    $243 |    $284 |    $325 |   $1,174 |
+| Labour hours a month (median)                           |    47.6 |    76.0 |   360.7 |   3207.4 |
+| Cash + labour at contractor rate                        |  $6,069 |  $9,597 | $44,511 | $394,081 |
+| Cash + labour at loaded-salary rate                     |  $7,273 | $11,522 | $53,640 | $475,260 |
+| Cash + full-time job (loaded $250k, low) + hired hours  | $24,157 | $24,199 | $48,826 | $398,396 |
+| Cash + full-time job (loaded $250k, high) + hired hours | $27,570 | $27,611 | $52,238 | $401,808 |
+| Cash + median labour + promised on-call (contractor)    |  $8,409 | $11,937 | $46,851 | $396,421 |
 
 Reading the table: **Claude Ultra is 82% of the cash cost at 100 paying seats.** Cash costs reach about $1,174 at 100,000 paying seats (against $552 before the overhead accounts were counted), because 473,333 accounts use the platform. Labour dwarfs cash at every size; the median maintenance hours cost about 20 times the cash costs at 1,000 paying seats.
 
@@ -308,7 +314,7 @@ No usage forces an enterprise plan at 100,000 paying seats. Features do.
 3. **Assumptions with no source:** monthly active share, coven memberships per account, the keeper-exemption schedule (**owner to confirm**: 5% / 3% / 1.5% / 0.5% of paying seats at 100 / 1,000 / 10,000 / 100,000), sessions per active account, spells and ingredients per coven (so database size), Neon average compute, mails per account per month.
 4. **Neon compute-hours at each size** have no source; they are assumptions.
 5. **Churn period.** Recurly's 3.6% has no stated period. The model uses ChartMogul's 6.1% monthly.
-6. **Maintenance hours** (Lane D) are derived from build hours and published ratios, not from this project's history.
+6. **Labour hours** (Lanes D and I) are derived from build hours, published ratios and support-contact benchmarks, not from this project's history. The support contact rate decides the one-person ceiling (**owner to confirm**, subscription-models.md question 20).
 7. **Merchant of record treatment** of resold software for Washington B&O: not found, accountant to confirm.
 8. **Accountant items:** unemployment and L&I cover for officers, S-corporation salary, Paid Family and Medical Leave opt-in, L&I risk class, and SB 6346 credit changes from 2029.
 9. **Vercel's `.com` price, Vercel and Neon enterprise terms:** not found.
@@ -318,7 +324,11 @@ No usage forces an enterprise plan at 100,000 paying seats. Features do.
 13. **Document-mailing cap:** your decision (see Resend).
 14. **Unverified figures I did not use:** Discord boost price, Sanctuary and World Anvil prices, FireHydrant's incident benchmark, the 51% Pagan Census figure.
 15. **Overhead shares.** The demo-only share and the trial share come from benchmarks measured on mostly self-signup populations, not invite-gated sites. No source gives the split, a trial-length effect, customer-count growth (only revenue growth) or the share of accounts given away free (Lane G).
-16. **Not measured:** real Active CPU per render, and real spells and ingredients per coven.
+16. **Incident count against users:** not found (Lane I). **Owner to confirm.**
+17. **Time to prepare a Washington excise tax return, and time per refund:** not found (Lane I). **Owner to confirm** with the accountant.
+18. **Minutes per abuse report for a moderator, and solo-founder hours against users:** not found (Lane I). **Owner to confirm.**
+19. **Curation ratio** (compendium edits per user): not found (Lane I). **Owner to confirm.**
+20. **Not measured:** real Active CPU per render, and real spells and ingredients per coven.
 
 ## How to Re-Run the Numbers
 

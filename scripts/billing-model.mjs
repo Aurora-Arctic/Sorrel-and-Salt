@@ -53,9 +53,16 @@ const I = {
   // tracing (Lane H, A5): requests come from sessions x invocations; spans per request, sampling, price per 1M spans
   tracing: { spansPerReq: 20, sample: 0.1, perM: 0.5 },
   // labour
-  maintHours: { low: 27.9, median: 29.9, high: 39.8 },
-  incidentHours: { low: 2.4, median: 19.5, high: 36.6 },
-  overlapH: 2,
+  // Lane I (sources dated 2026-11-06): hours a month = fixed + variable x (paying seats / 1,000)
+  fixedHours: { low: 24.8, median: 44.4, high: 70.4 },
+  // variable hours per 1,000 paying seats: support, payment disputes, privacy requests, abuse reports
+  variableParts: {
+    support: { low: 6.7, median: 28.0, high: 97.5 },
+    disputes: { low: 0.36, median: 3.18, high: 6.82 },
+    privacy: { low: 0.06, median: 0.37, high: 8.5 },
+    abuse: { low: 0.01, median: 0.08, high: 0.16 },
+  },
+  oneFteHours: 160,
   contractor: { low: 95, median: 122.5, high: 150 },
   loaded: { low: 137.97, median: 147.81, high: 157.65 },
   salaryLoadedYear: { low: 286977, high: 327922 },
@@ -98,6 +105,8 @@ const I = {
     c_disc: 0.5,
     // observer (viewer) seat, assumption anchored on Figma's $3 Collab beside a $16 full seat [S6]
     c_obs: 1,
+    h_ill: 3, // (h) illustrative practitioner price
+    h_obs: 1, // (h) observer price, held at (c)'s $1
     observerTakeUp: 0.2, // assumption: share of observers who add a solo coven (range 5-40%; no source)
     observerShare: 0.3, // assumption, range 0.15-0.50; not researched
     d: 2.5,
@@ -211,10 +220,21 @@ const scale = SIZES.map((P, k) => {
   };
 });
 
-const hrs = (k) => I.maintHours[k] + I.incidentHours[k] - I.overlapH;
-const maint = {};
-for (const k of ['low', 'median', 'high'])
-  maint[k] = { h: hrs(k), contractor: hrs(k) * I.contractor[k], loaded: hrs(k) * I.loaded[k] };
+const CASES = ['low', 'median', 'high'];
+const varHours = Object.fromEntries(
+  CASES.map((k) => [k, Object.values(I.variableParts).reduce((a, p) => a + p[k], 0)]),
+);
+// hours a month at P paying seats
+const hoursAt = (k, P) => I.fixedHours[k] + (varHours[k] * P) / 1000;
+// paying seats at which one person's 160 hours a month run out
+const ceilingSeats = Object.fromEntries(
+  CASES.map((k) => [k, ((I.oneFteHours - I.fixedHours[k]) / varHours[k]) * 1000]),
+);
+// hired help: hours above one person's 160 are bought at the median contractor rate
+const hiredHours = (P) => Math.max(0, hoursAt('median', P) - I.oneFteHours);
+const labourContractor = (P) => hoursAt('median', P) * I.contractor.median;
+const labourLoaded = (P) => hoursAt('median', P) * I.loaded.median;
+const labourSalary = (P) => fte + hiredHours(P) * I.contractor.median;
 const fte = I.salaryLoadedYear.low / 12,
   fteHigh = I.salaryLoadedYear.high / 12;
 
@@ -263,6 +283,42 @@ const makeG = (solo) => ({
       2 ** 30) *
     I.neonGbMonth,
 });
+// (h) flat seats: no base fee. A practitioner seat (price p) includes a solo coven; an observer seat
+// (price o) becomes a practitioner seat by paying the difference (take-up as in (g)); a solo coven alone
+// costs p; a paying steward gets the (c) discount on practitioner seats in other covens.
+const hPerCoven = (p, o) =>
+  practitionersPerCoven * p * memberSeatFactor +
+  observersPerCoven * ((1 - I.price.observerTakeUp) * o + I.price.observerTakeUp * p);
+const hPerSeat = (p, o) =>
+  (1 - I.price.gSoloAloneShare) * hPerCoven(p, o) * (I.membershipsPerAccount / I.membersPerCoven) +
+  I.price.gSoloAloneShare * p;
+const gPerSeat = makeG(I.price.gSoloModelled).price;
+// hPerSeat is linear in p, so the practitioner price whose revenue per paying seat equals (g)'s solves exactly
+const hRev0 = hPerSeat(0, I.price.h_obs);
+const hRev1 = hPerSeat(1, I.price.h_obs);
+const hCalibrated = (gPerSeat - hRev0) / (hRev1 - hRev0);
+const hCalibratedRounded = Math.round(hCalibrated * 100) / 100;
+const hCovenMatch =
+  (cPerCoven - hPerCoven(0, I.price.h_obs)) /
+  (hPerCoven(1, I.price.h_obs) - hPerCoven(0, I.price.h_obs));
+const makeH = (id, p, label) => ({
+  id,
+  name: `(h) Flat seats, ${label}`,
+  base: 'account',
+  practitioner: p,
+  observer: I.price.h_obs,
+  price: hPerSeat(p, I.price.h_obs),
+  // seat upgrades ride on the steward's invoice, so one subscription per paying coven plus each solo-alone buyer
+  subsOf: (P) =>
+    (1 - I.price.gSoloAloneShare) * P * (I.membershipsPerAccount / I.membersPerCoven) +
+    I.price.gSoloAloneShare * P,
+  extraCash: (P) =>
+    ((((1 - I.price.gSoloAloneShare) * (1 - I.price.observerShare) + observerAddOns()) *
+      P *
+      I.covenBytes) /
+      2 ** 30) *
+    I.neonGbMonth,
+});
 const models = {
   a: { id: 'a', name: '(a) Coven pays, seat bundles', base: 'coven', price: aAvg },
   b: { id: 'b', name: '(b) Each user pays', base: 'account', price: I.price.b },
@@ -275,6 +331,12 @@ const models = {
   d: { id: 'd', name: '(d) Solo rung only', base: 'account', price: I.price.d },
   e: { id: 'e', name: '(e) Any member pays', base: 'coven', price: I.price.e },
   g: makeG(I.price.gSoloModelled),
+  h_ill: makeH('h_ill', I.price.h_ill, '$3 / $1 (illustrative)'),
+  h_cal: makeH(
+    'h_cal',
+    hCalibratedRounded,
+    `$${hCalibratedRounded.toFixed(2)} / $1 (calibrated to (g))`,
+  ),
 };
 const unitsOf = (m, P) =>
   m.base === 'coven' ? (P * I.membershipsPerAccount) / I.membersPerCoven : P;
@@ -289,11 +351,11 @@ function net(units, price, mp = false, subs = units) {
 const netAt = (m, P, mp = false) =>
   net(unitsOf(m, P), m.price, mp, m.subsOf ? m.subsOf(P) : undefined);
 
-// Cost lines, interpolated linearly in seats between the four sizes (flat outside them).
+// Cost lines, interpolated linearly in seats between the four sizes (and continued on the last slope above them).
 const lines = {
   cash: scale.map((s) => s.cash),
-  contractor: scale.map((s) => s.cash + maint.median.contractor),
-  fulltime: scale.map((s) => s.cash + fte),
+  contractor: scale.map((s) => s.cash + labourContractor(s.P)),
+  fulltime: scale.map((s) => s.cash + labourSalary(s.P)),
 };
 function costAt(line, P) {
   const y = lines[line];
@@ -301,7 +363,8 @@ function costAt(line, P) {
   for (let k = 1; k < SIZES.length; k++)
     if (P <= SIZES[k])
       return y[k - 1] + ((y[k] - y[k - 1]) * (P - SIZES[k - 1])) / (SIZES[k] - SIZES[k - 1]);
-  return y[3];
+  // beyond the last size the last segment's slope continues, because labour hours keep growing with seats
+  return y[3] + ((y[3] - y[2]) * (P - SIZES[3])) / (SIZES[3] - SIZES[2]);
 }
 const HI = 1e7;
 const costFor = (m, line, P) => costAt(line, P) + (m.extraCash ? m.extraCash(P) : 0);
@@ -316,7 +379,7 @@ function seatsFor(m, line) {
   }
   return Math.ceil(hi);
 }
-const seatText = (n) => (n === null ? '>10,000,000' : n.toLocaleString('en-US'));
+const seatText = (n) => (n === null ? 'none' : n.toLocaleString('en-US'));
 
 const out = [];
 const hdr = () => [row(['Quantity', ...SIZES]), row(['---', ...SIZES.map(() => '---:')])];
@@ -399,35 +462,55 @@ cr('of which server-side tracing (10% sampled)', (s) => s.tracing);
 cr('Platform and operations total', (s) => s.platform);
 cr('Claude Ultra', () => I.claudeUltra);
 cr('Cash costs', (s) => s.cash);
-out.push('', '## Maintenance and Incident Hours a Month');
+out.push('', '## Labour Hours a Month (Lane I): fixed + variable x paying seats / 1,000');
 out.push(
-  row(['Case', 'Hours', 'At contractor rate', 'At loaded-salary rate']),
-  row(['---', '---:', '---:', '---:']),
+  '',
+  row([
+    'Case',
+    'Fixed hours',
+    'Variable hours per 1,000 seats',
+    ...SIZES.map((P) => `Hours at ${P}`),
+    'One-person ceiling (seats)',
+  ]),
+  row(['---', '---:', '---:', ...SIZES.map(() => '---:'), '---:']),
 );
-for (const k of ['low', 'median', 'high'])
+for (const k of CASES)
   out.push(
     row([
       k,
-      maint[k].h.toFixed(1),
-      `${f(maint[k].contractor)} (${hrs(k).toFixed(1)} h x $${I.contractor[k]})`,
-      `${f(maint[k].loaded)} (${hrs(k).toFixed(1)} h x $${I.loaded[k]})`,
+      I.fixedHours[k].toFixed(1),
+      varHours[k].toFixed(1),
+      ...SIZES.map((P) => hoursAt(k, P).toFixed(1)),
+      Math.round(ceilingSeats[k]).toLocaleString('en-US'),
     ]),
   );
 out.push(
   '',
-  `Full-time job: ${f(fte)} a month (loaded low) to ${f(fteHigh)} (loaded high); promised on-call alternative ${f(I.onCallMonth)} a month.`,
+  `Variable labour per paying seat at the median: ${varHours.median.toFixed(1)} h per 1,000 seats x $${I.contractor.median} = $${((varHours.median * I.contractor.median) / 1000).toFixed(2)} a month. A model earning less than this per seat after fees has no break-even on a labour line.`,
+  `Median contractor rate $${I.contractor.median} an hour; loaded-salary rate $${I.loaded.median}. Salary line: loaded salary ${f(fte)} a month (low) plus hours above ${I.oneFteHours} a month bought as hired help at the median contractor rate. Loaded salary high: ${f(fteHigh)}; promised on-call alternative ${f(I.onCallMonth)} a month.`,
 );
-out.push('', '## Totals, USD a Month (median maintenance case)');
+out.push('', '## One-Person Ceiling');
+out.push(
+  '',
+  `Paying seats where hours cross ${I.oneFteHours} a month: low ${Math.round(ceilingSeats.low).toLocaleString('en-US')}, median ${Math.round(ceilingSeats.median).toLocaleString('en-US')}, high ${Math.round(ceilingSeats.high).toLocaleString('en-US')}.`,
+);
+out.push('', '## Totals, USD a Month (median labour case)');
 out.push(row(['Row', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
 const tr = (label, g) => out.push(row([label, ...scale.map((s) => f(g(s)))]));
 tr('Cash costs', (s) => s.cash);
-tr('Cash + maintenance at contractor rate', (s) => s.cash + maint.median.contractor);
-tr('Cash + maintenance at loaded-salary rate', (s) => s.cash + maint.median.loaded);
-tr('Cash + full-time job (loaded $250k, low)', (s) => s.cash + fte);
-tr('Cash + full-time job (loaded $250k, high)', (s) => s.cash + fteHigh);
+out.push(
+  row(['Labour hours a month (median)', ...scale.map((s) => hoursAt('median', s.P).toFixed(1))]),
+);
+tr('Cash + labour at contractor rate', (s) => s.cash + labourContractor(s.P));
+tr('Cash + labour at loaded-salary rate', (s) => s.cash + labourLoaded(s.P));
+tr('Cash + full-time job (loaded $250k, low) + hired hours', (s) => s.cash + labourSalary(s.P));
 tr(
-  'Cash + median maintenance + promised on-call (contractor)',
-  (s) => s.cash + maint.median.contractor + I.onCallMonth,
+  'Cash + full-time job (loaded $250k, high) + hired hours',
+  (s) => s.cash + fteHigh + hiredHours(s.P) * I.contractor.median,
+);
+tr(
+  'Cash + median labour + promised on-call (contractor)',
+  (s) => s.cash + labourContractor(s.P) + I.onCallMonth,
 );
 out.push('', '## Model (a) Step Prices and Coven Spread');
 out.push(
@@ -468,6 +551,27 @@ out.push(
     'Price per coven ($6 + ($2 x extra practitioners + $1 x observers) x factor)',
     f(cPerCoven, 4),
   ]),
+);
+out.push('', '## Model (h) Flat Seats');
+out.push(
+  '',
+  row(['Quantity', 'Value']),
+  row(['---', '---:']),
+  row(['Practitioner seats per coven', practitionersPerCoven.toFixed(2)]),
+  row(['Observer seats per coven', observersPerCoven.toFixed(2)]),
+  row(['Observers who upgrade to a practitioner seat (take-up)', pct(I.price.observerTakeUp)]),
+  row(['Seat price factor after the paying-steward discount', memberSeatFactor.toFixed(4)]),
+  row(['(g) revenue per paying seat to match', f(gPerSeat, 4)]),
+  row(['Calibrated practitioner price, observer held at $1', f(hCalibrated, 4)]),
+  row(['Rounded to the cent', f(hCalibratedRounded, 2)]),
+  row(['Practitioner price that matches (c) per group coven alone', f(hCovenMatch, 4)]),
+  row(['Group coven revenue at $3 / $1', f(hPerCoven(I.price.h_ill, I.price.h_obs), 4)]),
+  row([
+    'Group coven revenue at calibrated / $1',
+    f(hPerCoven(hCalibratedRounded, I.price.h_obs), 4),
+  ]),
+  row(['Revenue per paying seat at $3 / $1', f(models.h_ill.price, 4)]),
+  row(['Revenue per paying seat at calibrated / $1', f(models.h_cal.price, 4)]),
 );
 out.push('', '## Model (g) Solo Coven Price Proposals');
 out.push(
@@ -513,7 +617,7 @@ for (const m of Object.values(models))
   out.push(row([m.name, ...SIZES.map((P) => f(netAt(m, P, true).net))]));
 out.push(
   '',
-  '## Clears (i) cash / (ii) cash + contractor maintenance / (iii) cash + full-time job (loaded low)',
+  '## Clears (i) cash / (ii) cash + contractor labour / (iii) cash + full-time job (loaded low)',
 );
 out.push(row(['Model', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
 const yn = (v) => (v ? 'Y' : 'n');
@@ -524,7 +628,7 @@ for (const m of Object.values(models))
       ...scale.map((s) => {
         const n = netAt(m, s.P).net;
         const x = m.extraCash ? m.extraCash(s.P) : 0;
-        return [s.cash + x, s.cash + x + maint.median.contractor, s.cash + x + fte]
+        return [s.cash + x, s.cash + x + labourContractor(s.P), s.cash + x + labourSalary(s.P)]
           .map((c) => yn(n >= c))
           .join(' ');
       }),
@@ -532,13 +636,17 @@ for (const m of Object.values(models))
   );
 out.push(
   '',
-  '## Seats Needed to Break Even, (i) cash / (ii) cash + contractor maintenance / (iii) cash + full-time job',
+  '## Seats Needed to Break Even, (i) cash / (ii) cash + contractor labour / (iii) cash + full-time job',
 );
 out.push(row(['Model', '(i)', '(ii)', '(iii)']), row(['---', '---:', '---:', '---:']));
 for (const m of Object.values(models))
   out.push(
     row([m.name, ...['cash', 'contractor', 'fulltime'].map((l) => seatText(seatsFor(m, l)))]),
   );
+out.push(
+  '',
+  `At ${Math.round(ceilingSeats.median).toLocaleString('en-US')} paying seats (median; ${Math.round(ceilingSeats.low).toLocaleString('en-US')} low, ${Math.round(ceilingSeats.high).toLocaleString('en-US')} high) the work exceeds one person (${I.oneFteHours} hours a month). This holds for every model, since the hours depend on paying seats.`,
+);
 out.push(
   '',
   `Vercel Hobby limits: ${scale.map((s) => `${s.P} paying seats: ${(s.inv / 1e6).toFixed(2)}M invocations vs 1M, ${s.cpuH.toFixed(1)} h vs 4 h`).join('; ')}`,
@@ -554,7 +662,12 @@ if (process.argv.includes('--json')) {
       SIZES,
       ov,
       scale,
-      maint,
+      labour: {
+        hoursPerSize: CASES.map((k) => ({ case: k, hours: SIZES.map((P) => hoursAt(k, P)) })),
+        fixedHours: I.fixedHours,
+        variablePer1000: varHours,
+        ceilingSeats,
+      },
       aAvg,
       aMeanMembers,
       gProposals: I.price.gSolo.map((sp) => {
