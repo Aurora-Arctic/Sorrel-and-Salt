@@ -96,6 +96,9 @@ const I = {
     c_seat: 2,
     c_incl: 3,
     c_disc: 0.5,
+    // observer (viewer) seat, assumption anchored on Figma's $3 Collab beside a $16 full seat [S6]
+    c_obs: 1,
+    observerShare: 0.3, // assumption, range 0.15-0.50; not researched
     d: 2.5,
     e: 0.87 * 4.99 + 0.13 * 9.99,
   },
@@ -216,13 +219,23 @@ const fte = I.salaryLoadedYear.low / 12,
 
 // models: paying unit base and revenue per paying unit. A paying seat is one activated account
 // in a paying coven, so paying covens = paying seats x memberships per account / members per coven.
-const memberSeatFactor =
-  1 - ((I.membershipsPerAccount - 1) / I.membershipsPerAccount) * I.price.c_disc;
+// R5 (owner, 2026-11-06): only a member who is the paying steward of another coven gets the discount.
+// Stewards are one per coven, so the share of accounts that are stewards = covens per account
+// = memberships per account / members per coven. A seat is a second-or-later membership with
+// probability (m - 1) / m, and that holder is a steward with the steward share (independence assumed).
+const stewardShare = I.membershipsPerAccount / I.membersPerCoven;
+const extraSeatShare = (I.membershipsPerAccount - 1) / I.membershipsPerAccount;
+const discountedSeatShare = extraSeatShare * stewardShare;
+const memberSeatFactor = 1 - discountedSeatShare * I.price.c_disc;
+const practitionersPerCoven = I.membersPerCoven * (1 - I.price.observerShare);
+const observersPerCoven = I.membersPerCoven * I.price.observerShare;
 const aAvg = I.price.aSteps.reduce((t, x) => t + x.share * x.price, 0);
 const aMeanMembers = I.price.aSteps.reduce((t, x) => t + x.share * x.members, 0);
 const cPerCoven =
   I.price.c_base +
-  I.price.c_seat * Math.max(0, I.membersPerCoven - I.price.c_incl) * memberSeatFactor;
+  (I.price.c_seat * Math.max(0, practitionersPerCoven - I.price.c_incl) +
+    I.price.c_obs * observersPerCoven) *
+    memberSeatFactor;
 // (g) layers a free solo coven on (c): each paid group seat also holds one, a person with no
 // paid group seat buys a solo coven alone. Per paying seat: group share pays (c), the rest pays the solo price.
 const makeG = (solo) => ({
@@ -245,9 +258,7 @@ const models = {
     id: 'c',
     name: '(c) Base plus seats',
     base: 'coven',
-    price:
-      I.price.c_base +
-      I.price.c_seat * Math.max(0, I.membersPerCoven - I.price.c_incl) * memberSeatFactor,
+    price: cPerCoven,
   },
   d: { id: 'd', name: '(d) Solo rung only', base: 'account', price: I.price.d },
   e: { id: 'e', name: '(e) Any member pays', base: 'coven', price: I.price.e },
@@ -423,6 +434,29 @@ out.push(
     f(aAvg, 4),
   ]),
 );
+out.push('', '## Models (c) and (g) Seat Pricing');
+out.push(
+  '',
+  row(['Quantity', 'Value']),
+  row(['---', '---:']),
+  row([
+    'Paying-steward share of accounts (memberships per account / members per coven)',
+    pct(stewardShare),
+  ]),
+  row(['Share of seats that are a second or later membership', pct(extraSeatShare)]),
+  row(['Share of seats discounted (product of the two)', pct(discountedSeatShare)]),
+  row(['Seat price factor after the 50% discount', memberSeatFactor.toFixed(4)]),
+  row(['Practitioner seats per coven (70%)', practitionersPerCoven.toFixed(2)]),
+  row(['Observer seats per coven (30%)', observersPerCoven.toFixed(2)]),
+  row([
+    'Extra practitioner seats above the 3 in the base',
+    Math.max(0, practitionersPerCoven - I.price.c_incl).toFixed(2),
+  ]),
+  row([
+    'Price per coven ($6 + ($2 x extra practitioners + $1 x observers) x factor)',
+    f(cPerCoven, 4),
+  ]),
+);
 out.push('', '## Model (g) Solo Coven Price Proposals');
 out.push(
   '',
@@ -522,6 +556,11 @@ if (process.argv.includes('--json')) {
       }),
       gExtra: SIZES.map((P) => models.g.extraCash(P)),
       cPerCoven,
+      stewardShare,
+      discountedSeatShare,
+      memberSeatFactor,
+      practitionersPerCoven,
+      observersPerCoven,
       fte,
       fteHigh,
       models: Object.values(models).map((m) => ({
