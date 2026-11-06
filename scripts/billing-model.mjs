@@ -42,6 +42,16 @@ const I = {
   awakeH: [360, 540, 720, 720], // assumption
   domainYear: 11.81,
   claudeUltra: 200,
+  // GitHub Team for the private repository: one committer at every size, Actions beyond the 3,000 included minutes
+  github: {
+    seat: 4,
+    secret: 19,
+    code: 30,
+    committers: 1,
+    includedMin: 3000,
+    gateMin: 5398,
+    perMin: 0.006,
+  },
   // ops
   ops: {
     errors: [0, 15, 15, 50],
@@ -227,6 +237,9 @@ const scale = SIZES.map((P, k) => {
     I.ops.deliverability[k] +
     tracing;
   const domain = I.domainYear / 12;
+  const G = I.github;
+  const github =
+    G.committers * (G.seat + G.secret + G.code) + Math.max(0, G.gateMin - G.includedMin) * G.perMin;
   const platform = vercel + obs + neonL + mailCost + domain + ops;
   return {
     N,
@@ -253,7 +266,8 @@ const scale = SIZES.map((P, k) => {
     tracing,
     domain,
     platform,
-    cash: platform + I.claudeUltra,
+    github,
+    cash: platform + I.claudeUltra + github,
     mailDays: Math.ceil(N / 60),
   };
 });
@@ -644,6 +658,7 @@ cr('Operations stack (Lanes B and H)', (s) => s.ops);
 cr('of which server-side tracing (10% sampled)', (s) => s.tracing);
 cr('Platform and operations total', (s) => s.platform);
 cr('Claude Ultra', () => I.claudeUltra);
+cr('GitHub Team, private repository', (s) => s.github);
 cr('Cash costs', (s) => s.cash);
 out.push('', '## Labour Hours a Month: fixed + variable x paying seats / 1,000');
 out.push(

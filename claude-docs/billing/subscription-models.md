@@ -45,8 +45,9 @@ For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it i
   - **Prices that clear labour:** keep the raised prices. The owner raised them before this question, so the raise answers it.
   - **AI assistance:** the 0.87 factor and the Claude Team seats are confirmed.
   - **Each-member-pays share: 66.66%.** Owner: "I honestly think it will be more like 66.66%." This was 50%. It is the owner's estimate, with no source (range 0% to 100%). Model (i) is re-run with it: 11.1% of seats earn the discount, not 8.3%.
+- **GitHub Team (2026-11-06).** The repository is going private and moves to GitHub Team: $4 a user a month, Secret Protection $19 and Code Security $30 per active committer a month, and the Actions minutes beyond Team's 3,000 included at $0.006 a minute. Free offers repository rules and protected branches on public repositories only, which is why Team is required. Owner: "Yeah we're gonna need those for the team plan." The cost is one committer at every size and $67.39 a month, a cash row of its own in every total. See "CI" in running-costs.md.
 - **The owner does the hours (2026-11-06).** Owner: "Also model it if I'm going to take the contractor hours. At least some of them. Based on how much other work there is. Because I'd definitely be doing that and what support I can without paying someone else." The salary line already does this: the owner takes every hour up to 160 a month and the site hires the rest. See "Who does the hours" under Break-Even.
-- **What changed in the figures.** The observer share (30% to 20%) and the each-member-pays share (50% to 66.66%) moved the tables. (i)'s cash break-even is 97 paying seats, and its cash + labour break-evens are 1,271 (low) and 4,416 (median). The price that clears cash + the structure A job in the median row is $3.84, against today's $3.00.
+- **What changed in the figures.** The observer share (30% to 20%) and the each-member-pays share (50% to 66.66%) moved the tables. (i)'s cash break-even is 124 paying seats, and its cash + labour break-evens are 1,302 (low) and 4,480 (median). The price that clears cash + the structure A job in the median row is $3.85, against today's $3.00.
 - **Flat seats (2026-11-06).** "Yes, add (h) beside (g)." Model (h) has no base fee: a practitioner seat includes a solo coven, an observer seat costs less and becomes a practitioner seat by paying the difference, a solo coven alone costs the same as a practitioner seat, and a paying steward gets 50% off practitioner seats in other covens.
 - **One price list, over (c) (2026-11-06).** The owner asked for (i) beside (h), then asked why it did not use (g)'s group plan of $6 for 3 and $2 for each additional ("Model g had a group plan for $6 for 3 and $2 for additional. Why didn't you incorporate that?"), and said "rebuild yes". (i) is now built over (c), not (h): one price list with the per-coven payer switch. **Coven pays:** $6 a month for 3 practitioner seats, $2 each extra practitioner, $1 each observer. **Each member pays:** practitioner seat **$3** (owner: "$3"), observer $1. Every practitioner seat includes a solo coven; an observer upgrades to a practitioner seat by paying the difference ($1 in a coven that pays, $2 where members pay). A solo coven bought alone is the **personal plan at $3.50**. Owner: "Let's go $3.50 for a practitioner seat without a coven. There will probably be more support cost per user." The reason is the owner's expectation; it has no source. The consequence of $3: coven-pays and each-member-pays cost the same at two practitioners ($6 both ways) and coven-pays is cheaper from three ($6 against $9), which is what makes paying for the coven worth it.
 - **(i)'s prices raised (owner, 2026-11-06).** The owner's list, verbatim: "Coven pays: base (covers 3 practitioners) - $7.00; Coven pays: extra practitioner seat - $2.50; Each member pays: practitioner seat - $3.00; Observer seat - $1.25; Observer upgrade - $1.50 a month where the coven pays, $2.00 where members pay; Personal plan - $3.50; Personal plan - $1 off, free observer". I read it as: the coven pays $7 for 3 practitioner seats, $2.50 for each extra practitioner and $1.25 for each observer; each member pays $3 for a practitioner seat and $1.25 for an observer; an observer upgrade is a set $1.50 a month where the coven pays and $2.00 where members pay; the personal plan is $3.50; and the discount stays $1 off each later self-paid practitioner seat or personal plan, while a later self-paid observer seat is free (the whole $1.25 off). The upgrade is now a set price, not the difference between the seats: it is $0.25 above the difference in both modes. Coven-pays breaks even with each-member-pays at two practitioners ($7 against $6, so each-member-pays is cheaper at two) and is cheaper from three ($7 against $9). The other models are unchanged.
@@ -142,9 +143,9 @@ For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it i
 
 | Solo coven price | Revenue per paying seat | Net at 100 | Net at 1,000 | Net at 10,000 | Net at 100,000 | (i) |  (ii) |  (iii) |
 | ---------------- | ----------------------: | ---------: | -----------: | ------------: | -------------: | --: | ----: | -----: |
-| $1.99            |                 $2.1453 |       $182 |       $1,817 |       $18,133 |       $180,839 | 135 | 1,872 | 14,056 |
-| $2.99            |                 $2.3773 |       $203 |       $2,026 |       $20,212 |       $201,628 | 121 | 1,642 | 12,360 |
-| $4.99            |                 $2.8413 |       $244 |       $2,444 |       $24,370 |       $243,206 | 100 | 1,317 |  9,962 |
+| $1.99            |                 $2.1453 |       $182 |       $1,817 |       $18,133 |       $180,839 | 173 | 1,918 | 14,101 |
+| $2.99            |                 $2.3773 |       $203 |       $2,026 |       $20,212 |       $201,628 | 155 | 1,681 | 12,399 |
+| $4.99            |                 $2.8413 |       $244 |       $2,444 |       $24,370 |       $243,206 | 128 | 1,349 |  9,990 |
 
 | Paying seats                     | 100   | 1,000 | 10,000 | 100,000 |
 | -------------------------------- | ----- | ----- | ------ | ------- |
@@ -218,7 +219,7 @@ I use the same overhead, the same 20% observer share, the same 20% who buy a sol
 
 **Reception.** Per-seat pricing with a cheaper view-only seat is the common pattern: Figma's Collab seat is $3 beside a $16 full seat [S6]. A base for a minimum group plus extra seats is (c)'s pattern. Notion bills a person once per paid workspace [S3], so a $1 discount for a person's own second seat has no consumer precedent beyond Kanka's falling price per campaign when one payment covers several [S19]; I found no comparable with a fixed amount off a second seat. The solo coven price anchors are Bear $2.99 [S15], Neumoire $1.99 [S29] and Grimoire $4.99 [S28]; the $3.50 personal plan sits between Bear and Grimoire. I did not look for a comparable that prices a seat alone above a seat in a group.
 
-**Break-even (cash).** **97** paying seats (rows in the tables under Break-Even).
+**Break-even (cash).** **124** paying seats (rows in the tables under Break-Even).
 
 ## Fair Pricing
 
@@ -354,31 +355,31 @@ The owner chose, on 2026-11-06, to host the checkout on the site: "I want to hos
 | (b) Each user pays                              | Y n n | Y Y n | Y Y Y |  Y Y Y |
 | (c) Base plus seats                             | n n n | Y n n | Y Y n |  Y Y Y |
 | (g) Group plan includes a solo coven (over (c)) | n n n | Y n n | Y Y n |  Y Y Y |
-| (h) Flat seats, $3 / $1 (illustrative)          | Y n n | Y n n | Y Y Y |  Y Y Y |
+| (h) Flat seats, $3 / $1 (illustrative)          | n n n | Y n n | Y Y Y |  Y Y Y |
 | (h) Flat seats, $2.24 / $1 (calibrated to (g))  | n n n | Y n n | Y Y n |  Y Y Y |
-| (i) One price list                              | Y n n | Y n n | Y Y Y |  Y Y Y |
+| (i) One price list                              | n n n | Y n n | Y Y Y |  Y Y Y |
 
 Median row (stress case):
 
 | Model                                           |   100 |  1000 | 10000 | 100000 |
 | ----------------------------------------------- | ----: | ----: | ----: | -----: |
-| (b) Each user pays                              | Y n n | Y n n | Y Y Y |  Y Y Y |
+| (b) Each user pays                              | n n n | Y n n | Y Y Y |  Y Y Y |
 | (c) Base plus seats                             | n n n | Y n n | Y n n |  Y Y Y |
 | (g) Group plan includes a solo coven (over (c)) | n n n | Y n n | Y Y n |  Y Y Y |
-| (h) Flat seats, $3 / $1 (illustrative)          | Y n n | Y n n | Y Y n |  Y Y Y |
+| (h) Flat seats, $3 / $1 (illustrative)          | n n n | Y n n | Y Y n |  Y Y Y |
 | (h) Flat seats, $2.24 / $1 (calibrated to (g))  | n n n | Y n n | Y Y n |  Y Y Y |
-| (i) One price list                              | Y n n | Y n n | Y Y n |  Y Y Y |
+| (i) One price list                              | n n n | Y n n | Y Y n |  Y Y Y |
 
 **Seats needed to break even.** The smallest number of paying seats whose net revenue covers each cost line. The cost line is interpolated linearly between the four sizes (and continued on the last slope above 100,000), because overhead and usage grow with seats; the answer is therefore exact at the four sizes and approximate between them.
 
 | Model                                           | (i) | (ii) low | (iii) low | (ii) median | (iii) median |
 | ----------------------------------------------- | --: | -------: | --------: | ----------: | -----------: |
-| (b) Each user pays                              |  74 |      930 |     7,331 |       2,532 |        9,730 |
-| (c) Base plus seats                             | 131 |    1,809 |    13,586 |      11,268 |       43,270 |
-| (g) Group plan includes a solo coven (over (c)) | 121 |    1,642 |    12,360 |       8,202 |       31,460 |
-| (h) Flat seats, $3 / $1 (illustrative)          |  90 |    1,168 |     8,970 |       3,740 |       14,291 |
-| (h) Flat seats, $2.24 / $1 (calibrated to (g))  | 120 |    1,634 |    12,300 |       8,083 |       31,001 |
-| (i) One price list                              |  97 |    1,271 |     9,663 |       4,416 |       16,895 |
+| (b) Each user pays                              |  94 |      953 |     7,351 |       2,568 |        9,759 |
+| (c) Base plus seats                             | 168 |    1,852 |    13,629 |      11,431 |       43,433 |
+| (g) Group plan includes a solo coven (over (c)) | 155 |    1,681 |    12,399 |       8,320 |       31,578 |
+| (h) Flat seats, $3 / $1 (illustrative)          | 115 |    1,196 |     8,995 |       3,793 |       14,345 |
+| (h) Flat seats, $2.24 / $1 (calibrated to (g))  | 154 |    1,673 |    12,339 |       8,199 |       31,117 |
+| (i) One price list                              | 124 |    1,302 |     9,690 |       4,480 |       16,958 |
 
 **Labour and the One-Person Ceiling.** Hours a month = fixed hours + variable hours × (paying seats ÷ 1,000), where the fixed hours are 24.8 / 44.4 / 70.4 (low / median / high; all engineering work) and the variable hours per 1,000 seats, after the AI factor of 0.87 on support minutes, are 6.08 / 26.6 / 100.3 (support, disputes, privacy requests and abuse reports; all customer-service work). Without AI assistance they would be 6.95 / 30.3 / 113.0. Disputes are 0.25 / 2.0 / 5.0 hours each. Hours are **25.4 / 30.9 / 85.6 / 632.7** at 100 / 1,000 / 10,000 / 100,000 paying seats in the low row, and **47.1 / 71.0 / 310.7 / 2,707.4** in the median row (high row: 80.4 / 170.7 / 1,073.5 / 10,100.9). Contacts are counted on 25% of all accounts, demo-only accounts included. That overstates the contacts of an invite-gated site, and is kept as the conservative choice.
 
@@ -413,18 +414,18 @@ The cost of hired hours is the hired hours at $53.80 plus the Claude Team seats 
 
 | Paying seats | Row    | Owner's hours | Value of those hours | Left after cash costs (and hired help) | Draw a month | Draw an hour |
 | ------------ | ------ | ------------: | -------------------: | -------------------------------------: | -----------: | -----------: |
-| 100          | low    |          25.4 |               $2,535 |                                     $9 |           $9 |        $0.37 |
-| 100          | median |          47.1 |               $4,622 |                                     $9 |           $9 |        $0.20 |
-| 1,000        | low    |          30.9 |               $2,829 |                                 $2,236 |       $2,236 |       $72.43 |
-| 1,000        | median |          71.0 |               $5,912 |                                 $2,236 |       $2,236 |       $31.49 |
-| 10,000       | low    |          85.6 |               $5,772 |                                $24,797 |       $5,772 |       $67.44 |
-| 10,000       | median |         160.0 |              $10,699 |                                $16,639 |      $10,699 |       $66.87 |
-| 100,000      | low    |         160.0 |               $9,776 |                               $224,050 |       $9,776 |       $61.10 |
-| 100,000      | median |         160.0 |              $10,699 |                               $112,102 |      $10,699 |       $66.87 |
+| 100          | low    |          25.4 |               $2,535 |                                   -$58 |           $0 |        $0.00 |
+| 100          | median |          47.1 |               $4,622 |                                   -$58 |           $0 |        $0.00 |
+| 1,000        | low    |          30.9 |               $2,829 |                                 $2,169 |       $2,169 |       $70.24 |
+| 1,000        | median |          71.0 |               $5,912 |                                 $2,169 |       $2,169 |       $30.54 |
+| 10,000       | low    |          85.6 |               $5,772 |                                $24,730 |       $5,772 |       $67.44 |
+| 10,000       | median |         160.0 |              $10,699 |                                $16,572 |      $10,699 |       $66.87 |
+| 100,000      | low    |         160.0 |               $9,776 |                               $223,983 |       $9,776 |       $61.10 |
+| 100,000      | median |         160.0 |              $10,699 |                               $112,035 |      $10,699 |       $66.87 |
 
-At 100 seats the site covers its cash costs and nothing more, so the draw is about $9 a month. The salary line becomes affordable at (i)'s cash + job break-even: 9,663 paying seats in the low row and 16,895 in the median row. From 10,000 seats the draw is the full value of the owner's hours. At 100,000 seats hired help is bought first and the owner still does 160 hours.
+At 100 seats the site does not cover its cash costs, so the draw is nothing: the site is $58 short of its cash costs. The salary line becomes affordable at (i)'s cash + job break-even: 9,690 paying seats in the low row and 16,958 in the median row. From 10,000 seats the draw is the full value of the owner's hours. At 100,000 seats hired help is bought first and the owner still does 160 hours.
 
-What the tables say (the restricted discount and the observer price are in (c) and so in (g)): with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 131 paying seats ((h) at $3 / $1: 90; (i): 97). **In the low row every model also covers cash + labour**: (b) at 930 paying seats, (h) at $3 / $1 at 1,168, (i) at 1,271, (h) at $2.24 / $1 at 1,634, (g) at 1,642 and (c) at 1,809. **In the median row** (b) needs 2,532 and (h) at $3 / $1 3,740, both under the one-person ceiling of 4,341 paying seats, but (i) needs 4,416, just beyond it, and (h) at $2.24 / $1 needs 8,083, (g) 8,202 and (c) 11,268, well beyond it. The reason is the margin: net revenue per paying seat at 10,000 seats is $3.31 for (b), $1.87 for (c), $2.02 for (g), $2.71 for (h) at $3 / $1 and $2.03 at $2.24 / $1, $2.51 for (i), and median variable labour of $1.43 a seat leaves (c) only $0.44. This is driven by the support contact rate, the number to check first (the owner kept the modelled rates). Model (g), over (c), needs 121 seats on cash. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. The two owner decisions of 2026-11-06 (discount for paying stewards only, cheaper observer seats) lowered (c) from $10.58 to $9.29 per coven at 30% observers; the owner's later estimate of 20% observers raised it to $9.83, and its cash break-even is 131 paying seats. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
+What the tables say (the restricted discount and the observer price are in (c) and so in (g)): with no free tier and the withdrawn 4% share gone, every model covers cash costs by 94 to 168 paying seats ((h) at $3 / $1: 115; (i): 124). **In the low row every model also covers cash + labour**: (b) at 953 paying seats, (h) at $3 / $1 at 1,196, (i) at 1,302, (h) at $2.24 / $1 at 1,673, (g) at 1,681 and (c) at 1,852. **In the median row** (b) needs 2,568 and (h) at $3 / $1 3,793, both under the one-person ceiling of 4,341 paying seats, but (i) needs 4,480, just beyond it, and (h) at $2.24 / $1 needs 8,199, (g) 8,320 and (c) 11,431, well beyond it. The reason is the margin: net revenue per paying seat at 10,000 seats is $3.31 for (b), $1.87 for (c), $2.02 for (g), $2.71 for (h) at $3 / $1 and $2.03 at $2.24 / $1, $2.51 for (i), and median variable labour of $1.43 a seat leaves (c) only $0.44. This is driven by the support contact rate, the number to check first (the owner kept the modelled rates). Model (g), over (c), needs 155 seats on cash. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. The two owner decisions of 2026-11-06 (discount for paying stewards only, cheaper observer seats) lowered (c) from $10.58 to $9.29 per coven at 30% observers; the owner's later estimate of 20% observers raised it to $9.83, and its cash break-even is 168 paying seats. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
 
 ### Low-Support Scenario
 
@@ -444,13 +445,13 @@ The practitioner (or account) price at which net revenue covers labour at 10,000
 
 | Model                | Today | Cash + labour, low | Cash + labour, median | Cash + job, low | Cash + job, median |
 | -------------------- | ----: | -----------------: | --------------------: | --------------: | -----------------: |
-| (b) Each user pays   | $4.00 |      $0.99 (below) |        $2.45 (inside) |  $3.02 (inside) |     $3.93 (inside) |
-| (c) Base plus seats  | $2.00 |      $0.53 (below) |        $2.06 (inside) |  $2.66 (inside) |     $3.61 (inside) |
+| (b) Each user pays   | $4.00 |      $1.00 (below) |        $2.46 (inside) |  $3.03 (inside) |     $3.94 (inside) |
+| (c) Base plus seats  | $2.00 |      $0.54 (below) |        $2.07 (inside) |  $2.67 (inside) |     $3.62 (inside) |
 | (g) Group plan, solo | $2.00 |      $0.58 (below) |        $1.90 (inside) |  $2.41 (inside) |     $3.23 (inside) |
-| (h) Flat seats       | $3.00 |      $0.65 (below) |        $2.11 (inside) |  $2.69 (inside) |     $3.61 (inside) |
-| (i) One price list   | $3.00 |      $0.80 (below) |        $2.32 (inside) |  $2.90 (inside) |     $3.84 (inside) |
+| (h) Flat seats       | $3.00 |      $0.65 (below) |        $2.12 (inside) |  $2.70 (inside) |     $3.61 (inside) |
+| (i) One price list   | $3.00 |      $0.81 (below) |        $2.33 (inside) |  $2.91 (inside) |     $3.85 (inside) |
 
-"Below" means the clearing price is under the lowest comparable ($1.58), so today's price already clears. For (c) and (g) the figure is the practitioner seat price and the base scales with it; for (g) the scale factors are 0.292 (low) and 0.948 (median). These use the AI factor of 0.87; at 0.735 the median-row cash + labour prices for (b), (c), (g), (h) and (i) are $2.22, $1.82, $1.69, $1.89 and $2.08, and at 1.00 they are $2.67, $2.29, $2.09, $2.33 and $2.54. Every price that clears cash + labour or cash + job falls inside the comparables range, so none requires a price the market does not already charge. The 10,000-seat size is the model's assumption, not a forecast.
+"Below" means the clearing price is under the lowest comparable ($1.58), so today's price already clears. For (c) and (g) the figure is the practitioner seat price and the base scales with it; for (g) the scale factors are 0.295 (low) and 0.952 (median). These use the AI factor of 0.87; at 0.735 the median-row cash + labour prices for (b), (c), (g), (h) and (i) are $2.22, $1.82, $1.69, $1.89 and $2.08, and at 1.00 they are $2.67, $2.29, $2.09, $2.33 and $2.54. Every price that clears cash + labour or cash + job falls inside the comparables range, so none requires a price the market does not already charge. The 10,000-seat size is the model's assumption, not a forecast.
 
 ## Questions for the Owner
 
