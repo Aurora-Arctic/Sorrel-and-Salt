@@ -19,6 +19,7 @@ Every figure is labelled. `measured` was counted in this repository. `sourced` c
 | Monthly active share of accounts      | 25%                          | assumption | Range 15% to 30%. Not found                                                                                                    |
 | Sessions per active account per month | 8                            | assumption | Range 4 to 16                                                                                                                  |
 | Function invocations per session      | 40                           | derived    | 480,000 invocations ÷ 12,000 sessions, [17]                                                                                    |
+| Middleware invocations per session    | 9                            | derived    | 40 invocations ÷ 4.5 page loads per session                                                                                    |
 | Active CPU per invocation             | 30 ms                        | sourced    | [17]                                                                                                                           |
 | Edge requests per session             | 30                           | assumption | Range 9 to 100                                                                                                                 |
 | Data out per session                  | 1.5 MB                       | assumption | Range 0.5 to 5                                                                                                                 |
@@ -391,7 +392,7 @@ No usage forces an enterprise plan at 100,000 paying seats. Features do.
 26. **Accountant, salary structure (Lane J, item 6):** Form 2553 deadline and effective date; late-election relief. **Owner to confirm** with the accountant.
 27. **Accountant, salary structure (Lane J, item 7):** Confirm a 100% owner-officer should not elect unemployment insurance coverage (exempt, and ineligible for benefits as a 10%+ owner). **Owner to confirm** with the accountant.
 28. **Claude Team training terms.** Confirm Team = Claude for Work, and turn off Rate chats for support agents (see the AI heading in Labour).
-29. **Lane I's conversion basis.** Confirm that Lane I's 1.3 active users and 5.2 accounts per paying seat stay, instead of Lane G's ratios (difference within 7%).
+29. **Lane I's conversion basis.** Confirm that Lane I's 1.3 active users and 5.2 accounts per paying seat stay, instead of Lane G's ratios (the difference is stated under Labour hours).
 30. **Accountant, salary structure (Lane J, item 8):** Confirm the L&I officer exemption and whether to elect it for injury cover. **Owner to confirm** with the accountant.
 31. **Accountant, salary structure (Lane J, item 9):** PFML: officer reported as an employee in B; for C, the elective-coverage rate, base and three-year term. **Owner to confirm** with the accountant.
 32. **Accountant, salary structure (Lane J, item 10):** WA Cares: whether the owner is inside the self-employed opt-in window under C. **Owner to confirm** with the accountant.
@@ -424,41 +425,33 @@ All fetched 2026-11-06.
 15. Vercel Enterprise: https://vercel.com/enterprise
 16. Neon Enterprise: https://neon.com/enterprise
 17. DESIGN.md §4, capacity estimate (this repository, `claude-docs/DESIGN.md`)
-18. Lane E measurements (this task's research notes)
-19. GlitchTip pricing: https://glitchtip.com/pricing
-20. UptimeRobot pricing: https://uptimerobot.com/pricing/
-21. Vercel drains: https://vercel.com/docs/drains
-22. Axiom pricing: https://axiom.co/pricing
-23. PagerDuty pricing: https://www.pagerduty.com/pricing/incident-management/
-24. Socket pricing: https://socket.dev/pricing
-25. incident.io on-call: https://incident.io/blog/uncovering-the-mysteries-of-on-call
-26. WA B&O classifications: https://dor.wa.gov/taxes-rates/business-occupation-tax/business-occupation-tax-classifications
-27. WA digital products: https://dor.wa.gov/digitalproducts
-28. WA local sales tax rates: https://dor.wa.gov/sites/default/files/2026-05/Q326_LSU-flyer-by-county.pdf
-29. BLS employer costs: https://www.bls.gov/news.release/ecec.nr0.htm and https://www.index.dev/blog/freelance-developer-rates
-30. Stripe pricing: https://stripe.com/pricing
-31. Stripe Tax pricing: https://stripe.com/tax/pricing
-32. Stripe Managed Payments: https://docs.stripe.com/payments/managed-payments
-33. Paddle pricing: https://www.paddle.com/pricing
-34. ChartMogul churn: https://chartmogul.com/blog/good-customer-churn-rate/
-35. ChartMogul conversion: https://chartmogul.com/reports/saas-conversion-report/
-36. MIT Living Wage Calculator, Washington (page updated 2026-02-15, fetched 2026-11-06; 1 adult + 1 child $48.00 an hour, medical $9,588 a year): https://livingwage.mit.edu/states/53
-37. MIT Living Wage Calculator, King County, Washington (page updated 2026-02-15, fetched 2026-11-06; 1 adult + 1 child $56.43, medical $9,477; 1 adult no children $30.60, medical $3,032): https://livingwage.mit.edu/counties/53033
-38. AI assistance for support agents: Brynjolfsson, Li and Raymond, "Generative AI at Work", Quarterly Journal of Economics 2025 (resolutions per hour +15.2%, handle time −8.5%); Claude Team seat $25 a month, 2-seat minimum, and the Pro consumer-terms training default, as collected in Lane K (the research notes, 2026-11-06).
-39. US Bureau of Labor Statistics, Occupational Employment and Wage Statistics, Washington, May 2025 (customer-service representatives $24.20 median, $29.49 75th percentile; software developers $80.07 median), fetched 2026-11-06: https://www.bls.gov/oes/
-40. Anthropic privacy centre, "Is my data used for model training?" (updated 2026-08-18, fetched 2026-11-06): https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training
+18. GlitchTip pricing: https://glitchtip.com/pricing
+19. UptimeRobot pricing: https://uptimerobot.com/pricing/
+20. Vercel drains: https://vercel.com/docs/drains
+21. Axiom pricing: https://axiom.co/pricing
+22. PagerDuty pricing: https://www.pagerduty.com/pricing/incident-management/
+23. Socket pricing: https://socket.dev/pricing
+24. incident.io on-call: https://incident.io/blog/uncovering-the-mysteries-of-on-call
+25. WA B&O classifications: https://dor.wa.gov/taxes-rates/business-occupation-tax/business-occupation-tax-classifications
+26. WA digital products: https://dor.wa.gov/digitalproducts
+27. WA local sales tax rates: https://dor.wa.gov/sites/default/files/2026-05/Q326_LSU-flyer-by-county.pdf
+28. BLS employer costs: https://www.bls.gov/news.release/ecec.nr0.htm and https://www.index.dev/blog/freelance-developer-rates
+29. Stripe pricing: https://stripe.com/pricing
+30. Stripe Tax pricing: https://stripe.com/tax/pricing
+31. Stripe Managed Payments: https://docs.stripe.com/payments/managed-payments
+32. Paddle pricing: https://www.paddle.com/pricing
+33. ChartMogul churn: https://chartmogul.com/blog/good-customer-churn-rate/
+34. MIT Living Wage Calculator, Washington (page updated 2026-02-15, fetched 2026-11-06; 1 adult + 1 child $48.00 an hour, medical $9,588 a year): https://livingwage.mit.edu/states/53
+35. MIT Living Wage Calculator, King County, Washington (page updated 2026-02-15, fetched 2026-11-06; 1 adult + 1 child $56.43, medical $9,477; 1 adult no children $30.60, medical $3,032): https://livingwage.mit.edu/counties/53033
+36. AI assistance for support agents: Brynjolfsson, Li and Raymond, "Generative AI at Work", Quarterly Journal of Economics 2025 (resolutions per hour +15.2%, handle time −8.5%); Claude Team seat $25 a month, 2-seat minimum, and the Pro consumer-terms training default, as collected in Lane K (the research notes, 2026-11-06).
+37. US Bureau of Labor Statistics, Occupational Employment and Wage Statistics, Washington, May 2025 (customer-service representatives $24.20 median, $29.49 75th percentile; software developers $80.07 median), fetched 2026-11-06: https://www.bls.gov/oes/
+38. Anthropic privacy centre, "Is my data used for model training?" (updated 2026-08-18, fetched 2026-11-06): https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training
 
 - [G1] Userpilot, "SaaS Product Metrics": https://userpilot.com/saas-product-metrics/
 - [G2] Rachitsky and Timen, "What is a good activation rate": https://www.lennysnewsletter.com/p/what-is-a-good-activation-rate
-- [G3] Amplitude, "The 7% Retention Rule Explained": https://amplitude.com/blog/7-percent-retention-rule
 - [G4] SaaS Capital, Research Brief 34: https://www.saas-capital.com/wp-content/uploads/2026/07/RB34WS1-2026-B2B-Benchmarking-Private-SaaS-Company-Growth-Rates.pdf
-- [G5] ChartMogul, "What Is a Good SaaS Growth Rate?": https://chartmogul.com/blog/good-monthly-growth-rate/
-- [G6] ChartMogul, "SaaS Growth Report 2023": https://chartmogul.com/reports/saas-growth-report/
 - [G7] ChartMogul, "The SaaS Conversion Report": https://chartmogul.com/reports/saas-conversion-report/
-- [G8] First Page Sage, trial conversion benchmarks: https://firstpagesage.com/seo-blog/saas-free-trial-conversion-rate-benchmarks/
-- [G9] Baremetrics, "Open Startups": https://baremetrics.com/blog/open-startups (search result only, not fetched)
 - [G10] Discourse pricing: https://www.discourse.org/pricing
-- [G11] Circle pricing: https://circle.so/pricing
 - [G12] Mighty Networks pricing: https://www.mightynetworks.com/pricing
 - [G13] Ghost, complimentary plans: https://ghost.org/help/complimentary-plans
 - [G14] GitHub Copilot Pro free access: https://docs.github.com/en/copilot/how-tos/manage-your-account/get-free-access-to-copilot-pro

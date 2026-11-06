@@ -1,4 +1,4 @@
-// The M17.1 running-cost and break-even model. Run: node scripts/billing-model.mjs
+// The running-cost and break-even model. Run: node scripts/billing-model.mjs
 // Nearly every value below is a row of the Inputs table in claude-docs/billing/running-costs.md.
 // The sizes count PAYING SEATS (activated accounts in paying covens). Every other account is
 // overhead derived from them: trial seats, curator-coven seats, exempt seats and demo-only accounts.
@@ -267,7 +267,7 @@ const hoursAt = (k, P) => I.fixedHours[k] + (varHours[k] * P) / 1000;
 const ceilingSeats = Object.fromEntries(
   CASES.map((k) => [k, ((I.oneFteHours - I.fixedHours[k]) / varHours[k]) * 1000]),
 );
-// the primary row is the low contact rate; the median is the stress case ROW picks which one the
+// the primary row is the low contact rate; the median is the stress case. ROW picks which one the
 // labour functions below use.
 const ROWS = ['low', 'median'];
 let ROW = 'low';
