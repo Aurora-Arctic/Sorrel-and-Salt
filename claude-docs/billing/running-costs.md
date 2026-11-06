@@ -399,7 +399,7 @@ No usage forces an enterprise plan at 100,000 paying seats. Features do.
 33. **Accountant, salary structure (Lane J, item 11):** Confirm B&O is unchanged by the structure. **Owner to confirm** with the accountant.
 34. **Accountant, salary structure (Lane J, item 12):** Confirm distributions are not self-employment income, and that the Medicare premium income test is unaffected by the split. **Owner to confirm** with the accountant.
 35. **Accountant, salary structure (Lane J, item 13):** Current payroll and return-preparation fees (the survey figures date from 2016-17). **Owner to confirm** with the accountant.
-36. **Model (i)'s payer share and personal plan** (subscription-models.md question 25). Confirm that 50% of covens are each-member-pays (range 0% to 100%, no source), that 20% of paying seats buy a solo coven alone, and that the $3.50 personal plan holds even though a two-person each-member-pays coven gets a solo coven for the seat price.
+36. **Model (i)'s payer share and personal plan** (subscription-models.md question 25). Confirm that 50% of covens are each-member-pays (range 0% to 100%, no source), that 20% of paying seats buy a solo coven alone, and that the $3.50 personal plan holds even though a two-person each-member-pays coven gets a solo coven for the seat price. The model also counts one Stripe subscription per paying person, so a $0 later seat adds no 30¢ fee.
 
 ## How to Re-Run the Numbers
 
