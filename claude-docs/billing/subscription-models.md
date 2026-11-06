@@ -21,7 +21,8 @@ A price in a model below is mine unless it names a comparable. I anchored each o
 For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it is written:
 
 - **R5 (2026-11-06).** "'$1 for a discounted seat' - only a person paying for a coven gets a discounted seat on other covens." The discount is on the second coven's invoice, for a seat held by a paying steward of another coven. At 1.2 memberships per account and 5.5 members per coven that is 3.6% of seats (derived).
-- **Viewers and solo covens (2026-11-06).** "Viewers don't get solo covens." In (g) only a paid practitioner or steward seat includes a free solo coven; an observer seat does not. Revenue is unchanged; the free-coven storage cost counts practitioner seats only (70% of paid seats under the 30% observer assumption), and the break-even row for (g) is unchanged at 129 / 3,223 / 12,858.
+- **Viewers and solo covens (2026-11-06).** "Viewers don't get solo covens." In (g) only a paid practitioner or steward seat includes a free solo coven; an observer seat does not. Revenue is unchanged; the free-coven storage cost counts practitioner seats only (70% of paid seats under the 30% observer assumption), and the break-even row for (g) was unchanged at 129 / 3,223 / 12,858 before the next decision.
+- **Observers add a solo coven (2026-11-06).** "for solo covens. Viewers have to pay the difference. So they can get a solo coven for $1.99." The observer pays the solo price less $1 on their own subscription (person-level price on the Stripe side); take-up 20% (assumption). (g) then needs 125 / 3,104 / 12,381 paying seats.
 - **Observer price (2026-11-06).** "Also viewers should get a cheaper price point." The modelled price is $1 against $2 for a practitioner seat, with 30% of members observers; both numbers are my assumptions (question 19).
 
 ## How Each Model Meets R1 to R5
@@ -149,17 +150,19 @@ So (a) earns **$9.55** per paying coven on average, down from the $9.99 flat fig
 
 **Assumptions in the model.** A paying seat is either a group seat (priced as (c): $9.29 per coven, 1.2 memberships per account, 5.5 members per coven, so $2.03 per seat) or a solo coven bought alone. I assume 20% of paying accounts buy a solo coven alone (range 10% to 40%; no source). Revenue per paying seat = 80% × $9.29 × 1.2 ÷ 5.5 + 20% × $2.99 = $1.621 + $0.598 = **$2.22**. Stripe's 30¢ fixed fee is charged per subscription: 0.8 × 1.2 ÷ 5.5 group subscriptions plus 0.2 solo subscriptions per paying seat.
 
-**Cost of the free solo covens.** Each paid practitioner or steward seat (80% of paying seats, times the 70% that are not observers: 56%) holds one more coven, of the average size the cost model already uses (about 115 KB of spells and ingredients each, from the running-costs ratios). The free covens add stored data and nothing else: sessions, and so function calls, mail and tracing, are counted per account and do not change. The extra Neon storage is $0.00 / $0.04 / $0.39 / $3.94 a month at 100 / 1,000 / 10,000 / 100,000 paying seats. It is added to every cost line for (g).
+**Observers add a solo coven by paying the difference (owner, 2026-11-06: "for solo covens. Viewers have to pay the difference. So they can get a solo coven for $1.99.").** An observer seat costs $1, so an observer adds a solo coven for the solo price less $1: **$1.99** a month at the modelled $2.99. If you pick $1.99 or $4.99 as the solo price, the difference is $0.99 or $3.99. The observer pays it themselves, as their own subscription, not on the coven's invoice, so Stripe needs a person-level price for it (the person is a customer of their own, separate from the coven's steward). Take-up is an assumption: **20% of observers add one** (range 5% to 40%; no source). Per paying seat that is 80% in group covens × 30% observers × 20% take-up = 0.048 add-ons × $1.99 = **$0.095**, which brings revenue per paying seat to $2.22 + $0.095 = **$2.31**. Each add-on is also one more subscription (30¢ fixed fee) and one more free-sized coven of storage.
+
+**Cost of the free solo covens.** Each paid practitioner or steward seat (80% of paying seats, times the 70% that are not observers: 56%) holds one more coven (observers who add a solo coven add theirs: 0.048 per paying seat), of the average size the cost model already uses (about 115 KB of spells and ingredients each, from the running-costs ratios). The free covens add stored data and nothing else: sessions, and so function calls, mail and tracing, are counted per account and do not change. The extra Neon storage is $0.00 / $0.04 / $0.43 / $4.28 a month at 100 / 1,000 / 10,000 / 100,000 paying seats. It is added to every cost line for (g).
 
 **What it shows.** The free solo covens cost almost nothing, so the model's result depends on the assumed 20% who buy a solo coven alone and on the solo price:
 
 | Solo coven price                 | Revenue per paying seat | Net at 100 | Net at 1000 | Net at 10000 | Net at 100000 | (i) |  (ii) |  (iii) |
 | -------------------------------- | ----------------------: | ---------: | ----------: | -----------: | ------------: | --: | ----: | -----: |
-| $1.99                            |                 $2.0194 |       $171 |      $1,713 |      $17,095 |      $170,455 | 143 | 3,563 | 14,217 |
-| $2.99                            |                 $2.2194 |       $189 |      $1,893 |      $18,887 |      $188,377 | 129 | 3,223 | 12,858 |
-| $4.99                            |                 $2.6194 |       $225 |      $2,253 |      $22,471 |      $224,220 | 108 | 2,707 | 10,793 |
+| $1.99                            |                 $2.0669 |       $174 |      $1,742 |      $17,386 |      $173,361 | 141 | 3,503 | 13,978 |
+| $2.99                            |                 $2.3149 |       $197 |      $1,966 |      $19,608 |      $195,584 | 125 | 3,104 | 12,381 |
+| $4.99                            |                 $2.8109 |       $241 |      $2,412 |      $24,052 |      $240,030 | 101 | 2,528 | 10,079 |
 |                                  |                     100 |       1000 |       10000 |       100000 |
-| Cost of free solo covens a month |                   $0.00 |      $0.04 |       $0.39 |        $3.94 |
+| Cost of free solo covens a month |                   $0.00 |      $0.04 |       $0.43 |        $4.28 |
 
 The columns (i), (ii) and (iii) are seats to break even on cash, cash + contractor maintenance, and cash + a full-time job.
 
@@ -230,7 +233,7 @@ Stripe has the narrowest list. Whether a spell journal falls under any of these 
 | (c) Base plus seats                             |                 $9.29 | $176 | $1,764 | $17,601 | $175,518 |
 | (d) Solo rung only                              |                 $2.50 | $197 | $1,970 | $19,640 | $195,905 |
 | (e) Any member pays                             |                 $5.64 | $105 | $1,047 | $10,466 | $104,175 |
-| (g) Group plan includes a solo coven (over (c)) |                 $2.22 | $189 | $1,893 | $18,887 | $188,377 |
+| (g) Group plan includes a solo coven (over (c)) |                 $2.31 | $197 | $1,966 | $19,608 | $195,584 |
 
 #### Option 2, Managed Payments
 
@@ -241,7 +244,7 @@ Stripe has the narrowest list. Whether a spell journal falls under any of these 
 | (c) Base plus seats                             | $171 | $1,707 | $17,030 | $169,809 |
 | (d) Solo rung only                              | $190 | $1,899 | $18,936 | $188,862 |
 | (e) Any member pays                             | $101 | $1,012 | $10,120 | $100,709 |
-| (g) Group plan includes a solo coven (over (c)) | $183 | $1,831 | $18,262 | $182,125 |
+| (g) Group plan includes a solo coven (over (c)) | $190 | $1,900 | $18,956 | $189,063 |
 
 **Y means net revenue covers the cost line**, for (i) / (ii) / (iii):
 
@@ -263,9 +266,9 @@ Stripe has the narrowest list. Whether a spell journal falls under any of these 
 | (c) Base plus seats                             | 139 | 3,460 | 13,805 |
 | (d) Solo rung only                              | 124 | 3,098 | 12,361 |
 | (e) Any member pays                             | 238 | 5,841 | 23,350 |
-| (g) Group plan includes a solo coven (over (c)) | 129 | 3,223 | 12,858 |
+| (g) Group plan includes a solo coven (over (c)) | 125 | 3,104 | 12,381 |
 
-What the tables say (the restricted discount and the observer price are in (c) and so in (g)): with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 238 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,400. Model (g), over (c), needs 129 seats on cash and 3,223 for contractor maintenance, because of the assumed 20% who buy a solo coven alone. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. The two owner decisions of 2026-11-06 (discount for paying stewards only, cheaper observer seats) lowered (c) from $10.58 to $9.29 per coven, which raised its cash break-even from 121 to 139 paying seats. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
+What the tables say (the restricted discount and the observer price are in (c) and so in (g)): with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 238 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,400. Model (g), over (c), needs 125 seats on cash and 3,104 for contractor maintenance, because of the assumed 20% who buy a solo coven alone. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. The two owner decisions of 2026-11-06 (discount for paying stewards only, cheaper observer seats) lowered (c) from $10.58 to $9.29 per coven, which raised its cash break-even from 121 to 139 paying seats. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
 
 ## Questions for the Owner
 
@@ -281,7 +284,7 @@ What the tables say (the restricted discount and the observer price are in (c) a
 
 **The rest:**
 
-6. **Which model?** I need you to choose one of (a), (b), (c) or (g); (d) and (e) are also costed above. The research made no recommendation. Seats to break even on cash / cash + contractor maintenance / cash + a full-time job: (a) with step prices needs 135 / 3,362 / 13,413; (b) needs 74 / 1,836 / 7,320 (fewest, but drops R1); (c) needs 139 / 3,460 / 13,805 (meets all five wants); (g) over (c) needs 129 / 3,223 / 12,858 (assumes 20% buy a solo coven alone).
+6. **Which model?** I need you to choose one of (a), (b), (c) or (g); (d) and (e) are also costed above. The research made no recommendation. Seats to break even on cash / cash + contractor maintenance / cash + a full-time job: (a) with step prices needs 135 / 3,362 / 13,413; (b) needs 74 / 1,836 / 7,320 (fewest, but drops R1); (c) needs 139 / 3,460 / 13,805 (meets all five wants); (g) over (c) needs 125 / 3,104 / 12,381 (assumes 20% buy a solo coven alone).
 7. **Keeper exemptions.** The model uses 5% / 3% / 1.5% / 0.5% of paying seats at 100 / 1,000 / 10,000 / 100,000 (your words, 2026-11-06: "5% of paying seats initially, falling as the site becomes established and its beta testers are staff rather than friends and family"). I need you to confirm or give the numbers. No benchmark exists.
 8. **The pause rule.** When a site is paused (M15.52) or a coven is paused (M15.55), should the subscription be paused (Stripe `pause_collection`), keep running, or be extended by the paused time? No recommendation.
 9. **The multi-coven discount definition (R5).** Answered by you on 2026-11-06: the discount is on the second coven's invoice, for a seat held by a paying steward of another coven. Nothing for you to do. It is recorded under "Owner decisions recorded for the design record" above.
@@ -292,9 +295,9 @@ What the tables say (the restricted discount and the observer price are in (c) a
 14. **Hosted Checkout only.** Do you agree the site loads no Stripe.js on its own pages and sends buyers to Stripe's hosted Checkout? Research recommendation: yes. It keeps to the no-browser-script rule and gives up part of Stripe's fraud-model accuracy (Stripe says advanced risk factors improve it by 36%).
 15. **security.txt.** Do you agree to widen CLAUDE.md rule 1's `/.well-known/*.json` exception to also cover `security.txt`? Research recommendation: yes. It is sessionless and carries no application data. A static file under `public/.well-known/` may avoid a route handler; that was not checked.
 16. **Vercel pause on budget.** Is Vercel's "Pause Production Deployments" setting on? Research recommendation: off. A 503 page for every paying account is a worse outcome than a bill, and the budget still emails you at 50%, 75% and 100%.
-17. **Solo coven price (model (g)).** I need you to choose one: $1.99 (Neumoire [S29]; lowest barrier, earns the least; (g) then needs 143 / 3,563 / 14,217 paying seats), $2.99 (Bear [S15]; the one modelled; 129 / 3,223 / 12,858), or $4.99 (Grimoire [S28]; earns the most per solo buyer, nearer Day One's about $4.17 [S16]; 108 / 2,707 / 10,793). No recommendation: the result also rests on the assumed 20% who buy a solo coven alone, which no source informs.
+17. **Solo coven price (model (g)).** I need you to choose one: $1.99 (Neumoire [S29]; lowest barrier, earns the least; (g) then needs 141 / 3,503 / 13,978 paying seats), $2.99 (Bear [S15]; the one modelled; 125 / 3,104 / 12,381), or $4.99 (Grimoire [S28]; earns the most per solo buyer, nearer Day One's about $4.17 [S16]; 101 / 2,528 / 10,079). No recommendation: the result also rests on the assumed 20% who buy a solo coven alone, which no source informs.
 18. **Model (a) step prices.** Do you accept $2.99 / $7.99 / $11.99 / $16.99 for the four steps and the assumed spread of 6% / 50% / 42% / 2% of covens? Both are my assumptions anchored on the comparables in section (a), not researched figures. Give other numbers and I re-run the model.
-19. **Observer price and share.** I need you to confirm or change two assumptions. Price: $1 for an observer seat against $2 for a practitioner seat beyond the 3 in the base (anchor: Figma's Collab seat at $3 beside a $16 full seat [S6]; at Figma's ratio it would be about $0.40). Share: 30% of a coven's members are observers (range 15% to 50%; I did not research it). At 15% / 50% the break-evens move; run `scripts/billing-model.mjs` with `observerShare` changed to see them. No recommendation beyond the labels.
+19. **Observer price and share.** I need you to confirm or change two assumptions. Price: $1 for an observer seat against $2 for a practitioner seat beyond the 3 in the base (anchor: Figma's Collab seat at $3 beside a $16 full seat [S6]; at Figma's ratio it would be about $0.40). Share: 30% of a coven's members are observers (range 15% to 50%; I did not research it). Take-up: 20% of observers add a solo coven for the solo price less $1, on their own subscription (range 5% to 40%; no source). At 15% / 50% observers or 5% / 40% take-up the break-evens move; run `scripts/billing-model.mjs` with `observerShare` or `observerTakeUp` changed to see them. No recommendation beyond the labels.
 
 ## Sources
 

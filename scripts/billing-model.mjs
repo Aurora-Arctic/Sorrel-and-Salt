@@ -98,6 +98,7 @@ const I = {
     c_disc: 0.5,
     // observer (viewer) seat, assumption anchored on Figma's $3 Collab beside a $16 full seat [S6]
     c_obs: 1,
+    observerTakeUp: 0.2, // assumption: share of observers who add a solo coven (range 5-40%; no source)
     observerShare: 0.3, // assumption, range 0.15-0.50; not researched
     d: 2.5,
     e: 0.87 * 4.99 + 0.13 * 9.99,
@@ -238,19 +239,28 @@ const cPerCoven =
     memberSeatFactor;
 // (g) layers a free solo coven on (c): each paid group seat also holds one, a person with no
 // paid group seat buys a solo coven alone. Per paying seat: group share pays (c), the rest pays the solo price.
+// Observers (owner, 2026-11-06) may add a solo coven by paying the difference to the solo price,
+// on their own subscription. addOns = observers who take it up, per paying seat.
+const observerAddOns = () =>
+  (1 - I.price.gSoloAloneShare) * I.price.observerShare * I.price.observerTakeUp;
 const makeG = (solo) => ({
   id: 'g',
   name: '(g) Group plan includes a solo coven (over (c))',
   base: 'account',
   price:
     (1 - I.price.gSoloAloneShare) * cPerCoven * (I.membershipsPerAccount / I.membersPerCoven) +
-    I.price.gSoloAloneShare * solo,
+    I.price.gSoloAloneShare * solo +
+    observerAddOns() * (solo - I.price.c_obs),
   subsOf: (P) =>
     (1 - I.price.gSoloAloneShare) * P * (I.membershipsPerAccount / I.membersPerCoven) +
-    I.price.gSoloAloneShare * P,
+    I.price.gSoloAloneShare * P +
+    observerAddOns() * P,
   // free solo covens cost Neon storage only: one coven of the average size per paid group seat
   extraCash: (P) =>
-    (((1 - I.price.gSoloAloneShare) * (1 - I.price.observerShare) * P * I.covenBytes) / 2 ** 30) *
+    ((((1 - I.price.gSoloAloneShare) * (1 - I.price.observerShare) + observerAddOns()) *
+      P *
+      I.covenBytes) /
+      2 ** 30) *
     I.neonGbMonth,
 });
 const models = {
