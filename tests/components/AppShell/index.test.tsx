@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
+import { signInPath } from '@/lib/sign-in';
 
 const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({
@@ -190,5 +191,59 @@ describe('AppShell', () => {
     shell(MEMBER);
 
     expect(screen.queryByRole('complementary', { name: 'Site Access' })).not.toBeInTheDocument();
+  });
+});
+
+// An anonymous sender holds a session only for support: the menu names no account, leads to their requests, and offers to
+// make a real account, returning to those requests (claude-docs/design-decisions/m15.48-anonymous-sender.md).
+describe('the account menu for an anonymous sender', () => {
+  // As the shell's viewer read builds it for an anonymous session.
+  const ANONYMOUS = { ...MEMBER, name: 'Anonymous', anonymous: true } as ShellViewer;
+  const panelLinks = (menu: HTMLElement) => {
+    const panel = document.getElementById(menu.getAttribute('aria-controls') ?? '');
+    return within(panel!).getAllByRole('link');
+  };
+
+  it('names the button Account with no initials, and offers only Support and Create Account', () => {
+    pathname.mockReturnValue('/account/support');
+    shell(ANONYMOUS);
+    const menu = screen.getByRole('button', { name: 'Account' });
+    // Neither the stored name nor letters drawn from it: the avatar shows no text.
+    expect(menu).toHaveTextContent(/^Account$/);
+
+    fireEvent.click(menu);
+
+    expect(panelLinks(menu).map((link) => link.textContent)).toEqual(['Support', 'Create Account']);
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
+      'href',
+      '/account/support',
+    );
+    expect(screen.getByRole('link', { name: 'Create Account' })).toHaveAttribute(
+      'href',
+      signInPath('/account/support'),
+    );
+  });
+
+  it('leads Support to the list when requests wait on them too', () => {
+    pathname.mockReturnValue('/account/support');
+    shell({ ...ANONYMOUS, waitingSupport: 2 });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Account/ }));
+
+    expect(screen.getByRole('link', { name: /^Support/ })).toHaveAttribute(
+      'href',
+      '/account/support',
+    );
+  });
+
+  it('still names a signed-in member’s button for them, with Your Account and no Create Account', () => {
+    shell(MEMBER);
+    const menu = screen.getByRole('button', { name: 'Fixture Member' });
+    expect(menu).toHaveTextContent(/FM/);
+
+    fireEvent.click(menu);
+
+    expect(screen.getByRole('link', { name: 'Your Account' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Create Account' })).not.toBeInTheDocument();
   });
 });
