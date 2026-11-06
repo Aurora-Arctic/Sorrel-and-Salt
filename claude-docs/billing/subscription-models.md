@@ -38,6 +38,8 @@ For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it i
 - **No free tier (2026-11-06).** There is no free tier. The only free things are a trial period on a new coven (one month as standard; keepers may set a longer one for promotions and beta testers), each site curator's free coven, keeper exemptions, the demo coven's observer seat, and the public compendium. The four departures from DESIGN.md §13 under "New Requirements Beyond DESIGN.md §13" follow from it.
 - **Pricing as modelled is fair enough (2026-11-06).** After reviewing regional pricing, a self-requested hardship exemption and a stated wage gap, the owner decided: "pricing as modelled is fair enough". None of the three is modelled. No numbers change.
 - **The living wage is a floor (2026-11-06).** "The living wage is a minimum. Not a maximum." The $250,000 salary target is above that floor by the owner's choice. A task, to be minted on Wave 21 by M17.1 (no id yet), will scope an executive pay maximum: a ratio of the highest to the lowest pay on the site, researched against published pay-ratio policies.
+- **Model (i) chosen (owner, 2026-11-06).** The owner chose model (i), One price list ($6 base, +$2 for each extra seat if the coven pays, $3 if members pay, $1 off a second coven, personal plan $3.50). The remaining owner questions are written against (i) and quote (i)'s figures first; the other models' sections and tables stay as the record of what was compared. Questions 6 and 16 and the (g)-only and (c)-only options are gone; a question that applies to only some models carries a models list.
+- **Processor: Stripe Billing + Stripe Tax with hosted Checkout, the site as merchant (owner, 2026-11-06).** "And stripe as the processor: Stripe Billing + Tax, hosted Checkout." Questions 1 (merchant or merchant of record), 2 (Sold through Link) and 13 (hosted Checkout only, no Stripe.js) are decided. Question 4 stays, as a yes or no on describing the site to Stripe's review. Fee figures use Stripe option 1 as primary; Managed Payments stays in the comparison as the recorded fallback.
 
 ## How Each Model Meets R1 to R5
 
@@ -387,39 +389,145 @@ The practitioner (or account) price at which net revenue covers labour at 10,000
 
 ## Questions for the Owner
 
-**I need you to answer each of these.** The recommendation of the research is beside each where a lane made one.
+**I need you to answer each question below.** Each is written for model (i) and for Stripe Billing + Stripe Tax with hosted Checkout, both chosen on 2026-11-06. A question has a plain sentence saying what is decided, a "Why it matters" sentence saying what the answer changes and what the words mean, and the choices. The research's recommendation is marked "recommended". The numbers keep the earlier numbering, so cross-references still work.
 
-**Lane F's five:**
+**Already decided, so not asked:** 1. Merchant or merchant of record (decided: the site is the merchant, using Stripe Billing + Stripe Tax (decision above)); 2. Sold through Link (decided: not applicable, because Link branding belongs to Managed Payments, which stays only as the recorded fallback); 6. Which model (decided: model (i) (decision above)); 10. The document-mailing cap (removed); 13. Hosted Checkout only (decided: hosted Checkout, with no Stripe.js on the site's own pages (decision above)); 16. Solo coven price (model (g)) (removed, because it applies only to model (g)).
 
-1. **Merchant or merchant of record?** The site as merchant (Stripe Billing + Tax, ranked first) means you register for and file sales tax. Managed Payments passes that to Link for a higher fee, and statements read "Sold through Link". Research recommendation: the site as merchant, with Managed Payments the fallback. Merchant-of-record treatment for Washington B&O is unresolved; an accountant must confirm.
-2. **Link branding.** Are you willing to have "Sold through Link" on customers' statements? Only relevant to Managed Payments. No recommendation.
-3. **Business form.** Sole proprietor or company? Vendors' requirements vary and several were not found. No recommendation.
-4. **Content under review.** Are you willing to submit to a vendor review of the grimoire and compendium, given the restricted-business lines above? Research recommendation: Stripe, whose list is the narrowest.
-5. **International customers.** Are they in scope? International cards add 1.5%, currency conversion 1%, and sales tax in other countries. No recommendation.
+3. **Will you sell as yourself (a sole proprietor) or through a company (an LLC)?**
 
-**The rest:**
+   Why it matters: The answer decides which of the four ways of paying yourself are possible (the tax-structure table in running-costs.md: A all-salary, B and B* S corporation, C sole proprietor). Stripe also asks which one you are when you open the account. An accountant must confirm the choice, because vendors' requirements vary and several were not found.
 
-6. **Which model?** I need you to choose one of (b), (c), (g), (h) or (i); (a), (d) and (e) were rejected by you on 2026-11-06 (see "Considered and Rejected"). The research made no recommendation. Paying seats to break even on cash: (b) 74 (fewest, but drops R1); (c) 139 (meets all five wants); (g) over (c) 125 (assumes 20% buy a solo coven alone); (h) flat seats 95 at $3 / $1 and 124 at the calibrated $2.27 / $1 (meets all five wants); (i) one price list over (c) 110 (meets all five wants). On cash + labour (low row) the counts are (b) 930, (c) 1,943, (g) 1,703, (h) 1,237 at $3 / $1 and 1,691 at $2.27 / $1, (i) 1,477; in the median row they are 2,532, 15,123, 9,170, 4,180, 8,965 and 6,182 (see "Labour and the One-Person Ceiling"). I also need you to choose, for each coven, whether the default payer mode is coven pays or each member pays (questions 19 and 20).
-7. **Keeper exemptions.** The model uses 5% / 3% / 1.5% / 0.5% of paying seats at 100 / 1,000 / 10,000 / 100,000 (your words, 2026-11-06: "5% of paying seats initially, falling as the site becomes established and its beta testers are staff rather than friends and family"). I need you to confirm or give the numbers. No benchmark exists.
-8. **The pause rule.** When a site is paused (M15.52) or a coven is paused (M15.55), should the subscription be paused (Stripe `pause_collection`), keep running, or be extended by the paused time? No recommendation.
-9. **Bot Protection.** Does the Code of Ethics allow Vercel's JavaScript-challenge mode? Log mode runs no script. No recommendation.
-10. **The document-mailing cap.** Is it acceptable that mailing a document to everyone takes 852 days at 10,000 paying seats (51,093 accounts)? Not a billing question. No recommendation.
-11. **The new requirements.** Do you accept the four departures from §13 under "New Requirements Beyond DESIGN.md §13"? Research recommendation: accept all four.
-12. **Trial length.** One month standard, no card. Is one month right, and is no card right given the trial seats it creates (76% to 89% of paying seats)? You decided both on 2026-11-06; this records the cost.
-13. **Hosted Checkout only.** Do you agree the site loads no Stripe.js on its own pages and sends buyers to Stripe's hosted Checkout? Research recommendation: yes. It keeps to the no-browser-script rule and gives up part of Stripe's fraud-model accuracy (Stripe says advanced risk factors improve it by 36%).
-14. **security.txt.** Do you agree to widen CLAUDE.md rule 1's `/.well-known/*.json` exception to also cover `security.txt`? Research recommendation: yes. It is sessionless and carries no application data. A static file under `public/.well-known/` may avoid a route handler; that was not checked.
-15. **Vercel pause on budget.** Is Vercel's "Pause Production Deployments" setting on? Research recommendation: off. A 503 page for every paying account is a worse outcome than a bill, and the budget still emails you at 50%, 75% and 100%.
-16. **Solo coven price (model (g)).** I need you to choose one: $1.99 (Neumoire [S29]; lowest barrier, earns the least; (g) then needs 141 paying seats on cash), $2.99 (Bear [S15]; the one modelled; 125), or $4.99 (Grimoire [S28]; earns the most per solo buyer, nearer Day One's about $4.17 [S16]; 101). No recommendation: the result also rests on the assumed 20% who buy a solo coven alone, which no source informs.
-17. **Observer price and share.** I need you to confirm or change two assumptions. Price: $1 for an observer seat against $2 for a practitioner seat beyond the 3 in the base (anchor: Figma's Collab seat at $3 beside a $16 full seat [S6]; at Figma's ratio it would be about $0.40). Share: 30% of a coven's members are observers (range 15% to 50%; I did not research it). Take-up: 20% of observers add a solo coven for the solo price less $1, on their own subscription (range 5% to 40%; no source). At 15% / 50% observers or 5% / 40% take-up the break-evens move; run `scripts/billing-model.mjs` with `observerShare` or `observerTakeUp` changed to see them. No recommendation beyond the labels.
+   - Sell as yourself, a sole proprietor: Only tax structure C is possible: the business earns $252,950 a year to leave you the take-home of a $250,000 gross salary, married filing jointly. There is no legal separation between you and the business.
+   - Sell through a company, an LLC: An LLC taxed as a sole proprietor is still C ($252,950 a year). An LLC that elects S corporation tax makes B or B* possible ($260,359 or $260,868 a year), and a company paying you a $250,000 gross salary is A ($266,575 a year). The company separates your own money from the business's.
 
-18. **Support contact rate.** I need you to confirm or change it, because it decides the one-person ceiling. The median is 21.5 hours of support a month per 1,000 active accounts (range 5.1 to 75). The work passes one person at 22,241 paying seats in the low row, 4,341 in the median row and 893 in the high row, with AI assistance for support agents at a factor of 0.87 (question 24). **Research recommendation: take the low row as primary (question 22)**, on the condition that self-service help ships before billing. Annual billing cuts dispute hours. Lane I did not find these, and they are on the list for you or an accountant to confirm: how incident counts scale with users, the time a Washington excise return takes, the time a refund takes, the curation ratio, solo-founder hours against users, and the minutes a moderator spends per abuse report.
-19. **The member-pays rule.** Under "each member pays", a member who stops paying keeps an unpaid seat that is read-only until they pay again. I need you to confirm or change that. No recommendation.
-20. **The switching rule.** A change of payer mode cancels one set of subscriptions and starts the other at the next renewal, with no mid-period switch. I need you to confirm or change that. No recommendation.
-21. **Which tax structure should the business use?** I need you to choose one, or tell me to wait for an accountant. The salary line is already fixed as A, a $250,000 gross salary (your decision, 2026-11-06), so this question only decides how the business pays you. The figures are for married filing jointly with your spouse's income at zero (owner to confirm); the business must earn enough to leave you A's joint take-home of $194,529 after all tax. **C, a single-member LLC taxed as a sole proprietor, is recommended**: $252,950 a year ($21,079 a month), against $266,575 for A, a saving of $13,625. **B\*, an S corporation with a $190,000 wage, is second**: $260,868 a year ($21,739 a month), saving $5,707, with every benefit kept. B (a $184,500 wage) would earn $260,359 ($21,697), saving $6,216. For a single filer the savings were $17,141 (C), $8,273 (B\*) and $8,976 (B). The recommendation rests on the Rev. Proc. 2025-32 figures and the zero-spouse-income assumption; an accountant must confirm it (the questions are in [running-costs.md](running-costs.md#what-the-repository-doesnt-say)).
-22. **Which contact-rate row is the primary case?** I need you to choose the low row or the median row. **Recommended: the low row**, because Kanka, Pinboard and Plausible fit only that row; it holds only if the Low-Support Scenario (help centre, in-app answers, demo-coven community help, no support promise on trial and observer seats, annual billing) ships before billing. The median stays as the stress case beside it. Both rows are in every table.
-23. **Which price points?** I need you to choose a practitioner (or account) price for the model you pick. At 10,000 paying seats, cash + labour is cleared by today's prices in the low row and by $1.95 to $2.62 in the median row; cash + the structure A job is cleared by $2.50 to $3.29 (low row) or $3.38 to $4.37 (median row). All fall inside the comparables range of $1.58 to $5.99. No recommendation on the exact price; the table under "Prices That Clear Labour" has each model's figure.
-24. **AI assistance for support agents.** You decided on 2026-11-06 that it is on by default. I need you to confirm the factor on support minutes: **0.87 is used** (the average gain in Brynjolfsson, Li and Raymond, QJE 2025), with 0.735 and 1.00 as sensitivities (the table under "AI assistance for support agents"). I also need you to confirm the cost: a Claude Team seat at $25 a month per agent beyond you, 2-seat minimum, and that agents use Team, never Pro, so customer messages are not used to train a model. I also need you to confirm Team = Claude for Work, and to turn off Rate chats for support agents (see "Labour and the One-Person Ceiling"). Nothing else for you to do on this one.
-25. **Share of covens on each-member-pays (model (i)).** I need you to confirm or change the share the model uses for the covens whose members each pay for their own seat. **50% is used**, with a range of 0% to 100%; no source informs it. It decides how many second and later seats earn the $1 discount: 8.3% of seats at 50%, none at 0% (every coven pays as in (c), $9.68 a coven) and 16.7% at 100% (every coven at $3 a seat, $12.94 a coven after the discount). It also decides how many Stripe subscriptions there are, since each person who pays in an each-member-pays coven holds one. The $3.50 personal plan and the 20% who buy it alone are also assumptions (the premium relies on people not forming a two-person coven instead). No recommendation.
+4. **Payment companies review what a site sells. Will you describe the site, with its spells, zodiac and deity vocabularies, to Stripe's review?**
+
+   Why it matters: Stripe is the chosen payment company (the processor). Before it lets a site take payments it checks the site against a list of restricted businesses, and the grimoire and compendium touch topics such as astrology and spiritual services. Stripe's list is the narrowest of the processors compared. Without Stripe's approval the site cannot take payments through Stripe.
+
+   - Yes, describe the site to Stripe's review - recommended: Stripe reviews the site before approving it. The review is the eligibility step, and its result is Stripe's decision, not mine.
+   - No, do not describe the site: Stripe has nothing to approve, so billing through Stripe cannot start and the processor choice has to be reopened.
+
+5. **Will customers outside the United States be able to sign up and pay?**
+
+   Why it matters: Cards from other countries cost Stripe (the payment company) an extra 1.5%, converting currency costs another 1%, and sales tax or its equivalent may be owed in the customer's country. Staying US-only avoids all three. No source says how many customers would come from abroad.
+
+   - United States only, at first: No foreign tax registration, no currency conversion and no extra card fee.
+   - Accept international customers: Each foreign card adds 1.5% and currency conversion 1%, and you may have to register for tax in other countries.
+
+6. **Do you confirm how many accounts the keepers will give away free: 5% of paying seats at first, falling to 0.5%?**
+
+   Why it matters: A paying seat is a seat somebody is billed for. Staff, beta testers and friends get free accounts (keeper exemptions). They cost money and earn none, so the share changes every break-even (the number of paying seats at which revenue covers the cost line). The model uses 5% of paying seats at 100, 3% at 1,000, 1.5% at 10,000 and 0.5% at 100,000, from your words on 2026-11-06: "5% of paying seats initially, falling as the site becomes established and its beta testers are staff rather than friends and family". No benchmark exists for this.
+
+   - Confirm the schedule - recommended: The overhead and break-even figures stand as they are.
+   - Give other percentages: I re-run the model with your numbers and update every break-even.
+
+7. **While a site or a coven is paused, should its customers keep being charged?**
+
+   Why it matters: The whole site (M15.52) or a single coven (M15.55) can be paused. Stripe has a setting, pause_collection, that stops charging while keeping the subscription alive. The three options differ in who bears the paused time.
+
+   - Stop charging while paused: Customers are not charged for paused time and the subscription resumes by itself; the revenue for that time is lost.
+   - Keep charging: Customers pay for time they cannot use, which invites refund requests and disputes.
+   - Extend the subscription by the paused time: Customers get the paused time back at the end, but it needs extra bookkeeping.
+
+8. **May Vercel's Bot Protection run a test in visitors' browsers, or only record suspicious requests?**
+
+   Why it matters: Bot Protection is a Vercel setting that deals with automated traffic. Log mode only records suspicious requests and runs no script. Challenge mode makes the visitor's browser run a JavaScript test (Bot Protection's challenge). The question is whether the Code of Ethics allows that script.
+
+   - Log mode only: No script runs on visitors; bots are recorded but not stopped by Bot Protection.
+   - Allow challenge mode: A script runs on the visitor's browser, and suspected bots have to pass it.
+
+9. **Do you accept four changes to what DESIGN.md section 13 says billing must do?**
+
+Why it matters: DESIGN.md section 13 lists the billing requirements. Your decision of 2026-11-06, "no free tier", means four of them need changing: (1) a keeper can set a trial length per coven, (2) each site curator gets a free coven of 7 seats, (3) keeper exemptions can have an end date, (4) the demo coven's observer seat stays free. They are listed under "New Requirements Beyond DESIGN.md §13".
+
+- Accept all four - recommended: I write the four into the requirements as stated.
+- Accept some: You tell me which, and I redraft the requirements without the others.
+
+12. **Is a one-month free trial, with no card asked for, the right choice?**
+
+Why it matters: For every 100 paying seats there are 76 to 89 people on a free month at any time, because every new coven starts with a free month. You decided on 2026-11-06 to keep both the month and no card; this records what that costs. Asking for a card would raise the share of trials that become paying covens to 25% to 35% and shrink the number of free seats, but fewer people would try the site.
+
+- Keep both, as you decided on 2026-11-06: More people try the site, and the free seats are a running cost.
+- Ask for a card at sign-up: Fewer free seats and more trials turn into payments, but fewer people start a trial.
+
+14. **Do you agree to add security.txt to the short list of pages that need no signed-in session?**
+
+Why it matters: CLAUDE.md rule 1 is the rule that every page needs a signed-in session except a short public list; the list today includes the /.well-known/*.json files. security.txt is a small public text file that tells security researchers where to report a problem. It needs no session and carries no application data. A static file under public/.well-known/ may avoid a route handler; that was not checked.
+
+- Yes, add security.txt to the list - recommended: Researchers find the reporting address in the standard place.
+- No, leave the list as it is: There is no security.txt, and researchers use GitHub reporting only.
+
+15. **Should Vercel stop the site when the monthly spending budget is reached?**
+
+Why it matters: Vercel's "Pause Production Deployments" setting (pause-on-budget) switches production off when spending reaches the budget. With it off, the budget still emails you at 50%, 75% and 100%.
+
+- Leave it off - recommended: The site stays up and you get the bill, with warnings at 50%, 75% and 100%; a 503 page for every paying account is a worse outcome than a bill.
+- Turn it on: The site shows a 503 error page to everyone when the budget is reached.
+
+17. **Is $1 the right observer price, and are 30% of a coven's members observers?** (applies to models i; written for (i))
+
+Why it matters: An observer can read a coven but writes nothing. In model (i) an observer seat costs $1 a month and each practitioner beyond the first 3 in the $6 base costs $2. The model assumes 30% of a coven's members are observers (range 15% to 50%; not researched). The anchor is Figma's Collab seat at $3 beside a $16 full seat; at Figma's ratio an observer would cost about $0.40. Break-evens below are paying seats for cash / cash + labour (low row) / cash + the salary-line job (low row).
+
+- Keep $1 and 30% observers: (i) needs 110 / 1,477 / 11,149 paying seats.
+- Give another price or share: At 15% observers (i) needs 103 / 1,365 / 10,313; at 50% it needs 120 / 1,622 / 12,220. For any other number I re-run the model.
+
+18. **How often will people contact support?**
+
+Why it matters: The contact rate is the hours of support work that each 1,000 active accounts create in a month. It decides the one-person ceiling: the number of paying seats at which the work passes 160 hours a month, one person's full time. Two rows are modelled. The low row is the low rate that hobby products report (6.08 variable hours a month per 1,000 paying seats); the median row is the typical rate for business software (26.63). With AI assistance for support agents the work passes one person at 22,241 paying seats in the low row, 4,341 in the median row and 893 in the high row. Annual billing cuts dispute hours. Still not found, for you or an accountant to confirm: how incidents scale with users, how long a Washington excise return takes, how long a refund takes, how many compendium edits each user makes, a solo founder's hours against users, and the minutes a moderator spends per abuse report.
+
+- Keep the modelled rates: The median is 21.5 support hours a month per 1,000 active accounts, in a range of 5.1 to 75.
+- Give another rate: Give me a number and I re-run the model; the one-person ceiling moves with it.
+
+19. **If a member stops paying in a coven where each member pays, what happens to their seat?** (applies to models c, g, h, i; written for (i))
+
+Why it matters: Each coven is set either to "coven pays" (one bill from the steward) or "each member pays" (every member pays for their own seat). Entitlement (what an account is allowed to do) follows what a member has paid, so the rule must say what a lapsed member keeps.
+
+- The seat stays, read-only, until they pay again: This is the modelled rule. Spells and ingredients stay; nothing is deleted.
+- Another rule: You tell me which, and the entitlement paths change to match.
+
+20. **When a coven switches between "coven pays" and "each member pays", when does it take effect?** (applies to models c, g, h, i; written for (i))
+
+Why it matters: Stripe bills by subscription, so a switch cancels one set of subscriptions and starts the other. Proration means charging or crediting only the part of a billing period that was used.
+
+- At the next renewal, with no switching mid-period: This is the modelled rule. No proration and no double charge.
+- At once, with proration: Customers switch immediately, but there are more Stripe cases to build and test.
+
+21. **Which tax structure should the business use?**
+
+Why it matters: The salary line is already fixed as structure A, a $250,000 gross salary as a standard employee would see it (your decision, 2026-11-06). This question only decides how the business pays you, and so how much the business must earn to leave you A's take-home: $194,529 after all tax, married filing jointly, with your spouse's income taken as zero (I need you to confirm that income). QBI is the qualified business income deduction, a 20% deduction on business profit; reasonable compensation is the rule that an S corporation owner must pay themselves a normal wage before taking profit as distributions. For a single filer the savings were $17,141 (C), $8,273 (B*) and $8,976 (B). An accountant must confirm the result (the checklist is in running-costs.md).
+
+- C: a single-member LLC taxed as a sole proprietor - recommended, pending the accountant: The business earns $252,950 a year ($21,079 a month), $13,625 less than A. You give up unemployment cover, Paid Family and Medical Leave becomes optional, and WA Cares applies only inside a three-year window.
+- B*: an S corporation paying you a $190,000 wage, the rest as distributions: $260,868 a year ($21,739 a month), $5,707 less than A, with every benefit kept and a reasonable-compensation audit risk. Second choice if C is ruled out.
+- A: all salary, a $250,000 gross salary through payroll: $266,575 a year ($22,215 a month), the highest cost and no tax saving.
+- Wait for the accountant: The model keeps A as the salary line; the checklist is in running-costs.md (items 21 to 35 and 37).
+
+22. **Should the low support-contact rate be the main case, with the median rate beside it as the stress case?**
+
+Why it matters: The low row is the low rate that hobby products report; the median row is the typical rate for business software. In model (i) the break-even on cash + labour (the number of paying seats at which revenue covers cash costs plus work hours) is 1,477 in the low row and 6,182 in the median row. The low row holds only if self-service help ships before billing: a help centre, answers inside the app, community help in the demo coven, no support promise on trial and observer seats, and annual billing. Both rows are in every table.
+
+- Low row as the main case, median beside it - recommended: Kanka, Pinboard and Plausible fit only the low row. It holds only if self-service help ships first.
+- Median row as the main case: In the median row (i) needs 6,182 paying seats on cash + labour, which is more than the one-person ceiling of 4,341, so one person is overloaded before the site covers its labour.
+
+23. **Do the prices that cover labour at 10,000 seats change your price points?**
+
+Why it matters: The clearing price is the practitioner price at which revenue covers a cost line at 10,000 paying seats, with observers held at $1 and the other prices scaled in proportion. For model (i): cash + labour, low row $0.87 (below the lowest comparable of $1.58, so today's price already clears); median row $2.62; cash + the salary-line job, low row $3.29 and median row $4.37. Today's (i) practitioner price is $3.00 (when members pay) and the comparables range from $1.58 to $5.99.
+
+- Keep today's prices: At 10,000 paying seats today's prices cover labour in both rows and fall just short of the salary-line job (which needs 11,149 paying seats in the low row).
+- Set other prices: Give me a price and I re-run the model.
+
+24. **Do you confirm that support agents use AI assistance, and that it cuts their work by the 0.87 factor?**
+
+Why it matters: You decided on 2026-11-06 that AI assistance is on by default. The 0.87 factor means each support contact takes 87% of the minutes it would otherwise take (the average gain in Brynjolfsson, Li and Raymond, QJE 2025). 0.735 and 1.00 are the sensitivities. Each agent beyond you has a Claude Team seat at $25 a month (minimum 2 seats), and agents use Team, never Pro, so customer messages are not used to train a model. There is nothing else for you to do on this one beyond confirming Team is Claude for Work and turning off Rate chats for support agents (see "Labour and the One-Person Ceiling").
+
+- Confirm the factor of 0.87 and the Team seats: Seats are 0 / 0 / 0 / 3 in the low row and 0 / 0 / 2 / 16 in the median row at 100 / 1,000 / 10,000 / 100,000 paying seats.
+- Change the factor or the seat count: Give me the number and I re-run the model.
+
+25. **Do you confirm that 50% of covens are set to "each member pays"?** (applies to models i; written for (i))
+
+Why it matters: Model (i) needs a share of covens whose members each pay for their own seat. 50% is my assumption (range 0% to 100%; no source informs it). It decides how many second and later seats earn the $1 discount (8.3% of seats at 50%, none at 0%, 16.7% at 100%) and how many Stripe subscriptions there are, since each person who pays holds one. At 0% every coven pays as in (c), $9.68 a coven; at 100% every coven pays $12.94 after the discount. Break-evens in paying seats for cash / cash + labour (low) / cash + the salary-line job (low): 110 / 1,477 / 11,149 at 50%, 120 / 1,622 / 12,218 at 0% and 102 / 1,356 / 10,252 at 100%. The $3.50 personal plan and the 20% who buy it alone are also assumptions.
+
+- Confirm 50%: The break-evens above stay as they are.
+- Give another share: I re-run the model with your share.
 
 ## Sources
 
