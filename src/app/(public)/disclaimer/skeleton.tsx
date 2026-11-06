@@ -1,8 +1,8 @@
-import Skeleton from '@/components/Skeleton';
 import PageColumn from '@/components/PageColumn';
+import { DocumentSkeleton } from '@/components/DocumentPage/skeleton';
 
 export const DisclaimerSkeleton = () => (
   <PageColumn as="div">
-    <Skeleton shape="page" head="eyebrow" quiet />
+    <DocumentSkeleton title="Disclaimer" />
   </PageColumn>
 );

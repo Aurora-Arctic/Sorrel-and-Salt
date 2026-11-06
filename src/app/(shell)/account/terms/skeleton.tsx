@@ -1,8 +1,8 @@
-import Skeleton from '@/components/Skeleton';
 import PageFrame from '@/components/PageFrame';
+import { PanelSkeleton } from '@/components/Skeleton/panel';
 
 export const AccountTermsSkeleton = () => (
   <PageFrame as="div" narrow>
-    <Skeleton shape="page" quiet />
+    <PanelSkeleton />
   </PageFrame>
 );
