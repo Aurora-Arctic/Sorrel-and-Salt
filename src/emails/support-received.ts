@@ -33,7 +33,6 @@ export function SupportReceived({
             null,
             `You have no account to sign in to, so the reply comes by email. If you need to add something, ${actionVerb(part)} to write to us again.`,
           ),
-          h(Paragraph, { muted: true }, 'Only the link in your latest email works.'),
           h(Action, { href: url, label: 'Write to Us Again', part }),
         )
       : h(
