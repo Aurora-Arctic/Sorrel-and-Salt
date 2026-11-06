@@ -206,13 +206,13 @@ Stripe has the narrowest list. Whether a spell journal falls under any of these 
 
 | Model                        | (i) |  (ii) |  (iii) |
 | ---------------------------- | --: | ----: | -----: |
-| (a) Coven pays, seat bundles | 122 | 3,204 | 12,797 |
-| (b) Each user pays           |  70 | 1,832 |  7,318 |
-| (c) Base plus seats          | 115 | 3,018 | 12,054 |
-| (d) Solo rung only           | 118 | 3,092 | 12,358 |
-| (e) Any member pays          | 226 | 5,833 | 23,339 |
+| (a) Coven pays, seat bundles | 129 | 3,211 | 12,807 |
+| (b) Each user pays           |  74 | 1,837 |  7,322 |
+| (c) Base plus seats          | 121 | 3,025 | 12,063 |
+| (d) Solo rung only           | 124 | 3,099 | 12,368 |
+| (e) Any member pays          | 239 | 5,847 | 23,374 |
 
-What the tables say: with no free tier and the withdrawn 4% share gone, every model covers cash costs by 70 to 226 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,300. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
+What the tables say: with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 239 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,400. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
 
 ## Questions for the Owner
 
@@ -236,6 +236,9 @@ What the tables say: with no free tier and the withdrawn 4% share gone, every mo
 11. **The document-mailing cap.** Is it acceptable that mailing a document to everyone takes 852 days at 10,000 paying seats (51,093 accounts)? Not a billing question. No recommendation.
 12. **The new requirements.** Do you accept the four departures from §13 under "New Requirements Beyond DESIGN.md §13"? Research recommendation: accept all four.
 13. **Trial length.** One month standard, no card. Is one month right, and is no card right given the trial seats it creates (76% to 89% of paying seats)? You decided both on 2026-11-06; this records the cost.
+14. **Hosted Checkout only.** Do you agree the site loads no Stripe.js on its own pages and sends buyers to Stripe's hosted Checkout? Research recommendation: yes. It keeps to the no-browser-script rule and gives up part of Stripe's fraud-model accuracy (Stripe says advanced risk factors improve it by 36%).
+15. **security.txt.** Do you agree to widen CLAUDE.md rule 1's `/.well-known/*.json` exception to also cover `security.txt`? Research recommendation: yes. It is sessionless and carries no application data. A static file under `public/.well-known/` may avoid a route handler; that was not checked.
+16. **Vercel pause on budget.** Is Vercel's "Pause Production Deployments" setting on? Research recommendation: off. A 503 page for every paying account is a worse outcome than a bill, and the budget still emails you at 50%, 75% and 100%.
 
 ## Sources
 

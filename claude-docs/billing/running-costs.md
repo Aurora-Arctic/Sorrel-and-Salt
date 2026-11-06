@@ -64,33 +64,33 @@ Real spells and ingredients per coven are unknown. The two coven sizes above are
 
 ### Prices
 
-| Input                                           | Value                                                       | Label      | Source                                                                            |
-| ----------------------------------------------- | ----------------------------------------------------------- | ---------- | --------------------------------------------------------------------------------- |
-| Vercel Pro                                      | $20 a month, includes $20 of usage credit                   | sourced    | [2]                                                                               |
-| Function invocations over the allowance         | $0.60 per million                                           | sourced    | [1]                                                                               |
-| Active CPU                                      | $0.128 per hour                                             | sourced    | [1]                                                                               |
-| Provisioned memory                              | $0.0106 per GB-hour                                         | sourced    | [1]                                                                               |
-| Fast Data Transfer                              | 1 TB included, then $0.15 per GB                            | sourced    | [1]                                                                               |
-| Edge requests                                   | $2 per million over the allowance (see open item 1)         | sourced    | [1]                                                                               |
-| Vercel Workflows events                         | $20 per million; 3 events per step, 1 more per retry        | sourced    | [4]                                                                               |
-| Workflow events from daily jobs                 | 270 a month                                                 | assumption | 3 jobs a day, 3 events each                                                       |
-| Vercel Observability Plus                       | $1.20 per million events                                    | sourced    | [5]                                                                               |
-| Neon Launch                                     | $0.106 per CU-hour                                          | sourced    | [6]                                                                               |
-| Neon Scale                                      | $0.222 per CU-hour                                          | sourced    | [6]                                                                               |
-| Neon average compute                            | 0.25 CU at 100 and 1,000; 0.5 CU at 10,000; 2 CU at 100,000 | assumption | Range half to double                                                              |
-| Neon hours awake a month                        | 360, 540, 720, 720                                          | assumption | Autosuspend while idle                                                            |
-| Resend                                          | Free 3,000 a month (100 a day); Pro 50K $20; Pro 100K $35   | sourced    | [8]                                                                               |
-| Domain, `.com`                                  | $11.81 a year                                               | sourced    | [9] (Porkbun; Vercel's price not found)                                           |
-| Claude Ultra                                    | $200 a month                                                | sourced    | [10]                                                                              |
-| GitHub Free                                     | $0                                                          | sourced    | [11]                                                                              |
-| Operations stack                                | $0.03 / $15.03 / $32.03 / $112.03                           | derived    | Lane B: error events, uptime, log drain and restore test (see "Operations Stack") |
-| Maintenance hours a month (low / median / high) | 27.9 / 29.9 / 39.8                                          | derived    | Lane D, from 2,388 build hours                                                    |
-| Incident hours a month (low / median / high)    | 2.4 / 19.5 / 36.6                                           | derived    | Lane D                                                                            |
-| Contractor hourly rate                          | $95 / $122.50 / $150                                        | sourced    | [29] and Lane D's rate sources                                                    |
-| Loaded-salary hourly rate                       | $137.97 / $147.81 / $157.65                                 | derived    | $286,977 to $327,922 a year ÷ 2,080 h, [29]                                       |
-| Washington retailing B&O                        | 0.471%, less a credit of up to $55 a month                  | sourced    | [26]                                                                              |
-| Stripe card fee                                 | 2.9% + 30¢; Billing 0.7%; Tax Basic 0.5%                    | sourced    | [30] [31]                                                                         |
-| Managed Payments                                | +3.5% per charge, tax included                              | sourced    | [32]                                                                              |
+| Input                                           | Value                                                       | Label      | Source                                                                                                           |
+| ----------------------------------------------- | ----------------------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| Vercel Pro                                      | $20 a month, includes $20 of usage credit                   | sourced    | [2]                                                                                                              |
+| Function invocations over the allowance         | $0.60 per million                                           | sourced    | [1]                                                                                                              |
+| Active CPU                                      | $0.128 per hour                                             | sourced    | [1]                                                                                                              |
+| Provisioned memory                              | $0.0106 per GB-hour                                         | sourced    | [1]                                                                                                              |
+| Fast Data Transfer                              | 1 TB included, then $0.15 per GB                            | sourced    | [1]                                                                                                              |
+| Edge requests                                   | $2 per million over the allowance (see open item 1)         | sourced    | [1]                                                                                                              |
+| Vercel Workflows events                         | $20 per million; 3 events per step, 1 more per retry        | sourced    | [4]                                                                                                              |
+| Workflow events from daily jobs                 | 270 a month                                                 | assumption | 3 jobs a day, 3 events each                                                                                      |
+| Vercel Observability Plus                       | $1.20 per million events                                    | sourced    | [5]                                                                                                              |
+| Neon Launch                                     | $0.106 per CU-hour                                          | sourced    | [6]                                                                                                              |
+| Neon Scale                                      | $0.222 per CU-hour                                          | sourced    | [6]                                                                                                              |
+| Neon average compute                            | 0.25 CU at 100 and 1,000; 0.5 CU at 10,000; 2 CU at 100,000 | assumption | Range half to double                                                                                             |
+| Neon hours awake a month                        | 360, 540, 720, 720                                          | assumption | Autosuspend while idle                                                                                           |
+| Resend                                          | Free 3,000 a month (100 a day); Pro 50K $20; Pro 100K $35   | sourced    | [8]                                                                                                              |
+| Domain, `.com`                                  | $11.81 a year                                               | sourced    | [9] (Porkbun; Vercel's price not found)                                                                          |
+| Claude Ultra                                    | $200 a month                                                | sourced    | [10]                                                                                                             |
+| GitHub Free                                     | $0                                                          | sourced    | [11]                                                                                                             |
+| Operations stack                                | $12.20 / $28.58 / $47.36 / $268.03                          | derived    | Lanes B and H: error events, uptime, log drain, restore test, DMARC reports and tracing (see "Operations Stack") |
+| Maintenance hours a month (low / median / high) | 27.9 / 29.9 / 39.8                                          | derived    | Lane D, from 2,388 build hours                                                                                   |
+| Incident hours a month (low / median / high)    | 2.4 / 19.5 / 36.6                                           | derived    | Lane D                                                                                                           |
+| Contractor hourly rate                          | $95 / $122.50 / $150                                        | sourced    | [29] and Lane D's rate sources                                                                                   |
+| Loaded-salary hourly rate                       | $137.97 / $147.81 / $157.65                                 | derived    | $286,977 to $327,922 a year ÷ 2,080 h, [29]                                                                      |
+| Washington retailing B&O                        | 0.471%, less a credit of up to $55 a month                  | sourced    | [26]                                                                                                             |
+| Stripe card fee                                 | 2.9% + 30¢; Billing 0.7%; Tax Basic 0.5%                    | sourced    | [30] [31]                                                                                                        |
+| Managed Payments                                | +3.5% per charge, tax included                              | sourced    | [32]                                                                                                             |
 
 B&O means business and occupation tax, Washington's tax on gross receipts rather than profit. CU-hour means one compute unit running for one hour (a compute unit is Neon's measure of CPU and memory).
 
@@ -178,10 +178,11 @@ A `.com` is $11.81 a year at Porkbun [9], or $0.98 a month. Vercel's `.com` pric
 | Resend tier                                         |    Free | Pro 50K | Pro 50K | Scale 500K |
 | Resend                                              |   $0.00 |  $20.00 |  $20.00 |    $350.00 |
 | Domain (.com, Porkbun)                              |   $0.98 |   $0.98 |   $0.98 |      $0.98 |
-| Operations stack (Lane B)                           |   $0.03 |  $15.03 |  $32.03 |    $112.03 |
-| Platform and operations total                       |  $30.67 |  $71.36 | $121.29 |    $922.55 |
+| Operations stack (Lanes B and H)                    |  $12.20 |  $28.58 |  $47.36 |    $268.03 |
+| of which server-side tracing (10% sampled)          |   $0.17 |   $1.55 |  $15.33 |    $142.00 |
+| Platform and operations total                       |  $42.84 |  $84.91 | $136.62 |  $1,078.55 |
 | Claude Ultra                                        | $200.00 | $200.00 | $200.00 |    $200.00 |
-| Cash costs                                          | $230.67 | $271.36 | $321.29 |  $1,122.55 |
+| Cash costs                                          | $242.84 | $284.91 | $336.62 |  $1,278.55 |
 
 ## CI
 
@@ -195,17 +196,19 @@ Claude Ultra is **$200 a month** [10], 10x the usage of Pro, and it is the large
 
 ## Operations Stack
 
-This covers error tracking, uptime checks, log storage and paging. Lane B assumed 5 error events and 1 MB of logs per account per month, 8 monitors, and 1 responder (2 from 10,000).
+This covers error tracking, uptime checks, log storage and paging. Lane H added eight gaps below. Lane B assumed 5 error events and 1 MB of logs per account per month, 8 monitors, and 1 responder (2 from 10,000).
 
-| Category                     | Recommended                                          |   100 |  1,000 | 10,000 | 100,000 |
-| ---------------------------- | ---------------------------------------------------- | ----: | -----: | -----: | ------: |
-| Error tracking               | GlitchTip hosted [19]                                |    $0 |    $15 |    $15 |     $50 |
-| Uptime checks                | UptimeRobot [20]                                     |    $0 |     $0 |    $12 |     $12 |
-| Logs                         | Vercel drain fee [21], stored in Axiom Personal [22] |    $0 |     $0 |     $5 |     $50 |
-| On-call paging               | PagerDuty Free [23]                                  |    $0 |     $0 |     $0 |      $0 |
-| Dependency and secret checks | GitHub built-ins and Socket Free [24]                |    $0 |     $0 |     $0 |      $0 |
-| Restore test                 | a scheduled restore, Neon storage                    | $0.03 |  $0.03 |  $0.03 |   $0.03 |
-| Total                        |                                                      | $0.03 | $15.03 | $32.03 | $112.03 |
+| Category                     | Recommended                                          |    100 |  1,000 | 10,000 | 100,000 |
+| ---------------------------- | ---------------------------------------------------- | -----: | -----: | -----: | ------: |
+| Error tracking               | GlitchTip hosted [19]                                |     $0 |    $15 |    $15 |     $50 |
+| Uptime checks                | UptimeRobot Solo [20] [H4]                           |    $12 |    $12 |    $12 |     $12 |
+| Logs                         | Vercel drain fee [21], stored in Axiom Personal [22] |     $0 |     $0 |     $5 |     $50 |
+| On-call paging               | PagerDuty Free [23]                                  |     $0 |     $0 |     $0 |      $0 |
+| Dependency and secret checks | GitHub built-ins and Socket Free [24]                |     $0 |     $0 |     $0 |      $0 |
+| Restore test                 | a scheduled restore, Neon storage                    |  $0.03 |  $0.03 |  $0.03 |   $0.03 |
+| Email deliverability         | Postmark DMARC digests [H3]                          |     $0 |     $0 |     $0 |     $14 |
+| Server-side tracing          | Vercel tracing at 10% sampling [H6]                  |  $0.17 |  $1.55 | $15.33 | $142.00 |
+| Total                        |                                                      | $12.20 | $28.58 | $47.36 | $268.03 |
 
 Vercel Pro and Observability Plus are left out of this table because they are priced above. Alternatives: Sentry Team at $29 a month, Bugsink, and Better Stack on-call at $29 per responder on an annual plan.
 
@@ -217,9 +220,29 @@ Vercel Pro and Observability Plus are left out of this table because they are pr
 
 - GlitchTip uses the Sentry SDK with its client file deleted. That is to be proved in a proof of concept, and its hosted privacy terms were not found.
 - Each adopted vendor must be added to the privacy policy's list of processors. PagerDuty's data processing agreement was not fetched.
-- UptimeRobot heartbeat monitors are unconfirmed.
+- UptimeRobot Free has no heartbeat monitors (Lane H, [H4]), so Solo at $12 a month is priced from 100 paying seats. This corrects Lane B.
 - The availability of GitHub's dependency-review action on public repositories is in conflict between two pages.
 - **Bot Protection.** Vercel's Bot Protection challenge mode serves a JavaScript challenge to non-browser traffic. I need you to decide whether the Code of Ethics allows that. Log mode runs no script.
+
+### Operations Gaps (Lane H)
+
+Lane H, fetched 2026-11-06, covers eight things Lane B left open. Its sizes were written as "accounts" but were briefed as paying seats. Only tracing depends on volume, and it assumes 300 requests per account a month, 20 spans per request and 10% sampling (an assumption). Per-account volume applies to **total accounts**, so the table above prices tracing on those: $0.17 / $1.55 / $15.33 / $142.00. Read as paying seats, as Lane H did, it would be $0.03 / $0.30 / $3.00 / $30.00. Every other pick has a flat price. Each vendor named here must be added to the privacy policy's list of processors in the same change.
+
+**1. Spend alerts and caps.** Included: Vercel Spend Management on Pro at no extra cost, with a budget, notices at 50%, 75% and 100%, and a signed webhook [H1]; Neon spending notifications on Launch and Scale, which alert but do not stop usage, and Neon consumption limits, which are hard caps [H1]. Pick: a Vercel budget with a webhook, Neon notifications and a Neon `compute_time_seconds` quota, with Resend pay-as-you-go left off. Price: $0 / $0 / $0 / $0. Reason: every piece is free and already sits with an existing processor. Vercel's "Pause Production Deployments" setting should stay off, because a 503 for every paying account is worse than a bill; this is an owner decision.
+
+**2. Database health.** Included: the Neon console monitoring page and the `pg_stat_statements` extension [H2]. Pick: those, a weekly look at Query performance, and a daily cron that reads `pg_stat_activity` and database size and calls the alert webhook past a threshold. Price: $0 at every size. Reason: pganalyze costs $149 a month, more than the whole Lane B stack, and gets less on Neon [H2]. Reconsider it only at 100,000 on Neon Scale.
+
+**3. Email deliverability.** Included: Resend webhooks for bounces, complaints and failures, and automatic suppression after a hard bounce or complaint [H3]. Pick: route those events to the alert route, make DMARC required with `rua=` pointing at Postmark's free weekly digest, and register the domain in Google Postmaster Tools. Price: $0 / $0 / $0 / $14 (Postmark paid digests, 60 days of history, from 100,000). Reason: every step is free at the current volume. Leave open and click tracking off, because they need tracking pixels. Postmark and Google become processors, but they receive aggregate reports only.
+
+**4. Certificate and DNS expiry.** Included: Vercel renews certificates automatically and notifies on failure, and a domain bought through Vercel auto-renews [H4]. Pick: UptimeRobot Solo, which monitors certificate and domain expiry and, unlike Free, includes heartbeat monitors [H4]. Price: $12 at every size. Reason: Solo is needed for the three cron heartbeats anyway, so expiry monitoring costs nothing extra. UptimeRobot is already a Lane B processor.
+
+**5. Payment-side monitoring.** Included: Stripe Radar Lite, free with payment processing from 22 January 2027, fraud alerts, dispute notices, and Smart Retries inside Billing's 0.7% [H5]. Pick: Radar Lite, with `charge.dispute.created` and `radar.early_fraud_warning.created` sent to the paging route, and the last `invoice.payment_failed` retry sent to the daily digest. Price: $0 a month; a dispute costs $15, plus $15 to counter it, refunded if won [H5]. Reason: a dispute has a deadline of 7 to 21 days, and Lite with webhooks covers one operator. Stripe advises loading Stripe.js on every page for better risk signals, which conflicts with the no-browser-script rule; hosted Checkout collects the same signals on Stripe's page and gives up part of the risk model's accuracy. This is an owner decision.
+
+**6. Server-side tracing.** Included: Vercel tracing on every plan, $0.50 per 1M span units on Pro, 14 days of traces, set up with `@vercel/otel` [H6]. Pick: native tracing at 10% sampling. Price: see the table above. Reason: it is the cheapest option fetched at every size and adds no processor. Span attributes must not carry email addresses or request bodies.
+
+**7. Secrets rotation and vulnerability disclosure.** Included: Vercel Secret variables, Better Auth's versioned secrets, Stripe's 7-day key overlap, Neon's immediate password reset (no overlap, so rotate through a second role), GitHub private vulnerability reporting, and `/.well-known/security.txt` under RFC 9116 [H7]. Pick: all of them, one rotation runbook in `claude-docs/` with a section per vendor, a yearly rotation, a `SECURITY.md`, and a `security.txt` that the yearly rotation renews. Price: $0 / $0 / $0 / $0. Reason: every step is free and native. Serving `security.txt` needs CLAUDE.md rule 1's `/.well-known/*.json` exception widened to name it, or a static file under `public/.well-known/`; this is an owner decision.
+
+**8. Incident communication and runbooks.** Included: UptimeRobot Solo's public status page on its own domain, without subscribers, and Resend's mail path to every account [H8]. Pick: the Solo status page on a `status.` subdomain, a Resend mail to the accounts an incident affects, and a one-page runbook in `claude-docs/ops/` using PagerDuty's structure and Google's postmortem headings. Price: $0 beyond Solo. Reason: no subscriber addresses go to a new processor. Statuspage, Instatus and UptimeRobot Team each hold subscriber addresses; Team adds $27 a month.
 
 ## Maintenance and Incident Response
 
@@ -254,14 +277,14 @@ All rows are dollars a month. Cash costs are the Platform total plus Claude Ultr
 
 | Row                                                       |     100 |    1000 |   10000 |  100000 |
 | --------------------------------------------------------- | ------: | ------: | ------: | ------: |
-| Cash costs                                                |    $231 |    $271 |    $321 |  $1,123 |
-| Cash + maintenance at contractor rate                     |  $6,037 |  $6,078 |  $6,128 |  $6,929 |
-| Cash + maintenance at loaded-salary rate                  |  $7,237 |  $7,278 |  $7,327 |  $8,129 |
-| Cash + full-time job (loaded $250k, low)                  | $24,145 | $24,186 | $24,236 | $25,037 |
-| Cash + full-time job (loaded $250k, high)                 | $27,558 | $27,598 | $27,648 | $28,449 |
-| Cash + median maintenance + promised on-call (contractor) |  $8,377 |  $8,418 |  $8,468 |  $9,269 |
+| Cash costs                                                |    $243 |    $285 |    $337 |  $1,279 |
+| Cash + maintenance at contractor rate                     |  $6,049 |  $6,091 |  $6,143 |  $7,085 |
+| Cash + maintenance at loaded-salary rate                  |  $7,249 |  $7,291 |  $7,343 |  $8,285 |
+| Cash + full-time job (loaded $250k, low)                  | $24,158 | $24,200 | $24,251 | $25,193 |
+| Cash + full-time job (loaded $250k, high)                 | $27,570 | $27,612 | $27,663 | $28,605 |
+| Cash + median maintenance + promised on-call (contractor) |  $8,389 |  $8,431 |  $8,483 |  $9,425 |
 
-Reading the table: **Claude Ultra is 87% of the cash cost at 100 paying seats.** Cash costs reach about $1,123 at 100,000 paying seats (against $552 before the overhead accounts were counted), because 473,333 accounts use the platform. Labour dwarfs cash at every size; the median maintenance hours cost about 21 times the cash costs at 1,000 paying seats.
+Reading the table: **Claude Ultra is 82% of the cash cost at 100 paying seats.** Cash costs reach about $1,279 at 100,000 paying seats (against $552 before the overhead accounts were counted), because 473,333 accounts use the platform. Labour dwarfs cash at every size; the median maintenance hours cost about 20 times the cash costs at 1,000 paying seats.
 
 ## Enterprise Thresholds
 
@@ -352,3 +375,12 @@ All fetched 2026-11-06.
 - [G12] Mighty Networks pricing: https://www.mightynetworks.com/pricing
 - [G13] Ghost, complimentary plans: https://ghost.org/help/complimentary-plans
 - [G14] GitHub Copilot Pro free access: https://docs.github.com/en/copilot/how-tos/manage-your-account/get-free-access-to-copilot-pro
+
+- [H1] Spend: https://vercel.com/docs/spend-management ; https://neon.com/docs/introduction/plans ; https://neon.com/docs/guides/consumption-limits ; https://resend.com/pricing (fetched 2026-11-06)
+- [H2] Database health: https://neon.com/docs/introduction/monitoring-page ; https://neon.com/docs/extensions/pg_stat_statements ; https://pganalyze.com/pricing (fetched 2026-11-06)
+- [H3] Deliverability: https://resend.com/docs/dashboard/webhooks/event-types ; https://resend.com/docs/dashboard/emails/email-suppressions ; https://dmarc.postmarkapp.com/ ; https://support.google.com/a/answer/9981691 (fetched 2026-11-06)
+- [H4] Expiry and heartbeats: https://vercel.com/docs/domains/working-with-ssl ; https://vercel.com/docs/domains/renew-a-domain ; https://uptimerobot.com/pricing/ ; https://uptimerobot.com/pricing.md (fetched 2026-11-06)
+- [H5] Payments: https://docs.stripe.com/radar/how-radar-works ; https://support.stripe.com/questions/updates-to-radar-pricing-(january-2027) ; https://docs.stripe.com/disputes/responding ; https://stripe.com/pricing ; https://docs.stripe.com/billing/revenue-recovery/smart-retries ; https://docs.stripe.com/radar/optimize-risk-factors (fetched 2026-11-06)
+- [H6] Tracing: https://vercel.com/docs/tracing ; https://vercel.com/docs/tracing/configure-tracing ; https://vercel.com/docs/tracing/instrumentation (fetched 2026-11-06)
+- [H7] Secrets and disclosure: https://vercel.com/docs/environment-variables/rotating-secrets ; https://better-auth.com/docs/1.6/reference/security ; https://neon.com/docs/manage/roles ; https://docs.stripe.com/keys ; https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability ; https://www.rfc-editor.org/rfc/rfc9116 (fetched 2026-11-06)
+- [H8] Incident communication: https://uptimerobot.com/pricing/ ; https://www.atlassian.com/software/statuspage/pricing ; https://instatus.com/pricing ; https://response.pagerduty.com/ ; https://sre.google/sre-book/example-postmortem/ (fetched 2026-11-06)
