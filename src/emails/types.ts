@@ -108,6 +108,8 @@ export interface SupportStatusProps extends BaseEmailProps {
   requestSubject: string;
   /** True for a sender with no account: `url` is then the support page, which asks for no sign-in. */
   signedOut?: boolean;
+  /** With `signedOut`: `url` is the request’s own page behind a mailed link, not the support form. */
+  viewLink?: boolean;
 }
 
 /** Told a sender that their support request arrived. `url` opens the request, or the support page for a signed-out sender. */
@@ -124,6 +126,8 @@ export interface SupportClosingSoonProps extends SupportStatusProps {
 export interface SupportEmailReplyProps extends BaseEmailProps {
   /** The subject of the request answered, as its sender wrote it; the template cuts it to length. */
   requestSubject: string;
+  /** `url` is the request’s own page behind a mailed link, not the support form. */
+  viewLink?: boolean;
 }
 
 /** Told to a user that a keeper timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */

@@ -27,7 +27,14 @@ export function supportClosingNoticeMessage(
 ): Promise<Message> {
   const signedOut = requestId === null;
   const url = `${origin}${signedOut ? signedOutPath(viewToken) : supportRequestPath(requestId)}`;
-  return supportClosingSoonMessage({ to, url, requestSubject, signedOut, timeLeftMs });
+  return supportClosingSoonMessage({
+    to,
+    url,
+    requestSubject,
+    signedOut,
+    viewLink: signedOut && Boolean(viewToken),
+    timeLeftMs,
+  });
 }
 
 /**
@@ -50,6 +57,7 @@ export function supportReplyMessage(
       to,
       url: `${origin}${signedOutPath(reply.viewToken)}`,
       requestSubject: reply.requestSubject,
+      viewLink: Boolean(reply.viewToken),
     });
   const url = `${origin}${supportRequestPath(reply.requestId)}`;
   return supportReplyNoticeMessage({ to, url, requestSubject: reply.requestSubject });
@@ -73,5 +81,11 @@ export function supportStatusMessage(
   viewToken?: string,
 ): Promise<Message> {
   const url = `${origin}${requestId === null ? signedOutPath(viewToken) : supportRequestPath(requestId)}`;
-  return STATUS_MESSAGES[mail]({ to, url, requestSubject, signedOut: requestId === null });
+  return STATUS_MESSAGES[mail]({
+    to,
+    url,
+    requestSubject,
+    signedOut: requestId === null,
+    viewLink: requestId === null && Boolean(viewToken),
+  });
 }

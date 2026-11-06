@@ -412,6 +412,15 @@ export function IgnoreNote({ when }: { when: string }) {
   return h(Paragraph, { muted: true }, `${when}, you can ignore this email.`);
 }
 
+/** The closing line of a mail to a signed-out sender, whose link is the only way to answer. */
+export function LinkOnlyNote() {
+  return h(
+    Paragraph,
+    { muted: true },
+    'Replies to this email are not read. To answer, use the link above.',
+  );
+}
+
 /** Renders a template once per part, so the text part is written for text, not stripped from the HTML. */
 export async function renderParts(
   email: (part: Part) => ReactElement,
