@@ -128,13 +128,17 @@ describe('Mutation.createAdminInvitation', () => {
     return !isEnumType(named) && !['Boolean', 'Int', 'Float'].includes(named.name);
   };
 
+  // Named for the mailed token it takes as its argument; it answers the request, whose own type the scan still reads.
+  const TAKES_A_TOKEN = ['Query.supportRequestByViewToken'];
+
   it('has no token, hash or link field on any type but the card mint result', () => {
     const carriers: string[] = [];
     for (const type of Object.values(schema.getTypeMap())) {
       if (!isObjectType(type) || type.name.startsWith('__')) continue;
       for (const [name, field] of Object.entries(type.getFields())) {
-        if (/token|hash|link(?!ed)/i.test(name) && canCarryText(field))
-          carriers.push(`${type.name}.${name}`);
+        const path = `${type.name}.${name}`;
+        if (TAKES_A_TOKEN.includes(path)) continue;
+        if (/token|hash|link(?!ed)/i.test(name) && canCarryText(field)) carriers.push(path);
       }
     }
     expect(carriers).toEqual(['MintedInvitationCards.tokens']);

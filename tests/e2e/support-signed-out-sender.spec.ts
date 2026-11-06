@@ -7,7 +7,7 @@ import { latestMessageTo } from './mailpit';
 // gets back to the request through the link the receipt mails, never through a session
 // (claude-docs/design-decisions/m15.48-mailed-link.md).
 
-const VIEW_LINK = /\/support\/request\/([A-Za-z0-9_-]{32,})/;
+const VIEW_LINK = /\/support\/request#([A-Za-z0-9_-]{32,})/;
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

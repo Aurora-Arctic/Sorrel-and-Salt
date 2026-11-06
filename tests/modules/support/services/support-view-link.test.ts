@@ -50,7 +50,7 @@ useTestDatabase((client) => {
 
 const ORIGIN = 'http://localhost:3000';
 const mail: SupportNotifier = { origin: async () => ORIGIN };
-const VIEW_LINK = /http:\/\/localhost:3000\/support\/request\/([A-Za-z0-9_-]{32,})/;
+const VIEW_LINK = /http:\/\/localhost:3000\/support\/request#([A-Za-z0-9_-]{32,})/;
 const sha256Hex = (token: string) => createHash('sha256').update(token).digest('hex');
 /** Day 6 after a request resolved just now, inside its closing-soon window. */
 const noticeDay = () => Date.now() + 6 * 24 * 60 * 60 * 1000;
@@ -107,7 +107,7 @@ describe('the receipt’s link', () => {
     const { id, receipt, token } = await sendSignedOut();
 
     expect(receipt.to).toBe('visitor@example.test');
-    expect(receipt.html).toContain(`/support/request/${token}`);
+    expect(receipt.html).toContain(`/support/request#${token}`);
     expect(await hashOf(id)).toBe(sha256Hex(token));
     const [row] = await sql`select * from support_requests where id = ${id}`;
     expect(JSON.stringify(row)).not.toContain(token);

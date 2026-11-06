@@ -8,6 +8,7 @@ import type { SupportNotifier, SupportTimeoutRow } from '@/modules/support';
 import type { Session } from '@/lib/session';
 import { C, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { run } from '../../../support/graphql/run';
 import { insertSupportRequest } from '../../../support/db/insert-support-request';
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { PAUSE_MESSAGE, noPauseNotifier } from '../../../support/email-verification';
@@ -18,7 +19,12 @@ import { PAUSE_MESSAGE, noPauseNotifier } from '../../../support/email-verificat
 // (claude-docs/design-decisions/m15.48-mailed-link.md). The mailed-link reply is support-view-reply.test.ts's, and the
 // claim by email tests/db/support-claim-by-email.test.ts's.
 
-const { sendSignedOutSupportRequest, sendSupportRequest, timeOutSupportSender } = support;
+const {
+  liftSupportTimeout,
+  sendSignedOutSupportRequest,
+  sendSupportRequest,
+  timeOutSupportSender,
+} = support;
 
 /** The keeper's time-out of a signed-out request's sender, named by the request, as this task adds it. */
 const timeOutSignedOutSender = (
@@ -215,6 +221,68 @@ describe('a keeper timing out a signed-out request’s sender', () => {
 
     expect(error).toBeInstanceOf(Forbidden);
     expect(await sql`select 1 from support_timeouts`).toHaveLength(0);
+  });
+});
+
+// A keeper reads the time-outs on a request through its `timeouts` field. A signed-out request's sender is the stand-in
+// account, so the field has to find the address time-out by the request's address key, not by the account.
+const OPENED = /* GraphQL */ `
+  query ($id: ID!) {
+    supportRequest(id: $id) {
+      timeouts {
+        id
+        userId
+        liftedAt
+      }
+    }
+  }
+`;
+type Opened = {
+  supportRequest: {
+    timeouts: { id: string; userId: string | null; liftedAt: string | null }[];
+  } | null;
+};
+
+describe('a keeper lifting a signed-out sender’s time-out', () => {
+  it('sees the standing address time-out on the request, lifts it, and the address sends again', async () => {
+    const requestId = await insertSupportRequest(sql, {
+      createdBy: SIGNED_OUT_SENDER_ID,
+      senderEmail: TIMED_OUT,
+    });
+    const timeoutId = await insertSupportTimeout(sql, null, { address: TIMED_OUT });
+    // Why lifting matters: the time-out names no account, only the address key, and it refuses the address's next send.
+    expect(
+      await sql`select user_id, address_key from support_timeouts where id = ${timeoutId}`,
+    ).toEqual([{ user_id: null, address_key: addressCountKey(TIMED_OUT) }]);
+    expect(await failureOf(sendSignedOut(TIMED_OUT))).toBeInstanceOf(Forbidden);
+
+    const opened = await run<Opened>(asUser(E), OPENED, { id: requestId });
+
+    expect(opened.errors).toBeUndefined();
+    expect(opened.data?.supportRequest?.timeouts).toEqual([
+      { id: timeoutId, userId: null, liftedAt: null },
+    ]);
+
+    const listed = opened.data!.supportRequest!.timeouts[0]!.id;
+    await liftSupportTimeout(asUser(E), listed);
+
+    const [row] = await sql`select lifted_at from support_timeouts where id = ${timeoutId}`;
+    expect(row!.lifted_at).toBeInstanceOf(Date);
+    await sendSignedOut(TIMED_OUT);
+    expect(await requestsFrom(TIMED_OUT)).toBe(2);
+  });
+
+  it('lists no other address’s time-out on the request', async () => {
+    const requestId = await insertSupportRequest(sql, {
+      createdBy: SIGNED_OUT_SENDER_ID,
+      senderEmail: TIMED_OUT,
+    });
+    const own = await insertSupportTimeout(sql, null, { address: TIMED_OUT });
+    await insertSupportTimeout(sql, null, { address: 'someone-else@example.test' });
+
+    const opened = await run<Opened>(asUser(E), OPENED, { id: requestId });
+
+    expect(opened.data?.supportRequest?.timeouts.map(({ id }) => id)).toEqual([own]);
   });
 });
 

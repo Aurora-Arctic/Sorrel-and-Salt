@@ -11,6 +11,8 @@ import type {
   SupportViewer,
 } from '@/components/SupportRequests/types';
 import type {
+  LiftSupportTimeoutMutation,
+  LiftSupportTimeoutMutationVariables,
   ReplyToSupportRequestMutation,
   ReplyToSupportRequestMutationVariables,
   SetSupportRequestIssueUrlMutation,
@@ -459,6 +461,41 @@ describe('Time-Out', () => {
     expect(panel.queryByText(/First warning/)).toBeNull();
     expect(panel.getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
     expect(panel.queryByLabelText('For')).toBeNull();
+  });
+
+  // A signed-out request’s time-out names its address and no account, and a keeper lifts it from the request as any other.
+  it('shows a signed-out sender’s standing address time-out with Lift in place of the form, and lifts it by its id after asking', async () => {
+    const lifted: LiftSupportTimeoutMutationVariables[] = [];
+    mockGraphQLMutation<LiftSupportTimeoutMutation, LiftSupportTimeoutMutationVariables>(
+      'LiftSupportTimeout',
+      (variables) => {
+        lifted.push(variables);
+        return { liftSupportTimeout: { id: 't-address' } };
+      },
+    );
+    open(ADMIN, {
+      sender: { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' },
+      signedOut: true,
+      timeouts: [
+        {
+          id: 't-address',
+          until: null,
+          note: 'Repeated sends',
+          liftedAt: null,
+          createdAt: new Date('2026-10-01T00:00:00Z'),
+          setBy: { id: 'admin-1', name: 'Ash Warden' },
+          liftedBy: null,
+        },
+      ],
+    });
+    openTimeOut();
+    const panel = within(dialog());
+    expect(panel.queryByLabelText('For')).toBeNull();
+
+    fireEvent.click(panel.getByRole('button', { name: 'Lift' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lift Time-Out' }));
+
+    await waitFor(() => expect(lifted).toEqual([{ id: 't-address' }]));
   });
 });
 

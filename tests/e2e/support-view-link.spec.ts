@@ -3,17 +3,22 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
 
-// Against the built server: the link a signed-out sender's receipt carries opens that one request with no session, and
-// any other token is a 404 (claude-docs/design-decisions/m15.48-mailed-link.md, "A link in each mail that opens the
-// request"). Which tokens the service honours is tests/modules/support/services/support-view-link.test.ts's.
+// Against the built server: the link a signed-out sender's receipt carries holds its token in the URL fragment, which the
+// browser never sends to the server or in a Referer header. The page reads it, drops it from the address bar, and asks
+// for the request, so a reload shows nothing and the page is never stored. Any other token shows the same nothing, and the
+// old path form is a 404 (claude-docs/design-decisions/m15.48-mailed-link.md, "A link in each mail that opens the
+// request"). Which tokens the query honours is tests/modules/support/services/support-view-query.test.ts's.
 
 const SUBJECT = 'The Testwort jar will not open';
+const VIEW_LINK = /https?:\/\/\S+\/support\/request#([A-Za-z0-9_-]{32,})/;
+/** What the page says when it has no request to show. */
+const OPEN_THE_LATEST = /latest email/i;
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('the receipt’s link opens the request with no session and takes a reply, and a token no mail carried is a 404', async ({
+test('the receipt’s link opens the request from its fragment with no session, takes a reply, and shows nothing on a reload', async ({
   page,
   browser,
 }) => {
@@ -28,25 +33,26 @@ test('the receipt’s link opens the request with no session and takes a reply, 
   await expect(page.getByText(/within 5 working days/)).toBeVisible();
 
   const receipt = await latestMessageTo(address, 20_000);
-  const link = receipt.text.match(/https?:\/\/\S+\/support\/request\/[A-Za-z0-9_-]+/)?.[0];
-  expect(link, receipt.text).toBeDefined();
-  const path = new URL(link!).pathname;
+  const token = receipt.text.match(VIEW_LINK)?.[1];
+  expect(token, receipt.text).toBeDefined();
 
   // A fresh browser, with no cookie, as the visitor opening the mail on another device.
   const elsewhere = await browser.newContext();
   const visitor = await elsewhere.newPage();
   expect(await elsewhere.cookies()).toEqual([]);
 
-  const opened = await visitor.goto(path);
+  const opened = await visitor.goto(`/support/request#${token}`);
   expect(opened?.status()).toBe(200);
-  // The token is in the path, so the page tells the browser to send no referrer from it.
+  expect(await opened?.headerValue('cache-control')).toContain('no-store');
   expect(await opened?.headerValue('referrer-policy')).toBe('no-referrer');
   await expect(visitor.getByRole('heading', { name: SUBJECT })).toBeVisible();
+  // The token leaves the address bar once read, so it is not kept in history or shown over a shoulder.
+  expect(new URL(visitor.url()).hash).toBe('');
   expect(await elsewhere.cookies()).toEqual([]);
   const robots = await visitor.locator('meta[name="robots"]').getAttribute('content');
   expect(robots).toMatch(/noindex/);
 
-  // A reply from the page, still with no session: it is posted, and shows on the request when the page is opened again.
+  // A reply from the page, still with no session.
   const body = 'The Testwort lid is still stuck.';
   await visitor.getByRole('textbox', { name: 'Reply' }).fill(body);
   // Waits on the mutation itself, then on the reply in the thread: the reply box holds the same text until it clears.
@@ -59,15 +65,22 @@ test('the receipt’s link opens the request with no session and takes a reply, 
   const answer = await (await posted).json();
   expect(answer.errors).toBeUndefined();
   expect(answer.data).toEqual({ replyToSupportRequestByViewToken: true });
-  const inThread = visitor.getByRole('listitem').filter({ hasText: body });
-  await expect(inThread).toBeVisible();
-  await visitor.goto(path);
-  await expect(inThread).toBeVisible();
+  await expect(visitor.getByRole('listitem').filter({ hasText: body })).toBeVisible();
   expect(await elsewhere.cookies()).toEqual([]);
 
-  const wrong = await visitor.goto(`${path.slice(0, -1)}${path.endsWith('x') ? 'y' : 'x'}`);
-  expect(wrong?.status()).toBe(404);
-  const missing = await visitor.goto('/support/request/not-a-token');
-  expect(missing?.status()).toBe(404);
+  // With the token gone from the address, a reload has nothing to ask for, and says to open the latest email.
+  await visitor.reload();
+  await expect(visitor.getByText(OPEN_THE_LATEST)).toBeVisible();
+  await expect(visitor.getByRole('heading', { name: SUBJECT })).toHaveCount(0);
+
+  // A token no mail carried shows the same nothing. From a blank page, so the visit is a full load, not a hash change.
+  await visitor.goto('about:blank');
+  await visitor.goto(`/support/request#${token!.slice(0, -1)}${token!.endsWith('x') ? 'y' : 'x'}`);
+  await expect(visitor.getByText(OPEN_THE_LATEST)).toBeVisible();
+  await expect(visitor.getByRole('heading', { name: SUBJECT })).toHaveCount(0);
+
+  // The old form, with the token in the path the server sees, is gone.
+  const oldForm = await visitor.goto(`/support/request/${token}`);
+  expect(oldForm?.status()).toBe(404);
   await elsewhere.close();
 });

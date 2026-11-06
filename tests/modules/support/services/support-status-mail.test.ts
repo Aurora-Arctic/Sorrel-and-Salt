@@ -118,7 +118,7 @@ describe('the received mail', () => {
     expect(JSON.stringify(statusRuns())).not.toContain(SIGNED_OUT.subject);
     const [message] = await sendStatusRuns();
     expect(message!.to).toBe(SIGNED_OUT.email);
-    expect(message!.text).toMatch(/http:\/\/localhost:3000\/support\/request\/[A-Za-z0-9_-]{32,}/);
+    expect(message!.text).toMatch(/http:\/\/localhost:3000\/support\/request#[A-Za-z0-9_-]{32,}/);
     expect(message!.text).not.toContain('/account');
   });
 

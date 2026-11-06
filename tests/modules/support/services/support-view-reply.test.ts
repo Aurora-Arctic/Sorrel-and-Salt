@@ -51,7 +51,7 @@ useTestDatabase((client) => {
 
 const ORIGIN = 'http://localhost:3000';
 const mail: SupportNotifier = { origin: async () => ORIGIN };
-const VIEW_LINK = /\/support\/request\/([A-Za-z0-9_-]{32,})/;
+const VIEW_LINK = /\/support\/request#([A-Za-z0-9_-]{32,})/;
 const sha256Hex = (token: string) => createHash('sha256').update(token).digest('hex');
 const IP = '203.0.113.7';
 
