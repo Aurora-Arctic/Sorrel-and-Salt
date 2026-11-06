@@ -20,7 +20,7 @@ export function SupportEmailReply({
     EmailLayout,
     { preview: 'There is a reply to your support request.', heading: title, origin },
     h(Paragraph, null, `To read the reply and write back, ${actionVerb(part)}.`),
-    h(Paragraph, { muted: true }, 'Only the link in your latest email works.'),
+    h(Paragraph, { muted: true }, 'Only the link in the latest email works.'),
     h(Action, { href: url, label: 'Open the Request', part }),
   );
 }
