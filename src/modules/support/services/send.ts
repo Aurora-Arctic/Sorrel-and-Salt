@@ -33,7 +33,7 @@ export function refuseOverLimit(recent: number): void {
  *
  * The sender is mailed a receipt once the request is saved.
  *
- * @throws {Forbidden} the address is unverified, the sender is timed out, or they have sent ten requests in 24 hours.
+ * @throws {Forbidden} the session is anonymous, the address is unverified, the sender is timed out, or they have sent ten requests in 24 hours.
  * @throws {ValidationError} the subject, message, path or error code is not acceptable.
  */
 export async function sendSupportRequest(
@@ -41,6 +41,9 @@ export async function sendSupportRequest(
   input: SupportRequestInput,
   notifier: SupportNotifier,
 ): Promise<SupportRequestRow> {
+  // An anonymous account sends with the signed-out form, which holds the limits that fit it.
+  if (session.anonymous)
+    throw new Forbidden('Send your request with the form for visitors without an account.');
   requireVerified(session);
   const values = parseInput(SupportRequestInput, input);
 
