@@ -30,6 +30,8 @@ export interface ListNavigation {
 export interface ListFrameProps {
   /** The list's own root class, beside `list-frame`: "user-list". */
   className?: string;
+  /** Draws the list as a placeholder: its controls disabled and the whole frame hidden from assistive technology, for a skeleton. */
+  disabled?: boolean;
   /** The filter, then the `ListBody`. */
   children: ReactNode;
 }

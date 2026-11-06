@@ -1,6 +1,14 @@
 'use client';
 
-import { type ReactElement, createContext, useContext, useEffect, useRef, useState } from 'react';
+import {
+  type ReactElement,
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { usePendingNavigation } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind } from './types';
@@ -20,7 +28,7 @@ export const ListNavigationContext = createContext<ListNavigation | null>(null);
  * Holds the navigation the filter, pager and body share; `pending` stays true until Next has rendered the new page
  * (claude-docs/components/list-frame.md, "The navigation provider").
  */
-const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
+const ListFrame = ({ className, disabled = false, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);
   const { pending: moving, navigate } = usePendingNavigation();
   const [leaving, setLeaving] = useState(false);
@@ -32,6 +40,20 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const [kind, setKind] = useState<ListNavigationKind>();
   // The address of the navigation last started, read only while one is pending.
   const [target, setTarget] = useState<string>();
+
+  // A list drawn as a placeholder: its real controls are disabled and the links taken out of the
+  // tab order, since the page they belong to has not arrived.
+  useLayoutEffect(() => {
+    if (!disabled) return;
+    for (const control of root.current?.querySelectorAll<HTMLElement>(
+      'input, select, textarea, button, a[href]',
+    ) ?? []) {
+      if (control instanceof HTMLAnchorElement) {
+        control.tabIndex = -1;
+        control.setAttribute('aria-disabled', 'true');
+      } else (control as HTMLInputElement).disabled = true;
+    }
+  }, [disabled]);
 
   // A pager end's page: once the transition ends the new page has rendered, so bring the
   // start of the list to the line the stuck search row leaves, if it is above that now. A
@@ -89,7 +111,12 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   };
   return (
     <ListNavigationContext.Provider value={value}>
-      <div ref={root} className={className ? `list-frame ${className}` : 'list-frame'}>
+      <div
+        ref={root}
+        className={className ? `list-frame ${className}` : 'list-frame'}
+        aria-hidden={disabled || undefined}
+        inert={disabled || undefined}
+      >
         {children}
       </div>
     </ListNavigationContext.Provider>
