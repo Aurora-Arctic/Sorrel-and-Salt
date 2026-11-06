@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import Skeleton from '../Skeleton';
 import type { PageHeaderProps } from './types';
 
 const classes = (...names: (string | false | undefined)[]): string =>
@@ -10,6 +11,7 @@ const classes = (...names: (string | false | undefined)[]): string =>
 // directly; an action that needs the browser is a client component of its own.
 const PageHeader = ({
   title,
+  pendingTitle,
   id,
   eyebrow,
   lede,
@@ -23,7 +25,13 @@ const PageHeader = ({
 }: PageHeaderProps): ReactElement => {
   // A tag makes the h1 a two-column grid, so it stays beside the title's first line when the title wraps.
   const focus = focusable ? { tabIndex: -1, 'data-view-heading': true } : {};
-  const heading = tag ? (
+  // A pending title draws a bar the height of the heading in the same box, so the head keeps its
+  // size; the heading is hidden from assistive technology, the shell's status saying Loading.
+  const heading = pendingTitle ? (
+    <h1 id={id} className={headingClassName} aria-hidden="true">
+      <Skeleton shape="line" quiet />
+    </h1>
+  ) : tag ? (
     <h1 id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
       <span>{title}</span> {tag}
     </h1>

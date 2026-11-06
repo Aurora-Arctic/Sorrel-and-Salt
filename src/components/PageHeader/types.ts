@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 
 export interface PageHeaderProps {
   /** The page's `h1`, title case, and what its tab title says too. */
-  title: string;
+  title?: string;
+  /** Draws a placeholder bar in the `h1` in place of the title, for a head whose title is not known yet: a skeleton's. */
+  pendingTitle?: boolean;
   /** The `h1`'s id, for a landmark or an article that takes the heading as its name. */
   id?: string;
   /**
