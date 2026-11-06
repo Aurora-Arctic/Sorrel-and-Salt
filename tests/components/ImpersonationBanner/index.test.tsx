@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ImpersonationBanner from '@/components/ImpersonationBanner';
-import { stubLocationAssign } from '../../support/location';
+import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 
 // The way out of an impersonation: every page, `/keepers` included, says whose session this is
 // and carries Stop (claude-docs/components/impersonation-banner.md).
@@ -111,5 +111,18 @@ describe('ImpersonationBanner', () => {
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
     expect(stopImpersonatingMock).toHaveBeenCalledTimes(2);
+  });
+
+  // The bar and the busy hint stay up through a full page load only when the page reports it is leaving first.
+  it('reports the page is leaving before it returns the admin to the user list', async () => {
+    const leaving = leavingAtEachLoad(assignMock);
+    stopImpersonatingMock.mockResolvedValue({ data: {}, error: null });
+    stubLocationAssign(assignMock);
+    render(<ImpersonationBanner {...BO} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stop Impersonating' }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/keepers/users'));
+    expect(leaving).toEqual([true]);
   });
 });

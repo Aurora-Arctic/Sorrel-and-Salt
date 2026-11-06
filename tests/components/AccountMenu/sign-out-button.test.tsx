@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import SignOutButton from '@/components/AccountMenu/sign-out-button';
 import { GENERIC_FAILURE } from '@/lib/graphql-failure';
+import { leavingAtEachLoad } from '../../support/location';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which happy-dom cannot follow.
@@ -81,5 +82,18 @@ describe('SignOutButton', () => {
     expect(screen.queryByRole('button', { name: /^Show the error/ })).toBeNull();
     expect(button).not.toHaveAccessibleDescription();
     expect(signOutMock).toHaveBeenCalledTimes(2);
+  });
+
+  // The bar and the busy hint stay up through a full page load only when the page reports it is leaving first.
+  it('reports the page is leaving before it opens /', async () => {
+    const leaving = leavingAtEachLoad(assignMock);
+    signOutMock.mockResolvedValue({ error: null });
+    vi.stubGlobal('location', { assign: assignMock });
+    render(<SignOutButton />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign Out' }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
+    expect(leaving).toEqual([true]);
   });
 });

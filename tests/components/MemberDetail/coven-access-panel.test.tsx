@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse } from 'msw/http';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import MemberDetail from '@/components/MemberDetail';
 import Modal from '@/components/Modal';
@@ -241,5 +241,40 @@ describe('CovenAccessPanel, while a pause stands', () => {
     expect(sent).toEqual([
       { name: 'LiftMemberAccessPause', variables: { workspaceId: 'w', userId: 'u' } },
     ]);
+  });
+});
+
+describe('CovenAccessPanel, while the pauses are read', () => {
+  // A test that stops early still lets the held answer go before happy-dom waits on the request, so it holds up no later test.
+  let release = () => {};
+  afterEach(() => release());
+
+  // The earlier pauses are a round trip away as the modal opens: their place holds a skeleton until they arrive.
+  it('draws a skeleton where the earlier pauses go until the read answers, then the pauses in its place', async () => {
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let requested = false;
+    server.use(
+      graphqlLink.query('MemberPauses', async () => {
+        requested = true;
+        await held;
+        return HttpResponse.json({
+          data: { workspace: { id: 'w', memberPauses: { edges: [{ node: LIFTED }] } } },
+        });
+      }),
+    );
+    renderPanel(null);
+    unfold();
+
+    // Precondition: the read is out, so the panel is waiting on it.
+    await waitFor(() => expect(requested).toBe(true));
+    expect(within(section()).queryByRole('status')).not.toBeNull();
+    expect(within(section()).queryByRole('list', { name: 'Earlier Pauses' })).toBeNull();
+
+    release();
+
+    expect(
+      await within(section()).findByRole('list', { name: 'Earlier Pauses' }),
+    ).toBeInTheDocument();
+    expect(within(section()).queryByRole('status')).toBeNull();
   });
 });

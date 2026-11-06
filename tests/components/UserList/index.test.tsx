@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
@@ -8,11 +8,12 @@ import type { UserListProps } from '@/components/UserList/types';
 import { SITE_ROLE_ACCESS } from '@/components/UserList/roles';
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
-import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import { FILTER_ROWS, drawnOnServer, filterForm } from '../../support/filter-form';
+import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
-import { stubLocationAssign } from '../../support/location';
+import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 
@@ -330,6 +331,20 @@ describe('UserList impersonation', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(assignMock).not.toHaveBeenCalled();
   });
+
+  // The bar and the busy hint stay up through a full page load only when the page reports it is leaving first.
+  it('reports the page is leaving before it opens the site as the row’s user', async () => {
+    const leaving = leavingAtEachLoad(assignMock);
+    impersonateUserMock.mockResolvedValue({ data: {}, error: null });
+    stubLocationAssign(assignMock);
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    openFor(BO.name);
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
+    expect(leaving).toEqual([true]);
+  });
 });
 
 // The search applies from its magnifier or Enter, a role or Needs
@@ -386,6 +401,53 @@ describe('UserList filter', () => {
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+  // The filtered list is a server render away: the row stays busy, and the rows give way to their
+  // skeleton, until it arrives, and the wait carries the filtered address, so the skeleton chosen is the list's.
+  it('stays busy until the filtered list arrives, the wait carrying the filtered address', async () => {
+    let state: { busy: boolean; href?: string } | undefined;
+    function Probe() {
+      const current = useNavigationState();
+      // Read from committed renders only, as a suspended transition re-runs bodies with the optimistic value put back.
+      useEffect(() => {
+        state = current;
+      });
+      return null;
+    }
+    let arrive = () => {};
+    const arrives = new Promise<void>((resolve) => (arrive = resolve));
+    render(
+      <Navigating push={router.push} arrives={arrives}>
+        <UserList {...props()} />
+        <Probe />
+      </Navigating>,
+    );
+    const filter = filterForm('Filter Users');
+    // Precondition: at rest the row is idle, the rows are shown and nothing says it is loading.
+    expect(filter).not.toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('row', { name: /Bo Fixturewort/ })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
+    });
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    const sentTo = new URL(String(router.push.mock.calls[0]?.[0]), 'https://sorrel.test');
+    expect(sentTo.pathname).toBe('/keepers/users');
+    expect(sentTo.searchParams.has('awaiting')).toBe(true);
+    expect(state).toEqual({ busy: true, href: router.push.mock.calls[0]?.[0] });
+    expect(filter).toHaveAttribute('aria-busy', 'true');
+    expect(filter).toBeInTheDocument();
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('row', { name: /Bo Fixturewort/ })).not.toBeInTheDocument();
+
+    await act(async () => arrive());
+
+    expect(state?.busy).toBe(false);
+    expect(filter).not.toHaveAttribute('aria-busy', 'true');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
 
   // A select-only box once hydrated, as every
   // closed set in the row is, over the native select the server draws.

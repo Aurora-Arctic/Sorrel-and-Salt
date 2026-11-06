@@ -11,6 +11,7 @@ import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
 import { renderInModal } from '../../support/discard-guard';
 import { press, type } from '../../support/interact';
+import { leavingAtEachLoad, stubLocationReload } from '../../support/location';
 import {
   ENTRY_ID,
   WORKSPACE_ID,
@@ -60,6 +61,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe('a new ingredient', () => {
@@ -221,6 +223,25 @@ describe('a save someone else got in first', () => {
 
     await waitFor(() => expect(onReload).toHaveBeenCalledOnce());
     expect(readMirror(mirrorKey({ entity: 'ingredient', id: ENTRY_ID, userId: USER }))).toBeNull();
+  });
+
+  // With no page to hand it to, the form reloads the page itself; the bar and the busy hint stay up
+  // through that reload only when the page reports it is leaving first.
+  it('reports the page is leaving before Reload Latest reloads the page itself', async () => {
+    const reloadMock = vi.fn();
+    const leaving = leavingAtEachLoad(reloadMock);
+    stubLocationReload(reloadMock);
+    acceptCovenUpdate();
+    mockGraphQLError('UpdateWorkspaceIngredient', { code: 'STALE_WRITE', currentRevision: 5 });
+    renderForm({ entry: OPENED });
+    type('Name', 'Mine');
+    await wait(3100);
+    expect(await screen.findByText('This ingredient was changed elsewhere.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reload Latest' }));
+
+    await waitFor(() => expect(reloadMock).toHaveBeenCalledOnce());
+    expect(leaving).toEqual([true]);
   });
 });
 

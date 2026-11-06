@@ -265,6 +265,26 @@ describe('CategoryPicker', () => {
     expect(removeButton('c-gone')).toBeInTheDocument();
   });
 
+  // While the categories are read, an edit's held picks have no names to draw, so each pick's place holds
+  // a skeleton, drawn for the eye alone, until its name arrives.
+  it('holds a skeleton in place of each pick it cannot name yet while the categories are read', () => {
+    const hidden = (root: HTMLElement) => root.querySelectorAll('[aria-hidden="true"]').length;
+    const one = render(<CategoryPicker {...PROPS} categories={[]} pending value={['c-gone']} />);
+    const withOne = hidden(one.container);
+    one.unmount();
+
+    const { container, rerender } = render(
+      <CategoryPicker {...PROPS} categories={[]} pending value={['c-gone', 'c-also-gone']} />,
+    );
+    // A second held pick adds a second skeleton; the box's own hidden parts are the same in both.
+    expect(hidden(container)).toBeGreaterThan(withOne);
+    expect(screen.queryByRole('button', { name: /^Remove / })).not.toBeInTheDocument();
+
+    rerender(<CategoryPicker {...PROPS} value={['c-gone', 'c-also-gone']} />);
+    expect(removeButton('c-gone')).toBeInTheDocument();
+    expect(removeButton('c-also-gone')).toBeInTheDocument();
+  });
+
   // The filter reads the picker with counts: how many entries each
   // category would leave.
   describe('with counts', () => {

@@ -1,11 +1,13 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { HttpResponse } from 'msw/http';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SupportRequestByLink from '@/components/SupportRequestByLink';
 import type {
   SupportRequestByViewTokenQuery,
   SupportRequestByViewTokenQueryVariables,
 } from '@/gql/graphql';
-import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
+import { graphqlLink, mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 // The mailed-link page's reader. The token arrives in the URL fragment, leaves the address bar once read, and is kept in
 // this tab's sessionStorage, so a reload in the same tab opens the request again and a new tab does not. A token the
@@ -156,5 +158,38 @@ describe('SupportRequestByLink', () => {
       expect(window.location.hash).toBe('');
       expect(window.sessionStorage.getItem(KEY)).toBe('second-token');
     });
+  });
+});
+
+describe('SupportRequestByLink, while the request is read', () => {
+  // A test that stops early still lets the held answer go before happy-dom waits on the request, so it holds up no later test.
+  let release = () => {};
+  afterEach(() => release());
+
+  // The read is a round trip: the page holds a skeleton of the request beside the one status saying it is opening.
+  it('draws one status with a skeleton beside it until the request arrives', async () => {
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let requested = false;
+    server.use(
+      graphqlLink.query('SupportRequestByViewToken', async () => {
+        requested = true;
+        await held;
+        return HttpResponse.json({ data: FOUND });
+      }),
+    );
+    at('/support/request#fragment-token');
+
+    const { container } = render(<SupportRequestByLink />);
+
+    // Precondition: the read is out, so the page is waiting on it.
+    await waitFor(() => expect(requested).toBe(true));
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    // The skeleton is drawn for the eye alone, so it is found by being hidden from assistive technology.
+    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull();
+
+    release();
+
+    expect(await screen.findByRole('heading', { name: SUBJECT })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });
