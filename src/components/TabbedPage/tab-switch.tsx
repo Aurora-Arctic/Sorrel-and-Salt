@@ -53,18 +53,7 @@ export const TabAction = ({ children }: TabActionProps): ReactElement => {
 export const TabPanel = ({ children }: TabPanelProps): ReactElement => {
   const { pending, target } = useTabSwitch();
   return (
-    <SwapPanel
-      pending={pending}
-      className="tabbed-page__panel"
-      filter={target?.filtered}
-      skeleton={target?.skeleton}
-      shape={target?.shape}
-      count={target?.sections}
-      columns={target?.columns}
-      fields={target?.fields}
-      density={target?.density}
-      card={target?.card}
-    >
+    <SwapPanel pending={pending} className="tabbed-page__panel" skeleton={target?.skeleton ?? null}>
       {children}
     </SwapPanel>
   );

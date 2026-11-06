@@ -1,0 +1,39 @@
+import type { ReactElement } from 'react';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
+
+/** The list's rows with nothing in them yet: its table's headings over placeholder rows. */
+export const AdminCardsBodySkeleton = (): ReactElement => (
+  <ListBodySkeleton
+    label="Invitation Cards"
+    headings={[
+      'Batch',
+      'Status',
+      'Cards',
+      'Accepted',
+      'Refused Opens',
+      'Minted On',
+      'Expires',
+      'Revoke',
+    ]}
+    actions={['Revoke']}
+    count={4}
+  />
+);
+
+/** The Card Sign-Ups tab's rows with nothing in them yet. */
+export const CardArrivalsBodySkeleton = (): ReactElement => (
+  <ListBodySkeleton
+    label="Card Sign-Ups"
+    headings={['Name', 'Email', 'Accepted On', 'Batch', 'Covens Owned']}
+    count={4}
+  />
+);
+
+/** The refused-opens table's rows with nothing in them yet. */
+export const CardAttemptsBodySkeleton = (): ReactElement => (
+  <ListBodySkeleton
+    label="Refused Opens"
+    headings={['Name', 'Email', 'Card', 'Refusal']}
+    count={3}
+  />
+);

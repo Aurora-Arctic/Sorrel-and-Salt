@@ -4,6 +4,7 @@ import { type ReactElement } from 'react';
 import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
+import { SupportDetailSkeleton, SupportListBodySkeleton } from './skeleton';
 import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import LocalTime from '../LocalTime';
 import IconTip, {
@@ -16,7 +17,6 @@ import IconTip, {
   SproutIcon,
 } from '../IconTip';
 import Pager from '../Pager';
-import Skeleton from '../Skeleton';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS } from './filter';
@@ -106,7 +106,7 @@ const SupportRequests = ({
           key={`${filter.about}\n${filter.view}\n${filter.errorCode}`}
           filter={filter}
         />
-        <ListBody>
+        <ListBody skeleton={<SupportListBodySkeleton />}>
           <output className="visually-hidden">
             {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
           </output>
@@ -270,7 +270,7 @@ const SupportRequests = ({
       <RouteModal
         closeHref={supportHref(filter, cursor)}
         size="listed"
-        loadingBody={<Skeleton shape="detail" side={viewer.role === 'admin'} />}
+        loadingBody={<SupportDetailSkeleton />}
         content={
           opened && {
             heading: {

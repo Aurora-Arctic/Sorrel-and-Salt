@@ -9,6 +9,7 @@ import UserLink from './user-link';
 import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import RoleTip from '../RoleTip';
 import ListFrame, { ListBody } from '../ListFrame';
+import { UserListBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
@@ -188,7 +189,7 @@ const UserList = ({
       paused={paused}
     />
 
-    <ListBody>
+    <ListBody skeleton={<UserListBodySkeleton />}>
       {/* Roomy, and each cell on one line, the table scrolling in its frame. */}
       <StackTable
         columns={columns(canImpersonate)}

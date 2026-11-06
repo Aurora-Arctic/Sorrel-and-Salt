@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import TabbedPage from '@/components/TabbedPage';
 import SupportRequests from '@/components/SupportRequests';
+import { SupportListSkeleton } from '@/components/SupportRequests/skeleton';
 import { USER_MODAL_PLACE, supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import { pagerHrefs } from '@/lib/list-href';
 import { impersonationEnabled } from '@/lib/impersonation';
@@ -39,7 +40,10 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   return (
     <TabbedPage
       title="Support"
-      tabs={supportViewTabs(filter, counts)}
+      tabs={supportViewTabs(filter, counts).map((tab) => ({
+        ...tab,
+        skeleton: <SupportListSkeleton />,
+      }))}
       open={supportHref(filter)}
       tabsBelow
     >

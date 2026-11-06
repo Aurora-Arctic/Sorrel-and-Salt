@@ -5,7 +5,6 @@ import type { Route } from 'next';
 import { asOptions, GROUP_NAMES } from '../../../.storybook/fixtures';
 import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
-import type { ListBodyProps } from '../ListFrame/types';
 import StackTable, { GroupChip } from '.';
 import type { ColumnSort, SortDirection, StackColumn } from './types';
 
@@ -44,9 +43,9 @@ const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   },
 ];
 
-const Frame = ({ children }: ListBodyProps) => (
+const Frame = ({ children }: { children: ReactNode }) => (
   <ListFrame>
-    <ListBody>{children}</ListBody>
+    <ListBody skeleton={null}>{children}</ListBody>
   </ListFrame>
 );
 

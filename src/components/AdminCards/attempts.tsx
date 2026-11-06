@@ -11,7 +11,7 @@ import { MysticEyeIcon } from '../IconTip/icons';
 import { ModalButton } from '../Modal';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
-import Skeleton from '../Skeleton';
+import { CardAttemptsBodySkeleton } from './skeleton';
 import { userListHref } from '../UserList/href';
 import UserLink from '../UserList/user-link';
 import { batchName } from './batches';
@@ -125,7 +125,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
         Every card listed here already admits nobody. Further tries are refused and counted here.
       </p>
       {reading ? (
-        <Skeleton shape="table" count={3} />
+        <CardAttemptsBodySkeleton />
       ) : (
         <StackTable
           columns={[

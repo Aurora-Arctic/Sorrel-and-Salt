@@ -8,6 +8,7 @@ import { dayInUtc, printedDayOf } from '../../lib/utc';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
+import { AdminCardsBodySkeleton } from './skeleton';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import ConfirmedAction from '../UserList/confirmed-action';
@@ -75,7 +76,7 @@ const AdminCards = ({
     <ListFrame>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
       <CardsFilterForm key={JSON.stringify(filter)} filter={filter} />
-      <ListBody>
+      <ListBody skeleton={<AdminCardsBodySkeleton />}>
         <StackTable
           columns={[
             {

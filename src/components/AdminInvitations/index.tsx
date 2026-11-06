@@ -10,6 +10,7 @@ import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
 import { roleLabel } from '../UserList/roles';
 import ListFrame, { ListBody } from '../ListFrame';
+import { AdminInvitationsBodySkeleton } from './skeleton';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import Pager from '../Pager';
@@ -134,7 +135,7 @@ const AdminInvitations = ({
       <ListFrame>
         {/* Keyed by the filter shown, so another one starts the form again from it. */}
         <AdminInvitationsFilter key={`${filter.email}\n${filter.expiringSoon}`} filter={filter} />
-        <ListBody>
+        <ListBody skeleton={<AdminInvitationsBodySkeleton />}>
           {/* Each cell on one line, the table scrolling in its frame. */}
           <StackTable
             columns={[

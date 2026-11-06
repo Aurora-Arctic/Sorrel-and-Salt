@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
+import { PendingInvitationsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { emptyList } from '../../lib/text';
@@ -23,7 +24,7 @@ const PendingInvitations = ({
   position,
 }: PendingInvitationsProps): ReactElement => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={<PendingInvitationsBodySkeleton />}>
       <StackTable
         aria-label="Pending Invitations"
         columns={[

@@ -135,14 +135,13 @@ export function useListNavigation(): ListNavigation {
  * a pager, no filter row, since the real one stays. Swapped as a tab's
  * panel is (`Skeleton/swap-panel.tsx`).
  */
-export const ListBody = ({ shape, card, children }: ListBodyProps): ReactElement => {
+export const ListBody = ({ skeleton, children }: ListBodyProps): ReactElement => {
   const { pending, heldHeight } = useListNavigation();
   return (
     <SwapPanel
       pending={pending}
       className="list-frame__body"
-      shape={shape}
-      card={card}
+      skeleton={skeleton}
       loadingMinHeight={heldHeight}
     >
       {children}

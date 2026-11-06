@@ -7,6 +7,7 @@ import { noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
+import { CardArrivalsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { batchName } from './batches';
 import UserLink from '../UserList/user-link';
@@ -47,7 +48,7 @@ const AdminArrivals = ({
     <ListFrame>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
       <ArrivalsFilterForm key={JSON.stringify(filter)} filter={filter} />
-      <ListBody>
+      <ListBody skeleton={<CardArrivalsBodySkeleton />}>
         <StackTable
           columns={[
             {

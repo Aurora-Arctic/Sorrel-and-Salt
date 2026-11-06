@@ -88,7 +88,7 @@ function Dialog(): ReactElement | null {
             answer.isError ? (
               <Notice kind="error">{GENERIC_FAILURE}</Notice>
             ) : (
-              <Skeleton shape="form" />
+              <Skeleton shape="block" count={4} />
             )
           ) : state.kind === 'unverified' ? (
             <Notice kind="plain">

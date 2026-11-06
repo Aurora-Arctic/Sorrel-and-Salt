@@ -37,10 +37,8 @@ export interface ListFrameProps {
 }
 
 export interface ListBodyProps {
-  /** What the skeleton stands in for: `table` (the default), or `cards`, a grid of ingredient cards. */
-  shape?: 'table' | 'cards';
-  /** With `cards`: the card the list draws, so its skeleton does too: the grimoire's spell card. */
-  card?: 'spell';
+  /** What the body draws while another page is on its way: the list's own placeholder. */
+  skeleton: ReactNode;
   /** The table or its empty state, then the pager: what the skeleton stands in for. */
   children: ReactNode;
 }

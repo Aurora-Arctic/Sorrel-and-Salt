@@ -7,6 +7,7 @@ import IngredientCard from '../IngredientCard';
 import { cardName } from '../IngredientCard/card-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import AddIcon from '../AddIcon';
 import { emptyList } from '../../lib/text';
@@ -109,7 +110,7 @@ const CompendiumCards = ({
   myCovens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
-    shape="cards"
+    skeleton={<ListBodySkeleton label="Compendium" />}
     search={
       <CompendiumListFilter
         audience="public"

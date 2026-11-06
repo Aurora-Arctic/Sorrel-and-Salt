@@ -1,3 +1,4 @@
+import { ListBodySkeleton } from './skeleton';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Pager from '../Pager';
@@ -16,7 +17,7 @@ const ROWS = ['Testwort', 'Fixture Salt', 'Mockroot'];
 
 const List = () => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={null}>
       <div className="data-table-frame">
         <table className="data-table" aria-label="Fixtures">
           <thead>
@@ -51,7 +52,7 @@ const pendingNode = (
 const pendingCardsNode = (
   <ListNavigationContext.Provider value={{ pending: true, searching: false, go: () => undefined }}>
     <ListFrame className="card-list">
-      <ListBody shape="cards">
+      <ListBody skeleton={<ListBodySkeleton label="Cards" />}>
         <p>Cards</p>
       </ListBody>
     </ListFrame>

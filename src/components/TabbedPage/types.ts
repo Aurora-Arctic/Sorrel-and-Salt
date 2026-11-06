@@ -7,22 +7,8 @@ export interface PageTab {
   label: string;
   /** A number shown after the label as a facet count, "Mine 3", and "99+" from 100; left out, none. */
   count?: number;
-  /** What the panel draws while this tab is on its way: the tab's own placeholder, built from the components its page draws. Left out, the `shape` fields below stand in. */
+  /** What the panel draws while this tab is on its way: the tab's own placeholder, built from the components its page draws. */
   skeleton?: ReactNode;
-  /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
-  filtered?: boolean;
-  /** What the tab's loading skeleton stands in for: a table (the default), cards (as the grimoire's tabs), or document (a site document's editor). */
-  shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
-  /** With the `sections` shape: how many panels the skeleton draws, to match the tab's own. */
-  sections?: number;
-  /** A `table` tab's column count, where it has more than three. */
-  columns?: number;
-  /** A `table` tab's filter controls, where its filter has more than two. */
-  fields?: number;
-  /** With `cards`: the tab's list opens compact, so its loading skeleton does too. */
-  density?: 'compact';
-  /** With `cards`: the card the list draws, so its loading skeleton does too: the grimoire's spell card. */
-  card?: 'spell';
 }
 
 export interface TabbedPageProps {
@@ -67,23 +53,6 @@ export interface TabSwitchProviderProps {
 export interface TabActionProps {
   /** The open tab's action, which greys out while another tab is on its way. */
   children: ReactNode;
-}
-
-export interface TabPanelLoadingProps {
-  /** Whether to draw a filter row above the table: the pressed tab's `filtered`. */
-  filter?: boolean;
-  /** What the skeleton stands in for: `table` (the default), or `cards`, the grid of ingredient cards, or `sections`, an account tab's menu and panels. */
-  shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
-  /** With `sections`: how many panels it draws. */
-  count?: number;
-  /** A `table` skeleton's column count: the pressed tab's `columns`. */
-  columns?: number;
-  /** A `table` skeleton's filter controls: the pressed tab's `fields`. */
-  fields?: number;
-  /** The density of a `cards` skeleton: the pressed tab's `density`. */
-  density?: 'compact';
-  /** The card of a `cards` skeleton: the pressed tab's `card`. */
-  card?: 'spell';
 }
 
 export interface TabPanelProps {

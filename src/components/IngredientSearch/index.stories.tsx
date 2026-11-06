@@ -1,3 +1,5 @@
+import { ListBodySkeleton } from '../ListFrame/skeleton';
+import { CompendiumListBodySkeleton } from '../CompendiumList/skeleton';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { Route } from 'next';
 import { useEffect, type ReactElement } from 'react';
@@ -121,7 +123,13 @@ const Shell = ({
       previousHref={previous ? (`${PATH}` as Route) : undefined}
       nextHref={`${PATH}?after=x` as Route}
       position={{ page: previous ? 2 : 1, pages: 2 }}
-      shape={shape}
+      skeleton={
+        shape === 'cards' ? (
+          <ListBodySkeleton label="Ingredients" />
+        ) : (
+          <CompendiumListBodySkeleton />
+        )
+      }
     >
       <ul>
         {matches(3).map((match) => (

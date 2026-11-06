@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import StackTable, { GroupChip, updatedColumn } from '../DataTable';
 import { emptyList, noMatchText } from '../../lib/text';
 import ListFrame, { ListBody } from '../ListFrame';
+import { GroupedValueListBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import GroupedValueListFilter from './filter';
 import { KINDS } from './kinds';
@@ -49,7 +50,7 @@ const GroupedValueList = ({
         groups={groups}
       />
 
-      <ListBody>
+      <ListBody skeleton={<GroupedValueListBodySkeleton kind={kind} />}>
         {/* A flat kind has no group column. Roomy for the categories alone,
             whose groups are drawn in chips taller than a line of text. */}
         <StackTable

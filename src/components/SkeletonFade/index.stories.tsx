@@ -26,7 +26,7 @@ export const Default: Story = {
     const [busy, setBusy] = useState(false);
     const skeleton = busy ? (
       <main className="page-column">
-        <Skeleton shape="page" head="title" />
+        <Skeleton shape="line" count={3} />
       </main>
     ) : null;
     const leaving = useLeavingSkeleton(skeleton);

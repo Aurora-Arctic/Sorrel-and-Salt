@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import IngredientCardList from '../IngredientCardList';
 import SpellCard, { SpellCardFilters } from '../SpellCard';
@@ -31,8 +32,13 @@ const GrimoireList = ({
 }: GrimoireListProps): ReactElement => (
   <div data-density="compact">
     <IngredientSearch
-      shape="cards"
-      card="spell"
+      skeleton={
+        <ListBodySkeleton
+          label={status === 'draft' ? 'Drafts' : 'Spells'}
+          card="spell"
+          density="compact"
+        />
+      }
       search={
         <GrimoireFilter
           path={path}

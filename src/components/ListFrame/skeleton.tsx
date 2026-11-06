@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import FilterForm from '../FilterForm';
@@ -59,15 +59,28 @@ export const ListBodySkeleton = ({
   );
 };
 
-// A whole list page with nothing in it yet: the filter row with its controls disabled over the body.
-export const ListSkeleton = ({
+// A list page's frame with nothing in it yet: the filter row with its controls disabled over the body.
+export const ListFilterFrame = ({
   filter,
-  ...body
-}: ListBodySkeletonProps & { filter: string }): ReactElement => (
+  children,
+}: {
+  filter: string;
+  children: ReactNode;
+}): ReactElement => (
   <ListFrame disabled>
     <FilterForm label={filter} action="/" searchHref={() => '/'} shown={[]}>
       <input name="q" type="search" aria-label="Search" />
     </FilterForm>
-    <ListBodySkeleton {...body} />
+    {children}
   </ListFrame>
+);
+
+// A whole list page with nothing in it yet.
+export const ListSkeleton = ({
+  filter,
+  ...body
+}: ListBodySkeletonProps & { filter: string }): ReactElement => (
+  <ListFilterFrame filter={filter}>
+    <ListBodySkeleton {...body} />
+  </ListFilterFrame>
 );

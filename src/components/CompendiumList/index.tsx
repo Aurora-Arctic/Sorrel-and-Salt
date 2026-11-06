@@ -13,6 +13,7 @@ import type { ColumnSort, OtherOrder, SortDirection, StackColumn } from '../Data
 import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
+import { CompendiumListBodySkeleton } from './skeleton';
 import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
 import { compendiumHref } from './href';
@@ -299,6 +300,7 @@ const CompendiumList = ({
   cursor,
 }: CompendiumListProps): ReactElement => (
   <IngredientSearch
+    skeleton={<CompendiumListBodySkeleton />}
     search={
       // Not keyed here: the row inside is keyed by the name searched, and follows the
       // rest of the filter itself, so a facet's change keeps the open panel and its

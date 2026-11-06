@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
+import { MemberListBodySkeleton } from '../../../../../../components/MemberList/skeleton';
 import MemberList from '../../../../../../components/MemberList';
 import type { MemberListEntry } from '../../../../../../components/MemberList/types';
 import { RouteModalProvider } from '../../../../../../components/Modal/route-modal-provider';
@@ -146,7 +147,7 @@ export default async function MembersPage({
             Make another member a steward to be safe.
           </Notice>
         )}
-        <ListBody>
+        <ListBody skeleton={<MemberListBodySkeleton />}>
           <MemberList
             members={members}
             currentUserId={session.userId}

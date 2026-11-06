@@ -41,10 +41,8 @@ export interface IngredientSearchProps extends Partial<PagerHrefs<Route>> {
   position?: PagePosition;
   /** The list's own root class, beside `list-frame`. */
   className?: string;
-  /** The shape the results take while a page loads: a table (the default) or cards. */
-  shape?: 'table' | 'cards';
-  /** With `cards`: the card the list draws, so its skeleton does too: the grimoire's spell card. */
-  card?: 'spell';
+  /** What the results area draws while another page is on its way: the list's own placeholder. */
+  skeleton: ReactNode;
 }
 
 export interface IngredientSearchFormProps {

@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 /** A pager where a list puts it, in its frame's body beneath the list. */
 const paged = (pager: ReactElement) => (
   <ListFrame>
-    <ListBody>
+    <ListBody skeleton={null}>
       <table aria-label="Fixtures" />
       {pager}
     </ListBody>
