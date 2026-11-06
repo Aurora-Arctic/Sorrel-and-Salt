@@ -147,7 +147,7 @@
     "github-slugger": "^2.0.0",
     "happy-dom": "21.0.4",
     "jsqr": "^1.4.0",
-    "knip": "^6.44.0",
+    "knip": "^6.44.1",
     "lighthouse": "13.6.0",
     "lint-staged": "^17.6.0",
     "monocart-coverage-reports": "^3.1.0",
