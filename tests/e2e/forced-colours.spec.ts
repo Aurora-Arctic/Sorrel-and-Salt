@@ -1,0 +1,499 @@
+import type { Browser, Locator, Page } from '@playwright/test';
+import { test, expect } from './fixtures';
+import { assertNoAccessibilityViolations } from './axe';
+import { recreateE2eDatabase } from './database';
+import { signInAgainAs, signInAs } from './session';
+import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
+import { insertIngredient } from '../support/db/insert-ingredient';
+import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
+import { insertReference, insertReferenceLink } from '../support/db/insert-reference';
+import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { ADD, HELD_MARK } from '../support/cupboard-wording';
+import { slugify } from '@/lib/slugify';
+
+// The compendium section under forced colours (Windows High Contrast and its kin): every surface keeps an
+// edge, and every state a mark, in the system colours the browser forces (claude-docs/styling.md,
+// "Forced colours"). A system colour is compared by what this browser resolves it to, read from a probe
+// in the same page, so no assertion is tied to one palette. Then the :target fill in the normal theme.
+
+test.beforeAll(async () => {
+  await recreateE2eDatabase();
+});
+
+const SYSTEM = ['Canvas', 'CanvasText', 'Highlight', 'HighlightText', 'GrayText'] as const;
+type Palette = Record<(typeof SYSTEM)[number], string>;
+
+/**
+ * What this browser draws each system colour as. The pairs a test tells apart must differ, or a
+ * comparison between them proves nothing.
+ */
+async function systemColours(page: Page): Promise<Palette> {
+  const palette = await page.evaluate((names) => {
+    const found: Record<string, string> = {};
+    for (const name of names) {
+      const probe = document.createElement('div');
+      probe.style.color = name;
+      document.body.append(probe);
+      found[name] = getComputedStyle(probe).color;
+      probe.remove();
+    }
+    return found;
+  }, SYSTEM);
+  const p = palette as Palette;
+  expect(p.CanvasText).not.toBe(p.Canvas);
+  expect(p.Highlight).not.toBe(p.Canvas);
+  expect(p.Highlight).not.toBe(p.CanvasText);
+  expect(p.GrayText).not.toBe(p.CanvasText);
+  return p;
+}
+
+interface Line {
+  width: number;
+  style: string;
+  color: string;
+}
+interface Drawn {
+  color: string;
+  background: string;
+  content: string;
+  borders: Line[];
+  outline: Line;
+}
+
+/** The computed paint of an element, or of one of its pseudo-elements. Borders run top, right, bottom, left. */
+function drawnOf(locator: Locator, pseudo: string | null = null): Promise<Drawn> {
+  return locator.evaluate((el, pseudoElement) => {
+    const s = getComputedStyle(el, pseudoElement);
+    const line = (prefix: string) => ({
+      width: parseFloat(s.getPropertyValue(`${prefix}-width`)) || 0,
+      style: s.getPropertyValue(`${prefix}-style`),
+      color: s.getPropertyValue(`${prefix}-color`),
+    });
+    return {
+      color: s.color,
+      background: s.backgroundColor,
+      content: s.content,
+      borders: ['top', 'right', 'bottom', 'left'].map((side) => line(`border-${side}`)),
+      outline: line('outline'),
+    };
+  }, pseudo);
+}
+
+const shows = (line: Line) => line.width >= 1 && line.style !== 'none' && line.style !== 'hidden';
+
+/** Each of the four sides' colour where that side is drawn, else 'none': an edge reads [c, c, c, c]. */
+const edgeOf = async (locator: Locator) =>
+  (await drawnOf(locator)).borders.map((side) => (shows(side) ? side.color : 'none'));
+
+/** Every colour drawn round the element, by border or by outline: a mark is any one of them. */
+const marksOf = async (locator: Locator) => {
+  const { borders, outline } = await drawnOf(locator);
+  return [...borders, outline].filter(shows).map((line) => line.color);
+};
+
+const fillOf = async (locator: Locator) => {
+  const { background, color } = await drawnOf(locator);
+  return { background, color };
+};
+
+const inkOf = async (locator: Locator) => (await drawnOf(locator)).color;
+
+// Colour contrast is the forced palette's, which axe cannot read: it measures the author's colours
+// where the browser paints system ones, so it flags text the screen shows legibly.
+const FORCED_SKIP = ['color-contrast'];
+
+// Every check of an item is soft, so one run shows each item that fails, not only the first.
+const check = expect.configure({ soft: true, timeout: 2_000 });
+
+/** A user to stamp the rows with, signed in on a page that is closed again at once. */
+async function authorOf(browser: Browser, baseURL: string | undefined, email: string) {
+  const author = await browser.newPage({ baseURL });
+  try {
+    return (await signInAs(author, email, ['discord'], 'admin')).userId;
+  } finally {
+    await author.close();
+  }
+}
+
+/** A compendium entry with one form and one source cited from its details, so the page has Note 1. */
+async function seedSourcedEntry(author: string, name: string) {
+  return withSql(async (sql) => {
+    const id = await insertIngredient(
+      sql,
+      makeIngredient({
+        name,
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Fixture Root' })],
+      }),
+      author,
+    );
+    const reference = await insertReference(
+      sql,
+      {
+        kind: 'web_page',
+        title: `A Fixture Page on ${name}`,
+        url: 'https://fixtures.example/',
+        accessed: '2026-01-01',
+      },
+      author,
+    );
+    await insertReferenceLink(sql, id, reference, author);
+    return { id, slug: slugify(name) };
+  });
+}
+
+test.describe('under forced colours', () => {
+  test.use({ forcedColors: 'active' });
+
+  test('the public compendium list keeps its edges and marks its states', async ({ page }) => {
+    await withSql(
+      (sql) => sql`
+        insert into ingredient_categories (ingredient_id, category_id, created_by, updated_by)
+        select link.ingredient_id, c.id, link.created_by, link.updated_by
+        from (
+          select ingredient_id, created_by, updated_by from ingredient_categories
+          where ingredient_id = (
+            select id from ingredients
+            where name = 'Amethyst' and workspace_id is null and deleted_at is null)
+          limit 1
+        ) link
+        cross join (
+          select id from categories
+          where deleted_at is null
+            and name in ('Binding', 'Healing', 'Strength')
+            and id not in (
+              select category_id from ingredient_categories ic
+              join ingredients i on i.id = ic.ingredient_id
+              where i.name = 'Amethyst' and i.workspace_id is null)
+        ) c`,
+    );
+    await page.goto('/compendium');
+    const cards = compendiumList(page).locator(':scope > li');
+    await expect(cards.first()).toBeVisible();
+    const p = await systemColours(page);
+    const card = cards.first().getByRole('article');
+
+    // Item 1: the card's edge.
+    await check.poll(() => edgeOf(card)).toEqual(Array(4).fill(p.CanvasText));
+    // Item 2: under the pointer the edge turns Highlight.
+    await card.hover();
+    await check.poll(() => marksOf(card)).toContain(p.Highlight);
+
+    // Item 20: a .btn drawn on a link has a Highlight border under the pointer, not a fill the browser
+    // removes. Not on a <button>: the browser rings a hovered <button> in Highlight itself.
+    const signIn = page.getByRole('link', { name: 'Sign In', exact: true }).first();
+    await signIn.hover();
+    await check.poll(() => marksOf(signIn)).toContain(p.Highlight);
+    await page.mouse.move(0, 0);
+
+    const filters = page.getByRole('button', { name: /^Filters/ });
+
+    // Item 36, a guard: the keyboard focus ring stays, in a system colour.
+    await filters.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(filters).toBeFocused();
+    await check
+      .poll(async () => {
+        const { outline } = await drawnOf(filters);
+        return shows(outline) && [p.CanvasText, p.Highlight].includes(outline.color);
+      })
+      .toBe(true);
+
+    // Item 21: the first page's disabled Prev reads as off, in GrayText.
+    const prev = page
+      .getByRole('navigation', { name: 'Pages' })
+      .getByRole('link', { name: 'Prev' });
+    await expect(prev).toBeDisabled();
+    await check.poll(() => inkOf(prev)).toBe(p.GrayText);
+
+    // Item 8: the pinned search row has a CanvasText rule along its foot once stuck. The rule may sit on
+    // the row or on its fill, which stands in the row's place on screen.
+    const row = page.getByRole('search');
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => window.scrollTo(0, 1500));
+    await expect(row).toHaveAttribute('data-stuck', 'true');
+    const fill = row.locator(':scope > [aria-hidden="true"]');
+    await check
+      .poll(async () => {
+        const feet = [(await edgeOf(row))[2]];
+        if ((await fill.count()) > 0) feet.push((await edgeOf(fill.first()))[2]);
+        return feet;
+      })
+      .toContain(p.CanvasText);
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    // Items 3 and 4: the +N button's hover and open marks, and the panel's edge.
+    const search = page.getByRole('combobox', { name: 'Name' });
+    await search.fill('Amethyst');
+    await search.press('Enter');
+    await expect(page).toHaveURL(/query=/);
+    const more = page.getByRole('button', { name: /more categories? for/i }).first();
+    await expect(more).toBeVisible();
+    // A guard: a <button> under the pointer, ringed in Highlight by the browser.
+    await more.hover();
+    await check.poll(() => marksOf(more)).toContain(p.Highlight);
+    await more.click();
+    await expect(more).toHaveAttribute('aria-expanded', 'true');
+    await page.mouse.move(0, 0);
+    await check
+      .poll(() => fillOf(more))
+      .toEqual({ background: p.Highlight, color: p.HighlightText });
+    const panel = page.getByRole('group', { name: /^More categories for/ }).first();
+    await expect(panel).toBeVisible();
+    await check.poll(() => edgeOf(panel)).toEqual(Array(4).fill(p.CanvasText));
+    await page.keyboard.press('Escape');
+
+    // Item 5: a Quick Look dialog's edge.
+    await page
+      .getByRole('link', { name: /^Quick Look / })
+      .first()
+      .click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await check.poll(() => edgeOf(dialog)).toEqual(Array(4).fill(p.CanvasText));
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+
+    await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
+  });
+
+  test("the plus's menu marks hover and disabled, and the coven's list passes axe", async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    const NAME = 'Fixture Prismwort Menu';
+    const FIRST = 'Fixture Coven Prism One';
+    const SECOND = 'Fixture Coven Prism Two';
+    const one = await seedCoven(page, FIRST, 'forced-colours-menu.test', { A: 'owner' });
+    const member = one.users.A!;
+    const second = await withSql((sql) =>
+      sql.begin(async (tx) => {
+        await tx`select set_config('app.current_user_id', ${member}, true)`;
+        const [workspace] = await tx<{ id: string }[]>`
+          insert into workspaces (name, slug, created_by, updated_by)
+          values (${SECOND}, 'fixture-coven-prism-two', ${member}, ${member})
+          returning id`;
+        await tx`
+          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+          values (${workspace.id}, ${member}, 'owner', ${member}, ${member})`;
+        return workspace.id;
+      }),
+    );
+    const author = await authorOf(browser, baseURL, 'author@forced-colours-menu.test');
+    const { id, slug } = await seedSourcedEntry(author, NAME);
+    // The second coven holds the entry, so its item in the plus's menu is disabled.
+    await withSql((sql) =>
+      insertCupboardEntry(sql, { workspaceId: second, ingredientId: id }, member),
+    );
+
+    await signInAgainAs(page, member);
+    await page.goto(`/compendium/ingredients/${slug}`);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(NAME);
+    const p = await systemColours(page);
+
+    const add = page.getByRole('main').getByRole('button', { name: ADD });
+    const menu = page.getByRole('menu', { name: ADD });
+    // Item 18: the plus's hover, then its open fill.
+    await add.hover();
+    await check.poll(() => marksOf(add)).toContain(p.Highlight);
+    await add.click();
+    await expect(menu).toBeVisible();
+    await expect(add).toHaveAttribute('aria-expanded', 'true');
+    // The menu's edge, a guard: it is a CanvasText line already.
+    await check.poll(() => edgeOf(menu)).toEqual(Array(4).fill(p.CanvasText));
+
+    const held = menu.getByRole('menuitem', { name: SECOND });
+    const open = menu.getByRole('menuitem', { name: FIRST });
+    await expect(held).toBeDisabled();
+    await expect(held).toHaveAccessibleName(`${SECOND}, ${HELD_MARK}`);
+    await expect(open).toBeEnabled();
+    // Item 12: the held coven's item reads as off.
+    await check.poll(() => inkOf(held)).toBe(p.GrayText);
+    // Item 11, option A: an item under the pointer has a Highlight outline.
+    await open.hover();
+    await check.poll(() => marksOf(open)).toContain(p.Highlight);
+    // Item 18: the plus is filled while its menu is open, the pointer elsewhere.
+    await page.mouse.move(0, 0);
+    await check
+      .poll(() => fillOf(add))
+      .toEqual({ background: p.Highlight, color: p.HighlightText });
+    await page.keyboard.press('Escape');
+
+    await page.goto(`/coven/fixture-coven-prism-two/ingredients`);
+    await expect(page.getByRole('list', { name: 'Ingredients' })).toBeVisible();
+    await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
+  });
+
+  test('the entry page marks its current section and the jumped-to note and source', async ({
+    page,
+    browser,
+    baseURL,
+  }) => {
+    const author = await authorOf(browser, baseURL, 'author@forced-colours-entry.test');
+    const { slug } = await seedSourcedEntry(author, 'Fixture Prismwort Entry');
+    await page.goto(`/compendium/ingredients/${slug}`);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    const p = await systemColours(page);
+
+    // Item 30: the current section's bar, a heavy CanvasText line on one inline edge.
+    const nav = page.getByRole('navigation', { name: 'On This Page' });
+    const current = nav.locator('a[aria-current="location"]');
+    await expect(current).toHaveCount(1);
+    await check
+      .poll(async () => {
+        const { borders } = await drawnOf(current);
+        return [borders[1]!, borders[3]!].some(
+          (side) => shows(side) && side.width >= 2 && side.color === p.CanvasText,
+        );
+      })
+      .toBe(true);
+    // Item 31: another section's link under the pointer has a Highlight outline.
+    const other = nav.locator('a:not([aria-current])').first();
+    await other.hover();
+    await check.poll(() => marksOf(other)).toContain(p.Highlight);
+    await page.mouse.move(0, 0);
+
+    // Item 32: the jumped-to note, and then its source, each ringed in Highlight.
+    await page.getByRole('link', { name: 'Note 1', exact: true }).click();
+    await expect(page).toHaveURL(/#note-1$/);
+    const note = page.locator('li:target');
+    await expect(note).toHaveCount(1);
+    await check.poll(() => marksOf(note)).toContain(p.Highlight);
+    await note.getByRole('link').first().click();
+    await expect(page).toHaveURL(/#ref-/);
+    const source = page.getByRole('list', { name: 'Bibliography' }).locator('li:target');
+    await expect(source).toHaveCount(1);
+    await check.poll(() => marksOf(source)).toContain(p.Highlight);
+
+    await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
+  });
+
+  test("the admin list's tray, table and switch keep their marks", async ({ page }) => {
+    const { userId } = await signInAs(
+      page,
+      'admin@forced-colours-admin.test',
+      ['discord'],
+      'admin',
+    );
+    await withSql(async (sql) => {
+      for (const [name, categories] of [
+        ['Fixture Glintwort Both', ['Protection', 'Cleansing']],
+        ['Fixture Glintwort One', ['Protection']],
+      ] as const)
+        await insertIngredient(
+          sql,
+          makeIngredient({ name, nomenclature: 'none', categories: [...categories] }),
+          userId,
+        );
+    });
+    await page.goto('/curator/compendium?query=Glintwort&categories=protection');
+    const edit = page.getByRole('link', { name: 'Edit Fixture Glintwort Both' });
+    await expect(edit).toBeVisible();
+    const p = await systemColours(page);
+
+    // Item 9: the pinned Edit column's start edge, a CanvasText line drawn by the cell's ::before.
+    const editCell = edit.locator('xpath=ancestor::*[self::td or self::th][1]');
+    await check
+      .poll(async () => {
+        const { content, background } = await drawnOf(editCell, '::before');
+        return content !== 'none' && background === p.CanvasText;
+      })
+      .toBe(true);
+    // Item 10, option A: each body row is ruled off in CanvasText, the banding being gone. The rule may
+    // be the row's or its cells', as the table collapses its borders.
+    const bodyRow = edit.locator('xpath=ancestor::tr[1]');
+    await check
+      .poll(async () => [(await edgeOf(bodyRow))[2], (await edgeOf(editCell))[2]])
+      .toContain(p.CanvasText);
+
+    // Item 24: the Shown switch's thumb. The entry is shown, so the track is Highlight and the thumb
+    // HighlightText.
+    const shown = page.getByRole('switch', { name: 'Shown in Compendium: Fixture Glintwort Both' });
+    await expect(shown).toBeChecked();
+    const thumb = shown.locator('xpath=following-sibling::span[1]');
+    await check.poll(async () => (await drawnOf(shown)).background).toBe(p.Highlight);
+    await check.poll(async () => (await drawnOf(thumb)).background).toBe(p.HighlightText);
+
+    // The Filters tray.
+    await page.getByRole('button', { name: /^Filters/ }).click();
+    const tray = page.getByRole('dialog', { name: 'Filters' });
+    await expect(tray).toBeVisible();
+    const match = tray.getByRole('group', { name: 'Match' });
+    // Item 22, disabled: with one category the Match chip is off, in GrayText.
+    const off = match.getByRole('button', { name: /All/ });
+    await expect(off).toBeDisabled();
+    await check.poll(() => inkOf(off)).toBe(p.GrayText);
+
+    // Item 13, option A: the active option is filled with Highlight.
+    const box = tray.getByRole('combobox', { name: 'Category' });
+    await box.fill('cleansing');
+    const option = page.getByRole('option', { name: /^Cleansing/ });
+    await expect(option).toBeVisible();
+    await box.press('ArrowDown');
+    await expect(box).toHaveAttribute('aria-activedescendant', /.+/);
+    const active = page.locator(`[id="${await box.getAttribute('aria-activedescendant')}"]`);
+    await check
+      .poll(() => fillOf(active))
+      .toEqual({ background: p.Highlight, color: p.HighlightText });
+    await option.click();
+
+    // Item 14: a chosen category's chip in the box has a CanvasText edge.
+    const chip = tray
+      .getByRole('button', { name: 'Remove Category: Cleansing' })
+      .locator('xpath=ancestor::li[1]');
+    await expect(chip).toBeVisible();
+    await check.poll(() => edgeOf(chip)).toEqual(Array(4).fill(p.CanvasText));
+
+    // Item 22: the Match chip, now enabled, has a Highlight hover and a Highlight fill while open.
+    const summary = match.locator('summary');
+    await expect(summary).toBeVisible();
+    await summary.hover();
+    await check.poll(() => marksOf(summary)).toContain(p.Highlight);
+    await summary.click();
+    await expect(match.getByRole('radio', { name: 'Any' })).toBeVisible();
+    await page.mouse.move(0, 0);
+    await check
+      .poll(() => fillOf(summary))
+      .toEqual({ background: p.Highlight, color: p.HighlightText });
+    await page.keyboard.press('Escape');
+
+    await page.goto('/curator/compendium');
+    await expect(page.getByRole('link', { name: /^Edit / }).first()).toBeVisible();
+    await assertNoAccessibilityViolations(page, { skipRules: FORCED_SKIP });
+  });
+});
+
+// A jump to a note or a note's mark fills its target as a jump to a source does: the :target fill
+// once stood on the overflow-wrap rule, so only a source took it.
+test('a jumped-to note and mark take the fill a jumped-to source takes', async ({
+  page,
+  browser,
+  baseURL,
+}) => {
+  const author = await authorOf(browser, baseURL, 'author@forced-colours-target.test');
+  const { slug } = await seedSourcedEntry(author, 'Fixture Prismwort Target');
+  await page.goto(`/compendium/ingredients/${slug}`);
+  const background = async (locator: Locator) => (await drawnOf(locator)).background;
+
+  await page.getByRole('link', { name: 'Note 1', exact: true }).click();
+  const note = page.locator('li:target');
+  await expect(note).toHaveCount(1);
+  await note.getByRole('link').first().click();
+  const source = page.getByRole('list', { name: 'Bibliography' }).locator('li:target');
+  await expect(source).toHaveCount(1);
+  // Why the note could match: a source's fill is drawn, not transparent.
+  const fill = await background(source);
+  expect(fill).not.toBe('rgba(0, 0, 0, 0)');
+
+  await source.getByRole('link', { name: 'Back to Note 1' }).click();
+  await expect(page).toHaveURL(/#note-1$/);
+  await check.poll(() => background(page.locator('li:target'))).toBe(fill);
+
+  await page.locator('li:target').getByRole('link', { name: 'Back to Details' }).click();
+  await expect(page).toHaveURL(/#note-ref-1$/);
+  await check
+    .poll(() => background(page.getByRole('link', { name: 'Note 1', exact: true })))
+    .toBe(fill);
+});
