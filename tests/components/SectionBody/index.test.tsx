@@ -126,10 +126,18 @@ describe('SectionBody for a coven', () => {
   // Each is on its way to a page the registry knows, or a different address,
   // so only the host rule keeps this section from drawing.
   it.each([
-    ['Switch', '/coven/brambleroot-circle/ingredients', 'another coven, whose host is not this one'],
+    [
+      'Switch',
+      '/coven/brambleroot-circle/ingredients',
+      'another coven, whose host is not this one',
+    ],
     ['Leave', '/compendium', "a page drawn in the shell's body"],
     ['Curate', '/curator/forms', "the admin area's page"],
-    ['Filter', '/coven/testwort-circle/ingredients?q=testwort', 'the same page, whose list draws its own wait'],
+    [
+      'Filter',
+      '/coven/testwort-circle/ingredients?q=testwort',
+      'the same page, whose list draws its own wait',
+    ],
     ['Lost', '/coven/testwort-circle/nowhere', 'an address no page answers'],
   ])('leaves the page in place for %s (%s: %s)', async (name, href) => {
     renderCoven({ [name]: href });

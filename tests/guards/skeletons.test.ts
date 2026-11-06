@@ -93,9 +93,7 @@ describe('the skeleton registry', () => {
     );
     expect(patternOf('src/app/page.tsx')).toBe('/');
     expect(all).toContain('src/app/(shell)/coven/[slug]/(people)/@action/members/page.tsx');
-    expect(isSlotPage('src/app/(shell)/coven/[slug]/(people)/@action/members/page.tsx')).toBe(
-      true,
-    );
+    expect(isSlotPage('src/app/(shell)/coven/[slug]/(people)/@action/members/page.tsx')).toBe(true);
     // A slot page has the address of the page it sits beside, so that page's entry covers it.
     expect(routed.map(patternOf)).toContain('/coven/[slug]/members');
     // An exemption that names no page, or a slot page, is a stale line.

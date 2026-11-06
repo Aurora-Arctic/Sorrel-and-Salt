@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  NEW_COVEN_PATH,
-  covenSlugOf,
-  isReservedCovenSlug,
-  pathInCoven,
-} from '@/lib/coven-path';
+import { NEW_COVEN_PATH, covenSlugOf, isReservedCovenSlug, pathInCoven } from '@/lib/coven-path';
 
 describe('covenSlugOf', () => {
   it.each([

@@ -4,9 +4,7 @@ import type { ReactElement } from 'react';
 // skeleton hosts tell apart, each skeleton a named region, so a test finds which one was drawn
 // by role and name alone. A test mocks `@/app/skeletons` with `{ skeletons: testSkeletons }`.
 
-const named =
-  (name: string) =>
-  (): ReactElement => <section aria-label={name} />;
+const named = (name: string) => (): ReactElement => <section aria-label={name} />;
 
 export const testSkeletons = {
   '/compendium': { host: 'main', Skeleton: named('Compendium skeleton') },
