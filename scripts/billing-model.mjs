@@ -82,17 +82,25 @@ const I = {
     },
     dev: { median: 80.07, contractor: 122.5 },
   },
-  // business earnings a year that leave the owner the take-home of a $250,000 salary
-  // (A: $180,243 after all tax). Employer tax and payroll admin are inside these figures; benefits are not.
+  // business earnings a year that leave the owner the take-home of a $250,000 gross salary, married
+  // filing jointly with the spouse's income taken as zero (A: $194,529 after all tax). Employer tax and
+  // payroll admin are inside these figures; benefits are not.
   structures: [
-    { id: 'A', name: 'A all-salary ($250,000 wage)', year: 266575 },
-    { id: 'B', name: 'B S corporation ($184,500 wage, distributions)', year: 257599 },
-    { id: 'B*', name: 'B* S corporation ($190,000 wage, distributions)', year: 258302 },
+    { id: 'A', name: 'A all-salary ($250,000 gross salary)', year: 266575 },
+    { id: 'B', name: 'B S corporation ($184,500 wage, distributions)', year: 260359 },
+    { id: 'B*', name: 'B* S corporation ($190,000 wage, distributions)', year: 260868 },
     {
       id: 'C',
-      name: 'C sole proprietor or single-member LLC (recommended, pending the accountant)',
-      year: 249434,
+      name: 'C sole proprietor or single-member LLC (recommended as a tax structure, pending the accountant)',
+      year: 252950,
     },
+  ],
+  // the same four for a single filer (A: $180,243 after all tax), the previous assumption
+  structuresSingle: [
+    { id: 'A', name: 'A all-salary ($250,000 gross salary)', year: 266575 },
+    { id: 'B', name: 'B S corporation ($184,500 wage, distributions)', year: 257599 },
+    { id: 'B*', name: 'B* S corporation ($190,000 wage, distributions)', year: 258302 },
+    { id: 'C', name: 'C sole proprietor or single-member LLC', year: 249434 },
   ],
   // benefits (health, retirement), the same in every structure: method A (low) and method B (high)
   benefitsYear: { low: 20848, high: 57251 },
@@ -344,11 +352,12 @@ const labourSens = (P) => labourAt(P, I.rates.support.living, I.rates.dev.contra
 const hiredHours = (P) => Math.max(0, hoursAt(ROW, P) - I.oneFteHours);
 const labourSalary = (P) => fte + hiredHours(P) * I.rates.support.living + aiCost(P);
 const structYear = (id) => I.structures.find((x) => x.id === id).year;
-// the salary line is structure C plus benefits; all-salary (A) is kept as a sensitivity row
-const fte = (structYear('C') + I.benefitsYear.low) / 12,
-  fteHigh = (structYear('C') + I.benefitsYear.high) / 12;
-const fteA = (structYear('A') + I.benefitsYear.low) / 12,
-  fteAHigh = (structYear('A') + I.benefitsYear.high) / 12;
+// the salary line is a $250,000 gross salary (structure A) plus the employer's payroll taxes and
+// benefits, so it reads as a standard employee's cost; structure C is kept as a sensitivity row
+const fte = (structYear('A') + I.benefitsYear.low) / 12,
+  fteHigh = (structYear('A') + I.benefitsYear.high) / 12;
+const fteC = (structYear('C') + I.benefitsYear.low) / 12,
+  fteCHigh = (structYear('C') + I.benefitsYear.high) / 12;
 
 // models: paying unit base and revenue per paying unit. A paying seat is one activated account
 // in a paying coven, so paying covens = paying seats x memberships per account / members per coven.
@@ -662,7 +671,7 @@ out.push(
       `Variable labour per paying seat, ${k} row: ${varHours[k].toFixed(2)} h per 1,000 seats x loaded $${I.rates.support.living.toFixed(2)} = $${((varHours[k] * I.rates.support.living) / 1000).toFixed(3)} a month (market rate: $${((varHours[k] * I.rates.support.market) / 1000).toFixed(3)}). Fixed labour ${f(I.fixedHours[k] * I.rates.dev.median)} a month (contractor rate ${f(I.fixedHours[k] * I.rates.dev.contractor)}).`,
   ),
   `AI assistance for support agents (on by default): the factor on minutes per support contact is ${aiFactor} (${AI.choice}; low 0.735, median 0.87, high 1.00), applied to the support part of the variable hours only. Each agent beyond the owner has a Claude Team seat at $${AI.seatPrice} a month (minimum ${AI.minSeats} seats), one agent per further ${I.oneFteHours} hours a month, rounded up; agents use the Team plan, never Pro, so customer messages are not trained on.`,
-  `Salary line: structure C job ${f(fte)} a month (low benefits) plus hours above ${I.oneFteHours} a month bought as hired help at the living-wage support rate. Job high benefits: ${f(fteHigh)}; promised on-call alternative ${f(I.onCallMonth)} a month.`,
+  `Salary line: structure A job (a $250,000 gross salary plus employer taxes) ${f(fte)} a month (low benefits) plus hours above ${I.oneFteHours} a month bought as hired help at the living-wage support rate. Job high benefits: ${f(fteHigh)}; promised on-call alternative ${f(I.onCallMonth)} a month.`,
 );
 out.push('', '## One-Person Ceiling');
 out.push(
@@ -690,16 +699,16 @@ for (const k of ROWS) {
   tr('Cash + labour at the BLS market support rate', (s) => s.cash + labourMarket(s.P));
   tr('Cash + labour with contractor engineering rate', (s) => s.cash + labourSens(s.P));
   tr(
-    'Cash + structure C job (recommended, pending accountant; low benefits) + hired hours',
+    'Cash + structure A job ($250,000 gross salary; low benefits) + hired hours',
     (s) => s.cash + labourSalary(s.P),
   );
   tr(
-    'Cash + structure C job (high benefits) + hired hours',
+    'Cash + structure A job (high benefits) + hired hours',
     (s) => s.cash + fteHigh + hiredHours(s.P) * I.rates.support.living + aiCost(s.P),
   );
   tr(
-    'Sensitivity: cash + all-salary job (A; low benefits) + hired hours',
-    (s) => s.cash + fteA + hiredHours(s.P) * I.rates.support.living + aiCost(s.P),
+    'Sensitivity: cash + structure C job (low benefits) + hired hours',
+    (s) => s.cash + fteC + hiredHours(s.P) * I.rates.support.living + aiCost(s.P),
   );
   tr(
     'Cash + labour at base rates + promised on-call',
@@ -720,6 +729,29 @@ out.push(
   ]),
   row(['---', '---:', '---:', '---:', '---:', '---:']),
   ...I.structures.map((x) =>
+    row([
+      x.name,
+      f(x.year, 0),
+      f(x.year / 12, 0),
+      f(structYear('A') - x.year, 0),
+      f(x.year + I.benefitsYear.low, 0),
+      f(x.year + I.benefitsYear.high, 0),
+    ]),
+  ),
+);
+out.push('', '## Salary Structures, single filer (previous assumption)');
+out.push(
+  '',
+  row([
+    'Structure',
+    'Business earnings a year',
+    'a month',
+    'Saving against A',
+    'Loaded a year, low benefits',
+    'Loaded a year, high benefits',
+  ]),
+  row(['---', '---:', '---:', '---:', '---:', '---:']),
+  ...I.structuresSingle.map((x) =>
     row([
       x.name,
       f(x.year, 0),
@@ -859,7 +891,7 @@ for (const m of Object.values(models))
   out.push(row([m.name, ...SIZES.map((P) => f(netAt(m, P, true).net))]));
 out.push(
   '',
-  '## Clears (i) cash / (ii) cash + labour at base rates / (iii) cash + structure C job (low benefits)',
+  '## Clears (i) cash / (ii) cash + labour at base rates / (iii) cash + structure A job (low benefits)',
 );
 const yn = (v) => (v ? 'Y' : 'n');
 for (const k of ROWS) {
@@ -1113,8 +1145,15 @@ if (process.argv.includes('--json')) {
       observersPerCoven,
       fte,
       fteHigh,
-      fteA,
-      fteAHigh,
+      fteC,
+      fteCHigh,
+      structuresSingle: I.structuresSingle.map((x) => ({
+        ...x,
+        month: x.year / 12,
+        saving: structYear('A') - x.year,
+        loadedLow: x.year + I.benefitsYear.low,
+        loadedHigh: x.year + I.benefitsYear.high,
+      })),
       structures: I.structures.map((x) => ({
         ...x,
         month: x.year / 12,

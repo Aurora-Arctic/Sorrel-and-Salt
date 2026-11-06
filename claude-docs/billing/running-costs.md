@@ -273,7 +273,7 @@ Variable hours include the AI factor of 0.87 on the support part. Without AI ass
 **Loading a wage into an hourly cost.** Each wage × 2,080 hours is loaded with Lane D's employer payroll taxes and benefits, by the same rules Lane D applied to the $250,000 salary, and the base rate is the midpoint of the low and high loads. For the $41.47 wage ($86,255 a year): low load, taxes $7,664 (Social Security 6.2%, Medicare 1.45%, FUTA $42, Washington unemployment 1.0% and EAF 0.02% on $78,200, no employer PFML share, L&I at the class 5302 rate) plus benefits $12,002 (health $7,344 plus retirement 5.40% of wage) gives $105,921 ÷ 2,080 = **$50.92**. High load, taxes $11,888 (unemployment 6.0%, EAF 0.03%, employer PFML 1.13% × 28.57%, L&I at the class 4904 rate, the higher one) plus benefits $19,752 (22.90% of wage, BLS ECEC) gives $117,895 ÷ 2,080 = **$56.68**. The midpoint is **$53.80 an hour**. The benefits load includes health cover, and the wage already has the medical line taken out, so health cover is not counted twice. The same method on the engineering wage gives $94.56 to $107.20, base **$100.88**, and on the market-rate $24.20 gives $31.26 to $33.27, base $32.27. Engineering hours above one person's 160, if hired, would be loaded the same way; the fixed hours never reach 160, so none arise. The owner's own line keeps Lane J's structure.
 
 - **Labour line (ii):** cash + fixed hours at the loaded $100.88 + variable hours at the loaded $53.80 + Claude Team seats.
-- **Salary line (iii):** cash + structure C's monthly cost with Lane D's benefits ($22,524 a month with low benefits, $25,557 with high; **the recommended structure, pending an accountant**, see Salary Structures below) + hired help for every hour above 160 a month, bought at the loaded $53.80 (the variable hours are the ones that grow) + Claude Team seats. One full-time person is 160 hours a month. The all-salary figure (structure A) is $23,952 a month low and $26,986 high.
+- **Salary line (iii):** cash + structure A's monthly cost with Lane D's benefits ($23,952 a month with low benefits, $26,986 with high; a $250,000 gross salary as a standard employee would see it before their own deductions, plus the employer's payroll taxes, plus benefits) + hired help for every hour above 160 a month, bought at the loaded $53.80 (the variable hours are the ones that grow) + Claude Team seats. One full-time person is 160 hours a month. The owner chose A for the line so that it reads as a normal employee's cost (2026-11-06). Structure C (a cheaper tax structure, recommended as a tax structure pending the accountant) is a sensitivity row: $22,817 a month low and $25,850 high, married filing jointly ($22,524 and $25,557 for a single filer).
 - **One-person ceiling:** the paying-seat count where the hours reach 160 a month: **22,241** (low row), **4,341** (median row), **893** (high row). The hourly rates do not change it; the AI factor does (19,453 / 3,819 / 793 at 1.00).
 - **Variable labour per paying seat:** low row 6.08 h ÷ 1,000 × $53.80 = **$0.33 a month** ($0.20 at the loaded market rate); median row 26.6 h ÷ 1,000 × $53.80 = **$1.43** ($0.86 at the market rate). Net revenue per paying seat after fees at 10,000 seats is $1.76 to $3.31 (model (c) is lowest), so in the low row every model breaks even on labour at some size, and in the median row model (c) keeps only $0.33 a seat (see subscription-models.md). Fixed labour is $2,502 a month in the low row and $4,479 in the median row at the loaded $100.88 ($3,038 and $5,439 at the unloaded $122.50).
 - **Primary case:** the low row. Kanka, Pinboard and Plausible fit only the low row, and it holds only if self-service help ships before billing (the Low-Support Scenario in subscription-models.md). The median is the stress case and is shown beside it everywhere.
@@ -295,58 +295,71 @@ A merchant of record is the company legally selling to the customer, which colle
 
 ## Salary Structures (Lane J)
 
-Lane J (sources dated 2026-11-06) asked what the business must earn for the owner to keep the take-home of a $250,000 salary under four ways of paying oneself. The owner's goals (2026-11-06): "the cheapest tax option with the maximum benefits", "while maintaining what I would get at a $250k salary". A is all-salary. B and B* are an S corporation paying a wage of $184,500 or $190,000 with the rest as distributions. C is a single-member LLC taxed as a sole proprietor, with no S election. The take-home held equal is A's: $180,243 after all tax, single filer.
+Lane J (sources dated 2026-11-06) asked what the business must earn for the owner to keep the take-home of a $250,000 salary under four ways of paying oneself. The owner's goals (2026-11-06): "the cheapest tax option with the maximum benefits", "while maintaining what I would get at a $250k salary". A is all-salary. B and B* are an S corporation paying a wage of $184,500 or $190,000 with the rest as distributions. C is a single-member LLC taxed as a sole proprietor, with no S election. The owner files married filing jointly (2026-11-06: "Married filing jointly would be my tax."), so the main table holds equal A's joint take-home: **$194,529** after all tax (income tax $37,468, employee payroll taxes $18,003, no additional Medicare, taxable income $217,800). The spouse's income is unknown and assumed to be zero (owner to confirm; accountant item 37). The single-filer table beneath is the previous assumption, which held equal A's single take-home of $180,243.
+
+**Joint figures and sources (fetched 2026-11-06).** Rev. Proc. 2025-32 (https://www.irs.gov/pub/irs-drop/rp-25-32.pdf) gives the 2026 joint brackets (10% to $24,800; 12% to $100,800; 22% to $211,400; 24% to $403,550; 32% to $512,450; 35% to $768,700; 37% above), the joint standard deduction ($32,200) and the joint qualified business income (QBI) threshold ($403,500, with the phase-in ending at $553,500, a range of $150,000). The additional Medicare threshold for joint filers ($250,000) is from IRS Topic 560 (https://www.irs.gov/taxtopics/tc560), not the Rev. Proc. All joint figures were found. Taxable income is far below $403,500 in every structure, so whether the business is a specified service trade or business (SSTB) makes no difference to the joint results (derived).
 
 **What each earlier figure includes.** Lane D's $286,977 is $250,000 wage + employer payroll taxes, unemployment insurance, the Employment Administration Fund and workers' compensation lines + Lane D's low benefits ($20,848). Lane J's $266,575 for A is $250,000 wage + employer taxes ($15,106) + $1,469 of payroll and return-preparation admin, and **no benefits**. Add the same low benefits and Lane J's A is $287,423. That differs from Lane D's $286,977 by $446: Lane D's unemployment insurance, Employment Administration Fund and L&I lines (+$1,024) which Lane J sets to zero (a 100% owner-officer cannot draw unemployment, and officers are exempt from L&I by default), less Lane J's admin ($1,469) which Lane D does not carry. So the two agree once the benefits and these two lines are lined up; nothing is double counted.
 
 **Like for like.** Every row below adds the same Lane D benefits, because health and retirement cost the same in every structure: $20,848 (method A, low) to $57,251 (method B, high).
 
-| Structure                                                                    | Business earnings a year | a month | Saving against A | Loaded a year, low benefits | Loaded a year, high benefits |
-| ---------------------------------------------------------------------------- | -----------------------: | ------: | ---------------: | --------------------------: | ---------------------------: |
-| A all-salary ($250,000 wage)                                                 |                 $266,575 | $22,215 |               $0 |                    $287,423 |                     $323,826 |
-| B S corporation ($184,500 wage, distributions)                               |                 $257,599 | $21,467 |           $8,976 |                    $278,447 |                     $314,850 |
-| B* S corporation ($190,000 wage, distributions)                              |                 $258,302 | $21,525 |           $8,273 |                    $279,150 |                     $315,553 |
-| C sole proprietor or single-member LLC (recommended, pending the accountant) |                 $249,434 | $20,786 |          $17,141 |                    $270,282 |                     $306,685 |
+| Structure                                                                                       | Business earnings a year | a month | Saving against A | Loaded a year, low benefits | Loaded a year, high benefits |
+| ----------------------------------------------------------------------------------------------- | -----------------------: | ------: | ---------------: | --------------------------: | ---------------------------: |
+| A all-salary ($250,000 gross salary)                                                            |                 $266,575 | $22,215 |               $0 |                    $287,423 |                     $323,826 |
+| B S corporation ($184,500 wage, distributions)                                                  |                 $260,359 | $21,697 |           $6,216 |                    $281,207 |                     $317,610 |
+| B* S corporation ($190,000 wage, distributions)                                                 |                 $260,868 | $21,739 |           $5,707 |                    $281,716 |                     $318,119 |
+| C sole proprietor or single-member LLC (recommended as a tax structure, pending the accountant) |                 $252,950 | $21,079 |          $13,625 |                    $273,798 |                     $310,201 |
 
-What each structure gives up against A: B and B* keep every benefit, and carry a reasonable-compensation audit risk. C keeps the Social Security record and Medicare, makes Paid Family and Medical Leave opt-in (employee share only, three-year minimum), loses unemployment cover (a 100% owner could not draw it in A either), keeps WA Cares only if the owner first self-employed within three years, and has retirement room of about $71,400 against $72,000 (about $600 less). C wins because Social Security is capped at the same $184,500 in every structure, so an S corporation saves only Medicare on the distribution, while a sole proprietor's whole profit counts for the qualified business income (QBI) deduction.
+Joint detail: in C the self-employment tax is about $29,647, the QBI deduction about $41,148, WA Cares about $1,466 and income tax about $25,635. In B the distribution is about $60,233, the QBI deduction about $12,047 and income tax about $33,531; in B* the distribution is about $55,163, the QBI deduction about $11,033 and income tax about $33,849. At the same business earnings of $266,575, A costs $70,577 in total tax and C $61,047.
 
-**The model's recommendation is C, pending the accountant.** If the accountant rules C out, B* at a $190,000 wage is second. The result rests on secondary sources for the QBI thresholds and on a single-filer assumption; filing jointly was not computed. If the business is a specified service trade or business (SSTB), B's saving falls to about $6,800 (derived) and C is unchanged. The checklist for the accountant is items 21 to 33 under "What the Repository Doesn't Say".
+**Single filer (the previous assumption).** The same method with the single brackets, the $16,100 standard deduction and the $201,750 QBI threshold with its $75,000 range:
+
+| Structure                                       | Business earnings a year | a month | Saving against A | Loaded a year, low benefits | Loaded a year, high benefits |
+| ----------------------------------------------- | -----------------------: | ------: | ---------------: | --------------------------: | ---------------------------: |
+| A all-salary ($250,000 gross salary)            |                 $266,575 | $22,215 |               $0 |                    $287,423 |                     $323,826 |
+| B S corporation ($184,500 wage, distributions)  |                 $257,599 | $21,467 |           $8,976 |                    $278,447 |                     $314,850 |
+| B* S corporation ($190,000 wage, distributions) |                 $258,302 | $21,525 |           $8,273 |                    $279,150 |                     $315,553 |
+| C sole proprietor or single-member LLC          |                 $249,434 | $20,786 |          $17,141 |                    $270,282 |                     $306,685 |
+
+What each structure gives up against A: B and B* keep every benefit, and carry a reasonable-compensation audit risk. C keeps the Social Security record and Medicare, makes Paid Family and Medical Leave opt-in (employee share only, three-year minimum), loses unemployment cover (a 100% owner could not draw it in A either), keeps WA Cares only if the owner first self-employed within three years, and has retirement room of about $71,400 against $72,000 (about $600 less). C is no longer the salary line: the owner wants the line to read as a normal employee's cost, so the line is A and C is the sensitivity row. C still wins as a tax structure because Social Security is capped at the same $184,500 in every structure, so an S corporation saves only Medicare on the distribution, while a sole proprietor's whole profit counts for the qualified business income (QBI) deduction.
+
+**The model's recommendation is C, pending the accountant.** If the accountant rules C out, B* at a $190,000 wage is second. The result now rests on the Rev. Proc. 2025-32 figures for the QBI thresholds and on the assumption that the spouse has no income. For a single filer, if the business is a specified service trade or business (SSTB), B's saving falls to about $6,800 (derived) and C is unchanged; for joint filing the SSTB status makes no difference. The checklist for the accountant is items 21 to 33 under "What the Repository Doesn't Say".
 
 ## Totals
 
-All rows are dollars a month. Cash costs are the Platform total plus Claude Ultra. The labour rows use the low and median cases of the Labour section, so they grow with paying seats. The full-time rows are structure C (the recommended structure, pending the accountant) with Lane D's benefits, $270,282 a year (low) or $306,685 (high), divided by 12, plus hired help for hours above 160 a month. The sensitivity row is all-salary (A) with low benefits, $287,423 a year. The on-call row is a separate best-effort-versus-promised comparison.
+All rows are dollars a month. Cash costs are the Platform total plus Claude Ultra. The labour rows use the low and median cases of the Labour section, so they grow with paying seats. The full-time rows are structure A (a $250,000 gross salary plus the employer's payroll taxes) with Lane D's benefits, $287,423 a year (low) or $323,826 (high), divided by 12, plus hired help for hours above 160 a month. The sensitivity row is structure C (married filing jointly) with low benefits, $273,798 a year. The on-call row is a separate best-effort-versus-promised comparison.
 
 **Low contact-rate row (primary):**
 
-| Row                                                                                  |     100 |    1000 |   10000 |  100000 |
-| ------------------------------------------------------------------------------------ | ------: | ------: | ------: | ------: |
-| Cash costs                                                                           |    $243 |    $284 |    $325 |  $1,174 |
-| Labour hours a month                                                                 |    25.4 |    30.9 |    85.6 |   632.7 |
-| Claude Team seats for support agents (inside every labour row below)                 |       0 |       0 |       0 |       3 |
-| Labour alone (loaded $100.88 engineering, $53.80 support)                            |  $2,535 |  $2,829 |  $5,772 | $35,283 |
-| Cash + labour at base rates                                                          |  $2,777 |  $3,113 |  $6,098 | $36,457 |
-| Cash + labour at the loaded BLS market support rate ($32.27)                         |  $2,764 |  $2,982 |  $4,789 | $23,367 |
-| Cash + labour with contractor engineering ($122.50)                                  |  $3,313 |  $3,649 |  $6,634 | $36,994 |
-| Cash + structure C job (recommended, pending accountant; low benefits) + hired hours | $22,766 | $22,807 | $22,849 | $49,205 |
-| Cash + structure C job (high benefits) + hired hours                                 | $25,800 | $25,841 | $25,882 | $52,239 |
-| Sensitivity: cash + all-salary job (A; low benefits) + hired hours                   | $24,195 | $24,236 | $24,277 | $50,634 |
-| Cash + labour + promised on-call                                                     |  $5,117 |  $5,453 |  $8,438 | $38,797 |
+| Row                                                                        |     100 |    1000 |   10000 |  100000 |
+| -------------------------------------------------------------------------- | ------: | ------: | ------: | ------: |
+| Cash costs                                                                 |    $243 |    $284 |    $325 |  $1,174 |
+| Labour hours a month                                                       |    25.4 |    30.9 |    85.6 |   632.7 |
+| Claude Team seats for support agents (inside every labour row below)       |       0 |       0 |       0 |       3 |
+| Labour alone (loaded $100.88 engineering, $53.80 support)                  |  $2,535 |  $2,829 |  $5,772 | $35,283 |
+| Cash + labour at base rates                                                |  $2,777 |  $3,113 |  $6,098 | $36,457 |
+| Cash + labour at the loaded BLS market support rate ($32.27)               |  $2,764 |  $2,982 |  $4,789 | $23,367 |
+| Cash + labour with contractor engineering ($122.50)                        |  $3,313 |  $3,649 |  $6,634 | $36,994 |
+| Cash + structure A job ($250,000 gross salary; low benefits) + hired hours | $24,195 | $24,236 | $24,277 | $50,634 |
+| Cash + structure A job (high benefits) + hired hours                       | $27,228 | $27,269 | $27,311 | $53,667 |
+| Sensitivity: cash + structure C job (low benefits) + hired hours           | $23,059 | $23,100 | $23,142 | $49,498 |
+| Cash + labour + promised on-call                                           |  $5,117 |  $5,453 |  $8,438 | $38,797 |
 
 **Median contact-rate row (stress case):**
 
-| Row                                                                                  |     100 |    1000 |   10000 |   100000 |
-| ------------------------------------------------------------------------------------ | ------: | ------: | ------: | -------: |
-| Cash costs                                                                           |    $243 |    $284 |    $325 |   $1,174 |
-| Labour hours a month                                                                 |    47.1 |    71.0 |   310.7 |   2707.4 |
-| Claude Team seats for support agents (inside every labour row below)                 |       0 |       0 |       2 |       16 |
-| Labour alone (loaded $100.88 engineering, $53.80 support)                            |  $4,622 |  $5,912 | $18,857 | $148,154 |
-| Cash + labour at base rates                                                          |  $4,865 |  $6,196 | $19,182 | $149,328 |
-| Cash + labour at the loaded BLS market support rate ($32.27)                         |  $4,808 |  $5,622 | $13,448 |  $91,984 |
-| Cash + labour with contractor engineering ($122.50)                                  |  $5,825 |  $7,156 | $20,142 | $150,288 |
-| Cash + structure C job (recommended, pending accountant; low benefits) + hired hours | $22,766 | $22,807 | $31,007 | $161,153 |
-| Cash + structure C job (high benefits) + hired hours                                 | $25,800 | $25,841 | $34,040 | $164,187 |
-| Sensitivity: cash + all-salary job (A; low benefits) + hired hours                   | $24,195 | $24,236 | $32,435 | $162,581 |
-| Cash + labour + promised on-call                                                     |  $7,205 |  $8,536 | $21,522 | $151,668 |
+| Row                                                                        |     100 |    1000 |   10000 |   100000 |
+| -------------------------------------------------------------------------- | ------: | ------: | ------: | -------: |
+| Cash costs                                                                 |    $243 |    $284 |    $325 |   $1,174 |
+| Labour hours a month                                                       |    47.1 |    71.0 |   310.7 |   2707.4 |
+| Claude Team seats for support agents (inside every labour row below)       |       0 |       0 |       2 |       16 |
+| Labour alone (loaded $100.88 engineering, $53.80 support)                  |  $4,622 |  $5,912 | $18,857 | $148,154 |
+| Cash + labour at base rates                                                |  $4,865 |  $6,196 | $19,182 | $149,328 |
+| Cash + labour at the loaded BLS market support rate ($32.27)               |  $4,808 |  $5,622 | $13,448 |  $91,984 |
+| Cash + labour with contractor engineering ($122.50)                        |  $5,825 |  $7,156 | $20,142 | $150,288 |
+| Cash + structure A job ($250,000 gross salary; low benefits) + hired hours | $24,195 | $24,236 | $32,435 | $162,581 |
+| Cash + structure A job (high benefits) + hired hours                       | $27,228 | $27,269 | $35,469 | $165,615 |
+| Sensitivity: cash + structure C job (low benefits) + hired hours           | $23,059 | $23,100 | $31,300 | $161,446 |
+| Cash + labour + promised on-call                                           |  $7,205 |  $8,536 | $21,522 | $151,668 |
 
 Reading the table: **Claude Ultra is 82% of the cash cost at 100 paying seats.** Cash costs reach about $1,174 at 100,000 paying seats (against $552 before the overhead accounts were counted), because 473,333 accounts use the platform. Labour dwarfs cash at every size in both rows; in the low row at 1,000 paying seats it is about 10 times the cash costs.
 
@@ -385,8 +398,8 @@ No usage forces an enterprise plan at 100,000 paying seats. Features do.
 19. **Curation ratio** (compendium edits per user): not found (Lane I). **Owner to confirm.**
 20. **Not measured:** real Active CPU per render, and real spells and ingredients per coven.
 21. **Accountant, salary structure (Lane J, item 1):** Is $184,500 or $190,000 reasonable compensation for this owner (developer plus manager), given BLS Washington pay ($166,540 median, $211,860 75th percentile; IT managers $209,370 median)? **Owner to confirm** with the accountant.
-22. **Accountant, salary structure (Lane J, item 2):** Confirm the 2026 QBI threshold ($201,750 single) and $75,000 phase-in from Rev. Proc. 2025-32, and whether a SaaS business is a specified service trade or business (SSTB). **Owner to confirm** with the accountant.
-23. **Accountant, salary structure (Lane J, item 3):** Confirm the C-versus-S result for the owner's real filing status and other income, and whether an S election still pays at all. **Owner to confirm** with the accountant.
+22. **Accountant, salary structure (Lane J, item 2):** Confirm the 2026 QBI threshold ($403,500 joint, $201,750 single) and phase-in range ($150,000 joint, $75,000 single) from Rev. Proc. 2025-32, and whether a SaaS business is a specified service trade or business (SSTB). **Owner to confirm** with the accountant.
+23. **Accountant, salary structure (Lane J, item 3):** Confirm the C-versus-S result for the owner's real other income, and whether an S election still pays at all. The model assumes married filing jointly with the spouse's income at zero (item 37). **Owner to confirm** with the accountant.
 24. **Accountant, salary structure (Lane J, item 4):** For a solo 401(k), is an S-corporation owner's "compensation" W-2 wages only, and is a sole proprietor's employer share effectively 20%? **Owner to confirm** with the accountant.
 25. **Accountant, salary structure (Lane J, item 5):** Are the owner's health premiums and retirement contributions handled the same way in each structure, and how do they reduce QBI? **Owner to confirm** with the accountant.
 26. **Accountant, salary structure (Lane J, item 6):** Form 2553 deadline and effective date; late-election relief. **Owner to confirm** with the accountant.
@@ -400,6 +413,7 @@ No usage forces an enterprise plan at 100,000 paying seats. Features do.
 34. **Accountant, salary structure (Lane J, item 12):** Confirm distributions are not self-employment income, and that the Medicare premium income test is unaffected by the split. **Owner to confirm** with the accountant.
 35. **Accountant, salary structure (Lane J, item 13):** Current payroll and return-preparation fees (the survey figures date from 2016-17). **Owner to confirm** with the accountant.
 36. **Model (i)'s payer share and personal plan** (subscription-models.md question 25). Confirm that 50% of covens are each-member-pays (range 0% to 100%, no source), that 20% of paying seats buy a solo coven alone, and that the $3.50 personal plan holds even though a two-person each-member-pays coven gets a solo coven for the seat price. The model also counts one Stripe subscription per paying person, so a $0 later seat adds no 30¢ fee.
+37. **Accountant, spouse's income and joint filing.** The owner files married filing jointly (2026-11-06). The spouse's income is unknown and assumed to be zero in every joint figure; the structure table changes if the spouse earns anything. Confirm the spouse's income and that joint filing gives the results above. **Owner to confirm** with the accountant.
 
 ## How to Re-Run the Numbers
 
