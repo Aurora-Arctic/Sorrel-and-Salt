@@ -58,19 +58,26 @@ import type { CardAssets, CardSheetsInput } from './types';
 
 const PT = 72;
 export const PAGE = { width: 8.5 * PT, height: 11 * PT };
-const TRIM = { width: 3.5 * PT, height: 2.625 * PT };
+/** The landscape frame the cards are laid out on, before it is turned onto the portrait page. */
+const FRAME = { width: PAGE.height, height: PAGE.width };
+const TRIM = { width: 3.5 * PT, height: 2 * PT };
 const BLEED = 0.125 * PT;
-/** The block of nine cards and its bleed: 1/8 in from the page's ends, centred between its sides. */
+/** Three cards across the frame's long side and four down. */
+const COLUMNS = 3;
+const ROWS = CARDS_PER_SHEET / COLUMNS;
+/** The block of twelve cards and its bleed, 1/8 in from every edge of the page. */
 export const BLOCK = {
   x: 0.125 * PT,
-  y: 0.1875 * PT,
-  width: 3 * TRIM.width + 2 * BLEED,
-  height: 3 * TRIM.height + 2 * BLEED,
+  y: 0.125 * PT,
+  width: COLUMNS * TRIM.width + 2 * BLEED,
+  height: ROWS * TRIM.height + 2 * BLEED,
 };
 const ARTBOARD_SCALE = PT / PX_PER_INCH;
 
-// Crop marks sit on each cut line's extension, clear of the bleed: short at the page's ends, where the margin is 1/8 in.
-const MARK = { width: 0.75, endGap: 2.25, endLength: 6, sideGap: 4.5, sideLength: 7.5 };
+// Crop marks sit on each cut line's extension, clear of the bleed, short enough for the 1/8 in margin on every side.
+const MARK = { width: 0.75, gap: 2.25, length: 6 };
+/** The sheet label's place: in the margin below the block, its baseline 2.5 pt from the frame's edge, 8 pt in from the first trim. */
+const LABEL_AT = { x: BLOCK.x + BLEED + 8, baseline: FRAME.height - 2.5 };
 
 interface Sheet {
   fronts: PDFPage;
@@ -84,17 +91,17 @@ interface Embedded {
   pictures: Record<PictureItem['picture'], PDFRef>;
 }
 
-/** The top left of card i's trim on its sheet: three across the frame's long side, three down. */
+/** The top left of card i's trim on its sheet: three across the frame's long side, four down. */
 function cardTrim(i: number): { x: number; y: number } {
   return {
-    x: BLOCK.x + BLEED + (i % 3) * TRIM.width,
-    y: BLOCK.y + BLEED + Math.floor(i / 3) * TRIM.height,
+    x: BLOCK.x + BLEED + (i % COLUMNS) * TRIM.width,
+    y: BLOCK.y + BLEED + Math.floor(i / COLUMNS) * TRIM.height,
   };
 }
 
 /** The position a card's back takes: the backs are mirrored by column, so a long-edge two-sided print puts each back behind its front. */
 export function backPosition(i: number): number {
-  return Math.floor(i / 3) * 3 + (2 - (i % 3));
+  return Math.floor(i / COLUMNS) * COLUMNS + (COLUMNS - 1 - (i % COLUMNS));
 }
 
 /**
@@ -219,13 +226,15 @@ function cropMarkOperators(): Operator[] {
   const bottom = BLOCK.y + BLOCK.height;
   const left = BLOCK.x;
   const right = BLOCK.x + BLOCK.width;
-  for (let k = 0; k <= 3; k += 1) {
+  for (let k = 0; k <= COLUMNS; k += 1) {
     const x = BLOCK.x + BLEED + k * TRIM.width;
-    ops.push(moveTo(x, top - MARK.sideGap), lineTo(x, top - MARK.sideGap - MARK.sideLength));
-    ops.push(moveTo(x, bottom + MARK.sideGap), lineTo(x, bottom + MARK.sideGap + MARK.sideLength));
+    ops.push(moveTo(x, top - MARK.gap), lineTo(x, top - MARK.gap - MARK.length));
+    ops.push(moveTo(x, bottom + MARK.gap), lineTo(x, bottom + MARK.gap + MARK.length));
+  }
+  for (let k = 0; k <= ROWS; k += 1) {
     const y = BLOCK.y + BLEED + k * TRIM.height;
-    ops.push(moveTo(left - MARK.endGap, y), lineTo(left - MARK.endGap - MARK.endLength, y));
-    ops.push(moveTo(right + MARK.endGap, y), lineTo(right + MARK.endGap + MARK.endLength, y));
+    ops.push(moveTo(left - MARK.gap, y), lineTo(left - MARK.gap - MARK.length, y));
+    ops.push(moveTo(right + MARK.gap, y), lineTo(right + MARK.gap + MARK.length, y));
   }
   ops.push(stroke());
   return ops;
@@ -307,7 +316,7 @@ function embedPicture(doc: PDFDocument, png: Uint8Array): PDFRef {
   );
 }
 
-/** Builds the print PDF: per sheet of nine, a page of fronts, then (unless `backs` is false) a page of their backs. */
+/** Builds the print PDF: per sheet of twelve, a page of fronts, then (unless `backs` is false) a page of their backs. */
 export async function renderCardSheets(
   { links, batch, expiresAt, backs = true }: CardSheetsInput,
   assets: CardAssets,
@@ -329,9 +338,14 @@ export async function renderCardSheets(
     drawPage(
       sheet.fronts,
       'front',
-      sheetLinks.map((link, i) => ({ position: i, picture: FRONT_PICTURE, text: fronts[i], link })),
+      sheetLinks.map((link, i) => ({
+        position: i,
+        picture: FRONT_PICTURE,
+        text: fronts[(start + i) % fronts.length],
+        link,
+      })),
       embedded,
-      marginText(batch, number, sheets, 'front', BLOCK, BLEED),
+      marginText(batch, number, sheets, 'front', LABEL_AT),
     );
     if (sheet.backs)
       drawPage(
@@ -343,7 +357,7 @@ export async function renderCardSheets(
           text: back,
         })),
         embedded,
-        marginText(batch, number, sheets, 'back', BLOCK, BLEED),
+        marginText(batch, number, sheets, 'back', LABEL_AT),
       );
   }
   return doc.save();

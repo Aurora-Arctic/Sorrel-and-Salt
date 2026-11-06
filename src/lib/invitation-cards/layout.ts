@@ -2,10 +2,10 @@ import type { Font } from '@pdf-lib/fontkit';
 import { BACK_LEDE, BACK_NOTE, type FrontCopy, SITE_ADDRESS, WORDMARK } from './copy';
 import { baselineOffset, normalLineHeight, type TextStyle, wrap, wrapBalanced } from './text';
 
-// Every length here is a pixel of the approved canvas's card artboard, drawn at twice
-// 96 px per inch: 720 × 552 px is the 3.75 × 2.875 in bleed box, and the trim sits 24 px in.
+// Every length here is a pixel of the card artboard, drawn at twice 96 px per inch:
+// 720 × 432 px is the 3.75 × 2.25 in bleed box, and the 3.5 × 2 in trim sits 24 px in.
 
-export const ARTBOARD = { width: 720, height: 552, trimInset: 24 } as const;
+export const ARTBOARD = { width: 720, height: 432, trimInset: 24 } as const;
 export const PX_PER_INCH = 192;
 
 export const CHALK = '#ebe4d4';
@@ -42,8 +42,8 @@ export interface QrItem {
   size: number;
 }
 
-/** The front's text column. */
-export const COLUMN = { left: 72, top: 72, width: 290, height: 408 } as const;
+/** The front's text column, its top left and bottom 1/8 in (24 px) inside the trim. */
+export const COLUMN = { left: 48, top: 48, width: 290, height: 336 } as const;
 const BODY_WIDTH = 280;
 const GROUP_GAP = 18;
 const FOOT_GAP = 6;
@@ -73,8 +73,8 @@ export const BACK_PICTURE: PictureItem = {
   height: 288,
 };
 
-/** The QR code, centred between the text column and the right trim and on the card's middle. */
-export const FRONT_QR: QrItem = { x: 438, y: 185, size: 182 };
+/** The QR code, right of the text column, with the front's foot beneath it on the same left edge. */
+export const FRONT_QR: QrItem = { x: 400, y: 104, size: 182 };
 
 export function headlineStyle(fonts: CardFonts): TextStyle {
   return { font: fonts.cormorant600, size: HEADLINE_SIZE };
@@ -140,7 +140,7 @@ function lexend(fonts: CardFonts, font: FontKey, size: number, letterSpacing = 0
   return { font: fonts[font], size, letterSpacing };
 }
 
-/** The front's words, the canvas's `Main` artboard: the top group, and the foot pushed to the column's bottom. */
+/** The front's words: the top group in the text column, and the foot under the QR code, its last line on the column's bottom. */
 export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string): TextItem[] {
   const tagline = lexend(fonts, 'lexend400', 19.5);
   const rest = lexend(fonts, 'lexend300', 16.5);
@@ -220,7 +220,7 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
   const foot = stack(
     fonts,
     footBlocks,
-    COLUMN.left,
+    FRONT_QR.x,
     COLUMN.top + COLUMN.height - footHeight,
     FOOT_GAP,
   );
@@ -261,8 +261,8 @@ export function backText(fonts: CardFonts, batch: string): TextItem[] {
         },
       },
     ],
-    72,
-    72,
+    COLUMN.left,
+    COLUMN.top,
     12,
   ).items;
   return [...words, backBatchText(batch)];
@@ -282,24 +282,23 @@ function backBatchText(batch: string): TextItem {
 }
 
 /**
- * The sheet's label for the page margin below the block, between its first two crop marks, in the page frame's points.
- * It names the batch and the sheet, so a printed sheet can be matched to the batch to revoke.
+ * The sheet's label for the page margin below the block, between its first two crop marks, at `x` and `baseline` in the
+ * page frame's points. It names the batch and the sheet, so a printed sheet can be matched to the batch to revoke.
  */
 export function marginText(
   batch: string,
   sheet: number,
   sheets: number,
   face: 'front' | 'back',
-  block: { x: number; y: number; height: number },
-  bleed: number,
+  { x, baseline }: { x: number; baseline: number },
 ): TextItem {
   return {
     font: 'lexend400',
-    size: 6,
+    size: 5,
     letterSpacing: 0,
     colour: LABEL,
-    x: block.x + bleed + 8,
-    baseline: block.y + block.height + 10,
+    x,
+    baseline,
     text: `Batch ${batch}, sheet ${sheet} of ${sheets}, ${face === 'front' ? 'fronts' : 'backs'}`,
   };
 }
