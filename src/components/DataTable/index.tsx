@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import Skeleton from '../Skeleton';
 import { SortSelect } from './sort-select';
 import type { ColumnSort, SortChoice, StackColumn, StackTableProps } from './types';
 
@@ -88,15 +89,19 @@ function StackTable<Row>({
   'aria-label': label,
   className,
   otherOrders,
+  pendingRows,
 }: StackTableProps<Row>): ReactElement {
-  if (!rows.length) return <p>{empty}</p>;
+  const pending = pendingRows !== undefined;
+  if (!pending && !rows.length) return <p>{empty}</p>;
   const shown = columns.filter((column): column is StackColumn<Row> => Boolean(column));
-  const sorting = shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
+  const sorting =
+    !pending && shown.some((column) => column.sort) && sortChoices(shown, otherOrders);
   return (
     <div className="data-table-frame">
       {/* Inside the frame, as the container query that shows it at phone width asks of the frame. */}
       {sorting && <SortSelect choices={sorting.choices} current={sorting.current} />}
       <table
+        aria-hidden={pending || undefined}
         className={['data-table data-table--stack', className].filter(Boolean).join(' ')}
         aria-label={label}
         {...tableRole('table')}
@@ -113,7 +118,7 @@ function StackTable<Row>({
               >
                 {column.hiddenHeading ? (
                   <span className="visually-hidden">{column.heading}</span>
-                ) : column.sort ? (
+                ) : column.sort && !pending ? (
                   <SortHeading heading={column.heading} sort={column.sort} />
                 ) : (
                   column.heading
@@ -123,21 +128,35 @@ function StackTable<Row>({
           </tr>
         </thead>
         <tbody {...tableRole('rowgroup')}>
-          {rows.map((row) => (
-            <tr key={rowKey(row)} {...tableRole('row')}>
-              {shown.map((column) => (
-                // An action's cell has no label: it spans the card, or stands at
-                // its top right beside the first line.
-                <td
-                  key={column.heading}
-                  className={cellClass(column)}
-                  {...stackCell(column.action ? '' : column.heading)}
-                >
-                  {column.cell(row)}
-                </td>
+          {pending
+            ? Array.from({ length: pendingRows }, (_, at) => (
+                <tr key={at} {...tableRole('row')}>
+                  {shown.map((column) => (
+                    <td
+                      key={column.heading}
+                      className={cellClass(column)}
+                      {...stackCell(column.action ? '' : column.heading)}
+                    >
+                      {!column.action && <Skeleton shape="line" quiet />}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            : rows.map((row) => (
+                <tr key={rowKey(row)} {...tableRole('row')}>
+                  {shown.map((column) => (
+                    // An action's cell has no label: it spans the card, or stands at
+                    // its top right beside the first line.
+                    <td
+                      key={column.heading}
+                      className={cellClass(column)}
+                      {...stackCell(column.action ? '' : column.heading)}
+                    >
+                      {column.cell(row)}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
         </tbody>
       </table>
     </div>
