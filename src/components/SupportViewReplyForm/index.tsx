@@ -98,7 +98,7 @@ const SupportViewReplyForm = ({ token }: SupportViewReplyFormProps): ReactElemen
           busy={sending}
           busyLabel="Sending"
         >
-          Send Reply
+          Reply
         </BusyButton>
       </div>
     </form>

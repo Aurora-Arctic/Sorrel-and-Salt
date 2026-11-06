@@ -55,7 +55,7 @@ test('the receipt’s link opens the request with no session and takes a reply, 
       response.url().endsWith('/api/graphql') &&
       (response.request().postData() ?? '').includes('replyToSupportRequestByViewToken'),
   );
-  await visitor.getByRole('button', { name: 'Send Reply' }).click();
+  await visitor.getByRole('button', { name: 'Reply' }).click();
   const answer = await (await posted).json();
   expect(answer.errors).toBeUndefined();
   expect(answer.data).toEqual({ replyToSupportRequestByViewToken: true });
