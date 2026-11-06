@@ -27,6 +27,7 @@ const PUBLIC_ROUTES = [
   '/compendium', // the one public surface, read by anyone, indexed by search engines
   '/compendium/*',
   '/support', // offers a signed-out visitor Sign In and holds no data
+  '/support/request/*', // a mailed view link: the token in the path is the authority, so it needs no session
   '/privacy', // a public document, holding no application data
   '/privacy/versions/*', // an earlier version of it
   '/disclaimer',
