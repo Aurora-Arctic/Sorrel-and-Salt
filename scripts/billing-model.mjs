@@ -58,13 +58,30 @@ const I = {
   // variable hours per 1,000 paying seats: support, payment disputes, privacy requests, abuse reports
   variableParts: {
     support: { low: 6.7, median: 28.0, high: 97.5 },
-    disputes: { low: 0.36, median: 3.18, high: 6.82 },
+    // 0.25 / 2.0 / 5.0 hours a dispute (Lane I) x 4 / 5 / 7.5 disputes per 1,000 charges, per 1,000 paying seats
+    disputes: { low: 0.18, median: 1.82, high: 6.82 },
     privacy: { low: 0.06, median: 0.37, high: 8.5 },
     abuse: { low: 0.01, median: 0.08, high: 0.16 },
   },
   oneFteHours: 160,
-  contractor: { low: 95, median: 122.5, high: 150 },
-  loaded: { low: 137.97, median: 147.81, high: 157.65 },
+  // hourly rates, USD (BLS OEWS, Washington, May 2025, fetched 2026-11-06; Lane I, Lane J). Variable hours (support,
+  // disputes, privacy requests, abuse reports) are customer-service work; fixed hours (maintenance, incidents,
+  // filing) are engineering work. 122.5 is Lane D's contractor figure, kept as the engineering sensitivity.
+  rates: {
+    // owner, 2026-11-06: support work is priced at a living wage, the average of three MIT Living Wage Calculator rows
+    // (updated 2026-02-15): Washington 1 adult + 1 child 48.00, King County 1 adult + 1 child 56.43,
+    // King County 1 adult no children 30.60. The BLS Washington customer-service median is the market-rate sensitivity.
+    // wage = living-wage average minus the MIT Medical budget line (9,588 / 9,477 / 3,032 a year over 2,080 h), since the
+    // benefits load below pays for health cover
+    support: {
+      livingFull: (48.0 + 56.43 + 30.6) / 3,
+      medical: (9588 + 9477 + 3032) / 3 / 2080,
+      living: (48.0 + 56.43 + 30.6) / 3 - (9588 + 9477 + 3032) / 3 / 2080,
+      market: 24.2,
+      marketP75: 29.49,
+    },
+    dev: { median: 80.07, contractor: 122.5 },
+  },
   salaryLoadedYear: { low: 286977, high: 327922 }, // Lane D: $250k salary + employer tax + benefits
   // Lane J (sources dated 2026-11-06): business earnings a year that leave the owner the take-home of a $250,000 salary
   // (A: $180,243 after all tax). Employer tax and payroll admin are inside these figures; benefits are not.
@@ -226,8 +243,24 @@ const scale = SIZES.map((P, k) => {
 });
 
 const CASES = ['low', 'median', 'high'];
+// AI assistance for support agents is on by default (owner, 2026-11-06; lane-k-ai-support.md). The factor scales
+// minutes per support contact only (Brynjolfsson, Li and Raymond, QJE 2025: handle time down 8.5%, resolutions per
+// hour up 15.2%); it removes no contact, so the other parts are unchanged. --ai=low|median|high picks the factor.
+const AI = {
+  factors: { low: 0.735, median: 0.87, high: 1.0 },
+  choice: (process.argv.find((a) => a.startsWith('--ai=')) || '--ai=median').slice(5),
+  seatPrice: 25, // Claude Team standard seat, a month; business terms, so customer messages are not trained on
+  minSeats: 2, // Team plan minimum
+};
+const aiFactor = AI.factors[AI.choice];
 const varHours = Object.fromEntries(
-  CASES.map((k) => [k, Object.values(I.variableParts).reduce((a, p) => a + p[k], 0)]),
+  CASES.map((k) => [
+    k,
+    Object.entries(I.variableParts).reduce(
+      (a, [name, p]) => a + p[k] * (name === 'support' ? aiFactor : 1),
+      0,
+    ),
+  ]),
 );
 // hours a month at P paying seats
 const hoursAt = (k, P) => I.fixedHours[k] + (varHours[k] * P) / 1000;
@@ -235,11 +268,79 @@ const hoursAt = (k, P) => I.fixedHours[k] + (varHours[k] * P) / 1000;
 const ceilingSeats = Object.fromEntries(
   CASES.map((k) => [k, ((I.oneFteHours - I.fixedHours[k]) / varHours[k]) * 1000]),
 );
-// hired help: hours above one person's 160 are bought at the median contractor rate
-const hiredHours = (P) => Math.max(0, hoursAt('median', P) - I.oneFteHours);
-const labourContractor = (P) => hoursAt('median', P) * I.contractor.median;
-const labourLoaded = (P) => hoursAt('median', P) * I.loaded.median;
-const labourSalary = (P) => fte + hiredHours(P) * I.contractor.median;
+// the primary row is the low contact rate; the median is the stress case (Lane I). ROW picks which one the
+// labour functions below use.
+const ROWS = ['low', 'median'];
+let ROW = 'low';
+const withRow = (k, fn) => {
+  const old = ROW;
+  ROW = k;
+  try {
+    return fn();
+  } finally {
+    ROW = old;
+  }
+};
+// Employees, not contractors (owner, 2026-11-06): every wage is loaded with Lane D's employer payroll taxes and
+// benefits, using the same rules Lane D applied to the $250,000 salary (lane-d-labour-tax.md, 1a to 1c), on a
+// 2,080-hour year. Social Security 6.2% to the 184,500 cap; Medicare 1.45%; FUTA 0.6% on 7,000; WA UI 1.0% (low) or
+// 6.0% (high) on 78,200; WA EAF 0.02% / 0.03% on 78,200; PFML employer share 0 (low) or 1.13% x 28.57% (high);
+// L&I 5302 (low) or 4904 (high) per worker-hour; benefits method A (health 7,344 a year + retirement 5.40% of
+// wages) low, method B (ECEC insurance + retirement + supplemental, 22.90% of wages) high. The base rate is the
+// midpoint of the low and high loaded hourly figures.
+const HOURS_YEAR = 2080;
+function loadRate(w) {
+  const wage = w * HOURS_YEAR;
+  const ss = 0.062 * Math.min(wage, 184500),
+    med = 0.0145 * wage,
+    futa = 42;
+  const uiBase = Math.min(wage, 78200);
+  const li = (a, b, c) => (a + b + c / 2 + 0.0956) * HOURS_YEAR;
+  const low = {
+    taxes: ss + med + futa + 0.01 * uiBase + 0.0002 * uiBase + li(0.0109, 0.0002, 0.0038),
+    benefits: 7344 + 0.054 * wage,
+  };
+  const high = {
+    taxes:
+      ss +
+      med +
+      futa +
+      0.06 * uiBase +
+      0.0003 * uiBase +
+      0.0113 * 0.2857 * Math.min(wage, 184500) +
+      li(0.0209, 0.0003, 0.0099),
+    benefits: 0.229 * wage,
+  };
+  const hourly = (c) => (wage + c.taxes + c.benefits) / HOURS_YEAR;
+  const lo = hourly(low),
+    hi = hourly(high);
+  return { wage: w, low: lo, high: hi, mid: (lo + hi) / 2, lowParts: low, highParts: high };
+}
+const wages = JSON.parse(JSON.stringify(I.rates));
+const loading = {
+  support: loadRate(wages.support.living),
+  supportMarket: loadRate(wages.support.market),
+  dev: loadRate(wages.dev.median),
+};
+I.rates.support.living = loading.support.mid;
+I.rates.support.market = loading.supportMarket.mid;
+I.rates.dev.median = loading.dev.mid;
+// labour cost: fixed hours at the developer rate, variable hours at the customer-service rate
+// Claude Team seats for support agents: one agent per further 160 hours above the owner's own, the plan's minimum of 2
+const aiAgents = (P) => {
+  const extra = Math.max(0, hoursAt(ROW, P) - I.oneFteHours);
+  return extra > 0 ? Math.max(AI.minSeats, Math.ceil(extra / I.oneFteHours)) : 0;
+};
+const aiCost = (P) => aiAgents(P) * AI.seatPrice;
+const labourAt = (P, rs, rd) =>
+  I.fixedHours[ROW] * rd + ((varHours[ROW] * P) / 1000) * rs + aiCost(P);
+const labourContractor = (P) => labourAt(P, I.rates.support.living, I.rates.dev.median);
+// sensitivities: the BLS market rate for support, and Lane D's contractor rate for engineering
+const labourMarket = (P) => labourAt(P, I.rates.support.market, I.rates.dev.median);
+const labourSens = (P) => labourAt(P, I.rates.support.living, I.rates.dev.contractor);
+// hired help: hours above one person's 160 are the variable, customer-service hours, bought at that rate
+const hiredHours = (P) => Math.max(0, hoursAt(ROW, P) - I.oneFteHours);
+const labourSalary = (P) => fte + hiredHours(P) * I.rates.support.living + aiCost(P);
 const structYear = (id) => I.structures.find((x) => x.id === id).year;
 // the salary line is structure C plus Lane D's benefits; all-salary (A) is kept as a sensitivity row
 const fte = (structYear('C') + I.benefitsYear.low) / 12,
@@ -259,23 +360,25 @@ const discountedSeatShare = extraSeatShare * stewardShare;
 const memberSeatFactor = 1 - discountedSeatShare * I.price.c_disc;
 const practitionersPerCoven = I.membersPerCoven * (1 - I.price.observerShare);
 const observersPerCoven = I.membersPerCoven * I.price.observerShare;
-const cPerCoven =
-  I.price.c_base +
-  (I.price.c_seat * Math.max(0, practitionersPerCoven - I.price.c_incl) +
+// price per coven at a scale x on the base and the practitioner seat price; observers stay at c_obs
+const covenPriceAt = (x) =>
+  I.price.c_base * x +
+  (I.price.c_seat * x * Math.max(0, practitionersPerCoven - I.price.c_incl) +
     I.price.c_obs * observersPerCoven) *
     memberSeatFactor;
+const cPerCoven = covenPriceAt(1);
 // (g) layers a free solo coven on (c): each paid group seat also holds one, a person with no
 // paid group seat buys a solo coven alone. Per paying seat: group share pays (c), the rest pays the solo price.
 // Observers (owner, 2026-11-06) may add a solo coven by paying the difference to the solo price,
 // on their own subscription. addOns = observers who take it up, per paying seat.
 const observerAddOns = () =>
   (1 - I.price.gSoloAloneShare) * I.price.observerShare * I.price.observerTakeUp;
-const makeG = (solo) => ({
+const makeG = (solo, cpc = cPerCoven) => ({
   id: 'g',
   name: '(g) Group plan includes a solo coven (over (c))',
   base: 'account',
   price:
-    (1 - I.price.gSoloAloneShare) * cPerCoven * (I.membershipsPerAccount / I.membersPerCoven) +
+    (1 - I.price.gSoloAloneShare) * cpc * (I.membershipsPerAccount / I.membersPerCoven) +
     I.price.gSoloAloneShare * solo +
     observerAddOns() * (solo - I.price.c_obs),
   subsOf: (P) =>
@@ -356,13 +459,18 @@ const netAt = (m, P, mp = false) =>
   net(unitsOf(m, P), m.price, mp, m.subsOf ? m.subsOf(P) : undefined);
 
 // Cost lines, interpolated linearly in seats between the four sizes (and continued on the last slope above them).
-const lines = {
-  cash: scale.map((s) => s.cash),
-  contractor: scale.map((s) => s.cash + labourContractor(s.P)),
-  fulltime: scale.map((s) => s.cash + labourSalary(s.P)),
-};
+const linesByRow = Object.fromEntries(
+  ROWS.map((k) => [
+    k,
+    withRow(k, () => ({
+      cash: scale.map((s) => s.cash),
+      contractor: scale.map((s) => s.cash + labourContractor(s.P)),
+      fulltime: scale.map((s) => s.cash + labourSalary(s.P)),
+    })),
+  ]),
+);
 function costAt(line, P) {
-  const y = lines[line];
+  const y = linesByRow[ROW][line];
   if (P <= SIZES[0]) return y[0];
   for (let k = 1; k < SIZES.length; k++)
     if (P <= SIZES[k])
@@ -490,39 +598,58 @@ for (const k of CASES)
   );
 out.push(
   '',
-  `Variable labour per paying seat at the median: ${varHours.median.toFixed(1)} h per 1,000 seats x $${I.contractor.median} = $${((varHours.median * I.contractor.median) / 1000).toFixed(2)} a month. A model earning less than this per seat after fees has no break-even on a labour line.`,
-  `Median contractor rate $${I.contractor.median} an hour; loaded-salary rate $${I.loaded.median}. Salary line: loaded salary ${f(fte)} a month (low) plus hours above ${I.oneFteHours} a month bought as hired help at the median contractor rate. Loaded salary high: ${f(fteHigh)}; promised on-call alternative ${f(I.onCallMonth)} a month.`,
+  `Wages: support $${wages.support.living.toFixed(2)} an hour (living wage, derived: average of 48.00, 56.43 and 30.60 = ${wages.support.livingFull.toFixed(2)}, minus the average MIT medical line ${wages.support.medical.toFixed(2)}; BLS market median $${wages.support.market}); developer $${wages.dev.median} (BLS median; Lane D contractor $${wages.dev.contractor}, not loaded, a contractor bills all-in).`,
+  `Loaded hourly cost (wage + employer payroll taxes + benefits, 2,080 h a year): support $${loading.support.low.toFixed(2)} low to $${loading.support.high.toFixed(2)} high, base (midpoint) $${I.rates.support.living.toFixed(2)}. Low: wage ${f(loading.support.wage * HOURS_YEAR)} + taxes ${f(loading.support.lowParts.taxes)} + benefits ${f(loading.support.lowParts.benefits)} a year. High: taxes ${f(loading.support.highParts.taxes)} + benefits ${f(loading.support.highParts.benefits)}. Market-rate support: $${loading.supportMarket.low.toFixed(2)} to $${loading.supportMarket.high.toFixed(2)}, base $${I.rates.support.market.toFixed(2)}. Developer: $${loading.dev.low.toFixed(2)} to $${loading.dev.high.toFixed(2)}, base $${I.rates.dev.median.toFixed(2)}.`,
+  ...ROWS.map(
+    (k) =>
+      `Variable labour per paying seat, ${k} row: ${varHours[k].toFixed(2)} h per 1,000 seats x loaded $${I.rates.support.living.toFixed(2)} = $${((varHours[k] * I.rates.support.living) / 1000).toFixed(3)} a month (market rate: $${((varHours[k] * I.rates.support.market) / 1000).toFixed(3)}). Fixed labour ${f(I.fixedHours[k] * I.rates.dev.median)} a month (contractor rate ${f(I.fixedHours[k] * I.rates.dev.contractor)}).`,
+  ),
+  `AI assistance for support agents (on by default): the factor on minutes per support contact is ${aiFactor} (${AI.choice}; low 0.735, median 0.87, high 1.00), applied to the support part of the variable hours only. Each agent beyond the owner has a Claude Team seat at $${AI.seatPrice} a month (minimum ${AI.minSeats} seats), one agent per further ${I.oneFteHours} hours a month, rounded up; agents use the Team plan, never Pro, so customer messages are not trained on.`,
+  `Salary line: structure C job ${f(fte)} a month (low benefits) plus hours above ${I.oneFteHours} a month bought as hired help at the living-wage support rate. Job high benefits: ${f(fteHigh)}; promised on-call alternative ${f(I.onCallMonth)} a month.`,
 );
 out.push('', '## One-Person Ceiling');
 out.push(
   '',
-  `Paying seats where hours cross ${I.oneFteHours} a month: low ${Math.round(ceilingSeats.low).toLocaleString('en-US')}, median ${Math.round(ceilingSeats.median).toLocaleString('en-US')}, high ${Math.round(ceilingSeats.high).toLocaleString('en-US')}.`,
+  `Paying seats where hours cross ${I.oneFteHours} a month: low (primary) ${Math.round(ceilingSeats.low).toLocaleString('en-US')}, median (stress) ${Math.round(ceilingSeats.median).toLocaleString('en-US')}, high ${Math.round(ceilingSeats.high).toLocaleString('en-US')}.`,
 );
-out.push('', '## Totals, USD a Month (median labour case)');
-out.push(row(['Row', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
-const tr = (label, g) => out.push(row([label, ...scale.map((s) => f(g(s)))]));
-tr('Cash costs', (s) => s.cash);
-out.push(
-  row(['Labour hours a month (median)', ...scale.map((s) => hoursAt('median', s.P).toFixed(1))]),
-);
-tr('Cash + labour at contractor rate', (s) => s.cash + labourContractor(s.P));
-tr('Cash + labour at loaded-salary rate', (s) => s.cash + labourLoaded(s.P));
-tr(
-  'Cash + structure C job (recommended, pending accountant; low benefits) + hired hours',
-  (s) => s.cash + labourSalary(s.P),
-);
-tr(
-  'Cash + structure C job (recommended, pending accountant; high benefits) + hired hours',
-  (s) => s.cash + fteHigh + hiredHours(s.P) * I.contractor.median,
-);
-tr(
-  'Sensitivity: cash + all-salary job (A; low benefits) + hired hours',
-  (s) => s.cash + fteA + hiredHours(s.P) * I.contractor.median,
-);
-tr(
-  'Cash + median labour + promised on-call (contractor)',
-  (s) => s.cash + labourContractor(s.P) + I.onCallMonth,
-);
+for (const k of ROWS) {
+  ROW = k;
+  out.push(
+    '',
+    `## Totals, USD a Month (${k} contact-rate row${k === 'low' ? ', primary' : ', stress case'})`,
+  );
+  out.push(row(['Row', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
+  const tr = (label, g) => out.push(row([label, ...scale.map((s) => f(g(s)))]));
+  tr('Cash costs', (s) => s.cash);
+  out.push(row(['Labour hours a month', ...scale.map((s) => hoursAt(k, s.P).toFixed(1))]));
+  out.push(
+    row([
+      'Claude Team seats for support agents (in every labour row below)',
+      ...scale.map((s) => aiAgents(s.P)),
+    ]),
+  );
+  tr('Labour alone at base rates', (s) => labourContractor(s.P));
+  tr('Cash + labour at base rates', (s) => s.cash + labourContractor(s.P));
+  tr('Cash + labour at the BLS market support rate', (s) => s.cash + labourMarket(s.P));
+  tr('Cash + labour with contractor engineering rate', (s) => s.cash + labourSens(s.P));
+  tr(
+    'Cash + structure C job (recommended, pending accountant; low benefits) + hired hours',
+    (s) => s.cash + labourSalary(s.P),
+  );
+  tr(
+    'Cash + structure C job (high benefits) + hired hours',
+    (s) => s.cash + fteHigh + hiredHours(s.P) * I.rates.support.living + aiCost(s.P),
+  );
+  tr(
+    'Sensitivity: cash + all-salary job (A; low benefits) + hired hours',
+    (s) => s.cash + fteA + hiredHours(s.P) * I.rates.support.living + aiCost(s.P),
+  );
+  tr(
+    'Cash + labour at base rates + promised on-call',
+    (s) => s.cash + labourContractor(s.P) + I.onCallMonth,
+  );
+}
+ROW = 'low';
 out.push('', '## Salary Structures (Lane J, with Lane D benefits)');
 out.push(
   '',
@@ -634,35 +761,156 @@ for (const m of Object.values(models))
   out.push(row([m.name, ...SIZES.map((P) => f(netAt(m, P, true).net))]));
 out.push(
   '',
-  '## Clears (i) cash / (ii) cash + contractor labour / (iii) cash + structure C job (low benefits)',
+  '## Clears (i) cash / (ii) cash + labour at base rates / (iii) cash + structure C job (low benefits)',
 );
-out.push(row(['Model', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
 const yn = (v) => (v ? 'Y' : 'n');
-for (const m of Object.values(models))
-  out.push(
-    row([
-      m.name,
-      ...scale.map((s) => {
-        const n = netAt(m, s.P).net;
-        const x = m.extraCash ? m.extraCash(s.P) : 0;
-        return [s.cash + x, s.cash + x + labourContractor(s.P), s.cash + x + labourSalary(s.P)]
-          .map((c) => yn(n >= c))
-          .join(' ');
-      }),
-    ]),
-  );
+for (const k of ROWS) {
+  ROW = k;
+  out.push('', `### ${k} row`);
+  out.push(row(['Model', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
+  for (const m of Object.values(models))
+    out.push(
+      row([
+        m.name,
+        ...scale.map((s) => {
+          const n = netAt(m, s.P).net;
+          const x = m.extraCash ? m.extraCash(s.P) : 0;
+          return [s.cash + x, s.cash + x + labourContractor(s.P), s.cash + x + labourSalary(s.P)]
+            .map((c) => yn(n >= c))
+            .join(' ');
+        }),
+      ]),
+    );
+}
+ROW = 'low';
 out.push(
   '',
   '## Seats Needed to Break Even, (i) cash / (ii) cash + contractor labour / (iii) cash + full-time job',
 );
-out.push(row(['Model', '(i)', '(ii)', '(iii)']), row(['---', '---:', '---:', '---:']));
+out.push(
+  row(['Model', '(i)', '(ii) low', '(iii) low', '(ii) median', '(iii) median']),
+  row(['---', '---:', '---:', '---:', '---:', '---:']),
+);
 for (const m of Object.values(models))
   out.push(
-    row([m.name, ...['cash', 'contractor', 'fulltime'].map((l) => seatText(seatsFor(m, l)))]),
+    row([
+      m.name,
+      seatText(seatsFor(m, 'cash')),
+      ...ROWS.flatMap((k) =>
+        withRow(k, () => ['contractor', 'fulltime'].map((l) => seatText(seatsFor(m, l)))),
+      ),
+    ]),
   );
 out.push(
   '',
   `At ${Math.round(ceilingSeats.median).toLocaleString('en-US')} paying seats (median; ${Math.round(ceilingSeats.low).toLocaleString('en-US')} low, ${Math.round(ceilingSeats.high).toLocaleString('en-US')} high) the work exceeds one person (${I.oneFteHours} hours a month). This holds for every model, since the hours depend on paying seats.`,
+);
+// Price that clears labour at 10,000 paying seats: net revenue = cash + labour (line 'contractor') or cash + job
+// ('fulltime'). Practitioner seat price scaled with x; observers stay at c_obs; solo prices scale in proportion.
+const CLEAR_P = 10000;
+const COMPARABLES = [1.58, 5.99]; // Lane C: solo grimoire apps $1.58 to $3.33, Obsidian $4 to $5, Roll20 Plus $5.99
+const clearBuilders = {
+  b: {
+    name: '(b) Each user pays',
+    build: (x) => ({ ...models.b, price: I.price.b * x }),
+    shown: (x) => I.price.b * x,
+  },
+  c: {
+    name: '(c) Base plus seats',
+    build: (x) => ({ ...models.c, price: covenPriceAt(x) }),
+    shown: (x) => I.price.c_seat * x,
+  },
+  g: {
+    name: '(g) Group plan includes a solo coven',
+    build: (x) => makeG(I.price.gSoloModelled * x, covenPriceAt(x)),
+    shown: (x) => I.price.c_seat * x,
+  },
+  h: {
+    name: '(h) Flat seats',
+    build: (x) => makeH('h', x, 'solved'),
+    shown: (x) => x,
+  },
+};
+function clearingX(id, line, row) {
+  const b = clearBuilders[id];
+  const short = (x) =>
+    withRow(row, () => {
+      const m = b.build(x);
+      return netAt(m, CLEAR_P).net < costFor(m, line, CLEAR_P);
+    });
+  let lo = 0,
+    hi = 100;
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    if (short(mid)) lo = mid;
+    else hi = mid;
+  }
+  return hi;
+}
+const clearing = Object.fromEntries(
+  Object.keys(clearBuilders).map((id) => {
+    const b = clearBuilders[id];
+    // h's x is the practitioner price itself; the others scale a base price
+    const at = (line, row) => {
+      const x = clearingX(id, line, row);
+      return { x, price: b.shown(x) };
+    };
+    const low = at('contractor', 'low'),
+      median = at('contractor', 'median'),
+      lowJob = at('fulltime', 'low'),
+      medianJob = at('fulltime', 'median');
+    const inside = (v) => (v < COMPARABLES[0] ? 'below' : v > COMPARABLES[1] ? 'above' : 'inside');
+    return [
+      id,
+      {
+        name: b.name,
+        low: low.price,
+        median: median.price,
+        lowJob: lowJob.price,
+        medianJob: medianJob.price,
+        scale: { low: low.x, median: median.x, lowJob: lowJob.x, medianJob: medianJob.x },
+        comparablesRange: COMPARABLES,
+        inside: {
+          low: inside(low.price),
+          median: inside(median.price),
+          lowJob: inside(lowJob.price),
+          medianJob: inside(medianJob.price),
+        },
+      },
+    ];
+  }),
+);
+out.push(
+  '',
+  `## Price That Clears Labour at ${CLEAR_P.toLocaleString('en-US')} Paying Seats (practitioner or account price a month; observers held at $${I.price.c_obs}, solo prices scaled in proportion)`,
+  '',
+  row([
+    'Model',
+    'Today',
+    'Cash + labour, low',
+    'Cash + labour, median',
+    'Cash + job, low',
+    'Cash + job, median',
+    'Comparables',
+  ]),
+  row(['---', '---:', '---:', '---:', '---:', '---:', '---']),
+);
+const today = { b: I.price.b, c: I.price.c_seat, g: I.price.c_seat, h: I.price.h_ill };
+for (const [id, c] of Object.entries(clearing))
+  out.push(
+    row([
+      c.name,
+      f(today[id], 2),
+      `${f(c.low, 2)} ${c.inside.low}`,
+      `${f(c.median, 2)} ${c.inside.median}`,
+      `${f(c.lowJob, 2)} ${c.inside.lowJob}`,
+      `${f(c.medianJob, 2)} ${c.inside.medianJob}`,
+      `${f(COMPARABLES[0], 2)} to ${f(COMPARABLES[1], 2)}`,
+    ]),
+  );
+out.push(
+  '',
+  `For (c) and (g) the figure is the practitioner seat price; the base scales with it (today $${I.price.c_base} base and $${I.price.c_seat} a seat), and for (g) the solo price too (today $${I.price.gSoloModelled}). For (g) the scale factors are low ${clearing.g.scale.low.toFixed(3)} and median ${clearing.g.scale.median.toFixed(3)}.`,
 );
 out.push(
   '',
@@ -684,7 +932,50 @@ if (process.argv.includes('--json')) {
         fixedHours: I.fixedHours,
         variablePer1000: varHours,
         ceilingSeats,
+        aiSupport: {
+          factor: aiFactor,
+          choice: AI.choice,
+          factors: AI.factors,
+          seatPrice: AI.seatPrice,
+          minSeats: AI.minSeats,
+          agentsPerSize: Object.fromEntries(
+            ROWS.map((k) => [k, withRow(k, () => SIZES.map((P) => aiAgents(P)))]),
+          ),
+        },
+        hoursMedian: SIZES.map((P) => hoursAt('median', P)),
+        hoursLow: SIZES.map((P) => hoursAt('low', P)),
+        perSeatLabour: Object.fromEntries(
+          ROWS.map((k) => [
+            k,
+            {
+              variableHoursPer1000: varHours[k],
+              variablePerSeat: (varHours[k] * I.rates.support.living) / 1000,
+              variablePerSeatMarket: (varHours[k] * I.rates.support.market) / 1000,
+              fixedMonth: I.fixedHours[k] * I.rates.dev.median,
+              fixedMonthContractor: I.fixedHours[k] * I.rates.dev.contractor,
+            },
+          ]),
+        ),
+        perSize: Object.fromEntries(
+          ROWS.map((k) => [
+            k,
+            withRow(k, () =>
+              SIZES.map((P) => ({
+                P,
+                hours: hoursAt(k, P),
+                contractorTimeTotal: scale.find((s) => s.P === P).cash + labourContractor(P),
+                labour: labourContractor(P),
+                labourSens: labourSens(P),
+                loadedSalaryTotal: scale.find((s) => s.P === P).cash + labourSalary(P),
+              })),
+            ),
+          ]),
+        ),
+        rates: I.rates,
+        wages,
+        loading,
       },
+      clearing,
       gProposals: I.price.gSolo.map((sp) => {
         const gm = makeG(sp);
         return {
@@ -692,6 +983,9 @@ if (process.argv.includes('--json')) {
           perSeat: gm.price,
           net: SIZES.map((P) => netAt(gm, P).net),
           seats: ['cash', 'contractor', 'fulltime'].map((l) => seatsFor(gm, l)),
+          seatsMedian: withRow('median', () =>
+            ['cash', 'contractor', 'fulltime'].map((l) => seatsFor(gm, l)),
+          ),
         };
       }),
       gExtra: SIZES.map((P) => models.g.extraCash(P)),
@@ -718,6 +1012,10 @@ if (process.argv.includes('--json')) {
         extraCash: undefined,
         net: SIZES.map((P) => netAt(m, P).net),
         seats: ['cash', 'contractor', 'fulltime'].map((l) => seatsFor(m, l)),
+        seatsMedian: withRow('median', () =>
+          ['cash', 'contractor', 'fulltime'].map((l) => seatsFor(m, l)),
+        ),
+        clearingPrice: clearing[m.id.startsWith('h') ? 'h' : m.id],
       })),
     }),
   );
