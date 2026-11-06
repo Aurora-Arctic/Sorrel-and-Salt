@@ -32,6 +32,12 @@ const DAY_MS = SIGNED_OUT_WINDOW_SECONDS * 1000;
 /** Replies one signed-out request may take through its link in 24 hours. */
 export const SIGNED_OUT_REPLY_REQUEST_LIMIT = 5;
 
+/** How long a mailed token opens its request, from the mail that minted it. */
+const VIEW_TOKEN_DAYS = 30;
+
+/** Reads of the mailed-link query one client may make in the signed-out window, a wrong token too. */
+export const SIGNED_OUT_VIEW_LIMIT = 60;
+
 const hashOf = (token: string) => createHash('sha256').update(token).digest('hex');
 
 /**
@@ -44,7 +50,11 @@ export async function mintSupportViewToken(requestId: string): Promise<string> {
   if (!request) throw new NotFound(NO_SUCH_REQUEST);
   // Stamped as the request's own sender, so the row's last editor stays the account that sent it.
   await withAudit({ userId: request.createdBy }, (write) =>
-    write.setSupportViewToken(requestId, hashOf(token)),
+    write.setSupportViewToken(
+      requestId,
+      hashOf(token),
+      new Date(Date.now() + VIEW_TOKEN_DAYS * DAY_MS),
+    ),
   );
   return token;
 }
@@ -59,12 +69,30 @@ async function requestByToken(token: string): Promise<SupportRequestRow> {
 
 /**
  * The request a mailed link opens, with its public replies and nothing staff hold: no internal note, issue, assignee or
- * address. Open to a caller with no session; the token is what authorises it.
+ * address. Open to a caller with no session; the token is what authorises it. Each read counts toward a per-client limit.
  *
- * @throws {NotFound} no live signed-out request has this token: it is wrong, older than the newest mail, or the request was claimed or anonymised.
+ * @throws {NotFound} no live signed-out request has this token: it is wrong, older than the newest mail, past its 30 days, or the request was closed, claimed or anonymised.
+ * @throws {RateLimited} the client has read too many times in 24 hours.
  */
-export async function getSupportRequestByViewToken(token: string): Promise<SupportRequestView> {
+export async function getSupportRequestByViewToken(
+  token: string,
+  context: { clientIp: string | null; now?: Date } = { clientIp: null },
+): Promise<SupportRequestView> {
+  const counted = await withAudit({ userId: SIGNED_OUT_SENDER_ID }, (write) =>
+    write.countSignedOutView(
+      clientCountKey(`view|${context.clientIp ?? 'unknown'}`),
+      context.now ?? new Date(),
+      SIGNED_OUT_WINDOW_SECONDS,
+    ),
+  );
+  if (counted > SIGNED_OUT_VIEW_LIMIT) {
+    throw new RateLimited(
+      SIGNED_OUT_WINDOW_SECONDS,
+      'You have opened your request too many times today. Try again later.',
+    );
+  }
   const request = await requestByToken(token);
+  if (request.status === 'closed') throw new NotFound(NO_SUCH_REQUEST);
   const replies = await findPublicSupportReplies(request.id);
   return {
     id: request.id,

@@ -65,6 +65,8 @@ export const supportRequests = pgTable(
     senderEmail: text('sender_email'),
     // The SHA-256 hex of the token in the link mailed about this request; only the newest mailed link matches, and a claim clears it.
     viewTokenHash: text('view_token_hash'),
+    // When that token stops opening the request: 30 days after it was minted, so each new mail starts the 30 days again.
+    viewTokenExpiresAt: timestamp('view_token_expires_at'),
     ...auditColumns,
   },
   (table) => [

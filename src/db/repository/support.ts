@@ -318,6 +318,7 @@ export function findSupportRequestByViewTokenHash(hash: string) {
     and(
       notSoftDeleted(supportRequests),
       eq(supportRequests.viewTokenHash, hash),
+      sql`${supportRequests.viewTokenExpiresAt} > now()`,
       isNotNull(supportRequests.senderEmail),
       ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
     ),
@@ -606,6 +607,15 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
   );
 }
 
+/** The live time-outs set on these addresses, by count key, newest first. The service lets a keeper alone ask. */
+export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) {
+  if (addressKeys.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    supportTimeouts,
+    and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.addressKey, [...addressKeys])),
+  );
+}
+
 /**
  * The time-out standing on each of these senders, not lifted and not yet ended, in one query: the user list's Support
  * Time-Out column for a page of users. Under the `SiteAdmin` proof: who is timed out is a keeper's to read.
@@ -637,6 +647,7 @@ export function supportWrites({
   AuditWriter,
   | 'lockSupportSender'
   | 'countSignedOutSend'
+  | 'countSignedOutView'
   | 'moveSupportRequest'
   | 'closeIdleResolvedSupportRequests'
   | 'markClosingNoticeSent'
@@ -692,6 +703,7 @@ export function supportWrites({
           resolvedBy: sql`case when ${supportRequests.resolvedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.resolvedBy} end`,
           senderEmail: null,
           viewTokenHash: null,
+          viewTokenExpiresAt: null,
         })
         .where(
           and(
@@ -729,6 +741,8 @@ export function supportWrites({
         );
       return rows.length;
     },
+    countSignedOutView: (clientKey, now, windowSeconds) =>
+      countKey('client', clientKey, now, windowSeconds),
     countSignedOutSend: async (addressKey, clientKey, now, windowSeconds) => ({
       // Fixed order, so two sends taking both locks cannot wait on each other.
       address: await countKey('address', addressKey, now, windowSeconds),
@@ -772,10 +786,10 @@ export function supportWrites({
         ),
       ),
     // Only a signed-out request has a link: one whose address is still on the row.
-    setSupportViewToken: (id, hash) =>
+    setSupportViewToken: (id, hash, expiresAt) =>
       update(
         supportRequests,
-        { viewTokenHash: hash },
+        { viewTokenHash: hash, viewTokenExpiresAt: expiresAt },
         and(eq(supportRequests.id, id), isNotNull(supportRequests.senderEmail)),
       ),
     markReplyNoticeSent: (id, sentAt) =>
@@ -796,6 +810,7 @@ export function supportWrites({
           path: '',
           senderEmail: null,
           viewTokenHash: null,
+          viewTokenExpiresAt: null,
           resolvedBy: sql`case when ${supportRequests.resolvedBy} = ${supportRequests.createdBy} then null else ${supportRequests.resolvedBy} end`,
           createdBy: SYSTEM_ACTOR_ID,
           updatedBy: session.userId,

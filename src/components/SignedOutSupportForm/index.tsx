@@ -159,7 +159,7 @@ const SignedOutSupportForm = ({
       <FieldShell
         label="Message"
         required
-        note={`Up to ${MESSAGE_LIMIT} characters.`}
+        note={`Up to ${MESSAGE_LIMIT} characters. Don’t include passwords, payment details or other private information.`}
         {...messageField}
       >
         <textarea

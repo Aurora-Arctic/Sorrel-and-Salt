@@ -1,5 +1,5 @@
 {
-  "id": "ef4e0777-1ba8-4338-a02d-2277053be44a",
+  "id": "6a3ca6ed-4580-43e3-b944-a424b13b5073",
   "prevId": "52661f2b-3c26-43eb-ac5b-89b6882e3051",
   "version": "7",
   "dialect": "postgresql",
@@ -7009,6 +7009,12 @@
         "view_token_hash": {
           "name": "view_token_hash",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "view_token_expires_at": {
+          "name": "view_token_expires_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },

@@ -3,6 +3,7 @@ import type postgres from 'postgres';
 import { getNamedType, isObjectType, type GraphQLObjectType } from 'graphql';
 import { schema } from '@/graphql/schema';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import * as support from '@/modules/support';
 import { C, E } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
@@ -199,7 +200,7 @@ describe('Query.supportRequestByViewToken', () => {
 
     await sql`update support_requests set status = 'closed' where id = ${closed.id}`;
     await sql`update support_requests set created_by = ${C.id}, sender_email = null where id = ${claimed.id}`;
-    await sql`update support_requests set sender_email = null where id = ${anonymised.id}`;
+    await sql`update support_requests set created_by = ${SYSTEM_ACTOR_ID}, sender_email = null where id = ${anonymised.id}`;
 
     for (const token of [older.token, closed.token, claimed.token, anonymised.token]) {
       const answer = await view(token, '198.51.100.99');

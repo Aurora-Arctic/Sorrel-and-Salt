@@ -15,6 +15,7 @@ export * from './services/reads';
 export * from './graphql/support';
 export * from './loaders/replies-by-request';
 export * from './loaders/tier-by-sender';
+export * from './loaders/timeouts-by-address';
 export * from './loaders/timeouts-by-sender';
 export * from './loaders/users-on-requests';
 export type {

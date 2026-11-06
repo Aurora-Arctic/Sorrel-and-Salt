@@ -235,7 +235,12 @@ describe('the GraphQL schema', () => {
     // Precondition: the walk reaches the support request type.
     expect(fields).toContain('SupportRequest.subject');
 
-    expect(fields.filter((name) => /viewToken|tokenHash/i.test(name))).toEqual([]);
+    // Query.supportRequestByViewToken is named for the token it takes; it answers the request.
+    expect(
+      fields.filter(
+        (name) => /viewToken|tokenHash/i.test(name) && name !== 'Query.supportRequestByViewToken',
+      ),
+    ).toEqual([]);
   });
 
   it('carries neither the token nor its hash in the mailed-link page’s or a keeper’s answer about the request', async () => {

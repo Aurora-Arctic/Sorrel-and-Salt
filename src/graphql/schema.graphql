@@ -1847,6 +1847,11 @@ type Query {
   supportRequest(id: ID!): SupportRequest!
 
   """
+  A signed-out sender opens their request from the token in a mail link. The token alone finds it; a wrong, older, expired or claimed one is NotFound. Open to anyone; counts toward a per-client read limit.
+  """
+  supportRequestByViewToken(token: String!): SupportRequestView!
+
+  """
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
   """
   supportRequests(about: SupportAbout, after: String, before: String, errorCode: Int, first: Int, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
@@ -2839,7 +2844,7 @@ type SupportRequest {
   subject: String!
 
   """
-  The sender’s time-outs, past and active, newest first. Site admins only.
+  The sender’s time-outs, past and active, newest first; for a signed-out request, those on its address. Site admins only.
   """
   timeouts: [SupportTimeout!]!
 }
@@ -2862,6 +2867,19 @@ input SupportRequestInput {
   path: String
 
   """1 to 120 characters."""
+  subject: String!
+}
+
+"""
+What the mailed-link page shows of a signed-out sender’s request: its public thread, and no address, token or staff field.
+"""
+type SupportRequestView {
+  about: SupportAbout!
+  createdAt: DateTime!
+  id: ID!
+  message: String!
+  replies: [SupportViewReply!]!
+  status: SupportStatus!
   subject: String!
 }
 
@@ -2888,6 +2906,16 @@ type SupportTimeout {
   note: String!
   until: DateTime
   userId: ID
+}
+
+"""
+A message in the thread of a signed-out sender’s request, as the mailed-link page shows it.
+"""
+type SupportViewReply {
+  authorRole: SupportReplyAuthorRole!
+  body: String!
+  createdAt: DateTime!
+  id: ID!
 }
 
 """A toxic setting other than any, and how many entries it would list."""

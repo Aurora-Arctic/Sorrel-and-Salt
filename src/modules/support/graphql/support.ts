@@ -27,7 +27,10 @@ import {
 import { replyToSupportRequest } from '../services/reply';
 import { sendSupportRequest } from '../services/send';
 import { sendSignedOutSupportRequest } from '../services/signed-out';
-import { replyToSupportRequestByViewToken } from '../services/view-link';
+import {
+  getSupportRequestByViewToken,
+  replyToSupportRequestByViewToken,
+} from '../services/view-link';
 import {
   liftSupportTimeout,
   timeOutSignedOutSender,
@@ -37,6 +40,7 @@ import type {
   SupportDialogAnswer,
   SupportReplyRow,
   SupportRequestRow,
+  SupportRequestView,
   SupportTimeoutRow,
 } from '../types';
 import { MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../validation/support';
@@ -168,9 +172,13 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
     }),
     timeouts: t.field({
       type: [SupportTimeoutRef],
-      description: 'The sender’s time-outs, past and active, newest first. Site admins only.',
+      description:
+        'The sender’s time-outs, past and active, newest first; for a signed-out request, those on its address. Site admins only.',
       authScopes: { admin: true },
-      resolve: (row, _args, { loaders }) => loaders.timeoutsBySender.load(row.createdBy),
+      resolve: (row, _args, { loaders }) =>
+        row.senderEmail
+          ? loaders.timeoutsByAddress.load(row.senderEmail)
+          : loaders.timeoutsBySender.load(row.createdBy),
     }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
@@ -326,6 +334,46 @@ builder.mutationField('sendSignedOutSupportRequest', (t) =>
       });
       return true;
     },
+  }),
+);
+
+type ViewedReply = SupportRequestView['replies'][number];
+
+const SupportViewReplyRef = builder.objectRef<ViewedReply>('SupportViewReply').implement({
+  description:
+    'A message in the thread of a signed-out sender’s request, as the mailed-link page shows it.',
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    authorRole: t.expose('authorRole', { type: SupportReplyAuthorRoleEnum }),
+    body: t.exposeString('body'),
+    createdAt: t.expose('createdAt', { type: 'DateTime' }),
+  }),
+});
+
+const SupportRequestViewRef = builder
+  .objectRef<SupportRequestView>('SupportRequestView')
+  .implement({
+    description:
+      'What the mailed-link page shows of a signed-out sender’s request: its public thread, and no address, token or staff field.',
+    fields: (t) => ({
+      id: t.exposeID('id'),
+      about: t.expose('about', { type: SupportAboutEnum }),
+      status: t.expose('status', { type: SupportStatusEnum }),
+      subject: t.exposeString('subject'),
+      message: t.exposeString('message'),
+      createdAt: t.expose('createdAt', { type: 'DateTime' }),
+      replies: t.field({ type: [SupportViewReplyRef], resolve: (view) => view.replies }),
+    }),
+  });
+
+builder.queryField('supportRequestByViewToken', (t) =>
+  t.field({
+    type: SupportRequestViewRef,
+    description:
+      'A signed-out sender opens their request from the token in a mail link. The token alone finds it; a wrong, older, expired or claimed one is NotFound. Open to anyone; counts toward a per-client read limit.',
+    args: { token: t.arg.string({ required: true }) },
+    resolve: (_root, { token }, context) =>
+      getSupportRequestByViewToken(token, { clientIp: context.clientIp }),
   }),
 );
 

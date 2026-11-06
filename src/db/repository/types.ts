@@ -713,6 +713,8 @@ export interface AuditWriter {
     now: Date,
     windowSeconds: number,
   ): Promise<{ address: number; client: number }>;
+  /** Counts one read of a mailed link against the client key alone, in its own row, and returns the count for the window ending at `now`. */
+  countSignedOutView(clientKey: string, now: Date, windowSeconds: number): Promise<number>;
   /**
    * Moves a support request from one of `from` to `values.status` in a single guarded update, and returns the row, or none when
    * its status is no longer one of `from` (or, given `ownerId`, it is not that sender's): the guard is in the `where`, so two
@@ -753,8 +755,12 @@ export interface AuditWriter {
     cutoff: Date,
     ids: readonly string[],
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
-  /** Stores `hash`, the SHA-256 of a mailed view link's token, on signed-out request `id`, replacing the one before; none when the request has no address on it. */
-  setSupportViewToken(id: string, hash: string): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Stores `hash`, the SHA-256 of a mailed view link's token, on signed-out request `id`, replacing the one before, and when it stops working; none when the request has no address on it. */
+  setSupportViewToken(
+    id: string,
+    hash: string,
+    expiresAt: Date,
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
    * Moves the stand-in's requests whose address is `email` (case aside), and their sender replies, to account `realId`, clearing their address and
    * view link; returns the requests moved. The standing address-only time-outs that bind `addressKey` (the address's count key) take `realId` as their account. The caller proves the address is the account's own and verified.

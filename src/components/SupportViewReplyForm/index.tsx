@@ -3,7 +3,6 @@
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { usePendingNavigation } from '../../lib/navigation';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
 import BusyButton from '../BusyButton';
@@ -23,8 +22,7 @@ const ReplyByViewTokenDocument = graphql(`
 
 const MESSAGE_LIMIT = 4000;
 
-const SupportViewReplyForm = ({ token }: SupportViewReplyFormProps): ReactElement => {
-  const { refresh } = usePendingNavigation();
+const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): ReactElement => {
   const bodyId = useId();
   const [body, setBody] = useState('');
   // The trap field: a person never sees it, so a value in it is a bot's.
@@ -51,7 +49,7 @@ const SupportViewReplyForm = ({ token }: SupportViewReplyFormProps): ReactElemen
       setBody('');
       setSending(false);
       // The page reads the request again, so the reply shows in the thread.
-      refresh();
+      onSent();
     } catch (error) {
       setSending(false);
       setFailure(readGraphqlFailure(error, ['body']));

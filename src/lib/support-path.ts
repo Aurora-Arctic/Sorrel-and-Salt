@@ -64,9 +64,9 @@ export const SUPPORT_LIST_PATH = '/account/support';
 export const supportRequestPath = (id: string) =>
   `${SUPPORT_LIST_PATH}?request=${encodeURIComponent(id)}`;
 
-/** The page a mailed link opens one signed-out request on, with no session: the token is the whole of the address. */
+/** The page a mailed link opens one signed-out request on, with no session: the token rides in the fragment, which a browser never sends. */
 export const supportViewPath = (token: string) =>
-  `${SUPPORT_PATH}/request/${encodeURIComponent(token)}`;
+  `${SUPPORT_PATH}/request#${encodeURIComponent(token)}`;
 
 /** The parameter that opens the Support dialog, holding what the request is about, preselected. */
 export const SUPPORT_PARAM = 'support';

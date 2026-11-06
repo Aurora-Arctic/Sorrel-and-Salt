@@ -173,6 +173,7 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  findSupportTimeoutsForAddresses,
   RESOLVED_CLOSES_AFTER_DAYS,
   findStandingSupportTimeoutsFor,
 } from './support';
