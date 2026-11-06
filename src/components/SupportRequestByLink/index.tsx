@@ -114,6 +114,28 @@ const SupportRequestByLink = (): ReactElement => {
     };
   }, [load]);
 
+  // A newer link pasted into the open tab changes the hash without remounting the page; an empty hash (the one this
+  // page leaves behind) is ignored.
+  useEffect(() => {
+    let current = true;
+    const onHashChange = () => {
+      const fragment = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+      if (fragment === '') return;
+      token.current = fragment;
+      writeStored(fragment);
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      setState({ phase: 'loading' });
+      void load().then((next) => {
+        if (current) setState(next);
+      });
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => {
+      current = false;
+      window.removeEventListener('hashchange', onHashChange);
+    };
+  }, [load]);
+
   if (state.phase === 'loading') return <p role="status">Opening your request.</p>;
   if (state.phase === 'failed') return <Notice kind="error">{state.message}</Notice>;
   if (state.phase === 'missing') {

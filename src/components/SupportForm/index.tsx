@@ -270,7 +270,14 @@ const SupportForm = ({
       <FieldShell
         label="Message"
         required
-        note={`Up to ${MESSAGE_LIMIT} characters. Don’t include passwords, payment details or other private information.`}
+        note={
+          <>
+            {`Up to ${MESSAGE_LIMIT} characters. `}
+            <span className="field__warning">
+              Don’t include passwords, payment details or other private information.
+            </span>
+          </>
+        }
         after={<CharacterCount id={messageCountId} length={message.length} limit={MESSAGE_LIMIT} />}
         {...messageField}
       >
