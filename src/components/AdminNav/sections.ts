@@ -7,14 +7,13 @@ import type { GroupedValueKind } from '../GroupedValueForm/types';
 import type { PageTab } from '../TabbedPage/types';
 import type { AdminPage, AdminSection } from './types';
 
-/** A curated list's tab, at its kind's address and under its title: it opens with a filter. */
+/** A curated list's tab, at its kind's address and under its title. */
 const valueTab = (kind: GroupedValueKind): PageTab => ({
   href: VALUE_KINDS[kind].path,
   label: VALUE_KINDS[kind].title,
-  filtered: true,
 });
 
-/** A group list's tab, "Groups" or "Traditions": it opens with no filter. */
+/** A group list's tab, "Groups" or "Traditions". */
 const groupTab = (kind: GroupKind): PageTab => ({
   href: GROUP_KINDS[kind].path,
   label: capitalise(GROUP_KINDS[kind].plural),
@@ -22,7 +21,7 @@ const groupTab = (kind: GroupKind): PageTab => ({
 
 // Every admin page, its tabs and section: the one list the two navs, the two indexes and each tabbed layout
 // read. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`);
-// the others are checked against built routes (typedRoutes). A `filtered` tab's loading skeleton draws a filter.
+// the others are checked against built routes (typedRoutes).
 export const ADMIN_PAGES = {
   compendium: {
     label: 'Compendium',
@@ -61,9 +60,9 @@ export const ADMIN_PAGES = {
     adminOnly: true,
     description: 'Every account and its role, and who changed which privilege.',
     tabs: [
-      { href: '/keepers/users', label: 'Users', filtered: true },
+      { href: '/keepers/users', label: 'Users' },
       // Who holds which privilege, and who changed it.
-      { href: '/keepers/privilege-changes', label: 'Privilege Changes', filtered: true },
+      { href: '/keepers/privilege-changes', label: 'Privilege Changes' },
     ],
   },
   invitations: {
@@ -94,15 +93,14 @@ export const ADMIN_PAGES = {
     // One tab per document, in the footer's order, each that document's editor, then the page that emails every account about the
     // documents changed since the last email. The cast is because typed routes know an editor's address only as `[key]`.
     tabs: [
-      { href: '/keepers/documents/terms' as Route, label: 'Terms of Use', shape: 'document' },
-      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer', shape: 'document' },
+      { href: '/keepers/documents/terms' as Route, label: 'Terms of Use' },
+      { href: '/keepers/documents/disclaimer' as Route, label: 'Disclaimer' },
       {
         href: '/keepers/documents/code-of-ethics' as Route,
         label: 'Code of Ethics',
-        shape: 'document',
       },
-      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy', shape: 'document' },
-      { href: '/keepers/documents', label: 'Email Updates', shape: 'sections', sections: 1 },
+      { href: '/keepers/documents/privacy' as Route, label: 'Privacy Policy' },
+      { href: '/keepers/documents', label: 'Email Updates' },
     ],
   },
 } as const satisfies Record<string, AdminPage>;

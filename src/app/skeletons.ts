@@ -35,7 +35,30 @@ import {
  * What each page draws while it is on its way, by the address pattern the folders under `src/app`
  * name it with. `host` is the body that draws it: the shell's `main`, a coven's body or an admin
  * area's body. Each skeleton sits in `skeleton.tsx` beside its page or a layout above it.
- */
+ */ import {
+  CategoriesSkeleton,
+  CategoryGroupsSkeleton,
+  CelestialBodiesSkeleton,
+  CuratorCompendiumSkeleton,
+  CuratorSkeleton,
+  DeitiesSkeleton,
+  DeityTraditionsSkeleton,
+  FormGroupsSkeleton,
+  FormsSkeleton,
+  ZodiacSignsSkeleton,
+} from './(shell)/curator/skeleton';
+import {
+  CardSignUpsSkeleton,
+  InvitationCardsSkeleton,
+  KeepersDocumentSkeleton,
+  KeepersEmailUpdatesSkeleton,
+  KeepersInvitationsSkeleton,
+  KeepersSkeleton,
+  KeepersSupportSkeleton,
+  PrivilegeChangesSkeleton,
+  UsersSkeleton,
+} from './(shell)/keepers/skeleton';
+
 export const skeletons: Record<string, { host: SkeletonHost; Skeleton: ComponentType }> = {
   '/compendium': { host: 'main', Skeleton: CompendiumSkeleton },
   '/compendium/ingredients/[slug]': { host: 'main', Skeleton: CompendiumEntrySkeleton },
@@ -64,4 +87,23 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/coven/[slug]/grimoire/[id]': { host: 'coven', Skeleton: SpellRecipeSkeleton },
   '/coven/[slug]/ingredients': { host: 'coven', Skeleton: CovenIngredientsSkeleton },
   '/coven/[slug]/ingredients/[id]': { host: 'coven', Skeleton: CovenEntrySkeleton },
+  '/curator': { host: 'admin', Skeleton: CuratorSkeleton },
+  '/curator/compendium': { host: 'admin', Skeleton: CuratorCompendiumSkeleton },
+  '/curator/categories': { host: 'admin', Skeleton: CategoriesSkeleton },
+  '/curator/category-groups': { host: 'admin', Skeleton: CategoryGroupsSkeleton },
+  '/curator/forms': { host: 'admin', Skeleton: FormsSkeleton },
+  '/curator/form-groups': { host: 'admin', Skeleton: FormGroupsSkeleton },
+  '/curator/deities': { host: 'admin', Skeleton: DeitiesSkeleton },
+  '/curator/deity-traditions': { host: 'admin', Skeleton: DeityTraditionsSkeleton },
+  '/curator/celestial-bodies': { host: 'admin', Skeleton: CelestialBodiesSkeleton },
+  '/curator/zodiac-signs': { host: 'admin', Skeleton: ZodiacSignsSkeleton },
+  '/keepers': { host: 'admin', Skeleton: KeepersSkeleton },
+  '/keepers/users': { host: 'admin', Skeleton: UsersSkeleton },
+  '/keepers/privilege-changes': { host: 'admin', Skeleton: PrivilegeChangesSkeleton },
+  '/keepers/invitations': { host: 'admin', Skeleton: KeepersInvitationsSkeleton },
+  '/keepers/invitation-cards': { host: 'admin', Skeleton: InvitationCardsSkeleton },
+  '/keepers/card-sign-ups': { host: 'admin', Skeleton: CardSignUpsSkeleton },
+  '/keepers/support': { host: 'admin', Skeleton: KeepersSupportSkeleton },
+  '/keepers/documents': { host: 'admin', Skeleton: KeepersEmailUpdatesSkeleton },
+  '/keepers/documents/[key]': { host: 'admin', Skeleton: KeepersDocumentSkeleton },
 };
