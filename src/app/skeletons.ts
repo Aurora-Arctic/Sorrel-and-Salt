@@ -19,6 +19,17 @@ import { AccountTermsSkeleton } from './(shell)/account/terms/skeleton';
 import { CovenPausedSkeleton } from './(shell)/coven-paused/[slug]/skeleton';
 import { NewCovenSkeleton } from './(shell)/coven/new/skeleton';
 import { CovenLandingSkeleton } from './(shell)/coven/skeleton';
+import {
+  CovenHomeSkeleton,
+  CovenIngredientsSkeleton,
+  CovenEntrySkeleton,
+  SpellRecipeSkeleton,
+} from './(shell)/coven/[slug]/skeleton';
+import { InvitationsSkeleton, MembersSkeleton } from './(shell)/coven/[slug]/(people)/skeleton';
+import {
+  GrimoireDraftsSkeleton,
+  GrimoireSkeleton,
+} from './(shell)/coven/[slug]/grimoire/(list)/skeleton';
 
 /**
  * What each page draws while it is on its way, by the address pattern the folders under `src/app`
@@ -45,4 +56,12 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/coven-paused/[slug]': { host: 'main', Skeleton: CovenPausedSkeleton },
   '/coven/new': { host: 'main', Skeleton: NewCovenSkeleton },
   '/coven': { host: 'main', Skeleton: CovenLandingSkeleton },
+  '/coven/[slug]': { host: 'coven', Skeleton: CovenHomeSkeleton },
+  '/coven/[slug]/members': { host: 'coven', Skeleton: MembersSkeleton },
+  '/coven/[slug]/invitations': { host: 'coven', Skeleton: InvitationsSkeleton },
+  '/coven/[slug]/grimoire': { host: 'coven', Skeleton: GrimoireSkeleton },
+  '/coven/[slug]/grimoire/drafts': { host: 'coven', Skeleton: GrimoireDraftsSkeleton },
+  '/coven/[slug]/grimoire/[id]': { host: 'coven', Skeleton: SpellRecipeSkeleton },
+  '/coven/[slug]/ingredients': { host: 'coven', Skeleton: CovenIngredientsSkeleton },
+  '/coven/[slug]/ingredients/[id]': { host: 'coven', Skeleton: CovenEntrySkeleton },
 };
