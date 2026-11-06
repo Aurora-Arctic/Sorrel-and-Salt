@@ -44,11 +44,11 @@ describe('the invitation card seed', () => {
       `;
       expect(batches.map((b) => b.state).sort()).toEqual(['expired', 'live', 'revoked']);
       for (const batch of batches) {
-        expect(batch.cards % 9).toBe(0);
+        expect(batch.cards % 12).toBe(0);
         expect([batch.low, batch.high, batch.distinct]).toEqual([1, batch.cards, batch.cards]);
       }
       const live = batches.find((b) => b.state === 'live');
-      expect(live?.cards).toBe(18);
+      expect(live?.cards).toBe(24);
     });
 
     it('gives the three batches distinct batchNames, as the admin screen names them', async () => {

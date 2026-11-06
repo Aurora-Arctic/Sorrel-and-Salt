@@ -78,7 +78,7 @@ describe('who may mint, list and revoke', () => {
 });
 
 describe('mintInvitationCards', () => {
-  it('writes nine pending cards a sheet sharing one batch and the chosen expiry, and returns each token once', async () => {
+  it('writes twelve pending cards a sheet sharing one batch and the chosen expiry, and returns each token once', async () => {
     const expiresAt = NEXT_WEEK();
 
     const minted = await mintInvitationCards(asUser(E), 2, expiresAt);
@@ -138,7 +138,9 @@ describe('mintInvitationCards', () => {
 
     const rows =
       await sql`select token_hash, position from invitations where kind = 'card' order by position`;
-    expect(rows.map((row) => row.position)).toEqual(Array.from({ length: 18 }, (_, i) => i + 1));
+    expect(rows.map((row) => row.position)).toEqual(
+      Array.from({ length: 2 * CARDS_PER_SHEET }, (_, i) => i + 1),
+    );
     expect(rows.map((row) => row.token_hash)).toEqual(minted.tokens.map(sha256));
   });
 
@@ -155,8 +157,8 @@ describe('mintInvitationCards', () => {
   it(`mints ${MAX_SHEETS_PER_BATCH} sheets in one call and refuses one more`, async () => {
     const minted = await mintInvitationCards(asUser(E), MAX_SHEETS_PER_BATCH, NEXT_WEEK());
     expect(minted.tokens).toHaveLength(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET);
-    expect(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET).toBe(495);
-    expect(await cards()).toHaveLength(495);
+    expect(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET).toBe(492);
+    expect(await cards()).toHaveLength(492);
 
     const refused = await mintInvitationCards(
       asUser(E),
@@ -164,8 +166,8 @@ describe('mintInvitationCards', () => {
       NEXT_WEEK(),
     ).catch((error: unknown) => error);
     expect(refused).toBeInstanceOf(ValidationError);
-    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 55 sheets/);
-    expect(await cards()).toHaveLength(495);
+    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 41 sheets/);
+    expect(await cards()).toHaveLength(492);
   });
 
   it.each([0, -1, 1.5, Number.NaN])('refuses %s sheets, a part sheet included', async (sheets) => {

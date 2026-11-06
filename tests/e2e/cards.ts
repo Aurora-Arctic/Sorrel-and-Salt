@@ -49,11 +49,11 @@ export async function decodePdfLinks(page: Page, pdfPath: string): Promise<strin
       >;
     } | null;
     const links: string[] = [];
-    // Each card's code sits at a fixed place in the three-by-three block (points from the page's top left). The round
+    // Each card's code sits at a fixed place in the twelve-card block (points from the page's top left). The round
     // dots stand apart when drawn large and join into a grid at a few pixels to a module, so a few scales are tried,
     // and each code is cropped onto a dark ground with a margin, as a phone camera sees it.
-    const centresX = [117, 304, 494];
-    const centresY = [205, 458, 707];
+    const centresX = [98, 242, 386, 530];
+    const centresY = [193, 445, 697];
     for (const scale of [1.3, 1, 1.7, 2.2]) {
       const viewport = sheet.getViewport({ scale });
       const page = document.createElement('canvas');

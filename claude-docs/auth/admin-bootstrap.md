@@ -877,8 +877,8 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   opens with `assertSiteAdmin`, so a curator, a practitioner and a steward are refused by direct call, and the
   GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
   `requireAdminSession()`, which answers a curator with the styled not-authorized page.
-- **Minting.** `createInvitationCards(sheets, expiresAt, note)` makes nine cards per sheet in one transaction under
-  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (55 sheets, 495 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). The
+- **Minting.** `createInvitationCards(sheets, expiresAt, note)` makes twelve cards per sheet in one transaction under
+  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (41 sheets, 492 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). The
   mutation returns each token once, in that response; no query or type but `MintedInvitationCards.tokens`
   has a token, hash or link field, and a test fails if one appears.
 - **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a

@@ -40,9 +40,9 @@ const BATCHES = [
     batchId: BATCH_ONE,
     mintedAt: new Date('2026-10-01T00:00:00Z'),
     expiresAt: new Date('2026-12-02T12:00:00Z'),
-    cards: 27,
+    cards: 36,
     accepted: 4,
-    pending: 20,
+    pending: 29,
     attempts: 3,
     note: null,
     status: 'live' as const,
@@ -51,8 +51,8 @@ const BATCHES = [
     batchId: 'b2222222-0000-4000-8000-000000000002',
     mintedAt: new Date('2026-01-01T00:00:00Z'),
     expiresAt: new Date('2026-02-02T12:00:00Z'),
-    cards: 9,
-    accepted: 9,
+    cards: 12,
+    accepted: 12,
     pending: 0,
     attempts: 0,
     note: null,
@@ -62,7 +62,7 @@ const BATCHES = [
     batchId: 'b3333333-0000-4000-8000-000000000003',
     mintedAt: new Date('2026-08-01T00:00:00Z'),
     expiresAt: new Date('2026-11-02T12:00:00Z'),
-    cards: 9,
+    cards: 12,
     accepted: 2,
     pending: 0,
     attempts: 0,
@@ -73,7 +73,7 @@ const BATCHES = [
     batchId: 'b4444444-0000-4000-8000-000000000004',
     mintedAt: new Date('2026-03-01T00:00:00Z'),
     expiresAt: new Date('2026-04-02T12:00:00Z'),
-    cards: 9,
+    cards: 12,
     accepted: 0,
     pending: 0,
     attempts: 0,
@@ -189,7 +189,7 @@ describe('AdminCards', () => {
                   reason: 'revoked',
                   attempts: 2,
                   note: null,
-                  cardPosition: 14,
+                  cardPosition: 17,
                   firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                   lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                   account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
@@ -241,7 +241,7 @@ describe('AdminCards', () => {
                 reason: 'revoked',
                 attempts: 2,
                 note: null,
-                cardPosition: 14,
+                cardPosition: 17,
                 firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                 lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                 account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
@@ -313,7 +313,7 @@ describe('AdminCards', () => {
     const [first, second, third, fourth] = screen.getAllByRole('row').slice(1);
     expect(screen.getAllByRole('row')).toHaveLength(5);
     expect(within(first).getByText('b1111111')).toBeInTheDocument();
-    expect(within(first).getByText('27')).toBeInTheDocument();
+    expect(within(first).getByText('36')).toBeInTheDocument();
     expect(within(first).getByText('4')).toBeInTheDocument();
     expect(
       within(first).getByRole('button', { name: /^Revoke Batch b1111111/ }),
@@ -360,11 +360,11 @@ describe('AdminCards', () => {
     expect(mint()).toBeDisabled();
     expect(
       within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }),
-    ).toHaveAccessibleDescription('A Letter sheet holds 9 cards.');
+    ).toHaveAccessibleDescription('A Letter sheet holds 12 cards.');
     fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '3' },
     });
-    expect(within(dialog()).getByText('27 cards')).toBeInTheDocument();
+    expect(within(dialog()).getByText('36 cards')).toBeInTheDocument();
     pickFirstOfFebruary();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());
@@ -390,13 +390,13 @@ describe('AdminCards', () => {
     );
     render(<AdminCards batches={[]} minting />);
     const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
-    const refusal = 'A batch is from 1 to 55 sheets';
+    const refusal = 'A batch is from 1 to 41 sheets';
 
     expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
-    fireEvent.change(sheets, { target: { value: '56' } });
+    fireEvent.change(sheets, { target: { value: '42' } });
     expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
     expect(sheets).toBeInvalid();
-    fireEvent.change(sheets, { target: { value: '55' } });
+    fireEvent.change(sheets, { target: { value: '41' } });
     expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
     fireEvent.change(sheets, { target: { value: '0' } });
     expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
@@ -405,13 +405,13 @@ describe('AdminCards', () => {
 
     // jsdom does not move the focus; the browser does, from its own report of the invalid field.
     const report = vi.spyOn(sheets as HTMLInputElement, 'reportValidity');
-    fireEvent.change(sheets, { target: { value: '56' } });
+    fireEvent.change(sheets, { target: { value: '42' } });
     pickFirstOfFebruary();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());
     expect(calls).toHaveLength(0);
     expect(report).toHaveBeenCalled();
-    expect(sheets).toHaveValue(56);
+    expect(sheets).toHaveValue(42);
   });
 
   it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {

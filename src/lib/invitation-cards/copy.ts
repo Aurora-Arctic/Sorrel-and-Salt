@@ -8,7 +8,7 @@ export interface FrontCopy {
   admits: string;
 }
 
-// Nine texts, one per card on a sheet, so no two cards on a sheet read the same.
+// Nine texts, taken in turn card after card across the sheets, so neighbouring cards read differently.
 export const FRONT_COPY: readonly FrontCopy[] = [
   {
     headline: 'The Kettle Is On',

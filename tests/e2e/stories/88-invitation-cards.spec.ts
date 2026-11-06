@@ -25,14 +25,14 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     );
     const links: string[] = [];
 
-    await test.step('the admin mints a sheet of nine, downloads the PDF and sees one batch', async () => {
+    await test.step('the admin mints a sheet of twelve, downloads the PDF and sees one batch', async () => {
       await page.goto('/keepers/invitation-cards');
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
       await dialog.getByRole('textbox', { name: 'Note' }).fill('Harvest fair stall');
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-      await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
+      await expect(dialog.getByText(/12 cards minted/)).toBeVisible();
 
       const pdfDownload = page.waitForEvent('download');
       await dialog.getByRole('button', { name: 'Download PDF' }).click();
@@ -53,7 +53,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await expect(batch).toContainText('Harvest fair stall');
 
       const printed = await decodePdfLinks(page, path);
-      expect(printed, 'the nine codes on the sheet decode').toHaveLength(9);
+      expect(printed, 'the twelve codes on the sheet decode').toHaveLength(12);
       for (const link of printed) {
         // The short form, on this site: the token is the last path segment.
         expect(link).toMatch(

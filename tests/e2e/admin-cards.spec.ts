@@ -21,9 +21,9 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
   await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
-  await expect(dialog.getByText('9 cards', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('12 cards', { exact: true })).toBeVisible();
   await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-  await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
+  await expect(dialog.getByText(/12 cards minted/)).toBeVisible();
 
   // Closing before the download asks first, and keeping the dialog open leaves the PDF on offer.
   await dialog.getByRole('button', { name: 'Done' }).click();
@@ -125,7 +125,7 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(before + 1);
 
   const links = await decodePdfLinks(page, path);
-  expect(links, 'every code on the sheet decodes').toHaveLength(9);
+  expect(links, 'every code on the sheet decodes').toHaveLength(12);
   await page.goto('/keepers/invitation-cards');
 
   // The newest batch is the first row.

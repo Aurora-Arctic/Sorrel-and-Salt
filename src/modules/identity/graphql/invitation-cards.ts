@@ -242,7 +242,7 @@ builder.mutationField('createInvitationCards', (t) =>
   t.field({
     type: MintedCardsRef,
     description:
-      'Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.',
+      'Mints `sheets` sheets of twelve cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 41 sheets.',
     args: {
       sheets: t.arg.int({ required: true }),
       expiresAt: t.arg({ type: 'DateTime', required: true }),
