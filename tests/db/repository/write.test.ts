@@ -1,8 +1,9 @@
-import { beforeAll, describe, expect, it } from 'vitest';
-import { and, eq } from 'drizzle-orm';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { and, eq, sql as expression } from 'drizzle-orm';
 import {
   type AuditWriter,
   findMany,
+  findSimilarIngredients,
   findManyIncludingSoftDeleted,
   findOne,
   withAudit,
@@ -11,6 +12,8 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { namedWrites } from '@/db/table-marks';
+import { ingredientSlug } from '@/lib/slugify';
+import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { A, asUser } from '../../support/as-user';
 import {
   herbs,
@@ -24,6 +27,8 @@ import {
   tinctures,
   useProbeTables,
 } from '../../support/db/probe-tables';
+import { insertIngredient } from '../../support/db/insert-ingredient';
+import { makeIngredient } from '../../support/fixtures';
 
 useProbeTables();
 
@@ -271,6 +276,196 @@ describe('app.current_user_id', () => {
     expect(rows).toHaveLength(0);
   });
 });
+
+// A finder called inside a `withAudit` callback runs on that callback's transaction, so it sees what the write
+// has put down and the actor it published, and never queues on a second connection behind a lock the write's
+// own transaction holds up. Outside one, it runs on the bare client as before.
+describe('a finder inside a withAudit callback', () => {
+  /** A committed row written by the raw client, which every connection sees. */
+  async function seedHerb(name: string) {
+    const [row] = await sql`
+      insert into repository_probe_herbs ${sql({ name, created_by: session.userId, updated_by: session.userId })}
+      returning id`;
+    return row.id as string;
+  }
+
+  it('sees a row the callback inserted and has not committed', async () => {
+    const seen = await withAudit(session, async (write) => {
+      const [row] = await write.insert(herbs, { name: 'Testwort' });
+      // Why a finder could miss it: no other connection sees the row yet.
+      const [{ count }] = await sql`select count(*)::int as count from repository_probe_herbs`;
+      expect(count).toBe(0);
+      return findMany(herbs, eq(herbs.id, row.id));
+    });
+
+    expect(seen).toEqual([expect.objectContaining({ name: 'Testwort' })]);
+  });
+
+  it('runs on the backend the callback writes on', async () => {
+    await seedHerb('Testwort');
+
+    const { writerPid, read } = await withAudit(session, async (write) => {
+      // The writer's backend, read by its own insert.
+      const [marker] = await write.insert(herbs, {
+        name: expression`pg_backend_pid()::text` as unknown as string,
+      });
+      const pid = Number(marker.name);
+      return {
+        writerPid: pid,
+        read: await findMany(
+          herbs,
+          and(eq(herbs.name, 'Testwort'), expression`pg_backend_pid() = ${pid}`),
+        ),
+      };
+    });
+
+    expect(writerPid).toBeGreaterThan(0);
+    // The seeded row is committed, so only the backend clause can hide it.
+    expect(read).toHaveLength(1);
+  });
+
+  it('reads under the acting user the write published', async () => {
+    await seedHerb('Testwort');
+
+    const read = await withAudit(session, () =>
+      findMany(herbs, expression`current_setting('app.current_user_id', true) = ${session.userId}`),
+    );
+
+    expect(read).toHaveLength(1);
+  });
+
+  it('does not wait behind a lock queued after the write took its own', async () => {
+    await seedHerb('Testwort');
+    let locking: Promise<unknown> = Promise.resolve();
+    let reading: Promise<unknown> = Promise.resolve();
+
+    const outcome = await withAudit(session, async (write) => {
+      // The write's transaction now holds a lock on the table that an exclusive lock must wait for.
+      await write.insert(herbs, { name: 'Betony' });
+      locking = sql.begin((tx) => tx`lock table repository_probe_herbs in access exclusive mode`);
+      await queuedLockOn('repository_probe_herbs');
+      reading = findMany(herbs);
+      return Promise.race([
+        reading.then(() => 'read'),
+        new Promise((resolve) => setTimeout(() => resolve('waited'), 2_000)),
+      ]);
+    });
+    // Once the write commits the lock is granted and released, and a read left waiting finishes.
+    await locking;
+    await reading;
+
+    expect(outcome).toBe('read');
+  });
+});
+
+describe('a finder outside any withAudit callback', () => {
+  it('does not see the rows of a write still open beside it', async () => {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let inserted!: () => void;
+    const written = new Promise<void>((resolve) => (inserted = resolve));
+
+    const writing = withAudit(session, async (write) => {
+      await write.insert(herbs, { name: 'Testwort' });
+      inserted();
+      await held;
+    });
+    await written;
+    const outside = await findMany(herbs);
+    release();
+    await writing;
+
+    expect(outside).toEqual([]);
+    // Why it could have answered a row: the write did insert one.
+    await expect(findMany(herbs)).resolves.toHaveLength(1);
+  });
+
+  it('runs on the bare client once the write has returned, with no actor published', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Testwort' }));
+
+    const read = await findMany(
+      herbs,
+      expression`coalesce(current_setting('app.current_user_id', true), '') = ''`,
+    );
+
+    expect(read).toEqual([expect.objectContaining({ name: 'Testwort' })]);
+  });
+});
+
+// A similarity read sets its pg_trgm thresholds with `set_config(…, true)`; inside a write it does so in a
+// savepoint on the write's transaction rather than a transaction of its own.
+describe('a similarity read inside a withAudit callback', () => {
+  const admin = assertSiteAdmin({ ...session, role: 'admin' });
+  const author = { userId: A.id };
+  const PAGE = { limit: 10, inverted: false };
+
+  beforeEach(async () => {
+    await sql`truncate ingredients cascade`;
+  });
+
+  /** A compendium entry with no formal name or folk names, so its display name is all a match can read. */
+  const addEntry = (name: string) =>
+    insertIngredient(
+      sql,
+      makeIngredient({ name, nomenclature: 'none', folkNames: [], variants: [] }),
+      A.id,
+    );
+
+  /** Renames the entry inside `write`, uncommitted, and answers what a similarity read for Testwort then finds. */
+  async function renameThenMatch(write: AuditWriter, id: string) {
+    await write.updateRevisionedInCompendium(admin, ingredients, id, null, {
+      name: 'Testwort',
+      slug: ingredientSlug('Testwort', null),
+    });
+    const page = await findSimilarIngredients([], 'Testwort', PAGE);
+    return page.map(({ node }) => node.name);
+  }
+
+  it('sees the write’s own rows under its threshold of 0.4, not the default of 0.3', async () => {
+    const renamed = await addEntry('Zyxquill');
+    await addEntry('Testwart Leaf');
+    // Why the read could have answered the near-miss: at the server's default it matches.
+    const [near] = await sql`
+      select ${'Testwart Leaf'} % ${'Testwort'} as matched,
+             similarity(${'Testwart Leaf'}, ${'Testwort'}) as score`;
+    expect(near.matched).toBe(true);
+    expect(Number(near.score)).toBeLessThan(0.4);
+
+    const names = await withAudit(author, (write) => renameThenMatch(write, renamed));
+
+    expect(names).toEqual(['Testwort']);
+  });
+
+  it('rolls the whole write back when the callback throws after the read', async () => {
+    const renamed = await addEntry('Zyxquill');
+
+    await expect(
+      withAudit(author, async (write) => {
+        const names = await renameThenMatch(write, renamed);
+        // Why a rollback could leave something behind: the read ran and found the rename.
+        expect(names).toEqual(['Testwort']);
+        await write.insert(herbs, { name: 'Betony' });
+        throw new Error('spell fizzled');
+      }),
+    ).rejects.toThrow('spell fizzled');
+
+    const [entry] = await sql`select name from ingredients where id = ${renamed}`;
+    expect(entry.name).toBe('Zyxquill');
+    await expect(sql`select id from repository_probe_herbs`).resolves.toHaveLength(0);
+  });
+});
+
+/** Waits until a lock request on `table` is queued and not granted, so a later statement queues behind it. */
+async function queuedLockOn(table: string) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const [{ waiting }] = await sql`
+      select count(*)::int as waiting from pg_locks
+      where relation = ${table}::regclass and not granted`;
+    if (waiting > 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  throw new Error(`no lock request queued on ${table}`);
+}
 
 // `write.delete` is how the two hard-deleted join tables are written, typed so it cannot
 // be pointed at anything else.

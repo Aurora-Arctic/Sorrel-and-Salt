@@ -100,6 +100,8 @@ there is no public handle a finder could reach the database through while
 skipping the filter — the same shape as `AuditWriter` gives writes no path
 around `applyAudit`.
 
+**A read inside a write runs on the write's transaction** (MB.148). `selectFrom` takes the transaction `withAudit` published through `unit-of-work.ts` when one is present and the bare client otherwise, so the soft-delete filter is applied in the same place whichever connection runs the read. Inside a write that connection is the write's own: the read sees the write's uncommitted rows and its published actor, and cannot deadlock behind a lock queued after the write ([`write-path.md`](write-path.md), "Reads inside a write"). `existsIn` only builds SQL and is unaffected.
+
 **`existsIn(table, where)` is the second builder** (MB.100). A finder whose
 scope lives on a parent row — `findManyInSpell`, `findManyOfIngredients`,
 `findMembershipsOfUsers`, and the provisional-account delete's check for an
