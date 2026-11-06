@@ -13,7 +13,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
     ? ACCOUNT_TABS.filter((tab) => tab.href === SUPPORT_LIST_PATH)
     : ACCOUNT_TABS;
   return (
-    <TabbedPage title="Account" tabs={tabs} framed>
+    <TabbedPage title={anonymous ? 'Support Requests' : 'Account'} tabs={tabs} framed>
       {children}
     </TabbedPage>
   );
