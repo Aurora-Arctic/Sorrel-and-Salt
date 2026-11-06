@@ -29,12 +29,12 @@ const SupportRequestByViewTokenDocument = graphql(`
       status
       subject
       message
-      createdAt
+      sentAt
       replies {
         id
         authorRole
         body
-        createdAt
+        sentAt
       }
     }
   }
@@ -76,11 +76,11 @@ const SupportRequestByLink = (): ReactElement => {
         ...found,
         about: found.about as SupportAbout,
         status: found.status as SupportStatus,
-        createdAt: new Date(found.createdAt),
+        createdAt: new Date(found.sentAt),
         replies: found.replies.map((reply) => ({
           id: reply.id,
           body: reply.body,
-          createdAt: new Date(reply.createdAt),
+          createdAt: new Date(reply.sentAt),
           fromSender: reply.authorRole === 'sender',
         })),
       };

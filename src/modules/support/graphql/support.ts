@@ -346,7 +346,7 @@ const SupportViewReplyRef = builder.objectRef<ViewedReply>('SupportViewReply').i
     id: t.exposeID('id'),
     authorRole: t.expose('authorRole', { type: SupportReplyAuthorRoleEnum }),
     body: t.exposeString('body'),
-    createdAt: t.expose('createdAt', { type: 'DateTime' }),
+    sentAt: t.expose('createdAt', { type: 'DateTime' }),
   }),
 });
 
@@ -361,7 +361,7 @@ const SupportRequestViewRef = builder
       status: t.expose('status', { type: SupportStatusEnum }),
       subject: t.exposeString('subject'),
       message: t.exposeString('message'),
-      createdAt: t.expose('createdAt', { type: 'DateTime' }),
+      sentAt: t.expose('createdAt', { type: 'DateTime' }),
       replies: t.field({ type: [SupportViewReplyRef], resolve: (view) => view.replies }),
     }),
   });

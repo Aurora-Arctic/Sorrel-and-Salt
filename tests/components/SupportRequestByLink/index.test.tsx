@@ -28,7 +28,7 @@ const FOUND: SupportRequestByViewTokenQuery = {
     status: 'open' as SupportRequestByViewTokenQuery['supportRequestByViewToken']['status'],
     subject: SUBJECT,
     message: 'It sticks at the lid.',
-    createdAt: '2026-11-01T09:00:00Z',
+    sentAt: '2026-11-01T09:00:00Z',
     replies: [],
   },
 };

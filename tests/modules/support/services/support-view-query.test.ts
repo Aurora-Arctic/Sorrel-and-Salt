@@ -45,7 +45,7 @@ const VIEW = /* GraphQL */ `
       message
       status
       about
-      createdAt
+      sentAt
       replies {
         body
         authorRole
@@ -67,7 +67,7 @@ type Viewed = {
     message: string;
     status: string;
     about: string;
-    createdAt: string;
+    sentAt: string;
     replies: { body: string; authorRole: string }[];
   } | null;
 };
@@ -138,7 +138,7 @@ describe('Query.supportRequestByViewToken', () => {
       about: 'account',
       replies: [{ body: 'Try the code on the card.', authorRole: 'staff' }],
     });
-    expect(answer.data?.supportRequestByViewToken?.createdAt).toEqual(expect.any(String));
+    expect(answer.data?.supportRequestByViewToken?.sentAt).toEqual(expect.any(String));
   });
 
   it('declares only what the page shows: no address, token, hash or staff field', () => {
@@ -148,15 +148,7 @@ describe('Query.supportRequestByViewToken', () => {
     expect(isObjectType(type)).toBe(true);
     const fields = Object.keys((type as GraphQLObjectType).getFields());
     expect(fields).toEqual(
-      expect.arrayContaining([
-        'id',
-        'subject',
-        'message',
-        'status',
-        'about',
-        'createdAt',
-        'replies',
-      ]),
+      expect.arrayContaining(['id', 'subject', 'message', 'status', 'about', 'sentAt', 'replies']),
     );
     const allowed = [
       'id',
@@ -164,7 +156,7 @@ describe('Query.supportRequestByViewToken', () => {
       'message',
       'status',
       'about',
-      'createdAt',
+      'sentAt',
       'updatedAt',
       'resolvedAt',
       'replies',
@@ -176,7 +168,7 @@ describe('Query.supportRequestByViewToken', () => {
     ) as GraphQLObjectType;
     expect(
       Object.keys(reply.getFields()).filter(
-        (name) => !['id', 'authorRole', 'body', 'createdAt'].includes(name),
+        (name) => !['id', 'authorRole', 'body', 'sentAt'].includes(name),
       ),
     ).toEqual([]);
   });

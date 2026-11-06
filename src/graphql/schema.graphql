@@ -2875,10 +2875,10 @@ What the mailed-link page shows of a signed-out sender’s request: its public t
 """
 type SupportRequestView {
   about: SupportAbout!
-  createdAt: DateTime!
   id: ID!
   message: String!
   replies: [SupportViewReply!]!
+  sentAt: DateTime!
   status: SupportStatus!
   subject: String!
 }
@@ -2914,8 +2914,8 @@ A message in the thread of a signed-out sender’s request, as the mailed-link p
 type SupportViewReply {
   authorRole: SupportReplyAuthorRole!
   body: String!
-  createdAt: DateTime!
   id: ID!
+  sentAt: DateTime!
 }
 
 """A toxic setting other than any, and how many entries it would list."""

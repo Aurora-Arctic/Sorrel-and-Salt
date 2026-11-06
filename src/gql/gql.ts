@@ -124,7 +124,7 @@ type Documents = {
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.SaveStockDocument,
     "\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n": typeof types.SupportDialogStateDocument,
     "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": typeof types.SendSupportRequestDocument,
-    "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      createdAt\n      replies {\n        id\n        authorRole\n        body\n        createdAt\n      }\n    }\n  }\n": typeof types.SupportRequestByViewTokenDocument,
+    "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n": typeof types.SupportRequestByViewTokenDocument,
     "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": typeof types.AssignSupportRequestDocument,
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestCuratorVisibleDocument,
     "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveSupportRequestDocument,
@@ -257,7 +257,7 @@ const documents: Documents = {
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.SaveStockDocument,
     "\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n": types.SupportDialogStateDocument,
     "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": types.SendSupportRequestDocument,
-    "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      createdAt\n      replies {\n        id\n        authorRole\n        body\n        createdAt\n      }\n    }\n  }\n": types.SupportRequestByViewTokenDocument,
+    "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n": types.SupportRequestByViewTokenDocument,
     "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": types.AssignSupportRequestDocument,
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": types.SetSupportRequestCuratorVisibleDocument,
     "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveSupportRequestDocument,
@@ -737,7 +737,7 @@ export function graphql(source: "\n  mutation SendSupportRequest($input: Support
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      createdAt\n      replies {\n        id\n        authorRole\n        body\n        createdAt\n      }\n    }\n  }\n"): (typeof documents)["\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      createdAt\n      replies {\n        id\n        authorRole\n        body\n        createdAt\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n"): (typeof documents)["\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
