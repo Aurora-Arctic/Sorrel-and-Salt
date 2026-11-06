@@ -3,6 +3,7 @@ import type postgres from 'postgres';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
+import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 
 const startJob = vi.hoisted(() => vi.fn<(job: unknown, args: unknown[]) => Promise<string>>());
 vi.mock('@/lib/jobs', () => ({ startJob }));
@@ -125,5 +126,29 @@ describe('the daily cleanup of anonymous accounts', () => {
     expect(ids).not.toContain(linked);
     expect(await present(linked)).toEqual({ users: 1, sessions: 1 });
     await sql`delete from users where id = ${linked}`;
+  });
+
+  // The time-out binds the address the account wrote from, and goes with the account by cascade, so the account must stay
+  // while the time-out stands.
+  it('keeps one holding no request while a time-out on it stands, and removes it once that is lifted', async () => {
+    const held = await insertAnonymousUser(sql, { createdAgo: '8 days', withSession: true });
+    const timeout = await insertSupportTimeout(sql, held, { address: 'held@example.test' });
+
+    await runDay();
+    expect(await present(held)).toEqual({ users: 1, sessions: 1 });
+
+    // Precondition: the lifted time-out is all that changed, so keeping it before was the time-out's doing.
+    await sql`update support_timeouts set lifted_at = now() where id = ${timeout}`;
+    await runDay();
+    expect(await present(held)).toEqual({ users: 0, sessions: 0 });
+  });
+
+  it('removes one whose time-out has run out', async () => {
+    const held = await insertAnonymousUser(sql, { createdAgo: '8 days', withSession: true });
+    await insertSupportTimeout(sql, held, { endsIn: '-1 hour', address: 'held@example.test' });
+
+    await runDay();
+
+    expect(await present(held)).toEqual({ users: 0, sessions: 0 });
   });
 });

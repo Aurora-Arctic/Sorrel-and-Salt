@@ -18,7 +18,7 @@ import { supportStatusStep } from '@/modules/support/jobs/support-status-mail-st
 import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
 import { B, C, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { anonymousMinter } from '../../../support/db/insert-anonymous-user';
+import { anonymousMinter, insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
 import { insertSupportRequest } from '../../../support/db/insert-support-request';
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { run } from '../../../support/graphql/run';
@@ -300,6 +300,31 @@ describe('a reply through the mailed link from a timed-out sender', () => {
     expect(refusal).not.toBeInstanceOf(NotFound);
     expect(refusal).toBeInstanceOf(Forbidden);
     expect((refusal as Error).message).toBe(signedIn.message);
+    expect(await repliesOn(id)).toHaveLength(1);
+
+    await sql`update support_timeouts set lifted_at = now() where id = ${timeout}`;
+    await reply(token, 'After the time-out.');
+    expect(await repliesOn(id)).toHaveLength(2);
+  });
+});
+
+// A time-out binds the address as well as the account, so a request from that address sent as a new account is held too.
+describe('a reply through the mailed link from a timed-out address', () => {
+  it('is refused when another account’s standing time-out binds the request’s address, and goes through once lifted', async () => {
+    const address = 'rebound@example.test';
+    const { id, senderId, token } = await sendSignedOut(address);
+    // Precondition: the token is valid and its sender holds no time-out, so a refusal below is the address's.
+    await reply(token, 'Before the time-out.');
+    expect(await repliesOn(id)).toHaveLength(1);
+    const earlier = await insertAnonymousUser(sql);
+    expect(earlier).not.toBe(senderId);
+    const timeout = await insertSupportTimeout(sql, earlier, { address: 'Rebound@Example.test' });
+    expect(await sql`select 1 from support_timeouts where user_id = ${senderId}`).toHaveLength(0);
+
+    const refusal = await failureOf(reply(token, 'During the time-out.'));
+
+    expect(refusal).not.toBeInstanceOf(NotFound);
+    expect(refusal).toBeInstanceOf(Forbidden);
     expect(await repliesOn(id)).toHaveLength(1);
 
     await sql`update support_timeouts set lifted_at = now() where id = ${timeout}`;

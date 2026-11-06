@@ -264,3 +264,49 @@ describe('an account claiming a timed-out anonymous sender’s requests', () => 
     );
   });
 });
+
+// A time-out also binds the address it was set from, so claiming by that address takes it even when its account holds none
+// of the claimed requests.
+describe('an account claiming by an address a standing time-out binds', () => {
+  async function claimUnderAddressTimeout(lifted: boolean) {
+    const { id: claimerId } = await signUp();
+    await asTouch(sql, (tx) => tx`update users set email_verified = true where id = ${claimerId}`);
+    const rows = await signedOutRequests();
+    // The timed-out account wrote from this address, but its requests are gone; only the time-out's key names the address.
+    const earlier = await insertAnonymousUser(sql);
+    await insertSupportTimeout(sql, earlier, { address: AS_TYPED, lifted });
+    // Preconditions: neither the claimer nor the account whose requests it claims is timed out.
+    expect(
+      await sql`select 1 from support_timeouts where user_id in (${claimerId}, ${rows.anonymousId})`,
+    ).toHaveLength(0);
+
+    const signedIn = await post(auth, '/sign-in/email', { email: CLAIMER, password: PASSWORD });
+    expect(signedIn.status, await signedIn.clone().text()).toBe(200);
+    expect(await requestRow(rows.fromAnonymous)).toMatchObject({ created_by: claimerId });
+    return claimerId;
+  }
+
+  const sendAs = (claimerId: string) =>
+    sendSupportRequest(
+      { userId: claimerId, role: 'user' },
+      { about: 'account', subject: 'After the claim', message: 'It still sticks.' },
+      { origin: async () => 'http://localhost:3000' },
+    );
+
+  it('takes that time-out, and its own send is refused', async () => {
+    const claimerId = await claimUnderAddressTimeout(false);
+    const before = (await sql`select 1 from support_requests where created_by = ${claimerId}`)
+      .length;
+
+    expect(await failureOf(sendAs(claimerId))).toBeInstanceOf(Forbidden);
+    expect(await sql`select 1 from support_requests where created_by = ${claimerId}`).toHaveLength(
+      before,
+    );
+  });
+
+  it('takes nothing from a lifted one, and its own send saves', async () => {
+    const claimerId = await claimUnderAddressTimeout(true);
+
+    expect((await sendAs(claimerId)).createdBy).toBe(claimerId);
+  });
+});
