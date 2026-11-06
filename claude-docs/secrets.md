@@ -282,13 +282,13 @@ devcontainer carries isn't scoped to manage Actions secrets/variables
 2. **Neon connection strings**: Neon console → the project → each branch
    (`main`, `staging`) → Connection Details.
 
-   **`channel_binding=require` can stay** (MB.49). The console puts it in by
-   default, and a hotfix's Neon URL is written by Neon's Vercel integration,
-   which rewrites it, so it cannot be deleted by hand. It is a libpq
-   _client-side_ option that postgres.js would hand to the server, which
-   refuses it with `42704`, so every place a connection opens strips it
-   first (`src/db/connection-url.ts`; [`ci/deploy.md`](ci/deploy.md),
-   "Deploy", has the mechanism). Keep `sslmode=require`: postgres.js
+   **`channel_binding=require` can stay, and is enforced.** The console puts
+   it in by default, and a hotfix's Neon URL is written by Neon's Vercel
+   integration, which rewrites it, so it cannot be deleted by hand. The
+   driver reads it from the URL and refuses to connect unless the server
+   offers channel binding, which Neon does
+   (`src/db/connection-url.ts`; [`ci/deploy.md`](ci/deploy.md), "Deploy",
+   has the failure it gives otherwise). Keep `sslmode=require`: the driver
    consumes that one, and it is what actually requests TLS.
 
 3. **Google OAuth client**: Google Cloud Console → APIs & Services →
