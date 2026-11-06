@@ -45,12 +45,13 @@ export async function seedDemoCovenSeats(tx: SeedTransaction): Promise<void> {
   const people = await tx
     .select({ id: users.id, role: users.role })
     .from(users)
-    // The signed-out support sender and the job actor hold no seat anywhere.
+    // The signed-out support sender, the job actor and provisional (anonymous) accounts hold no seat anywhere.
     .where(
       and(
         isNull(users.deletedAt),
         ne(users.id, SIGNED_OUT_SENDER_ID),
         ne(users.id, SYSTEM_ACTOR_ID),
+        eq(users.isAnonymous, false),
       ),
     );
   const seats = people.map(({ id, role }) => ({
