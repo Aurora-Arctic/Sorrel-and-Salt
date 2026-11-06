@@ -6,7 +6,7 @@ This page prices what it costs to run Sorrel & Salt at 100, 1,000, 10,000 and 10
 
 **Nothing here needs you to act yet.** The last section lists what I could not confirm and what I need you to decide. Prices were fetched on 2026-11-06 and move; see the [README](README.md).
 
-Every figure is labelled. `measured` was counted in this repository. `sourced` comes from a numbered source at the bottom. `derived` is calculated from named inputs. `assumption` is a guess, given with a range you can change. The totals are computed by `.reports/m17.1/compute.mjs` from the Inputs table, so changing an assumption changes every total (see "How to Re-Run the Numbers").
+Every figure is labelled. `measured` was counted in this repository. `sourced` comes from a numbered source at the bottom. `derived` is calculated from named inputs. `assumption` is a guess, given with a range you can change. The totals are computed by `scripts/billing-model.mjs` from the Inputs table, so changing an assumption changes every total (see "How to Re-Run the Numbers").
 
 ## Inputs
 
@@ -243,7 +243,7 @@ No usage forces an enterprise plan at 100,000 accounts. Features do.
 
 ## How to Re-Run the Numbers
 
-`node .reports/m17.1/compute.mjs` prints every table above. Its constants are the Inputs table. The folder `.reports/` is ignored by git, so the script is not in the repository; copy it into the folder if you want to keep it. Change a value in the `I` object and run it again.
+`node scripts/billing-model.mjs` prints every table above. Its constants are the Inputs table. Change a value in the `I` object and run it again.
 
 ## Sources
 

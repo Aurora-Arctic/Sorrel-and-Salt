@@ -12,7 +12,7 @@ The five wants a subscription has to meet are DESIGN.md §13's. I call them **R1
 - **R4.** A keeper can make a coven free.
 - **R5.** Someone who belongs to several covens pays less.
 
-A price in a model below is mine unless it names a comparable. I anchored each on the comparables, and the doc says so each time. Change them in `.reports/m17.1/compute.mjs` and re-run it. Sources S1 to S52 are Lane C's, listed at the end with the others.
+A price in a model below is mine unless it names a comparable. I anchored each on the comparables, and the doc says so each time. Change them in `scripts/billing-model.mjs` and re-run it. Sources S1 to S52 are Lane C's, listed at the end with the others.
 
 ## How Each Model Meets R1 to R5
 

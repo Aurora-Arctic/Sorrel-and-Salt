@@ -13,10 +13,10 @@ Every price and policy was fetched on **2026-11-06**. Vendors change prices, so 
 
 ## Re-Running the Numbers
 
-The figures in both files come from a script, `.reports/m17.1/compute.mjs`. `.reports/` is gitignored, so the script is not in the repository. It is copied in by hand. With the script in place, run:
+The figures in both files come from a script, `scripts/billing-model.mjs`. Run:
 
 ```
-node .reports/m17.1/compute.mjs
+node scripts/billing-model.mjs
 ```
 
 Its inputs are one object near the top of the file. Change a price or a ratio there and re-run it. The model prices in `subscription-models.md` are assumptions anchored on comparables, and are set there too.
