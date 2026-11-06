@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import PageHeader from '../PageHeader';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // The body of `src/app/(shell)/forbidden.tsx`: what a signed-in non-keeper sees at
 // the keepers pages. It says why and offers the way back — never who the keepers are or
@@ -19,9 +19,9 @@ const NotAuthorized = (): ReactElement => (
       }
     />
     <p className="not-authorized__way-back">
-      <Link className="btn btn--quiet" href="/">
+      <PendingLink className="btn btn--quiet" href="/">
         Back to Sorrel &amp; Salt
-      </Link>
+      </PendingLink>
     </p>
   </div>
 );

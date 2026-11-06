@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import ForgotPasswordForm from '../../components/ForgotPasswordForm';
 import PageHeader from '../../components/PageHeader';
 import PageFrame from '@/components/PageFrame';
+import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = {
   title: 'Forgot Password',
@@ -25,7 +25,7 @@ export default function ForgotPasswordPage() {
         />
         <ForgotPasswordForm />
         <p className="forgot-password-form__back">
-          <Link href="/sign-in">Back to Sign In</Link>
+          <PendingLink href="/sign-in">Back to Sign In</PendingLink>
         </p>
       </div>
     </PageFrame>

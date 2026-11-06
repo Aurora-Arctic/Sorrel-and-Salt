@@ -6,6 +6,7 @@ import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import type { ImpersonationBannerProps } from './types';
 import './index.scss';
+import { reportLeaving } from '../../lib/navigation';
 
 // The way out, on every page while a session is an impersonation. It cannot live in the
 // admin nav: impersonating a non-keeper costs the admin `/keepers` until they stop
@@ -57,6 +58,7 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
       report(STOP_FAILED);
       return;
     }
+    reportLeaving();
     window.location.assign(RETURN_TO);
   }
 

@@ -1,9 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { getSession, signIn, signUp } from '../../lib/auth-client';
-import { reportLeaving } from '../../lib/navigation';
+import { reportLeaving, PendingLink } from '../../lib/navigation';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { BackChevron } from '../IngredientEntry/back-link';
@@ -251,7 +250,7 @@ const PasswordForm = ({
       </form>
       {!signingUp && (
         <p className="sign-in-panel__switch">
-          <Link href="/forgot-password">Forgot Password?</Link>
+          <PendingLink href="/forgot-password">Forgot Password?</PendingLink>
         </p>
       )}
       <p className="sign-in-panel__switch">

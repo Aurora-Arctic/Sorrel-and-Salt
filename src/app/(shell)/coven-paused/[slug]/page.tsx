@@ -1,5 +1,4 @@
 import type { Metadata, Route } from 'next';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { pausedCovenBySlug } from '@/modules/coven';
 import ContextRow from '../../../../components/ContextRow';
@@ -13,6 +12,7 @@ import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import LocalTime from '../../../../components/LocalTime';
 import type { CovenPausedPageProps } from './types';
 import PageFrame from '@/components/PageFrame';
+import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = {
   title: 'Access Paused',
@@ -72,9 +72,9 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
               <ul aria-labelledby="other-covens">
                 {others.map((other) => (
                   <li key={other.slug}>
-                    <Link href={`/coven/${encodeURIComponent(other.slug)}` as Route}>
+                    <PendingLink href={`/coven/${encodeURIComponent(other.slug)}` as Route}>
                       {other.name}
-                    </Link>
+                    </PendingLink>
                   </li>
                 ))}
               </ul>

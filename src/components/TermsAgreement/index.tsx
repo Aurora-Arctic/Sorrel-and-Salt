@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
@@ -14,6 +13,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { TermsAgreementProps } from './types';
 import './index.scss';
+import { PendingLink, reportLeaving } from '../../lib/navigation';
 
 // The acceptance page's body: where to read the terms, and the one button that records agreement. The mutation names the version
 // shown, and the server refuses one no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
@@ -47,7 +47,10 @@ const TermsAgreement = ({
   const mutation = useMutation({
     mutationFn: () => graphqlRequest(AgreeToTermsDocument, { version }),
     // A full navigation, not the router's: the router may hold the redirect to this page as the answer for the page asked for.
-    onSuccess: () => window.location.assign(destination),
+    onSuccess: () => {
+      reportLeaving();
+      window.location.assign(destination);
+    },
     onError: (failure) => setAlert(readGraphqlFailure(failure, []).alert),
   });
 
@@ -66,13 +69,13 @@ const TermsAgreement = ({
       </p>
       <p>
         The terms include the{' '}
-        <Link href="/disclaimer" target="_blank">
+        <PendingLink href="/disclaimer" target="_blank">
           Disclaimer
-        </Link>{' '}
+        </PendingLink>{' '}
         and the{' '}
-        <Link href="/code-of-ethics" target="_blank">
+        <PendingLink href="/code-of-ethics" target="_blank">
           Code of Ethics
-        </Link>
+        </PendingLink>
         , and agreeing to the terms is agreeing to them too.
       </p>
       {changed.length > 0 && (
@@ -81,9 +84,9 @@ const TermsAgreement = ({
           <ul>
             {changed.map((key) => (
               <li key={key}>
-                <Link href={`/${key}`} target="_blank">
+                <PendingLink href={`/${key}`} target="_blank">
                   {DOCUMENT_TITLES[key]}
-                </Link>
+                </PendingLink>
               </li>
             ))}
           </ul>
@@ -91,9 +94,9 @@ const TermsAgreement = ({
       )}
       {alert && <Notice kind="error">{alert}</Notice>}
       <p className="terms-agreement__actions">
-        <Link className="btn btn--quiet" href="/terms" target="_blank">
+        <PendingLink className="btn btn--quiet" href="/terms" target="_blank">
           Read the Terms of Use
-        </Link>
+        </PendingLink>
         <BusyButton
           className="btn btn--solid"
           busy={recording}

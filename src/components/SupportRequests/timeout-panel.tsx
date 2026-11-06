@@ -1,11 +1,10 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { usePendingNavigation } from '../../lib/navigation';
+import { usePendingNavigation, PendingLink } from '../../lib/navigation';
 import { longMinuteInZone } from '../../lib/utc';
 import { CollapsibleSection } from '../CollapsibleSection';
 import IconTip from '../IconTip';
@@ -230,10 +229,10 @@ const TimeoutPanel = ({
         info={
           earlier.length > 0 && earlierHref ? (
             <IconTip tip="Earlier Time-Outs">
-              <Link className="timeout-panel__icon" href={earlierHref}>
+              <PendingLink className="timeout-panel__icon" href={earlierHref}>
                 <HistoryIcon />
                 <span className="visually-hidden">Earlier Time-Outs</span>
-              </Link>
+              </PendingLink>
             </IconTip>
           ) : undefined
         }

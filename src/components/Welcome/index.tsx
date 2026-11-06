@@ -1,8 +1,8 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import PageHeader from '../PageHeader';
 import type { WelcomeProps } from './types';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // The public front door at `/`: what the site is, that it is invite-only, the
 // way in, and the way to the public compendium. The session changes exactly one
@@ -21,18 +21,18 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
     </p>
     <p className="welcome__way-in">
       {landing ? (
-        <Link className="btn btn--solid" href={landing}>
+        <PendingLink className="btn btn--solid" href={landing}>
           Continue
-        </Link>
+        </PendingLink>
       ) : (
-        <Link className="btn btn--solid" href="/sign-in">
+        <PendingLink className="btn btn--solid" href="/sign-in">
           Sign In
-        </Link>
+        </PendingLink>
       )}
       {/* The compendium is public, so it is offered to everyone. */}
-      <Link className="btn btn--quiet" href="/compendium">
+      <PendingLink className="btn btn--quiet" href="/compendium">
         Browse the Compendium
-      </Link>
+      </PendingLink>
     </p>
   </div>
 );

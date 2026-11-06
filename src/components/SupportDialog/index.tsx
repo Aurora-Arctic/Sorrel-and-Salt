@@ -1,7 +1,6 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { Suspense, type ReactElement } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -26,6 +25,7 @@ import { useActualPathname } from '../../lib/use-actual-pathname';
 import { emailPagePath } from '../../lib/account-email';
 import type { SupportPanelState } from '../SupportPanel/types';
 import type { SupportDialogState } from './types';
+import { PendingLink } from '../../lib/navigation';
 
 // The Support dialog, open while the address carries `?support=<about>` on any page, with
 // `?error=<status>` when it comes from an error page. Drawn once by the root layout, which reads nothing
@@ -93,7 +93,7 @@ function Dialog(): ReactElement | null {
           ) : state.kind === 'unverified' ? (
             <Notice kind="plain">
               Confirm your email address before you write to us.{' '}
-              <Link href={emailPagePath(undefined)}>Go to Your Email</Link>
+              <PendingLink href={emailPagePath(undefined)}>Go to Your Email</PendingLink>
             </Notice>
           ) : (
             <SupportPanel state={panelState} path={path} returnTo={closeHref} onDone={done} />

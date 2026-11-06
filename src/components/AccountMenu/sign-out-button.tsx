@@ -5,6 +5,7 @@ import { signOut } from '../../lib/auth-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
+import { reportLeaving } from '../../lib/navigation';
 
 // Sign Out: Better Auth's own sign-out at `/api/auth/*`, the one path outside GraphQL, carrying the
 // session and no application data (claude-docs/auth/graphql-only-exception.md). A success is a full
@@ -30,6 +31,7 @@ const SignOutButton = (): ReactElement => {
       report(GENERIC_FAILURE);
       return;
     }
+    reportLeaving();
     window.location.assign(LANDING);
   }
 

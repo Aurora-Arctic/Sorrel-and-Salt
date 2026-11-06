@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import PageNav from '../../../../../components/PageNav';
 import Passkeys from '../../../../../components/Passkeys';
 import PasswordSection from '../../../../../components/PasswordSection';
@@ -21,6 +20,7 @@ import { configuredProviders } from '../../../../../lib/social-providers-config'
 import { getMe } from '@/modules/identity';
 import type { SignInPageProps } from './types';
 import PageWithNav from '@/components/PageWithNav';
+import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = {
   title: 'Sign-In',
@@ -110,7 +110,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         ) : (
           <p>
             Two-factor guards password sign-ins, and this account has no password.{' '}
-            <Link href={ACCOUNT_PASSWORD_PATH}>Set a Password</Link> first.
+            <PendingLink href={ACCOUNT_PASSWORD_PATH}>Set a Password</PendingLink> first.
           </p>
         )}
       </section>

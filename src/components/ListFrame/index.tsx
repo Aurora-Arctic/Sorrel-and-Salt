@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { usePendingNavigation } from '../../lib/navigation';
+import { usePendingNavigation, reportLeaving } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind } from './types';
 
@@ -91,6 +91,7 @@ const ListFrame = ({ className, disabled = false, children }: ListFrameProps): R
       setTarget(href);
       if (way === 'full') {
         setLeaving(true);
+        reportLeaving();
         window.location.assign(href);
         return;
       }

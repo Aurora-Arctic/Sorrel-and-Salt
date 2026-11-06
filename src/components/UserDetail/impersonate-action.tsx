@@ -10,6 +10,7 @@ import {
   sendImpersonation,
 } from '../UserList/impersonation';
 import type { UserDetailUser } from './types';
+import { reportLeaving } from '../../lib/navigation';
 
 // Impersonate inside the user's modal, asking over the modal's body through ConfirmQuestion, since
 // ConfirmedAction would open a second modal. The endpoint is the guard. A success swaps the session
@@ -52,6 +53,7 @@ const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => 
             throw error;
           }
           // Left busy: the page is replaced by the load below.
+          reportLeaving();
           window.location.assign(IMPERSONATION_LANDING);
         }}
         onKeep={() => setAsked(false)}
