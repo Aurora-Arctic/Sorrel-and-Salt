@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { SupportAbout, SupportStatus } from '../SupportRequests/types';
 
 export interface SupportSenderReply {
@@ -28,6 +29,8 @@ export interface SupportSenderRequestEntry {
 
 export interface SupportSenderRequestProps {
   request: SupportSenderRequestEntry;
+  /** The reply form to draw on an unclosed request in place of the signed-in one, with the Resolve button left out. */
+  reply?: ReactNode;
 }
 
 export interface SupportSenderReplyBoxProps {

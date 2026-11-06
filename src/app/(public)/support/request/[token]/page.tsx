@@ -1,8 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
-import LocalTime from '../../../../../components/LocalTime';
 import PageHeader from '../../../../../components/PageHeader';
+import { ABOUT_OPTIONS } from '../../../../../components/SupportRequests/filter';
+import { statusBadgeClass } from '../../../../../components/SupportRequests/status-badge';
+import SupportSenderRequest from '../../../../../components/SupportSenderRequest';
+import { senderStatusLabel } from '../../../../../components/SupportSenderRequest/status';
 import SupportViewReplyForm from '../../../../../components/SupportViewReplyForm';
 import { NotFound } from '../../../../../lib/errors';
 import { getSupportRequestByViewToken } from '../../../../../modules/support';
@@ -26,25 +29,39 @@ export default async function SupportRequestByLinkPage({
     if (error instanceof NotFound) notFound();
     throw error;
   });
+  const about =
+    ABOUT_OPTIONS.find((option) => option.value === request.about)?.label ?? request.about;
+  const staffWroteLast = request.replies[request.replies.length - 1]?.authorRole === 'staff';
+  // The request is drawn by the signed-in sender's own view, so the two read alike; only the reply form differs.
   return (
     <div className="page-with-nav">
-      <PageHeader eyebrow="Support" title={request.subject} lede={request.message} />
-      <ol>
-        {request.replies.map((reply) => (
-          <li key={reply.id}>
-            <p>
-              {reply.authorRole === 'sender' ? 'You' : 'Support'},{' '}
-              <LocalTime at={reply.createdAt} long />
-            </p>
-            <p>{reply.body}</p>
-          </li>
-        ))}
-      </ol>
-      {request.status === 'closed' ? (
-        <p>This request is closed. To write again, send a new request from the Support page.</p>
-      ) : (
-        <SupportViewReplyForm token={token} />
-      )}
+      <PageHeader eyebrow={`Support · ${about}`} title={request.subject} />
+      <div className="badges">
+        <span className={statusBadgeClass(request.status)}>
+          {senderStatusLabel(request.status, staffWroteLast)}
+        </span>
+      </div>
+      <SupportSenderRequest
+        request={{
+          id: request.id,
+          about: request.about,
+          subject: request.subject,
+          status: request.status,
+          message: request.message,
+          createdAt: request.createdAt,
+          path: null,
+          errorCode: null,
+          replies: request.replies.map((reply) => ({
+            id: reply.id,
+            body: reply.body,
+            createdAt: reply.createdAt,
+            fromSender: reply.authorRole === 'sender',
+          })),
+          followUpId: null,
+          timedOut: null,
+        }}
+        reply={<SupportViewReplyForm token={token} />}
+      />
     </div>
   );
 }

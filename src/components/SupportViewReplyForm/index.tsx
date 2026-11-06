@@ -6,7 +6,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import BusyButton from '../BusyButton';
+import { FieldShell, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { SupportViewReplyFormProps } from './types';
@@ -34,7 +35,6 @@ const SupportViewReplyForm = ({ token }: SupportViewReplyFormProps): ReactElemen
   const discard = useDiscardGuard(body !== '');
   const bodyField = fieldDescription({
     id: bodyId,
-    note: `Up to ${MESSAGE_LIMIT} characters.`,
     error: failure.field?.name === 'body' ? failure.field.message : undefined,
   });
 
@@ -59,16 +59,19 @@ const SupportViewReplyForm = ({ token }: SupportViewReplyFormProps): ReactElemen
   }
 
   return (
-    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
+    <form
+      className="form support-detail__reply"
+      noValidate
+      onSubmit={(event) => void submit(event)}
+    >
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Reply" required note={`Up to ${MESSAGE_LIMIT} characters.`} {...bodyField}>
+      <FieldShell label="Your Reply" {...bodyField}>
         <textarea
           id={bodyField.controlId}
           className="textarea"
-          rows={5}
-          placeholder="Write a reply"
+          rows={4}
+          placeholder="Write a reply."
           maxLength={MESSAGE_LIMIT}
-          aria-required
           {...bodyField.aria}
           value={body}
           disabled={sending}
@@ -87,13 +90,17 @@ const SupportViewReplyForm = ({ token }: SupportViewReplyFormProps): ReactElemen
         />
       </div>
       {discard.asking && <DiscardQuestion guard={discard} />}
-      <FormActions
-        noun="Reply"
-        label="Send Reply"
-        busyLabel="Sending"
-        dirty={body.trim() !== ''}
-        submitting={sending}
-      />
+      <div className="support-detail__actions">
+        <BusyButton
+          type="submit"
+          className="btn btn--solid"
+          disabled={body.trim() === '' || sending}
+          busy={sending}
+          busyLabel="Sending"
+        >
+          Send Reply
+        </BusyButton>
+      </div>
     </form>
   );
 };
