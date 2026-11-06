@@ -1266,6 +1266,11 @@ type Mutation {
   ): SupportReply!
 
   """
+  A signed-out sender replies from the link in a mail about their request. The token alone finds the request; a wrong, older or claimed one is not found. Open to anyone; counts toward the signed-out send limits.
+  """
+  replyToSupportRequestByViewToken(body: String!, token: String!, website: String): Boolean!
+
+  """
   The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.
   """
   resolveMySupportRequest(id: ID!): SupportRequest!

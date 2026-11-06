@@ -121,8 +121,10 @@ export async function getShellSession(): Promise<{
   session: Session;
   accessPause?: { until: Date | null };
 } | null> {
-  const { session, accessPause } = await getSessionState();
+  const { session, accessPause, anonymous } = await getSessionState();
   if (!session) return null;
+  // An anonymous sender is drawn on the support pages alone, as everywhere else they read as signed out.
+  if (anonymous && !isAnonymousViewPage((await forwardedReturnPath()) ?? '')) return null;
   return accessPause ? { session, accessPause } : { session };
 }
 
