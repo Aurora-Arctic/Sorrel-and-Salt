@@ -70,7 +70,7 @@ Real spells and ingredients per coven are unknown. The two coven sizes above are
 | Loaded-salary hourly rate                       | $137.97 / $147.81 / $157.65                                 | derived    | $286,977 to $327,922 a year ÷ 2,080 h, [29]                                       |
 | Washington retailing B&O                        | 0.471%, less a credit of up to $55 a month                  | sourced    | [26]                                                                              |
 | Stripe card fee                                 | 2.9% + 30¢; Billing 0.7%; Tax Basic 0.5%                    | sourced    | [30] [31]                                                                         |
-| Managed Payments                                | +3.5% on top                                                | sourced    | [32]                                                                              |
+| Managed Payments                                | +3.5% per charge, tax included                              | sourced    | [32]                                                                              |
 
 B&O means business and occupation tax, Washington's tax on gross receipts rather than profit. CU-hour means one compute unit running for one hour (a compute unit is Neon's measure of CPU and memory).
 
@@ -187,10 +187,10 @@ Full-time job: $23,915 a month (loaded low) to $27,327 (loaded high); promised o
 
 These are rates, not costs: they scale with revenue and are subtracted in subscription-models.md.
 
-| Option                                             | Fee                                                          | Who is the seller                             |
-| -------------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------- |
-| 1. Stripe Billing plus Stripe Tax, hosted Checkout | 2.9% + 30¢, plus 0.7% Billing, plus 0.5% Tax Basic [30] [31] | The site (the owner)                          |
-| 2. Stripe Managed Payments                         | Option 1 plus 3.5% [32]                                      | Link, Stripe's service, as merchant of record |
+| Option                                             | Fee                                                                                                       | Who is the seller                             |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| 1. Stripe Billing plus Stripe Tax, hosted Checkout | 2.9% + 30¢, plus 0.7% Billing, plus 0.5% Tax Basic by the no-code route (50¢ per charge by API) [30] [31] | The site (the owner)                          |
+| 2. Stripe Managed Payments                         | 2.9% + 30¢, plus 0.7% Billing, plus 3.5%; tax is included in the 3.5% [30] [32]                           | Link, Stripe's service, as merchant of record |
 
 A merchant of record is the company legally selling to the customer, which collects and pays the sales tax. Under option 1 the owner is the seller and **owes sales tax registration and filing** (Stripe Tax calculates the tax; it does not file it, and Tax Complete, which files, starts at $90 a month on a one-year contract [31]). Under option 2 Link collects and remits it. Other processors (Paddle, Lemon Squeezy, Polar) charge 5% + 50¢ and act as merchant of record [33]; they are covered in subscription-models.md.
 
