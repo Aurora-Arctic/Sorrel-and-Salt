@@ -7,7 +7,7 @@ PR #1542 is Dependabot's bump of the `postgres` package (postgres.js, our Postgr
 - **Why:** the new major version opens an unencrypted connection in Node's custom read mode (`onread`) by default. msw, the library that fakes outside web services in tests, intercepts every socket, including database ones. Its passthrough swaps in a socket that ignores that read mode, so the first read fails.
 - **The same fault can make tests flaky:** a pool that opens a second connection after msw starts fails the same way. That was reproduced with two concurrent transactions.
 - **Production never uses the read mode.** Neon URLs use `sslmode=require`, which starts unencrypted and then upgrades to TLS, and that path never sets `onread`.
-- **Channel binding.** 4.0.0 also reads `channel_binding` from the URL itself. Channel binding is a login check tied to the server's TLS certificate. Today `src/db/connection-url.ts` strips `channel_binding` from every URL, because the old major version forwarded it to the server, which refused it with `42704`. Under the new version the strip only throws the setting away: Neon's `channel_binding=require` would be enforced if we let it through.
+- **Channel binding.** The new version also reads `channel_binding` from the URL itself. Channel binding is a login check tied to the server's TLS certificate. Today `src/db/connection-url.ts` strips `channel_binding` from every URL, because the old major version forwarded it to the server, which refused it with `42704`. Under the new version the strip only throws the setting away: Neon's `channel_binding=require` would be enforced if we let it through.
 
 Decisions you made:
 
