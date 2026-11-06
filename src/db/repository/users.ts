@@ -40,12 +40,13 @@ export async function findUserByEmail(
 /** The user list's order, by name and then id. */
 const USER_ORDER: readonly SortPart[] = [users.name];
 
-/** The users the list holds under `filter`: all but the three system users, narrowed by its arms. */
+/** The users the list holds under `filter`: all but the three system users and the anonymous accounts a signed-out send mints, narrowed by its arms. */
 function listedUsers(filter: UserFilter): SQL | undefined {
   return and(
     ne(users.id, BOOTSTRAP_USER_ID),
     ne(users.id, SIGNED_OUT_SENDER_ID),
     ne(users.id, SYSTEM_ACTOR_ID),
+    eq(users.isAnonymous, false),
     ...userArms(filter),
   );
 }
