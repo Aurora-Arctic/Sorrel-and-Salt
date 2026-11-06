@@ -1,5 +1,4 @@
 import { PendingLink } from '../../../../lib/navigation';
-import { covenTarget } from '../../../../lib/coven-path';
 import type { Route } from 'next';
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster, rolePermits } from '@/modules/coven';
@@ -79,7 +78,6 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           <li>
             <PendingLink
               href={`/coven/${slug}/ingredients` as Route}
-              navigationTarget={covenTarget(`/coven/${slug}/ingredients`)}
               aria-describedby="coven-contents-ingredients"
             >
               Ingredients
@@ -91,7 +89,6 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           <li>
             <PendingLink
               href={`/coven/${slug}/grimoire` as Route}
-              navigationTarget={covenTarget(`/coven/${slug}/grimoire`)}
               aria-describedby="coven-contents-grimoire"
             >
               Grimoire
@@ -104,7 +101,6 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
             <li>
               <PendingLink
                 href={`/coven/${slug}/members` as Route}
-                navigationTarget={covenTarget(`/coven/${slug}/members`)}
                 aria-describedby="coven-contents-members"
               >
                 Members

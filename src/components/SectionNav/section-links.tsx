@@ -230,7 +230,6 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
           >
             <PendingLink
               href={section.href}
-              navigationTarget={section.target}
               className="section-nav__link"
               aria-current={isCurrent(pathname, section) ? 'page' : undefined}
             >
@@ -274,7 +273,6 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
                 <li key={section.href} className={`section-nav__sheet-item${apart(section)}`}>
                   <PendingLink
                     href={section.href}
-                    navigationTarget={section.target}
                     className="section-nav__link"
                     aria-current={isCurrent(pathname, section) ? 'page' : undefined}
                   >

@@ -13,21 +13,18 @@ import { ActiveNavigationContext, NavigationActionsContext } from './provider';
 import { getServerSnapshot, getSnapshot, subscribe } from './store';
 import type { NavigateOptions, NavigationState, PendingNavigation } from './types';
 
-const IDLE: NavigationState = { busy: false, target: undefined };
+const IDLE: NavigationState = { busy: false, href: undefined };
 
 /**
- * The site-wide state: busy while any navigation is on its way, and where it
- * is headed. A navigation's part is the provider's optimistic value; a full
+ * The site-wide state: busy while any navigation is on its way, and the address it
+ * is headed for. A navigation's part is the provider's optimistic value; a full
  * page load's part is the external store's.
  */
 export function useNavigationState(): NavigationState {
   const active = useContext(ActiveNavigationContext);
   const leaving = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const target = active?.target;
-  return useMemo(
-    () => (active || leaving ? { busy: true, target } : IDLE),
-    [active, leaving, target],
-  );
+  const href = active?.href;
+  return useMemo(() => (active || leaving ? { busy: true, href } : IDLE), [active, leaving, href]);
 }
 
 /**

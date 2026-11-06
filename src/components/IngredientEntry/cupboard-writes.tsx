@@ -1,7 +1,6 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
@@ -167,7 +166,7 @@ export function useCupboardWrites({
     mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
     onSuccess: ({ convertCompendiumEntryToLocal: { entry } }) => {
       const href = `/coven/${covenSlug}/ingredients/${entry.id}`;
-      navigate(href as Route, { target: ingredientLinkTarget(href) });
+      navigate(href as Route);
     },
     onError: refused,
   });

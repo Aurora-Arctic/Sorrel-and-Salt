@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
-import type { NavigationTarget } from '../../lib/navigation';
 
 export interface SectionBodyProps {
-  /** The navigations this body answers: those whose target names this region. */
-  region: Exclude<NavigationTarget['region'], 'main'>;
+  /** The navigations this body answers: the moves to a page the registry gives this region. */
+  region: 'coven' | 'admin';
   /** The frame's class, which the section's stylesheet already styles. */
   className: string;
   /** The section's page, which its layout is given. */

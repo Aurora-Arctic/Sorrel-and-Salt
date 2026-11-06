@@ -12,10 +12,10 @@ import {
   useState,
 } from 'react';
 import { LeaveGuardContext, holdTraversals, leaveGuardSlot } from './leave-guard';
-import type { NavigateOptions, NavigationTarget } from './types';
+import type { NavigateOptions } from './types';
 
-/** The navigation on its way: who started it, and where it is headed. */
-export type ActiveNavigation = { owner: symbol; target: NavigationTarget | undefined };
+/** The navigation on its way: who started it, and the address it is headed for. */
+export type ActiveNavigation = { owner: symbol; href: string | undefined };
 
 /** What the provider lets a caller do. `owner` is the caller's own identity, for its `pending`. */
 export type NavigationActions = {
@@ -46,7 +46,7 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
           options?.scroll === undefined ? undefined : { scroll: options.scroll };
         guards.leave(() =>
           startTransition(() => {
-            setActive({ owner, target: options?.target });
+            setActive({ owner, href });
             const go = options?.replace ? router.replace : router.push;
             if (routerOptions) go(href as never, routerOptions);
             else go(href as never);
@@ -55,7 +55,7 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
       },
       refresh: (owner) => {
         startTransition(() => {
-          setActive({ owner, target: undefined });
+          setActive({ owner, href: undefined });
           router.refresh();
         });
       },

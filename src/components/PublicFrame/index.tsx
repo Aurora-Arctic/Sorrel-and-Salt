@@ -27,11 +27,7 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
     </a>
     <header className="public-frame__bar">
       <div className="public-frame__bar-inner">
-        <PendingLink
-          href="/"
-          className="public-frame__brand"
-          navigationTarget={{ region: 'main', shape: 'page' }}
-        >
+        <PendingLink href="/" className="public-frame__brand">
           <BrandName block="public-frame" />
         </PendingLink>
         <SiteNav links={COMPENDIUM_LINK} />

@@ -3,7 +3,6 @@
 import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
-import { covenTarget } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -40,9 +39,7 @@ export function useDeleteSpell({
   const { navigate } = usePendingNavigation();
   const remove = useMutation({
     mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
-    // The target is read off the path alone: the query carries what was deleted, not where.
-    onSuccess: () =>
-      navigate(deletedHref, { replace: true, target: covenTarget(deletedHref.split('?')[0]!) }),
+    onSuccess: () => navigate(deletedHref, { replace: true }),
     onError: (error) => {
       onClosed();
       onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);

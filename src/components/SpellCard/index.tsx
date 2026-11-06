@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
@@ -74,7 +73,7 @@ const SpellCard = ({
             {href ? (
               // The recipe page draws its own frame while it loads, so the link names it.
               // The link stretches over the whole card, as an ingredient card's name does.
-              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+              <PendingLink href={href}>
                 <span className="spell-card__title-text">
                   {name} <LinkHint />
                 </span>

@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 
 const Link = (): ReactElement => (
   <p>
-    <PendingLink href="/compendium" navigationTarget={{ region: 'coven', shape: 'table' }}>
+    <PendingLink href="/compendium">
       Compendium <LinkHint />
     </PendingLink>
   </p>

@@ -1,6 +1,5 @@
 import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
 import ShownToggle from '../IngredientEntry/shown-toggle';
@@ -93,7 +92,6 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
         <PendingLink
           className="compendium-list__name"
           href={`/compendium/ingredients/${entry.slug}` as Route}
-          navigationTarget={ingredientLinkTarget(`/compendium/ingredients/${entry.slug}`)}
         >
           {entry.name}
           <LinkIconHint />

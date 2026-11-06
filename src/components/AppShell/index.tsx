@@ -47,11 +47,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
         <div className="app-shell__bar-inner">
           {/* The brand leads to `/`, which is public, so every viewer gets the link,
               an unverified one included. */}
-          <PendingLink
-            href="/"
-            className="app-shell__brand"
-            navigationTarget={{ region: 'main', shape: 'page' }}
-          >
+          <PendingLink href="/" className="app-shell__brand">
             {brand}
           </PendingLink>
           <SiteNav links={links} />

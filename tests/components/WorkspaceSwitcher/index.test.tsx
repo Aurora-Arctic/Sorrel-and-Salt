@@ -158,12 +158,12 @@ describe('WorkspaceSwitcher', () => {
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
   });
 
-  it('goes from another coven straight to a paused coven’s paused page, drawing that page’s narrow panel while it loads', async () => {
+  it('goes from another coven straight to a paused coven’s paused page, naming that page while it loads', async () => {
     let target: unknown;
     function Probe() {
       const state = useNavigationState();
       useEffect(() => {
-        target = state.target;
+        target = state.href;
       });
       return null;
     }
@@ -184,7 +184,7 @@ describe('WorkspaceSwitcher', () => {
 
     expect(push).toHaveBeenCalledTimes(1);
     expect(push.mock.calls[0]?.[0]).toBe('/coven-paused/testwort-circle');
-    expect(target).toEqual({ region: 'main', shape: 'form', frame: 'narrow' });
+    expect(target).toBe('/coven-paused/testwort-circle');
   });
 
   it('keeps the current workspace from the address, so a re-render in another tab’s workspace does not change it', () => {

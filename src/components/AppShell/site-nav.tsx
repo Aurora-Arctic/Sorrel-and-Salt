@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { isAtPath } from '../../lib/at-path';
 import { PendingLink } from '../../lib/navigation';
-import { siteLinkTarget } from './site-target';
 import type { SiteNavProps } from './types';
 
 // The bar's links, a client part since only `usePathname()` reads the address. Current is
@@ -18,11 +17,7 @@ const SiteNav = ({ links }: SiteNavProps): ReactElement => {
       <ul>
         {links.map(({ label, href, base }) => (
           <li key={label}>
-            <PendingLink
-              href={href}
-              navigationTarget={siteLinkTarget(base, href)}
-              aria-current={isAtPath(pathname, base) ? 'page' : undefined}
-            >
+            <PendingLink href={href} aria-current={isAtPath(pathname, base) ? 'page' : undefined}>
               {label}
             </PendingLink>
           </li>

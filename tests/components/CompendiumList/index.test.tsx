@@ -179,12 +179,12 @@ describe('CompendiumList', () => {
     expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });
 
-  it("names the entry page it leads to, so that page's frame is drawn while it loads", async () => {
+  it('names the entry page it leads to by its address while it loads', async () => {
     let target: unknown;
     function Probe() {
       const state = useNavigationState();
       useEffect(() => {
-        target = state.target;
+        target = state.href;
       });
       return null;
     }
@@ -204,7 +204,7 @@ describe('CompendiumList', () => {
     });
 
     expect(router.push.mock.calls[0]?.[0]).toBe('/compendium/ingredients/fixture-salt');
-    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    expect(target).toBe('/compendium/ingredients/fixture-salt');
     await act(async () => arrive());
   });
 

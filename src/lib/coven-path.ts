@@ -1,5 +1,3 @@
-import type { NavigationTarget } from './navigation';
-
 // A workspace is named by the address alone, never by session state, so two
 // tabs can sit in two workspaces without disagreeing. These read and
 // rewrite that address: the segment after `/coven/` is the slug.
@@ -95,44 +93,4 @@ export function pathInCoven(
   if (PEOPLE_SECTIONS.has(section) && !canReadMembers) return home;
   if (opens?.includes(slug)) return `${home}/${parts.slice(3).join('/')}`;
   return `${home}/${section}`;
-}
-
-/**
- * What each section's page draws while it is on its way: the heading and its cards under a filter (Ingredients), the tab row
- * and a filter (grimoire), or a table under the tab row (people; Invitations for a steward). The Invite action is left out,
- * as it is a steward's alone and the address does not say who is asking.
- */
-const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
-  ingredients: { shape: 'cards', title: true, filter: true, density: 'compact' },
-  grimoire: {
-    shape: 'cards',
-    title: true,
-    filter: true,
-    tabs: true,
-    // New Spell is for practitioners and stewards; an observer sees a block where it is not, which keeps the rows from jumping.
-    action: true,
-    density: 'compact',
-    card: 'spell',
-  },
-  members: { shape: 'table', title: true, tabs: true },
-  invitations: { shape: 'table', title: true, tabs: true },
-};
-
-/**
- * What a coven page draws while it is on its way, from the section the address names: the home and one ingredient's page
- * (an id beneath `ingredients`) have a menu beside them, any other section is a plain page. One mapping for the switcher,
- * section nav, the home's Contents and the links into an ingredient.
- */
-export function covenTarget(pathname: string): NavigationTarget {
-  const slug = covenSlugOf(pathname);
-  const section = slug ? pathname.split('/')[3] : undefined;
-  const beneath = slug ? pathname.split('/')[4] : undefined;
-  if (slug && !section)
-    return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
-  if (slug && section === 'ingredients' && beneath)
-    return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
-  // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.
-  if (slug && section === 'grimoire' && beneath && beneath !== 'drafts')
-    return { region: 'coven', shape: 'recipe' };
-  return { region: 'coven', ...((section && PARTS_OF_SECTION[section]) || { shape: 'page' }) };
 }

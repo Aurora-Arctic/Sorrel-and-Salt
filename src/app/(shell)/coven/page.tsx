@@ -43,21 +43,12 @@ export default async function CovenLandingPage() {
             {pending === 1
               ? 'You have an invitation waiting. '
               : `You have ${pending} invitations waiting. `}
-            <PendingLink
-              href={ACCOUNT_INVITATIONS_PATH}
-              navigationTarget={{ region: 'main', shape: 'page', frame: 'with-nav', head: 'title' }}
-            >
-              See your invitations
-            </PendingLink>
+            <PendingLink href={ACCOUNT_INVITATIONS_PATH}>See your invitations</PendingLink>
           </Notice>
         )}
         {viewer.canCreate ? (
           <p>
-            <PendingLink
-              className="btn btn--solid"
-              href={NEW_COVEN_PATH}
-              navigationTarget={{ region: 'main', shape: 'form', frame: 'narrow' }}
-            >
+            <PendingLink className="btn btn--solid" href={NEW_COVEN_PATH}>
               Create Coven
             </PendingLink>
           </p>

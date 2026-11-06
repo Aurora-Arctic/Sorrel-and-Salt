@@ -1,48 +1,9 @@
-/** Where a navigation is headed, so the part of the page that will change can draw its own wait. */
-export type NavigationTarget = {
-  region: 'coven' | 'admin' | 'main';
-  /** A coven switch names the coven it opens, so what belongs to the old coven can leave at once. */
-  coven?: string;
-  shape: 'table' | 'cards' | 'form' | 'page' | 'contents' | 'recipe' | 'document';
-  /** A `table` or `cards` wait draws the page's heading row above the list. */
-  title?: boolean;
-  /** With `title`: the page has an action (Add) at the heading's end. */
-  action?: boolean;
-  /** A `table` or `cards` wait draws the page's filter row. */
-  filter?: boolean;
-  /** With `title`: the page has a tab row between its heading and its action. */
-  tabs?: boolean;
-  /** With `title` and `tabs`: the tab row stands on a line of its own beneath the heading. */
-  tabsBelow?: boolean;
-  /** A `table` wait's column count, where the page's table has more than three. */
-  columns?: number;
-  /** A `table` wait's filter controls, where the page's filter has more than two. */
-  fields?: number;
-  /** A `cards` wait draws the compact cards the list opens at, unless the viewer stored Regular. */
-  density?: 'compact';
-  /** A `cards` wait draws the Grimoire's spell cards, not the Ingredients cards. */
-  card?: 'spell';
-  /**
-   * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
-   * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column
-   * with a side menu drawn, on a `page`) or `entry` (the wide column with a side menu, an ingredient's page). None is the standard centred frame.
-   */
-  /**
-   * The head of a `page` or `contents`: `eyebrow` draws an eyebrow above the
-   * title, `title` the title alone; none is a title and a lede.
-   */
-  head?: 'eyebrow' | 'title';
-  frame?: 'wide' | 'narrow' | 'with-nav' | 'entry';
-};
-
 /** What `navigate` takes beyond the address. */
 export type NavigateOptions = {
   /** Replace the history entry rather than adding one. */
   replace?: boolean;
   /** `false` keeps the scroll position, as a filter or pager does. */
   scroll?: boolean;
-  /** Where the page is headed; read by whatever draws a skeleton for it. */
-  target?: NavigationTarget;
 };
 
 export type PendingNavigation = {
@@ -55,7 +16,8 @@ export type PendingNavigation = {
 /** The site-wide view: any navigation on its way, whoever started it. */
 export type NavigationState = {
   busy: boolean;
-  target: NavigationTarget | undefined;
+  /** The address a navigation is headed for, which the skeletons choose the destination by; none for a refresh or a full page load. */
+  href: string | undefined;
 };
 
 /** A form's hold on leaving the page, registered with the provider while it is mounted. */

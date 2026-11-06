@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
 import { NO_MATCH_HINT } from '../../lib/text';
-import { siteLinkTarget } from '../AppShell/site-target';
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../CompendiumList/href';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import FirstAdd from './first-add';
@@ -46,7 +45,6 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
       {filter.query && (
         <PendingLink
           href={compendiumHref({ query: filter.query }, undefined, PUBLIC_COMPENDIUM_PATH)}
-          navigationTarget={siteLinkTarget(PUBLIC_COMPENDIUM_PATH)}
           className="btn btn--solid"
         >
           Search the Compendium
