@@ -1,6 +1,7 @@
 import 'server-only';
 import { createHash, randomBytes } from 'node:crypto';
 import {
+  findOneById,
   countSenderRepliesSince,
   findPublicSupportReplies,
   findSupportRequestByViewTokenHash,
@@ -8,9 +9,9 @@ import {
 } from '../../../db/repository';
 import { NotFound, RateLimited } from '../../../lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
-import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import { addressCountKey, clientCountKey } from '../../../lib/send-count-key';
 import { parseInput } from '../../../lib/validation';
+import { supportRequests } from '../schema/support-requests';
 import { supportReplies } from '../schema/support-replies';
 import type { SupportRequestRow, SupportRequestView } from '../types';
 import { SupportMessage } from '../validation/support';
@@ -24,7 +25,6 @@ import {
 // SHA-256 hash is stored, so the newest mailed link alone opens the request. A request a real account holds, or one
 // anonymised, has no address on the row, so no token finds it (claude-docs/design-decisions/m15.48-anonymous-sender.md).
 
-const SYSTEM = { userId: SYSTEM_ACTOR_ID };
 const DAY_MS = SIGNED_OUT_WINDOW_SECONDS * 1000;
 
 /** Replies one signed-out request may take through its link in 24 hours. */
@@ -38,7 +38,12 @@ const hashOf = (token: string) => createHash('sha256').update(token).digest('hex
  */
 export async function mintSupportViewToken(requestId: string): Promise<string> {
   const token = randomBytes(32).toString('base64url');
-  await withAudit(SYSTEM, (write) => write.setSupportViewToken(requestId, hashOf(token)));
+  const request = await findOneById(supportRequests, requestId);
+  if (!request) throw new NotFound(NO_SUCH_REQUEST);
+  // Stamped as the request's own sender, so the row's last editor stays the account that sent it.
+  await withAudit({ userId: request.createdBy }, (write) =>
+    write.setSupportViewToken(requestId, hashOf(token)),
+  );
   return token;
 }
 
