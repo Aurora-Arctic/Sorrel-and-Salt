@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -16,8 +17,9 @@ import type { LinkedRequest, LinkState } from './types';
 
 // The page a signed-out sender's mails link to. The mailed link holds its token in the URL fragment, which the browser never
 // sends to the server or in a Referer header, so this reads it in the browser, asks `supportRequestByViewToken` for the
-// request, and drops the fragment from the address bar. The token stays in memory for the reply; a reload has none and shows
-// the not-found state, as a wrong, older or expired token does.
+// request, and drops the fragment from the address bar. The token is kept in this tab's sessionStorage, not the address bar: it
+// lasts for a reload in the tab, is never shared with another tab, and is wiped when the tab closes. A token the server no
+// longer honours is removed from storage.
 
 const SupportRequestByViewTokenDocument = graphql(`
   query SupportRequestByViewToken($token: String!) {
@@ -39,6 +41,24 @@ const SupportRequestByViewTokenDocument = graphql(`
 `);
 
 const NOT_FOUND = 'NOT_FOUND';
+const STORAGE_KEY = 'support-view-token';
+
+function readStored(): string | null {
+  try {
+    return window.sessionStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStored(value: string | null): void {
+  try {
+    if (value === null) window.sessionStorage.removeItem(STORAGE_KEY);
+    else window.sessionStorage.setItem(STORAGE_KEY, value);
+  } catch {
+    // Storage is blocked: the page falls back to showing not-found on a reload.
+  }
+}
 
 const SupportRequestByLink = (): ReactElement => {
   const [state, setState] = useState<LinkState>({ phase: 'loading' });
@@ -66,9 +86,11 @@ const SupportRequestByLink = (): ReactElement => {
       };
       return { phase: 'found', request };
     } catch (error) {
-      return readGraphqlFailureCode(error) === NOT_FOUND
-        ? { phase: 'missing' }
-        : { phase: 'failed', message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE };
+      if (readGraphqlFailureCode(error) === NOT_FOUND) {
+        writeStored(null);
+        return { phase: 'missing' };
+      }
+      return { phase: 'failed', message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE };
     }
   }, []);
 
@@ -77,7 +99,10 @@ const SupportRequestByLink = (): ReactElement => {
       const fragment = decodeURIComponent(window.location.hash.replace(/^#/, ''));
       if (fragment !== '') {
         token.current = fragment;
+        writeStored(fragment);
         window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      } else {
+        token.current = readStored();
       }
     }
     let current = true;
@@ -94,10 +119,11 @@ const SupportRequestByLink = (): ReactElement => {
   if (state.phase === 'missing') {
     return (
       <div className="page-with-nav">
-        <PageHeader title="Request Not Found" />
+        <PageHeader title="Request Not Found or Closed" />
         <p>
-          This link doesn’t open a request. Open the link in the latest email we sent about your
-          request; only the newest link works, and a link stops working after 30 days.
+          This link doesn’t open a request. The request may be closed, or this may not be the newest
+          link. Only the link in the latest email we sent works, and a link stops working after 30
+          days. To ask something new, <Link href="/support">send a new request</Link>.
         </p>
       </div>
     );
