@@ -110,6 +110,49 @@ describe('the GraphQL request context', () => {
     });
   });
 
+  // The account a signed-out support send mints acts as itself on the support operations alone, as a paused session does,
+  // but with no pause: anything else answers as signed out (claude-docs/design-decisions/m15.48-anonymous-sender.md).
+  describe('for an anonymous account', () => {
+    const ANONYMOUS: Session = { userId: 'anonymous-a', role: 'user', anonymous: true };
+
+    const contextFor = (query: string) => {
+      sessionStateFromHeaders.mockResolvedValue({
+        ...stateOf(ANONYMOUS),
+        emailVerified: false,
+        termsAgreed: false,
+        anonymous: true,
+      });
+      return createContext({
+        request: request('better-auth.session_token=abc'),
+        params: { query },
+      });
+    };
+
+    it('carries its session for an operation of the support pages', async () => {
+      for (const query of [
+        'query { mine: mySupportRequests(first: 5) { totalCount } }',
+        'query { mySupportRequest(id: "r") { id } }',
+        'mutation { sendSupportMessage(requestId: "r", body: "b") { id } }',
+      ]) {
+        const context = await contextFor(query);
+        expect(context.session, query).toEqual(ANONYMOUS);
+        expect(context.accessPause, query).toBeUndefined();
+      }
+    });
+
+    it('carries no session, and no pause, for any other operation', async () => {
+      for (const query of [
+        'query { me { id } }',
+        'query { categories(first: 5) { totalCount } }',
+        'query { mySupportRequests(first: 5) { totalCount } me { id } }',
+      ]) {
+        const context = await contextFor(query);
+        expect(context.session, query).toBeNull();
+        expect(context.accessPause, query).toBeUndefined();
+      }
+    });
+  });
+
   it('exposes loaders, and a fresh set for every request', async () => {
     sessionStateFromHeaders.mockResolvedValue(stateOf(null));
 

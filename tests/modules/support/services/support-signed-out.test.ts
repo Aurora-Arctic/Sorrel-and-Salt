@@ -10,14 +10,17 @@ import {
   replyToSupportRequest,
   sendSignedOutSupportRequest,
 } from '@/modules/support';
-import type { SupportNotifier } from '@/modules/support';
+import type { AnonymousMinter, SupportNotifier } from '@/modules/support';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
 
-// A visitor with no account writes about accessibility or signing in: the row, the two topics, the limits that guard it, and
-// the reply that reaches them by email alone (claude-docs/design-decisions/m15-support-review.md).
+// A visitor with no account writes about accessibility or signing in: the provisional account the send mints and writes the
+// row as, the topics, the limits that guard it, and the reply that reaches them by email
+// (claude-docs/design-decisions/m15-support-review.md, m15.48-anonymous-sender.md). Better Auth minting the account and
+// setting its cookie is tests/db/anonymous-link.test.ts's; here the minter stands in, writing the row the plugin would.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -60,6 +63,19 @@ function notifier() {
   return { mail };
 }
 
+/** The ids of the accounts the stand-in minter made, in order. */
+let minted: string[] = [];
+const minter: AnonymousMinter = {
+  mint: async () => {
+    const id = await insertAnonymousUser(sql);
+    minted.push(id);
+    return id;
+  },
+};
+beforeEach(() => {
+  minted = [];
+});
+
 const send = (
   input: Parameters<typeof sendSignedOutSupportRequest>[0] = INPUT,
   context: { clientIp?: string | null; now?: Date; mail?: SupportNotifier } = {},
@@ -68,18 +84,23 @@ const send = (
     clientIp: context.clientIp === undefined ? '203.0.113.7' : context.clientIp,
     notifier: context.mail ?? notifier().mail,
     now: context.now,
+    anonymous: minter,
   });
 
 const count = async () => (await sql`select count(*)::int as n from support_requests`)[0]!.n;
 
 describe('sendSignedOutSupportRequest', () => {
-  it('stores the request under the signed-out sender with the address beside it, and mails a receipt', async () => {
+  it('mints one anonymous account and stores the request as it, with the address beside it, and mails a receipt', async () => {
     const { mail } = notifier();
 
     await send(INPUT, { mail });
 
+    expect(minted).toHaveLength(1);
     const [row] = await sql`select * from support_requests`;
-    expect(row!.created_by).toBe(SIGNED_OUT_SENDER_ID);
+    // Written through withAudit as the minted account: both stamps are its, never the seeded signed-out sender's.
+    expect(row!.created_by).toBe(minted[0]);
+    expect(row!.updated_by).toBe(minted[0]);
+    expect(row!.created_by).not.toBe(SIGNED_OUT_SENDER_ID);
     expect(row!.sender_email).toBe('visitor@example.test');
     expect(row!.about).toBe('account');
     expect(row!.status).toBe('open');
@@ -110,6 +131,8 @@ describe('sendSignedOutSupportRequest', () => {
 
       expect(error).toBeInstanceOf(Forbidden);
       expect(await count()).toBe(1);
+      // Only the allowed send minted an account.
+      expect(minted).toHaveLength(1);
     },
   );
 
@@ -152,6 +175,7 @@ describe('sendSignedOutSupportRequest', () => {
 
     expect(error).toBeInstanceOf(ValidationError);
     expect(await count()).toBe(0);
+    expect(minted).toEqual([]);
   });
 
   it('drops a send whose hidden field is filled, storing, counting and mailing nothing', async () => {
@@ -162,6 +186,7 @@ describe('sendSignedOutSupportRequest', () => {
     expect(await count()).toBe(0);
     expect(receipts()).toEqual([]);
     expect(await sql`select 1 from support_send_counts`).toHaveLength(0);
+    expect(minted).toEqual([]);
   });
 
   it('treats an address that belongs to an account as only an address', async () => {
@@ -170,7 +195,7 @@ describe('sendSignedOutSupportRequest', () => {
     await send({ ...INPUT, email: account!.email as string });
 
     const [row] = await sql`select created_by, sender_email from support_requests`;
-    expect(row!.created_by).toBe(SIGNED_OUT_SENDER_ID);
+    expect(row!.created_by).toBe(minted[0]);
     expect(row!.created_by).not.toBe(A.id);
     expect(await listMySupportRequests(asUser(A), { limit: 101, inverted: false })).toHaveLength(0);
   });
@@ -189,6 +214,8 @@ describe('sendSignedOutSupportRequest', () => {
       expect(error).toBeInstanceOf(RateLimited);
       expect(error).toMatchObject({ retryAfterSeconds: SIGNED_OUT_WINDOW_SECONDS });
       expect(await count()).toBe(SIGNED_OUT_ADDRESS_LIMIT);
+      // A refused send mints no account: one per stored request.
+      expect(minted).toHaveLength(SIGNED_OUT_ADDRESS_LIMIT);
       // Another address from the same client passes: the address limit, not the send, was the guard.
       await send({ ...INPUT, email: 'other@example.test' }, { now, clientIp: '198.51.100.99' });
       expect(await count()).toBe(SIGNED_OUT_ADDRESS_LIMIT + 1);

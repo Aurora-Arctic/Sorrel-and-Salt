@@ -329,6 +329,30 @@ describe('sign-up hook seat', () => {
     await hook({ id: 'new-user', emailVerified: false } as never, null);
     expect(scheduleProvisionalExpiry).toHaveBeenCalledExactlyOnceWith('new-user');
   });
+
+  // The account a signed-out support send mints is unverified too, but the daily cleanup removes it on its own rule
+  // (claude-docs/design-decisions/m15.48-anonymous-sender.md), and it holds nothing but its requests.
+  it('seats no anonymous account in the demo coven, where the same hook seats a normal one', async () => {
+    const { hook, values } = await afterHookWith({ id: 'demo-id' }, async () => undefined);
+
+    await hook({ id: 'normal-user', isAnonymous: false } as never, null);
+    expect(values).toHaveBeenCalledOnce();
+    values.mockClear();
+
+    await hook({ id: 'anonymous-user', isAnonymous: true, emailVerified: false } as never, null);
+    expect(values).not.toHaveBeenCalled();
+  });
+
+  it('schedules no expiry run for an anonymous account, where the same unverified sign-up gets one', async () => {
+    const { hook, scheduleProvisionalExpiry } = await afterHookWithJobs();
+
+    await hook({ id: 'new-user', emailVerified: false, isAnonymous: false } as never, null);
+    expect(scheduleProvisionalExpiry).toHaveBeenCalledExactlyOnceWith('new-user');
+    scheduleProvisionalExpiry.mockClear();
+
+    await hook({ id: 'anonymous-user', emailVerified: false, isAnonymous: true } as never, null);
+    expect(scheduleProvisionalExpiry).not.toHaveBeenCalled();
+  });
 });
 
 // Everything the primary keeper's protection rests on holds only while the
@@ -474,6 +498,29 @@ describe('rate limiting', () => {
 
   it('is off outside production, so next dev and the test suites are never throttled', async () => {
     expect((await authAt('development')).options.rateLimit?.enabled).toBe(false);
+  });
+
+  // The handler mounts the anonymous plugin's own endpoint whether or not anything links to it, so a script could mint
+  // accounts there without sending anything; its own rule holds it far below the default.
+  it('limits the anonymous sign-in endpoint by a rule of its own', async () => {
+    const rule = (await authAt('production')).options.rateLimit?.customRules?.[
+      '/sign-in/anonymous'
+    ] as { window: number; max: number } | undefined;
+
+    expect(rule).toEqual({ window: expect.any(Number), max: expect.any(Number) });
+    expect(rule!.max).toBeLessThanOrEqual(10);
+  });
+});
+
+// The account a signed-out support send mints: Better Auth's anonymous plugin, which adds `users.is_anonymous` under
+// Better Auth's own field name (claude-docs/design-decisions/m15.48-anonymous-sender.md).
+describe('anonymous plugin', () => {
+  it('is registered, and its field is isAnonymous on the users table', async () => {
+    vi.resetModules();
+    const { auth } = await import('@/lib/auth');
+
+    expect(auth.options.plugins?.some(({ id }) => id === 'anonymous')).toBe(true);
+    expect(Object.keys(getAuthTables(auth.options).user.fields)).toContain('isAnonymous');
   });
 });
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { FIXTURE_USERS } from '@/db/seed/standard';
@@ -175,6 +176,44 @@ describe('support_requests table', () => {
       const error = await failureOf(send(SIGNED_OUT_SENDER_ID, null));
 
       expect(error.code).toBe('23514');
+    });
+
+    // The account a signed-out send mints carries the address its form gave
+    // (claude-docs/design-decisions/m15.48-anonymous-sender.md).
+    it('accepts an address with an anonymous account, and refuses it beside the same account not anonymous', async () => {
+      const anonymous = await insertAnonymousUser(sql);
+      const ordinary = await insertAnonymousUser(sql, { anonymous: false });
+
+      const [row] = await send(anonymous, 'visitor@example.test');
+      expect(row.sender_email).toBe('visitor@example.test');
+
+      const error = await failureOf(send(ordinary, 'visitor@example.test'));
+      expect(error.code).toBe('23514');
+    });
+
+    it('accepts an anonymous account with no address', async () => {
+      const anonymous = await insertAnonymousUser(sql);
+
+      const [row] = await send(anonymous, null);
+
+      expect(row.sender_email).toBeNull();
+    });
+
+    it('refuses handing a request that keeps its address to an ordinary account, and takes it once the address is cleared', async () => {
+      const anonymous = await insertAnonymousUser(sql);
+      const [{ id }] = await sql`
+        insert into support_requests (about, subject, message, path, sender_email, created_by, updated_by)
+        values ('question', 'Subject', 'Message', '/', 'visitor@example.test', ${anonymous}, ${anonymous}) returning id`;
+
+      const error = await failureOf(
+        sql`update support_requests set created_by = ${SENDER}, updated_by = ${SENDER} where id = ${id}`,
+      );
+      expect(error.code).toBe('23514');
+
+      await sql`update support_requests set created_by = ${SENDER}, updated_by = ${SENDER}, sender_email = null where id = ${id}`;
+      expect(await sql`select created_by from support_requests where id = ${id}`).toEqual([
+        { created_by: SENDER },
+      ]);
     });
   });
 
