@@ -1,4 +1,18 @@
-import { and, eq, gt, inArray, isNull, lte, ne, not, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  ne,
+  not,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
@@ -6,7 +20,7 @@ import { supportSendCounts } from '../../modules/support/schema/support-send-cou
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { SUPPORT_VIEWS } from '../../lib/support-path';
 import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
-import { ANONYMISED_SUBJECT } from '../../lib/support-sender';
+import { ANONYMISED_SUBJECT, SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
@@ -294,6 +308,50 @@ export function findOwnSupportRequest(userId: string, id: string) {
   ).then(oneAsOfNow);
 }
 
+/**
+ * The signed-out request whose mailed link hashes to `hash`, or `undefined` when none does. A request a real account holds, or
+ * one anonymised, has no address left on the row, so it never matches.
+ */
+export function findSupportRequestByViewTokenHash(hash: string) {
+  return selectOne(
+    supportRequests,
+    and(
+      notSoftDeleted(supportRequests),
+      eq(supportRequests.viewTokenHash, hash),
+      isNotNull(supportRequests.senderEmail),
+      ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
+    ),
+  ).then(oneAsOfNow);
+}
+
+/** The public replies on a request, oldest first: what the mailed-link page shows, with no internal note among them. */
+export function findPublicSupportReplies(requestId: string) {
+  return selectFrom(
+    supportReplies,
+    and(
+      notSoftDeleted(supportReplies),
+      eq(supportReplies.requestId, requestId),
+      // A reply's visibility, not a spell's.
+      // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
+      eq(supportReplies.visibility, 'public'),
+    ),
+  );
+}
+
+/** How many replies the sender has written on a request since `since`. */
+export async function countSenderRepliesSince(requestId: string, since: Date): Promise<number> {
+  const rows = await selectFrom(
+    supportReplies,
+    and(
+      notSoftDeleted(supportReplies),
+      eq(supportReplies.requestId, requestId),
+      eq(supportReplies.authorRole, 'sender'),
+      gte(supportReplies.createdAt, since),
+    ),
+  );
+  return rows.length;
+}
+
 /** The request the sender opened as a follow-up to this closed one of theirs, or `undefined` when they have not. */
 export function findOwnSupportFollowUp(userId: string, id: string) {
   return selectOne(
@@ -570,6 +628,9 @@ export function supportWrites({
   | 'markClosingNoticeSent'
   | 'markReplyNoticeSent'
   | 'anonymiseClosedSupportRequests'
+  | 'adoptAnonymousAccount'
+  | 'setSupportViewToken'
+  | 'claimSupportRequestsByEmail'
 > {
   // One key's count: its advisory lock first, then the live row, started again when its window has passed.
   async function countKey(
@@ -605,7 +666,77 @@ export function supportWrites({
     return count;
   }
 
+  // Hands the requests `requestWhere` picks, and their sender replies, to `realId` in one statement each: the sender leaves
+  // as the address and view link are cleared, so the one-sender CHECK never sees an address with an ordinary account. The
+  // audit writer strips `created_by` from what it sets, so these go to the transaction itself.
+  async function handOver(requestWhere: SQL, fromSenders: SQL, realId: string): Promise<number> {
+    const rows = await tx
+      .update(supportRequests)
+      .set({
+        createdBy: realId,
+        updatedBy: sql`case when ${supportRequests.updatedBy} in (select id from users where is_anonymous) or ${supportRequests.updatedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.updatedBy} end`,
+        resolvedBy: sql`case when ${supportRequests.resolvedBy} in (select id from users where is_anonymous) or ${supportRequests.resolvedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.resolvedBy} end`,
+        senderEmail: null,
+        viewTokenHash: null,
+      })
+      .where(and(notSoftDeleted(supportRequests), requestWhere))
+      .returning({ id: supportRequests.id });
+    if (rows.length === 0) return 0;
+    await tx
+      .update(supportReplies)
+      .set({ createdBy: realId, updatedBy: realId })
+      .where(
+        and(
+          inArray(
+            supportReplies.requestId,
+            rows.map((row) => row.id),
+          ),
+          eq(supportReplies.authorRole, 'sender'),
+          fromSenders,
+        ),
+      );
+    return rows.length;
+  }
+
   return {
+    // The anonymous account's rows move to the account it signed in as, so deleting the anonymous account is not refused by a key,
+    // and what it sent is the account's own. Its time-outs move too, so a keeper's time-out outlives the account.
+    adoptAnonymousAccount: async (anonymousId, realId) => {
+      const moved = await handOver(
+        eq(supportRequests.createdBy, anonymousId),
+        eq(supportReplies.createdBy, anonymousId),
+        realId,
+      );
+      await tx
+        .update(supportReplies)
+        .set({ updatedBy: realId })
+        .where(eq(supportReplies.updatedBy, anonymousId));
+      await tx
+        .update(supportRequests)
+        .set({ updatedBy: realId })
+        .where(eq(supportRequests.updatedBy, anonymousId));
+      await tx
+        .update(supportTimeouts)
+        .set({ userId: realId })
+        .where(eq(supportTimeouts.userId, anonymousId));
+      return moved;
+    },
+    // Only a signed-out sender's rows (an anonymous account's, or the stand-in's) whose address is the verified account's own.
+    claimSupportRequestsByEmail: (realId, email) =>
+      handOver(
+        and(
+          sql`lower(${supportRequests.senderEmail}) = lower(${email})`,
+          or(
+            eq(supportRequests.createdBy, SIGNED_OUT_SENDER_ID),
+            sql`${supportRequests.createdBy} in (select id from users where is_anonymous)`,
+          ) as SQL,
+        ) as SQL,
+        or(
+          eq(supportReplies.createdBy, SIGNED_OUT_SENDER_ID),
+          sql`${supportReplies.createdBy} in (select id from users where is_anonymous)`,
+        ) as SQL,
+        realId,
+      ),
     countSignedOutSend: async (addressKey, clientKey, now, windowSeconds) => ({
       // Fixed order, so two sends taking both locks cannot wait on each other.
       address: await countKey('address', addressKey, now, windowSeconds),
@@ -648,6 +779,13 @@ export function supportWrites({
           isNull(supportRequests.closingNoticeSentAt),
         ),
       ),
+    // Only a signed-out request has a link: one whose address is still on the row.
+    setSupportViewToken: (id, hash) =>
+      update(
+        supportRequests,
+        { viewTokenHash: hash },
+        and(eq(supportRequests.id, id), isNotNull(supportRequests.senderEmail)),
+      ),
     markReplyNoticeSent: (id, sentAt) =>
       update(
         supportReplies,
@@ -665,6 +803,7 @@ export function supportWrites({
           message: '',
           path: '',
           senderEmail: null,
+          viewTokenHash: null,
           resolvedBy: sql`case when ${supportRequests.resolvedBy} = ${supportRequests.createdBy} then null else ${supportRequests.resolvedBy} end`,
           createdBy: SYSTEM_ACTOR_ID,
           updatedBy: session.userId,

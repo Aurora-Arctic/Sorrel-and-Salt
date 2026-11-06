@@ -9,6 +9,7 @@ import {
   noSender,
   noDocumentMailingNotifier,
   noPauseNotifier,
+  noAnonymousMinter,
   noSupportNotifier,
 } from '../support/email-verification';
 import { schema } from '@/graphql/schema';
@@ -24,6 +25,7 @@ function context(session: Context['session']): Context {
     invitations: noInvitationSender,
     passwords: noPasswordSetter,
     support: noSupportNotifier,
+    anonymous: noAnonymousMinter,
     pauses: noPauseNotifier,
     documents: noDocumentMailingNotifier,
     clientIp: null,

@@ -13,7 +13,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('the receipt’s link opens the request with no session, and a token no mail carried is a 404', async ({
+test('the receipt’s link opens the request with no session and takes a reply, and a token no mail carried is a 404', async ({
   page,
   browser,
 }) => {
@@ -37,10 +37,21 @@ test('the receipt’s link opens the request with no session, and a token no mai
 
   const opened = await visitor.goto(path);
   expect(opened?.status()).toBe(200);
+  // The token is in the path, so the page tells the browser to send no referrer from it.
+  expect(await opened?.headerValue('referrer-policy')).toBe('no-referrer');
   await expect(visitor.getByRole('heading', { name: SUBJECT })).toBeVisible();
   expect(await elsewhere.cookies()).toEqual([]);
   const robots = await visitor.locator('meta[name="robots"]').getAttribute('content');
   expect(robots).toMatch(/noindex/);
+
+  // A reply from the page, still with no session: it is posted, and shows on the request when the page is opened again.
+  const body = 'The Testwort lid is still stuck.';
+  await visitor.getByRole('textbox', { name: 'Reply' }).fill(body);
+  await visitor.getByRole('button', { name: 'Send Reply' }).click();
+  await expect(visitor.getByText(body)).toBeVisible();
+  await visitor.goto(path);
+  await expect(visitor.getByText(body)).toBeVisible();
+  expect(await elsewhere.cookies()).toEqual([]);
 
   const wrong = await visitor.goto(`${path.slice(0, -1)}${path.endsWith('x') ? 'y' : 'x'}`);
   expect(wrong?.status()).toBe(404);

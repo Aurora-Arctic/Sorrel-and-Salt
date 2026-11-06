@@ -6,6 +6,7 @@ import { currentAgreementVersion } from '@/modules/documents';
 import { assertCurator, assertSiteAdmin, standingAccessPause } from '@/modules/identity';
 import { agreementIsCurrent } from './agreement-version';
 import { auth } from './auth';
+import { isAnonymousViewPage } from './anonymous-session';
 import { ACCESS_PAUSED_PATH, covenPausedPath, isPausedViewPage } from './access-paused';
 import { AccessPaused, Forbidden } from './errors';
 import type { Session, SessionState } from './session';
@@ -62,13 +63,15 @@ export async function sessionStateFromHeaders(requestHeaders: Headers): Promise<
   // Present only while the `admin` plugin is registered and this session is
   // an impersonation; the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
+  const isAnonymous = (result.user as { isAnonymous?: boolean | null }).isAnonymous === true;
   const accessPause = await accessPauseOf(result.user.id);
   const agreedVersion = agreedVersionOf(result.user);
   return {
     session: {
       userId: result.user.id,
       role: toUserRole(result.user.role),
-      ...(result.user.emailVerified !== true && { emailUnverified: true as const }),
+      ...(result.user.emailVerified !== true && !isAnonymous && { emailUnverified: true as const }),
+      ...(isAnonymous && { anonymous: true as const }),
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,
@@ -76,12 +79,13 @@ export async function sessionStateFromHeaders(requestHeaders: Headers): Promise<
     agreedVersion,
     sessionFresh: await isFresh(result.session.createdAt),
     ...(accessPause && { accessPause }),
+    ...(isAnonymous && { anonymous: true as const }),
   };
 }
 
 /** The session a public page or the proxy acts as: none while a pause stands, so a paused session reads as signed out. */
-function actingSession({ session, accessPause }: SessionState): Session | null {
-  return accessPause ? null : session;
+function actingSession({ session, accessPause, anonymous }: SessionState): Session | null {
+  return accessPause || anonymous ? null : session;
 }
 
 /**
@@ -100,6 +104,9 @@ const getSessionState = cache(async (): Promise<SessionState> =>
 /** The signed-in user, or `null`, as a paused session is too on every page but support's. */
 export async function getSession(): Promise<Session | null> {
   const state = await getSessionState();
+  if (state.anonymous) {
+    return isAnonymousViewPage((await forwardedReturnPath()) ?? '') ? state.session : null;
+  }
   if (state.accessPause && isPausedViewPage((await forwardedReturnPath()) ?? '')) {
     return state.session;
   }
@@ -161,8 +168,10 @@ export async function requireSignedIn(): Promise<Session> {
 }
 
 // The sign-in and pause checks on a state already read, so `requireSession` reads the state once.
-async function signedInFrom({ session, accessPause }: SessionState): Promise<Session> {
+async function signedInFrom({ session, accessPause, anonymous }: SessionState): Promise<Session> {
   const returnPath = await forwardedReturnPath();
+  // An anonymous sender is signed in on the support pages alone; the rest send it to sign in, keeping the path.
+  if (anonymous && !isAnonymousViewPage(returnPath ?? '')) redirect(signInPath(returnPath));
   if (accessPause && !isPausedViewPage(returnPath ?? '')) {
     redirect(ACCESS_PAUSED_PATH);
   }
@@ -179,6 +188,7 @@ export async function requireSession(): Promise<Session> {
   const state = await getSessionState();
   const session = await signedInFrom(state);
   const { emailVerified, termsAgreed, accessPause } = state;
+  if (state.anonymous) return session;
   const returnPath = await forwardedReturnPath();
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));

@@ -9,7 +9,7 @@ import {
   getSessionFromCtx,
 } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { lastLoginMethod } from 'better-auth/plugins';
+import { anonymous, lastLoginMethod } from 'better-auth/plugins';
 import { twoFactor } from 'better-auth/plugins/two-factor';
 import { passkey } from '@better-auth/passkey';
 import {
@@ -579,6 +579,24 @@ async function noticeCompletedChange(userId: string, request: Request | undefine
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
+/** Claims the signed-out requests written from a verified account's address; a failure is logged, as the sign-in stands either way. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Better Auth's logger takes any
+async function claimForVerifiedAccount(
+  user: { id: string; email: string; emailVerified: boolean; isAnonymous?: boolean | null },
+  ctx:
+    | { context?: { logger?: { error: (message: string, ...args: any[]) => void } } }
+    | null
+    | undefined,
+): Promise<void> {
+  if (!user.emailVerified || user.isAnonymous) return;
+  try {
+    const { claimSignedOutRequests } = await import('@/modules/support');
+    await claimSignedOutRequests(user);
+  } catch (error) {
+    (ctx?.context?.logger ?? console).error(`support claim failed: user ${user.id}`, error);
+  }
+}
+
 export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
   // logs and still answers 200 on the well-known default (claude-docs/auth/config.md, "Config").
@@ -606,11 +624,21 @@ export const auth = betterAuth({
     // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md, "Rate limiting").
     customRules: {
       '/passkey/*': { window: 10, max: 3 },
+      // Each call mints an account, and the proxy only checks a cookie, so the mint is held to a handful a minute per client.
+      '/sign-in/anonymous': { window: 60, max: 5 },
     },
   },
   // Cookie only: `storeInDatabase` would add a users column nothing reads (claude-docs/auth/plugins.md, "Plugins").
   // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
   plugins: [
+    // A signed-out support send mints the provisional account (claude-docs/design-decisions/m15.48-anonymous-sender.md). Signing in
+    // by any method hands its support rows to the real account before the plugin deletes it.
+    anonymous({
+      onLinkAccount: async ({ anonymousUser, newUser }) => {
+        const { adoptAnonymousSender } = await import('@/modules/support');
+        await adoptAnonymousSender(anonymousUser.user.id, newUser.user.id);
+      },
+    }),
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
     // Fails closed: an unreachable or silent service refuses the password, never waves it through.
     breachedPasswordCheck({ message: PASSWORD_BREACHED_MESSAGE }),
@@ -833,6 +861,16 @@ export const auth = betterAuth({
     }),
   },
   databaseHooks: {
+    // A sign-in by a verified account claims the signed-out requests written from its address.
+    session: {
+      create: {
+        after: async (session, ctx) => {
+          const user = await ctx?.context.internalAdapter.findUserById(session.userId);
+          if (!user) return;
+          await claimForVerifiedAccount(user, ctx);
+        },
+      },
+    },
     user: {
       create: {
         // Writes outside `withAudit` (CLAUDE.md rule 3): there is no session yet,
@@ -853,6 +891,8 @@ export const auth = betterAuth({
         // new user as their own row is. It never throws, as Better Auth cannot roll the user row back and a half-failed sign-up is
         // worse than a missing seat; the demo coven seed's backfill repairs it.
         after: async (user, ctx) => {
+          // A provisional sender holds no demo seat and expires with its requests, not on the unverified-sign-up clock.
+          if ((user as { isAnonymous?: boolean | null }).isAnonymous) return;
           // One run per unverified sign-up removes the row once its window lapses. A failed start is logged, as the sign-up stands
           // either way and the account then holds its address until a keeper removes it.
           if (!user.emailVerified) {
@@ -885,6 +925,11 @@ export const auth = betterAuth({
         },
       },
       update: {
+        // The address was just verified: requests written from it are the account's now.
+        after: async (user, ctx) => {
+          if (!user || !user.emailVerified) return;
+          await claimForVerifiedAccount(user, ctx);
+        },
         // The same self-stamp as the create hook, outside `withAudit` for the
         // same reason: the verify write is the identity completing. Merged into
         // Better Auth's own UPDATE, so the row says who and the trigger says when.

@@ -1,0 +1,4 @@
+CREATE FUNCTION "support_sender_is_anonymous"(sender uuid) RETURNS boolean
+LANGUAGE sql STABLE AS $$ SELECT coalesce((SELECT "is_anonymous" FROM "users" WHERE "id" = sender), false) $$;--> statement-breakpoint
+ALTER TABLE "support_requests" DROP CONSTRAINT "support_requests_one_sender";--> statement-breakpoint
+ALTER TABLE "support_requests" ADD CONSTRAINT "support_requests_one_sender" CHECK (case when "support_requests"."created_by" = '00000000-0000-4000-8000-00000000a110' then "support_requests"."sender_email" is not null else "support_requests"."sender_email" is null or support_sender_is_anonymous("support_requests"."created_by") end);

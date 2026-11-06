@@ -105,6 +105,8 @@ async function signedOutRequests() {
       body: 'Testwort.',
     });
   }
+  // A mailed link stands on each, which the claim must spend.
+  await sql`update support_requests set view_token_hash = md5(id::text) where id in (${fromAnonymous}, ${fromSignedOut})`;
   // Another visitor's, from another address: it never moves.
   const otherAnonymous = await insertAnonymousUser(sql);
   const elsewhere = await insertSupportRequest(sql, {
@@ -150,6 +152,10 @@ describe('an account claiming the requests sent signed out from its address', ()
         { author_role: 'staff', created_by: E.id },
       ]);
     }
+    // The claim spends the mailed links, so an old link never writes as the real account.
+    expect(
+      await sql`select view_token_hash from support_requests where id in (${rows.fromAnonymous}, ${rows.fromSignedOut})`,
+    ).toEqual([{ view_token_hash: null }, { view_token_hash: null }]);
     expect(await requestRow(rows.elsewhere)).toMatchObject({
       created_by: rows.otherAnonymous,
       sender_email: `someone-else${DOMAIN}`,

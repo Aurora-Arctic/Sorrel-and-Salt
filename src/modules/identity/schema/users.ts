@@ -56,6 +56,8 @@ export const users = pgTable(
     formerEmail: text('former_email'),
     // The `twoFactor` plugin's user flag: true once an authenticator is confirmed.
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
+    // The `anonymous` plugin's flag: true for the provisional account a signed-out support send mints, until a sign-in links it.
+    isAnonymous: boolean('is_anonymous').notNull().default(false),
     // When the account agreed to the terms of use; null until it does.
     termsAcceptedAt: timestamp('terms_accepted_at'),
     // The numbers of the terms, disclaimer and code of ethics versions the account last agreed to, all three at once; null until

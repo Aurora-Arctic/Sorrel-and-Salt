@@ -13,6 +13,9 @@ const SUPPORT_FIELDS = new Set([
   'resolveMySupportRequest',
 ]);
 
+// The one field an anonymous sender's session may add: the signed-out send, which reuses the session it already holds.
+const ANONYMOUS_FIELD = 'sendSignedOutSupportRequest';
+
 /** The parameters Yoga hands its context factory: the document and the operation chosen from it. */
 export interface OperationParams {
   query?: string;
@@ -36,7 +39,10 @@ function chosenOperation(
  * Whether every root selection of the operation is a support field, written out as a field. A fragment at the root, a
  * document that does not parse, or an operation that cannot be told apart is not, so the pause refuses it.
  */
-export function isSupportOperation(params: OperationParams | undefined): boolean {
+export function isSupportOperation(
+  params: OperationParams | undefined,
+  forAnonymous = false,
+): boolean {
   if (!params?.query) return false;
   let operation: OperationDefinitionNode | undefined;
   try {
@@ -46,6 +52,9 @@ export function isSupportOperation(params: OperationParams | undefined): boolean
   }
   if (!operation || operation.operation === 'subscription') return false;
   return operation.selectionSet.selections.every(
-    (selection) => selection.kind === Kind.FIELD && SUPPORT_FIELDS.has(selection.name.value),
+    (selection) =>
+      selection.kind === Kind.FIELD &&
+      (SUPPORT_FIELDS.has(selection.name.value) ||
+        (forAnonymous && selection.name.value === ANONYMOUS_FIELD)),
   );
 }

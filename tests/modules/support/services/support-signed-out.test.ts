@@ -189,6 +189,31 @@ describe('sendSignedOutSupportRequest', () => {
     expect(minted).toEqual([]);
   });
 
+  // A returning visitor whose anonymous cookie is still set: the send names that session, and the service writes as it.
+  it('reuses the anonymous account of the session it is sent from, minting none', async () => {
+    await send(INPUT);
+    // Precondition: the first send minted the account the second one is sent from.
+    expect(minted).toHaveLength(1);
+    const returning = minted[0]!;
+
+    await sendSignedOutSupportRequest(
+      { ...INPUT, subject: 'A second Testwort request' },
+      {
+        clientIp: '203.0.113.7',
+        notifier: notifier().mail,
+        anonymous: minter,
+        session: { userId: returning, role: 'user', anonymous: true },
+      },
+    );
+
+    expect(minted).toEqual([returning]);
+    expect(await sql`select created_by from support_requests order by created_at`).toEqual([
+      { created_by: returning },
+      { created_by: returning },
+    ]);
+    expect(await sql`select 1 from users where is_anonymous`).toHaveLength(1);
+  });
+
   it('treats an address that belongs to an account as only an address', async () => {
     const [account] = await sql`select email from users where id = ${A.id}`;
 

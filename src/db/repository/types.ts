@@ -754,6 +754,18 @@ export interface AuditWriter {
     ids: readonly string[],
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
+   * Moves what anonymous account `anonymousId` holds of support (its requests and sender replies, the stamps naming it, its time-outs) to
+   * account `realId`, clearing the moved requests' address and view link; returns the requests moved. The anonymous account can then be deleted.
+   */
+  adoptAnonymousAccount(anonymousId: string, realId: string): Promise<number>;
+  /** Stores `hash`, the SHA-256 of a mailed view link's token, on signed-out request `id`, replacing the one before; none when the request has no address on it. */
+  setSupportViewToken(id: string, hash: string): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /**
+   * Moves the signed-out requests whose address is `email` (case aside), and their sender replies, to account `realId`, clearing their address and
+   * view link; returns the requests moved. The caller proves the address is the account's own and verified.
+   */
+  claimSupportRequestsByEmail(realId: string, email: string): Promise<number>;
+  /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
    * form-id order, read in the transaction so they include the ones this write
    * has just made. None for an ingredient that is not the coven's.

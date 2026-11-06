@@ -438,6 +438,12 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
       'mutation { sendSignedOutSupportRequest(input: { about: account, email: "fixture@example.org", subject: "Fixture", message: "Fixture", website: "filled" }) }',
     outcome: 'answers',
   },
+  // Open to anyone by design. The honeypot field is filled, so the reply is dropped and the probe writes nothing.
+  replyToSupportRequestByViewToken: {
+    source:
+      'mutation { replyToSupportRequestByViewToken(token: "fixture-token", body: "Fixture", website: "filled") }',
+    outcome: 'answers',
+  },
   sendSupportRequest: write(
     'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
   ),
@@ -808,6 +814,8 @@ const OPEN_WRITES = [
   'recordCardAttempt',
   // Open to anyone, signed in or not: the service allows two topics and counts the sends.
   'sendSignedOutSupportRequest',
+  // Open to anyone, signed in or not: the service finds the request by the token's hash and counts the replies.
+  'replyToSupportRequestByViewToken',
   // Any verified session may send; the service reads the limit and any time-out.
   'sendSupportRequest',
   // Any verified session may write on a request; the service finds only the sender's own.

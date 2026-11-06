@@ -6,7 +6,7 @@ import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
 import { addressCountKey, clientCountKey } from '../../../lib/send-count-key';
 import { parseInput } from '../../../lib/validation';
 import { supportRequests } from '../schema/support-requests';
-import type { SupportNotifier, SupportRequestRow } from '../types';
+import type { AnonymousMinter, SupportNotifier, SupportRequestRow } from '../types';
 import {
   SIGNED_OUT_ABOUTS,
   SignedOutSupportRequestInput,
@@ -15,14 +15,15 @@ import {
 import { mailSender } from './mail-sender';
 import { redactPath } from './redact-path';
 
-/** Sends one address may make in the window. */
-export const SIGNED_OUT_ADDRESS_LIMIT = 10;
-/** Sends one client address may make in the window, across every email address it writes from. */
-export const SIGNED_OUT_IP_LIMIT = 30;
-/** The window the limits count over, in seconds: 24 hours. */
-export const SIGNED_OUT_WINDOW_SECONDS = 24 * 60 * 60;
+import {
+  SIGNED_OUT_ADDRESS_LIMIT,
+  SIGNED_OUT_IP_LIMIT,
+  SIGNED_OUT_WINDOW_SECONDS,
+} from './signed-out-limits';
 
-/** Who writes a signed-out request, as the audit trail names it. Holds no seat, so it can read and write nothing else. */
+export { SIGNED_OUT_ADDRESS_LIMIT, SIGNED_OUT_IP_LIMIT, SIGNED_OUT_WINDOW_SECONDS };
+
+/** Who counts a signed-out send: the seeded signed-out sender, which holds no seat, so it can read and write nothing else. */
 const SIGNED_OUT_SESSION: Session = { userId: SIGNED_OUT_SENDER_ID, role: 'user' };
 
 /**
@@ -40,7 +41,15 @@ const SIGNED_OUT_SESSION: Session = { userId: SIGNED_OUT_SENDER_ID, role: 'user'
  */
 export async function sendSignedOutSupportRequest(
   input: SignedOutInput,
-  context: { clientIp: string | null; notifier: SupportNotifier; now?: Date },
+  context: {
+    clientIp: string | null;
+    notifier: SupportNotifier;
+    now?: Date;
+    /** Mints the provisional account a first send is written as. */
+    anonymous: AnonymousMinter;
+    /** The anonymous session the send came from, whose account a returning visitor's request is written as; no other session counts. */
+    session?: Session | null;
+  },
 ): Promise<void> {
   const values = parseInput(SignedOutSupportRequestInput, input);
   if (values.website) return;
@@ -66,7 +75,11 @@ export async function sendSignedOutSupportRequest(
     );
   }
 
-  const [request] = await withAudit(SIGNED_OUT_SESSION, (write) =>
+  // After the limits, so a refused send mints nothing; a returning visitor's cookie names the account to write as.
+  const senderId = context.session?.anonymous
+    ? context.session.userId
+    : await context.anonymous.mint();
+  const [request] = await withAudit({ userId: senderId }, (write) =>
     write.insert(supportRequests, {
       about: values.about,
       subject: values.subject,

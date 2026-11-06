@@ -5,6 +5,7 @@ import { supportStatusMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
+import { mintSupportViewToken } from './view-link';
 import type { Message } from '../../../lib/types';
 import type { SupportStatusMail } from '../types';
 
@@ -27,6 +28,7 @@ export async function supportStatusMessageFor(mail: SupportStatusMail): Promise<
     to,
     request.subject,
     signedOut ? null : request.id,
+    signedOut ? await mintSupportViewToken(request.id) : undefined,
   );
 }
 

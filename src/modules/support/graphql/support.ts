@@ -27,6 +27,7 @@ import {
 import { replyToSupportRequest } from '../services/reply';
 import { sendSupportRequest } from '../services/send';
 import { sendSignedOutSupportRequest } from '../services/signed-out';
+import { replyToSupportRequestByViewToken } from '../services/view-link';
 import { liftSupportTimeout, timeOutSupportSender } from '../services/timeouts';
 import type {
   SupportDialogAnswer,
@@ -318,7 +319,29 @@ builder.mutationField('sendSignedOutSupportRequest', (t) =>
       await sendSignedOutSupportRequest(definedArgs(input), {
         clientIp: context.clientIp,
         notifier: context.support,
+        anonymous: context.anonymous,
+        session: context.session,
       });
+      return true;
+    },
+  }),
+);
+
+builder.mutationField('replyToSupportRequestByViewToken', (t) =>
+  t.boolean({
+    description:
+      'A signed-out sender replies from the link in a mail about their request. The token alone finds the request; a wrong, older or claimed one is not found. Open to anyone; counts toward the signed-out send limits.',
+    args: {
+      token: t.arg.string({ required: true }),
+      body: t.arg.string({ required: true }),
+      website: t.arg.string({ required: false }),
+    },
+    resolve: async (_root, { token, body, website }, context) => {
+      await replyToSupportRequestByViewToken(
+        token,
+        { body, website },
+        { clientIp: context.clientIp },
+      );
       return true;
     },
   }),

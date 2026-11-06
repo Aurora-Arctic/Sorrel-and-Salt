@@ -167,6 +167,27 @@ describe('a signed-out send', () => {
   });
 });
 
+describe('a second send from the anonymous cookie', () => {
+  it('reuses the same account: no second users row, and the same sender on both requests', async () => {
+    const { cookie, anonymousId } = await sendSignedOut();
+    // Precondition: the first send left one anonymous account.
+    expect(await sql`select id from users where is_anonymous`).toEqual([{ id: anonymousId }]);
+
+    const again = await graphql(
+      SEND_SIGNED_OUT,
+      { input: { ...INPUT, subject: 'A second Testwort request' } },
+      cookie,
+    );
+    expect(((await again.json()) as { errors?: unknown }).errors).toBeUndefined();
+
+    expect(await sql`select id from users where is_anonymous`).toEqual([{ id: anonymousId }]);
+    expect(await sql`select created_by from support_requests`).toEqual([
+      { created_by: anonymousId },
+      { created_by: anonymousId },
+    ]);
+  });
+});
+
 describe('signing in from an anonymous session', () => {
   /** A verified password account, never signed in, so the sign-in below is its first session. */
   async function passwordAccount(): Promise<string> {

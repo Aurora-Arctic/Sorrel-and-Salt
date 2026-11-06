@@ -9,6 +9,7 @@ import {
   noSender,
   noDocumentMailingNotifier,
   noPauseNotifier,
+  noAnonymousMinter,
   noSupportNotifier,
 } from '../support/email-verification';
 import { InvalidCursor } from '@/lib/errors';
@@ -80,6 +81,7 @@ const context: Context = {
   invitations: noInvitationSender,
   passwords: noPasswordSetter,
   support: noSupportNotifier,
+  anonymous: noAnonymousMinter,
   pauses: noPauseNotifier,
   documents: noDocumentMailingNotifier,
   clientIp: null,
