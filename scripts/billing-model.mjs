@@ -249,7 +249,9 @@ const makeG = (solo) => ({
     (1 - I.price.gSoloAloneShare) * P * (I.membershipsPerAccount / I.membersPerCoven) +
     I.price.gSoloAloneShare * P,
   // free solo covens cost Neon storage only: one coven of the average size per paid group seat
-  extraCash: (P) => (((1 - I.price.gSoloAloneShare) * P * I.covenBytes) / 2 ** 30) * I.neonGbMonth,
+  extraCash: (P) =>
+    (((1 - I.price.gSoloAloneShare) * (1 - I.price.observerShare) * P * I.covenBytes) / 2 ** 30) *
+    I.neonGbMonth,
 });
 const models = {
   a: { id: 'a', name: '(a) Coven pays, seat bundles', base: 'coven', price: aAvg },

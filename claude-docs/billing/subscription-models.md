@@ -21,6 +21,7 @@ A price in a model below is mine unless it names a comparable. I anchored each o
 For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it is written:
 
 - **R5 (2026-11-06).** "'$1 for a discounted seat' - only a person paying for a coven gets a discounted seat on other covens." The discount is on the second coven's invoice, for a seat held by a paying steward of another coven. At 1.2 memberships per account and 5.5 members per coven that is 3.6% of seats (derived).
+- **Viewers and solo covens (2026-11-06).** "Viewers don't get solo covens." In (g) only a paid practitioner or steward seat includes a free solo coven; an observer seat does not. Revenue is unchanged; the free-coven storage cost counts practitioner seats only (70% of paid seats under the 30% observer assumption), and the break-even row for (g) is unchanged at 129 / 3,223 / 12,858.
 - **Observer price (2026-11-06).** "Also viewers should get a cheaper price point." The modelled price is $1 against $2 for a practitioner seat, with 30% of members observers; both numbers are my assumptions (question 19).
 
 ## How Each Model Meets R1 to R5
@@ -138,7 +139,7 @@ So (a) earns **$9.55** per paying coven on average, down from the $9.99 flat fig
 
 ### (g) Group Plan Includes a Solo Coven
 
-**Structure.** Owner request, 2026-11-06: "Group plan includes solo coven, a solo coven price should be found." Every paid seat in a group coven also gives that member a free solo coven of their own. A person with no paid group seat buys a solo coven alone. (g) is a layer over a group model; I model it over **(c)** (base plus seats), and it could sit over (a) the same way.
+**Structure.** Owner request, 2026-11-06: "Group plan includes solo coven, a solo coven price should be found." Every paid practitioner or steward seat in a group coven also gives that member a free solo coven of their own. An observer seat does not (owner, 2026-11-06: "Viewers don't get solo covens."). A person with no paid group seat buys a solo coven alone. (g) is a layer over a group model; I model it over **(c)** (base plus seats), and it could sit over (a) the same way.
 
 **Solo coven price proposals** (all assumptions, anchored on the solo comparables in section "Solo and Personal Spaces"; Day One is $49.99 a year, about $4.17 a month [S16]):
 
@@ -148,7 +149,7 @@ So (a) earns **$9.55** per paying coven on average, down from the $9.99 flat fig
 
 **Assumptions in the model.** A paying seat is either a group seat (priced as (c): $9.29 per coven, 1.2 memberships per account, 5.5 members per coven, so $2.03 per seat) or a solo coven bought alone. I assume 20% of paying accounts buy a solo coven alone (range 10% to 40%; no source). Revenue per paying seat = 80% × $9.29 × 1.2 ÷ 5.5 + 20% × $2.99 = $1.621 + $0.598 = **$2.22**. Stripe's 30¢ fixed fee is charged per subscription: 0.8 × 1.2 ÷ 5.5 group subscriptions plus 0.2 solo subscriptions per paying seat.
 
-**Cost of the free solo covens.** Each paid group seat (80% of paying seats) holds one more coven, of the average size the cost model already uses (about 115 KB of spells and ingredients each, from the running-costs ratios). The free covens add stored data and nothing else: sessions, and so function calls, mail and tracing, are counted per account and do not change. The extra Neon storage is $0.01 / $0.06 / $0.56 / $5.63 a month at 100 / 1,000 / 10,000 / 100,000 paying seats. It is added to every cost line for (g).
+**Cost of the free solo covens.** Each paid practitioner or steward seat (80% of paying seats, times the 70% that are not observers: 56%) holds one more coven, of the average size the cost model already uses (about 115 KB of spells and ingredients each, from the running-costs ratios). The free covens add stored data and nothing else: sessions, and so function calls, mail and tracing, are counted per account and do not change. The extra Neon storage is $0.00 / $0.04 / $0.39 / $3.94 a month at 100 / 1,000 / 10,000 / 100,000 paying seats. It is added to every cost line for (g).
 
 **What it shows.** The free solo covens cost almost nothing, so the model's result depends on the assumed 20% who buy a solo coven alone and on the solo price:
 
@@ -158,7 +159,7 @@ So (a) earns **$9.55** per paying coven on average, down from the $9.99 flat fig
 | $2.99                            |                 $2.2194 |       $189 |      $1,893 |      $18,887 |      $188,377 | 129 | 3,223 | 12,858 |
 | $4.99                            |                 $2.6194 |       $225 |      $2,253 |      $22,471 |      $224,220 | 108 | 2,707 | 10,793 |
 |                                  |                     100 |       1000 |       10000 |       100000 |
-| Cost of free solo covens a month |                   $0.01 |      $0.06 |       $0.56 |        $5.63 |
+| Cost of free solo covens a month |                   $0.00 |      $0.04 |       $0.39 |        $3.94 |
 
 The columns (i), (ii) and (iii) are seats to break even on cash, cash + contractor maintenance, and cash + a full-time job.
 
