@@ -48,7 +48,7 @@ const safe: Box = {
   bottom: trim.bottom - SAFE_INSET,
 };
 
-// A line's box: its advance across, and the inked height of its glyphs about its baseline, since the
+// A line's box: its advance across, less the letter spacing after its last letter, which prints nothing, and the inked height of its glyphs about its baseline, since the
 // font's ascent reaches well above any letter and would hold the text further from the trim than it prints.
 function boxOf(item: TextItem): Box {
   const f = fonts[item.font];
@@ -58,7 +58,8 @@ function boxOf(item: TextItem): Box {
     left: item.x,
     right:
       item.x +
-      textWidth({ font: f, size: item.size, letterSpacing: item.letterSpacing }, item.text),
+      textWidth({ font: f, size: item.size, letterSpacing: item.letterSpacing }, item.text) -
+      item.letterSpacing,
     top: item.baseline - Math.max(...glyphs.map((box) => box.maxY)) * scale,
     bottom: item.baseline - Math.min(...glyphs.map((box) => box.minY)) * scale,
   };
@@ -79,11 +80,13 @@ const qr: Box = {
 };
 // The longest expiry the date format writes.
 const VALID = 'Valid until 30 September 2027';
+// The widest expiry the date format prints for any day from 2026 to 2099.
+const WIDEST_VALID = 'Valid until 30 September 2044';
+const pt = (px: number) => (px * 72) / PX_PER_INCH;
 
-// The inked middle of a line: its advance less the letter spacing set after its last letter.
 function middleOf(item: TextItem): number {
   const box = boxOf(item);
-  return (box.left + box.right - item.letterSpacing) / 2;
+  return (box.left + box.right) / 2;
 }
 const columnLine = (items: TextItem[], text: string) => {
   const found = items.find((item) => item.text === text);
@@ -160,21 +163,41 @@ describe('the card layout', () => {
   );
 
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
-    'spaces the code’s column on the "%s" front by its inked edges and centres it in the safe area’s height',
+    'runs the text column on the "%s" front from the top margin to the bottom margin by its inked edges',
+    (_, copy) => {
+      const column = frontText(fonts, copy, VALID)
+        .filter((item) => item.x === COLUMN.left)
+        .map(boxOf);
+      expect(column.length).toBeGreaterThan(4);
+      expect(
+        Math.abs(pt(Math.min(...column.map((box) => box.top)) - safe.top)),
+      ).toBeLessThanOrEqual(0.25);
+      expect(
+        Math.abs(pt(safe.bottom - Math.max(...column.map((box) => box.bottom)))),
+      ).toBeLessThanOrEqual(0.25);
+    },
+  );
+
+  it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
+    'runs the code’s column on the "%s" front from the top margin to the bottom margin, its gaps in the ratio 1 : 2 : 2',
     (_, copy) => {
       const items = frontText(fonts, copy, VALID);
       const wordmark = boxOf(columnLine(items, WORDMARK));
       const address = boxOf(columnLine(items, SITE_ADDRESS.toUpperCase()));
       const valid = boxOf(columnLine(items, VALID.toUpperCase()));
-      const pt = (px: number) => (px * 72) / PX_PER_INCH;
-      expect(Math.abs(pt(address.top - wordmark.bottom) - 4.5)).toBeLessThanOrEqual(0.25);
-      expect(Math.abs(pt(qr.top - address.bottom) - 9)).toBeLessThanOrEqual(0.25);
-      expect(Math.abs(pt(valid.top - qr.bottom) - 9)).toBeLessThanOrEqual(0.25);
-      expect(
-        Math.abs(pt(wordmark.top - safe.top) - pt(safe.bottom - valid.bottom)),
-      ).toBeLessThanOrEqual(0.25);
+      expect(Math.abs(pt(wordmark.top - safe.top))).toBeLessThanOrEqual(0.25);
+      expect(Math.abs(pt(safe.bottom - valid.bottom))).toBeLessThanOrEqual(0.25);
+      const unit = pt(address.top - wordmark.bottom);
+      expect(Math.abs(pt(qr.top - address.bottom) - 2 * unit)).toBeLessThanOrEqual(0.25);
+      expect(Math.abs(pt(valid.top - qr.bottom) - 2 * unit)).toBeLessThanOrEqual(0.25);
     },
   );
+
+  it('ends the widest expiry the date format prints on the right margin, centred on the code', () => {
+    const items = frontText(fonts, FRONT_COPY[0], WIDEST_VALID);
+    const valid = columnLine(items, WIDEST_VALID.toUpperCase());
+    expect(Math.abs(pt(boxOf(valid).right - safe.right))).toBeLessThanOrEqual(0.25);
+  });
 
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
     'sets no line of the "%s" front over another',

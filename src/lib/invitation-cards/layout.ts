@@ -54,10 +54,9 @@ export interface QrItem {
 export const COLUMN = { left: 48, top: 48, width: 290, height: 336 } as const;
 const BODY_WIDTH = 280;
 const GROUP_GAP = 18;
-// The code's column is spaced between inked edges: 1/16 in between the wordmark and the address, and 1/8 in
-// between the code and the lines above and below it.
-const LINE_GAP = PX_PER_INCH / 16;
-const CODE_GAP = PX_PER_INCH / 8;
+// Both front columns run between the safe area's top and bottom, 1/8 in inside the trim, by their inked edges.
+const SAFE_TOP = COLUMN.top;
+const SAFE_BOTTOM = COLUMN.top + COLUMN.height;
 
 /** The headline size; `tests/lib/invitation-cards/headline.test.ts` holds every headline to two lines at it. */
 export const HEADLINE_SIZE = 52;
@@ -86,11 +85,12 @@ export const BACK_PICTURE: PictureItem = {
 };
 
 /**
- * The QR code, right of the text column, between the wordmark and address above it and the expiry below. It stands
- * left of the salt's bright bowl, which washes the code out where the two overlap. Its height on the card centres
- * that column, from the wordmark's top to the expiry's bottom, in the safe area's height.
+ * The QR code, between the wordmark and address above it and the expiry below, each line centred on it. Across, it
+ * stands where the widest expiry the date format prints, "VALID UNTIL 30 SEPTEMBER 2044" at 268.19 px, ends on the
+ * safe area's right edge. Down, it stands where the column's gaps run 1 : 2 : 2 with the wordmark's top and the
+ * expiry's bottom on the safe area's edges. layout.test.ts measures both.
  */
-export const FRONT_QR: QrItem = { x: 380, y: 138, size: 182 };
+export const FRONT_QR: QrItem = { x: 446.905, y: 144.231, size: 182 };
 
 export function headlineStyle(fonts: CardFonts): TextStyle {
   return { font: fonts.cormorant600, size: HEADLINE_SIZE };
@@ -205,6 +205,12 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
     COLUMN.top,
     GROUP_GAP,
   );
+  const paragraphs = [
+    headlineLines(fonts, copy.headline).length,
+    wrap(tagline, copy.tagline, BODY_WIDTH).length,
+    wrap(rest, copy.howTo, BODY_WIDTH).length,
+    wrap(rest, copy.admits, BODY_WIDTH).length,
+  ];
   const line = (
     font: FontKey,
     size: number,
@@ -218,15 +224,46 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
   const wordmark = line('cormorant600', 22, 22 * 0.04, CHALK, WORDMARK);
   const address = line('lexend500', 13, 13 * 0.12, MUTED, SITE_ADDRESS.toUpperCase());
   const expiry = line('lexend500', 13, 13 * 0.12, MUTED, validUntil.toUpperCase());
-  const addressBaseline = FRONT_QR.y - CODE_GAP - address.below;
-  const wordmarkBaseline = addressBaseline - address.above - LINE_GAP - wordmark.below;
-  const expiryBaseline = FRONT_QR.y + FRONT_QR.size + CODE_GAP + expiry.above;
+  // The wordmark's top and the expiry's bottom sit on the safe area's edges; the address takes a third of the room
+  // between the wordmark and the code, so the gap above it is half the gap below it.
+  const wordmarkBaseline = SAFE_TOP + wordmark.above;
+  const wordmarkBottom = wordmarkBaseline + wordmark.below;
+  const addressGap = (FRONT_QR.y - wordmarkBottom - address.above - address.below) / 3;
+  const addressBaseline = wordmarkBottom + addressGap + address.above;
+  const expiryBaseline = SAFE_BOTTOM - expiry.below;
   const column = [
     { ...wordmark.item, baseline: wordmarkBaseline },
     { ...address.item, baseline: addressBaseline },
     { ...expiry.item, baseline: expiryBaseline },
   ];
-  return [...top.items, ...column.map((item) => centredOnCode(fonts, item))];
+  return [
+    ...spread(fonts, top.items, paragraphs),
+    ...column.map((item) => centredOnCode(fonts, item)),
+  ];
+}
+
+/**
+ * Moves the paragraphs, `counts` lines each, so the first's inked top sits on the safe area's top and the last's inked
+ * bottom on its bottom. The room gained is shared between the gaps in proportion to their sizes, so the rhythm stays
+ * and the lines within a paragraph keep their spacing.
+ */
+function spread(fonts: CardFonts, items: TextItem[], counts: number[]): TextItem[] {
+  const ink = (item: TextItem) => inkExtent(fonts[item.font], item.size, item.text);
+  let start = 0;
+  const groups = counts.map((count) => items.slice(start, (start += count)));
+  const tops = groups.map((group) => group[0].baseline - ink(group[0]).above);
+  const bottoms = groups.map((group) => {
+    const last = group[group.length - 1];
+    return last.baseline + ink(last).below;
+  });
+  const gaps = tops.slice(1).map((top, i) => top - bottoms[i]);
+  const room = SAFE_BOTTOM - SAFE_TOP - (bottoms[bottoms.length - 1] - tops[0]);
+  const stretch = room / gaps.reduce((sum, gap) => sum + gap, 0);
+  let shift = SAFE_TOP - tops[0];
+  return groups.flatMap((group, i) => {
+    if (i > 0) shift += gaps[i - 1] * stretch;
+    return group.map((item) => ({ ...item, baseline: item.baseline + shift }));
+  });
 }
 
 // The inked width leaves out the letter spacing set after the last letter, so a spaced line centres on what prints.
