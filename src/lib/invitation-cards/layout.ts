@@ -92,6 +92,13 @@ export const BACK_PICTURE: PictureItem = {
  */
 export const FRONT_QR: QrItem = { x: 446.905, y: 144.231, size: 182 };
 
+/**
+ * The soft shadow behind the code column, in the ground ink with no offset: its blur radius, 3 pt as artboard px, is
+ * twice the Gaussian's standard deviation, and its opacity is the shadow's darkest point.
+ */
+export const SHADOW_RADIUS = (3 / 72) * PX_PER_INCH;
+export const SHADOW_OPACITY = 0.5;
+
 export function headlineStyle(fonts: CardFonts): TextStyle {
   return { font: fonts.cormorant600, size: HEADLINE_SIZE };
 }
@@ -211,6 +218,11 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
     wrap(rest, copy.howTo, BODY_WIDTH).length,
     wrap(rest, copy.admits, BODY_WIDTH).length,
   ];
+  return [...spread(fonts, top.items, paragraphs), ...codeColumnText(fonts, validUntil)];
+}
+
+/** The column centred on the QR code: the wordmark and the address above the code, and the expiry below it. */
+export function codeColumnText(fonts: CardFonts, validUntil: string): TextItem[] {
   const line = (
     font: FontKey,
     size: number,
@@ -231,15 +243,11 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
   const addressGap = (FRONT_QR.y - wordmarkBottom - address.above - address.below) / 3;
   const addressBaseline = wordmarkBottom + addressGap + address.above;
   const expiryBaseline = SAFE_BOTTOM - expiry.below;
-  const column = [
+  return [
     { ...wordmark.item, baseline: wordmarkBaseline },
     { ...address.item, baseline: addressBaseline },
     { ...expiry.item, baseline: expiryBaseline },
-  ];
-  return [
-    ...spread(fonts, top.items, paragraphs),
-    ...column.map((item) => centredOnCode(fonts, item)),
-  ];
+  ].map((item) => centredOnCode(fonts, item));
 }
 
 /**

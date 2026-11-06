@@ -22,6 +22,7 @@ import {
   PICTURE_LIGHT_INK,
   tintPicture,
 } from '@/lib/invitation-cards/inks';
+import { SHADOW_OPACITY } from '@/lib/invitation-cards/layout';
 import { renderCardSheets } from '@/lib/invitation-cards/pdf';
 import type { CardAssets } from '@/lib/invitation-cards/types';
 
@@ -64,7 +65,15 @@ interface Drawn {
   clips: Box[];
   strokes: { from: [number, number]; to: [number, number] }[];
   // up and right are the directions, on the page, of the image's top and of its right-hand side.
-  images: { name: string; box: Box; up: Vector; right: Vector }[];
+  // textsBefore and pathsBefore count the text runs and filled paths drawn before the image.
+  images: {
+    name: string;
+    box: Box;
+    up: Vector;
+    right: Vector;
+    textsBefore: number;
+    pathsBefore: number;
+  }[];
   textRuns: number;
   /** Every operator the page uses, so a test can see which colour spaces it paints in. */
   operators: Set<string>;
@@ -194,6 +203,8 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
             box: boxOf([apply(ctm, 0, 0), apply(ctm, 1, 0), apply(ctm, 0, 1), apply(ctm, 1, 1)]),
             up: [Math.sign(ctm[2]) + 0, Math.sign(ctm[3]) + 0],
             right: [Math.sign(ctm[0]) + 0, Math.sign(ctm[1]) + 0],
+            textsBefore: result.textRuns,
+            pathsBefore: result.pathInks.length,
           });
           break;
         case 'TJ':
@@ -209,19 +220,21 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
   return result;
 }
 
-/** Which picture each of a page's image names draws, told apart by the baked files' pixel widths. */
-function imageNames(doc: PDFDocument, pageIndex: number): Record<string, 'salt' | 'sorrel'> {
+type ImageKind = 'salt' | 'sorrel' | 'shadow';
+
+/** What each of a page's image names draws, told apart by the pixel widths of the baked pictures. */
+function imageNames(doc: PDFDocument, pageIndex: number): Record<string, ImageKind> {
   const xObjects = doc.getPage(pageIndex).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
-  const names: Record<string, 'salt' | 'sorrel'> = {};
+  const names: Record<string, ImageKind> = {};
   for (const [name, ref] of xObjects.entries()) {
     const image = doc.context.lookup(ref) as PDFRawStream;
     const width = image.dict.lookup(PDFName.of('Width'), PDFNumber).asNumber();
-    names[name.decodeText()] = width === 440 ? 'salt' : 'sorrel';
+    names[name.decodeText()] = width === 440 ? 'salt' : width === 330 ? 'sorrel' : 'shadow';
   }
   return names;
 }
 
-function pictures(doc: PDFDocument, pageIndex: number, picture: 'salt' | 'sorrel'): Box[] {
+function pictures(doc: PDFDocument, pageIndex: number, picture: ImageKind): Box[] {
   const names = imageNames(doc, pageIndex);
   return drawn(doc, pageIndex)
     .images.filter((image) => names[image.name] === picture)
@@ -453,8 +466,8 @@ describe('the card sheets PDF', () => {
     const ofType = (key: string, value: string) =>
       objects.filter((object) => dictOf(object)?.get(PDFName.of(key)) === PDFName.of(value));
     expect(ofType('Subtype', 'Type0')).toHaveLength(4);
-    // Each picture is one image and one soft mask, its alpha.
-    expect(ofType('Subtype', 'Image')).toHaveLength(4);
+    // Each picture is one image and one soft mask, its alpha, and so is each front's shadow.
+    expect(ofType('Subtype', 'Image')).toHaveLength(4 + 2 * 500);
     const saltPage = pictures(doc, 82, 'salt');
     expect(saltPage).toHaveLength(500 - 41 * 12);
   }, 60_000);
@@ -581,4 +594,35 @@ describe("the card sheets PDF's inks", () => {
       }
     },
   );
+  it('shades each front behind its code column with solid ground ink through a grey soft mask, over the salt and under the words', () => {
+    const names = imageNames(twelve, 0);
+    const page = drawn(twelve, 0);
+    const shadows = page.images.filter((image) => names[image.name] === 'shadow');
+    expect(shadows).toHaveLength(12);
+    const lastSalt = page.images.map((image) => names[image.name]).lastIndexOf('salt');
+    for (const shadow of shadows) {
+      expect(page.images.indexOf(shadow)).toBeGreaterThan(lastSalt);
+      expect(shadow.textsBefore).toBe(0);
+      expect(shadow.pathsBefore).toBe(0);
+    }
+    expect(Object.values(imageNames(twelve, 1))).not.toContain('shadow');
+
+    const xObjects = twelve.getPage(0).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
+    for (const name of new Set(shadows.map((shadow) => shadow.name))) {
+      const image = twelve.context.lookup(xObjects.get(PDFName.of(name))) as PDFRawStream;
+      expect(image.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceCMYK'));
+      expect(image.dict.lookup(PDFName.of('BitsPerComponent'), PDFNumber).asNumber()).toBe(8);
+      const cmyk = decodePDFRawStream(image).decode();
+      const ground = GROUND_INK.map((v) => Math.round(v * 255));
+      expect(cmyk.length % 4).toBe(0);
+      for (let i = 0; i < cmyk.length; i += 4)
+        if (ground.some((v, c) => cmyk[i + c] !== v))
+          throw new Error(`pixel ${i / 4} is not the ground ink`);
+      const mask = twelve.context.lookup(image.dict.get(PDFName.of('SMask'))) as PDFRawStream;
+      expect(mask.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceGray'));
+      const alpha = decodePDFRawStream(mask).decode();
+      expect(alpha).toHaveLength(cmyk.length / 4);
+      expect(Math.max(...alpha)).toBe(Math.round(SHADOW_OPACITY * 255));
+    }
+  });
 });

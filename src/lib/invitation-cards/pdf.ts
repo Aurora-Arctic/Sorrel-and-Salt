@@ -16,6 +16,7 @@ import {
   PDFHexString,
   PDFNumber,
   PDFOperator,
+  PDFRawStream,
   type PDFOperator as Operator,
   type PDFPage,
   type PDFRef,
@@ -37,6 +38,7 @@ import {
   ARTBOARD,
   BACK_PICTURE,
   backText,
+  codeColumnText,
   marginText,
   type CardFonts,
   type FontKey,
@@ -49,6 +51,7 @@ import {
 } from './layout';
 import { CARDS_PER_SHEET } from './limits';
 import { qrShapes } from '../qr';
+import { codeShadows, type CodeShadows } from './shadow';
 import { glyphAdvances } from './text';
 import type { RoundedSquare } from '../qr/types';
 import type { CardAssets, CardSheetsInput } from './types';
@@ -130,7 +133,14 @@ function artboardOperators(i: number): Operator[] {
   ];
 }
 
-function pictureOperators(page: PDFPage, image: PDFRef, item: PictureItem): Operator[] {
+interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+function imageOperators(page: PDFPage, image: PDFRef, item: Rect): Operator[] {
   const name = page.node.newXObject('Image', image);
   // The image space runs up from its bottom left, so it is flipped to stand upright in the frame.
   return [
@@ -241,13 +251,19 @@ function cropMarkOperators(): Operator[] {
 }
 
 /**
- * Draws one page: the soot block, then every picture, then every card's words and code, all clipped to the block's outer edge,
+ * Draws one page: the soot block, then every picture, then every shadow, then every card's words and code, all clipped to the block's outer edge,
  * so no picture lands over a neighbour's words. A position with no card stays plain soot, so the block prints and cuts as a full one.
  */
 function drawPage(
   page: PDFPage,
   face: 'front' | 'back',
-  cards: { position: number; picture: PictureItem; text: TextItem[]; link?: string }[],
+  cards: {
+    position: number;
+    picture: PictureItem;
+    text: TextItem[];
+    link?: string;
+    shadow?: { image: PDFRef; rect: Rect };
+  }[],
   embedded: Embedded,
   margin: TextItem,
 ) {
@@ -261,10 +277,18 @@ function drawPage(
   for (const card of cards) {
     ops.push(pushGraphicsState(), ...artboardOperators(card.position));
     ops.push(
-      ...pictureOperators(page, embedded.pictures[card.picture.picture], card.picture),
+      ...imageOperators(page, embedded.pictures[card.picture.picture], card.picture),
       popGraphicsState(),
     );
   }
+  for (const { position, shadow } of cards)
+    if (shadow)
+      ops.push(
+        pushGraphicsState(),
+        ...artboardOperators(position),
+        ...imageOperators(page, shadow.image, shadow.rect),
+        popGraphicsState(),
+      );
   for (const card of cards) {
     ops.push(pushGraphicsState(), ...artboardOperators(card.position));
     for (const item of card.text) ops.push(...textOperators(page, embedded, item));
@@ -316,6 +340,37 @@ function embedPicture(doc: PDFDocument, png: Uint8Array): PDFRef {
   );
 }
 
+/**
+ * Embeds a card's shadow: an image of solid ground ink the mask's size, its soft mask the blurred column. Every
+ * shadow's ink is the same, so it is compressed once and its bytes shared.
+ */
+function shadowEmbedder(doc: PDFDocument, shadows: CodeShadows) {
+  const image = {
+    Type: 'XObject',
+    Subtype: 'Image',
+    Width: shadows.columns,
+    Height: shadows.rows,
+    BitsPerComponent: 8,
+  };
+  const ground = GROUND_INK.map((v) => Math.round(v * 255));
+  const solid = new Uint8Array(shadows.columns * shadows.rows * 4);
+  for (let i = 0; i < solid.length; i += 1) solid[i] = ground[i % 4];
+  const ink = doc.context.flateStream(solid).getContents();
+  const rect = { x: shadows.x, y: shadows.y, width: shadows.width, height: shadows.height };
+  return (link: string) => {
+    const mask = doc.context.register(
+      doc.context.flateStream(shadows.mask(link), { ...image, ColorSpace: 'DeviceGray' }),
+    );
+    const dict = doc.context.obj({
+      ...image,
+      ColorSpace: 'DeviceCMYK',
+      Filter: 'FlateDecode',
+      SMask: mask,
+    });
+    return { image: doc.context.register(PDFRawStream.of(dict, ink)), rect };
+  };
+}
+
 /** Builds the print PDF: per sheet of twelve, a page of fronts, then (unless `backs` is false) a page of their backs. */
 export async function renderCardSheets(
   { links, batch, expiresAt, backs = true }: CardSheetsInput,
@@ -327,6 +382,10 @@ export async function renderCardSheets(
   const valid = validUntil(expiresAt);
   const back = backText(embedded.measure, batch);
   const fronts = FRONT_COPY.map((copy) => frontText(embedded.measure, copy, valid));
+  const shadowOf = shadowEmbedder(
+    doc,
+    codeShadows(embedded.measure, codeColumnText(embedded.measure, valid)),
+  );
   const sheets = Math.ceil(links.length / CARDS_PER_SHEET);
   for (let start = 0; start < links.length; start += CARDS_PER_SHEET) {
     const number = start / CARDS_PER_SHEET + 1;
@@ -343,6 +402,7 @@ export async function renderCardSheets(
         picture: FRONT_PICTURE,
         text: fronts[(start + i) % fronts.length],
         link,
+        shadow: shadowOf(link),
       })),
       embedded,
       marginText(batch, number, sheets, 'front', LABEL_AT),
