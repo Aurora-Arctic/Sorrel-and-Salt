@@ -50,8 +50,8 @@ const I = {
     drain: [0, 0, 5, 50],
     restore: [0.03, 0.03, 0.03, 0.03],
   },
-  // tracing (Lane H, A5): requests per account, spans per request, sampling, price per 1M spans
-  tracing: { reqPerAccount: 300, spansPerReq: 20, sample: 0.1, perM: 0.5 },
+  // tracing (Lane H, A5): requests come from sessions x invocations; spans per request, sampling, price per 1M spans
+  tracing: { spansPerReq: 20, sample: 0.1, perM: 0.5 },
   // labour
   maintHours: { low: 27.9, median: 29.9, high: 39.8 },
   incidentHours: { low: 2.4, median: 19.5, high: 36.6 },
@@ -156,7 +156,7 @@ const scale = SIZES.map((P, k) => {
   const tier = resend.find((t) => t[0] >= mails);
   const mailCost = tier[1];
   const tracing =
-    ((N * I.tracing.reqPerAccount * I.tracing.spansPerReq * I.tracing.sample) / 1e6) *
+    ((sessions * I.invocationsPerSession * I.tracing.spansPerReq * I.tracing.sample) / 1e6) *
     I.tracing.perM;
   const ops =
     I.ops.errors[k] +
@@ -279,6 +279,12 @@ orow('Exempt seats (5% / 3% / 1.5% / 0.5% of paying seats)', (o) => o.exempt);
 orow('Activated accounts (all of the above)', (o) => o.activated, 1);
 orow('Demo-only accounts', (o) => o.demoOnly, 1);
 orow('Total accounts', (o) => o.total, 1);
+out.push(
+  row([
+    'Active accounts (total accounts x 25%, range 15-30%)',
+    ...ov.map((o) => Math.round(o.total * I.activeFraction).toLocaleString('en-US')),
+  ]),
+);
 out.push(row(['Total accounts per paying seat', ...ov.map((o) => (o.total / o.P).toFixed(2))]));
 out.push('', '### Overhead Sensitivity, Total Accounts');
 out.push(...hdr());

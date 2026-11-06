@@ -206,13 +206,13 @@ Stripe has the narrowest list. Whether a spell journal falls under any of these 
 
 | Model                        | (i) |  (ii) |  (iii) |
 | ---------------------------- | --: | ----: | -----: |
-| (a) Coven pays, seat bundles | 129 | 3,211 | 12,807 |
-| (b) Each user pays           |  74 | 1,837 |  7,322 |
-| (c) Base plus seats          | 121 | 3,025 | 12,063 |
-| (d) Solo rung only           | 124 | 3,099 | 12,368 |
-| (e) Any member pays          | 239 | 5,847 | 23,374 |
+| (a) Coven pays, seat bundles | 129 | 3,209 | 12,800 |
+| (b) Each user pays           |  74 | 1,836 |  7,320 |
+| (c) Base plus seats          | 121 | 3,023 | 12,057 |
+| (d) Solo rung only           | 124 | 3,098 | 12,361 |
+| (e) Any member pays          | 238 | 5,841 | 23,350 |
 
-What the tables say: with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 239 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,400. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
+What the tables say: with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 238 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,400. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
 
 ## Questions for the Owner
 

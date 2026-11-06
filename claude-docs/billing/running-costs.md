@@ -83,7 +83,7 @@ Real spells and ingredients per coven are unknown. The two coven sizes above are
 | Domain, `.com`                                  | $11.81 a year                                               | sourced    | [9] (Porkbun; Vercel's price not found)                                                                          |
 | Claude Ultra                                    | $200 a month                                                | sourced    | [10]                                                                                                             |
 | GitHub Free                                     | $0                                                          | sourced    | [11]                                                                                                             |
-| Operations stack                                | $12.20 / $28.58 / $47.36 / $268.03                          | derived    | Lanes B and H: error events, uptime, log drain, restore test, DMARC reports and tracing (see "Operations Stack") |
+| Operations stack                                | $12.07 / $27.44 / $36.12 / $163.90                          | derived    | Lanes B and H: error events, uptime, log drain, restore test, DMARC reports and tracing (see "Operations Stack") |
 | Maintenance hours a month (low / median / high) | 27.9 / 29.9 / 39.8                                          | derived    | Lane D, from 2,388 build hours                                                                                   |
 | Incident hours a month (low / median / high)    | 2.4 / 19.5 / 36.6                                           | derived    | Lane D                                                                                                           |
 | Contractor hourly rate                          | $95 / $122.50 / $150                                        | sourced    | [29] and Lane D's rate sources                                                                                   |
@@ -108,7 +108,10 @@ B&O means business and occupation tax, Washington's tax on gross receipts rather
 | Activated accounts (all of the above)                | 208.4 | 1,938 |   19,160 |   177,500 |
 | Demo-only accounts                                   | 347.3 | 3,230 | 31,933.3 | 295,833.3 |
 | Total accounts                                       | 555.7 | 5,168 | 51,093.3 | 473,333.3 |
+| Active accounts (total accounts x 25%, range 15-30%) |   139 | 1,292 |   12,773 |   118,333 |
 | Total accounts per paying seat                       |  5.56 |  5.17 |     5.11 |      4.73 |
+
+Active accounts are total accounts × the 25% monthly active share, an assumption (range 15% to 30%, no source found). They set the session count that drives function, bandwidth and tracing costs.
 
 Worked example, 100 paying seats: trial seats = 100 × (2.84% + 6.1%) ÷ 10% = 89.4. Curators = max(2, floor(100 ÷ 1,000)) = 2, so 14 seats. Exempt = 100 × 5% = 5. Activated = 100 + 89.4 + 14 + 5 = 208.4. Total accounts = 208.4 ÷ (1 − 0.625) = 555.7, so 347.3 are demo-only.
 
@@ -178,11 +181,11 @@ A `.com` is $11.81 a year at Porkbun [9], or $0.98 a month. Vercel's `.com` pric
 | Resend tier                                         |    Free | Pro 50K | Pro 50K | Scale 500K |
 | Resend                                              |   $0.00 |  $20.00 |  $20.00 |    $350.00 |
 | Domain (.com, Porkbun)                              |   $0.98 |   $0.98 |   $0.98 |      $0.98 |
-| Operations stack (Lanes B and H)                    |  $12.20 |  $28.58 |  $47.36 |    $268.03 |
-| of which server-side tracing (10% sampled)          |   $0.17 |   $1.55 |  $15.33 |    $142.00 |
-| Platform and operations total                       |  $42.84 |  $84.91 | $136.62 |  $1,078.55 |
+| Operations stack (Lanes B and H)                    |  $12.07 |  $27.44 |  $36.12 |    $163.90 |
+| of which server-side tracing (10% sampled)          |   $0.04 |   $0.41 |   $4.09 |     $37.87 |
+| Platform and operations total                       |  $42.72 |  $83.77 | $125.38 |    $974.42 |
 | Claude Ultra                                        | $200.00 | $200.00 | $200.00 |    $200.00 |
-| Cash costs                                          | $242.84 | $284.91 | $336.62 |  $1,278.55 |
+| Cash costs                                          | $242.72 | $283.77 | $325.38 |  $1,174.42 |
 
 ## CI
 
@@ -207,8 +210,8 @@ This covers error tracking, uptime checks, log storage and paging. Lane H added 
 | Dependency and secret checks | GitHub built-ins and Socket Free [24]                |     $0 |     $0 |     $0 |      $0 |
 | Restore test                 | a scheduled restore, Neon storage                    |  $0.03 |  $0.03 |  $0.03 |   $0.03 |
 | Email deliverability         | Postmark DMARC digests [H3]                          |     $0 |     $0 |     $0 |     $14 |
-| Server-side tracing          | Vercel tracing at 10% sampling [H6]                  |  $0.17 |  $1.55 | $15.33 | $142.00 |
-| Total                        |                                                      | $12.20 | $28.58 | $47.36 | $268.03 |
+| Server-side tracing          | Vercel tracing at 10% sampling [H6]                  |  $0.04 |  $0.41 |  $4.09 |  $37.87 |
+| Total                        |                                                      | $12.07 | $27.44 | $36.12 | $163.90 |
 
 Vercel Pro and Observability Plus are left out of this table because they are priced above. Alternatives: Sentry Team at $29 a month, Bugsink, and Better Stack on-call at $29 per responder on an annual plan.
 
@@ -226,7 +229,7 @@ Vercel Pro and Observability Plus are left out of this table because they are pr
 
 ### Operations Gaps (Lane H)
 
-Lane H, fetched 2026-11-06, covers eight things Lane B left open. Its sizes were written as "accounts" but were briefed as paying seats. Only tracing depends on volume, and it assumes 300 requests per account a month, 20 spans per request and 10% sampling (an assumption). Per-account volume applies to **total accounts**, so the table above prices tracing on those: $0.17 / $1.55 / $15.33 / $142.00. Read as paying seats, as Lane H did, it would be $0.03 / $0.30 / $3.00 / $30.00. Every other pick has a flat price. Each vendor named here must be added to the privacy policy's list of processors in the same change.
+Lane H, fetched 2026-11-06, covers eight things Lane B left open. Its sizes were written as "accounts" but were briefed as paying seats. Only tracing depends on volume. Lane H assumes 300 requests per account a month, which this model does not use: the request count here is the model's own, sessions times 40 invocations per session. Sessions are total accounts × 25% active × 8 sessions each, which is 2 sessions and about 80 requests per account a month, against Lane H's 300 (about a quarter). Spans per request (20) and sampling (10%) are Lane H's assumptions and are kept. Tracing is $0.04 / $0.41 / $4.09 / $37.87. Lane H's own figures, at 300 requests per paying seat, were $0.03 / $0.30 / $3.00 / $30.00. Every other pick has a flat price. Each vendor named here must be added to the privacy policy's list of processors in the same change.
 
 **1. Spend alerts and caps.** Included: Vercel Spend Management on Pro at no extra cost, with a budget, notices at 50%, 75% and 100%, and a signed webhook [H1]; Neon spending notifications on Launch and Scale, which alert but do not stop usage, and Neon consumption limits, which are hard caps [H1]. Pick: a Vercel budget with a webhook, Neon notifications and a Neon `compute_time_seconds` quota, with Resend pay-as-you-go left off. Price: $0 / $0 / $0 / $0. Reason: every piece is free and already sits with an existing processor. Vercel's "Pause Production Deployments" setting should stay off, because a 503 for every paying account is worse than a bill; this is an owner decision.
 
@@ -277,14 +280,14 @@ All rows are dollars a month. Cash costs are the Platform total plus Claude Ultr
 
 | Row                                                       |     100 |    1000 |   10000 |  100000 |
 | --------------------------------------------------------- | ------: | ------: | ------: | ------: |
-| Cash costs                                                |    $243 |    $285 |    $337 |  $1,279 |
-| Cash + maintenance at contractor rate                     |  $6,049 |  $6,091 |  $6,143 |  $7,085 |
-| Cash + maintenance at loaded-salary rate                  |  $7,249 |  $7,291 |  $7,343 |  $8,285 |
-| Cash + full-time job (loaded $250k, low)                  | $24,158 | $24,200 | $24,251 | $25,193 |
-| Cash + full-time job (loaded $250k, high)                 | $27,570 | $27,612 | $27,663 | $28,605 |
-| Cash + median maintenance + promised on-call (contractor) |  $8,389 |  $8,431 |  $8,483 |  $9,425 |
+| Cash costs                                                |    $243 |    $284 |    $325 |  $1,174 |
+| Cash + maintenance at contractor rate                     |  $6,049 |  $6,090 |  $6,132 |  $6,981 |
+| Cash + maintenance at loaded-salary rate                  |  $7,249 |  $7,290 |  $7,332 |  $8,181 |
+| Cash + full-time job (loaded $250k, low)                  | $24,157 | $24,199 | $24,240 | $25,089 |
+| Cash + full-time job (loaded $250k, high)                 | $27,570 | $27,611 | $27,652 | $28,501 |
+| Cash + median maintenance + promised on-call (contractor) |  $8,389 |  $8,430 |  $8,472 |  $9,321 |
 
-Reading the table: **Claude Ultra is 82% of the cash cost at 100 paying seats.** Cash costs reach about $1,279 at 100,000 paying seats (against $552 before the overhead accounts were counted), because 473,333 accounts use the platform. Labour dwarfs cash at every size; the median maintenance hours cost about 20 times the cash costs at 1,000 paying seats.
+Reading the table: **Claude Ultra is 82% of the cash cost at 100 paying seats.** Cash costs reach about $1,174 at 100,000 paying seats (against $552 before the overhead accounts were counted), because 473,333 accounts use the platform. Labour dwarfs cash at every size; the median maintenance hours cost about 20 times the cash costs at 1,000 paying seats.
 
 ## Enterprise Thresholds
 
