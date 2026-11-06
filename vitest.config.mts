@@ -51,10 +51,11 @@ const DB_FILES = globSync(DB_INCLUDE, { cwd: ROOT, exclude: DB_FREE });
 // What a file does that outlives it once a worker keeps its module registry
 // from one file to the next: a module mock or a hoisted value for one, a stub
 // of a global or of the environment, a reset of the registry itself, or a fake
-// clock (MB.238). A mention in a comment counts too, which errs toward
+// clock (MB.238), or an msw server, which patches every socket's `connect`
+// while it listens. A mention in a comment counts too, which errs toward
 // isolation.
 const LEAKS_PAST_ITS_FILE =
-  /\bvi\.(mock|doMock|unmock|hoisted|stubGlobal|stubEnv|resetModules|useFakeTimers)\(/;
+  /\bvi\.(mock|doMock|unmock|hoisted|stubGlobal|stubEnv|resetModules|useFakeTimers)\(|\bsetupServer\(/;
 
 // The tests/support helpers that do one of those for their caller, so that a
 // file calling one counts as doing it: auth-module.ts's `importAuth` resets the

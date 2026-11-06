@@ -182,7 +182,8 @@ what a file does to the worker it runs in.
 - **`db-mocking`** runs with `isolate: true`, as every file did before. A file
   lands here when its source calls `vi.mock`, `vi.doMock`, `vi.unmock`,
   `vi.hoisted`, `vi.stubGlobal`, `vi.stubEnv`, `vi.resetModules` or
-  `vi.useFakeTimers`, or imports a `tests/support/` helper whose source does
+  `vi.useFakeTimers`, calls msw's `setupServer(` (msw patches the process's
+  sockets, which a shared worker would hand to the next file), or imports a `tests/support/` helper whose source does
   (today `auth-module.ts`, whose `importAuth` resets the registry and builds
   `@/lib/auth` under another environment). Each of those changes something a
   shared registry would hand to the next file: a mocked module stays mocked,
@@ -290,7 +291,11 @@ move together: raising any one without the others breaks the arithmetic below.
   `boundedPostgres()` plugin resolves `import postgres from 'postgres'` to
   that file for every module the project transforms (the wrapper's own import
   is the one left to the real package), and the wrapper passes
-  `max: min(asked, TEST_POOL_MAX)`. A cap rather than a default: a call site
+  `max: min(asked, TEST_POOL_MAX)` and `onread: false`. The second is
+  because the driver's custom read mode for plaintext connections is ignored by
+  the socket msw swaps in when it passes a connection through, so a client
+  opened while msw listens fails with `read ENOTCONN`; the app's client sets
+  it too, so test and production read the same way. A cap rather than a default: a call site
   may lower it (postgres.js's ordering guarantee is `max: 1`) and cannot raise
   it. Measured at the server, a burst three times the cap wide, counted
   mid-flight in `pg_stat_activity`, opened exactly the cap for the app's

@@ -35,16 +35,18 @@
 
 ### V Fast Follow
 
-- [ ] Closed practice warning, scoped by M17.2. When it is built, update the Code of Ethics
-      (`src/app/(public)/code-of-ethics/page.tsx`) in the same PR: the Short
+- [ ] Closed practice warning, scoped by M17.2; built by M19.4 to M19.8 and M19.10 on Wave 19.
+      When it is built, update the Code of Ethics (`documents/code-of-ethics.md`,
+      a document a keeper edits and publishes) in the same PR: the Short
       Version's closed-practices line and the list in "Closed Practices and
       Where Lore Comes From" say no entry is marked yet and the warning is
       planned. Say what the warning shows instead, and add the promise that an
       entry from a closed practice says so, names the people it belongs to and
       does not describe the ceremony. The data is gathered in
       `compendium/ethics/` (M14.29).
-- [ ] Ethical warnings around ingredients, scoped by M17.3. When it is built, update the Code
-      of Ethics in the same PR: the "planned" item in "Closed Practices and
+- [ ] Ethical warnings around ingredients, scoped by M17.3 and built by Wave 20
+      (M20.1 → M20.15). M20.13, the entry-page notice with the card marks and
+      filter, updates the Code of Ethics in its PR: the "planned" item in "Closed Practices and
       Where Lore Comes From" and the paragraph in "Ethical and Sustainable
       Sourcing" that says IUCN and CITES status are planned.
 - [ ] Draft and approval ingredients process.

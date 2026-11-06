@@ -23,8 +23,8 @@
   ```
 
   An unreachable host, a wrong password, an `sslmode` mismatch and a
-  client-side parameter such as `channel_binding` (now stripped from the URL
-  before any connection opens, `src/db/connection-url.ts`) all produced that byte-identical output — the
+  `channel_binding=require` against a server that cannot offer it all
+  produced that byte-identical output — the
   shape carries no information at all. `migrate.yml` therefore runs
   `scripts/probe-database.ts` first, which opens the connection itself and
   prints the driver's error code and message (`ECONNREFUSED`, `ENOTFOUND`,
