@@ -29,16 +29,12 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('the receipt’s link opens the request from its fragment with no session, takes a reply, and holds it through a reload in that tab alone', async ({
-  page,
-  browser,
-}) => {
-  // Unique per run, so mail an earlier run left in Mailpit, carrying a token from a recreated database, is never the newest.
-  const address = `visitor-${randomUUID()}@support-view-link.test`;
+/** Sends a signed-out request from `address` at /support, and returns the token its receipt's link carries. */
+async function sendSignedOut(page: Page, address: string, subject: string): Promise<string> {
   await page.goto('/support');
   await page.getByRole('radio', { name: /^Account/ }).check();
   await page.getByRole('textbox', { name: 'Email' }).fill(address);
-  await page.getByRole('textbox', { name: 'Subject' }).fill(SUBJECT);
+  await page.getByRole('textbox', { name: 'Subject' }).fill(subject);
   await page.getByRole('textbox', { name: 'Message' }).fill('It sticks at the lid.');
   await page.getByRole('button', { name: 'Send Request' }).click();
   await expect(page.getByText(/within 5 working days/)).toBeVisible();
@@ -46,6 +42,16 @@ test('the receipt’s link opens the request from its fragment with no session, 
   const receipt = await latestMessageTo(address, 20_000);
   const token = receipt.text.match(VIEW_LINK)?.[1];
   expect(token, receipt.text).toBeDefined();
+  return token!;
+}
+
+test('the receipt’s link opens the request from its fragment with no session, takes a reply, and holds it through a reload in that tab alone', async ({
+  page,
+  browser,
+}) => {
+  // Unique per run, so mail an earlier run left in Mailpit, carrying a token from a recreated database, is never the newest.
+  const address = `visitor-${randomUUID()}@support-view-link.test`;
+  const token = await sendSignedOut(page, address, SUBJECT);
 
   // A fresh browser, with no cookie, as the visitor opening the mail on another device.
   const elsewhere = await browser.newContext();
@@ -104,6 +110,27 @@ test('the receipt’s link opens the request from its fragment with no session, 
   await visitor.reload();
   await expectNoRequest(visitor);
   expect(await tabHolds(visitor, token!)).toBe(false);
+
+  // A newer mailed link pasted into this open tab: the browser changes only the hash, without loading the page again, and
+  // the page opens that link's request.
+  const second = 'The second Testwort jar';
+  const secondToken = await sendSignedOut(
+    page,
+    `visitor-${randomUUID()}@support-view-link.test`,
+    second,
+  );
+  await visitor.evaluate(() => {
+    (window as unknown as { samePageMarker?: boolean }).samePageMarker = true;
+  });
+  await visitor.goto(`/support/request#${secondToken}`);
+  await expect(visitor.getByRole('heading', { name: second })).toBeVisible();
+  expect(new URL(visitor.url()).hash).toBe('');
+  // Precondition: the document was not loaded again, so this is the hash change, not a fresh visit.
+  expect(
+    await visitor.evaluate(
+      () => (window as unknown as { samePageMarker?: boolean }).samePageMarker,
+    ),
+  ).toBe(true);
 
   // A token no mail carried opens nothing. From a blank page, so the visit is a full load, not a hash change.
   await visitor.goto('about:blank');

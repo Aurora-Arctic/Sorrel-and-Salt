@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SupportRequestByLink from '@/components/SupportRequestByLink';
 import type {
@@ -44,6 +44,33 @@ function answered(): string[] {
     },
   );
   return asked;
+}
+
+/** Answers each token with a request of its own subject, and records each token asked with. */
+function answeredPerToken(subjects: Record<string, string>): string[] {
+  const asked: string[] = [];
+  mockGraphQLQuery<SupportRequestByViewTokenQuery, SupportRequestByViewTokenQueryVariables>(
+    'SupportRequestByViewToken',
+    ({ token }) => {
+      asked.push(token);
+      return {
+        supportRequestByViewToken: {
+          ...FOUND.supportRequestByViewToken,
+          id: token,
+          subject: subjects[token] ?? SUBJECT,
+        },
+      };
+    },
+  );
+  return asked;
+}
+
+/** A newer mailed link pasted into the address bar of the open tab: the browser changes the hash without reloading. */
+function pasteLink(token: string) {
+  act(() => {
+    window.location.hash = token;
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  });
 }
 
 const at = (url: string) => window.history.replaceState(null, '', url);
@@ -95,5 +122,39 @@ describe('SupportRequestByLink', () => {
 
     await waitFor(() => expect(window.sessionStorage.getItem(KEY)).toBeNull());
     expect(screen.queryByRole('heading', { name: SUBJECT })).toBeNull();
+  });
+
+  describe('a newer link pasted into the open tab', () => {
+    const SECOND = 'The second Testwort jar';
+
+    it('opens its request over the one shown, clears the fragment and keeps the new token', async () => {
+      const asked = answeredPerToken({ 'first-token': SUBJECT, 'second-token': SECOND });
+      at('/support/request#first-token');
+      render(<SupportRequestByLink />);
+      expect(await screen.findByRole('heading', { name: SUBJECT })).toBeInTheDocument();
+
+      pasteLink('second-token');
+
+      expect(await screen.findByRole('heading', { name: SECOND })).toBeInTheDocument();
+      expect(asked).toEqual(['first-token', 'second-token']);
+      expect(window.location.hash).toBe('');
+      expect(window.sessionStorage.getItem(KEY)).toBe('second-token');
+    });
+
+    it('opens its request from the not-found state', async () => {
+      const asked = answeredPerToken({ 'second-token': SECOND });
+      render(<SupportRequestByLink />);
+      expect(await screen.findByRole('heading')).toBeInTheDocument();
+      // Precondition: the tab showed no request and asked for none.
+      expect(screen.queryByRole('heading', { name: SECOND })).toBeNull();
+      expect(asked).toEqual([]);
+
+      pasteLink('second-token');
+
+      expect(await screen.findByRole('heading', { name: SECOND })).toBeInTheDocument();
+      expect(asked).toEqual(['second-token']);
+      expect(window.location.hash).toBe('');
+      expect(window.sessionStorage.getItem(KEY)).toBe('second-token');
+    });
   });
 });
