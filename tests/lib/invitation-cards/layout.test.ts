@@ -129,6 +129,23 @@ describe('the card layout', () => {
   );
 
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
+    'spaces the code’s column on the "%s" front by its inked edges and centres it in the safe area’s height',
+    (_, copy) => {
+      const items = frontText(fonts, copy, VALID);
+      const wordmark = boxOf(columnLine(items, WORDMARK));
+      const address = boxOf(columnLine(items, SITE_ADDRESS.toUpperCase()));
+      const valid = boxOf(columnLine(items, VALID.toUpperCase()));
+      const pt = (px: number) => (px * 72) / PX_PER_INCH;
+      expect(Math.abs(pt(address.top - wordmark.bottom) - 4.5)).toBeLessThanOrEqual(0.25);
+      expect(Math.abs(pt(qr.top - address.bottom) - 9)).toBeLessThanOrEqual(0.25);
+      expect(Math.abs(pt(valid.top - qr.bottom) - 9)).toBeLessThanOrEqual(0.25);
+      expect(
+        Math.abs(pt(wordmark.top - safe.top) - pt(safe.bottom - valid.bottom)),
+      ).toBeLessThanOrEqual(0.25);
+    },
+  );
+
+  it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
     'sets no line of the "%s" front over another',
     (_, copy) => {
       const boxes = frontText(fonts, copy, VALID).map(boxOf);

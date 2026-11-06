@@ -90,3 +90,17 @@ export function wrapBalanced(style: TextStyle, text: string, maxWidth: number): 
   }
   return wrap(style, text, sorted[low]);
 }
+
+/** How far a line's glyphs reach above and below its baseline, from their outlines rather than the font's ascent. */
+export function inkExtent(
+  font: Font,
+  size: number,
+  text: string,
+): { above: number; below: number } {
+  const scale = size / font.unitsPerEm;
+  const boxes = font.layout(text).glyphs.map((glyph) => glyph.bbox);
+  return {
+    above: Math.max(...boxes.map((box) => box.maxY)) * scale,
+    below: -Math.min(...boxes.map((box) => box.minY)) * scale,
+  };
+}

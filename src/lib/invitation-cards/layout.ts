@@ -2,6 +2,7 @@ import type { Font } from '@pdf-lib/fontkit';
 import { BACK_LEDE, BACK_NOTE, type FrontCopy, SITE_ADDRESS, WORDMARK } from './copy';
 import {
   baselineOffset,
+  inkExtent,
   normalLineHeight,
   textWidth,
   type TextStyle,
@@ -53,7 +54,10 @@ export interface QrItem {
 export const COLUMN = { left: 48, top: 48, width: 290, height: 336 } as const;
 const BODY_WIDTH = 280;
 const GROUP_GAP = 18;
-const FOOT_GAP = 6;
+// The code's column is spaced between inked edges: 1/16 in between the wordmark and the address, and 1/8 in
+// between the code and the lines above and below it.
+const LINE_GAP = PX_PER_INCH / 16;
+const CODE_GAP = PX_PER_INCH / 8;
 
 /** The headline size; `tests/lib/invitation-cards/headline.test.ts` holds every headline to two lines at it. */
 export const HEADLINE_SIZE = 52;
@@ -83,9 +87,10 @@ export const BACK_PICTURE: PictureItem = {
 
 /**
  * The QR code, right of the text column, between the wordmark and address above it and the expiry below. It stands
- * left of the salt's bright bowl, which washes the code out where the two overlap.
+ * left of the salt's bright bowl, which washes the code out where the two overlap. Its height on the card centres
+ * that column, from the wordmark's top to the expiry's bottom, in the safe area's height.
  */
-export const FRONT_QR: QrItem = { x: 380, y: 104, size: 182 };
+export const FRONT_QR: QrItem = { x: 380, y: 138, size: 182 };
 
 export function headlineStyle(fonts: CardFonts): TextStyle {
   return { font: fonts.cormorant600, size: HEADLINE_SIZE };
@@ -206,35 +211,22 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
     letterSpacing: number,
     colour: string,
     text: string,
-  ): Block => ({
-    font,
-    size,
-    letterSpacing,
-    colour,
-    lines: [text],
-  });
-  const heading = stack(
-    fonts,
-    [
-      { block: line('cormorant600', 22, 22 * 0.04, CHALK, WORDMARK), marginBottom: 2 },
-      { block: line('lexend500', 13, 13 * 0.12, MUTED, SITE_ADDRESS.toUpperCase()) },
-    ],
-    0,
-    0,
-    FOOT_GAP,
-  );
-  const expiry = stack(
-    fonts,
-    [{ block: line('lexend500', 13, 13 * 0.12, MUTED, validUntil.toUpperCase()) }],
-    0,
-    FRONT_QR.y + FRONT_QR.size + FOOT_GAP,
-    FOOT_GAP,
-  );
-  const above = heading.items.map((item) => ({
-    ...item,
-    baseline: item.baseline + FRONT_QR.y - FOOT_GAP - heading.height,
-  }));
-  return [...top.items, ...[...above, ...expiry.items].map((item) => centredOnCode(fonts, item))];
+  ) => {
+    const { above, below } = inkExtent(fonts[font], size, text);
+    return { item: { font, size, letterSpacing, colour, x: 0, baseline: 0, text }, above, below };
+  };
+  const wordmark = line('cormorant600', 22, 22 * 0.04, CHALK, WORDMARK);
+  const address = line('lexend500', 13, 13 * 0.12, MUTED, SITE_ADDRESS.toUpperCase());
+  const expiry = line('lexend500', 13, 13 * 0.12, MUTED, validUntil.toUpperCase());
+  const addressBaseline = FRONT_QR.y - CODE_GAP - address.below;
+  const wordmarkBaseline = addressBaseline - address.above - LINE_GAP - wordmark.below;
+  const expiryBaseline = FRONT_QR.y + FRONT_QR.size + CODE_GAP + expiry.above;
+  const column = [
+    { ...wordmark.item, baseline: wordmarkBaseline },
+    { ...address.item, baseline: addressBaseline },
+    { ...expiry.item, baseline: expiryBaseline },
+  ];
+  return [...top.items, ...column.map((item) => centredOnCode(fonts, item))];
 }
 
 // The inked width leaves out the letter spacing set after the last letter, so a spaced line centres on what prints.
