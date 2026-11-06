@@ -18,6 +18,7 @@ import { loadCompendium } from '@/db/seed/compendium/load';
 import { identityOf } from '@/db/seed/coven-content';
 import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { fromRoot } from '../../support/paths';
+import { insertAnonymousUser } from '../../support/db/insert-anonymous-user';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from '../types';
 
@@ -146,6 +147,25 @@ describe('the demo coven seed', () => {
     const seated = await seats();
     expect(seated[lateId]).toBe('viewer');
     expect(seated[goneId]).toBeUndefined();
+  });
+
+  it('leaves the provisional account a signed-out send mints unseated, and seats an ordinary account beside it', async () => {
+    const anonymousId = await insertAnonymousUser(sql);
+    const ordinaryId = await insertAnonymousUser(sql, { anonymous: false });
+    // Precondition: the two accounts differ only in the flag.
+    expect(
+      await sql`select id, is_anonymous from users where id in ${sql([anonymousId, ordinaryId])} order by is_anonymous`,
+    ).toEqual([
+      { id: ordinaryId, is_anonymous: false },
+      { id: anonymousId, is_anonymous: true },
+    ]);
+
+    await run();
+
+    const seated = await seats();
+    // The ordinary account's seat proves the seed ran over both.
+    expect(seated[ordinaryId]).toBe('viewer');
+    expect(seated[anonymousId]).toBeUndefined();
   });
 
   it('refuses, naming the coven, when another coven already holds the slug', async () => {
