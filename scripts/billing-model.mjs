@@ -45,10 +45,13 @@ const I = {
   // ops (Lane B, derived there)
   ops: {
     errors: [0, 15, 15, 50],
-    uptime: [0, 0, 12, 12],
+    uptime: [12, 12, 12, 12], // Solo: Free has no heartbeat monitors (Lane H)
+    deliverability: [0, 0, 0, 14], // Postmark paid DMARC digests at 100k (Lane H)
     drain: [0, 0, 5, 50],
     restore: [0.03, 0.03, 0.03, 0.03],
   },
+  // tracing (Lane H, A5): requests per account, spans per request, sampling, price per 1M spans
+  tracing: { reqPerAccount: 300, spansPerReq: 20, sample: 0.1, perM: 0.5 },
   // labour
   maintHours: { low: 27.9, median: 29.9, high: 39.8 },
   incidentHours: { low: 2.4, median: 19.5, high: 36.6 },
@@ -152,7 +155,16 @@ const scale = SIZES.map((P, k) => {
   const neonS = I.avgCu[k] * I.awakeH[k] * I.neonScaleCu + storGb * I.neonGbMonth;
   const tier = resend.find((t) => t[0] >= mails);
   const mailCost = tier[1];
-  const ops = I.ops.errors[k] + I.ops.uptime[k] + I.ops.drain[k] + I.ops.restore[k];
+  const tracing =
+    ((N * I.tracing.reqPerAccount * I.tracing.spansPerReq * I.tracing.sample) / 1e6) *
+    I.tracing.perM;
+  const ops =
+    I.ops.errors[k] +
+    I.ops.uptime[k] +
+    I.ops.drain[k] +
+    I.ops.restore[k] +
+    I.ops.deliverability[k] +
+    tracing;
   const domain = I.domainYear / 12;
   const platform = vercel + obs + neonL + mailCost + domain + ops;
   return {
@@ -177,6 +189,7 @@ const scale = SIZES.map((P, k) => {
     tier: tier[2],
     mailCost,
     ops,
+    tracing,
     domain,
     platform,
     cash: platform + I.claudeUltra,
@@ -318,7 +331,8 @@ cr('Neon Scale, same usage (alternative)', (s) => s.neonS);
 out.push(row(['Resend tier', ...scale.map((s) => s.tier)]));
 cr('Resend', (s) => s.mailCost);
 cr('Domain (.com, Porkbun)', (s) => s.domain);
-cr('Operations stack (Lane B)', (s) => s.ops);
+cr('Operations stack (Lanes B and H)', (s) => s.ops);
+cr('of which server-side tracing (10% sampled)', (s) => s.tracing);
 cr('Platform and operations total', (s) => s.platform);
 cr('Claude Ultra', () => I.claudeUltra);
 cr('Cash costs', (s) => s.cash);
