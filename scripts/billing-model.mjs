@@ -1,5 +1,7 @@
 // The M17.1 running-cost and break-even model. Run: node scripts/billing-model.mjs
 // Every value below is a row of the Inputs table in claude-docs/billing/running-costs.md.
+// The sizes count PAYING SEATS (activated accounts in paying covens). Every other account is
+// overhead derived from them: trial seats, curator-coven seats, exempt seats and demo-only accounts.
 const SIZES = [100, 1000, 10000, 100000];
 const I = {
   // ratios (assumption unless noted)
@@ -61,9 +63,19 @@ const I = {
   mpExtra: 0.035,
   bo: 0.00471,
   boCredit: 55,
-  conv: 0.04,
-  convHigh: 0.1,
   churn: 0.061,
+  // overhead on top of paying seats (owner, 2026-11-06: no free tier; Lane G shares)
+  demoOnlyShare: 0.625, // derived 100% - 37.5% activation, Userpilot [G1]; range 0.574-0.70 [G1][G2]
+  demoOnlyRange: [0.574, 0.625, 0.7],
+  growthMonthly: [0.0284, 0.0284, 0.0284, 0.0153], // derived (1+40%)^(1/12)-1 under $1M ARR; (1+20%)^(1/12)-1 at 100k [G4]
+  trialMonths: 1, // owner: one month standard
+  trialConversion: 0.1, // sourced no-card "great", ChartMogul [G7]; "good" is 0.05
+  trialConversionRange: [0.05, 0.1, 0.15], // 0.15 is the top of the no-card "great" band [G7]
+  curatorSeats: 7, // owner: 7 seats including the curator
+  seatsPerCurator: 1000, // owner: one curator per 1,000 paying seats
+  curatorMin: 2, // owner: minimum 2
+  // owner, 2026-11-06: 5% at first, falling as the site is established and beta testers are staff, not friends and family
+  exemptShare: [0.05, 0.03, 0.015, 0.005], // assumption (schedule per size); owner to confirm
   price: {
     a: 9.99,
     b: 4.0,
@@ -89,8 +101,30 @@ const f = (x, d = 0) =>
 const pct = (x) => (x * 100).toFixed(2) + '%';
 const row = (cells) => '| ' + cells.join(' | ') + ' |';
 
-const scale = SIZES.map((N, k) => {
-  const covens = (N * I.membershipsPerAccount) / I.membersPerCoven;
+function overhead(P, k, d = I.demoOnlyShare, c = I.trialConversion) {
+  const trial = P * ((I.growthMonthly[k] + I.churn) / c) * I.trialMonths;
+  const curators = Math.max(I.curatorMin, Math.floor(P / I.seatsPerCurator));
+  const curatorSeats = curators * I.curatorSeats;
+  const exempt = P * I.exemptShare[k];
+  const activated = P + trial + curatorSeats + exempt;
+  const total = activated / (1 - d);
+  return {
+    P,
+    g: I.growthMonthly[k],
+    trial,
+    curators,
+    curatorSeats,
+    exempt,
+    activated,
+    demoOnly: total - activated,
+    total,
+  };
+}
+const ov = SIZES.map((P, k) => overhead(P, k));
+const scale = SIZES.map((P, k) => {
+  const o = ov[k];
+  const N = o.total;
+  const covens = (o.activated * I.membershipsPerAccount) / I.membersPerCoven;
   const sessions = N * I.activeFraction * I.sessionsPerActive;
   const inv = sessions * I.invocationsPerSession;
   const cpuH = (inv * I.cpuMsPerInvocation) / 1000 / 3600;
@@ -123,6 +157,7 @@ const scale = SIZES.map((N, k) => {
   const platform = vercel + obs + neonL + mailCost + domain + ops;
   return {
     N,
+    P,
     covens,
     sessions,
     inv,
@@ -156,22 +191,26 @@ for (const k of ['low', 'median', 'high'])
 const fte = I.salaryLoadedYear.low / 12,
   fteHigh = I.salaryLoadedYear.high / 12;
 
-// models: paying unit base and revenue per paying unit
+// models: paying unit base and revenue per paying unit. A paying seat is one activated account
+// in a paying coven, so paying covens = paying seats x memberships per account / members per coven.
 const memberSeatFactor =
   1 - ((I.membershipsPerAccount - 1) / I.membershipsPerAccount) * I.price.c_disc;
 const models = {
-  a: { name: '(a) Coven pays, seat bundles', base: 'coven', price: I.price.a },
-  b: { name: '(b) Each user pays', base: 'account', price: I.price.b },
+  a: { id: 'a', name: '(a) Coven pays, seat bundles', base: 'coven', price: I.price.a },
+  b: { id: 'b', name: '(b) Each user pays', base: 'account', price: I.price.b },
   c: {
+    id: 'c',
     name: '(c) Base plus seats',
     base: 'coven',
     price:
       I.price.c_base +
       I.price.c_seat * Math.max(0, I.membersPerCoven - I.price.c_incl) * memberSeatFactor,
   },
-  d: { name: '(d) Solo rung only', base: 'account', price: I.price.d },
-  e: { name: '(e) Any member pays', base: 'coven', price: I.price.e },
+  d: { id: 'd', name: '(d) Solo rung only', base: 'account', price: I.price.d },
+  e: { id: 'e', name: '(e) Any member pays', base: 'coven', price: I.price.e },
 };
+const unitsOf = (m, P) =>
+  m.base === 'coven' ? (P * I.membershipsPerAccount) / I.membersPerCoven : P;
 function net(units, price, mp = false) {
   const u = units * (1 - I.churn);
   const rev = u * price;
@@ -179,23 +218,84 @@ function net(units, price, mp = false) {
   const bo = Math.max(0, rev * I.bo - I.boCredit);
   return { rev, proc, bo, net: rev - proc - bo };
 }
-function unitsFor(target, price, mp = false) {
+const netAt = (m, P, mp = false) => net(unitsOf(m, P), m.price, mp);
+
+// Cost lines, interpolated linearly in seats between the four sizes (flat outside them).
+const lines = {
+  cash: scale.map((s) => s.cash),
+  contractor: scale.map((s) => s.cash + maint.median.contractor),
+  fulltime: scale.map((s) => s.cash + fte),
+};
+function costAt(line, P) {
+  const y = lines[line];
+  if (P <= SIZES[0]) return y[0];
+  for (let k = 1; k < SIZES.length; k++)
+    if (P <= SIZES[k])
+      return y[k - 1] + ((y[k] - y[k - 1]) * (P - SIZES[k - 1])) / (SIZES[k] - SIZES[k - 1]);
+  return y[3];
+}
+const HI = 1e7;
+function seatsFor(m, line) {
+  if (netAt(m, HI).net < costAt(line, HI)) return null;
   let lo = 0,
-    hi = 1e9;
+    hi = HI;
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
-    if (net(mid / (1 - I.churn), price, mp).net < target) lo = mid;
+    if (netAt(m, mid).net < costAt(line, mid)) lo = mid;
     else hi = mid;
   }
-  return hi / (1 - I.churn);
+  return Math.ceil(hi);
 }
+const seatText = (n) => (n === null ? '>10,000,000' : n.toLocaleString('en-US'));
+
 const out = [];
-out.push('## Scale');
-out.push(row(['Quantity', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
+const hdr = () => [row(['Quantity', ...SIZES]), row(['---', ...SIZES.map(() => '---:')])];
+out.push('## Overhead on Top of Paying Seats');
+out.push(...hdr());
+const orow = (label, g, d = 0) =>
+  out.push(
+    row([label, ...ov.map((o) => g(o).toLocaleString('en-US', { maximumFractionDigits: d }))]),
+  );
+orow('Paying seats', (o) => o.P);
+out.push(row(['Monthly growth of paying seats', ...ov.map((o) => pct(o.g))]));
+orow('Trial seats (one-month trial, no card)', (o) => o.trial, 1);
+orow('Trial seats as a share of paying seats (%)', (o) => (o.trial / o.P) * 100, 1);
+orow('Curators (one per 1,000 paying seats, minimum 2)', (o) => o.curators);
+orow('Curator-coven seats (7 each)', (o) => o.curatorSeats);
+orow('Exempt seats (5% / 3% / 1.5% / 0.5% of paying seats)', (o) => o.exempt);
+orow('Activated accounts (all of the above)', (o) => o.activated, 1);
+orow('Demo-only accounts', (o) => o.demoOnly, 1);
+orow('Total accounts', (o) => o.total, 1);
+out.push(row(['Total accounts per paying seat', ...ov.map((o) => (o.total / o.P).toFixed(2))]));
+out.push('', '### Overhead Sensitivity, Total Accounts');
+out.push(...hdr());
+for (const d of I.demoOnlyRange)
+  out.push(
+    row([
+      `Demo-only share ${pct(d)}`,
+      ...SIZES.map((P, k) =>
+        overhead(P, k, d).total.toLocaleString('en-US', { maximumFractionDigits: 0 }),
+      ),
+    ]),
+  );
+for (const c of I.trialConversionRange)
+  out.push(
+    row([
+      `No-card trial conversion ${pct(c)}`,
+      ...SIZES.map((P, k) =>
+        overhead(P, k, I.demoOnlyShare, c).total.toLocaleString('en-US', {
+          maximumFractionDigits: 0,
+        }),
+      ),
+    ]),
+  );
+out.push('', '## Scale');
+out.push(...hdr());
 const sr = (label, g, d = 0) =>
   out.push(
     row([label, ...scale.map((s) => g(s).toLocaleString('en-US', { maximumFractionDigits: d }))]),
   );
+sr('Accounts (paying and overhead)', (s) => s.N);
 sr('Covens', (s) => s.covens);
 sr('Sessions a month', (s) => s.sessions);
 sr('Function invocations a month', (s) => s.inv);
@@ -208,7 +308,7 @@ sr('Workflow events a month', (s) => s.wfEvents);
 sr('Database size (MB)', (s) => s.bytes / 1e6, 1);
 sr('Days to mail one document to everyone (at 60 a day)', (s) => s.mailDays);
 out.push('', '## Platform Cost, USD a Month');
-out.push(row(['Line', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
+out.push(...hdr().slice(0, 0), row(['Line', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
 const cr = (label, g) => out.push(row([label, ...scale.map((s) => f(g(s), 2))]));
 cr('Vercel metered usage (before credit)', (s) => s.metered);
 cr('Vercel Pro (plan + overage after the $20 credit)', (s) => s.vercel);
@@ -253,43 +353,20 @@ tr(
   (s) => s.cash + maint.median.contractor + I.onCallMonth,
 );
 out.push('', '## Net Revenue a Month by Model (after churn, Stripe fees on option 1, WA B&O)');
-for (const [lab, conv] of [
-  ['4% paying (base)', I.conv],
-  ['10% paying (high)', I.convHigh],
-]) {
-  out.push(
-    '',
-    `### ${lab}`,
-    row(['Model', 'Price per paying unit', ...SIZES]),
-    row(['---', '---:', ...SIZES.map(() => '---:')]),
-  );
-  for (const m of Object.values(models)) {
-    out.push(
-      row([
-        m.name,
-        f(m.price, 2),
-        ...scale.map((s) => {
-          const base = m.base === 'coven' ? s.covens : s.N;
-          return f(net(base * conv, m.price).net);
-        }),
-      ]),
-    );
-  }
-}
-out.push('', '### Option 2 (Managed Payments), 4% paying');
-out.push(row(['Model', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
-for (const m of Object.values(models))
-  out.push(
-    row([
-      m.name,
-      ...scale.map((s) =>
-        f(net((m.base === 'coven' ? s.covens : s.N) * I.conv, m.price, true).net),
-      ),
-    ]),
-  );
 out.push(
   '',
-  '## Clears (i) cash / (ii) cash + contractor maintenance / (iii) cash + full-time job (loaded low), 4% paying',
+  row(['Model', 'Price per paying unit', ...SIZES]),
+  row(['---', '---:', ...SIZES.map(() => '---:')]),
+);
+for (const m of Object.values(models))
+  out.push(row([m.name, f(m.price, 2), ...SIZES.map((P) => f(netAt(m, P).net))]));
+out.push('', '### Option 2 (Managed Payments)');
+out.push(row(['Model', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
+for (const m of Object.values(models))
+  out.push(row([m.name, ...SIZES.map((P) => f(netAt(m, P, true).net))]));
+out.push(
+  '',
+  '## Clears (i) cash / (ii) cash + contractor maintenance / (iii) cash + full-time job (loaded low)',
 );
 out.push(row(['Model', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
 const yn = (v) => (v ? 'Y' : 'n');
@@ -298,55 +375,45 @@ for (const m of Object.values(models))
     row([
       m.name,
       ...scale.map((s) => {
-        const n = net((m.base === 'coven' ? s.covens : s.N) * I.conv, m.price).net;
+        const n = netAt(m, s.P).net;
         return [s.cash, s.cash + maint.median.contractor, s.cash + fte]
           .map((c) => yn(n >= c))
           .join(' ');
       }),
     ]),
   );
-out.push('', '## Share of the Base That Must Pay to Clear (i) / (ii) / (iii)');
-out.push(row(['Model (base)', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
+out.push(
+  '',
+  '## Seats Needed to Break Even, (i) cash / (ii) cash + contractor maintenance / (iii) cash + full-time job',
+);
+out.push(row(['Model', '(i)', '(ii)', '(iii)']), row(['---', '---:', '---:', '---:']));
 for (const m of Object.values(models))
   out.push(
-    row([
-      `${m.name} (${m.base}s)`,
-      ...scale.map((s) => {
-        const base = m.base === 'coven' ? s.covens : s.N;
-        return [s.cash, s.cash + maint.median.contractor, s.cash + fte]
-          .map((c) => {
-            const u = unitsFor(c, m.price) / base;
-            return u > 1 ? '>100%' : pct(u);
-          })
-          .join(' / ');
-      }),
-    ]),
+    row([m.name, ...['cash', 'contractor', 'fulltime'].map((l) => seatText(seatsFor(m, l)))]),
   );
-out.push('', '## Free-Tier Cost per Account');
-out.push(row(['Quantity', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
-out.push(
-  row([
-    'Platform and operations cost per account a month',
-    ...scale.map((s) => f(s.platform / s.N, 4)),
-  ]),
-);
-const marg = (scale[3].platform - scale[2].platform) / (scale[3].N - scale[2].N);
-out.push(row(['Marginal cost per account, 10,000 to 100,000', f(marg, 4), '', '', '']));
-const net1 = (m) => net(1 / (1 - I.churn), m.price).net;
 out.push(
   '',
-  `Free accounts one paying unit carries at the marginal cost: ` +
-    Object.values(models)
-      .map((m) => `${m.name}: ${Math.floor(net1(m) / marg)}`)
-      .join('; '),
-);
-out.push(
-  '',
-  `Vercel Hobby limits: ${scale.map((s) => `${s.N}: ${(s.inv / 1e6).toFixed(2)}M invocations vs 1M, ${s.cpuH.toFixed(1)} h vs 4 h`).join('; ')}`,
+  `Vercel Hobby limits: ${scale.map((s) => `${s.P} paying seats: ${(s.inv / 1e6).toFixed(2)}M invocations vs 1M, ${s.cpuH.toFixed(1)} h vs 4 h`).join('; ')}`,
 );
 out.push(
   `Model prices: ${Object.values(models)
     .map((m) => `${m.name} ${f(m.price, 2)}`)
     .join('; ')}`,
 );
-console.log(out.join('\n'));
+if (process.argv.includes('--json')) {
+  console.log(
+    JSON.stringify({
+      SIZES,
+      ov,
+      scale,
+      maint,
+      fte,
+      fteHigh,
+      models: Object.values(models).map((m) => ({
+        ...m,
+        net: SIZES.map((P) => netAt(m, P).net),
+        seats: ['cash', 'contractor', 'fulltime'].map((l) => seatsFor(m, l)),
+      })),
+    }),
+  );
+} else console.log(out.join('\n'));
