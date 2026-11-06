@@ -167,7 +167,7 @@ const UserDetail = ({
     </section>
     {timeouts && (
       <section aria-label="Support Time-Out" className="user-detail__section">
-        <TimeoutPanel userId={user.id} name={user.name} timeouts={timeouts} />
+        <TimeoutPanel target={{ userId: user.id }} name={user.name} timeouts={timeouts} />
       </section>
     )}
     {pauses && (

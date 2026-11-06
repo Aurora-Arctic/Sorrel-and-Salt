@@ -68,11 +68,10 @@ export const supportRequests = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // An address is set only on a request whose sender is an anonymous account or the seeded signed-out sender, and the
-    // signed-out sender always has one. The function reads `users`, which a CHECK cannot do inline.
+    // A request belongs to an account or to an address, never both: the signed-out sender account stands as `created_by` exactly when an address is set.
     check(
       'support_requests_one_sender',
-      sql`case when ${table.createdBy} = ${sql.raw(`'${SIGNED_OUT_SENDER_ID}'`)} then ${table.senderEmail} is not null else ${table.senderEmail} is null or support_sender_is_anonymous(${table.createdBy}) end`,
+      sql`(${table.senderEmail} is not null) = (${table.createdBy} = ${sql.raw(`'${SIGNED_OUT_SENDER_ID}'`)})`,
     ),
     // The admin list: open ahead of resolved, newest first.
     index('support_requests_status_created_idx')

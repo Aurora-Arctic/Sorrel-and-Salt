@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import type { SupportAbout } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
-import { SUPPORT_ABOUTS, SUPPORT_LIST_PATH } from '../../lib/support-path';
+import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import type { Failure } from '../../lib/types';
 import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -104,8 +103,7 @@ const SignedOutSupportForm = ({
   if (sent) {
     return (
       <Notice kind="success">
-        Your message was received. We will reply by email within 5 working days. You can read it and
-        any reply on <Link href={SUPPORT_LIST_PATH}>your requests page</Link>.
+        Your message was received. We will reply by email within 5 working days.
       </Notice>
     );
   }

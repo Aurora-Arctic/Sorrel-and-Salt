@@ -1354,6 +1354,19 @@ type Mutation {
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
   """
+  Bars the sender of a signed-out request, who has no account, from sending support requests from the address they wrote from, until `until` or with no end when it is left out. The address is kept only as a key. Site admins only.
+  """
+  timeOutSignedOutSender(
+    """
+    Kept with the time-out; nothing is mailed to an address that was never confirmed.
+    """
+    message: String!
+    note: String!
+    requestId: ID!
+    until: DateTime
+  ): SupportTimeout!
+
+  """
   Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.
   """
   timeOutSupportSender(
@@ -2874,7 +2887,7 @@ type SupportTimeout {
   liftedAt: DateTime
   note: String!
   until: DateTime
-  userId: ID!
+  userId: ID
 }
 
 """A toxic setting other than any, and how many entries it would list."""

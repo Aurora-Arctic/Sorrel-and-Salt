@@ -2,13 +2,10 @@ import { and, eq, gt, lt, not, or, sql } from 'drizzle-orm';
 import { accounts } from '../../modules/identity/schema/auth';
 import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
-import { supportRequests } from '../../modules/support/schema/support-requests';
-import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 // The database client; why only the repository may import it: see `select.ts`.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
 import { notSoftDeleted } from './predicates';
-import { timeoutStands } from './support';
 import { existsIn } from './select';
 
 /** The rows a lapse can reach: unverified, holding a provider, and not vouched for by a keeper. */
@@ -18,38 +15,6 @@ function provisional(userId?: string) {
     eq(users.emailVerified, false),
     existsIn(accounts, eq(accounts.userId, users.id)),
     not(existsIn(userPrivilegeChanges, eq(userPrivilegeChanges.userId, users.id))),
-  );
-}
-
-/** How long an anonymous account that holds no request lives, counted from its creation. */
-const ANONYMOUS_IDLE_DAYS = 7;
-
-/**
- * An anonymous sender's account that has lapsed: it holds no request and no standing time-out (retention hands each one it sent to the System account
- * when it anonymises it), and is older than the idle days, so a fresh account whose first send is still being written stays.
- */
-function lapsedAnonymous(userId?: string) {
-  return and(
-    userId === undefined ? undefined : eq(users.id, userId),
-    eq(users.isAnonymous, true),
-    lt(users.createdAt, sql`now() - make_interval(days => ${ANONYMOUS_IDLE_DAYS})`),
-    not(existsIn(supportRequests, eq(supportRequests.createdBy, users.id))),
-    // A time-out goes with its account by cascade, and binds the address it was set for, so it keeps the account.
-    not(existsIn(supportTimeouts, and(eq(supportTimeouts.userId, users.id), timeoutStands))),
-  );
-}
-
-/** The rows the cleanup may remove: a provisional account past either window, or a lapsed anonymous one. */
-function lapsed(lifetimeSeconds: number, capSeconds: number, userId?: string) {
-  return or(
-    and(
-      provisional(userId),
-      or(
-        lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
-        lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
-      ),
-    ),
-    lapsedAnonymous(userId),
   );
 }
 
@@ -66,7 +31,15 @@ export async function deleteLapsedProvisionalUser(
 ): Promise<boolean> {
   const rows = await db
     .delete(users)
-    .where(lapsed(lifetimeSeconds, capSeconds, userId))
+    .where(
+      and(
+        provisional(userId),
+        or(
+          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
+          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
+        ),
+      ),
+    )
     .returning({ id: users.id });
   return rows.length > 0;
 }
@@ -111,8 +84,12 @@ export async function findLapsedProvisionalUserIds(
     .where(
       and(
         notSoftDeleted(users),
+        provisional(),
         after === null ? undefined : gt(users.id, after),
-        lapsed(lifetimeSeconds, capSeconds),
+        or(
+          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
+          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
+        ),
       ),
     )
     .orderBy(users.id)

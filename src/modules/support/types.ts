@@ -59,9 +59,6 @@ export interface SupportDialogAnswer {
   until: Date | null;
 }
 
-/** Mints the provisional account a signed-out first send is written as, and returns its id; the GraphQL context builds it, and sets the account's cookie on the response. */
-export type AnonymousMinter = { mint(): Promise<string> };
-
 /** What the mailed-link page shows of a signed-out request: its public thread and nothing staff hold, with no address, token or hash. */
 export type SupportRequestView = Pick<
   SupportRequestRow,

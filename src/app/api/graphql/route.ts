@@ -11,10 +11,10 @@ import { schema } from '../../../graphql/schema';
 const production = process.env.NODE_ENV === 'production';
 
 // Every browser-initiated read and write comes through here (CLAUDE.md rule 1).
-const yoga = createYoga<ServerContext>({
+const yoga = createYoga({
   schema,
   graphqlEndpoint: '/api/graphql',
-  context: ({ request, params, setCookies }) => createContext({ request, params, setCookies }),
+  context: ({ request, params }) => createContext({ request, params }),
   fetchAPI: { Response },
   plugins: protections({ production }),
   // Each service error leaves with its code; anything else leaves masked.
@@ -26,12 +26,7 @@ const yoga = createYoga<ServerContext>({
   cors: false,
 });
 
-// The route has no params, so Yoga is handed no server context of Next's, only the list a minted session's cookie is
-// collected in.
-interface ServerContext {
-  setCookies: string[];
-}
-
+// The route has no params, so Yoga is handed no server context of Next's.
 async function handle(request: Request): Promise<Response> {
   if (!production && isBrowserNavigation(request)) {
     return new Response(await renderAltairPage(request), {
@@ -40,10 +35,7 @@ async function handle(request: Request): Promise<Response> {
   }
   const refusal = refuseCrossSite(request);
   if (refusal) return refusal;
-  const setCookies: string[] = [];
-  const response = await yoga.handleRequest(request, { setCookies });
-  for (const cookie of setCookies) response.headers.append('set-cookie', cookie);
-  return response;
+  return yoga.handleRequest(request, {});
 }
 
 export { handle as GET, handle as POST };

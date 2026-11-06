@@ -15,7 +15,7 @@ import { PAUSE_MESSAGE, noPauseNotifier } from '../../../support/email-verificat
 // A signed-out sender has no account of its own: every signed-out request is written as the one seeded stand-in. So a
 // keeper's time-out on a signed-out request names the address it came from, kept as its HMAC key and never in clear, with
 // no account, and that time-out refuses the next signed-out send from the address
-// (claude-docs/design-decisions/m15.48-anonymous-sender.md). The mailed-link reply is support-view-reply.test.ts's, and the
+// (claude-docs/design-decisions/m15.48-mailed-link.md). The mailed-link reply is support-view-reply.test.ts's, and the
 // claim by email tests/db/support-claim-by-email.test.ts's.
 
 const { sendSignedOutSupportRequest, sendSupportRequest, timeOutSupportSender } = support;

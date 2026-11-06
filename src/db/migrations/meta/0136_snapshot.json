@@ -1,5 +1,5 @@
 {
-  "id": "17697032-f5fb-4a39-89f6-097804a6274e",
+  "id": "ef4e0777-1ba8-4338-a02d-2277053be44a",
   "prevId": "52661f2b-3c26-43eb-ac5b-89b6882e3051",
   "version": "7",
   "dialect": "postgresql",
@@ -3806,13 +3806,6 @@
           "notNull": true,
           "default": false
         },
-        "is_anonymous": {
-          "name": "is_anonymous",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "terms_accepted_at": {
           "name": "terms_accepted_at",
           "type": "timestamp",
@@ -7339,7 +7332,7 @@
           "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "until": {
           "name": "until",
@@ -7355,6 +7348,12 @@
         },
         "message": {
           "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address_key": {
+          "name": "address_key",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -7426,6 +7425,22 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "support_timeouts_address_key_idx": {
+          "name": "support_timeouts_address_key_idx",
+          "columns": [
+            {
+              "expression": "address_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"support_timeouts\".\"lifted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -7473,6 +7488,10 @@
         "support_timeouts_note_not_blank": {
           "name": "support_timeouts_note_not_blank",
           "value": "btrim(\"support_timeouts\".\"note\") <> ''"
+        },
+        "support_timeouts_binds_someone": {
+          "name": "support_timeouts_binds_someone",
+          "value": "\"support_timeouts\".\"user_id\" is not null or \"support_timeouts\".\"address_key\" is not null"
         }
       },
       "isRLSEnabled": false

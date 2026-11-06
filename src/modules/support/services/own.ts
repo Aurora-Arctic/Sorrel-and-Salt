@@ -107,8 +107,7 @@ export async function getMySupportTimeout(session: Session): Promise<StandingTim
 export async function getMySupportDialogState(
   session: Session | null,
 ): Promise<SupportDialogAnswer> {
-  // An anonymous session writes with the signed-out form, as a visitor does; its time-outs bind that send instead.
-  if (!session || session.anonymous) return { kind: 'signedOut', until: null };
+  if (!session) return { kind: 'signedOut', until: null };
   if (session.emailUnverified) return { kind: 'unverified', until: null };
   const timedOut = await getMySupportTimeout(session);
   return timedOut ? { kind: 'timedOut', until: timedOut.until } : { kind: 'form', until: null };

@@ -398,24 +398,6 @@ export async function findStandingSupportTimeoutByAddress(
   return latestEnd(rows);
 }
 
-/** The address on the sender's newest request that carries one, or `undefined` when none does. */
-export async function findNewestSenderAddress(userId: string): Promise<string | undefined> {
-  const carriesAddress = and(
-    notSoftDeleted(supportRequests),
-    eq(supportRequests.createdBy, userId),
-    isNotNull(supportRequests.senderEmail),
-  ) as SQL;
-  // The newest by the database, so only that row leaves it.
-  const rows = await selectFrom(
-    supportRequests,
-    and(
-      carriesAddress,
-      sql`${supportRequests.createdAt} = (select max(r.created_at) from support_requests r where r.created_by = ${userId} and r.deleted_at is null and r.sender_email is not null)`,
-    ),
-  );
-  return rows[0]?.senderEmail ?? undefined;
-}
-
 /** The latest end among standing time-outs: none at all wins over any date. */
 function latestEnd(rows: readonly { until: Date | null }[]): StandingTimeout | undefined {
   if (rows.length === 0) return undefined;
@@ -660,7 +642,6 @@ export function supportWrites({
   | 'markClosingNoticeSent'
   | 'markReplyNoticeSent'
   | 'anonymiseClosedSupportRequests'
-  | 'adoptAnonymousAccount'
   | 'setSupportViewToken'
   | 'claimSupportRequestsByEmail'
 > {
@@ -698,93 +679,55 @@ export function supportWrites({
     return count;
   }
 
-  // Hands the requests `requestWhere` picks, and their sender replies, to `realId` in one statement each: the sender leaves
-  // as the address and view link are cleared, so the one-sender CHECK never sees an address with an ordinary account. The
-  // audit writer strips `created_by` from what it sets, so these go to the transaction itself.
-  async function handOver(requestWhere: SQL, fromSenders: SQL, realId: string): Promise<number> {
-    const rows = await tx
-      .update(supportRequests)
-      .set({
-        createdBy: realId,
-        updatedBy: sql`case when ${supportRequests.updatedBy} in (select id from users where is_anonymous) or ${supportRequests.updatedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.updatedBy} end`,
-        resolvedBy: sql`case when ${supportRequests.resolvedBy} in (select id from users where is_anonymous) or ${supportRequests.resolvedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.resolvedBy} end`,
-        senderEmail: null,
-        viewTokenHash: null,
-      })
-      .where(and(notSoftDeleted(supportRequests), requestWhere))
-      .returning({ id: supportRequests.id });
-    if (rows.length === 0) return 0;
-    await tx
-      .update(supportReplies)
-      .set({ createdBy: realId, updatedBy: realId })
-      .where(
-        and(
-          inArray(
-            supportReplies.requestId,
-            rows.map((row) => row.id),
-          ),
-          eq(supportReplies.authorRole, 'sender'),
-          fromSenders,
-        ),
-      );
-    return rows.length;
-  }
-
   return {
-    // The anonymous account's rows move to the account it signed in as, so deleting the anonymous account is not refused by a key,
-    // and what it sent is the account's own. Its time-outs move too, so a keeper's time-out outlives the account.
-    adoptAnonymousAccount: async (anonymousId, realId) => {
-      const moved = await handOver(
-        eq(supportRequests.createdBy, anonymousId),
-        eq(supportReplies.createdBy, anonymousId),
-        realId,
-      );
-      await tx
-        .update(supportReplies)
-        .set({ updatedBy: realId })
-        .where(eq(supportReplies.updatedBy, anonymousId));
-      await tx
-        .update(supportRequests)
-        .set({ updatedBy: realId })
-        .where(eq(supportRequests.updatedBy, anonymousId));
-      await tx
-        .update(supportTimeouts)
-        .set({ userId: realId })
-        .where(eq(supportTimeouts.userId, anonymousId));
-      return moved;
-    },
-    // Only a signed-out sender's rows (an anonymous account's, or the stand-in's) whose address is the verified account's own.
+    // Only the stand-in's rows whose address is the verified account's own move to it, with their sender replies; the address and
+    // view link are cleared so the one-sender CHECK never sees an address with an ordinary account. The audit writer strips
+    // `created_by` from what it sets, so these go to the transaction itself.
     claimSupportRequestsByEmail: async (realId, email, addressKey) => {
-      const signedOutSender = or(
-        eq(supportRequests.createdBy, SIGNED_OUT_SENDER_ID),
-        sql`${supportRequests.createdBy} in (select id from users where is_anonymous)`,
-      ) as SQL;
-      const addressIsTheirs = sql`lower(${supportRequests.senderEmail}) = lower(${email})`;
-      // The anonymous accounts whose requests are claimed, read before the requests move; their time-outs follow them.
-      const senders = await tx
-        .selectDistinct({ id: supportRequests.createdBy })
-        .from(supportRequests)
-        .where(and(addressIsTheirs, signedOutSender));
-      const anonymousIds = senders.map((row) => row.id).filter((id) => id !== SIGNED_OUT_SENDER_ID);
-      const moved = await handOver(
-        and(addressIsTheirs, signedOutSender) as SQL,
-        or(
-          eq(supportReplies.createdBy, SIGNED_OUT_SENDER_ID),
-          sql`${supportReplies.createdBy} in (select id from users where is_anonymous)`,
-        ) as SQL,
-        realId,
-      );
-      // Those of the senders, and the standing ones that bind this address though their account holds none of the claimed requests.
+      const rows = await tx
+        .update(supportRequests)
+        .set({
+          createdBy: realId,
+          updatedBy: sql`case when ${supportRequests.updatedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.updatedBy} end`,
+          resolvedBy: sql`case when ${supportRequests.resolvedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.resolvedBy} end`,
+          senderEmail: null,
+          viewTokenHash: null,
+        })
+        .where(
+          and(
+            notSoftDeleted(supportRequests),
+            eq(supportRequests.createdBy, SIGNED_OUT_SENDER_ID),
+            sql`lower(${supportRequests.senderEmail}) = lower(${email})`,
+          ),
+        )
+        .returning({ id: supportRequests.id });
+      if (rows.length > 0) {
+        await tx
+          .update(supportReplies)
+          .set({ createdBy: realId, updatedBy: realId })
+          .where(
+            and(
+              inArray(
+                supportReplies.requestId,
+                rows.map((row) => row.id),
+              ),
+              eq(supportReplies.authorRole, 'sender'),
+              eq(supportReplies.createdBy, SIGNED_OUT_SENDER_ID),
+            ),
+          );
+      }
+      // The standing time-outs that bind this address alone now bind the account that proved it.
       await tx
         .update(supportTimeouts)
         .set({ userId: realId })
         .where(
-          or(
-            anonymousIds.length > 0 ? inArray(supportTimeouts.userId, anonymousIds) : undefined,
-            and(eq(supportTimeouts.addressKey, addressKey), timeoutStands),
+          and(
+            isNull(supportTimeouts.userId),
+            eq(supportTimeouts.addressKey, addressKey),
+            timeoutStands,
           ),
         );
-      return moved;
+      return rows.length;
     },
     countSignedOutSend: async (addressKey, clientKey, now, windowSeconds) => ({
       // Fixed order, so two sends taking both locks cannot wait on each other.

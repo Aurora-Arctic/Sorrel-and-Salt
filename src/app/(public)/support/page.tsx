@@ -27,8 +27,7 @@ export const metadata: Metadata = {
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);
   let state: SupportPanelState;
-  // An anonymous sender is offered the signed-out form again, which sends from their same account.
-  if (!session || session.anonymous) {
+  if (!session) {
     state = { kind: 'signed-out', support: supportAboutOf(single(params.support) ?? null) };
   } else {
     if (!(await sessionIsVerified())) redirect(emailPagePath(undefined));

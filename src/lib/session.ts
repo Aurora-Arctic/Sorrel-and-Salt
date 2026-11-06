@@ -23,11 +23,6 @@ export interface Session extends AuditSession {
    * on the API as `requireSession()` does on the pages.
    */
   emailUnverified?: true;
-  /**
-   * Set on the provisional account a signed-out support send mints. It reads and writes its own support requests and nothing else:
-   * the pages and the API treat it as signed out everywhere but the support ones, and it carries no `emailUnverified`, as it has no address to verify.
-   */
-  anonymous?: true;
 }
 
 // `sessionFresh` stays off the service-level session: pages read it and services never do. `requireSession` keeps an unverified
@@ -44,8 +39,6 @@ export interface SessionState {
   sessionFresh: boolean;
   /** Set while a pause stands on the session's user, with its end, `null` for none; absent otherwise. */
   accessPause?: { until: Date | null };
-  /** Set when the session is an anonymous sender's, which the pages and the API read as signed out outside support. */
-  anonymous?: true;
 }
 
 /** What a Better Auth hook handler is handed: the request, and the session once there is one. */

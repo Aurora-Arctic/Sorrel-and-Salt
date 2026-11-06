@@ -28,7 +28,11 @@ import { replyToSupportRequest } from '../services/reply';
 import { sendSupportRequest } from '../services/send';
 import { sendSignedOutSupportRequest } from '../services/signed-out';
 import { replyToSupportRequestByViewToken } from '../services/view-link';
-import { liftSupportTimeout, timeOutSupportSender } from '../services/timeouts';
+import {
+  liftSupportTimeout,
+  timeOutSignedOutSender,
+  timeOutSupportSender,
+} from '../services/timeouts';
 import type {
   SupportDialogAnswer,
   SupportReplyRow,
@@ -86,7 +90,7 @@ const SupportTimeoutRef = builder.objectRef<SupportTimeoutRow>('SupportTimeout')
     'A bar on a user sending support requests until `until`, or with no end when `until` is null, unless lifted sooner.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    userId: t.exposeID('userId'),
+    userId: t.exposeID('userId', { nullable: true }),
     until: t.expose('until', { type: 'DateTime', nullable: true }),
     note: t.exposeString('note'),
     liftedAt: t.expose('liftedAt', { type: 'DateTime', nullable: true }),
@@ -319,8 +323,6 @@ builder.mutationField('sendSignedOutSupportRequest', (t) =>
       await sendSignedOutSupportRequest(definedArgs(input), {
         clientIp: context.clientIp,
         notifier: context.support,
-        anonymous: context.anonymous,
-        session: context.session,
       });
       return true;
     },
@@ -477,6 +479,27 @@ builder.mutationField('timeOutSupportSender', (t) =>
     authScopes: { admin: true },
     resolve: (_root, { userId, until, note, message }, context) =>
       timeOutSupportSender(sessionOf(context), userId, until, note, context.pauses, message),
+  }),
+);
+
+builder.mutationField('timeOutSignedOutSender', (t) =>
+  t.field({
+    type: SupportTimeoutRef,
+    description:
+      'Bars the sender of a signed-out request, who has no account, from sending support requests from the address they wrote from, until `until` or with no end when it is left out. The address is kept only as a key. Site admins only.',
+    args: {
+      requestId: t.arg.id({ required: true }),
+      until: t.arg({ type: 'DateTime', required: false }),
+      note: t.arg.string({ required: true }),
+      message: t.arg.string({
+        required: true,
+        description:
+          'Kept with the time-out; nothing is mailed to an address that was never confirmed.',
+      }),
+    },
+    authScopes: { admin: true },
+    resolve: (_root, { requestId, until, note, message }, context) =>
+      timeOutSignedOutSender(sessionOf(context), requestId, until, note, context.pauses, message),
   }),
 );
 

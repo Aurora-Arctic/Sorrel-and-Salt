@@ -25,8 +25,6 @@ export interface SupportRequestEntry {
   sender: SupportSender | null;
   /** Sent by a visitor who was signed out: the sender is a shared stand-in account, and `sender.email` is the visitor’s own address. */
   signedOut: boolean;
-  /** Of a signed-out request, the sender is the visitor’s own anonymous account, which a keeper can time out; false for the shared stand-in. */
-  anonymousSender: boolean;
   /** Sent by the System account: an anonymised request, whose sender is not shown, so `sender` is null. */
   anonymised: boolean;
   assignee: SupportPerson | null;

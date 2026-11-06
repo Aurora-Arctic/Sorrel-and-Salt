@@ -59,7 +59,7 @@ function personOf(names: Names, id: string | null): SupportPerson | null {
 function senderOf(row: SupportRequestRow, names: Names): SupportSender | null {
   const found = names.get(row.createdBy);
   if (!found) return null;
-  return row.senderEmail !== null ? { ...found, email: row.senderEmail } : found;
+  return row.createdBy === SIGNED_OUT_SENDER_ID ? { ...found, email: row.senderEmail } : found;
 }
 
 /** The sender wrote last: staff have answered and the sender's activity is later than theirs. */
@@ -75,11 +75,7 @@ function entryOf(row: SupportRequestRow, names: Names, betaTester: boolean): Sup
     subject: row.subject,
     status: row.status,
     sender: senderOf(row, names),
-    signedOut: row.senderEmail !== null,
-    anonymousSender:
-      row.senderEmail !== null &&
-      row.createdBy !== SIGNED_OUT_SENDER_ID &&
-      row.createdBy !== SYSTEM_ACTOR_ID,
+    signedOut: row.createdBy === SIGNED_OUT_SENDER_ID,
     anonymised: row.createdBy === SYSTEM_ACTOR_ID,
     assignee: personOf(names, row.assignedTo),
     curatorVisible: row.curatorVisible,

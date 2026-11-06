@@ -9,7 +9,7 @@ import {
   getSessionFromCtx,
 } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { anonymous, lastLoginMethod } from 'better-auth/plugins';
+import { lastLoginMethod } from 'better-auth/plugins';
 import { twoFactor } from 'better-auth/plugins/two-factor';
 import { passkey } from '@better-auth/passkey';
 import {
@@ -582,13 +582,13 @@ async function noticeCompletedChange(userId: string, request: Request | undefine
 /** Claims the signed-out requests written from a verified account's address; a failure is logged, as the sign-in stands either way. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Better Auth's logger takes any
 async function claimForVerifiedAccount(
-  user: { id: string; email: string; emailVerified: boolean; isAnonymous?: boolean | null },
+  user: { id: string; email: string; emailVerified: boolean },
   ctx:
     | { context?: { logger?: { error: (message: string, ...args: any[]) => void } } }
     | null
     | undefined,
 ): Promise<void> {
-  if (!user.emailVerified || user.isAnonymous) return;
+  if (!user.emailVerified) return;
   try {
     const { claimSignedOutRequests } = await import('@/modules/support');
     await claimSignedOutRequests(user);
@@ -624,21 +624,11 @@ export const auth = betterAuth({
     // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md, "Rate limiting").
     customRules: {
       '/passkey/*': { window: 10, max: 3 },
-      // Each call mints an account, and the proxy only checks a cookie, so the mint is held to a handful a minute per client.
-      '/sign-in/anonymous': { window: 60, max: 5 },
     },
   },
   // Cookie only: `storeInDatabase` would add a users column nothing reads (claude-docs/auth/plugins.md, "Plugins").
   // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
   plugins: [
-    // A signed-out support send mints the provisional account (claude-docs/design-decisions/m15.48-anonymous-sender.md). Signing in
-    // by any method hands its support rows to the real account before the plugin deletes it.
-    anonymous({
-      onLinkAccount: async ({ anonymousUser, newUser }) => {
-        const { adoptAnonymousSender } = await import('@/modules/support');
-        await adoptAnonymousSender(anonymousUser.user.id, newUser.user.id);
-      },
-    }),
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
     // Fails closed: an unreachable or silent service refuses the password, never waves it through.
     breachedPasswordCheck({ message: PASSWORD_BREACHED_MESSAGE }),
@@ -891,8 +881,6 @@ export const auth = betterAuth({
         // new user as their own row is. It never throws, as Better Auth cannot roll the user row back and a half-failed sign-up is
         // worse than a missing seat; the demo coven seed's backfill repairs it.
         after: async (user, ctx) => {
-          // A provisional sender holds no demo seat and expires with its requests, not on the unverified-sign-up clock.
-          if ((user as { isAnonymous?: boolean | null }).isAnonymous) return;
           // One run per unverified sign-up removes the row once its window lapses. A failed start is logged, as the sign-up stands
           // either way and the account then holds its address until a keeper removes it.
           if (!user.emailVerified) {

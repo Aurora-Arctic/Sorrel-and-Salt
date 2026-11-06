@@ -28,24 +28,6 @@ async function viewerFor(
   session: Session,
   accessPause?: { until: Date | null },
 ): Promise<ShellContext> {
-  // An anonymous sender has no coven, curation or invitation and no address, so the shell draws their name and the count of
-  // their own requests waiting on them, and nothing else.
-  if (session.anonymous) {
-    const support = await getMySupportCounts(session);
-    return {
-      viewer: {
-        id: session.userId,
-        name: 'Anonymous',
-        canCurate: false,
-        canCreate: false,
-        verified: true,
-        pendingInvitations: 0,
-        assignedSupport: 0,
-        waitingSupport: support.waitingOnMe,
-      },
-      workspaces: [],
-    };
-  }
   // A paused viewer reaches support and nothing else, so the shell reads no coven, curation or invitation for them, and
   // keeps the count of their own requests waiting on them.
   if (accessPause) {

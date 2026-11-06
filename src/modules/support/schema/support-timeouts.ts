@@ -9,23 +9,26 @@ export const supportTimeouts = pgTable(
   'support_timeouts',
   {
     id: idColumn(),
-    // Goes with the sender it names: a hard-deleted provisional account takes its time-outs, as it takes its sessions.
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    // Null on a time-out set on a signed-out request, which binds its address alone; a claim of that address sets it.
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
     // Null for a time-out with no end date.
     until: timestamp('until'),
     // Why it was set, for staff: every time-out has one.
     note: text('note').notNull(),
     message: text('message'),
     // The HMAC key of the address the sender wrote from (`src/lib/send-count-key.ts`), never the address, so the time-out also binds
-    // a new anonymous account writing from it; null when the sender has no address on a request.
+    // a sender who writes from it again with no account; null when the sender is an account.
     addressKey: text('address_key'),
     liftedAt: timestamp('lifted_at'),
     ...auditColumns,
   },
   (table) => [
     check('support_timeouts_note_not_blank', sql`btrim(${table.note}) <> ''`),
+    // A time-out binds an account, an address, or both.
+    check(
+      'support_timeouts_binds_someone',
+      sql`${table.userId} is not null or ${table.addressKey} is not null`,
+    ),
     // The active-time-out read: a sender's rows not yet lifted, by end.
     index('support_timeouts_user_until_idx')
       .on(table.userId, table.until)

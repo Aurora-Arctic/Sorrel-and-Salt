@@ -6,7 +6,7 @@ import type {
   InvitationSender,
   PasswordSetter,
 } from '@/modules/identity';
-import type { AnonymousMinter, SupportNotifier, TimeoutNotifier } from '@/modules/support';
+import type { SupportNotifier, TimeoutNotifier } from '@/modules/support';
 
 // The sender for a hand-built GraphQL context in a test that sends nothing:
 // a call is the test's mistake, so it throws rather than passing silently.
@@ -29,11 +29,6 @@ export const noInvitationSender: InvitationSender = {
 export const noPasswordSetter: PasswordSetter = {
   set: async () => unexpected('set a password'),
   sessionIsFresh: async () => unexpected('read a session'),
-};
-
-/** For a test that builds a GraphQL context and sends no signed-out support request. */
-export const noAnonymousMinter: AnonymousMinter = {
-  mint: async () => unexpected('mint an anonymous account'),
 };
 
 export const noSupportNotifier: SupportNotifier = {

@@ -5,15 +5,16 @@ import type { Session } from '../../../lib/session';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
 import { addressCountKey, clientCountKey } from '../../../lib/send-count-key';
 import { parseInput } from '../../../lib/validation';
+import { mintSupportViewToken } from './view-link';
 import { supportRequests } from '../schema/support-requests';
-import type { AnonymousMinter, SupportNotifier, SupportRequestRow } from '../types';
+import type { SupportNotifier, SupportRequestRow } from '../types';
 import {
   SIGNED_OUT_ABOUTS,
   SignedOutSupportRequestInput,
   type SignedOutSupportRequestInput as SignedOutInput,
 } from '../validation/support';
 import { mailSender } from './mail-sender';
-import { SEND_WINDOW_SECONDS, refuseTimedOut } from './time-out-refusals';
+import { refuseTimedOut } from './time-out-refusals';
 import { redactPath } from './redact-path';
 
 import {
@@ -37,7 +38,7 @@ const SIGNED_OUT_SESSION: Session = { userId: SIGNED_OUT_SENDER_ID, role: 'user'
  * Replies reach the visitor by email only; nothing here returns a row.
  *
  * @throws {Forbidden} the topic is not one a signed-out visitor may write about.
- * @throws {Forbidden} also when the returning visitor’s anonymous account stands under a keeper’s time-out.
+ * @throws {Forbidden} the address stands under a keeper’s time-out.
  * @throws {RateLimited} the address or the client has sent too many in 24 hours; carries the seconds to wait.
  * @throws {ValidationError} the address, subject, message, path or error code is not acceptable.
  */
@@ -47,10 +48,6 @@ export async function sendSignedOutSupportRequest(
     clientIp: string | null;
     notifier: SupportNotifier;
     now?: Date;
-    /** Mints the provisional account a first send is written as. */
-    anonymous: AnonymousMinter;
-    /** The anonymous session the send came from, whose account a returning visitor's request is written as; no other session counts. */
-    session?: Session | null;
   },
 ): Promise<void> {
   const values = parseInput(SignedOutSupportRequestInput, input);
@@ -61,7 +58,7 @@ export async function sendSignedOutSupportRequest(
     );
   }
 
-  // A keeper's time-out also binds the address it was set for, so a new account from it is refused before any is minted.
+  // A keeper's time-out also binds the address it was set for, so a send from it is refused.
   refuseTimedOut(await findStandingSupportTimeoutByAddress(addressCountKey(values.email)));
 
   const now = context.now ?? new Date();
@@ -80,16 +77,8 @@ export async function sendSignedOutSupportRequest(
     );
   }
 
-  // After the limits, so a refused send mints nothing; a returning visitor's cookie names the account to write as.
-  const returning = context.session?.anonymous ? context.session.userId : null;
-  const senderId = returning ?? (await context.anonymous.mint());
-  const [request] = await withAudit({ userId: senderId }, async (write) => {
-    // A keeper’s time-out names the account, so a returning visitor is held to it as a signed-in sender is.
-    if (returning) {
-      const { timedOut } = await write.lockSupportSender(returning, SEND_WINDOW_SECONDS);
-      refuseTimedOut(timedOut);
-    }
-    return write.insert(supportRequests, {
+  const [request] = await withAudit(SIGNED_OUT_SESSION, (write) =>
+    write.insert(supportRequests, {
       about: values.about,
       subject: values.subject,
       message: values.message,
@@ -98,7 +87,8 @@ export async function sendSignedOutSupportRequest(
       errorReference: values.errorReference || null,
       senderEmail: values.email,
       lastSenderActivityAt: now,
-    });
-  });
+    }),
+  );
+  await mintSupportViewToken(request.id);
   await mailSender(context.notifier, request as SupportRequestRow, 'received');
 }

@@ -753,16 +753,11 @@ export interface AuditWriter {
     cutoff: Date,
     ids: readonly string[],
   ): Promise<(typeof supportRequests.$inferSelect)[]>;
-  /**
-   * Moves what anonymous account `anonymousId` holds of support (its requests and sender replies, the stamps naming it, its time-outs) to
-   * account `realId`, clearing the moved requests' address and view link; returns the requests moved. The anonymous account can then be deleted.
-   */
-  adoptAnonymousAccount(anonymousId: string, realId: string): Promise<number>;
   /** Stores `hash`, the SHA-256 of a mailed view link's token, on signed-out request `id`, replacing the one before; none when the request has no address on it. */
   setSupportViewToken(id: string, hash: string): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
-   * Moves the signed-out requests whose address is `email` (case aside), and their sender replies, to account `realId`, clearing their address and
-   * view link; returns the requests moved. The standing time-outs that bind `addressKey` (the address's count key) move to `realId` too. The caller proves the address is the account's own and verified.
+   * Moves the stand-in's requests whose address is `email` (case aside), and their sender replies, to account `realId`, clearing their address and
+   * view link; returns the requests moved. The standing address-only time-outs that bind `addressKey` (the address's count key) take `realId` as their account. The caller proves the address is the account's own and verified.
    */
   claimSupportRequestsByEmail(realId: string, email: string, addressKey: string): Promise<number>;
   /**

@@ -151,7 +151,6 @@ export {
 export {
   findStandingSupportTimeout,
   findStandingSupportTimeoutByAddress,
-  findNewestSenderAddress,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,

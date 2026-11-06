@@ -466,6 +466,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setSupportRequestIssueUrl: write(
     `mutation { setSupportRequestIssueUrl(id: "${NOWHERE}", issueUrl: null) { id } }`,
   ),
+  timeOutSignedOutSender: write(
+    `mutation { timeOutSignedOutSender(requestId: "${NOWHERE}", note: "Spam", message: "Hi") { id } }`,
+  ),
   timeOutSupportSender: write(
     `mutation { timeOutSupportSender(userId: "${NOWHERE}", note: "Spam", message: "Hi") { id } }`,
   ),
@@ -723,6 +726,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   setSupportRequestCuratorVisible: { governs: 'support' },
   setSupportRequestIssueUrl: { governs: 'support' },
   timeOutSupportSender: { governs: 'support' },
+  timeOutSignedOutSender: { governs: 'support' },
   liftSupportTimeout: { governs: 'support' },
   saveDocumentDraft: { governs: 'documents' },
   publishDocumentDraft: { governs: 'documents' },

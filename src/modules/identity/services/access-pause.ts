@@ -70,7 +70,7 @@ export async function pauseUserAccess(
   if (!user) throw new NotFound('No such user');
   if (isPrimaryAdmin(user)) throw new Forbidden(PRIMARY_REFUSAL);
   if (user.id === session.userId) throw new Forbidden(SELF_REFUSAL);
-  if (isStandInAccount(user.id) || user.isAnonymous) throw new Forbidden(STAND_IN_REFUSAL);
+  if (isStandInAccount(user.id)) throw new Forbidden(STAND_IN_REFUSAL);
   if (user.role === 'admin') await assertChangesOpen(session, admin);
   if (await findStandingUserAccessPause(user.id)) {
     throw fieldRefusal('userId', ALREADY_PAUSED);

@@ -14,7 +14,7 @@ import type {
   PasswordSetter,
 } from '@/modules/identity';
 import type { DocumentMailingNotifier } from '@/modules/documents';
-import type { AnonymousMinter, SupportNotifier, TimeoutNotifier } from '@/modules/support';
+import type { SupportNotifier, TimeoutNotifier } from '@/modules/support';
 import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
 import type { Loaders } from './loaders';
@@ -40,8 +40,6 @@ export interface Context {
   documents: DocumentMailingNotifier;
   /** The caller's address from the platform's forwarded-for header; `null` when there is none. Only the signed-out support send reads it. */
   clientIp: string | null;
-  /** Bound to this request: the signed-out support send mints its provisional account through it. */
-  anonymous: AnonymousMinter;
 }
 
 export interface SchemaTypes {

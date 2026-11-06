@@ -1,1 +1,0 @@
-Destructive DDL acknowledged: the support_requests_one_sender CHECK is dropped and added again in the same migration with a wider rule (an anonymous account may hold an address beside the seeded signed-out sender). Every existing row satisfies the new rule, so none is refused and no data is lost.

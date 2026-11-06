@@ -1,10 +1,5 @@
 import 'server-only';
-import {
-  findNewestSenderAddress,
-  findOneById,
-  findSupportTimeoutById,
-  withAudit,
-} from '../../../db/repository';
+import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { parseRequiredPauseMessage } from '../../../lib/pause-message';
@@ -13,16 +8,33 @@ import { isStandInAccount } from '../../../lib/system-actor';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
 import { users } from '../../identity/schema/users';
+import { supportRequests } from '../schema/support-requests';
 import { supportTimeouts } from '../schema/support-timeouts';
 import type { SupportTimeoutRow, TimeoutNotifier } from '../types';
 import { mailTimedOutSender } from './timeout-start';
 
 const REFUSAL = 'Only a site keeper may time out or restore a support sender';
 const STAND_IN_REFUSAL = 'This account is not a person, so it cannot be timed out of support';
+const NO_ADDRESS_REFUSAL =
+  'This request was not sent without an account, so it has no address to time out';
 const NOTE_MAX_LENGTH = 500;
 const PAST_END = 'Choose a time in the future';
 const NO_NOTE = 'Write a note saying why';
 const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
+
+/** Checks a time-out's end and note, and returns the note trimmed. */
+function checkedNote(until: Date | null | undefined, note: string): string {
+  const trimmed = typeof note === 'string' ? note.trim() : '';
+  if (
+    until != null &&
+    (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
+  ) {
+    throw fieldRefusal('until', PAST_END);
+  }
+  if (!trimmed) throw fieldRefusal('note', NO_NOTE);
+  if (trimmed.length > NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
+  return trimmed;
+}
 
 /**
  * Stops a user sending support requests until `until`, or with no end date when `until` is `null`, for the reason `note`
@@ -44,28 +56,17 @@ export async function timeOutSupportSender(
 ): Promise<SupportTimeoutRow> {
   assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
-  const trimmed = typeof note === 'string' ? note.trim() : '';
-  if (
-    until != null &&
-    (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
-  ) {
-    throw fieldRefusal('until', PAST_END);
-  }
-  if (!trimmed) throw fieldRefusal('note', NO_NOTE);
-  if (trimmed.length > NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
+  const trimmed = checkedNote(until, note);
   const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
   if (isStandInAccount(id)) throw new Forbidden(STAND_IN_REFUSAL);
-  // The address the sender wrote from, if it wrote from one, so the time-out also holds a new account using it.
-  const address = await findNewestSenderAddress(id);
   const row = await withAudit(session, async (write) => {
     const [inserted] = await write.insert(supportTimeouts, {
       userId: id,
       until: until ?? null,
       note: trimmed,
       message: toUser,
-      addressKey: address === undefined ? null : addressCountKey(address),
     });
     return inserted as SupportTimeoutRow;
   });
@@ -77,6 +78,43 @@ export async function timeOutSupportSender(
     console.error('Could not start a support time-out notice', error);
   }
   return row;
+}
+
+/**
+ * Stops the sender of a signed-out request, who has no account, sending support requests from the address they wrote from, until
+ * `until` or with no end date when it is `null`. The time-out holds the address only as its HMAC key and names no user. No mail
+ * is sent: the address was never confirmed to be the sender's own.
+ *
+ * @throws {Forbidden} the session is not a keeper, or the request has no sender address.
+ * @throws {NotFound} no request has this id.
+ * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, or the message is missing, blank or over 500.
+ */
+export async function timeOutSignedOutSender(
+  session: Session,
+  requestId: string,
+  until: Date | null | undefined,
+  note: string,
+  _notifier: TimeoutNotifier,
+  message: string | null,
+): Promise<SupportTimeoutRow> {
+  assertSiteAdmin(session, REFUSAL);
+  const id = parseInput(RowId, requestId);
+  const trimmed = checkedNote(until, note);
+  const toSender = parseRequiredPauseMessage(message ?? '');
+  const request = await findOneById(supportRequests, id);
+  if (!request) throw new NotFound('No such request');
+  if (request.senderEmail === null) throw new Forbidden(NO_ADDRESS_REFUSAL);
+  const senderEmail = request.senderEmail;
+  return withAudit(session, async (write) => {
+    const [inserted] = await write.insert(supportTimeouts, {
+      userId: null,
+      until: until ?? null,
+      note: trimmed,
+      message: toSender,
+      addressKey: addressCountKey(senderEmail),
+    });
+    return inserted as SupportTimeoutRow;
+  });
 }
 
 /**
