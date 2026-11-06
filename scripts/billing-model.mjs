@@ -184,7 +184,8 @@ function unitsFor(target, price, mp = false) {
     hi = 1e9;
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
-    net(mid / (1 - I.churn), price, mp).net < target ? (lo = mid) : (hi = mid);
+    if (net(mid / (1 - I.churn), price, mp).net < target) lo = mid;
+    else hi = mid;
   }
   return hi / (1 - I.churn);
 }
