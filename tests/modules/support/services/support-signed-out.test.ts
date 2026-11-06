@@ -18,7 +18,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 
 // A visitor with no account writes about accessibility or signing in: the row it writes as the seeded signed-out sender with
 // the address beside it, the topics, the limits that guard it, and the reply that reaches them by email
-// (claude-docs/design-decisions/m15-support-review.md, m15.48-anonymous-sender.md). The send sets no cookie and makes no
+// (claude-docs/design-decisions/m15-support-review.md, m15.48-mailed-link.md). The send sets no cookie and makes no
 // account; tests/e2e/support-signed-out-sender.spec.ts walks the cookie half in a browser.
 
 let sql: postgres.Sql;

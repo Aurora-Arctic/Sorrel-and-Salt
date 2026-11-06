@@ -386,7 +386,7 @@ export async function findStandingSupportTimeout(
 
 /**
  * The end of the time-out standing on the address whose count key is `addressKey`, latest first, `until` null when one has no end
- * date; `undefined` when none stands. A time-out set on an anonymous sender binds the address it wrote from.
+ * date; `undefined` when none stands. A time-out set on a signed-out sender binds the address it wrote from.
  */
 export async function findStandingSupportTimeoutByAddress(
   addressKey: string,

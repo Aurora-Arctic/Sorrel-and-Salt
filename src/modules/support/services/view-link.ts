@@ -83,8 +83,8 @@ export async function getSupportRequestByViewToken(token: string): Promise<Suppo
 }
 
 /**
- * A signed-out sender's reply from the mailed link, written as the request's own sender account: the anonymous account, or the
- * seeded signed-out sender on a request from before those. It moves the request as a signed-in reply does (a waiting or resolved
+ * A signed-out sender's reply from the mailed link, written as the request's own sender: the seeded signed-out stand-in.
+ * It moves the request as a signed-in reply does (a waiting or resolved
  * one reopens), and counts toward the address's and the client's send limits and a cap on the request. A filled `website`
  * field is a bot's: nothing is stored or counted.
  *

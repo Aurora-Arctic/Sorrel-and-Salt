@@ -4,7 +4,7 @@ import { recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
 
 // Against the built server: the link a signed-out sender's receipt carries opens that one request with no session, and
-// any other token is a 404 (claude-docs/design-decisions/m15.48-anonymous-sender.md, "A link in each mail that opens the
+// any other token is a 404 (claude-docs/design-decisions/m15.48-mailed-link.md, "A link in each mail that opens the
 // request"). Which tokens the service honours is tests/modules/support/services/support-view-link.test.ts's.
 
 const SUBJECT = 'The Testwort jar will not open';

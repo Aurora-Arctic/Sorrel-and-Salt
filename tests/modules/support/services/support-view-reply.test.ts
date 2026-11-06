@@ -24,7 +24,7 @@ import { run } from '../../../support/graphql/run';
 
 // A signed-out sender's reply from the mailed-link page: the token alone finds the request, the reply is written as the
 // seeded signed-out sender, and every way the token could be stale answers the same not-found
-// (claude-docs/design-decisions/m15.48-anonymous-sender.md, "A signed-out reply through the mailed link"). The page itself
+// (claude-docs/design-decisions/m15.48-mailed-link.md, "A signed-out reply through the mailed link"). The page itself
 // is tests/e2e/support-view-link.spec.ts's.
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);

@@ -16,7 +16,7 @@ import { post, pwnedRange } from '../support/password';
 import type { AuthInstance } from '../support/types';
 
 // Through Better Auth's real endpoints: an account claims the requests sent signed out from its address once it holds a
-// session with that address verified, or verifies it, so a visitor who wrote with no account gets back to them (claude-docs/design-decisions/m15.48-anonymous-sender.md, "Claim by verified email").
+// session with that address verified, or verifies it, so a visitor who wrote with no account gets back to them (claude-docs/design-decisions/m15.48-mailed-link.md, "Claim by verified email").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));

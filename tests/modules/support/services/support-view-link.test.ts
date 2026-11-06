@@ -23,7 +23,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 
 // The link in each mail about a signed-out request, which opens that one request with no session: the mail's step mints the
 // token afresh on every send and stores only its SHA-256 hash, so only the newest mailed link works
-// (claude-docs/design-decisions/m15.48-anonymous-sender.md, "A link in each mail that opens the request"). The page's
+// (claude-docs/design-decisions/m15.48-mailed-link.md, "A link in each mail that opens the request"). The page's
 // 404 is tests/e2e/support-view-link.spec.ts's; the last describe holds every GraphQL answer about the request to carrying neither the token nor its hash.
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
