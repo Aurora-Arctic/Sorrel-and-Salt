@@ -1,5 +1,12 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/white-sage-salvia-apiana
-status: needs-review
+status: approved
+closedPractice:
+  - tradition: The Indigenous peoples of California and the wider Americas
+    kind: asked-not-to-use
+    quote: 'I have a firm stance in regards to medicinal plants that they are not to be sold: period.'
+    source: hcn-sage-advice
+    locator: 'Weshoyot Alvitre (Tongva), quoted by the author; a request not to sell white sage, not a request not to use it. The same article quotes Rose Ramirez (Chumash and Yaqui): "We are well past the point of not selling it."'
 questions:
   - Wikipedia says that, because of the plant's sacredness to certain Indigenous tribes, many Native Americans have asked non-Natives to refrain from using white sage. Wikipedia is not an allowed closed-practice source, and a search of the Tongva Taraxat Paxaavxa Conservancy page found no statement naming white sage as closed to others (its Protect White Sage page returned HTTP 404). Is there a tribal, religious-house or academic source that names this ingredient as closed, so a closedPractice row can be added?
+  - 'Answered by the owner 2026-11-06: mark it, kind asked-not-to-use, naming the Indigenous peoples of California and the wider Americas, whose ceremony smudging is. No tribal government or religious body says the plant is closed, so the kind is not closed. The request is not to sell or buy white sage, not a request not to use it; rule 2 counts it by the owner''s call of 2026-11-06. High Country News (hcn-sage-advice) carries it in named voices: Weshoyot Alvitre (Tongva), "I have a firm stance in regards to medicinal plants that they are not to be sold: period.", and Rose Ramirez (Chumash and Yaqui), "We are well past the point of not selling it." The author writes that "The burning of California white sage, especially, has become an accepted form of cultural appropriation." Wikipedia (wikipedia-salvia-apiana, section Conservation) says "many Native Americans have asked non-Natives to refrain from the usage of white sage.", but that sentence cites no source, so it is not the request this row rests on. The record is claude-docs/design-decisions/m17.2-closed-practice-warning.md.'

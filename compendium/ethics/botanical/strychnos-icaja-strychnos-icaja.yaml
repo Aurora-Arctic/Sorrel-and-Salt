@@ -1,5 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/strychnos-icaja-strychnos-icaja
-status: needs-review
+status: approved
 questions:
   - 'The article quotes a missionary account of initiation into the Bwiti secret society, in which the aspirant drinks a decoction of Strychnos icaja bark. It does not say whether the practice is closed to outsiders, and I searched no tradition-authority website. Should this be checked against a Bwiti authority before approval? I recommend yes.'
+  - 'Answered by the owner 2026-11-06: no mark. Bwiti initiates outsiders. Samorini (samorini-bwiti-initiation, p. 39), himself initiated in 1993, writes: "Some White men, mostly French permanently living in Gabon, made themselves initiate in other Bwitist sects, particularly in Dissumba, the most widespread sect." He also says (pp. 41-42) that the Fang "consider Bwiti a universal religion, hence approachable by anyone who seriously intends to join it", while among the Pygmy population the traditional use of iboga "is still considered and kept secret", and that initiates may not communicate details of the initiation rite. Neither restriction names Strychnos icaja, and the compendium describes no rite. The record is claude-docs/design-decisions/m17.2-closed-practice-warning.md.'

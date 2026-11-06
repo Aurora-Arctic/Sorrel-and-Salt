@@ -1,6 +1,6 @@
 # Gathered for M14.29; the seed never reads this folder.
 entry: botanical/yopo-anadenanthera-peregrina
-status: needs-review
+status: approved
 listings:
   - list: iucn
     name: IUCN Red List
@@ -12,3 +12,4 @@ listings:
     locator: taxobox, conservation status (status = LC, IUCN3.1)
 questions:
   - The source says that among the Piaroa yopo is reserved primarily for shamanic specialists. That limits use inside the community and does not say outsiders may not use it, so no closedPractice row is written. Is there a tribal or academic source that names yopo as closed to outsiders?
+  - 'Answered by the owner 2026-11-06: no mark. The academic study found (rodd-sumabila-2011) compares Piaroa and Cuiva use; by the summary of its abstract, Piaroa use is restricted to trained shamans inside the community, and it says nothing of outsiders. Ethnography establishes closure to outsiders only when it says so. The article itself refused the fetch, so this rests on the summary. The record is claude-docs/design-decisions/m17.2-closed-practice-warning.md.'
