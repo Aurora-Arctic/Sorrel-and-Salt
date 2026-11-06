@@ -129,6 +129,10 @@ const I = {
   trialMonths: 1, // one month standard
   trialConversion: 0.1, // sourced no-card "great", ChartMogul [G7]; "good" is 0.05
   trialConversionRange: [0.05, 0.1, 0.15], // 0.15 is the top of the no-card "great" band [G7]
+  // --card: sensitivity for requiring a card. Conversion 0.3 is the middle of the card band [G7]; trial seats per
+  // paying seat scale by 2.5/8.5, the card against no-card visitor-to-trial rates (First Page Sage, B2B-heavy).
+  cardConversion: 0.3,
+  cardTrialScale: 2.5 / 8.5,
   curatorSeats: 7, // 7 seats including the curator
   seatsPerCurator: 1000, // one curator per 1,000 paying seats
   curatorMin: 2, // minimum 2
@@ -175,8 +179,10 @@ const f = (x, d = 0) =>
 const pct = (x) => (x * 100).toFixed(2) + '%';
 const row = (cells) => '| ' + cells.join(' | ') + ' |';
 
-function overhead(P, k, d = I.demoOnlyShare, c = I.trialConversion) {
-  const trial = P * ((I.growthMonthly[k] + I.churn) / c) * I.trialMonths;
+const CARD = process.argv.includes('--card');
+function overhead(P, k, d = I.demoOnlyShare, c = CARD ? I.cardConversion : I.trialConversion) {
+  const trial =
+    P * ((I.growthMonthly[k] + I.churn) / c) * I.trialMonths * (CARD ? I.cardTrialScale : 1);
   const curators = Math.max(I.curatorMin, Math.floor(P / I.seatsPerCurator));
   const curatorSeats = curators * I.curatorSeats;
   const exempt = P * I.exemptShare[k];
@@ -588,7 +594,7 @@ const orow = (label, g, d = 0) =>
   );
 orow('Paying seats', (o) => o.P);
 out.push(row(['Monthly growth of paying seats', ...ov.map((o) => pct(o.g))]));
-orow('Trial seats (one-month trial, no card)', (o) => o.trial, 1);
+orow(`Trial seats (one-month trial, ${CARD ? 'card required' : 'no card'})`, (o) => o.trial, 1);
 orow('Trial seats as a share of paying seats (%)', (o) => (o.trial / o.P) * 100, 1);
 orow('Curators (one per 1,000 paying seats, minimum 2)', (o) => o.curators);
 orow('Curator-coven seats (7 each)', (o) => o.curatorSeats);

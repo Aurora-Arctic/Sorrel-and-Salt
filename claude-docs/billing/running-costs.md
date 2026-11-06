@@ -506,6 +506,7 @@ All fetched 2026-11-06.
 - [G12] Mighty Networks pricing: https://www.mightynetworks.com/pricing
 - [G13] Ghost, complimentary plans: https://ghost.org/help/complimentary-plans
 - [G14] GitHub Copilot Pro free access: https://docs.github.com/en/copilot/how-tos/manage-your-account/get-free-access-to-copilot-pro
+- [G15] First Page Sage, "SaaS Free Trial Conversion Rate Benchmarks" (published 2025-09-05, fetched 2026-11-06): https://firstpagesage.com/seo-blog/saas-free-trial-conversion-rate-benchmarks/
 
 - [H1] Spend: https://vercel.com/docs/spend-management ; https://neon.com/docs/introduction/plans ; https://neon.com/docs/guides/consumption-limits ; https://resend.com/pricing (fetched 2026-11-06)
 - [H2] Database health: https://neon.com/docs/introduction/monitoring-page ; https://neon.com/docs/extensions/pg_stat_statements ; https://pganalyze.com/pricing (fetched 2026-11-06)
