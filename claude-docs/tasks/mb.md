@@ -5217,9 +5217,9 @@ _Acceptance criteria:_
 - Keyboard operable, announced as the other list fields are, axe clean, usable at 375px, and asserted by role and label
 - `claude-docs/components/ingredient-form.md` describes it under its list fields, lookups and testing, and `combobox.md` too if the combobox gains an option
 
-**MB.175 — Help and FAQ articles** · 1h
+**MB.175 — Scope Help and FAQ Articles: the Model, the Glossary, Sub Pages and Their Build Tasks** · 1h
 
-_Story:_ As a visitor or a member, I want an FAQ, help articles and a glossary of the site's terms on how the site works, so that I can find my way and know what a word means without asking someone.
+_Story:_ As the owner, I want the help and FAQ articles, the glossary and the sub pages designed, recorded and broken into build tasks, so that visitors and members can later find their way and look up what a word means without asking someone, and the build is transcription.
 
 **Amended 2026-11-03, the owner's call:** the help articles gain a glossary. A glossary entry is a third `kind` of help article, `term`: one row per term, its `title` the term and its `body` a short Markdown definition, so a keeper adds or edits a term as they would an article. `/help/glossary` lists every term from A to Z, each with an anchor from its `slug`, so a page or an article can link to one term (`/help/glossary#steward`). `position` is not used for a term. The slug `glossary` is reserved, so no article can take that address. The `help` seed ships the site's own terms, each defined the way `CLAUDE.md`'s Vocabulary and domain invariants use it: at least Compendium, Ingredients, Grimoire, Coven, Steward, Practitioner, and Observer (M15.79), Keeper (M15.79), Curator, Spell, Working, Variant, and Form.
 
