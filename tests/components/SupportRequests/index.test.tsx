@@ -40,6 +40,7 @@ const ROW: SupportRequestEntry = {
   status: 'open',
   sender: { id: 'u1', name: 'Ada Wortley', email: 'ada@example.test' },
   signedOut: false,
+  anonymousSender: false,
   anonymised: false,
   assignee: null,
   curatorVisible: false,
@@ -689,14 +690,14 @@ describe('What a viewer is shown', () => {
       sender: anonymous,
       signedOut: true,
       anonymousSender: true,
-    } as Partial<SupportRequestDetailEntry>);
+    });
     expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
     unmount();
     open(ADMIN, {
       sender: standIn,
       signedOut: true,
       anonymousSender: false,
-    } as Partial<SupportRequestDetailEntry>);
+    });
     expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
   });
 

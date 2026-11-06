@@ -13,6 +13,7 @@ import {
   type SignedOutSupportRequestInput as SignedOutInput,
 } from '../validation/support';
 import { mailSender } from './mail-sender';
+import { SEND_WINDOW_SECONDS, refuseTimedOut } from './time-out-refusals';
 import { redactPath } from './redact-path';
 
 import {
@@ -36,6 +37,7 @@ const SIGNED_OUT_SESSION: Session = { userId: SIGNED_OUT_SENDER_ID, role: 'user'
  * Replies reach the visitor by email only; nothing here returns a row.
  *
  * @throws {Forbidden} the topic is not one a signed-out visitor may write about.
+ * @throws {Forbidden} also when the returning visitor’s anonymous account stands under a keeper’s time-out.
  * @throws {RateLimited} the address or the client has sent too many in 24 hours; carries the seconds to wait.
  * @throws {ValidationError} the address, subject, message, path or error code is not acceptable.
  */
@@ -76,11 +78,15 @@ export async function sendSignedOutSupportRequest(
   }
 
   // After the limits, so a refused send mints nothing; a returning visitor's cookie names the account to write as.
-  const senderId = context.session?.anonymous
-    ? context.session.userId
-    : await context.anonymous.mint();
-  const [request] = await withAudit({ userId: senderId }, (write) =>
-    write.insert(supportRequests, {
+  const returning = context.session?.anonymous ? context.session.userId : null;
+  const senderId = returning ?? (await context.anonymous.mint());
+  const [request] = await withAudit({ userId: senderId }, async (write) => {
+    // A keeper’s time-out names the account, so a returning visitor is held to it as a signed-in sender is.
+    if (returning) {
+      const { timedOut } = await write.lockSupportSender(returning, SEND_WINDOW_SECONDS);
+      refuseTimedOut(timedOut);
+    }
+    return write.insert(supportRequests, {
       about: values.about,
       subject: values.subject,
       message: values.message,
@@ -89,7 +95,7 @@ export async function sendSignedOutSupportRequest(
       errorReference: values.errorReference || null,
       senderEmail: values.email,
       lastSenderActivityAt: now,
-    }),
-  );
+    });
+  });
   await mailSender(context.notifier, request as SupportRequestRow, 'received');
 }

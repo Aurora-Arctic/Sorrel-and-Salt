@@ -13,6 +13,7 @@ import {
 } from '@/modules/support';
 import type { SupportRequestFilter, SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
 import { NotFound } from '@/lib/errors';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type { Session } from '@/lib/session';
 import type {
@@ -75,6 +76,10 @@ function entryOf(row: SupportRequestRow, names: Names, betaTester: boolean): Sup
     status: row.status,
     sender: senderOf(row, names),
     signedOut: row.senderEmail !== null,
+    anonymousSender:
+      row.senderEmail !== null &&
+      row.createdBy !== SIGNED_OUT_SENDER_ID &&
+      row.createdBy !== SYSTEM_ACTOR_ID,
     anonymised: row.createdBy === SYSTEM_ACTOR_ID,
     assignee: personOf(names, row.assignedTo),
     curatorVisible: row.curatorVisible,

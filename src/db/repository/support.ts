@@ -722,21 +722,34 @@ export function supportWrites({
       return moved;
     },
     // Only a signed-out sender's rows (an anonymous account's, or the stand-in's) whose address is the verified account's own.
-    claimSupportRequestsByEmail: (realId, email) =>
-      handOver(
-        and(
-          sql`lower(${supportRequests.senderEmail}) = lower(${email})`,
-          or(
-            eq(supportRequests.createdBy, SIGNED_OUT_SENDER_ID),
-            sql`${supportRequests.createdBy} in (select id from users where is_anonymous)`,
-          ) as SQL,
-        ) as SQL,
+    claimSupportRequestsByEmail: async (realId, email) => {
+      const signedOutSender = or(
+        eq(supportRequests.createdBy, SIGNED_OUT_SENDER_ID),
+        sql`${supportRequests.createdBy} in (select id from users where is_anonymous)`,
+      ) as SQL;
+      const addressIsTheirs = sql`lower(${supportRequests.senderEmail}) = lower(${email})`;
+      // The anonymous accounts whose requests are claimed, read before the requests move; their time-outs follow them.
+      const senders = await tx
+        .selectDistinct({ id: supportRequests.createdBy })
+        .from(supportRequests)
+        .where(and(addressIsTheirs, signedOutSender));
+      const anonymousIds = senders.map((row) => row.id).filter((id) => id !== SIGNED_OUT_SENDER_ID);
+      const moved = await handOver(
+        and(addressIsTheirs, signedOutSender) as SQL,
         or(
           eq(supportReplies.createdBy, SIGNED_OUT_SENDER_ID),
           sql`${supportReplies.createdBy} in (select id from users where is_anonymous)`,
         ) as SQL,
         realId,
-      ),
+      );
+      if (anonymousIds.length > 0) {
+        await tx
+          .update(supportTimeouts)
+          .set({ userId: realId })
+          .where(inArray(supportTimeouts.userId, anonymousIds));
+      }
+      return moved;
+    },
     countSignedOutSend: async (addressKey, clientKey, now, windowSeconds) => ({
       // Fixed order, so two sends taking both locks cannot wait on each other.
       address: await countKey('address', addressKey, now, windowSeconds),

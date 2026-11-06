@@ -15,6 +15,7 @@ import { supportRequests } from '../schema/support-requests';
 import { supportReplies } from '../schema/support-replies';
 import type { SupportRequestRow, SupportRequestView } from '../types';
 import { SupportMessage } from '../validation/support';
+import { SEND_WINDOW_SECONDS, refuseTimedOutReply } from './time-out-refusals';
 import {
   SIGNED_OUT_ADDRESS_LIMIT,
   SIGNED_OUT_IP_LIMIT,
@@ -87,6 +88,7 @@ export async function getSupportRequestByViewToken(token: string): Promise<Suppo
  * field is a bot's: nothing is stored or counted.
  *
  * @throws {NotFound} the token finds no request, or the request is closed.
+ * @throws {Forbidden} the request’s sender stands under a keeper’s time-out.
  * @throws {RateLimited} the address, the client or the request has had too many in 24 hours.
  * @throws {ValidationError} the body is empty or over the message limit.
  */
@@ -125,6 +127,9 @@ export async function replyToSupportRequestByViewToken(
     throw tooMany();
 
   await withAudit({ userId: senderId }, async (write) => {
+    // The token proves which request; a keeper’s time-out on its sender still holds, as for a signed-in reply.
+    const { timedOut } = await write.lockSupportSender(senderId, SEND_WINDOW_SECONDS);
+    refuseTimedOutReply(timedOut);
     const [moved] = await write.moveSupportRequest(
       request.id,
       senderId,

@@ -227,8 +227,8 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               )
             }
           />
-          {/* A signed-out request is sent by a stand-in account, which cannot be timed out. */}
-          {request.sender && !request.signedOut && (
+          {/* A signed-out request from the shared stand-in account has no one to time out; a visitor’s own anonymous account can be. */}
+          {request.sender && (!request.signedOut || request.anonymousSender) && (
             <TimeoutPanel
               userId={request.sender.id}
               name={request.sender.name}
