@@ -110,8 +110,8 @@ describe('a cleanup batch', () => {
     expect(await exists(lapsed)).toBe(false);
   });
 
-  it('logs a batch that fails every attempt and leaves the account for the next day', async () => {
-    // A lapsed account whose removal the database refuses: the delete step throws on every one of the SDK's attempts.
+  it('logs an account the database refuses to delete, counts it as not removed, and leaves it for the next day', async () => {
+    // A lapsed account whose removal the database refuses: the batch logs it and carries on, rather than failing whole.
     const doomed = await signUp('doomed', false, '2 days');
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     await sql`
@@ -125,10 +125,12 @@ describe('a cleanup batch', () => {
     try {
       const run = await start(provisionalCleanupBatch, [[doomed]]);
 
-      expect(await run.returnValue).toBeNull();
+      expect(await run.returnValue).toBe(0);
       expect(await exists(doomed)).toBe(true);
       expect(
-        logged.mock.calls.some(([line]) => String(line).includes('every attempt failed')),
+        logged.mock.calls.some(([line]) =>
+          String(line).includes(`Could not delete the lapsed provisional account ${doomed}`),
+        ),
       ).toBe(true);
     } finally {
       await sql`drop trigger refuse_cleanup_delete on users`;
