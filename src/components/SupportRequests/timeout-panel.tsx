@@ -36,6 +36,19 @@ const TimeOutDocument = graphql(`
   }
 `);
 
+const TimeOutSignedOutDocument = graphql(`
+  mutation TimeOutSignedOutSender(
+    $requestId: ID!
+    $until: DateTime
+    $note: String!
+    $message: String!
+  ) {
+    timeOutSignedOutSender(requestId: $requestId, until: $until, note: $note, message: $message) {
+      id
+    }
+  }
+`);
+
 const LiftDocument = graphql(`
   mutation LiftSupportTimeout($id: ID!) {
     liftSupportTimeout(id: $id) {
@@ -96,8 +109,11 @@ const StandingCard = ({
   </div>
 );
 
+/** Who a time-out is set on: a user, or a signed-out request whose sender has no account and is named by the address it wrote from. */
+type TimeoutTarget = { userId: string } | { requestId: string };
+
 /** The form that sets a time-out: how long, the note, and a confirm before it is sent. */
-const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactElement => {
+const TimeoutForm = ({ target, name }: { target: TimeoutTarget; name: string }): ReactElement => {
   const { refresh } = usePendingNavigation();
   const [span, setSpan] = useState<PauseSpan>('day');
   const [day, setDay] = useState('');
@@ -148,12 +164,14 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
           send={() => {
             const until = endOf(span, day, new Date());
             if (until === undefined) return Promise.reject(new Error('No end chosen'));
-            return graphqlRequest(TimeOutDocument, {
-              userId,
+            const fields = {
               until: until?.toISOString() ?? null,
               note: note.trim(),
               message: message.trim(),
-            });
+            };
+            return 'requestId' in target
+              ? graphqlRequest(TimeOutSignedOutDocument, { requestId: target.requestId, ...fields })
+              : graphqlRequest(TimeOutDocument, { userId: target.userId, ...fields });
           }}
           onSent={() => {
             setSpan('day');
@@ -175,12 +193,12 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
  * `timeouts` is newest first.
  */
 const TimeoutPanel = ({
-  userId,
+  target,
   name,
   timeouts,
   earlierHref,
 }: {
-  userId: string;
+  target: TimeoutTarget;
   name: string;
   timeouts: SupportTimeoutEntry[];
   earlierHref?: Route;
@@ -224,7 +242,7 @@ const TimeoutPanel = ({
         {standing ? (
           <StandingCard timeout={standing} name={name} />
         ) : (
-          <TimeoutForm userId={userId} name={name} />
+          <TimeoutForm target={target} name={name} />
         )}
         {earlier.length > 0 && !earlierHref && (
           <Ledger pauses={earlier} title="Earlier Time-Outs" />

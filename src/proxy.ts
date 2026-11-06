@@ -27,6 +27,8 @@ const PUBLIC_ROUTES = [
   '/compendium', // the one public surface, read by anyone, indexed by search engines
   '/compendium/*',
   '/support', // offers a signed-out visitor Sign In and holds no data
+  '/support/request', // a mailed view link: the token in the fragment is the authority, so it needs no session
+  '/support/request/*', // the old path form, left public so it answers 404 rather than sending a visitor to sign in
   '/privacy', // a public document, holding no application data
   '/privacy/versions/*', // an earlier version of it
   '/disclaimer',

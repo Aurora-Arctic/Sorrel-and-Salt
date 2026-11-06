@@ -335,7 +335,9 @@ describe('supportRequests', () => {
     await sql`delete from support_send_counts`;
     await sendSignedOutSupportRequest(
       { about: 'account', email: address, subject: 'No code', message: 'It never comes.' },
-      { clientIp: '203.0.113.7', notifier: notifier() },
+      { clientIp: '203.0.113.7', notifier: notifier() } as Parameters<
+        typeof sendSignedOutSupportRequest
+      >[1],
     );
     const [sent] = await sql`select id from support_requests where sender_email = ${address}`;
     await setSupportRequestCuratorVisible(asUser(E), sent.id, true);

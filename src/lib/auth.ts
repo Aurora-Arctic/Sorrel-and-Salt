@@ -579,6 +579,24 @@ async function noticeCompletedChange(userId: string, request: Request | undefine
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
+/** Claims the signed-out requests written from a verified account's address; a failure is logged, as the sign-in stands either way. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Better Auth's logger takes any
+async function claimForVerifiedAccount(
+  user: { id: string; email: string; emailVerified: boolean },
+  ctx:
+    | { context?: { logger?: { error: (message: string, ...args: any[]) => void } } }
+    | null
+    | undefined,
+): Promise<void> {
+  if (!user.emailVerified) return;
+  try {
+    const { claimSignedOutRequests } = await import('@/modules/support');
+    await claimSignedOutRequests(user);
+  } catch (error) {
+    (ctx?.context?.logger ?? console).error(`support claim failed: user ${user.id}`, error);
+  }
+}
+
 export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
   // logs and still answers 200 on the well-known default (claude-docs/auth/config.md, "Config").
@@ -833,6 +851,16 @@ export const auth = betterAuth({
     }),
   },
   databaseHooks: {
+    // A sign-in by a verified account claims the signed-out requests written from its address.
+    session: {
+      create: {
+        after: async (session, ctx) => {
+          const user = await ctx?.context.internalAdapter.findUserById(session.userId);
+          if (!user) return;
+          await claimForVerifiedAccount(user, ctx);
+        },
+      },
+    },
     user: {
       create: {
         // Writes outside `withAudit` (CLAUDE.md rule 3): there is no session yet,
@@ -885,6 +913,11 @@ export const auth = betterAuth({
         },
       },
       update: {
+        // The address was just verified: requests written from it are the account's now.
+        after: async (user, ctx) => {
+          if (!user || !user.emailVerified) return;
+          await claimForVerifiedAccount(user, ctx);
+        },
         // The same self-stamp as the create hook, outside `withAudit` for the
         // same reason: the verify write is the identity completing. Merged into
         // Better Auth's own UPDATE, so the row says who and the trigger says when.

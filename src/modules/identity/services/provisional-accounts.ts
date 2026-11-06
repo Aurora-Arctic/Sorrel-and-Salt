@@ -50,15 +50,26 @@ export async function findLapsedProvisionalPage(after: string | null): Promise<s
 /**
  * Removes each of `ids` that has still lapsed, through the same single-row delete the per-sign-up
  * job uses, so an account verified since the page was read stays, and one already gone is skipped.
+ * One the database refuses to delete is logged and left, so it cannot stop the rest of the page.
  * Returns how many went: a re-run or an overlapping run deletes nothing twice and raises no error.
  */
 export async function deleteLapsedProvisionalAccounts(ids: readonly string[]): Promise<number> {
   let removed = 0;
   for (const id of ids) {
-    if (
-      await deleteLapsedProvisionalUser(id, VERIFICATION_LIFETIME_SECONDS, PROVISIONAL_CAP_SECONDS)
-    ) {
-      removed += 1;
+    try {
+      if (
+        await deleteLapsedProvisionalUser(
+          id,
+          VERIFICATION_LIFETIME_SECONDS,
+          PROVISIONAL_CAP_SECONDS,
+        )
+      ) {
+        removed += 1;
+      }
+    } catch (error) {
+      // A row other tables still point at, such as a support request it wrote, is refused by the database; it is left, and the rest of the page still goes.
+      // oxlint-disable-next-line no-console -- the log is how a held account is seen
+      console.error(`Could not delete the lapsed provisional account ${id}`, error);
     }
   }
   return removed;

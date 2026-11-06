@@ -227,13 +227,20 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               )
             }
           />
-          {/* A signed-out request is sent by a stand-in account, which cannot be timed out. */}
+          {/* A signed-out request is sent by a stand-in account, which cannot be timed out, so the time-out names the request and the server keys it by the address. */}
           {request.sender && !request.signedOut && (
             <TimeoutPanel
-              userId={request.sender.id}
+              target={{ userId: request.sender.id }}
               name={request.sender.name}
               timeouts={request.timeouts}
               earlierHref={userHref?.(request.sender.id)}
+            />
+          )}
+          {request.signedOut && request.sender?.email && (
+            <TimeoutPanel
+              target={{ requestId: request.id }}
+              name={request.sender.email}
+              timeouts={request.timeouts}
             />
           )}
         </aside>

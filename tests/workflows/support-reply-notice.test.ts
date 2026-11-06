@@ -130,7 +130,7 @@ describe('the reply notice run', () => {
     errors.mockRestore();
   });
 
-  it('mails a signed-out sender the reply in full, linked to the support page', async () => {
+  it('tells a signed-out sender a reply is waiting, without its text, linked to the request’s mailed link', async () => {
     const { replyId } = await replied(SIGNED_OUT_SENDER_ID, `visitor${DOMAIN}`);
 
     const run = await start(supportReplyNotice, [replyId, ORIGIN]);
@@ -138,8 +138,10 @@ describe('the reply notice run', () => {
     await expect(run.returnValue).resolves.toBe(true);
     expect(received).toHaveLength(1);
     expect(received[0]!.to).toBe(`visitor${DOMAIN}`);
-    expect(received[0]!.text).toContain('Try the Testwort lever.');
-    expect(received[0]!.text).toContain(`${ORIGIN}/support`);
+    expect(received[0]!.text).not.toContain('Testwort lever');
+    expect(received[0]!.text).toMatch(
+      /http:\/\/localhost:3000\/support\/request#[A-Za-z0-9_-]{32,}/,
+    );
     expect(received[0]!.text).not.toContain('/account');
     expect(await markerOf(replyId)).toBeInstanceOf(Date);
   });

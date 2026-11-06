@@ -124,6 +124,7 @@ type Documents = {
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.SaveStockDocument,
     "\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n": typeof types.SupportDialogStateDocument,
     "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": typeof types.SendSupportRequestDocument,
+    "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n": typeof types.SupportRequestByViewTokenDocument,
     "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": typeof types.AssignSupportRequestDocument,
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestCuratorVisibleDocument,
     "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveSupportRequestDocument,
@@ -131,9 +132,11 @@ type Documents = {
     "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n": typeof types.ReplyToSupportRequestDocument,
     "\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.AddSupportInternalNoteDocument,
     "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": typeof types.TimeOutSupportSenderDocument,
+    "\n  mutation TimeOutSignedOutSender(\n    $requestId: ID!\n    $until: DateTime\n    $note: String!\n    $message: String!\n  ) {\n    timeOutSignedOutSender(requestId: $requestId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": typeof types.TimeOutSignedOutSenderDocument,
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": typeof types.LiftSupportTimeoutDocument,
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveMySupportRequestDocument,
+    "\n  mutation ReplyToSupportRequestByViewToken($token: String!, $body: String!, $website: String) {\n    replyToSupportRequestByViewToken(token: $token, body: $body, website: $website)\n  }\n": typeof types.ReplyToSupportRequestByViewTokenDocument,
     "\n  mutation AgreeToTerms($version: AgreementVersionInput!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n      agreedDisclaimerVersion\n      agreedEthicsVersion\n    }\n  }\n": typeof types.AgreeToTermsDocument,
     "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": typeof types.PauseUserAccessDocument,
     "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": typeof types.LiftUserAccessPauseDocument,
@@ -254,6 +257,7 @@ const documents: Documents = {
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.SaveStockDocument,
     "\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n": types.SupportDialogStateDocument,
     "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": types.SendSupportRequestDocument,
+    "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n": types.SupportRequestByViewTokenDocument,
     "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": types.AssignSupportRequestDocument,
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": types.SetSupportRequestCuratorVisibleDocument,
     "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveSupportRequestDocument,
@@ -261,9 +265,11 @@ const documents: Documents = {
     "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n": types.ReplyToSupportRequestDocument,
     "\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.AddSupportInternalNoteDocument,
     "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": types.TimeOutSupportSenderDocument,
+    "\n  mutation TimeOutSignedOutSender(\n    $requestId: ID!\n    $until: DateTime\n    $note: String!\n    $message: String!\n  ) {\n    timeOutSignedOutSender(requestId: $requestId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": types.TimeOutSignedOutSenderDocument,
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": types.LiftSupportTimeoutDocument,
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveMySupportRequestDocument,
+    "\n  mutation ReplyToSupportRequestByViewToken($token: String!, $body: String!, $website: String) {\n    replyToSupportRequestByViewToken(token: $token, body: $body, website: $website)\n  }\n": types.ReplyToSupportRequestByViewTokenDocument,
     "\n  mutation AgreeToTerms($version: AgreementVersionInput!) {\n    agreeToTerms(version: $version) {\n      id\n      agreedTermsVersion\n      agreedDisclaimerVersion\n      agreedEthicsVersion\n    }\n  }\n": types.AgreeToTermsDocument,
     "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n": types.PauseUserAccessDocument,
     "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": types.LiftUserAccessPauseDocument,
@@ -731,6 +737,10 @@ export function graphql(source: "\n  mutation SendSupportRequest($input: Support
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n"): (typeof documents)["\n  query SupportRequestByViewToken($token: String!) {\n    supportRequestByViewToken(token: $token) {\n      id\n      about\n      status\n      subject\n      message\n      sentAt\n      replies {\n        id\n        authorRole\n        body\n        sentAt\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -759,6 +769,10 @@ export function graphql(source: "\n  mutation TimeOutSupportSender($userId: ID!,
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation TimeOutSignedOutSender(\n    $requestId: ID!\n    $until: DateTime\n    $note: String!\n    $message: String!\n  ) {\n    timeOutSignedOutSender(requestId: $requestId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation TimeOutSignedOutSender(\n    $requestId: ID!\n    $until: DateTime\n    $note: String!\n    $message: String!\n  ) {\n    timeOutSignedOutSender(requestId: $requestId, until: $until, note: $note, message: $message) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -768,6 +782,10 @@ export function graphql(source: "\n  mutation SendSupportMessage($requestId: ID!
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ReplyToSupportRequestByViewToken($token: String!, $body: String!, $website: String) {\n    replyToSupportRequestByViewToken(token: $token, body: $body, website: $website)\n  }\n"): (typeof documents)["\n  mutation ReplyToSupportRequestByViewToken($token: String!, $body: String!, $website: String) {\n    replyToSupportRequestByViewToken(token: $token, body: $body, website: $website)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

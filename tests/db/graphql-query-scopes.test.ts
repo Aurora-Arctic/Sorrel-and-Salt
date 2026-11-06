@@ -9,7 +9,8 @@ import { A, E, F, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
 import type { AdminWrite, Governed, ScopeProbe } from './types';
 
-// Only the compendium's queries answer a null session; every other query, and every mutation, refuses one.
+// Only the compendium's queries and the mailed link's request answer a null session; every other query, and every mutation
+// bar the open writes below, refuses one.
 // Every `Query` field is classified here, and the first test fails on one that is not (claude-docs/graphql/schema.md, "Auth scopes").
 // Resolver files need no signed-out test of their own (claude-docs/design-decisions/mb.180-graphql-transport-half.md).
 
@@ -59,6 +60,10 @@ async function expectOutcome(field: string, probe: ScopeProbe) {
       path: [field],
       extensions: { code: 'FORBIDDEN' },
     });
+  } else if (probe.outcome === 'not-found') {
+    // Reached, and not refused for the session: the probe's token names nothing.
+    expect(result.data ?? null).toBeNull();
+    expect(result.errors?.[0]).toMatchObject({ path: [field], extensions: { code: 'NOT_FOUND' } });
   } else {
     expect(result.data ?? null).toBeNull();
     expect(result.errors?.[0]?.path).toBeUndefined();
@@ -120,6 +125,10 @@ const PROBES: Record<string, ScopeProbe> = {
     outcome: 'refuses',
   },
   supportRequest: { source: `{ supportRequest(id: "${NOWHERE}") { id } }`, outcome: 'refuses' },
+  supportRequestByViewToken: {
+    source: '{ supportRequestByViewToken(token: "fixture-token") { id } }',
+    outcome: 'not-found',
+  },
   compendium: {
     source: '{ compendium(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
@@ -438,6 +447,12 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
       'mutation { sendSignedOutSupportRequest(input: { about: account, email: "fixture@example.org", subject: "Fixture", message: "Fixture", website: "filled" }) }',
     outcome: 'answers',
   },
+  // Open to anyone by design. The honeypot field is filled, so the reply is dropped and the probe writes nothing.
+  replyToSupportRequestByViewToken: {
+    source:
+      'mutation { replyToSupportRequestByViewToken(token: "fixture-token", body: "Fixture", website: "filled") }',
+    outcome: 'answers',
+  },
   sendSupportRequest: write(
     'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
   ),
@@ -459,6 +474,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   resolveSupportRequest: write(`mutation { resolveSupportRequest(id: "${NOWHERE}") { id } }`),
   setSupportRequestIssueUrl: write(
     `mutation { setSupportRequestIssueUrl(id: "${NOWHERE}", issueUrl: null) { id } }`,
+  ),
+  timeOutSignedOutSender: write(
+    `mutation { timeOutSignedOutSender(requestId: "${NOWHERE}", note: "Spam", message: "Hi") { id } }`,
   ),
   timeOutSupportSender: write(
     `mutation { timeOutSupportSender(userId: "${NOWHERE}", note: "Spam", message: "Hi") { id } }`,
@@ -717,6 +735,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   setSupportRequestCuratorVisible: { governs: 'support' },
   setSupportRequestIssueUrl: { governs: 'support' },
   timeOutSupportSender: { governs: 'support' },
+  timeOutSignedOutSender: { governs: 'support' },
   liftSupportTimeout: { governs: 'support' },
   saveDocumentDraft: { governs: 'documents' },
   publishDocumentDraft: { governs: 'documents' },
@@ -808,6 +827,8 @@ const OPEN_WRITES = [
   'recordCardAttempt',
   // Open to anyone, signed in or not: the service allows two topics and counts the sends.
   'sendSignedOutSupportRequest',
+  // Open to anyone, signed in or not: the service finds the request by the token's hash and counts the replies.
+  'replyToSupportRequestByViewToken',
   // Any verified session may send; the service reads the limit and any time-out.
   'sendSupportRequest',
   // Any verified session may write on a request; the service finds only the sender's own.

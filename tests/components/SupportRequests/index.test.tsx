@@ -11,6 +11,8 @@ import type {
   SupportViewer,
 } from '@/components/SupportRequests/types';
 import type {
+  LiftSupportTimeoutMutation,
+  LiftSupportTimeoutMutationVariables,
   ReplyToSupportRequestMutation,
   ReplyToSupportRequestMutationVariables,
   SetSupportRequestIssueUrlMutation,
@@ -33,7 +35,8 @@ const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
 const ADMIN_ONLY = ['Assignee', 'GitHub Issue', 'For'];
 
-const ROW: SupportRequestEntry = {
+// Asserted rather than declared, so the fixture compiles while the entry type still carries fields this page no longer reads.
+const ROW = {
   id: 'r1',
   about: 'bug',
   subject: 'The moon icon is missing',
@@ -50,7 +53,7 @@ const ROW: SupportRequestEntry = {
   senderReplied: false,
   betaTester: false,
   resolvedBySender: false,
-};
+} as SupportRequestEntry;
 
 const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
@@ -459,6 +462,41 @@ describe('Time-Out', () => {
     expect(panel.getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
     expect(panel.queryByLabelText('For')).toBeNull();
   });
+
+  // A signed-out request’s time-out names its address and no account, and a keeper lifts it from the request as any other.
+  it('shows a signed-out sender’s standing address time-out with Lift in place of the form, and lifts it by its id after asking', async () => {
+    const lifted: LiftSupportTimeoutMutationVariables[] = [];
+    mockGraphQLMutation<LiftSupportTimeoutMutation, LiftSupportTimeoutMutationVariables>(
+      'LiftSupportTimeout',
+      (variables) => {
+        lifted.push(variables);
+        return { liftSupportTimeout: { id: 't-address' } };
+      },
+    );
+    open(ADMIN, {
+      sender: { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' },
+      signedOut: true,
+      timeouts: [
+        {
+          id: 't-address',
+          until: null,
+          note: 'Repeated sends',
+          liftedAt: null,
+          createdAt: new Date('2026-10-01T00:00:00Z'),
+          setBy: { id: 'admin-1', name: 'Ash Warden' },
+          liftedBy: null,
+        },
+      ],
+    });
+    openTimeOut();
+    const panel = within(dialog());
+    expect(panel.queryByLabelText('For')).toBeNull();
+
+    fireEvent.click(panel.getByRole('button', { name: 'Lift' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Lift Time-Out' }));
+
+    await waitFor(() => expect(lifted).toEqual([{ id: 't-address' }]));
+  });
 });
 
 describe('Issue', () => {
@@ -673,13 +711,50 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
   });
 
-  it('offers a keeper no Time-Out for a signed-out sender, and does for a signed-in one', () => {
+  it('offers a keeper the Time-Out for a signed-out sender with an address, as for a signed-in one', () => {
     const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
     const { unmount } = open(ADMIN);
     expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
     unmount();
     open(ADMIN, { sender: visitor, signedOut: true });
-    expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
+    expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
+  });
+
+  // Every signed-out request is written as the one stand-in account, so the time-out names the request, whose address the
+  // server keys it by, never the stand-in.
+  it('sends a signed-out sender’s time-out by the request, not the stand-in account, after asking', async () => {
+    const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    const byRequest: { requestId: string; note: string }[] = [];
+    const byAccount: unknown[] = [];
+    mockGraphQLMutation<
+      { timeOutSignedOutSender: { __typename: 'SupportTimeout'; id: string } },
+      { requestId: string; note: string }
+    >('TimeOutSignedOutSender', (variables) => {
+      byRequest.push(variables);
+      return { timeOutSignedOutSender: { __typename: 'SupportTimeout', id: 't' } };
+    });
+    mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
+      'TimeOutSupportSender',
+      (variables) => {
+        byAccount.push(variables);
+        return { timeOutSupportSender: { __typename: 'SupportTimeout', id: 't' } };
+      },
+    );
+    open(ADMIN, { sender: visitor, signedOut: true });
+    openTimeOut();
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Note/ }), {
+      target: { value: 'Repeated sends' },
+    });
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Message to User/ }), {
+      target: { value: 'Please keep each request to one problem.' },
+    });
+    fireEvent.click(timeOutSubmit());
+    confirmTimeOut();
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(byRequest).toHaveLength(1);
+    expect(byRequest[0]).toMatchObject({ requestId: 'r1', note: 'Repeated sends' });
+    expect(byAccount).toEqual([]);
   });
 
   it('offers no note or reply on an anonymised request, which the System account owns, and does on another', () => {

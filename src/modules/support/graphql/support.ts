@@ -27,11 +27,20 @@ import {
 import { replyToSupportRequest } from '../services/reply';
 import { sendSupportRequest } from '../services/send';
 import { sendSignedOutSupportRequest } from '../services/signed-out';
-import { liftSupportTimeout, timeOutSupportSender } from '../services/timeouts';
+import {
+  getSupportRequestByViewToken,
+  replyToSupportRequestByViewToken,
+} from '../services/view-link';
+import {
+  liftSupportTimeout,
+  timeOutSignedOutSender,
+  timeOutSupportSender,
+} from '../services/timeouts';
 import type {
   SupportDialogAnswer,
   SupportReplyRow,
   SupportRequestRow,
+  SupportRequestView,
   SupportTimeoutRow,
 } from '../types';
 import { MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../validation/support';
@@ -85,7 +94,7 @@ const SupportTimeoutRef = builder.objectRef<SupportTimeoutRow>('SupportTimeout')
     'A bar on a user sending support requests until `until`, or with no end when `until` is null, unless lifted sooner.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    userId: t.exposeID('userId'),
+    userId: t.exposeID('userId', { nullable: true }),
     until: t.expose('until', { type: 'DateTime', nullable: true }),
     note: t.exposeString('note'),
     liftedAt: t.expose('liftedAt', { type: 'DateTime', nullable: true }),
@@ -163,9 +172,13 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
     }),
     timeouts: t.field({
       type: [SupportTimeoutRef],
-      description: 'The sender’s time-outs, past and active, newest first. Site admins only.',
+      description:
+        'The sender’s time-outs, past and active, newest first; for a signed-out request, those on its address. Site admins only.',
       authScopes: { admin: true },
-      resolve: (row, _args, { loaders }) => loaders.timeoutsBySender.load(row.createdBy),
+      resolve: (row, _args, { loaders }) =>
+        row.senderEmail
+          ? loaders.timeoutsByAddress.load(row.senderEmail)
+          : loaders.timeoutsBySender.load(row.createdBy),
     }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
@@ -324,6 +337,66 @@ builder.mutationField('sendSignedOutSupportRequest', (t) =>
   }),
 );
 
+type ViewedReply = SupportRequestView['replies'][number];
+
+const SupportViewReplyRef = builder.objectRef<ViewedReply>('SupportViewReply').implement({
+  description:
+    'A message in the thread of a signed-out sender’s request, as the mailed-link page shows it.',
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    authorRole: t.expose('authorRole', { type: SupportReplyAuthorRoleEnum }),
+    body: t.exposeString('body'),
+    sentAt: t.expose('createdAt', { type: 'DateTime' }),
+  }),
+});
+
+const SupportRequestViewRef = builder
+  .objectRef<SupportRequestView>('SupportRequestView')
+  .implement({
+    description:
+      'What the mailed-link page shows of a signed-out sender’s request: its public thread, and no address, token or staff field.',
+    fields: (t) => ({
+      id: t.exposeID('id'),
+      about: t.expose('about', { type: SupportAboutEnum }),
+      status: t.expose('status', { type: SupportStatusEnum }),
+      subject: t.exposeString('subject'),
+      message: t.exposeString('message'),
+      sentAt: t.expose('createdAt', { type: 'DateTime' }),
+      replies: t.field({ type: [SupportViewReplyRef], resolve: (view) => view.replies }),
+    }),
+  });
+
+builder.queryField('supportRequestByViewToken', (t) =>
+  t.field({
+    type: SupportRequestViewRef,
+    description:
+      'A signed-out sender opens their request from the token in a mail link. The token alone finds it; a wrong, older, expired or claimed one is NotFound. Open to anyone; counts toward a per-client read limit.',
+    args: { token: t.arg.string({ required: true }) },
+    resolve: (_root, { token }, context) =>
+      getSupportRequestByViewToken(token, { clientIp: context.clientIp }),
+  }),
+);
+
+builder.mutationField('replyToSupportRequestByViewToken', (t) =>
+  t.boolean({
+    description:
+      'A signed-out sender replies from the link in a mail about their request. The token alone finds the request; a wrong, older or claimed one is not found. Open to anyone; counts toward the signed-out send limits.',
+    args: {
+      token: t.arg.string({ required: true }),
+      body: t.arg.string({ required: true }),
+      website: t.arg.string({ required: false }),
+    },
+    resolve: async (_root, { token, body, website }, context) => {
+      await replyToSupportRequestByViewToken(
+        token,
+        { body, website },
+        { clientIp: context.clientIp },
+      );
+      return true;
+    },
+  }),
+);
+
 builder.mutationField('replyToSupportRequest', (t) =>
   t.field({
     type: SupportReplyRef,
@@ -454,6 +527,27 @@ builder.mutationField('timeOutSupportSender', (t) =>
     authScopes: { admin: true },
     resolve: (_root, { userId, until, note, message }, context) =>
       timeOutSupportSender(sessionOf(context), userId, until, note, context.pauses, message),
+  }),
+);
+
+builder.mutationField('timeOutSignedOutSender', (t) =>
+  t.field({
+    type: SupportTimeoutRef,
+    description:
+      'Bars the sender of a signed-out request, who has no account, from sending support requests from the address they wrote from, until `until` or with no end when it is left out. The address is kept only as a key. Site admins only.',
+    args: {
+      requestId: t.arg.id({ required: true }),
+      until: t.arg({ type: 'DateTime', required: false }),
+      note: t.arg.string({ required: true }),
+      message: t.arg.string({
+        required: true,
+        description:
+          'Kept with the time-out; nothing is mailed to an address that was never confirmed.',
+      }),
+    },
+    authScopes: { admin: true },
+    resolve: (_root, { requestId, until, note, message }, context) =>
+      timeOutSignedOutSender(sessionOf(context), requestId, until, note, context.pauses, message),
   }),
 );
 

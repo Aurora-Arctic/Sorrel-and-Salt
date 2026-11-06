@@ -104,8 +104,11 @@ describe('the received mail', () => {
     expect(message!.text).toContain(`/account/support?request=${request.id}`);
   });
 
-  it('carries no address or subject of a signed-out sender in its run, and its step mails them a link to the support page', async () => {
-    await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier: mail });
+  it('carries no address or subject of a signed-out sender in its run, and its step mails them the link that opens the request', async () => {
+    await sendSignedOutSupportRequest(SIGNED_OUT, {
+      clientIp: '203.0.113.7',
+      notifier: mail,
+    } as Parameters<typeof sendSignedOutSupportRequest>[1]);
 
     const [row] = await sql`select id from support_requests`;
     expect(statusRuns()).toEqual([
@@ -115,12 +118,15 @@ describe('the received mail', () => {
     expect(JSON.stringify(statusRuns())).not.toContain(SIGNED_OUT.subject);
     const [message] = await sendStatusRuns();
     expect(message!.to).toBe(SIGNED_OUT.email);
-    expect(message!.text).toContain('http://localhost:3000/support');
+    expect(message!.text).toMatch(/http:\/\/localhost:3000\/support\/request#[A-Za-z0-9_-]{32,}/);
     expect(message!.text).not.toContain('/account');
   });
 
   it('reads the address when it sends, so a run for an anonymised request sends nothing', async () => {
-    await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier: mail });
+    await sendSignedOutSupportRequest(SIGNED_OUT, {
+      clientIp: '203.0.113.7',
+      notifier: mail,
+    } as Parameters<typeof sendSignedOutSupportRequest>[1]);
     // Precondition: the run was started, and the step would have mailed the sender.
     expect(statusRuns()).toHaveLength(1);
     await sql`update support_requests set sender_email = null, created_by = ${SYSTEM_ACTOR_ID}`;
@@ -217,7 +223,10 @@ describe('the rendered mails', () => {
 
   it('link a signed-out sender to nothing behind an account, in every mail they receive', async () => {
     const notifier = real();
-    await sendSignedOutSupportRequest(SIGNED_OUT, { clientIp: '203.0.113.7', notifier });
+    await sendSignedOutSupportRequest(SIGNED_OUT, {
+      clientIp: '203.0.113.7',
+      notifier,
+    } as Parameters<typeof sendSignedOutSupportRequest>[1]);
     const [row] = await sql`select id from support_requests`;
     await addSupportInternalNote(asUser(E), row!.id as string, NOTE);
     const reply = await replyToSupportRequest(

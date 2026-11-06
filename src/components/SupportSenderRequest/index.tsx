@@ -13,9 +13,10 @@ import '../SupportRequests/index.scss';
 // The body of the sender's dialog over `/account/support` (claude-docs/components/support-sender-request.md): the facts
 // and the thread of the staff dialog, with the sender's own messages named and tagged "You" and every staff reply named
 // for the site and tagged "Staff", never the staff member's name. Beneath it sits the reply box, or on a closed request
-// the link to its follow-up.
+// the link to its follow-up. The page behind a mailed link passes its own `reply` form, which needs no session, and has no
+// Resolve button.
 
-const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElement => (
+const SupportSenderRequest = ({ request, reply }: SupportSenderRequestProps): ReactElement => (
   <div className="support-detail support-detail--single">
     <div className="support-detail__main">
       <SupportFacts
@@ -41,11 +42,12 @@ const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElem
           })),
         ]}
       />
-      {(request.status === 'open' || request.status === 'waiting_on_sender') && (
-        <SupportSenderResolveButton requestId={request.id} />
-      )}
+      {reply === undefined &&
+        (request.status === 'open' || request.status === 'waiting_on_sender') && (
+          <SupportSenderResolveButton requestId={request.id} />
+        )}
       {request.status !== 'closed' ? (
-        <SupportSenderReplyBox requestId={request.id} timedOut={request.timedOut} />
+        (reply ?? <SupportSenderReplyBox requestId={request.id} timedOut={request.timedOut} />)
       ) : (
         <p className="support-sender-request__closed">
           This request is closed.{' '}

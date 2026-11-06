@@ -53,4 +53,14 @@ describe('security headers', () => {
     expect(headers['content-security-policy']).toBeUndefined();
     expect(headers['x-content-type-options']).toBe('nosniff');
   });
+
+  // The page reads its request from the fragment in the browser; nothing of it is kept by a cache or sent as a referrer.
+  it('sends the mailed-link page no-store and no referrer, and leaves the support page cacheable', async () => {
+    const view = await headersFor('/support/request');
+    expect(view['cache-control']).toContain('no-store');
+    expect(view['referrer-policy']).toBe('no-referrer');
+    expect(view['content-security-policy']).toContain("frame-ancestors 'none'");
+
+    expect((await headersFor('/support'))['cache-control']).toBeUndefined();
+  });
 });

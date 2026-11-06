@@ -15,7 +15,7 @@ const message = () =>
     to: 'someone@example.com',
     url: `${WORKSHOP_ORIGIN}/support`,
     origin: WORKSHOP_ORIGIN,
-    body: 'Open the recovery link in your latest email.',
+    requestSubject: 'Recovery link',
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.

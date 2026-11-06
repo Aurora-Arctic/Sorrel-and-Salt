@@ -1,5 +1,12 @@
 import { Fragment, createElement as h } from 'react';
-import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
+import {
+  Action,
+  EmailLayout,
+  LinkOnlyNote,
+  Paragraph,
+  actionVerb,
+  defineMessage,
+} from './parts/layout';
 import { supportTitle } from './parts/support-title';
 import type { SupportClosingSoonProps } from './types';
 
@@ -26,6 +33,7 @@ export function SupportClosingSoon({
   part,
   requestSubject,
   signedOut = false,
+  viewLink = false,
   timeLeftMs,
 }: SupportClosingSoonProps) {
   const title = titleOf(requestSubject);
@@ -33,27 +41,39 @@ export function SupportClosingSoon({
   return h(
     EmailLayout,
     { preview: 'Your support request closes soon.', heading: title, origin },
-    signedOut
+    signedOut && viewLink
       ? h(
           Fragment,
           null,
           h(
             Paragraph,
             null,
-            `It closes in ${left}. If you still need help, ${actionVerb(part)} to write to us again.`,
+            `Your request closes in ${left}. A reply from you before then keeps it open. To reply, ${actionVerb(part)}.`,
           ),
-          h(Action, { href: url, label: 'Write to Us Again', part }),
+          h(Action, { href: url, label: 'Open Your Support Request', part }),
+          h(LinkOnlyNote),
         )
-      : h(
-          Fragment,
-          null,
-          h(
-            Paragraph,
+      : signedOut
+        ? h(
+            Fragment,
             null,
-            `It closes in ${left}, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`,
+            h(
+              Paragraph,
+              null,
+              `It closes in ${left}. If you still need help, ${actionVerb(part)} to write to us again.`,
+            ),
+            h(Action, { href: url, label: 'Write to Us Again', part }),
+          )
+        : h(
+            Fragment,
+            null,
+            h(
+              Paragraph,
+              null,
+              `It closes in ${left}, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`,
+            ),
+            h(Action, { href: url, label: 'Open the Request', part }),
           ),
-          h(Action, { href: url, label: 'Open the Request', part }),
-        ),
   );
 }
 

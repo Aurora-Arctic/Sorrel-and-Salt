@@ -1266,6 +1266,11 @@ type Mutation {
   ): SupportReply!
 
   """
+  A signed-out sender replies from the link in a mail about their request. The token alone finds the request; a wrong, older or claimed one is not found. Open to anyone; counts toward the signed-out send limits.
+  """
+  replyToSupportRequestByViewToken(body: String!, token: String!, website: String): Boolean!
+
+  """
   The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.
   """
   resolveMySupportRequest(id: ID!): SupportRequest!
@@ -1347,6 +1352,19 @@ type Mutation {
   Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
+
+  """
+  Bars the sender of a signed-out request, who has no account, from sending support requests from the address they wrote from, until `until` or with no end when it is left out. The address is kept only as a key. Site admins only.
+  """
+  timeOutSignedOutSender(
+    """
+    Kept with the time-out; nothing is mailed to an address that was never confirmed.
+    """
+    message: String!
+    note: String!
+    requestId: ID!
+    until: DateTime
+  ): SupportTimeout!
 
   """
   Bars a user from sending support requests until `until`, or with no end when it is left out, for the reason `note` gives. Site admins only.
@@ -1827,6 +1845,11 @@ type Query {
 
   """One support request the viewer may read."""
   supportRequest(id: ID!): SupportRequest!
+
+  """
+  A signed-out sender opens their request from the token in a mail link. The token alone finds it; a wrong, older, expired or claimed one is NotFound. Open to anyone; counts toward a per-client read limit.
+  """
+  supportRequestByViewToken(token: String!): SupportRequestView!
 
   """
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
@@ -2821,7 +2844,7 @@ type SupportRequest {
   subject: String!
 
   """
-  The sender’s time-outs, past and active, newest first. Site admins only.
+  The sender’s time-outs, past and active, newest first; for a signed-out request, those on its address. Site admins only.
   """
   timeouts: [SupportTimeout!]!
 }
@@ -2847,6 +2870,19 @@ input SupportRequestInput {
   subject: String!
 }
 
+"""
+What the mailed-link page shows of a signed-out sender’s request: its public thread, and no address, token or staff field.
+"""
+type SupportRequestView {
+  about: SupportAbout!
+  id: ID!
+  message: String!
+  replies: [SupportViewReply!]!
+  sentAt: DateTime!
+  status: SupportStatus!
+  subject: String!
+}
+
 """Derived from the invitation the sender accepted; never stored."""
 enum SupportSenderTier {
   beta_tester
@@ -2869,7 +2905,17 @@ type SupportTimeout {
   liftedAt: DateTime
   note: String!
   until: DateTime
-  userId: ID!
+  userId: ID
+}
+
+"""
+A message in the thread of a signed-out sender’s request, as the mailed-link page shows it.
+"""
+type SupportViewReply {
+  authorRole: SupportReplyAuthorRole!
+  body: String!
+  id: ID!
+  sentAt: DateTime!
 }
 
 """A toxic setting other than any, and how many entries it would list."""

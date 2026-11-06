@@ -1,4 +1,18 @@
-import { and, eq, gt, inArray, isNull, lte, ne, not, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  gt,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  ne,
+  not,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
@@ -6,7 +20,7 @@ import { supportSendCounts } from '../../modules/support/schema/support-send-cou
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { SUPPORT_VIEWS } from '../../lib/support-path';
 import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
-import { ANONYMISED_SUBJECT } from '../../lib/support-sender';
+import { ANONYMISED_SUBJECT, SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import type { SiteAdmin } from '@/modules/identity';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
@@ -294,6 +308,51 @@ export function findOwnSupportRequest(userId: string, id: string) {
   ).then(oneAsOfNow);
 }
 
+/**
+ * The signed-out request whose mailed link hashes to `hash`, or `undefined` when none does. A request a real account holds, or
+ * one anonymised, has no address left on the row, so it never matches.
+ */
+export function findSupportRequestByViewTokenHash(hash: string) {
+  return selectOne(
+    supportRequests,
+    and(
+      notSoftDeleted(supportRequests),
+      eq(supportRequests.viewTokenHash, hash),
+      sql`${supportRequests.viewTokenExpiresAt} > now()`,
+      isNotNull(supportRequests.senderEmail),
+      ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
+    ),
+  ).then(oneAsOfNow);
+}
+
+/** The public replies on a request, oldest first: what the mailed-link page shows, with no internal note among them. */
+export function findPublicSupportReplies(requestId: string) {
+  return selectFrom(
+    supportReplies,
+    and(
+      notSoftDeleted(supportReplies),
+      eq(supportReplies.requestId, requestId),
+      // A reply's visibility, not a spell's.
+      // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
+      eq(supportReplies.visibility, 'public'),
+    ),
+  );
+}
+
+/** How many replies the sender has written on a request since `since`. */
+export async function countSenderRepliesSince(requestId: string, since: Date): Promise<number> {
+  const rows = await selectFrom(
+    supportReplies,
+    and(
+      notSoftDeleted(supportReplies),
+      eq(supportReplies.requestId, requestId),
+      eq(supportReplies.authorRole, 'sender'),
+      gte(supportReplies.createdAt, since),
+    ),
+  );
+  return rows.length;
+}
+
 /** The request the sender opened as a follow-up to this closed one of theirs, or `undefined` when they have not. */
 export function findOwnSupportFollowUp(userId: string, id: string) {
   return selectOne(
@@ -322,6 +381,20 @@ export async function findStandingSupportTimeout(
   const rows = await selectFrom(
     supportTimeouts,
     and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.userId, userId), timeoutStands),
+  );
+  return latestEnd(rows);
+}
+
+/**
+ * The end of the time-out standing on the address whose count key is `addressKey`, latest first, `until` null when one has no end
+ * date; `undefined` when none stands. A time-out set on a signed-out sender binds the address it wrote from.
+ */
+export async function findStandingSupportTimeoutByAddress(
+  addressKey: string,
+): Promise<StandingTimeout | undefined> {
+  const rows = await selectFrom(
+    supportTimeouts,
+    and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.addressKey, addressKey), timeoutStands),
   );
   return latestEnd(rows);
 }
@@ -534,6 +607,15 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
   );
 }
 
+/** The live time-outs set on these addresses, by count key, newest first. The service lets a keeper alone ask. */
+export function findSupportTimeoutsForAddresses(addressKeys: readonly string[]) {
+  if (addressKeys.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    supportTimeouts,
+    and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.addressKey, [...addressKeys])),
+  );
+}
+
 /**
  * The time-out standing on each of these senders, not lifted and not yet ended, in one query: the user list's Support
  * Time-Out column for a page of users. Under the `SiteAdmin` proof: who is timed out is a keeper's to read.
@@ -565,11 +647,14 @@ export function supportWrites({
   AuditWriter,
   | 'lockSupportSender'
   | 'countSignedOutSend'
+  | 'countSignedOutView'
   | 'moveSupportRequest'
   | 'closeIdleResolvedSupportRequests'
   | 'markClosingNoticeSent'
   | 'markReplyNoticeSent'
   | 'anonymiseClosedSupportRequests'
+  | 'setSupportViewToken'
+  | 'claimSupportRequestsByEmail'
 > {
   // One key's count: its advisory lock first, then the live row, started again when its window has passed.
   async function countKey(
@@ -606,6 +691,58 @@ export function supportWrites({
   }
 
   return {
+    // Only the stand-in's rows whose address is the verified account's own move to it, with their sender replies; the address and
+    // view link are cleared so the one-sender CHECK never sees an address with an ordinary account. The audit writer strips
+    // `created_by` from what it sets, so these go to the transaction itself.
+    claimSupportRequestsByEmail: async (realId, email, addressKey) => {
+      const rows = await tx
+        .update(supportRequests)
+        .set({
+          createdBy: realId,
+          updatedBy: sql`case when ${supportRequests.updatedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.updatedBy} end`,
+          resolvedBy: sql`case when ${supportRequests.resolvedBy} = ${SIGNED_OUT_SENDER_ID}::uuid then ${realId}::uuid else ${supportRequests.resolvedBy} end`,
+          senderEmail: null,
+          viewTokenHash: null,
+          viewTokenExpiresAt: null,
+        })
+        .where(
+          and(
+            notSoftDeleted(supportRequests),
+            eq(supportRequests.createdBy, SIGNED_OUT_SENDER_ID),
+            sql`lower(${supportRequests.senderEmail}) = lower(${email})`,
+          ),
+        )
+        .returning({ id: supportRequests.id });
+      if (rows.length > 0) {
+        await tx
+          .update(supportReplies)
+          .set({ createdBy: realId, updatedBy: realId })
+          .where(
+            and(
+              inArray(
+                supportReplies.requestId,
+                rows.map((row) => row.id),
+              ),
+              eq(supportReplies.authorRole, 'sender'),
+              eq(supportReplies.createdBy, SIGNED_OUT_SENDER_ID),
+            ),
+          );
+      }
+      // The standing time-outs that bind this address alone now bind the account that proved it.
+      await tx
+        .update(supportTimeouts)
+        .set({ userId: realId })
+        .where(
+          and(
+            isNull(supportTimeouts.userId),
+            eq(supportTimeouts.addressKey, addressKey),
+            timeoutStands,
+          ),
+        );
+      return rows.length;
+    },
+    countSignedOutView: (clientKey, now, windowSeconds) =>
+      countKey('client', clientKey, now, windowSeconds),
     countSignedOutSend: async (addressKey, clientKey, now, windowSeconds) => ({
       // Fixed order, so two sends taking both locks cannot wait on each other.
       address: await countKey('address', addressKey, now, windowSeconds),
@@ -648,6 +785,13 @@ export function supportWrites({
           isNull(supportRequests.closingNoticeSentAt),
         ),
       ),
+    // Only a signed-out request has a link: one whose address is still on the row.
+    setSupportViewToken: (id, hash, expiresAt) =>
+      update(
+        supportRequests,
+        { viewTokenHash: hash, viewTokenExpiresAt: expiresAt },
+        and(eq(supportRequests.id, id), isNotNull(supportRequests.senderEmail)),
+      ),
     markReplyNoticeSent: (id, sentAt) =>
       update(
         supportReplies,
@@ -665,6 +809,8 @@ export function supportWrites({
           message: '',
           path: '',
           senderEmail: null,
+          viewTokenHash: null,
+          viewTokenExpiresAt: null,
           resolvedBy: sql`case when ${supportRequests.resolvedBy} = ${supportRequests.createdBy} then null else ${supportRequests.resolvedBy} end`,
           createdBy: SYSTEM_ACTOR_ID,
           updatedBy: session.userId,
