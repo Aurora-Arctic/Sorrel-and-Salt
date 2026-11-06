@@ -65,7 +65,21 @@ const I = {
   oneFteHours: 160,
   contractor: { low: 95, median: 122.5, high: 150 },
   loaded: { low: 137.97, median: 147.81, high: 157.65 },
-  salaryLoadedYear: { low: 286977, high: 327922 },
+  salaryLoadedYear: { low: 286977, high: 327922 }, // Lane D: $250k salary + employer tax + benefits
+  // Lane J (sources dated 2026-11-06): business earnings a year that leave the owner the take-home of a $250,000 salary
+  // (A: $180,243 after all tax). Employer tax and payroll admin are inside these figures; benefits are not.
+  structures: [
+    { id: 'A', name: 'A all-salary ($250,000 wage)', year: 266575 },
+    { id: 'B', name: 'B S corporation ($184,500 wage, distributions)', year: 257599 },
+    { id: 'B*', name: 'B* S corporation ($190,000 wage, distributions)', year: 258302 },
+    {
+      id: 'C',
+      name: 'C sole proprietor or single-member LLC (recommended, pending the accountant)',
+      year: 249434,
+    },
+  ],
+  // Lane D benefits (health, retirement), the same in every structure: method A (low) and method B (high)
+  benefitsYear: { low: 20848, high: 57251 },
   onCallMonth: 2340,
   // payments and tax
   stripePct: 0.029 + 0.007 + 0.005,
@@ -87,13 +101,6 @@ const I = {
   // owner, 2026-11-06: 5% at first, falling as the site is established and beta testers are staff, not friends and family
   exemptShare: [0.05, 0.03, 0.015, 0.005], // assumption (schedule per size); owner to confirm
   price: {
-    // (a) step prices, assumption anchored on [S15] [S19] [S18] [S4] [S9]-[S12]
-    aSteps: [
-      { label: '1 member (solo)', price: 2.99, share: 0.06, members: 1 },
-      { label: 'Up to 5 members', price: 7.99, share: 0.5, members: 4 },
-      { label: 'Up to 13 members', price: 11.99, share: 0.42, members: 7.5 },
-      { label: 'Unlimited', price: 16.99, share: 0.02, members: 16 },
-    ],
     // (g) solo coven price proposals, assumption anchored on [S29] [S15] [S28]
     gSolo: [1.99, 2.99, 4.99],
     gSoloModelled: 2.99,
@@ -109,8 +116,6 @@ const I = {
     h_obs: 1, // (h) observer price, held at (c)'s $1
     observerTakeUp: 0.2, // assumption: share of observers who add a solo coven (range 5-40%; no source)
     observerShare: 0.3, // assumption, range 0.15-0.50; not researched
-    d: 2.5,
-    e: 0.87 * 4.99 + 0.13 * 9.99,
   },
 };
 const resend = [
@@ -235,8 +240,12 @@ const hiredHours = (P) => Math.max(0, hoursAt('median', P) - I.oneFteHours);
 const labourContractor = (P) => hoursAt('median', P) * I.contractor.median;
 const labourLoaded = (P) => hoursAt('median', P) * I.loaded.median;
 const labourSalary = (P) => fte + hiredHours(P) * I.contractor.median;
-const fte = I.salaryLoadedYear.low / 12,
-  fteHigh = I.salaryLoadedYear.high / 12;
+const structYear = (id) => I.structures.find((x) => x.id === id).year;
+// the salary line is structure C plus Lane D's benefits; all-salary (A) is kept as a sensitivity row
+const fte = (structYear('C') + I.benefitsYear.low) / 12,
+  fteHigh = (structYear('C') + I.benefitsYear.high) / 12;
+const fteA = (structYear('A') + I.benefitsYear.low) / 12,
+  fteAHigh = (structYear('A') + I.benefitsYear.high) / 12;
 
 // models: paying unit base and revenue per paying unit. A paying seat is one activated account
 // in a paying coven, so paying covens = paying seats x memberships per account / members per coven.
@@ -250,8 +259,6 @@ const discountedSeatShare = extraSeatShare * stewardShare;
 const memberSeatFactor = 1 - discountedSeatShare * I.price.c_disc;
 const practitionersPerCoven = I.membersPerCoven * (1 - I.price.observerShare);
 const observersPerCoven = I.membersPerCoven * I.price.observerShare;
-const aAvg = I.price.aSteps.reduce((t, x) => t + x.share * x.price, 0);
-const aMeanMembers = I.price.aSteps.reduce((t, x) => t + x.share * x.members, 0);
 const cPerCoven =
   I.price.c_base +
   (I.price.c_seat * Math.max(0, practitionersPerCoven - I.price.c_incl) +
@@ -320,7 +327,6 @@ const makeH = (id, p, label) => ({
     I.neonGbMonth,
 });
 const models = {
-  a: { id: 'a', name: '(a) Coven pays, seat bundles', base: 'coven', price: aAvg },
   b: { id: 'b', name: '(b) Each user pays', base: 'account', price: I.price.b },
   c: {
     id: 'c',
@@ -328,8 +334,6 @@ const models = {
     base: 'coven',
     price: cPerCoven,
   },
-  d: { id: 'd', name: '(d) Solo rung only', base: 'account', price: I.price.d },
-  e: { id: 'e', name: '(e) Any member pays', base: 'coven', price: I.price.e },
   g: makeG(I.price.gSoloModelled),
   h_ill: makeH('h_ill', I.price.h_ill, '$3 / $1 (illustrative)'),
   h_cal: makeH(
@@ -503,31 +507,44 @@ out.push(
 );
 tr('Cash + labour at contractor rate', (s) => s.cash + labourContractor(s.P));
 tr('Cash + labour at loaded-salary rate', (s) => s.cash + labourLoaded(s.P));
-tr('Cash + full-time job (loaded $250k, low) + hired hours', (s) => s.cash + labourSalary(s.P));
 tr(
-  'Cash + full-time job (loaded $250k, high) + hired hours',
+  'Cash + structure C job (recommended, pending accountant; low benefits) + hired hours',
+  (s) => s.cash + labourSalary(s.P),
+);
+tr(
+  'Cash + structure C job (recommended, pending accountant; high benefits) + hired hours',
   (s) => s.cash + fteHigh + hiredHours(s.P) * I.contractor.median,
+);
+tr(
+  'Sensitivity: cash + all-salary job (A; low benefits) + hired hours',
+  (s) => s.cash + fteA + hiredHours(s.P) * I.contractor.median,
 );
 tr(
   'Cash + median labour + promised on-call (contractor)',
   (s) => s.cash + labourContractor(s.P) + I.onCallMonth,
 );
-out.push('', '## Model (a) Step Prices and Coven Spread');
+out.push('', '## Salary Structures (Lane J, with Lane D benefits)');
 out.push(
   '',
-  row(['Step', 'Price', 'Share of covens', 'Mean members', 'Price x share']),
-  row(['---', '---:', '---:', '---:', '---:']),
-);
-for (const x of I.price.aSteps)
-  out.push(row([x.label, f(x.price, 2), pct(x.share), x.members, f(x.price * x.share, 4)]));
-out.push(
   row([
-    'Total',
-    '',
-    pct(I.price.aSteps.reduce((t, x) => t + x.share, 0)),
-    aMeanMembers.toFixed(2),
-    f(aAvg, 4),
+    'Structure',
+    'Business earnings a year',
+    'a month',
+    'Saving against A',
+    'Loaded a year, low benefits',
+    'Loaded a year, high benefits',
   ]),
+  row(['---', '---:', '---:', '---:', '---:', '---:']),
+  ...I.structures.map((x) =>
+    row([
+      x.name,
+      f(x.year, 0),
+      f(x.year / 12, 0),
+      f(structYear('A') - x.year, 0),
+      f(x.year + I.benefitsYear.low, 0),
+      f(x.year + I.benefitsYear.high, 0),
+    ]),
+  ),
 );
 out.push('', '## Models (c) and (g) Seat Pricing');
 out.push(
@@ -617,7 +634,7 @@ for (const m of Object.values(models))
   out.push(row([m.name, ...SIZES.map((P) => f(netAt(m, P, true).net))]));
 out.push(
   '',
-  '## Clears (i) cash / (ii) cash + contractor labour / (iii) cash + full-time job (loaded low)',
+  '## Clears (i) cash / (ii) cash + contractor labour / (iii) cash + structure C job (low benefits)',
 );
 out.push(row(['Model', ...SIZES]), row(['---', ...SIZES.map(() => '---:')]));
 const yn = (v) => (v ? 'Y' : 'n');
@@ -668,8 +685,6 @@ if (process.argv.includes('--json')) {
         variablePer1000: varHours,
         ceilingSeats,
       },
-      aAvg,
-      aMeanMembers,
       gProposals: I.price.gSolo.map((sp) => {
         const gm = makeG(sp);
         return {
@@ -688,6 +703,15 @@ if (process.argv.includes('--json')) {
       observersPerCoven,
       fte,
       fteHigh,
+      fteA,
+      fteAHigh,
+      structures: I.structures.map((x) => ({
+        ...x,
+        month: x.year / 12,
+        saving: structYear('A') - x.year,
+        loadedLow: x.year + I.benefitsYear.low,
+        loadedHigh: x.year + I.benefitsYear.high,
+      })),
       models: Object.values(models).map((m) => ({
         ...m,
         subsOf: undefined,
