@@ -52,6 +52,19 @@ describe('TabbedPage', () => {
     expect(within(screen.getByRole('main')).getByRole('table', { name: 'Users' })).toBeVisible();
   });
 
+  it('draws as a plain box, with no landmark of its own, inside a body that already has one', () => {
+    render(
+      <main>
+        <TabbedPage as="div" title="People" tabs={TABS}>
+          <p>Content</p>
+        </TabbedPage>
+      </main>,
+    );
+
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+    expect(tabs()).toHaveLength(TABS.length);
+  });
+
   it('draws no tab row for a page with one tab, and still shows its action and content', () => {
     render(
       <TabbedPage title="People" tabs={[TABS[0]]} action={<a href="/keepers/users?pause">Pause</a>}>

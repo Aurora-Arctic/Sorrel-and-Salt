@@ -26,6 +26,8 @@ export interface PageTab {
 }
 
 export interface TabbedPageProps {
+  /** The element drawn: `main` (the default), or `div` for a skeleton inside a body that already has the page's one landmark. */
+  as?: 'main' | 'div';
   /** The page's `h1`, title case, which names the tabs' nav too: "Categories". */
   title: string;
   /** In their order along the row; the open one is found from the address. */

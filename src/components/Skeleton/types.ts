@@ -10,6 +10,7 @@ export type SkeletonShape =
   | 'requests'
   | 'contents'
   | 'line'
+  | 'block'
   | 'recipe'
   | 'detail'
   | 'document';

@@ -15,6 +15,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   requests: 3,
   contents: 2,
   line: 1,
+  block: 1,
   recipe: 1,
   detail: 1,
   document: 1,
@@ -455,6 +456,8 @@ const Skeleton = ({
             <span className="skeleton__box" />
           </div>
         )}
+        {shape === 'block' &&
+          Array.from({ length: many }, (_, box) => <span key={box} className="skeleton__box" />)}
         {shape === 'line' &&
           Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}
         {shape === 'page' && (
