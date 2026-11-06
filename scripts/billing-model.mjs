@@ -80,7 +80,17 @@ const I = {
   // owner, 2026-11-06: 5% at first, falling as the site is established and beta testers are staff, not friends and family
   exemptShare: [0.05, 0.03, 0.015, 0.005], // assumption (schedule per size); owner to confirm
   price: {
-    a: 9.99,
+    // (a) step prices, assumption anchored on [S15] [S19] [S18] [S4] [S9]-[S12]
+    aSteps: [
+      { label: '1 member (solo)', price: 2.99, share: 0.06, members: 1 },
+      { label: 'Up to 5 members', price: 7.99, share: 0.5, members: 4 },
+      { label: 'Up to 13 members', price: 11.99, share: 0.42, members: 7.5 },
+      { label: 'Unlimited', price: 16.99, share: 0.02, members: 16 },
+    ],
+    // (g) solo coven price proposals, assumption anchored on [S29] [S15] [S28]
+    gSolo: [1.99, 2.99, 4.99],
+    gSoloModelled: 2.99,
+    gSoloAloneShare: 0.2, // assumption: share of paying accounts that buy a solo coven alone (range 10-40%)
     b: 4.0,
     c_base: 6,
     c_seat: 2,
@@ -208,8 +218,28 @@ const fte = I.salaryLoadedYear.low / 12,
 // in a paying coven, so paying covens = paying seats x memberships per account / members per coven.
 const memberSeatFactor =
   1 - ((I.membershipsPerAccount - 1) / I.membershipsPerAccount) * I.price.c_disc;
+const aAvg = I.price.aSteps.reduce((t, x) => t + x.share * x.price, 0);
+const aMeanMembers = I.price.aSteps.reduce((t, x) => t + x.share * x.members, 0);
+const cPerCoven =
+  I.price.c_base +
+  I.price.c_seat * Math.max(0, I.membersPerCoven - I.price.c_incl) * memberSeatFactor;
+// (g) layers a free solo coven on (c): each paid group seat also holds one, a person with no
+// paid group seat buys a solo coven alone. Per paying seat: group share pays (c), the rest pays the solo price.
+const makeG = (solo) => ({
+  id: 'g',
+  name: '(g) Group plan includes a solo coven (over (c))',
+  base: 'account',
+  price:
+    (1 - I.price.gSoloAloneShare) * cPerCoven * (I.membershipsPerAccount / I.membersPerCoven) +
+    I.price.gSoloAloneShare * solo,
+  subsOf: (P) =>
+    (1 - I.price.gSoloAloneShare) * P * (I.membershipsPerAccount / I.membersPerCoven) +
+    I.price.gSoloAloneShare * P,
+  // free solo covens cost Neon storage only: one coven of the average size per paid group seat
+  extraCash: (P) => (((1 - I.price.gSoloAloneShare) * P * I.covenBytes) / 2 ** 30) * I.neonGbMonth,
+});
 const models = {
-  a: { id: 'a', name: '(a) Coven pays, seat bundles', base: 'coven', price: I.price.a },
+  a: { id: 'a', name: '(a) Coven pays, seat bundles', base: 'coven', price: aAvg },
   b: { id: 'b', name: '(b) Each user pays', base: 'account', price: I.price.b },
   c: {
     id: 'c',
@@ -221,17 +251,20 @@ const models = {
   },
   d: { id: 'd', name: '(d) Solo rung only', base: 'account', price: I.price.d },
   e: { id: 'e', name: '(e) Any member pays', base: 'coven', price: I.price.e },
+  g: makeG(I.price.gSoloModelled),
 };
 const unitsOf = (m, P) =>
   m.base === 'coven' ? (P * I.membershipsPerAccount) / I.membersPerCoven : P;
-function net(units, price, mp = false) {
+function net(units, price, mp = false, subs = units) {
   const u = units * (1 - I.churn);
   const rev = u * price;
-  const proc = rev * (mp ? 0.029 + 0.007 + I.mpExtra : I.stripePct) + u * I.stripeFix;
+  const proc =
+    rev * (mp ? 0.029 + 0.007 + I.mpExtra : I.stripePct) + subs * (1 - I.churn) * I.stripeFix;
   const bo = Math.max(0, rev * I.bo - I.boCredit);
   return { rev, proc, bo, net: rev - proc - bo };
 }
-const netAt = (m, P, mp = false) => net(unitsOf(m, P), m.price, mp);
+const netAt = (m, P, mp = false) =>
+  net(unitsOf(m, P), m.price, mp, m.subsOf ? m.subsOf(P) : undefined);
 
 // Cost lines, interpolated linearly in seats between the four sizes (flat outside them).
 const lines = {
@@ -248,13 +281,14 @@ function costAt(line, P) {
   return y[3];
 }
 const HI = 1e7;
+const costFor = (m, line, P) => costAt(line, P) + (m.extraCash ? m.extraCash(P) : 0);
 function seatsFor(m, line) {
-  if (netAt(m, HI).net < costAt(line, HI)) return null;
+  if (netAt(m, HI).net < costFor(m, line, HI)) return null;
   let lo = 0,
     hi = HI;
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2;
-    if (netAt(m, mid).net < costAt(line, mid)) lo = mid;
+    if (netAt(m, mid).net < costFor(m, line, mid)) lo = mid;
     else hi = mid;
   }
   return Math.ceil(hi);
@@ -372,6 +406,53 @@ tr(
   'Cash + median maintenance + promised on-call (contractor)',
   (s) => s.cash + maint.median.contractor + I.onCallMonth,
 );
+out.push('', '## Model (a) Step Prices and Coven Spread');
+out.push(
+  '',
+  row(['Step', 'Price', 'Share of covens', 'Mean members', 'Price x share']),
+  row(['---', '---:', '---:', '---:', '---:']),
+);
+for (const x of I.price.aSteps)
+  out.push(row([x.label, f(x.price, 2), pct(x.share), x.members, f(x.price * x.share, 4)]));
+out.push(
+  row([
+    'Total',
+    '',
+    pct(I.price.aSteps.reduce((t, x) => t + x.share, 0)),
+    aMeanMembers.toFixed(2),
+    f(aAvg, 4),
+  ]),
+);
+out.push('', '## Model (g) Solo Coven Price Proposals');
+out.push(
+  '',
+  row([
+    'Solo coven price',
+    'Revenue per paying seat',
+    ...SIZES.map((P) => 'Net at ' + P),
+    '(i)',
+    '(ii)',
+    '(iii)',
+  ]),
+  row(['---', ...Array(SIZES.length + 4).fill('---:')]),
+);
+for (const sp of I.price.gSolo) {
+  const gm = makeG(sp);
+  out.push(
+    row([
+      f(sp, 2),
+      f(gm.price, 4),
+      ...SIZES.map((P) => f(netAt(gm, P).net)),
+      ...['cash', 'contractor', 'fulltime'].map((l) => seatText(seatsFor(gm, l))),
+    ]),
+  );
+}
+out.push(
+  '',
+  row(['', ...SIZES]),
+  row(['---', ...SIZES.map(() => '---:')]),
+  row(['Cost of free solo covens a month', ...SIZES.map((P) => f(models.g.extraCash(P), 2))]),
+);
 out.push('', '## Net Revenue a Month by Model (after churn, Stripe fees on option 1, WA B&O)');
 out.push(
   '',
@@ -396,7 +477,8 @@ for (const m of Object.values(models))
       m.name,
       ...scale.map((s) => {
         const n = netAt(m, s.P).net;
-        return [s.cash, s.cash + maint.median.contractor, s.cash + fte]
+        const x = m.extraCash ? m.extraCash(s.P) : 0;
+        return [s.cash + x, s.cash + x + maint.median.contractor, s.cash + x + fte]
           .map((c) => yn(n >= c))
           .join(' ');
       }),
@@ -427,10 +509,25 @@ if (process.argv.includes('--json')) {
       ov,
       scale,
       maint,
+      aAvg,
+      aMeanMembers,
+      gProposals: I.price.gSolo.map((sp) => {
+        const gm = makeG(sp);
+        return {
+          solo: sp,
+          perSeat: gm.price,
+          net: SIZES.map((P) => netAt(gm, P).net),
+          seats: ['cash', 'contractor', 'fulltime'].map((l) => seatsFor(gm, l)),
+        };
+      }),
+      gExtra: SIZES.map((P) => models.g.extraCash(P)),
+      cPerCoven,
       fte,
       fteHigh,
       models: Object.values(models).map((m) => ({
         ...m,
+        subsOf: undefined,
+        extraCash: undefined,
         net: SIZES.map((P) => netAt(m, P).net),
         seats: ['cash', 'contractor', 'fulltime'].map((l) => seatsFor(m, l)),
       })),

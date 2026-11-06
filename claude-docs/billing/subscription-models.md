@@ -18,26 +18,39 @@ A price in a model below is mine unless it names a comparable. I anchored each o
 
 ## How Each Model Meets R1 to R5
 
-| Model                           | R1 coven pays   | R2 scales with members | R3 free months                           | R4 keeper exemption | R5 pays less in several covens                  |
-| ------------------------------- | --------------- | ---------------------- | ---------------------------------------- | ------------------- | ----------------------------------------------- |
-| (a) Coven pays, seat bundles    | kept            | kept in steps          | kept                                     | kept                | **altered**                                     |
-| (b) Each user pays              | **dropped**     | **altered**            | **altered**                              | **altered**         | kept                                            |
-| (c) Base plus seats             | kept            | kept                   | kept                                     | kept                | kept (as a seat discount)                       |
-| (d) Solo rung                   | kept            | not applicable         | kept                                     | kept                | kept (smallest step of the model that holds it) |
-| (e) Any member pays             | **altered**     | **dropped or altered** | kept                                     | kept                | kept (in its own form)                          |
-| (f) Trial only + curator covens | kept, as policy | not applicable         | **altered** (one month, keeper-settable) | **altered** (timed) | not applicable                                  |
+| Model                                | R1 coven pays   | R2 scales with members | R3 free months                           | R4 keeper exemption | R5 pays less in several covens                  |
+| ------------------------------------ | --------------- | ---------------------- | ---------------------------------------- | ------------------- | ----------------------------------------------- |
+| (a) Coven pays, seat bundles         | kept            | kept in steps          | kept                                     | kept                | **altered**                                     |
+| (b) Each user pays                   | **dropped**     | **altered**            | **altered**                              | **altered**         | kept                                            |
+| (c) Base plus seats                  | kept            | kept                   | kept                                     | kept                | kept (as a seat discount)                       |
+| (d) Solo rung                        | kept            | not applicable         | kept                                     | kept                | kept (smallest step of the model that holds it) |
+| (e) Any member pays                  | **altered**     | **dropped or altered** | kept                                     | kept                | kept (in its own form)                          |
+| (g) Group plan includes a solo coven | kept (over (c)) | kept (over (c))        | kept                                     | kept                | kept (a member's solo coven is free)            |
+| (f) Trial only + curator covens      | kept, as policy | not applicable         | **altered** (one month, keeper-settable) | **altered** (timed) | not applicable                                  |
 
 **No comparable discounts a seat across groups.** Notion bills a person once per paid workspace they belong to, "even if the same people are in multiple workspaces" [S3]. GitHub bills each organisation separately [S7]. R5 therefore has no consumer precedent as a seat discount. The nearest thing is Kanka, where one payment covers several campaigns and the price per campaign falls ($4.99, $3.33, $3.57 for 1, 3 and 7) [S19].
 
 **The keeper exemption (R4)** is a flag on the coven in (a), (c), (d) and (e). In (b) it must be a flag on the person, or an exemption that waives every member of a flagged coven. Nothing in the comparables does this; it is an internal rule. In Stripe it is a 100%-off coupon on the subscription, or no subscription at all.
 
-## The Six Models
+## The Models
 
 ### (a) Coven Pays, Seat Bundles
 
 **Structure.** The steward buys a bundle that covers a fixed number of members: 1 (solo), up to 5, up to 13, unlimited. A coven that crosses a bundle edge moves up a step.
 
-**Price points.** Basecamp charges $29 for 5 users, $79 for 10 and $99 for 15, "no per-user fees" [S4]. Household bundles cost $5.99 to $27.95 for 5 to 6 people and take 70% to 78% off the per-head price [S9] [S10] [S11] [S12]. Kanka charges $9.99 for 3 campaign slots [S19]. I model **$9.99 a month per coven** (assumption, anchored on those).
+**Price points.** Basecamp charges $29 for 5 users, $79 for 10 and $99 for 15, "no per-user fees" [S4]. Household bundles cost $5.99 to $27.95 for 5 to 6 people and take 70% to 78% off the per-head price [S9] [S10] [S11] [S12]. Kanka charges $9.99 for 3 campaign slots [S19]. I price each step separately (all four prices are assumptions, flagged for the owner): **$2.99** for 1 member, anchored on Bear at $2.99 [S15] (Neumoire is $1.99 [S29], Grimoire $4.99 [S28]); **$7.99** for up to 5, between Kanka's $4.99 for one campaign and $9.99 for three [S19] and inside the $5.99 to $27.95 household bundles [S9] to [S12]; **$11.99** for up to 13, above Kanka's $9.99 [S19] and well under Basecamp's $29 for 5 users [S4], with D&D Beyond's $5.99 for 12 people [S18] as the floor; **$16.99** for unlimited, below Kanka's $24.99 for 7 campaigns [S19].
+
+**Assumed spread of coven sizes.** No distribution was researched. I chose shares of paying covens per step so that the mean membership matches the 5.5-member tabletop mean [S45]: 6% solo, 50% in the 2 to 5 step, 42% in the 6 to 13 step, 2% above 13. The mean members in each step (1, 4, 7.5, 16) are my own guesses, and they give 5.53. Revenue per coven = Σ share × step price:
+
+| Step             |  Price | Share of covens | Mean members | Price x share |
+| ---------------- | -----: | --------------: | -----------: | ------------: |
+| 1 member (solo)  |  $2.99 |           6.00% |            1 |       $0.1794 |
+| Up to 5 members  |  $7.99 |          50.00% |            4 |       $3.9950 |
+| Up to 13 members | $11.99 |          42.00% |          7.5 |       $5.0358 |
+| Unlimited        | $16.99 |           2.00% |           16 |       $0.3398 |
+| Total            |        |         100.00% |         5.53 |       $9.5500 |
+
+So (a) earns **$9.55** per paying coven on average, down from the $9.99 flat figure used before. A different spread changes this directly: moving 10 points of covens from the 6 to 13 step to the 2 to 5 step lowers it by $0.40.
 
 **R1 to R5.** R1 kept. R2 kept, in steps. R3 kept: a trial per coven; Slack gives new teams 50% off for 3 months [S1]. R4 kept. **R5 altered:** a bundle has no per-member charge to discount, so "pays less" becomes a discount on a steward's second coven bundle, or a credit for a member's own covens.
 
@@ -114,6 +127,32 @@ A price in a model below is mine unless it names a comparable. I anchored each o
 - **Reception of no free tier.** I found no source that measures harm from having none. Retention after one year was "nearly identical" for hard-paywall and freemium apps [S34].
 - **Curator coven precedent.** Community products include 2 to 15 staff seats in a plan [G10] to [G12]; none gives a seat count free by the platform to its own curators. Ghost lets a publisher comp any member for a week, a month, six months, a year or forever [G13]; GitHub re-checks free eligibility every month [G14]. The re-check is the nearest precedent for a timed exemption.
 
+### (g) Group Plan Includes a Solo Coven
+
+**Structure.** Owner request, 2026-11-06: "Group plan includes solo coven, a solo coven price should be found." Every paid seat in a group coven also gives that member a free solo coven of their own. A person with no paid group seat buys a solo coven alone. (g) is a layer over a group model; I model it over **(c)** (base plus seats), and it could sit over (a) the same way.
+
+**Solo coven price proposals** (all assumptions, anchored on the solo comparables in section "Solo and Personal Spaces"; Day One is $49.99 a year, about $4.17 a month [S16]):
+
+- **$1.99 a month**, Neumoire's price [S29]. Lowest barrier to entry, but it earns the least and the cheapest comparable is not the one that is known to last.
+- **$2.99 a month**, Bear's price [S15]. Matches the best-known solo journal at a price people already accept; this is the one I modelled.
+- **$4.99 a month**, Grimoire's price [S28], close to Day One's $4.17 [S16]. Earns the most per solo buyer, and sits at the price where a solo coven costs more than a group seat's share ($2.31).
+
+**Assumptions in the model.** A paying seat is either a group seat (priced as (c): $10.58 per coven, 1.2 memberships per account, 5.5 members per coven, so $2.31 per seat) or a solo coven bought alone. I assume 20% of paying accounts buy a solo coven alone (range 10% to 40%; no source). Revenue per paying seat = 80% × $10.58 × 1.2 ÷ 5.5 + 20% × $2.99 = $1.847 + $0.598 = **$2.45**. Stripe's 30¢ fixed fee is charged per subscription: 0.8 × 1.2 ÷ 5.5 group subscriptions plus 0.2 solo subscriptions per paying seat.
+
+**Cost of the free solo covens.** Each paid group seat (80% of paying seats) holds one more coven, of the average size the cost model already uses (about 115 KB of spells and ingredients each, from the running-costs ratios). The free covens add stored data and nothing else: sessions, and so function calls, mail and tracing, are counted per account and do not change. The extra Neon storage is $0.01 / $0.06 / $0.56 / $5.63 a month at 100 / 1,000 / 10,000 / 100,000 paying seats. It is added to every cost line for (g).
+
+**What it shows.** The free solo covens cost almost nothing, so the model's result depends on the assumed 20% who buy a solo coven alone and on the solo price:
+
+| Solo coven price                 | Revenue per paying seat | Net at 100 | Net at 1000 | Net at 10000 | Net at 100000 | (i) |  (ii) |  (iii) |
+| -------------------------------- | ----------------------: | ---------: | ----------: | -----------: | ------------: | --: | ----: | -----: |
+| $1.99                            |                 $2.2453 |       $192 |      $1,916 |      $19,119 |      $190,698 | 128 | 3,184 | 12,700 |
+| $2.99                            |                 $2.4453 |       $210 |      $2,096 |      $20,911 |      $208,620 | 117 | 2,910 | 11,604 |
+| $4.99                            |                 $2.8453 |       $246 |      $2,457 |      $24,496 |      $244,463 |  99 | 2,482 |  9,896 |
+|                                  |                     100 |       1000 |       10000 |       100000 |
+| Cost of free solo covens a month |                   $0.01 |      $0.06 |       $0.56 |        $5.63 |
+
+The columns (i), (ii) and (iii) are seats to break even on cash, cash + contractor maintenance, and cash + a full-time job.
+
 ### New Requirements Beyond DESIGN.md §13
 
 The no-free-tier decision departs from §13 in four places. **I need you to accept each before a task is minted.**
@@ -172,47 +211,51 @@ Stripe has the narrowest list. Whether a spell journal falls under any of these 
 
 ## Break-Even
 
-**Method.** Sizes are paying seats: 100, 1,000, 10,000 and 100,000. Revenue = paying units × price × (1 − 6.1%), the single-month churn haircut, a crude stand-in for steady-state churn. Paying units are paying seats for (b) and (d), and paying covens (seats × 1.2 memberships ÷ 5.5 members) for (a), (c) and (e). Fees are Stripe's option 1 (2.9% + 30¢, 0.7% Billing, 0.5% Tax Basic) on that revenue, and Washington retailing B&O of 0.471% less the $55 a month credit. Sales tax is passed through to the customer, so it is neither revenue nor cost. Trial, curator, exempt and demo-only accounts earn nothing and are in the cost side. The cost lines come from running-costs.md: (i) cash, (ii) cash + median maintenance at the contractor rate, (iii) cash + a full-time job at a $250,000 salary loaded to $286,977 a year (low). **Net revenue a month**, after churn, fees and B&O:
+**Method.** Sizes are paying seats: 100, 1,000, 10,000 and 100,000. Revenue = paying units × price × (1 − 6.1%), the single-month churn haircut, a crude stand-in for steady-state churn. Paying units are paying seats for (b), (d) and (g) (whose per-seat revenue is built in its section), and paying covens (seats × 1.2 memberships ÷ 5.5 members) for (a), (c) and (e); (a) uses its $9.55 average across the four steps. Fees are Stripe's option 1 (2.9% + 30¢, 0.7% Billing, 0.5% Tax Basic) on that revenue, and Washington retailing B&O of 0.471% less the $55 a month credit. Sales tax is passed through to the customer, so it is neither revenue nor cost. Trial, curator, exempt and demo-only accounts earn nothing and are in the cost side. The cost lines come from running-costs.md: (i) cash, (ii) cash + median maintenance at the contractor rate, (iii) cash + a full-time job at a $250,000 salary loaded to $286,977 a year (low). **Net revenue a month**, after churn, fees and B&O:
 
-| Model                        | Price per paying unit |  100 |   1000 |   10000 |   100000 |
-| ---------------------------- | --------------------: | ---: | -----: | ------: | -------: |
-| (a) Coven pays, seat bundles |                 $9.99 | $190 | $1,901 | $18,972 | $189,221 |
-| (b) Each user pays           |                 $4.00 | $332 | $3,320 | $33,081 | $330,316 |
-| (c) Base plus seats          |                $10.58 | $202 | $2,018 | $20,132 | $200,821 |
-| (d) Solo rung only           |                 $2.50 | $197 | $1,970 | $19,640 | $195,905 |
-| (e) Any member pays          |                 $5.64 | $105 | $1,047 | $10,466 | $104,175 |
+| Model                                           | Price per paying unit |  100 |   1000 |   10000 |   100000 |
+| ----------------------------------------------- | --------------------: | ---: | -----: | ------: | -------: |
+| (a) Coven pays, seat bundles                    |                 $9.55 | $181 | $1,815 | $18,111 | $180,619 |
+| (b) Each user pays                              |                 $4.00 | $332 | $3,320 | $33,081 | $330,316 |
+| (c) Base plus seats                             |                $10.58 | $202 | $2,018 | $20,132 | $200,821 |
+| (d) Solo rung only                              |                 $2.50 | $197 | $1,970 | $19,640 | $195,905 |
+| (e) Any member pays                             |                 $5.64 | $105 | $1,047 | $10,466 | $104,175 |
+| (g) Group plan includes a solo coven (over (c)) |                 $2.45 | $210 | $2,096 | $20,911 | $208,620 |
 
 #### Option 2, Managed Payments
 
-| Model                        |  100 |   1000 |   10000 |   100000 |
-| ---------------------------- | ---: | -----: | ------: | -------: |
-| (a) Coven pays, seat bundles | $184 | $1,840 | $18,358 | $183,081 |
-| (b) Each user pays           | $321 | $3,208 | $31,954 | $319,048 |
-| (c) Base plus seats          | $195 | $1,953 | $19,481 | $194,317 |
-| (d) Solo rung only           | $190 | $1,899 | $18,936 | $188,862 |
-| (e) Any member pays          | $101 | $1,012 | $10,120 | $100,709 |
+| Model                                           |  100 |   1000 |   10000 |   100000 |
+| ----------------------------------------------- | ---: | -----: | ------: | -------: |
+| (a) Coven pays, seat bundles                    | $176 | $1,756 | $17,524 | $174,749 |
+| (b) Each user pays                              | $321 | $3,208 | $31,954 | $319,048 |
+| (c) Base plus seats                             | $195 | $1,953 | $19,481 | $194,317 |
+| (d) Solo rung only                              | $190 | $1,899 | $18,936 | $188,862 |
+| (e) Any member pays                             | $101 | $1,012 | $10,120 | $100,709 |
+| (g) Group plan includes a solo coven (over (c)) | $203 | $2,028 | $20,223 | $201,731 |
 
 **Y means net revenue covers the cost line**, for (i) / (ii) / (iii):
 
-| Model                        |   100 |  1000 | 10000 | 100000 |
-| ---------------------------- | ----: | ----: | ----: | -----: |
-| (a) Coven pays, seat bundles | n n n | Y n n | Y Y n |  Y Y Y |
-| (b) Each user pays           | Y n n | Y n n | Y Y Y |  Y Y Y |
-| (c) Base plus seats          | n n n | Y n n | Y Y n |  Y Y Y |
-| (d) Solo rung only           | n n n | Y n n | Y Y n |  Y Y Y |
-| (e) Any member pays          | n n n | Y n n | Y Y n |  Y Y Y |
+| Model                                           |   100 |  1000 | 10000 | 100000 |
+| ----------------------------------------------- | ----: | ----: | ----: | -----: |
+| (a) Coven pays, seat bundles                    | n n n | Y n n | Y Y n |  Y Y Y |
+| (b) Each user pays                              | Y n n | Y n n | Y Y Y |  Y Y Y |
+| (c) Base plus seats                             | n n n | Y n n | Y Y n |  Y Y Y |
+| (d) Solo rung only                              | n n n | Y n n | Y Y n |  Y Y Y |
+| (e) Any member pays                             | n n n | Y n n | Y Y n |  Y Y Y |
+| (g) Group plan includes a solo coven (over (c)) | n n n | Y n n | Y Y n |  Y Y Y |
 
 **Seats needed to break even.** The smallest number of paying seats whose net revenue covers each cost line. The cost line is interpolated linearly between the four sizes (and held flat outside them), because overhead and usage grow with seats; the answer is therefore exact at the four sizes and approximate between them.
 
-| Model                        | (i) |  (ii) |  (iii) |
-| ---------------------------- | --: | ----: | -----: |
-| (a) Coven pays, seat bundles | 129 | 3,209 | 12,800 |
-| (b) Each user pays           |  74 | 1,836 |  7,320 |
-| (c) Base plus seats          | 121 | 3,023 | 12,057 |
-| (d) Solo rung only           | 124 | 3,098 | 12,361 |
-| (e) Any member pays          | 238 | 5,841 | 23,350 |
+| Model                                           | (i) |  (ii) |  (iii) |
+| ----------------------------------------------- | --: | ----: | -----: |
+| (a) Coven pays, seat bundles                    | 135 | 3,362 | 13,413 |
+| (b) Each user pays                              |  74 | 1,836 |  7,320 |
+| (c) Base plus seats                             | 121 | 3,023 | 12,057 |
+| (d) Solo rung only                              | 124 | 3,098 | 12,361 |
+| (e) Any member pays                             | 238 | 5,841 | 23,350 |
+| (g) Group plan includes a solo coven (over (c)) | 117 | 2,910 | 11,604 |
 
-What the tables say: with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 238 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,400. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
+What the tables say: with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 238 paying seats. Covering contractor-rate maintenance needs about 1,800 to 5,800 paying seats, and a full-time job needs about 7,300 to 23,400. Model (g), over (c), needs 117 seats on cash and 2,910 for contractor maintenance, because of the assumed 20% who buy a solo coven alone. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. Model (e) needs the most because it earns $5.64 per covered coven. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
 
 ## Questions for the Owner
 
@@ -228,7 +271,7 @@ What the tables say: with no free tier and the withdrawn 4% share gone, every mo
 
 **The rest:**
 
-6. **Which model?** (a) to (e). The research made no recommendation. (c) meets all five wants; (b) needs the fewest paying seats to break even but drops R1.
+6. **Which model?** I need you to choose one of (a), (b), (c) or (g); (d) and (e) are also costed above. The research made no recommendation. Seats to break even on cash / cash + contractor maintenance / cash + a full-time job: (a) with step prices needs 135 / 3,362 / 13,413; (b) needs 74 / 1,836 / 7,320 (fewest, but drops R1); (c) needs 121 / 3,023 / 12,057 (meets all five wants); (g) over (c) needs 117 / 2,910 / 11,604 (assumes 20% buy a solo coven alone).
 7. **Keeper exemptions.** The model uses 5% / 3% / 1.5% / 0.5% of paying seats at 100 / 1,000 / 10,000 / 100,000 (your words, 2026-11-06: "5% of paying seats initially, falling as the site becomes established and its beta testers are staff rather than friends and family"). I need you to confirm or give the numbers. No benchmark exists.
 8. **The pause rule.** When a site is paused (M15.52) or a coven is paused (M15.55), should the subscription be paused (Stripe `pause_collection`), keep running, or be extended by the paused time? No recommendation.
 9. **The multi-coven discount definition (R5).** Does it discount the second coven's invoice, or the member? DESIGN.md §13 leaves it open. No recommendation.
@@ -239,6 +282,8 @@ What the tables say: with no free tier and the withdrawn 4% share gone, every mo
 14. **Hosted Checkout only.** Do you agree the site loads no Stripe.js on its own pages and sends buyers to Stripe's hosted Checkout? Research recommendation: yes. It keeps to the no-browser-script rule and gives up part of Stripe's fraud-model accuracy (Stripe says advanced risk factors improve it by 36%).
 15. **security.txt.** Do you agree to widen CLAUDE.md rule 1's `/.well-known/*.json` exception to also cover `security.txt`? Research recommendation: yes. It is sessionless and carries no application data. A static file under `public/.well-known/` may avoid a route handler; that was not checked.
 16. **Vercel pause on budget.** Is Vercel's "Pause Production Deployments" setting on? Research recommendation: off. A 503 page for every paying account is a worse outcome than a bill, and the budget still emails you at 50%, 75% and 100%.
+17. **Solo coven price (model (g)).** I need you to choose one: $1.99 (Neumoire [S29]; lowest barrier, earns the least; (g) then needs 128 / 3,184 / 12,700 paying seats), $2.99 (Bear [S15]; the one modelled; 117 / 2,910 / 11,604), or $4.99 (Grimoire [S28]; earns the most per solo buyer, nearer Day One's about $4.17 [S16]; 99 / 2,482 / 9,896). No recommendation: the result also rests on the assumed 20% who buy a solo coven alone, which no source informs.
+18. **Model (a) step prices.** Do you accept $2.99 / $7.99 / $11.99 / $16.99 for the four steps and the assumed spread of 6% / 50% / 42% / 2% of covens? Both are my assumptions anchored on the comparables in section (a), not researched figures. Give other numbers and I re-run the model.
 
 ## Sources
 

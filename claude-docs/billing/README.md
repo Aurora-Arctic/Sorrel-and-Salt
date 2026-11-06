@@ -5,7 +5,7 @@ This folder holds the research for task M17.1: what it would cost to run Sorrel 
 | File                                             | What it holds                                                                                                                      |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | [running-costs.md](running-costs.md)             | What the site costs a month at 100, 1,000, 10,000 and 100,000 accounts: platform, tooling, operations, maintenance and processing. |
-| [subscription-models.md](subscription-models.md) | Six ways to charge, measured against DESIGN.md §13's five wants, with break-even tables, processors and the owner's questions.     |
+| [subscription-models.md](subscription-models.md) | Seven ways to charge, measured against DESIGN.md §13's five wants, with break-even tables, processors and the owner's questions.   |
 
 ## When the Prices Were Fetched
 
