@@ -168,6 +168,8 @@ The test is the Code of Ethics (`documents/code-of-ethics.md`, line 34): "It wil
 
 **Decision (2026-11-06).** The owner reviewed regional pricing, a self-requested hardship exemption and a stated wage gap, and decided: "pricing as modelled is fair enough". None of the three is modelled. No numbers change.
 
+**The living wage is a floor.** Owner correction, 2026-11-06: "The living wage is a minimum. Not a maximum." The Code's living wage is a minimum, not a limit on pay. The $250,000 salary target is above that floor by the owner's choice. A task, to be minted on Wave 21 by M17.1 (no id yet), will scope an executive pay maximum: a ratio of the highest to the lowest pay on the site, researched against published pay-ratio policies. The owner's words: "we should probably add a task to scope executive maximum percentages to ensure more equity."
+
 ### Payer Modes
 
 Owner decision, 2026-11-06: "Model both modes now." Every coven-pays model that reaches the page, (c), (g) and (h), gains a per-coven switch. A steward sets it for the coven.
