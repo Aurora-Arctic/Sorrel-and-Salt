@@ -1,13 +1,14 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
-import { NotFound, RateLimited, ValidationError } from '@/lib/errors';
+import { Forbidden, NotFound, RateLimited, ValidationError } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import {
   SIGNED_OUT_ADDRESS_LIMIT,
   SIGNED_OUT_IP_LIMIT,
   SIGNED_OUT_REPLY_REQUEST_LIMIT,
   replyToSupportRequestByViewToken,
+  sendSenderMessage,
   sendSignedOutSupportRequest,
 } from '@/modules/support';
 import type { SupportNotifier, SupportStatusMail } from '@/modules/support';
@@ -15,10 +16,11 @@ import { MESSAGE_MAX_LENGTH } from '@/modules/support/validation/support';
 import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { supportStatusStep } from '@/modules/support/jobs/support-status-mail-steps';
 import { retentionBatchStep } from '@/modules/support/jobs/support-retention-batch-steps';
-import { B } from '../../../support/as-user';
+import { B, C, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { anonymousMinter } from '../../../support/db/insert-anonymous-user';
 import { insertSupportRequest } from '../../../support/db/insert-support-request';
+import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { run } from '../../../support/graphql/run';
 
 // A signed-out sender's reply from the mailed-link page: the token alone finds the request, the reply is written as the
@@ -274,5 +276,34 @@ describe('the mutation', () => {
     expect(answer.errors?.[0]).toMatchObject({ extensions: { code: 'NOT_FOUND' } });
     expect(JSON.stringify(answer)).not.toContain(wrong);
     expect(await sql`select 1 from support_replies`).toHaveLength(0);
+  });
+});
+
+// The token proves which request; a keeper's time-out on the request's sender still holds, as it does for a signed-in reply.
+describe('a reply through the mailed link from a timed-out sender', () => {
+  it('is refused as a signed-in reply is, not as not-found, writing no reply, and goes through once lifted', async () => {
+    const { id, senderId, token } = await sendSignedOut();
+    // Precondition: the token is valid, so a refusal below is the time-out's.
+    await reply(token, 'Before the time-out.');
+    expect(await repliesOn(id)).toHaveLength(1);
+    const timeout = await insertSupportTimeout(sql, senderId);
+    // The wording a timed-out signed-in sender's reply on an open request is refused with, from the same kind of time-out.
+    const own = await insertSupportRequest(sql, { createdBy: C.id });
+    await insertSupportTimeout(sql, C.id);
+    const signedIn = (await failureOf(
+      sendSenderMessage(asUser(C), own, 'It still sticks.'),
+    )) as Error;
+    expect(signedIn).toBeInstanceOf(Forbidden);
+
+    const refusal = await failureOf(reply(token, 'During the time-out.'));
+
+    expect(refusal).not.toBeInstanceOf(NotFound);
+    expect(refusal).toBeInstanceOf(Forbidden);
+    expect((refusal as Error).message).toBe(signedIn.message);
+    expect(await repliesOn(id)).toHaveLength(1);
+
+    await sql`update support_timeouts set lifted_at = now() where id = ${timeout}`;
+    await reply(token, 'After the time-out.');
+    expect(await repliesOn(id)).toHaveLength(2);
   });
 });

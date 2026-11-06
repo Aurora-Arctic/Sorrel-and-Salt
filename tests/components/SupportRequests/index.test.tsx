@@ -682,6 +682,24 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
   });
 
+  it('offers a keeper the Time-Out for a signed-out sender whose own anonymous account sent it, and none for the stand-in', () => {
+    const anonymous = { id: 'anon-1', name: 'Anonymous', email: 'visitor@example.test' };
+    const standIn = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    const { unmount } = open(ADMIN, {
+      sender: anonymous,
+      signedOut: true,
+      anonymousSender: true,
+    } as Partial<SupportRequestDetailEntry>);
+    expect(within(dialog()).getByRole('button', { name: 'Time-Out' })).toBeInTheDocument();
+    unmount();
+    open(ADMIN, {
+      sender: standIn,
+      signedOut: true,
+      anonymousSender: false,
+    } as Partial<SupportRequestDetailEntry>);
+    expect(within(dialog()).queryByRole('button', { name: 'Time-Out' })).toBeNull();
+  });
+
   it('offers no note or reply on an anonymised request, which the System account owns, and does on another', () => {
     const { unmount } = open(ADMIN);
     expect(within(dialog()).getByLabelText(/^Your Note/)).toBeInTheDocument();

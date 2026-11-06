@@ -8,6 +8,10 @@ import { importAuth } from '../support/auth-module';
 import { insertAnonymousUser } from '../support/db/insert-anonymous-user';
 import { insertSupportReply, insertSupportRequest } from '../support/db/insert-support-request';
 import { asTouch } from '../support/db/touch-row';
+import { insertSupportTimeout } from '../support/db/insert-support-timeout';
+import { Forbidden } from '@/lib/errors';
+import { sendSupportRequest } from '@/modules/support';
+import { failureOf } from '../support/db/database';
 import { PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { post, pwnedRange } from '../support/password';
 import type { AuthInstance } from '../support/types';
@@ -219,5 +223,44 @@ describe('an account claiming the requests sent signed out from its address', ()
       created_by: anonymousId,
       sender_email: `x${CLAIMER}`,
     });
+  });
+});
+
+// A keeper's time-out names the anonymous account; claiming its requests by address must not leave the time-out behind.
+describe('an account claiming a timed-out anonymous sender’s requests', () => {
+  it('takes the time-out with them, and its own send is refused', async () => {
+    const { id: claimerId } = await signUp();
+    await asTouch(sql, (tx) => tx`update users set email_verified = true where id = ${claimerId}`);
+    const rows = await signedOutRequests();
+    const timeout = await insertSupportTimeout(sql, rows.anonymousId);
+    const othersTimeout = await insertSupportTimeout(sql, rows.otherAnonymous);
+    // Preconditions: the claimer stands under no time-out, so a refusal below is the one it took over.
+    expect(await sql`select 1 from support_timeouts where user_id = ${claimerId}`).toHaveLength(0);
+
+    const signedIn = await post(auth, '/sign-in/email', { email: CLAIMER, password: PASSWORD });
+    expect(signedIn.status, await signedIn.clone().text()).toBe(200);
+    // The claim ran: the anonymous sender's request is the claimer's.
+    expect(await requestRow(rows.fromAnonymous)).toMatchObject({ created_by: claimerId });
+
+    expect(await sql`select user_id from support_timeouts where id = ${timeout}`).toEqual([
+      { user_id: claimerId },
+    ]);
+    // Another visitor's time-out, whose requests were not claimed, stays on that visitor.
+    expect(await sql`select user_id from support_timeouts where id = ${othersTimeout}`).toEqual([
+      { user_id: rows.otherAnonymous },
+    ]);
+    const before = (await sql`select 1 from support_requests where created_by = ${claimerId}`)
+      .length;
+    const refusal = await failureOf(
+      sendSupportRequest(
+        { userId: claimerId, role: 'user' },
+        { about: 'account', subject: 'After the claim', message: 'It still sticks.' },
+        { origin: async () => 'http://localhost:3000' },
+      ),
+    );
+    expect(refusal).toBeInstanceOf(Forbidden);
+    expect(await sql`select 1 from support_requests where created_by = ${claimerId}`).toHaveLength(
+      before,
+    );
   });
 });

@@ -9,13 +9,15 @@ import {
   listMySupportRequests,
   replyToSupportRequest,
   sendSignedOutSupportRequest,
+  sendSupportRequest,
 } from '@/modules/support';
 import type { AnonymousMinter, SupportNotifier } from '@/modules/support';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
-import { A, E, asUser } from '../../../support/as-user';
+import { A, C, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
+import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 
 // A visitor with no account writes about accessibility or signing in: the provisional account the send mints and writes the
 // row as, the topics, the limits that guard it, and the reply that reaches them by email
@@ -290,5 +292,67 @@ describe('a reply to a signed-out request', () => {
     );
 
     expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
+  });
+});
+
+// A keeper's time-out names the account, and a returning visitor's send is written as that same account.
+describe('a returning visitor whose anonymous account is timed out', () => {
+  it('is refused as a signed-in sender is, writing no request, and sends once the time-out is lifted', async () => {
+    await send(INPUT);
+    const returning = minted[0]!;
+    const timeout = await insertSupportTimeout(sql, returning);
+    const sendAgain = () =>
+      sendSignedOutSupportRequest(
+        { ...INPUT, subject: 'A second Testwort request' },
+        {
+          clientIp: '203.0.113.7',
+          notifier: notifier().mail,
+          anonymous: minter,
+          session: { userId: returning, role: 'user', anonymous: true },
+        },
+      );
+    // The wording a timed-out signed-in sender is refused with, from the same kind of time-out.
+    await insertSupportTimeout(sql, C.id);
+    const signedIn = (await failureOf(
+      sendSupportRequest(
+        asUser(C),
+        { ...INPUT, subject: 'A signed-in Testwort request' },
+        notifier().mail,
+      ),
+    )) as Error;
+    expect(signedIn).toBeInstanceOf(Forbidden);
+
+    const refusal = await failureOf(sendAgain());
+
+    expect(refusal).toBeInstanceOf(Forbidden);
+    expect((refusal as Error).message).toBe(signedIn.message);
+    expect(await count()).toBe(1);
+    expect(minted).toEqual([returning]);
+
+    // Precondition: the time-out alone refused it.
+    await sql`update support_timeouts set lifted_at = now() where id = ${timeout}`;
+    await sendAgain();
+    expect(await sql`select created_by from support_requests`).toEqual([
+      { created_by: returning },
+      { created_by: returning },
+    ]);
+  });
+
+  it('sends when the time-out on the account has run out', async () => {
+    await send(INPUT);
+    const returning = minted[0]!;
+    await insertSupportTimeout(sql, returning, { endsIn: '-1 hour' });
+
+    await sendSignedOutSupportRequest(
+      { ...INPUT, subject: 'A second Testwort request' },
+      {
+        clientIp: '203.0.113.7',
+        notifier: notifier().mail,
+        anonymous: minter,
+        session: { userId: returning, role: 'user', anonymous: true },
+      },
+    );
+
+    expect(await count()).toBe(2);
   });
 });
