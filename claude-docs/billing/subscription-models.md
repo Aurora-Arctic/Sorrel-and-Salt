@@ -77,7 +77,7 @@ A price in a model below is mine unless it names a comparable. I anchored each o
 
 ### (d) Solo Rung
 
-**Structure.** A one-member coven at a low price, or free. It sits inside (a), (b) or (c) as the smallest step.
+**Structure.** A one-member coven at a low price. It sits inside (a), (b) or (c) as the smallest step.
 
 **Price points.** Bear $2.99 a month [S15]; Day One $49.99 a year [S16]; Grimoire $4.99 a month [S28]; Neumoire $1.99 a month [S29]. Notion, Kanka and Obsidian are free for one person [S2] [S19] [S13]. I model **$2.50 a month** (assumption).
 
