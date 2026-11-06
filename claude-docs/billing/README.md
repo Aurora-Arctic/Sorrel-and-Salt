@@ -19,8 +19,8 @@ The figures in both files come from a script, `scripts/billing-model.mjs`. Run:
 node scripts/billing-model.mjs
 ```
 
-Its inputs are one object near the top of the file. Change a price or a ratio there and re-run it. The model prices in `subscription-models.md` are assumptions anchored on comparables, and are set there too.
+Add `--json` to get the same figures as data. Sizes are paying seats; trial, curator, exempt and demo-only accounts are derived from them. Its inputs are one object near the top of the file. Change a price or a ratio there and re-run it. The model prices in `subscription-models.md` are assumptions anchored on comparables, and are set there too.
 
 ## Where Decisions Live
 
-The decision record is `claude-docs/design-decisions/m17.1-subscription-billing-scope.md`. The main session writes it after the owner chooses a model, a free tier, a processor and the other questions at the end of `subscription-models.md`. It does not exist yet.
+The decision record is `claude-docs/design-decisions/m17.1-subscription-billing-scope.md`. The main session writes it after the owner chooses a model, a processor, the keeper-exemption schedule and the other questions at the end of `subscription-models.md`. It does not exist yet.
