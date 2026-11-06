@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Route } from 'next';
 import type { ReactElement, ReactNode } from 'react';
 import { Navigating } from '../../../.storybook/navigating';
 import { PendingLink } from '../../lib/navigation';
@@ -34,11 +35,11 @@ const Waiting = ({
 }: {
   name: string;
   region: keyof typeof FRAME;
-  href: string;
+  href: Route;
 }): ReactElement => (
   <Navigating press={name}>
     <p>
-      <PendingLink href={route(href)}>{name}</PendingLink>
+      <PendingLink href={href}>{name}</PendingLink>
     </p>
     <SectionBody region={region} className={FRAME[region]}>
       <main>
@@ -52,8 +53,10 @@ const Waiting = ({
 // the address the link goes to: a page of the same coven, and a page of the same admin area.
 const STATES: Record<string, ReactNode> = {
   Resting,
-  'Loading Coven Page': <Waiting name="Overview" region="coven" href="/coven/fixture-coven" />,
-  'Loading Admin Page': <Waiting name="Forms" region="admin" href="/curator/forms" />,
+  'Loading Coven Page': (
+    <Waiting name="Overview" region="coven" href={route('/coven/fixture-coven')} />
+  ),
+  'Loading Admin Page': <Waiting name="Forms" region="admin" href={route('/curator/forms')} />,
 };
 
 export const States: Story = {
