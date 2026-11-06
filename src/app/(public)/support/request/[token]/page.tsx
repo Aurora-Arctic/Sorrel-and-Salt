@@ -14,7 +14,7 @@ import { getSupportRequestByViewToken } from '../../../../../modules/support';
 // session. Never indexed or cached, and the headers in src/lib/security-headers.ts send no referrer from it, since the
 // address holds the token.
 export const metadata: Metadata = {
-  title: 'Your Request',
+  title: 'Your Support Request',
   robots: { index: false, follow: false },
 };
 

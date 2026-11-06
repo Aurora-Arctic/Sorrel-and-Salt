@@ -36,7 +36,7 @@ export function SupportResolved({
             null,
             `We have marked your request as resolved. A reply from you reopens it, and it closes by itself after seven days without one. To read it or reply, ${actionVerb(part)}.`,
           ),
-          h(Action, { href: url, label: 'Open Your Request', part }),
+          h(Action, { href: url, label: 'Open Your Support Request', part }),
           h(LinkOnlyNote),
         )
       : signedOut

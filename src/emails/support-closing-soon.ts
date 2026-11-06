@@ -50,7 +50,7 @@ export function SupportClosingSoon({
             null,
             `Your request closes in ${left}. A reply from you before then keeps it open. To reply, ${actionVerb(part)}.`,
           ),
-          h(Action, { href: url, label: 'Open Your Request', part }),
+          h(Action, { href: url, label: 'Open Your Support Request', part }),
           h(LinkOnlyNote),
         )
       : signedOut

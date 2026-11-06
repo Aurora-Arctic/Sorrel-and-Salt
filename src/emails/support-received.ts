@@ -41,7 +41,7 @@ export function SupportReceived({
             null,
             `To read your request, add to it or answer our reply, ${actionVerb(part)}. Anyone with the link can open your request, so keep this email private. Only the link in the latest email works.`,
           ),
-          h(Action, { href: url, label: 'Open Your Request', part }),
+          h(Action, { href: url, label: 'Open Your Support Request', part }),
           h(LinkOnlyNote),
         )
       : h(
