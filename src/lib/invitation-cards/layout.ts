@@ -1,6 +1,13 @@
 import type { Font } from '@pdf-lib/fontkit';
 import { BACK_LEDE, BACK_NOTE, type FrontCopy, SITE_ADDRESS, WORDMARK } from './copy';
-import { baselineOffset, normalLineHeight, type TextStyle, wrap, wrapBalanced } from './text';
+import {
+  baselineOffset,
+  normalLineHeight,
+  textWidth,
+  type TextStyle,
+  wrap,
+  wrapBalanced,
+} from './text';
 
 // Every length here is a pixel of the card artboard, drawn at twice 96 px per inch:
 // 720 × 432 px is the 3.75 × 2.25 in bleed box, and the 3.5 × 2 in trim sits 24 px in.
@@ -75,8 +82,8 @@ export const BACK_PICTURE: PictureItem = {
 };
 
 /**
- * The QR code, right of the text column, with the front's foot beneath it on the same left edge. It stands left
- * of the salt's bright bowl, which washes the code out where the two overlap.
+ * The QR code, right of the text column, between the wordmark and address above it and the expiry below. It stands
+ * left of the salt's bright bowl, which washes the code out where the two overlap.
  */
 export const FRONT_QR: QrItem = { x: 380, y: 104, size: 182 };
 
@@ -144,7 +151,10 @@ function lexend(fonts: CardFonts, font: FontKey, size: number, letterSpacing = 0
   return { font: fonts[font], size, letterSpacing };
 }
 
-/** The front's words: the top group in the text column, and the foot under the QR code, its last line on the column's bottom. */
+/**
+ * The front's words: the top group in the text column, and beside it a column centred on the QR code, the wordmark
+ * and the address above the code and the expiry below it.
+ */
 export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string): TextItem[] {
   const tagline = lexend(fonts, 'lexend400', 19.5);
   const rest = lexend(fonts, 'lexend300', 16.5);
@@ -190,46 +200,55 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
     COLUMN.top,
     GROUP_GAP,
   );
-  const footBlocks = [
-    {
-      block: {
-        font: 'cormorant600',
-        size: 22,
-        letterSpacing: 22 * 0.04,
-        colour: CHALK,
-        lines: [WORDMARK],
-      } satisfies Block,
-      marginBottom: 2,
-    },
-    {
-      block: {
-        font: 'lexend500',
-        size: 13,
-        letterSpacing: 13 * 0.12,
-        colour: MUTED,
-        lines: [SITE_ADDRESS.toUpperCase()],
-      } satisfies Block,
-    },
-    {
-      block: {
-        font: 'lexend500',
-        size: 13,
-        letterSpacing: 13 * 0.12,
-        colour: MUTED,
-        lines: [validUntil.toUpperCase()],
-      } satisfies Block,
-    },
-  ];
-  const footHeight = stack(fonts, footBlocks, 0, 0, FOOT_GAP).height;
-  const foot = stack(
+  const line = (
+    font: FontKey,
+    size: number,
+    letterSpacing: number,
+    colour: string,
+    text: string,
+  ): Block => ({
+    font,
+    size,
+    letterSpacing,
+    colour,
+    lines: [text],
+  });
+  const heading = stack(
     fonts,
-    footBlocks,
-    FRONT_QR.x,
-    COLUMN.top + COLUMN.height - footHeight,
+    [
+      { block: line('cormorant600', 22, 22 * 0.04, CHALK, WORDMARK), marginBottom: 2 },
+      { block: line('lexend500', 13, 13 * 0.12, MUTED, SITE_ADDRESS.toUpperCase()) },
+    ],
+    0,
+    0,
     FOOT_GAP,
   );
-  return [...top.items, ...foot.items];
+  const expiry = stack(
+    fonts,
+    [{ block: line('lexend500', 13, 13 * 0.12, MUTED, validUntil.toUpperCase()) }],
+    0,
+    FRONT_QR.y + FRONT_QR.size + FOOT_GAP,
+    FOOT_GAP,
+  );
+  const above = heading.items.map((item) => ({
+    ...item,
+    baseline: item.baseline + FRONT_QR.y - FOOT_GAP - heading.height,
+  }));
+  return [...top.items, ...[...above, ...expiry.items].map((item) => centredOnCode(fonts, item))];
 }
+
+// The inked width leaves out the letter spacing set after the last letter, so a spaced line centres on what prints.
+function centredOnCode(fonts: CardFonts, item: TextItem): TextItem {
+  const width =
+    textWidth(
+      { font: fonts[item.font], size: item.size, letterSpacing: item.letterSpacing },
+      item.text,
+    ) - item.letterSpacing;
+  return { ...item, x: FRONT_QR.x + FRONT_QR.size / 2 - width / 2 };
+}
+
+// The back's words end 1/16 in short of the sorrel, so no line runs over the picture or its stem.
+const BACK_WORDS_WIDTH = BACK_PICTURE.x - PX_PER_INCH / 16 - COLUMN.left;
 
 /** The back's words, the canvas's `Back` artboard. */
 export function backText(fonts: CardFonts, batch: string): TextItem[] {
@@ -252,7 +271,7 @@ export function backText(fonts: CardFonts, batch: string): TextItem[] {
           size: 18,
           lineHeight: 18 * 1.5,
           colour: CHALK,
-          lines: wrap(lede, BACK_LEDE, 500),
+          lines: wrapBalanced(lede, BACK_LEDE, BACK_WORDS_WIDTH),
         },
       },
       {

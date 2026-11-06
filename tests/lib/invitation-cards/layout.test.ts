@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as fontkit from '@pdf-lib/fontkit';
 import { describe, expect, it } from 'vitest';
-import { FRONT_COPY } from '@/lib/invitation-cards/copy';
+import { FRONT_COPY, SITE_ADDRESS, WORDMARK } from '@/lib/invitation-cards/copy';
 import {
   ARTBOARD,
+  BACK_PICTURE,
   backText,
+  COLUMN,
   type CardFonts,
   FRONT_QR,
   frontText,
@@ -77,6 +79,19 @@ const qr: Box = {
 // The longest expiry the date format writes.
 const VALID = 'Valid until 30 September 2027';
 
+// The inked middle of a line: its advance less the letter spacing set after its last letter.
+function middleOf(item: TextItem): number {
+  const box = boxOf(item);
+  return (box.left + box.right - item.letterSpacing) / 2;
+}
+const columnLine = (items: TextItem[], text: string) => {
+  const found = items.find((item) => item.text === text);
+  if (!found) throw new Error(`no line "${text}"`);
+  return found;
+};
+// The least room between the back's words and the sorrel, 1/16 in.
+const PICTURE_GAP = PX_PER_INCH / 16;
+
 describe('the card layout', () => {
   it('is a 3.5 × 2 in card with 1/8 in of bleed on every side', () => {
     expect((trim.right - trim.left) / PX_PER_INCH).toBe(3.5);
@@ -96,6 +111,41 @@ describe('the card layout', () => {
       }
     },
   );
+
+  it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
+    'stacks the wordmark and the address above the code and the expiry below it on the "%s" front, each centred on the code',
+    (_, copy) => {
+      const items = frontText(fonts, copy, VALID);
+      const wordmark = columnLine(items, WORDMARK);
+      const address = columnLine(items, SITE_ADDRESS.toUpperCase());
+      const valid = columnLine(items, VALID.toUpperCase());
+      expect(boxOf(wordmark).bottom).toBeLessThan(boxOf(address).top);
+      expect(boxOf(address).bottom).toBeLessThan(qr.top);
+      expect(boxOf(valid).top).toBeGreaterThan(qr.bottom);
+      for (const line of [wordmark, address, valid]) {
+        expect(middleOf(line), line.text).toBeCloseTo(FRONT_QR.x + FRONT_QR.size / 2, 1);
+      }
+    },
+  );
+
+  it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
+    'sets no line of the "%s" front over another',
+    (_, copy) => {
+      const boxes = frontText(fonts, copy, VALID).map(boxOf);
+      boxes.forEach((a, i) =>
+        boxes.slice(i + 1).forEach((b) => expect(overlaps(a, b)).toBe(false)),
+      );
+    },
+  );
+
+  it('ends every line of the back at least 1/16 in left of the sorrel', () => {
+    const items = backText(fonts, 'b4444444');
+    expect(items.length).toBeGreaterThan(5);
+    for (const item of items) {
+      expect(boxOf(item).right, item.text).toBeLessThanOrEqual(BACK_PICTURE.x - PICTURE_GAP);
+      expect(item.x).toBe(COLUMN.left);
+    }
+  });
 
   it('keeps every line of the back 1/8 in inside the trim', () => {
     const items = backText(fonts, 'b4444444');
