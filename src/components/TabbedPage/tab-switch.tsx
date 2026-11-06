@@ -57,6 +57,7 @@ export const TabPanel = ({ children }: TabPanelProps): ReactElement => {
       pending={pending}
       className="tabbed-page__panel"
       filter={target?.filtered}
+      skeleton={target?.skeleton}
       shape={target?.shape}
       count={target?.sections}
       columns={target?.columns}

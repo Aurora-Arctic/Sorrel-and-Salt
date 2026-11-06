@@ -59,6 +59,8 @@ export interface SwapPanelProps {
   className: string;
   /** Whether the skeleton draws a filter row, as `TabPanelLoading`'s. */
   filter?: boolean;
+  /** A placeholder to draw in place of the shaped skeleton below. */
+  skeleton?: ReactNode;
   /** Which skeleton, as `TabPanelLoading`'s. */
   shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
   /** A `table` skeleton's column count, as `TabPanelLoading`'s. */

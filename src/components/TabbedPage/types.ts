@@ -7,6 +7,8 @@ export interface PageTab {
   label: string;
   /** A number shown after the label as a facet count, "Mine 3", and "99+" from 100; left out, none. */
   count?: number;
+  /** What the panel draws while this tab is on its way: the tab's own placeholder, built from the components its page draws. Left out, the `shape` fields below stand in. */
+  skeleton?: ReactNode;
   /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
   filtered?: boolean;
   /** What the tab's loading skeleton stands in for: a table (the default), cards (as the grimoire's tabs), or document (a site document's editor). */

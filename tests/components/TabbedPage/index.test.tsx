@@ -155,6 +155,30 @@ describe('TabbedPage', () => {
     expect(router.push).toHaveBeenCalledTimes(1);
   });
 
+  it("draws the pressed tab's own skeleton in the panel while it is on its way", async () => {
+    render(
+      <Navigating push={router.push}>
+        <TabbedPage
+          title="People"
+          tabs={[
+            TABS[0],
+            { ...TABS[1], skeleton: <p aria-hidden="true">Invitations placeholder</p> },
+            TABS[2],
+          ]}
+        >
+          <table aria-label="Users" />
+        </TabbedPage>
+      </Navigating>,
+    );
+
+    await act(async () => {
+      fireEvent.click(tab('Invitations'));
+    });
+
+    expect(within(panel()).getByText('Invitations placeholder')).toBeInTheDocument();
+    expect(within(panel()).queryByRole('table', { name: 'Users' })).not.toBeInTheDocument();
+  });
+
   it('moves the current page to the pressed tab once it has rendered', () => {
     // A navigation that renders at once: the address moves and the
     // transition ends in the same update.
