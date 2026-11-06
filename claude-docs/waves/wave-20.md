@@ -24,4 +24,4 @@
 
 **The data marks 33 entries today, and 32 once peyote leaves under M19.1.** The question tasks may change the list.
 
-**The help page waits on MB.175's build tasks.** M20.15 documents the warning in the help pages, which MB.175 builds. It also follows M20.13.
+**The help page waits on M17.16.** M20.15 documents the warning in the help pages, which M17.16 builds from MB.175's scope. It also follows M20.13.
