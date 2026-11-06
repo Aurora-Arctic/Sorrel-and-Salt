@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
@@ -6,7 +7,6 @@ import { latestMessageTo } from './mailpit';
 // any other token is a 404 (claude-docs/design-decisions/m15.48-anonymous-sender.md, "A link in each mail that opens the
 // request"). Which tokens the service honours is tests/modules/support/services/support-view-link.test.ts's.
 
-const ADDRESS = 'visitor@support-view-link.test';
 const SUBJECT = 'The Testwort jar will not open';
 
 test.beforeAll(async () => {
@@ -17,15 +17,17 @@ test('the receipt’s link opens the request with no session and takes a reply, 
   page,
   browser,
 }) => {
+  // Unique per run, so mail an earlier run left in Mailpit, carrying a token from a recreated database, is never the newest.
+  const address = `visitor-${randomUUID()}@support-view-link.test`;
   await page.goto('/support');
   await page.getByRole('radio', { name: /^Account/ }).check();
-  await page.getByRole('textbox', { name: 'Email' }).fill(ADDRESS);
+  await page.getByRole('textbox', { name: 'Email' }).fill(address);
   await page.getByRole('textbox', { name: 'Subject' }).fill(SUBJECT);
   await page.getByRole('textbox', { name: 'Message' }).fill('It sticks at the lid.');
   await page.getByRole('button', { name: 'Send Request' }).click();
   await expect(page.getByText(/within 5 working days/)).toBeVisible();
 
-  const receipt = await latestMessageTo(ADDRESS, 20_000);
+  const receipt = await latestMessageTo(address, 20_000);
   const link = receipt.text.match(/https?:\/\/\S+\/support\/request\/[A-Za-z0-9_-]+/)?.[0];
   expect(link, receipt.text).toBeDefined();
   const path = new URL(link!).pathname;
