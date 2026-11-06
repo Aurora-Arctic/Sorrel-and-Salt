@@ -142,4 +142,41 @@ describe('a cleanup batch', () => {
     expect(await retry.returnValue).toBe(1);
     expect(await exists(doomed)).toBe(false);
   });
+  it('reports a batch that fails every attempt outside the per-account delete, removes nothing, and leaves it for the next day', async () => {
+    // The step can throw past the per-account catch only from that catch itself: the database refuses the delete, and the log
+    // of the refusal throws, so every attempt fails and the run falls to its failure report.
+    const doomed = await signUp('lost-batch', false, '2 days');
+    const logged = vi.spyOn(console, 'error').mockImplementation((line) => {
+      if (String(line).includes('Could not delete the lapsed provisional account'))
+        throw new Error('log down');
+    });
+    await sql`
+      create or replace function refuse_cleanup_delete() returns trigger language plpgsql as $$
+      begin
+        if old.email like '%${sql.unsafe(DOMAIN)}' then raise exception 'removal refused'; end if;
+        return old;
+      end $$
+    `;
+    await sql`create trigger refuse_cleanup_delete before delete on users for each row execute function refuse_cleanup_delete()`;
+    try {
+      const run = await start(provisionalCleanupBatch, [[doomed]]);
+
+      expect(await run.returnValue).toBeNull();
+      expect(await exists(doomed)).toBe(true);
+      expect(
+        logged.mock.calls.some(([line]) =>
+          String(line).includes('every attempt failed; a batch of 1 accounts is left'),
+        ),
+      ).toBe(true);
+    } finally {
+      await sql`drop trigger refuse_cleanup_delete on users`;
+      await sql`drop function refuse_cleanup_delete()`;
+      logged.mockRestore();
+    }
+
+    // With the fault gone, the next batch takes the account the failed one left.
+    const retry = await start(provisionalCleanupBatch, [[doomed]]);
+    expect(await retry.returnValue).toBe(1);
+    expect(await exists(doomed)).toBe(false);
+  });
 });
