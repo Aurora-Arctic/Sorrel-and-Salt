@@ -1,5 +1,7 @@
 import { test, expect } from './fixtures';
+import { randomUUID } from 'node:crypto';
 import { recreateE2eDatabase } from './database';
+import { latestMessageTo } from './mailpit';
 
 // Against the built server: browsing the public pages sets no cookie, and a signed-out send leaves the visitor an anonymous
 // session that reaches their own requests and nothing else (claude-docs/design-decisions/m15.48-anonymous-sender.md).
@@ -46,4 +48,33 @@ test('a signed-out send leaves a session that shows the visitor’s request and 
 
   await page.goto('/coven');
   await expect(page).toHaveURL(/\/sign-in\?next=%2Fcoven$/);
+});
+
+test('a returning anonymous visitor is offered the signed-out form in the header Support dialog, and its send mails the view link', async ({
+  page,
+}) => {
+  const run = randomUUID();
+  await page.goto('/support');
+  await page.getByRole('radio', { name: /^Account/ }).check();
+  await page.getByRole('textbox', { name: 'Email' }).fill(`first-${run}@anonymous-sender.test`);
+  await page.getByRole('textbox', { name: 'Subject' }).fill('The first Testwort request');
+  await page.getByRole('textbox', { name: 'Message' }).fill('The first request.');
+  await page.getByRole('button', { name: 'Send Request' }).click();
+  await expect(page.getByText(/within 5 working days/)).toBeVisible();
+
+  // The visitor now holds an anonymous session; the header dialog must still treat them as signed out.
+  const address = `second-${run}@anonymous-sender.test`;
+  await page.goto('/compendium?support=account');
+  const dialog = page.getByRole('dialog', { name: 'Contact Support' });
+  await dialog.getByRole('radio', { name: /^Account/ }).check();
+  await dialog.getByRole('textbox', { name: 'Email' }).fill(address);
+  await dialog.getByRole('textbox', { name: 'Subject' }).fill('The second Testwort request');
+  await dialog
+    .getByRole('textbox', { name: 'Message' })
+    .fill('The second request, from the header.');
+  await dialog.getByRole('button', { name: 'Send Request' }).click();
+  await expect(dialog.getByText(/within 5 working days/)).toBeVisible();
+
+  const mail = await latestMessageTo(address, 20_000);
+  expect(mail.text).toMatch(/\/support\/request\/([A-Za-z0-9_-]{32,})/);
 });

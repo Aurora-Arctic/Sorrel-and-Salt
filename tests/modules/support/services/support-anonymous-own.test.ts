@@ -4,15 +4,17 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import {
   countMySupportRequests,
+  getMySupportDialogState,
   getMySupportRequest,
   listMySupportRequests,
   sendSignedOutSupportRequest,
+  sendSupportRequest,
 } from '@/modules/support';
 import type { AnonymousMinter, SupportNotifier } from '@/modules/support';
 import { assertMembership } from '@/modules/coven';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
-import { A } from '../../../support/as-user';
+import { A, C, asUser } from '../../../support/as-user';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 // What `/account/support` reads for the account a signed-out send minted: its own requests and nobody else's, by list and by id
@@ -100,5 +102,37 @@ describe('an anonymous account’s own requests', () => {
     expect(
       await failureOf(assertMembership(session, demo!.id as string, { workspace: ['read'] })),
     ).toBeInstanceOf(Forbidden);
+  });
+});
+
+// The Support dialog in the site header and the signed-in send it would otherwise reach: an anonymous session is a signed-out
+// visitor to both, so it writes again through the signed-out form, which keeps the address and mails the link.
+describe('an anonymous session at the Support dialog', () => {
+  it('is offered the signed-out form, where a signed-in account is offered the signed-in one', async () => {
+    const { session } = await sendAs('first@example.test', 'The first Testwort request');
+    // Precondition: the same call answers a signed-in account, under no time-out, with the signed-in form.
+    expect(await getMySupportDialogState(asUser(C))).toEqual({ kind: 'form', until: null });
+
+    expect(await getMySupportDialogState(session)).toEqual({ kind: 'signedOut', until: null });
+  });
+
+  it('is refused the signed-in send, which writes nothing, where a signed-in account’s same send saves', async () => {
+    const { session } = await sendAs('first@example.test', 'The first Testwort request');
+    const input = {
+      about: 'account',
+      subject: 'A second Testwort request',
+      message: 'It still sticks.',
+    } as const;
+    // Precondition: the same input saves from a signed-in account.
+    const saved = await sendSupportRequest(asUser(C), input, mail);
+    expect(saved.createdBy).toBe(C.id);
+    const before = await sql`select id from support_requests where created_by = ${session.userId}`;
+    expect(before).toHaveLength(1);
+
+    expect(await failureOf(sendSupportRequest(session, input, mail))).toBeInstanceOf(Forbidden);
+
+    expect(await sql`select id from support_requests where created_by = ${session.userId}`).toEqual(
+      before,
+    );
   });
 });
