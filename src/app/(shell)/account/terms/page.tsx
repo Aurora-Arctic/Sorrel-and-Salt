@@ -6,6 +6,7 @@ import { signedInLanding } from '../../../../lib/landing';
 import { safeReturnPath } from '../../../../lib/sign-in';
 import { agreementVersionInForce, readDocument } from '@/modules/documents';
 import type { TermsPageProps } from './types';
+import PageFrame from '@/components/PageFrame';
 
 // Out of search results and unfollowed: the public Terms of Use link here, and a signed-out crawler
 // is sent on to sign-in.
@@ -30,7 +31,7 @@ export default async function TermsAcceptancePage({ searchParams }: TermsPagePro
   const destination = safeReturnPath(params.next) ?? (await signedInLanding(session));
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <div className="panel">
         <TermsAgreement
           version={version}
@@ -39,6 +40,6 @@ export default async function TermsAcceptancePage({ searchParams }: TermsPagePro
           destination={destination}
         />
       </div>
-    </main>
+    </PageFrame>
   );
 }

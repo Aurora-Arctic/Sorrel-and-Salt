@@ -14,6 +14,7 @@ import {
 } from '../../../lib/support-path';
 import { getMySupportTimeout } from '../../../modules/support';
 import type { SupportPageProps } from './types';
+import PageWithNav from '@/components/PageWithNav';
 
 // Crawlable, so a search engine reads this and drops the bare address it would otherwise list from
 // links; the page holds nothing worth a result.
@@ -44,13 +45,13 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   }
   // The form keeps to the column the account's support tab uses (`.page-with-nav`), not the frame's wide one.
   return (
-    <div className="page-with-nav">
+    <PageWithNav as="div">
       <PageHeader
         eyebrow="Help"
         title="Support"
         lede="Tell us about something you cannot use, something broken, or ask a question."
       />
       <SupportPanel state={state} path={single(params.from) ?? SUPPORT_PATH} />
-    </div>
+    </PageWithNav>
   );
 }

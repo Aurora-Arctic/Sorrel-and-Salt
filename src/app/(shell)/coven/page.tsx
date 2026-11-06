@@ -8,6 +8,7 @@ import { requireSession } from '../../../lib/request-session';
 import { firstReachable } from '../../../lib/shell-home';
 import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
+import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = {
   title: 'Your Coven',
@@ -26,7 +27,7 @@ export default async function CovenLandingPage() {
   const pending = viewer.pendingInvitations;
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <section className="page-frame__section" aria-labelledby="coven-landing-heading">
         <PageHeader
           id="coven-landing-heading"
@@ -67,6 +68,6 @@ export default async function CovenLandingPage() {
           </p>
         )}
       </section>
-    </main>
+    </PageFrame>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import InvitationPanel from '../../invite/[token]/invitation-panel';
 import type { InvitePageProps } from '../../invite/[token]/types';
+import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = {
   title: 'Your Invitation',
@@ -10,8 +11,8 @@ export const metadata: Metadata = {
 export default async function CardPage({ params }: InvitePageProps) {
   const { token } = await params;
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <InvitationPanel token={token} here={`/i/${encodeURIComponent(token)}`} />
-    </main>
+    </PageFrame>
   );
 }

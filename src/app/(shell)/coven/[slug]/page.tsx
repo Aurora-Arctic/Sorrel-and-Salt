@@ -11,6 +11,7 @@ import PageNav from '../../../../components/PageNav';
 import type { PageNavEntry } from '../../../../components/PageNav/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
 import type { CovenLayoutParams } from './types';
+import PageWithNav from '@/components/PageWithNav';
 
 // The page a coven opens on. The layout's title template does not apply in its own segment, so this
 // titles itself with the coven's name. The guard runs again (claude-docs/auth/coven-guard.md,
@@ -55,7 +56,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   ];
 
   return (
-    <main className="page-with-nav">
+    <PageWithNav>
       <PageHeader
         eyebrow="Coven"
         title={workspace.name}
@@ -146,6 +147,6 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           </div>
         </section>
       )}
-    </main>
+    </PageWithNav>
   );
 }

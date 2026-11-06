@@ -20,6 +20,7 @@ import { isRosterProvider } from '../../../../../lib/social-providers';
 import { configuredProviders } from '../../../../../lib/social-providers-config';
 import { getMe } from '@/modules/identity';
 import type { SignInPageProps } from './types';
+import PageWithNav from '@/components/PageWithNav';
 
 export const metadata: Metadata = {
   title: 'Sign-In',
@@ -45,7 +46,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       : undefined;
 
   return (
-    <div className="page-with-nav page-with-nav--headless">
+    <PageWithNav as="div" headless>
       <PageNav
         label="On This Page"
         entries={[
@@ -127,6 +128,6 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
         </div>
         <Passkeys passkeys={passkeys} />
       </section>
-    </div>
+    </PageWithNav>
   );
 }

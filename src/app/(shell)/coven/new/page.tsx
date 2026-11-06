@@ -7,6 +7,7 @@ import PageHeader from '../../../../components/PageHeader';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import { requireSession } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
+import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = {
   title: 'Create Coven',
@@ -34,7 +35,7 @@ export default async function NewCovenPage({
       )}
       {/* Centred in the narrow page frame, on a panel, as the email page's form
           is. */}
-      <main className="page-frame page-frame--narrow">
+      <PageFrame narrow>
         <div className="page-frame__section panel">
           <PageHeader
             title="Create Coven"
@@ -54,7 +55,7 @@ export default async function NewCovenPage({
             </Notice>
           )}
         </div>
-      </main>
+      </PageFrame>
     </>
   );
 }

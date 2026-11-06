@@ -15,6 +15,7 @@ import { requireSession } from '../../../../lib/request-session';
 import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '../../../../lib/sign-in';
 import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
+import PageWithNav from '@/components/PageWithNav';
 
 export const metadata: Metadata = {
   title: 'Your Account',
@@ -40,7 +41,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = invitations.pageInfo;
 
   return (
-    <div className="page-with-nav page-with-nav--headless">
+    <PageWithNav as="div" headless>
       <PageNav
         label="On This Page"
         entries={[
@@ -100,6 +101,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
         />
       </section>
-    </div>
+    </PageWithNav>
   );
 }

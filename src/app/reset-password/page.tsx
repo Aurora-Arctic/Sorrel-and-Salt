@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import ResetPasswordForm from '../../components/ResetPasswordForm';
 import PageHeader from '../../components/PageHeader';
 import type { ResetPasswordPageProps } from './types';
+import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = {
   title: 'Choose a New Password',
@@ -19,7 +20,7 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
     typeof token === 'string' && token !== '' && error === undefined ? token : undefined;
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <div className="panel">
         <PageHeader
           headingClassName="auth-title"
@@ -28,6 +29,6 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
         />
         <ResetPasswordForm token={usable} />
       </div>
-    </main>
+    </PageFrame>
   );
 }

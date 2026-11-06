@@ -7,6 +7,7 @@ import { getShellSession } from '../../lib/request-session';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import LocalTime from '../../components/LocalTime';
 import { getMySupportTimeout } from '../../modules/support';
+import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = {
   title: 'Access Paused',
@@ -28,7 +29,7 @@ export default async function AccessPausedPage() {
   const timedOut = session.emailUnverified ? null : await getMySupportTimeout(session);
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <div className="panel">
         <PageHeader headingClassName="auth-title" title="Access Paused" />
         {accessPause.until ? (
@@ -66,6 +67,6 @@ export default async function AccessPausedPage() {
           The <Link href="/compendium">Compendium</Link> stays open to everyone, without signing in.
         </p>
       </div>
-    </main>
+    </PageFrame>
   );
 }

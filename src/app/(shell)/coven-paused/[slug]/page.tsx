@@ -12,6 +12,7 @@ import { viewerOf } from '../../../../lib/viewer';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import LocalTime from '../../../../components/LocalTime';
 import type { CovenPausedPageProps } from './types';
+import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = {
   title: 'Access Paused',
@@ -40,7 +41,7 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
       <ContextRow
         lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}
       />
-      <main className="page-frame page-frame--narrow">
+      <PageFrame narrow>
         <div className="page-frame__section panel">
           <PageHeader
             title="Access Paused"
@@ -80,7 +81,7 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
             </section>
           )}
         </div>
-      </main>
+      </PageFrame>
     </>
   );
 }

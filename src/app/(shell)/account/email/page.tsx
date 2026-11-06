@@ -6,6 +6,7 @@ import { requireSession } from '../../../../lib/request-session';
 import { signedInLanding } from '../../../../lib/landing';
 import { ACCOUNT_PATH, safeReturnPath } from '../../../../lib/sign-in';
 import type { EmailPageProps } from './types';
+import PageFrame from '@/components/PageFrame';
 
 export const metadata: Metadata = {
   title: 'Your Email',
@@ -18,7 +19,7 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
   const [me, landing] = await Promise.all([getMe(session), signedInLanding(session)]);
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <div className="panel">
         <EmailForm
           // A placeholder is the row's way of having no address; the form
@@ -38,6 +39,6 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
           accountPath={ACCOUNT_PATH}
         />
       </div>
-    </main>
+    </PageFrame>
   );
 }
