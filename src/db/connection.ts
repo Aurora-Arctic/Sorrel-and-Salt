@@ -19,7 +19,7 @@ const clients = (registry.__sorrelPostgresClients ??= new Map());
 function client(url: string): postgres.Sql {
   let existing = clients.get(url);
   if (!existing) {
-    existing = postgres(url);
+    existing = postgres(url, { onread: false });
     clients.set(url, existing);
   }
   return existing;

@@ -14,7 +14,9 @@ function bounded(first?: string | ClientOptions, second?: ClientOptions) {
   // NOTICE-level messages are dropped unless a caller passes its own handler: a
   // truncate that cascades prints one per table, ~3,000 lines a run. A WARNING
   // or anything else the server says still prints, as postgres.js would.
+  // `onread: false` because msw's socket passthrough ignores Node's `onread` mode, which the driver otherwise uses.
   const capped = {
+    onread: false,
     onnotice: (notice: postgres.Notice) => {
       // oxlint-disable-next-line no-console -- a deliberate diagnostic: a server WARNING must still reach the run's output
       if (notice.severity !== 'NOTICE') console.log(notice);
