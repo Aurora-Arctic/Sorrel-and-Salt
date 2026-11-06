@@ -252,7 +252,7 @@ const MAILS: {
       supportEmailReplyMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/support`,
-        body: 'Thank you for writing.',
+        requestSubject: 'Recovery link',
       }),
   },
 ];

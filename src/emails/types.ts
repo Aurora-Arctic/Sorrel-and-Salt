@@ -120,10 +120,10 @@ export interface SupportClosingSoonProps extends SupportStatusProps {
   timeLeftMs: number;
 }
 
-/** A staff reply to a signed-out visitor, whose only way to read it is this mail. `url` is the support page, for writing again. */
+/** Told to a signed-out visitor that a reply is waiting. `url` is the request’s page, where it is read; the reply itself is never in the mail. */
 export interface SupportEmailReplyProps extends BaseEmailProps {
-  /** What staff wrote. */
-  body: string;
+  /** The subject of the request answered, as its sender wrote it; the template cuts it to length. */
+  requestSubject: string;
 }
 
 /** Told to a user that a keeper timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */

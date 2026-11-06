@@ -32,7 +32,7 @@ export function supportClosingNoticeMessage(
 
 /**
  * The mail telling a sender of a staff reply, linked from `origin`. A signed-in sender is told one is waiting, with no reply text,
- * and linked to the request; a signed-out sender, who has no page to read it on, gets `body` whole, linked to the support form.
+ * and linked to the request; a signed-out sender is told the same, linked to the request’s page behind their mailed link.
  */
 export function supportReplyMessage(
   origin: string,
@@ -49,7 +49,7 @@ export function supportReplyMessage(
     return supportEmailReplyMessage({
       to,
       url: `${origin}${signedOutPath(reply.viewToken)}`,
-      body: reply.body,
+      requestSubject: reply.requestSubject,
     });
   const url = `${origin}${supportRequestPath(reply.requestId)}`;
   return supportReplyNoticeMessage({ to, url, requestSubject: reply.requestSubject });
