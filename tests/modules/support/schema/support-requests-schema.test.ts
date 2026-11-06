@@ -31,6 +31,7 @@ const OWN_COLUMNS = [
   'error_reference',
   'sender_email',
   'closing_notice_sent_at',
+  'view_token_hash',
 ];
 
 const LIST_INDEX = 'support_requests_status_created_idx';

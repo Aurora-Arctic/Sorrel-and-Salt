@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
-import { getNamedType, isObjectType, type GraphQLObjectType } from 'graphql';
+import { getNamedType, isEnumType, isObjectType, type GraphQLObjectType } from 'graphql';
 import { schema } from '@/graphql/schema';
 import { NotFound } from '@/lib/errors';
 import {
@@ -201,10 +201,14 @@ describe('a signed-in sender’s mail', () => {
 });
 
 describe('the GraphQL schema', () => {
-  /** Every scalar field of `type` that takes no required argument, as a selection set. */
-  function scalarsOf(type: GraphQLObjectType): string {
+  /** Every scalar field of `type` that takes no required argument, as a selection set; for a sender, without the staff-only fields. */
+  function scalarsOf(type: GraphQLObjectType, staff: boolean): string {
     return Object.values(type.getFields())
       .filter((field) => !isObjectType(getNamedType(field.type)))
+      .filter(
+        (field) =>
+          staff || !(field.extensions.pothosOptions as { authScopes?: unknown }).authScopes,
+      )
       .filter((field) =>
         field.args.every(
           (arg) => arg.defaultValue !== undefined || !String(arg.type).endsWith('!'),
@@ -215,10 +219,17 @@ describe('the GraphQL schema', () => {
   }
 
   it('names no field for the token or its hash on any type', () => {
+    // A token or hash is a string, so a field answering only a Boolean, number or enum cannot carry one, whatever its
+    // name: replyToSupportRequestByViewToken takes the token and answers a Boolean.
     const fields = Object.values(schema.getTypeMap())
       .filter((type) => isObjectType(type) && !type.name.startsWith('__'))
       .flatMap((type) =>
-        Object.keys((type as GraphQLObjectType).getFields()).map((name) => `${type.name}.${name}`),
+        Object.entries((type as GraphQLObjectType).getFields())
+          .filter(([, field]) => {
+            const named = getNamedType(field.type);
+            return !isEnumType(named) && !['Boolean', 'Int', 'Float'].includes(named.name);
+          })
+          .map(([name]) => `${type.name}.${name}`),
       );
     // Precondition: the walk reaches the support request type.
     expect(fields).toContain('SupportRequest.subject');
@@ -232,14 +243,20 @@ describe('the GraphQL schema', () => {
       await sql`select created_by from support_requests where id = ${id}`;
     const request = schema.getType('SupportRequest') as GraphQLObjectType;
     const reply = schema.getType('SupportReply') as GraphQLObjectType;
-    const selection = `{ ${scalarsOf(request)} replies { ${scalarsOf(reply)} } }`;
+    const selection = (staff: boolean) =>
+      `{ ${scalarsOf(request, staff)} replies { ${scalarsOf(reply, staff)} } }`;
+    // Precondition: the keeper's selection reaches the staff-only fields the sender's leaves out.
+    expect(selection(true)).toContain('errorReference');
+    expect(selection(false)).not.toContain('errorReference');
     await replyToSupportRequest(asUser(E), id, 'Which code?', mail);
 
     const answers = [
-      await run(asUser(E), `query ($id: ID!) { supportRequest(id: $id) ${selection} }`, { id }),
+      await run(asUser(E), `query ($id: ID!) { supportRequest(id: $id) ${selection(true)} }`, {
+        id,
+      }),
       await run(
         { userId: senderId as string, role: 'user', anonymous: true },
-        `query ($id: ID!) { mySupportRequest(id: $id) ${selection} }`,
+        `query ($id: ID!) { mySupportRequest(id: $id) ${selection(false)} }`,
         { id },
       ),
     ];

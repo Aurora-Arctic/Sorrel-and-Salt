@@ -47,10 +47,20 @@ test('the receipt’s link opens the request with no session and takes a reply, 
   // A reply from the page, still with no session: it is posted, and shows on the request when the page is opened again.
   const body = 'The Testwort lid is still stuck.';
   await visitor.getByRole('textbox', { name: 'Reply' }).fill(body);
+  // Waits on the mutation itself, then on the reply in the thread: the reply box holds the same text until it clears.
+  const posted = visitor.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/graphql') &&
+      (response.request().postData() ?? '').includes('replyToSupportRequestByViewToken'),
+  );
   await visitor.getByRole('button', { name: 'Send Reply' }).click();
-  await expect(visitor.getByText(body)).toBeVisible();
+  const answer = await (await posted).json();
+  expect(answer.errors).toBeUndefined();
+  expect(answer.data).toEqual({ replyToSupportRequestByViewToken: true });
+  const inThread = visitor.getByRole('listitem').filter({ hasText: body });
+  await expect(inThread).toBeVisible();
   await visitor.goto(path);
-  await expect(visitor.getByText(body)).toBeVisible();
+  await expect(inThread).toBeVisible();
   expect(await elsewhere.cookies()).toEqual([]);
 
   const wrong = await visitor.goto(`${path.slice(0, -1)}${path.endsWith('x') ? 'y' : 'x'}`);

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { isObjectType } from 'graphql';
+import { getNamedType, isEnumType, isObjectType, type GraphQLField } from 'graphql';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { schema } from '@/graphql/schema';
@@ -121,12 +121,20 @@ describe('Mutation.createAdminInvitation', () => {
     ]);
   });
 
+  // A token, hash or link is a string, so a field answering only a Boolean, number or enum cannot carry one, whatever
+  // its name: replyToSupportRequestByViewToken takes a token and answers a Boolean.
+  const canCarryText = (field: GraphQLField<unknown, unknown>) => {
+    const named = getNamedType(field.type);
+    return !isEnumType(named) && !['Boolean', 'Int', 'Float'].includes(named.name);
+  };
+
   it('has no token, hash or link field on any type but the card mint result', () => {
     const carriers: string[] = [];
     for (const type of Object.values(schema.getTypeMap())) {
       if (!isObjectType(type) || type.name.startsWith('__')) continue;
-      for (const name of Object.keys(type.getFields())) {
-        if (/token|hash|link(?!ed)/i.test(name)) carriers.push(`${type.name}.${name}`);
+      for (const [name, field] of Object.entries(type.getFields())) {
+        if (/token|hash|link(?!ed)/i.test(name) && canCarryText(field))
+          carriers.push(`${type.name}.${name}`);
       }
     }
     expect(carriers).toEqual(['MintedInvitationCards.tokens']);

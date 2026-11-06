@@ -161,7 +161,8 @@ describe('a stale token', () => {
     // A second mail mints a newer token: the resolved mail, as staff resolving would start it.
     await sql`update support_requests set status = 'resolved', resolved_at = now() where id = ${id}`;
     await supportStatusStep({ kind: 'resolved', requestId: id, origin: ORIGIN });
-    const newest = sent.map(({ text }) => text.match(VIEW_LINK)?.[1]).find(Boolean)!;
+    const tokens = sent.map(({ text }) => text.match(VIEW_LINK)?.[1]).filter(Boolean);
+    const newest = tokens[tokens.length - 1]!;
     // Preconditions: the tokens differ, and the newest one is honoured.
     expect(newest).not.toBe(first);
     await sql`update support_requests set status = 'open', resolved_at = null where id = ${id}`;

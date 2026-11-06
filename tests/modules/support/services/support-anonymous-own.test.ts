@@ -12,6 +12,8 @@ import type { AnonymousMinter, SupportNotifier } from '@/modules/support';
 import { assertMembership } from '@/modules/coven';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { insertAnonymousUser } from '../../../support/db/insert-anonymous-user';
+import { A } from '../../../support/as-user';
+import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 // What `/account/support` reads for the account a signed-out send minted: its own requests and nobody else's, by list and by id
 // (claude-docs/design-decisions/m15.48-anonymous-sender.md). The page guard letting the session reach the page is
@@ -81,8 +83,14 @@ describe('an anonymous account’s own requests', () => {
   });
 
   it('holds no seat anywhere: the demo coven refuses it', async () => {
+    // The test database holds no demo coven, so the test writes one, before the send as on a live site.
+    const live = async () => sql`select id from workspaces where demo and deleted_at is null`;
+    if ((await live()).length === 0) {
+      await sql`
+        insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name: 'Fixture Demo Coven' })), demo: true, created_by: A.id, updated_by: A.id })}`;
+    }
     const { session } = await sendAs('first@example.test', 'The first Testwort request');
-    const [demo] = await sql`select id from workspaces where demo and deleted_at is null`;
+    const [demo] = await live();
     // Precondition: the demo coven exists, so a refusal is the missing seat and not a missing coven.
     expect(demo).toBeDefined();
     expect(

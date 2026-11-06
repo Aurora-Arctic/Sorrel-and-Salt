@@ -155,9 +155,9 @@ describe('a signed-out send', () => {
     const { cookie } = await sendSignedOut();
 
     const mine = (await (
-      await graphql('query { mySupportRequests(first: 5) { totalCount } }', {}, cookie)
-    ).json()) as { data?: { mySupportRequests?: { totalCount: number } } };
-    expect(mine.data?.mySupportRequests?.totalCount).toBe(1);
+      await graphql('query { mySupportRequests(first: 5) { edges { node { id } } } }', {}, cookie)
+    ).json()) as { data?: { mySupportRequests?: { edges: { node: { id: string } }[] } } };
+    expect(mine.data?.mySupportRequests?.edges).toHaveLength(1);
 
     const me = (await (await graphql('query { me { id } }', {}, cookie)).json()) as {
       data?: { me: unknown } | null;
@@ -247,8 +247,12 @@ describe('signing in from an anonymous session', () => {
     const realCookie = cookieHeader(signedIn);
     expect((await sessionUser(realCookie))?.id).toBe(realId);
     const mine = (await (
-      await graphql('query { mySupportRequests(first: 5) { totalCount } }', {}, realCookie)
-    ).json()) as { data?: { mySupportRequests?: { totalCount: number } } };
-    expect(mine.data?.mySupportRequests?.totalCount).toBe(1);
+      await graphql(
+        'query { mySupportRequests(first: 5) { edges { node { id } } } }',
+        {},
+        realCookie,
+      )
+    ).json()) as { data?: { mySupportRequests?: { edges: { node: { id: string } }[] } } };
+    expect(mine.data?.mySupportRequests?.edges).toHaveLength(1);
   });
 });

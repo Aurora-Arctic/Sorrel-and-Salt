@@ -195,6 +195,9 @@ describe('sendSignedOutSupportRequest', () => {
     // Precondition: the first send minted the account the second one is sent from.
     expect(minted).toHaveLength(1);
     const returning = minted[0]!;
+    // Users outlive the reset between tests, so the count is taken here rather than assumed to be one.
+    const anonymousUsers = async () => (await sql`select 1 from users where is_anonymous`).length;
+    const before = await anonymousUsers();
 
     await sendSignedOutSupportRequest(
       { ...INPUT, subject: 'A second Testwort request' },
@@ -211,7 +214,7 @@ describe('sendSignedOutSupportRequest', () => {
       { created_by: returning },
       { created_by: returning },
     ]);
-    expect(await sql`select 1 from users where is_anonymous`).toHaveLength(1);
+    expect(await anonymousUsers()).toBe(before);
   });
 
   it('treats an address that belongs to an account as only an address', async () => {
