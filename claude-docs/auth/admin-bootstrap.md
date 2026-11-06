@@ -900,3 +900,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   `InvitationCardBatch.refusedOpens` counts them; both are admin only, like every card field.
 
 The component is described in [`components/admin-cards.md`](../components/admin-cards.md).
+
+### Anonymous accounts (M15.48)
+
+A signed-out support send mints an anonymous account (`users.is_anonymous`) through Better Auth's `anonymous` plugin. The sign-up hook skips it: it earns no demo-coven seat and no `canCreateWorkspace`. When the sender signs in to a real account with a verified email, the plugin's link step moves the account's requests to it, and a request whose `sender_email` matches a verified address is claimed the same way. The daily provisional cleanup removes an anonymous account that holds no live request, or none at all after 7 days. Record: `design-decisions/m15.48-anonymous-sender.md`.

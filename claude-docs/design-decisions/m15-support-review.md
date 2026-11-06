@@ -132,7 +132,7 @@ A request can belong to an email address instead of an account, so a signed-out 
 
 **The check.** The entry asks that exactly one of the sender account and `sender_email` is set. Because `created_by` is always set, the check reads "the sender account" as an account other than the signed-out one: `(sender_email IS NOT NULL) = (created_by = <signed-out account id>)`. The id is the fixed constant `SIGNED_OUT_SENDER_ID` in `src/lib/support-sender.ts`, so a CHECK can name it. Every existing row passes, since none is created by that account.
 
-**Not built here.** The migration does not insert the account: a seed does (M15.40). Better Auth's anonymous plugin is a separate task (M15.48) and nothing here builds toward it.
+**Not built here.** The migration does not insert the account: a seed does (M15.40). Better Auth's anonymous plugin is a separate task (M15.48, built since: m15.48-anonymous-sender.md) and nothing here built toward it.
 
 ### A Signed-Out Request Is Limited, Trapped and Answered by Email (M15.40)
 
@@ -144,7 +144,7 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 - **Mail.** A receipt mail confirms the send. A staff reply to a signed-out request is mailed whole to `sender_email`, since the sender has no account to read it in.
 - **An address that belongs to an account** is still treated as signed out, so a request cannot reveal which addresses are registered.
 - **The sender's id** is one named constant, `SIGNED_OUT_SENDER_ID` in `src/lib/support-sender.ts`. The seed and the schema's CHECK use it, and the CHECK's migration (`0112_support-sender-email`) holds the same literal, since SQL cannot import it. The CHECK tying `created_by` to that id is accepted.
-- **Out of scope.** Better Auth's anonymous plugin (M15.48) is not built toward.
+- **Out of scope.** Better Auth's anonymous plugin (M15.48) was not built toward here; it landed later (m15.48-anonymous-sender.md).
 
 ## Decided while building
 
