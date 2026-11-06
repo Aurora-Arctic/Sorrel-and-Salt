@@ -3,11 +3,15 @@ import { supportEmailReplyMessage } from '../emails/support-email-reply';
 import { supportReplyNoticeMessage } from '../emails/support-reply-notice';
 import { supportReceivedMessage } from '../emails/support-received';
 import { supportResolvedMessage } from '../emails/support-resolved';
-import { supportRequestPath } from './support-path';
+import { SUPPORT_PATH, supportRequestPath, supportViewPath } from './support-path';
 import type { Message } from './types';
 
 // The support mails a job's step renders from the row when it sends, so a run carries ids and never an address or a subject.
 // Only templates and paths are imported, as the step bundle takes in everything this file reaches.
+
+/** Where a signed-out sender's mail leads: the request's own page when it carries a token, the support form when it does not. */
+const signedOutPath = (viewToken: string | undefined) =>
+  viewToken ? supportViewPath(viewToken) : SUPPORT_PATH;
 
 /**
  * The closing-soon notice, linked from `origin`. A signed-out sender has no page to open, so `requestId` is null and the mail
@@ -19,23 +23,42 @@ export function supportClosingNoticeMessage(
   requestSubject: string,
   requestId: string | null,
   timeLeftMs: number,
+  viewToken?: string,
 ): Promise<Message> {
   const signedOut = requestId === null;
-  const url = `${origin}${signedOut ? '/support' : supportRequestPath(requestId)}`;
-  return supportClosingSoonMessage({ to, url, requestSubject, signedOut, timeLeftMs });
+  const url = `${origin}${signedOut ? signedOutPath(viewToken) : supportRequestPath(requestId)}`;
+  return supportClosingSoonMessage({
+    to,
+    url,
+    requestSubject,
+    signedOut,
+    viewLink: signedOut && Boolean(viewToken),
+    timeLeftMs,
+  });
 }
 
 /**
  * The mail telling a sender of a staff reply, linked from `origin`. A signed-in sender is told one is waiting, with no reply text,
- * and linked to the request; a signed-out sender, who has no page to read it on, gets `body` whole, linked to the support form.
+ * and linked to the request; a signed-out sender is told the same, linked to the request’s page behind their mailed link.
  */
 export function supportReplyMessage(
   origin: string,
   to: string,
-  reply: { requestId: string; requestSubject: string; body: string; signedOut: boolean },
+  reply: {
+    requestId: string;
+    requestSubject: string;
+    body: string;
+    signedOut: boolean;
+    viewToken?: string;
+  },
 ): Promise<Message> {
   if (reply.signedOut)
-    return supportEmailReplyMessage({ to, url: `${origin}/support`, body: reply.body });
+    return supportEmailReplyMessage({
+      to,
+      url: `${origin}${signedOutPath(reply.viewToken)}`,
+      requestSubject: reply.requestSubject,
+      viewLink: Boolean(reply.viewToken),
+    });
   const url = `${origin}${supportRequestPath(reply.requestId)}`;
   return supportReplyNoticeMessage({ to, url, requestSubject: reply.requestSubject });
 }
@@ -55,7 +78,14 @@ export function supportStatusMessage(
   to: string,
   requestSubject: string,
   requestId: string | null,
+  viewToken?: string,
 ): Promise<Message> {
-  const url = `${origin}${requestId === null ? '/support' : supportRequestPath(requestId)}`;
-  return STATUS_MESSAGES[mail]({ to, url, requestSubject, signedOut: requestId === null });
+  const url = `${origin}${requestId === null ? signedOutPath(viewToken) : supportRequestPath(requestId)}`;
+  return STATUS_MESSAGES[mail]({
+    to,
+    url,
+    requestSubject,
+    signedOut: requestId === null,
+    viewLink: requestId === null && Boolean(viewToken),
+  });
 }

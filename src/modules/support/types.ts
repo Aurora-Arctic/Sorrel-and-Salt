@@ -58,3 +58,11 @@ export interface SupportDialogAnswer {
   kind: 'signedOut' | 'unverified' | 'timedOut' | 'form';
   until: Date | null;
 }
+
+/** What the mailed-link page shows of a signed-out request: its public thread and nothing staff hold, with no address, token or hash. */
+export type SupportRequestView = Pick<
+  SupportRequestRow,
+  'id' | 'about' | 'status' | 'subject' | 'message' | 'createdAt'
+> & {
+  replies: Pick<SupportReplyRow, 'id' | 'authorRole' | 'body' | 'createdAt'>[];
+};

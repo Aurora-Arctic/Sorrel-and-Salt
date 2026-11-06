@@ -150,6 +150,7 @@ export {
 } from './invitations';
 export {
   findStandingSupportTimeout,
+  findStandingSupportTimeoutByAddress,
   findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
@@ -162,6 +163,9 @@ export {
   findSupportRequestsDueToAnonymise,
   findSupportRequestsDueToClose,
   findReplyAwaitingNotice,
+  findSupportRequestByViewTokenHash,
+  findPublicSupportReplies,
+  countSenderRepliesSince,
   findSupportRepliesFor,
   findSupportRequestCount,
   findSupportViewCounts,
@@ -169,6 +173,7 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  findSupportTimeoutsForAddresses,
   RESOLVED_CLOSES_AFTER_DAYS,
   findStandingSupportTimeoutsFor,
 } from './support';

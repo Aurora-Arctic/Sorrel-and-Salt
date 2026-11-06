@@ -1481,6 +1481,11 @@
     font-size: type-size('caption');
   }
 
+  // A caution inside a hint, in the error red (`$secondary`), like the error beneath it.
+  .field__warning {
+    color: $secondary;
+  }
+
   .field__error {
     color: $secondary;
     font-size: type-size('small');

@@ -13,6 +13,8 @@ import type { SupportTimeoutMail } from '../types';
 export async function supportTimeoutMessageFor(mail: SupportTimeoutMail): Promise<Message | null> {
   const timeout = await findOneById(supportTimeouts, mail.timeoutId);
   if (!timeout || timeout.liftedAt) return null;
+  // An address-only time-out names no user, so there is no one to mail.
+  if (!timeout.userId) return null;
   const user = await findOneById(users, timeout.userId);
   if (!user) return null;
   return supportTimeoutNotice(mail.origin, user.email, timeout);

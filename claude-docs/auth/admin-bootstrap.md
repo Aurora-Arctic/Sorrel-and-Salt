@@ -900,3 +900,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   `InvitationCardBatch.refusedOpens` counts them; both are admin only, like every card field.
 
 The component is described in [`components/admin-cards.md`](../components/admin-cards.md).
+
+### Claiming signed-out support requests (M15.48)
+
+A signed-out support send makes no account and no session: the request is written as the seeded signed-out sender account with its `sender_email`. When an account gains a session or verifies its email, every request whose `sender_email` matches the verified address moves to it, with the sender's replies and any time-out bound to that address; an unverified account claims nothing. Record: `design-decisions/m15.48-mailed-link.md`.

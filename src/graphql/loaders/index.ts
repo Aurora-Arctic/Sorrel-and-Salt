@@ -29,6 +29,7 @@ import {
 import {
   repliesByRequest,
   tierBySender,
+  timeoutsByAddress,
   timeoutsBySender,
   usersOnRequests,
 } from '@/modules/support';
@@ -53,6 +54,7 @@ const LOADERS = {
   usersByIdForAdmin,
   repliesByRequest,
   tierBySender,
+  timeoutsByAddress,
   timeoutsBySender,
   usersOnRequests,
   cardPositionById,

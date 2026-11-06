@@ -12,6 +12,12 @@ const EVERYTHING = '/((?!workshop(?:/|$)).*)';
 /** Documents only: a policy on a JSON response protects nothing, and Altair (dev only) loads its assets from a CDN. */
 const DOCUMENTS = '/((?!workshop(?:/|$)|api/).*)';
 
+/** The page a signed-out request's mailed link opens: the browser reads its token from the fragment, so nothing of it is cached or sent as a referrer. */
+const VIEW_LINK = '/support/request';
+
+/** Documents but the view link, which has its own referrer policy. */
+const REFERRING_DOCUMENTS = '/((?!workshop(?:/|$)|api/|support/request(?:/|$)).*)';
+
 export function contentSecurityPolicy(development: boolean): string {
   return [
     "default-src 'self'",
@@ -40,9 +46,17 @@ export function securityHeaders(development: boolean): HeaderRules {
   return [
     {
       source: DOCUMENTS,
+      headers: [{ key: 'Content-Security-Policy', value: contentSecurityPolicy(development) }],
+    },
+    {
+      source: REFERRING_DOCUMENTS,
+      headers: [{ key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }],
+    },
+    {
+      source: VIEW_LINK,
       headers: [
-        { key: 'Content-Security-Policy', value: contentSecurityPolicy(development) },
-        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Referrer-Policy', value: 'no-referrer' },
+        { key: 'Cache-Control', value: 'no-store' },
       ],
     },
     {

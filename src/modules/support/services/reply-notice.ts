@@ -5,6 +5,7 @@ import { supportReplyMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
+import { mintSupportViewToken } from './view-link';
 import type { Message } from '../../../lib/types';
 
 // The mail that tells a sender of a staff reply, sent by its job's step as the System account. The step reads the reply, the
@@ -25,6 +26,7 @@ async function replyMailFor(replyId: string, origin: string): Promise<Message | 
     requestSubject: request.subject,
     body: reply.body,
     signedOut: request.senderEmail !== null,
+    viewToken: request.senderEmail !== null ? await mintSupportViewToken(request.id) : undefined,
   });
 }
 

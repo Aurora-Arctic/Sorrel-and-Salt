@@ -1,10 +1,11 @@
 import 'server-only';
-import { withAudit } from '../../../db/repository';
+import { findStandingSupportTimeoutByAddress, withAudit } from '../../../db/repository';
 import { Forbidden, RateLimited } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
 import { addressCountKey, clientCountKey } from '../../../lib/send-count-key';
 import { parseInput } from '../../../lib/validation';
+import { mintSupportViewToken } from './view-link';
 import { supportRequests } from '../schema/support-requests';
 import type { SupportNotifier, SupportRequestRow } from '../types';
 import {
@@ -13,16 +14,18 @@ import {
   type SignedOutSupportRequestInput as SignedOutInput,
 } from '../validation/support';
 import { mailSender } from './mail-sender';
+import { refuseTimedOut } from './time-out-refusals';
 import { redactPath } from './redact-path';
 
-/** Sends one address may make in the window. */
-export const SIGNED_OUT_ADDRESS_LIMIT = 10;
-/** Sends one client address may make in the window, across every email address it writes from. */
-export const SIGNED_OUT_IP_LIMIT = 30;
-/** The window the limits count over, in seconds: 24 hours. */
-export const SIGNED_OUT_WINDOW_SECONDS = 24 * 60 * 60;
+import {
+  SIGNED_OUT_ADDRESS_LIMIT,
+  SIGNED_OUT_IP_LIMIT,
+  SIGNED_OUT_WINDOW_SECONDS,
+} from './signed-out-limits';
 
-/** Who writes a signed-out request, as the audit trail names it. Holds no seat, so it can read and write nothing else. */
+export { SIGNED_OUT_ADDRESS_LIMIT, SIGNED_OUT_IP_LIMIT, SIGNED_OUT_WINDOW_SECONDS };
+
+/** Who counts a signed-out send: the seeded signed-out sender, which holds no seat, so it can read and write nothing else. */
 const SIGNED_OUT_SESSION: Session = { userId: SIGNED_OUT_SENDER_ID, role: 'user' };
 
 /**
@@ -35,12 +38,17 @@ const SIGNED_OUT_SESSION: Session = { userId: SIGNED_OUT_SENDER_ID, role: 'user'
  * Replies reach the visitor by email only; nothing here returns a row.
  *
  * @throws {Forbidden} the topic is not one a signed-out visitor may write about.
+ * @throws {Forbidden} the address stands under a keeper’s time-out.
  * @throws {RateLimited} the address or the client has sent too many in 24 hours; carries the seconds to wait.
  * @throws {ValidationError} the address, subject, message, path or error code is not acceptable.
  */
 export async function sendSignedOutSupportRequest(
   input: SignedOutInput,
-  context: { clientIp: string | null; notifier: SupportNotifier; now?: Date },
+  context: {
+    clientIp: string | null;
+    notifier: SupportNotifier;
+    now?: Date;
+  },
 ): Promise<void> {
   const values = parseInput(SignedOutSupportRequestInput, input);
   if (values.website) return;
@@ -49,6 +57,9 @@ export async function sendSignedOutSupportRequest(
       'Without an account you can write to us about Accessibility, Bug, Account & Sign-In, Privacy & Data or a Question. Sign in to write about anything else.',
     );
   }
+
+  // A keeper's time-out also binds the address it was set for, so a send from it is refused.
+  refuseTimedOut(await findStandingSupportTimeoutByAddress(addressCountKey(values.email)));
 
   const now = context.now ?? new Date();
   const counts = await withAudit(SIGNED_OUT_SESSION, (write) =>
@@ -78,5 +89,6 @@ export async function sendSignedOutSupportRequest(
       lastSenderActivityAt: now,
     }),
   );
+  await mintSupportViewToken(request.id);
   await mailSender(context.notifier, request as SupportRequestRow, 'received');
 }
