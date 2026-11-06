@@ -48,6 +48,8 @@ export interface SkeletonProps {
   card?: 'spell';
   /** How many rows, cards, fields, blocks or lines it draws; each shape has its own default. */
   count?: number;
+  /** Leaves out the `Loading` status, for a skeleton drawn inside a shell body that already carries the one. */
+  quiet?: boolean;
 }
 
 export interface SwapPanelProps {

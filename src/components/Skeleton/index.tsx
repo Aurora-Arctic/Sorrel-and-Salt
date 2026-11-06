@@ -198,6 +198,7 @@ const Skeleton = ({
   density,
   card,
   count,
+  quiet = false,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
   const listed = shape === 'table' || shape === 'cards';
@@ -210,7 +211,7 @@ const Skeleton = ({
       }
       data-density={density}
     >
-      <output className="visually-hidden">Loading</output>
+      {!quiet && <output className="visually-hidden">Loading</output>}
       <div className="skeleton__shapes" aria-hidden="true">
         {(listed || shape === 'document') && title && (
           // A list page with an eyebrow and a lede (the public Compendium) holds its heading row in the
