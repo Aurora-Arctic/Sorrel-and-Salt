@@ -4,7 +4,7 @@
 
 **The owner withdrew the free tier on 2026-11-06.** The owner's decision: there is no free tier. The only free things are a trial period on a new coven (one month as standard; keepers may set a longer one for promotions and beta testers), each site curator's free coven, keeper exemptions, the demo coven's observer seat, and the public compendium. The size steps below count **paying seats**; trial, curator, exempt and demo-only accounts are overhead derived from them ([running-costs.md](running-costs.md#overhead-on-top-of-paying-seats)).
 
-This page compares five ways to charge for Sorrel & Salt, prices each against the running costs in [running-costs.md](running-costs.md), and ends with the questions I need you to answer. It does not choose a model. **You need to act:** the last section lists what I need you to decide.
+This page compares six ways to charge for Sorrel & Salt, prices each against the running costs in [running-costs.md](running-costs.md), and ends with the questions I need you to answer. It does not choose a model. **You need to act:** the last section lists what I need you to decide.
 
 The five wants a subscription has to meet are DESIGN.md §13's. I call them **R1** to **R5** here:
 
@@ -26,7 +26,10 @@ For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it i
 - **Observer price (2026-11-06).** "Also viewers should get a cheaper price point." The modelled price is $1 against $2 for a practitioner seat, with 30% of members observers; both numbers are my assumptions (question 17).
 
 - **Flat seats (2026-11-06).** "Yes, add (h) beside (g)." Model (h) has no base fee: a practitioner seat includes a solo coven, an observer seat costs less and becomes a practitioner seat by paying the difference, a solo coven alone costs the same as a practitioner seat, and a paying steward gets 50% off practitioner seats in other covens.
-- **Payer modes (2026-11-06).** "Model both modes now." Every coven-pays model that reaches the page ((c), (g), (h)) gains a per-coven switch between coven pays and each member pays. See "Payer Modes" below; the member-pays rule and the switching rule are mine and are owner questions 19 and 20.
+- **One price list (2026-11-06).** The owner asked for (i) beside (h), with the same rules and two changes: one price list with the per-coven payer switch, not three plans, and a personal plan. A practitioner seat includes a solo coven; the observer seat is $1 and becomes a practitioner seat by paying the difference ($2.00 at $3 / $1, the owner's "$2.00 a month for a solo coven"). A solo coven bought alone is the **personal plan at $3.50**, above the practitioner seat. Owner: "Let's go $3.50 for a practitioner seat without a coven. There will probably be more support cost per user." The reason is the owner's expectation; it has no source.
+- **R5 in (i) (2026-11-06).** "Any user that is paying for a seat gets a discount. So coven members that aren't paying for their own seat don't." The discount is 50% off, on seats a person pays for themselves (a seat in an each-member-pays coven, or their personal plan) beyond the first one they pay at full price. It never lands on another payer's invoice: "self paid seats only." This replaces the paying-steward rule for (i) only; (c), (g) and (h) keep the rule above.
+- **An observer upgrade earns the discount (2026-11-06).** Owner: "yes they earn the discount." An observer who pays only the difference to become a practitioner counts as paying for a seat, and earns the discount on the seats they pay for elsewhere. (i) is modelled that way.
+- **Payer modes (2026-11-06).** "Model both modes now." Every coven-pays model that reaches the page ((c), (g), (h), (i)) gains a per-coven switch between coven pays and each member pays. See "Payer Modes" below; the member-pays rule and the switching rule are mine and are owner questions 19 and 20.
 - **Models rejected (2026-11-06).** "We're not going to do e - any member pays, remove it. We're not going to do d - solo run only by itself. We're not going to do a - coven pays, seat bundles." Each is a short entry under "Considered and Rejected"; (d)'s solo-coven price research stays because (g) and (h) use it.
 - **Salary structure (Lane J, 2026-11-06).** The owner's goals: "the cheapest tax option with the maximum benefits", "while maintaining what I would get at a $250k salary". The salary line uses structure C (a single-member LLC taxed as a sole proprietor) at $249,434 a year of business earnings, plus Lane D's benefits; the model's recommendation, pending an accountant. The all-salary figure stays as a sensitivity row. See [running-costs.md](running-costs.md#salary-structures-lane-j) and owner question 21.
 - **AI assistance for support agents is on by default (owner, 2026-11-06; Lane K).** The factor on minutes per support contact is 0.87 in the primary case (0.735 and 1.00 as sensitivities), from Brynjolfsson, Li and Raymond (QJE 2025): resolutions per hour up 15.2%, handle time down 8.5%. It deflects no contact. Agents use the Claude Team plan ($25 a seat a month, 2-seat minimum), never Pro, because the consumer terms train on inputs unless opted out and customer messages must not train a model (the Code of Ethics: the site sells no data). The Team plan's training terms and what is unconfirmed are under "Labour and the One-Person Ceiling".
@@ -37,17 +40,18 @@ For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it i
 
 ## How Each Model Meets R1 to R5
 
-| Model                                | R1 coven pays                          | R2 scales with members | R3 free months                           | R4 keeper exemption | R5 pays less in several covens                                                    |
-| ------------------------------------ | -------------------------------------- | ---------------------- | ---------------------------------------- | ------------------- | --------------------------------------------------------------------------------- |
-| (b) Each user pays                   | **dropped**                            | **altered**            | **altered**                              | **altered**         | kept                                                                              |
-| (c) Base plus seats                  | kept                                   | kept                   | kept                                     | kept                | kept (as a seat discount, paying stewards only)                                   |
-| (g) Group plan includes a solo coven | kept (over (c))                        | kept (over (c))        | kept                                     | kept                | kept (a member's solo coven is free)                                              |
-| (h) Flat seats                       | kept (steward's bill is seats × price) | kept                   | kept                                     | kept                | kept (50% off for paying stewards; every practitioner seat has a free solo coven) |
-| (f) Trial only + curator covens      | kept, as policy                        | not applicable         | **altered** (one month, keeper-settable) | **altered** (timed) | not applicable                                                                    |
+| Model                                | R1 coven pays                                       | R2 scales with members | R3 free months                           | R4 keeper exemption | R5 pays less in several covens                                                                                    |
+| ------------------------------------ | --------------------------------------------------- | ---------------------- | ---------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| (b) Each user pays                   | **dropped**                                         | **altered**            | **altered**                              | **altered**         | kept                                                                                                              |
+| (c) Base plus seats                  | kept                                                | kept                   | kept                                     | kept                | kept (as a seat discount, paying stewards only)                                                                   |
+| (g) Group plan includes a solo coven | kept (over (c))                                     | kept (over (c))        | kept                                     | kept                | kept (a member's solo coven is free)                                                                              |
+| (h) Flat seats                       | kept (steward's bill is seats × price)              | kept                   | kept                                     | kept                | kept (50% off for paying stewards; every practitioner seat has a free solo coven)                                 |
+| (i) One price list                   | kept (steward pays; or each member pays, per coven) | kept                   | kept                                     | kept                | kept (50% off a person's own second and later paid seats; the seat of a member who does not pay for it gets none) |
+| (f) Trial only + curator covens      | kept, as policy                                     | not applicable         | **altered** (one month, keeper-settable) | **altered** (timed) | not applicable                                                                                                    |
 
 **No comparable discounts a seat across groups.** Notion bills a person once per paid workspace they belong to, "even if the same people are in multiple workspaces" [S3]. GitHub bills each organisation separately [S7]. R5 therefore has no consumer precedent as a seat discount, and none restricts one to people who pay for another group. The nearest thing is Kanka, where one payment covers several campaigns and the price per campaign falls ($4.99, $3.33, $3.57 for 1, 3 and 7) [S19].
 
-**The keeper exemption (R4)** is a flag on the coven in (c), (g) and (h). In (b) it must be a flag on the person, or an exemption that waives every member of a flagged coven. Nothing in the comparables does this; it is an internal rule. In Stripe it is a 100%-off coupon on the subscription, or no subscription at all.
+**The keeper exemption (R4)** is a flag on the coven in (c), (g), (h) and (i). In (b) it must be a flag on the person, or an exemption that waives every member of a flagged coven. Nothing in the comparables does this; it is an internal rule. In Stripe it is a 100%-off coupon on the subscription, or no subscription at all.
 
 ## The Models
 
@@ -160,6 +164,41 @@ The owner rejected three models on 2026-11-06. Their research stays here so it i
 
 **(e) Any member pays.** Owner decision, 2026-11-06: "We're not going to do e - any member pays, remove it." Any member could buy a subscription covering a coven, and one subscription could cover several covens, with tiers by coven count. Kanka sells 1, 3 and 7 campaigns for $4.99, $9.99 and $24.99 [S19]; D&D Beyond's $5.99 Master plan shares with up to 12 people, and the subscriber need not be the DM [S18]; any Discord member may boost a server [S8]. I modelled $5.64 a month per covered coven (derived: 87% of Kanka payers at $4.99 and 13% at $9.99, [S20] and [S19]), which needed 238 paying seats on cash. It altered R1 (any member, not only the steward, may pay) and dropped or altered R2. Kanka's survey found 99% saying merged boosts simplified the system [S20]; I found no data on how often a non-owner pays. The owner's separate "each member pays" payer mode (below) is a different thing and stays.
 
+### (i) One Price List
+
+**Structure.** Owner choice, 2026-11-06. (i) is (h)'s rules with two changes: it is one price list with the per-coven payer switch (see "Payer Modes"), not three plans, and a solo coven alone has its own price. There is no base fee. Five rules:
+
+1. A **practitioner seat** includes a solo coven of the member's own.
+2. The **observer seat** is $1. An observer becomes a practitioner, and so gets a solo coven, by paying the difference.
+3. The **personal plan**, a solo coven bought alone, costs **$3.50** a month, above the practitioner seat. The owner's reason: "There will probably be more support cost per user." That is the owner's expectation, with no source. A two-person coven on each-member-pays gets the same solo coven for the seat price, so the premium relies on people not doing that (assumption, no source).
+4. **Discount (R5).** 50% off, earned by any person who pays for a seat of their own. It applies only to seats that person pays for themselves (a seat in an each-member-pays coven, or their personal plan), beyond the first one they pay at full price. A member whose seat is on a steward's invoice gets no discount, and the discount never lands on another payer's invoice.
+5. An observer who pays only the upgrade difference counts as paying for a seat, and earns the discount (owner decision, above).
+
+**On the Stripe side** the discount follows the person across their own subscriptions: every discounted seat is on the payer's own subscription, so it is one customer and needs no cross-customer coupon. I did not check Stripe's coupon rules for this; the Wave 21 design confirms them.
+
+I use the same overhead, the same 30% observer share, the same 20% who buy a solo coven alone (now at $3.50) and the same 20% observer take-up as (h). All five wants are kept.
+
+**Two price pairs, both shown.**
+
+| Pair              | Practitioner seat | Observer seat | Observer upgrade (difference) | Personal plan |
+| ----------------- | ----------------: | ------------: | ----------------------------: | ------------: |
+| Illustrative      |             $3.00 |         $1.00 |                         $2.00 |         $3.50 |
+| Calibrated to (g) |             $1.99 |         $1.00 |                         $0.99 |         $3.50 |
+
+At $3 / $1 the upgrade difference is the owner's $2.00. The calibrated pair is solved with the personal plan held at $3.50, so it is lower than (h)'s $2.27: the dearer personal plan carries more of the revenue.
+
+**Reach of the discount (derived, with one assumption).** 16.7% of seats are second or later memberships (1.2 memberships per account; [S45]), the same figure as (c). Only the self-paid ones are discounted, and that depends on the share of covens on each-member-pays. No source exists, so I assume **50% of covens are each-member-pays** (range 0% to 100%; owner question 25). That discounts 16.7% × 50% = 8.3% of seats and takes the seat price factor to 0.9583. At 0% nobody is discounted and the factor is 1.0000; at 100% 16.7% of seats are discounted and the factor is 0.9167. (h)'s paying-steward rule reaches 3.6% of seats and a factor of 0.9818. The factor is applied to every seat a member pays, observer seats and upgrades included. The personal plan is not discounted in the model, since a solo-alone buyer holds one seat.
+
+**The calibration arithmetic.** Per paying seat, 80% of seats sit in group covens and a coven has 1.2 ÷ 5.5 = 0.2182 of a coven per seat. A coven has 3.85 practitioners and 1.65 observers, 20% of whom upgrade, all with the 0.9583 factor. Revenue per paying seat is therefore 0.8 × 0.2182 × 0.9583 × [3.85 × p + 1.65 × (0.8 × $1 + 0.2 × p)] + 0.2 × $3.50 = 0.6992 p + $0.9208. Setting it equal to (g)'s $2.3149 per paying seat gives p = (2.3149 − 0.9208) ÷ 0.6992 = **$1.9938, rounded to $1.99**, with observers at $1 and the personal plan at $3.50. At $1.99 revenue per paying seat is $2.3122. At the illustrative $3 / $1 a group coven pays $13.28 and a paying seat brings $3.02; at $1.99 / $1 a group coven pays $9.24.
+
+**Worked example.** A coven of five: three practitioners and two observers, on each-member-pays, and one of the practitioners (Mira) also pays for her own seat in another each-member-pays coven. At $3 / $1, in Mira's second coven the bill is 2 × $3 + 1 × $1.50 + 2 × $1 = **$9.50**: her seat there is her second self-paid seat, so it costs $1.50. If the same coven were steward-pays, nobody in it would be discounted and the bill is 3 × $3 + 2 × $1 = **$11.00**. If an observer upgrades, the bill rises by $2.00, and the upgrade is discounted too if that observer pays for a seat elsewhere. A person with no coven who buys the personal plan pays $3.50.
+
+**Costs.** Subscriptions: in an each-member-pays coven every paying member holds one; a steward-pays coven has one; each solo-alone buyer has one. Stripe's 30¢ fixed fee is charged on those, so (i) carries more subscriptions than (h) at the same share of covens (the script counts them at the 50% share). Free solo covens cost Neon storage only, counted as in (g).
+
+**Reception.** Per-seat pricing with a cheaper view-only seat is the common pattern: Figma's Collab seat is $3 beside a $16 full seat [S6]. Notion bills a person once per paid workspace [S3], so a 50% discount for a person's own second seat has no consumer precedent beyond Kanka's falling price per campaign when one payment covers several [S19] (see the R5 note above). The solo coven price anchors are Bear $2.99 [S15], Neumoire $1.99 [S29] and Grimoire $4.99 [S28]; the $3.50 personal plan sits between Bear and Grimoire. I did not look for a comparable that prices a seat alone above a seat in a group.
+
+**Break-even (cash).** $3 / $1: **98** paying seats; $1.99 / $1: **131** (rows in the tables under Break-Even).
+
 ## Fair Pricing
 
 The test is the Code of Ethics (`documents/code-of-ethics.md`, line 34): "It will charge, fairly: enough to cover its costs and to pay the people who work on it a fair, living wage." The model keeps these things that meet it:
@@ -180,10 +219,10 @@ The test is the Code of Ethics (`documents/code-of-ethics.md`, line 34): "It wil
 
 ### Payer Modes
 
-Owner decision, 2026-11-06: "Model both modes now." Every coven-pays model that reaches the page, (c), (g) and (h), gains a per-coven switch. A steward sets it for the coven.
+Owner decision, 2026-11-06: "Model both modes now." Every coven-pays model that reaches the page, (c), (g), (h) and (i), gains a per-coven switch. A steward sets it for the coven. In (i) the switch is what decides who earns the discount: only a seat the member pays for is discounted, so it is the each-member-pays covens that carry it.
 
 - **Coven pays.** The steward is billed for every seat and holds the R5 discount for seats in other covens.
-- **Each member pays.** Every member subscribes to their own seat at the same seat prices. R5 does not apply (the discount belongs to a paying steward's invoice).
+- **Each member pays.** Every member subscribes to their own seat at the same seat prices. R5 as defined for (c), (g) and (h) does not apply (the discount belongs to a paying steward's invoice); in (i) it does, on the member's own second and later paid seats.
 
 **Revenue is held equal.** Revenue per coven is the same under both modes in the tables. Take-up differs and no source says which converts better, so I did not guess. One cost does differ and is not in the tables: Stripe's 30¢ fixed fee is charged per subscription, so member-pays pays it for each member and not once per coven. Per paying seat that is 30¢ × (1 − 1.2 ÷ 5.5) = about **$0.23** more a month (derived), against revenue of $1.8 to $3.3 a seat. I recommend you treat member-pays as costing about that much more in fees.
 
@@ -210,7 +249,7 @@ The no-free-tier decision departs from §13 in four places. **I need you to acce
 
 **What comparables do.** Notion gives a single-member workspace with no block limit [S2]. Figma has free Drafts [S6]. GitHub has a free personal account beside organisations [S7]. Obsidian is a free local vault [S13]. Kanka and Basecamp have no personal type: a solo user is a group of one [S19] [S4]. Slack has no personal space [S1].
 
-**What reintroducing a personal `kind` would change.** CLAUDE.md says there are no personal workspaces: no `kind` column, every coven can take members and be deleted by a steward. Under the current rule, a solo user is a coven of one, which is how Kanka and Basecamp work. Adding a `kind` would let a personal space be free and undeletable, and would let it not take members. It would also add a `kind` check to every membership rule, the invitation service and the demo coven's deletion rule. **This is a change you would have to accept; I have made none.** I recommend no `kind`: a solo coven in (g) or (h), as a coven of one, gives the same price point without a schema change.
+**What reintroducing a personal `kind` would change.** CLAUDE.md says there are no personal workspaces: no `kind` column, every coven can take members and be deleted by a steward. Under the current rule, a solo user is a coven of one, which is how Kanka and Basecamp work. Adding a `kind` would let a personal space be free and undeletable, and would let it not take members. It would also add a `kind` check to every membership rule, the invitation service and the demo coven's deletion rule. **This is a change you would have to accept; I have made none.** I recommend no `kind`: a solo coven in (g), (h) or (i), as a coven of one, gives the same price point without a schema change.
 
 ## Processors
 
@@ -253,55 +292,65 @@ Stripe has the narrowest list. Whether a spell journal falls under any of these 
 
 ## Break-Even
 
-**Method.** Sizes are paying seats: 100, 1,000, 10,000 and 100,000. Revenue = paying units × price × (1 − 6.1%), the single-month churn haircut, a crude stand-in for steady-state churn. Paying units are paying seats for (b), (g) and (h) (whose per-seat revenue is built in their sections), and paying covens (seats × 1.2 memberships ÷ 5.5 members) for (c). Fees are Stripe's option 1 (2.9% + 30¢, 0.7% Billing, 0.5% Tax Basic) on that revenue, and Washington retailing B&O of 0.471% less the $55 a month credit. Sales tax is passed through to the customer, so it is neither revenue nor cost. Trial, curator, exempt and demo-only accounts earn nothing and are in the cost side. The cost lines come from running-costs.md: (i) cash, (ii) cash + all labour hours, with fixed (engineering) hours at the BLS Washington developer median of $80.07, loaded to $100.88, and variable (customer-service) hours at the $41.47 living wage without health cover, loaded to $53.80, (iii) cash + the owner's job as salary structure C (the recommended structure, pending the accountant) with Lane D's benefits, $270,282 a year (low) or $306,685 (high), plus hired hours at the loaded $53.80 for every hour above 160 a month. Support agents use AI assistance (on by default, factor 0.87 on support minutes), and each agent beyond the owner has a Claude Team seat at $25 a month; those seats are inside every labour line. Labour hours grow with paying seats (below), and every labour result is shown for the low contact-rate row (the primary case) and the median row (the stress case). **Net revenue a month**, after churn, fees and B&O:
+**Method.** Sizes are paying seats: 100, 1,000, 10,000 and 100,000. Revenue = paying units × price × (1 − 6.1%), the single-month churn haircut, a crude stand-in for steady-state churn. Paying units are paying seats for (b), (g), (h) and (i) (whose per-seat revenue is built in their sections), and paying covens (seats × 1.2 memberships ÷ 5.5 members) for (c). Fees are Stripe's option 1 (2.9% + 30¢, 0.7% Billing, 0.5% Tax Basic) on that revenue, and Washington retailing B&O of 0.471% less the $55 a month credit. Sales tax is passed through to the customer, so it is neither revenue nor cost. Trial, curator, exempt and demo-only accounts earn nothing and are in the cost side. The cost lines come from running-costs.md: (i) cash, (ii) cash + all labour hours, with fixed (engineering) hours at the BLS Washington developer median of $80.07, loaded to $100.88, and variable (customer-service) hours at the $41.47 living wage without health cover, loaded to $53.80, (iii) cash + the owner's job as salary structure C (the recommended structure, pending the accountant) with Lane D's benefits, $270,282 a year (low) or $306,685 (high), plus hired hours at the loaded $53.80 for every hour above 160 a month. Support agents use AI assistance (on by default, factor 0.87 on support minutes), and each agent beyond the owner has a Claude Team seat at $25 a month; those seats are inside every labour line. Labour hours grow with paying seats (below), and every labour result is shown for the low contact-rate row (the primary case) and the median row (the stress case). **Net revenue a month**, after churn, fees and B&O:
 
-| Model                                           | Price per paying unit |  100 |   1000 |   10000 |   100000 |
-| ----------------------------------------------- | --------------------: | ---: | -----: | ------: | -------: |
-| (b) Each user pays                              |                 $4.00 | $332 | $3,320 | $33,081 | $330,316 |
-| (c) Base plus seats                             |                 $9.29 | $176 | $1,764 | $17,601 | $175,518 |
-| (g) Group plan includes a solo coven (over (c)) |                 $2.31 | $197 | $1,966 | $19,608 | $195,584 |
-| (h) Flat seats, $3 / $1 (illustrative)          |                 $2.98 | $258 | $2,580 | $25,726 | $256,763 |
-| (h) Flat seats, $2.27 / $1 (calibrated to (g))  |                 $2.31 | $198 | $1,977 | $19,725 | $196,754 |
+| Model                                              | Price per paying unit |  100 |   1000 |   10000 |   100000 |
+| -------------------------------------------------- | --------------------: | ---: | -----: | ------: | -------: |
+| (b) Each user pays                                 |                 $4.00 | $332 | $3,320 | $33,081 | $330,316 |
+| (c) Base plus seats                                |                 $9.29 | $176 | $1,764 | $17,601 | $175,518 |
+| (g) Group plan includes a solo coven (over (c))    |                 $2.31 | $197 | $1,966 | $19,608 | $195,584 |
+| (h) Flat seats, $3 / $1 (illustrative)             |                 $2.98 | $258 | $2,580 | $25,726 | $256,763 |
+| (h) Flat seats, $2.27 / $1 (calibrated to (g))     |                 $2.31 | $198 | $1,977 | $19,725 | $196,754 |
+| (i) One price list, $3 / $1 (illustrative)         |                 $3.02 | $250 | $2,502 | $24,941 | $248,913 |
+| (i) One price list, $1.99 / $1 (calibrated to (g)) |                 $2.31 | $187 | $1,866 | $18,613 | $185,633 |
 
 #### Option 2, Managed Payments
 
-| Model                                           |  100 |   1000 |   10000 |   100000 |
-| ----------------------------------------------- | ---: | -----: | ------: | -------: |
-| (b) Each user pays                              | $321 | $3,208 | $31,954 | $319,048 |
-| (c) Base plus seats                             | $171 | $1,707 | $17,030 | $169,809 |
-| (g) Group plan includes a solo coven (over (c)) | $190 | $1,900 | $18,956 | $189,063 |
-| (h) Flat seats, $3 / $1 (illustrative)          | $250 | $2,496 | $24,886 | $248,362 |
-| (h) Flat seats, $2.27 / $1 (calibrated to (g))  | $191 | $1,912 | $19,073 | $190,239 |
+| Model                                              |  100 |   1000 |   10000 |   100000 |
+| -------------------------------------------------- | ---: | -----: | ------: | -------: |
+| (b) Each user pays                                 | $321 | $3,208 | $31,954 | $319,048 |
+| (c) Base plus seats                                | $171 | $1,707 | $17,030 | $169,809 |
+| (g) Group plan includes a solo coven (over (c))    | $190 | $1,900 | $18,956 | $189,063 |
+| (h) Flat seats, $3 / $1 (illustrative)             | $250 | $2,496 | $24,886 | $248,362 |
+| (h) Flat seats, $2.27 / $1 (calibrated to (g))     | $191 | $1,912 | $19,073 | $190,239 |
+| (i) One price list, $3 / $1 (illustrative)         | $242 | $2,417 | $24,091 | $240,410 |
+| (i) One price list, $1.99 / $1 (calibrated to (g)) | $180 | $1,801 | $17,961 | $179,119 |
 
 **Y means net revenue covers the cost line**, for (i) / (ii) / (iii). Low contact-rate row (primary):
 
-| Model                                           |   100 |  1000 | 10000 | 100000 |
-| ----------------------------------------------- | ----: | ----: | ----: | -----: |
-| (b) Each user pays                              | Y n n | Y Y n | Y Y Y |  Y Y Y |
-| (c) Base plus seats                             | n n n | Y n n | Y Y n |  Y Y Y |
-| (g) Group plan includes a solo coven (over (c)) | n n n | Y n n | Y Y n |  Y Y Y |
-| (h) Flat seats, $3 / $1 (illustrative)          | Y n n | Y n n | Y Y Y |  Y Y Y |
-| (h) Flat seats, $2.27 / $1 (calibrated to (g))  | n n n | Y n n | Y Y n |  Y Y Y |
+| Model                                              |   100 |  1000 | 10000 | 100000 |
+| -------------------------------------------------- | ----: | ----: | ----: | -----: |
+| (b) Each user pays                                 | Y n n | Y Y n | Y Y Y |  Y Y Y |
+| (c) Base plus seats                                | n n n | Y n n | Y Y n |  Y Y Y |
+| (g) Group plan includes a solo coven (over (c))    | n n n | Y n n | Y Y n |  Y Y Y |
+| (h) Flat seats, $3 / $1 (illustrative)             | Y n n | Y n n | Y Y Y |  Y Y Y |
+| (h) Flat seats, $2.27 / $1 (calibrated to (g))     | n n n | Y n n | Y Y n |  Y Y Y |
+| (i) One price list, $3 / $1 (illustrative)         | Y n n | Y n n | Y Y Y |  Y Y Y |
+| (i) One price list, $1.99 / $1 (calibrated to (g)) | n n n | Y n n | Y Y n |  Y Y Y |
 
 Median row (stress case):
 
-| Model                                           |   100 |  1000 | 10000 | 100000 |
-| ----------------------------------------------- | ----: | ----: | ----: | -----: |
-| (b) Each user pays                              | Y n n | Y n n | Y Y Y |  Y Y Y |
-| (c) Base plus seats                             | n n n | Y n n | Y n n |  Y Y Y |
-| (g) Group plan includes a solo coven (over (c)) | n n n | Y n n | Y Y n |  Y Y Y |
-| (h) Flat seats, $3 / $1 (illustrative)          | Y n n | Y n n | Y Y n |  Y Y Y |
-| (h) Flat seats, $2.27 / $1 (calibrated to (g))  | n n n | Y n n | Y Y n |  Y Y Y |
+| Model                                              |   100 |  1000 | 10000 | 100000 |
+| -------------------------------------------------- | ----: | ----: | ----: | -----: |
+| (b) Each user pays                                 | Y n n | Y n n | Y Y Y |  Y Y Y |
+| (c) Base plus seats                                | n n n | Y n n | Y n n |  Y Y Y |
+| (g) Group plan includes a solo coven (over (c))    | n n n | Y n n | Y Y n |  Y Y Y |
+| (h) Flat seats, $3 / $1 (illustrative)             | Y n n | Y n n | Y Y n |  Y Y Y |
+| (h) Flat seats, $2.27 / $1 (calibrated to (g))     | n n n | Y n n | Y Y n |  Y Y Y |
+| (i) One price list, $3 / $1 (illustrative)         | Y n n | Y n n | Y Y n |  Y Y Y |
+| (i) One price list, $1.99 / $1 (calibrated to (g)) | n n n | Y n n | Y n n |  Y Y Y |
 
 **Seats needed to break even.** The smallest number of paying seats whose net revenue covers each cost line. The cost line is interpolated linearly between the four sizes (and continued on the last slope above 100,000), because overhead and usage grow with seats; the answer is therefore exact at the four sizes and approximate between them.
 
-| Model                                           | (i) | (ii) low | (iii) low | (ii) median | (iii) median |
-| ----------------------------------------------- | --: | -------: | --------: | ----------: | -----------: |
-| (b) Each user pays                              |  74 |      930 |     6,898 |       2,532 |        9,133 |
-| (c) Base plus seats                             | 139 |    1,943 |    13,590 |      15,123 |       53,446 |
-| (g) Group plan includes a solo coven (over (c)) | 125 |    1,703 |    11,950 |       9,170 |       32,388 |
-| (h) Flat seats, $3 / $1 (illustrative)          |  95 |    1,237 |     8,878 |       4,180 |       14,712 |
-| (h) Flat seats, $2.27 / $1 (calibrated to (g))  | 124 |    1,691 |    11,867 |       8,965 |       31,661 |
+| Model                                              | (i) | (ii) low | (iii) low | (ii) median | (iii) median |
+| -------------------------------------------------- | --: | -------: | --------: | ----------: | -----------: |
+| (b) Each user pays                                 |  74 |      930 |     6,898 |       2,532 |        9,133 |
+| (c) Base plus seats                                | 139 |    1,943 |    13,590 |      15,123 |       53,446 |
+| (g) Group plan includes a solo coven (over (c))    | 125 |    1,703 |    11,950 |       9,170 |       32,388 |
+| (h) Flat seats, $3 / $1 (illustrative)             |  95 |    1,237 |     8,878 |       4,180 |       14,712 |
+| (h) Flat seats, $2.27 / $1 (calibrated to (g))     | 124 |    1,691 |    11,867 |       8,965 |       31,661 |
+| (i) One price list, $3 / $1 (illustrative)         |  98 |    1,282 |     9,158 |       4,493 |       15,820 |
+| (i) One price list, $1.99 / $1 (calibrated to (g)) | 131 |    1,813 |    12,711 |      11,391 |       40,256 |
 
 **Labour and the One-Person Ceiling.** Hours a month = fixed hours + variable hours × (paying seats ÷ 1,000), where the fixed hours are 24.8 / 44.4 / 70.4 (low / median / high; all engineering work) and the variable hours per 1,000 seats, after the AI factor of 0.87 on support minutes, are 6.08 / 26.6 / 100.3 (support, disputes, privacy requests and abuse reports; all customer-service work). Without AI assistance they would be 6.95 / 30.3 / 113.0. Disputes are 0.25 / 2.0 / 5.0 hours each. Hours are **25.4 / 30.9 / 85.6 / 632.7** at 100 / 1,000 / 10,000 / 100,000 paying seats in the low row, and **47.1 / 71.0 / 310.7 / 2,707.4** in the median row (high row: 80.4 / 170.7 / 1,073.5 / 10,100.9). Contacts are counted on 25% of all accounts, demo-only accounts included. That overstates the contacts of an invite-gated site, and is kept as the conservative choice.
 
@@ -317,7 +366,7 @@ Median row (stress case):
 
 **One-person ceiling.** At **22,241** paying seats in the low row (**4,341** median; **893** high) the work exceeds one person at 160 hours a month. It holds for every model, since hours depend on paying seats, and it does not depend on the hourly rates (it does depend on the AI factor, above). The salary line pays the structure C job plus hired hours above 160 at the loaded $53.80. Fixed engineering hours (at most 70.4) never reach 160 on their own, so the hired hours are the variable, customer-service ones.
 
-What the tables say (the restricted discount and the observer price are in (c) and so in (g)): with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 139 paying seats ((h) at $3 / $1: 95). **In the low row every model also covers cash + labour**: (b) at 930 paying seats, (h) at $3 / $1 at 1,237, (h) at $2.27 / $1 at 1,691, (g) at 1,703 and (c) at 1,943. **In the median row** (b) needs 2,532 and (h) at $3 / $1 4,180, but (h) at $2.27 / $1 needs 8,965, (g) 9,170 and (c) 15,123, all beyond the one-person ceiling of 4,341 paying seats. The reason is the margin: net revenue per paying seat at 10,000 seats is $3.31 for (b), $1.76 for (c), $1.96 for (g), $2.57 for (h) at $3 / $1 and $1.97 at $2.27 / $1, and median variable labour of $1.43 a seat leaves (c) only $0.33. This is driven by the support contact rate (owner question 18), the number to check first. Model (g), over (c), needs 125 seats on cash. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. The two owner decisions of 2026-11-06 (discount for paying stewards only, cheaper observer seats) lowered (c) from $10.58 to $9.29 per coven, which raised its cash break-even from 121 to 139 paying seats. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
+What the tables say (the restricted discount and the observer price are in (c) and so in (g)): with no free tier and the withdrawn 4% share gone, every model covers cash costs by 74 to 139 paying seats ((h) at $3 / $1: 95; (i) at $3 / $1: 98). **In the low row every model also covers cash + labour**: (b) at 930 paying seats, (h) at $3 / $1 at 1,237, (h) at $2.27 / $1 at 1,691, (g) at 1,703, (i) at $1.99 / $1 at 1,813 ((i) at $3 / $1: 1,282) and (c) at 1,943. **In the median row** (b) needs 2,532 and (h) at $3 / $1 4,180 and (i) at $3 / $1 4,493, but (h) at $2.27 / $1 needs 8,965, (g) 9,170, (i) at $1.99 / $1 11,391 and (c) 15,123, all beyond the one-person ceiling of 4,341 paying seats. The reason is the margin: net revenue per paying seat at 10,000 seats is $3.31 for (b), $1.76 for (c), $1.96 for (g), $2.57 for (h) at $3 / $1 and $1.97 at $2.27 / $1, $2.49 for (i) at $3 / $1 and $1.86 at $1.99 / $1, and median variable labour of $1.43 a seat leaves (c) only $0.33. This is driven by the support contact rate (owner question 18), the number to check first. Model (g), over (c), needs 125 seats on cash. Model (b) needs the fewest seats because it counts people, not covens, and prices each at $4.00. The two owner decisions of 2026-11-06 (discount for paying stewards only, cheaper observer seats) lowered (c) from $10.58 to $9.29 per coven, which raised its cash break-even from 121 to 139 paying seats. These counts leave out the overhead's cost _growth_ beyond what the cost lines already include, and they take paying seats as given: how many people would pay is the thing no source answers for this site.
 
 ### Low-Support Scenario
 
@@ -333,7 +382,7 @@ A Wave 21 support-reduction task will be minted by M17.1 to build these (no id y
 
 ### Prices That Clear Labour
 
-The practitioner (or account) price at which net revenue covers labour at 10,000 paying seats. Observers are held at $1 and the solo prices scale in proportion. "Cash + labour" prices labour at the loaded $53.80 and $100.88; "cash + job" is the structure C job plus hired hours. The comparables range is **$1.58 to $5.99** (solo grimoire apps $1.58 to $3.33; Obsidian $4 to $5; Roll20 Plus $5.99). Wider references: Figma's collaborator seat at $3 against $16 for a full seat [S6], and the RevenueCat median of $10 [S34].
+The practitioner (or account) price at which net revenue covers labour at 10,000 paying seats. Observers are held at $1 and the solo prices scale in proportion; in (i) the personal plan moves with the practitioner seat, held $0.50 above it. "Cash + labour" prices labour at the loaded $53.80 and $100.88; "cash + job" is the structure C job plus hired hours. The comparables range is **$1.58 to $5.99** (solo grimoire apps $1.58 to $3.33; Obsidian $4 to $5; Roll20 Plus $5.99). Wider references: Figma's collaborator seat at $3 against $16 for a full seat [S6], and the RevenueCat median of $10 [S34].
 
 | Model                | Today | Cash + labour, low | Cash + labour, median | Cash + job, low | Cash + job, median |
 | -------------------- | ----: | -----------------: | --------------------: | --------------: | -----------------: |
@@ -341,6 +390,7 @@ The practitioner (or account) price at which net revenue covers labour at 10,000
 | (c) Base plus seats  | $2.00 |      $0.47 (below) |        $2.21 (inside) |  $2.70 (inside) |     $3.79 (inside) |
 | (g) Group plan, solo | $2.00 |      $0.55 (below) |        $1.95 (inside) |  $2.35 (inside) |     $3.22 (inside) |
 | (h) Flat seats       | $3.00 |      $0.61 (below) |        $2.20 (inside) |  $2.65 (inside) |     $3.64 (inside) |
+| (i) One price list   | $3.00 |      $0.66 (below) |        $2.29 (inside) |  $2.74 (inside) |     $3.75 (inside) |
 
 "Below" means the clearing price is under the lowest comparable ($1.58), so today's price already clears. For (c) and (g) the figure is the practitioner seat price and the base scales with it; for (g) the scale factors are 0.276 (low) and 0.977 (median). These use the AI factor of 0.87; at 0.735 the median-row cash + labour prices are $2.22, $1.94, $1.74 and $1.96, and at 1.00 they are $2.67, $2.47, $2.16 and $2.44. Every price that clears cash + labour or cash + job falls inside the comparables range, so none requires a price the market does not already charge. The 10,000-seat size is the model's assumption, not a forecast.
 
@@ -358,7 +408,7 @@ The practitioner (or account) price at which net revenue covers labour at 10,000
 
 **The rest:**
 
-6. **Which model?** I need you to choose one of (b), (c), (g) or (h); (a), (d) and (e) were rejected by you on 2026-11-06 (see "Considered and Rejected"). The research made no recommendation. Paying seats to break even on cash: (b) 74 (fewest, but drops R1); (c) 139 (meets all five wants); (g) over (c) 125 (assumes 20% buy a solo coven alone); (h) flat seats 95 at $3 / $1 and 124 at the calibrated $2.27 / $1 (meets all five wants). On cash + labour (low row) the counts are (b) 930, (c) 1,943, (g) 1,703, (h) 1,237 at $3 / $1 and 1,691 at $2.27 / $1; in the median row they are 2,532, 15,123, 9,170, 4,180 and 8,965 (see "Labour and the One-Person Ceiling"). I also need you to choose, for each coven, whether the default payer mode is coven pays or each member pays (questions 19 and 20).
+6. **Which model?** I need you to choose one of (b), (c), (g), (h) or (i); (a), (d) and (e) were rejected by you on 2026-11-06 (see "Considered and Rejected"). The research made no recommendation. Paying seats to break even on cash: (b) 74 (fewest, but drops R1); (c) 139 (meets all five wants); (g) over (c) 125 (assumes 20% buy a solo coven alone); (h) flat seats 95 at $3 / $1 and 124 at the calibrated $2.27 / $1 (meets all five wants); (i) one price list 98 at $3 / $1 and 131 at the calibrated $1.99 / $1 (meets all five wants). On cash + labour (low row) the counts are (b) 930, (c) 1,943, (g) 1,703, (h) 1,237 at $3 / $1 and 1,691 at $2.27 / $1, (i) 1,282 at $3 / $1 and 1,813 at $1.99 / $1; in the median row they are 2,532, 15,123, 9,170, 4,180, 8,965, 4,493 and 11,391 (see "Labour and the One-Person Ceiling"). I also need you to choose, for each coven, whether the default payer mode is coven pays or each member pays (questions 19 and 20).
 7. **Keeper exemptions.** The model uses 5% / 3% / 1.5% / 0.5% of paying seats at 100 / 1,000 / 10,000 / 100,000 (your words, 2026-11-06: "5% of paying seats initially, falling as the site becomes established and its beta testers are staff rather than friends and family"). I need you to confirm or give the numbers. No benchmark exists.
 8. **The pause rule.** When a site is paused (M15.52) or a coven is paused (M15.55), should the subscription be paused (Stripe `pause_collection`), keep running, or be extended by the paused time? No recommendation.
 9. **Bot Protection.** Does the Code of Ethics allow Vercel's JavaScript-challenge mode? Log mode runs no script. No recommendation.
@@ -376,8 +426,9 @@ The practitioner (or account) price at which net revenue covers labour at 10,000
 20. **The switching rule.** A change of payer mode cancels one set of subscriptions and starts the other at the next renewal, with no mid-period switch. I need you to confirm or change that. No recommendation.
 21. **Which salary structure?** I need you to choose one, or tell me to wait for an accountant. **C, a single-member LLC taxed as a sole proprietor, is recommended**: the business earns $249,434 a year ($20,786 a month) to leave you the take-home of a $250,000 salary, against $266,575 for all-salary (A), a saving of $17,141. **B\*, an S corporation with a $190,000 wage, is second**: $258,302 a year ($21,525 a month), saving $8,273, with every benefit kept. B (a $184,500 wage) would earn $257,599 ($21,467). The model's salary line uses C, and the recommendation rests on secondary sources for the QBI thresholds and a single-filer assumption; an accountant must confirm it (the 13 questions are in [running-costs.md](running-costs.md#what-the-repository-doesnt-say)).
 22. **Which contact-rate row is the primary case?** I need you to choose the low row or the median row. **Recommended: the low row**, because Kanka, Pinboard and Plausible fit only that row; it holds only if the Low-Support Scenario (help centre, in-app answers, demo-coven community help, no support promise on trial and observer seats, annual billing) ships before billing. The median stays as the stress case beside it. Both rows are in every table.
-23. **Which price points?** I need you to choose a practitioner (or account) price for the model you pick. At 10,000 paying seats, cash + labour is cleared by today's prices in the low row and by $1.95 to $2.45 in the median row; cash + the structure C job is cleared by $2.35 to $2.86 (low row) or $3.22 to $3.79 (median row). All fall inside the comparables range of $1.58 to $5.99. No recommendation on the exact price; the table under "Prices That Clear Labour" has each model's figure.
+23. **Which price points?** I need you to choose a practitioner (or account) price for the model you pick. At 10,000 paying seats, cash + labour is cleared by today's prices in the low row and by $1.95 to $2.45 in the median row (the range includes (i)'s $2.29); cash + the structure C job is cleared by $2.35 to $2.86 (low row) or $3.22 to $3.79 (median row). All fall inside the comparables range of $1.58 to $5.99. No recommendation on the exact price; the table under "Prices That Clear Labour" has each model's figure.
 24. **AI assistance for support agents.** You decided on 2026-11-06 that it is on by default. I need you to confirm the factor on support minutes: **0.87 is used** (the average gain in Brynjolfsson, Li and Raymond, QJE 2025), with 0.735 and 1.00 as sensitivities (the table under "AI assistance for support agents"). I also need you to confirm the cost: a Claude Team seat at $25 a month per agent beyond you, 2-seat minimum, and that agents use Team, never Pro, so customer messages are not used to train a model. I also need you to confirm Team = Claude for Work, and to turn off Rate chats for support agents (see "Labour and the One-Person Ceiling"). Nothing else for you to do on this one.
+25. **Share of covens on each-member-pays (model (i)).** I need you to confirm or change the share the model uses for the covens whose members each pay for their own seat. **50% is used**, with a range of 0% to 100%; no source informs it. It decides how many second and later seats earn the discount: 8.3% of seats at 50%, none at 0% (price factor 1.0000) and 16.7% at 100% (0.9167). It also decides how many Stripe subscriptions there are, since each member of an each-member-pays coven holds one. The $3.50 personal plan and the 20% who buy it alone are also assumptions (the premium relies on people not forming a two-person coven instead). No recommendation.
 
 ## Sources
 
