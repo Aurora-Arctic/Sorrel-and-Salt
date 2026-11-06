@@ -124,6 +124,10 @@ stops demanding `Generic` leaves a directive unused. Each marked table's
 schema test assigns the table to `NamedWrites`, so one that loses its mark
 fails too.
 
+### Reads inside a write (MB.148)
+
+`withAudit` runs its callback inside `runInWriteTransaction(tx, …)` from `src/db/repository/unit-of-work.ts`, which holds the transaction in an `AsyncLocalStorage`. `selectFrom` asks `currentWriteTransaction()` and runs on that transaction when there is one, on the bare client when there is not. So a finder called in the callback sees the rows the write has put down and not yet committed, finds `app.current_user_id` published, and uses the write's connection. A read on a second connection could instead block on a lock queued behind the write (an `ALTER TABLE` waiting for the write to commit), and the write would wait for the read: a cycle Postgres cannot see, since one leg is the application waiting. A similarity read inside a write sets its thresholds in a savepoint (`tx.transaction`) on the same transaction. Only `withAudit` enters the store, and no finder's signature carries a transaction, so a service still holds no handle to it. The record: [`mb.148-reads-on-the-write-transaction.md`](../design-decisions/mb.148-reads-on-the-write-transaction.md).
+
 ### `app.current_user_id`, published per transaction (M1.19)
 
 Before it calls `fn`, `withAudit` publishes the session's acting user to
