@@ -19,7 +19,8 @@ const clients = (registry.__sorrelPostgresClients ??= new Map());
 function client(url: string): postgres.Sql {
   let existing = clients.get(url);
   if (!existing) {
-    existing = postgres(url);
+    // `onread: false` keeps one read path everywhere: Neon over TLS never uses that mode, and msw in tests breaks it.
+    existing = postgres(url, { onread: false });
     clients.set(url, existing);
   }
   return existing;

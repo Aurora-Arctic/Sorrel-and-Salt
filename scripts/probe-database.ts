@@ -119,6 +119,7 @@ export async function probe(url: string): Promise<ProbeResult> {
       connect_timeout: 10,
       idle_timeout: 1,
       prepare: false,
+      onread: false,
       onnotice: () => {},
     });
 

@@ -19,6 +19,19 @@ opening another that nothing ends (MB.179;
   parses `sslmode` off the connection string itself, so a Neon URL's
   `?sslmode=require` turns on TLS automatically and a local URL with no
   `sslmode` stays plaintext — `connection.ts` never branches on environment.
+- **The client reads with `onread: false`.** The driver's default for a
+  plaintext connection is Node's custom read mode, which the socket msw swaps
+  in for a passed-through connection ignores, so the first read fails with
+  `read ENOTCONN`. A Neon URL's `sslmode=require` upgrades to TLS and never
+  uses that mode, so turning it off changes nothing in production. The option is
+  set on every client the project opens: `connection.ts`, the probe, and the
+  `db` test projects' bounded client
+  ([`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)).
+- **`channel_binding` reaches the driver.** The driver reads it from the URL,
+  enforces `require` and defaults to `prefer`; a server that cannot offer
+  channel binding, such as a local Postgres without TLS, fails a `require` URL
+  with `CHANNEL_BINDING_REQUIRED`. Only parameters the driver does not
+  consume are stripped (`src/db/connection-url.ts`).
 - **`drizzle.config.ts`** (repo root) drives `drizzle-kit`: `dialect:
 'postgresql'`, schema at the glob `./src/modules/*/schema/*.ts` — every module's tables, no barrel and no registration step — and migrations output to
   `src/db/migrations`. It reads the same `DATABASE_URL` and throws under the

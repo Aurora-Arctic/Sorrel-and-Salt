@@ -51,11 +51,14 @@ cited by number in the PR table of the task that applies it.
    written, and **code used only by Claude agents is never tested** —
    `scripts/task-board.mjs`, the doc-splitting and citation tools, skills
    tooling, the CI summarizers: a bug there is seen by the agent that runs it,
-   not a user. Two tests of the harness stay on purpose (M14.27):
+   not a user. Three tests of the harness stay on purpose (M14.27):
    `tests/e2e/axe.spec.ts`, the only proof that every axe assertion can fail
-   (its second case is MB.265's regression test), and
+   (its second case is MB.265's regression test);
    `tests/guards/no-tracked-books.test.ts`, which reads repository content:
-   a committed book stays published because the repository is public.
+   a committed book stays published because the repository is public;
+   and `tests/db/connection-under-msw.test.ts`, the regression test for a
+   database client that opens a connection while msw listens (PR #1542):
+   nothing else covers a pool opening its second connection after msw starts.
 2. **State, never copy.** After an action, assert that the `status`,
    `alert`, `tooltip`, row, chip or description is present, or carries the
    data the action used. Never a heading, label, caption, column heading,
