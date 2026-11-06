@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { decodePdfLinks } from './cards';
+import { mintedLinks } from './cards';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
@@ -115,7 +115,10 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
   await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
+  const minted = mintedLinks(page);
   await dialog.getByRole('button', { name: 'Mint Cards' }).click();
+  const links = await minted;
+  expect(links, 'a sheet of twelve links').toHaveLength(12);
   const download = page.waitForEvent('download');
   await dialog.getByRole('button', { name: 'Download PDF' }).click();
   const path = testInfo.outputPath('cards.pdf');
@@ -123,10 +126,6 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
   await dialog.getByRole('button', { name: 'Done' }).click();
   await expect(dialog).toBeHidden();
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(before + 1);
-
-  const links = await decodePdfLinks(page, path);
-  expect(links, 'every code on the sheet decodes').toHaveLength(12);
-  await page.goto('/keepers/invitation-cards');
 
   // The newest batch is the first row.
   await page

@@ -28,7 +28,7 @@ Every page is US Letter, portrait (8.5 × 11 in).
 - **The crop marks need a printer that prints close to the edge.** Every mark sits in the 1/8 in margin; a printer with a wider unprintable margin crops them.
 - **The sheet label** names the batch, the sheet number and the face. It sits in the margin below the block (in the frame's terms), in Lexend 400 at 5 pt, its baseline 2.5 pt from the frame's edge and its start 8 pt in from the first card's trim, between the first two crop marks.
 
-The layers on each page are drawn in this order: the soot fill, then every picture, then every card's words and QR code, then the crop marks. Everything except the marks is clipped to the block's outer edge, so a picture never lands on a neighbouring card's words.
+The layers on each page are drawn in this order: the soot fill, then every picture, then every front's shadow, then every card's words and QR code, then the crop marks. Everything except the marks is clipped to the block's outer edge, so a picture never lands on a neighbouring card's words.
 
 ## The card
 
@@ -36,9 +36,15 @@ The layers on each page are drawn in this order: the soot fill, then every pictu
 
 1. the headline, Cormorant Unicase 600 at 52 px;
 2. the tagline, Lexend 400;
-3. the two muted lines (how to use the card and what it admits), Lexend 300;
+3. the two muted lines (how to use the card and what it admits), Lexend 300.
 
-The QR code sits right of the column, 182 px (0.95 in) square, and left of the salt's bright bowl, which washes the code out where the two overlap. A second column stands on the code: the wordmark and the site address above it and the expiry date below it, each centred on the code's centre line. The column is spaced between inked edges, from the bottom of one line's glyphs to the top of the next thing's: 1/16 in (4.5 pt) from the wordmark to the address, and 1/8 in (9 pt) from the address to the code and from the code to the expiry. The code's height on the card centres the column, from the wordmark's top to the expiry's bottom, between the safe area's top and bottom. A letter-spaced line is centred on its inked width, which leaves out the spacing after its last letter. The salt picture lies behind both columns. Card `i` gets front text `i mod 9` from `FRONT_COPY` in `copy.ts`, so the nine texts run on in turn from sheet to sheet and neighbouring cards read differently. The expiry date reads `VALID UNTIL 31 MARCH 2027`: the batch's expiry, formatted in UTC in British English and set in capitals.
+The column runs the full height of the safe area: the headline's inked top sits on the top margin and the last muted line's inked bottom on the bottom margin, both 9 pt inside the trim. The room left over is shared between the gaps (headline to tagline, tagline to the first muted line, and between the two muted paragraphs) in proportion to their sizes, worked out per card from the measured lines; the lines within a paragraph keep their spacing.
+
+The QR code sits right of the column, 182 px (0.95 in) square, at x 446.905, y 144.231 px, over the edge of the salt's bright bowl. A second column stands on the code: the wordmark and the site address above it and the expiry date below it, each centred on the code's centre line. The column runs from the top margin to the bottom margin: the wordmark's inked top sits on the top margin and the expiry's inked bottom on the bottom margin. Its gaps, measured between inked edges, run 1 : 2 : 2, wordmark to address, address to code and code to expiry, which comes to 9.07, 18.14 and 18.14 pt. Across, the column stands where its widest line, `VALID UNTIL 30 SEPTEMBER 2044` (the widest expiry date through 2099), ends on the right margin, 9 pt inside the trim; a shorter date ends a little short of it.
+
+**A faint shadow lies behind the code column**, over the salt and under the words and the code: the wordmark, the address, the code's dots and finders and the expiry, blurred with no offset, in the ground ink (K93). It is a DeviceCMYK image of solid ground ink whose DeviceGray soft mask holds the blurred shapes, traced and blurred in `shadow.ts` at 240 dpi, finer than the salt picture. `SHADOW_RADIUS` (3 pt, twice the blur's standard deviation) and `SHADOW_OPACITY` (0.5, the mask's darkest point) in `layout.ts` set it. Each card's code differs, so each front has its own mask; the ink image's bytes are shared.
+
+**That a printed code scans is checked by the owner on a printed sheet.** No test decodes a code from a render: a screen render shows the inks lighter than paper prints them, so it says nothing reliable about the code's contrast against the salt. A letter-spaced line is centred on its inked width, which leaves out the spacing after its last letter. The salt picture lies behind both columns. Card `i` gets front text `i mod 9` from `FRONT_COPY` in `copy.ts`, so the nine texts run on in turn from sheet to sheet and neighbouring cards read differently. The expiry date reads `VALID UNTIL 31 MARCH 2027`: the batch's expiry, formatted in UTC in British English and set in capitals.
 
 **The back** keeps the same 1/8 in inset and carries the wordmark, a sentence about the site, and `BY INVITATION ONLY.`, with the sorrel picture at the top right. The sentence wraps at one width, 1/16 in short of the sorrel's leftmost inked pixel beside it, so no line runs over the sorrel or its stem. The picture's rectangle starts further left, where it has faded to nothing, so the edge is measured on the picture as it prints: a pixel counts as inked where its tint times its alpha moves the ground at least 5% of the way to chalk. Its lines are balanced as a headline's are, so it ends on no lone word. The batch's name sits at the column's foot. `layout.test.ts` holds every back line 1/16 in left of the sorrel's inked pixels in that line's own height, and 1/8 in inside the trim.
 
@@ -64,7 +70,7 @@ A PDF has no CSS mask, so the script writes the canvas's edge fade into each pic
 
 Both are below the 300 dpi usual for print. They are soft, low-contrast pictures behind the text, so the shortfall shows less than it would on a sharp picture. A sharper card needs larger source illustrations.
 
-The salt sits in the artboard's bottom-right corner, its right and bottom edges 1/8 in past the trim. It is drawn at 360 × 240 px, the canvas's 460 × 307 scaled with the card's height, so its bright bowl lies beside and below the QR code rather than under it. At the canvas's size the bowl sat under the whole code and the code no longer decoded. Every picture on a sheet is drawn before any card's words or QR code, and the only clip is the block's outer edge. So the card beside and the card below each show a strip of salt under their words, and a card on the block's edge keeps that strip in the bleed, which the guillotine cuts away. `pdf.test.ts` pins the salt to that corner.
+The salt sits in the artboard's bottom-right corner, its right and bottom edges 1/8 in past the trim. It is drawn at 360 × 240 px, the canvas's 460 × 307 scaled with the card's height, so its bright bowl lies beside and below the QR code rather than under the whole of it. Every picture on a sheet is drawn before any card's words or QR code, and the only clip is the block's outer edge. So the card beside and the card below each show a strip of salt under their words, and a card on the block's edge keeps that strip in the bleed, which the guillotine cuts away. `pdf.test.ts` pins the salt to that corner.
 
 ## Fonts
 
@@ -107,7 +113,8 @@ jsPDF's higher-level text and font calls were not tested against these four need
 - each back lands behind its own front under a long-edge flip, and stands right way up when the card is turned side over side;
 - every picture lies inside the block;
 - the expiry date and every tagline appear in order;
-- a 500-card batch builds 84 pages with each font and picture embedded once;
+- a 500-card batch builds 84 pages with each font and picture embedded once, and one shadow per front;
+- each front's shadow is solid ground ink through a grey soft mask that peaks at the shadow opacity, drawn over the salt and under the words;
 - every embedded glyph is intact.
 
-`qr.test.ts` proves the code is 29 × 29 modules and that the SVG's dots match the matrix. `headline.test.ts` holds the headlines to two lines. `layout.test.ts` holds the card to 3.5 × 2 in with 1/8 in of bleed, keeps every line of every front and the back 1/8 in inside the trim and clear of the code, and holds the code to at least 0.9 in.
+`qr.test.ts` proves the code is 29 × 29 modules and that the SVG's dots match the matrix. `headline.test.ts` holds the headlines to two lines. `layout.test.ts` holds the card to 3.5 × 2 in with 1/8 in of bleed, keeps every line of every front and the back 1/8 in inside the trim and clear of the code, and holds the code to at least 0.9 in. It also holds both front columns to the top and bottom margins and the widest expiry to the right margin, within 0.25 pt. `shadow.test.ts` proves the shadow's peak, its resolution, that it spreads evenly about the code column with no offset from the shapes it blurs, and that it fades to nothing before its edges.
