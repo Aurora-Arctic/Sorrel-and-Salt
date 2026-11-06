@@ -14,6 +14,7 @@ import {
   PX_PER_INCH,
   type TextItem,
 } from '@/lib/invitation-cards/layout';
+import { decodePng, GROUND_INK, PICTURE_LIGHT_INK, tintPicture } from '@/lib/invitation-cards/inks';
 import { textWidth } from '@/lib/invitation-cards/text';
 
 const FONTS = path.join(process.cwd(), 'public/invitation-cards/fonts');
@@ -92,6 +93,36 @@ const columnLine = (items: TextItem[], text: string) => {
 // The least room between the back's words and the sorrel, 1/16 in.
 const PICTURE_GAP = PX_PER_INCH / 16;
 
+// The sorrel as it prints: a pixel's amount is how far it moves the ground towards chalk, its tint times its
+// alpha, and a pixel counts as inked from 5% of the way, as far as a fade can go before the eye reads it.
+const INKED = 0.05;
+const sorrel = (() => {
+  const { rgba, width, height } = decodePng(
+    readFileSync(path.join(process.cwd(), 'public/invitation-cards/sorrel.png')),
+  );
+  const { cmyk, alpha } = tintPicture(rgba, width, height);
+  const k = 3;
+  const amount = (i: number) =>
+    ((cmyk[i * 4 + k] / 255 - GROUND_INK[k]) / (PICTURE_LIGHT_INK[k] - GROUND_INK[k])) *
+    (alpha[i] / 255);
+  return { width, height, amount };
+})();
+// The artboard x of the sorrel's leftmost inked pixel in the artboard rows from top to bottom, or Infinity if none.
+function sorrelEdge(top: number, bottom: number): number {
+  const { width, height, amount } = sorrel;
+  let edge = Infinity;
+  const rowOf = (y: number) => Math.floor(((y - BACK_PICTURE.y) * height) / BACK_PICTURE.height);
+  for (let row = Math.max(0, rowOf(top)); row <= Math.min(height - 1, rowOf(bottom)); row += 1) {
+    for (let column = 0; column < width; column += 1) {
+      if (amount(row * width + column) >= INKED) {
+        edge = Math.min(edge, BACK_PICTURE.x + (column * BACK_PICTURE.width) / width);
+        break;
+      }
+    }
+  }
+  return edge;
+}
+
 describe('the card layout', () => {
   it('is a 3.5 × 2 in card with 1/8 in of bleed on every side', () => {
     expect((trim.right - trim.left) / PX_PER_INCH).toBe(3.5);
@@ -155,11 +186,16 @@ describe('the card layout', () => {
     },
   );
 
-  it('ends every line of the back at least 1/16 in left of the sorrel', () => {
+  it('ends every line of the back at least 1/16 in left of the sorrel’s inked pixels beside it, the sentence in four lines', () => {
     const items = backText(fonts, 'b4444444');
-    expect(items.length).toBeGreaterThan(5);
+    const sentence = items.filter((item) => item.font === 'lexend300');
+    expect(sentence.length).toBeGreaterThan(1);
+    expect(sentence.length).toBeLessThanOrEqual(4);
     for (const item of items) {
-      expect(boxOf(item).right, item.text).toBeLessThanOrEqual(BACK_PICTURE.x - PICTURE_GAP);
+      const box = boxOf(item);
+      expect(box.right, item.text).toBeLessThanOrEqual(
+        sorrelEdge(box.top, box.bottom) - PICTURE_GAP,
+      );
       expect(item.x).toBe(COLUMN.left);
     }
   });

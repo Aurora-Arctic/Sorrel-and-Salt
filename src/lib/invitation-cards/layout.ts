@@ -239,8 +239,11 @@ function centredOnCode(fonts: CardFonts, item: TextItem): TextItem {
   return { ...item, x: FRONT_QR.x + FRONT_QR.size / 2 - width / 2 };
 }
 
-// The back's words end 1/16 in short of the sorrel, so no line runs over the picture or its stem.
-const BACK_WORDS_WIDTH = BACK_PICTURE.x - PX_PER_INCH / 16 - COLUMN.left;
+// The sorrel's leftmost inked column beside the back's sentence, where it prints 5% of the way from the ground to
+// chalk; the picture's rectangle starts further left, where it has faded to nothing. layout.test.ts measures it.
+const SORREL_INKED_LEFT = 455;
+// The sentence wraps at one width, 1/16 in short of that edge, so no line runs over the sorrel or its stem.
+const BACK_WORDS_WIDTH = SORREL_INKED_LEFT - PX_PER_INCH / 16 - COLUMN.left;
 
 /** The back's words, the canvas's `Back` artboard. */
 export function backText(fonts: CardFonts, batch: string): TextItem[] {
