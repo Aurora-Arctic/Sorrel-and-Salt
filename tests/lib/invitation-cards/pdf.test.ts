@@ -385,7 +385,7 @@ describe('the card sheets PDF', () => {
     }
   });
 
-  it("runs each front's salt 1/8 in past its card's trim at the bottom right, at 460 × 307 artboard px", () => {
+  it("runs each front's salt 1/8 in past its card's trim at the bottom right, at 360 × 240 artboard px", () => {
     const fronts = pictures(twelve, 0, 'salt');
     expect(fronts).toHaveLength(12);
     for (const box of fronts) {
@@ -397,8 +397,8 @@ describe('the card sheets PDF', () => {
       // The frame turns a quarter clockwise, so a card's right edge lies at the page's bottom and its bottom at the left.
       expect(trim.bottom - box.bottom).toBeCloseTo(9);
       expect(trim.left - box.left).toBeCloseTo(9);
-      expect(box.top - box.bottom).toBeCloseTo((460 * 72) / 192);
-      expect(box.right - box.left).toBeCloseTo((307 * 72) / 192);
+      expect(box.top - box.bottom).toBeCloseTo((360 * 72) / 192);
+      expect(box.right - box.left).toBeCloseTo((240 * 72) / 192);
     }
   });
 

@@ -52,9 +52,10 @@ const FOOT_GAP = 6;
 export const HEADLINE_SIZE = 52;
 export const HEADLINE_MAX_LINES = 2;
 
-// The salt fills the artboard's bottom-right corner, bleed included, as the canvas draws it,
-// so it runs under the words of the cards beside and below and is clipped only at the block's edge.
-const SALT = { width: 460, height: 307 };
+// The salt fills the artboard's bottom-right corner, bleed included, so it runs under the words of the cards
+// beside and below and is clipped only at the block's edge. It is scaled with the card's height, so its bright
+// bowl sits beside and below the QR code rather than under it, where it would wash the code out.
+const SALT = { width: 360, height: 240 };
 
 export const FRONT_PICTURE: PictureItem = {
   picture: 'salt',

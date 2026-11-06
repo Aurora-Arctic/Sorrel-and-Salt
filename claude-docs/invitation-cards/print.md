@@ -59,12 +59,12 @@ A PDF has no CSS mask, so the script writes the canvas's edge fade into each pic
 
 | Picture | Pixels    | Printed size   | Resolution    |
 | ------- | --------- | -------------- | ------------- |
-| Salt    | 440 × 294 | 2.40 × 1.60 in | about 184 dpi |
+| Salt    | 440 × 294 | 1.88 × 1.25 in | about 235 dpi |
 | Sorrel  | 330 × 248 | 2.04 × 1.50 in | about 162 dpi |
 
 Both are below the 300 dpi usual for print. They are soft, low-contrast pictures behind the text, so the shortfall shows less than it would on a sharp picture. A sharper card needs larger source illustrations.
 
-The salt sits where the canvas's `Main` artboard puts it: in the artboard's bottom-right corner, its right and bottom edges 1/8 in past the trim. Every picture on a sheet is drawn before any card's words or QR code, and the only clip is the block's outer edge. So the card beside and the card below each show a strip of salt under their words, and a card on the block's edge keeps that strip in the bleed, which the guillotine cuts away. `pdf.test.ts` pins the salt to that corner.
+The salt sits in the artboard's bottom-right corner, its right and bottom edges 1/8 in past the trim. It is drawn at 360 × 240 px, the canvas's 460 × 307 scaled with the card's height, so its bright bowl lies beside and below the QR code. At the canvas's size the bowl sat under the whole code and the code no longer decoded. Every picture on a sheet is drawn before any card's words or QR code, and the only clip is the block's outer edge. So the card beside and the card below each show a strip of salt under their words, and a card on the block's edge keeps that strip in the bleed, which the guillotine cuts away. `pdf.test.ts` pins the salt to that corner.
 
 ## Fonts
 
