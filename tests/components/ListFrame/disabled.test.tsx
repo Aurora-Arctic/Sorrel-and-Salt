@@ -7,7 +7,12 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
 const list = (disabled?: boolean) => (
   <ListFrame disabled={disabled}>
-    <FilterForm label="Filter Users" action="/users" searchHref={() => '/users'} shown={[]}>
+    <FilterForm
+      label="Filter Users"
+      action="/keepers/users"
+      searchHref={() => '/keepers/users'}
+      shown={[]}
+    >
       <input name="q" aria-label="Search" />
       <select name="role" aria-label="Role">
         <option>Any</option>
