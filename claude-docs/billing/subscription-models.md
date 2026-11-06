@@ -154,6 +154,20 @@ The owner rejected three models on 2026-11-06. Their research stays here so it i
 
 **(e) Any member pays.** Owner decision, 2026-11-06: "We're not going to do e - any member pays, remove it." Any member could buy a subscription covering a coven, and one subscription could cover several covens, with tiers by coven count. Kanka sells 1, 3 and 7 campaigns for $4.99, $9.99 and $24.99 [S19]; D&D Beyond's $5.99 Master plan shares with up to 12 people, and the subscriber need not be the DM [S18]; any Discord member may boost a server [S8]. I modelled $5.64 a month per covered coven (derived: 87% of Kanka payers at $4.99 and 13% at $9.99, [S20] and [S19]), which needed 238 paying seats on cash. It altered R1 (any member, not only the steward, may pay) and dropped or altered R2. Kanka's survey found 99% saying merged boosts simplified the system [S20]; I found no data on how often a non-owner pays. The owner's separate "each member pays" payer mode (below) is a different thing and stays.
 
+## Fair Pricing
+
+The test is the Code of Ethics (`documents/code-of-ethics.md`, line 34): "It will charge, fairly: enough to cover its costs and to pay the people who work on it a fair, living wage." The model keeps these things that meet it:
+
+- Observers pay less than practitioners ($1 against $2 in (c), (g) and (h)).
+- A solo practitioner pays for one seat.
+- A member who pays for a coven pays half for a seat in another coven (R5).
+- A new coven gets a one-month trial with no card.
+- Each site curator holds a free coven.
+- Keeper exemptions carry an end date.
+- Prices are anchored on hobby and household comparables, not on business tools.
+
+**Decision (2026-11-06).** The owner reviewed regional pricing, a self-requested hardship exemption and a stated wage gap, and decided: "pricing as modelled is fair enough". None of the three is modelled. No numbers change.
+
 ### Payer Modes
 
 Owner decision, 2026-11-06: "Model both modes now." Every coven-pays model that reaches the page, (c), (g) and (h), gains a per-coven switch. A steward sets it for the coven.
