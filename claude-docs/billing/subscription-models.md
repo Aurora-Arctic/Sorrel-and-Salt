@@ -39,7 +39,7 @@ For `claude-docs/design-decisions/m17.1-subscription-billing-scope.md` when it i
 - **Pricing as modelled is fair enough (2026-11-06).** After reviewing regional pricing, a self-requested hardship exemption and a stated wage gap, the owner decided: "pricing as modelled is fair enough". None of the three is modelled. No numbers change.
 - **The living wage is a floor (2026-11-06).** "The living wage is a minimum. Not a maximum." The $250,000 salary target is above that floor by the owner's choice. A task, to be minted on Wave 21 by M17.1 (no id yet), will scope an executive pay maximum: a ratio of the highest to the lowest pay on the site, researched against published pay-ratio policies.
 - **Model (i) chosen (owner, 2026-11-06).** The owner chose model (i), One price list ($6 base, +$2 for each extra seat if the coven pays, $3 if members pay, $1 off a second coven, personal plan $3.50). The remaining owner questions are written against (i) and quote (i)'s figures first; the other models' sections and tables stay as the record of what was compared. Questions 6 and 16 and the (g)-only and (c)-only options are gone; a question that applies to only some models carries a models list.
-- **Processor: Stripe Billing + Stripe Tax with hosted Checkout, the site as merchant (owner, 2026-11-06).** "And stripe as the processor: Stripe Billing + Tax, hosted Checkout." Questions 1 (merchant or merchant of record), 2 (Sold through Link) and 13 (hosted Checkout only, no Stripe.js) are decided. Question 4 stays, as a yes or no on describing the site to Stripe's review. Fee figures use Stripe option 1 as primary; Managed Payments stays in the comparison as the recorded fallback.
+- **Processor: Stripe Billing + Stripe Tax, the site as merchant, with a checkout page the site hosts; Stripe.js loads on that page and on no other (owner, 2026-11-06).** The owner first said "And stripe as the processor: Stripe Billing + Tax, hosted Checkout", then amended it: "I want to host my own checkout. And only have the scripts on absolutely necessary pages." Questions 1 (merchant or merchant of record), 2 (Sold through Link) and 13 (Stripe.js; now answered as: on the checkout page only) are decided. The research's earlier recommendation, Stripe-hosted Checkout, is overridden by the owner; the reason is fewer vendor pages and the script confined to the one page that needs it. Fees are unchanged. The consequences are under "A Site-Hosted Checkout Page". Question 4 stays, as a yes or no on describing the site to Stripe's review. Fee figures use Stripe option 1 as primary; Managed Payments stays in the comparison as the recorded fallback, and it requires Stripe's hosted Checkout, so using the fallback would also mean giving up the site-hosted page.
 
 ## How Each Model Meets R1 to R5
 
@@ -253,7 +253,7 @@ The no-free-tier decision departs from §13 in four places. **I need you to acce
 
 ### Lane F's Summary
 
-**Rank 1: Stripe Billing plus Stripe Tax with hosted Checkout, the site as merchant.** **Rank 2: Stripe Managed Payments, where Link, Stripe's service, is the merchant of record.** A merchant of record is the company legally selling to the customer: it collects and pays the sales tax. Hosted Checkout loads no Stripe.js on the site, which keeps the site within its Code of Ethics and Privacy Policy [S-js] [S-checkout].
+**Rank 1: Stripe Billing plus Stripe Tax, the site as merchant, with a checkout page the site hosts (the owner's choice of 2026-11-06; the research had recommended Stripe-hosted Checkout).** **Rank 2: Stripe Managed Payments, where Link, Stripe's service, is the merchant of record.** A merchant of record is the company legally selling to the customer: it collects and pays the sales tax. Stripe-hosted Checkout loads no Stripe.js on the site [S-js] [S-checkout]; the site-hosted page loads it on that one page, which needs a scoped exception (see "A Site-Hosted Checkout Page").
 
 | Route                                             | Cost on a $10 monthly seat, US card |
 | ------------------------------------------------- | ----------------------------------- |
@@ -265,7 +265,7 @@ The no-free-tier decision departs from §13 in four places. **I need you to acce
 
 Stripe Tax Basic does not register or file anything [S-tax]; with it the owner registers and files in Washington and wherever else a threshold is crossed.
 
-**Managed Payments limits.** Subscriptions only through Checkout; no invoice items; statements read "Sold through Link"; Stripe may refund within 60 days; products must be digital and fully automated; an eligibility review applies [S-mp] [S-mp-elig].
+**Managed Payments limits.** Subscriptions only through Stripe's hosted Checkout, so the fallback would mean giving up the site-hosted page; no invoice items; statements read "Sold through Link"; Stripe may refund within 60 days; products must be digital and fully automated; an eligibility review applies [S-mp] [S-mp-elig].
 
 ### Restricted-Business Quotes
 
@@ -280,13 +280,25 @@ The site sells a grimoire and a compendium that includes zodiac and deity vocabu
 
 Stripe has the narrowest list. Whether a spell journal falls under any of these lines is a judgement the vendor makes; I could not resolve it.
 
+### A Site-Hosted Checkout Page
+
+The owner chose, on 2026-11-06, to host the checkout on the site: "I want to host my own checkout. And only have the scripts on absolutely necessary pages." Stripe.js loads on the checkout page and on no other. The earlier research recommendation (Stripe-hosted Checkout, which loads no script on the site) is overridden by the owner, for fewer vendor pages and the script confined to the one page that needs it. Fees are unchanged. Consequences:
+
+- **Card data and PCI scope.** Stripe's security guide says its low risk integrations collect card details and send them straight to Stripe without passing through the site's servers, which reduces the site's PCI obligations [S-sec]. The guide does not name the self-assessment questionnaire; that this keeps the site at SAQ A was **not found** in the fetched sources, and the accountant or Stripe's Dashboard compliance page should confirm it. Card fields stay in Stripe's frames (an iframe is a page embedded inside another page), so card numbers never reach the site's servers.
+- **Fraud signals.** Stripe.js collects them on the checkout page itself, which is the page where they matter. This partly answers the earlier worry in running-costs.md (payment-side monitoring) that hosted Checkout gives up some risk-model accuracy; how much of the gap it closes was **not found**. Stripe advises loading Stripe.js on every page, and this decision does not do that.
+- **Script risk.** Stripe's guide says that including another site's JavaScript makes the site's security depend on that site's, and recommends minimising it [S-sec]. Confining the script to one page is the owner's way of doing that. The guide also lists the Content Security Policy directives for Stripe.js (script, frame and connect sources), to set on that page only [S-sec].
+- **Privacy Policy and Code of Ethics.** The Privacy Policy's "runs no tracking script" and the Code of Ethics line need a scoped exception, "one payment script from Stripe runs on the checkout page only". It is edited in the Wave 21 task that adds Stripe as a processor, not here.
+- **Better Auth plugin.** `@better-auth/stripe` creates subscriptions through Stripe's Checkout [BA-stripe]. Whether it supports a site-hosted page (Elements or embedded Checkout) or the Stripe SDK route is required is **not found**; the proof of concept must test it.
+
 ### Testing the Integration
 
 `stripe-mock` is Stripe's local fake API. It is stateless: it checks requests against the API spec and returns fixed replies, and it sends no webhooks [S-mock]. It cannot test subscription renewals. I recommend a scheduled run against Stripe's real test mode using test clocks, which move a test subscription through time [S-clocks]. Webhooks are not delivered in order, so the handler has to dedupe on the event id [S-wh].
 
 ### Better Auth Plugin Note
 
-`@better-auth/stripe` lists peer dependency ranges newer than the versions of `stripe` and `better-auth` the repository pins, so using the plugin means a bump [BA-stripe]. DESIGN.md §13 names the plugin's two structural costs: its tables sit outside `withAudit`, and its routes sit outside `/api/graphql`. The alternative is a thin service over the Stripe SDK with audited tables of its own; the spike is meant to settle it.
+`@better-auth/stripe` lists peer dependency ranges newer than the versions of `stripe` and `better-auth` the repository pins, so using the plugin means a bump [BA-stripe]. DESIGN.md §13 names the plugin's two structural costs: its tables sit outside `withAudit`, and its routes sit outside `/api/graphql`. The alternative is a thin service over the Stripe SDK with audited tables of its own; the spike is meant to settle it. With the site-hosted checkout page, the spike must also test whether the plugin supports that page or whether the SDK route is required.
+
+**Proof-of-concept item: which form on the checkout page.** Choose between Stripe Elements (the site's own form around Stripe's card fields) and embedded Checkout (Stripe's whole form shown inside the site's page). Both load Stripe.js on that one page. No recommendation: Lane F's sources do not give one.
 
 ## Break-Even
 
@@ -389,9 +401,9 @@ The practitioner (or account) price at which net revenue covers labour at 10,000
 
 ## Questions for the Owner
 
-**I need you to answer each question below.** Each is written for model (i) and for Stripe Billing + Stripe Tax with hosted Checkout, both chosen on 2026-11-06. A question has a plain sentence saying what is decided, a "Why it matters" sentence saying what the answer changes and what the words mean, and the choices. The research's recommendation is marked "recommended". The numbers keep the earlier numbering, so cross-references still work.
+**I need you to answer each question below.** Each is written for model (i) and for Stripe Billing + Stripe Tax with a site-hosted checkout page, both chosen on 2026-11-06. A question has a plain sentence saying what is decided, a "Why it matters" sentence saying what the answer changes and what the words mean, and the choices. The research's recommendation is marked "recommended". The numbers keep the earlier numbering, so cross-references still work.
 
-**Already decided, so not asked:** 1. Merchant or merchant of record (decided: the site is the merchant, using Stripe Billing + Stripe Tax (decision above)); 2. Sold through Link (decided: not applicable, because Link branding belongs to Managed Payments, which stays only as the recorded fallback); 6. Which model (decided: model (i) (decision above)); 10. The document-mailing cap (removed); 13. Hosted Checkout only (decided: hosted Checkout, with no Stripe.js on the site's own pages (decision above)); 16. Solo coven price (model (g)) (removed, because it applies only to model (g)).
+**Already decided, so not asked:** 1. Merchant or merchant of record (decided: the site is the merchant, using Stripe Billing + Stripe Tax (decision above)); 2. Sold through Link (decided: not applicable, because Link branding belongs to Managed Payments, which stays only as the recorded fallback); 6. Which model (decided: model (i) (decision above)); 10. The document-mailing cap (removed); 13. Stripe.js (decided: loads on the site-hosted checkout page only (decision above)); 16. Solo coven price (model (g)) (removed, because it applies only to model (g)).
 
 3. **Will you sell as yourself (a sole proprietor) or through a company (an LLC)?**
 
@@ -578,6 +590,7 @@ Lane F's processor sources (fetched 2026-11-06):
 - S-mp-elig https://docs.stripe.com/payments/managed-payments/eligibility
 - S-rb https://stripe.com/legal/restricted-businesses
 - S-mock https://github.com/stripe/stripe-mock
+- S-sec https://docs.stripe.com/security/guide (fetched 2026-11-06)
 - S-clocks https://docs.stripe.com/billing/testing/test-clocks
 - S-wh https://docs.stripe.com/webhooks
 - BA-stripe https://www.npmjs.com/package/@better-auth/stripe
