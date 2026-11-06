@@ -138,6 +138,11 @@ const I = {
     c_obs: 1,
     h_ill: 3, // (h) illustrative practitioner price
     h_obs: 1, // (h) observer price, held at (c)'s $1
+    i_base: 7, // (i) coven pays: base for 3 practitioners
+    i_seat: 2.5, // (i) coven pays: each extra practitioner
+    i_obs: 1.25, // (i) observer seat, in both modes
+    i_upCp: 1.5, // (i) observer upgrade a month where the coven pays, a set price
+    i_upMp: 2, // (i) observer upgrade a month where members pay, a set price
     i_personal: 3.5, // (i) solo coven bought alone, above the practitioner seat
     i_emp: 3, // (i) practitioner seat when each member pays
     i_disc: 1, // (i) dollars off a seat a person pays for themselves beyond their first
@@ -440,32 +445,29 @@ const makeH = (id, p, label) => ({
       2 ** 30) *
     I.neonGbMonth,
 });
-// (i) one price list over (c): a coven that pays is priced as in (c) ($6 for 3 practitioners, $2 each
-// extra, $1 each observer); a coven whose members each pay charges i_emp a practitioner seat and $1 an
-// observer. A practitioner seat includes a solo coven, an observer upgrades by paying the difference,
-// and a solo coven alone costs i_personal. The discount (R5) is i_disc off a seat a person pays for
-// themselves beyond their first, and never lands on another payer's invoice, so only each-member-pays
-// seats earn it. It applies to every seat type, so a self-paid observer seat beyond the first is free.
+// (i) one price list: a coven that pays charges i_base for 3 practitioners, i_seat for each extra and
+// i_obs for each observer; a coven whose members each pay charges i_emp a practitioner seat and i_obs an
+// observer. A practitioner seat includes a solo coven, an observer upgrades by paying a set add-on
+// (i_upCp or i_upMp, above the observer seat), and a solo coven alone costs i_personal. The discount (R5)
+// is i_disc off a practitioner seat a person pays for themselves beyond their first, and the whole
+// observer seat off a self-paid observer seat beyond the first. It never lands on another payer's
+// invoice, so only each-member-pays seats earn it.
 // x scales every price except the observer seat and the discount, for the clearing-price search.
 const iDiscountedSeatShare = extraSeatShare * I.price.i_payerShare;
-const iObsMix = (seat) =>
-  observersPerCoven *
-  ((1 - I.price.observerTakeUp) * I.price.c_obs + I.price.observerTakeUp * seat);
+const iObsMix = (up) => observersPerCoven * (I.price.i_obs + I.price.observerTakeUp * up);
 const iCovenPays = (x = 1) =>
-  I.price.c_base * x +
-  I.price.c_seat * x * Math.max(0, practitionersPerCoven - I.price.c_incl) +
-  iObsMix(I.price.c_seat * x);
-const iMembersPayGross = (x = 1) => {
-  const e = I.price.i_emp * x;
-  return practitionersPerCoven * e + iObsMix(e);
-};
+  I.price.i_base * x +
+  I.price.i_seat * x * Math.max(0, practitionersPerCoven - I.price.c_incl) +
+  iObsMix(I.price.i_upCp * x);
+const iMembersPayGross = (x = 1) =>
+  practitionersPerCoven * I.price.i_emp * x + iObsMix(I.price.i_upMp * x);
 const iMembersPay = (x = 1) =>
   iMembersPayGross(x) -
   extraSeatShare *
     (practitionersPerCoven * Math.min(I.price.i_disc, I.price.i_emp * x) +
       observersPerCoven *
-        ((1 - I.price.observerTakeUp) * Math.min(I.price.i_disc, I.price.c_obs) +
-          I.price.observerTakeUp * Math.min(I.price.i_disc, I.price.i_emp * x)));
+        ((1 - I.price.observerTakeUp) * I.price.i_obs +
+          I.price.observerTakeUp * Math.min(I.price.i_disc, I.price.i_emp * x + I.price.i_obs)));
 const iPerCoven = (x = 1) =>
   (1 - I.price.i_payerShare) * iCovenPays(x) + I.price.i_payerShare * iMembersPay(x);
 const iPerSeat = (x = 1) =>
@@ -478,7 +480,7 @@ const makeI = (x = 1, label = '') => ({
   name: '(i) One price list' + label,
   base: 'account',
   practitioner: I.price.i_emp * x,
-  observer: I.price.c_obs,
+  observer: I.price.i_obs,
   personal: I.price.i_personal * x,
   price: iPerSeat(x),
   subsOf: (P) =>
@@ -509,7 +511,10 @@ const models = {
     hCalibratedRounded,
     '$' + hCalibratedRounded.toFixed(2) + ' / $1 (calibrated to (g))',
   ),
-  i: makeI(1, ', $6 base + $2 extra if the coven pays, $3 if members pay, $1 off, personal $3.50'),
+  i: makeI(
+    1,
+    ', $7 base + $2.50 extra if the coven pays, $3 if members pay, $1 off, personal $3.50',
+  ),
 };
 const unitsOf = (m, P) =>
   m.base === 'coven' ? (P * I.membershipsPerAccount) / I.membersPerCoven : P;
@@ -811,11 +816,18 @@ out.push(
   '',
   row(['Quantity', 'Value']),
   row(['---', '---:']),
-  row(['Coven pays: base for 3 practitioners', f(I.price.c_base, 2)]),
-  row(['Coven pays: each extra practitioner', f(I.price.c_seat, 2)]),
+  row(['Coven pays: base for 3 practitioners', f(I.price.i_base, 2)]),
+  row(['Coven pays: each extra practitioner', f(I.price.i_seat, 2)]),
   row(['Each member pays: practitioner seat', f(I.price.i_emp, 2)]),
-  row(['Observer seat', f(I.price.c_obs, 2)]),
-  row(['Discount off a self-paid seat beyond the first', f(I.price.i_disc, 2)]),
+  row(['Observer seat', f(I.price.i_obs, 2)]),
+  row([
+    'Observer upgrade: coven pays / members pay',
+    f(I.price.i_upCp, 2) + ' / ' + f(I.price.i_upMp, 2),
+  ]),
+  row([
+    'Discount off a self-paid practitioner seat beyond the first (a self-paid observer seat is free)',
+    f(I.price.i_disc, 2),
+  ]),
   row(['Personal plan (solo coven bought alone)', f(I.price.i_personal, 2)]),
   row(['Share of covens on each-member-pays', pct(I.price.i_payerShare)]),
   row(['Second-or-later memberships', pct(extraSeatShare)]),
@@ -837,11 +849,11 @@ out.push(
   ]),
   row([
     'Two practitioners: coven pays / members pay',
-    f(I.price.c_base, 2) + ' / ' + f(2 * I.price.i_emp, 2),
+    f(I.price.i_base, 2) + ' / ' + f(2 * I.price.i_emp, 2),
   ]),
   row([
     'Three practitioners: coven pays / members pay',
-    f(I.price.c_base, 2) + ' / ' + f(3 * I.price.i_emp, 2),
+    f(I.price.i_base, 2) + ' / ' + f(3 * I.price.i_emp, 2),
   ]),
   row(['Revenue per paying seat', f(models.i.price, 4)]),
   row(['(g) revenue per paying seat, for comparison', f(gPerSeat, 4)]),
@@ -1055,7 +1067,7 @@ out.push(
 );
 out.push(
   '',
-  `For (h) the figure is the practitioner seat price. For (i) it is the each-member-pays practitioner seat; the coven-pays base and extra seat and the personal plan scale with it (today $${I.price.c_base} base, $${I.price.c_seat} an extra seat, $${I.price.i_personal} personal), and the observer seat and the $${I.price.i_disc} discount stay fixed.`,
+  `For (h) the figure is the practitioner seat price. For (i) it is the each-member-pays practitioner seat; the coven-pays base and extra seat and the personal plan scale with it (today $${I.price.i_base} base, $${I.price.i_seat} an extra seat, $${I.price.i_personal} personal, observer upgrades $${I.price.i_upCp} and $${I.price.i_upMp}), and the $${I.price.i_obs} observer seat and the $${I.price.i_disc} discount stay fixed.`,
 );
 out.push(
   '',
