@@ -11,6 +11,8 @@ export const PX_PER_INCH = 192;
 export const CHALK = '#ebe4d4';
 export const MUTED = '#c0baac';
 export const SOOT = '#14120e';
+/** The sheet label's grey, in the page margin. */
+export const LABEL = '#555555';
 
 export type FontKey = 'cormorant600' | 'lexend300' | 'lexend400' | 'lexend500';
 export type CardFonts = Record<FontKey, Font>;
@@ -295,7 +297,7 @@ export function marginText(
     font: 'lexend400',
     size: 6,
     letterSpacing: 0,
-    colour: '#555555',
+    colour: LABEL,
     x: block.x + bleed + 8,
     baseline: block.y + block.height + 10,
     text: `Batch ${batch}, sheet ${sheet} of ${sheets}, ${face === 'front' ? 'fronts' : 'backs'}`,

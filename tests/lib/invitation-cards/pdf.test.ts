@@ -12,7 +12,16 @@ import {
   PDFRef,
 } from 'pdf-lib';
 import { beforeAll, describe, expect, it } from 'vitest';
+import UPNG from '@pdf-lib/upng';
 import { FRONT_COPY } from '@/lib/invitation-cards/copy';
+import {
+  GROUND_INK,
+  HEADING_INK,
+  LABEL_INK,
+  MUTED_INK,
+  PICTURE_LIGHT_INK,
+  tintPicture,
+} from '@/lib/invitation-cards/inks';
 import { renderCardSheets } from '@/lib/invitation-cards/pdf';
 import type { CardAssets } from '@/lib/invitation-cards/types';
 
@@ -55,6 +64,12 @@ interface Drawn {
   // up and right are the directions, on the page, of the image's top and of its right-hand side.
   images: { name: string; box: Box; up: Vector; right: Vector }[];
   textRuns: number;
+  /** Every operator the page uses, so a test can see which colour spaces it paints in. */
+  operators: Set<string>;
+  /** The CMYK fill in force at each rectangle in `fills`, at each other filled path, and at each text run. */
+  fillInks: number[][];
+  pathInks: number[][];
+  textInks: number[][];
 }
 
 function multiply([a, b, c, d, e, f]: Matrix, [A, B, C, D, E, F]: Matrix): Matrix {
@@ -95,7 +110,19 @@ function contents(doc: PDFDocument, pageIndex: number): string {
 }
 
 function drawn(doc: PDFDocument, pageIndex: number): Drawn {
-  const result: Drawn = { fills: [], clips: [], strokes: [], images: [], textRuns: 0 };
+  const result: Drawn = {
+    fills: [],
+    clips: [],
+    strokes: [],
+    images: [],
+    textRuns: 0,
+    operators: new Set(),
+    fillInks: [],
+    pathInks: [],
+    textInks: [],
+  };
+  let ink: number[] = [];
+  const inks: number[][] = [];
   let ctm: Matrix = [1, 0, 0, 1, 0, 0];
   const saved: Matrix[] = [];
   let operands: string[] = [];
@@ -104,12 +131,18 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
   const num = (i: number) => Number(operands[operands.length - i]);
   for (const token of tokens(contents(doc, pageIndex))) {
     if (/^[a-zA-Z*'"]+$/.test(token) && !/^\d/.test(token)) {
+      result.operators.add(token);
       switch (token) {
         case 'q':
           saved.push(ctm);
+          inks.push(ink);
           break;
         case 'Q':
           ctm = saved.pop() ?? ctm;
+          ink = inks.pop() ?? ink;
+          break;
+        case 'k':
+          ink = [num(4), num(3), num(2), num(1)];
           break;
         case 'cm':
           ctm = multiply([num(6), num(5), num(4), num(3), num(2), num(1)], ctm);
@@ -143,7 +176,10 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
           break;
         case 'f':
         case 'f*':
-          if (path.length === 1 && path[0].length === 4) result.fills.push(boxOf(path[0]));
+          if (path.length === 1 && path[0].length === 4) {
+            result.fills.push(boxOf(path[0]));
+            result.fillInks.push(ink);
+          } else result.pathInks.push(ink);
           path = [];
           break;
         case 'S':
@@ -160,6 +196,7 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
           break;
         case 'TJ':
           result.textRuns += 1;
+          result.textInks.push(ink);
           break;
       }
       operands = [];
@@ -420,4 +457,90 @@ describe('the card sheets PDF', () => {
       }
     }
   });
+});
+
+describe("the card sheets PDF's inks", () => {
+  let nine: PDFDocument;
+  beforeAll(async () => {
+    ({ doc: nine } = await build(9));
+  });
+  const same = (a: number[], b: readonly number[]) =>
+    a.length === 4 && a.every((v, i) => Math.abs(v - b[i]) < 1e-4);
+
+  it('paints every fill and stroke in DeviceCMYK, and nothing in RGB, grey or a named colour space', () => {
+    for (let i = 0; i < nine.getPageCount(); i += 1) {
+      const { operators } = drawn(nine, i);
+      expect(operators.has('k'), `page ${i} fills in CMYK`).toBe(true);
+      expect(operators.has('K'), `page ${i} strokes in CMYK`).toBe(true);
+      for (const op of ['rg', 'RG', 'g', 'G', 'sc', 'SC', 'scn', 'SCN', 'cs', 'CS'])
+        expect(operators.has(op), `page ${i} uses ${op}`).toBe(false);
+    }
+  });
+
+  it('fills the block with the ground ink', () => {
+    for (let i = 0; i < nine.getPageCount(); i += 1) {
+      const page = drawn(nine, i);
+      expect(page.fills[0]).toEqual(BLOCK);
+      expect(same(page.fillInks[0], GROUND_INK), `page ${i}: ${page.fillInks[0]}`).toBe(true);
+    }
+  });
+
+  it('writes the words in the heading and muted inks, and the sheet label in the label ink', () => {
+    for (let i = 0; i < nine.getPageCount(); i += 1) {
+      const { textInks } = drawn(nine, i);
+      const label = textInks[textInks.length - 1];
+      expect(same(label, LABEL_INK), `page ${i} label: ${label}`).toBe(true);
+      const cards = textInks.slice(0, -1);
+      expect(cards.some((ink) => same(ink, HEADING_INK))).toBe(true);
+      expect(cards.some((ink) => same(ink, MUTED_INK))).toBe(true);
+      for (const ink of cards)
+        expect(same(ink, HEADING_INK) || same(ink, MUTED_INK), `page ${i}: ${ink}`).toBe(true);
+    }
+  });
+
+  it('draws each code in the muted ink', () => {
+    const { pathInks } = drawn(nine, 0);
+    // Per code, three finder rings, three finder centres and one fill of every dot.
+    expect(pathInks).toHaveLength(9 * 7);
+    for (const ink of pathInks) expect(same(ink, MUTED_INK), `${ink}`).toBe(true);
+    expect(drawn(nine, 1).pathInks).toHaveLength(0);
+  });
+
+  it.each(['salt', 'sorrel'] as const)(
+    'embeds the %s picture as CMYK tinted between the ground and chalk, with its alpha as a grey soft mask',
+    (picture) => {
+      const page = picture === 'salt' ? 0 : 1;
+      const names = imageNames(nine, page);
+      const name = Object.keys(names).find((n) => names[n] === picture)!;
+      const xObjects = nine.getPage(page).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
+      const image = nine.context.lookup(xObjects.get(PDFName.of(name))) as PDFRawStream;
+      expect(image.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceCMYK'));
+      expect(image.dict.get(PDFName.of('Filter'))).toBe(PDFName.of('FlateDecode'));
+      expect(image.dict.lookup(PDFName.of('BitsPerComponent'), PDFNumber).asNumber()).toBe(8);
+      const mask = nine.context.lookup(image.dict.get(PDFName.of('SMask'))) as PDFRawStream;
+      expect(mask.dict.get(PDFName.of('ColorSpace'))).toBe(PDFName.of('DeviceGray'));
+
+      const png = UPNG.decode(assets[picture].slice().buffer);
+      const rgba = new Uint8Array(UPNG.toRGBA8(png)[0]);
+      const n = png.width * png.height;
+      const alpha = decodePDFRawStream(mask).decode();
+      expect([...alpha]).toEqual(Array.from({ length: n }, (_, i) => rgba[i * 4 + 3]));
+
+      const cmyk = decodePDFRawStream(image).decode();
+      expect(cmyk).toHaveLength(n * 4);
+      expect(
+        Buffer.from(cmyk).equals(Buffer.from(tintPicture(rgba, png.width, png.height).cmyk)),
+      ).toBe(true);
+      // Every pixel lies on the line from the ground to chalk, channel by channel.
+      for (let c = 0; c < 4; c += 1) {
+        const ends = [GROUND_INK[c], PICTURE_LIGHT_INK[c]].map((v) => Math.round(v * 255));
+        let outside = 0;
+        for (let i = 0; i < n; i += 1) {
+          const v = cmyk[i * 4 + c];
+          if (v < Math.min(...ends) || v > Math.max(...ends)) outside += 1;
+        }
+        expect(outside, `channel ${c}`).toBe(0);
+      }
+    },
+  );
 });

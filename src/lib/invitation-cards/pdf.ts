@@ -12,26 +12,27 @@ import {
   lineTo,
   moveTo,
   type PDFFont,
-  type PDFImage,
   PDFDocument,
   PDFHexString,
   PDFNumber,
   PDFOperator,
   type PDFOperator as Operator,
   type PDFPage,
+  type PDFRef,
   popGraphicsState,
   pushGraphicsState,
   rectangle,
   setCharacterSpacing,
-  setFillingRgbColor,
+  setFillingCmykColor,
   setFontAndSize,
   setLineWidth,
-  setStrokingRgbColor,
+  setStrokingCmykColor,
   setTextMatrix,
   stroke,
 } from 'pdf-lib';
 import { FRONT_COPY, validUntil } from './copy';
 import { padGlyphs } from './font-padding';
+import { decodePng, GROUND_INK, inkOf, MUTED_INK, tintPicture } from './inks';
 import {
   ARTBOARD,
   BACK_PICTURE,
@@ -42,10 +43,8 @@ import {
   FRONT_PICTURE,
   FRONT_QR,
   frontText,
-  MUTED,
   PX_PER_INCH,
   type PictureItem,
-  SOOT,
   type TextItem,
 } from './layout';
 import { CARDS_PER_SHEET } from './limits';
@@ -82,12 +81,7 @@ interface Sheet {
 interface Embedded {
   fonts: Record<FontKey, PDFFont>;
   measure: CardFonts;
-  pictures: Record<PictureItem['picture'], PDFImage>;
-}
-
-function rgb(hex: string): [number, number, number] {
-  const n = Number.parseInt(hex.slice(1), 16);
-  return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
+  pictures: Record<PictureItem['picture'], PDFRef>;
 }
 
 /** The top left of card i's trim on its sheet: three across the frame's long side, three down. */
@@ -129,8 +123,8 @@ function artboardOperators(i: number): Operator[] {
   ];
 }
 
-function pictureOperators(page: PDFPage, image: PDFImage, item: PictureItem): Operator[] {
-  const name = page.node.newXObject('Image', image.ref);
+function pictureOperators(page: PDFPage, image: PDFRef, item: PictureItem): Operator[] {
+  const name = page.node.newXObject('Image', image);
   // The image space runs up from its bottom left, so it is flipped to stand upright in the frame.
   return [
     pushGraphicsState(),
@@ -155,7 +149,7 @@ function textOperators(page: PDFPage, embedded: Embedded, item: TextItem): Opera
   const name = page.node.newFontDictionary(font.name, font.ref);
   return [
     beginText(),
-    setFillingRgbColor(...rgb(item.colour)),
+    setFillingCmykColor(...inkOf(item.colour)),
     setFontAndSize(name, item.size),
     setCharacterSpacing(item.letterSpacing),
     setTextMatrix(1, 0, 0, -1, item.x, item.baseline),
@@ -203,7 +197,7 @@ function qrOperators(link: string): Operator[] {
   const ops: Operator[] = [
     pushGraphicsState(),
     concatTransformationMatrix(module, 0, 0, module, FRONT_QR.x, FRONT_QR.y),
-    setFillingRgbColor(...rgb(MUTED)),
+    setFillingCmykColor(...MUTED_INK),
   ];
   // Each finder's ring is filled even-odd, so the card shows through its middle as it does through the SVG's.
   for (const { outer, inner, centre } of finders) {
@@ -220,7 +214,7 @@ function qrOperators(link: string): Operator[] {
 }
 
 function cropMarkOperators(): Operator[] {
-  const ops: Operator[] = [setStrokingRgbColor(0, 0, 0), setLineWidth(MARK.width)];
+  const ops: Operator[] = [setStrokingCmykColor(0, 0, 0, 1), setLineWidth(MARK.width)];
   const top = BLOCK.y;
   const bottom = BLOCK.y + BLOCK.height;
   const left = BLOCK.x;
@@ -251,7 +245,7 @@ function drawPage(
   const ops: Operator[] = [pushGraphicsState(), ...frameOperators(face), pushGraphicsState()];
   ops.push(rectangle(BLOCK.x, BLOCK.y, BLOCK.width, BLOCK.height), clip(), endPath());
   ops.push(
-    setFillingRgbColor(...rgb(SOOT)),
+    setFillingCmykColor(...GROUND_INK),
     rectangle(BLOCK.x, BLOCK.y, BLOCK.width, BLOCK.height),
     fill(),
   );
@@ -287,11 +281,30 @@ async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedd
     fonts[key] = await doc.embedFont(bytes, { subset: true });
     measure[key] = fontkit.create(bytes);
   }
-  const [salt, sorrel] = await Promise.all([
-    doc.embedPng(assets.salt),
-    doc.embedPng(assets.sorrel),
-  ]);
-  return { fonts, measure, pictures: { salt, sorrel } };
+  return {
+    fonts,
+    measure,
+    pictures: { salt: embedPicture(doc, assets.salt), sorrel: embedPicture(doc, assets.sorrel) },
+  };
+}
+
+/** Embeds a picture tinted into the print inks: an 8-bit DeviceCMYK image, its alpha a DeviceGray soft mask. */
+function embedPicture(doc: PDFDocument, png: Uint8Array): PDFRef {
+  const { rgba, width, height } = decodePng(png);
+  const { cmyk, alpha } = tintPicture(rgba, width, height);
+  const image = {
+    Type: 'XObject',
+    Subtype: 'Image',
+    Width: width,
+    Height: height,
+    BitsPerComponent: 8,
+  };
+  const mask = doc.context.register(
+    doc.context.flateStream(alpha, { ...image, ColorSpace: 'DeviceGray' }),
+  );
+  return doc.context.register(
+    doc.context.flateStream(cmyk, { ...image, ColorSpace: 'DeviceCMYK', SMask: mask }),
+  );
 }
 
 /** Builds the print PDF: per sheet of nine, a page of fronts, then (unless `backs` is false) a page of their backs. */
