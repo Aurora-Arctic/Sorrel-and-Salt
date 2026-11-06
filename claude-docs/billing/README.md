@@ -2,10 +2,10 @@
 
 This folder holds the research for task M17.1: what it would cost to run Sorrel & Salt, and how it could charge for it. It records research only. No decision lives here.
 
-| File                                             | What it holds                                                                                                                      |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| [running-costs.md](running-costs.md)             | What the site costs a month at 100, 1,000, 10,000 and 100,000 accounts: platform, tooling, operations, maintenance and processing. |
-| [subscription-models.md](subscription-models.md) | Seven ways to charge, measured against DESIGN.md §13's five wants, with break-even tables, processors and the owner's questions.   |
+| File                                             | What it holds                                                                                                                                              |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [running-costs.md](running-costs.md)             | What the site costs a month at 100, 1,000, 10,000 and 100,000 paying seats: platform, tooling, operations, maintenance and processing.                     |
+| [subscription-models.md](subscription-models.md) | Five ways to charge (three more were rejected), measured against DESIGN.md §13's five wants, with break-even tables, processors and the owner's questions. |
 
 ## When the Prices Were Fetched
 

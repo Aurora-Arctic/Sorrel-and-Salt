@@ -1,5 +1,5 @@
 // The M17.1 running-cost and break-even model. Run: node scripts/billing-model.mjs
-// Every value below is a row of the Inputs table in claude-docs/billing/running-costs.md.
+// Nearly every value below is a row of the Inputs table in claude-docs/billing/running-costs.md.
 // The sizes count PAYING SEATS (activated accounts in paying covens). Every other account is
 // overhead derived from them: trial seats, curator-coven seats, exempt seats and demo-only accounts.
 const SIZES = [100, 1000, 10000, 100000];
@@ -15,10 +15,10 @@ const I = {
   mbPerSession: 1.5, // assumption, range 0.5-5
   middlewarePerSession: 9, // derived 40 / 4.5 page loads
   wallOverCpu: 2, // assumption, range 1-5
-  memoryGb: 2, // sourced Lane A default function memory
+  memoryGb: 2, // sourced default function memory
   mailsPerAccountMonth: 0.5, // assumption, range 0.25-1
   mailingsPerYear: 2, // assumption
-  // bytes (measured / derived, Lane E)
+  // bytes (measured / derived)
   fixedBytes: 15515648,
   accountBytes: 3766,
   covenBytes: Math.round((32682 + 203327) / 2),
@@ -42,35 +42,35 @@ const I = {
   awakeH: [360, 540, 720, 720], // assumption
   domainYear: 11.81,
   claudeUltra: 200,
-  // ops (Lane B, derived there)
+  // ops
   ops: {
     errors: [0, 15, 15, 50],
-    uptime: [12, 12, 12, 12], // Solo: Free has no heartbeat monitors (Lane H)
-    deliverability: [0, 0, 0, 14], // Postmark paid DMARC digests at 100k (Lane H)
+    uptime: [12, 12, 12, 12], // Solo: Free has no heartbeat monitors
+    deliverability: [0, 0, 0, 14], // Postmark paid DMARC digests at 100k
     drain: [0, 0, 5, 50],
     restore: [0.03, 0.03, 0.03, 0.03],
   },
-  // tracing (Lane H, A5): requests come from sessions x invocations; spans per request, sampling, price per 1M spans
+  // tracing (A5): requests come from sessions x invocations; spans per request, sampling, price per 1M spans
   tracing: { spansPerReq: 20, sample: 0.1, perM: 0.5 },
   // labour
-  // Lane I (sources dated 2026-11-06): hours a month = fixed + variable x (paying seats / 1,000)
+  // hours a month = fixed + variable x (paying seats / 1,000)
   fixedHours: { low: 24.8, median: 44.4, high: 70.4 },
   // variable hours per 1,000 paying seats: support, payment disputes, privacy requests, abuse reports
   variableParts: {
     support: { low: 6.7, median: 28.0, high: 97.5 },
-    // 0.25 / 2.0 / 5.0 hours a dispute (Lane I) x 4 / 5 / 7.5 disputes per 1,000 charges, per 1,000 paying seats
+    // 0.25 / 2.0 / 5.0 hours a dispute x 4 / 5 / 7.5 disputes per 1,000 charges, per 1,000 paying seats
     disputes: { low: 0.18, median: 1.82, high: 6.82 },
     privacy: { low: 0.06, median: 0.37, high: 8.5 },
     abuse: { low: 0.01, median: 0.08, high: 0.16 },
   },
   oneFteHours: 160,
-  // hourly rates, USD (BLS OEWS, Washington, May 2025, fetched 2026-11-06; Lane I, Lane J). Variable hours (support,
-  // disputes, privacy requests, abuse reports) are customer-service work; fixed hours (maintenance, incidents,
-  // filing) are engineering work. 122.5 is Lane D's contractor figure, kept as the engineering sensitivity.
+  // hourly rates, USD (BLS OEWS, Washington). Variable hours (support, disputes, privacy requests, abuse reports)
+  // are customer-service work; fixed hours (maintenance, incidents, filing) are engineering work. 122.5 is the
+  // contractor figure, kept as the engineering sensitivity.
   rates: {
-    // owner, 2026-11-06: support work is priced at a living wage, the average of three MIT Living Wage Calculator rows
-    // (updated 2026-02-15): Washington 1 adult + 1 child 48.00, King County 1 adult + 1 child 56.43,
-    // King County 1 adult no children 30.60. The BLS Washington customer-service median is the market-rate sensitivity.
+    // support work is priced at a living wage, the average of three MIT Living Wage Calculator rows: Washington
+    // 1 adult + 1 child 48.00, King County 1 adult + 1 child 56.43, King County 1 adult no children 30.60. The BLS
+    // Washington customer-service median is the market-rate sensitivity.
     // wage = living-wage average minus the MIT Medical budget line (9,588 / 9,477 / 3,032 a year over 2,080 h), since the
     // benefits load below pays for health cover
     support: {
@@ -82,8 +82,7 @@ const I = {
     },
     dev: { median: 80.07, contractor: 122.5 },
   },
-  salaryLoadedYear: { low: 286977, high: 327922 }, // Lane D: $250k salary + employer tax + benefits
-  // Lane J (sources dated 2026-11-06): business earnings a year that leave the owner the take-home of a $250,000 salary
+  // business earnings a year that leave the owner the take-home of a $250,000 salary
   // (A: $180,243 after all tax). Employer tax and payroll admin are inside these figures; benefits are not.
   structures: [
     { id: 'A', name: 'A all-salary ($250,000 wage)', year: 266575 },
@@ -95,7 +94,7 @@ const I = {
       year: 249434,
     },
   ],
-  // Lane D benefits (health, retirement), the same in every structure: method A (low) and method B (high)
+  // benefits (health, retirement), the same in every structure: method A (low) and method B (high)
   benefitsYear: { low: 20848, high: 57251 },
   onCallMonth: 2340,
   // payments and tax
@@ -105,18 +104,18 @@ const I = {
   bo: 0.00471,
   boCredit: 55,
   churn: 0.061,
-  // overhead on top of paying seats (owner, 2026-11-06: no free tier; Lane G shares)
+  // overhead on top of paying seats (no free tier)
   demoOnlyShare: 0.625, // derived 100% - 37.5% activation, Userpilot [G1]; range 0.574-0.70 [G1][G2]
   demoOnlyRange: [0.574, 0.625, 0.7],
   growthMonthly: [0.0284, 0.0284, 0.0284, 0.0153], // derived (1+40%)^(1/12)-1 under $1M ARR; (1+20%)^(1/12)-1 at 100k [G4]
-  trialMonths: 1, // owner: one month standard
+  trialMonths: 1, // one month standard
   trialConversion: 0.1, // sourced no-card "great", ChartMogul [G7]; "good" is 0.05
   trialConversionRange: [0.05, 0.1, 0.15], // 0.15 is the top of the no-card "great" band [G7]
-  curatorSeats: 7, // owner: 7 seats including the curator
-  seatsPerCurator: 1000, // owner: one curator per 1,000 paying seats
-  curatorMin: 2, // owner: minimum 2
-  // owner, 2026-11-06: 5% at first, falling as the site is established and beta testers are staff, not friends and family
-  exemptShare: [0.05, 0.03, 0.015, 0.005], // assumption (schedule per size); owner to confirm
+  curatorSeats: 7, // 7 seats including the curator
+  seatsPerCurator: 1000, // one curator per 1,000 paying seats
+  curatorMin: 2, // minimum 2
+  // 5% at first, falling as the site is established and beta testers become staff rather than friends and family
+  exemptShare: [0.05, 0.03, 0.015, 0.005], // assumption (schedule per size)
   price: {
     // (g) solo coven price proposals, assumption anchored on [S29] [S15] [S28]
     gSolo: [1.99, 2.99, 4.99],
@@ -243,7 +242,7 @@ const scale = SIZES.map((P, k) => {
 });
 
 const CASES = ['low', 'median', 'high'];
-// AI assistance for support agents is on by default (owner, 2026-11-06; lane-k-ai-support.md). The factor scales
+// AI assistance for support agents is on by default. The factor scales
 // minutes per support contact only (Brynjolfsson, Li and Raymond, QJE 2025: handle time down 8.5%, resolutions per
 // hour up 15.2%); it removes no contact, so the other parts are unchanged. --ai=low|median|high picks the factor.
 const AI = {
@@ -268,7 +267,7 @@ const hoursAt = (k, P) => I.fixedHours[k] + (varHours[k] * P) / 1000;
 const ceilingSeats = Object.fromEntries(
   CASES.map((k) => [k, ((I.oneFteHours - I.fixedHours[k]) / varHours[k]) * 1000]),
 );
-// the primary row is the low contact rate; the median is the stress case (Lane I). ROW picks which one the
+// the primary row is the low contact rate; the median is the stress case ROW picks which one the
 // labour functions below use.
 const ROWS = ['low', 'median'];
 let ROW = 'low';
@@ -281,9 +280,8 @@ const withRow = (k, fn) => {
     ROW = old;
   }
 };
-// Employees, not contractors (owner, 2026-11-06): every wage is loaded with Lane D's employer payroll taxes and
-// benefits, using the same rules Lane D applied to the $250,000 salary (lane-d-labour-tax.md, 1a to 1c), on a
-// 2,080-hour year. Social Security 6.2% to the 184,500 cap; Medicare 1.45%; FUTA 0.6% on 7,000; WA UI 1.0% (low) or
+// Employees, not contractors: every wage is loaded with employer payroll taxes and benefits, by the same rules the
+// $250,000 salary uses, on a 2,080-hour year. Social Security 6.2% to the 184,500 cap; Medicare 1.45%; FUTA 0.6% on 7,000; WA UI 1.0% (low) or
 // 6.0% (high) on 78,200; WA EAF 0.02% / 0.03% on 78,200; PFML employer share 0 (low) or 1.13% x 28.57% (high);
 // L&I 5302 (low) or 4904 (high) per worker-hour; benefits method A (health 7,344 a year + retirement 5.40% of
 // wages) low, method B (ECEC insurance + retirement + supplemental, 22.90% of wages) high. The base rate is the
@@ -334,15 +332,15 @@ const aiAgents = (P) => {
 const aiCost = (P) => aiAgents(P) * AI.seatPrice;
 const labourAt = (P, rs, rd) =>
   I.fixedHours[ROW] * rd + ((varHours[ROW] * P) / 1000) * rs + aiCost(P);
-const labourContractor = (P) => labourAt(P, I.rates.support.living, I.rates.dev.median);
-// sensitivities: the BLS market rate for support, and Lane D's contractor rate for engineering
+const labourLoaded = (P) => labourAt(P, I.rates.support.living, I.rates.dev.median);
+// sensitivities: the BLS market rate for support, and the contractor rate for engineering
 const labourMarket = (P) => labourAt(P, I.rates.support.market, I.rates.dev.median);
 const labourSens = (P) => labourAt(P, I.rates.support.living, I.rates.dev.contractor);
 // hired help: hours above one person's 160 are the variable, customer-service hours, bought at that rate
 const hiredHours = (P) => Math.max(0, hoursAt(ROW, P) - I.oneFteHours);
 const labourSalary = (P) => fte + hiredHours(P) * I.rates.support.living + aiCost(P);
 const structYear = (id) => I.structures.find((x) => x.id === id).year;
-// the salary line is structure C plus Lane D's benefits; all-salary (A) is kept as a sensitivity row
+// the salary line is structure C plus benefits; all-salary (A) is kept as a sensitivity row
 const fte = (structYear('C') + I.benefitsYear.low) / 12,
   fteHigh = (structYear('C') + I.benefitsYear.high) / 12;
 const fteA = (structYear('A') + I.benefitsYear.low) / 12,
@@ -350,7 +348,7 @@ const fteA = (structYear('A') + I.benefitsYear.low) / 12,
 
 // models: paying unit base and revenue per paying unit. A paying seat is one activated account
 // in a paying coven, so paying covens = paying seats x memberships per account / members per coven.
-// R5 (owner, 2026-11-06): only a member who is the paying steward of another coven gets the discount.
+// R5: only a member who is the paying steward of another coven gets the discount.
 // Stewards are one per coven, so the share of accounts that are stewards = covens per account
 // = memberships per account / members per coven. A seat is a second-or-later membership with
 // probability (m - 1) / m, and that holder is a steward with the steward share (independence assumed).
@@ -369,7 +367,7 @@ const covenPriceAt = (x) =>
 const cPerCoven = covenPriceAt(1);
 // (g) layers a free solo coven on (c): each paid group seat also holds one, a person with no
 // paid group seat buys a solo coven alone. Per paying seat: group share pays (c), the rest pays the solo price.
-// Observers (owner, 2026-11-06) may add a solo coven by paying the difference to the solo price,
+// Observers may add a solo coven by paying the difference to the solo price,
 // on their own subscription. addOns = observers who take it up, per paying seat.
 const observerAddOns = () =>
   (1 - I.price.gSoloAloneShare) * I.price.observerShare * I.price.observerTakeUp;
@@ -464,7 +462,7 @@ const linesByRow = Object.fromEntries(
     k,
     withRow(k, () => ({
       cash: scale.map((s) => s.cash),
-      contractor: scale.map((s) => s.cash + labourContractor(s.P)),
+      contractor: scale.map((s) => s.cash + labourLoaded(s.P)),
       fulltime: scale.map((s) => s.cash + labourSalary(s.P)),
     })),
   ]),
@@ -574,7 +572,7 @@ cr('of which server-side tracing (10% sampled)', (s) => s.tracing);
 cr('Platform and operations total', (s) => s.platform);
 cr('Claude Ultra', () => I.claudeUltra);
 cr('Cash costs', (s) => s.cash);
-out.push('', '## Labour Hours a Month (Lane I): fixed + variable x paying seats / 1,000');
+out.push('', '## Labour Hours a Month: fixed + variable x paying seats / 1,000');
 out.push(
   '',
   row([
@@ -628,8 +626,8 @@ for (const k of ROWS) {
       ...scale.map((s) => aiAgents(s.P)),
     ]),
   );
-  tr('Labour alone at base rates', (s) => labourContractor(s.P));
-  tr('Cash + labour at base rates', (s) => s.cash + labourContractor(s.P));
+  tr('Labour alone at base rates', (s) => labourLoaded(s.P));
+  tr('Cash + labour at base rates', (s) => s.cash + labourLoaded(s.P));
   tr('Cash + labour at the BLS market support rate', (s) => s.cash + labourMarket(s.P));
   tr('Cash + labour with contractor engineering rate', (s) => s.cash + labourSens(s.P));
   tr(
@@ -646,11 +644,11 @@ for (const k of ROWS) {
   );
   tr(
     'Cash + labour at base rates + promised on-call',
-    (s) => s.cash + labourContractor(s.P) + I.onCallMonth,
+    (s) => s.cash + labourLoaded(s.P) + I.onCallMonth,
   );
 }
 ROW = 'low';
-out.push('', '## Salary Structures (Lane J, with Lane D benefits)');
+out.push('', '## Salary Structures (with employer benefits)');
 out.push(
   '',
   row([
@@ -775,7 +773,7 @@ for (const k of ROWS) {
         ...scale.map((s) => {
           const n = netAt(m, s.P).net;
           const x = m.extraCash ? m.extraCash(s.P) : 0;
-          return [s.cash + x, s.cash + x + labourContractor(s.P), s.cash + x + labourSalary(s.P)]
+          return [s.cash + x, s.cash + x + labourLoaded(s.P), s.cash + x + labourSalary(s.P)]
             .map((c) => yn(n >= c))
             .join(' ');
         }),
@@ -785,7 +783,7 @@ for (const k of ROWS) {
 ROW = 'low';
 out.push(
   '',
-  '## Seats Needed to Break Even, (i) cash / (ii) cash + contractor labour / (iii) cash + full-time job',
+  '## Seats Needed to Break Even, (i) cash / (ii) cash + labour at loaded rates / (iii) cash + full-time job',
 );
 out.push(
   row(['Model', '(i)', '(ii) low', '(iii) low', '(ii) median', '(iii) median']),
@@ -805,10 +803,10 @@ out.push(
   '',
   `At ${Math.round(ceilingSeats.median).toLocaleString('en-US')} paying seats (median; ${Math.round(ceilingSeats.low).toLocaleString('en-US')} low, ${Math.round(ceilingSeats.high).toLocaleString('en-US')} high) the work exceeds one person (${I.oneFteHours} hours a month). This holds for every model, since the hours depend on paying seats.`,
 );
-// Price that clears labour at 10,000 paying seats: net revenue = cash + labour (line 'contractor') or cash + job
+// Price that clears labour at 10,000 paying seats: net revenue = cash + labour (line 'contractor', the loaded-rate labour line) or cash + job
 // ('fulltime'). Practitioner seat price scaled with x; observers stay at c_obs; solo prices scale in proportion.
 const CLEAR_P = 10000;
-const COMPARABLES = [1.58, 5.99]; // Lane C: solo grimoire apps $1.58 to $3.33, Obsidian $4 to $5, Roll20 Plus $5.99
+const COMPARABLES = [1.58, 5.99]; // solo grimoire apps $1.58 to $3.33, Obsidian $4 to $5, Roll20 Plus $5.99
 const clearBuilders = {
   b: {
     name: '(b) Each user pays',
@@ -963,8 +961,8 @@ if (process.argv.includes('--json')) {
               SIZES.map((P) => ({
                 P,
                 hours: hoursAt(k, P),
-                contractorTimeTotal: scale.find((s) => s.P === P).cash + labourContractor(P),
-                labour: labourContractor(P),
+                labourTotal: scale.find((s) => s.P === P).cash + labourLoaded(P),
+                labour: labourLoaded(P),
                 labourSens: labourSens(P),
                 loadedSalaryTotal: scale.find((s) => s.P === P).cash + labourSalary(P),
               })),

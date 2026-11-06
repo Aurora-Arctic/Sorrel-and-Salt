@@ -1,0 +1,1315 @@
+{
+ "sizes": [
+  100,
+  1000,
+  10000,
+  100000
+ ],
+ "salaryStructures": [
+  {
+   "id": "A",
+   "name": "All-salary: $250,000 wage",
+   "perYear": 266575,
+   "perMonth": 22215,
+   "saving": 0,
+   "givesUp": "Nothing; it is the baseline and the most expensive for the same take-home.",
+   "loadedLowBenefits": 287423,
+   "loadedHighBenefits": 323826,
+   "note": "Business earnings that leave the owner the take-home of a $250,000 salary; loaded figures add Lane D benefits ($20,848 to $57,251 a year)."
+  },
+  {
+   "id": "B",
+   "name": "S corporation: $184,500 wage plus distributions",
+   "perYear": 257599,
+   "perMonth": 21467,
+   "saving": 8976,
+   "givesUp": "Keeps every benefit; carries a reasonable-compensation audit risk.",
+   "loadedLowBenefits": 278447,
+   "loadedHighBenefits": 314850,
+   "note": "Business earnings that leave the owner the take-home of a $250,000 salary; loaded figures add Lane D benefits ($20,848 to $57,251 a year)."
+  },
+  {
+   "id": "B*",
+   "name": "S corporation: $190,000 wage plus distributions",
+   "perYear": 258302,
+   "perMonth": 21525,
+   "saving": 8273,
+   "givesUp": "Keeps every benefit; carries a reasonable-compensation audit risk (second choice).",
+   "loadedLowBenefits": 279150,
+   "loadedHighBenefits": 315553,
+   "note": "Business earnings that leave the owner the take-home of a $250,000 salary; loaded figures add Lane D benefits ($20,848 to $57,251 a year)."
+  },
+  {
+   "id": "C",
+   "name": "Sole proprietor or single-member LLC (recommended, pending the accountant)",
+   "perYear": 249434,
+   "perMonth": 20786,
+   "saving": 17141,
+   "givesUp": "Paid Family and Medical Leave becomes opt-in; no unemployment cover; WA Cares only inside a three-year window; about $600 less retirement room.",
+   "loadedLowBenefits": 270282,
+   "loadedHighBenefits": 306685,
+   "note": "Business earnings that leave the owner the take-home of a $250,000 salary; loaded figures add Lane D benefits ($20,848 to $57,251 a year)."
+  }
+ ],
+ "consideredAndRejected": [
+  {
+   "id": "a",
+   "name": "Coven pays, seat bundles",
+   "decided": "2026-11-06",
+   "ownerWords": "We're not going to do a - coven pays, seat bundles.",
+   "breakEvenCash": 135,
+   "note": "Sources and step prices stay in subscription-models.md under Considered and Rejected."
+  },
+  {
+   "id": "d",
+   "name": "Solo rung only",
+   "decided": "2026-11-06",
+   "ownerWords": "We're not going to do d - solo run only by itself.",
+   "breakEvenCash": 124,
+   "note": "Its solo-coven price research stays in use by (g) and (h)."
+  },
+  {
+   "id": "e",
+   "name": "Any member pays",
+   "decided": "2026-11-06",
+   "ownerWords": "We're not going to do e - any member pays, remove it.",
+   "breakEvenCash": 238,
+   "note": "The separate each-member-pays payer mode stays."
+  }
+ ],
+ "labour": {
+  "hoursPerSize": [
+   {
+    "case": "low",
+    "hours": [
+     25.4079,
+     30.878999999999998,
+     85.58999999999999,
+     632.6999999999998
+    ]
+   },
+   {
+    "case": "median",
+    "hours": [
+     47.062999999999995,
+     71.03,
+     310.7,
+     2707.4
+    ]
+   },
+   {
+    "case": "high",
+    "hours": [
+     80.43050000000001,
+     170.705,
+     1073.45,
+     10100.9
+    ]
+   }
+  ],
+  "fixedHours": {
+   "low": 24.8,
+   "median": 44.4,
+   "high": 70.4
+  },
+  "variablePer1000": {
+   "low": 6.078999999999999,
+   "median": 26.63,
+   "high": 100.305
+  },
+  "ceilingSeats": {
+   "low": 22241,
+   "median": 4341,
+   "high": 893
+  },
+  "aiSupport": {
+   "factor": 0.87,
+   "seatPrice": 25,
+   "agentsPerSize": {
+    "low": [
+     0,
+     0,
+     0,
+     3
+    ],
+    "median": [
+     0,
+     0,
+     2,
+     16
+    ]
+   },
+   "factors": {
+    "low": 0.735,
+    "median": 0.87,
+    "high": 1
+   },
+   "minSeats": 2,
+   "privacy": "Agents use Claude Team, never Pro, so customer messages are not trained on."
+  },
+  "rates": {
+   "supportWage": 41.4688141025641,
+   "supportLoaded": 53.80197109014535,
+   "engineeringLoaded": 100.88052574050383
+  },
+  "primaryCase": "low",
+  "note": "Hours a month = fixed + variable x paying seats / 1,000, with the AI factor on support minutes. Ceiling = paying seats where hours reach 160 a month. The low contact-rate row is primary and the median the stress case. Variable labour per paying seat is $0.33 (low) and $1.43 (median) at the loaded $53.80 support rate."
+ },
+ "payerModes": [
+  {
+   "mode": "coven pays",
+   "description": "The steward is billed for every seat and holds the R5 discount for seats in other covens."
+  },
+  {
+   "mode": "each member pays",
+   "description": "Every member subscribes to their own seat at the same seat prices; R5 does not apply; a member who stops paying keeps a read-only seat until they pay again."
+  },
+  {
+   "note": "Revenue per coven is held equal in both modes because no source says which converts better. Member-pays pays Stripe's 30c fixed fee per member, about $0.23 more per paying seat a month (derived), which the tables leave out. Switching takes effect at the next renewal. Wave 21 entitlement paths, webhook cases and stories roughly double."
+  }
+ ],
+ "overhead": [
+  {
+   "size": 100,
+   "activeAccounts": {
+    "value": 139,
+    "share": 0.25,
+    "label": "assumption"
+   },
+   "accounts": {
+    "value": 556,
+    "label": "derived"
+   },
+   "demoOnly": {
+    "value": 347,
+    "share": 0.625,
+    "label": "derived"
+   },
+   "trialSeats": {
+    "value": 89,
+    "shareOfAccounts": 0.161,
+    "shareOfPayingSeats": 0.894,
+    "label": "derived"
+   },
+   "curatorCovens": {
+    "value": 2,
+    "label": "derived"
+   },
+   "curatorSeats": {
+    "value": 14,
+    "share": 0.025,
+    "label": "derived"
+   },
+   "exemptSeats": {
+    "value": 5,
+    "share": 0.009,
+    "label": "assumption, owner to confirm"
+   },
+   "payingSeats": {
+    "value": 100,
+    "share": 0.18,
+    "label": "input"
+   }
+  },
+  {
+   "size": 1000,
+   "activeAccounts": {
+    "value": 1292,
+    "share": 0.25,
+    "label": "assumption"
+   },
+   "accounts": {
+    "value": 5168,
+    "label": "derived"
+   },
+   "demoOnly": {
+    "value": 3230,
+    "share": 0.625,
+    "label": "derived"
+   },
+   "trialSeats": {
+    "value": 894,
+    "shareOfAccounts": 0.173,
+    "shareOfPayingSeats": 0.894,
+    "label": "derived"
+   },
+   "curatorCovens": {
+    "value": 2,
+    "label": "derived"
+   },
+   "curatorSeats": {
+    "value": 14,
+    "share": 0.003,
+    "label": "derived"
+   },
+   "exemptSeats": {
+    "value": 30,
+    "share": 0.0058,
+    "label": "assumption, owner to confirm"
+   },
+   "payingSeats": {
+    "value": 1000,
+    "share": 0.193,
+    "label": "input"
+   }
+  },
+  {
+   "size": 10000,
+   "activeAccounts": {
+    "value": 12773,
+    "share": 0.25,
+    "label": "assumption"
+   },
+   "accounts": {
+    "value": 51093,
+    "label": "derived"
+   },
+   "demoOnly": {
+    "value": 31933,
+    "share": 0.625,
+    "label": "derived"
+   },
+   "trialSeats": {
+    "value": 8940,
+    "shareOfAccounts": 0.175,
+    "shareOfPayingSeats": 0.894,
+    "label": "derived"
+   },
+   "curatorCovens": {
+    "value": 10,
+    "label": "derived"
+   },
+   "curatorSeats": {
+    "value": 70,
+    "share": 0.001,
+    "label": "derived"
+   },
+   "exemptSeats": {
+    "value": 150,
+    "share": 0.0029,
+    "label": "assumption, owner to confirm"
+   },
+   "payingSeats": {
+    "value": 10000,
+    "share": 0.196,
+    "label": "input"
+   }
+  },
+  {
+   "size": 100000,
+   "activeAccounts": {
+    "value": 118333,
+    "share": 0.25,
+    "label": "assumption"
+   },
+   "accounts": {
+    "value": 473333,
+    "label": "derived"
+   },
+   "demoOnly": {
+    "value": 295833,
+    "share": 0.625,
+    "label": "derived"
+   },
+   "trialSeats": {
+    "value": 76300,
+    "shareOfAccounts": 0.161,
+    "shareOfPayingSeats": 0.763,
+    "label": "derived"
+   },
+   "curatorCovens": {
+    "value": 100,
+    "label": "derived"
+   },
+   "curatorSeats": {
+    "value": 700,
+    "share": 0.001,
+    "label": "derived"
+   },
+   "exemptSeats": {
+    "value": 500,
+    "share": 0.0011,
+    "label": "assumption, owner to confirm"
+   },
+   "payingSeats": {
+    "value": 100000,
+    "share": 0.211,
+    "label": "input"
+   }
+  }
+ ],
+ "costs": [
+  {
+   "size": 100,
+   "cashRows": {
+    "vercel": 20,
+    "observability": 0.11,
+    "database": 9.55,
+    "mail": 0,
+    "domain": 0.98,
+    "operationsStack": 12.07,
+    "tracingWithinOperations": 0.04,
+    "aiSubscription": 200
+   },
+   "cashTotal": 242.72,
+   "hours": 25.4,
+   "hoursMedian": 47.1,
+   "labourTotal": 2777,
+   "labourTotalMedian": 4865,
+   "loadedSalaryTotal": 22766,
+   "loadedSalaryMedian": 22766,
+   "aiSeats": {
+    "low": 0,
+    "median": 0
+   },
+   "loadedSalaryAllSalaryTotal": 24195
+  },
+  {
+   "size": 1000,
+   "cashRows": {
+    "vercel": 20,
+    "observability": 0.98,
+    "database": 14.36,
+    "mail": 20,
+    "domain": 0.98,
+    "operationsStack": 27.44,
+    "tracingWithinOperations": 0.41,
+    "aiSubscription": 200
+   },
+   "cashTotal": 283.77,
+   "hours": 30.9,
+   "hoursMedian": 71,
+   "labourTotal": 3113,
+   "labourTotalMedian": 6196,
+   "loadedSalaryTotal": 22807,
+   "loadedSalaryMedian": 22807,
+   "aiSeats": {
+    "low": 0,
+    "median": 0
+   },
+   "loadedSalaryAllSalaryTotal": 24236
+  },
+  {
+   "size": 10000,
+   "cashRows": {
+    "vercel": 20,
+    "observability": 9.69,
+    "database": 38.59,
+    "mail": 20,
+    "domain": 0.98,
+    "operationsStack": 36.12,
+    "tracingWithinOperations": 4.09,
+    "aiSubscription": 200
+   },
+   "cashTotal": 325.38,
+   "hours": 85.6,
+   "hoursMedian": 310.7,
+   "labourTotal": 6098,
+   "labourTotalMedian": 19182,
+   "loadedSalaryTotal": 22849,
+   "loadedSalaryMedian": 31007,
+   "aiSeats": {
+    "low": 0,
+    "median": 2
+   },
+   "loadedSalaryAllSalaryTotal": 24277
+  },
+  {
+   "size": 100000,
+   "cashRows": {
+    "vercel": 213.23,
+    "observability": 89.74,
+    "database": 156.56,
+    "mail": 350,
+    "domain": 0.98,
+    "operationsStack": 163.9,
+    "tracingWithinOperations": 37.87,
+    "aiSubscription": 200
+   },
+   "cashTotal": 1174.42,
+   "hours": 632.7,
+   "hoursMedian": 2707.4,
+   "labourTotal": 36457,
+   "labourTotalMedian": 149328,
+   "loadedSalaryTotal": 49205,
+   "loadedSalaryMedian": 161153,
+   "aiSeats": {
+    "low": 3,
+    "median": 16
+   },
+   "loadedSalaryAllSalaryTotal": 50634
+  }
+ ],
+ "models": [
+  {
+   "id": "b",
+   "name": "(b) Each user pays",
+   "description": "Each person pays once and it unlocks every coven they belong to.",
+   "pricePoints": "$4.00 a month per person (assumption)",
+   "priceTable": [
+    {
+     "level": "Each person",
+     "price": "$4.00 a month",
+     "example": "One subscription unlocks every coven the person belongs to."
+    }
+   ],
+   "example": "A coven of 5 where one member already pays elsewhere brings in 4 payments of $4.00, so $16.00 a month, because the fifth person is already paying.",
+   "requirements": {
+    "R1": "dropped",
+    "R2": "altered",
+    "R3": "altered",
+    "R4": "altered",
+    "R5": "kept"
+   },
+   "reception": "Obsidian does it, but few people share the cost of one account.",
+   "breakEvenSeats": {
+    "cash": 74,
+    "cashPlusLabour": 930,
+    "cashPlusSalary": 6898
+   },
+   "breakEvenSeatsMedian": {
+    "cash": 74,
+    "cashPlusLabour": 2532,
+    "cashPlusSalary": 9133
+   },
+   "clearingPrice": {
+    "low": 0.99,
+    "median": 2.45,
+    "lowJob": 2.86,
+    "medianJob": 3.77,
+    "comparablesRange": [
+     1.58,
+     5.99
+    ],
+    "position": {
+     "low": "below",
+     "median": "inside",
+     "lowJob": "inside",
+     "medianJob": "inside"
+    }
+   },
+   "revenuePerSize": [
+    {
+     "size": 100,
+     "netPerMonth": 332
+    },
+    {
+     "size": 1000,
+     "netPerMonth": 3320
+    },
+    {
+     "size": 10000,
+     "netPerMonth": 33081
+    },
+    {
+     "size": 100000,
+     "netPerMonth": 330316
+    }
+   ]
+  },
+  {
+   "id": "c",
+   "payerModes": [
+    "coven pays",
+    "each member pays"
+   ],
+   "name": "(c) Base plus seats",
+   "description": "The steward pays a base for a minimum group and each extra member adds a seat.",
+   "pricePoints": "$9.29 a month per coven (assumption)",
+   "priceTable": [
+    {
+     "level": "Base (covers 3 practitioners)",
+     "price": "$6.00 a month",
+     "example": "A coven of 3 practitioners pays only the base."
+    },
+    {
+     "level": "Extra practitioner seat",
+     "price": "$2.00 a month",
+     "example": "The 4th and 5th practitioners each add a seat."
+    },
+    {
+     "level": "Observer seat",
+     "price": "$1.00 a month (assumption)",
+     "example": "A viewer costs half a practitioner seat; observers are not counted in the base."
+    },
+    {
+     "level": "Discounted seat (the member pays for a coven of their own elsewhere)",
+     "price": "50% off the seat: $1.00 for a practitioner seat, $0.50 for an observer seat",
+     "example": "Only a paying steward of another coven gets it."
+    }
+   ],
+   "example": "A coven of 5 has 4 practitioners and 1 observer, and one of the practitioners pays for a coven of their own elsewhere. It pays the $6.00 base for 3 practitioners, $1.00 for the fourth practitioner (a $2.00 seat at half price because that member pays for a coven elsewhere) and $1.00 for the observer, so $8.00 a month. Without a member paying elsewhere it would be $9.00.",
+   "requirements": {
+    "R1": "kept",
+    "R2": "kept",
+    "R3": "kept",
+    "R4": "kept",
+    "R5": "kept as a seat discount"
+   },
+   "reception": "Meets every want, though per-seat pricing draws complaints.",
+   "breakEvenSeats": {
+    "cash": 139,
+    "cashPlusLabour": 1943,
+    "cashPlusSalary": 13590
+   },
+   "breakEvenSeatsMedian": {
+    "cash": 139,
+    "cashPlusLabour": 15123,
+    "cashPlusSalary": 53446
+   },
+   "clearingPrice": {
+    "low": 0.47,
+    "median": 2.21,
+    "lowJob": 2.7,
+    "medianJob": 3.79,
+    "comparablesRange": [
+     1.58,
+     5.99
+    ],
+    "position": {
+     "low": "below",
+     "median": "inside",
+     "lowJob": "inside",
+     "medianJob": "inside"
+    }
+   },
+   "revenuePerSize": [
+    {
+     "size": 100,
+     "netPerMonth": 176
+    },
+    {
+     "size": 1000,
+     "netPerMonth": 1764
+    },
+    {
+     "size": 10000,
+     "netPerMonth": 17601
+    },
+    {
+     "size": 100000,
+     "netPerMonth": 175518
+    }
+   ]
+  },
+  {
+   "id": "g",
+   "payerModes": [
+    "coven pays",
+    "each member pays"
+   ],
+   "name": "(g) Group plan includes a solo coven (over (c))",
+   "description": "Every paid seat in a group coven also gives that member a free solo coven; a person with no paid group seat buys a solo coven alone. Modelled over (c).",
+   "pricePoints": "$2.31 revenue per paying seat: (c) for group seats, a $2.99 solo coven alone for 20% of paying seats, and $1.99 solo add-ons from 20% of observers (assumptions)",
+   "priceTable": [
+    {
+     "level": "Group seat",
+     "price": "Same as (c): $6 base for 3 practitioners, $2 each extra practitioner, $1 each observer, half off a seat held by a paying steward of another coven",
+     "example": "Pays for the group coven."
+    },
+    {
+     "level": "Solo coven alone",
+     "price": "$2.99 a month (proposed; $1.99 or $4.99 are the alternatives)",
+     "example": "A person with no paid group seat buys one."
+    },
+    {
+     "level": "Solo coven added by an observer",
+     "price": "Solo price less $1: $1.99 a month at the modelled $2.99 ($0.99 or $3.99 if $1.99 or $4.99 is chosen)",
+     "example": "An observer pays the difference on their own subscription, not the coven's invoice; modelled take-up is 20% of observers (assumption)."
+    },
+    {
+     "level": "Solo coven with a paid practitioner or steward seat",
+     "price": "Free",
+     "example": "Every paid practitioner or steward seat includes one; an observer seat does not."
+    }
+   ],
+   "example": "A coven of 5 pays $8.00 as in (c) ($6 base + $1 discounted practitioner seat + $1 observer; one member pays for a coven of their own elsewhere), and the 4 practitioners each also get a free solo coven; the observer does not, but could add one for $1.99 a month on their own subscription.",
+   "requirements": {
+    "R1": "kept (over (c))",
+    "R2": "kept (over (c))",
+    "R3": "kept",
+    "R4": "kept",
+    "R5": "kept: a member's solo coven is free"
+   },
+   "reception": "Solo journal apps charge $1.99 to $4.99 a month, but no comparable bundles a free one into a group plan, and the free covens cost little to host.",
+   "breakEvenSeats": {
+    "cash": 125,
+    "cashPlusLabour": 1703,
+    "cashPlusSalary": 11950
+   },
+   "breakEvenSeatsMedian": {
+    "cash": 125,
+    "cashPlusLabour": 9170,
+    "cashPlusSalary": 32388
+   },
+   "clearingPrice": {
+    "low": 0.55,
+    "median": 1.95,
+    "lowJob": 2.35,
+    "medianJob": 3.22,
+    "comparablesRange": [
+     1.58,
+     5.99
+    ],
+    "position": {
+     "low": "below",
+     "median": "inside",
+     "lowJob": "inside",
+     "medianJob": "inside"
+    }
+   },
+   "revenuePerSize": [
+    {
+     "size": 100,
+     "netPerMonth": 197
+    },
+    {
+     "size": 1000,
+     "netPerMonth": 1966
+    },
+    {
+     "size": 10000,
+     "netPerMonth": 19608
+    },
+    {
+     "size": 100000,
+     "netPerMonth": 195584
+    }
+   ]
+  },
+  {
+   "id": "h_ill",
+   "payerModes": [
+    "coven pays",
+    "each member pays"
+   ],
+   "name": "(h) Flat seats, $3 / $1 (illustrative)",
+   "description": "No base fee. A practitioner seat includes a solo coven; an observer seat costs less and becomes a practitioner seat by paying the difference; a solo coven alone costs the same as a practitioner seat; a paying steward gets 50% off practitioner seats in other covens.",
+   "pricePoints": "$3.00 practitioner / $1.00 observer; $2.98 revenue per paying seat (illustrative)",
+   "priceTable": [
+    {
+     "level": "Practitioner seat",
+     "price": "$3.00 a month",
+     "example": "Includes a solo coven of the member's own."
+    },
+    {
+     "level": "Observer seat",
+     "price": "$1.00 a month",
+     "example": "Read-only; no solo coven."
+    },
+    {
+     "level": "Observer upgrade",
+     "price": "$2.00 a month (the difference)",
+     "example": "The observer becomes a practitioner seat and gets a solo coven; modelled take-up 20% (assumption)."
+    },
+    {
+     "level": "Solo coven alone",
+     "price": "$3.00 a month",
+     "example": "Costs the same as a practitioner seat."
+    }
+   ],
+   "example": "A coven of 5: 3 practitioners and 2 observers, one practitioner also pays for a coven elsewhere. At $3 / $1 the bill is 2 x $3 + $1.50 + 2 x $1 = $9.50; if one observer upgrades it is $11.50.",
+   "requirements": {
+    "R1": "kept (the steward's bill is seats x price)",
+    "R2": "kept",
+    "R3": "kept",
+    "R4": "kept",
+    "R5": "kept: 50% off for paying stewards; every practitioner seat has a free solo coven"
+   },
+   "reception": "Per-seat pricing with a cheaper view-only seat is common (Figma Collab $3 beside a $16 full seat); solo coven anchors are Bear $2.99, Neumoire $1.99 and Grimoire $4.99, as in (g). No comparable gives a paying steward 50% off.",
+   "breakEvenSeats": {
+    "cash": 95,
+    "cashPlusLabour": 1237,
+    "cashPlusSalary": 8878
+   },
+   "breakEvenSeatsMedian": {
+    "cash": 95,
+    "cashPlusLabour": 4180,
+    "cashPlusSalary": 14712
+   },
+   "clearingPrice": {
+    "low": 0.61,
+    "median": 2.2,
+    "lowJob": 2.65,
+    "medianJob": 3.64,
+    "comparablesRange": [
+     1.58,
+     5.99
+    ],
+    "position": {
+     "low": "below",
+     "median": "inside",
+     "lowJob": "inside",
+     "medianJob": "inside"
+    }
+   },
+   "revenuePerSize": [
+    {
+     "size": 100,
+     "netPerMonth": 258
+    },
+    {
+     "size": 1000,
+     "netPerMonth": 2580
+    },
+    {
+     "size": 10000,
+     "netPerMonth": 25726
+    },
+    {
+     "size": 100000,
+     "netPerMonth": 256763
+    }
+   ]
+  },
+  {
+   "id": "h_cal",
+   "payerModes": [
+    "coven pays",
+    "each member pays"
+   ],
+   "name": "(h) Flat seats, $2.27 / $1 (calibrated to (g))",
+   "description": "No base fee. A practitioner seat includes a solo coven; an observer seat costs less and becomes a practitioner seat by paying the difference; a solo coven alone costs the same as a practitioner seat; a paying steward gets 50% off practitioner seats in other covens.",
+   "pricePoints": "$2.27 practitioner / $1.00 observer, calibrated so a paying seat brings $2.31 as in (g): p = ($2.3149 - $0.2304) / 0.9173 = $2.2722. Matching (c) per group coven instead gives $1.94.",
+   "priceTable": [
+    {
+     "level": "Practitioner seat",
+     "price": "$2.27 a month",
+     "example": "Includes a solo coven of the member's own."
+    },
+    {
+     "level": "Observer seat",
+     "price": "$1.00 a month",
+     "example": "Read-only; no solo coven."
+    },
+    {
+     "level": "Observer upgrade",
+     "price": "$1.27 a month (the difference)",
+     "example": "The observer becomes a practitioner seat and gets a solo coven; modelled take-up 20% (assumption)."
+    },
+    {
+     "level": "Solo coven alone",
+     "price": "$2.27 a month",
+     "example": "Costs the same as a practitioner seat."
+    }
+   ],
+   "example": "The same coven at $2.27 / $1: 2 x $2.27 + $1.135 + 2 x $1 = $7.68; with one observer upgrade (+$1.27) it is $8.95.",
+   "requirements": {
+    "R1": "kept (the steward's bill is seats x price)",
+    "R2": "kept",
+    "R3": "kept",
+    "R4": "kept",
+    "R5": "kept: 50% off for paying stewards; every practitioner seat has a free solo coven"
+   },
+   "reception": "Per-seat pricing with a cheaper view-only seat is common (Figma Collab $3 beside a $16 full seat); solo coven anchors are Bear $2.99, Neumoire $1.99 and Grimoire $4.99, as in (g). No comparable gives a paying steward 50% off.",
+   "breakEvenSeats": {
+    "cash": 124,
+    "cashPlusLabour": 1691,
+    "cashPlusSalary": 11867
+   },
+   "breakEvenSeatsMedian": {
+    "cash": 124,
+    "cashPlusLabour": 8965,
+    "cashPlusSalary": 31661
+   },
+   "clearingPrice": {
+    "low": 0.61,
+    "median": 2.2,
+    "lowJob": 2.65,
+    "medianJob": 3.64,
+    "comparablesRange": [
+     1.58,
+     5.99
+    ],
+    "position": {
+     "low": "below",
+     "median": "inside",
+     "lowJob": "inside",
+     "medianJob": "inside"
+    }
+   },
+   "revenuePerSize": [
+    {
+     "size": 100,
+     "netPerMonth": 198
+    },
+    {
+     "size": 1000,
+     "netPerMonth": 1977
+    },
+    {
+     "size": 10000,
+     "netPerMonth": 19725
+    },
+    {
+     "size": 100000,
+     "netPerMonth": 196754
+    }
+   ]
+  },
+  {
+   "id": "f",
+   "priceTable": [
+    {
+     "level": "Trial",
+     "price": "Free for one month, no card",
+     "example": "A new coven trials before paying."
+    }
+   ],
+   "example": "Not a price, so a coven of 5 pays nothing extra.",
+   "name": "(f) Trial only + curator covens",
+   "description": "Not a price: a no-card trial, a free coven of 7 seats for each curator, and timed keeper exemptions.",
+   "pricePoints": "none; it adds cost and no revenue",
+   "requirements": {
+    "R1": "kept as policy",
+    "R2": "not applicable",
+    "R3": "altered: one month, keeper-settable",
+    "R4": "altered: timed",
+    "R5": "not applicable"
+   },
+   "reception": "Starting with no free tier avoids the costly cut that Evernote and Heroku made later."
+  }
+ ],
+ "processors": [
+  {
+   "name": "Stripe Billing + Tax, hosted Checkout",
+   "rank": 1,
+   "fees": "About 11.6% of a $10 seat by API (2.9% + 30c, 0.7% Billing, 0.5% Tax Basic); 7.1% no-code",
+   "merchantOfRecord": "No. The site is the merchant and files its own tax.",
+   "contentPolicyRisk": "Lowest: its list names only psychic services, in three countries",
+   "serverSideOnly": "Yes, hosted Checkout loads no Stripe.js on the site",
+   "officialMock": "Yes, stripe-mock, but it keeps no state and sends no webhooks",
+   "recommendation": "Recommended first choice."
+  },
+  {
+   "name": "Stripe Managed Payments",
+   "rank": 2,
+   "fees": "About 10.1% of a $10 seat (adds 3.5%)",
+   "merchantOfRecord": "Yes, Link (Stripe) is the seller and files tax in 80+ countries.",
+   "contentPolicyRisk": "Same list as Stripe, plus an eligibility review",
+   "serverSideOnly": "Yes, through Checkout only",
+   "officialMock": "stripe-mock covers the API, not the seller behaviour",
+   "recommendation": "Fallback if you do not want to file sales tax."
+  },
+  {
+   "name": "Paddle",
+   "rank": 3,
+   "fees": "5% + 50c on a $10 seat (10%)",
+   "merchantOfRecord": "Yes",
+   "contentPolicyRisk": "High: bans pseudo-science including horoscopes and fortune-telling",
+   "serverSideOnly": "Not established",
+   "officialMock": "None found",
+   "recommendation": "Not recommended because of its content ban."
+  },
+  {
+   "name": "Lemon Squeezy",
+   "rank": 4,
+   "fees": "5% + 50c on a $10 seat (10%)",
+   "merchantOfRecord": "Yes",
+   "contentPolicyRisk": "Unclear: bans anything its payment partners restrict",
+   "serverSideOnly": "Not established",
+   "officialMock": "None found",
+   "recommendation": "Not recommended; its policy is open-ended."
+  },
+  {
+   "name": "Polar",
+   "rank": 5,
+   "fees": "5% + 50c on a $10 seat (10%)",
+   "merchantOfRecord": "Yes",
+   "contentPolicyRisk": "High: prohibits the same pseudo-science wording and reviews spiritual services",
+   "serverSideOnly": "Not established",
+   "officialMock": "None found",
+   "recommendation": "Not recommended because of its content ban."
+  },
+  {
+   "name": "Creem",
+   "rank": 6,
+   "fees": "3.9% + 40c on a $10 seat (7.9%)",
+   "merchantOfRecord": "Yes",
+   "contentPolicyRisk": "High: bans metaphysical and fortune-telling services",
+   "serverSideOnly": "Not established",
+   "officialMock": "None found",
+   "recommendation": "Not recommended because of its content ban."
+  },
+  {
+   "name": "Dodo",
+   "rank": 7,
+   "fees": "Not found",
+   "merchantOfRecord": "Yes",
+   "contentPolicyRisk": "High: religious and spiritual services need review",
+   "serverSideOnly": "Not established",
+   "officialMock": "None found",
+   "recommendation": "Not recommended because of its content review."
+  }
+ ],
+ "ownerQuestions": [
+  {
+   "id": 1,
+   "question": "Should the site be the merchant, or use a merchant of record?",
+   "options": [
+    {
+     "option": "The site as merchant (Stripe Billing + Tax) - recommended",
+     "consequence": "You register for and file sales tax; the fee is lower."
+    },
+    {
+     "option": "Stripe Managed Payments",
+     "consequence": "Link files the tax; the fee is 3.5% higher."
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "question": "Will you accept \"Sold through Link\" on customers' statements?",
+   "options": [
+    {
+     "option": "No recommendation: yes",
+     "consequence": "Managed Payments stays open."
+    },
+    {
+     "option": "No",
+     "consequence": "Managed Payments is ruled out."
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "question": "Is the seller a sole proprietor or a company?",
+   "options": [
+    {
+     "option": "No recommendation: sole proprietor",
+     "consequence": "Some vendors' requirements were not found."
+    },
+    {
+     "option": "Company",
+     "consequence": "Some vendors' requirements were not found."
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "question": "Will you submit the grimoire and compendium to a vendor content review?",
+   "options": [
+    {
+     "option": "Yes, with Stripe - recommended",
+     "consequence": "Stripe has the narrowest restricted list."
+    },
+    {
+     "option": "Yes, with another vendor",
+     "consequence": "Their lists name astrology and spiritual services."
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "question": "Are international customers in scope?",
+   "options": [
+    {
+     "option": "No recommendation: not at first",
+     "consequence": "No foreign tax, conversion or card fees."
+    },
+    {
+     "option": "Yes",
+     "consequence": "Cards add 1.5%, conversion 1%, plus foreign sales tax."
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "question": "Which pricing model?",
+   "options": [
+    {
+     "option": "(b) Each user pays",
+     "consequence": "Needs 74, the fewest, but drops R1 (the coven pays)."
+    },
+    {
+     "option": "(c) Base plus seats - meets all five wants",
+     "consequence": "Needs 139."
+    },
+    {
+     "option": "(g) Group plan includes a solo coven (over (c))",
+     "consequence": "Needs 125, assuming 20% of paying seats buy a solo coven alone."
+    },
+    {
+     "option": "(h) Flat seats, $3 / $1 illustrative",
+     "consequence": "Needs 95. Meets all five wants."
+    },
+    {
+     "option": "(h) Flat seats, $2.27 / $1 calibrated to (g)",
+     "consequence": "Needs 124. Meets all five wants."
+    },
+    {
+     "option": "Break-even on cash + labour (low row primary; median stress)",
+     "consequence": "(b) 930 (median 2,532); (c) 1,943 (15,123); (g) 1,703 (9,170); (h) $3 / $1 1,237 (4,180); (h) $2.27 / $1 1,691 (8,965). The one-person ceiling is 22,241 low and 4,341 median, so (c), (g) and (h) at $2.27 in the median row pass it."
+    },
+    {
+     "option": "Note: (a), (d) and (e) were rejected on 2026-11-06",
+     "consequence": "See consideredAndRejected."
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "question": "Do you confirm the keeper exemption schedule of 5% / 3% / 1.5% / 0.5% of paying seats?",
+   "options": [
+    {
+     "option": "Confirm the schedule - recommended",
+     "consequence": "The overhead and break-even figures stand."
+    },
+    {
+     "option": "Give other numbers",
+     "consequence": "I re-run the model with them."
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "question": "What happens to a subscription while a site or coven is paused?",
+   "options": [
+    {
+     "option": "No recommendation: pause collection",
+     "consequence": "The customer is not charged while paused."
+    },
+    {
+     "option": "Keep running",
+     "consequence": "Customers pay for paused time."
+    },
+    {
+     "option": "Extend by the paused time",
+     "consequence": "Needs extra bookkeeping."
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "question": "Does the Code of Ethics allow Vercel Bot Protection's JavaScript challenge?",
+   "options": [
+    {
+     "option": "No recommendation: log mode",
+     "consequence": "Runs no script."
+    },
+    {
+     "option": "Challenge mode",
+     "consequence": "Runs a script on the visitor."
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "question": "Is a document mail to everyone taking 852 days at 10,000 paying seats acceptable?",
+   "options": [
+    {
+     "option": "No recommendation",
+     "consequence": "Not a billing question."
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "question": "Do you accept the four departures from DESIGN.md section 13?",
+   "options": [
+    {
+     "option": "Accept all four - recommended",
+     "consequence": "A per-coven trial length, a free coven of 7 seats per curator, timed exemptions, and the demo observer seat staying free."
+    },
+    {
+     "option": "Accept some",
+     "consequence": "Tell me which; I redraft the requirements."
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "question": "Are a one-month trial and no card right?",
+   "options": [
+    {
+     "option": "Keep both (your decision of 2026-11-06)",
+     "consequence": "Trial seats equal 76% to 89% of paying seats."
+    },
+    {
+     "option": "Require a card",
+     "consequence": "Conversion rises to 25% to 35% and trial seats fall, but fewer people try it."
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "question": "Will the site load no Stripe.js on its own pages and use hosted Checkout only?",
+   "options": [
+    {
+     "option": "Yes - recommended",
+     "consequence": "Keeps the no-browser-script rule; gives up some fraud-model accuracy."
+    },
+    {
+     "option": "No, load Stripe.js",
+     "consequence": "Better risk signals, but a vendor script on every page."
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "question": "Do you widen CLAUDE.md rule 1 to cover /.well-known/security.txt?",
+   "options": [
+    {
+     "option": "Yes - recommended",
+     "consequence": "It is sessionless and carries no application data."
+    },
+    {
+     "option": "No",
+     "consequence": "No security.txt; researchers use GitHub reporting only."
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "question": "Is Vercel pause-on-budget turned on?",
+   "options": [
+    {
+     "option": "Off - recommended",
+     "consequence": "You get alerts at 50%, 75% and 100%, but the site never goes down on a bill."
+    },
+    {
+     "option": "On",
+     "consequence": "The site shows a 503 to everyone when the budget is reached."
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "question": "What should a solo coven cost (model (g))?",
+   "options": [
+    {
+     "option": "$1.99 a month (Neumoire)",
+     "consequence": "Lowest barrier and the least revenue; (g) needs 141 paying seats on cash."
+    },
+    {
+     "option": "$2.99 a month (Bear) - the one modelled",
+     "consequence": "Matches the best-known solo journal; (g) needs 125 paying seats on cash."
+    },
+    {
+     "option": "$4.99 a month (Grimoire; Day One is about $4.17)",
+     "consequence": "Earns the most per solo buyer; (g) needs 101 paying seats on cash."
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "question": "What should an observer seat cost, and what share of a coven are observers?",
+   "options": [
+    {
+     "option": "$1 against $2 for a practitioner, 30% observers - the ones modelled",
+     "consequence": "Both are my assumptions. (c) is $9.29 a coven and needs 139 paying seats to break even on cash. Also assumed: 20% of observers (range 5% to 40%) add a solo coven for the solo price less $1; (g) then needs 125 on cash."
+    },
+    {
+     "option": "Another price or share",
+     "consequence": "Share range I would test: 15% to 50%. Anchor: Figma Collab $3 beside a $16 full seat, about a fifth of the price."
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "question": "What is the support contact rate? It decides the one-person ceiling.",
+   "options": [
+    {
+     "option": "The low row is primary: 6.08 variable hours a month per 1,000 paying seats; the median (26.6) is the stress case",
+     "consequence": "With AI assistance the work passes one person at 22,241 paying seats in the low row, 4,341 in the median row and 893 in the high row. Annual billing cuts dispute hours."
+    },
+    {
+     "option": "Another rate (range 5.1 to 75)",
+     "consequence": "Give a number and I re-run the model. Also not found, for you or an accountant to confirm: how incidents scale with users, Washington excise return time, refund time, the curation ratio, solo-founder hours against users, and moderator minutes per abuse report."
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "question": "What happens to a member who stops paying under \"each member pays\"?",
+   "options": [
+    {
+     "option": "The seat stays, read-only until they pay again - the modelled rule",
+     "consequence": "Spells and ingredients stay; nothing is deleted."
+    },
+    {
+     "option": "Another rule",
+     "consequence": "Tell me which; the entitlement paths change."
+    }
+   ]
+  },
+  {
+   "id": 20,
+   "question": "How does a coven switch between \"coven pays\" and \"each member pays\"?",
+   "options": [
+    {
+     "option": "A change cancels one set of subscriptions and starts the other at the next renewal; no mid-period switch - the modelled rule",
+     "consequence": "No proration and no double charge."
+    },
+    {
+     "option": "Switch at once, with proration",
+     "consequence": "More Stripe cases to build and test."
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "question": "Which salary structure should the salary line use?",
+   "options": [
+    {
+     "option": "C: single-member LLC taxed as a sole proprietor - recommended, pending the accountant",
+     "consequence": "Business earnings of $249,434 a year ($20,786 a month) leave the take-home of a $250,000 salary, a saving of $17,141 against all-salary. Gives up elective-only Paid Family and Medical Leave, unemployment cover and (outside a three-year window) WA Cares."
+    },
+    {
+     "option": "B*: S corporation with a $190,000 wage - second choice",
+     "consequence": "$258,302 a year ($21,525 a month), saving $8,273, every benefit kept, with a reasonable-compensation audit risk."
+    },
+    {
+     "option": "A: all-salary",
+     "consequence": "$266,575 a year ($22,215 a month); kept as a sensitivity row."
+    },
+    {
+     "option": "Wait for the accountant",
+     "consequence": "The 13-item checklist is in running-costs.md under owner-to-confirm items 21 to 33."
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "question": "Is the low contact-rate row the primary case, with the median as the stress case?",
+   "options": [
+    {
+     "option": "Yes: low primary, median beside it - recommended",
+     "consequence": "Every model breaks even on cash + labour at 930 to 1,943 paying seats; the median stress case needs 2,532 to 15,123. It holds only if self-service help ships before billing."
+    },
+    {
+     "option": "The median as primary",
+     "consequence": "Models (c), (g) and (h) at $2.27 pass the one-person ceiling of 4,341 before they break even."
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "question": "Which prices clear labour at 10,000 paying seats?",
+   "options": [
+    {
+     "option": "The listed clearing prices",
+     "consequence": "Cash + labour, low row: (b) $0.99, (c) $0.47, (g) $0.55, (h) $0.61, all below the comparables range of $1.58 to $5.99, so today's prices clear. Median row: (b) $2.45, (c) $2.21, (g) $1.95, (h) $2.20, all inside the range. Practitioner or account price a month."
+    },
+    {
+     "option": "Other target prices",
+     "consequence": "Give a price and I re-run the model."
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "question": "Do you confirm AI assistance for support agents: factor 0.87 and a $25 Claude Team seat each?",
+   "options": [
+    {
+     "option": "Yes, as decided on 2026-11-06 - agents use Team, never Pro. Also confirm that Team is Claude for Work and turn off Rate chats for support agents.",
+     "consequence": "Factor 0.87 on support minutes (0.735 and 1.00 as sensitivities); seats at 0 / 0 / 0 / 3 (low row) and 0 / 0 / 2 / 16 (median row) at the four sizes. Customer messages are not trained on."
+    },
+    {
+     "option": "Change the factor or the seat count",
+     "consequence": "Tell me the number and I re-run the model."
+    }
+   ]
+  }
+ ]
+}
