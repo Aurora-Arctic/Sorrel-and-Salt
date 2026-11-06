@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { connection } from 'next/server';
 import PageHeader from '../../../../../components/PageHeader';
-import { ABOUT_OPTIONS } from '../../../../../components/SupportRequests/filter';
+import { SUPPORT_ABOUTS } from '../../../../../lib/support-path';
 import { statusBadgeClass } from '../../../../../components/SupportRequests/status-badge';
 import SupportSenderRequest from '../../../../../components/SupportSenderRequest';
 import { senderStatusLabel } from '../../../../../components/SupportSenderRequest/status';
@@ -30,7 +30,7 @@ export default async function SupportRequestByLinkPage({
     throw error;
   });
   const about =
-    ABOUT_OPTIONS.find((option) => option.value === request.about)?.label ?? request.about;
+    SUPPORT_ABOUTS.find((option) => option.value === request.about)?.label ?? request.about;
   const staffWroteLast = request.replies[request.replies.length - 1]?.authorRole === 'staff';
   // The request is drawn by the signed-in sender's own view, so the two read alike; only the reply form differs.
   return (
