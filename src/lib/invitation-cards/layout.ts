@@ -74,8 +74,11 @@ export const BACK_PICTURE: PictureItem = {
   height: 288,
 };
 
-/** The QR code, right of the text column, with the front's foot beneath it on the same left edge. */
-export const FRONT_QR: QrItem = { x: 400, y: 104, size: 182 };
+/**
+ * The QR code, right of the text column, with the front's foot beneath it on the same left edge. It stands left
+ * of the salt's bright bowl, which washes the code out where the two overlap.
+ */
+export const FRONT_QR: QrItem = { x: 380, y: 104, size: 182 };
 
 export function headlineStyle(fonts: CardFonts): TextStyle {
   return { font: fonts.cormorant600, size: HEADLINE_SIZE };

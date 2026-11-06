@@ -60,7 +60,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
           new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/i/[\\w-]{12,}$`),
         );
       }
-      expect(new Set(printed).size).toBe(9);
+      expect(new Set(printed).size).toBe(12);
       links.push(...printed);
     });
 
@@ -100,7 +100,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       const batch = page
         .getByRole('row')
         .filter({ has: page.getByRole('button', { name: /^Revoke Batch / }) });
-      await expect(batch).toContainText('9');
+      await expect(batch).toContainText('12');
       await expect(batch).toContainText('1');
       await page.getByRole('button', { name: /^Revoke Batch / }).click();
       await page

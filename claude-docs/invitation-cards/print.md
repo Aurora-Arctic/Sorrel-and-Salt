@@ -38,7 +38,7 @@ The layers on each page are drawn in this order: the soot fill, then every pictu
 2. the tagline, Lexend 400;
 3. the two muted lines (how to use the card and what it admits), Lexend 300;
 
-The QR code sits right of the column, 182 px (0.95 in) square, and the foot sits under it on the same left edge: the wordmark, the site address and the expiry date, the last line ending on the column's bottom, 1/8 in above the trim. The salt picture lies behind both. The foot moved from the column's foot to under the code because the shorter card has no height for it beneath the muted lines at the same type sizes. Card `i` gets front text `i mod 9` from `FRONT_COPY` in `copy.ts`, so the nine texts run on in turn from sheet to sheet and neighbouring cards read differently. The expiry date reads `VALID UNTIL 31 MARCH 2027`: the batch's expiry, formatted in UTC in British English and set in capitals.
+The QR code sits right of the column, 182 px (0.95 in) square, and left of the salt's bright bowl, which washes the code out where the two overlap, and the foot sits under it on the same left edge: the wordmark, the site address and the expiry date, the last line ending on the column's bottom, 1/8 in above the trim. The salt picture lies behind both. The foot moved from the column's foot to under the code because the shorter card has no height for it beneath the muted lines at the same type sizes. Card `i` gets front text `i mod 9` from `FRONT_COPY` in `copy.ts`, so the nine texts run on in turn from sheet to sheet and neighbouring cards read differently. The expiry date reads `VALID UNTIL 31 MARCH 2027`: the batch's expiry, formatted in UTC in British English and set in capitals.
 
 **The back** keeps the same 1/8 in inset and carries the wordmark, a sentence about the site, and `BY INVITATION ONLY.`, with the sorrel picture at the top right.
 
@@ -64,7 +64,7 @@ A PDF has no CSS mask, so the script writes the canvas's edge fade into each pic
 
 Both are below the 300 dpi usual for print. They are soft, low-contrast pictures behind the text, so the shortfall shows less than it would on a sharp picture. A sharper card needs larger source illustrations.
 
-The salt sits in the artboard's bottom-right corner, its right and bottom edges 1/8 in past the trim. It is drawn at 360 × 240 px, the canvas's 460 × 307 scaled with the card's height, so its bright bowl lies beside and below the QR code. At the canvas's size the bowl sat under the whole code and the code no longer decoded. Every picture on a sheet is drawn before any card's words or QR code, and the only clip is the block's outer edge. So the card beside and the card below each show a strip of salt under their words, and a card on the block's edge keeps that strip in the bleed, which the guillotine cuts away. `pdf.test.ts` pins the salt to that corner.
+The salt sits in the artboard's bottom-right corner, its right and bottom edges 1/8 in past the trim. It is drawn at 360 × 240 px, the canvas's 460 × 307 scaled with the card's height, so its bright bowl lies beside and below the QR code rather than under it. At the canvas's size the bowl sat under the whole code and the code no longer decoded. Every picture on a sheet is drawn before any card's words or QR code, and the only clip is the block's outer edge. So the card beside and the card below each show a strip of salt under their words, and a card on the block's edge keeps that strip in the bleed, which the guillotine cuts away. `pdf.test.ts` pins the salt to that corner.
 
 ## Fonts
 
