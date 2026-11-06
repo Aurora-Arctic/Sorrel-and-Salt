@@ -901,6 +901,6 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
 
 The component is described in [`components/admin-cards.md`](../components/admin-cards.md).
 
-### Anonymous accounts (M15.48)
+### Claiming signed-out support requests (M15.48)
 
-A signed-out support send mints an anonymous account (`users.is_anonymous`) through Better Auth's `anonymous` plugin. The sign-up hook skips it: it earns no demo-coven seat and no `canCreateWorkspace`. When the sender signs in to a real account with a verified email, the plugin's link step moves the account's requests to it, and a request whose `sender_email` matches a verified address is claimed the same way. The daily provisional cleanup removes an anonymous account that holds no live request, or none at all after 7 days. Record: `design-decisions/m15.48-anonymous-sender.md`.
+A signed-out support send makes no account and no session: the request is written as the seeded signed-out sender account with its `sender_email`. When an account gains a session or verifies its email, every request whose `sender_email` matches the verified address moves to it, with the sender's replies and any time-out bound to that address; an unverified account claims nothing. Record: `design-decisions/m15.48-mailed-link.md`.

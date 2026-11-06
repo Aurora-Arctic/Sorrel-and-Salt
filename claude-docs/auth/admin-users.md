@@ -100,8 +100,6 @@ position, and a foreign cursor reading the first page.
 `tests/e2e/admin.spec.ts` checks the page a keeper sees against the built
 server, with axe.
 
-The list leaves out the anonymous accounts a signed-out support send mints (`users.is_anonymous`), as it leaves out the three system users: they are not people, and a keeper reads their requests from Support (M15.48).
-
 ## The user modal (M9.19)
 
 Pressing a user's name on the list opens a modal over it, so a keeper sees

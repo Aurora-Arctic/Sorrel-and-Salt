@@ -265,8 +265,7 @@ No task is minted: v1 has no deletion story.
   before signing up can be kept. Not a sign-in scheme this site wants, and
   not what a public read needs: MB.80 weighed it against the public
   compendium and declined it for v1. It is v2's try-before-sign-up
-  (DESIGN.md §13) if that is ever wanted. M15.48 later adopted it for the
-  signed-out support sender alone (m15.48-anonymous-sender.md).
+  (DESIGN.md §13) if that is ever wanted.
 - **`genericOAuth`:** the mechanism for a provider outside Better Auth's
   built-in roster. Worth knowing; no such provider is wanted.
 - **`openAPI`:** a reference page for `/api/auth/*`. The API a developer
@@ -294,7 +293,7 @@ No task is minted: v1 has no deletion story.
 `captcha` and `haveIBeenPwned` only if email and password ever lands. The
 Stripe plugin is v2 as well, decided separately by MB.79 and left to a
 test-mode spike. `anonymous` is v2 too, only if try-before-sign-up is wanted
-(MB.80, DESIGN.md §13); M15.48 reversed that for the signed-out support sender only.
+(MB.80, DESIGN.md §13).
 
 **Never here:** `jwt`, `bearer`, `oneTimeToken`, `deviceAuthorization`,
 `oauthPopup`, `multiSession`, `oneTap`, `username`,

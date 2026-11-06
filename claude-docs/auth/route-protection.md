@@ -189,7 +189,3 @@ top-level bans because an override replaces the rule rather than merging
 (`claude-docs/db/query-building.md`).
 Lint carries it; each ban was proved by a probe in the PR that added it
 (MB.224 retired the guard that re-ran the probes).
-
-### The provisional support session (M15.48)
-
-A signed-out support sender holds a session cookie for an anonymous account. The proxy only checks that a session cookie is present, so that cookie passes it on every protected path; it cannot tell an anonymous session from a real one. The secure layer does: `requireSession()` and `getShellSession()` in `src/lib/request-session.ts` treat an anonymous session as signed out everywhere except `/support`, `/account/support` and below, so the cookie opens nothing else. The same split holds in the GraphQL context: an anonymous session acts as itself only for the support operations and `sendSignedOutSupportRequest`. `/` and `/compendium` set no cookie. Record: `design-decisions/m15.48-anonymous-sender.md`.
