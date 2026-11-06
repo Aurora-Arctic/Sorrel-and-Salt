@@ -1,0 +1,26 @@
+# Billing Research
+
+This folder holds the research for task M17.1: what it would cost to run Sorrel & Salt, and how it could charge for it. It records research only. No decision lives here.
+
+| File                                             | What it holds                                                                                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| [running-costs.md](running-costs.md)             | What the site costs a month at 100, 1,000, 10,000 and 100,000 accounts: platform, tooling, operations, maintenance and processing. |
+| [subscription-models.md](subscription-models.md) | Six ways to charge, measured against DESIGN.md §13's five wants, with break-even tables, processors and the owner's questions.     |
+
+## When the Prices Were Fetched
+
+Every price and policy was fetched on **2026-11-06**. Vendors change prices, so check a figure's source before relying on it later.
+
+## Re-Running the Numbers
+
+The figures in both files come from a script, `.reports/m17.1/compute.mjs`. `.reports/` is gitignored, so the script is not in the repository. It is copied in by hand. With the script in place, run:
+
+```
+node .reports/m17.1/compute.mjs
+```
+
+Its inputs are one object near the top of the file. Change a price or a ratio there and re-run it. The model prices in `subscription-models.md` are assumptions anchored on comparables, and are set there too.
+
+## Where Decisions Live
+
+The decision record is `claude-docs/design-decisions/m17.1-subscription-billing-scope.md`. The main session writes it after the owner chooses a model, a free tier, a processor and the other questions at the end of `subscription-models.md`. It does not exist yet.
