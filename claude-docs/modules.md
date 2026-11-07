@@ -1,6 +1,6 @@
 # Modules
 
-`src/` is a modular monolith (MB.86). Eight domain modules under `src/modules/`, the eighth of them, `help`, planned (MB.175)
+`src/` is a modular monolith (MB.86). Seven domain modules under `src/modules/` (`identity`, `coven`, `vocabulary`, `ingredients`, `grimoire`, `support` and `documents`), with an eighth, `help`, planned,
 own every table and every service; the database layer, the GraphQL host, `lib`
 and the presentation tree are infrastructure that composes them. A module has a
 public surface, an allowed set of modules it may import, and two lint
@@ -32,11 +32,10 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
 `celestialBodySuggestions`, `zodiacSuggestions`, `formSuggestions` and
 `deitySuggestions` connections, and `Deity` and `DeityTradition` with the
-`deityTraditionsById` and `ingredientFormsById` loaders (MB.167) and the
-`otherNamesByDeity` loader (M14.23); `ingredients` has
+`deityTraditionsById`, `ingredientFormsById` and `otherNamesByDeity` loaders; `ingredients` has
 `Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
-the workspace ingredient mutations, the compendium's three (M5.5), and `CommonNameSuggestion` and
+the workspace ingredient mutations, the compendium's three, and `CommonNameSuggestion` and
 `commonNameSuggestions`, whose claimants reuse `vocabulary`'s
 `SuggestionClaimant` — the edge runs that way round — plus the
 `categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient` and
@@ -139,10 +138,10 @@ of any of them from outside the module is a boundary violation, whatever the imp
 
 A step several services of one module repeat lives once in a service file
 the index does not re-export, and each service calls it between its own
-checks (MB.210, on the owner's call for shared steps over a descriptor
-factory): every exported service keeps its function, its JSDoc, and its own
-`assertSiteAdmin(` and `expireCompendium()`, so a reader sees the
-check and the expiry in the service they guard.
+checks, rather than through a descriptor factory: every exported service keeps
+its function, its JSDoc, and its own authorization check (`assertSiteAdmin(` or
+`assertCurator(`) and `expireCompendium()`, so a reader sees the check and the
+expiry in the service they guard.
 
 - **`vocabulary/services/curated-writes.ts`** — a curated write's steps,
   each taking the table's `CuratedVocabulary` descriptor (`types.ts`):
@@ -150,7 +149,13 @@ check and the expiry in the service they guard.
   `parseUnderLiveParent` for a row filed under a group, and a group's
   `moveTarget`, `updateGroup` and `deleteGroup`, built on
   `group-moves.ts` and a `CuratedGroup` whose `members` are the `MovedRows`
-  it moves — their column, their slug rule, and the walk that reads them.
+  it moves — their column, their slug rule, and the walk that reads them. The file is internal to the module and the index exports no part of it. Its rules:
+  - A write that broke the vocabulary's slug index is a `ValidationError` on `name` (the slug is derived and has no field of its own), naming the row holding the address; any other error passes unchanged.
+  - Reading a row by id answers `NotFound` for an id that is not a uuid, which names nothing and would be a driver error at the comparison.
+  - A group's input is parsed with its group checked live (a foreign key admits a retired one); the refusal is the input schema's own words for a missing group, on its field.
+  - A delete's `moveTo` is refused, beside the picker that names it, when none is named or it names the group itself or no other live group.
+  - Rewriting a group whole follows the name into the slug of every live row under it whose slug carries the group's name; a category's carries none, so a category group's rename moves nothing. A move onto another row's address is refused on `name`, naming both, before the write and again after one the index refused.
+  - Deleting a group first moves its live rows to the `moveTo` group, re-slugged where the slug carries the group's name, in the same transaction. The rows are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops.
 - **`vocabulary/services/curated-lists.ts`** — `readableFilter` and
   `cachedFilteredList`, the list and count of a vocabulary filtered by a
   group. Each service still spells its own two cache keys, which
@@ -171,8 +176,7 @@ walk over a finder's pages; `plural`, `joinAnd` and `addressTaken` in
 `in-id-order.ts`, a batch answered in its ids' order. `coven` exports
 `readersOf` for every read of the compendium and, optionally, one coven. A
 service writing its own slug-collision refusal, move target, `describeEntry`
-or page walk is a review finding: MB.224 retired the guard that pinned the
-call sites, since it tested where code lives, not what it does.
+or page walk is a review finding; no guard pins the call sites.
 
 ## The boundary
 
@@ -198,6 +202,8 @@ The dependency graph is fixed and acyclic:
 | `vocabulary`  | `identity`, `coven`                              |
 | `ingredients` | `identity`, `coven`, `vocabulary`                |
 | `grimoire`    | `identity`, `coven`, `vocabulary`, `ingredients` |
+| `support`     | `identity`                                       |
+| `documents`   | `identity`                                       |
 
 Every edge is a foreign key or a service call that already crosses in that
 direction. A new edge is a design change: add it to `ALLOWED` in `lint/sorrel-lint.js` in
@@ -210,15 +216,14 @@ modules.
 ### Enforcement
 
 Two lint layers, a path glob for the alias and a plugin rule for the
-relative spellings a glob cannot judge (MB.224, which retired the guard that
-scanned the import graph on every test run):
+relative spellings a glob cannot judge (no guard scans the import graph on every test run):
 
 - **Lint.** `.oxlintrc.json` carries one `no-restricted-imports` pattern group
   banning `@/modules/*/services`, `@/modules/*/services/**`,
   `@/modules/*/graphql`, `@/modules/*/graphql/**`, `@/modules/*/loaders`,
   `@/modules/*/loaders/**` and `@/modules/*/types`. It is restated in every override, because an
   override replaces the top-level rule rather than merging with it
-  ([`db/query-building.md`](db/query-building.md), "Where queries may be
+  ([`db/query-building.md`](db/repository-files.md), "Where queries may be
   built"). The bare `@/modules/<name>` index import matches none of the
   patterns, so no negation is needed. The lint sees only the alias spelling.
 - **Plugin rule.** `sorrel/module-boundaries` in `lint/sorrel-lint.js`
@@ -228,7 +233,7 @@ scanned the import graph on every test run):
   module-to-module edge its `ALLOWED` map does not name; a module importing
   presentation; and an import into `src/db/repository/` other than its index.
   `import/no-cycle` fails a cycle between files anywhere, the repository
-  included since MB.231.
+  included.
   A type-only import counts exactly like a runtime one: `import type` is
   erased at compile time but couples to the file all the same, and the index
   exports the type too.
@@ -344,9 +349,6 @@ trigger, isolation and pagination tests — and the shared db harness is
   spreads each module's map into `LOADERS`, so `createLoaders(session)` still
   builds one fresh set per request.
 
-Three modules register types today and two register loaders. What is fixed
-is that the host reaches each through the module's index.
-
 ## Adding a module
 
 Five things, in one PR:
@@ -359,7 +361,7 @@ Five things, in one PR:
 4. Add the row to the ownership table above, to
    [`DESIGN.md`](DESIGN.md) §3's tree if the shape changes, and to
    the entry in `claude-docs/tasks/` for the task that adds it.
-5. Say in the PR body why the existing five could not own it.
+5. Say in the PR body why the existing seven could not own it.
 
 ## Adding a table
 
@@ -373,21 +375,10 @@ built from — partial unique indexes, the
 `CREATE OR REPLACE TRIGGER` line for `set_updated_at()` in the table's own
 migration, and a transcribed entry in `tests/support/db/table-metadata.ts`,
 which `tests/db/updated-at-trigger.test.ts` compares against the catalogue
-([`db.md`](db.md)). `drizzle.config.ts` reads `src/modules/*/schema/*.ts`, so a
+([`db.md`](db/README.md)). `drizzle.config.ts` reads `src/modules/*/schema/*.ts`, so a
 new file is picked up by `npm run db:generate` with no registration step. A
 `*.test.ts` file must never sit in `schema/`: the glob would hand it to
 drizzle-kit, which cannot load Vitest.
-
-## Vocabulary shared write steps
-
-`src/modules/vocabulary/services/curated-writes.ts` holds the steps every curated vocabulary's admin write is made of, so how a slug collision, a missing row or a group's move is refused is one edit across the seven services. They are shared steps rather than a descriptor factory: each service keeps its own exported functions and JSDoc, and its own `assertCurator(` and `expireCompendium()`, so the check and the expiry are read together. The file is internal to the module and the index exports no part of it.
-
-- A write that broke the vocabulary's slug index is a `ValidationError` on `name` (the slug is derived and has no field of its own), naming the row holding the address; any other error passes unchanged.
-- Reading a row by id answers `NotFound` for an id that is not a uuid, which names nothing and would be a driver error at the comparison.
-- A group's input is parsed with its group checked live (a foreign key admits a retired one); the refusal is the input schema's own words for a missing group, on its field.
-- A delete's `moveTo` is refused, beside the picker that names it, when none is named or it names the group itself or no other live group.
-- Rewriting a group whole follows the name into the slug of every live row under it whose slug carries the group's name; a category's carries none, so a category group's rename moves nothing. A move onto another row's address is refused on `name`, naming both, before the write and again after one the index refused.
-- Deleting a group first moves its live rows to the `moveTo` group, re-slugged where the slug carries the group's name, in the same transaction. The rows are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops.
 
 ## Library helpers
 
@@ -429,10 +420,7 @@ list with no rows at all uses, filtered or not, and a list may add a sentence af
 saying how to begin ("Add one with Add Category."). An empty field says "No … recorded."
 instead ("No folk names recorded."), since a field is filled in rather than added to.
 
-`noun` is the plural, matched by a plural verb. One wording serves all six lists;
-before it the compendium said "No entry matches", the invitations "No invitation
-matches", the users "No users match", the group and value lists "No category
-matches that filter. Try another name." and the ledger "No keeper changes for “x”."
+`noun` is the plural, matched by a plural verb. One wording serves all six lists.
 The plural reads true however many rows the list could have held, and naming each
 filter, not calling it "that filter", shows a keeper which one to change.
 

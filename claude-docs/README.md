@@ -124,8 +124,13 @@ nothing but the code open (`CLAUDE.md`, Conventions; the record is
   belongs on the shared helper, the type, or the doc it describes, and the
   copies become a pointer or nothing. A `@throws` line, a stories-file note or
   a framework fact repeated across files is the sign.
-- **Plain writing applies**: everyday words, the thing described before it is
-  named, one idea per sentence (`.claude/rules/writing.md`, "Code comments").
+- **Write it plainly, in the present tense, with no actors and no time.** Say
+  what the thing is first, in everyday words, then the one clause of why if the
+  obvious alternative would be wrong: `Rows the viewer may see, filtered in SQL
+so a private spell never reaches the resolver.` Not "X was added so that",
+  "the owner chose" or "until Y lands". One idea per line and one line per field
+  or prop; a doc pointer is a citation after the clause it supports, never a
+  paragraph restating the section (`.claude/rules/writing.md`).
 - **Review holds this rule**, with no mechanical guard on density or on history
   markers, by the owner's decision of 2026-10-29: a density guard cannot be
   written without penalising the comments the third bullet protects, and a
