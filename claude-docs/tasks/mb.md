@@ -294,6 +294,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.288 | Bug Bash 2026-11-02: Ingredient Edits, the Formal Name Eyebrow and the Terms Screens                                     | Bugfixes | —                      |
 | MB.289 | Crawlers Hit Blocked Links and Index Few Compendium Pages                                                                | Bugfixes | —                      |
 | MB.290 | Renaming or Deleting a Celestial Body or Zodiac Sign Misses Compendium Variants                                          | Bugfixes | —                      |
+| MB.291 | Error Pages Are Blank Without JavaScript                                                                                 | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -6092,3 +6093,24 @@ _Acceptance criteria:_
 - A deleted variant, or a variant of a deleted entry, neither blocks a delete nor is rewritten.
 - DESIGN.md §5's MB.162 paragraph says the rewrite and the delete check both cover the variants' lists.
 - The compendium's Celestial Body and Zodiac Sign filters, and their facet counts, match an entry whose live variant holds the value, as the Element filter does; a deleted variant's value does not match, asserted by a test that fails before the change.
+
+**MB.291 — Error Pages Are Blank Without JavaScript** · 4h
+
+_Story:_ As a visitor whose browser runs no JavaScript, or a search crawler that runs none, I want a missing or forbidden page to say so in the HTML the server sends, so that I see why the page did not load and how to get back.
+
+A page that answers 404 (not found) or 403 (not authorized) sends the right status code, but its HTML body holds only `<div hidden>`, 58 to 562 bytes, and the heading, message and links back appear only once JavaScript runs. The pages are drawn by `ErrorScreens` and `NotAuthorized` (`src/components/`). The cause is not yet established.
+
+Found on 2026-11-07 during M11.9's status-code checks, locally and on staging at ad502addf, so M11.9 did not cause it; it happens every time. Signed out for the 404, signed in as a non-keeper for the 403. Steps to reproduce:
+
+1. Signed out, request `/compendium/ingredients/no-such-entry` with JavaScript off, or with curl.
+2. Read the HTML body the server sends.
+3. Signed in as a coven member who is not a keeper, request `/keepers/users` with JavaScript off.
+
+Actual: each body holds only `<div hidden>`, so the page is blank. Expected: the server's HTML carries the 404 page's heading, message and links back, and the styled "not authorized" page for the 403.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: with JavaScript off, a missing compendium entry and a keeper page requested by a non-keeper each show their heading in the server's HTML.
+- The 404 for a missing compendium entry, the 404 for a coven the viewer is not a member of, and the 403 for a keeper page each carry their heading and links back in the server's HTML.
+- The status codes stay 404 and 403, and the 308 redirects are unchanged.
+- `claude-docs/loading.md`, or the error-page doc, is corrected wherever it describes how these pages render.
