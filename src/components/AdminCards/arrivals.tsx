@@ -25,7 +25,6 @@ const ArrivalsCsvDocument = graphql(`
   }
 `);
 
-/** The CSV of the arrivals the filter shows: the same query the list holds. */
 export const readArrivalsCsv = async (
   filter: ArrivalsFilter = NO_ARRIVALS_FILTER,
 ): Promise<string> =>

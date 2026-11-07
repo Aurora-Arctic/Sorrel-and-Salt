@@ -15,7 +15,6 @@ import type { CardsFilter, CardsFilterProps } from './types';
 // A range field has no name, so two hidden inputs carry it for the native submit before hydration
 // (claude-docs/components/admin-cards.md).
 
-// Title case, as an option is a label; the table's cells keep `STATUS_LABEL`'s sentence case.
 const STATUS_OPTIONS: { value: CardsFilter['status']; label: string }[] = [
   { value: '', label: 'Any' },
   { value: 'live', label: 'Live' },
@@ -24,7 +23,6 @@ const STATUS_OPTIONS: { value: CardsFilter['status']; label: string }[] = [
   { value: 'used-up', label: 'Used Up' },
 ];
 
-/** What the drawer holds: every part of the filter but the batch. */
 type Held = Omit<CardsFilter, 'batch'>;
 
 const heldOf = ({ status, mintedFrom, mintedTo, expiresFrom, expiresTo }: CardsFilter): Held => ({
@@ -37,11 +35,9 @@ const heldOf = ({ status, mintedFrom, mintedTo, expiresFrom, expiresTo }: CardsF
 
 const NONE: Held = { status: '', mintedFrom: '', mintedTo: '', expiresFrom: '', expiresTo: '' };
 
-/** How many filters the drawer holds: the status and each range with a day in it, one apiece. */
 const countOf = ({ status, mintedFrom, mintedTo, expiresFrom, expiresTo }: Held): number =>
   [status, mintedFrom || mintedTo, expiresFrom || expiresTo].filter(Boolean).length;
 
-/** Today and the ranges a person most often wants, worked out when pressed: ago or ahead. */
 const day = (shift: number): string => {
   const at = new Date();
   at.setDate(at.getDate() + shift);
@@ -140,7 +136,6 @@ const CardsFilterForm = ({ filter }: CardsFilterProps): ReactElement => {
       label="Filter Invitation Cards"
       action={CARDS_PATH}
       className="admin-cards__filter"
-      // The search and Apply Filters: the batch typed and everything the drawer holds.
       searchHref={() => cardsHref({}, false, { batch: draftBatch.trim(), ...held })}
       shown={[filter.batch]}
       // The drawer's Clear All stands in for Clear while it shows a filter, so one is drawn at a time.
@@ -156,8 +151,6 @@ const CardsFilterForm = ({ filter }: CardsFilterProps): ReactElement => {
       <FacetShell
         count={countOf(held)}
         clearHref={CARDS_PATH}
-        // Shut any other way than Apply Filters: what the drawer holds, under the batch the page
-        // shows, and nothing at all when none of it changed.
         onApply={() => {
           if (changed) apply(cardsHref({}, false, { batch: filter.batch, ...held }));
         }}

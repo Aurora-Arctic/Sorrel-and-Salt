@@ -19,7 +19,6 @@
   }
 }
 
-// Size, photograph and place.
 @mixin sorrel-shape {
   position: fixed;
   top: 0;
@@ -38,7 +37,6 @@
     top: #{$shell-bar-height};
   }
 
-  // The context row scrolls away but the bar stays: the sorrel climbs to the bar's foot.
   body:has(.context-row) & {
     --sorrel-rest: #{$shell-bar-height};
     --sorrel-lift: calc(#{$context-row-height} + 1px);
@@ -51,8 +49,6 @@
   }
 }
 
-// How the grey meets the page: one layer per blend, faded by the theme's
-// opacity tokens (see index.scss for why they are two).
 @mixin sorrel-blend($blend, $opacity) {
   mix-blend-mode: $blend;
   opacity: $opacity;

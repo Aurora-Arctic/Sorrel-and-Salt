@@ -19,10 +19,8 @@ import './index.scss';
 // when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
 
-// The account page: its sections beside the jump menu.
 const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
 
-// The most a menu count shows; a larger one reads "99+".
 const COUNT_CAP = 99;
 
 const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
@@ -33,13 +31,11 @@ function countText(count: number, what: string): string {
     : `${count} ${count === 1 ? 'request' : 'requests'} ${what}`;
 }
 
-// The count as a circle shows it, and its tip: "3 Support Requests Assigned to You".
 function supportTip(count: number, tipWhat: string): { shown: number | string; tip: string } {
   const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
   return { shown, tip: `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}` };
 }
 
-// The red circle inside a row's link, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
 function MenuCount({
   count,
   what,
@@ -47,7 +43,6 @@ function MenuCount({
 }: {
   count: number;
   what: string;
-  /** The tip's words after the count, in title case: "Assigned to You". */
   tipWhat: string;
 }): ReactElement {
   const { shown, tip } = supportTip(count, tipWhat);
@@ -94,7 +89,6 @@ const AccountMenu = ({
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
 
-  // A link press leaves the page; the panel should not outlive it.
   const close = (): void => setOpen(false);
 
   // Open only: a closed menu listens for nothing. Escape is heard on the window so
@@ -227,7 +221,6 @@ const AccountMenu = ({
             }
           >
             {senderCount > 0 ? (
-              // Waiting requests: the row leads to the list that shows which, not to a blank form.
               <PendingLink
                 href={SUPPORT_LIST_PATH}
                 navigationTarget={ACCOUNT_TARGET}

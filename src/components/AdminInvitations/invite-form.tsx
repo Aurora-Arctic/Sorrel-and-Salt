@@ -23,17 +23,9 @@ const CreateAdminInvitationDocument = graphql(`
   }
 `);
 
-/**
- * Where the Reason is kept, behind its info tip: with the invitation first,
- * where a confirmed change's is kept with the change.
- */
 const NOTE_HINT =
   'Kept with the invitation, and in the record of who changed what once it is accepted.';
 
-/**
- * The roles an invitation offers, the lesser first and chosen to begin with, so
- * granting the people page is a choice the keeper makes.
- */
 const SITE_ROLES: readonly InvitableSiteRole[] = ['curator', 'admin'];
 
 /**
@@ -54,8 +46,6 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
     error: failure.field?.message,
   });
 
-  // Anything typed is a change: Cancel, and every other way out, asks first; a sent
-  // invitation does not.
   const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -133,12 +123,8 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   );
 };
 
-/** The modal's head, and the tab's action that opens it. */
 export const INVITE_TITLE = 'New Invitation';
 
-// The tab's one modal place, rendered whether or not `?invite` is open, so New
-// Invitation's press shows it at once over a skeleton and the form arrives in the
-// same dialog.
 const InviteForm = ({ open, onSent, closeHref }: InviteFormProps): ReactElement => (
   <RouteModal
     closeHref={closeHref}

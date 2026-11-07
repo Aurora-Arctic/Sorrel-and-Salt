@@ -34,7 +34,6 @@
   }
 }
 
-// The bar, its inner row, brand and end group, shared with PublicFrame (_frame-bar.scss).
 @include frame-bar(app-shell);
 
 // The links fill the bar's height, square, so the current one's rule sits along the bar's
@@ -53,7 +52,6 @@
   a {
     display: inline-flex;
     align-items: center;
-    // The item stretches to the bar; the link has to be told to fill it.
     height: 100%;
     padding: 0 space(3);
     color: $text-primary;
@@ -80,8 +78,6 @@
   }
 }
 
-// Closer at a phone’s width. The shell hides the links there (below), so only the public frame,
-// whose links stay in the bar, shows it.
 @media (max-width: $shell-phone-width) {
   .app-shell__nav a {
     padding: 0 space(2);
@@ -92,12 +88,6 @@
   display: inline-flex;
 }
 
-// The page's own frame is `min-height: 100dvh` less the top inset; inside the
-// shell the bar takes room too (_primitives.scss).
-
-// Under the tablet width the site links move into the account panel, where
-// the name has already gone (AccountMenu/index.scss): with them in the bar
-// a keeper's bar ran past the window from 642px up.
 @media (max-width: $shell-tablet-width) {
   .app-shell__nav {
     display: none;
@@ -116,14 +106,10 @@
   white-space: nowrap;
 }
 
-// Add Ingredient as a split button: the main part and the chevron sit in one
-// group, and the chevron's menu hangs from it, as the account panel does.
 .app-shell__add-group {
   display: inline-flex;
   flex: none;
   align-items: stretch;
-  // One shadow for the pair, cast by the group: each half's own `.btn` shadow
-  // showed on the other half.
   border-radius: radius('control');
   box-shadow: $shadow-floating;
 }
@@ -165,8 +151,6 @@
   }
 }
 
-// Over a page that narrows its column the notice takes that column, by the page's own grid: `.page-with-nav`'s (Support,
-// the account's tabs) and a document page's. Where `:has()` is missing the notice keeps the wide column.
 .app-shell__main:has(.page-with-nav) .app-shell__pause {
   column-gap: space(6);
   @include page-with-nav-grid;

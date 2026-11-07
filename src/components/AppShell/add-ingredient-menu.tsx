@@ -15,7 +15,6 @@ export default function AddIngredientMenu({
   className,
   onChoose,
 }: {
-  /** The places in the order to draw them: two or more groups, or one, which is drawn flat. */
   sections: readonly MenuSection<AddDestination>[];
   className: string;
   onChoose: (destination: AddDestination) => void;

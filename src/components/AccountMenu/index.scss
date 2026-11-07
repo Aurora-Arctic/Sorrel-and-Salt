@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The account button and its panel: a control-tall button (`$control-height`)
-// with the avatar disc, the name and a chevron; at a phone's width the name and
-// chevron leave and it is a square of the avatar alone.
 $account-menu-avatar: 2rem;
 
 .account-menu {
@@ -28,8 +25,6 @@ $account-menu-avatar: 2rem;
   color: $text-primary;
   font: inherit;
 
-  // No wash behind the button: the disc is the control, and it answers the
-  // pointer as the theme switch's does, darkening to the accent's hover.
   &:hover .account-menu__avatar,
   &[aria-expanded='true'] .account-menu__avatar {
     background-color: $accent-hover;
@@ -86,7 +81,6 @@ $account-menu-avatar: 2rem;
   position: absolute;
   top: -0.0625rem;
   right: -0.0625rem;
-  // Two thirds of 0.625rem.
   width: 0.4167rem;
   height: 0.4167rem;
   border-radius: 50%;
@@ -186,16 +180,11 @@ $account-menu-avatar: 2rem;
   }
 }
 
-// The count of pending invitations at the right end of Your Account's row: the
-// site's badge in attention's red, a circle, a pill from two digits. Its tip
-// hangs below it.
 .account-menu__account,
 .account-menu__link--counted {
   position: relative;
 }
 
-// Over the row's right end, so Your Account's wash still runs edge to edge
-// beneath it; the row keeps its text clear of it.
 .account-menu__count {
   position: absolute;
   top: 50%;
@@ -211,7 +200,6 @@ $account-menu-avatar: 2rem;
   padding-inline-end: space(7);
 }
 
-// The red circle: a link of its own on the Your Account and Admin rows, inside the Support row's link.
 .account-menu__count-mark,
 .account-menu__badge {
   @include badge('attention');
@@ -224,7 +212,6 @@ $account-menu-avatar: 2rem;
   border-radius: radius('pill');
 }
 
-// Pushed to the row's right end, where the invitations circle sits.
 .account-menu__badge-tip {
   display: flex;
   margin-inline-start: auto;
@@ -276,9 +263,6 @@ $account-menu-avatar: 2rem;
   padding: space(2);
 }
 
-// Under the tablet width the bar has no room for the name and the site links (an
-// admin's bar ran past the window at 642px): the button is the avatar alone and
-// the links move into the panel. The theme disc stays in the bar at every width.
 @media (max-width: $shell-tablet-width) {
   .account-menu__button {
     justify-content: center;
@@ -286,7 +270,6 @@ $account-menu-avatar: 2rem;
     padding: 0;
   }
 
-  // Out of sight, still in the button's name.
   .account-menu__name {
     @include visually-hidden;
   }

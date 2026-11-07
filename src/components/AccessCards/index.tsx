@@ -9,14 +9,12 @@ import './index.scss';
 
 const MARK_WORD: Record<AccessMark, string> = { yes: 'Yes', part: 'In Part', no: 'No' };
 
-// The mark's drawing is CSS; the hidden text, where given, is what a screen reader gets in its place.
 const Mark = ({ mark, spoken }: { mark: AccessMark; spoken?: string }): ReactElement => (
   <span className={`access-cards__mark access-cards__mark--${mark}`}>
     {spoken && <span className="access-cards__spoken">{spoken}</span>}
   </span>
 );
 
-// Each card is named by its kind of data alone, not by the marks' hidden text on the same line.
 const AccessCards = ({ roles, rows }: AccessCardsProps): ReactElement => {
   const id = useId();
   return (

@@ -10,7 +10,6 @@ import {
   NEW_SPELL_PREFIX,
 } from '../../lib/coven-path';
 
-/** The address parameter that opens a dialog. */
 export const NEW = 'new';
 
 export {
@@ -21,45 +20,32 @@ export {
   NEW_SPELL_PREFIX,
 };
 
-/** The slug after a prefix, or `null` when the value does not start with it or names no slug. */
 function slugAfter(value: string, prefix: string): string | null {
   return value.startsWith(prefix) && value.length > prefix.length
     ? value.slice(prefix.length)
     : null;
 }
 
-/**
- * Which Add Ingredient dialog a value of `?new` asks for: `default` for the default coven's,
- * a slug for a named coven's, and `null` for none, as for a spell's value, the compendium's or
- * no `?new`. A bare `?new` is the default coven's only off the admin pages.
- */
 export function askedCoven(value: string | null, onAdmin = false): 'default' | string | null {
   if (value === null) return null;
   if (value === NEW_INGREDIENT || (value === '' && !onAdmin)) return 'default';
   return slugAfter(value, NEW_COVEN_INGREDIENT_PREFIX);
 }
 
-/**
- * Which coven's New Spell a value of `?new` asks for: `current` for the grimoire the page is
- * on (`?new=spell`), a slug for a named coven's (`?new=spell-<slug>`), and `null` for none.
- */
 export function askedSpell(value: string | null): 'current' | string | null {
   if (value === null) return null;
   if (value === NEW_SPELL) return 'current';
   return slugAfter(value, NEW_SPELL_PREFIX);
 }
 
-/** The value of `?new` that opens a coven's Add Ingredient. */
 export function covenIngredientValue(slug: string): string {
   return `${NEW_COVEN_INGREDIENT_PREFIX}${slug}`;
 }
 
-/** The value of `?new` that opens a coven's New Spell. */
 export function spellValue(slug: string): string {
   return `${NEW_SPELL_PREFIX}${slug}`;
 }
 
-/** Whether a value of `?new` opens New Spell over this coven's grimoire. */
 export function opensNewSpell(value: string | null, slug: string): boolean {
   const asked = askedSpell(value);
   return asked === 'current' || asked === slug;
@@ -78,7 +64,6 @@ export function newSpellElsewhere(value: string | null, pathname: string): strin
   return `${grimoire}?${NEW}=${spellValue(asked)}`;
 }
 
-/** The address with `?new=ingredient-coven-<slug>`, over its other parameters. */
 export function openHref(pathname: string, params: URLSearchParams, slug: string): string {
   const rest = new URLSearchParams(params);
   rest.delete(NEW);
@@ -86,7 +71,6 @@ export function openHref(pathname: string, params: URLSearchParams, slug: string
   return `${pathname}?${rest}`;
 }
 
-/** The address with `?new` dropped. */
 export function closedHref(pathname: string, params: URLSearchParams): string {
   const rest = new URLSearchParams(params);
   rest.delete(NEW);

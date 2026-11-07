@@ -4,7 +4,6 @@ import type { ReactElement } from 'react';
 // viewer's coven too, unlike the plus's menu, which lists only covens the viewer may write in
 // (claude-docs/components/compendium-cards.md, "The plus and the check").
 
-/** What the tip and the name add: ". In 2 covens: Testhollow, Testwren"; nothing where none holds it. */
 export const holdingText = (holding: readonly string[]): string =>
   holding.length === 0
     ? ''

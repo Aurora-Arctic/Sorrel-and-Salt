@@ -31,7 +31,6 @@ const RevokeCardBatchDocument = graphql(`
   }
 `);
 
-/** Mint Cards, the tab's action beside the heading: a link to `?mint`, which opens the form over the list. */
 export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
   const href = cardsHref(cursor, true, filter);
   const onClick = useOpenModalClick(href, { title: MINT_TITLE });

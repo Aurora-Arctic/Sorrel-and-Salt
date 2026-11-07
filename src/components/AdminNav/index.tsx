@@ -24,12 +24,10 @@ const items = (sections: readonly AdminSection[], needsStaff?: number): readonly
     })),
   );
 
-/** The `/curator` nav: every curation page, to a curator and a keeper alike. */
 export const CuratorNav = (): ReactElement => (
   <SectionNav label="Curator" sections={items(CURATOR_SECTIONS)} />
 );
 
-/** The `/keepers` nav. */
 const AdminNav = ({ managesPeople, needsStaff }: AdminNavProps): ReactElement => (
   <SectionNav label="Keepers" sections={items(adminSections(managesPeople), needsStaff)} />
 );

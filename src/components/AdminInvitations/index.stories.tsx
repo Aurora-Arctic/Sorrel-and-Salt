@@ -12,22 +12,14 @@ import AdminInvitations, { InviteAdmin } from '.';
 import { invitationsHref } from './href';
 import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/AdminInvitations.
-// Invite and Revoke reach the network only when sent; the workshop's fake API
-// (.storybook/mock-api.ts) answers them, refusing where a state shows that.
 const meta = {
   title: 'Admin / Invitations',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// The filter a page shows: part of an address and Expires in 24 Hrs, which
-// leaves the one invitation lapsing tomorrow morning.
 const FILTER: AdminInvitationsFilter = { email: 'brook', expiringSoon: true };
 
-// The admin layout's frame and the People page with its Invitations tab
-// open, as /keepers/invitations draws them: New Invitation beside the heading as
-// the tab's action, the filter row and the list beneath.
 const Frame = ({
   invitations,
   filter,
@@ -52,8 +44,6 @@ const Frame = ({
   </AdminTabbedFrame>
 );
 
-// A middle page of a list longer than one: the page's 25, newest first, and
-// the pager beneath them, both ends live and where the page stands between.
 const PAGE_TWO: AdminInvitationEntry[] = Array.from({ length: 25 }, (_, index) => ({
   id: `p${index}`,
   email: `fixture.invitee${index + 26}@example.test`,
@@ -75,18 +65,12 @@ const defaultNode = <Frame invitations={INVITATIONS} />;
 
 const emptyNode = <Frame invitations={[]} />;
 
-// Filtered by part of an address and Expires in 24 Hrs: the fields hold the
-// filter shown, Clear is offered, and one invitation is left.
 const filteredNode = <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />;
 
-// A filter that leaves none: the empty state names it.
 const noMatchesNode = <Frame invitations={[]} filter={FILTER} />;
 
 const middlePageNode = <PageTwo />;
 
-// New Invitation pressed: the form `?invite` opens over the list. Closing it
-// navigates to the list's address without `?invite`, which the workshop's
-// router reports (.storybook/navigation.ts). Open Again brings the form back.
 export const Inviting: Story = {
   render: () => {
     const [inviting, setInviting] = useState(true);
@@ -107,11 +91,8 @@ export const Inviting: Story = {
   },
 };
 
-// Paused, to a keeper who is not the primary one: New Invitation and every
-// Revoke in view but locked, the pause as the reason in a tip.
 const pausedNode = <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />;
 
-// The last page: Previous is live, Next is not.
 const lastPageNode = (
   <Frame
     invitations={PAGE_TWO.slice(0, 7)}
@@ -120,7 +101,6 @@ const lastPageNode = (
   />
 );
 
-// Revoke pressed, then confirmed, and refused.
 const REVOKE_REFUSED = [
   answerMutation(RevokeAdminInvitationDocument, () =>
     refusal({ message: 'That invitation was already accepted.', code: 'CONFLICT' }),
@@ -136,7 +116,6 @@ const RevokeRefusedView = (): ReactElement => {
 };
 const revokeRefusedNode = <RevokeRefusedView />;
 
-// An address typed and sent, and refused: the form's alert shows.
 const SEND_REFUSED = [
   answerMutation(CreateAdminInvitationDocument, () =>
     refusal({ message: 'You cannot invite administrators right now.', code: 'FORBIDDEN' }),

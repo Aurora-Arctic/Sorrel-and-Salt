@@ -44,8 +44,6 @@
   }
 }
 
-// A refused open's count and dates under its reason, muted at caption size; each date stays on one line, the
-// reason above may wrap.
 .admin-cards__refusal-when {
   display: block;
   color: $text-muted;
@@ -110,8 +108,6 @@
     align-items: center;
   }
 
-  // The shared switch centres its track under its label; here the track starts at the label's left edge, as the
-  // date field's control does under its label.
   > .switch {
     align-items: flex-start;
   }
@@ -145,8 +141,6 @@
   position: relative;
 }
 
-// Beside the two range fields on a wide drawer the status keeps the width its longest option
-// needs, and the ranges share the rest; stacked, it is as wide as the drawer.
 .admin-cards__status {
   @media (min-width: $shell-tablet-width) {
     flex: none;
@@ -170,6 +164,5 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
-  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
   line-clamp: 2;
 }

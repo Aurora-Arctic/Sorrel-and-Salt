@@ -28,7 +28,6 @@ import './index.scss';
 // (address, site role, reason, expiry, Revoke), the pager, and the invite form `?invite` opens. While
 // keeper changes are paused both are locked for any keeper but the primary (claude-docs/components/admin-invitations.md).
 
-/** No filter: the whole pending list. */
 const NO_FILTER: Filter = { email: '', expiringSoon: false };
 
 /**
@@ -118,7 +117,6 @@ const AdminInvitations = ({
   inviting = false,
 }: AdminInvitationsProps): ReactElement => {
   const [sent, setSent] = useState<string>();
-  // A form opened again clears the last notice, as a fresh form starts empty.
   const [wasInviting, setWasInviting] = useState(inviting);
   if (inviting !== wasInviting) {
     setWasInviting(inviting);

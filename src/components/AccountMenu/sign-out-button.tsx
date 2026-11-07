@@ -22,12 +22,9 @@ const SignOutButton = (): ReactElement => {
     if (pending) return;
     setPending(true);
     report(undefined);
-    // A refusal answers `error`; a dropped connection throws. Either says so.
     const { error } = await signOut().catch((thrown: unknown) => ({ error: thrown }));
     if (error) {
       setPending(false);
-      // The shared fallback sentence, though this call is Better Auth's and
-      // not GraphQL's: it has no more to say about why than a lost request.
       report(GENERIC_FAILURE);
       return;
     }
