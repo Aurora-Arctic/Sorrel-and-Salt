@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import AccessCards from '@/components/AccessCards';
 import type { AccessRole, AccessRow } from '@/components/AccessCards/types';
 
-// The privacy policy's "Who Can See What" cards (claude-docs/components/access-cards.md): one closed
-// card per kind of data, six marks on its summary line, and every role's full wording once opened.
+// claude-docs/components/access-cards.md
 
 const ROLES: AccessRole[] = [
   { name: 'Fixture Owner', short: 'Own' },

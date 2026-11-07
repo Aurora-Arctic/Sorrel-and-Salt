@@ -8,14 +8,11 @@ the page below changes:
 - the coven's `[slug]` layout, `region="coven"` with `className="coven-layout"`;
 - the `/curator` and `/keepers` layouts, `region="admin"` with `className="page-column"`.
 
-## Props
-
-`SectionBodyProps` (`types.ts`). `region` is the navigations this body answers.
+`region` is the navigations this body answers.
 
 ## Contracts
 
 - **When the wait ends, the skeleton fades out over the arrived page** rather than vanishing: it is kept for 200ms as an `aria-hidden`, absolutely placed overlay on the section frame (which takes the `skeleton-fade-host` class), then unmounts. See [`SkeletonFade`](skeleton.md#skeleton-fade).
-
 - **At rest, or while a navigation aimed at another region or at no region
   is on its way, it renders the children as they were.**
 - **While a navigation aimed at its own region is on its way, the page is
@@ -25,22 +22,20 @@ the page below changes:
   section frame, so its flex column and gap are untouched, and the skeleton is
   laid over it in a copy of that frame, pinned under the bar
   ([`SkeletonFade`](skeleton.md#skeleton-fade), "The page is held, not swapped"). Nobody can act on the wrong coven's data in the wait. The
-  shape is the destination's. In the coven it is the section's (compact `cards` for
+  shape is the destination's: in the coven the section's (compact `cards` for
   Ingredients and the grimoire, `table` for the people pages, `page` for the home), worked out
-  by `WorkspaceSwitcher` or `CovenNav` when the navigation starts. In admin it
-  is `adminTarget`'s (`AdminNav`).
-- **The context row is not inside it.** A move between admin pages, or
-  between a coven's sections, leaves the row and its nav on screen. Only a
-  `main` target, aimed at a different part of the site, replaces the row too
-  (`MainBody`). So a link may name `admin` only from a page under the admin
-  layout, and `coven` only from one under the coven layout: elsewhere no body
-  answers it and no skeleton shows.
+  by `WorkspaceSwitcher` or `CovenNav` when the navigation starts; in admin
+  `adminTarget`'s (`AdminNav`).
+- **The context row is not inside it.** Only a `main` target, aimed at a
+  different part of the site, replaces the row too (`MainBody`). So a link may
+  name `admin` only from a page under the admin layout, and `coven` only from
+  one under the coven layout: elsewhere no body answers it and no skeleton shows.
 - **The skeleton sits inside a `<main>`.** The pages own their landmark, so
   without one here the page would have none for the length of the wait, and
   axe's one-main rule would fail.
 - **It holds a visually hidden `<h1>Loading</h1>`.** The skeleton replaced the
-  page's own `h1`, and axe's page-has-heading-one rule failed during every
-  wait. A screen reader hears both this heading and the skeleton's `<output>` "Loading" status.
+  page's own `h1`, and axe's page-has-heading-one rule fails during every
+  wait without it.
 - A `loading.tsx` would be wrong here: a route boundary turns the guards'
   404, 403 and 308 responses into 200s, so the wait is read from the
   navigation provider's state instead (`navigation-bar.md`).
@@ -51,7 +46,3 @@ The `[slug]` layout remounts when the coven changes, taking the switcher with
 it, so the focus it held would drop to the page. `WorkspaceSwitcher` keeps a
 module-level flag, set on a pick of another coven and read once by the next
 switcher to mount, which focuses its box. See `workspace-switcher.md`.
-
-## Stories
-
-`src/components/SectionBody/index.stories.tsx` ("Shell / Section Body").
