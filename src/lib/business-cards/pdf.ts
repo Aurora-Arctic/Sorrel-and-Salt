@@ -36,7 +36,6 @@ function label(name: string, face: 'fronts' | 'backs'): TextItem {
   };
 }
 
-/** Builds the print PDF: a page of ten fronts, then, when `backs` is set, a page of their backs. */
 export async function renderBusinessCards(
   { name, email, phone, backs }: BusinessCardsInput,
   assets: CardAssets,
