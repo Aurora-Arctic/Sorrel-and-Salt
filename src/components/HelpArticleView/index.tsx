@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
+import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
 import { BackChevron } from '../IngredientEntry/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
@@ -11,8 +12,8 @@ import './index.scss';
 /** A body with this many sections gains a contents menu; fewer are in view without one. */
 const MENU_FROM = 3;
 
-// One help article: its body as sanitised Markdown, the pages beneath it and the search box. A widget directive in
-// the body stays as text here; the widget's own task draws it (claude-docs/components/help-pages.md).
+// One help article: its body as sanitised Markdown with its widgets drawn, the pages beneath it and the search box
+// (claude-docs/components/help-pages.md).
 const HelpArticleView = ({
   title,
   body,
@@ -21,7 +22,14 @@ const HelpArticleView = ({
   heading = 'Help',
   terms = [],
 }: HelpArticleViewProps): ReactElement => {
-  const { content, entries } = renderMarkdown(body, {}, [], true, helpTerms(terms));
+  const { content, entries } = renderMarkdown(
+    body,
+    {},
+    [],
+    true,
+    helpTerms(terms),
+    HELP_WIDGET_ELEMENTS,
+  );
   // The entries are read before the headings move down, so a top-level entry or a group is one `##` of the body.
   const sections =
     entries.filter((entry) => entry.group === undefined).length +

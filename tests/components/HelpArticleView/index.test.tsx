@@ -183,4 +183,11 @@ describe('HelpArticleView glossary marks', () => {
     expect(screen.queryByRole('link', { name: 'Steward' })).not.toBeInTheDocument();
     expect(screen.getByText('Ask a Steward.')).toBeInTheDocument();
   });
+
+  it('draws a widget its body places on a paragraph of its own', () => {
+    view('Who may do what.\n\n::widget[role-permission-table]', []);
+
+    expect(screen.getByRole('table', { name: 'What Each Role May Do' })).toBeInTheDocument();
+    expect(screen.queryByText('::widget[role-permission-table]')).toBeNull();
+  });
 });

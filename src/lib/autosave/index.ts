@@ -1,4 +1,4 @@
-export { useAutosave } from './use-autosave';
+export { RETRY_DELAYS_MS, useAutosave } from './use-autosave';
 export { clearMirror, mirrorKey, readMirror, writeMirror } from './mirror';
 export type {
   AutosaveOptions,
