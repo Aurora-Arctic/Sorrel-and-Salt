@@ -9,11 +9,6 @@ import type { ModalHeading, RouteModalOpener, RouteModalProviderProps } from './
 // skeleton, and the navigation runs in this transition so the skeleton holds until the page
 // renders (claude-docs/components/modal.md, "Opening at once").
 
-/**
- * The modal on its way, shared by the links that open it and the page's
- * `RouteModal` that shows it. Exported for the workshop, whose stub router
- * goes nowhere, to draw a modal on its way.
- */
 export const RouteModalContext = createContext<RouteModalOpener | null>(null);
 
 /**
@@ -25,7 +20,6 @@ export const RouteModalProvider = ({ children }: RouteModalProviderProps): React
   const outer = useContext(RouteModalContext);
   const { pending, navigate } = usePendingNavigation();
   const [opening, setOpening] = useState<{ heading: ModalHeading; place?: string }>();
-  // Kept past the close, which reads it as the modal leaves the page.
   const [opened, setOpened] = useState<Route>();
   const value = outer ?? {
     loading: pending ? opening?.heading : undefined,
@@ -41,16 +35,10 @@ export const RouteModalProvider = ({ children }: RouteModalProviderProps): React
   return <RouteModalContext.Provider value={value}>{children}</RouteModalContext.Provider>;
 };
 
-/** The opening, or undefined outside a provider, where a link stays a plain link. */
 export function useRouteModalOpener(): RouteModalOpener | undefined {
   return useContext(RouteModalContext) ?? undefined;
 }
 
-/**
- * A link's click that opens its route modal at once, in `place` where the page has more than one,
- * under a provider: a plain press of the main button. A press with a modifier or another button,
- * and every press outside a provider or before the page's script has loaded, is left to the link.
- */
 export function useOpenModalClick(
   href: Route,
   heading: ModalHeading,

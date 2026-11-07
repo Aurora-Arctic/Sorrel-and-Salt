@@ -47,7 +47,6 @@ const PasswordField = ({
           className="input"
           type={shown ? 'text' : 'password'}
           autoComplete={purpose === 'new' ? 'new-password' : 'current-password'}
-          // Shown text is still a password: no spelling or capital fix-ups.
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}

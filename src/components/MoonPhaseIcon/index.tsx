@@ -7,8 +7,6 @@ import './index.scss';
 // from assistive technology (claude-docs/components/spell-builder.md, "The fields").
 
 const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement | null => {
-  // An id per icon, so two on one page clip each to its own lit part; a
-  // half's layers add their index to it.
   const clipId = useId();
   // Own-property checks rather than an index: the field is free text, and a
   // phase with no drawing draws nothing.
@@ -32,8 +30,6 @@ const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement |
       {layers.map(([shape, opacity], i) => {
         const lit = LIT_PARTS[shape];
         const id = `${clipId}-${i}`;
-        // A full-strength layer leaves fill-opacity unset, as a single phase
-        // draws it.
         const fillOpacity = opacity === 1 ? undefined : opacity;
         return (
           <g key={shape}>

@@ -15,8 +15,6 @@ $modal-padding: space(5) * 2;
 $close-inset: space(5);
 $close-reserve: calc(#{$close-target} + #{space(3)});
 
-// The eyebrow's own line: its size, set in the typography layer, at the 1.65 a `p` is given there.
-// A head with no top line has the eyebrow for its first line, and the × is brought level with it.
 $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 
 // Only what the native element needs beyond the `.modal` primitive: border and padding gone, a
@@ -72,7 +70,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding: 0 space(5) space(5);
   overflow: auto;
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the
-  // dialog moves the page behind it, not yet Baseline
   overscroll-behavior: contain;
   isolation: isolate;
 
@@ -106,7 +103,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     color $theme-transition-duration $theme-transition-easing;
 
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
-  // fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
   }
@@ -116,7 +112,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     transition: opacity $modal-fade;
 
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
-    // fading in, widely available 2027-02-06
     @starting-style {
       opacity: 0;
     }
@@ -127,7 +122,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   // only the box fades in. It still fades out at its own close.
   &[data-handover]::backdrop {
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
-    // fading in, widely available 2027-02-06
     @starting-style {
       opacity: 1;
     }
@@ -253,9 +247,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   margin: 0;
 }
 
-// Controls beneath the × (`actionsUnderClose`): the naming grid runs to the dialog's edge, the
-// controls level with the title's first line, while the head's other lines keep clear of the ×. The
-// head stands a step lower, for room between the × and the control beneath it.
 .modal-dialog__heading--under-close {
   padding-block-start: space(3);
   padding-inline-end: 0;
@@ -270,7 +261,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// Gone while nothing is in it (no Edit, no plus).
 .modal-dialog__formal-actions {
   display: flex;
   align-items: center;
@@ -284,7 +274,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// The badges under the heading (`under`): a row, wrapping, hidden while it holds none.
 .modal-dialog__under {
   display: flex;
   flex-wrap: wrap;
@@ -296,8 +285,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// A second identifier after the name, an ingredient's formal name or a deity's tradition: quieter
-// than the name, the body's face at its size and weight in the muted ink.
 .modal-dialog__qualifier {
   font-family: $font-body;
   font-size: type-size('body');
@@ -336,9 +323,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// A toolbar row under the heading at every width, for the controls the contents put in the header:
-// the first control at its start, a form's Undo and Redo pair at its end. Stretched, so every
-// button is as tall as the tallest. Hidden while nothing is in it.
 .modal-dialog__header-slot {
   display: flex;
   grid-column: 1 / -1;
@@ -409,9 +393,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// A question a form asks over itself, ConfirmOverlay: a scrim over the body in view, the form
-// dimmed beneath it, the question on a raised card centred in it wherever the body is scrolled.
-// Both fade in over the short motion, and appear at once under reduced motion.
 .confirm-overlay {
   position: relative;
   z-index: 1;
@@ -424,7 +405,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   transition: opacity $motion-short ease-out;
 
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without
-  // fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
   }
@@ -474,8 +454,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   @include focus-ring;
 }
 
-// Its row stacks, full width and in order, at the width a form's own does: under 28rem of its own
-// width, the body's padding outside it.
 @container modal-main (max-width: #{$narrow-column + $modal-padding}) {
   .confirm-overlay__card .modal__actions {
     flex-direction: column;
@@ -483,8 +461,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   }
 }
 
-// Outside a modal there is no layer: the card stands in the form's flow, as
-// far from the fields as a form's buttons are, with no scrim.
 .confirm-overlay--in-place {
   position: static;
   display: block;

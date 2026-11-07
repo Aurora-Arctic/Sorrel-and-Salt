@@ -5,7 +5,6 @@ import { createContext, useContext } from 'react';
 // (claude-docs/components/modal.md, "A control in the header"). Null outside a modal.
 export const HeaderSlotContext = createContext<HTMLElement | null>(null);
 
-/** The element in the modal's header, or null where there is none. */
 export const useModalHeaderSlot = (): HTMLElement | null => useContext(HeaderSlotContext);
 
 // A line under the title, above that row, where the contents may put a sentence about the whole
@@ -13,5 +12,4 @@ export const useModalHeaderSlot = (): HTMLElement | null => useContext(HeaderSlo
 // a modal, as the row's is.
 export const HeaderNoteContext = createContext<HTMLElement | null>(null);
 
-/** The line under the modal's title, or null where there is none. */
 export const useModalHeaderNote = (): HTMLElement | null => useContext(HeaderNoteContext);

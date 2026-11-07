@@ -11,14 +11,11 @@
   }
 }
 
-// The deduction preview: one `JarLine` per step, as the recipe page's In the Cupboard panel draws it.
 .working-deductions {
   @include stack(3);
 
-  // No ✦ beside the jars: the jar is each line's mark.
   @include list-reset;
 
-  // A long name wraps here: the preview has the room, and a cut name hides which step it is.
   .jar-line__name {
     overflow: visible;
     overflow-wrap: anywhere;

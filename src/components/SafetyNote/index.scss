@@ -1,16 +1,11 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The caution as ordinary text, set apart by a bar of the safety fill and a heading in the same fill. One red with the
-// Toxic badge, not `$secondary`, which reads lighter on dark. The bar is `$safety-bar-width`, the heavy rule.
 .safety-note {
   padding: space(1) 0 space(1) space(4);
   border-inline-start: $safety-bar-width solid badge-token('safety', 'fill');
 }
 
-// The h4 size at any level, with a hairline stroke (`$text-stroke-hairline`) faking a weight above
-// the face's 700. The fill is 4.28:1 at worst, clearing 3:1 only as large text (24px at 700), so
-// keep that size and weight.
 .safety-note__heading {
   margin: 0 0 space(2);
   font-size: heading-size(4);
@@ -18,7 +13,6 @@
   color: badge-token('safety', 'fill');
 }
 
-// Notes are typed with line breaks in a textarea; keep them.
 .safety-note__text {
   margin: 0;
   max-width: $measure;

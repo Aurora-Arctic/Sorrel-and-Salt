@@ -4,7 +4,6 @@
 // A vertical menu of jump links. The current entry's bar is on the edge facing away from the page on a phone,
 // toward it on a wide screen (claude-docs/components/page-nav.md).
 .page-nav {
-  // The phone's bar rule's accent, softened toward the card.
   --page-nav-bar: #{color-mix(in srgb, $accent 60%, $surface-card)};
 
   ul {
@@ -14,14 +13,11 @@
   a {
     display: flex;
     align-items: center;
-    // Tighter than a control: a column of short entries, read at a glance.
     padding: space(1) space(4);
     border-radius: 0;
     color: $text-muted;
     text-align: start;
     text-decoration: none;
-    // An entry too long for the column breaks into lines of even length, as the headings do, so no
-    // line is left holding one word; a single-line entry is untouched.
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: the entry wraps in the ordinary way, uneven lines, where unsupported
     text-wrap: balance;
     box-shadow: inset $rule-heavy 0 0 0 transparent;
@@ -71,8 +67,6 @@
     font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    // The body ink, not the eyebrow's muted one: the entries under it are muted, and the label
-    // stands apart by being darker.
     color: $text-primary;
   }
 
@@ -82,13 +76,6 @@
     margin-block-start: space(1);
   }
 
-  // A group's entries are not stepped in from its label at any width: the label alone sets
-  // them apart. A step in read as too much room to their left on a phone, and on a wide
-  // screen, where the text is right-aligned, pushed them off the column's edge.
-
-  // Beside a group, a top-level entry is the page's own section and reads a
-  // step above body copy, as the group's entries do not: a size between
-  // body and the smallest heading, which the scale has no step for.
   &--grouped > ul > li > a {
     font-size: $nav-link-size;
   }
@@ -117,8 +104,6 @@
     }
   }
 
-  // On a phone a collapsible menu folds behind its label: a bordered card, as an access card is, whose
-  // label row is the toggle. From a tablet up the card's box is dropped (below).
   .page-nav__fold {
     border: 1px solid $hairline;
     border-radius: radius('surface');
@@ -229,7 +214,6 @@
         box-shadow: inset (-$rule-heavy) 0 0 0 var(--page-nav-bar);
       }
 
-      // The bar sits on the end edge here.
       @include forced-colors {
         border-inline-start: 0;
         border-inline-end: $rule-heavy solid Canvas;
@@ -251,8 +235,6 @@
   }
 }
 
-// An entry for a section that stands under the text on a narrow window and beside it on a wide one
-// has no place in the menu once it is beside it.
 @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
   .page-nav .page-nav__narrow {
     display: none;

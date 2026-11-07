@@ -29,10 +29,6 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
   manual: 'Manual fix',
 };
 
-/**
- * The empty ledger, naming the filters in use as every admin list does: "No privilege changes
- * match “ada” and the privilege Keeper. Change or clear the filter to see more."
- */
 function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
   const filters = [
     query && `“${query}”`,
@@ -41,13 +37,11 @@ function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
   return noMatchText('privilege changes', filters, emptyList('privilege changes'));
 }
 
-/** A named user, linked to their `/keepers/users` row where the list has one. */
 const Person = ({ person }: LedgerPersonProps): ReactElement => {
   if (!person) return <em>Deleted account</em>;
   return person.href ? <a href={person.href}>{person.name}</a> : <span>{person.name}</span>;
 };
 
-/** The columns, each heading the label its cell carries as a card at phone width. */
 const COLUMNS: readonly StackColumn<PrivilegeLedgerEntry>[] = [
   {
     heading: 'When',

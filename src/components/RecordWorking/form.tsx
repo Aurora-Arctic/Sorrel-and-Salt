@@ -59,7 +59,6 @@ const UpdateWorkingDocument = graphql(`
   }
 `);
 
-// The participant box's search: the coven's members whose name holds the typed text.
 const RecordWorkingMembersDocument = graphql(`
   query RecordWorkingMembers($workspaceId: ID!, $query: String, $first: Int) {
     workspace(id: $workspaceId) {
@@ -122,7 +121,6 @@ export default function RecordWorkingForm({
   const [failure, setFailure] = useState<Failure>({});
   const [completing, setCompleting] = useState<string>();
   const [deleting, setDeleting] = useState(false);
-  // Once the delete is sent the form has nothing left to save.
   const [removed, setRemoved] = useState(false);
 
   const complete = working?.status === 'complete';
@@ -136,7 +134,6 @@ export default function RecordWorkingForm({
         p.userId !== initial.participants[i]?.userId || p.name !== initial.participants[i]?.name,
     );
   const valid = DAY.test(workedOn);
-  // A draft may be dated ahead; it is completed only once its day has come.
   const waitFor = completeReason(workedOn);
   const dirty = completing === undefined && changed && !removed;
   const discard = useDiscardGuard(dirty);
@@ -176,7 +173,6 @@ export default function RecordWorkingForm({
     active,
     memberOptions,
   );
-  // The members already taking part are left out of the page the server answered.
   const suggested = {
     ...found,
     options:

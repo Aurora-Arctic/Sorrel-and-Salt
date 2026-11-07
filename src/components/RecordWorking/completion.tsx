@@ -67,10 +67,8 @@ type Skipped = Plan['warnings'][number];
 type PreviewRow = { step: WorkingStep; taken: Taken } | { step: WorkingStep; skipped: Skipped };
 
 const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
-// An empty jar has none, the way the recipe page's In the Cupboard panel says it.
 const holds = (quantity: number, unit: string) => (quantity > 0 ? amount(quantity, unit) : 'none');
 
-/** One line of the preview: the step's jar as the recipe page's In the Cupboard panel draws it, then what the step takes from it. */
 function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {
   const { step } = row;
   const taken = 'taken' in row ? row.taken : null;
@@ -79,7 +77,6 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
   const unstocked = skipped?.reason === 'UNSTOCKED';
   const short = taken !== null && taken.shortfall > 0;
   const held = taken ? { quantity: taken.before, threshold: taken.lowStockThreshold } : null;
-  // Short is Low whatever the Low mark says: the jar is emptied.
   const state = short ? 'low' : held ? stockState(held.quantity, held.threshold) : 'ok';
   const tone = oneOff ? 'ok' : unstocked ? 'empty' : state;
   const form = step.form ?? '';
@@ -95,7 +92,6 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
         step.stock
           ? {
               ...step.stock,
-              // The same dialog and handler as a jar on the recipe page's In the Cupboard panel.
               ariaLabel: ['Edit Stock', step.stock.ingredientName, form && formLabel(form)]
                 .filter(Boolean)
                 .join(', '),

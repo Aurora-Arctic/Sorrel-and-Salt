@@ -1,5 +1,4 @@
 export type PageNavEntry = {
-  /** A fragment link to a section's id, `#account-name`. */
   href: `#${string}`;
   label: string;
   /**
@@ -8,10 +7,6 @@ export type PageNavEntry = {
    * link. Left out, the entry stands at the top level.
    */
   group?: string;
-  /**
-   * Set apart from the entries above it with a short rule. On a top-level entry it also takes a group's entry size; a
-   * group takes it from its first entry.
-   */
   apart?: boolean;
   /**
    * Drawn only below a tablet's width, where the section it names stands under the text and
@@ -21,7 +16,6 @@ export type PageNavEntry = {
 };
 
 export type PageNavProps = {
-  /** The landmark's accessible name, "On This Page". */
   label: string;
   entries: PageNavEntry[];
   /**
@@ -32,7 +26,6 @@ export type PageNavProps = {
   collapsible?: boolean;
 };
 
-/** What the menu draws: a top-level entry, or a run of consecutive entries sharing a group. */
 export type PageNavItem =
   | { kind: 'entry'; entry: PageNavEntry }
   | { kind: 'group'; label: string; entries: PageNavEntry[] };

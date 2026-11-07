@@ -51,7 +51,6 @@ export default function PageNav({ label, entries, collapsible }: PageNavProps): 
       .filter((el): el is HTMLElement => el !== null);
     if (targets.length === 0) return;
 
-    // Sections currently inside the band; the topmost one in page order wins.
     const visible = new Set<string>();
     const observer = new IntersectionObserver(
       (changes) => {
@@ -119,8 +118,6 @@ export default function PageNav({ label, entries, collapsible }: PageNavProps): 
     </li>
   );
 
-  // The entries stay one flat list for the observer above; only the drawing
-  // nests a group, its label naming its list.
   const list = (
     <ul>
       {itemsOf(entries).map((item, at) =>
@@ -132,7 +129,6 @@ export default function PageNav({ label, entries, collapsible }: PageNavProps): 
             className={
               [
                 item.entries[0]?.apart && 'page-nav__apart',
-                // A group of narrow-only entries is hidden whole, label included.
                 item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
               ]
                 .filter(Boolean)

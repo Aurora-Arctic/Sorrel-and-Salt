@@ -18,8 +18,6 @@ import EditWorkingAction from '../SpellWorkings/edit-working';
 import RecordWorkingButton, { CompleteWorkingAction } from '.';
 import type { EditableWorking, WorkingStep } from './types';
 
-// Render-only; behaviour is asserted in tests/components/RecordWorking. Saving, deleting, the
-// participant search and the preview are answered by the workshop's fake API (.storybook/mock-api.ts).
 const meta = { title: 'Grimoire / Record Working' } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;
@@ -35,7 +33,6 @@ const STEPS: readonly WorkingStep[] = [
   { id: 's1', name: 'Testwort (Dried Leaf)', form: 'Dried Leaf', seed: 'ingredient-s1' },
 ];
 
-/** The spell's steps for Shortfall: two jars, a step whose units differ from its jar's, and a one-off. */
 const SHORT_STEPS: readonly WorkingStep[] = [
   ...STEPS,
   { id: 's2', name: 'Mockleaf (Oil)', form: 'Oil', seed: 'ingredient-s2' },
@@ -54,7 +51,6 @@ const recorded = answerMutation(RecordWorkingDocument, ({ variables: { input } }
   },
 }));
 
-// The participant box's search: the members whose name holds the typed text, as the server narrows them.
 const searched = answerQuery(RecordWorkingMembersDocument, ({ variables: { query } }) => ({
   workspace: {
     id: WORKSPACE,
@@ -87,12 +83,9 @@ const DRAFT: EditableWorking = {
     { userId: null, name: 'A Visiting Friend' },
   ],
 };
-// Complete and shared with the coven, so its visibility is shut: it only widens.
 const COMPLETE: EditableWorking = { ...DRAFT, status: 'complete', visibility: 'workspace' };
 
-// Module-level lists, since `useMockHandlers` needs each to keep its identity.
 const HANDLERS = {
-  // Ten grams in the jar, two taken, against a Low mark of three: nothing short or low.
   plain: [
     recorded,
     searched,
@@ -100,8 +93,6 @@ const HANDLERS = {
       workingDeductionPreview: { deductions: [jar('s1', 10, 2, 3)], warnings: [] },
     })),
   ],
-  // Testwort short by five; Mockleaf left below its Low mark; Stubroot skipped, since its step
-  // and its jar measure in different units; the candle a one-off.
   shortfall: [
     recorded,
     searched,
@@ -115,7 +106,6 @@ const HANDLERS = {
       },
     })),
   ],
-  // An edit's save and Delete Working's write, should either be pressed.
   edit: [
     searched,
     answerOperations(({ operationName, variables }) => {
@@ -154,7 +144,6 @@ const Driven = ({
   );
 };
 
-/** A working's pencil, as its row on the recipe page draws it, pressed open. */
 const Edit = ({
   working,
   canDelete = false,
@@ -180,14 +169,12 @@ const Edit = ({
   );
 };
 
-/** A week from today, whenever the workshop is opened. */
 const weekAhead = (): string => {
   const day = new Date(`${today()}T00:00:00Z`);
   day.setUTCDate(day.getUTCDate() + 7);
   return isoDay(day);
 };
 
-/** A draft dated ahead: its row's Complete is off, and a press opens the tip giving the day. */
 const DatedAhead = (): ReactElement => {
   useSteps([() => press('Complete Working')], 120);
   return (
@@ -202,7 +189,6 @@ const DatedAhead = (): ReactElement => {
   );
 };
 
-/** A draft dated today, its row's flask pressed: the dialog titled Complete Working, over the preview. */
 const CompleteFromRow = (): ReactElement => {
   useMockHandlers(HANDLERS.plain);
   useSteps([() => press('Complete Working')], 120);
@@ -228,13 +214,9 @@ const STATES: Record<string, ReactNode> = {
       steps={STEPS}
     />
   ),
-  // The recorder already named as the first participant.
   Open: <Driven />,
   'Private Spell': <Driven visibility="private" />,
-  // Complete pressed: the draft saved, then what it takes from the jars, with Mark Complete and
-  // Keep as Draft.
   'Deduction Preview': <Driven steps={[() => press('Complete')]} />,
-  // A short jar reads "needs · have · short by"; the skipped step and the one-off take nothing.
   Shortfall: (
     <Driven
       spellSteps={SHORT_STEPS}
@@ -242,10 +224,8 @@ const STATES: Record<string, ReactNode> = {
       steps={[() => press('Complete')]}
     />
   ),
-  // A draft's edit, with a participant typed rather than chosen from the coven.
   'Edit Working': <Edit working={DRAFT} />,
   'Edit Complete Working': <Edit working={COMPLETE} />,
-  // The bin in the edit's footer, pressed: Delete's question over the form.
   'Delete Working': (
     <Edit
       working={DRAFT}
@@ -257,8 +237,6 @@ const STATES: Record<string, ReactNode> = {
   'Dated Ahead': <DatedAhead />,
 };
 
-// One story with a control to choose the state: the open ones are dialogs, too big to sit beside
-// the others (claude-docs/workshop.md, rule 5).
 export const States: Story = {
   args: { state: 'Closed' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },

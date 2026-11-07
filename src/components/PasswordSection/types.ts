@@ -7,6 +7,5 @@ export interface PasswordSectionProps {
 }
 
 export interface TwoFactorSettingsProps {
-  /** Whether two-factor is on for the account as the page loads. */
   enabled: boolean;
 }

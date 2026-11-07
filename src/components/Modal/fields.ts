@@ -15,6 +15,5 @@ const isShown = (field: HTMLElement): boolean =>
   field.closest('[data-focus-skip]') === null &&
   (typeof field.checkVisibility !== 'function' || field.checkVisibility());
 
-/** The first field shown in the scope, or null when it holds none. */
 export const firstShownField = (scope: ParentNode): HTMLElement | null =>
   [...scope.querySelectorAll<HTMLElement>(FIRST_FIELD)].find(isShown) ?? null;

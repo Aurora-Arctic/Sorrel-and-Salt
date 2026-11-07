@@ -4,8 +4,6 @@ import { MOON_PHASES } from '../SpellBuilder/constants';
 import MoonPhaseIcon from '.';
 import './index.stories.scss';
 
-// Render-only, for reviewing the drawings: each phase in the list's order with its
-// name beneath, the maria on its lit part. The toolbar's theme control shows each theme.
 const meta = {
   title: 'Grimoire / Moon Phase Icon',
 } satisfies Meta;
@@ -28,5 +26,4 @@ const Row = (): ReactElement => (
   </ul>
 );
 
-// Every listed phase in a row, New Moon to Waning Moon.
 export const Default: Story = { render: () => <Row /> };

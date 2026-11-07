@@ -30,13 +30,8 @@ import './index.scss';
  */
 const FADE_LIMIT_MS = 400;
 
-/**
- * How soon after one modal goes, open and not faded out, another that opens takes its place: a link
- * in the first one's foot opening the second unmounts one and mounts the other in one commit.
- */
 const HANDOVER_MS = 100;
 
-/** When a modal last went while still open, which the next one to open reads. */
 let handedAt = Number.NEGATIVE_INFINITY;
 
 /** Motion turned down, or no way to ask, so a close is not held for a fade. */
@@ -44,7 +39,6 @@ const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** Whether the point is outside the dialog's box: on the backdrop, which is the dialog's own to an event. */
 function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent): boolean {
   const box = dialog.getBoundingClientRect();
   return clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom;
@@ -110,7 +104,6 @@ const Modal = ({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
     let cancelled = false;
     let release: (() => void) | undefined;
     if (!dialog.open) {
@@ -119,10 +112,7 @@ const Modal = ({
         const active = document.activeElement;
         opener.current = active === document.body ? null : active;
       }
-      // Measured before showModal(), while the scrollbar it is to replace is still there.
       release = holdPage();
-      // One modal in place of another keeps the page dimmed: the backdrop shows at once and only
-      // the box fades in (index.scss).
       if (performance.now() - handedAt < HANDOVER_MS) dialog.dataset.handover = '';
       dialog.showModal();
       // The focus goes to the body's first field, or the dialog itself with none, not to Close.
@@ -160,9 +150,6 @@ const Modal = ({
     wasLoading.current = loading;
   }, [loading, focusTitle]);
 
-  // It fades out before the owner is asked to close it: open, fading, then closed, and closed asks
-  // the owner once, in an effect, however many ways it came (the fade's end, or the limit), so
-  // nothing a render reaches reads a ref (the close is handed to the contents).
   const [phase, setPhase] = useState<ModalPhase>('open');
   // With no fade to wait on the owner is asked at once, in the event, as it
   // was before the fade: `asked` marks it, so the effect below asks no more.
@@ -250,8 +237,6 @@ const Modal = ({
     pressedOutside.current = false;
   };
 
-  // The hidden comma sits at the heading's end, and the spans beside it are not in the
-  // dialog's name.
   const titleHeading = (
     <h2 id={titleId} className="modal-dialog__title" tabIndex={focusTitle ? -1 : undefined}>
       {title}
@@ -263,14 +248,12 @@ const Modal = ({
       )}
     </h2>
   );
-  // At the dialog's corner; with a top line it stands on that line, in the markup too.
   const closeButton = (
     <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
       <span aria-hidden="true">×</span>
     </button>
   );
 
-  // The backdrop's click is the pointer's alone; Escape is its keyboard equivalent, handled above.
   // oxlint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
   return (
     <dialog
@@ -280,9 +263,6 @@ const Modal = ({
         .join(' ')}
       // Focusable by script alone, for a dialog with no field to take the focus.
       tabIndex={-1}
-      // Named by the eyebrow and the heading together, "Edit Ingredient,
-      // Mugwort", or by the heading then where it lands, "Add Ingredient to
-      // Whitethorn Coven"; by the heading alone with a formal name over it.
       aria-labelledby={(eyebrow
         ? [eyebrowId, titleId]
         : destination
@@ -292,7 +272,6 @@ const Modal = ({
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
-      // The dialog's own fade, or its backdrop's, which reports here too.
       onTransitionEnd={(event) => {
         if (event.target === event.currentTarget) finish();
       }}
@@ -327,8 +306,6 @@ const Modal = ({
           )}
           {aboveName}
           {formalActions !== undefined ? (
-            // The formal name, the title, and the actions at the formal name's end: after the
-            // title in the markup, as the entry page's are, and placed on the formal name's line.
             <div className="modal-dialog__naming">
               {formalName}
               {titleHeading}
@@ -357,7 +334,6 @@ const Modal = ({
           ref={body}
           className="modal-dialog__body"
           aria-busy={loading || undefined}
-          // A body only to read takes a Tab stop, so a keyboard can scroll it.
           // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrolling body must take a Tab stop so a keyboard can scroll it
           tabIndex={readingBody ? 0 : undefined}
         >

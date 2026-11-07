@@ -2,17 +2,12 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import PageNav from '.';
 
-// Render-only; behaviour is asserted in tests/components/PageNav. With no
-// sections on the page the first entry stays current.
 const meta = {
   title: 'Navigation / Page Nav',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Grouped: entries under a group's label, as the ingredient page puts forms under
-// Forms. Grouped Apart: a group set apart by its first entry, as References is when
-// the page has notes: a break and a short rule halfway.
 export const States: Story = {
   render: () => (
     <StatesGrid

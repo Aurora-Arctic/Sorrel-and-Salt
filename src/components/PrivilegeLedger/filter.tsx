@@ -14,7 +14,6 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
   const query = filter.query ?? '';
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();
-  /** The filter shown with the privilege given, the search text typed carried, from the first page. */
   const hrefWith = (privilege: PrivilegeLedgerFilter['privilege']) =>
     privilegeLedgerHref({ query: draftQuery.trim(), privilege });
 
