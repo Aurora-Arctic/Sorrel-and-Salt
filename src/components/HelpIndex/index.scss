@@ -6,12 +6,9 @@
     margin-block: space(8) space(3);
   }
 
+  // The lede, the search box and the quick links, on the page itself.
   &__band {
     max-width: $measure;
-    padding: space(6) space(5);
-    border: 1px solid $hairline;
-    border-radius: radius('surface');
-    background-color: $surface-card;
 
     .lede {
       margin-block: 0 space(4);

@@ -42,7 +42,7 @@ Every help page but the front page (`/help`, and the staff index, whose h1 is St
 
 ## The front page
 
-`HelpIndex` draws, beneath the h1, a band (`.help-index__band`, a hairline surface card) holding a lede, the search box at its `hero` size and the quick links; then the guides and the FAQ.
+`HelpIndex` draws, beneath the h1, a band (`.help-index__band`, on the page itself, with no surface or edge) holding a lede, the search box at its `hero` size and the quick links; then the guides and the FAQ.
 
 - **The hero search box** (`HelpSearchForm size="hero"`) is `$hero-control-height` tall at the lead size, with a magnifier drawn inside the box and a "Search Help" placeholder; the button drops beneath the box below 20rem. Every other help page draws the standard box.
 - **Quick links** are a list named "Quick Links", read on each request by `quickLinks(HELP_QUICK_LINKS, readHelpArticle)` (`src/lib/help-quick-links.ts`). `HELP_QUICK_LINKS` names articles by their shipped titles, which the skeleton draws while the page is on its way; each is read at its `slugify` slug, the title and the address shown come from the finder, and a slug that no longer answers as a public article drops out. `tests/lib/help-quick-links.test.ts` fails when a named title is not a public article's title in the shipped seed. The staff index passes none.
