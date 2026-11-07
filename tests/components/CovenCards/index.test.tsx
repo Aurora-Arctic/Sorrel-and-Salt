@@ -279,6 +279,15 @@ describe('CovenCards', () => {
     expect(within(state!).queryByRole('link')).toBeNull();
   });
 
+  it('links the empty cupboard to the Ingredients help article', () => {
+    render(<Cards {...props(empty)} />);
+
+    expect(within(emptyState()!).getByRole('link', { name: 'Learn More' })).toHaveAttribute(
+      'href',
+      '/help/ingredients',
+    );
+  });
+
   it("draws a viewer's empty cupboard with no add", () => {
     render(<Cards {...props({ ...empty, canAdd: false })} />);
     expect(emptyState()).not.toBeNull();

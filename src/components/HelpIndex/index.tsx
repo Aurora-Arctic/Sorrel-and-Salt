@@ -5,8 +5,15 @@ import PageHeader from '../PageHeader';
 import type { HelpIndexProps } from './types';
 import './index.scss';
 
-// The help front page: the search box, the guides, the glossary link and the FAQ. Each FAQ entry is an anchor from
-// its slug; nothing else on the page takes an id, so a slug shared with an article never doubles one
+// The glossary is reference, not a guide, but it is read from the same list, described like one.
+const GLOSSARY = {
+  title: 'Glossary',
+  summary: 'The words Sorrel & Salt uses, and what each one means.',
+  href: '/help/glossary',
+};
+
+// The help front page: the search box, the guides with the glossary among them, and the FAQ. Each FAQ entry is an
+// anchor from its slug; nothing else on the page takes an id, so a slug shared with an article never doubles one
 // (claude-docs/components/help-pages.md).
 const HelpIndex = ({ faq, articles, heading = 'Help' }: HelpIndexProps): ReactElement => {
   // A heading in an answer never takes an entry's id, or another answer's heading id.
@@ -20,22 +27,17 @@ const HelpIndex = ({ faq, articles, heading = 'Help' }: HelpIndexProps): ReactEl
     <div className="help-page help-index">
       <PageHeader title={heading} />
       <HelpSearchForm />
-      {articles.length > 0 && (
-        <section aria-label="Guides">
-          <h2>Guides</h2>
-          <ul className="help-index__guides">
-            {articles.map((article) => (
-              <li key={article.href}>
-                <a href={article.href}>{article.title}</a>
-                {article.summary && <p>{article.summary}</p>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      <p>
-        <a href="/help/glossary">Glossary</a>
-      </p>
+      <section aria-label="Guides">
+        <h2>Guides</h2>
+        <ul className="help-index__guides">
+          {[...articles, GLOSSARY].map((article) => (
+            <li key={article.href}>
+              <a href={article.href}>{article.title}</a>
+              {article.summary && <p>{article.summary}</p>}
+            </li>
+          ))}
+        </ul>
+      </section>
       {faq.length > 0 && (
         <section aria-label="Frequently Asked Questions">
           <h2>Frequently Asked Questions</h2>

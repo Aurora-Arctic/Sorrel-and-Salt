@@ -1,10 +1,22 @@
 @use '../../scss/variables' as *;
 
+// The parent link closes the gap to the title beneath it, so the two read as one line of the way in.
+.help-article__parent {
+  margin-block: space(6) calc(-1 * #{space(4)});
+  font-size: type-size('small');
+}
+
 .help-article__body {
   margin-block-start: space(6);
 
-  h2 {
+  // The body's own headings, one level down from the seed text: a contents menu jumps to the h3s.
+  h3 {
     margin-block: space(8) space(3);
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+
+  h4 {
+    margin-block: space(6) space(2);
   }
 
   ul,

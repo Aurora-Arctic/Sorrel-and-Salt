@@ -1,5 +1,10 @@
 @use '../../scss/variables' as *;
 
+.help-results__count {
+  display: block;
+  color: $text-muted;
+}
+
 .help-results__list {
   padding: 0;
   list-style: none;
@@ -11,4 +16,17 @@
   p {
     margin-block: space(1) 0;
   }
+}
+
+// The labels stand above the title, small and muted, so the title keeps the line and the labels say what it opens.
+.help-results__labels {
+  display: flex;
+  gap: space(2);
+  margin-block: 0 space(1);
+  font-size: type-size('small');
+  color: $text-muted;
+}
+
+.help-results__audience {
+  font-weight: 600;
 }

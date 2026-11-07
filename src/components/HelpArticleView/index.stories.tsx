@@ -16,3 +16,27 @@ export default meta;
 
 export const Default: StoryObj<typeof HelpArticleView> = {};
 export const NoSubpages: StoryObj<typeof HelpArticleView> = { args: { subpages: [] } };
+export const SubPage: StoryObj<typeof HelpArticleView> = {
+  args: {
+    title: 'Signing In',
+    body: 'Choose Sign In and follow the panel.',
+    subpages: [],
+    parent: { title: 'Getting Started', href: '/help/getting-started' },
+  },
+};
+export const WithMenu: StoryObj<typeof HelpArticleView> = {
+  args: {
+    title: 'A Long Guide',
+    body: [
+      '## Signing In',
+      'How to sign in.',
+      '## Your Coven',
+      'What a coven is.',
+      '## Ingredients',
+      'What you have.',
+      '## Grimoire',
+      'What you make.',
+    ].join('\n\n'),
+    subpages: [],
+  },
+};

@@ -30,7 +30,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { slug, child } = await params;
   const found = await subPage(slug, child);
+  // The parent is read for its title alone; the sub page answered, so the parent is a public article.
+  const parent = await orNotFound(() => readHelpArticle(slug));
   return (
-    <HelpArticleView title={found.title} body={found.body} subpages={found.children.map(linkTo)} />
+    <HelpArticleView
+      title={found.title}
+      body={found.body}
+      subpages={found.children.map(linkTo)}
+      parent={linkTo(parent)}
+    />
   );
 }

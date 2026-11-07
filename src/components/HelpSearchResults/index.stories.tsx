@@ -13,11 +13,25 @@ export const Results: StoryObj<typeof HelpSearchResults> = {
     results: [
       {
         kind: 'article',
+        audience: 'public',
         title: 'Stock Levels',
         summary: 'How stock is counted.',
         href: '/help/stock-levels',
       },
-      { kind: 'term', title: 'Stock', summary: null, href: '/help/glossary#stock' },
+      {
+        kind: 'term',
+        audience: 'public',
+        title: 'Stock',
+        summary: null,
+        href: '/help/glossary#stock',
+      },
+      {
+        kind: 'article',
+        audience: 'staff',
+        title: 'Checking Stock Reports',
+        summary: 'What a curator reads in a stock report.',
+        href: '/help/staff/curation/stock-reports',
+      },
     ],
   },
 };

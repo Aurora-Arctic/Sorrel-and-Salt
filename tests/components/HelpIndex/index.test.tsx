@@ -50,10 +50,26 @@ describe('HelpIndex', () => {
     expect(linked).toEqual(ARTICLES.map((article) => article.href));
   });
 
-  it('links the glossary', () => {
+  it('lists the glossary among the guides, described like them', () => {
     index();
 
-    expect(hrefs(screen.getAllByRole('link'))).toContain('/help/glossary');
+    const guides = screen.getByRole('region', { name: 'Guides' });
+    const glossary = within(guides).getByRole('link', { name: 'Glossary' });
+    expect(glossary).toHaveAttribute('href', '/help/glossary');
+    const item = glossary.closest('li')!;
+    expect(within(guides).getAllByRole('listitem')).toContain(item);
+    // Described: the item says more than its link does.
+    expect(item.textContent!.trim().length).toBeGreaterThan(glossary.textContent!.length);
+  });
+
+  it('lists the glossary even when no guide is handed', () => {
+    index(FAQ, []);
+
+    expect(
+      within(screen.getByRole('region', { name: 'Guides' })).getByRole('link', {
+        name: 'Glossary',
+      }),
+    ).toHaveAttribute('href', '/help/glossary');
   });
 
   it('carries the help search box', () => {

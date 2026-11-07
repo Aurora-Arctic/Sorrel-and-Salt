@@ -18,12 +18,15 @@ export default async function Page({
   if (found.kind !== 'article' || found.audience === 'public' || found.parentSlug !== slug) {
     notFound();
   }
+  // The parent is read for its title alone, by the same reach, so a parent the reader may not open is a 404.
+  const parent = await orNotFound(() => readStaffHelpArticle(session, slug));
   return (
     <HelpArticleView
       heading="Staff Help"
       title={found.title}
       body={found.body}
       subpages={found.children.map(linkTo)}
+      parent={linkTo(parent)}
     />
   );
 }

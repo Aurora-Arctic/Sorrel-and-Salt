@@ -12,4 +12,6 @@ export interface HelpArticleViewProps {
   /** Markdown, rendered with raw HTML as text. */
   body: string;
   subpages: HelpSubpageLink[];
+  /** On a sub page, the guide above it, linked between the search box and the title. */
+  parent?: Pick<HelpSubpageLink, 'title' | 'href'>;
 }

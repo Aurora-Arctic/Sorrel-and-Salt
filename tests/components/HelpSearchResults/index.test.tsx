@@ -9,18 +9,36 @@ import { hrefs } from '../../support/links';
 const RESULTS = [
   {
     kind: 'article' as const,
+    audience: 'public',
     title: 'Testwort Stock Levels',
     summary: 'How stock is counted.',
     href: '/help/ingredients/stock-levels',
   },
-  { kind: 'term' as const, title: 'Stock', summary: null, href: '/help/glossary#stock' },
+  {
+    kind: 'term' as const,
+    audience: 'public',
+    title: 'Stock',
+    summary: null,
+    href: '/help/glossary#stock',
+  },
   {
     kind: 'faq' as const,
+    audience: 'public',
     title: 'Where Is My Stock?',
     summary: null,
     href: '/help#where-is-my-stock',
   },
 ];
+
+const STAFF_RESULT = {
+  kind: 'article' as const,
+  audience: 'staff',
+  title: 'Testwort Curation Stock',
+  summary: null,
+  href: '/help/staff/curation/stock',
+};
+
+const itemOf = (name: RegExp) => screen.getByRole('link', { name }).closest('li')!;
 
 const resultHrefs = () =>
   hrefs(screen.queryAllByRole('link')).filter((href) =>
@@ -66,6 +84,26 @@ describe('HelpSearchResults', () => {
     expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveValue('');
   });
 
+  it('counts the results it is handed', () => {
+    render(<HelpSearchResults query="stock" results={RESULTS} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(new RegExp(`^${RESULTS.length}\\b`));
+  });
+
+  it('counts one result in the singular', () => {
+    render(<HelpSearchResults query="stock" results={RESULTS.slice(0, 1)} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(/^1 result\b/);
+  });
+
+  // The staff search returns rows a signed-out reader never sees; each one says so.
+  it('marks a staff row Staff, and a public row not', () => {
+    render(<HelpSearchResults query="stock" results={[...RESULTS, STAFF_RESULT]} />);
+
+    expect(within(itemOf(/Testwort Curation Stock/)).getByText('Staff')).toBeInTheDocument();
+    expect(within(itemOf(/Testwort Stock Levels/)).queryByText('Staff')).toBeNull();
+  });
+
   it('draws no result link when a query finds nothing', () => {
     render(<HelpSearchResults query="nothing-matches" results={[]} />);
 
@@ -74,5 +112,19 @@ describe('HelpSearchResults', () => {
     expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveValue(
       'nothing-matches',
     );
+  });
+
+  it('offers the guides and the glossary when a query finds nothing', () => {
+    render(<HelpSearchResults query="nothing-matches" results={[]} />);
+
+    expect(hrefs(screen.getAllByRole('link'))).toEqual(
+      expect.arrayContaining(['/help', '/help/glossary']),
+    );
+  });
+
+  it('offers no such links for an empty query', () => {
+    render(<HelpSearchResults query="" results={[]} />);
+
+    expect(screen.queryByRole('link')).toBeNull();
   });
 });

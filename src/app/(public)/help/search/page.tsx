@@ -25,7 +25,11 @@ export default async function Page({
   return (
     <HelpSearchResults
       query={query}
-      results={results.map(({ node }) => ({ kind: node.kind, ...linkTo(node) }))}
+      results={results.map(({ node }) => ({
+        kind: node.kind,
+        audience: node.audience,
+        ...linkTo(node),
+      }))}
     />
   );
 }

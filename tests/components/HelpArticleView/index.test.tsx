@@ -106,4 +106,54 @@ describe('HelpArticleView', () => {
 
     expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveAttribute('name', 'q');
   });
+
+  // A sub page is two levels below the index, so one link to its parent stands in for a trail.
+  it('links a sub page to its parent guide, between the search box and the title', () => {
+    render(
+      <HelpArticleView
+        title="Testwort Kindling"
+        body="Body."
+        subpages={[]}
+        parent={{ title: 'Testwort Guide', href: '/help/guide' }}
+      />,
+    );
+
+    const parent = screen.getByRole('link', { name: /Testwort Guide/ });
+    expect(parent).toHaveAttribute('href', '/help/guide');
+    expect(screen.getByRole('search').compareDocumentPosition(parent)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(
+      parent.compareDocumentPosition(
+        screen.getByRole('heading', { level: 2, name: 'Testwort Kindling' }),
+      ),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('draws no parent link on a top-level guide', () => {
+    view('Body.', []);
+
+    expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  // Today no article has three sections, so the menu is drawn for none; this proves the threshold either side.
+  it('draws an On This Page menu, each entry jumping to its section, once the body has three sections', () => {
+    view('## Testwort One\n\nA.\n\n## Testwort Two\n\nB.\n\n## Testwort Three\n\nC.', []);
+
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    const links = within(nav).getAllByRole('link');
+    expect(links).toHaveLength(3);
+    const first = links[0]!.getAttribute('href')!;
+    expect(document.getElementById(first.slice(1))).toBe(
+      screen.getByRole('heading', { level: 3, name: 'Testwort One' }),
+    );
+  });
+
+  it('draws no On This Page menu for a body with two sections', () => {
+    view('## Testwort One\n\nA.\n\n## Testwort Two\n\nB.', []);
+
+    expect(screen.queryByRole('navigation', { name: 'On This Page' })).toBeNull();
+    // Why the absence means something: both sections rendered.
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+  });
 });
