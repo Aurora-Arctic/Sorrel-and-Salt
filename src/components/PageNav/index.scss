@@ -13,7 +13,8 @@
     @include list-reset;
   }
 
-  a {
+  a,
+  .page-nav__pending {
     display: flex;
     align-items: center;
     // Tighter than a control: a column of short entries, read at a glance.
@@ -267,4 +268,9 @@
 // mixin's `<open> &` selector reads `.page-nav__fold… .page-nav__chevron`, not through `.page-nav`.
 .page-nav__chevron {
   @include disclosure-chevron('.page-nav__fold:is(.is-open, .page-nav__fold--static[open])');
+}
+
+// A skeleton's pending entry: the bar fills the entry, as a label would.
+.page-nav__pending > .skeleton {
+  flex: 1;
 }

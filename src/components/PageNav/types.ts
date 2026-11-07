@@ -32,6 +32,8 @@ export type PageNavProps = {
    * opens without the script.
    */
   collapsible?: boolean;
+  /** A skeleton's menu: draws bars in place of the entries, at the menu's own width and padding. */
+  pending?: boolean;
 };
 
 /** What the menu draws: a top-level entry, or a run of consecutive entries sharing a group. */
