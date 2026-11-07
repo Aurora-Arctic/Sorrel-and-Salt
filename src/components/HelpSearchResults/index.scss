@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 .help-results__count {
   display: block;
@@ -16,17 +17,45 @@
   p {
     margin-block: space(1) 0;
   }
+
+  // The searched words, picked out by weight, not a highlighter's fill.
+  mark {
+    background-color: transparent;
+    color: inherit;
+    font-weight: 600;
+  }
 }
 
-// The labels stand above the title, small and muted, so the title keeps the line and the labels say what it opens.
+// The chips stand above the title, so the title keeps the line and the chips say what it opens.
 .help-results__labels {
   display: flex;
   gap: space(2);
   margin-block: 0 space(1);
-  font-size: type-size('small');
-  color: $text-muted;
+}
+
+.help-results__kind {
+  @include badge('muted');
 }
 
 .help-results__audience {
-  font-weight: 600;
+  @include badge('local');
+}
+
+// The site's No Matches state, as the coven's Ingredients list draws it (CovenCards).
+.help-results__no-match {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(4);
+
+  p {
+    margin: 0;
+    color: $text-muted;
+  }
+}
+
+.help-results__ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
 }

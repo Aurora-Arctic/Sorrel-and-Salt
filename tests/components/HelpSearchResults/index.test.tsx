@@ -128,3 +128,37 @@ describe('HelpSearchResults', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 });
+
+describe('HelpSearchResults emphasis and no-match state', () => {
+  it('marks each searched word where a title or summary holds it, in any case', () => {
+    render(<HelpSearchResults query="stock COUNTED" results={RESULTS.slice(0, 1)} />);
+
+    const item = itemOf(/Testwort Stock Levels/);
+    expect(
+      within(item)
+        .getAllByRole('mark')
+        .map((mark) => mark.textContent),
+    ).toEqual(['Stock', 'stock', 'counted']);
+    // The link keeps its title as its name.
+    expect(within(item).getByRole('link', { name: 'Testwort Stock Levels' })).toBeInTheDocument();
+  });
+
+  it('marks nothing in a result the words do not appear in', () => {
+    render(<HelpSearchResults query="zzz" results={RESULTS.slice(0, 1)} />);
+
+    expect(screen.queryAllByRole('mark')).toEqual([]);
+  });
+
+  it('says a query matched nothing in a No Matches status, holding the way on', () => {
+    render(<HelpSearchResults query="nothing-matches" results={[]} />);
+
+    const status = screen.getByRole('status', { name: 'No Matches' });
+    expect(hrefs(within(status).getAllByRole('link'))).toEqual(['/help', '/help/glossary']);
+  });
+
+  it('draws no No Matches status for an empty query', () => {
+    render(<HelpSearchResults query="" results={[]} />);
+
+    expect(screen.queryByRole('status', { name: 'No Matches' })).toBeNull();
+  });
+});

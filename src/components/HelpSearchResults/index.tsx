@@ -1,14 +1,16 @@
 import type { ReactElement } from 'react';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
+import { emphasise } from './emphasis';
 import type { HelpSearchResultsProps } from './types';
 import './index.scss';
 
 const KIND = { faq: 'Question', article: 'Guide', term: 'Term' } as const;
 
 // The search box holding the words, a count, then the results in the order handed (the search's rank), each under
-// a label saying what kind of page it opens and, for a row only staff read, that it is a staff page. No results
-// draws no list, so the empty and the unmatched cases say so in words (claude-docs/components/help-pages.md).
+// a chip saying what kind of page it opens and, for a row only staff read, a Staff chip, with the searched words
+// marked. No results draws no list; an unmatched query says so in the site's No Matches status
+// (claude-docs/components/help-pages.md).
 const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactElement => (
   <div className="help-page help-results">
     <PageHeader title="Help" />
@@ -28,18 +30,22 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
                   <span className="help-results__audience">Staff</span>
                 )}
               </p>
-              <a href={result.href}>{result.title}</a>
-              {result.summary && <p>{result.summary}</p>}
+              <a href={result.href}>{emphasise(result.title, query)}</a>
+              {result.summary && <p>{emphasise(result.summary, query)}</p>}
             </li>
           ))}
         </ul>
       </>
     ) : (
       query !== '' && (
-        <p>
-          Nothing matches “{query}”. Try fewer or different words, or read{' '}
-          <a href="/help">the guides</a> or <a href="/help/glossary">the glossary</a>.
-        </p>
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- holds a paragraph and links, which <output> may not
+        <div role="status" aria-label="No Matches" className="help-results__no-match">
+          <p>Nothing matches “{query}”. Try fewer or different words.</p>
+          <p className="help-results__ways">
+            <a href="/help">Browse the Guides</a>
+            <a href="/help/glossary">Read the Glossary</a>
+          </p>
+        </div>
       )
     )}
   </div>
