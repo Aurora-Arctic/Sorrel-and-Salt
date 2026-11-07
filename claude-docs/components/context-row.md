@@ -2,14 +2,14 @@
 
 `src/components/ContextRow/` is the band under the shell's bar that says where
 you are in words: the coven's name (as its switcher) or "Admin", with the
-area's section nav beside it (MB.7). A server component of two slots.
+area's section nav beside it. A server component of two slots.
 
-## Props
+## Slots
 
-- `lead`: what names the area. The coven layout passes `WorkspaceSwitcher`; the
+- `lead` (`types.ts`): what names the area. The coven layout passes `WorkspaceSwitcher`; the
   admin layout a `PendingLink` to `/curator` reading "Curator", or to `/keepers` reading "Keepers", with
   `context-row__name`, so the area's name is its home as the switcher is the
-  coven's (M8.16, the owner's call). It names the `admin` region and the `page`
+  coven's. It names the `admin` region and the `page`
   shape as its `navigationTarget`, so a press on it draws a page skeleton under the row while
   the index is on its way ([`loading.md`](../loading.md)).
 - `children`: the section nav (`CovenNav`, `AdminNav`).
@@ -33,8 +33,7 @@ area's section nav beside it (MB.7). A server component of two slots.
   contrast needs no check of its own: in both themes the card is lighter than
   the page in every colour channel, so the mix sits between the two, and
   `tests/scss/tokens.test.ts` already holds every text colour to 4.5:1 on the
-  page and on the card. Measured on 2026-10-13, the body ink on it is about 14:1
-  in either theme.
+  page and on the card.
 - Full width, with a `$hairline` bottom edge. The inner column is
   `$wide-column` wide.
 - The row is `$context-row-height` tall on a desktop: a control's height plus
@@ -56,17 +55,6 @@ area's section nav beside it (MB.7). A server component of two slots.
 
 The row is a named region (`section`, labelled "Context"), so its lead sits inside a landmark for the axe region rule; the nav inside it is named by its own `aria-label`.
 
-## Stories
+## Stories and tests
 
-`index.stories.tsx`, titled "Shell / Context Row", render-only. `States` is a grid:
-
-- Admin: "Admin" as the lead, with `AdminNav` beside it. Curator is the same row as a curator sees it.
-- Coven: the coven switcher as the lead, with `CovenNav` beside it as a
-  member sees it (Overview and Members). Viewer's Coven is the viewer's row.
-- No Covens: the switcher with nothing to switch to.
-- Long Workspace Name: a coven name long enough to wrap to two lines at 375px, where the nav has left for the bottom bar and the lead has the row.
-
-## Testing
-
-`tests/components/ContextRow/index.test.tsx`: the lead and the nav render
-together, and the lead alone without a nav.
+`src/components/ContextRow/index.stories.tsx` (render-only; includes a coven name long enough to wrap to two lines at 375px); `tests/components/ContextRow/index.test.tsx`.

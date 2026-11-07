@@ -3,22 +3,7 @@
 `src/components/BusyButton/` — a button whose action can be in flight. While
 it is, the button carries `aria-busy`, shows the [`Spinner`](busy-button.md#spinner) ahead of its
 label, and its label says what is happening: "Save Name" becomes "Saving
-Name". That is the owner's rule for every Save (M5.6; [`styling.md`](../styling.md),
-"Buttons"). MB.115 wrote it once, after the same three pieces had been copied
-into twenty-three buttons.
-
-## Props
-
-`BusyButtonProps` (`types.ts`): every attribute a `<button>` takes, a `ref`
-among them, and two more.
-
-| Prop        | What it is                                                              |
-| ----------- | ----------------------------------------------------------------------- |
-| `busy`      | Whether the action is in flight                                         |
-| `busyLabel` | The label while busy, title case, saying what is happening              |
-| `children`  | The label while idle                                                    |
-| `type`      | Optional: `button` when left out, so a Save says `submit` itself        |
-| `className` | Optional: `btn` when left out; a variant adds its own, `btn btn--solid` |
+Name". That is the rule for every Save ([`styling.md`](../styling.md), "Buttons"); the component holds the three pieces once.
 
 ## Contracts
 
@@ -43,32 +28,17 @@ among them, and two more.
   so the page bar stays up until the browser unloads. See
   [`../loading.md`](../loading.md).
 
-## Styling
+- **Styling is the primitives'**: `.btn` and its variants, the `Spinner`, and the `.btn[aria-busy='true']` padding step.
 
-None of its own: `.btn` and its variants, the `Spinner`, and the
-`.btn[aria-busy='true']` padding step are the primitives'.
+## Stories and tests
 
-## Stories
-
-[`index.stories.tsx`](../../src/components/BusyButton/index.stories.tsx), `Forms / Busy Button`: `States` is a grid of Solid, Outline, Destructive and Small, each idle beside busy; `BusyKeepingFocus` is busy with `aria-disabled`.
-
-## Testing
-
-No file of its own (claude-docs/testing/layer-ownership.md, "What a test may
-assert", rule 5): each form that uses it asserts its own busy state, by role
-and `aria-busy`, as NameForm, EmailForm, SignInMethods, SignInPanel, SignOutButton and
-InvitationAcceptance do.
+`src/components/BusyButton/index.stories.tsx`. No test file of its own (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 5): each form that uses it asserts its own busy state, by role and `aria-busy`.
 
 ## Spinner
 
 `src/components/Spinner/` — the small turning ring that says an action is in
-flight (M12.33). `BusyButton`, `MenuButton` and `TextField`'s busy mark draw
+flight. `BusyButton`, `MenuButton` and `TextField`'s busy mark draw
 it; nothing else should draw its own.
-
-### Props
-
-`SpinnerProps` (`types.ts`): `className`, optional, added beside `spinner`
-(`TextField` passes `field__busy` to place it inside the field).
 
 ### Contracts
 
@@ -84,15 +54,10 @@ it; nothing else should draw its own.
   `$pulse-duration` (2s) on the shared `loading-pulse` keyframe.
 - It is `1em` square and takes the colour of the text around it, so it
   scales with its label.
-
+- **`className`** is added beside `spinner` (`TextField` passes `field__busy` to place it inside the field).
 - **A link's chain icon turns into it** while the link is pending
   ([`LinkIconHint`](link-hint.md)), in the icon's own `1em` box.
 
-### Stories
+### Stories and tests
 
-`Feedback / Spinner`: one `States` story showing `Default` and `Larger` side by side.
-
-### Testing
-
-`tests/components/Spinner/index.test.tsx` asserts it is hidden. Each control
-that uses it asserts its own busy state.
+`src/components/Spinner/*.stories.tsx`; `tests/components/Spinner/index.test.tsx` asserts it is hidden. Each control that uses it asserts its own busy state.

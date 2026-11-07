@@ -1,7 +1,7 @@
 # Passkeys
 
 `src/components/Passkeys/` — the list inside the account page's Passkeys
-section (M16.8, Story 74): each passkey the signed-in account holds, with
+section (story 74): each passkey the signed-in account holds, with
 Rename and Remove, and Add a Passkey beneath. Server component
 `src/app/(shell)/account/page.tsx` reads the list with `accountPasskeys()`
 (`src/lib/request-session.ts`) and hands it down. The section's heading and
@@ -14,13 +14,9 @@ Every call is the passkey plugin's own route through `passkey` in
 and its ceremonies, as Better Auth owns the provider links SignInMethods
 makes ([`auth/plugins.md`](../auth/plugins.md), "Passkeys").
 
-## The props contract
+## Props
 
-| Prop       | Meaning                                                                                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `passkeys` | The account's passkeys as `{ id, name, createdAt }` (`AccountPasskey`, `src/lib/types.ts`): `name` is null for one never named, `createdAt` an ISO timestamp. |
-
-The list is held in state, seeded from the prop, and each action answers in
+`passkeys`: the account's passkeys as `AccountPasskey` (`src/lib/types.ts`; `name` is null for one never named). The list is held in state, seeded from the prop, and each action answers in
 place rather than reloading the page.
 
 ## The rows
@@ -69,9 +65,4 @@ grey the button beforehand, since the page does not read the password.
 
 ## Tests
 
-`tests/components/Passkeys/index.test.tsx` covers the list, add, a cancelled
-add, rename, the ask-first remove, and the last-way-in refusal, with the plugin's
-client actions mocked. `tests/db/passkey-account.test.ts` covers the server:
-rename and remove by the owner, another account's id refused for both, and
-the last-way-in rule. `tests/e2e/stories/74-passkeys-on-the-account-page.spec.ts`
-walks add (named after the browser), rename and a confirmed remove in Chromium with a virtual authenticator.
+`tests/components/Passkeys/index.test.tsx` (the plugin's client actions mocked); `tests/db/passkey-account.test.ts` (the server: rename and remove by the passkey's holder, another account's id refused for both, and the last-way-in rule); `tests/e2e/stories/74-passkeys-on-the-account-page.spec.ts` (Chromium with a virtual authenticator).

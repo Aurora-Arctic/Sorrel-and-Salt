@@ -36,7 +36,4 @@ A Gazetteer diameter is a feature's greatest extent, so the ellipse is generous 
 
 `index.scss`: the icon is 1.25em square and sunk 0.25em, as `FormIcon` is, so it takes the size of the line it sits in, and `flex: none` keeps a flex row from squeezing it. Its three fills are the theme's `--moon-shadow`, `--moon-lit` and `--moon-mare` (`src/scss/_mixins.scss`).
 
-## Stories
-
-[`index.stories.tsx`](../../src/components/MoonPhaseIcon/index.stories.tsx), under
-`Grimoire / Moon Phase Icon`: `Default`, every phase in a row with its name beneath.
+Stories: `src/components/MoonPhaseIcon/index.stories.tsx`.
