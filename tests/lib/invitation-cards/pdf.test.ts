@@ -33,7 +33,6 @@ const links = (n: number) =>
     (_, i) => `https://sorrelandsalt.com/i/card${String(i).padStart(12, '0')}`,
   );
 
-// Letter, and the block of nine cards with bleed on the portrait page: 8.125 × 10.75 in, centred, 1/8 in from top and bottom.
 const LETTER = { width: 612, height: 792 };
 const BLOCK = { left: 13.5, right: 598.5, bottom: 9, top: 783 };
 
@@ -45,14 +44,12 @@ interface Box {
 }
 type Matrix = [number, number, number, number, number, number];
 
-// Just enough of a content-stream reader to follow the transforms and see what each page draws, in page points.
 type Vector = [number, number];
 
 interface Drawn {
   fills: Box[];
   clips: Box[];
   strokes: { from: [number, number]; to: [number, number] }[];
-  // up and right are the directions, on the page, of the image's top and of its right-hand side.
   images: { name: string; box: Box; up: Vector; right: Vector }[];
   textRuns: number;
 }
@@ -170,7 +167,6 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
   return result;
 }
 
-/** Which picture each of a page's image names draws, told apart by the baked files' pixel widths. */
 function imageNames(doc: PDFDocument, pageIndex: number): Record<string, 'salt' | 'sorrel'> {
   const xObjects = doc.getPage(pageIndex).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
   const names: Record<string, 'salt' | 'sorrel'> = {};
@@ -189,7 +185,6 @@ function pictures(doc: PDFDocument, pageIndex: number, picture: 'salt' | 'sorrel
     .map((image) => image.box);
 }
 
-// The cell of the 3 × 3 block a picture's centre falls in, counted across and up the portrait page.
 function cell({ left, right, bottom, top }: Box): string {
   const x = (left + right) / 2;
   const y = (bottom + top) / 2;
@@ -266,7 +261,6 @@ describe('the card sheets PDF', () => {
   });
 
   it('draws 16 crop marks per page, each on a cut line, outside the block and on the page', () => {
-    // The cuts run 1/8 in inside the block's edge and every card's width or height apart.
     const cutsX = [0, 1, 2, 3].map((k) => BLOCK.left + 9 + 189 * k);
     const cutsY = [0, 1, 2, 3].map((k) => BLOCK.bottom + 9 + 252 * k);
     for (let i = 0; i < nine.getPageCount(); i += 1) {
@@ -300,7 +294,6 @@ describe('the card sheets PDF', () => {
   it('puts each back behind its front when the sheet is turned over its long edge', async () => {
     const { doc } = await build(4);
     const fronts = pictures(doc, 0, 'salt').map(cell);
-    // A long-edge turn mirrors the page left to right, so a back's cell, mirrored, is its front's.
     const backs = pictures(doc, 1, 'sorrel').map((box) =>
       cell({ ...box, left: LETTER.width - box.right, right: LETTER.width - box.left }),
     );
@@ -319,7 +312,6 @@ describe('the card sheets PDF', () => {
       expect(turnSheet(back.up)).toEqual(front.up);
       expect(turnSheet(back.right)).toEqual(front.right.map((v) => 0 - v));
     }
-    // Every front faces the same way, so the first one stands for them all.
     for (const other of drawn(nine, 0).images) expect(other.up).toEqual(front.up);
   });
 
@@ -343,7 +335,6 @@ describe('the card sheets PDF', () => {
         left: BLOCK.left + 9 + 189 * cx,
         bottom: BLOCK.bottom + 9 + 252 * cy,
       };
-      // The frame turns a quarter clockwise, so a card's right edge lies at the page's bottom and its bottom at the left.
       expect(trim.bottom - box.bottom).toBeCloseTo(9);
       expect(trim.left - box.left).toBeCloseTo(9);
       expect(box.top - box.bottom).toBeCloseTo((460 * 72) / 192);
@@ -358,7 +349,6 @@ describe('the card sheets PDF', () => {
     const page = text.items.map((item) => ('str' in item ? item.str : '')).join('\n');
     // Letter spacing reads back as a space between letters, so the spaced lines are compared without spaces.
     expect(page.replace(/ /g, '').match(/VALIDUNTIL31MARCH2027/g)).toHaveLength(9);
-    // Cards are drawn in order, so each tagline's opening appears in the order of the texts.
     const starts = FRONT_COPY.map((copy) => page.indexOf(copy.tagline.slice(0, 12)));
     expect(starts.every((start) => start >= 0)).toBe(true);
     expect([...starts].sort((a, b) => a - b)).toEqual(starts);
@@ -366,7 +356,6 @@ describe('the card sheets PDF', () => {
       .map((item) => ('str' in item ? item.str : ''))
       .join('\n');
     expect(backs.replace(/ /g, '').match(/BYINVITATIONONLY\./g)).toHaveLength(9);
-    // The batch name sits on every back, and in each page's margin with the sheet number.
     expect(backs.replace(/ /g, '').match(/BATCHB4444444/g)).toHaveLength(9);
     expect(page).toContain('Batch b4444444, sheet 1 of 1, fronts');
     expect(backs).toContain('Batch b4444444, sheet 1 of 1, backs');
@@ -381,7 +370,6 @@ describe('the card sheets PDF', () => {
     const ofType = (key: string, value: string) =>
       objects.filter((object) => dictOf(object)?.get(PDFName.of(key)) === PDFName.of(value));
     expect(ofType('Subtype', 'Type0')).toHaveLength(4);
-    // Each picture is one image and one soft mask, its alpha.
     expect(ofType('Subtype', 'Image')).toHaveLength(4);
     const saltPage = pictures(doc, 110, 'salt');
     expect(saltPage).toHaveLength(500 - 55 * 9);

@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 
-// The helper turns Better Auth's session into the service-level `Session` and nothing more.
-// Better Auth is mocked: whether a cookie is a real session is its job, and
-// tests/e2e/route-protection.spec.ts proves it end to end against the built server.
+// Better Auth is mocked: whether a cookie is a real session is its job (tests/e2e/route-protection.spec.ts proves it end to end).
 
 const getSessionMock = vi.fn();
 const listUserAccountsMock = vi.fn();
@@ -29,9 +27,7 @@ vi.mock('next/navigation', () => ({
     throw new Error('not-found');
   },
 }));
-// The coven lookup is the service's, proved against Postgres in
-// tests/modules/coven/services/workspace-by-slug.test.ts; here only how the
-// helper answers its refusal.
+// The coven lookup is proved in tests/modules/coven/services/workspace-by-slug.test.ts.
 const membershipBySlugMock = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipBySlug: membershipBySlugMock }));
 // The pause lookup is the service's, proved against Postgres in tests/db/impersonation.test.ts; here only what the helpers do with its answer.
@@ -109,7 +105,6 @@ describe('getSession', () => {
 
   it('maps a session to the service-level one', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('admin'));
-    // Exactly these two fields: the service session carries nothing else.
     await expect(getSession()).resolves.toEqual({ userId: USER_ID, role: 'admin' });
   });
 
@@ -122,7 +117,6 @@ describe('getSession', () => {
   });
 });
 
-// The proxy has no `headers()` to call; it hands over the request's own.
 describe('sessionFromHeaders', () => {
   it('marks the session of an unverified account, and leaves a verified one unmarked', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user', false));
@@ -286,7 +280,6 @@ describe('requireSession', () => {
     );
   });
 
-  // With none, the sign-in lands by role, which is the callback's to decide.
   it('sends the visitor to the bare sign-in page when no return path was forwarded', async () => {
     getSessionMock.mockResolvedValue(null);
     await expect(requireSession()).rejects.toThrow(/^redirect:\/sign-in$/);
@@ -390,7 +383,6 @@ describe('requireSession', () => {
     );
   });
 
-  // The account and its agreement stay as they were; only one published document moves on.
   it.each([
     ['terms', { ...IN_FORCE, terms: IN_FORCE.terms + 1 }],
     ['disclaimer', { ...IN_FORCE, disclaimer: IN_FORCE.disclaimer + 1 }],
@@ -411,7 +403,6 @@ describe('requireSession', () => {
   );
 });
 
-// The acceptance page names what changed since the account last agreed, from the versions the session already carries.
 describe('sessionAgreedVersion', () => {
   it('is the three versions the account stored, with no query of its own', async () => {
     getSessionMock.mockResolvedValue(
@@ -453,7 +444,6 @@ describe('requireAdminSession', () => {
     await expect(requireAdminSession()).rejects.toThrow('forbidden');
   });
 
-  // The people pages keep this guard, so a curator is refused there.
   it('answers a curator with the forbidden page, whom the curation guard admits', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('curator'));
 
@@ -462,9 +452,7 @@ describe('requireAdminSession', () => {
   });
 });
 
-// The guard on `/keepers` and every curation page under it, the people pages excepted. A curator
-// or a keeper passes; anyone else gets the forbidden page, as at requireAdminSession
-// (claude-docs/auth/admin-guard.md).
+// A curator or a keeper passes; anyone else gets the forbidden page (claude-docs/auth/admin-guard.md).
 describe('requireCuratorSession', () => {
   it.each([
     ['a curator', 'curator'],
@@ -484,8 +472,6 @@ describe('requireCuratorSession', () => {
   });
 });
 
-// What the account page lists: Better Auth's own account rows, by the row id
-// /unlink-account takes and the provider they sign in through.
 const row = (id: string, providerId: string) => ({
   id,
   providerId,
@@ -507,7 +493,6 @@ describe('linkedAccounts', () => {
     expect(listUserAccountsMock).toHaveBeenCalledWith({ headers: requestHeaders });
   });
 
-  // A password has its own section, and a provider the roster cannot name no line on the page.
   it('leaves out the password and a provider outside the roster', async () => {
     listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);
 
@@ -515,7 +500,6 @@ describe('linkedAccounts', () => {
   });
 });
 
-// The account page changes a password the account holds and sets one it does not.
 describe('hasPassword', () => {
   it('is true when Better Auth holds a password row for the account', async () => {
     listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);

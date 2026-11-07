@@ -15,7 +15,6 @@ const Layer = z.object({
   tags: z.array(z.string().min(1, 'A tag cannot be blank')),
 });
 
-// A refinement with no path is the one issue about the input as a whole.
 const Pair = z
   .object({ low: z.number(), high: z.number() })
   .refine(({ low, high }) => low <= high, 'Low must not exceed high');
@@ -66,7 +65,6 @@ describe('parseInput', () => {
   });
 });
 
-// The shapes every module's schemas share; each schema's own test holds it to its messages.
 describe('requiredText', () => {
   it('trims, and refuses blank and missing alike with the one message', () => {
     const Text = requiredText('Name it');

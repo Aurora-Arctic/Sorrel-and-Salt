@@ -7,9 +7,7 @@ import {
 import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
 import { clearDataCache, declared } from '../support/next-data-cache';
 
-// The published documents' data cache: the same for every viewer, so CLAUDE.md rule 6 allows it, and under a tag of its own so a
-// publish never empties the compendium's (claude-docs/design-decisions/m15.59-document-editor-scope.md, "Caching"). Against a data
-// cache that holds as Next's does (tests/support/next-data-cache.ts).
+// Same for every viewer, so CLAUDE.md rule 6 allows it; under a tag of its own so a publish never empties the compendium's (claude-docs/design-decisions/m15.59-document-editor-scope.md, "Caching").
 vi.mock('next/cache', () => import('../support/next-data-cache'));
 
 describe('cachedDocumentRead', () => {

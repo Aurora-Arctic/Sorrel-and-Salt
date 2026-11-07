@@ -2,8 +2,6 @@ import QRCode from 'qrcode';
 import { describe, expect, it } from 'vitest';
 import { cardQrSvg } from '@/lib/invitation-cards';
 
-// A realistic card link: the short `/i/` route and a 16-character token from the
-// card alphabet (letters and digits without 0, O, 1, l and I).
 const LINK = 'https://sorrelandsalt.com/i/Hk7pQ2xRm9TbWz4N';
 
 function inFinder(row: number, col: number, size: number): boolean {

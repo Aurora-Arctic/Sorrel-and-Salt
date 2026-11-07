@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { validateEmailAddress } from '@/lib/email-address';
 
-// The shape half of the one email rule: the invite dialog and the services both call it. The
-// empty, over-long and reserved-domain refusals are proved beside the identity module's email
-// service (tests/modules/identity/services/email.test.ts).
+// The empty, over-long and reserved-domain refusals are tests/modules/identity/services/email.test.ts's.
 describe('validateEmailAddress', () => {
   it.each([
     ['no @', 'ada.example.test'],

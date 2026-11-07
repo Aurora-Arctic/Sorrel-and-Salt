@@ -6,8 +6,7 @@ import {
   formatAgreementVersion,
 } from '@/lib/agreement-version';
 
-// An account's agreement covers three documents at once, the terms, the disclaimer and the code of ethics, and reads as one joint
-// version, `terms.disclaimer.ethics` (claude-docs/design-decisions/m15.79-agreement-covers-three-documents.md).
+// The agreement reads as one joint version, `terms.disclaimer.ethics` (claude-docs/design-decisions/m15.79-agreement-covers-three-documents.md).
 
 const IN_FORCE = { terms: 1, disclaimer: 4, ethics: 2 };
 

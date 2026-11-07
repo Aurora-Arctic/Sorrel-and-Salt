@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { contentSecurityPolicy } from '@/lib/security-headers';
 import { nextConfig } from '../../next.config';
 
-// What the browser is told on each path: every rule whose `source` matches the path contributes its
-// headers. Next reads a source as path-to-regexp; the rules here are one regex group, which a RegExp reads too.
 async function headersFor(path: string): Promise<Record<string, string>> {
   const rules = (await nextConfig.headers?.()) ?? [];
   const applied: Record<string, string> = {};

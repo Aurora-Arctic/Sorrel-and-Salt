@@ -2,8 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { startJob } from '@/lib/jobs';
 import { RunArgumentRefused } from '@/lib/jobs/run-arguments';
 
-// startJob is the one door to the SDK (tests/guards/lint-job-boundary.test.ts), so the run-argument allow-list it applies covers
-// every job the site starts.
+// startJob is the one door to the SDK (tests/guards/lint-job-boundary.test.ts), so its run-argument allow-list covers every job.
 
 const start = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => ({ runId: 'run-1' })));
 vi.mock('workflow/api', () => ({ start, getHookByToken: vi.fn() }));

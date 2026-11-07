@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RunArgumentRefused, assertRunArguments } from '@/lib/jobs/run-arguments';
 
-// What a job's run may hold: its arguments are kept in the job's event log, so only ids, a kind, the site origin, a lock length
-// and a return path pass, and anything else is refused before the run starts.
+// A job's arguments are kept in its event log, so only ids, a kind, the site origin, a lock length and a return path pass.
 
 const ID = '0b6f3c1e-8f3a-4d6e-9a43-3d7f4d2a9c11';
 const OTHER = '7d1c2b3a-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
