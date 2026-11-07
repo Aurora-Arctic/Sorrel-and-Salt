@@ -31,9 +31,9 @@
   - **A failure**, a refusal or a dropped connection, says "That didn't work. Please try again." (`GENERIC_FAILURE`, `src/lib/graphql-failure.ts`) in a click-feedback callout beneath the button, with the focus left on it and a badge on its corner that brings the sentence back once dismissed ([`click-feedback.md`](click-feedback.md)). The next press clears it. The call is Better Auth's, not GraphQL's, but it has no more to say about why than a lost request does, so it takes the same sentence.
   - **SignInMethods' Sign In Again makes the same call** in the same shape, but lands on `/sign-in?next=%2Faccount` rather than `/`, so a stale session comes back to the account page fresh ([`sign-in-methods.md`](sign-in-methods.md), "A stale session signs in again").
 
-## Loading on first press
+## Loading with the page
 
-The button and the panel's frame are in the page's first scripts. The rows inside the panel (`panel.tsx`) load on the first press through `useLazyModule`, and show a `status` until they arrive. The counts the rows need are read by `counts.ts`, not by the button.
+The button and the panel's rows (`panel.tsx`) are both in the page's first scripts, so a press opens the panel at once with no loading state. The rows are drawn while the panel is shut too, inside the hidden list, so the panel fades out with them in it. The counts the rows need are read by `counts.ts`, which the button and the rows share.
 
 ## Styling
 

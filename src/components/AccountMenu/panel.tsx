@@ -12,8 +12,7 @@ import SignOutButton from './sign-out-button';
 import { countText, supportTip } from './counts';
 import type { AccountMenuProps } from './types';
 
-// The rows of the account menu's panel. The menu loads this file the first time it opens, so a page
-// does not carry it until the button is pressed (claude-docs/components/account-menu.md).
+// The rows of the account menu's panel (claude-docs/components/account-menu.md).
 
 const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
 

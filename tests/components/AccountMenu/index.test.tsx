@@ -15,7 +15,7 @@ const { initialsOf } = await import('@/components/AccountMenu/initials');
 
 const button = () => screen.getByRole('button', { name: 'Fixture Owner' });
 
-/** Presses the account button and waits for the panel's rows, which load on the first press. */
+/** Presses the account button and waits for the panel to show its Sign Out row. */
 const openPanel = async (toggle: HTMLElement): Promise<void> => {
   fireEvent.click(toggle);
   await screen.findByRole('button', { name: 'Sign Out' });
@@ -34,6 +34,17 @@ afterEach(() => {
 });
 
 describe('AccountMenu', () => {
+  it('shows its rows in the same render as the press, with no loading state', () => {
+    render(<AccountMenu name="Fixture Owner" verified />);
+
+    fireEvent.click(button());
+
+    expect(button()).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('link', { name: 'Your Account' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('opens and closes its panel from the button, saying which it controls', async () => {
     render(<AccountMenu name="Fixture Owner" verified />);
     expect(button()).toHaveAttribute('aria-expanded', 'false');

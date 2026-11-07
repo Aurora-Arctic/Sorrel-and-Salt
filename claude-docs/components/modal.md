@@ -138,7 +138,7 @@ The compendium choice `navigate`s to `/curator/compendium?new=ingredient-compend
 
 ## Contents that load on first open
 
-Quick Look (the entry details), Add Ingredient and the Account menu's panel rows keep their contents out of the page's first scripts and fetch them when first opened.
+Quick Look (the entry details) and Add Ingredient keep their contents out of the page's first scripts and fetch them when first opened.
 
 - They share `useLazyModule` (`src/lib/use-lazy-module.ts`), which runs a dynamic `import()` and holds the loaded module in state.
 - The frame draws at once with its accessible name and a `status` (`ModalLoading`) in the body, and the contents replace the status when the code arrives. A route modal gives the frame through `RouteModalContent`'s `loading` field.

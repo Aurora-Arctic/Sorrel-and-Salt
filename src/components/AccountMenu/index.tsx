@@ -2,17 +2,15 @@
 
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { ChevronIcon } from '../IconTip/icons';
-import { useLazyModule } from '../../lib/use-lazy-module';
 import { countText } from './counts';
 import { initialsOf } from './initials';
+import Panel from './panel';
 import type { AccountMenuProps } from './types';
 import './index.scss';
 
 // The account button in the shell's bar and its panel: Your Account, a link to pending invitations
 // when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
-
-const loadPanel = () => import('./panel');
 
 const AccountMenu = ({
   name,
@@ -23,9 +21,6 @@ const AccountMenu = ({
   waitingSupport = 0,
 }: AccountMenuProps): ReactElement => {
   const [open, setOpen] = useState(false);
-  // The panel's rows load on the first press, which opens it over its empty frame.
-  const panel = useLazyModule(loadPanel, open);
-  const Panel = panel?.default;
   // An unverified account cannot reach the account page the count leads to.
   const pending = verified && pendingInvitations > 0;
   const staffCount = verified ? assignedSupport : 0;
@@ -91,16 +86,14 @@ const AccountMenu = ({
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
       <ul id={panelId} className="account-menu__panel" hidden={!open}>
-        {Panel && (
-          <Panel
-            verified={verified}
-            links={links}
-            pendingInvitations={pendingInvitations}
-            assignedSupport={assignedSupport}
-            waitingSupport={waitingSupport}
-            close={close}
-          />
-        )}
+        <Panel
+          verified={verified}
+          links={links}
+          pendingInvitations={pendingInvitations}
+          assignedSupport={assignedSupport}
+          waitingSupport={waitingSupport}
+          close={close}
+        />
       </ul>
     </div>
   );
