@@ -5,9 +5,6 @@ import type { PasswordSetter } from '@/modules/identity';
 import { B, asUser } from '../../../support/as-user';
 import { run as runOperation } from '../../../support/graphql/run';
 
-// `setPassword` over the real schema, with a setter that records what it was handed. What Better Auth refuses,
-// and the mail, are tests/db/password-reset.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
-
 const NEW = 'a fresh fixture passphrase';
 
 const SET_PASSWORD = /* GraphQL */ `

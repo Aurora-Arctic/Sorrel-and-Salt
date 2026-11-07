@@ -6,9 +6,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '@/lib/invitation-cards/limits';
 import { run } from '../../../support/graphql/run';
 
-// The card operations' transport half: who may call each by direct request, the answer's shape, and that nothing but the
-// mint answers a token. What a mint writes and refuses is services/invitation-cards.test.ts's.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;

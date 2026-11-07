@@ -64,7 +64,6 @@ describe('admin_role_change_pauses table', () => {
 
     const second = await failureOf(openPause());
 
-    // 23505 is unique_violation: the one-open index.
     expect(second.code).toBe('23505');
     expect(second.constraint_name).toBe(ONE_OPEN);
   });
@@ -89,14 +88,11 @@ describe('admin_role_change_pauses table', () => {
       values (${ADMIN}, ${ADMIN}, ${ADMIN})
     `);
 
-    // 23514 is check_violation.
     expect([noBy.code, noAt.code]).toEqual(['23514', '23514']);
     expect([noBy.constraint_name, noAt.constraint_name]).toEqual([ENDED_TOGETHER, ENDED_TOGETHER]);
   });
 });
 
-// The repository's surface is three named calls under the `SiteAdmin` proof: the open pause, opening one, and ending it.
-// The table is marked `namedWrites`, so every generic write is refused at compile time: a pause cannot be backdated, reopened or deleted, and its ended pair is stamped from the session.
 describe('the repository', () => {
   const admin = assertSiteAdmin(asUser(E));
 
@@ -130,7 +126,6 @@ describe('the repository', () => {
     expect(await findOpenAdminRoleChangePause(admin)).toBeUndefined();
   });
 
-  // The compile-time half of the mark is admin-role-change-pauses-schema.type-check.ts.
   it('adds no property to the table for drizzle-kit to see', () => {
     expect((adminRoleChangePauses as NamedWrites).$writes).toBeUndefined();
   });

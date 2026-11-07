@@ -40,7 +40,6 @@ async function row(id: string): Promise<AgreementRow> {
   return found as AgreementRow;
 }
 
-/** The row's stored agreement, as the gate reads it. */
 const agreedOf = (found: AgreementRow): AgreedVersion => ({
   terms: found.agreed_terms_version,
   disclaimer: found.agreed_disclaimer_version,
@@ -181,7 +180,6 @@ describe('agreeToTerms', () => {
 
 // Publishing goes through the admin's own services, as the editor does, so the numbers in force move the way they move in use.
 describe('a newly published document', () => {
-  /** Saves a changed body into a draft of `key` and publishes it, as E. */
   async function publishAnEdit(key: DocumentKey): Promise<void> {
     const documentId = documentIds[key] as string;
     const editing = await readDocumentForEditing(asUser(E), key);

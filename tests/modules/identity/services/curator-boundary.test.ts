@@ -59,7 +59,6 @@ const sender = () => invitationSender(new Request(`${ORIGIN}/api/graphql`, { met
 let adminInvitationId: string;
 let covenInvitationId: string;
 
-/** A pending invitation, inserted as the seed would; site tier unless a coven is named. */
 async function invite(email: string, by: string, workspaceId: string | null): Promise<string> {
   const [row] = await sql`
     insert into invitations (email, token_hash, workspace_id, role, site_role, created_by, updated_by, expires_at)
