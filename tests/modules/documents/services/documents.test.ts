@@ -7,9 +7,7 @@ import { E } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 
-// The documents' public reads: the version a document page shows, a version by its number, and the published versions newest
-// first. Each takes no session, since a signed-out reader sees what a member sees, and none ever answers with a draft or a deleted
-// row (claude-docs/design-decisions/m15.59-document-editor-scope.md, "History"). That the reads are cached is documents-cache.test.ts's.
+// No read takes a session or answers with a draft or deleted row (claude-docs/design-decisions/m15.59-document-editor-scope.md, "History").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -22,7 +20,6 @@ beforeEach(async () => {
 
 const PAGE: PageRequest = { limit: 26, inverted: false };
 
-/** The privacy document with versions 1 and 2 published, and version 3 an open draft. */
 async function policyWithDraft(): Promise<string> {
   const id = await insertDocument(
     sql,
