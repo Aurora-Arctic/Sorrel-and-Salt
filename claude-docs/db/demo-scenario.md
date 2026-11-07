@@ -1,346 +1,99 @@
-## The demo scenario (M1.23)
+## The demo scenario
 
-`src/db/seed/demo.ts` implements DESIGN.md §"Seed data"'s third scenario:
-`standard` plus spells in W's grimoire, with ingredients and layer order. It is
-the scenario a screenshot is taken against, which is why the two jars are
-written out the way a member would write them — an intent in a sentence,
-instructions that read like instructions, a stack that names what went in and
-in what order — rather than generated as "Spell 1" and "Spell 2".
+`src/db/seed/demo.ts` implements DESIGN.md "Seed data"'s third scenario: `standard` plus spells in W's grimoire, W's cupboard, stock and workings. It is the scenario a screenshot is taken against, so its content is written out the way a member would write it (an intent in a sentence, instructions that read like instructions, a stack that names what went in and in what order), never "Spell 1". The exact rows are the files' own: `demo.ts`, `demo-workings.ts`, `invitation-cards.ts`, `sanctioned-users.ts`, `support-requests.ts`, all under `src/db/seed/`. This file keeps the rules the data is built to.
 
-| Spell              | Id      | Status     | Layers                                                                       |
-| ------------------ | ------- | ---------- | ---------------------------------------------------------------------------- |
-| Hearth Warding Jar | `…0001` | `complete` | sea salt · black salt · hearth ash · **dust from the front step** · rosemary |
-| Dreaming Sachet    | `…0002` | `draft`    | mugwort · lavender · german chamomile · amethyst                             |
-
-The ids are fixed and take a block of their own, `…0002-…`, after the users
-(`…0000-…`) and the workspaces (`…0001-…`), so a stray id is never ambiguous
-about what it names. A draft sits beside a finished spell because the status
-badge (M10.20) has to have both to show, and one layer carries no quantity at
-all — a sprig laid on top is not a measurement, and `quantity`/`unit` are
-nullable precisely so it does not have to be one.
+- **Ids** are fixed and each kind takes a block of its own: users `…0000-`, workspaces `…0001-`, spells `…0002-`, stock `…0003-`, workings `…0004-`, the pause `…0006-`. The two jars are `…0001` (Hearth Warding Jar, complete) and `…0002` (Dreaming Sachet, draft); a draft sits beside a finished spell because the status badge needs both to show.
+- **One layer carries no quantity**, because a sprig laid on top is not a measurement and `quantity` and `unit` are nullable for that reason.
+- **Layer order is the position in the `layers` array**, never a number written beside it: one list, so the stack and its depths cannot disagree, and each jar is numbered from 1.
+- **One custom, one-off layer**, "Dust from the front step" (`form` `dust`, no `ingredient_id`), sits between two linked layers in the Hearth Warding Jar. It is never an `ingredients` row, and `dust` is in no curated vocabulary: free text is what lets a member write it. It is the row of the second kind that rendering, reordering and printing must handle.
+- **A layer finds its ingredient by tier and identity** (`ingredientIdByIdentity`), the same key the cupboard rows use. A linked layer lays its ingredient's first live variant in form order, read back after the variants are written.
 
 ### The content helpers
 
-The helpers that write a coven's content live in `src/db/seed/coven-content.ts`, not in `demo.ts`: `insertMissingWorkspaceIngredients`, `insertMissingVariants`, `insertMissingCupboardEntries`, `insertMissingSpells`, `insertMissingSteps`, `insertMissingSpellCategories`, `insertMissingStock` and `insertMissingWorkings`. Each takes the coven it fills as `{ workspaceId, authorId }` (`CovenTarget`, in `types.ts`) and the data arrays to write, and reads no constant of W's, so any coven can be filled with them. `authorId` stamps the coven's private spells and need not be a member of it. `demo.ts` keeps W's data and calls them with W and B.
+The helpers that write a coven's content live in `src/db/seed/coven-content.ts`, not in `demo.ts`: `insertMissingWorkspaceIngredients`, `insertMissingVariants`, `insertMissingCupboardEntries`, `insertMissingSpells`, `insertMissingSteps`, `insertMissingSpellCategories`, `insertMissingStock` and `insertMissingWorkings`. Each takes the coven it fills as `{ workspaceId, authorId }` (`CovenTarget`, in `types.ts`) and the data arrays, and reads no constant of W's, so any coven can be filled with them. `authorId` stamps the coven's private spells and need not be a member. `demo.ts` keeps W's data and calls them with W and B.
+
+W's own entries list their forms as `variants`, as the compendium's do, written typed rather than picked and lower-case as the literals spell them. No coven entry in the demo shares a compendium entry's identity except Cat's Claw, which has no formal name.
 
 ### The grimoire shelf
 
-Beside the two jars, `demo` seeds 54 more spells in W (ids `…0003` to
-`…0056`) so the grimoire page (M10.11) has a real shelf to show. It pages 24
-cards at a time (`CARD_PAGE_SIZE`). With the two jars W holds 56 spells, 28
-complete and 28 drafts. Four of them are private to Fixture B (below), so
-every other member reads 26 complete spells and 26 drafts, and B reads all 56.
-Both the Spells and the Drafts tabs run past one page for every member.
+`demo` seeds 54 more spells in W (`…0003` to `…0056`) so the grimoire page has a real shelf. It pages 24 cards at a time (`CARD_PAGE_SIZE`). W holds 56 spells, 28 complete and 28 drafts. Four are private to Fixture B, so every other member reads 26 and 26, B reads all 56, and both tabs run past one page for every member. The shelf is built to exercise:
 
-- **Ranking titles.** Several titles share "Hearth" (Hearth Fire Blessing, Cold
-  Hearth Cleansing, Banked Hearth Candle, Hearthstone Luck Charm and others),
-  and Threshold Salt Line matches "hearth" only through its intent, so a search
-  shows a title match ranked above an intent match.
-- **An accented title.** Rêverie Pillow Mist is a draft, so a search for
-  "reverie" shows the accent-folding match.
-- **An untitled draft.** Spell `…0030` has no title, which the table allows for
-  a draft only (`spells_complete_has_title`, M13.15).
-- **Private spells.** Four spells are Fixture B's own and `private`: Private
-  Hearth Vow and Quiet Nerves Jar (complete), Hearth Ward of My Own and Letter
-  to the Sea (drafts). Only B reads them. A, the owner, does not, so signing in
-  as A shows what an ordinary member sees. A private spell is written as its
-  author, so its `created_by` is the `authorId` the helper is given (B for W), marked `byAuthor` in the data; every other spell is the bootstrap user's.
-- **Categories.** The assigned categories are spread across several groups, so
-  the category filter has more than one group to offer.
+- **Ranking.** Several titles share "Hearth", and Threshold Salt Line matches "hearth" only through its intent, so a search shows a title match ranked above an intent match.
+- **Accent folding.** Rêverie Pillow Mist is a draft, found by "reverie".
+- **An untitled draft** (`…0030`): the table allows no title for a draft only (`spells_complete_has_title`).
+- **Private spells**, marked `byAuthor` in the data and written as B (`created_by` is the `authorId`). A, the steward, does not read them, so signing in as A shows what an ordinary member sees.
+- **Categories** spread across several groups, so the category filter has more than one group to offer.
 
-**The curated compendium comes with it.** After `seedStandardContent`, in the
-same transaction, `demo` calls `seedCompendiumContent(tx, COMPENDIUM)`, so a
-person exploring the app finds the real compendium (every curated entry and
-its sources) beside standard's fixture entries, not only the 26 invented ones.
-The vocabularies it picks from are already there, since `standard` seeds them.
-The order matters: the fixture entries go in first and keep their rows, and a
-curated entry of the same identity, name or slug is skipped as present. The
-guard (`assertCompendiumValid`) runs before the transaction opens, so an invalid
-literal writes nothing. `standard` stays without it: it is the test fixture
-cast, and its tests rely on those rows alone. The layers name fixture entries
-by tier and identity, so the extra entries make none of them ambiguous.
+### The curated compendium comes with it
 
-**Four things in it are fixtures rather than decoration:**
+After `seedStandardContent`, in the same transaction, `demo` calls `seedCompendiumContent(tx, COMPENDIUM)`, so a person exploring finds every curated entry and its sources beside standard's fixture entries. The fixture entries go in first and keep their rows; a curated entry of the same identity, name or slug is skipped as present. `assertCompendiumValid` runs before the transaction opens, so an invalid literal writes nothing. `standard` stays without it: it is the test fixture cast. The layers name fixture entries by tier and identity, so the extra entries make none ambiguous.
 
-- **W's cupboard** (M12.26), the compendium entries a coven holds as
-  `workspace_compendium_entries` rows ([workspace-compendium-entries.md](workspace-compendium-entries.md)).
-  The seed inserts them directly, stamped like every other row, and does not
-  call the cupboard service. Nine, so that a member opening them sees annotated entries
-  with a variety of fields (the first three are the original M12.26 rows):
-  - **Rosemary**, labelled `Garden Rosemary`, with its own description,
-    "Cut from the bush by the back door, dried in bunches over the stove."
-    (an annotated row with a label and a text override);
-  - **German Chamomile** (_Matricaria chamomilla_), labelled `House Chamomile`,
-    with `colors` set to `white` and `yellow` (a label and an array override;
-    the compendium lists no colour for it);
-  - **Ginger** (_Zingiber officinale_), with no override at all (in the
-    cupboard and not annotated);
-  - **Mugwort**, labelled `Hedgerow Mugwort`, with a safety note and
-    `celestial_bodies` `Moon` and `Neptune`;
-  - **Lavender** (_Lavandula angustifolia_), with a description,
-    `elements` `air` and `water`, and `zodiac_signs` `Pisces`;
-  - **Comfrey**, with a safety note alone;
-  - **Sea Salt**, labelled `Kitchen Salt`, with `elements` an empty array (an
-    answer, not an absence) and `colors` `grey` and `white`;
-  - **Black Salt** and **Amethyst** (_Quartz var. amethyst_), with no override:
-    held because a spell below lays each, and a step names only what the coven
-    holds (the recipe service checks it; the seed writes raw, so it holds them).
+`demo` passes `restoreDeletedDeityPicks: false` to `seedStandardContent`, so the one row a reseed of `standard` puts back, a compendium deity pick a keeper deleted, stays deleted here (["A reseed of standard puts a deity pick back; demo does not"](standard-scenario.md)).
 
-  Six of the nine are `standard`'s rows ([standard-scenario.md](standard-scenario.md),
-  "W's cupboard"); `demo` adds German Chamomile, Black Salt and Amethyst. The Annotate action shows in a held entry's cupboard menu only for a role that may update
-  ingredients.
+### W's cupboard, own entries and stock
 
-  Every other column is null, so it reads as the compendium's value. These
-  three were W's own rows until M12.26, which shadowed the compendium's entry
-  under the hiding rule (M8.3, M12.12); a coven now names the entry instead of
-  copying it. The two jars' layers for Rosemary and Chamomile point at the
-  compendium's variants (Rosemary's `Herb`, Chamomile's `Flower`). The demo
-  seeds its jars on cupboard entries only: a jar on a compendium variant needs
-  its entry's row (decision 11 of the plan,
-  [m12.13-cupboard-names-the-compendium-plan.md](../design-decisions/m12.13-cupboard-names-the-compendium.md)).
-
-- **W's own ingredients**, the coven tier of §5's one table: `Hearth Ash` and
-  `Cat's Claw`. A grimoire that only ever reached the compendium would exercise
-  half of §5, and the jars mix the two the way a real one does.
-- **Cat's Claw is the "Similar in the Compendium" case** (M12.22). W's entry
-  has no formal name (nomenclature `unknown`, one `bark` variant), and
-  `standard` seeds five compendium Cat's Claws (four plants and the animal
-  claw). It stays an own stub beside them, with no cupboard row, for a member
-  to declare it to be one of the five. Until M12.28 retires the hiding rule it
-  also still replaces all five in the lists, and its page shows three links
-  then "See All 5" (none of the five is in the cupboard).
-- **One custom, one-off layer** (MB.40, story 57): "Dust from the front step",
-  `form` `dust`, no `ingredient_id`, sitting between two linked layers in the
-  same jar. It is never an `ingredients` row anywhere, and `dust` is nowhere in
-  M4.3a's curated 78 — free text is what lets a member write it. Wave 13
-  renders, reorders and prints both kinds of row, and this is its row of the
-  second kind.
-
-Layer order is the position in the `layers` array, never a number written
-beside it: one list, so the stack and its depths cannot disagree, and each jar
-is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
-
-**W's own entries have variants too (MB.216, MB.222).** Each of W's two
-literals lists its forms as `variants`, as the compendium's do
-([standard-scenario.md](standard-scenario.md)). After W's entries,
-`insertMissingVariants` from `coven-content.ts` writes them, typed rather than
-picked, lower-case as the literals spell them (Hearth Ash is `ash`, Cat's
-Claw `bark`). A linked layer lays its ingredient's first live variant in form
-order, read back after the variants are written; every ingredient a jar names
-has one, and Rosemary's `Herb` comes before its `Oil`.
-
-M12.26 moved Garden Rosemary, House Chamomile and Ginger off this list, so the
-seed no longer holds a coven entry in the identity of a compendium one except
-Cat's Claw (which has no formal name). It also loses `rhizome`, the uncurated
-form Ginger carried as §5's example of a value a member writes before a keeper
-curates it: no coven entry in the demo has one now.
-
-A layer finds its ingredient by tier and identity (`ingredientIdByIdentity`),
-the same key the cupboard rows use.
-
-### W's stock
-
-The demo writes eleven jars of stock into W (`DEMO_STOCK`), the rows the
-ingredients page's jar lines and Edit Stock button (M9.9) show: the seven
-`standard` seeds ([standard-scenario.md](standard-scenario.md), "W's stock"),
-which `DEMO_STOCK` spreads in, and four of its own. Their ids are fixed and take a
-block of their own, `…0003-…`, after the spells. Each names its ingredient and
-the form it holds, and the seed looks the variant up by that pair, so a jar can
-sit on any form an entry has.
-
-| Ingredient (form)         | Id      | Quantity | Why it is there                                                                 |
-| ------------------------- | ------- | -------- | ------------------------------------------------------------------------------- |
-| Hearth Ash (ash)          | `…0001` | 250 g    | An own entry with a weight, a source and a date acquired.                       |
-| Cat's Claw (bark)         | `…0002` | none     | Held and never weighed: no quantity, no unit, so "Unmeasured" and no threshold. |
-| German Chamomile (Flower) | `…0005` | 8 g      | Under the default 10 g threshold, so the Low badge shows.                       |
-| German Chamomile (Oil)    | `…0006` | 20 drop  | A count unit, with a threshold of its own (12) in place of the default 3.       |
-
-The ids `…0003`, `…0004` and `…0007` to `…0011` are `standard`'s. Weight,
-volume and count are all there. A jar that sets no threshold gets its unit's
-default, from `defaultThreshold` in
-`src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock`
-reads too, so the seed carries no second table of values. Every compendium entry
-stocked is in W's cupboard. The
-`minimal` scenario writes no stock.
-
-Idempotency is the pair the live-unique index guards, W and the variant,
-ignoring `deleted_at`: a jar the coven threw out stays out, one it edited is
-left as edited, and one it added itself for the same form is met rather than
-collided with. A developer scenario, so no test holds it (MB.225).
+- **W's cupboard** is nine compendium entries held as `workspace_compendium_entries` rows ([workspace-compendium-entries.md](workspace-compendium-entries.md)), inserted directly, stamped like every other row, not through the cupboard service. Six are `standard`'s rows ([standard-scenario.md](standard-scenario.md), "W's cupboard"); `demo` adds German Chamomile, Black Salt and Amethyst, held because a spell lays each and a step names only what the coven holds (the recipe service checks it; the seed writes raw). They are built to show every kind of annotation: a label with a text override (Garden Rosemary), a label with an array override the compendium lacks (House Chamomile's `colors`), no override at all (Ginger, Black Salt, Amethyst), a safety note alone (Comfrey), and `elements` as an empty array, an answer rather than an absence (Sea Salt). Every other column is null, so it reads as the compendium's value. The jars lay compendium variants (Rosemary's `Herb`, Chamomile's `Flower`), and a jar on a compendium variant needs its entry's row ([`m12.13-cupboard-names-the-compendium.md`](../design-decisions/m12.13-cupboard-names-the-compendium.md), decision 11).
+- **W's own ingredients**, the coven tier of §5's one table: `Hearth Ash` and `Cat's Claw`. A grimoire that reached only the compendium would exercise half of §5.
+- **Cat's Claw is the "Similar in the Compendium" case.** W's entry has no formal name (nomenclature `unknown`, one `bark` variant); `standard` seeds five compendium Cat's Claws. It stays an own stub with no cupboard row, for a member to declare it to be one of the five.
+- **Eleven jars of stock** (`DEMO_STOCK`): the seven `standard` seeds (["W's stock"](standard-scenario.md)) spread in, and four of its own. Each names its ingredient and the form it holds, and the seed looks the variant up by that pair. The four are built to show: an own entry with a weight, source and date acquired (Hearth Ash 250 g); a jar never weighed, so "Unmeasured" and no threshold (Cat's Claw); one under the default threshold, so the Low badge shows (German Chamomile Flower, 8 g under 10 g); and a count unit with a threshold of its own (German Chamomile Oil, 20 drop, threshold 12 not 3). A jar that sets no threshold gets its unit's `defaultThreshold` (`src/modules/ingredients/validation/default-threshold.ts`), the rule `createStock` reads, so the seed carries no second table. Every compendium entry stocked is in W's cupboard. `minimal` writes no stock. Idempotency is the pair the live-unique index guards, W and the variant, ignoring `deleted_at`: a jar the coven threw out stays out, one it edited is left as edited, and one it added itself for the same form is met rather than collided with.
 
 ### W's workings
 
-The demo writes eleven workings (`DEMO_WORKINGS` in `src/db/seed/demo-workings.ts`), so the Workings section on a spell page has rows to show. A working is one time a spell was made. Their ids are fixed and take a block of their own, `…0004-…`, after the stock. They sit on five complete spells and on none of the drafts.
+`DEMO_WORKINGS` (`src/db/seed/demo-workings.ts`) writes eleven workings on five complete spells and none of the drafts, so the Workings section has rows to show. They mix complete and draft, workspace and private (never wider than the spell), recorders A and B (an observer cannot record), with and without participants and notes, dates from July to October 2026, none in the future.
 
-| Spell                 | Workings | Notes                                                                                                                                                                        |
-| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cold Hearth Cleansing | 4        | Three complete (one private, one with a typed-name participant), one draft.                                                                                                  |
-| Threshold Salt Line   | 2        | One complete, one private draft.                                                                                                                                             |
-| Mugwort Seeing Wash   | 2        | Both complete. The mugwort jar holds 4 g and the wash takes 3 g, so the second takes 1 g and is 2 g short.                                                                   |
-| Hearth Fire Blessing  | 1        | Complete, with all three members as participants.                                                                                                                            |
-| Hearth Warding Jar    | 2        | One complete, one draft. Completing the draft skips Black Salt (no stock), the dust (a custom layer), the ash (pinches against a jar in grams) and the rosemary (no amount). |
+Completing a working takes each deducted amount from its jar. The seed does the same once, when it first writes a working, so a re-run adds nothing and decrements nothing. A complete working's deductions are written out in the data, not computed by `planDeductions` at seed time; a test replays them against the spell steps and `DEMO_STOCK` in date order to prove they match what the service would take. Five spells' steps use grams so a deduction exists at all, since a step and a jar convert only within one dimension and a step in tablespoons against a jar in grams would be skipped. Hearth Warding Jar's draft working is built to show a completion that skips layers: Black Salt (no stock), the dust (a custom layer), the ash (pinches against a jar in grams) and the rosemary (no amount); Mugwort Seeing Wash's second working is 2 g short. Idempotency is the working's fixed id: a working present, deleted or not, is left alone with its participants and deductions.
 
-They mix complete and draft, workspace and private (never wider than the spell), recorders A and B (an observer cannot record), workings with and without participants and notes, and dates from July to October 2026, none in the future.
+### Idempotency, and a jar's stack seeded whole or not at all
 
-Completing a working changes stock: the service takes each deducted amount from its jar. The seed does the same, once, when it first writes a working, so a re-run adds nothing and decrements nothing. The jars end at Sea Salt 395 g, Hearth Ash 245 g and Mugwort 0 g. A complete working's deductions are written out in the data, not computed by `planDeductions` at seed time; a test replays them against the spell steps and `DEMO_STOCK` in date order to prove they match what the service would take.
+The demo inserts what is missing, keyed on identity and ignoring `deleted_at`: spells by fixed id, W's ingredients by `identityOf`, assigned categories by the pair, cupboard rows by the coven and the entry (a row the coven removed counts as present), and stock by the coven and the variant. A database seeded before a content change keeps its old rows; `npm run db:reset` is what brings it to the scenario. A developer scenario, so no test holds the idempotency.
 
-Five spells' steps use grams so a deduction exists at all: Sea Salt 15 g in Cold Hearth Cleansing and 30 g in Threshold Salt Line and Hearth Warding Jar, Hearth Ash 5 g in Hearth Fire Blessing and Mugwort 3 g in Mugwort Seeing Wash. A step and a jar convert only within one dimension, so a step in tablespoons against a jar in grams would be skipped. A database seeded before this keeps its old step units (a jar's stack is seeded whole or not at all, below) and needs `npm run db:reset`.
+**`spell_ingredients` is the exception: the unit keyed on is the spell, not the layer.** A layer's identity is a depth in a shared sequence. Patch one row back into a stack a member has since edited and the arithmetic fails both ways: a layer pulled from the middle renumbers the ones below it, so the depth the seed wants is held by a different ingredient (the layer index), and the ingredient it wants is already at another depth. Either collision fails the whole scenario rather than the row. So a jar that already has layers is left exactly as it is, removed ones included, since a tombstone is a layer the jar has had and a jar a member emptied has been edited. What that gives up is a demo jar healing itself after someone empties it, which `npm run db:reset` does anyway; what it buys is that a reseed over an edited grimoire is a no-op rather than an error.
 
-Idempotency is the working's fixed id: a working present, deleted or not, is left alone with its participants and deductions.
+### Invitation cards, held-back accounts and support requests
 
-### A jar's stack is seeded whole or not at all
+These three run only in `demo`: not in `standard`, which every db test clones, and not in a reference seed, which runs on staging and production. Every row has a fixed id (or is found again by its natural key), so a second run adds nothing; times are set from the first run's clock, so a long-lived dev database shows them ageing; seeded rows are written past `withAudit`, as every seed row is.
 
-Idempotency is `standard`'s — insert what is missing, keyed on identity,
-ignoring `deleted_at` — for the spells (fixed id), W's ingredients
-(`identityOf`, the identity, over W's rows, deleted or not) and the assigned categories (the
-pair), W's cupboard rows (the coven and the entry), a row the coven
-removed counting as present, and W's stock (the coven and the variant). A database seeded before M12.26 still holds
-Garden Rosemary, House Chamomile and Ginger as own rows, which a reseed leaves
-alone: `npm run db:reset` is what brings it to this scenario. **`spell_ingredients` is the exception: the unit keyed on is the spell,
-not the layer.**
-
-The `standard` rows it writes through `seedStandardContent(tx)` keep their
-deletions too: `demo` passes `restoreDeletedDeityPicks: false`, so the one
-row a reseed of `standard` puts back, a compendium deity pick a keeper
-deleted, stays deleted here, since a person explores this scenario
-(claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity
-pick back; demo does not"). A developer scenario, so no test holds it
-(MB.225).
-
-Every other seeded row stands on its own, so "insert what is missing" is well
-defined per row. A layer does not — its identity is a depth in a sequence, and
-the sequence is shared. Patch one row back into a stack a member has since
-edited and the arithmetic is against you both ways: a layer pulled out of the
-middle leaves the ones below it renumbered, so the depth the seed wants is
-occupied by a different ingredient (the layer index) and the ingredient it
-wants is already at another depth
-(`spell_ingredients_spell_id_variant_id_unique` since MB.217, on the
-ingredient's variant; dropped by `0087`, so only the layer collision remains). Either collision fails the
-whole scenario rather than the row.
-
-So a jar that already has layers is left exactly as it is — removed ones
-included, since a tombstone is a layer the jar has had, and a jar a member
-emptied has been edited rather than left unstocked. What that gives up is a
-demo jar healing itself after someone empties it, which `npm run db:reset` (M1.24)
-does properly anyway; what it buys is that a reseed over an edited grimoire is
-a no-op rather than an error. A developer scenario, so no test holds it
-(MB.225).
-
-### Invitation cards
-
-`src/db/seed/invitation-cards.ts` gives the admin Invitation Cards and Card Sign-Ups tabs (M15.17 to M15.22) rows to show. It runs only in `demo`: not in `standard`, which every db test clones, and not in a reference seed, which runs on staging and production. Three batches have fixed ids, each with a different first block so the screen names them apart: a live batch of two sheets (18 cards), a revoked batch of one sheet and an expired batch of one sheet, every card with its position. Four cards are accepted, by Fixture A (who owns W, so Covens Owned shows one), B, C and D. Eight refused opens cover `revoked`, `expired` and `accepted`, with counts from 1 to 12 and times from minutes to nine days back. Tokens are random and thrown away; only the hashes are stored, so no seeded card can be redeemed. A card is found again by its batch and position, an attempt by its card, account and reason, so a second run adds nothing. Times are set from the first run's clock, so a long-lived dev database shows them ageing, and the "live" batch expires 21 days after that first run. Standard has no soft-deleted user, so no refusal names a removed account. Seeded rows are written past `withAudit`, as every seed row is.
-
-### Held-back accounts
-
-`src/db/seed/sanctioned-users.ts` seeds two more accounts, so the admin Users table's Support Time-Out and Site Access Paused columns and the user modal have a standing one each to show. Fixture H (`…000a`, `h@seed.sorrelandsalt.com`) has a site access pause with no end date, set by E six days before the first run, with a note. Fixture I (`…000b`, `i@seed.sorrelandsalt.com`) has sent one request and is timed out of support with no end date by the support seed, with a note. Both are verified plain users who have agreed to the terms and may create no coven. They are not fixtures A–G, since stories and specs sign in as those, and they run only in `demo`, before the support seed, which needs I. The pause's id takes the block `…0006-…`. Each row is found again by its fixed id, so a second run adds nothing.
-
-### Support requests
-
-`src/db/seed/support-requests.ts` gives the admin Support tab, the account's own requests and the time-out display rows to show. It runs only in `demo`, for the reasons the card seed does. Nineteen requests cover every state the screens show: open and unassigned, assigned to the admin (E) or to the curator (F), shared with the curators (one of them also unassigned), linked to a GitHub issue, resolved by E or by F, waiting on the sender, closed, and anonymised. The first eleven come from Fixtures A to D. Five more follow the request lifecycle (`src/modules/support/services/lifecycle.ts`), so each carries the times the service would set: `last_sender_activity_at` is its creation time, `last_staff_activity_at` the time of the last staff reply or close. Two wait on the sender, each with a staff reply asking a question as its latest public reply: A's, about moving a jar to another coven (assigned to E), and E's, about the role the demo coven's members page shows (assigned to F, shared with the curators). E and F hold no card invitation, so they stand for senders who are not beta testers, and A to D for ones who are. Two are closed: F's, resolved by E and closed by the idle job seven days later, and D's, resolved and then closed by E, about spell search. D wrote again, which opened a sixteenth request, open, with the same topic and assignee, whose `linked_from` names D's closed one. The seventeenth is Fixture I's, open and unanswered (below). The last two are older than the twelve months a closed request keeps its words (`src/modules/support/services/retention.ts`). The eighteenth, about accessibility, was resolved by E about thirteen months before the first run and closed by the idle job seven days later, and is stored already anonymised, exactly as `anonymiseClosedSupportRequests` leaves a row: the fixed subject `Anonymised support request.`, no message or path, no sender address, the System account as its sender and last writer, and its one staff reply's text emptied and last written by the System account; its topic, status, assignee, resolver and dates are kept. The nineteenth, C's feedback about sorting the grimoire, was resolved and closed by E just over twelve months before the first run and is not anonymised, so the sweep that a visit to `/keepers/support` starts anonymises it. Thirteen staff replies sit on eleven of the requests, and two requests have two each. No read state exists, so no reply is marked unread. D has a time-out in force and an earlier one E lifted, C one that has run out, B one a keeper lifted early, and I one with no end date; each is set by E, with a note. Every row has a fixed id and is found again by it, so a second run adds nothing. A request is stamped by its sender (the System account for the anonymised one) and a reply or time-out by its author, then given a time in the past, set from the first run's clock. A curator's reply is only ever on a request assigned to them. The issue links name issues on the project repository by number and are not checked against it. Seeded rows are written past `withAudit`, as every seed row is.
+- **Invitation cards** (`invitation-cards.ts`): three batches with fixed ids and different first blocks (a live batch of two sheets, a revoked batch and an expired batch of one sheet each), four accepted cards (Fixtures A, B, C, D) and eight refused opens covering `revoked`, `expired` and `accepted`. Tokens are random and thrown away; only the hashes are stored, so no seeded card can be redeemed. A card is found again by its batch and position, an attempt by its card, account and reason. The "live" batch expires 21 days after the first run.
+- **Held-back accounts** (`sanctioned-users.ts`): Fixture H (`…000a`) has a site access pause with no end date, set by E; Fixture I (`…000b`) has sent one request and is timed out of support with no end date. Both are verified, have agreed to the terms and may create no coven. They are not fixtures A to G, since stories and specs sign in as those, and they run before the support seed, which needs I.
+- **Support requests** (`support-requests.ts`): nineteen requests covering every state the screens show: open and unassigned, assigned to the admin (E) or curator (F), shared with the curators, linked to a GitHub issue (named by number and not checked against the repository), resolved, waiting on the sender, closed, and anonymised. E and F hold no card invitation, so they stand for senders who are not beta testers, and A to D for ones who are. Requests following the lifecycle (`src/modules/support/services/lifecycle.ts`) carry the times the service would set (`last_sender_activity_at`, `last_staff_activity_at`). Two are older than the twelve months a closed request keeps its words (`src/modules/support/services/retention.ts`): one already anonymised exactly as `anonymiseClosedSupportRequests` leaves a row, and one not yet, so the sweep a visit to `/keepers/support` starts anonymises it. A curator's reply is only ever on a request assigned to them. Time-outs in force, lifted, run out and lifted early are covered across B, C, D and I.
 
 ## The demo coven seed
 
-`src/db/seed/demo-coven.ts` seeds the one demo coven: a workspace flagged
-`workspaces.demo`, and a seat in it for every account. It is the seventh
-reference seed, so it runs on every environment, after the compendium. The
-decisions behind it are in
-[`m15.9-demo-coven.md`](../design-decisions/m15.9-demo-coven.md).
-
-### What it writes
+`src/db/seed/demo-coven.ts` seeds the one demo coven: a workspace flagged `workspaces.demo`, and a seat in it for every account. It is the seventh reference seed, so it runs on every environment, after the compendium ([`m15.9-demo-coven.md`](../design-decisions/m15.9-demo-coven.md)).
 
 In one seed transaction, as the bootstrap system user:
 
-1. **The workspace.** If no live row has `demo = true`, it inserts one with id
-   `DEMO_WORKSPACE_ID`, name "Sorrel & Salt Demo" and the slug `slugify` makes
-   of the name, `sorrel-and-salt-demo`. If a row with that id exists but is
-   soft-deleted, the seed stops quietly and writes nothing more.
-2. **Owner seats** for `BOOTSTRAP_USER_ID` and for every live user whose role
-   is `admin`.
-3. **Viewer seats** for every other live user. `invited_by` is null.
+1. **The workspace.** If no live row has `demo = true`, it inserts one with id `DEMO_WORKSPACE_ID`, name "Sorrel & Salt Demo" and the slug `slugify` makes of it, `sorrel-and-salt-demo`. If a row with that id exists but is soft-deleted, the seed stops quietly and writes nothing more.
+2. **Owner seats** for `BOOTSTRAP_USER_ID` and every live `admin`.
+3. **Viewer seats** for every other live user, `invited_by` null. A new account is seated as an observer at sign-up by `databaseHooks.user.create.after`; step 3 backfills any account that hook missed.
 
-A seat is inserted only when no `workspace_members` row exists for the pair
-(demo coven, user). A soft-deleted row counts as existing. This is the
-never-re-add rule: someone who used Leave stays out, and so does an ex-admin
-whose seat was removed, until another steward invites and promotes them. The seed
-never updates a row, so a second run inserts nothing.
+A seat is inserted only when no `workspace_members` row exists for the pair, a soft-deleted row counting as existing. This is the never-re-add rule: someone who used Leave stays out, and so does an ex-admin whose seat was removed, until another steward invites and promotes them. The seed never updates a row, so a second run inserts nothing.
 
-A new account is seated as an observer at sign-up by
-`databaseHooks.user.create.after`; the seed's step 3 backfills any account that
-hook missed.
-
-The contents are written by `src/db/seed/demo-coven-content.ts`, described under "Contents" below.
+**Slug refusal.** If a coven that is not the demo coven already holds the slug, the seed throws an error naming that coven and writes nothing; it does not take `-2`. A keeper renames one of the two and seeds again. The seed cannot reuse `freeSlug`, which lives in a `server-only` service.
 
 ### Contents
 
-`seedDemoCovenContent(tx)` runs right after the seats, from `seedDemoCoven`, `seedReferenceData` and `seedDemo`. Everything is authored or recorded by the system user. It is written against the real compendium (the approved files under `compendium/`), never the `standard` fixtures, and every compendium ingredient is named by its formal name and a form its file lists.
+`seedDemoCovenContent(tx)` (`src/db/seed/demo-coven-content.ts`) runs right after the seats, from `seedDemoCoven`, `seedReferenceData` and `seedDemo`. Everything is authored or recorded by the system user, and written against the real compendium (the approved files under `compendium/`), never the `standard` fixtures; every compendium ingredient is named by its formal name and a form its file lists. It holds seven cupboard entries, one own entry (House Hearth Blend, form `blend`), six jars in grams, five spells (shared and private, complete and draft) and two workings, one complete deducting its four stocked layers and one draft. Each jar's form is the first form alphabetically, because a linked step lays that form.
 
-- **Cupboard:** seven compendium entries: Bay Laurel, Salt, Lavender, Basil, Cinnamon, German Chamomile and Hyssop.
-- **Own entry:** House Hearth Blend (invented, form `blend`).
-- **Jars:** six, in grams: Salt, Bay Laurel (Leaf), Hyssop (Herb), Lavender (Flower), Basil (Leaf) and the House Hearth Blend. Cinnamon and German Chamomile have no jar. Each jar's form is the first form alphabetically, because a linked step lays that form.
-- **Spells:** Doorway Protection Jar and Cleansing Salt Bowl (complete, shared with the coven), Prosperity Bowl (complete, private), Sleep Sachet (draft, private), Peace for the Table (draft, shared).
-- **Workings:** a complete one on the Doorway Protection Jar that deducts its four stocked layers from the jars, and a draft on the Cleansing Salt Bowl.
+Every ingredient in a spell carries a compendium category that matches one of the spell's assigned categories, bar the entries in `DEMO_COVEN_EXCEPTIONS`. There is one, lavender in the Prosperity Bowl, left in on purpose so the spell shows assigned categories narrower than its derived ones; the test fails on a third. Step text is plain instruction and claims nothing the compendium does not say.
 
-Every ingredient in a spell carries a compendium category that matches one of the spell's assigned categories, bar the entries in `DEMO_COVEN_EXCEPTIONS`. There is one: lavender in the Prosperity Bowl, left in on purpose so the spell shows assigned categories narrower than its derived ones. The test fails on a third. Step text is plain instruction and claims nothing the compendium does not say.
+An entry the environment's compendium lacks, or lacks a jar's form of, is skipped with the cupboard row, jars and spells that name it. The run prints one `SKIPPED <formal name>: <reason>` line for it and one for each spell dropped, and a missing entry never fails the run. `migrate.yml` and `seed-environment.yml` include `SKIPPED` lines in their seed summaries.
 
-An entry the environment's compendium lacks, or lacks a jar's form of, is skipped with the cupboard row, jars and spells that name it, and the run prints one `SKIPPED <formal name>: <reason>` line for it and one for each spell dropped. A missing entry never fails the run. migrate.yml and seed-environment.yml include `SKIPPED` lines in their seed summaries.
-
-#### Changing the contents
-
-The seed is additive: a row that exists is never updated, so a keeper's hand edit to a live row stands, and a keeper edits the live rows by hand. A new row, or a change every environment should get, is a PR to `demo-coven-content.ts` that adds it; a change to a row already seeded does not reach environments that hold it.
-
-Demo exceptions: the Prosperity Bowl's lavender is one: the compendium lists lavender under neither Prosperity nor Success, so the bowl's derived categories (the union of its ingredients') run wider than the two it intends, which the spell page shows when the two kinds differ.
+**Changing the contents.** The seed is additive: a row that exists is never updated, so a keeper's hand edit to a live row stands. A new row, or a change every environment should get, is a PR to `demo-coven-content.ts` that adds it; a change to a row already seeded does not reach environments that hold it.
 
 ### How a keeper gains and loses the seat
 
-Making someone a keeper seats them as `owner` of the demo coven, in the same
-`withAudit` transaction as the role change. If the role write fails, no seat is
-written. This covers every keeper grant: `setUserRole`, the primary keeper's
-promotion, and an accepted admin invitation.
-
-- No seat row: it is inserted as `owner`.
-- A soft-deleted seat: it is revived as `owner`. Unlike the seed, the grant
-  does re-seat a pair that left.
-- A `viewer` or `member` seat: it is promoted to `owner`.
-- No demo coven: nothing is written.
-
-Demoting a keeper sets their live seat back to `viewer`. Making or unmaking a
-curator changes no seat. The writer for the role change is `setSeatRole`, a
-write that takes no `Membership` proof, because a site-tier action has none.
+Making someone a keeper seats them as `owner` of the demo coven, in the same `withAudit` transaction as the role change, so if the role write fails no seat is written. This covers every keeper grant: `setUserRole`, the primary keeper's promotion, and an accepted admin invitation. No seat row is inserted as `owner`; a soft-deleted seat is revived as `owner` (unlike the seed, the grant does re-seat a pair that left); a `viewer` or `member` seat is promoted; with no demo coven nothing is written. Demoting a keeper sets their live seat back to `viewer`. Making or unmaking a curator changes no seat. The writer is `setSeatRole`, which takes no `Membership` proof, because a site-tier action has none.
 
 ### Three refusals
 
-Each throws `Forbidden` with a message that explains it.
+Each throws `Forbidden` with a message that explains it, and holds even when another steward exists, so the last-owner guard is not what stops them.
 
-- `deleteWorkspace` refuses a workspace with `demo = true`: "The demo coven
-  can't be deleted."
-- `removeMember` refuses `BOOTSTRAP_USER_ID`: "The system user's seat can't be
-  changed."
-- `updateMemberRole` refuses `BOOTSTRAP_USER_ID` with the same message.
-
-These hold even when another steward exists, so the last-owner guard is not what
-stops them.
-
-### The slug refusal
-
-If a coven that is not the demo coven already holds the slug, the seed throws an
-error naming that coven and writes nothing. It does not take `-2`. A keeper
-renames one of the two and seeds again. The seed cannot reuse `freeSlug`
-because that lives in a `server-only` service.
+- `deleteWorkspace` refuses a workspace with `demo = true`: "The demo coven can't be deleted."
+- `removeMember` and `updateMemberRole` refuse `BOOTSTRAP_USER_ID`: "The system user's seat can't be changed."
 
 ### Where it runs
 
-- `npm run db:seed:demo-coven` runs it alone, and takes `--dry-run`.
-- `seedReferenceData` runs it last, so `npm run db:seed:reference` and the
-  hand-started `seed-environment.yml` include it.
-- `migrate.yml` runs it after the compendium seed. `deploy.yml`'s
-  `seed-changed` path list names its file.
-- `seedDemo` runs it after the curated compendium, so `npm run db:reset:demo`
-  shows it. The `standard` scenario does not: fixture users A to G would gain a
-  membership and shift every memberships test. A test that needs the demo coven
-  seeds it itself, as `tests/db/seed/demo-coven.test.ts` does.
-
-### Running it by hand
-
-Against a local database: `npm run db:seed:demo-coven`. Add `-- --dry-run` to
-run it in full and roll back. Against staging or production, start "Seed an
-environment" from the Actions tab.
+- `npm run db:seed:demo-coven` runs it alone and takes `-- --dry-run` (the full run, rolled back). Against staging or production, start "Seed an environment" from the Actions tab.
+- `seedReferenceData` runs it last, so `npm run db:seed:reference` and the hand-started `seed-environment.yml` include it. `migrate.yml` runs it after the compendium seed, and `deploy.yml`'s `seed-changed` path list names its file.
+- `seedDemo` runs it after the curated compendium, so `npm run db:reset:demo` shows it. `standard` does not: fixture users A to G would gain a membership and shift every memberships test. A test that needs the demo coven seeds it itself, as `tests/db/seed/demo-coven.test.ts` does.
