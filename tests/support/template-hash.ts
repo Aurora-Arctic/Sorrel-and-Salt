@@ -5,6 +5,17 @@ import { join } from 'node:path';
 // A fingerprint of the files a seeded template database is built from, so a run can tell a template
 // left by an earlier run is still what a fresh seed would give.
 
+// Everything the seeded template is built from: the schema, the seed code, the files the seed reads, and
+// the scripts that run them. A change to any of them makes the next run reseed.
+export const TEMPLATE_INPUTS = [
+  'src/db/migrations',
+  'src/db/seed',
+  'compendium',
+  'documents',
+  'scripts/db-seed.ts',
+  'drizzle.config.ts',
+];
+
 function filesUnder(root: string, path: string): string[] {
   if (!statSync(join(root, path)).isDirectory()) return [path];
   return readdirSync(join(root, path), { withFileTypes: true })

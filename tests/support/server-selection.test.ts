@@ -26,12 +26,20 @@ describe('specialServersFor', () => {
         run('tests/e2e/a.spec.ts', 'tests/e2e/sign-in-configured-providers.spec.ts'),
       ),
     ).toEqual(['configured-providers']);
+    expect(
+      specialServersFor(
+        run('tests/e2e/sign-in-configured-providers.spec.ts', 'tests/e2e/compendium-cache.spec.ts'),
+      ),
+    ).toEqual(BOTH);
   });
 
   it('reads a filter as a pattern, with a line suffix dropped', () => {
     expect(specialServersFor(run('compendium-cache'))).toEqual(['compendium-cache']);
     expect(specialServersFor(run('tests/e2e/compendium-cache.spec.ts:12'))).toEqual([
       'compendium-cache',
+    ]);
+    expect(specialServersFor(run('tests/e2e/sign-in-configured-providers.spec.ts:12:5'))).toEqual([
+      'configured-providers',
     ]);
     expect(specialServersFor(run('tests/e2e/'))).toEqual(BOTH);
   });
@@ -40,9 +48,29 @@ describe('specialServersFor', () => {
     expect(specialServersFor(run('tests/e2e/(a.spec.ts'))).toEqual(BOTH);
   });
 
-  it('starts both for any option that can widen the selection', () => {
-    for (const option of ['--project', '--grep', '-g', '--last-failed', '--ui', '--shard=1/2']) {
-      expect(specialServersFor(run('tests/e2e/a.spec.ts', option))).toEqual(BOTH);
+  it('starts both for any option that can widen the selection, or one it does not know', () => {
+    // Without the option the same run starts none, so the option alone is what starts both.
+    expect(specialServersFor(run('tests/e2e/a.spec.ts'))).toEqual([]);
+    const options = [
+      ['--project'],
+      ['--project=chromium'],
+      ['--grep'],
+      ['--grep=compendium'],
+      ['-g'],
+      ['--grep-invert=x'],
+      ['--last-failed'],
+      ['--only-changed'],
+      ['--test-list=list.txt'],
+      ['--ui'],
+      ['--shard=1/2'],
+      ['-c', 'playwright.stories.config.ts'],
+      ['--config=playwright.stories.config.ts'],
+      ['--some-future-option'],
+    ];
+    for (const option of options) {
+      expect(specialServersFor(run('tests/e2e/a.spec.ts', ...option)), option.join(' ')).toEqual(
+        BOTH,
+      );
     }
   });
 

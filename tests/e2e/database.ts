@@ -1,5 +1,5 @@
 import { cloneDatabase, databaseUrl, seedTemplate } from '../support/seeded-database';
-import { hashInputs } from '../support/template-hash';
+import { TEMPLATE_INPUTS, hashInputs } from '../support/template-hash';
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
 
@@ -20,17 +20,6 @@ export function slotDatabase(slot: number): string {
 export function e2eDatabaseUrl(database = slotDatabase(currentSlot())): string {
   return databaseUrl(database);
 }
-
-// Everything the seeded template is built from: the schema, the seed code, the files the seed reads, and
-// the scripts that run them. A change to any of them makes the next run reseed.
-const TEMPLATE_INPUTS = [
-  'src/db/migrations',
-  'src/db/seed',
-  'compendium',
-  'documents',
-  'scripts/db-seed.ts',
-  'drizzle.config.ts',
-];
 
 /** Once per run: builds the template unless the one a run left behind was built from these same inputs. */
 export async function seedE2eTemplate(): Promise<void> {
