@@ -109,7 +109,8 @@ export const ADMIN_PAGES = {
     label: 'Business Cards',
     icon: 'businessCards',
     adminOnly: true,
-    description: 'A Letter sheet of ten business cards with your name, email and phone, ready to print.',
+    description:
+      'A Letter sheet of ten business cards with your name, email and phone, ready to print.',
     tabs: [{ href: '/keepers/business-cards', label: 'Business Cards' }],
   },
 } as const satisfies Record<string, AdminPage>;
