@@ -39,7 +39,6 @@ export default async function MembersPage({
   const { slug } = await params;
   const query = await searchParams;
   const { after, before } = readPageCursors(query);
-  // Blank is no modal.
   const memberParam = single(query.member) || undefined;
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
@@ -69,7 +68,6 @@ export default async function MembersPage({
     ),
   ];
   const names = await displayNamesOf(session, ids);
-  // A name the service withholds (it answers co-members only) reads as Unknown.
   const nameOf = (id: string) => names[ids.indexOf(id)] ?? 'Unknown';
   // The editor's name withheld, the stamp is left empty: a date with no one to
   // ask about it says little.
@@ -86,7 +84,6 @@ export default async function MembersPage({
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
   const canRemove = rolePermits(membership.role, { member: ['remove'] });
   const canPause = rolePermits(membership.role, { member: ['pause'] });
-  // The pauses standing on this page's members, in one read, and only for a role that may set them.
   const pauses = canPause
     ? await standingMemberPauses(
         session,
@@ -94,7 +91,6 @@ export default async function MembersPage({
         page.edges.map(({ node }) => node.userId),
       )
     : [];
-  // The pause standing on a member, with its end; null for none, and undefined for a role that reads none.
   const pauseOf = (id: string) => {
     if (!canPause) return undefined;
     const standing = pauses.find(({ userId }) => userId === id);
@@ -115,7 +111,6 @@ export default async function MembersPage({
       email: emailOf(node.userId),
       paused: pauseOf(node.userId),
     };
-    // Its modal over this page, the cursor kept, under the head the loaded modal carries.
     return {
       ...row,
       openHref: listHref(path, { ...cursor, member: node.userId }),

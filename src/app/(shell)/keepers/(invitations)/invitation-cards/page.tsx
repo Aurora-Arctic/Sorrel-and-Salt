@@ -47,7 +47,6 @@ const readBatches = cache(
         )
       ).map((total) => [total.batchId, total] as const),
     );
-    // What the list shows of each: no token or hash leaves the page.
     const now = new Date();
     const batches = page.edges.map(({ node }) => {
       const total = totals.get(node.batchId);

@@ -32,7 +32,6 @@ const readInvitations = cache(
       (request) => listPendingAdminInvitations(session, filter, request),
       (start) => countPendingAdminInvitations(session, filter, start),
     );
-    // What the list shows of each: no token or hash leaves the page.
     const invitations = page.edges.map(({ node: { id, email, siteRole, note, expiresAt } }) => ({
       id,
       email,
@@ -52,8 +51,6 @@ export default async function AdminInvitationsPage({ searchParams }: AdminInvita
   const params = await searchParams;
   const { filter, cursor } = readInvitationsPlace(params);
   const [locked, { invitations, pageInfo, position }] = await Promise.all([
-    // Whether keeper changes are paused, which locks Invite and Revoke for every keeper but the
-    // primary one.
     invitationsLock(session),
     readInvitations(session, filter.email, filter.expiringSoon, cursor.after, cursor.before),
   ]);
@@ -66,7 +63,6 @@ export default async function AdminInvitationsPage({ searchParams }: AdminInvita
       position={position}
       {...pagerHrefs(pageInfo, (turn) => invitationsHref(filter, turn))}
       locked={locked}
-      // By presence: `?invite` is written bare. Never while locked.
       inviting={!locked && params.invite !== undefined}
     />
   );

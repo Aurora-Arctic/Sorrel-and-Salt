@@ -19,10 +19,7 @@ export default function CompendiumDialog({
 }: CompendiumDialogProps): ReactElement {
   const { navigate, refresh } = usePendingNavigation();
   const entry = opened?.entry;
-  // The entry an autosave created: the address moves to its `?edit=`, and the form stays the one
-  // the person is typing in.
   const [created, setCreated] = useState<string | null>(null);
-  // The list it opened over: the keeper's, or the public search's.
   const href = (dialog?: { edit: string }) => compendiumHref(place, dialog, path);
   return (
     <RouteModal
@@ -41,7 +38,6 @@ export default function CompendiumDialog({
                   setCreated(saved.id);
                   navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
                 }}
-                // An autosave keeps the modal open: its address and heading follow the saved name.
                 onAutosaved={(saved) => {
                   navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
                   refresh();
@@ -49,9 +45,6 @@ export default function CompendiumDialog({
                 review={opened.review}
                 sourcing={opened.sourcing}
                 entry={entry && entry.id !== created ? entry : undefined}
-                // Save Ingredient opens the entry it saved, at the address its name
-                // now spells; Save & Add Another stays on the new form, which clears
-                // itself, and the list beneath gains the entry.
                 onSaved={(saved, next) => {
                   if (next === 'open')
                     navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
@@ -71,10 +64,7 @@ export default function CompendiumDialog({
                       }
                     : done
                 }
-                // A near match opens its own modal here, over the same list.
                 duplicateHref={(match) => href({ edit: match.slug })}
-                // And its Quick Look opens its details over the form, the form kept open beneath
-                // them in the address, so closing them comes back to it.
                 quickLookOf={
                   lookUnder &&
                   ((match) => ({
@@ -82,8 +72,6 @@ export default function CompendiumDialog({
                     heading: detailsHeading(match),
                   }))
                 }
-                // A linked substitute's summary opens its entry's modal in a new tab, every
-                // substitute here being a compendium entry.
                 entryHref={({ slug }) => href({ edit: slug })}
               />
             </>

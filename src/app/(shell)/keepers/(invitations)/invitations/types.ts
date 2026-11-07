@@ -7,7 +7,6 @@ export interface AdminInvitationsPageProps {
   searchParams: Promise<InvitationsSearchParams>;
 }
 
-/** The tab's address: its filter (`email`, `expiring`), at most one cursor, and `?invite` for the form. */
 export interface InvitationsSearchParams {
   email?: string | string[];
   expiring?: string | string[];
@@ -16,7 +15,6 @@ export interface InvitationsSearchParams {
   invite?: string | string[];
 }
 
-/** Where the address puts the tab: its filter, and the page it shows. */
 export interface InvitationsPlace {
   filter: AdminInvitationsFilter;
   cursor: AdminInvitationsCursor;

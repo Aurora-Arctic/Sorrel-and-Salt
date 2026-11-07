@@ -36,7 +36,6 @@ import type { SpellRecipeParams } from './types';
 // spell and another member's private spell all read as the same 404. Per request, never cached (rule 6).
 // The page calls `requireSession()` and draws its own `<main>`.
 
-// One read per request, shared by the metadata and the page. The guard runs first.
 const spellOf = cache(async (slug: string, id: string) => {
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
@@ -59,8 +58,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const { workspace, membership, session, spell } = await spellOf(slug, id);
   const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
   const recipe = await readRecipeOf(session, spell, recipePath);
-  // The side column: the builder's In the Cupboard panel and Category Match on the saved spell, for
-  // the page and not the Quick Look modal.
   const aside = await readRecipeAsideOf(
     session,
     workspace.id,
@@ -86,11 +83,9 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const canDelete = rolePermits(membership.role, { spell: ['delete'] });
   const canDuplicate = rolePermits(membership.role, { spell: ['create'] });
-  // Only a complete spell is worked, and on the permission `recordWorking` asserts.
   const canRecord =
     spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
   const name = spell.title?.trim() || UNTITLED_SPELL;
-  // The recorder by name, from the viewer the shell layout already read this request.
   const { viewer } = await viewerOf();
   const recordButton = (
     <RecordWorkingButton
@@ -106,9 +101,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const deletedHref = deletedHrefOf(listPath as Route, spell.title);
   const query = await searchParams;
   const edit = query.edit;
-  // An ingredient step's Quick Look eye opens the ingredient's details over the recipe, at this
-  // page's `?entry=<id>`, read as the coven's Ingredients page reads it: any member's, and nothing
-  // for an id the service withholds.
   const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
   const wanted = typeof edit === 'string' ? RowId.safeParse(edit) : undefined;

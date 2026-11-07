@@ -30,10 +30,6 @@ import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
 type Query = Parameters<typeof listGrimoire>[3];
 
-/**
- * One page of `CARD_PAGE_SIZE` spells of one status with its count, each with its assigned
- * categories and last editor: one batch each. Newest edit first, or best match while searching.
- */
 export const readGrimoire = cache(
   async (
     workspaceId: string,
@@ -43,7 +39,6 @@ export const readGrimoire = cache(
     before: string | undefined,
   ) => {
     const session = await requireSession();
-    // Written by the page from its parameter table, and checked again by the service.
     const query: Query = { order: 'UPDATED_DESC', ...JSON.parse(variables), status };
     const page = await readNumberedPage(
       { after, before },
@@ -63,7 +58,6 @@ export const readGrimoire = cache(
         session,
         page.edges.map(({ node }) => node.updatedBy),
       ),
-      // How often each was made: the count loader's one query for the page.
       workingCountsOf(
         session,
         page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId })),
@@ -93,11 +87,6 @@ export const readGrimoire = cache(
   },
 );
 
-/**
- * The spell `?edit=<id>` opens the builder on, read as the signed-in member, with its fields and
- * assigned categories; its steps the dialog reads through /api/graphql. Nothing for a spell the
- * service withholds (another member's private one included); other failures are let through.
- */
 export async function readEditedSpell(
   workspaceId: string,
   id: string,
@@ -133,10 +122,6 @@ export async function readEditedSpell(
   }
 }
 
-/**
- * How many spells of one status each category holds under the filter, by category id: one grouped
- * read, a private spell counted for its author alone. An absent category holds none here.
- */
 export const readGrimoireCategoryCounts = cache(
   async (workspaceId: string, variables: string, status: SpellStatus) => {
     const session = await requireSession();
@@ -170,7 +155,6 @@ export const readGrimoireFacetCounts = cache(
       daysOfWeek: counts.daysOfWeek,
       visibilities: counts.visibilities,
       makers: makers.map((value, i) => ({
-        // One the viewer cannot name is still offered, unnamed, so its spells can be filtered.
         value,
         label: names[i] ?? FORMER_MEMBER,
         count: counted.get(value) ?? 0,
@@ -183,13 +167,11 @@ export const readGrimoireFacetCounts = cache(
  * The spell `?spell=<id>` opens Quick Look on, read as the signed-in member. `undefined` for a
  * spell the service withholds; any other failure is `failed`, which the modal says in a Notice.
  */
-/** The spell `?spell=<id>` opens at `lookHref`, the tab's address with it, and its recipe drawn there. */
 export async function readLookedSpell(workspaceId: string, lookHref: Route, id: string) {
   const session = await requireSession();
   try {
     const spell = await readSpell(session, workspaceId, id);
     const recipe = await readRecipeOf(session, spell, lookHref);
-    // The modal has no side column, so each ingredient step carries its stock verdict itself.
     const supplies = await readStepSuppliesOf(session, workspaceId, recipe.views);
     const steps = recipe.steps.map((step) =>
       step.kind === 'ingredient' ? { ...step, supply: supplies.get(step.id) ?? null } : step,

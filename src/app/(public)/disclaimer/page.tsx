@@ -8,7 +8,6 @@ export const metadata: Metadata = {
   alternates: { canonical: siteUrl('/disclaimer') },
 };
 
-// The text is read from the database, so the page is built per request and never frozen at build time.
 export const dynamic = 'force-dynamic';
 
 export default function Page() {

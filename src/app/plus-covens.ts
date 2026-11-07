@@ -10,10 +10,6 @@ import { covensHoldingEntry, type HoldingCoven } from '@/modules/ingredients';
 // hold the entry. Per viewer, so read per request and never cached (rule 6); see
 // claude-docs/components/ingredient-entry.md, "Cupboard buttons".
 
-/**
- * The viewer's covens that hold the entry, observers' included; none signed out. A refusal reads as
- * none, and the write says no.
- */
 export async function covensHolding(id: string): Promise<readonly HoldingCoven[]> {
   const session = await getSession();
   if (!session) return [];
@@ -25,10 +21,6 @@ export async function covensHolding(id: string): Promise<readonly HoldingCoven[]
   }
 }
 
-/**
- * Every coven the viewer may add in, with those in `holding` marked held; none where no coven may
- * add. `current` is the default where it may add, otherwise the first.
- */
 export async function plusCovensOf(
   holding: readonly HoldingCoven[],
   current?: string,

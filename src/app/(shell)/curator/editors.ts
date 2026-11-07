@@ -7,7 +7,6 @@ import { editorNamesForCurator, listedOnUserList } from '@/modules/identity';
 // names are read by `editorNamesForCurator`, which refuses anyone but a curator or keeper and shows
 // no ledger field, in one lookup for the whole page.
 
-/** What the column says of an editor no live account holds any more: a removed user. */
 const REMOVED_EDITOR = 'Unknown';
 
 /**

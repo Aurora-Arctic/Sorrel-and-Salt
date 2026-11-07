@@ -8,7 +8,6 @@ export interface AdminUsersPageProps {
   searchParams: Promise<UsersSearchParams>;
 }
 
-/** The page's address: the filter, at most one cursor, and the user whose modal is open. */
 export interface UsersSearchParams {
   query?: string | string[];
   awaiting?: string | string[];
@@ -17,13 +16,11 @@ export interface UsersSearchParams {
   paused?: string | string[];
   after?: string | string[];
   before?: string | string[];
-  /** The id of the user whose modal is open over the list. */
   user?: string | string[];
   /** The screen that opened the modal, where Close goes back to; none for the list itself. */
   from?: string | string[];
 }
 
-/** The user `?user=` opens, as the page read them: the modal's head and its body's props. */
 export interface OpenedUser {
   heading: ModalHeading;
   user: UserDetailUser;
@@ -34,13 +31,10 @@ export interface OpenedUser {
 }
 
 export interface UserDialogProps {
-  /** The list the modal opened over, its filter and cursor kept: closing returns there. */
   closeHref: Route;
   /** What the address opens; none when it opens nothing, or while a press's is on its way. */
   opened?: OpenedUser;
-  /** Whether impersonation is registered here, so the body offers it. */
   canImpersonate: boolean;
-  /** Whether keeper changes are locked for this keeper, as the list's controls read it. */
   changesPaused: boolean;
   /** The modal place it shows in, where the page has another modal; unnamed on the Users page. */
   place?: string;

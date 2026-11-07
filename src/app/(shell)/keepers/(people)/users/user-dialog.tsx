@@ -24,7 +24,6 @@ export default function UserDialog({
           heading: opened.heading,
           body: () => (
             <UserDetail
-              // A fresh body per user: one opened after another starts unasked.
               key={opened.user.id}
               user={opened.user}
               memberships={opened.memberships}

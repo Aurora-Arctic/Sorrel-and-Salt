@@ -3,7 +3,6 @@
 import ErrorPage from '../components/ErrorPage';
 import './globals.scss';
 
-// The sign-in-free address of the bug form for this error; the digest rides as `ref`.
 const reportHref = (digest?: string): string =>
   `/support?support=bug&error=500${digest ? `&ref=${encodeURIComponent(digest)}` : ''}`;
 

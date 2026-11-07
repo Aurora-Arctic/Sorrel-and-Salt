@@ -22,7 +22,6 @@ export default function GroupDialog({
           heading: opened.heading,
           body: (done) => (
             <GroupForm
-              // A fresh form per group: one opened after another starts from its own values.
               key={opened.group?.id ?? 'new'}
               kind={kind}
               group={opened.group}

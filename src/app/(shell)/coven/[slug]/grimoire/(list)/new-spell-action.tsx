@@ -19,7 +19,6 @@ export default function NewSpellAction({ covenName }: NewSpellActionProps): Reac
   const query = new URLSearchParams(useSearchParams());
   query.delete(NEW);
   query.delete('edit');
-  // The grimoire's own address always names its coven, so the slug is there.
   query.set(NEW, spellValue(covenSlugOf(path) ?? ''));
   const href = `${path}?${query}` as Route;
   return (

@@ -16,7 +16,6 @@ export const metadata: Metadata = {
 
 // Where an account that has not agreed to the current terms lands from every other protected page. It is exempt from the
 // terms check itself (`requireSession`), and an account that has already agreed is let through, so a stale tab does no harm.
-/** The stored agreement of an account that never agreed, which has every published document still to read. */
 const NEVER_AGREED = { terms: null, disclaimer: null, ethics: null };
 
 export default async function TermsAcceptancePage({ searchParams }: TermsPageProps) {

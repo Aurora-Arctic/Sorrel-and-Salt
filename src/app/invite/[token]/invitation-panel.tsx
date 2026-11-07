@@ -7,17 +7,14 @@ import { getSession } from '../../../lib/request-session';
 import { ADMIN_LANDING, CURATOR_LANDING, signInPath } from '../../../lib/sign-in';
 import { invitationStanding } from '@/modules/identity';
 
-// Cached so a second render in the request reads once (CLAUDE.md rule 1).
 const standingOf = cache(invitationStanding);
 
 // `Route<T>` checks the address against the built routes only when `T` is
 // inferred from it (see src/components/CovenNav/sections.ts).
 const route = <T extends string>(href: Route<T>): Route => href as Route;
 
-/** Where an account that accepts a card lands: it can now start a coven. */
 const CARD_LANDING = '/coven/new' satisfies Route;
 
-// The same page with the marker that makes it say what the card gave. A cast, as the built routes know no query.
 const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
 
 // The one accept panel for `/invite/[token]` and `/i/[token]`, public in src/proxy.ts. `getSession()`, not
@@ -27,7 +24,6 @@ export default async function InvitationPanel({ token, here }: { token: string; 
 
   let panel: InvitationAcceptanceProps;
   if (!session) {
-    // Nothing of the invitation is read until a session holds the link.
     panel = {
       status: 'signed-out',
       signInHref: signInPath(here),

@@ -12,7 +12,6 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 // connection finder as the signed-in session, which keeps a private working to its recorder and the
 // people named on it in SQL; per request, never cached (rule 6).
 
-/** What a participant reads when no name is readable for them. */
 export const FORMER_MEMBER = 'A former member';
 
 export async function readWorkingsOf(
@@ -20,9 +19,7 @@ export async function readWorkingsOf(
   workspaceId: string,
   spellId: string,
   steps: readonly RecipeStep[],
-  /** The viewer's role may delete workings; deleting is still the recorder's alone. */
   mayDelete: boolean,
-  /** The viewer's role may change workings; changing is the recorder's or a named member's. */
   mayEdit: boolean,
 ): Promise<WorkingView[]> {
   const reports = await allPages((request) =>
@@ -55,12 +52,10 @@ export async function readWorkingsOf(
     workedOn: working.workedOn,
     note: working.note,
     recordedBy: recorders[i] ?? null,
-    // The recorder is named once, in "Recorded by", so the people who took part leave them out.
     warnings: working.status === 'draft' && mayChange(working, participants) ? skips : [],
     participants: participants
       .filter((person) => person.userId !== working.createdBy)
       .map((person) => person.displayName ?? person.name ?? FORMER_MEMBER),
-    // The spell's order, so the lines read the way the recipe does without carrying its numbers.
     deductions: [...deductions]
       .sort(
         (a, b) =>

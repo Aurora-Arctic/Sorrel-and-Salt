@@ -29,8 +29,6 @@ export async function generateMetadata({ searchParams }: SignInPageProps): Promi
 export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
   const next = safeReturnPath(params.next);
-  // A signed-in visitor has nothing to do here: they go where a sign-in would have taken them, and an
-  // unverified account to the email page first, as requireSession() sends it.
   const session = await getSession();
   if (session) {
     const target = (next as Route | undefined) ?? (await signedInLanding(session));

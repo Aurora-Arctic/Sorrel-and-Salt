@@ -19,8 +19,6 @@ export const metadata: Metadata = {
   title: 'Support',
 };
 
-// The support requests a keeper may read, narrowed in SQL and paged by cursor, with the request
-// `?request=` opens. The page and GraphQL end at the same support services, which are the guard.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const session = await requireCuratorSession();
   const { filter, cursor, request, user } = readSupportPlace(await searchParams);

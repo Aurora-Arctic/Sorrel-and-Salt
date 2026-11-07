@@ -13,8 +13,6 @@ import { TWITTER_CARD } from '../lib/page-metadata';
 // unverified account gets the email page. See claude-docs/design-decisions/mb.57-post-sign-in-landing.md.
 const DESCRIPTION = 'A compendium, ingredient store and grimoire.';
 
-// The site's name alone, absolute so the layout's template does not add it twice. Canonical is the
-// bare origin. The same for every visitor; only a signed-out one is shown the `WebSite` markup below.
 export const metadata: Metadata = {
   title: { absolute: SITE_NAME },
   description: DESCRIPTION,

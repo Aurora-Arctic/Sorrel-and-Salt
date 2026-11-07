@@ -1,6 +1,5 @@
 import type { AccessRole, AccessRow } from '@/components/AccessCards/types';
 
-/** Who may see each kind of data: one row per kind, one cell per role, each cell drawn from the service that enforces it. */
 export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
   {
     data: 'Your name and the picture your sign-in provider shared',
@@ -131,7 +130,6 @@ export const PRIVACY_ACCESS_ROWS: AccessRow[] = [
   },
 ];
 
-/** The roles, in column order, each with the short label over its column. */
 export const PRIVACY_ACCESS_ROLES: AccessRole[] = [
   { name: 'Coven Steward', short: 'Stew' },
   { name: 'Coven Practitioner', short: 'Prac' },

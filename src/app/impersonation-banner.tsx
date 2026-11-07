@@ -9,7 +9,6 @@ import { useSession } from '../lib/auth-client';
 // page dynamic, the public compendium's included.
 export default function ImpersonationBannerSlot(): ReactElement | null {
   const { data } = useSession();
-  // The type is the client's, which knows the plugin's session field.
   if (!data?.session.impersonatedBy) return null;
   return <ImpersonationBanner name={data.user.name} email={data.user.email} />;
 }
