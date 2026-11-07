@@ -108,7 +108,9 @@ function StackTable<Row>({
   return (
     <div className="data-table-frame">
       {/* Inside the frame, as the container query that shows it at phone width asks of the frame. */}
-      {sorting && <SortSelect choices={sorting.choices} current={sorting.current} />}
+      {sorting && (
+        <SortSelect choices={sorting.choices} current={sorting.current} disabled={pending} />
+      )}
       <table
         aria-hidden={pending || undefined}
         className={[

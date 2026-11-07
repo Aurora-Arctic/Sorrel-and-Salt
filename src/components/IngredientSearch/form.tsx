@@ -3,6 +3,7 @@
 import { type ReactElement, createContext, useContext, useState } from 'react';
 import FilterForm from '../FilterForm';
 import IngredientSearchBox from './search-box';
+import IngredientSearchIdleBox from './idle-box';
 import type { IngredientSearchFormProps } from './types';
 
 // The search row: FilterForm around the search box, then the consumer's own fields. It shares
@@ -28,6 +29,7 @@ export const IngredientSearchForm = ({
   source,
   clear,
   className,
+  idle = false,
   children,
 }: IngredientSearchFormProps): ReactElement => {
   const [text, setText] = useState(query);
@@ -42,15 +44,19 @@ export const IngredientSearchForm = ({
         sorrel
         className={className}
       >
-        <IngredientSearchBox
-          text={text}
-          onText={setText}
-          searchHref={searchHref}
-          pickHref={pickHref}
-          pickHeading={pickHeading}
-          pickPlace={pickPlace}
-          source={source}
-        />
+        {idle ? (
+          <IngredientSearchIdleBox source={source} />
+        ) : (
+          <IngredientSearchBox
+            text={text}
+            onText={setText}
+            searchHref={searchHref}
+            pickHref={pickHref}
+            pickHeading={pickHeading}
+            pickPlace={pickPlace}
+            source={source}
+          />
+        )}
         {children}
       </FilterForm>
     </SearchText.Provider>

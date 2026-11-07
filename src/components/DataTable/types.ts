@@ -64,6 +64,8 @@ export interface SortSelectProps {
   choices: readonly SortChoice[];
   /** The address of the order the list is in now. */
   current: Route | undefined;
+  /** Drawn but out of use, for a table on its way. */
+  disabled?: boolean;
 }
 
 export interface StackTableProps<Row> {

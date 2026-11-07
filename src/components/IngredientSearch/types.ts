@@ -68,6 +68,8 @@ export interface IngredientSearchFormProps {
   clear?: boolean;
   /** Joins the form's class. */
   className?: string;
+  /** Draw the box empty and asking nothing, for a list on its way. */
+  idle?: boolean;
   /** The filter slot: the consumer's other fields, after the search box. */
   children?: ReactNode;
 }

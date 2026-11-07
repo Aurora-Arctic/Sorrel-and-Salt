@@ -28,6 +28,7 @@ export const SearchRowSkeleton = ({
       shown={[]}
       clear={false}
       className={className}
+      idle
       searchHref={() => '/'}
     >
       <button type="button" className="btn facet-panel__button" disabled>
