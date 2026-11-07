@@ -24,3 +24,4 @@ The held noun follows the vocabulary: a coven's own stock is its cupboard (`CLAU
 - "In Your Covens" as the held noun.
 - A Compact switch on the public list.
 - Fixing hand-written repeats of a mixin or token inside a design-review PR; they are collected into their own task.
+- Treating LinkHint's drop, the navigation bar's 3px and the Combobox ring as repeats: each is a design choice and stays as it is.
