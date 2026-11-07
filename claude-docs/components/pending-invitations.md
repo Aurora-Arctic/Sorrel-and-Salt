@@ -15,7 +15,7 @@ coven's Members page renders it (`claude-docs/auth/coven-guard.md`, "The invitat
   check `member: invite` (CLAUDE.md rule 1).
 - **The Status column** says "Expires <time>" for a pending invitation and "Declined
   <time>" for one the invitee declined. "Declined" is a badge in the `attention` palette's red,
- the account menu's count's, so a declined row stands out among the expiry dates. A declined row stays listed past its expiry, since an
+  the account menu's count's, so a declined row stands out among the expiry dates. A declined row stays listed past its expiry, since an
   answer is something to read and not a link that lapses, until a steward removes it.
 - **The Action column** (heading "Action") offers Revoke on a pending row and
   Remove on a declined one.
