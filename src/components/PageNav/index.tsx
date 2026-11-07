@@ -129,7 +129,7 @@ export default function PageNav({
   // nests a group, its label naming its list.
   const list = pending ? (
     <ul aria-hidden="true">
-      {Array.from({ length: 6 }, (_, at) => (
+      {Array.from({ length: pending === true ? 6 : pending }, (_, at) => (
         <li key={at}>
           <span className="page-nav__pending">
             <Skeleton shape="line" quiet />

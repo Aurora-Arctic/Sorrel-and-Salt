@@ -1,3 +1,4 @@
+import { EntrySkeleton } from '@/components/IngredientEntry/skeleton';
 import { ListSkeleton } from '@/components/ListFrame/skeleton';
 import PageHeader from '@/components/PageHeader';
 import PageNav from '@/components/PageNav';
@@ -33,30 +34,8 @@ export const CovenIngredientsSkeleton = () => (
   </div>
 );
 
-// An ingredient's page: the back bar and a name not yet known, then its menu and sections.
-export const CovenEntrySkeleton = () => (
-  <div>
-    <div className="back-bar">
-      <Skeleton shape="line" quiet />
-    </div>
-    <PageHeader pendingTitle />
-    <PageWithNav as="div">
-      <PageNav
-        label="On This Page"
-        entries={[
-          { href: '#stock', label: 'Stock' },
-          { href: '#details', label: 'Details' },
-          { href: '#forms', label: 'Forms' },
-          { href: '#references', label: 'References' },
-        ]}
-      />
-      <section className="page-frame__section">
-        <Skeleton shape="line" count={3} quiet />
-        <Skeleton shape="line" count={3} quiet />
-      </section>
-    </PageWithNav>
-  </div>
-);
+// An ingredient's page: the entry's own frame, with a name not yet known.
+export const CovenEntrySkeleton = () => <EntrySkeleton coven />;
 
 // A spell's page: the recipe's own frame, with the back bar, the title and its columns as bars.
 export const SpellRecipeSkeleton = () => (
