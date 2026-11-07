@@ -356,3 +356,27 @@ describe('the brand and text colours clear their floors on the page and the card
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
   });
 });
+
+describe("the faceted jar's two bands are solid theme tokens that swap roles between themes", () => {
+  it.each(['--jar-shade', '--jar-shine'])(
+    '%s is a solid colour with a value for each theme',
+    (name) => {
+      const [light, dark] = [surfaces('light')[name], surfaces('dark')[name]];
+      expect(light, `${name} in light`).toBeDefined();
+      expect(dark, `${name} in dark`).toBeDefined();
+      expect(toHex(light, 'light')).not.toBe(toHex(dark, 'dark'));
+    },
+  );
+
+  it('the shade is darker than the card in light and lighter in dark, and the shine the reverse', () => {
+    const lum = (hex: string) => contrastRatio(hex, '#000000');
+    for (const theme of ['light', 'dark'] as const) {
+      const tokens = surfaces(theme);
+      const [card, shade, shine] = ['--surface-card', '--jar-shade', '--jar-shine'].map((name) =>
+        lum(toHex(tokens[name], theme)),
+      );
+      expect(shade < card, `shade below card in ${theme}`).toBe(theme === 'light');
+      expect(shine > card, `shine above card in ${theme}`).toBe(theme === 'light');
+    }
+  });
+});

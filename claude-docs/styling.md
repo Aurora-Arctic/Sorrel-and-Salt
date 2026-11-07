@@ -373,6 +373,17 @@ the rest of the page. Decorative, so no contrast table: nothing is
 read against them, and `prefers-contrast: more` removes the ornaments entirely
 ([`components/backdrop.md`](components/backdrop.md)).
 
+### The faceted jar's bands
+
+`$jar-shade` and `$jar-shine` (`--jar-shade`, `--jar-shine`) are the two bands of a faceted jar in `JarShelf`, which is their only user. Each is a solid colour with one value per theme, taken from the card (`--surface-card`), and the two swap roles between themes.
+
+| Token         | Light                                                                          | Dark                                                                   |
+| ------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `--jar-shade` | iron-gall stirred into the raised parchment at 8%, a step darker than the card | chalk stirred into the raised soot at 8%, a step lighter than the card |
+| `--jar-shine` | the lifted parchment, a step lighter than the card                             | the soot page colour, a step darker than the card                      |
+
+Decorative, so held to no contrast ratio. A row in `tests/scss/tokens.test.ts` asserts that both are set in each theme and sit on the sides of the card given above. ([`components/jar-shelf.md`](components/jar-shelf.md), "Paint")
+
 ## Category chips
 
 Amended 2026-10-19; this replaced the `selected` and `unselected` states. `chip()` draws a pill in one

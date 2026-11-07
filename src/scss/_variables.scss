@@ -99,6 +99,14 @@ $drawer-side-dark: color.mix($chalk, $soot, 25%);
 $drawer-back-dark: color.mix($chalk, $soot, 2%);
 $drawer-seam-dark: color.mix($drawer-back-dark, $drawer-floor-dark, 55%);
 
+// The faceted jar's two bands, solid and from the card: light darkens the shade toward iron-gall
+// and lifts the shine to the raised parchment; dark lifts the shade toward chalk and sinks the
+// shine to the page. claude-docs/styling.md, "The faceted jar's bands".
+$jar-shade-light: color.mix($iron-gall, $parchment-raised, 8%);
+$jar-shine-light: $parchment-lifted;
+$jar-shade-dark: color.mix($chalk, $soot-raised, 8%);
+$jar-shine-dark: $soot;
+
 // The shading over the drawer: the shadow the face casts and the wash from each side wall. Dark
 // shades with black, as the site's shadows do. Light shades with iron-gall at alpha and lighter, as
 // the dark's strengths over a light floor read as a hole.
@@ -499,6 +507,10 @@ $notice-button-ink: var(--notice-button-ink);
 // "$ornament-screen").
 $ornament-screen: var(--ornament-screen);
 $ornament-multiply: var(--ornament-multiply);
+
+// A faceted jar's two bands (claude-docs/styling.md, "The faceted jar's bands").
+$jar-shade: var(--jar-shade);
+$jar-shine: var(--jar-shine);
 
 // The label on a solid fill — the selected chip, the safety badge. An alias for
 // the page surface: on dark the fill is the light thing and the label goes
