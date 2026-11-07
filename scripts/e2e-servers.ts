@@ -14,10 +14,21 @@
 // Usage: npm run e2e:servers
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { allServers } from '../tests/e2e/servers.ts';
+import { SERVERS_READY, allServers, serversFor } from '../tests/e2e/servers.ts';
+import type { SpecialServer } from '../tests/support/server-selection.ts';
+
+// `--playwright` is how playwright.config.ts's one `webServer` entry runs this: the special servers are the
+// ones `E2E_SPECIAL_SERVERS` names rather than both, a build is skipped when the slot servers are already
+// up (as `reuseExistingServer` did), and SERVERS_READY is printed for the entry to wait for.
+const forPlaywright = process.argv.includes('--playwright');
+const servers = forPlaywright
+  ? serversFor(
+      (process.env.E2E_SPECIAL_SERVERS ?? '').split(',').filter(Boolean) as SpecialServer[],
+    )
+  : allServers;
 
 const READY_TIMEOUT_MS = 60_000;
-const [first] = allServers;
+const [first] = servers;
 
 async function answers(url: string): Promise<boolean> {
   try {
@@ -40,12 +51,16 @@ async function waitUntilUp(url: string): Promise<void> {
 // The build always runs, so "restart after a code change" also rebuilds and a
 // stale build cannot be served. It takes the first slot's environment, as the
 // config's `npm run build && npm run start` does.
-console.log('Building .next-e2e ...');
-const build = spawnSync('npm', ['run', 'build'], {
-  stdio: 'inherit',
-  env: { ...process.env, ...first.env },
-});
-if (build.status !== 0) process.exit(build.status ?? 1);
+if (forPlaywright && !process.env.CI && (await answers(first.url))) {
+  console.log('Servers already up, build skipped');
+} else {
+  console.log('Building .next-e2e ...');
+  const build = spawnSync('npm', ['run', 'build'], {
+    stdio: forPlaywright ? ['ignore', 'ignore', 'inherit'] : 'inherit',
+    env: { ...process.env, ...first.env },
+  });
+  if (build.status !== 0) process.exit(build.status ?? 1);
+}
 
 // Each server is its own process group, so one signal reaches `next` and not
 // only the `npm` that started it.
@@ -65,7 +80,7 @@ process.on('SIGTERM', () => stopAll(0));
 
 const started = Date.now();
 const results = await Promise.allSettled(
-  allServers.map(async (server) => {
+  servers.map(async (server) => {
     if (await answers(server.url)) {
       console.log(`${server.url}  already up, left alone`);
       return;
@@ -91,7 +106,7 @@ if (failed.length > 0) {
   stopAll(1);
 }
 console.log(
-  `${allServers.length} servers ready in ${((Date.now() - started) / 1000).toFixed(1)} s. Ctrl-C stops them.`,
+  `${servers.length} ${SERVERS_READY} in ${((Date.now() - started) / 1000).toFixed(1)} s. Ctrl-C stops them.`,
 );
 
 // Keep the process alive; the servers are children, and the signal handlers end it.

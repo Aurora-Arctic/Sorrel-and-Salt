@@ -5,6 +5,7 @@ import {
   e2eDatabaseUrl,
   slotDatabase,
 } from './database';
+import type { SpecialServer } from '../support/server-selection';
 import { PRIMARY_ADMIN_EMAIL } from './session';
 import {
   COMPENDIUM_CACHE_PORT,
@@ -75,13 +76,9 @@ const serverEnv = (
   ...providers,
 });
 
-// The first slot's server builds; Playwright starts the entries in order, so
-// every later one serves the build the first has finished.
+// One server per worker slot. The first slot's environment is the build's.
 export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
-  command: slot === 0 ? 'npm run build && npm run start' : 'npm run start',
   url: serverUrl(slotPort(slot)),
-  reuseExistingServer: !process.env.CI,
-  timeout: slot === 0 ? 180_000 : 60_000,
   env: serverEnv(slotPort(slot), slotDatabase(slot), UNCONFIGURED_PROVIDERS),
 }));
 
@@ -89,24 +86,46 @@ export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
 // credentials per request) and a database of its own, so no slot reseeds it.
 // claude-docs/components/sign-in-panel.md, "Testing".
 const configuredProvidersServer = {
-  command: 'npm run start',
   url: serverUrl(CONFIGURED_PROVIDERS_PORT),
-  reuseExistingServer: !process.env.CI,
-  timeout: 60_000,
   env: serverEnv(CONFIGURED_PROVIDERS_PORT, CONFIGURED_PROVIDERS_DATABASE, PLACEHOLDER_PROVIDERS),
 };
 
 // One more, whose data cache holds: the one place a spec sees a read answered from the cache rather
 // than Postgres. Its database is its own and never reseeded, since a reseed would leave the cache behind it.
 const compendiumCacheServer = {
-  command: 'npm run start',
   url: serverUrl(COMPENDIUM_CACHE_PORT),
-  reuseExistingServer: !process.env.CI,
-  timeout: 60_000,
   env: serverEnv(COMPENDIUM_CACHE_PORT, COMPENDIUM_CACHE_DATABASE, UNCONFIGURED_PROVIDERS, {
     dataCache: true,
   }),
 };
 
-/** Every server a full run needs, in the order Playwright starts them. */
-export const allServers = [...slotServers, configuredProvidersServer, compendiumCacheServer];
+const SPECIAL_SERVERS = {
+  'configured-providers': configuredProvidersServer,
+  'compendium-cache': compendiumCacheServer,
+};
+
+/** The slot servers and the special ones named, in the order they are started. */
+export const serversFor = (special: SpecialServer[]) => [
+  ...slotServers,
+  ...special.map((name) => SPECIAL_SERVERS[name]),
+];
+
+/** Every server a full run needs. */
+export const allServers = serversFor(['configured-providers', 'compendium-cache']);
+
+/** What scripts/e2e-servers.ts prints when every server answers: the `webServer` entry waits for it. */
+export const SERVERS_READY = 'e2e servers ready';
+
+/**
+ * The one `webServer` entry a Playwright run needs: a script that builds once, then starts the slot servers
+ * and the special ones named together and prints SERVERS_READY when all answer. Playwright starts separate
+ * entries one after another, each waiting for its own, which cost more than the servers' boot did.
+ * The `SIGTERM` lets the script stop its servers, which run in process groups of their own.
+ */
+export const startupServer = (special: SpecialServer[]) => ({
+  command: 'npx tsx scripts/e2e-servers.ts --playwright',
+  env: { E2E_SPECIAL_SERVERS: special.join(',') },
+  wait: { stdout: new RegExp(SERVERS_READY) },
+  timeout: 240_000,
+  gracefulShutdown: { signal: 'SIGTERM' as const, timeout: 15_000 },
+});

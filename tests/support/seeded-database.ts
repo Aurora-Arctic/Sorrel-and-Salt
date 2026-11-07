@@ -72,17 +72,46 @@ function run(script: string, url: string, env: Record<string, string> = {}): voi
 /**
  * `name` as a clone of the extensions-only base with every migration applied and the `standard` scenario
  * seeded, which the fixture cast and the invented-names rule are written against. Around a second.
+ * With a `key`, an existing `name` stored under the same key is left as it is, and a rebuilt one is stored
+ * under it, as a comment on the database.
  */
 export async function seedTemplate(
   name: string,
-  { demoCoven = false }: { demoCoven?: boolean } = {},
+  { demoCoven = false, key }: { demoCoven?: boolean; key?: string } = {},
 ): Promise<void> {
+  if (key && (await templateKey(name)) === key) return;
   await cloneDatabase(name, BASE_TEMPLATE);
   const url = databaseUrl(name);
   run('db:migrate', url);
   run('db:seed', url, { SEED_SCENARIO: 'standard' });
   // `standard` leaves the demo coven out, as production seeds it as reference data; a browser spec about it asks for it.
   if (demoCoven) run('db:seed:demo-coven', url);
+  // Last, so a seed that failed part-way leaves no key and the next run reseeds.
+  if (key) await setTemplateKey(name, key);
+}
+
+/** The key `seedTemplate` stored on `name`, or undefined when the database or its key is missing. */
+async function templateKey(name: string): Promise<string | undefined> {
+  const sql = admin();
+  try {
+    const [row] = await sql<{ key: string | null }[]>`
+      select shobj_description(oid, 'pg_database') as key from pg_database where datname = ${name}
+    `;
+    return row?.key ?? undefined;
+  } finally {
+    await sql.end();
+  }
+}
+
+async function setTemplateKey(name: string, key: string): Promise<void> {
+  const sql = admin();
+  try {
+    // A comment takes a literal, not a parameter; `key` is a hex digest.
+    if (!/^[0-9a-f]+$/.test(key)) throw new Error('A template key must be a hex digest');
+    await sql.unsafe(`COMMENT ON DATABASE ${name} IS '${key}'`);
+  } finally {
+    await sql.end();
+  }
 }
 
 /**
