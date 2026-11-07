@@ -850,6 +850,18 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
 }
 
+// A card's placeholder: one block filling the whole card, in the card's own frame (its radius, border,
+// shadow and padding box), the same fill and shimmer as a bar. Nest inside the card's selector.
+@mixin card-skeleton-fill {
+  > .card-skeleton__fill {
+    @include skeleton-shape;
+    position: absolute;
+    inset: 0;
+    height: auto;
+    border-radius: inherit;
+  }
+}
+
 // The two row tweaks a data table takes by class (`.data-table--roomy`, `.data-table--nowrap`),
 // each emitted once by `_primitives.scss`. Roomy: taller rows, centred on their cells, for a chip or
 // a button taller than the text; only while it is a table. Nest inside the table's selector.

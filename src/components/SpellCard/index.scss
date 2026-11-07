@@ -149,7 +149,13 @@
   @include spell-card-compact;
 }
 
-// The skeleton's bars, closer than the shared stack so five of them stand as tall as the card's content.
-.spell-card .skeleton__shapes {
-  gap: space(3);
+// The skeleton: the card's frame at the height a typical card stands, the block filling it.
+.spell-card--skeleton {
+  @include card-skeleton-fill;
+  box-sizing: border-box;
+  height: 16.5rem;
+}
+
+[data-density='compact']:not(:root[data-card-density='regular'] *) .spell-card--skeleton {
+  height: 15.1rem;
 }

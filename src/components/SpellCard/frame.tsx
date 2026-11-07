@@ -7,11 +7,16 @@ import './index.scss';
 export const SpellCardFrame = ({
   labelledBy,
   children,
+  skeleton = false,
 }: {
   labelledBy?: string;
-  children: ReactNode;
+  children?: ReactNode;
+  skeleton?: boolean;
 }): ReactElement => (
-  <article className="spell-card specimen" aria-labelledby={labelledBy}>
+  <article
+    className={`spell-card specimen${skeleton ? ' spell-card--skeleton' : ''}`}
+    aria-labelledby={labelledBy}
+  >
     {/* The card's face and shadow, and the warm glow behind them, as layers, so the
         smouldering edge (_smoulder.scss) can burn a real hole in the face and its shadow.
         First, so the content paints over them; decoration only, so hidden from assistive
@@ -24,7 +29,7 @@ export const SpellCardFrame = ({
         </span>
       </span>
     </span>
-    {children}
+    {skeleton ? <span className="card-skeleton__fill" aria-hidden="true" /> : children}
     {/* The smoulder's ember line and char rim, over the content (_smoulder.scss). */}
     <span className="spell-card__burn" aria-hidden="true">
       <span className="spell-card__burn-paper">
