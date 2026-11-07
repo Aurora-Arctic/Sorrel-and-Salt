@@ -112,7 +112,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         disabled={sending}
       />
       <ReasonField
-        className="user-list__note"
+        className="confirmed-action__note"
         hint={NOTE_HINT}
         value={note}
         onChange={setNote}

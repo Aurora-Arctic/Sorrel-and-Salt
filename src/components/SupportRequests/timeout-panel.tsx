@@ -11,7 +11,7 @@ import { CollapsibleSection } from '../CollapsibleSection';
 import IconTip from '../IconTip';
 import { HistoryIcon } from '../IconTip/icons';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import {
   Ledger,
   PauseFields,

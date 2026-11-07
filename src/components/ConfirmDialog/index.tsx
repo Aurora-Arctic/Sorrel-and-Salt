@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, type ReactNode, useEffect, useId, useRef } from 'react';
-import BusyButton from '../BusyButton';
+import ConfirmAnswersRow from './answers';
 import { giveFocusBack } from '../Modal/modal';
 import { holdPage } from '../Modal/page-hold';
 import '../Modal/index.scss';
@@ -98,26 +98,17 @@ const ConfirmDialog = ({
         {question}
       </p>
       {children}
-      <div className="modal__actions">
-        <BusyButton
-          className={`btn btn--${tone}`}
-          busy={busy}
-          busyLabel={busyLabel}
-          disabled={busy}
-          onClick={onConfirm}
-        >
-          {confirmLabel}
-        </BusyButton>
-        <button
-          ref={cancel}
-          type="button"
-          className="btn btn--quiet"
-          disabled={busy}
-          onClick={onClose}
-        >
-          Cancel
-        </button>
-      </div>
+      <ConfirmAnswersRow
+        label={confirmLabel}
+        className={`btn btn--${tone}`}
+        busyLabel={busyLabel}
+        busy={busy}
+        disabled={busy}
+        onConfirm={onConfirm}
+        safeRef={cancel}
+        safeDisabled={busy}
+        onSafe={onClose}
+      />
     </dialog>
   );
 };

@@ -6,7 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import StackTable from '../DataTable';
 import { emptyList, noMatchText } from '../../lib/text';
 import LocalTime from '../LocalTime';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from '../UserList/locked-control';
 import { roleLabel } from '../UserList/roles';
 import ListFrame, { ListBody } from '../ListFrame';

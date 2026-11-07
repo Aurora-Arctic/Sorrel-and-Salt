@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import ConfirmedAction from '@/components/UserList/confirmed-action';
-import type { ConfirmedActionProps } from '@/components/UserList/types';
+import ConfirmedAction from '@/components/ConfirmedAction';
+import type { ConfirmedActionProps } from '@/components/ConfirmedAction/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { announced, expectRefusalUnder } from '../../support/click-feedback';
 

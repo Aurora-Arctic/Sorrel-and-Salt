@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import ConfirmedAction from './confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import {
   IMPERSONATION_LANDING,
   impersonationQuestion,

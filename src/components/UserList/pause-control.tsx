@@ -8,7 +8,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
-import ConfirmedAction from './confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
 

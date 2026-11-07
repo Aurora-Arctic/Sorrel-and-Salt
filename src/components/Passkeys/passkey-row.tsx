@@ -2,7 +2,7 @@
 
 import type { ReactElement } from 'react';
 import { ModalButton } from '../Modal';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { RenameFields } from './rename-fields';
 import { passkeyAdded, passkeyLabel } from './label';
 import { GENERIC } from './refusal';

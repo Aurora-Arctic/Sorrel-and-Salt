@@ -268,7 +268,7 @@ export const rules = {
           reason:
             'not a return to the opener: the print window takes the focus, the warning puts it on its safe answer as it opens, and after Stay, Go Back, Esc, Close or an outside click it goes to the two-factor section rather than to the button or link that opened the dialog',
         },
-        'src/components/UserList/confirmed-action.tsx': {
+        'src/components/ConfirmedAction/index.tsx': {
           calls: 1,
           reason:
             'the focus going in, not back: the question puts it on the confirm, which the warning describes, as the modal opens',

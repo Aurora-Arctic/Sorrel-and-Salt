@@ -15,7 +15,7 @@ hands it over; admin only: the service is the guard.
 - **Nothing pending**: a line says no document has changed since the last email, and nothing can be sent.
 - **Pending** (`canSend`): one **Summary of the …** textbox for each pending document. **Email Every Account**, red (`btn--destructive`)
   like its **Send Emails** confirm because a mailing reaches every account and cannot be called back, stays disabled until every summary
-  is written. It opens a confirmation, via [`ConfirmedAction`](../../src/components/UserList/confirmed-action.tsx), that names the
+  is written. It opens a confirmation, via [`ConfirmedAction`](../../src/components/ConfirmedAction/index.tsx), that names the
   documents. The account count and the days the mailing takes sit on a line of their own, as the confirm's `warning`. When the terms, the
   disclaimer or the code of ethics is pending, the question says each account is asked to agree again; when a mailing is open, it says
   that mailing stops. The summaries are sent trimmed, each with its version id.
