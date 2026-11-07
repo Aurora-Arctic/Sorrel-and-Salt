@@ -1,6 +1,7 @@
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import Skeleton from '../Skeleton';
+import SkeletonText from '../Skeleton/text';
 import './index.scss';
 import './formal-name.scss';
 
@@ -47,8 +48,8 @@ export const EntrySkeleton = ({ coven = false }: { coven?: boolean }) => (
         <section className="ingredient-entry__section">
           <div className="ingredient-entry__stock-panel">
             <div className="ingredient-entry__stock-head">
-              <h2 aria-hidden="true" className="ingredient-entry__pending-heading">
-                <Skeleton shape="line" quiet />
+              <h2 aria-hidden="true">
+                <SkeletonText>Stock</SkeletonText>
               </h2>
             </div>
             <ul aria-label="Stock" className="ingredient-entry__pending-shelf">
