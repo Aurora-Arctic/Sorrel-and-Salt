@@ -35,15 +35,12 @@ export const noSupportNotifier: SupportNotifier = {
   origin: async () => unexpected('resolve an origin'),
 };
 
-/** For a test that sets a time-out or pause and does not look at the mail: it gives the origin a pause mail's run carries. */
 export const noPauseNotifier: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier = {
   origin: async () => 'http://localhost:3000',
 };
 
-/** The origin a document mailing’s links are built on, for a test that starts no real run. */
 export const noDocumentMailingNotifier: DocumentMailingNotifier = {
   origin: async () => 'http://localhost:3000',
 };
 
-/** The message to the user that a time-out or site access pause must carry, for a test that does not look at the mail. */
 export const PAUSE_MESSAGE = 'A fixture message to the user.';

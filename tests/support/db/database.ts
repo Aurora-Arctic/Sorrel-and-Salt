@@ -6,10 +6,7 @@ import type { IndexRow, CatalogueReads } from './types';
 // database `WITH (FORCE)` before every file, which kills a connection that outlived its file
 // (claude-docs/testing/db-harness.md, "The db test harness").
 
-/**
- * Hands the client to `bind` rather than returning it, so a file's existing `let sql` stays as written.
- * `DATABASE_URL` is read inside the hook, after `db-runner.ts` has pointed it at this worker's clone.
- */
+// `DATABASE_URL` is read inside the hook, after `db-runner.ts` has pointed it at this worker's clone.
 export function useTestDatabase(bind: (client: postgres.Sql) => void): CatalogueReads {
   let sql: postgres.Sql;
 
@@ -45,7 +42,6 @@ export function useTestDatabase(bind: (client: postgres.Sql) => void): Catalogue
   };
 }
 
-/** The error a statement was expected to be refused with; throws if it succeeded instead. */
 export async function failureOf(work: Promise<unknown>): Promise<postgres.PostgresError> {
   return await work.then(
     () => {

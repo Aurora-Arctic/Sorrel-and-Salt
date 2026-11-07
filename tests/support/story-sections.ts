@@ -1,4 +1,3 @@
-// The part of the site each v1 story walks, as "Area - Page - Part": where in the site to look when a story
 // fails. A story without a section here is listed under "Other".
 
 export const STORY_SECTIONS: Readonly<Record<number, string>> = {

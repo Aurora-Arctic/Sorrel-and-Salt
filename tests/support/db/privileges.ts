@@ -4,7 +4,6 @@ import type postgres from 'postgres';
 // setup changing `role` or `can_create_workspace` by hand declares itself a `psql` fix
 // (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
-/** Runs `work` in one transaction that first declares the route `manual`, as a `psql` fix must. */
 export async function asManualFix(
   sql: postgres.Sql,
   work: (tx: postgres.TransactionSql) => Promise<unknown>,
@@ -15,11 +14,7 @@ export async function asManualFix(
   });
 }
 
-/**
- * The database's own message for a write that was expected to be refused:
- * Drizzle wraps the driver's error as its `cause`, and the raw client throws
- * it bare. Throws if the write succeeded instead.
- */
+// Drizzle wraps the driver's error as its `cause`; the raw client throws it bare.
 export async function refusalOf(work: Promise<unknown>): Promise<string> {
   return await work.then(
     () => {

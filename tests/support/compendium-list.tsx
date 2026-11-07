@@ -17,10 +17,6 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { filterForm } from './filter-form';
 import { mockGraphQLQuery } from './msw/graphql';
 
-// The compendium list's fixtures and its filter row's controls, shared by the
-// list's test (tests/components/CompendiumList/index.test.tsx), which renders
-// the table, and the filter's (filter.test.tsx), which renders the row alone.
-
 // The Name box is IngredientSearch's type-ahead, which asks the server through
 // TanStack Query, so every render sits under a client, as the app's providers give it.
 let client = makeQueryClient();
@@ -34,10 +30,6 @@ export const CompendiumList = (listProps: CompendiumListProps): ReactElement => 
   </QueryClientProvider>
 );
 
-/**
- * The filter row and its search sentence without the table: what the list
- * passes IngredientSearch as its search, with no results beneath it.
- */
 export const FilterRow = ({
   entries: _entries,
   previousHref,
@@ -115,10 +107,6 @@ export const ENTRIES: CompendiumListEntry[] = [
   },
 ];
 
-/**
- * The list's loading status, the skeleton's: the Form type-ahead holds a
- * status of its own, inside the filter's search landmark.
- */
 export const listStatus = () =>
   screen.queryAllByRole('status').filter((status) => !status.closest('search'));
 
@@ -142,7 +130,6 @@ export const NO_FILTER: CompendiumListFilter = {
   covensNot: false,
 };
 
-/** Every filter in use, as a page shows it. */
 export const SHOWN: CompendiumListFilter = {
   query: 'test',
   forms: ['Fixture Oil'],
@@ -163,14 +150,12 @@ export const SHOWN: CompendiumListFilter = {
   covensNot: false,
 };
 
-/** The categories the Categories box offers, each with the slug the address carries. */
 export const CATEGORIES = [
   { id: 'c-tw', slug: 'testward', name: 'Testward', group: WARDS },
   { id: 'c-tc', slug: 'testcraft', name: 'Testcraft', group: WARDS },
   { id: 'c-tb', slug: 'testbane', name: 'Testbane', group: WARDS },
 ];
 
-/** The facets the page reads: the curated forms the Form box offers, each with its count. */
 export const FORMS = [
   { value: 'Fixture Oil', label: 'Fixture Oil', count: 3, icon: null },
   { value: 'Fixture Powder', label: 'Fixture Powder', count: 2, icon: null },
@@ -203,11 +188,6 @@ export const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumL
   ...overrides,
 });
 
-/**
- * Readies a describe for the filter row's panel: the router's pushes cleared,
- * the panel opening as it does from the tablet width up, over the results, and
- * the panel's live counts answered with none.
- */
 export const readyFilterRow = (push: Mock) => {
   beforeEach(() => {
     push.mockReset();
@@ -249,7 +229,6 @@ export const answerCounts = (withoutReferences: number) =>
     },
   }));
 
-/** The filter the sentence cases search with: one category chosen. */
 export const SEARCHED: CompendiumListFilter = { ...NO_FILTER, categories: ['testcraft'] };
 
 // The sentence types on a 16ms interval, a render a tick. On real timers a loaded full run outran the 20s
@@ -261,13 +240,10 @@ export const typingClock = () => {
   });
 };
 
-// The sentence is typed out, hidden from assistive technology, while a search is on its way.
 const typingDetails = () =>
   screen
     .queryAllByRole('group', { hidden: true })
     .find((group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true');
 export const typing = () => typingDetails() !== undefined;
-/** The line typed out while the search is on its way: the first line of the hidden sentence. */
 export const typedLine = () => typingDetails()!.querySelector('summary')!.textContent;
-/** The whole typed sentence: the first line and the clauses beneath it, typed or still to type. */
 export const typedSentence = () => typingDetails()!.textContent;

@@ -71,7 +71,6 @@ let updatableWorkingId: string;
 let completableWorkingId: string;
 let deletableWorkingId: string;
 
-/** Seeds every row the probes name, once, before the first test of the file that calls it. */
 export function useProbeRows(): void {
   beforeAll(async () => {
     const sql = postgres(process.env.DATABASE_URL as string);
@@ -490,7 +489,6 @@ const mailsNothing: InvitationSender = {
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
 
-/** The probe as B, a member of W (or A, its owner, when the probe says), so only the id can refuse; `as` names another caller. */
 export async function runProbe(
   probe: WorkspaceIdProbe,
   workspaceId: string,
@@ -519,7 +517,6 @@ export async function runProbe(
   return (await response.json()) as Answer;
 }
 
-/** Every Query and Mutation field declaring a `workspaceId` argument. */
 export function fieldsTakingWorkspaceId(): string[] {
   const roots = [schema.getQueryType(), schema.getMutationType()] as GraphQLObjectType[];
   return roots

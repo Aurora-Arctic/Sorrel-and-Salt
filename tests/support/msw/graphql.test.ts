@@ -7,7 +7,6 @@ import { expectConsole } from '../console-guard';
 
 describe('MSW GraphQL handler stub', () => {
   it('fails loudly on an operation with no override, rather than hitting the network', async () => {
-    // MSW prints its refusal through console.error.
     expectConsole('error', /\[MSW\]/);
     await expect(
       fetch('/api/graphql', {

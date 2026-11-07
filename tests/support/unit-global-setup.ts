@@ -8,14 +8,8 @@ import type { Diagnostic } from './types';
 
 declare module 'vitest' {
   interface ProvidedContext {
-    /**
-     * Every file the repo holds, on disk: the index plus untracked files git would not ignore, so a guard
-     * catches a file before it is staged. Sorted, repo-relative; the lint probes are gitignored by name.
-     */
     repoFiles: string[];
-    /** oxlint's report over `lintedFiles`, under `.oxlintrc.json`, in one run. */
     lintDiagnostics: Diagnostic[];
-    /** What that run was pointed at, so a guard can assert its probes were seen. */
     lintedFiles: string[];
   }
 }
@@ -23,7 +17,6 @@ declare module 'vitest' {
 // One scan for every guard (claude-docs/testing/layer-ownership.md, "The owning layer"): a fixed cost paid
 // per run, not per file. The probes are removed as soon as oxlint has read them, so no test sees them on disk.
 
-/** The spelling scripts/doc-citations.mjs uses, so the two sweeps see one tree. */
 function listRepoFiles(): string[] {
   // `-c safe.directory=*`: CI's vitest job runs as root over a checkout owned
   // by uid 1000, which git refuses as "dubious ownership".
@@ -41,7 +34,6 @@ function listRepoFiles(): string[] {
   return files;
 }
 
-/** oxlint over the probes and the committed files the guards name, as JSON. */
 function lint(files: string[]): Diagnostic[] {
   const oxlint = join(REPO_ROOT, 'node_modules/.bin/oxlint');
   const config = join(REPO_ROOT, '.oxlintrc.json');
@@ -58,11 +50,9 @@ function lint(files: string[]): Diagnostic[] {
     stdout = (error as { stdout?: string }).stdout ?? '';
   }
   const { diagnostics } = JSON.parse(stdout) as { diagnostics: Diagnostic[] };
-  // Only what the guards read, so the provided context stays small.
   return diagnostics.map(({ code, filename, help }) => ({ code, filename, help }));
 }
 
-/** Writes the probes, lints them with the files the guards name, and removes them. */
 function lintProbes(): Diagnostic[] {
   removeProbes(); // a run killed mid-lint leaves its probes behind
   try {
@@ -93,7 +83,5 @@ export default function setup(project: TestProject) {
     project.provide('lintDiagnostics', lintProbes());
   };
   scan();
-  // Watch mode reruns without setting up again: a file added or a rule
-  // changed since the last run is seen on the next.
   project.onTestsRerun(scan);
 }

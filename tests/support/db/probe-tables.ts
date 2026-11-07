@@ -75,14 +75,11 @@ export const tiers = namedWrites(
   }),
 );
 
-/** Acting users with no `users` row: the probe tables carry no FK to one. */
 export const session = { userId: '11111111-1111-1111-1111-111111111111' };
 export const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
 
-/** The raw client, for what the repository deliberately cannot do. Set in `beforeAll`. */
 export let sql: ReturnType<typeof postgres>;
 
-/** Opens the raw client for this file, and closes it after. */
 export function useRawClient() {
   beforeAll(() => {
     sql = postgres(process.env.DATABASE_URL as string);
@@ -90,7 +87,6 @@ export function useRawClient() {
   afterAll(() => sql.end());
 }
 
-/** Creates the probe tables for this file, empties them before each test, and drops them after. */
 export function useProbeTables() {
   beforeAll(async () => {
     sql = postgres(process.env.DATABASE_URL as string);
