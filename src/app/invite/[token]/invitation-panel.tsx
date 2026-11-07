@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import { cache } from 'react';
 import InvitationAcceptance from '../../../components/InvitationAcceptance';
 import type { InvitationAcceptanceProps } from '../../../components/InvitationAcceptance/types';
+import type { PageHeaderProps } from '../../../components/PageHeader/types';
 import { emailPagePath } from '../../../lib/account-email';
 import { getSession } from '../../../lib/request-session';
 import { ADMIN_LANDING, CURATOR_LANDING, signInPath } from '../../../lib/sign-in';
@@ -24,7 +25,16 @@ const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
 // not `requireSession()`: an unverified account is told why it cannot accept yet, where a redirect
 // would drop the reason (claude-docs/auth/admin-users.md, "Inviting a keeper"). `here` is the path
 // the visitor came by, so sign-in and the email page return to it.
-export default async function InvitationPanel({ token, here }: { token: string; here: string }) {
+export default async function InvitationPanel({
+  token,
+  here,
+  headingLevel,
+}: {
+  token: string;
+  here: string;
+  /** The panel heading's level: `h2` where the page has its own `h1` above it. */
+  headingLevel?: PageHeaderProps['level'];
+}) {
   const session = await getSession();
 
   let panel: InvitationAcceptanceProps;
@@ -66,5 +76,5 @@ export default async function InvitationPanel({ token, here }: { token: string; 
     }
   }
 
-  return <InvitationAcceptance {...panel} />;
+  return <InvitationAcceptance {...panel} headingLevel={headingLevel} />;
 }

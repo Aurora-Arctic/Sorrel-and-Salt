@@ -1,0 +1,2 @@
+ALTER TABLE "invitations" ADD COLUMN "beta" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_beta_card_only" CHECK (not "invitations"."beta" or "invitations"."kind" = 'card');

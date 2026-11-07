@@ -121,6 +121,8 @@ beneath it, with the row's text kept clear of it. On hover the count keeps
 otherwise recolour the label. It sits one layer up, so its tip hangs over the
 rows beneath it.
 
+**Forced colours.** Forced-colours mode drops the disc's `$accent` fill, so a 1px `CanvasText` border draws the circle, inside the disc's 2rem so the bar does not move. On hover and while the panel is open, the circle turns `Highlight`, in place of the darkened fill. The invitations dot is still drawn by its fill alone, so it does not show in forced-colours mode.
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx), titled "Shell / Account Menu", has one story, `States`, with a control that chooses the state: Closed, Open, Closed With Invitations (the dot), Open With Invitations (the count beside Your Account), Open With One Invitation (the singular wording), Open On The Admin Page (the current page marked), Open With A Long Name, Sign Out Failed (the failure callout under the button) and Open Unverified (Sign Out alone). The toolbar viewport menu shows any of them at a phone's width. Every open state draws Sign Out as its last row; there is no state of the button alone, since the app never draws it elsewhere. Each sits at the right, since the panel hangs from the button's right edge. The wrapper holds the menu at its top and is tall enough for the open panel, because the workshop's frame clips what overflows it.

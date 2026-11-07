@@ -12,6 +12,12 @@
   margin-inline-start: space(1);
   border-radius: 50%;
   background: $accent;
+
+  // The link's own ink, as the fill is dropped.
+  @include forced-colors {
+    background-color: LinkText;
+  }
+
   // Unseen by opacity alone: its own `visibility` would override a held page's hidden one.
   opacity: 0;
 

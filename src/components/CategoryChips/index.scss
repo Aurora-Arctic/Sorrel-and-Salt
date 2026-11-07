@@ -28,6 +28,19 @@
   &:focus-visible {
     @include focus-ring;
   }
+
+  // The hairline fill is dropped: hover takes a Highlight edge, open a Highlight fill.
+  @include forced-colors {
+    &:hover {
+      border-color: Highlight;
+    }
+
+    &[aria-expanded='true'] {
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
 }
 
 // The panel is fixed and placed by Floating UI (category-more.tsx), so no table frame's
@@ -44,6 +57,12 @@
   box-sizing: border-box;
   max-inline-size: calc(100vw - #{space(4)});
   padding: space(3);
+
+  // The shadow that was its edge is dropped, so a border draws it.
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   opacity: 0;
   visibility: hidden;
   // Visibility waits for the fade-out, so the panel is gone from the page once it is clear.

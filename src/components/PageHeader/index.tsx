@@ -12,6 +12,7 @@ const classes = (...names: (string | false | undefined)[]): string =>
 const PageHeader = ({
   title,
   pendingTitle,
+  level = 'h1',
   id,
   eyebrow,
   lede,
@@ -24,23 +25,24 @@ const PageHeader = ({
   suffix,
 }: PageHeaderProps): ReactElement => {
   // A tag makes the h1 a two-column grid, so it stays beside the title's first line when the title wraps.
+  const Heading = level;
   const focus = focusable ? { tabIndex: -1, 'data-view-heading': true } : {};
   // A pending title draws a bar the height of the heading in the same box, so the head keeps its
   // size; the heading is named Loading, so a wait keeps its one level-one heading.
   const heading = pendingTitle ? (
-    <h1 id={id} className={headingClassName}>
+    <Heading id={id} className={headingClassName}>
       <span className="visually-hidden">Loading</span>
       <Skeleton shape="line" quiet />
-    </h1>
+    </Heading>
   ) : tag ? (
-    <h1 id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
+    <Heading id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
       <span>{title}</span> {tag}
-    </h1>
+    </Heading>
   ) : (
-    <h1 id={id} className={headingClassName} {...focus}>
+    <Heading id={id} className={headingClassName} {...focus}>
       {title}
       {suffix && <> {suffix}</>}
-    </h1>
+    </Heading>
   );
   const column = Boolean(eyebrow) || Boolean(lede);
   const line =

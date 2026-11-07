@@ -1291,6 +1291,37 @@ canvas behind the page match without being styled. Dark also turns on
 antialiased/grayscale font smoothing, since light text on a dark ground renders
 heavier than the reverse; light reverts to the browser default.
 
+## Forced colours
+
+Forced colours (Windows High Contrast) repaint every background to `Canvas`, drop shadows and
+gradients, and paint a transparent border or outline in `CanvasText`; a system colour the author writes is
+kept. Each rule sits in a `forced-colors` block, uses only `Canvas`, `CanvasText`, `Highlight`,
+`HighlightText`, `LinkText`, `GrayText` and `ButtonText`, adds no token and never uses
+`forced-color-adjust`. The compendium section's pass gave each state one treatment:
+
+- **Edge.** A surface whose edge was a shadow takes a 1px `CanvasText` border: the ingredient card,
+  the +N panel, the dialog and the confirm card, a Combobox chip, and the sourcing bar's track. The
+  pinned search row takes a rule along its foot, a banded table row one under it, and the sticky action
+  column a line at its start edge (`sticky-action-column`, dropped when the table stacks). An error edge
+  that was an inset shadow takes a second line inside it, as an outline.
+- **Hover.** A bordered control turns its border `Highlight`: `.btn`, `outlined-chip`, the +N button,
+  the choice chip and the card slot. A control with no border takes a 1px inset `Highlight` outline,
+  not while it has the focus ring: `icon-button` (so every icon button and AddIcon), the modal's close
+  button, ClickFeedback's dismiss, MenuButton items and PageNav's links.
+- **Chosen or open.** A `Highlight` fill with `HighlightText` ink, as the `.switch` and radio strip
+  already do: the open +N button, the open choice chip, an open `icon-button-edit`, the chosen menu
+  item, the active Combobox option and the dragged chip. The shown switch mirrors `.switch`.
+- **Focus.** No change: the shared ring is an outline, which forced colours paint in `CanvasText`.
+- **Disabled.** `GrayText` ink and border, keeping the dashed edge: `btn-disabled`, a shut Combobox
+  select and chip action, a disabled choice chip and a disabled menu item.
+- **Marks drawn by a fill or a mask** are painted a system colour: `warning-mark` `CanvasText`, the
+  ClickFeedback badge a `CanvasText` disc, the LinkHint dot `LinkText`, the search caret `CanvasText`,
+  the sourcing bar's gains `Highlight` and losses `CanvasText`, and the current PageNav section a
+  heavy `CanvasText` border (a `Canvas` one at rest). A jumped-to entry-page target takes a 1px
+  `Highlight` outline.
+
+`tests/e2e/forced-colours.spec.ts` asserts each against the colours the browser resolves.
+
 ## The files
 
 - `src/scss/_variables.scss` — base colour palette, badge tokens, the brand

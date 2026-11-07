@@ -48,6 +48,7 @@ import {
   ZodiacSignsSkeleton,
 } from './(shell)/curator/skeleton';
 import {
+  BusinessCardsSkeleton,
   CardSignUpsSkeleton,
   InvitationCardsSkeleton,
   KeepersDocumentSkeleton,
@@ -104,6 +105,7 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/keepers/invitation-cards': { host: 'admin', Skeleton: InvitationCardsSkeleton },
   '/keepers/card-sign-ups': { host: 'admin', Skeleton: CardSignUpsSkeleton },
   '/keepers/support': { host: 'admin', Skeleton: KeepersSupportSkeleton },
+  '/keepers/business-cards': { host: 'admin', Skeleton: BusinessCardsSkeleton },
   '/keepers/documents': { host: 'admin', Skeleton: KeepersEmailUpdatesSkeleton },
   '/keepers/documents/[key]': { host: 'admin', Skeleton: KeepersDocumentSkeleton },
 };

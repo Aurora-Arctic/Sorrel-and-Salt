@@ -31,3 +31,5 @@ The compendium's edit dialog, at the start of the form's Sources section (the fo
 ## Testing
 
 `tests/components/SourcingScore/index.test.tsx` checks the region is named by the heading, the rows run gains, costs then zeros with their signed points, the bar's accessible name states the numbers (including for a negative total), and the bar never passes its track. `tests/app/(shell)/curator/compendium/compendium-dialog.test.tsx` checks the edit dialog shows it. The heading level prop is tested in the same file, and `tests/app/(public)/compendium/ingredients/slug-page.test.tsx` checks who is handed the score. The service refusal is `tests/modules/ingredients/services/compendium-sourcing.test.ts`.
+
+**Forced colours.** The bar's track takes a 1px `CanvasText` border, the gains are `Highlight` and the losses `CanvasText`.

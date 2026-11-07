@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AdminCardsBodySkeleton, CardArrivalsBodySkeleton } from '../AdminCards/skeleton';
 import { AdminInvitationsBodySkeleton } from '../AdminInvitations/skeleton';
+import { BusinessCardsBodySkeleton } from '../BusinessCards/skeleton';
 import { CompendiumListBodySkeleton } from '../CompendiumList/skeleton';
 import { GroupListBodySkeleton } from '../GroupList/skeleton';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
@@ -53,6 +54,7 @@ const PANELS: Record<string, ReactNode> = {
   '/keepers/invitation-cards': filtered('Filter Invitation Cards', <AdminCardsBodySkeleton />),
   '/keepers/card-sign-ups': <CardArrivalsBodySkeleton />,
   '/keepers/support': <SupportListSkeleton />,
+  '/keepers/business-cards': <BusinessCardsBodySkeleton />,
   '/keepers/documents/terms': documentPanel,
   '/keepers/documents/disclaimer': documentPanel,
   '/keepers/documents/code-of-ethics': documentPanel,

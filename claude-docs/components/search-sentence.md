@@ -85,3 +85,5 @@ While a search is on its way, the whole sentence is typed out in place as the lo
 ## Stories
 
 `src/components/SearchSentence/index.stories.tsx`, titled "Ingredients / Search Sentence": `States`, with the states Settled (one closed line), Slow Search (results after four seconds), Fast Search (results before the clauses finish typing) and Nothing To Open (a search term and no filter, so a plain line). Each starts its own search on load; New Search and Search Again start another.
+
+**Forced colours.** The typing caret is painted `CanvasText`.

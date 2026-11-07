@@ -30,6 +30,11 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   overflow: clip;
   border: 0;
 
+  // The shadow that was its edge is dropped, so a border draws it.
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   &[open] {
     display: flex;
     flex-direction: column;
@@ -391,6 +396,13 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
     color: $text-primary;
   }
 
+  @include forced-colors {
+    &:hover:not(:focus-visible) {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+  }
+
   // The shared ring, in place of the browser's own.
   &:focus-visible {
     @include focus-ring;
@@ -435,6 +447,11 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   margin: auto;
   padding: space(5);
   border: 0;
+
+  // The shadow that was its edge is dropped, so a border draws it.
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
 }
 
 .confirm-overlay__question {
@@ -493,7 +510,12 @@ $confirm-flash: $motion-short * 4;
   pointer-events: none;
   animation: confirm-overlay-flash $confirm-flash * 0.5 ease-out 2 both;
 
+  // The flash is a fill, which forced colours drop, so the outline mark shows instead.
   @include reduced-motion {
+    animation: confirm-overlay-mark $confirm-flash step-end both;
+  }
+
+  @include forced-colors {
     animation: confirm-overlay-mark $confirm-flash step-end both;
   }
 }

@@ -10,6 +10,7 @@ import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { InvitationAcceptanceProps } from './types';
+import type { PageHeaderProps } from '../PageHeader/types';
 import './index.scss';
 
 // `/invite/[token]` and `/i/[token]` share this one panel: the page reads where the visitor stands and this shows it. Accept
@@ -120,7 +121,10 @@ const RecordRefusal = ({ token }: { token: string }): null => {
   return null;
 };
 
-const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement => {
+const InvitationAcceptance = ({
+  headingLevel,
+  ...props
+}: InvitationAcceptanceProps & { headingLevel?: PageHeaderProps['level'] }): ReactElement => {
   const grant = grantOf(props);
   return (
     <div className="panel invitation-acceptance">
@@ -129,6 +133,7 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
         headingClassName="auth-title"
         title="Your Invitation"
         lede={grant}
+        level={headingLevel}
       />
       {props.status === 'signed-out' && (
         <p className="invitation-acceptance__actions">

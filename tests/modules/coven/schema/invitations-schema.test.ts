@@ -30,6 +30,7 @@ const OWN_COLUMNS = [
   'kind',
   'batch_id',
   'position',
+  'beta',
 ];
 
 const TOKEN_HASH_INDEX = 'invitations_token_hash_unique';
@@ -41,6 +42,7 @@ const SITE_TIER_CHECK = 'invitations_site_role_tier';
 const SITE_ROLE_CHECK = 'invitations_site_role_invitable';
 const KIND_CHECK = 'invitations_kind_known';
 const CARD_SHAPE_CHECK = 'invitations_kind_shape';
+const BETA_CHECK = 'invitations_beta_card_only';
 
 describe('invitations schema', () => {
   const { byName } = tableFacts(invitations);
@@ -291,6 +293,49 @@ describe('invitations table', () => {
         site_role: null,
         batch_id: BATCH,
       });
+    });
+  });
+
+  // A beta batch is a set of cards minted for beta testers; the flag means nothing on an address row.
+  describe('the beta flag', () => {
+    it('defaults to false on either kind', async () => {
+      await invite('member');
+      await sql`
+        insert into invitations (kind, token_hash, created_by, updated_by)
+        values ('card', ${HASH_B}, ${ADMIN}, ${ADMIN})
+      `;
+
+      const rows = await sql`select kind, beta from invitations order by kind`;
+      expect(rows.map((row) => [row.kind, row.beta])).toEqual([
+        ['address', false],
+        ['card', false],
+      ]);
+    });
+
+    it('refuses a beta address invitation, on either tier', async () => {
+      const coven = await failureOf(sql`
+        insert into invitations (workspace_id, email, role, beta, token_hash, created_by, updated_by)
+        values (${COVEN}, 'rowan@example.com', 'member', true, ${HASH_A}, ${OWNER}, ${OWNER})
+      `);
+      const site = await failureOf(sql`
+        insert into invitations (email, site_role, beta, token_hash, created_by, updated_by)
+        values ('rowan@example.com', 'admin', true, ${HASH_B}, ${ADMIN}, ${ADMIN})
+      `);
+
+      expect(coven.code).toBe('23514');
+      expect(coven.constraint_name).toBe(BETA_CHECK);
+      expect(site.constraint_name).toBe(BETA_CHECK);
+    });
+
+    // Why the refusal above could have succeeded: the column takes true at all.
+    it('accepts a beta card', async () => {
+      await sql`
+        insert into invitations (kind, beta, token_hash, created_by, updated_by)
+        values ('card', true, ${HASH_A}, ${ADMIN}, ${ADMIN})
+      `;
+
+      const [row] = await sql`select beta from invitations`;
+      expect(row?.beta).toBe(true);
     });
   });
 

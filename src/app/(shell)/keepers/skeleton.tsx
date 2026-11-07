@@ -32,3 +32,6 @@ export const KeepersDocumentSkeleton = () => (
 export const KeepersEmailUpdatesSkeleton = () => (
   <AdminPageSkeleton page="documents" open="/keepers/documents" tabsBelow />
 );
+export const BusinessCardsSkeleton = () => (
+  <AdminPageSkeleton page="businessCards" open="/keepers/business-cards" />
+);

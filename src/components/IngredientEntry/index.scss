@@ -459,8 +459,6 @@ $formal-line: $icon-size;
   white-space: nowrap;
 }
 
-.ingredient-entry__marks a:target,
-.ingredient-entry__note:target,
 // A citation prints its url as plain text, so `anywhere` lets it break at any character;
 // `break-word` would still let the url set the list's min-content width.
 // (claude-docs/components/ingredient-entry.md, "Styling")
@@ -468,8 +466,16 @@ $formal-line: $icon-size;
   overflow-wrap: anywhere;
 }
 
+.ingredient-entry__marks a:target,
+.ingredient-entry__note:target,
 .ingredient-entry__reference:target {
   background-color: $fill-quiet;
+
+  // The fill is dropped, so an outline marks the target.
+  @include forced-colors {
+    outline: 1px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 // A jump to a note or an entry lands clear of the top inset, as a section does.

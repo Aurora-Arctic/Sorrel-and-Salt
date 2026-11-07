@@ -90,6 +90,13 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M9 12h6M9 15.5h6" />
     </>
   ),
+  // A landscape card with a name, a short rule under it and two lines of contact details.
+  businessCards: (
+    <>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="1.5" />
+      <path d="M6 9.5h7M6 11.5h4.5M6 14.5h6M6 16h4" />
+    </>
+  ),
   // The More button's mark: three dots, each a zero-length stroke the round
   // caps swell into a dot.
   more: <path strokeWidth="3" d="M6 12h.01M12 12h.01M18 12h.01" />,

@@ -1,19 +1,21 @@
 import { readFile } from 'node:fs/promises';
 import { test, expect } from '../fixtures';
-import { decodePdfLinks, defaultExpiryDay } from '../cards';
+import { defaultExpiryDay, mintedLinks } from '../cards';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 
-// Story 88: a keeper mints a batch of cards, and a brand-new account opens a card's link and may then start a coven. The
-// QR image is decoded rather than looked at: its content must be the link a person scanning it opens.
+// Story 88: a keeper mints a batch of cards, and a brand-new account opens a card's link and may then start a coven, once: a
+// second card stays free for someone else. A beta batch's card welcomes its holder as a beta tester, a plain one's only welcomes. The
+// links come from the mint's answer; that a printed code scans to its link is checked by the owner on a printed sheet.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, () => {
-  test('an admin mints two cards and a stranger scans one and can start a coven', async ({
+  test('an admin mints a beta batch and a stranger scans one card and can start a coven', async ({
     page,
+    browser,
     baseURL,
   }) => {
     const origin = new URL(baseURL ?? '').origin;
@@ -25,14 +27,20 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     );
     const links: string[] = [];
 
-    await test.step('the admin mints a sheet of nine, downloads the PDF and sees one batch', async () => {
+    const welcome = page.getByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' });
+    const betaTester = page.getByRole('heading', { name: 'You’re Among the First' });
+
+    await test.step('the admin mints a beta sheet of ten, downloads the PDF and sees one beta batch', async () => {
       await page.goto('/keepers/invitation-cards');
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
       await dialog.getByRole('textbox', { name: 'Note' }).fill('Harvest fair stall');
+      await dialog.getByRole('switch', { name: 'Beta Testers' }).check();
+      const minted = mintedLinks(page);
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-      await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
+      await expect(dialog.getByText(/10 cards minted/)).toBeVisible();
+      const printed = await minted;
 
       const pdfDownload = page.waitForEvent('download');
       await dialog.getByRole('button', { name: 'Download PDF' }).click();
@@ -51,17 +59,29 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       // The day on screen is the day printed on the card: UTC, en-GB.
       await expect(batch).toContainText(defaultExpiryDay());
       await expect(batch).toContainText('Harvest fair stall');
+      await expect(batch.getByText('Yes', { exact: true })).toHaveCount(1);
 
-      const printed = await decodePdfLinks(page, path);
-      expect(printed, 'the nine codes on the sheet decode').toHaveLength(9);
+      expect(printed, 'a sheet of ten links').toHaveLength(10);
       for (const link of printed) {
         // The short form, on this site: the token is the last path segment.
         expect(link).toMatch(
           new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/i/[\\w-]{12,}$`),
         );
       }
-      expect(new Set(printed).size).toBe(9);
+      expect(new Set(printed).size).toBe(10);
       links.push(...printed);
+    });
+
+    await test.step('a signed-out visitor opening a card is welcomed as a beta tester', async () => {
+      await page.context().clearCookies();
+      await page.goto(links[2]);
+      await expect(welcome).toBeVisible();
+      await expect(betaTester).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: 'Your Invitation' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
+      await page.getByRole('main').getByRole('link', { name: 'Support', exact: true }).click();
+      await expect(page.getByRole('dialog', { name: 'Contact Support' })).toBeVisible();
+      await expect(page).toHaveURL(/\/i\/[^/?]+\?support=$/);
     });
 
     await test.step('an unverified account opening the other card is sent to confirm its email', async () => {
@@ -94,13 +114,25 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
     });
 
+    await test.step('a second card is refused to the account that used one, and stays live', async () => {
+      await page.goto(links[2]);
+      await expect(
+        page.getByText(
+          "You've already used an invitation card, so this one stays free for someone else.",
+        ),
+      ).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
+      // Still pending: the welcome shows only for a live card.
+      await expect(welcome).toBeVisible();
+    });
+
     await test.step('the batch counts one accepted, and the admin revokes the rest', async () => {
       await signInAgainAs(page, adminId);
       await page.goto('/keepers/invitation-cards');
       const batch = page
         .getByRole('row')
         .filter({ has: page.getByRole('button', { name: /^Revoke Batch / }) });
-      await expect(batch).toContainText('9');
+      await expect(batch).toContainText('10');
       await expect(batch).toContainText('1');
       await page.getByRole('button', { name: /^Revoke Batch / }).click();
       await page
@@ -126,6 +158,28 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await signInAs(page, 'latecomer@story-88.test');
       await page.goto(links[1]);
       await expect(page.getByText(/This card has been withdrawn/)).toBeVisible();
+      await expect(welcome).toHaveCount(0);
+    });
+
+    await test.step('a card of a plain batch welcomes a signed-out visitor, with no beta section', async () => {
+      await signInAgainAs(page, adminId);
+      await page.goto('/keepers/invitation-cards');
+      await page.getByRole('link', { name: 'Mint Cards' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
+      await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
+      await expect(dialog.getByRole('switch', { name: 'Beta Testers' })).not.toBeChecked();
+      const minted = mintedLinks(page);
+      await dialog.getByRole('button', { name: 'Mint Cards' }).click();
+      const [plain] = await minted;
+
+      // A browser of its own, signed out, as the minted dialog still holds the PDF unsaved here.
+      const visitor = await browser.newPage();
+      await visitor.goto(plain!);
+      await expect(
+        visitor.getByRole('heading', { level: 1, name: 'Welcome to Sorrel & Salt' }),
+      ).toBeVisible();
+      await expect(visitor.getByRole('heading', { name: 'You’re Among the First' })).toHaveCount(0);
+      await visitor.close();
     });
   });
 });

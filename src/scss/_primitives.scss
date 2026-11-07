@@ -183,6 +183,13 @@
       @include focus-ring;
     }
 
+    // The fills are dropped, so hover takes a Highlight edge; this outweighs each kind's own hover.
+    @include forced-colors {
+      &:hover:not(:disabled, [aria-disabled='true']) {
+        border-color: Highlight;
+      }
+    }
+
     @include reduced-motion {
       transition: none;
     }
@@ -967,6 +974,13 @@
     tbody tr:nth-child(even) {
       background-color: $surface-card;
     }
+
+    // The banding fill is dropped, so a rule under each row separates them.
+    tbody tr {
+      @include forced-colors {
+        border-block-end: 1px solid CanvasText;
+      }
+    }
   }
 
   // A sortable heading is a link with no underline in any state; the sorted one is the accent, and
@@ -1318,6 +1332,138 @@
   .support-panel--signed-out {
     display: grid;
     gap: space(4);
+  }
+
+  // The card landing page: the welcome as plain words and the accept panel as a card, two columns on a wide window,
+  // the words at the reading measure and the card beside them, one column on a phone with the card after the words.
+  // The invitation card's width: the second column on the early-tester page, and the card under the words on the other.
+  $card-landing-card-width: 22rem;
+
+  .card-landing__words {
+    @include stack(6);
+
+    > * {
+      margin-block: 0;
+    }
+  }
+
+  // Each part of the welcome, a heading with its paragraphs, its children one gap apart and no margin of their own, so a
+  // heading sits nearer the text it opens than the part before it.
+  .card-landing__part {
+    @include stack(3);
+    max-width: $measure;
+
+    > * {
+      margin-block: 0;
+    }
+  }
+
+  .card-landing__card {
+    width: 100%;
+  }
+
+  .card-landing__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, $card-landing-card-width);
+    gap: space(5) space(8);
+    align-items: start;
+    max-width: calc(#{$measure} + #{$card-landing-card-width} + #{space(8)});
+
+    @media (max-width: #{$shell-phone-width}) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  // The heading alone fills the first row, so the card's top is the second row's: the first paragraph's, however many
+  // lines the heading takes. On a phone the card follows the words.
+  .card-landing__grid > .card-landing__title,
+  .card-landing__grid > .card-landing__words {
+    grid-column: 1;
+  }
+
+  // The card keeps pace with a long welcome on a wide window; on a phone it simply follows the words, half the row gap
+  // further down than a paragraph would be, so it stands apart from them.
+  .card-landing__grid > .card-landing__card {
+    position: sticky;
+    top: calc(#{$shell-bar-height} + #{space(4)});
+    grid-row: 2;
+    grid-column: 2;
+
+    @media (max-width: #{$shell-phone-width}) {
+      position: static;
+      grid-row: auto;
+      grid-column: 1;
+      margin-top: space(3);
+    }
+  }
+
+  // An ordinary card has no early-tester part, so its words are short: one column at the reading measure, the block
+  // centred on the page and its text still left-aligned. The card below the words keeps the two-column page's card
+  // width, at the words' left edge; on a phone it is the column's width, as there.
+  .card-landing--single .card-landing__grid {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: $measure;
+    margin-inline: auto;
+  }
+
+  .card-landing--single .card-landing__grid > .card-landing__card {
+    position: static;
+    grid-row: auto;
+    grid-column: 1;
+    justify-self: start;
+    max-width: $card-landing-card-width;
+    margin-top: space(3);
+
+    @media (max-width: #{$shell-phone-width}) {
+      max-width: none;
+    }
+  }
+
+  // One heading on two lines, the greeting above the name: block spans, so the name reads whole, and the greeting two
+  // steps down the heading scale. The grid's row gap stands in for the heading face's own margin.
+  .card-landing__title {
+    margin-bottom: 0;
+
+    > span {
+      display: block;
+    }
+  }
+
+  .card-landing__title-greeting {
+    font-size: heading-size(3);
+    line-height: 1.2;
+  }
+
+  // The free-months list reads at the paragraphs' line height, each item a step apart, where the base list is set tighter
+  // for the short items it serves elsewhere.
+  .card-landing__part > ul > li {
+    margin-block: space(2);
+    line-height: 1.65;
+  }
+
+  // The footer's support icon named in a sentence: text-sized, in the text's colour, dropped to sit level with the line as
+  // a link's chain icon is.
+  .card-landing__support-mark {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -$link-hint-drop;
+    color: currentcolor;
+
+    > svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  // The front door's frame fills the window and leaves no air when its content runs past it, which on a phone this page
+  // does, so the card keeps a step clear of the footer there.
+  @media (max-width: #{$shell-phone-width}) {
+    .page-frame.card-landing:has(+ .site-footer) {
+      padding-bottom: space(8);
+    }
   }
 
   .form {

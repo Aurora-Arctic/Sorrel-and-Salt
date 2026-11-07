@@ -877,26 +877,36 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   opens with `assertSiteAdmin`, so a curator, a practitioner and a steward are refused by direct call, and the
   GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
   `requireAdminSession()`, which answers a curator with the styled not-authorized page.
-- **Minting.** `createInvitationCards(sheets, expiresAt, note)` makes nine cards per sheet in one transaction under
-  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (55 sheets, 495 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). The
+- **Minting.** `createInvitationCards(sheets, expiresAt, beta, note)` makes ten cards per sheet in one transaction under
+  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (50 sheets, 500 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). `beta` marks every card of the batch as
+  minted for beta testers (`invitations.beta`); it is written at minting and never changed, and a CHECK refuses it on any row
+  that is not a card. The
   mutation returns each token once, in that response; no query or type but `MintedInvitationCards.tokens`
   has a token, hash or link field, and a test fails if one appears.
 - **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a
   card already accepted stays accepted. A single card is never revoked on its own.
-- **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, cards, accepted, pending),
+- **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, beta, cards, accepted, pending),
   counted in SQL. The Invitation Cards tab at `/keepers/invitation-cards` shows it; the QR codes cannot be
   redrawn from it.
 - **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
   account owns (read as a keeper may read anyone's memberships). `cardArrivalsCsv` returns the same as
-  CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
+  CSV text (Account, Email, Accepted On, Batch, Beta as Yes or No, Covens Owned), with a leading apostrophe on any cell a spreadsheet
   would read as a formula. The Card Sign-Ups tab at `/keepers/card-sign-ups` offers it as a download.
+- **One card per account.** An account that has accepted a card is refused a second, with the reason
+  `used-another-card`, and the second card stays pending for someone else. The service checks it, and the accept
+  statement holds it in SQL too, so a call that skips the service still stamps nothing. The account that accepted
+  _this_ card is still told `used-by-you`. The refusal records no card attempt, as the card is still pending.
+- **The landing page.** `/i/<token>` shows a welcome above the accept panel while the card is pending (not
+  accepted, revoked or expired), and a beta tester's section under it when the batch is beta. It reads
+  `liveCardOf(token)`, which takes no session, as the visitor holds only the card, and answers only whether the
+  card is live and whether it is beta; any other token, an address invitation's included, gets the panel alone.
 - **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
   expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
   and the service writes one row per card, account and reason, counting repeats
   ([`db/invitations.md`](../db/invitations.md), "Card attempts"). The mutation takes the token alone;
   the account comes from the session. A signed-out visitor, an unverified account, an unknown token,
   a pending card and the account that accepted the card record nothing, and the signed-out page reads
-  nothing of the link. `invitationCardAttempts(batchId)` lists a batch's refused opens and
+  nothing of the link beyond the landing page's `liveCardOf`. `invitationCardAttempts(batchId)` lists a batch's refused opens and
   `InvitationCardBatch.refusedOpens` counts them; both are admin only, like every card field.
 
 The component is described in [`components/admin-cards.md`](../components/admin-cards.md).

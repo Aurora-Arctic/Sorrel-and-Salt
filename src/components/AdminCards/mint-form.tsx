@@ -20,12 +20,17 @@ import {
 } from '../../lib/invitation-cards/limits';
 import type { MintFieldsProps, MintFormProps } from './types';
 
-// The modal Mint Cards opens at `?mint`: how many sheets of cards, the day they stop working and a note on the batch, sent as `createInvitationCards`.
+// The modal Mint Cards opens at `?mint`: how many sheets of cards, the day they stop working, whether they go to beta testers and a note on the batch, sent as `createInvitationCards`.
 // The answer carries each token once, so the modal then shows the codes and stays until closed; closing re-reads the tab.
 
 const CreateInvitationCardsDocument = graphql(`
-  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {
-    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {
+  mutation CreateInvitationCards(
+    $sheets: Int!
+    $expiresAt: DateTime!
+    $beta: Boolean!
+    $note: String
+  ) {
+    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, beta: $beta, note: $note) {
       batchId
       expiresAt
       tokens
@@ -81,6 +86,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [day, setDay] = useState(first);
   const [printBacks, setPrintBacks] = useState(true);
   const [note, setNote] = useState('');
+  const [beta, setBeta] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [minting, setMinting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
@@ -107,7 +113,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
 
   // Anything typed or changed is a change; once minted the codes are what a way out would lose, until the PDF is saved.
   const discard = useDiscardGuard(
-    minted ? !downloaded : sheets !== '' || day !== first || note !== '',
+    minted ? !downloaded : sheets !== '' || day !== first || note !== '' || beta,
   );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -125,6 +131,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
       const answer = await graphqlRequest(CreateInvitationCardsDocument, {
         sheets: wanted,
         expiresAt: expiryOf(day),
+        beta,
         note: note.trim() || undefined,
       });
       setMinting(false);
@@ -202,14 +209,6 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             {...dayAria}
           />
         </FieldShell>
-        <SwitchField
-          label="Print Backs"
-          name="backs"
-          value="1"
-          checked={printBacks}
-          disabled={minting}
-          onChange={setPrintBacks}
-        />
       </div>
       <FieldShell label="Note" hint={NOTE_HINT} {...noteShell}>
         <textarea
@@ -224,6 +223,24 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={(event) => setNote(event.target.value)}
         />
       </FieldShell>
+      <div className="admin-cards__switches">
+        <SwitchField
+          label="Print Backs"
+          name="backs"
+          value="1"
+          checked={printBacks}
+          disabled={minting}
+          onChange={setPrintBacks}
+        />
+        <SwitchField
+          label="Beta Testers"
+          name="beta"
+          value="1"
+          checked={beta}
+          disabled={minting}
+          onChange={setBeta}
+        />
+      </div>
       <FormActions
         noun="Cards"
         label="Mint Cards"

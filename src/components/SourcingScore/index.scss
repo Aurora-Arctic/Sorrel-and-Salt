@@ -35,14 +35,28 @@ $bar-height: 0.5rem;
   overflow: hidden;
   border-radius: radius('sharp');
   background: $fill-quiet;
+
+  // The fill is dropped, so an edge holds the track.
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
 }
 
+// Gains in Highlight and losses in CanvasText, as the fills are dropped.
 .sourcing-score__gain {
   background: $accent;
+
+  @include forced-colors {
+    background-color: Highlight;
+  }
 }
 
 .sourcing-score__cost {
   background: $warning;
+
+  @include forced-colors {
+    background-color: CanvasText;
+  }
 }
 
 .sourcing-score__key {

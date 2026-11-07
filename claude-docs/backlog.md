@@ -35,6 +35,10 @@
 
 ### V Fast Follow
 
+- [ ] Subscription billing, scoped by M17.1 (`claude-docs/design-decisions/m17.1-subscription-billing-scope.md`)
+      and built by Wave 21, M21.1 → M21.20. The requirements and the Stripe
+      plugin's fit are in DESIGN.md §13 (MB.79); the plugin-or-SDK choice is
+      the proof of concept, M21.1.
 - [ ] Closed practice warning, scoped by M17.2; built by M19.4 to M19.8 and M19.10 on Wave 19.
       When it is built, update the Code of Ethics (`documents/code-of-ethics.md`,
       a document a keeper edits and publishes) in the same PR: the Short
@@ -88,9 +92,6 @@
 
 ### V2
 
-- [ ] Subscription billing — the requirements and the Stripe plugin's fit
-      are in DESIGN.md §13 (MB.79); spike against Stripe's test mode before
-      scheduling it.
 - [ ] Suggest compendium additions.
 - [ ] Compendium of pre built spells
 - [ ] Admin editor comment sections for curated entries.

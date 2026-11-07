@@ -10,6 +10,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import { CardArrivalsBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { batchName } from './batches';
+import { Mark } from '../UserList/marks';
 import UserLink from '../UserList/user-link';
 import ArrivalsFilterForm from './arrivals-filter';
 import DownloadCsv from './download-csv';
@@ -71,6 +72,12 @@ const AdminArrivals = ({
               cell: (arrival) => <LocalTime at={arrival.acceptedAt} />,
             },
             { heading: 'Batch', cell: (arrival) => batchName(arrival.batchId) },
+            {
+              heading: 'Beta',
+              className: 'user-list__mark-column',
+              headingClassName: 'user-list__mark-column',
+              cell: (arrival) => <Mark value={arrival.beta} label={arrival.beta ? 'Yes' : 'No'} />,
+            },
             {
               heading: 'Covens Owned',
               cell: (arrival) =>

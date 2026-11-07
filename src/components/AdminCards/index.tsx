@@ -12,6 +12,7 @@ import { AdminCardsBodySkeleton } from './skeleton';
 import { ModalLink, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import ConfirmedAction from '../ConfirmedAction';
+import { Mark } from '../UserList/marks';
 import CardAttempts from './attempts';
 import { batchName, STATUS_LABEL } from './batches';
 import CardsFilterForm from './filter';
@@ -89,6 +90,12 @@ const AdminCards = ({
               ),
             },
             { heading: 'Status', cell: (batch) => STATUS_LABEL[batch.status] },
+            {
+              heading: 'Beta',
+              className: 'user-list__mark-column',
+              headingClassName: 'user-list__mark-column',
+              cell: (batch) => <Mark value={batch.beta} label={batch.beta ? 'Yes' : 'No'} />,
+            },
             { heading: 'Cards', cell: (batch) => batch.cards },
             { heading: 'Accepted', cell: (batch) => batch.accepted },
             {

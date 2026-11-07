@@ -43,6 +43,22 @@
       color: $text-primary;
       box-shadow: inset $rule-heavy 0 0 0 var(--page-nav-bar);
     }
+
+    // The bar is a shadow, which is dropped, so a heavy border carries it; Canvas at rest, as a
+    // transparent border would be painted CanvasText. Hover takes a Highlight outline.
+    @include forced-colors {
+      border-inline-start: $rule-heavy solid Canvas;
+      padding-inline-start: calc(#{space(4)} - #{$rule-heavy});
+
+      &[aria-current='location'] {
+        border-inline-start-color: CanvasText;
+      }
+
+      &:hover:not(:focus-visible) {
+        outline: 1px solid Highlight;
+        outline-offset: -1px;
+      }
+    }
   }
 
   // A group's label: a heading over its entries, not a link, in the
@@ -135,6 +151,13 @@
       background-color: $fill-highlight-field;
     }
 
+    @include forced-colors {
+      &:hover:not(:focus-visible) {
+        outline: 1px solid Highlight;
+        outline-offset: -1px;
+      }
+    }
+
     &:focus-visible {
       @include focus-ring($placement: inset);
     }
@@ -208,6 +231,17 @@
 
       &[aria-current='location'] {
         box-shadow: inset (-$rule-heavy) 0 0 0 var(--page-nav-bar);
+      }
+
+      // The bar sits on the end edge here.
+      @include forced-colors {
+        border-inline-start: 0;
+        border-inline-end: $rule-heavy solid Canvas;
+        padding-inline: space(4) calc(#{space(4)} - #{$rule-heavy});
+
+        &[aria-current='location'] {
+          border-inline-end-color: CanvasText;
+        }
       }
     }
 

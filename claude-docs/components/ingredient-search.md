@@ -406,3 +406,5 @@ On a phone the row is two lines: the search box on the first, and the Filters bu
 ## Scroll margin
 
 A focus or a jump that scrolls a control into view lands it below the stuck row, not under it. The margin is the bar (the shell's and the public frame's alike), the row's own height, and a step of air. The root is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The first `space(2)` is the gap under the row, a margin when the tray is shut and padding when it is open, so a jump lands in the same place either way. Under the narrow column the row is two controls tall plus the row's gap, so the root leaves one more control and gap of room. That query is the container query's width on the window: the column (`$narrow-column`) plus the page's two gutters.
+
+**Forced colours.** While the row is stuck its shadow is dropped, so the row's full-bleed fill takes a 1px `CanvasText` rule along its foot, which runs the width of the page and moves nothing in the row.
