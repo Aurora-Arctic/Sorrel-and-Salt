@@ -10,4 +10,37 @@
     flex: 1;
     min-width: 0;
   }
+
+  &--hero {
+    position: relative;
+
+    .input {
+      min-height: $hero-control-height;
+      padding-inline-start: calc(#{space(3)} + 1.25rem + #{space(2)});
+      font-size: type-size('lead');
+    }
+
+    .btn {
+      min-height: $hero-control-height;
+    }
+  }
+
+  &__magnifier {
+    position: absolute;
+    inset-block-start: calc((#{$hero-control-height} - 1.25rem) / 2);
+    inset-inline-start: space(3);
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    color: $text-muted;
+    pointer-events: none;
+  }
+
+  // Below a narrow phone the button drops beneath the box rather than squeezing it.
+  @media (max-width: 20rem) {
+    flex-wrap: wrap;
+
+    .btn {
+      flex-basis: 100%;
+    }
+  }
 }

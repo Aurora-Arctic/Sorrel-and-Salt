@@ -1,25 +1,101 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 .help-index {
   h2 {
     margin-block: space(8) space(3);
   }
 
+  &__band {
+    max-width: $measure;
+    padding: space(6) space(5);
+    border: 1px solid $hairline;
+    border-radius: radius('surface');
+    background-color: $surface-card;
+
+    .lede {
+      margin-block: 0 space(4);
+      color: $text-muted;
+    }
+
+    .help-search {
+      margin-block: 0;
+    }
+  }
+
+  &__quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(2) space(4);
+    margin-block: space(3) 0;
+    padding: 0;
+    list-style: none;
+    font-size: type-size('small');
+  }
+
   &__guides {
+    display: grid;
+    gap: space(3);
     padding: 0;
     list-style: none;
 
-    li + li {
-      margin-block-start: space(3);
+    @media (min-width: 40rem) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  // A left bar that turns accent on hover; the title's link covers the card (card-link), so the card is one target.
+  &__guide {
+    position: relative;
+    border-inline-start: $rule-heavy solid $hairline;
+    border-start-start-radius: radius('sharp');
+    border-end-start-radius: radius('sharp');
+
+    &:hover,
+    &:focus-within {
+      border-inline-start-color: $accent;
     }
 
-    p {
-      margin-block: space(1) 0;
+    .eyebrow {
+      margin-block-end: space(1);
+    }
+
+    h3 {
+      margin: 0 0 space(1);
+      font-size: heading-size(4);
+    }
+
+    h3 a {
+      @include card-link;
+    }
+
+    > p:last-child {
+      margin: 0;
+      font-size: type-size('small');
+      color: $text-muted;
     }
   }
 
   &__faq {
-    margin-block-end: space(6);
+    margin-block-end: space(5);
+    padding-block-start: space(5);
+    border-block-start: 1px solid $hairline;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+
+    h3 {
+      margin: 0 0 space(2);
+      font-size: heading-size(4);
+    }
+
+    > p:last-child {
+      margin-block-end: 0;
+    }
+  }
+
+  &__top {
+    display: inline-flex;
+    gap: space(2);
+    align-items: center;
+    font-size: type-size('small');
   }
 }

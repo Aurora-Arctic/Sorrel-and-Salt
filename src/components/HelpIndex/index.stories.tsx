@@ -20,3 +20,12 @@ const meta: Meta<typeof HelpIndex> = {
 export default meta;
 
 export const Default: StoryObj<typeof HelpIndex> = {};
+export const FrontPage: StoryObj<typeof HelpIndex> = {
+  args: {
+    lede: 'Guides to the Compendium, your coven, its ingredients and grimoire, and the words we use.',
+    quickLinks: [
+      { title: 'Signing In', summary: null, href: '/help/getting-started/signing-in' },
+      { title: 'Track Stock', summary: null, href: '/help/ingredients/track-stock' },
+    ],
+  },
+};

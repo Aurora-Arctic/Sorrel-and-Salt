@@ -121,3 +121,47 @@ describe('HelpIndex glossary marks', () => {
     );
   });
 });
+
+describe('HelpIndex front page', () => {
+  const QUICK = [
+    { title: 'Testwort Signing In', summary: null, href: '/help/start/signing-in' },
+    { title: 'Testwort Roles', summary: null, href: '/help/your-coven/roles' },
+  ];
+
+  it('links the quick links it is handed beside the search box, in order', () => {
+    render(<HelpIndex faq={FAQ} articles={ARTICLES} quickLinks={QUICK} />);
+
+    const quick = screen.getByRole('list', { name: 'Quick Links' });
+    expect(hrefs(within(quick).getAllByRole('link'))).toEqual(QUICK.map((link) => link.href));
+    // Beside the search: after the box, before the guides.
+    expect(screen.getByRole('search').compareDocumentPosition(quick)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(quick.compareDocumentPosition(screen.getByRole('region', { name: 'Guides' }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('draws no quick links when handed none', () => {
+    index();
+
+    expect(screen.queryByRole('list', { name: 'Quick Links' })).toBeNull();
+  });
+
+  it('ends the FAQ with one Back to Top link, after the last entry', () => {
+    index();
+
+    const faq = screen.getByRole('region', { name: 'Frequently Asked Questions' });
+    const back = within(faq).getByRole('link', { name: 'Back to Top' });
+    expect(back).toHaveAttribute('href', '#main');
+    const last = document.getElementById(FAQ[FAQ.length - 1].slug)!;
+    expect(last.compareDocumentPosition(back) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(last).not.toContainElement(back);
+  });
+
+  it('draws no Back to Top without an FAQ', () => {
+    index([], ARTICLES);
+
+    expect(screen.queryByRole('link', { name: 'Back to Top' })).toBeNull();
+  });
+});

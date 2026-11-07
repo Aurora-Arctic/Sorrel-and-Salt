@@ -9,3 +9,4 @@ export default meta;
 
 export const Empty: StoryObj<typeof HelpSearchForm> = {};
 export const WithQuery: StoryObj<typeof HelpSearchForm> = { args: { query: 'stock levels' } };
+export const Hero: StoryObj<typeof HelpSearchForm> = { args: { size: 'hero' } };

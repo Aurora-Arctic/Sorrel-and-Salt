@@ -8,18 +8,21 @@ import './index.scss';
 
 // The glossary is reference, not a guide, but it is read from the same list, described like one.
 const GLOSSARY = {
+  kind: 'Reference',
   title: 'Glossary',
   summary: 'The words Sorrel & Salt uses, and what each one means.',
   href: '/help/glossary',
 };
 
-// The help front page: the search box, the guides with the glossary among them, and the FAQ. Each FAQ entry is an
+// The help front page: a band holding the lede, the search box and the quick links, then the guides with the glossary among them, and the FAQ. Each FAQ entry is an
 // anchor from its slug; nothing else on the page takes an id, so a slug shared with an article never doubles one
 // (claude-docs/components/help-pages.md).
 const HelpIndex = ({
   faq,
   articles,
   heading = 'Help',
+  lede,
+  quickLinks = [],
   terms = [],
 }: HelpIndexProps): ReactElement => {
   // A heading in an answer never takes an entry's id, or another answer's heading id.
@@ -33,16 +36,33 @@ const HelpIndex = ({
   return (
     <div className="help-page help-index">
       <PageHeader title={heading} />
-      <HelpSearchForm />
+      <div className="help-index__band">
+        {lede && <p className="lede">{lede}</p>}
+        <HelpSearchForm size="hero" />
+        {quickLinks.length > 0 && (
+          <ul className="help-index__quick" aria-label="Quick Links">
+            {quickLinks.map((link) => (
+              <li key={link.href}>
+                <a href={link.href}>{link.title}</a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       <section aria-label="Guides">
         <h2>Guides</h2>
         <ul className="help-index__guides">
-          {[...articles, GLOSSARY].map((article) => (
-            <li key={article.href}>
-              <a href={article.href}>{article.title}</a>
-              {article.summary && <p>{article.summary}</p>}
-            </li>
-          ))}
+          {[...articles.map((article) => ({ kind: 'Guide', ...article })), GLOSSARY].map(
+            (article) => (
+              <li key={article.href} className="card--quiet help-index__guide">
+                <p className="eyebrow">{article.kind}</p>
+                <h3>
+                  <a href={article.href}>{article.title}</a>
+                </h3>
+                {article.summary && <p>{article.summary}</p>}
+              </li>
+            ),
+          )}
         </ul>
       </section>
       {faq.length > 0 && (
@@ -54,6 +74,9 @@ const HelpIndex = ({
               {answers[index]}
             </div>
           ))}
+          <a className="help-index__top" href="#main">
+            <span aria-hidden="true">↑</span> Back to Top
+          </a>
         </section>
       )}
     </div>
