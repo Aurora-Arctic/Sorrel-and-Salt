@@ -66,7 +66,6 @@ const chooseEach = (name: string, ...labels: string[]) => {
 };
 const save = () => press('Save Ingredient');
 const saveAnother = () => press('Save & Add Another');
-/** Types an entry into a list's box and presses its Add button. */
 const addEntry = (entry: string, value: string) => {
   type(entry, value);
   fireEvent.click(screen.getByLabelText(`Add ${entry}`, { selector: 'button' }));
@@ -74,25 +73,20 @@ const addEntry = (entry: string, value: string) => {
 const removeButton = (value: string) =>
   screen.getByLabelText(`Remove ${value}`, { selector: 'button' });
 
-/** Lets the step a change opened close, as the gap between two real actions does. */
 const settle = () => act(async () => {});
 
-/** The control is flagged invalid and described, the error read with it. */
 function expectErrorOn(control: HTMLElement) {
   expect(control).toBeInvalid();
   expect(control).toHaveAccessibleDescription(/\S/);
 }
 
-/** How many elements describe the control: a note or a status joins its hint. */
 const describers = (control: HTMLElement) =>
   control.getAttribute('aria-describedby')?.split(' ').length ?? 0;
 
-/** The status regions saying `text`: the form's own beside every box's. */
 const statusesSaying = (text: string) =>
   screen.queryAllByRole('status').filter((status) => status.textContent?.includes(text));
 
-// Invented groups, given out of order: the picker sorts them, and
-// knows none of them by name, as it knows no group a keeper adds.
+// Invented groups, given out of order: the picker sorts them and knows none by name, as it knows no group a keeper adds.
 const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
 const CRAFT = { id: 'b7f2d0c3-1e5a-4b9f-8d82-6c3a7f9e1b22', name: 'Craft of Tests' };
 const colours = { colorDark: '#8fb8de', colorLight: '#2f5d86' };
@@ -116,22 +110,18 @@ const CATEGORIES: CategoryNode[] = [
     group: { ...CRAFT, ...colours },
   },
 ];
-/** Opens the picker's list and picks the category, once the categories have been read. */
 const pickCategory = async (name: string) => {
-  // Opened only when shut: a pick leaves the list open for the next, and the
-  // chevron would shut it.
+  // Opened only when shut: a pick leaves the list open for the next, and the chevron would shut it.
   if (screen.getByRole('combobox', { name: 'Category' }).getAttribute('aria-expanded') !== 'true')
     fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
-  // A longer wait than the default 1000ms, here alone: nothing says the categories have loaded before the list opens, so the options are the only signal.
-  // They appear about 82ms after the click on an idle machine, but a run under full CPU load slows this file's tests up to about 85 times, past 1000ms; 10s covers that and stays inside the 20s test timeout.
+  // A longer wait than the default: nothing says the categories have loaded before the list opens, and a full-CPU run slows this file up to about 85 times, past 1000ms; 10s stays inside the 20s test timeout.
   fireEvent.click(
     await screen.findByRole('option', { name: new RegExp(`^${name}`) }, { timeout: 10_000 }),
   );
 };
 
 describe('IngredientForm', () => {
-  // The owner's rule for every form: a save is offered only when there
-  // is something to save.
+  // The owner's rule for every form: a save is offered only when there is something to save.
   it('keeps both saves off until something is entered, and off again once it is cleared', () => {
     renderForm();
     const saves = () => [
@@ -162,9 +152,7 @@ describe('IngredientForm', () => {
       );
       expect(calls).toHaveLength(1);
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
-      // Sent as typed — the kind unanswered — and read by the schema the
-      // service parses with as `none`, so the one-field stub is a whole entry.
-      // No element chosen is sent as none, the answer "none".
+      // Sent as typed (the kind unanswered), read by the service's schema as `none`, so the one-field stub is a whole entry.
       expect(calls[0].input).toMatchObject({
         name: 'Testwort',
         nomenclature: null,
@@ -201,7 +189,6 @@ describe('IngredientForm', () => {
         nomenclature: 'botanical',
         canonicalName: 'Fixtura testalis',
         description: 'A fixture herb.',
-        // In the order chosen, not the vocabulary's.
         elements: ['water', 'air'],
         celestialBodies: ['Mercury', 'Venus'],
         zodiacSigns: ['Gemini'],
@@ -219,8 +206,6 @@ describe('IngredientForm', () => {
       });
     });
 
-    // Save Ingredient opens what it made,
-    // and Save & Add Another leaves the form ready for the next ingredient.
     it('asks the page to open what Save Ingredient made, leaving the form as it is', async () => {
       acceptCreate();
       const onSaved = renderForm();
@@ -292,7 +277,6 @@ describe('IngredientForm', () => {
       ).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Remove Trialcraft' })).not.toBeInTheDocument();
       expect(textbox('Safety Notes')).toHaveValue('');
-      // Cleared, not refused: nothing is marked invalid.
       expect(textbox('Name')).not.toBeInvalid();
     });
 
@@ -303,13 +287,11 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       saveAnother();
 
-      // A status, polite, inside the form where its error alert would be.
       await waitFor(() => expect(statusesSaying('Testwort')).toHaveLength(1));
       expect(statusesSaying('Testwort')[0].closest('form')).not.toBeNull();
       await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
 
-      // A save refused by the resolver is a new answer, and the old one goes:
-      // something entered, since a cleared form offers no save, but no name.
+      // A save refused by the resolver is a new answer, and the old one goes: something entered, since a cleared form offers no save, but no name.
       type('Description', 'An entry with no name.');
       save();
       await waitFor(() => expect(statusesSaying('Testwort')).toHaveLength(0));
@@ -342,7 +324,6 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
     });
 
-    // Errors show on leaving a field, not only on submit.
     describe('on leaving a field', () => {
       // A field's error waits for it to be left after the person has edited it,
       // even if the edit put it back to its default.
@@ -484,15 +465,13 @@ describe('IngredientForm', () => {
       save();
 
       const alert = await screen.findByRole('alert');
-      // Above the first field, and beside none of them.
       expect(
         alert.compareDocumentPosition(textbox('Name')) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
       expect(textbox('Name')).not.toBeInvalid();
     });
 
-    // An index past the category picks names none of them, as a slug names no field: the form
-    // has no field for either, so it is said above the fields rather than lost.
+    // An index past the category picks names none of them, as a slug names no field: the form has no field for either, so it is said above the fields rather than lost.
     it.each([
       { path: ['slug'], message: 'That slug is already taken' },
       { path: ['categoryIds', 4], message: 'No such category' },
@@ -554,9 +533,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // What the form does with the picker: the picks sent, and an
-  // issue routed to one. The picker's own list, picks, status and error
-  // marking are CategoryPicker's (tests/components/CategoryPicker/).
+  // The picker's own list, picks, status and error marking are CategoryPicker's (tests/components/CategoryPicker/).
   describe('the categories', () => {
     const [testward, , trialcraft] = CATEGORIES;
 
@@ -594,7 +571,6 @@ describe('IngredientForm', () => {
       await pickCategory('Fixture Shield');
       save();
 
-      // The error names the pick, and its x reads it; the other pick's does not.
       await waitFor(() => expectErrorOn(box('Category')));
       expect(box('Category')).toHaveFocus();
       expect(box('Category')).toHaveAccessibleDescription(
@@ -612,14 +588,11 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(box('Category')).not.toBeInvalid());
     });
 
-    // The picker says so beneath its box (CategoryPicker's test); the form
-    // goes on without them.
     it('still saves, with no categories, when they cannot be read', async () => {
       const calls = acceptCreate();
       const onSaved = renderForm({ categories: 'refused' });
       const quiet = describers(box('Category'));
 
-      // The picker's status joins the box's description once the read is refused.
       await waitFor(() => expect(describers(box('Category'))).toBeGreaterThan(quiet));
       type('Name', 'Testwort');
       save();
@@ -655,7 +628,6 @@ describe('IngredientForm', () => {
       const formal = textbox('Formal Name');
       expect(formal).toBeDisabled();
       expect(formal).toHaveValue('');
-      // Its note joins its description.
       expect(describers(formal)).toBeGreaterThan(quiet);
       save();
 
@@ -720,7 +692,6 @@ describe('IngredientForm', () => {
       });
     });
 
-    // Inline: fixing either side clears the error on the other, with no second submit.
     it('clears the formal-name error when the kind changes to Unknown, leaving it open, or to None', async () => {
       acceptCreate();
       renderForm();
@@ -752,8 +723,6 @@ describe('IngredientForm', () => {
       expect(textbox('Formal Name')).not.toBeRequired();
       expect(select('Classification')).not.toBeRequired();
 
-      // The formal name while a named classification is chosen, and not
-      // under Unknown or None.
       choose('Classification', 'Mineral');
       expect(textbox('Formal Name')).toBeRequired();
       choose('Classification', 'Unknown');
@@ -761,15 +730,12 @@ describe('IngredientForm', () => {
       choose('Classification', 'None');
       expect(textbox('Formal Name')).not.toBeRequired();
 
-      // A formal name with no kind saves as unknown, so it asks for none.
       choose('Classification', 'Unknown');
       type('Formal Name', 'Fixtura testalis');
       expect(select('Classification')).not.toBeRequired();
     });
   });
 
-  // Undo and redo: the hook is tested in tests/components/Field; this
-  // is its wiring in the form.
   describe('its undo and redo', () => {
     it('undoes a classification pick together with the formal name it emptied, focusing Classification, and redoes both', async () => {
       renderForm();
@@ -779,7 +745,6 @@ describe('IngredientForm', () => {
       choose('Classification', 'None');
       expect(textbox('Formal Name')).toHaveValue('');
       act(() => textbox('Name').focus());
-      // Leaving Formal Name validates it.
       await settle();
 
       undo();
@@ -848,7 +813,6 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort Two');
       await settle();
       saveAnother();
-      // The mutation is held, so the form stays mid-save.
       await settle();
       act(() => textbox('Name').focus());
 
@@ -887,9 +851,6 @@ describe('IngredientForm', () => {
     });
   });
 
-  // The duplicate warning, as only the whole form holds it: the form asks its
-  // `check` before it sends and moves the focus to Create Anyway. What the
-  // warning says and when it asks is duplicates.test.tsx's.
   describe('the duplicate warning', () => {
     const TOMENTOSA: DuplicateNode = {
       id: 'claw-1',
@@ -905,8 +866,6 @@ describe('IngredientForm', () => {
       vi.useRealTimers();
     });
     const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
-    // The region once its last rows have faded: they leave on the slide's
-    // net, and the notice with them.
     const emptied = async () => {
       await act(() => vi.advanceTimersByTimeAsync(600));
       expect(warning()).toHaveTextContent('');
@@ -925,7 +884,6 @@ describe('IngredientForm', () => {
       expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, name: "Cat's Claw", first: 3 }]);
       expect(textbox('Name')).toBeInvalid();
       expect(saves).toHaveLength(0);
-      // Again, and the focus goes back to it.
       save();
       await waitFor(() => expect(createAnyway()).toHaveFocus());
       expect(saves).toHaveLength(0);
@@ -984,7 +942,6 @@ describe('IngredientForm', () => {
     });
   });
 
-  // The + on a duplicate match, as only the whole form sends it.
   describe('using a compendium entry of the name typed', () => {
     const CLAW: DuplicateNode = {
       id: 'claw-1',
@@ -1077,11 +1034,7 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(heldRow()).toBeInTheDocument());
     });
 
-    // After the add the form stays open, rather than opening the entry's page. The + turning to
-    // the check, then the eye, and the
-    // row moving under In This Coven are NameField's, in duplicates.test.tsx.
     describe('after the + has added', () => {
-      /** The form in a coven named Hedge Coven, under the page's status region. */
       const renderInCoven = () => {
         const onSaved = vi.fn();
         offerNothing();
@@ -1099,7 +1052,6 @@ describe('IngredientForm', () => {
         return onSaved;
       };
 
-      /** Types a name that finds Cat's Claw, and presses its +, the server holding it from then on. */
       const addClaw = async () => {
         offerDuplicates([CLAW]);
         type('Name', 'Porch Claw');
@@ -1151,9 +1103,6 @@ describe('IngredientForm', () => {
     });
   });
 
-  // The form's half of each lookup, once per kind: the box asks with this
-  // coven, and the pick is sent. What a lookup offers and how a pick reads is
-  // lookups.test.tsx's.
   describe('the lookups wired', () => {
     beforeEach(() => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -1161,7 +1110,6 @@ describe('IngredientForm', () => {
     afterEach(() => {
       vi.useRealTimers();
     });
-    /** Focuses the box, which starts its lookup, and picks `option` from its list once it answers. */
     const pickFrom = async (name: string, calls: unknown[], option: RegExp) => {
       act(() => box(name).focus());
       await waitFor(() => expect(calls).toHaveLength(1));
@@ -1249,7 +1197,6 @@ describe('IngredientForm', () => {
         },
       ];
 
-      // None asks until its box is used.
       act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
       for (const { calls } of lookups) expect(calls).toHaveLength(0);
       for (const { entry, calls, option } of lookups) {
@@ -1329,7 +1276,6 @@ describe('IngredientForm', () => {
     fireEvent.click(submit);
 
     await waitFor(() => expect(submit).toBeDisabled());
-    // Busy; the other is held down beside it.
     expect(submit).toHaveAttribute('aria-busy', 'true');
     expect(rest).toBeDisabled();
     expect(rest).not.toHaveAttribute('aria-busy');
@@ -1343,8 +1289,6 @@ describe('IngredientForm', () => {
   });
 });
 
-// Where the focus lands after an undo: a list's rows are not inputs,
-// only its typing box is, so the box is where a change to the list is shown.
 describe('IngredientForm undo focus', () => {
   const undoFrom = (from: HTMLElement) => {
     act(() => from.focus());
