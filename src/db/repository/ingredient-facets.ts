@@ -106,7 +106,6 @@ async function sourceFacet(
   return values.map((value, index) => ({ value, count: counts[index] }));
 }
 
-/** How many entries `filter`'s search arms hold within `scope`. */
 async function totalUnder(
   filter: IngredientFilter,
   scope: SQL | undefined,
@@ -164,7 +163,6 @@ async function readFacets(
   };
 }
 
-/** The rows a facet counts: the list's scope, and the proof whose overrides it reads, if any. */
 interface FacetRead {
   scope: SQL | undefined;
   membership?: Membership;
@@ -183,7 +181,6 @@ function listed(
   return { where: and(scope, list.arms), over: list.order };
 }
 
-/** How many distinct entries a group holds, however many of its rows each joins. */
 const entries = sql<number>`count(distinct ${ingredients.id})::int`;
 
 /**
@@ -331,7 +328,6 @@ function listFacet(
   });
 }
 
-/** Each element, in `INGREDIENT_ELEMENTS`' order, counted by `elementArm` in one pass. */
 async function elementFacet(
   filter: IngredientFilter,
   { scope, membership }: FacetRead,
@@ -350,7 +346,6 @@ async function elementFacet(
   return INGREDIENT_ELEMENTS.map((value) => ({ value, count: row[value] }));
 }
 
-/** Toxic, then not toxic, each counted by `toxicArm` in one pass. */
 async function toxicFacet(
   filter: IngredientFilter,
   { scope, membership }: FacetRead,
@@ -425,7 +420,6 @@ async function reviewFacet(
   ];
 }
 
-/** How many of the read's rows `arm` holds. `filter` has no builder. */
 function countWhere(arm: SQL | undefined): SQL<number> {
   return sql<number>`(count(*) filter (where ${arm}))::int`;
 }
@@ -489,7 +483,6 @@ function alphabetical(facets: FacetCount[]): FacetCount[] {
   return facets.sort((a, b) => collator.compare(a.value, b.value) || byCodeUnit(a.value, b.value));
 }
 
-/** The spelling used most often, ties going to the one that sorts first. */
 function mostUsed(spellings: readonly string[]): string {
   const uses = new Map<string, number>();
   for (const spelling of spellings) uses.set(spelling, (uses.get(spelling) ?? 0) + 1);
@@ -497,7 +490,6 @@ function mostUsed(spellings: readonly string[]): string {
   return spelling;
 }
 
-/** Code-unit order, the same on every server whatever its locale. */
 function byCodeUnit(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }

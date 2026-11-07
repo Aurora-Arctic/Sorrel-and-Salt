@@ -87,7 +87,6 @@ export type Revisioned = { revision: AnyPgColumn };
 
 export type Slugged = { slug: AnyPgColumn };
 
-/** A table's own columns, with every audit column removed — they come from the session. */
 export type Writable<TTable extends PgTable> = Omit<TTable['$inferInsert'], AuditColumnName>;
 
 export type WritableInWorkspace<TTable extends PgTable> = Omit<Writable<TTable>, 'workspaceId'>;
@@ -153,19 +152,13 @@ export type PageOrder<Carried extends object = {}> = readonly SortPart[] | ListO
  */
 export interface KeysetCount {
   count: KeyOrder;
-  /** A page's first row. None on an empty page, whose `countBefore` is null. */
   start: Cursor | undefined;
 }
 
-/** One field a `weightedSearch` scores: its own `UNION ALL` arm. */
 export interface SearchField {
-  /** The listed row the field belongs to, which the search joins on. */
   id: AnyPgColumn;
-  /** The text matched and scored. */
   text: AnyPgColumn;
-  /** What a match here counts towards the rank, against the other fields. */
   weight: number;
-  /** The relation the arm reads, the field's table or an alias of it. */
   from: SQLWrapper;
   /** What else a row must be to count: live, or in the reader's coven. */
   live?: SQL;
@@ -178,9 +171,7 @@ export interface WeightedSearch {
 }
 
 export interface WordMatch {
-  /** The query is word-similar (`<%`) to `text`. */
   matches: (text: AnyPgColumn) => SQL;
-  /** How word-similar, for a best-match order. */
   similarity: (text: AnyPgColumn) => SQL<number>;
   /** `text` holds the query verbatim, case and accents aside: a full hit, wherever it falls in a word. */
   contains: (text: AnyPgColumn) => SQL;
@@ -217,11 +208,9 @@ export interface Aggregate<TRow extends Record<string, unknown>> {
   joins?: readonly AggregateJoin[];
   groupBy?: readonly (SQL | AnyPgColumn)[];
   orderBy?: readonly (SQL | AnyPgColumn)[];
-  /** The most rows read, after `orderBy`; every row without. */
   limit?: number;
 }
 
-/** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table too. */
 export interface AggregateJoin {
   type: 'inner' | 'left' | 'right';
   table: PgTable;
