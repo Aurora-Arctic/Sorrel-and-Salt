@@ -54,11 +54,8 @@ const LISTED = {
   workingCount: 3,
 } satisfies Partial<SpellCardProps>;
 
-// Every state of the card in one grid. The cell is the grimoire's narrowest column.
-// The burn filter of the smouldering edge rides along, so hovering any card shows it.
-// Held is the hovered look drawn with no pointer, for a touch screen and a still screenshot.
-// The two Compact cells are the look the grimoire's Compact switch turns on: the list's
-// `data-density` attribute is all it takes.
+// Every state of the card in one grid, in the grimoire's narrowest column. Held is the hovered look drawn with no
+// pointer. The two Compact cells are the look the list's `data-density` attribute turns on.
 export const States: Story = {
   render: () => (
     <>

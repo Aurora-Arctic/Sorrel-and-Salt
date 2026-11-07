@@ -89,11 +89,9 @@ export const rateLimits = pgTable('rate_limits', {
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
 });
 
-// One row per account with a failed password sign-in, and none otherwise. No
-// audit columns: nobody writes it by hand and a failed sign-in has no session.
-// `last_failed_at` is when the last failure came, which the quiet period runs
-// from, and `locked_until` the end of the current lock; the schedule that
-// sets them is the lockout's, not the table's.
+// One row per account with a failed password sign-in. No audit columns: nobody
+// writes it by hand and a failed sign-in has no session. `last_failed_at` is
+// where the quiet period runs from, `locked_until` the end of the current lock.
 export const signInFailures = pgTable('sign_in_failures', {
   userId: uuid('user_id')
     .primaryKey()

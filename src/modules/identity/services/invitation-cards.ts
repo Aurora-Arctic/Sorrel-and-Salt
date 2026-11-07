@@ -70,13 +70,12 @@ function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
 const REFUSAL = 'Only a site keeper may mint, list or revoke invitation cards';
 
 /**
- * Mints `sheets` sheets of `CARDS_PER_SHEET` pending cards each, sharing one batch and `expiresAt`, and answers their tokens: the only time any of them
- * is readable, as the rows hold the hash alone.
+ * Mints `sheets` sheets of `CARDS_PER_SHEET` pending cards each, sharing one batch,
+ * `expiresAt` and a trimmed `note`, and answers their tokens: the only time any is
+ * readable, as the rows hold the hash alone.
  *
  * @throws {Forbidden} the session's role is not `admin`.
- * `note` is trimmed and written on every card of the batch; blank or absent is none.
- *
- * @throws {ValidationError} on `sheets`: not a whole number from 1 to `MAX_SHEETS_PER_BATCH`, so a part sheet is never minted; on `expiresAt`: not a future date; on `note`: over `MAX_NOTE_LENGTH` characters.
+ * @throws {ValidationError} `sheets` is not a whole number from 1 to `MAX_SHEETS_PER_BATCH`; `expiresAt` is not a future date; `note` is over `MAX_NOTE_LENGTH`.
  */
 export async function mintInvitationCards(
   session: Session,
@@ -233,9 +232,9 @@ export type OwnedCovenLookup = (
 ) => Promise<ReadonlyMap<string, readonly string[]>>;
 
 /**
- * Every arrival as CSV text, newest first: the account's name and email, the day it was accepted, the batch's short name and the covens the account owns now,
- * as the Card Sign-Ups table shows them. `identity` may import no module, so the caller supplies `ownedCovens`; it is asked once, for every account on the list.
- * A cell that opens with a character a spreadsheet reads as a formula is prefixed with an apostrophe.
+ * Every arrival as CSV text, newest first, as the Card Sign-Ups table shows them.
+ * `identity` may import no module, so the caller supplies `ownedCovens`, asked
+ * once for every account. A cell opening with a formula character is prefixed with an apostrophe.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */

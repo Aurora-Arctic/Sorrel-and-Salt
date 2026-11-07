@@ -93,16 +93,11 @@ async function writeRole(
 }
 
 /**
- * Gives a live user a site role, stamped as the acting keeper and recorded by
- * the trigger with `note`, the confirmation's optional reason, a blank one as
- * none. Answers the row as written.
+ * Gives a live user a site role, stamped as the acting keeper and recorded by the
+ * trigger with `note`, a blank one as none. Answers the row as written
+ * (claude-docs/auth/admin-users.md, "Changing a site role").
  *
- * @throws {Forbidden} the session's role is not `admin`, a curator's
- * included; the user already holds the role asked for, since the change
- * would record nothing; the user is the primary keeper and the role is not
- * `admin`, for every caller, the primary keeper included; the change would
- * leave no live keeper; or the primary keeper has paused keeper changes and the
- * caller is another keeper.
+ * @throws {Forbidden} not a keeper; the user already holds the role; the user is the primary keeper and the role is not `admin`; the change would leave no live keeper; or keeper changes are paused and the caller is another keeper.
  * @throws {NotFound} no live user has this id.
  */
 export async function setUserRole(

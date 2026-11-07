@@ -12,13 +12,10 @@ import type { UserRow } from '../types';
 // Better Auth's `/update-user` would write it outside the audit, so `src/lib/auth.ts` disables it (claude-docs/auth/admin-bootstrap.md, "The account page").
 
 /**
- * Renames the session's own row to `input`, trimmed. It takes no id, so the
- * only row a caller can name is their own. A provisional account is refused,
- * as it is by every service but `me` and `setEmail`: its one task is to prove
- * its address.
+ * Renames the session's own row to `input`, trimmed. It takes no id; a provisional
+ * account is refused, as by every service but `me` and `setEmail`.
  *
- * @throws {Forbidden} the account's address is not yet verified — checked
- * before the input is read.
+ * @throws {Forbidden} the address is unverified, checked before the input is read.
  * @throws {ValidationError} on `name`: blank, or longer than `NAME_MAX_LENGTH`.
  * @throws {NotFound} the row is gone, though the session outlives it.
  */

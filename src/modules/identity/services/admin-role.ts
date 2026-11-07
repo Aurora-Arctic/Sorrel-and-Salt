@@ -5,10 +5,9 @@ import { writeSiteRoleGrant } from './user-role';
 import type { Session } from '../../../lib/session';
 import type { PrimaryAdminOutcome, SignInProfile } from '../types';
 
-// The primary keeper is promoted at sign-in, by a provider that vouches for the
-// address, or at first-party verification, by our own mail:
-// claude-docs/design-decisions/m2.9-granting-admin.md, "The primary keeper",
-// and claude-docs/auth/admin-bootstrap.md, "Admin bootstrap".
+// The primary keeper is promoted at sign-in or at first-party verification
+// (claude-docs/design-decisions/m2.9-granting-admin.md, "The primary keeper";
+// claude-docs/auth/admin-bootstrap.md, "Admin bootstrap").
 
 /**
  * Google marks an address verified only for a domain its owner has proved, and Discord only for one it has mailed a code to.

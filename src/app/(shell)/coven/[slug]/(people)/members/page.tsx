@@ -30,10 +30,8 @@ export const metadata: Metadata = {
   title: 'Members',
 };
 
-// Who is in the coven and what each may do; a name opens the member's modal, which holds what the viewer may do
-// to them. An observer gets the stranger's 404. The read is
-// `listMembers`, which GraphQL ends at too (rule 1). An address is a steward's alone, asked only when
-// the role holds `member: readEmail` and checked again by `memberEmails`.
+// Who is in the coven; a name opens the member's modal. An observer gets the stranger's 404. An address is a steward's
+// alone, asked only when the role holds `member: readEmail` and checked again by `memberEmails`.
 export default async function MembersPage({
   params,
   searchParams,

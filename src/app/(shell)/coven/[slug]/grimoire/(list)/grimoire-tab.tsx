@@ -30,13 +30,8 @@ import type { GrimoireTabProps } from './types';
 import { readViewedEntry } from '../../ingredients/reads';
 import { viewedDetailsOf } from '../../ingredients/viewed-details';
 
-// One grimoire tab, Spells or Drafts: the slug guard, the address as the filter, and one page of 24
-// cards. Per request, never cached (rule 6). A function, not a component, so a test awaits each
-// page whole. Dialogs: claude-docs/design-decisions/m10.12-spell-builder-modal.md.
-// A delete on a spell's page leaves for this tab with `?deleted=<name>`, which a success Notice
-// above the list says once. A role that may record, update, duplicate or delete a spell gets each
-// card's Record a Working button, Edit pencil and More menu, links back to this address with
-// `deleted` or `?edit=<id>` added.
+// One grimoire tab, Spells or Drafts. Per request, never cached (rule 6). A function, not a component, so a test awaits
+// each page whole. Dialogs: claude-docs/design-decisions/m10.12-spell-builder-modal.md.
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route => withParam(closeHref, 'edit', id);
 

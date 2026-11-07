@@ -7,10 +7,8 @@ import '../UserList/index.scss';
 import UserDetail from '.';
 import type { UserCoven, UserDetailUser } from './types';
 
-// Render-only; behaviour is asserted in tests/components/UserDetail.
-// Impersonate is red, as a high-risk control that destroys nothing; the coven-creation
-// Revoke is plain. Impersonate reaches Better Auth, which the workshop does not serve:
-// the question can be seen, its answer cannot.
+// Render-only; behaviour is asserted in tests/components/UserDetail. Impersonate reaches Better Auth, which the
+// workshop does not serve: the question can be seen, its answer cannot.
 const meta = {
   title: 'Admin / User Detail',
 } satisfies Meta;

@@ -76,10 +76,8 @@ export interface SpellBuilderProps {
    */
   onCreated?: (spell: SpellBuilderSpell) => void;
   /**
-   * Whether `spell`'s steps are still on their way (`loading`) or could not be
-   * read (`failed`); left out, `spell.steps` are its steps. Until they are, the
-   * jar shows its loading state and nothing is sent: an update's `steps` is the
-   * whole recipe, so one sent now would remove the steps not yet shown.
+   * Whether `spell`'s steps are still on their way (`loading`) or could not be read (`failed`). Until they are, nothing
+   * is sent: an update's `steps` is the whole recipe, so one sent now would remove the steps not yet shown.
    */
   stepsRead?: 'loading' | 'failed';
   /**

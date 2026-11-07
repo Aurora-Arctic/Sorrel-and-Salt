@@ -36,11 +36,11 @@ export type SiteAdmin = Curator & {
 };
 
 /**
- * The curation check, for everything a curator may do and a keeper with them:
- * the compendium-tier writes and the keeper-curated vocabularies. Reads the
- * session's role and nothing else, as `assertSiteAdmin` does.
+ * The curation check, for what a curator may do and a keeper with them: the
+ * compendium-tier writes and the keeper-curated vocabularies. Reads only the
+ * session's role, as `assertSiteAdmin` does.
  *
- * @throws {Forbidden} the session's email address is unverified, or its role is neither `curator` nor `admin`.
+ * @throws {Forbidden} the email address is unverified, or the role is neither `curator` nor `admin`.
  */
 export function assertCurator(session: Session, reason = 'Only a curator may do this'): Curator {
   refuseUnverified(session);
@@ -49,13 +49,11 @@ export function assertCurator(session: Session, reason = 'Only a curator may do 
 }
 
 /**
- * The site-role check, for everything only a site keeper may do: the people
- * page — the user list, roles, coven creation, invitations, the pause and the
- * privilege ledger — and the workshop. Reads the session's role and nothing
- * else, which the request read off the user's row. `reason` is what the
- * refusal says, when the caller has a more particular one than the default.
+ * The site-role check, for what only a site keeper may do: the people page and the
+ * workshop. Reads only the session's role. `reason` is what the refusal says when
+ * the caller has a more particular one than the default.
  *
- * @throws {Forbidden} the session's email address is unverified, or its role is not `admin`.
+ * @throws {Forbidden} the email address is unverified, or the role is not `admin`.
  */
 export function assertSiteAdmin(
   session: Session,

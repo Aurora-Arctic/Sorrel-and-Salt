@@ -10,11 +10,8 @@ import TabbedPage from '.';
 import { TabSwitchContext } from './tab-switch';
 import type { TabSwitch } from './types';
 
-// Render-only; behaviour is asserted in tests/components/TabbedPage. The People page
-// as `/keepers/invitations` draws it: the admin frame and nav, the heading with its
-// three tabs, Invitations open, and its New Invitation. The workshop's stub names
-// the open address (.storybook/navigation.ts); a tab switch provided above the
-// page says a tab is on its way.
+// Render-only; behaviour is asserted in tests/components/TabbedPage. The People page as `/keepers/invitations` draws
+// it. The workshop's stub names the open address (.storybook/navigation.ts).
 const meta = {
   title: 'Layout / Tabbed Page',
 } satisfies Meta;
@@ -44,10 +41,8 @@ const Invitations = () => (
   </People>
 );
 
-// Users pressed and on its way: New Invitation and every tab greyed and closed to
-// another press, the Users pill in its pending look while Invitations is still the
-// current page, and the list's skeleton shimmering below. At 375px the rows are
-// cards. Under reduced motion the shapes stand still.
+// Users pressed and on its way: New Invitation and every tab closed to another press, the Users pill pending while
+// Invitations is still current, the list's skeleton below. Under reduced motion the shapes stand still.
 const Loading = ({ tab = ON_ITS_WAY }: { tab?: TabSwitch }) => (
   <TabSwitchContext.Provider value={tab}>
     <Invitations />

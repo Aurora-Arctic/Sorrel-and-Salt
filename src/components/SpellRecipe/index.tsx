@@ -12,9 +12,7 @@ import SpellRecipeSummary from './summary';
 import { CATEGORY_MATCH_ID, INVENTORY_ID, JAR_ID, STEPS_ID, WORKINGS_ID } from './sections';
 import type { SpellRecipeProps } from './types';
 
-// A saved spell as a page: purpose, four facts, steps, note (the body's two boxes, which Quick Look
-// also draws). Read-only; the page's controls (Record, Edit, Preview, the three dots) are the
-// `action` slot's, for the roles that may. Its print
+// A saved spell as a page, read-only; the page's controls are the `action` slot's, for the roles that may. Its print
 // layout is `src/scss/_print.scss` (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({

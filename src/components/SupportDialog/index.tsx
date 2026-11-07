@@ -27,10 +27,8 @@ import { emailPagePath } from '../../lib/account-email';
 import type { SupportPanelState } from '../SupportPanel/types';
 import type { SupportDialogState } from './types';
 
-// The Support dialog, open while the address carries `?support=<about>` on any page, with
-// `?error=<status>` when it comes from an error page. Drawn once by the root layout, which reads nothing
-// for it: the dialog asks what the visitor may do when it opens, through /api/graphql. Closing drops the
-// parameters and keeps the page (claude-docs/components/support-dialog.md).
+// The Support dialog, open while the address carries `?support=<about>`. Drawn once by the root layout, which reads
+// nothing for it: the dialog asks what the visitor may do when it opens (claude-docs/components/support-dialog.md).
 
 const SupportDialogStateDocument = graphql(`
   query SupportDialogState {

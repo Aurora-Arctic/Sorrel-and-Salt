@@ -11,12 +11,10 @@ import type { UserRow } from '../types';
 const userById = cache((id: string) => findOneById(users, id));
 
 /**
- * The signed-in user's own row. It takes no id, so there is no other user a
- * caller could name; `User`'s private fields are scoped again in the schema
- * as the second check (claude-docs/graphql/schema.md, "Auth scopes").
+ * The signed-in user's own row; it takes no id. `User`'s private fields are scoped
+ * again in the schema as the second check (claude-docs/graphql/schema.md, "Auth scopes").
  *
- * @throws {NotFound} the row is gone or soft-deleted — Better Auth reads the
- * session's user without our filter, so a session can outlive its row.
+ * @throws {NotFound} the row is gone or soft-deleted: Better Auth reads the session's user without our filter, so a session can outlive its row.
  */
 export async function getMe(session: Session): Promise<UserRow> {
   const row = await userById(session.userId);

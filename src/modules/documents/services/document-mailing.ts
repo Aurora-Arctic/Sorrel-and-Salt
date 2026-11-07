@@ -145,13 +145,13 @@ function assertCoversPending(
 }
 
 /**
- * Starts one mailing of every pending document to every account it counts, with the keeper's summary of each, replaces every
- * sending and paused mailing, and starts the run that sends the mail. A lock held for the transaction makes two keepers sending at
- * once start one mailing: the second finds every pending version already in it, and is refused.
+ * Starts one mailing of every pending document to every account it counts, with
+ * the keeper's summary of each, replaces every sending and paused mailing, and
+ * starts the run. A lock held for the transaction makes two keepers sending at
+ * once start one mailing; the second is refused.
  *
- * @throws {Forbidden} the session is not a site keeper.
- * @throws {ValidationError} a summary is blank, nothing is pending, the summaries do not name exactly the pending versions, or every
- *   pending version is in a sending or paused mailing already.
+ * @throws {Forbidden} not a keeper.
+ * @throws {ValidationError} a summary is blank, nothing is pending, the summaries do not name exactly the pending versions, or every pending version is in a sending or paused mailing already.
  */
 export async function emailDocumentsToEveryAccount(
   session: Session,

@@ -12,9 +12,9 @@ import type { UserRow } from '../types';
 // terms include the other two (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
 /**
- * Records that the session's own account agreed to the three versions in `version`, now. It takes no id, so the only row a caller
- * can name is their own, and it refuses any combination but the one in force, so a page left open across a publish cannot agree to
- * text it did not show.
+ * Records that the session's own account agreed to the three versions in `version`,
+ * now. It refuses any combination but the one in force, so a page left open across
+ * a publish cannot agree to text it did not show.
  *
  * @throws {ValidationError} `version` is not the combination in force.
  * @throws {NotFound} the row is gone, though the session outlives it.

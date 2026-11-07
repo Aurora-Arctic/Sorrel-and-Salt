@@ -18,10 +18,8 @@ import type {
 } from './types';
 import './index.scss';
 
-// What a saved spell says, below its head: its intent, categories, a strip of
-// its four facts, its steps in order and its note. The recipe page, the grimoire's Quick Look
-// modal and the Preview pane all draw it, so they cannot drift: the page its two boxes apart, with
-// its jump menu between, and the others both at once. claude-docs/components/spell-recipe.md.
+// What a saved spell says below its head. The recipe page, the grimoire's Quick Look and the Preview pane all draw it,
+// so they cannot drift (claude-docs/components/spell-recipe.md).
 
 /** The ingredient's label as a step says it: "Testwort (Dried Leaf)". */
 export const labelOf = ({ name, form }: IngredientRecipeStep): string =>

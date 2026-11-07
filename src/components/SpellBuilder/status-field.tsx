@@ -8,11 +8,8 @@ import { ConfirmQuestion } from '../Modal';
 import { useDuplicateSpell } from '../SpellRecipe/duplicate-spell';
 import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } from './types';
 
-// A spell is a draft until Mark Complete saves it as complete; a complete spell has Duplicate
-// where a draft has Mark Complete, which makes a private draft copy and opens it. A complete spell
-// is not reopened here, and the service refuses complete -> draft too. A shared draft asks first,
-// since completing it keeps it shared for good, as sharing a complete spell asks.
-// claude-docs/components/spell-builder.md, "Draft and complete".
+// A spell is a draft until Mark Complete saves it; a complete spell is not reopened here, and the service refuses
+// complete -> draft too (claude-docs/components/spell-builder.md, "Draft and complete").
 
 const DRAFT_SAYS = 'A draft: not yet finished.';
 

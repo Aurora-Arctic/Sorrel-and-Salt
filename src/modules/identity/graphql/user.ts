@@ -175,10 +175,9 @@ for (const { field, description, write } of CREATION_WRITES) {
   );
 }
 
-// The role change: the site admin's alone, a curator's
-// not, scoped here and refused again by the service, which is the real gate.
-// The note is the confirmation's optional reason, kept on the ledger row the
-// trigger writes; the actor is the session's, never an argument.
+// The role change: the site admin's alone, scoped here and refused again by the
+// service, the real gate. `note` is the confirmation's optional reason, kept on
+// the ledger row; the actor is the session's, never an argument.
 builder.mutationField('setUserRole', (t) =>
   t.field({
     type: UserRef,
@@ -196,9 +195,8 @@ builder.mutationField('setUserRole', (t) =>
 );
 
 // The pause switch: the site admin's scope here, and the service refuses every
-// admin but the primary one. Each answers whether changes are paused now, so
-// a second click answers the state rather than an error; the stamps are the
-// session's, and neither takes an argument.
+// admin but the primary one. Each answers whether changes are paused now, so a
+// second click answers the state rather than an error.
 builder.mutationField('pauseAdminRoleChanges', (t) =>
   t.boolean({
     description:

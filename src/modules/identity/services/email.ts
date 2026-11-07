@@ -9,8 +9,8 @@ import { getMe } from './profile';
 import type { AuditSession } from '../../../db/types';
 import type { EmailVerificationSender, UserRow } from '../types';
 
-// The address an account is mailed at changes only at verification: asking
-// for a new one writes it to `pending_email` and mails a link, never a write to `users.email`, so an
+// The address an account is mailed at changes only at verification: a new one
+// goes to `pending_email` with a mailed link, never to `users.email`, so an
 // established account never re-enters the provisional sweep
 // (claude-docs/auth/admin-bootstrap.md, "The email page").
 
@@ -133,17 +133,12 @@ export async function isEmailHeldByAnother(email: string, userId: string): Promi
 }
 
 /**
- * Asks for `input` to become the signed-in account's address. It is written to
- * `pending_email`, never `users.email`: it becomes the row's when the mailed link is
- * followed from this account's session. The row is stamped as mailed, which
- * also restarts a provisional caller's window so the link cannot outlive the
- * row. An address a live verified account holds is answered the same and
- * mailed nothing. Both mails are sent after the answer. The row's own address, still unverified, is mailed again
- * instead; verified, there is nothing to do. Either link lands on the way to `next`,
- * which the sender guards where it builds the link.
+ * Asks for `input` to become the signed-in account's address, written to
+ * `pending_email` and mailed a link, never written to `users.email`. An address a
+ * live verified account holds is answered the same and mailed nothing; the row's
+ * own unverified address is mailed again (claude-docs/auth/admin-bootstrap.md, "The email page").
  *
- * @throws {ValidationError} on `email`: malformed, unmailable, mailed within the last minute, or asked for from a
- * session older than `EMAIL_CHANGE_WINDOW_SECONDS`.
+ * @throws {ValidationError} on `email`: malformed, unmailable, mailed within the last minute, or asked for from a session older than `EMAIL_CHANGE_WINDOW_SECONDS`.
  */
 export async function setEmail(
   session: Session,

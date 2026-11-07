@@ -32,10 +32,8 @@ import SpellMoreMenu from './more-menu';
 import type { InventoryDoor, RecipeStep } from './types';
 import SpellRecipe from '.';
 
-// Render-only; what shows and when is asserted in tests/components/SpellRecipe. The page states
-// draw the recipe as its page does (src/app/(shell)/coven/[slug]/grimoire/[id]/page.tsx): the head's
-// controls, the Workings section and the side column. A dropdown, not a grid: the page's sections
-// carry fixed ids.
+// Render-only; what shows and when is asserted in tests/components/SpellRecipe. The page states draw the recipe as its
+// page does. A dropdown, not a grid: the page's sections carry fixed ids.
 const meta = {
   title: 'Grimoire / Spell Recipe',
 } satisfies Meta;
@@ -171,10 +169,8 @@ const Page = ({
   );
 };
 
-// Quick Look: the recipe's body in a modal over the grimoire list, its headings a level down under
-// the dialog's title, and each step's supply verdict and Quick Look eye in its row, since the modal
-// has no side column. A draft or private spell carries its badges under the title. The workshop's
-// router goes nowhere, so Close, Escape and the links leave Open Again (`Reopenable`).
+// Quick Look: the recipe's body in a modal over the grimoire list, headings a level down, each step's supply verdict
+// and eye in its row. The workshop's router goes nowhere, so Close, Escape and the links leave Open Again (`Reopenable`).
 const Look = ({
   member,
   status = 'complete',

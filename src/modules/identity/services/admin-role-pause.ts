@@ -14,10 +14,9 @@ const REFUSAL = 'Only a site keeper may see or change whether keeper changes are
 const NOT_PRIMARY_REFUSAL = 'Only the primary keeper may pause or resume keeper changes';
 
 /**
- * Refuses a keeper change while the primary keeper has paused them, unless the
- * caller is the primary keeper, whom the pause exempts so it can clean up
- * without resuming first: the one guard the role service and coven
- * creation's approve and revoke both call.
+ * Refuses a keeper change while the primary keeper has paused them, except the
+ * primary keeper's own, so it can clean up without resuming: the guard the role
+ * service and coven creation's approve and revoke both call.
  *
  * @throws {Forbidden} a pause is open and the caller is another keeper.
  */
@@ -28,13 +27,10 @@ export async function assertChangesOpen(session: Session, admin: SiteAdmin): Pro
 }
 
 /**
- * The site-role check, in `reason`'s words, then the pause's: the one guard
- * every keeper change opens with — a user's role, coven creation's approval
- * and its revoke, a keeper invitation and its withdrawal — answering the
- * proof the change writes under.
+ * The site-role check in `reason`'s words, then the pause's: the guard every
+ * keeper change opens with, answering the proof the change writes under.
  *
- * @throws {Forbidden} the session's role is not `admin`, or a pause is open
- * and the caller is another keeper.
+ * @throws {Forbidden} the session's role is not `admin`, or a pause is open and the caller is another keeper.
  */
 export async function assertAdminChangesOpen(session: Session, reason: string): Promise<SiteAdmin> {
   const admin = assertSiteAdmin(session, reason);
@@ -67,9 +63,8 @@ export async function adminRoleChangePauseState(
 }
 
 /**
- * Pauses keeper grants and revokes for every keeper but the primary one,
- * stamped as the primary keeper, and answers `true`, paused. A pause already
- * open is left as it is, so a second click changes nothing.
+ * Pauses keeper grants and revokes for every keeper but the primary one and
+ * answers `true`; a pause already open is left as it is.
  *
  * @throws {Forbidden} the session's user is not the primary keeper.
  */

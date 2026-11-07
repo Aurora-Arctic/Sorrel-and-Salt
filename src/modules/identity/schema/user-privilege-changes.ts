@@ -2,10 +2,9 @@ import { pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns, users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
-// pgEnums because each set is closed. The privilege names the `users` column
-// a change was to, `role` as `admin` or `curator` and
-// `can_create_workspace` as `create_workspace`, so a future flag is a value
-// here and a line in the trigger rather than a table.
+// pgEnums because each set is closed. The privilege names the `users` column a
+// change was to (`role` as `admin` or `curator`, `can_create_workspace` as
+// `create_workspace`), so a new flag is a value here and a line in the trigger.
 export const userPrivilege = pgEnum('user_privilege', ['admin', 'create_workspace', 'curator']);
 
 export const userPrivilegeChange = pgEnum('user_privilege_change', ['grant', 'revoke']);

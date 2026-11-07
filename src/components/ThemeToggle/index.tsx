@@ -17,10 +17,8 @@ export const applyTheme = (theme: 'light' | 'dark'): void => {
   }
 };
 
-// Mirrors globals.scss's three-state cascade: only a stored choice sets the
-// attribute, so on a light system with nothing stored it is absent while the
-// page is light. Asks for `light` so "no preference" resolves to dark.
-// claude-docs/components/theme-toggle.md, "Shared contract".
+// Mirrors globals.scss's three-state cascade: only a stored choice sets the attribute. Asks for `light` so "no
+// preference" resolves to dark (claude-docs/components/theme-toggle.md, "Shared contract").
 const resolveCurrentTheme = (): 'light' | 'dark' => {
   const stated = document.documentElement.getAttribute('data-theme');
   if (stated === 'light' || stated === 'dark') {

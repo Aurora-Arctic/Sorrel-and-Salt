@@ -81,10 +81,8 @@ const USERS: readonly UserListEntry[] = [
 // Each story sits inside the admin layout's frame and the People page, Users tab
 // open, with the switch on keeper changes beside the heading where a story gives it.
 
-// The page as /keepers/users draws it where impersonation is registered: nine columns,
-// facts no control changes muted, Impersonate red in its red-ruled column at the right.
-// Impersonate and Pause Keeper Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
-// shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
+// The page as /keepers/users draws it where impersonation is registered. Impersonate and Pause Keeper Changes each ask
+// first; the call reaches no server, so confirming shows the refusal. Drawn in the app shell.
 const defaultNode = (
   <ShellFrame area="admin">
     <TabbedPage

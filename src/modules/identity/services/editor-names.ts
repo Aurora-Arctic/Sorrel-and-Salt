@@ -6,17 +6,16 @@ import { users } from '../schema/users';
 import { assertCurator } from './site-admin';
 import type { EditorName } from '../types';
 
-// The "last edited by" names of the admin curated lists. Every
-// curation screen shows them, so a curator reads them too, which
-// `usersForAdmin` refuses: it hands back whole rows for the privilege
-// ledger. This read answers an id and a name and nothing else.
+// The "last edited by" names of the admin curated lists, which a curator reads
+// too. `usersForAdmin` refuses a curator; this read answers an id and a name and
+// nothing else.
 
 /**
  * The live user behind each id, as the id and display name an Updated stamp
- * shows: one answer per id in the order given, null where no live user holds
- * it. One query whatever the batch size.
+ * shows: one answer per id in the order given, null where none. One query
+ * whatever the batch size.
  *
- * @throws {Forbidden} the session's role is neither `curator` nor `admin`.
+ * @throws {Forbidden} not a curator or keeper.
  */
 export async function editorNamesForCurator(
   session: Session,

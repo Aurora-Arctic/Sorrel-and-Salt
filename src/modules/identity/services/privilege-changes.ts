@@ -15,17 +15,15 @@ import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
 import type { PrivilegeChangeFilter, PrivilegeChangeRow, UserRow } from '../types';
 
-// The privilege ledger's reads, behind `/keepers/privilege-changes`
-// and GraphQL's `privilegeChanges`: the database writes the ledger,
-// and only a site keeper reads it, checked here by direct call
+// The privilege ledger's reads, behind `/keepers/privilege-changes` and GraphQL's
+// `privilegeChanges`: only a site keeper reads it, checked here by direct call
 // (claude-docs/auth/admin-users.md, "The privilege ledger").
 
 const REFUSAL = 'Only a site keeper may read the privilege ledger';
 
 /**
- * One page of the privilege ledger under `filter`, newest first, to a site
- * admin. A subject that is not an id is refused rather than read, so a
- * malformed one is not taken for a bad cursor.
+ * One page of the privilege ledger under `filter`, newest first. A subject that is
+ * not an id is refused rather than read, so it is not taken for a bad cursor.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  * @throws {ValidationError} `filter.userId` is not an id.
@@ -40,9 +38,8 @@ export async function listPrivilegeChanges(
 }
 
 /**
- * How many changes `listPrivilegeChanges` pages under `filter`, and how many
- * come before `start`, a page's first row, none on an empty page: "Page X
- * of Y" on `/keepers/privilege-changes`.
+ * How many changes `listPrivilegeChanges` pages under `filter`, and how many come
+ * before `start`: the "Page X of Y" on `/keepers/privilege-changes`.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  * @throws {ValidationError} `filter.userId` is not an id.

@@ -31,10 +31,9 @@ export const revisionColumn = () => integer('revision').notNull().default(1);
 // of site roles, so a column is enough.
 export const userRole = pgEnum('user_role', ['user', 'curator', 'admin']);
 
-// Better Auth's adapter table plus the app columns. `name`/`image` keep Better
-// Auth's names (DESIGN.md was corrected, not the fields). `created_by`
-// self-references `users.id`; the sign-up hook and seed bootstrap satisfy it
-// within one statement (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
+// Better Auth's adapter table plus the app columns; `name` and `image` keep its
+// names. `created_by` self-references `users.id`, which the sign-up hook and seed
+// satisfy within one statement (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
 export const users = pgTable(
   'users',
   {

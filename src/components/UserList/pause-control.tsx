@@ -12,10 +12,8 @@ import ConfirmedAction from './confirmed-action';
 import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
 
-// The primary keeper's switch on keeper grants and revokes: a warning while paused and the control
-// that flips it. Every keeper sees both; only the primary keeper can use it, others see the reason in
-// a tip. Pause asks first; Resume acts at once. The service is the guard
-// (claude-docs/components/user-list.md).
+// The primary keeper's switch on keeper grants and revokes. Every keeper sees it; only the primary keeper can use it.
+// The service is the guard (claude-docs/components/user-list.md).
 
 const PauseAdminRoleChangesDocument = graphql(`
   mutation PauseAdminRoleChanges {

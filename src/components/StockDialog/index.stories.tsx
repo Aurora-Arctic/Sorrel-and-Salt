@@ -74,10 +74,8 @@ const choose = (index: number): void =>
 const press = (selector: string): void =>
   document.querySelector<HTMLButtonElement>(selector)?.click();
 
-// The field issues a batch of two edits and a removal can earn, in the shape
-// src/graphql/errors.ts sends a ValidationError (claude-docs/components/stock-dialog.md,
-// "Saving"): an issue on each edited jar's box. The server checks every row before
-// reading a jar, so this refusal carries field issues only.
+// The field issues a batch of two edits and a removal can earn, in the shape src/graphql/errors.ts sends a
+// ValidationError (claude-docs/components/stock-dialog.md, "Saving"): field issues only.
 const REFUSED = [
   answerMutation(SaveStockDocument, () =>
     refusal({
@@ -107,15 +105,9 @@ const GONE = [
 // With neither state, a save is answered as accepted.
 const NONE: RequestHandler[] = [];
 
-// Pressed already, as after a click on the stock button: Dried Leaf chosen and
-// badged Low Stock (with every form held, Resin is listed as unmeasured). With no
-// jar, the fields' column holds its place so the dialog keeps its size.
-// `remove` presses the chosen jar's bin, so its removal waits for Save Stock.
-// `save` types into the chosen jar's Quantity and presses Save Stock, which NOT_FOUND
-// answers: the server's sentence in the alert, no form marked, input kept.
-// `refuse` edits Dried Leaf's Quantity and Oil's Low Stock At, removes Resin and
-// presses Save Stock, which REFUSAL answers: both forms marked, Dried Leaf chosen with
-// its error in view, Resin still staged, no alert.
+// Pressed already, as after a click on the stock button. `remove` presses the chosen jar's bin; `save` types into
+// its Quantity and presses Save Stock, which NOT_FOUND answers with the server's sentence in the alert; `refuse` edits
+// two jars, removes Resin and presses Save Stock, which REFUSAL answers: both forms marked, Resin still staged.
 const Pressed = ({
   jars,
   remove = false,

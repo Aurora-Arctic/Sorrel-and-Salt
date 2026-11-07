@@ -34,14 +34,10 @@ async function setFlag(
 }
 
 /**
- * Lets a live user who lacks it create a workspace, stamped as the approving
- * admin and recorded as a `grant` with `note`, the confirmation's optional
- * reason, and answers the row as written.
+ * Lets a live user who lacks it create a workspace, stamped as the approving admin
+ * and recorded as a `grant` with `note`; answers the row as written.
  *
- * @throws {Forbidden} the session's role is not `admin`; keeper changes are
- * paused and the caller is not the primary keeper; or the user may
- * already create one — a second approval would record a change that never
- * happened.
+ * @throws {Forbidden} not a keeper; keeper changes are paused and the caller is not the primary keeper; or the user may already create one.
  * @throws {NotFound} no live user has this id.
  */
 export async function grantWorkspaceCreation(
@@ -56,15 +52,10 @@ export async function grantWorkspaceCreation(
 }
 
 /**
- * Stops a live user creating workspaces, stamped as the admin and recorded as
- * a `revoke` with `note`, and answers the row as written. The workspaces they already
- * created stay theirs: the flag governs creating, not keeping.
+ * Stops a live user creating workspaces, recorded as a `revoke` with `note`;
+ * answers the row as written. The workspaces they created stay theirs.
  *
- * @throws {Forbidden} the session's role is not `admin`; keeper changes are
- * paused and the caller is not the primary keeper; the user cannot
- * create one already; or the user is a keeper or a curator, whom the users
- * CHECK holds to the flag, so making them a user is the
- * route.
+ * @throws {Forbidden} not a keeper; keeper changes are paused and the caller is not the primary keeper; the user cannot create one already; or the user is a keeper or curator, whom the users CHECK holds to the flag.
  * @throws {NotFound} no live user has this id.
  */
 export async function revokeWorkspaceCreation(

@@ -58,10 +58,10 @@ export async function readDocumentForEditing(
 }
 
 /**
- * Writes `body` into the document's draft. With no `expectedRevision` it opens the draft, and refuses if one is open already;
- * with one it writes into the open draft only while the draft is still at that revision.
+ * Writes `body` into the document's draft. With no `expectedRevision` it opens the
+ * draft, refusing if one is open; with one it writes only while the draft is at that revision.
  *
- * @throws {Forbidden} the session is not a site keeper.
+ * @throws {Forbidden} not a keeper.
  * @throws {NotFound} the document is missing or deleted, or a revision was given and no draft is open.
  * @throws {StaleWrite} the draft has moved on, carrying the revision it is at now.
  */

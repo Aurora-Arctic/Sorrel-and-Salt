@@ -30,8 +30,7 @@ export async function listUsers(
 
 /**
  * How many users `listUsers` pages under `filter`, and how many come before
- * `start`, a page's first row, none on an empty page: the user list's
- * "Page X of Y".
+ * `start`: the user list's "Page X of Y".
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */

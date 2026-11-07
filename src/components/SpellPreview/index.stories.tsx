@@ -6,10 +6,8 @@ import { useSteps } from '../../../.storybook/press';
 import { previewStepsOf } from './preview-steps';
 import SpellPreview from '.';
 
-// Render-only; what shows and when is asserted in tests/components/SpellPreview. The pane is open
-// while the address carries `?preview`, which `WorkshopSearch` follows as the page's router would.
-// The workshop's browser may refuse the Screen Wake Lock, so the stories give it one that is held at
-// once: without it the Screen Awake button is not drawn.
+// Render-only; what shows and when is asserted in tests/components/SpellPreview. The workshop's browser may refuse
+// the Screen Wake Lock, so the stories give it one held at once; without it Screen Awake is not drawn.
 const meta = {
   title: 'Grimoire / Spell Preview',
 } satisfies Meta;

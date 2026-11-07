@@ -27,12 +27,11 @@ const SYSTEM = { userId: SYSTEM_ACTOR_ID };
 export type BatchResult = 'more' | 'sent' | 'replaced' | 'paused' | 'queued' | 'tomorrow';
 
 /**
- * Mails one batch of the mailing's unsent accounts, within today's allowance, one account at a time, each in a transaction that
- * holds the mailing's turn: two steps of one mailing never overlap, and each account is checked against the mailing's status and
- * the day's count just before it is mailed. A send is recorded as it goes, so a retry mails no one twice. An account that is gone,
- * or whose address the provider refuses for good (a 4xx other than 429), is skipped so the mailing can finish. A transport failure
- * throws and the SDK retries; the provider's quota answers end the batch instead, as a retry cannot clear them: the daily one ends
- * the run for the day, the monthly one pauses the mailing. A transport this environment may not use pauses it too.
+ * Mails one batch of the mailing's unsent accounts within today's allowance, each
+ * in a transaction that holds the mailing's turn, so two steps never overlap and a
+ * retry mails no one twice. A gone account or one the provider refuses for good
+ * is skipped; a transport failure throws and the SDK retries; the provider's quota
+ * answers end the batch instead (claude-docs/components/document-mailing-panel.md, "Contracts").
  */
 export async function mailBatchStep(mailingId: string, origin: string): Promise<BatchResult> {
   let sent = 0;

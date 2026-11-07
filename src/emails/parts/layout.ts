@@ -23,11 +23,8 @@ import type { Message } from '../../lib/types';
 import type { BaseEmailProps, MessageInput } from '../types';
 import type { EmailLayoutProps, InkProps, Part } from './types';
 
-// Every mail's frame: the site's palette, type and corner photographs (claude-docs/email.md,
-// "Design"). Dark is inline, light the one media query's override; Zoho Mail's Night mode needs
-// dark written as a gradient and an anchor around text (measurements in email.md). Written as
-// `createElement` calls, not JSX: a durable job's step renders these, and the step bundler leaves JSX
-// uncompiled.
+// Every mail's frame (claude-docs/email.md, "Design"). Written as `createElement` calls, not JSX: a durable job's step
+// renders these, and the step bundler leaves JSX uncompiled.
 
 const { dark, light } = EMAIL_THEMES;
 
@@ -68,11 +65,8 @@ function stylesheet(origin: string): string {
     // the next font in the stack instead of Times New Roman.
     `@media screen{${faces}}` +
     `${LIGHT_MEDIA}{` +
-    // Every light rule hangs off the one page cell, so a client applies all of
-    // them or none. A bare class per element let a client keep the text rules
-    // and drop the page rule, which rendered dark text on the dark page.
-    // `background`, not `background-color`: the shorthand also clears the
-    // gradient the inline dark is painted with.
+    // Every light rule hangs off the one page cell, so a client applies all of them or none. `background`, not
+    // `background-color`: the shorthand also clears the gradient the inline dark is painted with.
     `.ss-page{background:${light.page}!important;color:${light.text}!important;}` +
     `.ss-page .ss-text{color:${light.text}!important;}` +
     `.ss-page .ss-muted{color:${light.muted}!important;}` +
@@ -105,10 +99,8 @@ const WORDMARK_TOP = 24;
 const WORDMARK_LINE = 24;
 
 /**
- * A background Zoho Mail's Night mode keeps: it inverts a `background-color`
- * and leaves a gradient alone, so the colour is painted twice, as itself and
- * as a one-colour gradient over it. The shorthand, because Gmail for Android
- * mangles a gradient written as `background-image` (email-bugs#135).
+ * A background Zoho Mail's Night mode keeps: it inverts a `background-color` and leaves a gradient alone, so the colour
+ * is painted twice. The shorthand, because Gmail for Android mangles `background-image` gradients.
  */
 function paint(color: string): string {
   return `${color} linear-gradient(${color},${color})`;
@@ -120,10 +112,8 @@ function paint(color: string): string {
 const INK_BACKGROUND = 'linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0))';
 
 /**
- * A run of text in the one element Zoho Mail's Night mode does not recolour:
- * an anchor over a (transparent) gradient. No `href`, so it is text, not a
- * link; the text must sit directly inside it, since Zoho still rewrites any
- * element nested within.
+ * A run of text in the one element Zoho Mail's Night mode does not recolour: an anchor over a transparent gradient. No
+ * `href`, so it is text; the text sits directly inside it, since Zoho rewrites nested elements.
  */
 function Ink({ className, color, font, children }: InkProps) {
   return h(
@@ -147,10 +137,8 @@ function ornament(corner: Corner, origin: string, position: string): CSSProperti
   };
 }
 
-// Outlook for Windows ignores `max-width`, so the container sits in a fixed-width
-// table only it reads. React cannot write a comment, so the layout renders
-// these two placeholders and `renderParts` swaps each for its conditional
-// comment in the HTML part.
+// Outlook for Windows ignores `max-width`, so the container sits in a fixed-width table only it reads. React cannot
+// write a comment, so `renderParts` swaps these two placeholders for conditional comments in the HTML part.
 const MSO_OPEN = '<span data-mso="open"></span>';
 const MSO_CLOSE = '<span data-mso="close"></span>';
 const MSO_OPEN_COMMENT =
@@ -403,10 +391,8 @@ export function actionVerb(part: Part): string {
 }
 
 /**
- * The closing line every mail ends on: whoever did not ask for it can ignore
- * it. `when` is the template's own way of saying who that is. One string,
- * not text around an expression, which React renders with a `<!-- -->`
- * between the two in the HTML.
+ * The closing line every mail ends on, as one string: text around an expression renders with a `<!-- -->` between in
+ * the HTML.
  */
 export function IgnoreNote({ when }: { when: string }) {
   return h(Paragraph, { muted: true }, `${when}, you can ignore this email.`);

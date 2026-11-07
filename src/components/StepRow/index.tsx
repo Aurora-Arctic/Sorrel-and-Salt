@@ -3,10 +3,8 @@ import FormIcon from '../FormIcon';
 import './index.scss';
 import type { StepRowProps } from './types';
 
-// One step of a spell: its position, its ingredient with the quantity
-// and unit if it has them, and its text. Presentational: the spell builder
-// hands it editing controls and the recipe page none.
-// See claude-docs/components/step-row.md.
+// One step of a spell. Presentational: the spell builder hands it editing controls and the recipe page none
+// (claude-docs/components/step-row.md).
 
 /**
  * The quantity as the person typed it rather than as the column stores it: "1.000" is "1" and
@@ -34,10 +32,8 @@ export const amountOf = (quantity?: string | null, unit?: string | null): ReactN
 };
 
 /**
- * A click on the card's plain face toggles it, as a mouse shortcut for the pencil (which stays the
- * keyboard and screen-reader control, so the row gets no role or tab stop). Clicks on a control,
- * or anywhere in the open fields, are left to themselves; an open card closes only from its header
- * text.
+ * A click on the card's plain face toggles it, as a mouse shortcut for the pencil, which stays the keyboard and
+ * screen-reader control (so the row gets no role or tab stop). Clicks on a control or in the open fields are left alone.
  */
 function toggleFromFace(event: MouseEvent<HTMLLIElement>, open: boolean, toggle: () => void): void {
   const target = event.target as Element;

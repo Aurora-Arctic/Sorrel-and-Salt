@@ -15,11 +15,8 @@ import { senderStatusLabel } from '../SupportSenderRequest/status';
 import SupportViewReplyForm from '../SupportViewReplyForm';
 import type { LinkedRequest, LinkState } from './types';
 
-// The page a signed-out sender's mails link to. The mailed link holds its token in the URL fragment, which the browser never
-// sends to the server or in a Referer header, so this reads it in the browser, asks `supportRequestByViewToken` for the
-// request, and drops the fragment from the address bar. The token is kept in this tab's sessionStorage, not the address bar: it
-// lasts for a reload in the tab, is never shared with another tab, and is wiped when the tab closes. A token the server no
-// longer honours is removed from storage.
+// The page a signed-out sender's mail links to. The token is in the URL fragment, which the browser never sends, so
+// this reads it in the browser, keeps it in this tab's sessionStorage and drops the fragment from the address bar.
 
 const SupportRequestByViewTokenDocument = graphql(`
   query SupportRequestByViewToken($token: String!) {

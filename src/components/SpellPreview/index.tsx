@@ -20,12 +20,9 @@ import type { Ember, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
 
-// Spell Preview: a Preview button that opens the spell in a pane of its own, with
-// everything the printed spell shows, and no links or controls, so it can be followed without
-// distraction. A native modal `<dialog>` in the top layer, which already covers the
-// window, holds the page inert and gives Escape; true full screen is added on top where the browser
-// has it (claude-docs/components/spell-preview.md). The pane is open while the address carries
-// `?preview`, which is its one source of truth: a direct link or a refresh opens it, and Back closes it.
+// Spell Preview: a button opening the spell in a pane of its own, with no links or controls. A native modal `<dialog>`
+// holds the page inert and gives Escape; full screen is added where the browser has it
+// (claude-docs/components/spell-preview.md). `?preview` in the address is the one source of truth.
 
 const PREVIEW = 'preview';
 
@@ -68,10 +65,8 @@ const embers = (list: readonly Ember[], edge: boolean): ReactElement[] =>
     />
   ));
 
-// The background: the page smouldering from its foot corner as a spell card does under the pointer,
-// a hearth glow under the burn, and embers rising from the glow and from the charred edge. Decoration
-// only: hidden from assistive technology, behind the content, taking no pointer. The spell page has
-// no other copy of the card's burn filter, so the pane carries one while open.
+// The background: the page smouldering from its foot corner, a hearth glow and embers. Decoration only: hidden from
+// assistive technology, taking no pointer. The pane carries its own copy of the card's burn filter while open.
 const Scene = (): ReactElement => (
   <>
     <SpellCardFilters />
@@ -133,10 +128,9 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
     // Measured before showModal(), while the page's scrollbar is still there to be replaced.
     const release = holdPage();
     if (!dialog.open) dialog.showModal();
-    // The page asks, not the dialog: browsers refuse full screen for a `<dialog>` (a TypeError), and the modal
-    // dialog still stands in the top layer over a full-screen page. Past the browser floor on some engines
-    // (iPhone Safari has no element full screen): a pure enhancement behind a `typeof` check, with the dialog
-    // covering the window as the fallback.
+    // The page asks, not the dialog: browsers refuse full screen for a `<dialog>` (a TypeError). Past the browser floor
+    // (iPhone Safari has no element full screen): a pure enhancement behind a `typeof` check, the dialog covering the
+    // window as the fallback.
     if (typeof document.documentElement.requestFullscreen === 'function') {
       document.documentElement.requestFullscreen().then(
         () => {

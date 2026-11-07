@@ -64,10 +64,8 @@ const assignedFirst = <T extends { id: string }>(
 const NEUTRAL: GroupColors = { colorDark: 'var(--text-muted)', colorLight: 'var(--text-muted)' };
 
 /**
- * The categories as small print on a row, drawn by CategoryChips (compact size, group colours)
- * so the "+N" is the same CategoryMore button and floating panel the cards and the admin table
- * have. The first `ROW_CATEGORY_CAP` show; the rest fold behind it. The click and press are
- * kept from the option, so using the chips never picks the row or closes the list.
+ * The categories as small print on a row, drawn by CategoryChips so the "+N" is the same button and panel the cards
+ * have. The click and press are kept from the option, so the chips never pick the row or close the list.
  */
 const categoryNames = (
   name: string,

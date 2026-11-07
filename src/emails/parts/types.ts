@@ -22,9 +22,7 @@ export interface InkProps {
 }
 
 /**
- * Which part of the message is rendering. Where the two media differ, a
- * template words each its own way. A prop, never React context or state:
- * src/lib/auth.ts imports the templates, so Next compiles them as server
- * components, where `createContext` does not exist.
+ * Which part of the message is rendering. A prop, never React context or state: src/lib/auth.ts imports the
+ * templates, so Next compiles them as server components, where `createContext` does not exist.
  */
 export type Part = 'html' | 'text';

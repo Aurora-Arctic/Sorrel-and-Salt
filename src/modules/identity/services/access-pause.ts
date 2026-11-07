@@ -34,15 +34,13 @@ const NO_NOTE = 'Write a note saying why';
 const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
 
 /**
- * Pauses a user's access until `until`, or with no end when `until` is `null`, and ends every session they hold. Pausing
- * another keeper waits on keeper changes being open, as revoking one does. The user is mailed, with `message` if one is written, once the pause is saved.
+ * Pauses a user's access until `until`, or with no end when `until` is `null`, and
+ * ends every session they hold. The user is mailed, with `message` if one is
+ * written, once the pause is saved (claude-docs/auth/admin-bootstrap.md, "Pausing a user's access").
  *
- * @throws {Forbidden} the session is not a keeper; the user is the primary keeper, the caller, the System account or the signed-out
- * sender account; or keeper changes are paused
- * and the user is a keeper.
+ * @throws {Forbidden} not a keeper; the user is the primary keeper, the caller, or the System or signed-out sender account; or keeper changes are paused and the user is a keeper.
  * @throws {NotFound} no live user has this id.
- * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, the message is missing, blank or over
- * 500, or a pause already stands.
+ * @throws {ValidationError} `until` is not in the future, the note or message is missing, blank or over 500 characters, or a pause already stands.
  */
 export async function pauseUserAccess(
   session: Session,

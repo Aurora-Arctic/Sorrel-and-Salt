@@ -4,10 +4,8 @@ import { WORKINGS } from '../../../.storybook/grimoire-fixtures';
 import { WorkingsSection as Section } from '../../../.storybook/grimoire-workings';
 import type { WorkingView } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SpellWorkings. The section's controls are
-// the recipe page's own (Record a Working, Complete and the Edit pencil, whose dialog holds
-// Delete), given here as the page gives them; what each opens is Grimoire / Record Working's. A
-// dropdown, not a grid: the section's heading carries a fixed id.
+// Render-only; behaviour is asserted in tests/components/SpellWorkings. The controls are the recipe page's own, given
+// here as the page gives them. A dropdown, not a grid: the section's heading carries a fixed id.
 const meta = { title: 'Grimoire / Spell Workings' } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;

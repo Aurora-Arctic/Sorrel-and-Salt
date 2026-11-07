@@ -11,10 +11,8 @@ import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
 
-// Reply on a request: the sender is mailed that a reply is waiting and reads it on /account/support. A mode beside the box
-// turns the same text into an internal note, which only staff read and nobody is mailed; it opens on Internal Note, so a
-// reply is always chosen. Send stays off until there is something to say; Resolve, when given, sits opposite it.
-// A reply to a timed-out sender asks first, since they cannot answer it until the time-out ends.
+// Reply on a request, or an internal note nobody is mailed; it opens on Internal Note so a reply is always chosen. A
+// reply to a timed-out sender asks first, since they cannot answer until the time-out ends.
 
 type Mode = 'reply' | 'note';
 

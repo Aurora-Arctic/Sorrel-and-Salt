@@ -6,10 +6,9 @@ import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
-// What a keeper's change to a user, and a keeper's batch read of users, are
-// made of, written once for the role service, coven creation's approval and
-// the admin invitations. Internal to the module; the index exports
-// no part of it.
+// What a keeper's change to a user and a keeper's batch read of users are made
+// of, written once for the role service, coven creation's approval and the admin
+// invitations. Internal to the module.
 
 /** Whether the session's role is `admin`, for a caller answering a batch that refuses slot by slot; otherwise use `assertSiteAdmin`. */
 export function isSiteAdmin(session: Session): boolean {

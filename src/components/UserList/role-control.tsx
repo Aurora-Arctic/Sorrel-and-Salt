@@ -13,10 +13,8 @@ import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import { unverifiedWarning } from './warning';
 import type { RoleControlProps } from './types';
 
-// The user modal's Change Role (one control for every role, curator included): it asks which role the
-// user moves to, with an optional ledger reason. The primary keeper's, and every one while admin
-// changes are paused, stays in view but locked, its reason in a tip
-// (claude-docs/components/user-list.md).
+// The user modal's Change Role: asks which role, with an optional ledger reason. Kept in view but locked for the
+// primary keeper's and while admin changes are paused (claude-docs/components/user-list.md).
 
 const SetUserRoleDocument = graphql(`
   mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {
