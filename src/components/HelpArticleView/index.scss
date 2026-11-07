@@ -1,9 +1,10 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The parent link closes the gap to the title beneath it, so the two read as one line of the way in.
+// The parent link stands as an entry page's does over its name: 37px above the chevron, and about 45px from the
+// chevron to the title beneath (claude-docs/components/help-pages.md, "Headings").
 .help-article__parent {
-  margin-block: space(6) calc(-1 * #{space(4)});
+  margin-block: space(6) calc(#{space(6)} + #{space(1)});
 }
 
 .help-article__body {
