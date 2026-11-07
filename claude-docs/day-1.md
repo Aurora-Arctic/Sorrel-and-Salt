@@ -98,7 +98,7 @@ A type lives in a type-only file beside the code that uses it, and every slug co
 
 ## Dev tooling
 
-The day-to-day tools are the npm scripts. `npm run pre-commit` lints, formats and type-checks the files you changed, and runs on every commit through a hook. `npm run codegen` regenerates the GraphQL types in `src/gql/` from the schema, and its output is committed. `npm run db:generate` writes a migration from a schema change, `npm run db:migrate` applies it, and `npm run check:destructive-ddl` flags a migration that drops or narrows something.
+The day-to-day tools are the npm scripts. `npm run pre-commit` lints, formats and type-checks the files you changed, and runs on every commit. `npm run codegen` regenerates the GraphQL types in `src/gql/` from the schema, and its output is committed. `npm run db:generate` writes a migration from a schema change, `npm run db:migrate` applies it, and `npm run check:destructive-ddl` flags a migration that drops or narrows something.
 
 The component workshop is a Storybook of every shared component, run with its own command; the workshop doc says how to add a story. Drizzle Studio browses the local database. Altair, a GraphQL client, opens at `/api/graphql` in a browser on the dev server, signed in as you; the manual API testing doc says how to use it against staging too.
 
@@ -110,9 +110,9 @@ Debugging works from VS Code inside the container: `.vscode/launch.json`, which 
 
 The project is written test-first: the failing test comes before the code that makes it pass, and a bug fix starts with a test that reproduces the bug. Read the testing rule file for the process and what a test may assert; it is short, and reviews hold every test to it.
 
-There are two runners. Vitest runs the unit, component, database and guard tests, in six projects; a test that touches Postgres goes in the database project and runs against a real local Postgres, never a mock and never the hosted database. Playwright runs the end-to-end specs, each worker with its own database and server, and the story suite, which proves each user story by a browser flow. Six fixture users, A to F, stand for the roles every authorisation test needs, and an authorisation test proves both that access is refused and that it would have succeeded without the guard.
+There are two runners. Vitest runs the unit, component, database and guard tests, in six projects; a test that touches Postgres goes in the database project and runs against a real local Postgres, never a mock and never the hosted database. Playwright runs the end-to-end specs, each worker with its own database and server, and the story suite, which proves each user story by a browser flow. Six fixture users, A to F, stand for the roles every authorisation test needs.
 
-While you work, run the test files your change touches, by name. The full suites take long enough that they run when the task is finished, not on every save. Every local Playwright run sets the placeholder auth secret on its command line, so the real one is never read for a test.
+While you work, run the test files your change touches, by name; the full suites run when the task is finished.
 
 The guard tests under `tests/guards/` are worth a look on day one. Each turns a rule into a test that fails when the rule is broken, and their failure messages tell you which rule you have tripped.
 
@@ -130,13 +130,13 @@ Running `npm run pre-commit` before you push catches most of what the first jobs
 
 Branches follow Gitflow. A task's work goes on a `feature/*` branch, which merges into `staging`; staging merges into `main` through a `release/*` branch; an urgent fix to production goes on a `hotfix/*` branch off `main`, and a `main-sync/*` branch brings it back to staging. Both `staging` and `main` are protected, and a workflow refuses a PR into a branch the flow does not allow.
 
-Nobody deploys from a laptop. Every deploy runs in CI: a merge into `staging` deploys staging, a merge into `main` deploys production, and the deploy workflow migrates the database first. Migrations only ever move forward and are written so the old code and the new code both run against the database in between, which is why removing a column takes two PRs.
+Nobody deploys from a laptop. A merge into `staging` deploys staging, a merge into `main` deploys production, and the deploy workflow migrates the database first. Migrations only move forward and let old and new code both run in between, which is why removing a column takes two PRs.
 
 **Read next:** [`ci/deploy.md`](ci/deploy.md), "Deploy".
 
 ## Task tracking and skills
 
-Work is tracked as GitHub issues on the project board; `claude-docs/TASKS.md` and the files it indexes are the reasoning behind each one. Every board action goes through one script, `scripts/task-board.mjs`, rather than through `gh` by hand. A task moves forward through its statuses as the work does: in progress when you start, in review when its PR opens, done when the PR merges. A PR covers one task and opens with `Closes #N`. The repository is public, so every issue and comment is too; a comment names a variable or a file, never a value.
+Work is tracked as GitHub issues on the project board; `claude-docs/TASKS.md` and the files it indexes are the reasoning behind each one. Every board action goes through one script, `scripts/task-board.mjs`, rather than through `gh` by hand. A task moves forward through its statuses as the work does, and a PR covers one task and opens with `Closes #N`. The repository is public, so every issue and comment is too.
 
 The repository also ships skills: step-by-step instructions a coding agent follows for routine jobs such as starting a task, opening a PR, cutting a release or logging a bug. Each lives in `.claude/skills/<name>/`. Even if you never use an agent, read the start-task and create-pr skills once; they are the most exact description of how a task becomes a merged PR here.
 
@@ -151,7 +151,6 @@ Some rules are easy to break without noticing, because the code compiles and the
 - A unit converts within one dimension only, and a refusal is a result the caller handles, never a guess.
 - An ingredient's identity is its formal name, and each form it comes in is a variant beneath it.
 - A cached value must never depend on who is viewing.
-- A comment says what the code is, never its history; history goes in `claude-docs/`.
 
 Two habits prevent most of the rest. Before writing a database call, read the database rule file. Before adding a page, read the components rule file and check the page calls `requireSession()` if it is not one of the open ones.
 

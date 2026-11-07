@@ -116,48 +116,9 @@ file passed by name, so a staged file under `src/gql/` is not flagged.
 - **Warnings**: `jsx-a11y/aria-role`, set to `ignoreNonDOM` so a component with a `role` prop is not judged as an element, and the advisory rules below.
 - **Advisory, disabled where deliberate**: the React Compiler rules (`react/refs`, `react/immutability`, `react/preserve-manual-memoization`) because the compiler is off in `next.config.ts`; they are off in `tests/**`, where fixtures write and read freely, along with `react/globals` and `react/incompatible-library`. `jsx-a11y/prefer-tag-over-role` is disabled per site where the native tag would change the layout or the meaning.
 
-**knip** (`knip.jsonc`) finds code and dependencies that nothing uses: files no entry point reaches, exports and types nobody imports, and packages that `package.json` lists but no file imports (or the reverse). It is not part of `lint` or `pre-commit`. CI runs it on every pull request that runs `checks / lint`, as the `checks / unused` leg. That leg never fails, because its run step has `continue-on-error`, and it is not a required check. Its findings go into a PR comment marked "Unused Code (Non-Blocking)", which is resolved once a later run finds nothing. The config names the entry points knip cannot work out from its Next.js, Vitest, Playwright and Storybook plugins. The script supplies a placeholder `DATABASE_URL` when none is set, because knip loads `drizzle.config.ts` and `playwright.config.ts` and both throw without one. It also unsets `NODE_ENV`. knip loads `next.config.ts` as a production build would, and `withWorkflow` in it then compiles the job files. When `NODE_ENV` is `development`, which the devcontainer sets, it keeps watching them for changes and never exits. `knip.jsonc` carries a one-line reason beside each exception: the extra entry points (`.cjs` scripts, the manual every-story check, the bounded Postgres client Vitest swaps in, the db project's Vitest runner, which is named by path), `server-only`, which Next.js bundles rather than installing as a package; `jsqr`, which the invitation-card spec serves to the browser from its file in `node_modules`; `flock`, a system binary; `.design-sync/dist-index.mjs`, whose imports exist only inside the built bundle; the `playwright` package `.design-sync/remote-chromium.mjs` resolves from its own `package.json`; and the `--require` list in `deploy.yml`, which knip reads as a file path.
+**knip** (`knip.jsonc`) lists files no entry point reaches, exports and types nobody imports, and packages `package.json` lists but no file imports (or the reverse). It is not part of `lint` or `pre-commit`. CI runs it as the `checks / unused` leg on every pull request that runs `checks / lint`; the leg never fails (`continue-on-error`), is not a required check, and posts its findings as a PR comment marked "Unused Code (Non-Blocking)". The script supplies a placeholder `DATABASE_URL` when none is set (knip loads `drizzle.config.ts` and `playwright.config.ts`, which throw without one) and unsets `NODE_ENV` (`development`, which the devcontainer sets, makes `withWorkflow` watch the job files and never exit). Each exception in `knip.jsonc` carries its reason beside it.
 
-**Stylelint** (`.stylelintrc.json`) carries two binding rules
-([`styling.md`](styling.md), "Binding rules"). "Only `_variables.scss` may
-name a raw hue" is `color-no-hex`, `color-named: "never"`, and a
-`declaration-property-value-disallowed-list` entry refusing a colour function
-(`rgb()`, `hsl()`, `oklch()` and the rest) whose first argument is a
-number. "Type and layers come from the tokens" is a
-`declaration-property-value-allowed-list` for `font-family`, `font`,
-`font-size` and `z-index`. All of them are cleared for
-`src/scss/_variables.scss` alone. A group colour is a hex on its
-`category_groups` row, set inline from data, so the linter never sees it; a
-hex in a comment is not a colour to it either. It extends
-`stylelint-config-standard-scss`, adjusted where that set fights Prettier or
-the repo's Sass. It also runs `stylelint-plugin-use-baseline` with
-`available: "widely"` (M10.24), which refuses CSS past the browser floor
-([`styling.md`](styling.md), "Binding rules"); a feature that is an
-enhancement carries a disable comment saying what is lost and when it becomes
-widely available.
-
-- **Configured rather than off**: `selector-class-pattern` takes the repo's
-  BEM names (`block__element--modifier`, each part kebab-case) where the
-  default allows kebab-case only; `scss/at-function-pattern` allows the
-  leading `_` Sass gives a private function (`_assert-theme`);
-  `value-keyword-case` leaves `currentColor` and the font stacks' family
-  names as written; `number-max-precision` is 5, for `$control-height`'s
-  `2.78125rem`, which is exactly 44.5px.
-- **Off, because Prettier owns blank lines and line breaks**:
-  `at-rule-empty-line-before`, `declaration-empty-line-before`,
-  `custom-property-empty-line-before`, `scss/dollar-variable-empty-line-before`
-  and `scss/double-slash-comment-empty-line-before` (a comment sits directly
-  on what it explains, an `@include` directly after a declaration),
-  `scss/operator-no-newline-after` (Prettier breaks a long `@error` string
-  after its `+`), and `scss/comment-no-empty` (a bare `//` is a paragraph
-  break inside a comment).
-- **Off, because the repo writes the other form on purpose**:
-  `color-hex-length` (a brand hex is copied six digits long, as the provider
-  publishes it), `color-function-notation`, `color-function-alias-notation`
-  and `alpha-value-notation` (the two shadows are Sass's `rgba()` with an
-  alpha fraction), `scss/at-if-no-null` (the accessors test `== null`, which
-  says what they mean), and `media-feature-range-notation` (both notations
-  sit inside the browser floor; the repo writes `max-width:`).
+**Stylelint** (`.stylelintrc.json`) refuses, outside `src/scss/_variables.scss`: a hex, a named colour, a colour function with a numeric first argument, and any `font-family`, `font`, `font-size` or `z-index` value that is not a token ([`styling.md`](styling.md), "Binding rules"). A group colour is a hex on its `category_groups` row, set inline from data, so the linter never sees it. `stylelint-plugin-use-baseline` (`available: "widely"`) refuses CSS past the browser floor; an enhancement carries a disable comment saying what is lost and when it becomes widely available. Class names must be BEM (`block__element--modifier`, each part kebab-case), and `number-max-precision` is 5. Blank-line and colour-notation rules are off where Prettier owns the layout or the repo writes the other form on purpose; `.stylelintrc.json` lists each.
 
 ## Tests
 
