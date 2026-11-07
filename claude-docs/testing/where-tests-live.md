@@ -101,6 +101,9 @@ cannot:
   `web-features` package, which lint cannot (M10.24).
 - `migration-order-check.test.ts` and `destructive-ddl-check.test.ts` — the
   rules of the two CI scripts that guard production's migrations.
+- `axe-scans.test.ts` — the accessibility sweep's scan list names every
+  page under `src/app`, every route in DESIGN.md §9 and every file that draws
+  a modal, and nothing that has gone (testing/accessibility.md).
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
   reaches a CI log.
 
