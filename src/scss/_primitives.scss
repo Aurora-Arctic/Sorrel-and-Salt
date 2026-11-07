@@ -1354,6 +1354,21 @@
     }
   }
 
+  // An ordinary card has no early-tester part, so its words are short: one column at the reading measure, the card
+  // below the words at the same width, the block centred on the page and its text still left-aligned.
+  .card-landing--single .card-landing__grid {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: $measure;
+    margin-inline: auto;
+  }
+
+  .card-landing--single .card-landing__grid > .card-landing__card {
+    position: static;
+    grid-row: auto;
+    grid-column: 1;
+  }
+
   // One heading on two lines, the greeting above the name: block spans, so the name reads whole, and the greeting two
   // steps down the heading scale. The grid's row gap stands in for the heading face's own margin.
   .card-landing__title {

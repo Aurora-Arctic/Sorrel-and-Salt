@@ -68,7 +68,9 @@ export default async function CardPage({ params }: InvitePageProps) {
   }
 
   return (
-    <main className="page-frame card-landing welcome-page">
+    <main
+      className={`page-frame card-landing welcome-page${card.beta ? '' : ' card-landing--single'}`}
+    >
       <div className="card-landing__grid">
         <h1 className="card-landing__title">
           <span className="card-landing__title-greeting">Welcome to</span> <span>{WORDMARK}</span>
