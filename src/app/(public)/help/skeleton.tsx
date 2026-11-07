@@ -4,6 +4,6 @@ import { HELP_LEDE } from '@/lib/help-pages';
 
 export const HelpSkeleton = () => (
   <PageColumn as="div">
-    <HelpIndexSkeleton lede={HELP_LEDE} />
+    <HelpIndexSkeleton lede={HELP_LEDE} menu />
   </PageColumn>
 );

@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { HELP_QUICK_LINKS } from '../../lib/help-quick-links';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
+import PageNav from '../PageNav';
 import Skeleton from '../Skeleton';
 import './index.scss';
 
@@ -18,11 +19,14 @@ const GuideBars = () => (
 export const HelpIndexSkeleton = ({
   heading = 'Help',
   lede,
+  menu,
 }: {
   heading?: string;
   lede?: string;
+  /** The jump menu's labels, as text: the page draws the menu when it has questions, which the public index always does. */
+  menu?: boolean;
 }): ReactElement => (
-  <div className="help-page help-index">
+  <div className={menu ? 'help-page help-index page-with-nav' : 'help-page help-index'}>
     <PageHeader title={heading} />
     {lede ? (
       <div className="help-index__band">
@@ -39,7 +43,17 @@ export const HelpIndexSkeleton = ({
     ) : (
       <HelpSearchForm />
     )}
-    <section aria-label="Guides">
+    {menu && (
+      <PageNav
+        label="On This Page"
+        pending
+        entries={[
+          { href: '#guides', label: 'Guides' },
+          { href: '#faq', label: 'Frequently Asked Questions' },
+        ]}
+      />
+    )}
+    <section className="help-index__section" aria-label="Guides">
       <h2>Guides</h2>
       <ul className="help-index__guides">
         {[0, 1, 2, 3].map((n) => (

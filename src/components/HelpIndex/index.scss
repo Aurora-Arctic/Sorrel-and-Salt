@@ -6,6 +6,16 @@
     margin-block: space(8) space(3);
   }
 
+  // A section is where the jump menu lands, under the shell's bar. Beside the menu the column's gap stands above
+  // each section, so its heading keeps the rest of the 64px it has on the page without one.
+  &__section {
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+  }
+
+  &.page-with-nav &__section > h2:first-child {
+    margin-block-start: space(6);
+  }
+
   // The lede, the search box and the quick links, on the page itself.
   &__band {
     max-width: $measure;

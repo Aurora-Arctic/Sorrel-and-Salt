@@ -5,6 +5,8 @@ import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
+import PageNav from '../PageNav';
+import type { PageNavEntry } from '../PageNav/types';
 import type { HelpIndexProps } from './types';
 import './index.scss';
 
@@ -16,9 +18,14 @@ const GLOSSARY = {
   href: '/help/glossary',
 };
 
-// The help front page: a band holding the lede, the search box and the quick links (only the box, unbanded, when it is handed neither), then the guides with the glossary among them, and the FAQ. Each FAQ entry is an
-// anchor from its slug; nothing else on the page takes an id, so a slug shared with an article never doubles one
-// (claude-docs/components/help-pages.md).
+// The two sections the jump menu names. An answer's heading never takes these ids; a question's slug could only if it
+// were titled "Guides" or "FAQ", which no question is.
+const GUIDES_ID = 'guides';
+const FAQ_ID = 'faq';
+
+// The help front page: a band holding the lede, the search box and the quick links (only the box, unbanded, when it is handed neither), a jump menu, then the guides with the glossary among them, and the FAQ. Each FAQ
+// entry is an anchor from its slug; besides the two sections nothing else on the page takes an id, so a slug shared with an article
+// never doubles one (claude-docs/components/help-pages.md).
 const HelpIndex = ({
   faq,
   articles,
@@ -28,15 +35,25 @@ const HelpIndex = ({
   terms = [],
 }: HelpIndexProps): ReactElement => {
   // A heading in an answer never takes an entry's id, or another answer's heading id.
-  const reserved = faq.map((entry) => entry.slug);
+  const reserved = [GUIDES_ID, FAQ_ID, ...faq.map((entry) => entry.slug)];
   const glossary = helpTerms(terms);
   const answers = faq.map((entry) => {
     const { content, entries } = renderMarkdown(entry.body, {}, reserved, false, glossary);
     reserved.push(...entries.map(({ href }) => href.slice(1)));
     return content;
   });
+  // A menu only with both sections to jump between; the staff index has no questions.
+  const menu: PageNavEntry[] =
+    faq.length > 0
+      ? [
+          { href: `#${GUIDES_ID}`, label: 'Guides' },
+          { href: `#${FAQ_ID}`, label: 'Frequently Asked Questions' },
+        ]
+      : [];
   return (
-    <div className="help-page help-index">
+    <div
+      className={menu.length > 0 ? 'help-page help-index page-with-nav' : 'help-page help-index'}
+    >
       <PageHeader title={heading} />
       {lede || quickLinks.length > 0 ? (
         <div className="help-index__band">
@@ -55,7 +72,8 @@ const HelpIndex = ({
       ) : (
         <HelpSearchForm />
       )}
-      <section aria-label="Guides">
+      {menu.length > 0 && <PageNav label="On This Page" entries={menu} />}
+      <section id={GUIDES_ID} className="help-index__section" aria-label="Guides">
         <h2>Guides</h2>
         <ul className="help-index__guides">
           {[...articles.map((article) => ({ kind: 'Guide', ...article })), GLOSSARY].map(
@@ -72,7 +90,11 @@ const HelpIndex = ({
         </ul>
       </section>
       {faq.length > 0 && (
-        <section aria-label="Frequently Asked Questions">
+        <section
+          id={FAQ_ID}
+          className="help-index__section"
+          aria-label="Frequently Asked Questions"
+        >
           <h2>Frequently Asked Questions</h2>
           {faq.map((entry, index) => (
             <div key={entry.slug} id={entry.slug} className="help-index__faq">
