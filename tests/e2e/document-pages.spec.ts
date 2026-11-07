@@ -3,9 +3,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The public document pages against the built server: each answers a signed-out visitor, carries no
-// noindex of its own, is linked from the footer in both frames, passes axe signed out and signed in,
-// and is not something the compendium search can find (claude-docs/components/document-page.md).
+// The public document pages against the built server (claude-docs/components/document-page.md).
 
 const DOCUMENTS = [
   { path: '/privacy', title: 'Privacy Policy', link: 'Privacy' },
@@ -62,13 +60,10 @@ for (const { path, title, link } of DOCUMENTS) {
     // Preconditions: the search ran with the title as its query, and the list is the compendium's.
     await expect(page.getByRole('combobox', { name: 'Name' })).toHaveValue(title);
     await expect(page.getByText(/no entries match/i)).toBeVisible();
-    // In the list itself: the footer links every document by name on every page.
     await expect(page.getByRole('main').getByRole('link', { name: title })).toHaveCount(0);
   });
 }
 
-// Who can see what is drawn from code into the placeholder the privacy markdown holds: one card per kind of data, and no placeholder
-// text left on the page.
 test('/privacy draws the access cards under Who Can See What', async ({ page }) => {
   await page.goto('/privacy');
   const article = page.getByRole('main');
@@ -94,7 +89,6 @@ test('the code of ethics opens the support form on an accessibility bug', async 
     .getByRole('link', { name: 'support form' })
     .click();
 
-  // The dialog opens over the page it was asked from, the topic already chosen.
   await expect(page).toHaveURL(/\/code-of-ethics\?support=accessibility$/);
   const dialog = page.getByRole('dialog', { name: 'Contact Support' });
   await expect(dialog.getByRole('radio', { name: /^Accessibility/ })).toBeChecked();

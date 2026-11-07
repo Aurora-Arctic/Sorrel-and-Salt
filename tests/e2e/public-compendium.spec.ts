@@ -8,10 +8,6 @@ import { ADD, HELD } from '../support/cupboard-wording';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { compendiumList, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The public compendium page against the built server, for what no story walks: the page is whole in the HTML
-// as served, the pager reaches the last page, one coven's add shows as held to its other members, the search
-// row sticks, the category chips cover every category, a curator's Edit opens over the search, and it holds at 375px.
-
 // The cards page by 24 (`CARD_PAGE_SIZE`), so the grid ends on a full row.
 const PAGE_SIZE = 24;
 
@@ -19,10 +15,8 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The list's cards: its direct items, since a card holds lists of its own. */
 const cardsOf = (page: Page) => compendiumList(page).locator(':scope > li');
 
-/** Every entry link in a page of HTML, in the order it was drawn. */
 const entryLinks = (html: string): string[] =>
   [...html.matchAll(/href="(\/compendium\/ingredients\/[^"]+)"/g)].map(([, href]) => href);
 
@@ -44,7 +38,6 @@ test('the server HTML holds the unfiltered list, every card and every link', asy
 
   expect(links).toHaveLength(PAGE_SIZE);
   expect(new Set(links).size).toBe(PAGE_SIZE);
-  // The page is drawn by the server, so the first entry in the list's order is in the markup.
   const [first] = await withSql(
     (sql) =>
       sql<{ slug: string }[]>`
@@ -80,9 +73,6 @@ test("an owner's add shows as held to a member of the same coven, on the cached 
     B: 'member',
   });
 
-  // The plus works: a member of one coven adds with a press, and the card shows the
-  // check in its place. The covens' held marks are the coven's own, so B, in the same coven,
-  // finds that card already held when the page is opened.
   for (const [index, key] of ['A', 'B'].entries()) {
     await signInAgainAs(page, coven.users[key]);
     await page.goto('/compendium');
@@ -100,12 +90,10 @@ test("an owner's add shows as held to a member of the same coven, on the cached 
   }
 });
 
-// The search box, the Filters button and Clear All stay in view while the cards go by, and so does the tray
-// they open. The sticky box is the `<search>` landmark; the form inside is the controls alone.
+// The sticky box is the `<search>` landmark; the form inside is the controls alone.
 const searchRow = (page: Page) => page.getByRole('search');
 const searchForm = (page: Page) => searchRow(page).locator('form');
 
-// Both frames carry a sticky bar, so the row sticks under whichever bar the page has.
 const barBottom = async (page: Page) => {
   const bar = await page.locator('.app-shell__bar, .public-frame__bar').first().boundingBox();
   return bar!.y + bar!.height;
@@ -115,7 +103,6 @@ async function expectStuckRow(page: Page, offset: () => Promise<number>) {
   await page.goto('/compendium');
   await expect(cardsOf(page).first()).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 1500));
-  // Scrolled well past the row's place in the page.
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
   const row = await searchRow(page).boundingBox();
   expect(row?.y).toBeCloseTo(await offset(), 0);
@@ -153,8 +140,6 @@ test('signed in, the search row sticks under the top bar and its tray stays in v
   await expectStuckRow(page, () => barBottom(page));
 });
 
-// Under the narrow column the row is two lines, the search box and then Filters beside Clear All,
-// and both stick together as the desktop row does.
 test('the stuck row holds at 375px without a sideways scroll or an axe violation', async ({
   page,
 }) => {
@@ -165,7 +150,6 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
   const row = await searchRow(page).boundingBox();
   expect(row?.y).toBeCloseTo(await barBottom(page), 0);
-  // The Filters button sticks with the search box, inside the window and under the box.
   const box = await searchForm(page).locator(':scope > :first-child').boundingBox();
   const filters = await page.getByRole('button', { name: /^Filters/ }).boundingBox();
   expect(filters!.y).toBeGreaterThanOrEqual(box!.y + box!.height - 1);
@@ -205,9 +189,7 @@ test('the search row is marked stuck once scrolled past, and unmarked back at th
   await expect(row).not.toHaveAttribute('data-stuck', /.*/);
 });
 
-// The chips shown and the +N button together account for every category, and opening the panel floats it over
-// the card without changing the card's or its grid row's height (a component test cannot measure either).
-// The test files Amethyst under three more categories first, at the grid's narrowest, 20rem.
+// A component test cannot measure the panel floating over the card without changing the card's or its grid row's height.
 test('the category chips and the +N count cover every category, and opening the panel does not change the card height', async ({
   page,
 }) => {
@@ -245,8 +227,6 @@ test('the category chips and the +N count cover every category, and opening the 
   const more = card.getByRole('button', { name: /more categories? for/i });
   await expect(more).toBeVisible();
 
-  // The chips shown plus the count behind +N are all six, at the grid's narrowest card
-  // width (20rem).
   const chips = card
     .getByRole('list', { name: 'Categories' })
     .locator('li:has(.chip):not(:has(button))');
@@ -264,9 +244,6 @@ test('the category chips and the +N count cover every category, and opening the 
   await expect(more).toBeFocused();
 });
 
-// A curator edits an entry from the public search, in the compendium's edit dialog over
-// the results, and closes back onto the same search with the focus on the card's Edit. An
-// account that cannot curate gets no Edit, and the same address opens nothing for it.
 test("a curator's Edit opens the compendium's edit dialog over the search, and closes back to it", async ({
   page,
 }) => {
@@ -308,7 +285,6 @@ test("a curator's Edit opens the compendium's edit dialog over the search, and c
   await page.goto(editAddress!);
   await expect(dialog.getByRole('button', { name: 'Open All' })).toBeVisible();
 
-  // The same address, for an account that cannot curate: the card, but no Edit and no dialog.
   const coven = await seedCoven(page, 'Fixture Coven Edit Refused', 'edit-refused.test', {
     A: 'owner',
   });

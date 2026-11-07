@@ -15,7 +15,6 @@ test.beforeAll(async () => {
 
 const PASSWORD = 'lantern moss under the north window';
 
-/** A field by the start of its label, which ends in the required mark. */
 const field = (scope: ReturnType<Page['getByRole']>, label: string) =>
   scope.getByLabel(new RegExp(`^${label}`));
 
@@ -54,7 +53,6 @@ test(
     await field(section, 'Confirm Your Password').fill(PASSWORD);
     await section.getByRole('button', { name: 'Turn On Two-Factor' }).click();
 
-    // The setup shows the QR code, the key for typing in, and the backup codes, and is not on yet.
     await expect(section.getByRole('img', { name: /QR code/ })).toBeVisible();
     await expect(
       section.getByRole('list', { name: 'Backup Codes' }).getByRole('listitem'),
@@ -71,7 +69,6 @@ test(
     const appUri = `otpauth://totp/e2e?secret=${(key ?? '').replace(/[^A-Z2-7]/gi, '')}`;
     await field(section, 'Code From Your App').fill(await totpCode(appUri));
     await section.getByRole('button', { name: 'Confirm and Turn On' }).click();
-    // None of the codes was saved, so turning on asks first.
     await page
       .getByRole('dialog', { name: 'Turn On Without Saving Your Codes?' })
       .getByRole('button', { name: 'Turn On' })
@@ -92,7 +89,6 @@ test(
     await expect(page).toHaveURL(/\/sign-in/);
     await assertNoAccessibilityViolations(page);
 
-    // On a phone the step stays inside the card: Verify is on screen, not off an edge.
     await page.setViewportSize({ width: 390, height: 844 });
     const verifyBox = await main.getByRole('button', { name: 'Verify' }).boundingBox();
     expect(verifyBox).not.toBeNull();

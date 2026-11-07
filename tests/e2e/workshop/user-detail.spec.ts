@@ -1,8 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-// The user modal's Change Role and Approve, refused, say so in the click feedback's callout under the control
-// (claude-docs/components/user-detail.md). Measured in the story, where every press is refused: the callout
-// stands over the dialog's content and Escape closes it, leaving the dialog open.
+// The user modal's refused Change Role and Approve say so in the click feedback's callout (claude-docs/components/user-detail.md).
 
 const WIDTHS = [1280, 375] as const;
 
@@ -37,7 +35,6 @@ const CONTROLS = [
   },
 ] as const;
 
-/** Every corner and the middle of `alert` is the callout itself at that point: nothing covers or clips it. */
 async function expectOnTop(alert: Locator) {
   const hits = await alert.evaluate((node) => {
     const { left, right, top, bottom } = node.getBoundingClientRect();
@@ -70,7 +67,6 @@ for (const width of WIDTHS) {
       const alert = page.getByRole('alert');
       // Visible only once placed: until then it is hidden.
       await expect(alert).toBeVisible();
-      // In the dialog, under the control, and no notice beside it.
       await expect(dialog.getByRole('alert')).toHaveCount(1);
       await expect(dialog.locator('.notice')).toHaveCount(0);
       const at = await button.boundingBox();
@@ -78,20 +74,17 @@ for (const width of WIDTHS) {
       expect(under!.y).toBeGreaterThan(at!.y + at!.height);
       expect(under!.x).toBeGreaterThanOrEqual(0);
       expect(under!.x + under!.width).toBeLessThanOrEqual(width);
-      // Inside the dialog's box, not merely the window's.
       const box = await dialog.boundingBox();
       expect(under!.x).toBeGreaterThanOrEqual(box!.x);
       expect(under!.x + under!.width).toBeLessThanOrEqual(box!.x + box!.width);
       await expectOnTop(alert);
 
-      // Escape closes the callout, not the dialog; the focus back on the control.
       await expect(button).toBeFocused();
       await page.keyboard.press('Escape');
       await expect(alert).toHaveCount(0);
       await expect(dialog).toBeVisible();
       await expect(button).toBeFocused();
 
-      // The badge reopens it; a press elsewhere in the dialog closes it.
       const badge = dialog.getByRole('button', { name: /^Show the error for / });
       await badge.click();
       await expect(alert).toBeVisible();
@@ -100,7 +93,6 @@ for (const width of WIDTHS) {
       await expect(dialog).toBeVisible();
       await expect(badge).toBeVisible();
 
-      // The next press clears it.
       await button.click();
       await expect(badge).toHaveCount(0);
       await expect(alert).toHaveCount(0);
@@ -108,8 +100,7 @@ for (const width of WIDTHS) {
   }
 }
 
-// The story in Storybook's own page, where an iframe draws it, at the widths a review is held at: the callout
-// must find its dialog across that boundary. Not at a phone's, where the strip is too short to press in.
+// The story in Storybook's own page, where an iframe draws it: the callout must find its dialog across that boundary.
 const SIZES = [
   [1512, 982],
   [1440, 900],

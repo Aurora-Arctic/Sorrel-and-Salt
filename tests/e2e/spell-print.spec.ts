@@ -11,10 +11,6 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The spell recipe page's print layout: Print for any role, its own button for a viewer, and
-// under print media a one-page sheet with the Ingredients summary, the steps, formal names on shared
-// labels, and none of the page's controls or the shell's bar.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -39,7 +35,6 @@ test('a viewer prints a one-page recipe with the summary beside the steps and no
   await signInAgainAs(page, C);
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
-  // On screen: a viewer's Print is its own button, not a menu of one, and the keyboard reaches it.
   await expect(page.getByRole('button', { name: /^More for/ })).toHaveCount(0);
   const print = page.getByRole('button', { name: 'Print Fixture Working' });
   await expect(print).toBeVisible();
@@ -54,7 +49,6 @@ test('a viewer prints a one-page recipe with the summary beside the steps and no
   await page.keyboard.press('Enter');
   expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
 
-  // In print: the controls and the shell's bar are gone, the summary shows the formal names.
   await page.emulateMedia({ media: 'print' });
   await expect(print).toBeHidden();
   await expect(page.getByRole('banner')).toBeHidden();
@@ -111,7 +105,6 @@ test('the printed recipe names the coven with no line under it, leads with the i
   await expect(edited).toBeHidden();
   await expect(page.getByText('Worked under a waxing moon')).toBeHidden();
 
-  // The coven's name stands as plain text (no box) and nothing draws a line under it.
   const row = page.getByRole('region', { name: 'Context' });
   const selector = row.getByRole('combobox', { name: 'Coven' });
   await expect(selector).toBeVisible();
@@ -138,8 +131,6 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(lineUnder.image).toBe('none');
   expect(['none', 'normal']).toContain(lineUnder.after);
 
-  // The intent and the categories lead, then the facts run across the top, over the Ingredients
-  // column and the steps.
   const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
   const intent = await box(page.getByText('To draw a steady hand'));
   const categories = await box(page.getByRole('list', { name: 'Categories' }));
@@ -152,13 +143,11 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(facts.bottom).toBeLessThanOrEqual(heading.top);
   expect(facts.bottom).toBeLessThanOrEqual(steps.top);
 
-  // The Ingredients column stands to the left of the steps, the two side by side.
   expect(ingredients.right).toBeLessThanOrEqual(steps.left);
   expect(Math.min(ingredients.bottom, steps.bottom)).toBeGreaterThan(
     Math.max(heading.top, steps.top),
   );
 
-  // The Ingredients heading starts level with the Steps heading, which stands over the steps.
   const instructions = await box(page.getByRole('heading', { name: 'Steps', exact: true }));
   expect(Math.abs(heading.top - instructions.top)).toBeLessThanOrEqual(1);
   const firstStep = await box(
@@ -166,8 +155,6 @@ test('the printed recipe names the coven with no line under it, leads with the i
   );
   expect(instructions.bottom).toBeLessThanOrEqual(firstStep.top);
 
-  // Amounts share one column and names another beside it, each set to the left, so the amounts start
-  // on one line and the names on another, and a line with no amount keeps its name in its column.
   const columns = await page.evaluate(() => {
     const lines = [...document.querySelectorAll('.spell-recipe__summary ul > li')];
     return lines.map((li) => {
@@ -189,7 +176,6 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThanOrEqual(1);
   expect(Math.min(...lefts)).toBeGreaterThan(Math.max(...amounts));
 
-  // The amounts are as heavy as the steps' own amounts.
   const weights = await page.evaluate(() => ({
     summary: getComputedStyle(
       document.querySelector('.spell-recipe__summary ul .spell-recipe__need')!,
@@ -200,7 +186,6 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(weights.step).toBe('500');
   expect(weights.summary).toBe(weights.step);
 
-  // The summary's lines start flush with the heading.
   const indent = await page.evaluate(() => {
     const heading = [...document.querySelectorAll('h2')].find(
       (h) => h.textContent === 'Ingredients',
@@ -228,8 +213,7 @@ test('the printed recipe is an A4 sheet on white with no drawings, its note rule
   });
   await signInAgainAs(page, A);
 
-  // Another page prints on the reader's own sheet (Letter, Chromium's default), so the A4 below is
-  // the recipe's own.
+  // Another page prints on Letter (Chromium's default), so the A4 below is the recipe's own.
   const mediaBox = async () => {
     const pdf = (await page.pdf({ preferCSSPageSize: true })).toString('latin1');
     const [, width, height] = pdf.match(/\/MediaBox\s*\[\s*0 0 ([\d.]+) ([\d.]+)\s*\]/)!;
@@ -245,8 +229,7 @@ test('the printed recipe is an A4 sheet on white with no drawings, its note rule
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
   await expect(page.getByText('Keep it by the hearth')).toBeVisible();
 
-  // On screen the drawings are drawn and the page has its ground, so their absence in print is
-  // the print rules' doing.
+  // On screen the drawings are drawn and the page has its ground, so their absence in print is the print rules' doing.
   const drawings = () =>
     page
       .locator('.backdrop')
@@ -264,7 +247,6 @@ test('the printed recipe is an A4 sheet on white with no drawings, its note rule
   expect(await drawings()).toBe(0);
   expect(await grounds()).toEqual([clear, clear]);
 
-  // The note's hairline is the note's top border, so its width is the note's.
   const widths = await page.evaluate(() => ({
     note: document.querySelector('.spell-recipe__note')!.getBoundingClientRect().width,
     facts: document.querySelector('.spell-recipe__facts-box')!.getBoundingClientRect().width,
@@ -311,7 +293,6 @@ test('a printed draft private spell carries its Draft and Private badges in the 
   await expect(edited).toBeHidden();
   await expect(draft).toBeVisible();
   await expect(shared).toBeVisible();
-  // The badges stand in the head, between the title's top and the intent under it.
   const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
   const title = await box(page.getByRole('heading', { level: 1, name: 'Fixture Marked' }));
   const intent = await box(page.getByText('To mark a draft'));

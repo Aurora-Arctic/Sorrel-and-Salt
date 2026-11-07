@@ -16,17 +16,12 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// Every loading wait looks the same (claude-docs/design-decisions/m12.33-loading-standard.md), held
-// open through a coven switch, a section link and a site link: the pressed control is busy, the old
-// page is gone, one status stands in its place, axe passes and the focus ends where it should. A
-// non-member's 404 is coven.spec.ts's.
+// Every loading wait looks the same (claude-docs/design-decisions/m12.33-loading-standard.md), held open through a coven switch, a section link and a site link. A non-member's 404 is coven.spec.ts's.
 
-/** The keyframes every loading mark pulses with under reduced motion. */
 const PULSE = 'loading-pulse';
 
 const HOLLOW = 'Fixture Coven Hollow';
 const WILLOW = 'Fixture Coven Willow';
-// Invented, so no seed can ever hold them.
 const HOLLOW_ENTRY = 'Hollowwort';
 const WILLOW_ENTRY = 'Willowwort';
 
@@ -38,14 +33,11 @@ let admin = '';
 test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
 
-  // Only the rows matter: the page and its session are thrown away, and each
-  // test signs in again for itself.
   const setup = await browser.newPage({ baseURL: slotUrl(slot) });
   try {
     hollow = await seedCoven(setup, HOLLOW, 'navigation-wait.test', { A: 'owner' });
     viewer = hollow.users.A;
     admin = (await signInAs(setup, 'admin@navigation-wait.test', ['discord'], 'admin')).userId;
-    // A owns a second coven too, so the switcher has somewhere to go.
     const willowId = await withSql(async (sql) => {
       const [workspace] = await sql<{ id: string }[]>`
         insert into workspaces (name, slug, created_by, updated_by)
@@ -69,10 +61,7 @@ test.beforeAll(async ({ browser, slot }) => {
   }
 });
 
-/**
- * Holds back every React Server Components answer from `hold()` until `release()`, prefetches included;
- * `navigations` counts only the requests a navigation made.
- */
+/** Holds back every React Server Components answer, prefetches included; `navigations` counts only a navigation's requests. */
 async function holdServerAnswers(page: Page) {
   const held: Route[] = [];
   let holding = false;
@@ -103,10 +92,8 @@ const switcher = (page: Page): Locator =>
 const covenNav = (page: Page): Locator => page.getByRole('navigation', { name: 'Coven' });
 const siteNav = (page: Page): Locator => page.getByRole('navigation', { name: 'Site' });
 
-/** The one status the waiting region carries, in the page's one main landmark. */
 const statuses = (page: Page): Locator => page.getByRole('main').getByRole('status');
 
-/** Opens a coven's Ingredients page signed in as A, its one card drawn. */
 async function openIngredients(page: Page, coven: Coven, entry: string): Promise<void> {
   await signInAgainAs(page, viewer);
   const response = await page.goto(`/coven/${coven.slug}/ingredients`);
@@ -119,16 +106,11 @@ async function expectStill(page: Page): Promise<void> {
   await expect.poll(async () => (await runningAnimations(page)).length).toBe(0);
 }
 
-/** Picks another coven in the switcher. */
 async function pickCoven(page: Page, name: string): Promise<void> {
   await switcher(page).click();
   await page.getByRole('option', { name, exact: true }).click();
 }
 
-/**
- * The page's running loading animations: each CSS animation on the document's own timeline, by its
- * keyframes' name and whether it sits in the main landmark.
- */
 function runningAnimations(page: Page) {
   return page.evaluate(() =>
     document
@@ -162,13 +144,10 @@ test('a coven switch takes the old coven away at once, marks the switcher busy, 
   await pickCoven(page, WILLOW);
   await expect.poll(server.navigations).toBeGreaterThan(0);
 
-  // Control: busy, showing the pick.
   await expect(switcher(page)).toHaveAttribute('aria-busy', 'true');
   await expect(switcher(page)).toHaveText(WILLOW);
-  // Region: the old coven's cards are gone, one status in their place.
   await expect(cardsIn(ingredientList(page))).toHaveCount(0);
   await expect(statuses(page)).toHaveCount(1);
-  // Still the old address: the new coven has not rendered.
   expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
   await assertNoAccessibilityViolations(page);
 
@@ -223,9 +202,7 @@ test("a site link takes the shell's page away at once and puts one status in its
   await expect(compendiumList(page)).toBeVisible();
 });
 
-// A bug that reached review: a tabbed page held hidden under the
-// shell's wait still showed its tab row's open pill through the skeleton, since the pill
-// set its own visibility rather than inheriting the held page's. Members is a tabbed page.
+// A bug that reached review: a tabbed page held hidden still showed its tab row's open pill through the skeleton, since the pill set its own visibility.
 test('a site link from a tabbed page shows nothing of the held page through the wait', async ({
   page,
 }) => {
@@ -244,7 +221,6 @@ test('a site link from a tabbed page shows nothing of the held page through the 
   await expect.poll(server.navigations).toBeGreaterThan(0);
   await expect(statuses(page)).toHaveCount(1);
 
-  // Every box of the held page that takes up room is hidden while the wait stands.
   const shown = await page.evaluate(() =>
     [...document.querySelectorAll('[inert] *')]
       .filter((element) => {
@@ -285,7 +261,6 @@ test("a curator nav link keeps the curator page's wait until the server answers,
 
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
-  // Held for a while, not flashed: the old page does not come back.
   await page.waitForTimeout(500);
   await expect(statuses(page)).toHaveCount(1);
   await expect(pills).toHaveCount(0);
@@ -295,8 +270,7 @@ test("a curator nav link keeps the curator page's wait until the server answers,
   await server.release();
 
   await expect(page).toHaveURL(href!);
-  // The arrived page is the Forms list, which has a status of its own (its
-  // Group field's choices), so the wait is told gone by the table it drew.
+  // The Forms list has a status of its own, so the wait is told gone by the table it drew.
   await expect(page.getByRole('main').getByRole('table')).toBeVisible();
   await expect(pills).toHaveCount(0);
 });
@@ -353,15 +327,12 @@ test('under reduced motion, every loading mark of a wait pulses with the one sha
   await openIngredients(page, hollow, HOLLOW_ENTRY);
   const server = await holdServerAnswers(page);
 
-  // Why the names below are reduced motion's doing: with motion allowed,
-  // the same wait moves with marks of other keyframes (the spinner's
-  // turn, the skeleton's shimmer).
+  // With motion allowed, the same wait moves with marks of other keyframes.
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await expectStill(page);
   server.hold();
   await pickCoven(page, WILLOW);
   await expect.poll(server.navigations).toBeGreaterThan(0);
-  // The bar and the spinner come after their 100ms delay.
   await expect
     .poll(async () => {
       const running = await runningAnimations(page);
@@ -379,15 +350,12 @@ test('under reduced motion, every loading mark of a wait pulses with the one sha
   server.hold();
   await pickCoven(page, HOLLOW);
   await expect.poll(server.navigations).toBeGreaterThan(0);
-  // The skeleton in the main landmark; the bar and the switcher's spinner outside it.
   await expect
     .poll(async () => {
       const running = await runningAnimations(page);
       return {
         inMain: running.some(({ inMain }) => inMain),
         outside: running.filter(({ inMain }) => !inMain).length >= 2,
-        // `loading-appear` holds a mark hidden for its delay: no motion, and
-        // it ends once the mark shows.
         held: running.some(({ name }) => name === 'loading-appear'),
       };
     })
@@ -399,28 +367,23 @@ test('under reduced motion, every loading mark of a wait pulses with the one sha
   await expect(page).toHaveURL(`/coven/${hollow.slug}/ingredients`);
 });
 
-// Signed out, the public frame's body gives way to the destination's skeleton under the frame's bar and nav,
-// in the page's one main landmark. A retired slug's 308 is compendium-entry.spec.ts's.
+// A retired slug's 308 is compendium-entry.spec.ts's.
 
-/** A signed-out visitor's page: the frame's way in is in the bar. */
 async function expectSignedOut(page: Page): Promise<void> {
   await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toBeVisible();
 }
 
-/** The public frame's chrome, which stays through a wait. */
 async function expectFrameStanding(page: Page): Promise<void> {
   await expect(page.getByRole('banner')).toBeVisible();
   await expect(siteNav(page).getByRole('link', { name: 'Compendium', exact: true })).toBeVisible();
 }
 
-/** One main landmark, one level-one heading and one status, as at every wait. */
 async function expectOneWait(page: Page): Promise<void> {
   await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(statuses(page)).toHaveCount(1);
 }
 
-/** The first card's entry on the public Compendium: its address and its name. */
 async function firstEntry(page: Page): Promise<{ href: string; name: string }> {
   const link = compendiumList(page).locator('a[href^="/compendium/ingredients/"]').first();
   const href = await link.getAttribute('href');
@@ -496,8 +459,7 @@ test("signed out under reduced motion, the public frame's wait pulses with the o
   const server = await holdServerAnswers(page);
   const press = () => siteNav(page).getByRole('link', { name: 'Compendium', exact: true }).click();
 
-  // Why the name below is reduced motion's doing: with motion allowed, the
-  // same wait's skeleton moves with the shimmer's keyframes.
+  // With motion allowed, the same wait's skeleton moves with the shimmer's keyframes.
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await expectStill(page);
   server.hold();

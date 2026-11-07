@@ -28,7 +28,6 @@ for (const { name, ...viewport } of VIEWPORTS) {
     await page.goto('/curator/categories');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-    // Down the page first, as a reader who has been reading it would be.
     await page.evaluate(() => window.scrollTo({ top: 300, behavior: 'instant' }));
     expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 

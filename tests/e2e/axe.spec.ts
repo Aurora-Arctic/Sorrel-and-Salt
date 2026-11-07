@@ -61,11 +61,6 @@ test('a title that goes absent after the wait does not fail the scan', async ({ 
   await assertNoAccessibilityViolations(page);
 });
 
-// The grimoire's screens, each scanned in both themes: the list's tabs, its empty and no-match regions and its
-// Filters, a card hovered and focused, the builder with a step open, Record a Working's two steps, and the
-// recipe page with its workings and an ingredient's Quick Look. Each test seeds its own coven.
-
-/** Scans the page in the dark theme and the light, the site's default first. */
 async function scanBothThemes(page: Page) {
   for (const colorScheme of ['dark', 'light'] as const) {
     await page.emulateMedia({ colorScheme });
@@ -73,7 +68,6 @@ async function scanBothThemes(page: Page) {
   }
 }
 
-/** A coven owned by A, signed in, with one complete shared spell laying 2 g of a 20 g jar of Rosemary. */
 async function covenWithSpell(page: Page, name: string, domain: string) {
   const coven = await seedCoven(page, name, domain, { A: 'owner' });
   const spellId = await withSql(async (sql) => {

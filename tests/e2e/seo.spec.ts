@@ -15,11 +15,9 @@ const descriptionOf = (html: string): string =>
   /<meta name="description" content="([^"]*)"/.exec(html)?.[1] ?? '';
 const canonicalOf = (html: string): string =>
   /<link rel="canonical" href="([^"]*)"/.exec(html)?.[1] ?? '';
-/** A meta tag's content, by its `property` or `name`. */
 const metaOf = (html: string, key: string): string =>
   new RegExp(`<meta (?:property|name)="${key}" content="([^"]*)"`).exec(html)?.[1] ?? '';
 
-/** Home, the list, and the first entry the list links to. */
 async function publicPages(
   request: import('@playwright/test').APIRequestContext,
 ): Promise<Record<string, string>> {
@@ -60,7 +58,6 @@ test('canonicals are absolute, carry no query string, and name the page they sit
     expect(canonical.search).toBe('');
     expect(canonical.pathname).toBe(path);
   }
-  // A filtered view, with a query in its address, names the plain list.
   const filtered = await (await request.get('/compendium?query=wort&page=2')).text();
   expect(new URL(canonicalOf(filtered)).pathname).toBe('/compendium');
   expect(new URL(canonicalOf(filtered)).search).toBe('');
@@ -70,7 +67,6 @@ test('a later page of the list names itself, and a Quick Look its entry, as cano
   request,
 }) => {
   const list = await (await request.get('/compendium')).text();
-  // The pager's Next link, and the first card's Quick Look, as the list serves them.
   const next = /href="(\/compendium\?after=[^"]+)"/.exec(list)?.[1]?.replace(/&amp;/g, '&');
   const quickLook = /href="(\/compendium\?entry=[^"]+)"/.exec(list)?.[1]?.replace(/&amp;/g, '&');
   expect(next).toBeDefined();
@@ -130,7 +126,6 @@ test('each public page names its share card for link previews, absolute, sized a
     expect(card.status(), path).toBe(200);
     expect(card.headers()['content-type'], path).toBe('image/png');
   }
-  // An entry's card is its own, described by its name; the other two are the site's.
   const [home, list, entry] = Object.values(pages);
   expect(metaOf(entry, 'og:image')).not.toBe(metaOf(home, 'og:image'));
   expect(metaOf(entry, 'og:image:alt')).toBe(/<h1[^>]*>([^<]*)</.exec(entry)?.[1]);

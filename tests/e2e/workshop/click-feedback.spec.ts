@@ -1,15 +1,11 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { assertNoAccessibilityViolations } from '../axe';
 
-// The click-feedback callout's layout facts (claude-docs/components/click-feedback.md), measured in its Storybook
-// stories: clear of its control, inside the window, nothing moving as it comes and goes, and reduced motion
-// stilling the fade. What it says and where the focus goes are tests/components/ClickFeedback's.
+// Layout facts (claude-docs/components/click-feedback.md) measured in its Storybook stories; what it says and where the focus goes are tests/components/ClickFeedback's.
 
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;
 
-// The placements are the states of one `States` story, chosen by its `state`
-// control; Then Succeeds is a story of its own.
 const STATE_OF: Record<string, string> = {
   default: 'Resting',
   bordered: 'Bordered',
@@ -70,14 +66,12 @@ const pressTarget = (locator: Locator): Promise<Box> =>
 const overlaps = (a: Box, b: Box) =>
   a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
-/** Waits for the callout's place: hidden until the script has set it. */
 async function placed(page: Page): Promise<Locator> {
   const alert = callout(page);
   await expect(alert).toBeVisible();
   return alert;
 }
 
-/** The callout below the control, leaving it uncovered. */
 async function expectUnder(alert: Locator, control: Locator) {
   const at = await box(control);
   const under = await box(alert);
@@ -156,8 +150,6 @@ for (const width of WIDTHS) {
       test('nothing moves as the callout and the badge come and go', async ({ page }) => {
         await openStory(page, 'default', theme, width);
         const buttons = page.locator('.workshop-story-frame button');
-        // Why a shift could happen: four controls in a wrapping row, the
-        // badge and the callout drawn among them.
         await expect(buttons).toHaveCount(4);
         const before = await buttons.evaluateAll((nodes) =>
           nodes.map((node) => node.getBoundingClientRect().toJSON()),
@@ -178,7 +170,6 @@ for (const width of WIDTHS) {
 
       test('the badge’s press target is 24px and covers no other control', async ({ page }) => {
         await openStory(page, 'default', theme, width);
-        // Each refused, and its callout closed so it covers no next control.
         for (const name of ['Leave Coven', 'Remove', 'Annotate', 'Edit']) {
           await page.getByRole('button', { name, exact: true }).click();
           await placed(page);
@@ -210,14 +201,10 @@ for (const width of WIDTHS) {
   }
 }
 
-/** What one frame showed of a piece. */
 interface Frame {
-  /** In the page at all. */
   present: boolean;
-  /** Present and not `visibility: hidden`: what a person could see. */
   visible: boolean;
   opacity: number;
-  /** An animation on it is running, not finished or idle. */
   running: boolean;
 }
 
@@ -227,11 +214,7 @@ const PIECES: Record<Piece, string> = {
   badge: '.click-feedback__badge',
 };
 
-/**
- * Starts reading each piece's drawn state once a frame, on the page's own
- * clock, until `takeFrames` collects them: a fade is a matter of frames, which
- * no Playwright wait between them could catch.
- */
+/** Reads each piece's drawn state once a frame on the page's own clock: a fade is a matter of frames, which no Playwright wait between them could catch. */
 async function sampleFrames(page: Page): Promise<void> {
   await page.evaluate((pieces) => {
     const record: Record<string, unknown[]> = { callout: [], badge: [] };
@@ -305,10 +288,8 @@ async function holdPlacement(page: Page, frames: number): Promise<void> {
   );
 }
 
-/** Strictly between gone and full, with room for rounding at either end. */
 const midway = (frame: Frame) => frame.visible && frame.opacity > 0.05 && frame.opacity < 0.95;
 
-/** Waits out a fade: the piece at full opacity, or gone. */
 const settle = (page: Page) => page.waitForTimeout(500);
 
 test.describe('motion', () => {
@@ -341,8 +322,6 @@ test.describe('motion', () => {
     }
 
     await sampleFrames(page);
-    // A later try that succeeds: the badge goes, and the press outside it
-    // closes the callout.
     await page.getByRole('button', { name: 'Succeed' }).click();
     await expect(page.locator(PIECES.callout)).toHaveCount(0);
     await expect(page.locator(PIECES.badge)).toHaveCount(0);
@@ -398,7 +377,6 @@ test.describe('motion', () => {
     }
 
     await page.getByRole('button', { name: 'Succeed' }).click();
-    // Gone at once: no fade holds it in the page.
     await expect(page.locator(PIECES.callout)).toHaveCount(0, { timeout: 100 });
     await expect(page.locator(PIECES.badge)).toHaveCount(0, { timeout: 100 });
   });

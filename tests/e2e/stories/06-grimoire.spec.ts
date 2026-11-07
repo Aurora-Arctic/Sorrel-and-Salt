@@ -46,7 +46,6 @@ function grimoireList(page: Page): Locator {
 
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
   await page.getByRole('combobox', { name: 'Add to Jar' }).fill(name);
-  // The box's first row offers the typed text as a one-off; it is not the ingredient.
   await page
     .getByRole('option', { name })
     .filter({ hasNotText: 'as a one-off ingredient' })
@@ -426,7 +425,6 @@ test(
   'a member deletes a shared spell from its page after being asked, naming it; the grimoire says so, and a viewer is offered no Delete',
   { tag: '@story-56' },
   async ({ page }) => {
-    // The visibility lock governs widening, not existence.
     const coven = await seedCoven(page, 'Fixture Coven Fifty-Six Deletes', 'story-56-delete.test', {
       A: 'owner',
       B: 'member',
@@ -1124,7 +1122,6 @@ test(
     );
     const recipe = `/coven/${coven.slug}/grimoire/${spell}`;
 
-    // A viewer may not create a spell, so the recipe page offers no Duplicate.
     const dots = page.getByRole('button', { name: 'More for Fixture Working', exact: true });
     await signInAgainAs(page, coven.users.C);
     await page.goto(recipe);

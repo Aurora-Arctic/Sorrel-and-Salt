@@ -29,15 +29,12 @@ import {
 import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// The compendium as anyone browses it, an entry added from it to a coven, a coven's own ingredient, and the
-// warning that a new name resembles one already there. The flow still marked `fixme` waits on the task its
-// annotation names.
+// The flow still marked `fixme` waits on the task its annotation names.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The compendium's search box, a typeahead labelled "Name" as the keeper's is. */
 function compendiumSearch(page: Page) {
   return filterOf(page).getByRole('combobox', { name: 'Name' });
 }
@@ -45,7 +42,6 @@ function compendiumSearch(page: Page) {
 /** The action slot on a card, matched without regard to case: the entry spells it "Add to my ingredients", the label is title case. */
 const ADD_TO_MY_INGREDIENTS = /^add to my ingredients/i;
 
-/** The cards page by `CARD_PAGE_SIZE`, 24, so the grid ends on a full row. */
 const PAGE_SIZE = 24;
 
 test(
@@ -72,7 +68,6 @@ test(
       for (const [index, entry] of firstPage.entries()) {
         await expect(cards.nth(index)).toContainText(entry.name);
       }
-      // Signed out the cards carry no action; signing in is the header's.
       await expect(compendiumList(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: ADD_TO_MY_INGREDIENTS })).toHaveCount(0);
       await expect(cards.first()).toBeVisible();
@@ -81,7 +76,6 @@ test(
 
     await test.step('a folk name, its accent left off, finds the two Uncaria', async () => {
       await compendiumSearch(page).fill('una de gato');
-      // Enter applies the text to the paged list rather than picking a row.
       await compendiumSearch(page).press('Enter');
       const cards = compendiumList(page).locator(':scope > li');
       await expect(cards).toHaveCount(2);
@@ -121,8 +115,6 @@ test(
 
     await test.step('a form keeps only the entries holding it: bark is the two Uncaria', async () => {
       await page.goto('/compendium');
-      // The form filter, a type-ahead labelled "Form" as the keeper's is
-      // (claude-docs/components/compendium-list.md).
       const panel = await openFilters(page);
       await panel.getByRole('combobox', { name: 'Form' }).fill('bark');
       await page.getByRole('option', { name: /^Bark/ }).click();
@@ -141,8 +133,6 @@ test(
       );
       await page.goto('/compendium');
       await compendiumSearch(page).fill("Devil's Shoestring");
-      // Picking a row in the dropdown opens its Quick Look over the list,
-      // and the Quick Look's link goes on to the entry's page.
       await page.getByRole('option', { name: /^Devil's Shoestring/ }).click();
       const details = page.getByRole('dialog', { name: "Devil's Shoestring", exact: true });
       await expect(details).toBeVisible();
@@ -153,8 +143,6 @@ test(
       await expect(
         page.getByRole('heading', { level: 1, name: "Devil's Shoestring" }),
       ).toBeVisible();
-      // The entry page's lists, named as the form's fieldsets name them
-      // (claude-docs/components/ingredient-form.md): Folk Names, Categories.
       await expect(page.getByRole('list', { name: 'Folk Names' }).getByRole('listitem')).toHaveText(
         ['Devil Shoestrings'],
       );
@@ -174,9 +162,7 @@ test(
       A: 'owner',
       B: 'member',
     });
-    // It shares a folk name with the seed's Mugwort, Cronewort, so the same
-    // search that finds Mugwort in the compendium would find this too if
-    // the coven's tier leaked into it.
+    // It shares a folk name with the seed's Mugwort, Cronewort: the same search would find it if the coven's tier leaked.
     const [local] = await withSql(async (sql) => {
       const held = await localIngredient(sql, coven.id, coven.users.A, {
         name: 'Fixture Wroot',
@@ -275,7 +261,6 @@ test(
     });
 
     await test.step("Edit Stock, from the same card's three dots on the compendium, gives it a form and a quantity", async () => {
-      // The page is still the compendium: the card, now held, carries the three dots.
       const card = rowOf(compendiumList(page), 'Comfrey');
       await card.getByRole('button', { name: /^More for Comfrey/ }).click();
       await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
@@ -287,7 +272,6 @@ test(
       await leaf.pickUnit('g');
       await editor.save.click();
       await expect(editor.dialog).toHaveCount(0);
-      // The default threshold is the weight one, 10 g, written on the row.
       expect(await heldRows()).toEqual([{ quantity: 50, unit: 'g', threshold: 10 }]);
       expect(await cupboardRows()).toHaveLength(1);
     });
@@ -345,7 +329,6 @@ test(
           select id, workspace_id from ingredients
           where lower(name) = lower(${NAME}) and deleted_at is null`,
       );
-    // Nothing by this name exists in any tier.
     expect(await tiersHolding()).toEqual([]);
 
     let createdId = '';
@@ -353,15 +336,11 @@ test(
       await signInAgainAs(page, coven.users.B);
       await page.goto(`/coven/${coven.slug}/ingredients`);
       const dialog = await openAddIngredient(page);
-      // Name is the one required field (claude-docs/components/ingredient-form.md).
       await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill(NAME);
       await dialog.getByRole('button', { name: 'Save Ingredient' }).click();
 
-      // Save Ingredient opens what it saved, at the coven's entry page,
-      // /coven/[slug]/ingredients/[id].
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}$`));
       const tiers = await tiersHolding();
-      // Local, and only local: the compendium still lacks it.
       expect(tiers).toEqual([{ id: expect.any(String), workspace_id: coven.id }]);
       createdId = tiers[0].id;
       expect(page.url()).toMatch(new RegExp(`/coven/${coven.slug}/ingredients/${createdId}$`));
@@ -382,7 +361,6 @@ test(
     }
 
     await test.step('the viewer has no add control, and a write sent straight is refused', async () => {
-      // Signed in as C from the step before, on the coven's list.
       await expect(rowOf(ingredientList(page), NAME)).toBeVisible();
       await expect(
         page.getByRole('button', { name: 'Add Ingredient', disabled: false }),
@@ -406,7 +384,6 @@ test(
       await expect(rowOf(ingredientList(page), NAME)).toHaveCount(0);
 
       expect((await page.goto(`/coven/${coven.slug}/ingredients`))?.status()).toBe(404);
-      // The entry's page is the coven's too, so a non-member meets the same 404.
       expect((await page.goto(`/coven/${coven.slug}/ingredients/${createdId}`))?.status()).toBe(
         404,
       );
@@ -428,7 +405,6 @@ test(
   },
 );
 
-/** The five Cat's Claws the seed holds, one label over five formal names. */
 const CATS_CLAWS = [
   'Dolichandra unguis-cati',
   'Felis catus',
@@ -451,8 +427,7 @@ test(
         where workspace_id is null and deleted_at is null and name = 'Cat''s Claw'`,
     );
     expect(clawIds.map((row) => row.canonical_name).sort()).toEqual(CATS_CLAWS);
-    // Each match links the coven's entry page, which reaches a compendium
-    // entry too (claude-docs/components/ingredient-form.md, the duplicate warning).
+    // Each match links the coven's entry page, which reaches a compendium entry too (claude-docs/components/ingredient-form.md, the duplicate warning).
     const hrefs = clawIds.map((row) => `/coven/${coven.slug}/ingredients/${row.id}`);
 
     await signInAgainAs(page, coven.users.B);
@@ -477,7 +452,6 @@ test(
       }
       await assertNoAccessibilityViolations(page);
 
-      // Each opens in a new tab, so the form keeps its place.
       const [opened] = await Promise.all([context.waitForEvent('page'), matches.first().click()]);
       await opened.waitForLoadState();
       expect(new URL(opened.url()).pathname).toBe(await matches.first().getAttribute('href'));
@@ -497,8 +471,6 @@ test(
       await expect(matches).toHaveCount(3);
 
       await dialog.getByRole('button', { name: 'Save Ingredient' }).click();
-      // The first save is held on the warning: the name is marked and the
-      // focus goes to the way past it.
       await expect(name).toHaveAttribute('aria-invalid', 'true');
       await expect(dialog.getByRole('button', { name: 'Create Anyway' })).toBeFocused();
       const held = await withSql(
@@ -580,7 +552,6 @@ test(
       const notes = page.getByRole('list', { name: 'Notes' });
       const bibliography = page.getByRole('list', { name: 'Bibliography' });
 
-      // The loader's order, not insertion order: Alpha before Zeta.
       await expect(details.getByRole('link', { name: /^Note \d+$/ })).toHaveCount(2);
       await details.getByRole('link', { name: 'Note 1' }).click();
       await expect(page).toHaveURL(/#note-1$/);
@@ -614,7 +585,6 @@ test(
       await expect(entries.nth(0)).toContainText('Alpha Fixtures');
       await expect(entries.nth(1).locator('cite')).toHaveText('Oil Fixtures');
       await expect(entries.nth(2).locator('cite')).toHaveText('Zeta Fixtures');
-      // A web page’s title is quoted, not italic; its url is a link out.
       const link = entries.nth(0).getByRole('link', { name: /source/i });
       await expect(link).toHaveAttribute('href', 'https://fixtures.example/alpha');
       await expect(link).toHaveAttribute('rel', /noopener/);

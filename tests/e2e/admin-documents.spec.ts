@@ -4,27 +4,21 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// A keeper edits the site's documents in place, one tab each under /keepers/documents: a saved draft is the keeper's alone, and a publish is what a
-// reader sees, as a new version with the old one in its history. Publishing the terms, or the disclaimer or code of ethics they include, asks every
-// account to agree again, and the confirmation says so first (claude-docs/design-decisions/m15.59-document-editor-scope.md). The Email Updates tab
-// emails every account one email about every document changed since the last (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
+// Publishing the terms, or the disclaimer or code of ethics they include, asks every account to agree again (claude-docs/design-decisions/m15.59-document-editor-scope.md).
+// The Email Updates tab mails one email per change (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The four documents, in the order their tabs and the footer list them.
 const DOCUMENT_KEYS = ['terms', 'disclaimer', 'code-of-ethics', 'privacy'] as const;
 
-/** The editor's editable text. */
 const editorOf = (page: Page) =>
   page.getByRole('main').getByRole('textbox', { name: 'Document Text' });
 
-/** The editor's formatting toolbar. */
 const toolbarOf = (page: Page) =>
   page.getByRole('main').getByRole('toolbar', { name: 'Document Text Formatting' });
 
-/** Puts the caret at the end of the paragraph holding `anchor`, and types `addition` there. */
 async function appendTo(page: Page, anchor: string, addition: string): Promise<void> {
   await editorOf(page).getByText(anchor).click();
   await page.keyboard.press('End');
@@ -38,13 +32,11 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await signInAs(page, 'an-admin@admin-documents.test', ['discord'], 'admin');
   const reader = await (await browser.newContext()).newPage();
   const ADDITION = ' Fixturewort sentence from the editor.';
-  // A signed-in account that has agreed to everything in force, so a protected page answers it.
   const member = await (await browser.newContext()).newPage();
   await signInAs(member, 'disclaimer-reader@admin-documents.test');
   await member.goto('/account');
   await expect(member).not.toHaveURL(/\/account\/terms/);
 
-  // The nav's Documents opens the terms of use's editor, under a tab row with one tab per document in the footer's order, then Email Updates.
   await page.goto('/keepers');
   await page
     .getByRole('navigation', { name: 'Keepers' })
@@ -70,7 +62,6 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await expect(toolbarOf(page).getByRole('button').first()).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
-  // Before: the seed's one version, so the public page lists no earlier one.
   await reader.goto('/disclaimer');
   await expect(reader.getByRole('main')).not.toContainText('Fixturewort');
   await expect(reader.getByRole('region', { name: 'Earlier Versions' })).toHaveCount(0);
@@ -89,12 +80,10 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await appendTo(page, 'agreeing to the terms is agreeing to it', ADDITION);
   await expect(save).toBeEnabled();
   await save.click();
-  // Saved: nothing is left unsaved, and the draft is there when the editor opens again.
   await expect(save).toBeDisabled();
   await page.reload();
   await expect(editorOf(page)).toContainText(ADDITION.trim());
 
-  // A draft is no reader's.
   await reader.goto('/disclaimer');
   await expect(reader.getByRole('main')).not.toContainText('Fixturewort');
 
@@ -105,7 +94,6 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await confirmation.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(confirmation).toHaveCount(0);
 
-  // Published: the reader sees the edit, with version 1 now an earlier version linked from the page.
   await reader.goto('/disclaimer');
   await expect(reader.getByRole('main')).toContainText(ADDITION.trim());
   const history = reader.getByRole('region', { name: 'Earlier Versions' }).getByRole('link');
@@ -115,8 +103,6 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await expect(reader.getByRole('main')).not.toContainText('Fixturewort');
   await reader.context().close();
 
-  // The terms include the disclaimer, so the account's agreement was to the version before: its next protected page is the
-  // acceptance page, which links the disclaimer alone as changed, and agreeing returns it to the page it asked for.
   await member.goto('/account');
   await expect(member).toHaveURL(/\/account\/terms\?next=%2Faccount$/);
   const changed = member.getByRole('main').getByRole('list').getByRole('link');
@@ -157,7 +143,6 @@ test('publishing the terms warns that every account will agree again, and sends 
   await confirmation.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(confirmation).toHaveCount(0);
 
-  // The reader's agreement was to the version before, so the next protected page asks again.
   await reader.goto('/account');
   await expect(reader).toHaveURL(/\/account\/terms\?next=%2Faccount$/);
   await reader.getByRole('button', { name: 'Agree & Continue' }).click();
@@ -165,8 +150,6 @@ test('publishing the terms warns that every account will agree again, and sends 
   await reader.context().close();
 });
 
-// The toolbar is one stop in the tab order, and the arrow keys move between its buttons, as the WAI-ARIA toolbar pattern has it:
-// a keyboard user passes it with one Tab, and comes back to the button they left.
 test('the editor’s toolbar takes one tab stop, and the arrow keys move between its buttons', async ({
   page,
 }) => {
@@ -179,7 +162,6 @@ test('the editor’s toolbar takes one tab stop, and the arrow keys move between
   // Hydrated first: the editor loads as a separate chunk, and before it hydrates the toolbar is server HTML whose
   // arrow keys do nothing.
   await page.waitForLoadState('networkidle');
-  /** Whether focus is on one of the toolbar's buttons. */
   const focusInToolbar = () =>
     toolbarOf(page).evaluate((toolbar) => toolbar.contains(document.activeElement));
 
@@ -193,7 +175,6 @@ test('the editor’s toolbar takes one tab stop, and the arrow keys move between
   await page.keyboard.press('Home');
   await expect(buttons.first()).toBeFocused();
 
-  // One stop: Tab leaves the toolbar from any button, and Shift+Tab comes back to the button left, not the first or last.
   await page.keyboard.press('ArrowRight');
   await expect(buttons.nth(1)).toBeFocused();
   await page.keyboard.press('Tab');
@@ -226,9 +207,7 @@ test('a curator is refused every document editor and the Email Updates page with
   await assertNoAccessibilityViolations(page);
 });
 
-// A published change is emailed to every account only when a keeper asks, on the Email Updates page: one email covers every document
-// changed since the last, each with its own summary, and the mailing it starts is recorded on the page
-// (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
+// One email covers every document changed since the last (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
 test('an admin publishes the privacy policy and the code of ethics, then emails every account one email about both', async ({
   page,
 }) => {
@@ -237,7 +216,6 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
   await signInAs(page, 'mail-admin@admin-documents.test', ['discord'], 'admin');
   const main = page.getByRole('main');
 
-  /** Appends `addition` to the paragraph holding `anchor` in the `key` document, and publishes it. */
   async function publish(key: string, anchor: string, addition: string): Promise<void> {
     await page.goto(`/keepers/documents/${key}`);
     await appendTo(page, anchor, addition);
@@ -248,7 +226,6 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 
-  // Publishing mails nothing: the editor offers no email, and the change waits on the Email Updates page.
   await publish(
     'privacy',
     'Until then the old email stays',
@@ -260,7 +237,6 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
     'Everyone is welcome here, and bigotry is not.',
     ' Fixturewort duty from the editor.',
   );
-  // The code of ethics is one of the documents an account agrees to, so the keeper too agrees again before the next page answers.
   await page.goto('/keepers/documents');
   await expect(page).toHaveURL(/\/account\/terms\?next=/);
   await page.getByRole('button', { name: 'Agree & Continue' }).click();
@@ -272,8 +248,7 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
   ).toHaveAttribute('aria-current', 'page');
   await expect(main.getByRole('progressbar')).toHaveCount(0);
 
-  // Each changed document asks for its own summary, and the button waits for every one. The other tests in this file may have published
-  // the disclaimer and the terms first, so every summary on the page is written.
+  // The other tests in this file may have published the disclaimer and the terms first, so every summary on the page is written.
   const email = main.getByRole('button', { name: 'Email Every Account' });
   const privacy = main.getByRole('textbox', { name: 'Summary of the Privacy Policy' });
   const ethics = main.getByRole('textbox', { name: 'Summary of the Code of Ethics' });
@@ -296,7 +271,6 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
   await confirmation.getByRole('button', { name: 'Send Emails' }).click();
   await expect(confirmation).toHaveCount(0);
 
-  // Recorded: one mailing covers both documents, nothing is left to send, and the page reads the same again.
   const progress = main.getByRole('progressbar', {
     name: /Privacy Policy.*Code of Ethics|Code of Ethics.*Privacy Policy/,
   });
@@ -309,17 +283,13 @@ test('an admin publishes the privacy policy and the code of ethics, then emails 
   await assertNoAccessibilityViolations(page);
 });
 
-/** Puts the caret in a new, empty paragraph after the one holding `anchor`. */
 async function newLineAfter(page: Page, anchor: string): Promise<void> {
   await editorOf(page).getByText(anchor).click();
   await page.keyboard.press('End');
   await page.keyboard.press('Enter');
 }
 
-/**
- * Pastes into the text at the caret as Chromium does: a `paste` event carrying each type in `data`, then, unless it was
- * handled there, the `beforeinput` that inserts it, which is where the editor reads anything but plain text.
- */
+/** Pastes as Chromium does: a `paste` event, then, unless handled there, the `beforeinput` that inserts it. */
 async function paste(page: Page, data: Record<string, string>): Promise<void> {
   await editorOf(page).evaluate((element, types) => {
     const transfer = new DataTransfer();
@@ -339,7 +309,6 @@ async function paste(page: Page, data: Record<string, string>): Promise<void> {
   }, data);
 }
 
-// Markdown pasted from a code editor, a heading, a sentence with a footnote mark and the footnote's text.
 const PASTED_MARKDOWN = [
   '## Fixturewort Pasted Heading',
   '',
@@ -348,7 +317,6 @@ const PASTED_MARKDOWN = [
   '[^77]: A pasted Fixturewort source.',
 ].join('\n');
 
-/** The pasted heading, and the pasted footnote's text as an entry of the Sources list. */
 const pastedHeading = (page: Page) =>
   editorOf(page).getByRole('heading', { name: 'Fixturewort Pasted Heading' });
 const pastedSource = (page: Page) =>
@@ -362,7 +330,6 @@ test('markdown pasted from a code editor is read as markdown, not as its highlig
   await page.waitForLoadState('networkidle');
 
   await newLineAfter(page, 'Changes to This Policy');
-  // What VS Code puts on the clipboard: the text, its highlighted rendering, and its own editor data.
   const highlighted = PASTED_MARKDOWN.split('\n')
     .map((line) => `<div><span style="color: #569cd6;">${line}</span></div>`)
     .join('');
@@ -388,7 +355,6 @@ test('a monospace rendering of markdown is read as markdown, and a web page’s 
   await page.goto('/keepers/documents/privacy');
   await page.waitForLoadState('networkidle');
 
-  // A code block's rendering with no editor data of its own: the text is the markdown.
   await newLineAfter(page, 'Changes to This Policy');
   await paste(page, {
     'text/plain': PASTED_MARKDOWN,
@@ -397,7 +363,6 @@ test('a monospace rendering of markdown is read as markdown, and a web page’s 
   await expect(pastedHeading(page)).toBeVisible();
   await expect(pastedSource(page)).toHaveCount(1);
 
-  // A web page's rich text: the HTML is what was copied, and its plain text is only a fallback.
   await newLineAfter(page, 'A pasted Fixturewort claim.');
   await paste(page, {
     'text/plain': '## Fixturewort Web Heading',
@@ -411,8 +376,7 @@ test('a monospace rendering of markdown is read as markdown, and a web page’s 
   ).toHaveCount(0);
 });
 
-// An edit made while a save is in flight is measured against the text being saved, not the text saved before it: one that puts the
-// text back as it was before is still a change once that save lands, and the autosave sends it on its own.
+// A save's text is measured against the text being saved: an edit that puts the text back as it was before is still a change once the save lands.
 test('an edit made while a draft save is in flight, typed or pasted, is saved after it', async ({
   page,
 }) => {
@@ -421,10 +385,8 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
   await page.waitForLoadState('networkidle');
   const save = page.getByRole('main').getByRole('button', { name: /^Sav(e|ing) Draft$/ });
   const heading = editorOf(page).getByRole('heading', { name: /^Changes to This Polic/ });
-  // The heading as the document holds it, ended by its line break.
   const SAVED_HEADING = '## Changes to This Policy\n';
 
-  // Every save is held until the test lets it go.
   const bodies: string[] = [];
   let landed = 0;
   let release = () => {};
@@ -452,7 +414,6 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     return route.continue();
   });
 
-  /** Makes `change` at the end of the heading, waits for the autosave to send it, and makes `revert` while it is held. */
   async function editInFlight(
     change: () => Promise<void>,
     revert: () => Promise<void>,
@@ -465,7 +426,6 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     await expect(save).toHaveAttribute('aria-busy', 'true');
     await revert();
     release();
-    // The text is back as it was before the held save: the autosave sends it again on its own.
     await expect.poll(() => bodies.length, { timeout: 10_000 }).toBe(sent + 2);
     expect(bodies[bodies.length - 2]).not.toContain(SAVED_HEADING);
     expect(bodies[bodies.length - 1]).toContain(SAVED_HEADING);
@@ -475,12 +435,10 @@ test('an edit made while a draft save is in flight, typed or pasted, is saved af
     await expect(save).toBeDisabled();
   }
 
-  // Typed: an `X` added, then deleted again.
   await editInFlight(
     () => page.keyboard.type('X'),
     () => page.keyboard.press('Backspace'),
   );
-  // Pasted: the heading's last letter deleted, then pasted back.
   await editInFlight(
     () => page.keyboard.press('Backspace'),
     () => paste(page, { 'text/plain': 'y' }),

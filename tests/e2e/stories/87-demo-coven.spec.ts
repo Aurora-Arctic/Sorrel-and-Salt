@@ -55,13 +55,11 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
           page.getByRole('button', { name: /^(Add|New) /, disabled: false }),
         ).toHaveCount(0);
       }
-      // The add dialog's address opens nothing for a viewer.
       await page.goto(`${DEMO_PATH}/grimoire?new=spell`);
       await expect(page.getByRole('dialog')).toHaveCount(0);
     });
 
     await test.step('a seeded spell’s preview carries the demo notice', async () => {
-      // The suite's template holds no demo spells, so one is written for the viewer to open.
       const spellId = await withSql(async (sql) => {
         const [demo] = await sql`select id from workspaces where demo and deleted_at is null`;
         return insertSpell(sql, demo.id, 'Testwort Working', 'workspace', userId, 'complete');

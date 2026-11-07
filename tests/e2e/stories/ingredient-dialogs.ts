@@ -1,15 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 
-// The add and edit dialogs of a coven's ingredient as the stories reach them, here once beside
-// coven-ingredients.ts so a changed name is corrected in one place. Names follow a task entry or component doc
-// where one gives them, and are chosen here otherwise.
+// The add and edit dialogs as the stories reach them; names follow a task entry or component doc where one gives them.
 
-/**
- * The shell's Add Ingredient, in the bar (claude-docs/components/app-shell.md),
- * found inside the banner so the empty list's own Add Ingredient is never taken for it. A link is matched too,
- * for the compendium's `?new=ingredient-compendium`, so "none" means neither.
- */
+/** The shell's Add Ingredient, in the bar (claude-docs/components/app-shell.md), found inside the banner so the empty list's own is never taken for it. A link is matched too, for `?new=ingredient-compendium`. */
 export function shellAddIngredient(page: Page): Locator {
   const banner = page.getByRole('banner');
   return banner
@@ -25,19 +19,12 @@ export async function openAddIngredient(page: Page) {
   return dialog;
 }
 
-/**
- * The name of an entry's Edit, and of what follows the dialog's eyebrow: the label and, where there is one, the
- * formal name (claude-docs/components/compendium-list.md; claude-docs/components/modal.md, "An edit dialog's
- * head"), so two entries sharing a label never share a name.
- */
+/** The label and, where there is one, the formal name (claude-docs/components/modal.md, "An edit dialog's head"), so two entries sharing a label never share a name. */
 function entryName(name: string, formalName?: string): string {
   return formalName ? `${name}, ${formalName}` : name;
 }
 
-/**
- * An entry's Edit in `scope`, a row of the coven's list ("Edit Testwort, Fixtura testalis"); the entry's page
- * has its own icon (`openEditIngredientFromMenu`). A link or a button is matched.
- */
+/** The entry's page has its own icon (`openEditIngredientFromMenu`). A link or a button is matched. */
 export function editIngredientControl(scope: Locator, name: string, formalName?: string): Locator {
   const label = `Edit ${entryName(name, formalName)}`;
   return scope
@@ -45,10 +32,7 @@ export function editIngredientControl(scope: Locator, name: string, formalName?:
     .or(scope.getByRole('button', { name: label, exact: true }));
 }
 
-/**
- * The edit dialog, named by its eyebrow and the entry's saved label and formal name, "Edit Ingredient,
- * Testwort, Fixtura testalis" (claude-docs/components/modal.md, "An edit dialog's head").
- */
+/** Named by its eyebrow and the entry's saved label and formal name (claude-docs/components/modal.md, "An edit dialog's head"). */
 export function editIngredientDialog(page: Page, name: string, formalName?: string): Locator {
   return page.getByRole('dialog', {
     name: `Edit Ingredient, ${entryName(name, formalName)}`,
@@ -70,7 +54,7 @@ export async function openEditIngredient(
   return dialog;
 }
 
-/** Opens the edit from the entry's page, where Edit is an icon beside the three dots, and its sections, as `openEditIngredient` does from a row. */
+/** As `openEditIngredient`, from the entry's page, where Edit is an icon beside the three dots. */
 export async function openEditIngredientFromMenu(
   page: Page,
   name: string,
@@ -86,11 +70,7 @@ export async function openEditIngredientFromMenu(
   return dialog;
 }
 
-/**
- * The question a dialog asks before its changes are thrown away: a group drawn over the form, not an
- * alertdialog, found by its two answers, Discard Changes and Keep Editing (claude-docs/components/modal.md,
- * "Unsaved changes" and "Asking over the form").
- */
+/** A group drawn over the form, not an alertdialog, found by its two answers (claude-docs/components/modal.md, "Unsaved changes" and "Asking over the form"). */
 export function discardQuestion(dialog: Locator) {
   return {
     discard: dialog.getByRole('button', { name: 'Discard Changes', exact: true }),
@@ -98,10 +78,7 @@ export function discardQuestion(dialog: Locator) {
   };
 }
 
-/**
- * Picks a category in the dialog's CategoryPicker, the box named "Category" (claude-docs/components/category-picker.md).
- * An option's name starts with the category's and may carry its description.
- */
+/** An option's name starts with the category's and may carry its description (claude-docs/components/category-picker.md). */
 export async function pickCategoryIn(dialog: Locator, name: string): Promise<void> {
   const box = dialog.getByRole('combobox', { name: 'Category', exact: true });
   await box.fill(name);
@@ -118,16 +95,11 @@ export function categoryChip(dialog: Locator, name: string): Locator {
     .getByRole('button', { name: `Remove ${name}`, exact: true });
 }
 
-/** The ids `field`'s `aria-describedby` lists: its hint, its note and, while it has one, its error. */
 export async function describedIds(field: Locator): Promise<string[]> {
   return ((await field.getAttribute('aria-describedby')) ?? '').split(/\s+/).filter(Boolean);
 }
 
-/**
- * Checks `field` is marked invalid and that its description gained an element on show, its error, beside the ids
- * it listed while valid (`valid`): the link `FieldError` makes (claude-docs/components/ingredient-form.md, "One
- * error element, two sources"). The error is found by the id the field names, not by its sentence, which is copy.
- */
+/** The error is found by the id the field names, not by its sentence, which is copy (claude-docs/components/ingredient-form.md, "One error element, two sources"). */
 export async function expectFieldError(field: Locator, valid: readonly string[]): Promise<void> {
   await expect(field).toHaveAttribute('aria-invalid', 'true');
   const added = (await describedIds(field)).filter((id) => !valid.includes(id));
@@ -137,10 +109,7 @@ export async function expectFieldError(field: Locator, valid: readonly string[])
   }
 }
 
-/**
- * Every Edit the shell offers: in its bar, the banner, and each `nav` landmark (claude-docs/design-decisions/mb.7-navigation.md,
- * "DESIGN §9 Is Corrected, And Editing Lives Where An Ingredient Is Shown"). Editing lives where an ingredient is shown, never here.
- */
+/** Editing lives where an ingredient is shown, never in the shell (claude-docs/design-decisions/mb.7-navigation.md, "DESIGN §9 Is Corrected, And Editing Lives Where An Ingredient Is Shown"). */
 export function shellEditControls(page: Page): Locator {
   const shell = page.getByRole('banner').or(page.getByRole('navigation'));
   return shell
@@ -148,11 +117,7 @@ export function shellEditControls(page: Page): Locator {
     .or(shell.getByRole('link', { name: /^Edit\b/ }));
 }
 
-/**
- * The menu of places Add Ingredient can go, for someone with more than one (claude-docs/components/modal.md,
- * "Add Ingredient"): the chevron named "Choose Where to Add" opens a `menu` of destinations, the compendium
- * first. With one destination the chevron is not drawn.
- */
+/** With one destination the chevron is not drawn (claude-docs/components/modal.md, "Add Ingredient"). */
 export function destinationMenu(page: Page) {
   const banner = page.getByRole('banner');
   const menu = banner.getByRole('menu');

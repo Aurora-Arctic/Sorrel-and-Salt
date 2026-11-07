@@ -156,7 +156,6 @@ export async function insertStock(
   });
 }
 
-/** Raw SQL, since the spell factory imports the whole seed. */
 export async function insertSpell(
   sql: postgres.Sql,
   covenId: string,
@@ -198,7 +197,6 @@ export async function insertStep(
   });
 }
 
-// Nothing is deducted; a test that needs a deduction line writes it with `insertDeduction`.
 export async function insertWorking(
   sql: postgres.Sql,
   spellId: string,
@@ -282,7 +280,6 @@ export async function graphqlFromPage(
   );
 }
 
-// A reload starts a document without the mark.
 export async function markDocument(page: Page): Promise<void> {
   await page.evaluate(() => {
     (window as unknown as { storyMark?: boolean }).storyMark = true;
@@ -292,7 +289,6 @@ export async function markDocument(page: Page): Promise<void> {
 export async function stillSameDocument(page: Page): Promise<boolean> {
   return page.evaluate(() => (window as unknown as { storyMark?: boolean }).storyMark === true);
 }
-
 
 /** CovenCards' `IngredientCardList` (claude-docs/components/coven-cards.md). */
 export function ingredientList(page: Page): Locator {
@@ -335,7 +331,6 @@ export function nameSearch(page: Page): Locator {
   return filterOf(page).getByRole('combobox', { name: 'Name' });
 }
 
-/** Waits for the address to carry the text so the list asserted next is the searched one. */
 export async function searchCovenList(page: Page, text: string): Promise<void> {
   await nameSearch(page).fill(text);
   await nameSearch(page).press('Enter');
@@ -384,11 +379,9 @@ export function chipChoice(group: Locator, name: string | RegExp): Locator {
 /** The browser reads the hidden span after the label as a space and a comma, so the name is matched on both. */
 const fieldName = (label: string, form: string): RegExp => new RegExp(`^${label}\\s*, ${form}$`);
 
-/** `choose(form)` presses a jar's button before `jar(form)` can reach its fields. */
 export function stockEditor(row: Locator, name: string, coven?: string) {
   const page = row.page();
   const title = `Edit Stock, ${name}`;
-  // Opened from the compendium, the eyebrow names the coven: "Edit Stock for <Coven>, <name>".
   const dialog = page.getByRole('dialog', {
     name: coven ? `Edit Stock for ${coven}, ${name}` : title,
   });

@@ -7,9 +7,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 
-// Proving an address, changing it, granting and revoking admin, the privilege ledger and inviting a keeper by
-// email (claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
-// A mailed link is read from Mailpit and followed.
+// claude-docs/auth/admin-bootstrap.md, "The email page"; claude-docs/design-decisions/mb.61-email-verification-and-delivery.md.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -31,9 +29,6 @@ async function rename(userId: string, name: string): Promise<void> {
   await withSql((sql) => sql`update users set name = ${name} where id = ${userId}`);
 }
 
-/**
- * Opens `path` in this page, opening each redirect target afresh from the first response's `location`.
- */
 async function visit(page: Page, path: string): Promise<Response> {
   let target = path;
   for (let hop = 0; hop < 5; hop += 1) {
@@ -52,10 +47,7 @@ async function visit(page: Page, path: string): Promise<Response> {
 const VERIFY_LINK = /https?:\/\/[^\s\])>"]+\/verify-email\?[^\s\])>"]+/;
 const INVITE_LINK = /https?:\/\/[^\s\])>"]+\/invite\/[A-Za-z0-9_-]+/;
 
-/**
- * The path of the link in the newest mail to `to` matching `pattern`, waiting for one not in `seen` and
- * checking the mail went to that address alone. The path, not the URL: the link's origin is the build's, not this slot's.
- */
+/** The path, not the URL: the link's origin is the build's, not this slot's. */
 async function mailedPath(
   to: string,
   pattern: RegExp,
@@ -78,16 +70,12 @@ async function mailedPath(
   }
 }
 
-/** A browser holding no session at all, on this worker's server. */
 async function signedOutPage(browser: Browser, baseURL: string | undefined): Promise<Page> {
   const context = await browser.newContext({ baseURL });
   return context.newPage();
 }
 
-/**
- * Sends a GraphQL operation from the page, as anyone could from the console: the direct action behind a
- * control the page withholds, so a refusal must come from the server.
- */
+/** The direct action behind a control the page withholds, so a refusal must come from the server. */
 async function sendFromPage(
   page: Page,
   query: string,
@@ -118,7 +106,6 @@ const ACCEPT_INVITATION = `
   }
 `;
 
-/** Whether `page`'s account reaches the keepers area: the layout's nav, or the 403 page. */
 async function expectAdminArea(page: Page, reached: boolean): Promise<void> {
   const response = await visit(page, '/keepers');
   if (reached) {
@@ -142,7 +129,6 @@ async function primaryAdminId(page: Page): Promise<string> {
   return (await signInAs(page, PRIMARY_ADMIN_EMAIL, ['google'], 'admin')).userId;
 }
 
-/** The users list narrowed to one address, and that address's row. */
 async function userRow(page: Page, email: string) {
   const response = await visit(page, `/keepers/users?query=${encodeURIComponent(email)}`);
   expect(response.status()).toBe(200);
@@ -152,7 +138,6 @@ async function userRow(page: Page, email: string) {
 /** The role cell, the third: its text opens with the role. */
 const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(2);
 
-/** Opens `name`'s user modal from their row's name, where Change Role and coven creation's controls are, and answers it. */
 async function userModal(page: Page, row: ReturnType<Page['getByRole']>, name: string) {
   await row.getByRole('link', { name, exact: true }).click();
   const modal = page.getByRole('dialog', { name: new RegExp(name) });
@@ -160,16 +145,11 @@ async function userModal(page: Page, row: ReturnType<Page['getByRole']>, name: s
   return modal;
 }
 
-/** Closes the open user modal, back to the list. */
 async function closeModal(page: Page) {
   await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-/**
- * Presses Change Role in `name`'s user modal, opening it from `row` unless it is open, picks `role`, and answers
- * the question asked over the modal's body for the caller to confirm.
- */
 async function chooseRole(
   page: Page,
   row: ReturnType<Page['getByRole']>,
@@ -180,14 +160,11 @@ async function chooseRole(
     ? page.getByRole('dialog')
     : await userModal(page, row, name);
   await modal.getByRole('button', { name: `Change Role for ${name}` }).click();
-  // Named by its sentence, which names the user.
   const question = modal.getByRole('group', { name: new RegExp(name) });
-  // The radio's name opens with the role, its description following.
   await question.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
   return question;
 }
 
-/** Invites `email` from /keepers/invitations as the signed-in keeper, to the admin role unless told otherwise, and answers the mailed link's path. */
 async function inviteAdmin(
   page: Page,
   email: string,
@@ -197,7 +174,6 @@ async function inviteAdmin(
   await page.getByRole('link', { name: 'New Invitation' }).click();
   const dialog = page.getByRole('dialog', { name: 'New Invitation' });
   await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
-  // The radio's name opens with the role, its description following.
   await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
   // By role: "Reason" also names its info tip's button.
   if (reason) await dialog.getByRole('textbox', { name: 'Reason' }).fill(reason);
@@ -208,7 +184,6 @@ async function inviteAdmin(
   return mailedPath(email, INVITE_LINK);
 }
 
-/** The refusal an invitation link shows: its alert, and no Accept beside it. */
 async function expectInvitationRefused(page: Page, path: string): Promise<string> {
   const response = await visit(page, path);
   expect(response.status()).toBe(200);
@@ -228,24 +203,19 @@ test(
       emailVerified: false,
     });
 
-    // Every page it tries sends it to the email page, carrying where it was going.
     for (const path of ['/account', '/coven/new', '/coven']) {
       await visit(page, path);
       await expect(page).toHaveURL(`/account/email?next=${encodeURIComponent(path)}`);
       await expect(page.getByRole('textbox', { name: 'Email Address' })).toHaveValue(email);
     }
-    // An unverified account is offered no way on but proving the address.
     await expect(page.getByRole('link', { name: 'Continue to Account' })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
-    // It asks for the link, which is mailed to that address alone.
     await page.getByRole('button', { name: 'Send Confirmation' }).click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(email);
     const link = await mailedPath(email, VERIFY_LINK);
 
-    // Opened in a browser signed in to nothing, the link goes to sign-in,
-    // which returns to the email page, and verifies nothing.
     const stranger = await signedOutPage(browser, baseURL);
     await stranger.goto(link);
     await expect(stranger).toHaveURL('/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify');
@@ -253,13 +223,10 @@ test(
     await assertNoAccessibilityViolations(stranger);
     await stranger.context().close();
 
-    // Signed in again, the account is still unverified: still sent to the email page.
     await signInAgainAs(page, userId);
     await visit(page, '/coven');
     await expect(page).toHaveURL('/account/email?next=%2Fcoven');
 
-    // Followed from its own session, the link verifies the address and lands
-    // on the confirmed view, whose Continue goes on to where it was going.
     await visit(page, link);
     await expect(page).toHaveURL('/account/email?verified&next=%2Fcoven');
     await expect(page.getByRole('main')).toContainText(email);
@@ -269,7 +236,6 @@ test(
     await onward.click();
     await expect(page).toHaveURL('/coven');
 
-    // The rest of the shell is open to it now: no page sends it back.
     const account = await visit(page, '/account');
     expect(account.status()).toBe(200);
     await expect(page).toHaveURL('/account');
@@ -287,7 +253,6 @@ test(
     const after = address('after');
     await signInAs(page, before, ['google']);
 
-    // The page starts from the address the account holds, with nothing to send.
     await visit(page, '/account/email');
     const field = page.getByRole('textbox', { name: 'Email Address' });
     const send = page.getByRole('button', { name: 'Send Confirmation' });
@@ -300,14 +265,12 @@ test(
     await expect(page.getByRole('main').getByRole('status')).toContainText(after);
     await assertNoAccessibilityViolations(page);
     const link = await mailedPath(after, VERIFY_LINK);
-    // The address being left is told, naming the new one's domain and carrying no link.
     const requested = await latestMessageTo(before);
     expect(requested.subject).toBe('A New Email Address Was Requested');
     expect(requested.text).toContain('email-and-admin.test');
     expect(requested.text).not.toContain(after);
     expect(requested.text).not.toContain('verify-email');
 
-    // Until the link is followed, the account keeps the old address.
     await visit(page, '/account/email');
     await expect(field).toHaveValue(before);
     await visit(page, '/account');
@@ -315,7 +278,6 @@ test(
       page.getByRole('main').getByRole('textbox', { name: 'Email Address' }),
     ).toHaveValue(before);
 
-    // A browser signed in to nothing is sent to sign-in, and changes nothing.
     const stranger = await signedOutPage(browser, baseURL);
     await stranger.goto(link);
     await expect(stranger).toHaveURL('/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify');
@@ -324,7 +286,6 @@ test(
     await visit(page, '/account/email');
     await expect(field).toHaveValue(before);
 
-    // Followed from the account's own session, the new address is its, verified.
     await visit(page, link);
     await expect(page).toHaveURL(/^[^?]+\/account\/email\?verified$/);
     await expect(page.getByRole('main')).toContainText(after);
@@ -338,7 +299,6 @@ test(
     await expect(
       page.getByRole('main').getByRole('textbox', { name: 'Email Address' }),
     ).toHaveValue(after);
-    // Verified, so the shell is open: /coven answers itself, not the email page.
     await visit(page, '/coven');
     await expect(page).toHaveURL('/coven');
   },
@@ -350,7 +310,6 @@ test(
   async ({ page }) => {
     const granteeEmail = address('grantee');
     const { userId: grantee } = await signInAs(page, granteeEmail);
-    // Before: a user, refused the admin area.
     await expectAdminArea(page, false);
 
     const { userId: admin } = await signInAs(page, address('granting-admin'), ['discord'], 'admin');
@@ -365,14 +324,12 @@ test(
     await granting.getByRole('button', { name: 'Promote' }).click();
     await expect(granting).toHaveCount(0);
 
-    // A keeper now, who may create a coven: the creation cell holds the mark alone.
     await expect(roleCell(row)).toHaveText(/^Keeper/);
     await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
 
     await signInAgainAs(page, grantee);
     await expectAdminArea(page, true);
 
-    // Revoked again, behind its own modal; the creation flag stays.
     await signInAgainAs(page, admin);
     const again = await userRow(page, granteeEmail);
     const revoking = await chooseRole(page, again, 'Fixture Person', 'User');
@@ -382,7 +339,6 @@ test(
     await expect(revoking).toHaveCount(0);
     await expect(roleCell(again)).toHaveText(/^User/);
     await expect(again.getByRole('cell').nth(3)).toHaveText(/^Yes/);
-    // The modal stays open on the new role, its Change Role there to be used again.
     await expect(
       page.getByRole('dialog').getByRole('button', { name: 'Change Role for Fixture Person' }),
     ).toBeVisible();
@@ -393,9 +349,7 @@ test(
   },
 );
 
-// The three tests on the primary keeper share one worker, in this order, because the last demotes every other
-// admin in the worker's database, the primary included, which the two before need in place. Serial in this
-// block alone.
+// Serial in this block alone, in this order: the last test demotes every other admin in the worker's database, which the two before need in place.
 test.describe('the primary admin', () => {
   test.describe.configure({ mode: 'serial' });
 
@@ -408,13 +362,11 @@ test.describe('the primary admin', () => {
       await signInAs(page, peerEmail, ['discord'], 'admin');
       await signInAs(page, address('acting-admin'), ['discord'], 'admin');
 
-      // Another admin's Change Role is there to be used: the guard is about the primary keeper alone.
       const peer = await userModal(page, await userRow(page, peerEmail), 'Fixture Person');
       const usable = peer.getByRole('button', { name: 'Change Role for Fixture Person' });
       await expect(usable).toBeVisible();
       await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
 
-      // The primary keeper's row: marked, its Change Role in view but locked, saying why.
       const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
       await expect(row.getByRole('button', { name: 'Primary Keeper' })).toBeVisible();
       await expect(roleCell(row)).toHaveText(/^Keeper/);
@@ -423,19 +375,16 @@ test.describe('the primary admin', () => {
       await expect(locked).toHaveAttribute('aria-disabled', 'true');
       await expect(locked).toHaveAccessibleDescription(/\S/);
 
-      // Pressed anyway, from the keyboard since a pointer click waits for an
-      // enabled control, it says why again and asks nothing.
+      // From the keyboard, since a pointer click waits for an enabled control.
       await locked.focus();
       await page.keyboard.press('Enter');
       await expect(modal.getByRole('alert')).toBeVisible();
       await expect(modal.getByRole('radio')).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
-      // Sent straight to the server, the revoke is refused there too.
       const result = await sendFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
       expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
 
-      // Read afresh, the primary keeper is a keeper still, and reaches the admin area.
       const reread = await userRow(page, PRIMARY_ADMIN_EMAIL);
       await expect(roleCell(reread)).toHaveText(/^Keeper/);
       await signInAgainAs(page, primary);
@@ -452,18 +401,15 @@ test.describe('the primary admin', () => {
       const { userId: grantee } = await signInAs(page, granteeEmail);
       const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
       const list = `/keepers/users?query=${encodeURIComponent(granteeEmail)}`;
-      // The page's statement while paused, and none while open.
       const status = page.getByRole('main').getByRole('status');
 
-      // Another admin sees the switch, unusable, and why.
       await visit(page, list);
       const unusable = page.getByRole('button', { name: 'Pause Keeper Changes' });
       await expect(unusable).toHaveAttribute('aria-disabled', 'true');
       await expect(unusable).toHaveAccessibleDescription(/\S/);
       await expect(status).toHaveCount(0);
 
-      // The primary keeper pauses, behind a modal asking first. Scoped to it:
-      // the button that opens it has the same name.
+      // Scoped to the modal: the button that opens it has the same name.
       await signInAgainAs(page, primary);
       await visit(page, list);
       await page.getByRole('button', { name: 'Pause Keeper Changes' }).click();
@@ -474,8 +420,6 @@ test.describe('the primary admin', () => {
       await expect(page.getByRole('button', { name: 'Resume Keeper Changes' })).toBeEnabled();
       await assertNoAccessibilityViolations(page);
 
-      // The other keeper's Change Role is locked; tried from the keyboard, it says
-      // why and asks nothing, and Approve is locked the same way.
       await signInAgainAs(page, other);
       await visit(page, list);
       await expect(status).toBeVisible();
@@ -492,14 +436,12 @@ test.describe('the primary admin', () => {
       const approve = modal.getByRole('button', { name: 'Approve Fixture Person' });
       await expect(approve).toHaveAttribute('aria-disabled', 'true');
       await expect(approve).toHaveAccessibleDescription(/\S/);
-      // Sent straight to the server, the grant is refused there too.
       const refused = await sendFromPage(page, SET_USER_ROLE, { userId: grantee, role: 'admin' });
       expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       await visit(page, list);
       await expect(roleCell(row)).toHaveText(/^User/);
       await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-      // The primary keeper, whom the pause does not bind, still promotes.
       await signInAgainAs(page, primary);
       await visit(page, list);
       const granting = await chooseRole(page, row, 'Fixture Person', 'Keeper');
@@ -508,12 +450,10 @@ test.describe('the primary admin', () => {
       await expect(roleCell(row)).toHaveText(/^Keeper/);
       await closeModal(page);
 
-      // And resumes.
       await page.getByRole('button', { name: 'Resume Keeper Changes' }).click();
       await expect(page.getByRole('button', { name: 'Pause Keeper Changes' })).toBeEnabled();
       await expect(status).toHaveCount(0);
 
-      // The other keeper's controls work again: the revoke goes through.
       await signInAgainAs(page, other);
       await visit(page, list);
       await expect(status).toHaveCount(0);
@@ -524,8 +464,7 @@ test.describe('the primary admin', () => {
     },
   );
 
-  // Last of the three, and it must stay so: it demotes every other keeper in the
-  // worker's database, the primary keeper included.
+  // Last of the three, and it must stay so: it demotes every other keeper.
   test(
     'the last keeper is refused revoking their own admin, and stays an admin',
     { tag: '@story-60' },
@@ -551,14 +490,11 @@ test.describe('the primary admin', () => {
       await expect(keepers).toHaveCount(1);
       const row = await userRow(page, loneEmail);
 
-      // The control is offered, since the list cannot know the count stays
-      // above one; pressed, the server refuses and the modal says why.
       const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
       await revoking.getByRole('button', { name: 'Demote' }).click();
       await expect(revoking).toHaveCount(0);
       const modal = page.getByRole('dialog');
       await expect(modal.getByRole('alert')).toBeVisible();
-      // Said under the Change Role that asked, which has the focus back.
       await expect(
         modal.getByRole('button', { name: 'Change Role for Fixture Person', exact: true }),
       ).toBeFocused();
@@ -587,7 +523,6 @@ test(
     // To the second the database stamps, a little before this test's first change.
     const started = Date.now() - 1000;
 
-    // Two changes made where a keeper makes them, each with its reason.
     const row = await userRow(page, subjectEmail);
     const modal = await userModal(page, row, 'Ledger Fixturewort');
     await modal.getByRole('button', { name: 'Approve Ledger Fixturewort' }).click();
@@ -602,8 +537,6 @@ test(
     await expect(granting).toHaveCount(0);
     await expect(roleCell(row)).toHaveText(/^Keeper/);
 
-    // And a break-glass fix, made outside the app as a `psql` fix is: it
-    // must say it is one, may say why, and is stamped with whoever ran it.
     await withSql((sql) =>
       sql.begin(async (tx) => {
         await tx`select set_config('app.privilege_route', 'manual', true),
@@ -612,7 +545,6 @@ test(
       }),
     );
 
-    // The ledger, by its tab on the People page beside Users.
     await visit(page, '/keepers/users');
     const tab = page
       .getByRole('navigation', { name: 'People' })
@@ -621,11 +553,9 @@ test(
     await expect(page).toHaveURL(/\/keepers\/privilege-changes$/);
     await expect(tab).toHaveAttribute('aria-current', 'page');
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
-    // Every user's changes, not only this subject's: the seed's and each
-    // admin signed in here are on it too.
+    // Every user's changes, not only this subject's.
     await expect(rows.first()).toBeVisible();
     expect(await rows.count()).toBeGreaterThan(3);
-    // Newest first: the break-glass fix heads it.
     await expect(rows.first().getByRole('cell').nth(1)).toHaveText('Ledger Fixturewort');
     await expect(rows.first().getByRole('cell').nth(4)).toHaveText('Manual fix');
     for (const colorScheme of ['dark', 'light'] as const) {
@@ -633,7 +563,6 @@ test(
       await assertNoAccessibilityViolations(page);
     }
 
-    // Narrowed to the subject from their row's history link on the users list.
     const listed = await userRow(page, subjectEmail);
     const history = listed.getByRole('link', { name: 'Privilege changes for Ledger Fixturewort' });
     await history.hover();
@@ -650,9 +579,7 @@ test(
       page.getByRole('search', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
     ).toHaveValue(subjectEmail);
 
-    // Their three changes alone, newest first: what changed, how, who, why.
-    // The labels are the only rendering of the privilege, the change and
-    // the route, so they are the state here.
+    // The labels are the only rendering of the privilege, the change and the route, so they are the state here.
     await expect(rows).toHaveCount(3);
     const cells = async (index: number) => rows.nth(index).getByRole('cell').allTextContents();
     expect((await cells(0)).slice(1)).toEqual([
@@ -679,7 +606,6 @@ test(
       'Ledger Keeper',
       'Runs the Tuesday circle',
     ]);
-    // When: each stamped since this test began, the newest first.
     const times = await Promise.all(
       [0, 1, 2].map(async (index) =>
         Date.parse(
@@ -696,9 +622,6 @@ test(
     expect(times).toEqual([...times].sort((a, b) => b - a));
     await assertNoAccessibilityViolations(page);
 
-    // Typed by hand, the search takes part of an address in any case; the
-    // privilege dropdown, a select-only box once the page has hydrated,
-    // applies the moment a choice is picked, carrying the search with it.
     await page.waitForLoadState('networkidle');
     const filter = page.getByRole('search', { name: 'Filter Privilege Changes' });
     const search = filter.getByLabel('Name or Email');
@@ -719,7 +642,6 @@ test(
     await expect(page).toHaveURL(/privilege=admin$/);
     await expect(rows).toHaveCount(2);
 
-    // A search nobody matches leaves no table, only the page saying so.
     await search.fill('nobody-by-this-name');
     await privilege.click();
     await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
@@ -727,7 +649,6 @@ test(
     await expect(page.getByRole('table')).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
 
-    // The subject, a user again, is refused the ledger it has just been shown in.
     await signInAgainAs(page, subject);
     const refused = await visit(page, '/keepers/privilege-changes');
     expect(refused.status()).toBe(403);
@@ -747,12 +668,10 @@ test(
     await visit(page, '/keepers/invitations');
 
     const section = page.getByRole('region', { name: 'Keeper Invitations' });
-    // New Invitation is the tab's action, beside the page's heading.
     await page.getByRole('link', { name: 'New Invitation' }).click();
     const dialog = page.getByRole('dialog', { name: 'New Invitation' });
     const send = dialog.getByRole('button', { name: 'Send Invitation' });
     const email = dialog.getByRole('textbox', { name: 'Email Address' });
-    // It opens on its first field, with nothing to send yet.
     await expect(email).toBeFocused();
     await expect(send).toBeDisabled();
     await email.fill(invited);
@@ -764,10 +683,8 @@ test(
     await expect(section.getByRole('status')).toContainText(invited);
     const row = section.getByRole('row', { name: new RegExp(invited.replace(/[.]/g, '\\.')) });
     await expect(row).toContainText('Curates the resins');
-    // The role the form starts on, the lesser one.
     await expect(row).toContainText('Curator');
-    // Mailed to the invited address alone, and the page answers no link:
-    // the mail is the only place the token is.
+    // The mail is the only place the token is.
     const path = await mailedPath(invited, INVITE_LINK);
     const token = path.split('/').pop()!;
     expect(await page.content()).not.toContain(token);
@@ -776,7 +693,6 @@ test(
     await expect(row).toBeVisible();
     expect(await page.content()).not.toContain(token);
 
-    // A user is refused the page the keeper has just used.
     await signInAs(page, address('not-an-admin'));
     const refused = await visit(page, '/keepers/invitations?invite');
     expect(refused.status()).toBe(403);
@@ -795,7 +711,6 @@ test(
     await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
     const path = await inviteAdmin(page, invited, { reason: 'Curates the resins' });
 
-    // Signed out: asked to sign in and brought back, shown nothing of the invitation.
     const visitor = await signedOutPage(browser, baseURL);
     const opened = await visitor.goto(path);
     expect(opened?.status()).toBe(200);
@@ -804,7 +719,6 @@ test(
       'href',
       `/sign-in?next=${encodeURIComponent(path)}`,
     );
-    // Not even what kind of invitation it is: the word keeper appears nowhere on it.
     await expect(visitor.getByRole('main').getByText(/keeper/i)).toHaveCount(0);
     await expect(visitor.getByRole('main')).not.toContainText(invited);
     await expect(visitor.getByRole('main')).not.toContainText('Curates the resins');
@@ -813,8 +727,6 @@ test(
     await assertNoSidewaysScroll(visitor);
     await visitor.context().close();
 
-    // An account that has proved a different address is refused, at the
-    // page and at the server, and is no keeper after.
     await signInAs(page, address('stranger'), ['google']);
     const different = await expectInvitationRefused(page, path);
     await expect(page.getByRole('link', { name: 'Confirm Your Email' })).toHaveCount(0);
@@ -824,8 +736,6 @@ test(
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     await expectAdminArea(page, false);
 
-    // The invited address, not yet proved: refused with its own reason, and
-    // pointed at the email page with the way back.
     const { userId: invitee } = await signInAs(page, invited, ['microsoft'], 'user', {
       emailVerified: false,
     });
@@ -838,7 +748,6 @@ test(
     await confirm.click();
     await expect(page).toHaveURL(`/account/email?next=${encodeURIComponent(path)}`);
 
-    // It proves the address by the mailed link, and Continue brings it back to the invitation.
     await page.getByRole('button', { name: 'Send Confirmation' }).click();
     await expect(page.getByRole('main').getByRole('status')).toContainText(invited);
     const link = await mailedPath(invited, VERIFY_LINK);
@@ -855,8 +764,6 @@ test(
     await expect(page.getByRole('heading', { level: 1, name: 'Keepers' })).toBeVisible();
     await expectAdminArea(page, true);
 
-    // The ledger records both grants as the invitation's, made by the
-    // invitee, with the inviting admin's reason.
     await visit(page, `/keepers/privilege-changes?query=${encodeURIComponent(invited)}`);
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     await expect(rows).toHaveCount(2);
@@ -886,8 +793,7 @@ test(
   },
 );
 
-// The same invitation, to the curator role. The acceptance is the
-// admin's above; this proves what accepting it grants, and what it does not.
+// What accepting it grants, and what it does not.
 test(
   'an invitation to the curator role lands its invitee on /curator with the curation pages, and Keepers without People, both grants in the ledger',
   { tag: '@story-62' },
@@ -950,7 +856,6 @@ test(
     const withdrawn = await inviteAdmin(page, withdrawnEmail);
     const lapsed = await inviteAdmin(page, lapsedEmail);
 
-    // Each link is live to its own verified account before anything happens to it.
     const accounts: Record<string, string> = {};
     for (const [email, path] of [
       [usedEmail, used],
@@ -962,14 +867,12 @@ test(
       await expect(page.getByRole('button', { name: 'Accept Invitation' })).toBeVisible();
     }
 
-    // Used: accepted once, then opened again.
     await signInAgainAs(page, accounts[usedEmail]);
     await visit(page, used);
     await page.getByRole('button', { name: 'Accept Invitation' }).click();
     await expect(page).toHaveURL(/\/keepers$/);
     const usedReason = await expectInvitationRefused(page, used);
 
-    // Withdrawn: the admin revokes it from the list after confirming.
     await signInAgainAs(page, admin);
     await visit(page, '/keepers/invitations');
     const section = page.getByRole('region', { name: 'Keeper Invitations' });
@@ -984,9 +887,7 @@ test(
     await expect(
       section.getByRole('row', { name: new RegExp(withdrawnEmail.replace(/[.]/g, '\\.')) }),
     ).toHaveCount(0);
-    // Its Revoke went with the row: the page's heading has the focus.
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
-    // Still listed: the two that were not withdrawn, the lapsed one until it lapses.
     await expect(
       section.getByRole('row', { name: new RegExp(lapsedEmail.replace(/[.]/g, '\\.')) }),
     ).toBeVisible();
@@ -994,14 +895,12 @@ test(
     await signInAgainAs(page, accounts[withdrawnEmail]);
     const withdrawnReason = await expectInvitationRefused(page, withdrawn);
     await assertNoAccessibilityViolations(page);
-    // Sent straight to the server, the accept is refused there too.
     const refused = await sendFromPage(page, ACCEPT_INVITATION, {
       token: withdrawn.split('/').pop(),
     });
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     await expectAdminArea(page, false);
 
-    // Run out: its seven days backdated past, as time would.
     await withSql(
       (sql) => sql`
         update invitations set expires_at = now() - interval '1 second'
@@ -1012,7 +911,6 @@ test(
     const lapsedReason = await expectInvitationRefused(page, lapsed);
     await expectAdminArea(page, false);
 
-    // Three refusals, three reasons.
     expect(new Set([usedReason, withdrawnReason, lapsedReason]).size).toBe(3);
   },
 );

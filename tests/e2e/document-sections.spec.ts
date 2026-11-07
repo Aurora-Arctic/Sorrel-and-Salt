@@ -3,10 +3,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 
-// Each document page's sections and sources, as the reader meets them: the On This Page menu in order, each group a list of its
-// parts, each entry linking to its heading, and every source mark linking to its source and back. Written against the pages as
-// they were before their text moved into the database, so the same spec passing after the move proves the move kept them
-// (claude-docs/design-decisions/m15.59-document-editor-scope.md).
+// Each document page's sections and sources as the reader meets them (claude-docs/design-decisions/m15.59-document-editor-scope.md).
 
 interface Section {
   heading: string;
@@ -16,9 +13,7 @@ interface Section {
 interface DocumentShape {
   path: string;
   sections: readonly Section[];
-  /** What each source's entry opens with, in the order of the list. */
   sources: readonly string[];
-  /** How many marks cite each source, in the same order. */
   cites: readonly number[];
 }
 
@@ -150,7 +145,6 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The element a fragment link points at. */
 async function targetOf(page: Page, link: Locator): Promise<Locator> {
   const href = await link.getAttribute('href');
   expect(href).toMatch(/^#./);
@@ -196,7 +190,6 @@ for (const { path, sections, sources, cites } of DOCUMENTS) {
     await expect(marks).toHaveCount(cites.reduce((sum, count) => sum + count, 0));
     if (sources.length === 0) return;
 
-    // The first mark of source 1 finds the list; the list holds exactly the sources.
     const first = await targetOf(
       page,
       page.getByRole('link', { name: 'Source 1', exact: true }).first(),

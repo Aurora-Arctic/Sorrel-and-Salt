@@ -4,10 +4,6 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { insertSpell, localIngredient, seedCoven, withSql } from './stories/coven-ingredients';
 
-// Quick Look a spell from the grimoire list, for what the story does not walk: the filter kept in the address
-// beside ?spell=<id>, an ingredient step's eye opening its details over the modal at &entry=<id>, another
-// member's private spell and another coven's spell opening nothing, axe, and 375px.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -28,7 +24,6 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
       coven.users.B,
       'complete',
     );
-    // One ingredient step, laying the coven's own Testwort, for the eye the modal's step draws.
     const testwort = await localIngredient(sql, coven.id, coven.users.A);
     await sql.begin(async (tx) => {
       await tx`select set_config('app.current_user_id', ${coven.users.B}, true)`;
@@ -44,7 +39,6 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
   const other = await seedCoven(page, 'Fixture Coven Look X', 'spell-look-x.test', { D: 'owner' });
   const grimoire = `/coven/${coven.slug}/grimoire`;
 
-  // A member opens Quick Look from the eye; the filter stays in the address.
   await signInAgainAs(page, coven.users.B);
   await page.goto(`${grimoire}?query=fixture`);
   const eye = page.getByRole('link', { name: 'Quick Look Fixture Working' });
@@ -76,12 +70,10 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
   await expect(look).toBeVisible();
   await expect(stepEye).toBeFocused();
 
-  // Escape returns to the list with its filter.
   await page.keyboard.press('Escape');
   await expect(page).toHaveURL(`${grimoire}?query=fixture`);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  // Phone width: the modal is still reachable and closes with its button.
   await page.setViewportSize({ width: 375, height: 800 });
   await eye.click();
   const phone = page.getByRole('dialog', { name: 'Fixture Working' });
