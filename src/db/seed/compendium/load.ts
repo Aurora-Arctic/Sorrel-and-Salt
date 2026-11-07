@@ -10,7 +10,6 @@ import type { SeedCompendiumFile, SeedCompendiumShard, SeedWork } from '../types
 // The compendium's files read as one shard: entry files under `ingredients/<nomenclature>/`, per-entry sources under `sources/`, and `unaudited.txt`.
 // Synchronous, as the seed and the guard both want the whole corpus first. Reports only what stops it reading (a stray file, an unknown folder, a non-citation source); parse-entry.ts and guard.ts judge content.
 
-/** The repo's compendium folder, where `loadCompendium()` reads by default. */
 export const COMPENDIUM_ROOT = 'compendium';
 
 /** The template a new file is copied from, skipped by name: it is not an entry. */
@@ -20,15 +19,12 @@ export const TEMPLATE_FILE = 'base.md';
 export const UNAUDITED_LIST = 'unaudited.txt';
 
 export interface LoadedCompendium {
-  /** The absolute path of the folder read. */
   root: string;
-  /** Every file that parsed clean, in path order. */
   files: SeedCompendiumFile[];
   /** The per-entry sources, by handle, from `sources/<handle>.yaml`. The shared works are `WORKS`. */
   sources: Record<string, SeedWork>;
   /** One synthetic shard named `compendium`, so `checkCompendium` and the seed take the files as they took the literals. */
   shards: SeedCompendiumShard[];
-  /** The paths `unaudited.txt` lists, relative to the root. */
   unaudited: string[];
   /** What could not be read: a file's parse issues, a stray file, a folder for no naming system. */
   issues: string[];
@@ -140,7 +136,6 @@ export function pathList(text: string): string[] {
     .filter((line) => line !== '' && !line.startsWith('#'));
 }
 
-/** `unaudited.txt`'s paths; absent is empty. */
 function readUnaudited(root: string): string[] {
   const path = join(root, UNAUDITED_LIST);
   if (!existsSync(path)) return [];

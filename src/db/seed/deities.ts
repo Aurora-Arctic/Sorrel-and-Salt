@@ -18,7 +18,6 @@ import type {
 // here and re-derived on every seed (claude-docs/compendium/deity-vocabulary-seed.md, "The deity
 // vocabulary seed").
 
-/** The doc's traditions, in its order, which nothing reads — traditions list alphabetically. */
 export const DEITY_TRADITIONS: SeedDeityTradition[] = [
   {
     name: 'Greek',
@@ -434,9 +433,7 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
   },
 ];
 
-/** The doc's deities, in its order: each tradition's run in the traditions' order. */
 export const DEITIES: SeedDeity[] = [
-  // Greek
   {
     name: 'Adonis',
     tradition: 'Greek',
@@ -618,7 +615,6 @@ export const DEITIES: SeedDeity[] = [
       'Greek king of the gods, god of the sky, thunder, justice and the oak; Roman Jupiter.',
   },
 
-  // Roman
   {
     name: 'Bacchus',
     tradition: 'Roman',
@@ -742,7 +738,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Roman god of fire, volcanoes and the forge; Greek Hephaestus.',
   },
 
-  // Anatolian
   {
     name: 'Attis',
     tradition: 'Anatolian',
@@ -756,7 +751,6 @@ export const DEITIES: SeedDeity[] = [
       'Phrygian Great Mother of the gods, goddess of mountains, wild nature and fertility; Magna Mater.',
   },
 
-  // Egyptian
   {
     name: 'Amun',
     tradition: 'Egyptian',
@@ -874,7 +868,6 @@ export const DEITIES: SeedDeity[] = [
       'Egyptian ibis-headed god of writing, knowledge, magic, the Moon and the reckoning of time; also Djehuty.',
   },
 
-  // Sumerian
   {
     name: 'Enki',
     tradition: 'Sumerian',
@@ -893,7 +886,6 @@ export const DEITIES: SeedDeity[] = [
       'Sumerian goddess of love, war, fertility and the morning and evening star, who descended to the underworld; Queen of Heaven.',
   },
 
-  // Akkadian & Babylonian
   {
     name: 'Ishtar',
     tradition: 'Akkadian & Babylonian',
@@ -914,7 +906,6 @@ export const DEITIES: SeedDeity[] = [
       'Akkadian and Babylonian shepherd god of vegetation and its yearly death, consort of Ishtar; Sumerian Dumuzi, consort of Inanna.',
   },
 
-  // Canaanite & Phoenician
   {
     name: 'Anat',
     tradition: 'Canaanite & Phoenician',
@@ -943,7 +934,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Canaanite god of storms, rain and the fertility they bring; also Hadad.',
   },
 
-  // Persian
   {
     name: 'Anahita',
     tradition: 'Persian',
@@ -959,7 +949,6 @@ export const DEITIES: SeedDeity[] = [
       'Persian god of covenants, light and the rising sun, and of the Roman mysteries as Mithras.',
   },
 
-  // Norse
   {
     name: 'Baldur',
     tradition: 'Norse',
@@ -1050,7 +1039,6 @@ export const DEITIES: SeedDeity[] = [
       'Norse god of law, justice, oaths and war, who gave his hand to bind Fenrir; also Tiw.',
   },
 
-  // Anglo-Saxon & Continental Germanic
   {
     name: 'Berchta',
     tradition: 'Anglo-Saxon & Continental Germanic',
@@ -1079,7 +1067,6 @@ export const DEITIES: SeedDeity[] = [
       'Continental Germanic earth goddess of fertility and peace, carried among her people in a wagon, as Tacitus tells.',
   },
 
-  // Irish
   {
     name: 'Aengus',
     tradition: 'Irish',
@@ -1159,7 +1146,6 @@ export const DEITIES: SeedDeity[] = [
       'Irish god of eloquence, strength and writing, said to have made the ogham alphabet; also Oghma.',
   },
 
-  // Welsh
   {
     name: 'Arianrhod',
     tradition: 'Welsh',
@@ -1196,7 +1182,6 @@ export const DEITIES: SeedDeity[] = [
       'Welsh goddess of horses, birds, sovereignty and the Otherworld, whose birds wake the dead and lull the living.',
   },
 
-  // Gaulish & British
   {
     name: 'Belenus',
     tradition: 'Gaulish & British',
@@ -1229,7 +1214,6 @@ export const DEITIES: SeedDeity[] = [
       'Gaulish god of thunder and the sky, matched with Jupiter by the Romans and read by scholars as the wheel god.',
   },
 
-  // Slavic
   {
     name: 'Baba Yaga',
     tradition: 'Slavic',
@@ -1268,7 +1252,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Slavic god of the underworld, cattle, wealth, waters and magic; also Volos.',
   },
 
-  // Baltic
   {
     name: 'Laima',
     tradition: 'Baltic',
@@ -1289,7 +1272,6 @@ export const DEITIES: SeedDeity[] = [
       'Lithuanian goddess of the earth and everything that grows from it; also Zemynele.',
   },
 
-  // Finnish
   {
     name: 'Mielikki',
     tradition: 'Finnish',
@@ -1302,7 +1284,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Finnish god of the sky, weather, thunder and the rain the harvest needs.',
   },
 
-  // Hindu
   {
     name: 'Agni',
     tradition: 'Hindu',
@@ -1387,7 +1368,6 @@ export const DEITIES: SeedDeity[] = [
       'Hindu god who preserves the universe, returning as avatars such as Rama and Krishna.',
   },
 
-  // Taoist
   {
     name: 'Xi Wangmu',
     tradition: 'Taoist',
@@ -1396,7 +1376,6 @@ export const DEITIES: SeedDeity[] = [
       'Taoist Queen Mother of the West, goddess of immortality and keeper of the peaches of long life; also Xiwangmu, Hsi Wang Mu.',
   },
 
-  // Chinese Buddhist
   {
     name: 'Kuan Yin',
     tradition: 'Chinese Buddhist',
@@ -1405,7 +1384,6 @@ export const DEITIES: SeedDeity[] = [
       'Chinese Buddhist bodhisattva of compassion and mercy, honoured as a goddess in folk religion across East Asia; also Guanyin, Kwan Yin, Kannon.',
   },
 
-  // Chinese folk
   {
     name: 'Shennong',
     tradition: 'Chinese folk',
@@ -1413,7 +1391,6 @@ export const DEITIES: SeedDeity[] = [
       "Chinese folk religion's divine farmer, god of agriculture and herbal medicine, said to have tasted hundreds of herbs; the Divine Husbandman, Shen Nong.",
   },
 
-  // Japanese
   {
     name: 'Amaterasu',
     tradition: 'Japanese',
@@ -1443,7 +1420,6 @@ export const DEITIES: SeedDeity[] = [
       'Japanese Shinto god of the Moon and the night, brother of Amaterasu; also Tsukiyomi.',
   },
 
-  // Akan
   {
     name: 'Nyame',
     tradition: 'Akan',
@@ -1479,7 +1455,6 @@ export const DEITIES: SeedDeity[] = [
       'Akan obosom of Lake Bosomtwe, son of Nyame and Asase Yaa, honoured in the form of an antelope; also Bosomtwi, Bosumtwi.',
   },
 
-  // Igbo
   {
     name: 'Chukwu',
     tradition: 'Igbo',
@@ -1522,7 +1497,6 @@ export const DEITIES: SeedDeity[] = [
       'Igbo alusi of the yam and its farming, guardian of the farm, honoured at the planting festival; also Ahiajoku, Ahiajioku, Ifejioku.',
   },
 
-  // Fon & Ewe
   {
     name: 'Nana Buluku',
     tradition: 'Fon & Ewe',
@@ -1578,7 +1552,6 @@ export const DEITIES: SeedDeity[] = [
       "Fon and Ewe vodun of the sea and head of its pantheon, beside Sagbata's earth and Xevioso's thunder.",
   },
 
-  // Yoruba
   {
     name: 'Elegba',
     tradition: 'Yoruba',
@@ -1640,7 +1613,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Yoruba orisha of the sea, motherhood and protection; also Yemoja, Iemanja.',
   },
 
-  // Kongo
   {
     name: 'Nzambi Mpungu',
     tradition: 'Kongo',
@@ -1675,7 +1647,6 @@ export const DEITIES: SeedDeity[] = [
       'Kongo rainbow serpent of the waters and the rain, who climbs from the rivers to the sky.',
   },
 
-  // Zulu
   {
     name: 'Unkulunkulu',
     tradition: 'Zulu',
@@ -1705,7 +1676,6 @@ export const DEITIES: SeedDeity[] = [
       'Zulu goddess of rivers, a great water serpent of the deep pools whose favour is both sought and feared; also uMamlambo, Momlambo, Nomhoyi.',
   },
 
-  // Haitian Vodou
   {
     name: 'Baron Samedi',
     tradition: 'Haitian Vodou',
@@ -1738,7 +1708,6 @@ export const DEITIES: SeedDeity[] = [
       'Haitian Vodou lwa of the crossroads, gatekeeper between the living and the lwa, who opens every ceremony; also Legba.',
   },
 
-  // Aztec
   {
     name: 'Chalchiuhtlicue',
     tradition: 'Aztec',
@@ -1768,7 +1737,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Aztec goddess of flowers, love, beauty, fertility and weaving.',
   },
 
-  // Maya
   {
     name: 'Ixchel',
     tradition: 'Maya',
@@ -1777,7 +1745,6 @@ export const DEITIES: SeedDeity[] = [
       'Maya goddess of midwifery, medicine, weaving and fertility, the Moon in popular account; also Ix Chel, Chak Chel.',
   },
 
-  // Inca
   {
     name: 'Inti',
     tradition: 'Inca',
@@ -1790,7 +1757,6 @@ export const DEITIES: SeedDeity[] = [
       'Inca goddess of the earth, fertility, planting and harvest, honoured across the Andes still; Mother Earth.',
   },
 
-  // Hawaiian
   {
     name: 'Hina',
     tradition: 'Hawaiian',
@@ -1818,7 +1784,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Hawaiian goddess of volcanoes and fire, who dwells at Kilauea.',
   },
 
-  // Wicca
   {
     name: 'Horned God',
     tradition: 'Wicca',
@@ -1826,7 +1791,6 @@ export const DEITIES: SeedDeity[] = [
       'Wiccan and modern pagan god of the wild, the hunt, fertility and the dying and returning year.',
   },
 
-  // English folklore
   {
     name: 'Green Man',
     tradition: 'English folklore',
@@ -1840,7 +1804,6 @@ export const DEITIES: SeedDeity[] = [
       "English folklore's antlered hunter of Windsor Forest, honoured as a horned god in modern practice; Herne the Hunter.",
   },
 
-  // Italian folk witchcraft
   {
     name: 'Aradia',
     tradition: 'Italian folk witchcraft',
@@ -1848,7 +1811,6 @@ export const DEITIES: SeedDeity[] = [
       "Italian witch goddess of Leland's Aradia, or the Gospel of the Witches, daughter of Diana, who taught witchcraft to the oppressed.",
   },
 
-  // Greek
   {
     name: 'Achilles',
     tradition: 'Greek',
@@ -1967,7 +1929,6 @@ export const DEITIES: SeedDeity[] = [
       'Greek goddess and personification of peace, one of the Horae, daughter of Zeus and Themis.',
   },
 
-  // Roman
   {
     name: 'Hercules',
     tradition: 'Roman',
@@ -2013,7 +1974,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Roman goddess and personification of the dawn; Latin for dawn.',
   },
 
-  // Egyptian
   {
     name: 'Atum',
     tradition: 'Egyptian',
@@ -2046,7 +2006,6 @@ export const DEITIES: SeedDeity[] = [
       'God of silence, secrets and confidentiality, adapted by the Greeks of Ptolemaic Alexandria from the Egyptian child god Horus.',
   },
 
-  // Hindu
   {
     name: 'Brahma',
     tradition: 'Hindu',
@@ -2091,7 +2050,6 @@ export const DEITIES: SeedDeity[] = [
       'Hindu god and paradigmatic monk, a lord of yoga considered an avatar and combined form of Brahma, Vishnu and Shiva.',
   },
 
-  // Norse
   {
     name: 'Ran',
     tradition: 'Norse',
@@ -2111,7 +2069,6 @@ export const DEITIES: SeedDeity[] = [
       'Norse group of deities who shape the course of human destinies, often three goddesses, Urd, Verdandi and Skuld.',
   },
 
-  // Irish
   {
     name: 'Badb',
     tradition: 'Irish',
@@ -2143,7 +2100,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Irish sea god and personification of the sea, father of Manannan mac Lir.',
   },
 
-  // Welsh
   {
     name: 'Don',
     tradition: 'Welsh',
@@ -2168,7 +2124,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Welsh sea god, father of Bran, Branwen and Manawydan, related to the Irish Ler.',
   },
 
-  // Gaulish & British
   {
     name: 'Brigantia',
     tradition: 'Gaulish & British',
@@ -2182,7 +2137,6 @@ export const DEITIES: SeedDeity[] = [
       'Romano-British goddess of wells and springs, known from inscriptions near Carrawburgh on Hadrian’s Wall.',
   },
 
-  // Aztec
   {
     name: 'Centeotl',
     tradition: 'Aztec',
@@ -2219,7 +2173,6 @@ export const DEITIES: SeedDeity[] = [
       'Aztec patron god of commerce and travellers, especially business travellers; his symbol is a bundle of sticks.',
   },
 
-  // Buddhist
   {
     name: 'Buddha',
     tradition: 'Buddhist',
@@ -2227,7 +2180,6 @@ export const DEITIES: SeedDeity[] = [
       'Siddhartha Gautama, the wandering religious teacher of the 6th or 5th century BCE who founded Buddhism; “the awakened one”.',
   },
 
-  // Jewish
   {
     name: 'Yahweh',
     tradition: 'Jewish',
@@ -2235,7 +2187,6 @@ export const DEITIES: SeedDeity[] = [
       'Ancient Semitic deity of the southeastern Levant who became the national god of the Iron Age kingdoms of Israel-Samaria and Judah.',
   },
 
-  // Christian
   {
     name: 'Raphael',
     tradition: 'Christian',
@@ -2243,7 +2194,6 @@ export const DEITIES: SeedDeity[] = [
       'Archangel whose name means “God has healed”, first mentioned in the Book of Tobit and in 1 Enoch.',
   },
 
-  // Persian
   {
     name: 'Zoroaster',
     tradition: 'Persian',
@@ -2252,7 +2202,6 @@ export const DEITIES: SeedDeity[] = [
       'Iranian religious reformer and spiritual founder of Zoroastrianism, traditionally believed to have authored the Gathas.',
   },
 
-  // Akkadian & Babylonian
   {
     name: 'Tiamat',
     tradition: 'Akkadian & Babylonian',
@@ -2260,7 +2209,6 @@ export const DEITIES: SeedDeity[] = [
       'Mesopotamian cosmic ocean that mates with Abzu to produce the Babylonian pantheon in the Enuma Elish.',
   },
 
-  // Sumerian
   {
     name: 'Belili',
     tradition: 'Sumerian',
@@ -2268,7 +2216,6 @@ export const DEITIES: SeedDeity[] = [
       'Mesopotamian goddess, a sister of Dumuzi in the texts on his death and a primordial deity paired with Alala.',
   },
 
-  // Japanese
   {
     name: 'Izanami',
     tradition: 'Japanese',
@@ -2276,7 +2223,6 @@ export const DEITIES: SeedDeity[] = [
       'Japanese Shinto mother goddess, creator of both creation and death, who with her brother-husband Izanagi was among the last of seven generations of primordial deities.',
   },
 
-  // Maya
   {
     name: 'Ek Chuah',
     tradition: 'Maya',
@@ -2284,7 +2230,6 @@ export const DEITIES: SeedDeity[] = [
       'Postclassic Maya merchant deity, known as God M in the classification of codical gods.',
   },
 
-  // Hawaiian
   {
     name: 'Kanaloa',
     tradition: 'Hawaiian',
@@ -2298,7 +2243,6 @@ export const DEITIES: SeedDeity[] = [
     description: 'Hawaiian god of thunder, brother of Pele and Hiiaka, born of Haumea.',
   },
 
-  // Polynesian
   {
     name: 'Maui',
     tradition: 'Polynesian',
@@ -2306,7 +2250,6 @@ export const DEITIES: SeedDeity[] = [
       'Great culture hero and trickster of Polynesian mythology, very rarely worshipped and more a demigod and folk hero than a deity.',
   },
 
-  // English folklore
   {
     name: 'Puck',
     tradition: 'English folklore',
@@ -2315,7 +2258,6 @@ export const DEITIES: SeedDeity[] = [
       'Demon or fairy of English folklore, a domestic or nature sprite, also known as a goodfellow.',
   },
 
-  // Inuit
   {
     name: 'Sedna',
     tradition: 'Inuit',
@@ -2323,7 +2265,6 @@ export const DEITIES: SeedDeity[] = [
       'Inuit goddess of the sea and marine animals, the Mother of the Sea, who rules Adlivun, the underworld.',
   },
 
-  // Scottish Gaelic
   {
     name: 'Cailleach',
     tradition: 'Scottish Gaelic',

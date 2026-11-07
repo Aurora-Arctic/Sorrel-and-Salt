@@ -44,10 +44,8 @@ export interface SeedRunOptions {
   dryRun?: boolean;
 }
 
-/** The stamps `applyAudit('insert', …)` supplies, so a caller's row is typed without them. */
 export type InsertStamps = StampField;
 
-/** Typed against the insert model, so a column renamed in users.ts fails here. */
 export type SeedUser = Pick<
   typeof users.$inferInsert,
   'id' | 'name' | 'email' | 'role' | 'emailVerified'
@@ -157,7 +155,6 @@ export type SeedSpell = Pick<
 // The reference vocabularies: the shape the two-tier ones share, then the
 // rows filed in each. Their tables are listed once, in src/db/vocabularies.ts.
 
-/** What every item row carries before its foreign key to its group. */
 export type TwoTierItemRow = Pick<
   ItemTable['$inferInsert'],
   'name' | 'slug' | 'seedKey' | 'description'
@@ -191,7 +188,6 @@ export type SeedCategoryGroup = Pick<
 >;
 
 export type SeedCategory = Pick<typeof categories.$inferInsert, 'name' | 'description'> & {
-  /** The `name` of the group in CATEGORY_GROUPS this belongs to. */
   group: string;
 };
 
@@ -204,14 +200,12 @@ export type SeedIngredientForm = Pick<
   typeof ingredientForms.$inferInsert,
   'name' | 'description'
 > & {
-  /** The `name` of the group in FORM_GROUPS this belongs to. */
   group: string;
 };
 
 export type SeedDeityTradition = Pick<typeof deityTraditions.$inferInsert, 'name' | 'description'>;
 
 export type SeedDeity = Pick<typeof deities.$inferInsert, 'name' | 'description'> & {
-  /** The `name` of the tradition in DEITY_TRADITIONS this is filed under. */
   tradition: string;
   /**
    * The other names the deity answers to: a spelling or a by-name
@@ -225,7 +219,6 @@ export type SeedAstrologyValue = Pick<
   'name' | 'description' | 'position'
 >;
 
-/** A link from a seeded source to a deity, with where in the work it points. */
 export interface SeedSourceDeity {
   name: string;
   locator?: string;
@@ -307,7 +300,6 @@ export interface SeedCitation<Field extends string> {
  */
 export type SeedSubstitute = { identity: string; form?: string } | { name: string };
 
-/** One form of a compendium entry, and what that form adds to it. */
 export type SeedCompendiumVariant = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
   Partial<
     Pick<
@@ -364,7 +356,6 @@ export type SeedCompendiumEntry = Pick<
  */
 export type CompendiumFileStatus = 'draft' | 'needs-review' | 'approved';
 
-/** The two trailing sections an entry file may end with, neither hashed nor seeded. */
 export interface CompendiumFileSections {
   /** `#### Questions for the Curator`: the doubt a `needs-review` file asks the curator to settle. */
   questions?: string;
@@ -377,7 +368,6 @@ export interface CompendiumFileSections {
  * and what the file says about it that the seed does not store.
  */
 export interface SeedCompendiumFile {
-  /** Relative to the compendium root: `ingredients/botanical/aspen-populus-tremuloides.md`. */
   path: string;
   status: CompendiumFileStatus;
   /** The hash the curator marked for update, when the file carries one. */
@@ -385,7 +375,6 @@ export interface SeedCompendiumFile {
   /** Only beside `seedUpdate`: the update may overwrite an editor's or curator's work. */
   overwriteEditor?: true;
   entry: SeedCompendiumEntry;
-  /** `contentHash(entry)`, as the file stands. */
   hash: string;
   sections: CompendiumFileSections;
 }
@@ -401,7 +390,6 @@ export interface SeedCompendiumShard {
   entries: SeedCompendiumEntry[];
 }
 
-/** One of the audit's three ways a citation becomes a candidate. */
 export type AuditHeuristic = 'collision' | 'hatnote' | 'no-binomial';
 
 /**
@@ -410,16 +398,13 @@ export type AuditHeuristic = 'collision' | 'hatnote' | 'no-binomial';
  * variant, or both), since one answer settles them all.
  */
 export interface AuditCandidate {
-  /** The file, relative to the compendium root. */
   path: string;
-  /** The entry's formal name, which the source must print or resolve to. */
   canonicalName: string;
   source: string;
   /** The heading the source is cited under, from the locator or the source's title; absent only when neither gives one. */
   headedAs?: string;
   /** Where on the entry it is cited: `entry`, or a variant's form. */
   citedOn: string[];
-  /** Which heuristics marked it, in a fixed order. */
   heuristics: AuditHeuristic[];
   /** The other formal names the heading may mean, from the corpus and the hatnotes. */
   candidates: string[];
@@ -438,13 +423,9 @@ export interface AuditStated {
   taxon: string;
 }
 
-/** The audit's findings over a corpus. */
 export interface AuditReport {
-  /** How many files with a formal name were read. */
   files: number;
-  /** How many citations were checked: those not yet `stated` or `resolved`. */
   citations: number;
-  /** Ranked, highest score first. */
   candidates: AuditCandidate[];
   stated: AuditStated[];
 }
@@ -459,17 +440,13 @@ export interface SeedWorking {
   /** The member who recorded it, and so the one stamped on every row. */
   recorder: string;
   status: 'draft' | 'complete';
-  /** The day it was made, `YYYY-MM-DD`. */
   workedOn: string;
   note: string | null;
-  /** Never wider than its spell's. */
   visibility: 'private' | 'workspace';
   /** In order, from position 0: a coven member, or a name typed for someone without an account. */
   participants: ({ userId: string } | { name: string })[];
   deductions: {
-    /** The place of the spell step it took from. */
     stepPosition: number;
-    /** The id of the jar it took from, in `DEMO_STOCK`. */
     jarId: string;
     quantity: string;
     unit: 'g';
@@ -520,12 +497,10 @@ export interface CovenTarget {
   authorId: string;
 }
 
-/** One of the site's documents as its markdown file holds it: the front matter's fields, and the text below it as the body. */
 export interface SeedDocument {
   key: string;
   title: string;
   lede: string;
-  /** The day version 1 is dated, at midnight UTC. */
   publishedOn: Date;
   body: string;
 }

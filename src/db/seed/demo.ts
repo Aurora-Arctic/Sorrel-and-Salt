@@ -123,7 +123,6 @@ function fromWorkspace(entry: SeedWorkspaceIngredient): NamedIngredient {
  */
 export const DEMO_STOCK: SeedStock[] = [
   ...STANDARD_STOCK,
-  // Own entries.
   {
     id: '00000000-0000-0000-0003-000000000001',
     ingredient: fromWorkspace(HEARTH_ASH),
@@ -703,7 +702,6 @@ export const DEMO_SPELLS: SeedSpell[] = [
       { body: 'Sit where the moonlight reaches and count breaths back from a hundred.' },
     ],
   },
-  // The drafts.
   {
     id: '00000000-0000-0000-0002-000000000028',
     title: 'Hearthstone Luck Charm',

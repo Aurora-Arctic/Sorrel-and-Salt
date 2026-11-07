@@ -10,7 +10,6 @@ import type { InsertStamps, SeedDatabase, SeedRunOptions, SeedTransaction } from
 // The moves every seed makes. Writes go through the handle the caller
 // gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
 
-/** Thrown inside the transaction to roll a dry run back, and caught outside it. */
 class DryRunRollback<T> extends Error {
   constructor(readonly result: T) {
     super('dry run');
@@ -74,7 +73,6 @@ export async function insertMissing<TTable extends PgTable, W, K>(
     existing: (tx: SeedTransaction) => Promise<Iterable<K>>;
     keyOf: (item: W) => K;
     toRow: (item: W) => Omit<PgInsertValue<TTable>, InsertStamps>;
-    /** Who the rows are stamped by: the bootstrap user unless a seeded row is a member's own. */
     session?: AuditSession;
   },
 ): Promise<void> {
