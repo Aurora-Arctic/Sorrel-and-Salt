@@ -71,12 +71,14 @@ export default function RouteModal({
       {...heading}
       size={size}
       readingBody={readingBody}
-      loading={!content}
+      loading={!content || content.loading}
       foot={content?.foot}
       onClose={close}
       returnTo={backTo}
     >
-      {(done) => (content ? content.body(done) : (loadingBody ?? <ModalLoading />))}
+      {(done) =>
+        content && !content.loading ? content.body(done) : (loadingBody ?? <ModalLoading />)
+      }
     </Modal>
   );
 }

@@ -6,7 +6,7 @@ import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import type { DuplicateQuickLookQuery } from '../../gql/graphql';
 import { graphqlQuery } from '../../lib/graphql-client';
-import { headingOf } from '../IngredientEntry/details-dialog';
+import { headingOf } from '../IngredientEntry/details-parts';
 import { detailsHeading, detailsMarks } from '../IngredientEntry/details';
 import IngredientSummary from '../IngredientEntry/summary';
 import type { SummaryJar } from '../IngredientEntry/types';

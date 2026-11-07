@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render as draw, screen, waitFor, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -27,6 +27,23 @@ const ENTRY = {
 };
 const DETAILS_NAME = 'Testwort';
 
+/** Draws the dialog and waits out its loading body: the window's head and foot load on first open. */
+const render = async (ui: Parameters<typeof draw>[0]) => {
+  const view = draw(ui);
+  if (screen.queryByRole('dialog')) {
+    await waitFor(
+      () =>
+        expect(
+          within(screen.getByRole('dialog'))
+            .queryAllByRole('status')
+            .filter((s) => s.textContent === 'Loading'),
+        ).toHaveLength(0),
+      { timeout: 3000 },
+    );
+  }
+  return view;
+};
+
 const dialog = () => screen.getByRole('dialog', { name: DETAILS_NAME });
 
 beforeEach(() => {
@@ -35,8 +52,8 @@ beforeEach(() => {
 });
 
 describe('DetailsDialog', () => {
-  it('draws the latest edit in the window when given one, and none when not', () => {
-    const { unmount } = render(
+  it('draws the latest edit in the window when given one, and none when not', async () => {
+    const { unmount } = await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{
@@ -51,7 +68,7 @@ describe('DetailsDialog', () => {
     );
     unmount();
 
-    render(
+    await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE }}
@@ -60,9 +77,9 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).queryByRole('button', { name: /^Edited/ })).not.toBeInTheDocument();
   });
 
-  it('draws the Reviewed badge once: the marks leave it out beside a review row', () => {
+  it('draws the Reviewed badge once: the marks leave it out beside a review row', async () => {
     const marks = { kind: 'compendium' as const, reviewedAt: '2026-10-01T09:30:00.000Z' };
-    const { unmount } = render(
+    const { unmount } = await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{
@@ -76,7 +93,7 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).queryByText(/Reviewed By Curator/)).not.toBeInTheDocument();
     unmount();
 
-    render(
+    await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE, marks }}
@@ -85,14 +102,14 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).getByText(/Reviewed By Curator/)).toBeInTheDocument();
   });
 
-  it('opens nothing while its address asks for nothing', () => {
-    render(<DetailsDialog closeHref={LIST} />);
+  it('opens nothing while its address asks for nothing', async () => {
+    await render(<DetailsDialog closeHref={LIST} />);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it("shows the entry's summary under its name, with a link to its full page", () => {
-    render(
+  it("shows the entry's summary under its name, with a link to its full page", async () => {
+    await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE, children: <p>A summary</p> }}
@@ -110,8 +127,8 @@ describe('DetailsDialog', () => {
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
-  it('draws no formal name over the title for an entry classified None with no formal name', () => {
-    render(
+  it('draws no formal name over the title for an entry classified None with no formal name', async () => {
+    await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{
@@ -139,8 +156,8 @@ describe('DetailsDialog', () => {
     ],
   ])(
     "draws the page's formal name over the title with its states, and its tip (%j)",
-    (formal, said, label) => {
-      render(
+    async (formal, said, label) => {
+      await render(
         <DetailsDialog
           closeHref={LIST}
           opened={{ heading: detailsHeading({ name: 'Testwort', ...formal }), pageHref: PAGE }}
@@ -156,9 +173,9 @@ describe('DetailsDialog', () => {
     },
   );
 
-  it("names the link for where it goes: the compendium's page, or the coven's own", () => {
+  it("names the link for where it goes: the compendium's page, or the coven's own", async () => {
     const COVEN_PAGE = '/coven/fixture-coven/ingredients/a1' as Route;
-    render(
+    await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{
@@ -177,7 +194,7 @@ describe('DetailsDialog', () => {
   });
 
   it("goes to the entry's page on a press of See in Compendium, as the site's link does", async () => {
-    render(
+    await render(
       <Navigating push={router.push}>
         <DetailsDialog
           closeHref={LIST}
@@ -194,7 +211,7 @@ describe('DetailsDialog', () => {
   });
 
   it('closes back to the list it opened over', async () => {
-    render(
+    await render(
       <DetailsDialog
         closeHref={LIST}
         opened={{ heading: detailsHeading(ENTRY), pageHref: PAGE }}
@@ -210,7 +227,7 @@ describe('DetailsDialog', () => {
 
   it('opens the edit modal at once over the details on a press of Edit, in the edit place', async () => {
     const editing = editHeading(ENTRY);
-    render(
+    await render(
       <Navigating push={router.push}>
         <RouteModalProvider>
           <DetailsDialog
@@ -266,27 +283,27 @@ describe('DetailsDialog', () => {
         </Navigating>,
       );
 
-    it('shows Toxic alone for an entry that is both cautioned and toxic', () => {
-      show({ toxic: true, safetyNotes: 'Keep from children.' });
+    it('shows Toxic alone for an entry that is both cautioned and toxic', async () => {
+      await show({ toxic: true, safetyNotes: 'Keep from children.' });
 
       expect(within(dialog()).getByText('Toxic')).toBeInTheDocument();
       expect(within(dialog()).queryByText('Caution')).not.toBeInTheDocument();
     });
 
-    it('draws the provenance badges the entry page does', () => {
-      const { unmount } = show({ kind: 'own' });
+    it('draws the provenance badges the entry page does', async () => {
+      const { unmount } = await show({ kind: 'own' });
       expect(within(dialog()).getByText('Local')).toBeInTheDocument();
       unmount();
 
-      const held = show({ kind: 'cupboard' });
+      const held = await show({ kind: 'cupboard' });
       expect(within(dialog()).getByText('Compendium')).toBeInTheDocument();
       held.unmount();
 
-      const annotated = show({ kind: 'cupboard', annotated: true });
+      const annotated = await show({ kind: 'cupboard', annotated: true });
       expect(within(dialog()).getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
       annotated.unmount();
 
-      show({ kind: 'cupboard', retired: true });
+      await show({ kind: 'cupboard', retired: true });
       expect(within(dialog()).getByRole('button', { name: 'Retired' })).toBeInTheDocument();
     });
   });
@@ -320,8 +337,8 @@ describe('DetailsDialog plus', () => {
   const before = (first: Node, second: Node) =>
     Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
 
-  it('puts the plus before the pencil while a coven that may add lacks the entry', () => {
-    show({ covens: [ONE, TWO], heldIn: [ONE.id] });
+  it('puts the plus before the pencil while a coven that may add lacks the entry', async () => {
+    await show({ covens: [ONE, TWO], heldIn: [ONE.id] });
 
     const add = within(dialog()).getByRole('button', { name: /^Add to My Ingredients: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
@@ -330,8 +347,8 @@ describe('DetailsDialog plus', () => {
     expect(within(dialog()).queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
   });
 
-  it("shows the card's check in the plus's place once every coven that may add holds it", () => {
-    show({ covens: [ONE, TWO], heldIn: [ONE.id, TWO.id] });
+  it("shows the card's check in the plus's place once every coven that may add holds it", async () => {
+    await show({ covens: [ONE, TWO], heldIn: [ONE.id, TWO.id] });
 
     const held = within(dialog()).getByRole('button', { name: /^In Every Cupboard: / });
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
@@ -339,8 +356,8 @@ describe('DetailsDialog plus', () => {
     expect(within(dialog()).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
   });
 
-  it('shows neither where the page gave no plus, the pencil alone', () => {
-    show();
+  it('shows neither where the page gave no plus, the pencil alone', async () => {
+    await show();
 
     // Why neither could show: the page would have given one for a viewer who may add.
     expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
@@ -369,8 +386,8 @@ describe('DetailsDialog from a compendium card', () => {
       </Navigating>,
     );
 
-  it('names the pencil Edit in Compendium and puts the dots after it', () => {
-    show(true);
+  it('names the pencil Edit in Compendium and puts the dots after it', async () => {
+    await show(true);
     const edit = within(dialog()).getByRole('link', { name: 'Edit in Compendium Testwort' });
     const more = within(dialog()).getByRole('button', { name: 'More for Testwort' });
     expect(Boolean(edit.compareDocumentPosition(more) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(
@@ -380,8 +397,8 @@ describe('DetailsDialog from a compendium card', () => {
     expect(within(dialog()).queryByRole('link', { name: 'Edit Testwort' })).toBeNull();
   });
 
-  it('names the pencil a plain Edit where the window is not the compendium card', () => {
-    show(false);
+  it('names the pencil a plain Edit where the window is not the compendium card', async () => {
+    await show(false);
     expect(within(dialog()).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
     expect(within(dialog()).queryByRole('link', { name: /^Edit in Compendium/ })).toBeNull();
   });
@@ -415,8 +432,8 @@ describe('DetailsDialog coven card controls', () => {
   const actions = (fields: object) =>
     covenCardActions({ ...entry, ...fields }, WORKSPACE_ID, 'fixture-coven', COVEN_LIST);
 
-  it("draws Edit at its address for a coven's own entry, with no Delete Ingredient and no menu, as the Edit Ingredient dialog holds Delete", () => {
-    render(
+  it("draws Edit at its address for a coven's own entry, with no Delete Ingredient and no menu, as the Edit Ingredient dialog holds Delete", async () => {
+    await render(
       view(true, {
         actions: actions({ editHref: OWN_EDIT, editHeading: editHeading(ENTRY) }),
       }),
@@ -430,8 +447,8 @@ describe('DetailsDialog coven card controls', () => {
     expect(within(dialog()).queryByRole('button', { name: /^More/ })).toBeNull();
   });
 
-  it('draws Annotate and More, holding Make It Ours and Remove, for a held compendium entry', () => {
-    render(
+  it('draws Annotate and More, holding Make It Ours and Remove, for a held compendium entry', async () => {
+    await render(
       view(true, {
         actions: actions({ annotateHref: ANNOTATE, mayMakeOurs: true, mayRemove: true }),
       }),
@@ -447,8 +464,8 @@ describe('DetailsDialog coven card controls', () => {
     expect(items.map((item) => item.textContent)).toEqual(['Make It Ours', 'Remove']);
   });
 
-  it('draws nothing for a role that may do nothing to the entry', () => {
-    render(view(true, { actions: actions({}) }));
+  it('draws nothing for a role that may do nothing to the entry', async () => {
+    await render(view(true, { actions: actions({}) }));
 
     // Why something could show: the entry is the coven's, with its card's name.
     expect(within(dialog()).getByRole('heading', { name: /^Testwort/ })).toBeInTheDocument();
@@ -456,8 +473,8 @@ describe('DetailsDialog coven card controls', () => {
     expect(within(dialog()).queryByRole('button', { name: /^(Delete|Remove|More)/ })).toBeNull();
   });
 
-  it("names a compendium list's Edit as its card does, with the formal name", () => {
-    render(
+  it("names a compendium list's Edit as its card does, with the formal name", async () => {
+    await render(
       view(true, {
         editAction: { href: EDIT, name: CARD_NAME, heading: editHeading(ENTRY) },
       }),
@@ -466,8 +483,8 @@ describe('DetailsDialog coven card controls', () => {
     expect(within(dialog()).getByRole('link', { name: `Edit ${CARD_NAME}` })).toBeInTheDocument();
   });
 
-  it('offers no Edit at all where the page gave neither', () => {
-    render(view(true, {}));
+  it('offers no Edit at all where the page gave neither', async () => {
+    await render(view(true, {}));
 
     expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: /^Edit/ })).toBeNull();
