@@ -36,11 +36,19 @@ describe('the error boundary', () => {
 });
 
 describe('the global error boundary', () => {
-  it('offers a way home and a report, and prints no message or stack', () => {
+  it('offers to retry, a way home and a report, and prints no message or stack', () => {
+    const retry = vi.fn();
     // It renders <html>, which cannot sit inside the test's <div>, so React
     // takes the document itself as the root.
-    const { container } = render(<GlobalError error={failure} />, { container: document });
+    // The boundary's props as Next passes them: the error and its retry.
+    const props = { error: failure, retry };
+    const { container } = render(<GlobalError {...props} />, {
+      container: document,
+    });
 
+    fireEvent.click(screen.getByRole('button', { name: 'Try Again' }));
+
+    expect(retry).toHaveBeenCalledTimes(1);
     expect(home()).toHaveAttribute('href', '/');
     expect(report()).toHaveAttribute('href', '/support?support=bug&error=500&ref=d1g3st');
     expect(container.textContent).not.toMatch(/secret_table|secret-file/);

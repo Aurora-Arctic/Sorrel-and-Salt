@@ -41,7 +41,7 @@ describe('StackTable pending rows', () => {
         empty="None"
       />,
     );
-    expect(screen.getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Testwort' })).toBeInTheDocument();
     expect(document.querySelector('table')).not.toHaveAttribute('aria-hidden');
   });
 });

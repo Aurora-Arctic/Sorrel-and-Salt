@@ -21,6 +21,7 @@ import type {
   TimeOutSupportSenderMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { rowCells } from '../../support/table';
 
 // The admin Support page, render-only: the page owns the reads, this owns what a viewer sees of a
 // request and sends from it (claude-docs/components/support-requests.md).
@@ -592,7 +593,7 @@ describe('An anonymised request', () => {
       .getAllByRole('columnheader')
       .findIndex((header) => header.textContent === 'Sender');
     expect(column).toBeGreaterThan(-1);
-    return within(row).getAllByRole('cell')[column];
+    return rowCells(row)[column];
   };
 
   it('leaves the Sender cell empty in its row, and names the link by the subject alone', () => {
@@ -1087,8 +1088,7 @@ describe('The views', () => {
     const first = screen.getByRole('row', { name: /First/ });
     expect(within(first).getByRole('button', { name: 'Sender Replied' })).toBeInTheDocument();
     const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
-    const cellIn = (row: HTMLElement, heading: string) =>
-      within(row).getAllByRole('cell')[columns.indexOf(heading)];
+    const cellIn = (row: HTMLElement, heading: string) => rowCells(row)[columns.indexOf(heading)];
     expect(
       within(cellIn(first, 'Sender')).getByRole('button', { name: 'Beta Tester' }),
     ).toBeInTheDocument();
@@ -1303,7 +1303,7 @@ describe('the date columns', () => {
     const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
     expect(columns).toContain('Created');
     expect(columns).toContain('Last From Sender');
-    const cells = within(screen.getByRole('row', { name: /The moon icon/ })).getAllByRole('cell');
+    const cells = rowCells(screen.getByRole('row', { name: /The moon icon/ }));
     expect(cells[columns.indexOf('Created')]).toHaveTextContent('2026-10-29 9:00 am');
     expect(cells[columns.indexOf('Last From Sender')]).toHaveTextContent('2026-10-30 2:05 pm');
   });

@@ -76,6 +76,27 @@ describe('InvitationAcceptance, for the account that already used a card', () =>
 
     expect(screen.queryByRole('link', { name: 'Start a Coven' })).toBeNull();
   });
+
+  // A refusal is the end of the page, so it leaves a way back to the site, with or without a coven to start.
+  it('leaves a refused account a way back to the home page', () => {
+    const { rerender } = render(
+      <InvitationAcceptance status="refused" message="Already accepted." />,
+    );
+    const toHome = () =>
+      screen.queryAllByRole('link').filter((link) => link.getAttribute('href') === '/');
+
+    expect(toHome()).toHaveLength(1);
+
+    rerender(
+      <InvitationAcceptance
+        status="refused"
+        message="You've already used this card."
+        startCovenHref={'/coven/new' as Route}
+      />,
+    );
+
+    expect(toHome()).toHaveLength(1);
+  });
 });
 
 describe('InvitationAcceptance', () => {

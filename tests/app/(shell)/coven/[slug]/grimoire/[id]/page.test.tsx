@@ -10,6 +10,7 @@ import { offerCategories } from '../../../../../../support/msw/ingredient-lookup
 // It proves the page guards itself, a refusal is the 404, and what the services give is drawn.
 
 const SPELL_ID = '0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
+const OTHER_SPELL_ID = '7b2e4f10-9c3d-4a8e-b1f2-5d6c7e8f9a0b';
 const COVEN = { id: 'c0ffee00-0000-4000-8000-000000000001', slug: 'fixture-coven' };
 const session = { user: { id: 'fixture-user' } };
 const requireSession = vi.fn(async () => session);
@@ -355,11 +356,19 @@ describe('the spell recipe page', () => {
     'is the 404 when the service refuses the spell (%s)',
     async (refusal) => {
       readSpell.mockRejectedValue(refusal);
-      await expect(Page(params('someone-elses-private'))).rejects.toThrow('NEXT_NOT_FOUND');
-      expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, 'someone-elses-private');
+      await expect(Page(params(OTHER_SPELL_ID))).rejects.toThrow('NEXT_NOT_FOUND');
+      expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, OTHER_SPELL_ID);
       expect(stepsOfSpells).not.toHaveBeenCalled();
     },
   );
+
+  // A malformed id is no spell at all: the page answers 404 without asking the database, which
+  // would refuse the cast as a fault and so draw the 500.
+  it('is the 404 for an id that is not a row id, and never reads the spell', async () => {
+    await expect(Page(params('not-a-row-id'))).rejects.toThrow('NEXT_NOT_FOUND');
+    await expect(generateMetadata(params('not-a-row-id'))).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(readSpell).not.toHaveBeenCalled();
+  });
 
   it('lets any other failure through rather than calling it a 404', async () => {
     readSpell.mockRejectedValue(new Error('database down'));
