@@ -12,6 +12,19 @@ const TERMS = [
 ];
 
 describe('HelpGlossary', () => {
+  it('heads the page with Help, then the search box, then Glossary beneath', () => {
+    render(<HelpGlossary terms={TERMS} />);
+
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Help' });
+    const h2 = screen.getByRole('heading', { level: 2, name: 'Glossary' });
+    expect(h1.compareDocumentPosition(screen.getByRole('search'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.getByRole('search').compareDocumentPosition(h2)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   it('lists each term as a term, in the order handed, each anchored by its slug', () => {
     render(<HelpGlossary terms={TERMS} />);
 

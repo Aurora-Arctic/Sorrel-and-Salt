@@ -10,8 +10,9 @@ const KIND = { faq: 'Question', article: 'Guide', term: 'Term' } as const;
 // list, so the empty and the unmatched cases say so in words (claude-docs/components/help-pages.md).
 const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactElement => (
   <div className="help-results">
-    <PageHeader title="Search Help" />
+    <PageHeader title="Help" />
     <HelpSearchForm query={query} />
+    <h2>Search Help</h2>
     {results.length > 0 ? (
       <ul className="help-results__list">
         {results.map((result) => (

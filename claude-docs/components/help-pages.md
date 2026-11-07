@@ -26,6 +26,10 @@ An article page answers 404 for a row that is not a public article, and for a ch
 
 Only the FAQ entries (`HelpIndex`) and the terms (`HelpGlossary`) carry an id, their slug. `renderMarkdown` gives each h2 and h3 an id from its text, so `HelpIndex` and `HelpGlossary` pass every slug, and the ids earlier answers took, as its `reserved` argument; no heading claims an anchor.
 
+## Headings
+
+Every help page but the front page (`/help`, and the staff index, whose h1 is Staff Help) is headed by a level-one "Help" ("Staff Help" on a staff article), then the search box, then the page's own title as a level-two heading: the article's title, "Glossary" or "Search Help". The document `<title>` and metadata keep the page's own title. The Markdown body is drawn with `renderMarkdown(body, placeholders, reserved, true)`, whose last argument moves every heading down a level (h2 becomes h3), so the outline stays h1, h2, h3; the seed text is unchanged. The glossary does the same for its definitions.
+
 ## Links to help
 
 `Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. The keepers and curator layouts link `/help/staff` as "Staff Help" in a `nav`.

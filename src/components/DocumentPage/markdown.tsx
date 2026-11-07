@@ -222,6 +222,8 @@ export function renderMarkdown(
   placeholders: DocumentPlaceholders = {},
   // Ids a heading must not take, for a page that anchors other elements by id.
   reserved: readonly string[] = [],
+  // A body drawn beneath a page title of its own: every heading moves down a level (h2 becomes h3).
+  lowerHeadings = false,
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
@@ -232,5 +234,11 @@ export function renderMarkdown(
   tree.children = frameTables(tree.children as ElementContent[]) as RootContent[];
   visitElements(tree, shapeFootnotes);
   const entries = sectionsOf(tree, reserved);
+  if (lowerHeadings) {
+    visitElements(tree, (element) => {
+      const level = /^h([1-5])$/.exec(element.tagName)?.[1];
+      if (level) element.tagName = `h${Number(level) + 1}`;
+    });
+  }
   return { content: reactProcessorFor(placeholders).stringify(tree) as ReactNode, entries };
 }

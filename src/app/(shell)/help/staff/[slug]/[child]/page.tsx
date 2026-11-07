@@ -19,6 +19,11 @@ export default async function Page({
     notFound();
   }
   return (
-    <HelpArticleView title={found.title} body={found.body} subpages={found.children.map(linkTo)} />
+    <HelpArticleView
+      heading="Staff Help"
+      title={found.title}
+      body={found.body}
+      subpages={found.children.map(linkTo)}
+    />
   );
 }

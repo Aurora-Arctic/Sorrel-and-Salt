@@ -11,14 +11,15 @@ const HelpGlossary = ({ terms }: HelpGlossaryProps): ReactElement => {
   // A heading in a definition never takes a term's id, or another definition's heading id.
   const reserved = terms.map((term) => term.slug);
   const definitions = terms.map((term) => {
-    const { content, entries } = renderMarkdown(term.body, {}, reserved);
+    const { content, entries } = renderMarkdown(term.body, {}, reserved, true);
     reserved.push(...entries.map(({ href }) => href.slice(1)));
     return content;
   });
   return (
     <div className="help-glossary">
-      <PageHeader title="Glossary" />
+      <PageHeader title="Help" />
       <HelpSearchForm />
+      <h2>Glossary</h2>
       <dl>
         {terms.map((term, index) => (
           <div key={term.slug} id={term.slug} className="help-glossary__entry">

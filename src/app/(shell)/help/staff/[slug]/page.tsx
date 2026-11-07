@@ -16,6 +16,11 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   if (found.kind !== 'article' || found.audience === 'public') notFound();
   if (found.parentSlug) permanentRedirect(helpPath(found) as Route);
   return (
-    <HelpArticleView title={found.title} body={found.body} subpages={found.children.map(linkTo)} />
+    <HelpArticleView
+      heading="Staff Help"
+      title={found.title}
+      body={found.body}
+      subpages={found.children.map(linkTo)}
+    />
   );
 }

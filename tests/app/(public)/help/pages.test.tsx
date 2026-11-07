@@ -205,8 +205,9 @@ describe('/help/[slug]', () => {
     render((await Page(article('testwort-guide'))) as React.ReactElement);
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-guide');
-    expect(screen.getByRole('heading', { level: 1, name: 'Testwort Guide' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: 'Testwort Section' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Help' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Testwort Guide' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Testwort Section' })).toBeInTheDocument();
     expect(linkHrefs()).toEqual(
       expect.arrayContaining([
         '/help/testwort-guide/testwort-signing-in',
@@ -289,8 +290,9 @@ describe('/help/[slug]/[child]', () => {
 
     expect(readHelpArticle).toHaveBeenCalledWith('testwort-signing-in');
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Testwort Signing In' }),
+      screen.getByRole('heading', { level: 2, name: 'Testwort Signing In' }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Help' })).toBeInTheDocument();
     expect(screen.getByRole('search')).toBeInTheDocument();
   });
 

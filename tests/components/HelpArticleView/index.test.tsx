@@ -20,16 +20,31 @@ const view = (body: string, subpages = SUBPAGES) =>
   render(<HelpArticleView title="Testwort Guide" body={body} subpages={subpages} />);
 
 describe('HelpArticleView', () => {
-  it('heads the page with the article title', () => {
+  it('heads the page with Help, then the search box, then the article title beneath', () => {
     view('A fixture body.');
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Testwort Guide' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Help' })).toBeInTheDocument();
+    const title = screen.getByRole('heading', { level: 2, name: 'Testwort Guide' });
+    expect(
+      screen.getByRole('heading', { level: 1 }).compareDocumentPosition(screen.getByRole('search')),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.getByRole('search').compareDocumentPosition(title)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('heads a staff article with Staff Help', () => {
+    render(
+      <HelpArticleView heading="Staff Help" title="Testwort Guide" body="Body." subpages={[]} />,
+    );
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Staff Help' })).toBeInTheDocument();
   });
 
   it('renders the body as Markdown: a heading, a list and a link to another help page', () => {
     view('## Testwort Section\n\n- one\n- two\n\nSee [the glossary](/help/glossary#steward).');
 
-    expect(screen.getByRole('heading', { level: 2, name: 'Testwort Section' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Testwort Section' })).toBeInTheDocument();
     const items = screen.getAllByRole('listitem').map((item) => item.textContent);
     expect(items).toEqual(expect.arrayContaining(['one', 'two']));
     expect(screen.getByRole('link', { name: 'the glossary' })).toHaveAttribute(

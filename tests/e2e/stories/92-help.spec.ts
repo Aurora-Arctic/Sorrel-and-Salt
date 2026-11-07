@@ -37,9 +37,9 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
     await test.step('the visitor opens an article, which lists its public sub page only', async () => {
       await page.getByRole('link', { name: new RegExp(HELP.guide.title) }).click();
       await expect(page).toHaveURL(new RegExp(`/help/${HELP.guide.slug}$`));
-      await expect(page.getByRole('heading', { level: 1, name: HELP.guide.title })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 2, name: HELP.guide.title })).toBeVisible();
       await expect(
-        page.getByRole('heading', { level: 2, name: 'Lighting the Testwort Hearth' }),
+        page.getByRole('heading', { level: 3, name: 'Lighting the Testwort Hearth' }),
       ).toBeVisible();
       await expect(
         page.getByRole('link', { name: new RegExp(HELP.staffKindling.title) }),
@@ -51,7 +51,7 @@ test.describe('Story 92: A Visitor Reads the Help Pages', { tag: '@story-92' }, 
       await page.getByRole('link', { name: new RegExp(HELP.kindling.title) }).click();
       await expect(page).toHaveURL(new RegExp(`/help/${HELP.guide.slug}/${HELP.kindling.slug}$`));
       await expect(
-        page.getByRole('heading', { level: 1, name: HELP.kindling.title }),
+        page.getByRole('heading', { level: 2, name: HELP.kindling.title }),
       ).toBeVisible();
       await assertNoAccessibilityViolations(page);
     });

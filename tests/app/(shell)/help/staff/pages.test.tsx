@@ -214,11 +214,12 @@ describe('/help/staff/[slug]', () => {
     render((await Page(article('testwort-vocabularies'))) as React.ReactElement);
 
     expect(readStaffHelpArticle).toHaveBeenCalledWith(CURATOR, 'testwort-vocabularies');
+    expect(screen.getByRole('heading', { level: 1, name: 'Staff Help' })).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Testwort Vocabularies' }),
+      screen.getByRole('heading', { level: 2, name: 'Testwort Vocabularies' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Testwort Staff Section' }),
+      screen.getByRole('heading', { level: 3, name: 'Testwort Staff Section' }),
     ).toBeInTheDocument();
     expect(linkHrefs()).toEqual(
       expect.arrayContaining([
@@ -302,7 +303,8 @@ describe('/help/staff/[slug]/[child]', () => {
     render((await Page(child('testwort-vocabularies', 'testwort-forms'))) as React.ReactElement);
 
     expect(readStaffHelpArticle).toHaveBeenCalledWith(CURATOR, 'testwort-forms');
-    expect(screen.getByRole('heading', { level: 1, name: 'Testwort Forms' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Staff Help' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Testwort Forms' })).toBeInTheDocument();
     expect(screen.getByRole('search')).toBeInTheDocument();
   });
 

@@ -164,7 +164,7 @@ test.describe('the staff help pages', () => {
     await assertNoAccessibilityViolations(page);
 
     await page.getByRole('link', { name: new RegExp(HELP.curation.title) }).click();
-    await expect(page.getByRole('heading', { level: 1, name: HELP.curation.title })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: HELP.curation.title })).toBeVisible();
     await assertNoAccessibilityViolations(page);
 
     await page.getByRole('link', { name: new RegExp(HELP.curationForms.title) }).click();
@@ -172,7 +172,7 @@ test.describe('the staff help pages', () => {
       new RegExp(`/help/staff/${HELP.curation.slug}/${HELP.curationForms.slug}$`),
     );
     await expect(
-      page.getByRole('heading', { level: 1, name: HELP.curationForms.title }),
+      page.getByRole('heading', { level: 2, name: HELP.curationForms.title }),
     ).toBeVisible();
     await assertNoAccessibilityViolations(page);
 

@@ -28,6 +28,19 @@ const resultHrefs = () =>
   );
 
 describe('HelpSearchResults', () => {
+  it('heads the page with Help, then the search box, then Search Help beneath', () => {
+    render(<HelpSearchResults query="stock" results={RESULTS} />);
+
+    const h1 = screen.getByRole('heading', { level: 1, name: 'Help' });
+    const h2 = screen.getByRole('heading', { level: 2, name: 'Search Help' });
+    expect(h1.compareDocumentPosition(screen.getByRole('search'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.getByRole('search').compareDocumentPosition(h2)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   it('links each result, best first, as handed', () => {
     render(<HelpSearchResults query="stock" results={RESULTS} />);
 
