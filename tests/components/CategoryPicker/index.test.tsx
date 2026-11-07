@@ -8,8 +8,7 @@ import type {
   PickerGroup,
 } from '@/components/CategoryPicker/types';
 
-// The categories picked from one box, as a list field's entries are: the rows under their groups and each pick a chip in its group's colour.
-// It serves the form's category field and the ingredients filter (claude-docs/components/category-picker.md).
+// claude-docs/components/category-picker.md
 
 const fixtureWard: PickerGroup = {
   id: 'g-ward',
@@ -17,7 +16,6 @@ const fixtureWard: PickerGroup = {
   colorDark: '#4e8bc2',
   colorLight: '#0c5393',
 };
-// A group no code names: the picker knows groups only from the rows.
 const zanthic: PickerGroup = {
   id: 'g-zanthic',
   name: 'Zanthic Oddments',
@@ -38,8 +36,6 @@ const category = (
   description?: string,
 ): PickerCategory => ({ id, name, group, description });
 
-// In the order the vocabulary read gives them, groups and names alphabetical
-// : the picker keeps the order it is given.
 const CATEGORIES: PickerCategory[] = [
   category('c-cn', 'Cinderfix', ashen),
   category('c-tc', 'Testcraft', fixtureWard),
@@ -62,7 +58,6 @@ function renderPicker(props: Partial<CategoryPickerProps> = {}) {
   return { onChange };
 }
 
-/** The picker holding its own picks, as the form holds them for it. */
 function renderControlled(initial: string[] = [], props: Partial<CategoryPickerProps> = {}) {
   function Controlled() {
     const [value, setValue] = useState(initial);
@@ -77,7 +72,6 @@ const open = () =>
 const type = (text: string) => fireEvent.change(box(), { target: { value: text } });
 const option = (name: string) => screen.getByRole('option', { name: new RegExp(`^${name}`) });
 const removeButton = (name: string) => screen.getByRole('button', { name: `Remove ${name}` });
-/** An entry's chip: the row around its x. */
 const entry = (name: string) => removeButton(name).closest('li')!;
 const changes = () => screen.getByRole('status', { name: 'Categories changes' });
 
@@ -89,9 +83,7 @@ describe('CategoryPicker', () => {
     expect(box()).toHaveAccessibleDescription('What it is used for.');
   });
 
-  // The order is the read's, sorted in SQL, so the picker sorts
-  // nothing. Groups and names here run against the alphabet, so a re-sort
-  // would read differently.
+  // The order is the read's, sorted in SQL: groups and names here run against the alphabet, so a re-sort would show.
   it('lists every category under its group in the order given, a novel group included', () => {
     renderPicker({
       categories: [
@@ -123,7 +115,6 @@ describe('CategoryPicker', () => {
         .getAllByRole('option')
         .map((row) => row.textContent),
     ).toEqual([expect.stringMatching(/^Testward/), expect.stringMatching(/^Testcraft/)]);
-    // A description reads beneath its row.
     expect(option('Testward')).toHaveTextContent('Guards nothing in particular.');
   });
 
@@ -156,7 +147,6 @@ describe('CategoryPicker', () => {
     expect(screen.queryByRole('option', { name: /^Zestwort/ })).not.toBeInTheDocument();
   });
 
-  // Each pick adds a chip, so the list stays open for the next, in the facet and a form alike.
   it('keeps the list open after a pick, with the focus in the box, for the next', () => {
     renderControlled();
 
@@ -169,8 +159,6 @@ describe('CategoryPicker', () => {
     expect(box()).toHaveFocus();
   });
 
-  // The ×, Backspace and the clear are Combobox's; what the picker does with
-  // each is its own.
   it('reports the picks in order through onChange, as one is added, removed, taken by Backspace or cleared', () => {
     const { onChange } = renderPicker({ value: ['c-zz', 'c-tw'] });
 
@@ -196,7 +184,6 @@ describe('CategoryPicker', () => {
     expect(removeButton('Testward')).toHaveAccessibleDescription(
       'Fixture Wards Guards nothing in particular.',
     );
-    // No description: the group alone.
     expect(removeButton('Ablefix')).toHaveAccessibleDescription('Zanthic Oddments');
     fireEvent.mouseEnter(
       within(entry('Testward')).getByText('Testward', { ignore: '[role="tooltip"]' }),
@@ -204,7 +191,6 @@ describe('CategoryPicker', () => {
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Fixture Wards');
   });
 
-  // Nothing typed is a category, so Enter adds only the one the text names whole.
   it('adds on Enter the one category the text names whole, and nothing for part of a name', () => {
     renderControlled();
 
@@ -254,7 +240,6 @@ describe('CategoryPicker', () => {
     expect(screen.getByRole('combobox')).not.toHaveAttribute('aria-busy');
   });
 
-  // An edit's picks arrive before the categories do.
   it('holds a pick the categories do not name yet while they are read, then draws it by its id', () => {
     const { rerender } = render(
       <CategoryPicker {...PROPS} categories={[]} pending value={['c-gone']} />,
@@ -265,8 +250,6 @@ describe('CategoryPicker', () => {
     expect(removeButton('c-gone')).toBeInTheDocument();
   });
 
-  // The filter reads the picker with counts: how many entries each
-  // category would leave.
   describe('with counts', () => {
     const counted = (): PickerCategory[] =>
       CATEGORIES.map((c) => ({
