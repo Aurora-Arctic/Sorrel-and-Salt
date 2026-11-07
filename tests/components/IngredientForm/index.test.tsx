@@ -45,10 +45,8 @@ import {
 import { server } from '../../support/msw/server';
 import type { CategoryNode, DuplicateNode } from './types';
 
-// The ingredient entry form. MSW answers the mutation in the shape /api/graphql answers (tests/support/msw/graphql.ts), so a server error is the route's own mapping rather than a hand-written body
-// (claude-docs/components/ingredient-form.md).
+// claude-docs/components/ingredient-form.md
 
-/** Renders the form with every lookup answered empty; a test about a lookup answers it after rendering, since the later answer wins. The categories are read as the form opens, so a test about them passes them in. */
 function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refused' } = {}) {
   const onSaved = vi.fn();
   offerNothing();
@@ -59,18 +57,14 @@ function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refuse
   return onSaved;
 }
 
-/** A closed set's box: a combobox too, select-only. */
 const select = box;
-/** Opens a multi-select's box, picks each choice in turn, and closes it: it stays open between picks. */
 const chooseEach = (name: string, ...labels: string[]) => {
   fireEvent.click(select(name));
   const list = screen.getByRole('listbox', { name: `${name} choices` });
   for (const label of labels) fireEvent.click(within(list).getByRole('option', { name: label }));
   fireEvent.keyDown(select(name), { key: 'Escape' });
 };
-/** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
 const save = () => press('Save Ingredient');
-/** Presses Save & Add Another, the secondary save, focusing it first as `save` does. */
 const saveAnother = () => press('Save & Add Another');
 /** Types an entry into a list's box and presses its Add button. */
 const addEntry = (entry: string, value: string) => {

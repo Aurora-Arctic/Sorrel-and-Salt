@@ -20,8 +20,7 @@ import {
   offerDuplicates,
 } from '../../support/msw/ingredient-lookups';
 
-// The ingredient form's autosave: what it sends, to whom, and what it keeps in the browser. The save
-// machinery itself is the engine's, tests/lib/autosave/use-autosave.test.tsx.
+// The save machinery itself is tests/lib/autosave/use-autosave.test.tsx's.
 
 const USER = 'u1';
 const SAVED: IngredientFormValues = {

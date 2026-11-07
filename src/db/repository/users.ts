@@ -37,10 +37,8 @@ export async function findUserByEmail(
   return row;
 }
 
-/** The user list's order, by name and then id. */
 const USER_ORDER: readonly SortPart[] = [users.name];
 
-/** The users the list holds under `filter`: all but the three system users, narrowed by its arms. */
 function listedUsers(filter: UserFilter): SQL | undefined {
   return and(
     ne(users.id, BOOTSTRAP_USER_ID),
@@ -165,7 +163,6 @@ export function findPrivilegeChangeCount(
   );
 }
 
-/** The ledger filter's arms, each `undefined` when its part is absent. */
 function privilegeChangeArms({
   userId,
   privilege,
@@ -182,7 +179,6 @@ function privilegeChangeArms({
   ];
 }
 
-/** The filter's arms, each `undefined` when its part is absent. */
 function userArms({
   query,
   awaitingApproval,
@@ -204,7 +200,6 @@ function userArms({
   ];
 }
 
-/** A user's name or address holds `query`: the user list's match, and the ledger's by subject. */
 function nameOrEmailHolds(query: string): SQL | undefined {
   return or(containsText(users.name, query), containsText(users.email, query));
 }
@@ -222,7 +217,6 @@ export async function findOwnProviderIds(userId: string): Promise<string[]> {
   return rows.map(({ providerId }) => providerId);
 }
 
-/** Whether this user holds a passkey, for the lockout mail. Only the answer leaves. */
 export async function findHoldsPasskey(userId: string): Promise<boolean> {
   // Neither `passkeys` nor `verifications` carries `deleted_at`, so the filter adds nothing today.
   const rows = await selectFrom(
@@ -256,7 +250,6 @@ export async function findNewestResetToken(
   return newest?.identifier.slice(RESET_IDENTIFIER_PREFIX.length);
 }
 
-/** How Better Auth names a reset link's row in `verifications`: this, then the token. */
 const RESET_IDENTIFIER_PREFIX = 'reset-password:';
 
 export function userWrites({

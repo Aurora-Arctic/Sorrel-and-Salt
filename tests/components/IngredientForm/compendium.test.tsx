@@ -56,18 +56,14 @@ import {
   offerReferences,
 } from '../../support/msw/ingredient-lookups';
 
-// The form on the compendium, and only what the mode changes: written with no coven, so every lookup asks with a null `workspaceId`, the vocabulary boxes are picked from the curated rows,
-// a substitute is picked from the compendium, the classification is required, and an entry given to it is edited, saved over and deleted.
-// A pick-only list box on its own is list-field.test.tsx's, and what the form does in either mode is index.test.tsx's (claude-docs/components/ingredient-form.md, "Stories and tests").
+// claude-docs/components/ingredient-form.md, "Stories and tests"
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-// The Reviewed and Shown switches read the router to refresh the page after a save.
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const OTHER_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const CATEGORY_ID = 'c4a8e2f1-7b3d-4c9e-a6f5-1d2e3f4a5b6c';
 
-/** Testwort as an entry the form edits: a celestial body listed and a category filed. */
 const TESTWORT: IngredientFormValues = {
   ...EMPTY_VALUES,
   name: 'Testwort',
@@ -93,7 +89,6 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
   return { onSaved, onDeleted, asks };
 }
 
-/** A variant's Form box and a pick-only list's box on their own, as the compendium's form wires them, in a form of its own on the compendium's resolver. */
 function renderPickOnly() {
   const onSubmit = vi.fn();
   const Harness = () => {
@@ -132,11 +127,9 @@ function renderPickOnly() {
 const renderEntry = (values: IngredientFormValues = TESTWORT) =>
   renderForm({ entry: { id: ENTRY_ID, values } });
 
-/** A button at the form's foot, a save or a question's answer, by its role and name. */
 const button = (name: string) => screen.getByRole('button', { name });
 const noButton = (name: string) =>
   expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
-/** Focuses a box, types into it, and lets the debounce settle so its lookup asks. */
 async function search(name: string, text: string) {
   act(() => box(name).focus());
   type(name, text);
@@ -168,7 +161,6 @@ describe('IngredientForm on the compendium', () => {
     it('marks the classification required, refusing a save without one, then creates a compendium entry with no categories yet, and opens it', async () => {
       const calls = acceptCompendiumCreate();
       const { onSaved } = renderForm();
-      // A new entry keeps Save & Add Another, as a new coven ingredient does.
       expect(button('Save & Add Another')).toBeInTheDocument();
 
       expect(box('Classification')).toBeRequired();
@@ -192,9 +184,6 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
-    // What the compendium's page gives the form: where a near match links,
-    // the compendium's edit rather than a coven's ingredient page. Its Cancel
-    // is the discard guard's case below.
     it('links a near match where the page says', async () => {
       renderForm({ duplicateHref: (match) => `/curator/compendium?edit=${match.slug}` });
       offerDuplicates([
@@ -263,9 +252,7 @@ describe('IngredientForm on the compendium', () => {
 
       type('Name', 'Testwort');
       await search('New Form', 'ro');
-      // A form is the compendium's pick, as the harness below has it. The
-      // list is in the document only once the lookup has settled (its "no
-      // matches" message), a tick after the debounce, so it is awaited.
+      // The list is in the document only once the lookup has settled, a tick after the debounce, so it is awaited.
       expect(
         within(await screen.findByRole('listbox', { name: 'New Form suggestions' })).queryByRole(
           'option',
@@ -283,9 +270,7 @@ describe('IngredientForm on the compendium', () => {
       }
     });
 
-    // Every row a pick-only box offers is the compendium's, so a heading
-    // saying so tells the admin nothing: the rows are listed flat. A list's
-    // pick-only box is list-field.test.tsx's; the Form box's is here.
+    // Every row a pick-only box offers is the compendium's, so the rows are listed flat.
     it('offer the Form box the curated forms alone, flat, and never the typed text', async () => {
       renderPickOnly();
       offerForms([
@@ -317,7 +302,6 @@ describe('IngredientForm on the compendium', () => {
       expect(within(forms).queryByRole('group')).not.toBeInTheDocument();
     });
 
-    // A variant's form typed rather than picked is variants.test.tsx's.
     it('hold a save while a pick-only box holds text', async () => {
       const onSubmit = renderPickOnly();
 
@@ -363,8 +347,6 @@ describe('IngredientForm on the compendium', () => {
   });
 
   describe('an entry given to it', () => {
-    // An edit of the compendium says so at its head, as an add, which
-    // writes nothing yet anyone reads, does not.
     it('says that it edits the compendium, as a new entry does not', () => {
       renderForm();
       expect(screen.queryByText(COMPENDIUM_EDIT_NOTICE)).not.toBeInTheDocument();
@@ -374,8 +356,6 @@ describe('IngredientForm on the compendium', () => {
       expect(screen.getByText(COMPENDIUM_EDIT_NOTICE)).toBeInTheDocument();
     });
 
-    // The Reviewed switch is a field of the form, offered by the page to a
-    // curator or admin: Save carries it, Cancel drops it, and it never saves on its own.
     describe('the Reviewed switch', () => {
       const reviewSwitch = () => screen.getByRole('switch', { name: 'Reviewed' });
       const noSwitch = () => expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
@@ -457,7 +437,6 @@ describe('IngredientForm on the compendium', () => {
         await waitFor(() => expect(review).toHaveLength(1));
         expect(saves).toHaveLength(1);
         expect(review[0]).toEqual({ id: REVIEW_ID, reviewed: true });
-        // Saved, so nothing is left to save until it changes again.
         await waitFor(() => expect(button('Save Ingredient')).toBeDisabled());
       });
 
@@ -516,9 +495,6 @@ describe('IngredientForm on the compendium', () => {
       });
     });
 
-    // Shown in Compendium is a field of the form after Reviewed: a flip changes the form and writes
-    // nothing, and Save sends it in the entry's own create or update. An add starts from its categories
-    // until the curator flips it.
     describe('the Shown in Compendium switch', () => {
       const shownSwitch = () => screen.getByRole('switch', { name: 'Shown in Compendium' });
 
@@ -747,9 +723,6 @@ describe('IngredientForm on the compendium', () => {
       },
     );
 
-    // An edit renames what exists rather than making another, so a near
-    // match warns and holds nothing, and the entry
-    // is never its own near match.
     it('saves a rename near another entry at once, the match named but not itself, and nothing to set aside', async () => {
       const calls = acceptUpdate();
       renderEntry();
@@ -817,7 +790,6 @@ describe('IngredientForm on the compendium', () => {
       expect(asked).toEqual([{ id: ENTRY_ID }]);
     });
 
-    // Cancel, and the focus on it, are the modal's case below.
     it('deletes it once confirmed, and says why when the delete is refused', async () => {
       const { onDeleted } = renderEntry();
       mockGraphQLError('DeleteCompendiumIngredient', {
@@ -826,7 +798,6 @@ describe('IngredientForm on the compendium', () => {
       });
 
       fireEvent.click(button('Delete Ingredient'));
-      // The question names it, as the group it draws is named by the question.
       expect(screen.getByRole('group', { name: /Testwort/ })).toBeInTheDocument();
       await act(async () => {
         fireEvent.click(button('Delete'));
@@ -844,9 +815,6 @@ describe('IngredientForm on the compendium', () => {
     });
   });
 
-  // Its questions are asked over the form, as the unsaved changes' is
-  // : the long form inert behind each, and the
-  // focus on its safe answer, Cancel.
   describe('an entry given to it, in a modal', () => {
     const renderInDialog = () =>
       renderInModal((done) => (

@@ -10,8 +10,7 @@ const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsLink } = await import('@/components/IngredientEntry/details-link');
 const { DETAILS_PLACE, detailsHeading } = await import('@/components/IngredientEntry/details');
 
-// An entry's Quick Look in a list: the icon beside its name, a link to the list's own address with `?entry=`.
-// A plain press opens it at once as the details modal over the list; a new tab, or a press before the script loads, opens that address (claude-docs/components/ingredient-entry.md, "The details modal").
+// claude-docs/components/ingredient-entry.md, "The details modal"
 
 const DETAILS: Route = '/curator/compendium?entry=testwort';
 const heading = detailsHeading({
@@ -54,7 +53,6 @@ describe('DetailsLink', () => {
 
     expect(handled).toBe(false);
     expect(router.push).toHaveBeenCalledWith(DETAILS, { scroll: false });
-    // One dialog: the press shows in the details place, not the edit modal's too.
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(screen.getByRole('dialog', { name: 'Testwort' })).toBeInTheDocument();
   });

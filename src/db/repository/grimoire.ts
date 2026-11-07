@@ -23,7 +23,6 @@ import { weightedSearch } from './weighted-search';
 
 // The grimoire list's read, apart from `spells.ts` so `finders.ts` and this file do not import each other.
 
-/** An instant, newest first: a page's key is ascending, so it is negated. */
 const newestFirst = (column: typeof spells.updatedAt | typeof spells.createdAt): SortPart => ({
   // `numeric` keeps the microseconds a `Date` would drop from a cursor.
   expression: sql`-extract(epoch from ${column})`,
@@ -121,10 +120,8 @@ function categoryArms({ categoryIds = [], categoryMode = 'all' }: GrimoireQuery)
 
 type TextColumn = typeof spells.moonPhase | typeof spells.dayOfWeek;
 
-/** A free-text column as the facets compare it: trimmed, case set aside. */
 const folded = (column: TextColumn) => sql<string>`lower(btrim(${column}))`;
 
-/** The spell's text column is any of `values`, compared `folded`; a blank value matches nothing. */
 function textArm(column: TextColumn, values: readonly string[] | undefined): SQL[] {
   if (!values || values.length === 0) return [];
   return [

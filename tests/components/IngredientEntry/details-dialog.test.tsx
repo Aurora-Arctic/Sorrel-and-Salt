@@ -14,8 +14,7 @@ const { detailsHeading } = await import('@/components/IngredientEntry/details');
 const { editHeading } = await import('@/components/CompendiumList/heading');
 const { covenCardActions } = await import('@/components/CovenCards/actions');
 
-// The details modal over a list: a summary of the entry, a way through to its full page, and, for whoever may edit it, an Edit that opens the edit modal over it
-// (claude-docs/components/ingredient-entry.md, "The details modal").
+// claude-docs/components/ingredient-entry.md, "The details modal"
 
 const LIST: Route = '/curator/compendium';
 const PAGE = '/compendium/ingredients/testwort' as Route;
@@ -104,9 +103,7 @@ describe('DetailsDialog', () => {
       'href',
       PAGE,
     );
-    // Edit is offered only when the page gives one.
     expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).not.toBeInTheDocument();
-    // Only to read, with its links in the header: the body takes its own Tab stop.
     expect(within(dialog()).getByText('A summary').parentElement!.tabIndex).toBe(0);
   });
 
@@ -149,9 +146,7 @@ describe('DetailsDialog', () => {
 
       const dlg = screen.getByRole('dialog', { name: 'Testwort' });
       expect(within(dlg).getByText(said, { exact: false })).toBeInTheDocument();
-      // A tip says what the name is, the term being read by a screen reader only.
       expect(within(dlg).getByRole('button', { name: `About ${label}` })).toBeInTheDocument();
-      // No kicker: the title is the dialog's first heading, and nothing says "Ingredient".
       expect(within(dlg).queryByText('Ingredient')).not.toBeInTheDocument();
     },
   );
@@ -225,7 +220,6 @@ describe('DetailsDialog', () => {
         </RouteModalProvider>
       </Navigating>,
     );
-    // The cards' pencil, named for the entry; IconTip's own tests own its tip.
     const edit = within(dialog()).getByRole('link', { name: 'Edit Testwort' });
     expect(edit).toHaveAttribute('href', EDIT);
 
@@ -234,7 +228,6 @@ describe('DetailsDialog', () => {
     });
 
     expect(router.push).toHaveBeenCalledWith(EDIT, { scroll: false });
-    // The details stay open beneath the edit modal's skeleton.
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
     expect(
       screen.getByRole('dialog', { name: 'Edit Ingredient, Testwort, Fixtura testalis' }),
@@ -242,8 +235,6 @@ describe('DetailsDialog', () => {
     expect(dialog()).toBeInTheDocument();
   });
 
-  // The head: the entry's badges are the card's and the entry page's own components, with the safety badge beside the name,
-  // the formal name on its own line below it, the other badges in a row under that, and the Edit pencil last of what stands beside the name.
   describe('head', () => {
     const marks = (more: Record<string, unknown> = {}) => ({
       kind: 'compendium' as const,
@@ -292,8 +283,6 @@ describe('DetailsDialog', () => {
   });
 });
 
-// The plus beside the pencil, and the check once every coven the viewer may add in holds the
-// entry, as the entry page has them.
 describe('DetailsDialog plus', () => {
   const ID = '00000000-0000-4000-8000-0000000000aa';
   const ONE = { id: '00000000-0000-4000-8000-000000000001', name: 'Fixture Coven One' };
@@ -349,8 +338,6 @@ describe('DetailsDialog plus', () => {
   });
 });
 
-// The window opened from a compendium card follows it: the pencil
-// is Edit in Compendium, and the page's three dots come last, after the plus and the pencil.
 describe('DetailsDialog from a compendium card', () => {
   const show = (inCompendium: boolean) =>
     render(
@@ -387,8 +374,6 @@ describe('DetailsDialog from a compendium card', () => {
   });
 });
 
-// The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards use, so the window shows what the card shows for this entry and role:
-// Edit on the coven's own entry, Annotate and More on a compendium entry the cupboard holds.
 describe('DetailsDialog coven card controls', () => {
   const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
   const ID = '00000000-0000-4000-8000-0000000000bb';

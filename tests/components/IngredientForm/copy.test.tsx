@@ -18,8 +18,7 @@ import {
   twoForms,
 } from './variants-harness';
 
-// A variant's Copy From Ingredient buttons: each of an open variant's fields but its form fills from the ingredient's own, adding and never taking away.
-// Rendered by ./variants-harness.tsx, with the ingredient's own fields held in the form's values and its Description a box beside the field; a copy into the list fields, sent by the whole form's save, is variants.test.tsx's (claude-docs/components/ingredient-form.md, "The variants").
+// claude-docs/components/ingredient-form.md, "The variants"
 
 const save = () => press('Save Ingredient');
 
@@ -69,8 +68,6 @@ describe('copying from the ingredient', () => {
     expect(copyOf(oil, 'Safety Notes')).toHaveFocus();
   });
 
-  // Oil for Oil, and an ingredient in no such
-  // form skipped, since a variant's link names a form.
   it('links each substitute’s same form, skips one in no such form and says which, and keeps a name as a name', async () => {
     const onSubmit = renderVariants({ workspaceId: null, values: filled() });
     const oil = openWhole('Oil');
@@ -78,12 +75,10 @@ describe('copying from the ingredient', () => {
 
     fireEvent.click(copyOf(oil, 'Substitute Ingredients'));
 
-    // Tinctwort comes in no oil, and Plainwort in no form at all.
     const notice = skippedNotice(oil);
     expect(notice).toHaveTextContent(/Tinctwort/);
     expect(notice).toHaveTextContent(/Plainwort/);
     expect(notice).not.toHaveTextContent(/Oilwort|Fixture moss/);
-    // Announced once, by the region.
     expect(within(notice).queryAllByRole('alert')).toEqual([]);
     expect(within(notice).queryAllByRole('status')).toEqual([]);
     expect(
@@ -98,7 +93,6 @@ describe('copying from the ingredient', () => {
     ]);
   });
 
-  // An entry's citation may back what a form has no field for: its deities, say.
   it('copies a citation’s name basis, and of what it supports only what a form holds', async () => {
     const entry = filled();
     entry.references[0] = {

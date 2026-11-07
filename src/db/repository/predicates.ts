@@ -3,7 +3,6 @@ import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { SoftDeletable, VariantScoped, WordMatch, WorkspaceScoped } from './types';
 
-// The `where` predicates the finders and the writer share: tier scopes, the soft-delete filter and the text matches.
 // Nothing here builds a query; `readableIngredientParent` lives in `ingredient-parent.ts` because `select.ts` imports this file.
 
 /**
@@ -59,7 +58,6 @@ export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | und
   return deletedAt ? isNull(deletedAt) : undefined;
 }
 
-/** An end column that is null or still ahead: a time-out or pause with no end date, or one that has not run out. */
 export function noEndOrAhead(until: AnyPgColumn): SQL {
   return or(isNull(until), gt(until, sql`now()`)) as SQL;
 }
@@ -81,7 +79,6 @@ export function containsText(column: AnyPgColumn, query: string): SQL {
   return ilike(column, `%${query.replace(/[\\%_]/g, '\\$&')}%`);
 }
 
-/** `column` (cast to text) starts with `prefix`, case-insensitive, its `%` and `_` read literally. */
 export function startsWithText(column: AnyPgColumn, prefix: string): SQL {
   return ilike(sql`${column}::text`, `${prefix.replace(/[\\%_]/g, '\\$&')}%`);
 }
@@ -144,7 +141,6 @@ export function foldedWordMatch(query: string): WordMatch {
  */
 export const NATURAL_COLLATION = sql.raw('"en-US-x-icu"');
 
-/** `value` sorted under `NATURAL_COLLATION`: the one place the COLLATE clause is written. */
 export function naturally(value: SQL | AnyPgColumn): SQL {
   return sql`${value} collate ${NATURAL_COLLATION}`;
 }
