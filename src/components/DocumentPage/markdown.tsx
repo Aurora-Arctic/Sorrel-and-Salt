@@ -8,6 +8,7 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 import { MARK, shownText, type HelpTerms } from '../../lib/help-marks';
+import { widgetOf, type HelpWidgetName } from '../../lib/help-widgets';
 import { slugify } from '../../lib/slugify';
 import HelpTerm from '../HelpTerm';
 import type { PageNavEntry } from '../PageNav/types';
@@ -70,6 +71,21 @@ function markPlaceholders(
     if (name === undefined || !Object.prototype.hasOwnProperty.call(placeholders, name))
       return child;
     return { type: 'element', tagName: PLACEHOLDER_TAG, properties: { name }, children: [] };
+  });
+}
+
+/** The widgets a help page hands the renderer, by the name a body's `::widget[name]` tag gives. */
+export type HelpWidgets = Partial<Record<HelpWidgetName, ReactNode>>;
+
+/** The tag a widget paragraph becomes, so the React step can swap it for the widget the page handed over. */
+const WIDGET_TAG = 'help-widget';
+
+function markWidgets(children: ElementContent[], widgets: HelpWidgets): ElementContent[] {
+  return children.map((child) => {
+    if (!isElement(child) || child.tagName !== 'p' || child.children.length !== 1) return child;
+    const name = widgetOf(textOf(child));
+    if (name === undefined || widgets[name] === undefined) return child;
+    return { type: 'element', tagName: WIDGET_TAG, properties: { name }, children: [] };
   });
 }
 
@@ -169,7 +185,7 @@ function shapeCallouts(children: ElementContent[]): ElementContent[] {
   });
 }
 
-function reactProcessorFor(placeholders: DocumentPlaceholders) {
+function reactProcessorFor(placeholders: DocumentPlaceholders, widgets: HelpWidgets) {
   return unified().use(rehypeReact, {
     Fragment: runtime.Fragment,
     jsx: runtime.jsx,
@@ -177,6 +193,7 @@ function reactProcessorFor(placeholders: DocumentPlaceholders) {
     components: {
       [PLACEHOLDER_TAG]: ({ name }: { name: string }) => placeholders[name],
       [TERM_TAG]: HelpTerm,
+      [WIDGET_TAG]: ({ name }: { name: HelpWidgetName }) => widgets[name],
     },
   });
 }
@@ -326,6 +343,8 @@ export function renderMarkdown(
   // The glossary a help body marks its terms from. A caller that passes none (site documents) leaves `[[…]]` as text
   // and a callout as the blockquote it is written as.
   terms?: HelpTerms,
+  // The widgets a help page draws for its `::widget[name]` paragraphs. A caller that passes none keeps each tag as text.
+  widgets: HelpWidgets = {},
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
@@ -333,6 +352,7 @@ export function renderMarkdown(
     tree.children = markTerms(tree.children as ElementContent[], terms) as RootContent[];
     tree.children = shapeCallouts(tree.children as ElementContent[]) as RootContent[];
   }
+  tree.children = markWidgets(tree.children as ElementContent[], widgets) as RootContent[];
   tree.children = markPlaceholders(
     tree.children as ElementContent[],
     placeholders,
@@ -346,5 +366,8 @@ export function renderMarkdown(
       if (level) element.tagName = `h${Number(level) + 1}`;
     });
   }
-  return { content: reactProcessorFor(placeholders).stringify(tree) as ReactNode, entries };
+  return {
+    content: reactProcessorFor(placeholders, widgets).stringify(tree) as ReactNode,
+    entries,
+  };
 }
