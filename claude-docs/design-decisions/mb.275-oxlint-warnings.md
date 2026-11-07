@@ -1,6 +1,6 @@
 # Oxlint rules that are errors
 
-**Status:** decided. Live home: `claude-docs/commands.md`, "Oxlint" paragraph (the error and warning split, with a reason for each).
+**Status:** decided. Live home: `claude-docs/commands.md`, "The app" (the error and warning split, with a reason for each).
 
 ## Decision
 

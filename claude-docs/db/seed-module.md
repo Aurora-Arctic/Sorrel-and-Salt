@@ -1,4 +1,4 @@
-## The seed module (M1.21)
+## The seed module
 
 `src/db/seed/index.ts` exports `seed(db, { scenario })` — DESIGN.md's one
 module for Docker, Vitest and Playwright, so a bug reproduces identically in

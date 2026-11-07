@@ -1,4 +1,4 @@
-## The category seed (M4.3)
+## The category seed
 
 `src/db/seed/categories.ts` seeds DESIGN.md §6: eight `category_groups` rows,
 then the 101 `categories` that point at them. **It is not a scenario.**

@@ -1,4 +1,4 @@
-## The Membership proof (M6.3)
+## The Membership proof
 
 CLAUDE.md rule 5 asks for two authorization layers: the check, and a proof the
 check ran. `assertMembership` is the first and its return value is the second.

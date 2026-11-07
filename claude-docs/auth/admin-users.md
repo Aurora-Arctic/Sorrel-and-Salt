@@ -1,3 +1,5 @@
+## The user list
+
 `/keepers/users` lists everyone with an account, so a keeper can act on a person
 without being sent their id: approval, role change and impersonation start from
 the modal each row's name opens. Each row shows the name, the email, the role
@@ -429,6 +431,8 @@ filter, page)` is one page of the pending list, newest first, and
 sent: the pending list is where a keeper sees them and acts. An accepted
 invitation is already in the privilege ledger as its `invitation` row, so no
 list of past invitations is kept.
+
+## The privilege ledger
 
 Every change to who is a keeper or a curator and who may create a coven is a row of `user_privilege_changes`, which the database writes and nothing in the application inserts into (DESIGN.md §5). `/keepers/privilege-changes`, the People page's Privilege Changes tab, shows the whole ledger, newest first, for the keeper who suspects misuse.
 

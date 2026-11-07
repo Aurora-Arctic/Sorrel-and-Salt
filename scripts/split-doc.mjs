@@ -1,5 +1,5 @@
 // Splits a claude-docs summary into one file per section, the summary becoming their index
-// (claude-docs/README.md, "What lives where").
+// (claude-docs/README.md, "What lives where, and what to read").
 // Usage: node scripts/split-doc.mjs <plan.json>; then repoint-doc-citations.mjs.
 
 import { execFileSync } from 'node:child_process';

@@ -20,7 +20,7 @@ name is scoped to its table, so no table prefix is needed.
     reader sees;
   - `revision`, because the `bump_revision` trigger moves it on every update and,
     by name order, runs first. It is the database's own counter of writes, not part
-    of what the row says (claude-docs/db/grimoire.md, "Revision (M13.15)");
+    of what the row says (claude-docs/db/grimoire.md, "Revision");
   - generated columns (an ingredient's `identity_key`), because Postgres computes
     those after a BEFORE trigger runs, so `NEW` holds none of them. The trigger
     looks up the table's generated columns in `pg_attribute` on every update, a

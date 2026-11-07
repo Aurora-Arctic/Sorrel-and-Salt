@@ -1,4 +1,4 @@
-## Soft-delete filtering and the partial-index convention (M1.20)
+## Soft-delete filtering and the partial-index convention
 
 CLAUDE.md rule 4 / DESIGN.md §5: **no exported query can return a soft-deleted
 row, and no call site does its own filtering.** `src/db/repository/select.ts`

@@ -1,4 +1,4 @@
-## Keyset pages (M3.6)
+## Keyset pages
 
 A list that can grow is read one page at a time (CLAUDE.md rule 8). The finder
 is `findPage(table, order, page, where?)`, or

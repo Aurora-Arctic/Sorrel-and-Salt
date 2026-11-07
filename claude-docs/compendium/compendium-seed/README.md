@@ -313,7 +313,9 @@ The hash is a SHA-256 over the fields that reach the database: scalars, lists, s
 
 **A citation's `nameBasis` and `supports` are stored on its link and are not hashed.** Adding them to the hash would have staled every `seedUpdate` mark and turned each marked row a person has worked on from a quiet skip into a refusal. They say where content comes from rather than being content, so they are not compared with the entry's fields either: a link that differs only in them is not among the fields that differ, and the rules in "Citation attributes on a present entry" write them.
 
-**Refusals.** An update is refused, and the entry changes in no way, when:
+#### Refusals
+
+An update is refused, and the entry changes in no way, when:
 
 1. **the row is curator-reviewed** (`curator_reviewed_at` is set);
 2. **an editor has touched the row**: it was last updated by anyone but the bootstrap user;

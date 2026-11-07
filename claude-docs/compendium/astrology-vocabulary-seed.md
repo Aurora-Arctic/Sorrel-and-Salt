@@ -1,4 +1,4 @@
-## The astrology vocabulary seed (MB.93)
+## The astrology vocabulary seed
 
 `src/db/seed/astrology.ts` seeds DESIGN.md §5's celestial body and zodiac
 table: nineteen `celestial_bodies` and thirteen `zodiac_signs`, in §5's order, as the

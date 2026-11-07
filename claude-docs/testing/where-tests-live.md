@@ -76,7 +76,7 @@ project) and by the whole tree passing `npm run lint`:
   `useDiscardGuard` or `useLeaveGuard`, or the spell builder's
   `useSaveOnClose`, which calls `useLeaveGuard`.
 - `e2e-chained-tests-serial` — a Playwright
-  spec whose tests chain is serial (M11.18; claude-docs/testing/e2e.md, "E2E").
+  spec whose tests chain is serial (M11.18; claude-docs/testing/e2e.md, "E2E — Playwright").
   `.oxlintrc.json` turns it on for `tests/e2e/**/*.spec.ts` alone.
 
 The two that keep an allowance list (`modal-focus-return-through-modal` and
@@ -225,17 +225,7 @@ inline; }`, for the HTML rendering section's inline elements.
     off, and a test's own spy would hide the call from it, which is why a `dom` test declares
     instead of spying. It guards the `dom` project only; MSW's refusal of an unhandled request
     prints through `console.error`, so a missing handler fails its test here.
-  - **Why happy-dom.** The `dom` project's 94 files and 1,049 tests
-    took 46.3 s of wall time and 168 CPU-seconds under jsdom, three workers,
-    coverage on, and 28.2 s and 95 CPU-seconds under happy-dom on the same
-    tree (39% and 43% less), every test passing. The cost is that happy-dom has
-    one maintainer and a long list of open issues, mostly gaps in computed
-    style; the version is pinned exactly in `package.json`, so an upgrade is a
-    reviewed pull request that runs the whole project, and the setup test
-    above is what fails first if a release changes what the environment
-    reports. The measurements, the alternatives ruled out and the stability
-    assessment are in
-    [`../design-decisions/m11.25-component-tests-run-on-happy-dom.md`](../design-decisions/m11.25-component-tests-run-on-happy-dom.md).
+  - **Why happy-dom.** The `dom` project runs on happy-dom, not jsdom, because it runs the same tests in much less time; the version is pinned exactly in `package.json` and the setup test above fails first if a release changes what the environment reports ([`../design-decisions/m11.25-component-tests-run-on-happy-dom.md`](../design-decisions/m11.25-component-tests-run-on-happy-dom.md)).
   - **A test that stubs `location` uses `stubLocationAssign(assign)`**
     (`tests/support/location.ts`), never `{ ...window.location }`. A spread
     copies the fields only where they are own properties, which is jsdom's
@@ -448,7 +438,9 @@ can show a coverage table (`.github/scripts/summarize-vitest.mjs`), and since
 MB.180 a slowest-files block ([`layer-ownership.md`](layer-ownership.md), "The
 file budget").
 
-**Quiet under Claude Code.** `CLAUDECODE=1`, which only Claude Code's
+### Quiet under Claude Code
+
+`CLAUDECODE=1`, which only Claude Code's
 shell sets, switches the test reporter to `dot`, the coverage reporter to
 `text-summary`, and `silent` to `passed-only`, which drops the console output
 of passing tests — a green run printed ~12,000 lines of pg notices and React

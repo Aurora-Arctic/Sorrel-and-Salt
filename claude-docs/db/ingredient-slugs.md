@@ -1,4 +1,4 @@
-## Ingredient slugs (MB.80; table MB.81, rule MB.82)
+## Ingredient slugs
 
 Every ingredient carries a URL slug, and a compendium entry's is its public
 address, `/compendium/ingredients/[slug]`. The argument is

@@ -1,4 +1,4 @@
-## The form vocabulary seed (M4.3a)
+## The form vocabulary seed
 
 `src/db/seed/forms.ts` seeds DESIGN.md §5's form vocabulary: six
 `ingredient_form_groups` rows — Botanical, Animal, Mineral, Substance, Fluid,

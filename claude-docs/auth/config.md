@@ -1,4 +1,4 @@
-## Config (`src/lib/auth.ts`)
+## Config
 
 - **`BETTER_AUTH_SECRET` is required, but only at `NODE_ENV=production`.**
   `next dev` and Vitest (`NODE_ENV=test`) never need it set. The check is

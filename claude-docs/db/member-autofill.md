@@ -1,4 +1,4 @@
-## The member's autofill (MB.94)
+## The member's autofill
 
 `findVocabularySuggestions(memberships, vocabulary, query, page)` in
 `src/db/repository/vocabularies.ts` is the read behind `celestialBodySuggestions`,

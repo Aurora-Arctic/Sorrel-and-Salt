@@ -29,7 +29,7 @@ give a row's `createdAt` back as a string where the miss gave a `Date`. The
 wrapper stores `superjson.stringify` of the result and parses it on every
 read, hit or miss, so both answer the same types.
 
-### The deployment key part (MB.274)
+### The deployment key part
 
 Every key `cachedCompendiumRead` builds ends in the deployment's own id, so a
 new deployment reads under fresh keys and its first read of each entry goes

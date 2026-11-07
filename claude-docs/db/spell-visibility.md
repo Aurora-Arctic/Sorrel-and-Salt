@@ -1,4 +1,4 @@
-## Spell visibility (M10.3)
+## Spell visibility
 
 DESIGN.md §5: a `workspace` spell is readable by every member of its coven,
 observers included; a `private` spell is readable by its **author alone**, stewards
@@ -93,7 +93,7 @@ read builder (["Soft-delete filtering"](soft-delete.md)), which ANDs the spell's
 for the finders that read `spells` directly, so here the parent is filtered
 twice, and neither copy is the other's to forget.
 
-### What a spell holds (M5.3)
+### What a spell holds
 
 A spell keeps what went into its jar, so an ingredient soft-deleted after it went
 in is still there: shown as it was, its categories still counted toward the

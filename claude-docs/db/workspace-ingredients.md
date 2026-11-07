@@ -1,4 +1,4 @@
-## Workspace ingredients (M8.2)
+## Workspace ingredients
 
 A coven's own ingredients are written and read by four services in `ingredients`'
 `services/workspace-ingredients.ts`: `createWorkspaceIngredient`,
