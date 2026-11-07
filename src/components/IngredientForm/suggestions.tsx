@@ -2,7 +2,7 @@
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useMemo, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
@@ -202,7 +202,7 @@ const qualified = (value: string, by: string | null | undefined): string =>
  * besides the text (the coven, or null for the compendium's alone), and nothing for its own search.
  */
 export function useLookup<TResult, TScope extends object, O extends ComboboxOption>(
-  document: TypedDocumentNode<TResult, TScope & LookupText>,
+  document: DocumentTypeDecoration<TResult, TScope & LookupText>,
   scope: TScope,
   text: string,
   active: boolean,
