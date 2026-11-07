@@ -13,14 +13,9 @@ import {
   insertSupportRequest,
 } from '../../../support/db/insert-support-request';
 
-// The mailed link carries its token in the URL fragment, which the browser never sends, so the page reads it in the browser
-// and asks this query for the request. It answers a caller with no session, shows what the page shows and nothing staff
-// hold, answers one NotFound for every token that does not open a live request, counts each read toward a per-client limit,
-// and stops opening the request 30 days after the token was minted (claude-docs/design-decisions/m15.48-mailed-link.md).
-// The page, its no-store header and the reload are tests/e2e/support-view-link.spec.ts's.
+// The link carries its token in the URL fragment, which the browser never sends (claude-docs/design-decisions/m15.48-mailed-link.md).
 
 const { mintSupportViewToken } = support;
-/** The reads one client may make of the query in the signed-out window, as this task adds it. */
 const viewLimit = () =>
   (support as unknown as { SIGNED_OUT_VIEW_LIMIT?: number }).SIGNED_OUT_VIEW_LIMIT;
 
@@ -82,7 +77,6 @@ const replyBy = (token: string, body = 'It still sticks.', clientIp: string | nu
     { clientIp },
   );
 
-/** A signed-out request from ADDRESS, and the token a mail about it would carry. */
 async function signedOutRequest(status: 'open' | 'resolved' | 'closed' = 'open') {
   const id = await insertSupportRequest(sql, {
     createdBy: SIGNED_OUT_SENDER_ID,
@@ -93,7 +87,6 @@ async function signedOutRequest(status: 'open' | 'resolved' | 'closed' = 'open')
   return { id, token: await mintSupportViewToken(id) };
 }
 
-/** The code and message a refusal came back with, or undefined when the answer has no error. */
 const refusal = (answer: {
   errors?: { message: string; extensions?: Record<string, unknown> }[];
 }) =>
@@ -102,7 +95,6 @@ const refusal = (answer: {
     message: answer.errors[0].message,
   };
 
-/** Seconds from now until the request's token stops working. */
 async function secondsLeft(id: string): Promise<number> {
   const [row] = await sql`
     select extract(epoch from view_token_expires_at - now())::float8 as left

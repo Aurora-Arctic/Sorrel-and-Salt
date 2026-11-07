@@ -13,11 +13,7 @@ import { insertSupportRequest } from '../../../support/db/insert-support-request
 import { insertSupportTimeout } from '../../../support/db/insert-support-timeout';
 import { PAUSE_MESSAGE, noPauseNotifier } from '../../../support/email-verification';
 
-// A signed-out sender has no account of its own: every signed-out request is written as the one seeded stand-in. So a
-// keeper's time-out on a signed-out request names the address it came from, kept as its HMAC key and never in clear, with
-// no account, and that time-out refuses the next signed-out send from the address
-// (claude-docs/design-decisions/m15.48-mailed-link.md). The mailed-link reply is support-view-reply.test.ts's, and the
-// claim by email tests/db/support-claim-by-email.test.ts's.
+// Every signed-out request is written as the one seeded stand-in, so the time-out names the address's HMAC key and no account (claude-docs/design-decisions/m15.48-mailed-link.md).
 
 const {
   liftSupportTimeout,
@@ -26,7 +22,6 @@ const {
   timeOutSupportSender,
 } = support;
 
-/** The keeper's time-out of a signed-out request's sender, named by the request, as this task adds it. */
 const timeOutSignedOutSender = (
   support as unknown as {
     timeOutSignedOutSender: (
@@ -77,13 +72,11 @@ const requestsFrom = async (email: string) =>
   (await sql`select id from support_requests where sender_email = ${email}`).length;
 const userCount = async () => (await sql`select count(*)::int as n from users`)[0]!.n as number;
 
-/** A signed-out request from TIMED_OUT, and a keeper's time-out on its address with no account. */
 async function timedOutAddress(timeout: { endsIn?: string | null; lifted?: boolean } = {}) {
   await insertSupportRequest(sql, { createdBy: SIGNED_OUT_SENDER_ID, senderEmail: TIMED_OUT });
   return insertSupportTimeout(sql, null, { ...timeout, address: TIMED_OUT });
 }
 
-/** The sentence a timed-out signed-in sender's send is refused with, from the same kind of time-out. */
 async function signedInRefusal(): Promise<string> {
   await insertSupportTimeout(sql, C.id);
   const refusal = (await failureOf(
@@ -224,8 +217,7 @@ describe('a keeper timing out a signed-out request’s sender', () => {
   });
 });
 
-// A keeper reads the time-outs on a request through its `timeouts` field. A signed-out request's sender is the stand-in
-// account, so the field has to find the address time-out by the request's address key, not by the account.
+// The stand-in account is shared, so the `timeouts` field finds the address time-out by the request's address key, not by the account.
 const OPENED = /* GraphQL */ `
   query ($id: ID!) {
     supportRequest(id: $id) {

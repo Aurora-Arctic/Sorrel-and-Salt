@@ -28,15 +28,11 @@ import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 
-// The support lifecycle by direct call: each row of the transition table, the pairs it leaves out, the reopen guard, what a
-// sender never reads, and the tier derived from a card.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
-// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));

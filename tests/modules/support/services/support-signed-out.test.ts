@@ -16,17 +16,13 @@ import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
-// A visitor with no account writes about accessibility or signing in: the row it writes as the seeded signed-out sender with
-// the address beside it, the topics, the limits that guard it, and the reply that reaches them by email
-// (claude-docs/design-decisions/m15-support-review.md, m15.48-mailed-link.md). The send sets no cookie and makes no
-// account; tests/e2e/support-signed-out-sender.spec.ts walks the cookie half in a browser.
+// A signed-out send sets no cookie and makes no account (claude-docs/design-decisions/m15.48-mailed-link.md); tests/e2e/support-signed-out-sender.spec.ts walks the cookie half.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
-// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));
@@ -53,7 +49,6 @@ const INPUT = {
   message: 'The code never arrives.',
 } as const;
 
-// The receipt goes out through its job too, whose mail is tested in tests/modules/support/services/support-status-mail.test.ts.
 const receipts = () =>
   startJob.mock.calls.filter(([job]) => job === supportStatusMail).map(([, args]) => args);
 
@@ -84,16 +79,13 @@ describe('sendSignedOutSupportRequest', () => {
     await send(INPUT, { mail });
 
     const [row] = await sql`select * from support_requests`;
-    // Written through withAudit as the seeded stand-in: no account is made for the visitor.
     expect(row!.created_by).toBe(SIGNED_OUT_SENDER_ID);
     expect(row!.updated_by).toBe(SIGNED_OUT_SENDER_ID);
     expect(await userCount()).toBe(usersBefore);
-    // Only the hash of the mailed link's token is kept.
     expect(row!.view_token_hash).toMatch(/^[0-9a-f]{64}$/);
     expect(row!.sender_email).toBe('visitor@example.test');
     expect(row!.about).toBe('account');
     expect(row!.status).toBe('open');
-    // The run carries the request id and the origin; its step reads the address from the row.
     expect(receipts()).toEqual([
       [{ kind: 'received', requestId: row!.id, origin: 'http://localhost:3000' }],
     ]);
@@ -213,7 +205,6 @@ describe('sendSignedOutSupportRequest', () => {
 
       expect(error).toBeInstanceOf(RateLimited);
       expect(await count()).toBe(SIGNED_OUT_IP_LIMIT);
-      // A different client passes.
       await send({ ...INPUT, email: 'one-more@example.test' }, { now, clientIp: '198.51.100.1' });
       expect(await count()).toBe(SIGNED_OUT_IP_LIMIT + 1);
     });

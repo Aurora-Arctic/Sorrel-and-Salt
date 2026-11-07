@@ -11,9 +11,6 @@ import type { SupportNotifier } from '@/modules/support';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// What the sender's page receives for one request: the thread in order with the sender's own messages marked, and no internal
-// note anywhere in it.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;

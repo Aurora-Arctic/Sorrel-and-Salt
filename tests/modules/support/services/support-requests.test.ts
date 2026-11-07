@@ -35,10 +35,8 @@ import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { noPauseNotifier, PAUSE_MESSAGE } from '../../../support/email-verification';
 
-// The support services by direct call: who may send, read, answer and manage a request, each refusal paired with the
-// same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
+// Each refusal is paired with the same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
 
-// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));

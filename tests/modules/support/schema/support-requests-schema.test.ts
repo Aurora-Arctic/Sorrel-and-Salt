@@ -8,8 +8,6 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
 import { SUPPORT_ABOUTS } from '@/lib/support-path';
 import { supportRequests } from '@/modules/support/schema/support-requests';
 
-// A message an account sends to whoever runs the site; the sender is `created_by`.
-
 const OWN_COLUMNS = [
   'id',
   'about',
@@ -107,7 +105,6 @@ describe('support_requests table', () => {
   it('refuses an about outside its enum', async () => {
     const error = await failureOf(insert({ about: 'complaint' }));
 
-    // 22P02 is invalid_text_representation, which is what an enum refuses with.
     expect(error.code).toBe('22P02');
   });
 
@@ -192,7 +189,6 @@ describe('support_requests table', () => {
           values ('bug', 'Subject', 'Message', '/', pg_catalog.gen_random_uuid(), ${SENDER}, ${SENDER})`,
     );
 
-    // 23503 is foreign_key_violation.
     expect(error.code).toBe('23503');
   });
 });
