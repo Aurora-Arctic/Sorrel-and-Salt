@@ -7,8 +7,12 @@ import ReportThis from '../ReportThis';
 
 // The 404 and 500 screens, shared by the root routes and the shell's (claude-docs/components/error-page.md).
 
-export const NotFoundScreen = (): ReactElement => (
-  <ErrorPage title="Page Not Found" reason="There is nothing at this address.">
+export const NotFoundScreen = ({ withinMain = false }: { withinMain?: boolean }): ReactElement => (
+  <ErrorPage
+    title="Page Not Found"
+    withinMain={withinMain}
+    reason="There is nothing at this address."
+  >
     <Link className="btn btn--quiet" href="/">
       Back to Sorrel &amp; Salt
     </Link>
