@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
@@ -31,10 +31,12 @@ const press = (href: string, options?: { replace?: boolean }) => {
 let pushState: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   for (const call of Object.values(router)) call.mockReset();
+  window.history.replaceState(null, '', '/here');
   pushState = vi.spyOn(window.history, 'pushState').mockImplementation(() => {});
 });
 afterEach(() => {
   pushState.mockRestore();
+  vi.restoreAllMocks();
 });
 
 describe('Forward onto an entry pushed early and never arrived at', () => {
@@ -78,6 +80,14 @@ describe('the history entry of a navigation to another page', () => {
     expect(pushState).toHaveBeenCalledWith({ ...held, earlyEntry: true }, '', '/there?x=1');
     // The router replaces the entry just pushed, so a redirect on the way leaves one entry, not two.
     expect(router.replace).toHaveBeenCalledWith('/there?x=1');
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it('is not pushed again when the current entry is itself an early one', async () => {
+    vi.spyOn(window.history, 'state', 'get').mockReturnValue({ __NA: true, earlyEntry: true });
+    await press('/third');
+    expect(pushState).not.toHaveBeenCalled();
+    expect(router.replace).toHaveBeenCalledWith('/third');
     expect(router.push).not.toHaveBeenCalled();
   });
 

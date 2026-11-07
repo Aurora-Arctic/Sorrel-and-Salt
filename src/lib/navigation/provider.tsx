@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   type ReactElement,
   type ReactNode,
@@ -9,7 +9,6 @@ import {
   useEffect,
   useMemo,
   useOptimistic,
-  useRef,
   useState,
 } from 'react';
 import { LeaveGuardContext, holdTraversals, leaveGuardSlot } from './leave-guard';
@@ -32,13 +31,15 @@ export const NavigationActionsContext = createContext<NavigationActions | null>(
  * the meantime would pass the page being left. The entry carries the current one's router state, which Next's `pushState` patch takes as its own and leaves the
  * router alone; the router then replaces this entry, with the page's final address, when it arrives. The tree it carries is the page being left, so a Forward onto an entry whose page never arrived is fetched afresh instead (`holdEarlyEntries`); an arrival overwrites the state, marker included. Only a move to another path qualifies, and only on an entry the router wrote.
  */
-function pushAtOnce(href: string, from: string): boolean {
-  if (!href.startsWith('/') || href.startsWith('//')) return false;
+function pushAtOnce(href: string): 'pushed' | 'early' | 'no' {
+  if (!href.startsWith('/') || href.startsWith('//')) return 'no';
   const state: unknown = window.history.state;
-  if (!state || (state as { __NA?: unknown }).__NA !== true) return false;
-  if (new URL(href, window.location.href).pathname === from) return false;
+  if (!state || (state as { __NA?: unknown }).__NA !== true) return 'no';
+  // The entry already is an early one (a second press during a wait): the router replaces it, and no second entry is made.
+  if ((state as { earlyEntry?: unknown }).earlyEntry) return 'early';
+  if (new URL(href, window.location.href).pathname === window.location.pathname) return 'no';
   window.history.pushState({ ...state, earlyEntry: true }, '', href);
-  return true;
+  return 'pushed';
 }
 
 /** Runs before Next's own `popstate` listener (a child's effect runs first), so the page of an early entry is fetched rather than drawn from the wrong tree. */
@@ -55,11 +56,6 @@ function holdEarlyEntries(refetch: (href: string) => void): () => void {
 /** Mounted once and never unmounts, so a wait is never lost with the control that began it; React puts the optimistic wait back when the transition ends. A mounted form with unsaved changes is waited on first (claude-docs/design-decisions/ui.md, "Navigation provider"). */
 export function NavigationProvider({ children }: { children: ReactNode }): ReactElement {
   const router = useRouter();
-  const pathname = usePathname();
-  const shown = useRef(pathname);
-  useEffect(() => {
-    shown.current = pathname;
-  }, [pathname]);
   const [active, setActive] = useOptimistic<ActiveNavigation | undefined>(undefined);
   const [guards] = useState(leaveGuardSlot);
   useEffect(() => holdTraversals(guards), [guards]);
@@ -76,7 +72,7 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
           startTransition(() => {
             setActive({ owner, href });
             // The router replaces an entry already pushed, so a redirect on the way leaves one entry, not two.
-            const pushed = !options?.replace && pushAtOnce(href, shown.current);
+            const pushed = !options?.replace && pushAtOnce(href) !== 'no';
             const go = options?.replace || pushed ? router.replace : router.push;
             if (routerOptions) go(href as never, routerOptions);
             else go(href as never);
