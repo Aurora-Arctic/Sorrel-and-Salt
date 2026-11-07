@@ -558,6 +558,8 @@ for (const navigation of navigations) {
       await expect(page.locator('.skeleton-cover')).toHaveCount(0, { timeout: 20_000 });
       await expect(page.locator('.skeleton-fade')).toHaveCount(0);
       await page.waitForLoadState('networkidle');
+      // A part still loading its code or data says so with aria-busy, and is measured once it is drawn.
+      await expect(page.locator('[aria-busy="true"]')).toHaveCount(0, { timeout: 20_000 });
       const frameArrived = await frameOf(page);
       const arrived = await layoutOf(page, false);
       // Why the comparison means something: the page arrived and drew its heading.
