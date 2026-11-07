@@ -18,11 +18,6 @@ const { default: DocumentEditor } = await import('@/components/DocumentEditor');
 warmImport(() => import('@/components/DocumentEditor/editor'));
 const { NavigationProvider } = await import('@/lib/navigation');
 
-// The editor saves its draft as the other autosaving forms do, through the shared hook at its own timing (3 s after the last
-// change, src/lib/autosave/use-autosave.ts); Save Draft still saves at once, and Publish waits while any save is in flight, so
-// it never publishes a draft that a save is still writing.
-
-/** The hook's wait after the last change, as the spell builder runs it: no new number for this form. */
 const AUTOSAVE_DELAY_MS = 3000;
 
 beforeEach(() => {
@@ -33,7 +28,6 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-/** Renders the editor with no draft open unless `revision` says otherwise, on the published text. */
 async function renderEditor({ revision = null }: { revision?: number | null } = {}) {
   render(
     <NavigationProvider>
@@ -52,7 +46,6 @@ async function renderEditor({ revision = null }: { revision?: number | null } = 
   return screen.findByRole('textbox', { name: 'Document Text' });
 }
 
-/** Changes the text as a keeper does, by bolding a word, and waits until the editor reads it as unsaved. */
 async function change(text: HTMLElement): Promise<void> {
   const node = document.createTreeWalker(text, NodeFilter.SHOW_TEXT).nextNode() as Text;
   const range = document.createRange();
@@ -76,7 +69,6 @@ async function change(text: HTMLElement): Promise<void> {
   await waitFor(() => expect(saveDraft()).toBeEnabled());
 }
 
-/** Records each draft save, answering the next revision at once. */
 function acceptSaves(): SaveDocumentDraftMutationVariables[] {
   const sent: SaveDocumentDraftMutationVariables[] = [];
   mockGraphQLMutation<SaveDocumentDraftMutation, SaveDocumentDraftMutationVariables>(
@@ -89,7 +81,6 @@ function acceptSaves(): SaveDocumentDraftMutationVariables[] {
   return sent;
 }
 
-/** Records each draft save and holds its answer until `release` is called. */
 function holdSaves() {
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -112,7 +103,6 @@ function holdSaves() {
 const saveDraft = () => screen.getByRole('button', { name: 'Save Draft' });
 const publish = () => screen.getByRole('button', { name: 'Publish' });
 
-/** Lets the hook's timers and the answers they wait on run, as `ms` of time passing. */
 const wait = (ms: number) =>
   act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
@@ -131,7 +121,6 @@ describe('autosave', () => {
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]).toMatchObject({ documentId: 'd1', expectedRevision: null });
     expect(sent[0]?.body).toContain('*Fixturewort*');
-    // The draft is saved, so nothing is left for Save Draft.
     await waitFor(() => expect(saveDraft()).toBeDisabled());
   });
 
@@ -146,8 +135,6 @@ describe('autosave', () => {
     expect(sent[0]).toMatchObject({ expectedRevision: 4 });
   });
 
-  // Another admin saved the draft since this editor read it: the save is refused, and the editor says why rather than
-  // writing over it or trying again.
   it('shows the explaining failure on a stale revision, and sends no more', async () => {
     mockGraphQLError('SaveDocumentDraft', { code: 'STALE_WRITE', currentRevision: 5 });
     const text = await renderEditor({ revision: 4 });
