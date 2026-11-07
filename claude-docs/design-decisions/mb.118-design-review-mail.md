@@ -1,10 +1,18 @@
-# MB.118 — Design review: the site's mail (#575)
+# Mail design review sign-off
 
-**Status:** decided and built. Only the decisions, the reasons and what they rule out are kept here.
+**Status:** decided. Live home: `claude-docs/email.md`, "Design".
 
-## Decisions at sign-off (owner, 2026-10-12, from the review page)
+## Decision
 
-- Verification mail, admin invitation, coven invitation: approved, light and dark, 375px and 600px.
-- Client preview (Gmail, Outlook, Apple Mail): not done yet. Gmail on iPhone: not checked. Outlook.com button: not checked.
-- Subjects: accept the drafts. Preview lines: accept the drafts. Closing sentences: accept without contractions. Expired-link sentence: add it.
-- Names in the mail: build both here, not in separate tasks. Applied as the inviter's name opening both invitations, read from the acting user's row in the services. The reader's name in the verification mail was applied and then withdrawn on the owner's second call (2026-10-12): the mail goes to an address the account has not proved, and a mistyped one would hand a stranger the name of whoever typed it.
+- The verification mail, admin invitation and coven invitation are approved in light and dark at 375px and 600px.
+- Subjects and preview lines: the drafts. Closing sentences: no contractions. An expired-link sentence is added.
+- **Names in mail:** the inviter's name opens both invitations, read from the acting user's row in the services. The reader's name is not in the verification mail.
+- **Not checked:** client previews (Gmail, Outlook, Apple Mail), Gmail on iPhone and the Outlook.com button.
+
+## Why
+
+The verification mail goes to an address the account has not proved; a mistyped one would hand a stranger the name of whoever typed it.
+
+## Rules out
+
+- Naming the reader in the verification mail.

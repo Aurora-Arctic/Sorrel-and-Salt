@@ -1,18 +1,18 @@
-# MB.71 — Link a second sign-in method from the account page
+# Linking a second sign-in method
 
-**Status:** decided and built. Only the decisions, the reasons and what they rule out are kept here.
+**Status:** decided. Live home: `claude-docs/auth/admin-bootstrap.md`.
 
 ## Decision
 
-account is unknown is linked to the row holding its email only if the _provider_
-not map, hence the generic sentence. (Its `unable_to_link_account` sentence is
-also wrong: that code means "provider did not vouch during a link", not "already
-server-side (`api/routes/account.mjs`), not client-supplied;
-`allowDifferentEmails`, then creates the `accounts` row. It never writes
-`emailVerified`, issues no session (so MB.60's after-hook does not run), and
-never consulted again, so nOAuth cannot reach it. `promotePrimaryAdmin`
-which during a callback holds the parsed state. `link` is present only for a
-unchanged. In the link branch the profile's `emailVerified` feeds only Better
-linked provider's profile never rewrites the row.
-// Vouched only inside a link flow /link-social began under a session: there the
-const vouchOnlyWhenLinking = async () => ({
+- **A provider account is linked to an existing row only inside a link flow** that `/link-social` began under a session. There the provider's profile `emailVerified` feeds only Better Auth's link decision, and the check is a `vouchOnlyWhenLinking` hook. Outside a link flow nothing is linked by email.
+- **The link flow's state is server-side** (`api/routes/account.mjs`), not client-supplied, and uses `allowDifferentEmails`; it then creates the `accounts` row.
+- **It never writes `emailVerified`**, issues no session (so the after-hook does not run), and a linked provider's profile never rewrites the row. The link is never consulted again at sign-in, so an email-takeover attack on the provider cannot reach it.
+- **Better Auth's `unable_to_link_account` sentence is wrong** for what the code means ("provider did not vouch during a link"), so the page shows a generic sentence instead.
+
+## Why
+
+Linking by email at sign-in lets a provider that does not verify addresses take over an account.
+
+## Rules out
+
+- Linking by unverified email at sign-in.
