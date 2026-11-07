@@ -1,32 +1,24 @@
 import type { ReactNode } from 'react';
-import { AdminCardsBodySkeleton, CardArrivalsBodySkeleton } from '../AdminCards/skeleton';
-import { AdminInvitationsBodySkeleton } from '../AdminInvitations/skeleton';
+import { AdminCardsSkeleton, CardArrivalsSkeleton } from '../AdminCards/skeleton';
+import { AdminInvitationsSkeleton } from '../AdminInvitations/skeleton';
 import { BusinessCardsBodySkeleton } from '../BusinessCards/skeleton';
-import { CompendiumListBodySkeleton } from '../CompendiumList/skeleton';
-import { GroupListBodySkeleton } from '../GroupList/skeleton';
+import { CompendiumListSkeleton } from '../CompendiumList/skeleton';
+import { GroupListSkeleton } from '../GroupList/skeleton';
 import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
-import type { GroupedValueKind } from '../GroupedValueForm/types';
-import { GroupedValueListBodySkeleton } from '../GroupedValueList/skeleton';
+import ActionFace, { ButtonFace } from '../ActionFace';
+import { impersonationEnabled } from '../../lib/impersonation';
+import { GroupedValueListSkeleton } from '../GroupedValueList/skeleton';
 import { KINDS as VALUE_KINDS } from '../GroupedValueList/kinds';
-import { ListFilterFrame } from '../ListFrame/skeleton';
-import { PrivilegeLedgerBodySkeleton } from '../PrivilegeLedger/skeleton';
-import { UserListBodySkeleton } from '../UserList/skeleton';
+import { PrivilegeLedgerSkeleton } from '../PrivilegeLedger/skeleton';
+import { UserListSkeleton } from '../UserList/skeleton';
 import { SupportListSkeleton } from '../SupportRequests/skeleton';
+import PageHeader from '../PageHeader';
 import Skeleton from '../Skeleton';
 import { PanelSkeleton } from '../Skeleton/panel';
 import TabbedPage from '../TabbedPage';
 import type { PageTab } from '../TabbedPage/types';
 import { ADMIN_PAGES } from './sections';
 import type { AdminPage } from './types';
-
-// What each admin tab draws in its panel while it is on its way, by the tab's address: the page's own
-// filter row and table headings, so the list keeps its place when the rows arrive.
-const filtered = (filter: string, body: ReactNode): ReactNode => (
-  <ListFilterFrame filter={filter}>{body}</ListFilterFrame>
-);
-
-const valuePanel = (kind: GroupedValueKind): ReactNode =>
-  filtered(`Filter ${VALUE_KINDS[kind].title}`, <GroupedValueListBodySkeleton kind={kind} />);
 
 const documentPanel: ReactNode = (
   <>
@@ -35,24 +27,24 @@ const documentPanel: ReactNode = (
   </>
 );
 
-const PANELS: Record<string, ReactNode> = {
-  '/curator/compendium': filtered('Filter Compendium', <CompendiumListBodySkeleton />),
-  [VALUE_KINDS.category.path]: valuePanel('category'),
-  [GROUP_KINDS.category.path]: <GroupListBodySkeleton kind="category" />,
-  [VALUE_KINDS.form.path]: valuePanel('form'),
-  [GROUP_KINDS.form.path]: <GroupListBodySkeleton kind="form" />,
-  [VALUE_KINDS.deity.path]: valuePanel('deity'),
-  [GROUP_KINDS.tradition.path]: <GroupListBodySkeleton kind="tradition" />,
-  [VALUE_KINDS.celestialBody.path]: valuePanel('celestialBody'),
-  [VALUE_KINDS.zodiacSign.path]: valuePanel('zodiacSign'),
-  '/keepers/users': filtered('Filter Users', <UserListBodySkeleton />),
-  '/keepers/privilege-changes': filtered(
-    'Filter Privilege Changes',
-    <PrivilegeLedgerBodySkeleton />,
-  ),
-  '/keepers/invitations': <AdminInvitationsBodySkeleton />,
-  '/keepers/invitation-cards': filtered('Filter Invitation Cards', <AdminCardsBodySkeleton />),
-  '/keepers/card-sign-ups': <CardArrivalsBodySkeleton />,
+// What each admin tab draws in its panel while it is on its way, by the tab's address: the page's own
+// filter row and table headings, so the list keeps its place when the rows arrive. A function, since the
+// Users table's columns follow the environment.
+const panels = (): Record<string, ReactNode> => ({
+  '/curator/compendium': <CompendiumListSkeleton />,
+  [VALUE_KINDS.category.path]: <GroupedValueListSkeleton kind="category" />,
+  [GROUP_KINDS.category.path]: <GroupListSkeleton kind="category" />,
+  [VALUE_KINDS.form.path]: <GroupedValueListSkeleton kind="form" />,
+  [GROUP_KINDS.form.path]: <GroupListSkeleton kind="form" />,
+  [VALUE_KINDS.deity.path]: <GroupedValueListSkeleton kind="deity" />,
+  [GROUP_KINDS.tradition.path]: <GroupListSkeleton kind="tradition" />,
+  [VALUE_KINDS.celestialBody.path]: <GroupedValueListSkeleton kind="celestialBody" />,
+  [VALUE_KINDS.zodiacSign.path]: <GroupedValueListSkeleton kind="zodiacSign" />,
+  '/keepers/users': <UserListSkeleton canImpersonate={impersonationEnabled()} />,
+  '/keepers/privilege-changes': <PrivilegeLedgerSkeleton />,
+  '/keepers/invitations': <AdminInvitationsSkeleton />,
+  '/keepers/invitation-cards': <AdminCardsSkeleton />,
+  '/keepers/card-sign-ups': <CardArrivalsSkeleton />,
   '/keepers/support': <SupportListSkeleton />,
   '/keepers/business-cards': <BusinessCardsBodySkeleton />,
   '/keepers/documents/terms': documentPanel,
@@ -60,11 +52,34 @@ const PANELS: Record<string, ReactNode> = {
   '/keepers/documents/code-of-ethics': documentPanel,
   '/keepers/documents/privacy': documentPanel,
   '/keepers/documents': <PanelSkeleton fields={2} />,
+});
+
+// The header action each tab carries, drawn with nothing to press: the Add of the curator tabs, and the
+// keeper tabs' own button.
+const ACTIONS: Record<string, ReactNode> = {
+  '/curator/compendium': <ActionFace>Add Ingredient</ActionFace>,
+  ...Object.fromEntries(
+    Object.values(VALUE_KINDS).map((kind) => [
+      kind.path,
+      <ActionFace key={kind.path}>{`Add ${kind.label}`}</ActionFace>,
+    ]),
+  ),
+  ...Object.fromEntries(
+    Object.values(GROUP_KINDS).map((kind) => [
+      kind.path,
+      <ActionFace key={kind.path}>{kind.add}</ActionFace>,
+    ]),
+  ),
+  // The pause switch is a bare wrapper for a keeper who may not flip it, which sets the header's height.
+  '/keepers/users': <div className="user-list__pause" />,
+  '/keepers/invitations': <ButtonFace link>New Invitation</ButtonFace>,
+  '/keepers/invitation-cards': <ButtonFace link>Mint Cards</ButtonFace>,
+  '/keepers/card-sign-ups': <ButtonFace>Download CSV</ButtonFace>,
 };
 
 /** The tabs of an admin page with each one's panel placeholder, for its tabbed layout. */
 export const withSkeletons = (tabs: AdminPage['tabs']): PageTab[] =>
-  tabs.map((tab) => ({ ...tab, skeleton: PANELS[tab.href] }));
+  tabs.map((tab) => ({ ...tab, skeleton: panels()[tab.href] }));
 
 /** An admin page with the tab at `open` pressed, drawn in the body while the page is on its way. */
 export const AdminPageSkeleton = ({
@@ -75,14 +90,22 @@ export const AdminPageSkeleton = ({
   page: keyof typeof ADMIN_PAGES;
   open: string;
   tabsBelow?: boolean;
-}) => (
-  <TabbedPage
-    as="div"
-    title={ADMIN_PAGES[page].label}
-    tabs={withSkeletons(ADMIN_PAGES[page].tabs)}
-    open={open}
-    tabsBelow={tabsBelow}
-  >
-    {PANELS[open]}
-  </TabbedPage>
-);
+}) =>
+  // A page of one tab is drawn by its page with a plain heading, not the tabbed frame.
+  ADMIN_PAGES[page].tabs.length === 1 ? (
+    <>
+      <PageHeader title={ADMIN_PAGES[page].label} action={ACTIONS[open]} />
+      {panels()[open]}
+    </>
+  ) : (
+    <TabbedPage
+      as="div"
+      title={ADMIN_PAGES[page].label}
+      tabs={withSkeletons(ADMIN_PAGES[page].tabs)}
+      open={open}
+      tabsBelow={tabsBelow}
+      action={ACTIONS[open]}
+    >
+      {panels()[open]}
+    </TabbedPage>
+  );

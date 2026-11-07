@@ -6,6 +6,7 @@ export const PendingInvitationsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Pending Invitations"
     rowKind="pending-invitations"
+    tableClassName="data-table--nowrap"
     headings={['Email', 'Role', 'Status', 'Action']}
     actions={['Action']}
   />

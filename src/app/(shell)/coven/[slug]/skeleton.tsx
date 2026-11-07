@@ -1,4 +1,5 @@
-import { ListSkeleton } from '@/components/ListFrame/skeleton';
+import { SearchListSkeleton, SearchRowSkeleton } from '@/components/IngredientSearch/skeleton';
+import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
 import PageHeader from '@/components/PageHeader';
 import PageNav from '@/components/PageNav';
 import PageWithNav from '@/components/PageWithNav';
@@ -29,7 +30,15 @@ export const CovenHomeSkeleton = () => (
 export const CovenIngredientsSkeleton = () => (
   <div>
     <PageHeader title="Ingredients" />
-    <ListSkeleton filter="Filter Ingredients" label="Ingredients" density="compact" />
+    <div data-density="compact">
+      <SearchListSkeleton
+        row={
+          <SearchRowSkeleton label="Filter Ingredients" className="compendium-list__row" density />
+        }
+      >
+        <ListBodySkeleton label="Ingredients" density="compact" />
+      </SearchListSkeleton>
+    </div>
   </div>
 );
 

@@ -1,20 +1,27 @@
 'use client';
 
 import type { Route } from 'next';
-import { ListSkeleton } from '@/components/ListFrame/skeleton';
+import ActionFace from '@/components/ActionFace';
+import { SearchListSkeleton, SearchRowSkeleton } from '@/components/IngredientSearch/skeleton';
+import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
 import TabbedPage from '@/components/TabbedPage';
 import type { PageTab } from '@/components/TabbedPage/types';
 import { useCovenSlug } from '@/lib/use-coven-slug';
 
 /** A Grimoire tab's filter row and spell cards, compact as the coven lists open. */
 export const GrimoirePanelSkeleton = ({ drafts }: { drafts?: boolean }) => (
-  <ListSkeleton
-    filter="Filter the Grimoire"
-    label={drafts ? 'Drafts' : 'Spells'}
-    card="spell"
-    draft={drafts}
-    density="compact"
-  />
+  <div data-density="compact">
+    <SearchListSkeleton
+      row={<SearchRowSkeleton label="Filter the Grimoire" className="grimoire-list__row" density />}
+    >
+      <ListBodySkeleton
+        label={drafts ? 'Drafts' : 'Spells'}
+        card="spell"
+        draft={drafts}
+        density="compact"
+      />
+    </SearchListSkeleton>
+  </div>
 );
 
 const GrimoireTabsSkeleton = ({ drafts }: { drafts?: boolean }) => {
@@ -37,6 +44,7 @@ const GrimoireTabsSkeleton = ({ drafts }: { drafts?: boolean }) => {
       title="Grimoire"
       tabs={tabs}
       open={`/coven/${slug}/grimoire${drafts ? '/drafts' : ''}`}
+      action={<ActionFace>New Spell</ActionFace>}
     >
       <GrimoirePanelSkeleton drafts={drafts} />
     </TabbedPage>
