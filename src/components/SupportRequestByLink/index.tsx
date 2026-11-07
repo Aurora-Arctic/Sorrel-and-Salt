@@ -9,6 +9,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import { statusBadgeClass } from '../SupportRequests/status-badge';
 import type { SupportAbout, SupportStatus } from '../SupportRequests/types';
+import Skeleton from '../Skeleton';
 import SupportSenderRequest from '../SupportSenderRequest';
 import { senderStatusLabel } from '../SupportSenderRequest/status';
 import SupportViewReplyForm from '../SupportViewReplyForm';
@@ -136,7 +137,15 @@ const SupportRequestByLink = (): ReactElement => {
     };
   }, [load]);
 
-  if (state.phase === 'loading') return <p role="status">Opening your request.</p>;
+  // The one status announces the wait; the quiet skeleton beside it is for the eye alone.
+  if (state.phase === 'loading') {
+    return (
+      <div className="page-with-nav">
+        <p role="status">Opening your request.</p>
+        <Skeleton shape="line" count={4} quiet />
+      </div>
+    );
+  }
   if (state.phase === 'failed') return <Notice kind="error">{state.message}</Notice>;
   if (state.phase === 'missing') {
     return (

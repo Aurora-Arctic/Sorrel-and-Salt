@@ -129,6 +129,8 @@ export interface PausePanelProps {
   standing: StandingPause | undefined;
   /** Every pause but the standing one, newest first. */
   earlier: readonly AccessPauseEntry[];
+  /** Whether the earlier pauses are still being read: their place holds a skeleton. */
+  earlierLoading?: boolean;
   copy: PausePanelCopy;
   /** Marks the note and the message required and holds Pause Access until both have text: a site pause needs one, a coven pause does not. */
   noteRequired?: boolean;

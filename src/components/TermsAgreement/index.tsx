@@ -13,7 +13,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { TermsAgreementProps } from './types';
 import './index.scss';
-import { PendingLink, reportLeaving } from '../../lib/navigation';
+import { reportLeaving } from '../../lib/navigation';
 
 // The acceptance page's body: where to read the terms, and the one button that records agreement. The mutation names the version
 // shown, and the server refuses one no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
@@ -69,13 +69,13 @@ const TermsAgreement = ({
       </p>
       <p>
         The terms include the{' '}
-        <PendingLink href="/disclaimer" target="_blank">
+        <a href="/disclaimer" target="_blank">
           Disclaimer
-        </PendingLink>{' '}
+        </a>{' '}
         and the{' '}
-        <PendingLink href="/code-of-ethics" target="_blank">
+        <a href="/code-of-ethics" target="_blank">
           Code of Ethics
-        </PendingLink>
+        </a>
         , and agreeing to the terms is agreeing to them too.
       </p>
       {changed.length > 0 && (
@@ -84,9 +84,9 @@ const TermsAgreement = ({
           <ul>
             {changed.map((key) => (
               <li key={key}>
-                <PendingLink href={`/${key}`} target="_blank">
+                <a href={`/${key}`} target="_blank">
                   {DOCUMENT_TITLES[key]}
-                </PendingLink>
+                </a>
               </li>
             ))}
           </ul>
@@ -94,9 +94,9 @@ const TermsAgreement = ({
       )}
       {alert && <Notice kind="error">{alert}</Notice>}
       <p className="terms-agreement__actions">
-        <PendingLink className="btn btn--quiet" href="/terms" target="_blank">
+        <a className="btn btn--quiet" href="/terms" target="_blank">
           Read the Terms of Use
-        </PendingLink>
+        </a>
         <BusyButton
           className="btn btn--solid"
           busy={recording}
