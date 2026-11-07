@@ -11,6 +11,16 @@ import { CodeOfEthicsVersionSkeleton } from './(public)/code-of-ethics/versions/
 import { DisclaimerSkeleton } from './(public)/disclaimer/skeleton';
 import { DisclaimerVersionSkeleton } from './(public)/disclaimer/versions/[number]/skeleton';
 import { SupportSkeleton } from './(public)/support/skeleton';
+import { HelpSkeleton } from './(public)/help/skeleton';
+import { HelpGlossaryPageSkeleton } from './(public)/help/glossary/skeleton';
+import { HelpSearchPageSkeleton } from './(public)/help/search/skeleton';
+import { HelpArticlePageSkeleton } from './(public)/help/[slug]/skeleton';
+import { HelpSubPageSkeleton } from './(public)/help/[slug]/[child]/skeleton';
+import {
+  StaffHelpArticleSkeleton,
+  StaffHelpSkeleton,
+  StaffHelpSubPageSkeleton,
+} from './(shell)/help/staff/skeleton';
 import { AccountSkeleton } from './(shell)/account/(tabs)/skeleton';
 import { AccountSignInSkeleton } from './(shell)/account/(tabs)/sign-in/skeleton';
 import { AccountSupportSkeleton } from './(shell)/account/(tabs)/support/skeleton';
@@ -53,6 +63,7 @@ import {
   InvitationCardsSkeleton,
   KeepersDocumentSkeleton,
   KeepersEmailUpdatesSkeleton,
+  KeepersHelpSkeleton,
   KeepersInvitationsSkeleton,
   KeepersSkeleton,
   KeepersSupportSkeleton,
@@ -72,6 +83,14 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/disclaimer': { host: 'main', Skeleton: DisclaimerSkeleton },
   '/disclaimer/versions/[number]': { host: 'main', Skeleton: DisclaimerVersionSkeleton },
   '/support': { host: 'main', Skeleton: SupportSkeleton },
+  '/help': { host: 'main', Skeleton: HelpSkeleton },
+  '/help/glossary': { host: 'main', Skeleton: HelpGlossaryPageSkeleton },
+  '/help/search': { host: 'main', Skeleton: HelpSearchPageSkeleton },
+  '/help/[slug]': { host: 'main', Skeleton: HelpArticlePageSkeleton },
+  '/help/[slug]/[child]': { host: 'main', Skeleton: HelpSubPageSkeleton },
+  '/help/staff': { host: 'main', Skeleton: StaffHelpSkeleton },
+  '/help/staff/[slug]': { host: 'main', Skeleton: StaffHelpArticleSkeleton },
+  '/help/staff/[slug]/[child]': { host: 'main', Skeleton: StaffHelpSubPageSkeleton },
   '/account': { host: 'main', Skeleton: AccountSkeleton },
   '/account/sign-in': { host: 'main', Skeleton: AccountSignInSkeleton },
   '/account/support': { host: 'main', Skeleton: AccountSupportSkeleton },
@@ -108,4 +127,5 @@ export const skeletons: Record<string, { host: SkeletonHost; Skeleton: Component
   '/keepers/business-cards': { host: 'admin', Skeleton: BusinessCardsSkeleton },
   '/keepers/documents': { host: 'admin', Skeleton: KeepersEmailUpdatesSkeleton },
   '/keepers/documents/[key]': { host: 'admin', Skeleton: KeepersDocumentSkeleton },
+  '/keepers/help': { host: 'admin', Skeleton: KeepersHelpSkeleton },
 };

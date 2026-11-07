@@ -27,6 +27,7 @@ export const KeepersSkeleton = () => (
   </div>
 );
 
+export const KeepersHelpSkeleton = () => <AdminPageSkeleton page="help" open="/keepers/help" />;
 export const UsersSkeleton = () => <AdminPageSkeleton page="people" open="/keepers/users" />;
 export const PrivilegeChangesSkeleton = () => (
   <AdminPageSkeleton page="people" open="/keepers/privilege-changes" />

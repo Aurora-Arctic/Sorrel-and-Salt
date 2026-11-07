@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import { EditLink } from '../IconTip';
 import ListFrame, { ListBody } from '../ListFrame';
-import { ListBodySkeleton } from '../ListFrame/skeleton';
+import { HelpListBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import { emptyList } from '../../lib/text';
 import type { HelpListProps } from './types';
@@ -14,16 +14,7 @@ const AUDIENCE_LABELS = { public: 'Public', staff: 'Staff', keeper: 'Keeper' } a
 
 const HelpList = ({ articles, previousHref, nextHref }: HelpListProps): ReactElement => (
   <ListFrame>
-    <ListBody
-      skeleton={
-        <ListBodySkeleton
-          label="Help"
-          headings={['Title', 'Kind', 'Audience', 'Position', 'Edit']}
-          actions={['Edit']}
-          hidden={['Edit']}
-        />
-      }
-    >
+    <ListBody skeleton={<HelpListBodySkeleton />}>
       <StackTable
         columns={[
           { heading: 'Title', cell: (article) => article.title },

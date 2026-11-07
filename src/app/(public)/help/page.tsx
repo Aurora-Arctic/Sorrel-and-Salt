@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import HelpIndex from '@/components/HelpIndex';
 import { readGlossaryTerms } from '@/lib/help-glossary';
-import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
+import { HELP_LEDE, HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
 import { HELP_QUICK_LINKS, quickLinks } from '@/lib/help-quick-links';
 import { siteUrl } from '@/lib/site';
 import { readHelpArticle, readHelpArticleIndex, readHelpFaq } from '@/modules/help';
@@ -24,7 +24,7 @@ export default async function Page() {
   return (
     <HelpIndex
       faq={faq.map(({ node }) => node)}
-      lede="Guides to the Compendium, your coven, its ingredients and grimoire, and the words we use."
+      lede={HELP_LEDE}
       quickLinks={quick}
       articles={articles.map(({ node }) => linkTo(node))}
       terms={terms}

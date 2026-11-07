@@ -6,6 +6,10 @@ import { helpPath, type HelpAddressed } from './help-paths';
 /** A public page reads at most this many rows of a list; the help centre is a few dozen pages. */
 export const HELP_PAGE_LIMIT = 200;
 
+/** The help front page's lede, which its skeleton draws too. */
+export const HELP_LEDE =
+  'Guides to the Compendium, your coven, its ingredients and grimoire, and the words we use.';
+
 /** A read that finds nothing answers the site's 404. */
 export async function orNotFound<T>(read: () => Promise<T>): Promise<T> {
   try {
