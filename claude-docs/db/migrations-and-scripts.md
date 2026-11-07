@@ -311,8 +311,8 @@ journal entry's** (`<NNNN>_snapshot.json`, `NNNN` being the tag's number). `driz
 checks the folder's snapshots for format and for two sharing a parent, then
 diffs the schema against the newest alone; `drizzle-kit migrate` reads the
 journal and the `.sql` files and opens no snapshot. The older ones were 80% of
-every line under `src/`, read by nothing, so `npm run db:generate` deletes
-them after each run, and git history keeps every one the entries above name.
+every line under `src/` and are read by nothing, so `npm run db:generate` deletes
+them after each run, and git history keeps them.
 Run `db:generate`, never a bare `drizzle-kit generate`, which leaves the old
 one beside the new: `tests/guards/migration-snapshots.test.ts` fails a folder
 with more than one snapshot, or with one that is not the newest entry's.
@@ -330,13 +330,9 @@ when the author runs `generate`, so with several migration branches in flight
 one can reach staging older than a migration already applied there:
 `migrate.yml` passes, the migration never runs, and the deploy meets a schema
 it expects and does not have. No test sees it, since a test database starts
-empty and runs every migration. On 2026-10-06 MB.171's 0045, MB.69's 0046,
-MB.172's 0047 and MB.168's 0048 were in flight together, and regenerating 0046
-to follow 0045 left it newer than 0047 and 0048: merged in number order, both
-would have been skipped.
+empty and runs every migration.
 
-**`npm run check:migration-order` refuses that before the merge** (MB.173,
-`scripts/check-migration-order.ts`). It reads the branch's journal from the
+**`npm run check:migration-order` refuses that before the merge** (`scripts/check-migration-order.ts`). It reads the branch's journal from the
 working tree, so a just-generated migration counts, against the base's
 committed one, the base resolving as `check:destructive-ddl`'s does
 (`-- --base <ref>` picks another). An entry is the branch's when the base has
@@ -368,3 +364,4 @@ well, which only `generate` rewrites.
 ### Rules
 
 The three "Rules this sets" lines of the migrations record
+   renamed migration carries its `.ack.md` sidecar under its new tag.
