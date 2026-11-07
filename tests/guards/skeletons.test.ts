@@ -24,6 +24,8 @@ const EXEMPT: Record<string, string> = {
   'src/app/access-paused/page.tsx': 'a paused-account notice, outside every skeleton host',
   'src/app/invite/[token]/page.tsx': 'the invitation accept panel, outside every skeleton host',
   'src/app/i/[token]/page.tsx': 'the card accept panel, outside every skeleton host',
+  'src/app/(unmatched)/[...missing]/page.tsx':
+    'answers every unmatched address with the 404, so there is no data to wait on',
   'src/app/(public)/support/request/page.tsx':
     'reads its request in the browser from the link fragment, so the server render has no data to wait on',
 };

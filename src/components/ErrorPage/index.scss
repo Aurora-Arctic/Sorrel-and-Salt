@@ -12,6 +12,12 @@
   margin: 0;
 }
 
+// A reference to quote, small and muted so it stays out of the reading line.
+.error-page__reference {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
 .error-page__way-on {
   display: flex;
   flex-wrap: wrap;
