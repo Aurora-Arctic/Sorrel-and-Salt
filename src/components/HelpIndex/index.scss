@@ -6,13 +6,18 @@
     margin-block: space(8) space(3);
   }
 
-  // A section is where the jump menu lands, under the shell's bar. Beside the menu the column's gap stands above
-  // each section, so its heading keeps the rest of the 64px it has on the page without one.
+  // A section is where the jump menu lands, under the shell's bar. Beside the menu the column's gap alone stands
+  // between the band and the Guides heading, as the search box stands above a page title elsewhere, in place of a
+  // heading's own top margin; the FAQ heading keeps a further step, so the long guide list ends before it.
   &__section {
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
   }
 
   &.page-with-nav &__section > h2:first-child {
+    margin-block-start: 0;
+  }
+
+  &.page-with-nav &__section + &__section > h2:first-child {
     margin-block-start: space(6);
   }
 
