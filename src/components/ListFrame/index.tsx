@@ -116,7 +116,6 @@ const ListFrame = ({ className, disabled = false, children }: ListFrameProps): R
         ref={root}
         className={className ? `list-frame ${className}` : 'list-frame'}
         aria-hidden={disabled || undefined}
-        inert={disabled || undefined}
       >
         {children}
       </div>

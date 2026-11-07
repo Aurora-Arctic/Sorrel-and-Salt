@@ -576,6 +576,12 @@
     }
   }
 
+  // A list drawn as a placeholder takes no click; its controls are disabled instead of the frame being
+  // `inert`, which would mark the skeleton as held-page content.
+  .list-frame[aria-hidden='true'] {
+    pointer-events: none;
+  }
+
   // The new list, faded in as it replaces the skeleton, as a tab's content
   // is (claude-docs/components/list-frame.md); a list the server drew,
   // before any press, has no `data-arrived` and shows at once.
