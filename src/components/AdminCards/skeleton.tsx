@@ -8,6 +8,7 @@ export const AdminCardsBodySkeleton = (): ReactElement => (
     headings={[
       'Batch',
       'Status',
+      'Beta',
       'Cards',
       'Accepted',
       'Refused Opens',
@@ -24,7 +25,7 @@ export const AdminCardsBodySkeleton = (): ReactElement => (
 export const CardArrivalsBodySkeleton = (): ReactElement => (
   <ListBodySkeleton
     label="Card Sign-Ups"
-    headings={['Name', 'Email', 'Accepted On', 'Batch', 'Covens Owned']}
+    headings={['Name', 'Email', 'Accepted On', 'Batch', 'Beta', 'Covens Owned']}
     count={4}
   />
 );
