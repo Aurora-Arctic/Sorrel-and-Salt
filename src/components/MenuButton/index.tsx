@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import {
   type KeyboardEvent,
   type ReactElement,
@@ -15,6 +14,7 @@ import { CheckIcon, ChevronIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // A labelled button with a chevron opening a menu, the APG menu-button pattern
 // (claude-docs/components/menu-button.md). Placed on Floating UI, fixed so a scrolling dialog
@@ -159,7 +159,7 @@ export default function MenuButton({
 
   const drawItem = (item: MenuButtonItem): ReactElement =>
     item.href !== undefined ? (
-      <Link
+      <PendingLink
         key={item.key}
         href={item.href}
         role="menuitem"
@@ -172,7 +172,7 @@ export default function MenuButton({
         }}
       >
         {item.label}
-      </Link>
+      </PendingLink>
     ) : (
       <button
         key={item.key}

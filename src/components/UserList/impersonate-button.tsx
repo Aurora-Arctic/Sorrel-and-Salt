@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import ConfirmedAction from './confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import {
   IMPERSONATION_LANDING,
   impersonationQuestion,
@@ -9,6 +9,7 @@ import {
   sendImpersonation,
 } from './impersonation';
 import type { ImpersonateButtonProps } from './types';
+import { reportLeaving } from '../../lib/navigation';
 
 // The row's Impersonate, asking first: acting as someone else is the table's one dangerous control.
 // Better Auth's endpoint is the guard, refusing a non-keeper and a keeper target. A success swaps
@@ -24,7 +25,10 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
     busy="Impersonating"
     confirmClass="btn btn--destructive"
     send={() => sendImpersonation(userId)}
-    onSent={() => window.location.assign(IMPERSONATION_LANDING)}
+    onSent={() => {
+      reportLeaving();
+      window.location.assign(IMPERSONATION_LANDING);
+    }}
     refusal={impersonationRefusal(name)}
   />
 );

@@ -40,10 +40,6 @@
   list-style: none;
 }
 
-.support-list__empty {
-  margin: 0;
-}
-
 // `min-inline-size: 0` lets the subject shrink below its text and end in an ellipsis.
 .support-list__item {
   @include stack(2);
@@ -73,6 +69,11 @@
 .support-list__item:focus-within {
   background-color: $surface-card-hover;
   box-shadow: $shadow-lifted;
+}
+
+// The row link is stretched over the row, so its ring is drawn on the row.
+.support-list__item:has(:focus-visible) {
+  @include focus-ring;
 }
 
 .support-list__link {

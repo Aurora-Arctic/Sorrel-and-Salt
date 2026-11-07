@@ -1,9 +1,9 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { ACCESS_PAUSED_PATH } from '../../lib/access-paused';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import type { PausedNoticeProps } from './types';
+import { PendingLink } from '../../lib/navigation';
 
 // A paused viewer's notice: a landmark of its own, as the page owns `main`. The shell draws it above every page, and a
 // page whose text column the shell cannot line up with (an ingredient entry) draws it inside that column instead.
@@ -19,7 +19,7 @@ const PausedNotice = ({ until, className }: PausedNoticeProps): ReactElement => 
       ) : (
         ', with no end date.'
       )}{' '}
-      <Link href={ACCESS_PAUSED_PATH}>What This Means</Link>
+      <PendingLink href={ACCESS_PAUSED_PATH}>What This Means</PendingLink>
     </Notice>
   </aside>
 );

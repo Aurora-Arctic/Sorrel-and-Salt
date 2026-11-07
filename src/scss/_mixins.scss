@@ -207,8 +207,11 @@
   letter-spacing: 0.01em;
 }
 
-// The contrast-checked part that must not be re-picked per component. Tokens go through the accessors, so a typo fails to compile.
+// A raised panel, a pill, a square badge. Each sets colour, edge and geometry
+// only — the contrast-checked part that must not be re-picked per component.
+// All name tokens through the accessors, so a typo fails to compile.
 
+// Elevation is an argument so a nested surface can take the floating shadow.
 // No padding, width, position or backdrop: those would fit only one modal.
 @mixin modal-surface($shadow: $shadow-elevated) {
   background-color: $surface-card;
@@ -704,10 +707,10 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// The lighter step passing across it (`skeleton-shimmer`) becomes the shared pulse under reduced motion (`loading-motion`).
-@mixin skeleton-shape {
-  display: block;
-  height: 1rem;
+// A skeleton's placeholder shape: a rounded bar of the muted ink a little way into the card
+// surface, so both themes carry it on the page and on a card, with a lighter step passing across
+// it (`skeleton-shimmer`) that becomes the shared pulse under reduced motion (`loading-motion`).
+@mixin skeleton-fill {
   border-radius: radius('control');
   background-image: linear-gradient(
     90deg,
@@ -719,10 +722,28 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
 }
 
+@mixin skeleton-shape {
+  display: block;
+  height: 1rem;
+  @include skeleton-fill;
+}
+
+// A card's placeholder: one block filling the whole card, in the card's own frame (its radius, border,
+// shadow and padding box), the same fill and shimmer as a bar. Nest inside the card's selector.
+@mixin card-skeleton-fill {
+  > .card-skeleton__fill {
+    @include skeleton-shape;
+    position: absolute;
+    inset: 0;
+    height: auto;
+    border-radius: inherit;
+  }
+}
+
 // Each emitted once by `_primitives.scss`. Roomy only while it is a table. Nest inside the table's selector.
 @mixin data-table-roomy {
   @container data-table not (max-width: #{$table-stack-width}) {
-    td {
+    :is(td, th) {
       padding-block: space(3);
       vertical-align: middle;
     }
@@ -732,7 +753,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 // A confirmation opened from a cell and a card wrap as prose again. Child combinators reach only this table's own cells. Nest inside the table's selector.
 @mixin data-table-nowrap {
   > thead > tr > th,
-  > tbody > tr > td {
+  > tbody > tr > :is(td, th) {
     white-space: nowrap;
   }
 
@@ -743,7 +764,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   @container data-table (max-width: #{$table-stack-width}) {
     &.data-table--stack {
       > thead > tr > th,
-      > tbody > tr > td {
+      > tbody > tr > :is(td, th) {
         white-space: normal;
       }
     }

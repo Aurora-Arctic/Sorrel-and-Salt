@@ -642,6 +642,13 @@ $action-look-glyph-size: $action-glyph-size * $action-mark-scale;
 // Written as `min($tip-width, calc(100vw - space(6)))` so a tip never runs off a phone.
 $tip-width: 18rem;
 
+// A floating menu (the account menu, the workspace switcher) is never narrower than its control and never wider than this; a search field's suggestions stay at the field's width.
+$panel-min-width: 15rem;
+$panel-max-width: 18rem;
+
+// A floating menu's row height, shared so the account menu and the switcher stand the same height.
+$panel-row-height: 2.8125rem;
+
 // One width for the native select the server draws and the type-ahead that replaces it once hydrated, so the swap moves nothing.
 // 14rem: most names fit, and the longest seeded one (18rem as the box draws it) runs on inside the box; its option in the list is drawn whole.
 $filter-choice-width: 14rem;
@@ -929,3 +936,45 @@ $burn-rim-frames: (
 $burn-char-blur: 1px;
 $burn-char-line-blur: 0.5px;
 $burn-char-line-spread: 4.75px;
+
+// The height a list's card skeleton stands, per kind of card and density: the tallest card of that
+// list (a card with its stock, forms or actions), which is the height the cards of a row stretch to.
+$card-skeleton-heights: (
+  'cupboard': (
+    'regular': 17.95rem,
+    'compact': 14.81rem,
+  ),
+  'compendium': (
+    'regular': 14.19rem,
+    'compact': 10.67rem,
+  ),
+  'spell': (
+    'regular': 16.52rem,
+    'compact': 15.26rem,
+  ),
+  'spell-draft': (
+    'regular': 18.52rem,
+    'compact': 17.01rem,
+  ),
+);
+
+// The height a table's placeholder row stands at phone width, where each row is a card: one block as
+// tall as that list's real stacked row (a typical row, with its longest cells). 'default' is a row
+// with no list named.
+$stack-row-skeleton-heights: (
+  'default': 16rem,
+  'users': 32rem,
+  'members': 23.25rem,
+  'support': 29.416rem,
+  'invitation-cards': 28.25rem,
+  'card-sign-ups': 21rem,
+  'refused-opens': 15.25rem,
+  'keeper-invitations': 16.625rem,
+  'privilege-changes': 22.75rem,
+  'pending-invitations': 13.375rem,
+  'received-invitations': 11rem,
+  'groups': 12.637rem,
+  'values': 20rem,
+  'category-values': 14.625rem,
+  'compendium': 23.612rem,
+);

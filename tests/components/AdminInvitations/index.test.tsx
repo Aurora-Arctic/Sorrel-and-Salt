@@ -105,11 +105,14 @@ describe('AdminInvitations', () => {
     expect(send()).toBeEnabled();
     fireEvent.click(send());
 
-    expect(
-      (await screen.findAllByRole('status')).filter((status) =>
-        status.textContent?.includes('cass@example.test'),
-      ),
-    ).toHaveLength(1);
+    // The list's own empty state is a status region already, so the sent notice is waited for by its text.
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole('status')
+          .filter((status) => status.textContent?.includes('cass@example.test')),
+      ).toHaveLength(1),
+    );
     expect(calls).toEqual([
       { email: 'cass@example.test', siteRole: 'curator', note: 'Knows the celestial bodies' },
     ]);

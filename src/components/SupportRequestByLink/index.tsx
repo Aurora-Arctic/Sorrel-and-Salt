@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -10,10 +9,12 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import { statusBadgeClass } from '../SupportRequests/status-badge';
 import type { SupportAbout, SupportStatus } from '../SupportRequests/types';
+import Skeleton from '../Skeleton';
 import SupportSenderRequest from '../SupportSenderRequest';
 import { senderStatusLabel } from '../SupportSenderRequest/status';
 import SupportViewReplyForm from '../SupportViewReplyForm';
 import type { LinkedRequest, LinkState } from './types';
+import { PendingLink } from '../../lib/navigation';
 
 // The token is in the URL fragment, which the browser never sends: it is read here, kept in sessionStorage and dropped from the address bar.
 
@@ -131,7 +132,15 @@ const SupportRequestByLink = (): ReactElement => {
     };
   }, [load]);
 
-  if (state.phase === 'loading') return <p role="status">Opening your request.</p>;
+  // The one status announces the wait; the quiet skeleton beside it is for the eye alone.
+  if (state.phase === 'loading') {
+    return (
+      <div className="page-with-nav">
+        <p role="status">Opening your request.</p>
+        <Skeleton shape="line" count={4} quiet />
+      </div>
+    );
+  }
   if (state.phase === 'failed') return <Notice kind="error">{state.message}</Notice>;
   if (state.phase === 'missing') {
     return (
@@ -140,7 +149,7 @@ const SupportRequestByLink = (): ReactElement => {
         <p>
           This link doesn’t open a request. The request may be closed, or this may not be the newest
           link. Only the link in the latest email we sent works, and a link stops working after 30
-          days. To ask something new, <Link href="/support">send a new request</Link>.
+          days. To ask something new, <PendingLink href="/support">send a new request</PendingLink>.
         </p>
       </div>
     );

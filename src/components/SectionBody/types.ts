@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import type { NavigationTarget } from '../../lib/navigation';
 
 export interface SectionBodyProps {
-  region: Exclude<NavigationTarget['region'], 'main'>;
+  /** The navigations this body answers: the moves to a page the registry gives this region. */
+  region: 'coven' | 'admin';
   className: string;
   children: ReactNode;
 }

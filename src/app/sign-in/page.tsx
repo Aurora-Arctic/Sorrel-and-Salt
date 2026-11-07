@@ -10,6 +10,7 @@ import { siteUrl } from '../../lib/site';
 // oxlint-disable-next-line no-restricted-imports
 import { configuredProviders } from '../../lib/social-providers-config';
 import type { SignInPageProps } from './types';
+import PageFrame from '@/components/PageFrame';
 
 /**
  * The bare address is the one to index. `?next=` and `?error=` show the same form, so they name it
@@ -38,8 +39,8 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const configured = configuredProviders();
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <SignInPanel next={next} error={error} configured={configured} />
-    </main>
+    </PageFrame>
   );
 }

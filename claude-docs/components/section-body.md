@@ -8,34 +8,16 @@ the page below changes:
 - the coven's `[slug]` layout, `region="coven"` with `className="coven-layout"`;
 - the `/curator` and `/keepers` layouts, `region="admin"` with `className="page-column"`.
 
-`region` is the navigations this body answers.
+`region` is the host this body is: it draws the registry entries that name it ([`loading.md`](../loading.md), "How a skeleton is chosen").
 
 ## Contracts
 
 - **When the wait ends, the skeleton fades out over the arrived page** rather than vanishing: it is kept for 200ms as an `aria-hidden`, absolutely placed overlay on the section frame (which takes the `skeleton-fade-host` class), then unmounts. See [`SkeletonFade`](skeleton.md#skeleton-fade).
-- **At rest, or while a navigation aimed at another region or at no region
-  is on its way, it renders the children as they were.**
-- **While a navigation aimed at its own region is on its way, the page is
-  hidden and put out of reach at once** (`visibility: hidden`, `inert`,
-  `aria-hidden`) and `<Skeleton>` of the target's shape, with its `title`, `action` and `filter` parts, stands over it,
-  with no dimming. The page stays mounted at its full height inside the
-  section frame, so its flex column and gap are untouched, and the skeleton is
-  laid over it in a copy of that frame, pinned under the bar
-  ([`SkeletonFade`](skeleton.md#skeleton-fade), "The page is held, not swapped"). Nobody can act on the wrong coven's data in the wait. The
-  shape is the destination's: in the coven the section's (compact `cards` for
-  Ingredients and the grimoire, `table` for the people pages, `page` for the home), worked out
-  by `WorkspaceSwitcher` or `CovenNav` when the navigation starts; in admin
-  `adminTarget`'s (`AdminNav`).
-- **The context row is not inside it.** Only a `main` target, aimed at a
-  different part of the site, replaces the row too (`MainBody`). So a link may
-  name `admin` only from a page under the admin layout, and `coven` only from
-  one under the coven layout: elsewhere no body answers it and no skeleton shows.
-- **The skeleton sits inside a `<main>`.** The pages own their landmark, so
-  without one here the page would have none for the length of the wait, and
-  axe's one-main rule would fail.
-- **It holds a visually hidden `<h1>Loading</h1>`.** The skeleton replaced the
-  page's own `h1`, and axe's page-has-heading-one rule fails during every
-  wait without it.
+- **At rest, or while a navigation is on its way that another body draws (or none: a refresh, the same address, an address no page answers), it renders the children as they were.**
+- **While a navigation to a page of its own section is on its way, the page is hidden and put out of reach at once** (`visibility: hidden`, `inert`, `aria-hidden`) and the destination's skeleton, chosen by its address from the registry (`skeletonFor`), stands over it, with no dimming. The page stays mounted at its full height inside the section frame, so its flex column and gap are untouched, and the skeleton is laid over it in a copy of that frame, pinned under the bar ([`SkeletonFade`](skeleton.md#skeleton-fade), "The page is held, not swapped"). Nobody can act on the wrong coven's data in the wait. A coven body draws for a destination in any coven (a switch keeps the header and switcher up and busy), and an admin body only for one in the same area (`curator` or `keepers`).
+- **The context row is not inside it.** Only a skeleton the registry gives to `main` (a page outside this section) replaces the row too (`MainBody`). A section body whose section is not standing for the address draws nothing, and `MainBody` draws the whole frame.
+- **The skeleton sits inside a `<main>`.** The pages own their landmark, so without one here the page would have none for the length of the wait, and axe's one-main rule would fail.
+- **It holds one visually hidden `<output>` "Loading" and no heading.** Every skeleton draws its page's own `PageHeader` `h1`, so the wait still has one level-one heading (`tests/guards/skeleton-heading.test.tsx`).
 - A `loading.tsx` would be wrong here: a route boundary turns the guards'
   404, 403 and 308 responses into 200s, so the wait is read from the
   navigation provider's state instead (`navigation-bar.md`).

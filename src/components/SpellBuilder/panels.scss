@@ -5,11 +5,6 @@
 // Category Match and In the Cupboard: the two panels the builder and the recipe page's side column
 // both draw, in a stylesheet of their own so the recipe page loads these and not the whole builder's.
 
-.spell-aside__empty {
-  margin: 0;
-  color: $text-muted;
-}
-
 .spell-inventory {
   @include stack(2);
 }

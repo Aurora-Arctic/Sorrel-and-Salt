@@ -246,7 +246,7 @@
 }
 
 .chip-color-field__empty {
-  color: var(--text-muted);
+  color: $text-muted;
   font-size: type-size('caption');
 }
 

@@ -1,13 +1,23 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import ErrorBoundary from '@/app/error';
 import GlobalError from '@/app/global-error';
 import NotFound from '@/app/not-found';
 
-vi.mock('next/navigation', () => ({ usePathname: () => '/gone' }));
+vi.mock('next/navigation', () => ({ usePathname: () => '/gone', useRouter: () => ({}) }));
 window.history.replaceState({}, '', '/gone');
+
+// React marks `document` as listening the first time any root mounts, and a later root whose container is
+// `document` itself (GlobalError renders a whole `<html>`) then skips attaching its click listener. Clearing the
+// mark after each test gives that root its own.
+afterEach(() => {
+  for (const key of Object.keys(document)) {
+    if (key.startsWith('_reactListening'))
+      delete (document as unknown as Record<string, unknown>)[key];
+  }
+});
 
 // The screens a failure lands on. Each must offer a way onward and a way to report it, and
 // must not print the error's message or stack, whatever it holds.
@@ -36,11 +46,19 @@ describe('the error boundary', () => {
 });
 
 describe('the global error boundary', () => {
-  it('offers a way home and a report, and prints no message or stack', () => {
+  it('offers to retry, a way home and a report, and prints no message or stack', () => {
+    const retry = vi.fn();
     // It renders <html>, which cannot sit inside the test's <div>, so React
     // takes the document itself as the root.
-    const { container } = render(<GlobalError error={failure} />, { container: document });
+    // The boundary's props as Next passes them: the error and its retry.
+    const props = { error: failure, retry };
+    const { container } = render(<GlobalError {...props} />, {
+      container: document,
+    });
 
+    fireEvent.click(screen.getByRole('button', { name: 'Try Again' }));
+
+    expect(retry).toHaveBeenCalledTimes(1);
     expect(home()).toHaveAttribute('href', '/');
     expect(report()).toHaveAttribute('href', '/support?support=bug&error=500&ref=d1g3st');
     expect(container.textContent).not.toMatch(/secret_table|secret-file/);

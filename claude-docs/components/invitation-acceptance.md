@@ -16,7 +16,7 @@
 
 ## Styling
 
-A `.panel`; its `PageHeader` ([`page-header.md`](page-header.md)) holds the `h1` and the grant sentence as its `lede`. A refusal has no grant, so its head is the heading alone with its row's margin dropped. The page has no AppShell, so its `main` is `.page-frame.page-frame--narrow` ([`styling.md`](../styling.md), "The page frame"), which sets the panel's width. A refusal's reason is an error `Notice` ([`notice.md`](notice.md)). Accept's wrapper is a `div`, not a `p`, because the callout is a `div`. Accept is a `BusyButton` ([`busy-button.md`](busy-button.md)).
+A `.panel`; its `PageHeader` ([`page-header.md`](page-header.md)) holds the `h1` and the grant sentence as its `lede`. A refusal's lede says only that the invitation cannot be used, and the alert beneath says why; a Back to Home link follows it, so the page is never a dead end. The head is centred, as the other card pages' are (`.card-page-header`, with the heading at `.auth-title` size). The page has no AppShell, so its `main` is `.page-frame.page-frame--narrow` ([`styling.md`](../styling.md), "The page frame"), which sets the panel's width. A refusal's reason is an error `Notice` ([`notice.md`](notice.md)). Accept's wrapper is a `div`, not a `p`, because the callout is a `div`. Accept is a `BusyButton` ([`busy-button.md`](busy-button.md)).
 
 ## Stories and tests
 

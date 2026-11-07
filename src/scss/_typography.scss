@@ -29,6 +29,7 @@
 
   // An h1 set at the h2 size so a long title fits the narrow card.
   .auth-title {
+    text-align: center;
     font-size: heading-size(2);
     line-height: 1.15;
   }

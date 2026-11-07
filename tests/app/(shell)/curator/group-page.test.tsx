@@ -111,7 +111,7 @@ describe('a group page, on the category groups', () => {
     await renderPage();
 
     expect(listCategoryGroups).toHaveBeenCalledWith({ limit: 26, inverted: false });
-    expect(screen.getByRole('cell', { name: 'Fixture Wards' })).toBeInTheDocument();
+    expect(screen.getByRole('rowheader', { name: 'Fixture Wards' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Edit Fixture Wards' })).toHaveAttribute(
       'href',
       '/curator/category-groups?edit=fixture-wards',

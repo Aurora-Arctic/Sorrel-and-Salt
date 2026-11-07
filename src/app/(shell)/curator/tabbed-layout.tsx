@@ -1,4 +1,5 @@
 import TabbedPage from '../../../components/TabbedPage';
+import { withSkeletons } from '../../../components/AdminNav/skeleton';
 import { ADMIN_PAGES } from '../../../components/AdminNav/sections';
 import type { TabbedLayoutProps, TabbedPageKey } from './types';
 
@@ -9,7 +10,7 @@ export function tabbedLayout(key: TabbedPageKey) {
   const { label, tabs } = ADMIN_PAGES[key];
   return function AdminTabbedLayout({ action, children }: TabbedLayoutProps) {
     return (
-      <TabbedPage title={label} tabs={tabs} action={action}>
+      <TabbedPage title={label} tabs={withSkeletons(tabs)} action={action}>
         {children}
       </TabbedPage>
     );

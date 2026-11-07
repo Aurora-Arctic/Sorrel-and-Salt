@@ -342,7 +342,10 @@ const CompendiumListFilterWithSentence = ({
         covens={covens}
         cursor={cursor}
       />
-      <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
+      {/* An empty list with no filter says so itself, so the count line stays out. */}
+      {(total > 0 || sentence.hasFilter) && (
+        <SearchSentence sentence={sentence} query={searched.query} pending={searching} />
+      )}
     </>
   );
 };

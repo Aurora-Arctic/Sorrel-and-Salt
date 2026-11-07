@@ -117,6 +117,7 @@ describe('public routes', () => {
     '/compendium/ingredients/x',
     '/support',
     '/support?support=bug&error=404',
+    // The public documents carry no application data.
     '/privacy',
     '/disclaimer',
     '/terms',
@@ -138,30 +139,39 @@ describe('public routes', () => {
     expect(response.headers.get('x-middleware-next')).toBe('1');
   });
 
+  // Deny-by-default holds for lookalikes: an entry names a whole path, or a whole segment with `/*`, so
+  // a page that merely starts with one, or shares its last segment, is protected.
   it.each([
+    '/account/support',
+    '/coven/hearth',
+    '/coven/hearth/ingredients',
+    '/keepers',
+    '/curator',
+  ])('redirects a signed-out request to the protected page %s', async (path) => {
+    expect((await proxy(request(path))).status).toBe(307);
+  });
+
+  // An address that is no page at all holds no data to protect, so a signed-out visitor gets the 404 in
+  // the public frame, not Sign In. Each is a lookalike of a public entry, which must not admit it as that
+  // page either: it reaches routing, which has nothing to draw for it.
+  it.each([
+    '/nothing-here',
     '/sign-in-help',
     '/sign-in/elsewhere',
     '/forgot-password/x',
     '/reset-password/abc',
     '/access-paused/x',
     '/invites',
-    '/invite',
-    '/i',
     '/icards/x',
-    '/emails/x.png',
     '/compendiums',
     '/compendium-admin',
-    '/support/other',
     '/supports',
-    '/account/support',
     '/robots.txt.bak',
-    '/llms.txt/x',
-    '/opengraph-image/x',
-    '/.well-known',
-    '/coven/hearth',
-    '/coven/hearth/ingredients',
-  ])('redirects a signed-out request to the lookalike %s', async (path) => {
-    expect((await proxy(request(path))).status).toBe(307);
+  ])('lets a signed-out request to the unknown address %s through to the 404', async (path) => {
+    const response = await proxy(request(path));
+
+    expect(getRedirectUrl(response)).toBeNull();
+    expect(response.headers.get('x-middleware-next')).toBe('1');
   });
 
   it('forwards the return path on a public route too', async () => {

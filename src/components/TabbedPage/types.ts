@@ -4,20 +4,15 @@ import type { ReactNode } from 'react';
 export interface PageTab {
   href: Route;
   label: string;
+  /** A number shown after the label as a facet count, "Mine 3", and "99+" from 100; left out, none. */
   count?: number;
-  /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
-  filtered?: boolean;
-  shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
-  sections?: number;
-  columns?: number;
-  fields?: number;
-  /** With `cards`: the tab's list opens compact, so its loading skeleton does too. */
-  density?: 'compact';
-  /** With `cards`: the card the list draws, so its loading skeleton does too: the grimoire's spell card. */
-  card?: 'spell';
+  /** What the panel draws while this tab is on its way: the tab's own placeholder, built from the components its page draws. */
+  skeleton?: ReactNode;
 }
 
 export interface TabbedPageProps {
+  /** The element drawn: `main` (the default), or `div` for a skeleton inside a body that already has the page's one landmark. */
+  as?: 'main' | 'div';
   title: string;
   tabs: readonly PageTab[];
   action?: ReactNode;
@@ -26,6 +21,7 @@ export interface TabbedPageProps {
   tabsBelow?: boolean;
   /** The open tab's `href`, for tabs told apart by their query rather than their path; left out, it is found from the pathname. */
   open?: string;
+  /** The open tab's content. */
   children: ReactNode;
 }
 
@@ -47,19 +43,11 @@ export interface TabSwitchProviderProps {
 }
 
 export interface TabActionProps {
+  /** The open tab's action, which greys out while another tab is on its way. */
   children: ReactNode;
 }
 
-export interface TabPanelLoadingProps {
-  filter?: boolean;
-  shape?: 'table' | 'cards' | 'sections' | 'requests' | 'document';
-  count?: number;
-  columns?: number;
-  fields?: number;
-  density?: 'compact';
-  card?: 'spell';
-}
-
 export interface TabPanelProps {
+  /** The open tab's content, which the loading state replaces while a tab is on its way. */
   children: ReactNode;
 }

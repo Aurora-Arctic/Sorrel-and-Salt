@@ -1,7 +1,8 @@
 import type { Route } from 'next';
 import type { UserRole } from './session';
-import type { PageTab } from '../components/TabbedPage/types';
-import { SUPPORT_LIST_PATH } from './support-path';
+
+// Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route protection (src/proxy.ts,
+// src/lib/request-session.ts): one rule for which return paths are safe, plus the account page's OAuth round-trip sentences.
 
 /**
  * Where a sign-in goes when no page asked for the visitor back, for anyone but a curator or an admin: the post-sign-in
@@ -125,12 +126,6 @@ export const ACCOUNT_SIGN_IN_PATH = '/account/sign-in';
 
 export const ACCOUNT_PASSWORD_PATH = `${ACCOUNT_SIGN_IN_PATH}#password` as Route;
 export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route;
-
-export const ACCOUNT_TABS: readonly PageTab[] = [
-  { href: ACCOUNT_PATH as Route, label: 'Account', shape: 'sections', sections: 3 },
-  { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In', shape: 'sections', sections: 4 },
-  { href: SUPPORT_LIST_PATH as Route, label: 'Support Requests', shape: 'requests' },
-];
 
 export const ACCOUNT_INVITATIONS_ID = 'account-invitations';
 export const ACCOUNT_INVITATIONS_PATH = `${ACCOUNT_PATH}#${ACCOUNT_INVITATIONS_ID}` as const;

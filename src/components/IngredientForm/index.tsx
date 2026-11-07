@@ -103,6 +103,7 @@ import { VariantsField, useVariantFolds } from './variants';
 import './index.scss';
 import ReviewRow from '../IngredientEntry/review-row';
 import ShownToggle from '../IngredientEntry/shown-toggle';
+import { reportLeaving } from '../../lib/navigation';
 
 // Every property of an ingredient, validated by the shared schema before the mutation is sent and by
 // the service after; an error lands beside the field its path names, or above them all. A coven's
@@ -821,7 +822,10 @@ const IngredientForm = ({
     await autosave.resolveConflict('reload');
     if (mirror) clearMirror(mirror);
     if (onReload) onReload();
-    else window.location.reload();
+    else {
+      reportLeaving();
+      window.location.reload();
+    }
   };
 
   const endRedirect = async (): Promise<void> => {

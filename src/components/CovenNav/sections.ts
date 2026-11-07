@@ -1,5 +1,4 @@
 import type { Route } from 'next';
-import { covenTarget } from '../../lib/coven-path';
 import type { SectionNavItem } from '../SectionNav/types';
 
 // `Route<T>` checks a dynamic address against the built routes only when `T` is inferred from the
@@ -11,10 +10,7 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 // Members is shown by what the role may do (`member: read`), passed as a boolean since the server-only
 // access-control module cannot load in the workshop's browser build; never by a rank.
 export const covenSections = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] =>
-  sectionsOf(slug, canReadMembers).map((section) => ({
-    ...section,
-    target: covenTarget(section.href),
-  }));
+  sectionsOf(slug, canReadMembers);
 
 const sectionsOf = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] => [
   { label: 'Overview', href: route(`/coven/${slug}`), icon: 'overview', exact: true },

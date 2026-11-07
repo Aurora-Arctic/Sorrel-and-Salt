@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import PageHeader from '../../components/PageHeader';
 import SupportLink from '../../components/SupportLink';
@@ -7,6 +6,8 @@ import { getShellSession } from '../../lib/request-session';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import LocalTime from '../../components/LocalTime';
 import { getMySupportTimeout } from '../../modules/support';
+import PageFrame from '@/components/PageFrame';
+import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = {
   title: 'Access Paused',
@@ -26,7 +27,7 @@ export default async function AccessPausedPage() {
   const timedOut = session.emailUnverified ? null : await getMySupportTimeout(session);
 
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <div className="panel">
         <PageHeader headingClassName="auth-title" title="Access Paused" />
         {accessPause.until ? (
@@ -51,19 +52,20 @@ export default async function AccessPausedPage() {
               <p>You cannot send a support request: you are timed out with no end date.</p>
             )}
             <p>
-              You can still <Link href={SUPPORT_LIST_PATH}>read your requests</Link>.
+              You can still <PendingLink href={SUPPORT_LIST_PATH}>read your requests</PendingLink>.
             </p>
           </>
         ) : (
           <p>
             You can still reach <SupportLink>Support</SupportLink> signed in, to ask about the
-            pause, and read <Link href={SUPPORT_LIST_PATH}>your requests</Link>.
+            pause, and read <PendingLink href={SUPPORT_LIST_PATH}>your requests</PendingLink>.
           </p>
         )}
         <p>
-          The <Link href="/compendium">Compendium</Link> stays open to everyone, without signing in.
+          The <PendingLink href="/compendium">Compendium</PendingLink> stays open to everyone,
+          without signing in.
         </p>
       </div>
-    </main>
+    </PageFrame>
   );
 }

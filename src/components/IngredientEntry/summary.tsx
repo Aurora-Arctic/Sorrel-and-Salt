@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import FormIcon from '../FormIcon';
 import SafetyNote from '../SafetyNote';
@@ -21,6 +21,7 @@ import { HELD_IN_COVENS_TITLE } from '../AddIcon/wording';
 // Loaded here: a list page draws no entry page to load the blocks' styles.
 import './index.scss';
 import './summary.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // The details modal's body: the entry page's Details section cut to a glance, drawn by the page's
 // own blocks and leaving out what is empty (claude-docs/components/ingredient-entry.md, "The details modal").
@@ -109,10 +110,10 @@ export default function IngredientSummary({
     >
       {holding.map(({ id, slug, name }) => (
         <li key={id}>
-          <Link href={`/coven/${slug}/ingredients/${detail.entry.id}`}>
+          <PendingLink href={`/coven/${slug}/ingredients/${detail.entry.id}` as Route}>
             <ShelfIcon />
             <span>{name}</span>
-          </Link>
+          </PendingLink>
         </li>
       ))}
     </ListBlock>

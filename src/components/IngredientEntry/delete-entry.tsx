@@ -6,9 +6,8 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
-import BusyButton from '../BusyButton';
 import { useAnnounce } from '../ClickFeedback/status-region';
-import Modal from '../Modal';
+import ConfirmDialog from '../ConfirmDialog';
 import type { CupboardQuestionProps, CupboardWrite, DeleteEntryOptions } from './types';
 
 // Delete Ingredient asked in a dialog, for a coven's own entry: the entry page's bin and a list
@@ -27,35 +26,20 @@ export function DeleteDialog({
   returnTo,
 }: CupboardQuestionProps): ReactElement {
   return (
-    <Modal title="Delete Ingredient" onClose={onClose} returnTo={returnTo}>
-      {(close) => (
+    <ConfirmDialog
+      title="Delete Ingredient"
+      question={
         <>
-          <p>
-            Delete <strong>{name}</strong>? It leaves the coven, but any spell that uses it keeps
-            it.
-          </p>
-          <div className="modal__actions">
-            <BusyButton
-              className="btn btn--destructive"
-              busy={write.pending}
-              busyLabel="Deleting"
-              disabled={write.pending}
-              onClick={write.run}
-            >
-              Delete
-            </BusyButton>
-            <button
-              type="button"
-              className="btn btn--quiet"
-              disabled={write.pending}
-              onClick={close}
-            >
-              Cancel
-            </button>
-          </div>
+          Delete <strong>{name}</strong>? It leaves the coven, but any spell that uses it keeps it.
         </>
-      )}
-    </Modal>
+      }
+      confirmLabel="Delete"
+      busyLabel="Deleting"
+      busy={write.pending}
+      onConfirm={write.run}
+      onClose={onClose}
+      returnTo={returnTo}
+    />
   );
 }
 

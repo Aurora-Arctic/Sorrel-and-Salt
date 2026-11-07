@@ -117,6 +117,7 @@ const SignInMethods = ({
       signInAgain.report(GENERIC_FAILURE);
       return;
     }
+    reportLeaving();
     window.location.assign(signInPath(ACCOUNT_SIGN_IN_PATH));
   };
 

@@ -10,7 +10,8 @@ import { FieldShell, FormActions, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 
-// Plain controlled input, not react-hook-form: every refusal is the server's (claude-docs/components/create-workspace-form.md).
+// A plain controlled input, not react-hook-form: every refusal is the server's, the creation gate's
+// included (claude-docs/components/create-workspace-form.md).
 
 const CreateWorkspaceDocument = graphql(`
   mutation CreateWorkspace($name: String!) {
@@ -34,11 +35,7 @@ const CreateWorkspaceForm = (): ReactElement => {
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
-      // The new coven's home replaces the whole page, not only a coven body: it has its contents
-      // menu.
-      navigate(`/coven/${slug}`, {
-        target: { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' },
-      });
+      navigate(`/coven/${slug}`);
       // The shell's switcher lists the viewer's covens from the layout, which
       // a client-side push does not re-run: refresh brings the new one in.
       refresh();

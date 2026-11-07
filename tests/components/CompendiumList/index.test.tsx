@@ -23,6 +23,7 @@ import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
 import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
+import { rowCells } from '../../support/table';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -83,7 +84,7 @@ describe('CompendiumList', () => {
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(within(rows[2]).queryByRole('list', { name: 'Categories' })).toBeNull();
     const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
-    const cells = within(rows[2]).getAllByRole('cell');
+    const cells = rowCells(rows[2]);
     expect(cells[heads.indexOf('Categories')]).toHaveTextContent('—');
   });
 
@@ -171,12 +172,12 @@ describe('CompendiumList', () => {
     expect(screen.getByRole('dialog', { name: 'Ingredient, Fixture Salt' })).toBeInTheDocument();
   });
 
-  it("names the entry page it leads to, so that page's frame is drawn while it loads", async () => {
+  it('names the entry page it leads to by its address while it loads', async () => {
     let target: unknown;
     function Probe() {
       const state = useNavigationState();
       useEffect(() => {
-        target = state.target;
+        target = state.href;
       });
       return null;
     }
@@ -196,7 +197,7 @@ describe('CompendiumList', () => {
     });
 
     expect(router.push.mock.calls[0]?.[0]).toBe('/compendium/ingredients/fixture-salt');
-    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    expect(target).toBe('/compendium/ingredients/fixture-salt');
     await act(async () => arrive());
   });
 
@@ -208,6 +209,26 @@ describe('CompendiumList', () => {
       <CompendiumList {...props({ entries: [], filter: { ...NO_FILTER, query: 'nothing' } })} />,
     );
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  // A filter that matched nothing offers the way back to the whole list: its own address, every filter
+  // dropped. A compendium that is empty with no filter has nothing to clear.
+  it('offers Clear Filters where a filter matched nothing, back to the list with no filter', () => {
+    const filter: CompendiumListFilter = {
+      ...NO_FILTER,
+      query: 'nothing',
+      withoutReferences: true,
+    };
+    const { unmount } = render(<CompendiumList {...props({ entries: [], filter })} />);
+    const state = screen.getByRole('status', { name: 'No Matches' });
+    expect(within(state).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      compendiumHref(NO_FILTER),
+    );
+    unmount();
+
+    render(<CompendiumList {...props({ entries: [] })} />);
+    expect(screen.queryByRole('link', { name: 'Clear Filters' })).toBeNull();
   });
 
   it('bolds each filter value in the empty sentence and leaves the joining words plain', () => {

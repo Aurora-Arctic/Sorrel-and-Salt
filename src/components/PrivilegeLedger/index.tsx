@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import ListFrame, { ListBody } from '../ListFrame';
+import { PrivilegeLedgerBodySkeleton } from './skeleton';
 import LocalTime from '../LocalTime';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
@@ -66,7 +67,7 @@ const PrivilegeLedger = ({
   <ListFrame className="privilege-ledger">
     <LedgerFilterForm key={`${filter.query ?? ''}\n${filter.privilege ?? ''}`} filter={filter} />
 
-    <ListBody>
+    <ListBody skeleton={<PrivilegeLedgerBodySkeleton />}>
       <StackTable
         columns={COLUMNS}
         rows={changes}

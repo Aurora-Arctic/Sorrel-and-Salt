@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { signInPath } from '../../lib/sign-in';
 import { SUPPORT_PATH } from '../../lib/support-path';
@@ -7,6 +6,7 @@ import Notice from '../Notice';
 import SignedOutSupportForm from '../SignedOutSupportForm';
 import SupportForm from '../SupportForm';
 import type { SupportPanelProps } from './types';
+import { PendingLink } from '../../lib/navigation';
 
 // (claude-docs/components/support-form.md)
 
@@ -20,9 +20,9 @@ const SupportPanel = ({
     return (
       <div className="support-panel--signed-out">
         <Notice kind="plain">
-          Have an account? <Link href={signInPath(returnTo)}>Sign In</Link> to write about anything.
-          Without one, you can write to us about accessibility, a bug, signing in, privacy or a
-          question.
+          Have an account? <PendingLink href={signInPath(returnTo)}>Sign In</PendingLink> to write
+          about anything. Without one, you can write to us about accessibility, a bug, signing in,
+          privacy or a question.
         </Notice>
         <SignedOutSupportForm about={state.support} path={path} />
       </div>

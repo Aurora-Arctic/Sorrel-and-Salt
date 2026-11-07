@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import BrandName from '../AppShell/brand-name';
 import MainBody from '../AppShell/main-body';
@@ -23,18 +22,14 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
     </a>
     <header className="public-frame__bar">
       <div className="public-frame__bar-inner">
-        <PendingLink
-          href="/"
-          className="public-frame__brand"
-          navigationTarget={{ region: 'main', shape: 'page' }}
-        >
+        <PendingLink href="/" className="public-frame__brand">
           <BrandName block="public-frame" />
         </PendingLink>
         <SiteNav links={COMPENDIUM_LINK} />
         <div className="public-frame__end">
-          <Link className="btn btn--solid btn--medium" href="/sign-in">
+          <PendingLink className="btn btn--solid btn--medium" href="/sign-in">
             Sign In
-          </Link>
+          </PendingLink>
           {/* The shell’s wrapper (AppShell/index.scss). */}
           <span className="app-shell__theme">
             <ThemeToggle variant="inline" />

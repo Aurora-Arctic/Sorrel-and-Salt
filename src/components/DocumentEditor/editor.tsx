@@ -9,7 +9,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { editorPlugins } from './elements';
 import Toolbar from './toolbar';
 import { editorValueToMarkdown, markdownToEditorValue } from './markdown';

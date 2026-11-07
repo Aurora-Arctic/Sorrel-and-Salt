@@ -6,7 +6,7 @@
 
 **Content and marks**
 
-- The name is an `h2` holding the card's **one link**, a `PendingLink` naming the page it draws (`ingredientLinkTarget`, [`loading.md`](../loading.md)), so both lists show the entry page's own skeleton while it loads. It ends with a `LinkHint` ([`link-hint.md`](link-hint.md)) because entry pages cannot have a route `loading.tsx`.
+- The name is an `h2` holding the card's **one link**, a `PendingLink`, so both lists show the entry page's own skeleton, chosen by its address ([`loading.md`](../loading.md)), while it loads. It ends with a `LinkHint` ([`link-hint.md`](link-hint.md)) because entry pages cannot have a route `loading.tsx`.
 - The card owns layout and nothing else. Marks, chips and stock badges are each the project's one presentation, never restyled here.
 - `nomenclature` decides italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic.
 - The forms line puts a `FormIcon` before each form, which tells two entries sharing a label apart. `forms={false}` turns it off; the coven's cards do, because their jar lines and Quick Look already name every form. The variants still feed the safety badge.

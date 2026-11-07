@@ -83,7 +83,7 @@ test.describe('who is in a coven', () => {
           // By the name cell: Ash is also named in other rows' Invited By and Updated.
           const row = table
             .getByRole('row')
-            .filter({ has: page.getByRole('cell', { name: new RegExp(`^${name}( You)?$`) }) });
+            .filter({ has: page.getByRole('rowheader', { name: new RegExp(`^${name}( You)?$`) }) });
           if (reader === ash) await expect(row).toContainText(address);
           else await expect(row).not.toContainText(address);
         }

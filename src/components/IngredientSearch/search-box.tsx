@@ -1,7 +1,6 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
@@ -19,6 +18,9 @@ import type {
   IngredientSearchOption,
 } from './types';
 import './index.scss';
+
+// The search row's first control: a type-ahead over the compendium's ranked search, with the magnifier as the form's one
+// submit. The list changes only on Enter, the clear, a pick or the last row.
 
 const IngredientSearchMatchesDocument = graphql(`
   query IngredientSearchMatches($query: String, $first: Int) {
@@ -85,7 +87,8 @@ const GrimoireSearchMatchesDocument = graphql(`
   }
 `);
 
-const WORDING = {
+/** The words the box uses for what it searches: an ingredient's name, or a spell's title. */
+export const WORDING = {
   ingredient: {
     label: 'Name',
     placeholder: 'Search',
@@ -230,10 +233,7 @@ const IngredientSearchBox = ({
     }
     const href = pickHref(option.match);
     if (modal && pickHeading) modal.open(href, pickHeading(option.match), pickPlace);
-    else {
-      const target = ingredientLinkTarget(href);
-      navigate(href, target ? { target } : {});
-    }
+    else navigate(href);
   }
 
   return (

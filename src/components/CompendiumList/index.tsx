@@ -1,6 +1,5 @@
 import type { Route } from 'next';
 import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
 import ShownToggle from '../IngredientEntry/shown-toggle';
@@ -14,7 +13,9 @@ import type { ColumnSort, OtherOrder, SortDirection, StackColumn } from '../Data
 import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
+import { CompendiumListBodySkeleton } from './skeleton';
 import IngredientSearch from '../IngredientSearch';
+import { buildSearchSentence } from '../IngredientSearch/sentence';
 import CompendiumListFilter from './filter';
 import { compendiumHref } from './href';
 import type {
@@ -88,7 +89,6 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
         <PendingLink
           className="compendium-list__name"
           href={`/compendium/ingredients/${entry.slug}` as Route}
-          navigationTarget={ingredientLinkTarget(`/compendium/ingredients/${entry.slug}`)}
         >
           {entry.name}
           <LinkIconHint />
@@ -282,34 +282,57 @@ const CompendiumList = ({
   position,
   total,
   cursor,
-}: CompendiumListProps): ReactElement => (
-  <IngredientSearch
-    search={
-      // Not keyed here: the row inside is keyed by the name searched, and follows the
-      // rest of the filter itself, so a facet's change keeps the open panel and its
-      // focus, and the sentence above the results keeps its typing across a search.
-      <CompendiumListFilter
-        filter={filter}
-        facets={facets}
-        categories={categories}
-        vocabulary={vocabulary}
-        total={total}
-        cursor={cursor}
+}: CompendiumListProps): ReactElement => {
+  const matched = buildSearchSentence({
+    filter: {
+      ...filter,
+      toxic: filter.toxic || null,
+      reviewed: filter.reviewed || null,
+      source: null,
+      inStock: false,
+      lowStockOnly: false,
+    },
+    total: 0,
+    admin: true,
+  }).hasFilter;
+  return (
+    <IngredientSearch
+      skeleton={<CompendiumListBodySkeleton />}
+      search={
+        // Not keyed here: the row inside is keyed by the name searched, and follows the
+        // rest of the filter itself, so a facet's change keeps the open panel and its
+        // focus, and the sentence above the results keeps its typing across a search.
+        <CompendiumListFilter
+          filter={filter}
+          facets={facets}
+          categories={categories}
+          vocabulary={vocabulary}
+          total={total}
+          cursor={cursor}
+        />
+      }
+      previousHref={previousHref}
+      nextHref={nextHref}
+      position={position}
+    >
+      <StackTable
+        columns={columnsFor(filter)}
+        otherOrders={bestMatch(filter)}
+        rows={entries}
+        rowKey={(entry) => entry.id}
+        empty={emptyText(filter, categories, facets)}
+        emptyLabel={matched ? 'No Matches' : undefined}
+        emptyAction={
+          matched ? (
+            <PendingLink href={compendiumHref({})} className="btn btn--quiet">
+              Clear Filters
+            </PendingLink>
+          ) : undefined
+        }
+        className="data-table--nowrap"
       />
-    }
-    previousHref={previousHref}
-    nextHref={nextHref}
-    position={position}
-  >
-    <StackTable
-      columns={columnsFor(filter)}
-      otherOrders={bestMatch(filter)}
-      rows={entries}
-      rowKey={(entry) => entry.id}
-      empty={emptyText(filter, categories, facets)}
-      className="data-table--nowrap"
-    />
-  </IngredientSearch>
-);
+    </IngredientSearch>
+  );
+};
 
 export default CompendiumList;

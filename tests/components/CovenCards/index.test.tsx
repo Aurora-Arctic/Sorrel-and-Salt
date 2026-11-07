@@ -17,7 +17,9 @@ import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// claude-docs/components/coven-cards.md
+// A coven's Ingredients list: a link per entry inside the coven, the coven's own label,
+// the jars beneath the forms, Edit in the foot where an entry has an edit address, and a filter with the coven's three extra
+// choices (claude-docs/components/coven-cards.md).
 
 const client = makeQueryClient();
 const Cards = (props: CovenCardsProps): ReactElement => (
@@ -296,6 +298,20 @@ describe('CovenCards', () => {
     expect(emptyState()).not.toHaveTextContent(/\bpractitioner\b|\bsteward\b/i);
   });
 
+  // The empty region says the cupboard is empty, so the count line, which would say so too, is not drawn.
+  // A filter matching nothing keeps it, as it carries the search sentence.
+  it('draws no count line over an empty cupboard, and keeps it over a filter that matched nothing', () => {
+    // Only the regions that say something: a combobox's results announcer is a status region too.
+    const saying = () => screen.getAllByRole('status').filter((region) => region.textContent);
+    const { unmount } = render(<Cards {...props(empty)} />);
+    expect(saying()).toEqual([emptyState()]);
+    unmount();
+
+    render(<Cards {...props({ ...empty, filter: { ...FILTER, query: 'Knitbone' } })} />);
+    expect(saying()).toHaveLength(2);
+    expect(saying()).toContain(noMatchState());
+  });
+
   it('draws a search matching nothing as the no-match state, handing the search to the Compendium', () => {
     render(<Cards {...props({ ...empty, filter: { ...FILTER, query: 'Knitbone' } })} />);
     expect(emptyState()).toBeNull();
@@ -303,23 +319,34 @@ describe('CovenCards', () => {
     expect(state).not.toBeNull();
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
     expect(state).not.toHaveTextContent('Knitbone');
+    // Two ways on: back to the whole cupboard, every filter dropped, and the search handed to the Compendium.
     expect(within(state!).queryByRole('button')).toBeNull();
-    expect(within(state!).getAllByRole('link')).toHaveLength(1);
+    expect(within(state!).getAllByRole('link')).toHaveLength(2);
+    expect(within(state!).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/ingredients',
+    );
     expect(within(state!).getByRole('link', { name: 'Search the Compendium' })).toHaveAttribute(
       'href',
       '/compendium?query=Knitbone',
     );
   });
 
-  it('treats a coven-only filter matching nothing as no match, with nothing to hand on', () => {
+  it('treats a coven-only filter matching nothing as no match, offering only Clear Filters', () => {
     render(<Cards {...props({ ...empty, filter: { ...FILTER, inStock: true } })} />);
     expect(emptyState()).toBeNull();
     expect(noMatchState()).not.toBeNull();
-    expect(within(noMatchState()!).queryByRole('link')).toBeNull();
+    // No search word, so nothing to hand the Compendium: the one way on is the whole cupboard.
+    expect(within(noMatchState()!).getAllByRole('link')).toHaveLength(1);
+    expect(within(noMatchState()!).getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/ingredients',
+    );
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
   });
 
   it('offers Source, In Stock and Low Stock Only, and submits to the coven page', () => {
+    // The panel asks for the counts of the filter it holds, and the page already has them.
     mockGraphQLQuery('CovenFacetCounts', () => ({
       workspaceIngredientFacets: {
         forms: [],

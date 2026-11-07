@@ -527,6 +527,9 @@ site has three parts: the control that was pressed answers at once, the region
 that changes shows a skeleton, and a thin bar along the global bar marks every
 navigation. The standard itself is [`../loading.md`](../loading.md).
 
+> Link targets (`navigationTarget`) and the hidden `<h1>Loading</h1>` were later replaced by skeletons chosen by the destination's address, each drawing its page's own heading: see
+> [`m11.9-skeletons-beside-pages.md`](m11.9-skeletons-beside-pages.md).
+
 ### The calls
 
 - **A page bar on every navigation.** A thin indeterminate bar sits under the

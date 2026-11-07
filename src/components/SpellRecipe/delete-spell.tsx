@@ -3,12 +3,10 @@
 import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
-import { covenTarget } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
-import BusyButton from '../BusyButton';
-import Modal from '../Modal';
+import ConfirmDialog from '../ConfirmDialog';
 import type { DeleteSpellActionProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
 
@@ -40,9 +38,7 @@ export function useDeleteSpell({
   const { navigate } = usePendingNavigation();
   const remove = useMutation({
     mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
-    // The target is read off the path alone: the query carries what was deleted, not where.
-    onSuccess: () =>
-      navigate(deletedHref, { replace: true, target: covenTarget(deletedHref.split('?')[0]!) }),
+    onSuccess: () => navigate(deletedHref, { replace: true }),
     onError: (error) => {
       onClosed();
       onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
@@ -68,42 +64,6 @@ export function DeleteSpellWords({
   );
 }
 
-function DeleteSpellQuestion({
-  name,
-  visibility,
-  pending,
-  onConfirm,
-  close,
-}: {
-  name: string;
-  visibility?: SpellVisibility;
-  pending: boolean;
-  onConfirm: () => void;
-  close: () => void;
-}): ReactElement {
-  return (
-    <>
-      <p>
-        <DeleteSpellWords name={name} visibility={visibility} />
-      </p>
-      <div className="modal__actions">
-        <BusyButton
-          className="btn btn--destructive"
-          busy={pending}
-          busyLabel="Deleting"
-          disabled={pending}
-          onClick={onConfirm}
-        >
-          Delete
-        </BusyButton>
-        <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
-          Cancel
-        </button>
-      </div>
-    </>
-  );
-}
-
 /** The question in a dialog opened by state, as the More menu's item opens it; it gives the focus to `returnTo()` once it closes. */
 export function DeleteSpellDialog({
   name,
@@ -121,16 +81,15 @@ export function DeleteSpellDialog({
   returnTo: () => HTMLElement | null;
 }): ReactElement {
   return (
-    <Modal title="Delete Spell" onClose={onClose} returnTo={returnTo}>
-      {(close) => (
-        <DeleteSpellQuestion
-          name={name}
-          visibility={visibility}
-          pending={pending}
-          onConfirm={onConfirm}
-          close={close}
-        />
-      )}
-    </Modal>
+    <ConfirmDialog
+      title="Delete Spell"
+      question={<DeleteSpellWords name={name} visibility={visibility} />}
+      confirmLabel="Delete"
+      busyLabel="Deleting"
+      busy={pending}
+      onConfirm={onConfirm}
+      onClose={onClose}
+      returnTo={returnTo}
+    />
   );
 }

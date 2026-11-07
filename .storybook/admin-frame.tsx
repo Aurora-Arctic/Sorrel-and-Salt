@@ -1,7 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import AdminNav from '../src/components/AdminNav';
 import { ADMIN_PAGES } from '../src/components/AdminNav/sections';
-import { adminTarget } from '../src/components/AdminNav/target';
 import { RouteModalProvider } from '../src/components/Modal/route-modal-provider';
 import SectionBody from '../src/components/SectionBody';
 import { PendingLink } from '../src/lib/navigation';
@@ -50,11 +49,7 @@ export const AdminFrame = ({
         <RouteModalProvider>
           <ContextRow
             lead={
-              <PendingLink
-                href="/keepers"
-                className="context-row__name"
-                navigationTarget={adminTarget('/keepers')}
-              >
+              <PendingLink href="/keepers" className="context-row__name">
                 Admin
               </PendingLink>
             }

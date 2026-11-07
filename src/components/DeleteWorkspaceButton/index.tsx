@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import type { DeleteWorkspaceButtonProps } from './types';
 
 // The page shows it only to a role holding `workspace: delete` (claude-docs/components/delete-workspace-button.md).

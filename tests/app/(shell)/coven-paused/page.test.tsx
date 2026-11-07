@@ -9,6 +9,7 @@ import { Forbidden } from '@/lib/errors';
 // sent back in. The service is proved against Postgres in tests/modules/coven/services/member-pause.test.ts.
 
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({}),
   redirect: (url: string) => {
     throw new Error(`redirect:${url}`);
   },

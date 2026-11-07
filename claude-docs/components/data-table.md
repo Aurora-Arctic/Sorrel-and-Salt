@@ -6,7 +6,7 @@ It has no styles of its own. It draws the `.data-table` primitive, which turns e
 
 ## Contracts
 
-`<StackTable columns rows rowKey empty>` draws a `.data-table-frame` (it scrolls the table sideways and is the container the cards are measured against, named so a `.form` or `.page-header` container is not the one asked), holding a `table.data-table.data-table--stack`. With no rows it draws `empty` in a `<p>` instead.
+`<StackTable columns rows rowKey empty>` draws a `.data-table-frame` (it scrolls the table sideways and is the container the cards are measured against, named so a `.form` or `.page-header` container is not the one asked), holding a `table.data-table.data-table--stack`. With no rows it draws `empty` in an [`EmptyState`](empty-state.md) instead. The first column's cell is a row header (`th scope="row"`), so a screen reader moving down the table hears which row it is in.
 
 - **A column only some pages show is passed as `false` or `undefined` when it is off**, so a list writes its columns as one array.
 - **Every part carries its role** (`role="table"`, `rowgroup`, `row`, `columnheader`, `cell`), spread from `src/lib/table-roles.ts`. WebKit drops a table's meaning once `display` changes on its parts, as it does when the rows become cards, and the explicit roles put it back.

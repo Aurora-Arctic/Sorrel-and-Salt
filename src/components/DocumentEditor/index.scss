@@ -109,3 +109,18 @@
     margin-top: calc(#{space(4)} - #{space(3)} - 0.125rem);
   }
 }
+
+// The loading editor's text area, as tall as the real text box.
+.document-editor__skeleton-text {
+  min-height: 24rem;
+}
+
+// The loading title's bar, as tall as the heading line it stands for.
+.document-editor > h2 .skeleton__line {
+  block-size: 1lh;
+}
+
+// The real lede leaves no remainder under its lines before the text box.
+.document-editor > .skeleton-lede {
+  padding-block-end: 0;
+}

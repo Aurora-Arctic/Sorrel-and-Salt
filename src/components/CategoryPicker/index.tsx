@@ -4,6 +4,7 @@ import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import { matchesLabelOrGroup } from '../Combobox/match';
 import InfoTip from '../InfoTip';
+import Skeleton from '../Skeleton';
 import type { CategoryOption, CategoryPickerProps, PickerCategory } from './types';
 import './index.scss';
 
@@ -111,8 +112,14 @@ const CategoryPicker = ({
         const category = byId.get(categoryId);
         // A pick the categories do not hold — still being read, or since
         // retired — is drawn by its id once the read is done, so it can be
-        // taken out; while the read is on, it waits for its name.
-        if (!category && pending) return null;
+        // taken out; while the read is on, its place holds a skeleton until its name arrives.
+        if (!category && pending) {
+          return (
+            <li key={categoryId} className="category-picker__held">
+              <Skeleton shape="line" quiet />
+            </li>
+          );
+        }
         return (
           <ComboboxEntry
             key={categoryId}

@@ -13,7 +13,9 @@ import { mockGraphQLMutation } from '../../support/msw/graphql';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// claude-docs/components/ingredient-entry.md, "On the public page"
+// The cupboard choices on the public entry page, across every coven the viewer may write in (claude-docs/components/ingredient-entry.md, "On the public page").
+// The card's plus shows while any coven lacks the entry, just before the other icons and never among their choices; a curator's Edit is the main icon and never in the dots;
+// the held choices sit in the dots while a holding coven permits them, acting in that coven alone or asking which where several do.
 
 const PAGE = '/compendium/ingredients/testwort' as Route;
 
@@ -225,7 +227,7 @@ describe('CupboardActions on the public page', () => {
 
       await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
       expect(calls).toEqual([{ workspaceId: place(1).workspaceId, ingredientId: INGREDIENT }]);
-      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.queryByRole('alertdialog')).toBeNull();
     });
 
     it("gives way to the card's check once every coven holds the entry (the owner's call, 2026-10-20)", () => {
@@ -257,7 +259,7 @@ describe('CupboardActions on the public page', () => {
       place(2).annotateHref,
     );
     fireEvent.click(screen.getByRole('menuitem', { name: 'Remove' }));
-    const dialog = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     expect(within(dialog).queryByRole('combobox')).toBeNull();
     press(within(dialog).getByRole('button', { name: 'Remove' }));
 
@@ -272,7 +274,7 @@ describe('CupboardActions on the public page', () => {
     show(props([place(1, { held: true }), place(2, { held: true })]));
 
     choose('Remove');
-    const dialog = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     expect(within(dialog).getByRole('combobox', { name: 'Coven' })).toHaveTextContent(
       place(1).name,
     );
@@ -297,7 +299,7 @@ describe('CupboardActions on the public page', () => {
     );
 
     choose('Remove');
-    const dialog = screen.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const dialog = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     fireEvent.click(within(dialog).getByRole('combobox', { name: 'Coven' }));
 
     expect(
@@ -313,18 +315,18 @@ describe('CupboardActions on the public page', () => {
     });
     const rendered = show(props([place(1, { held: true }), place(2, { held: true })]));
     choose('Remove');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
 
     // The close hands focus back to the three dots, which open their tip a step later (IconTip); awaited inside an async act.
     await act(async () => {
       rendered.rerender(view(props([place(1), place(2, { held: true })])));
     });
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
     choose('Remove');
 
     expect(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }),
     ).toBeEnabled();
     // The dots' tip fades out as the dialog takes focus: its fade timer ends inside an act, not after the test.
     await act(async () => {

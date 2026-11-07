@@ -7,6 +7,7 @@ import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import { ModalLink, RouteModal, useOpenModalClick } from '../Modal';
 import { SupportIcon } from '../IconTip/icons';
+import EmptyState from '../EmptyState';
 import Pager from '../Pager';
 import { ABOUT_OPTIONS } from '../SupportRequests/filter';
 import { statusBadgeClass } from '../SupportRequests/status-badge';
@@ -67,7 +68,9 @@ const SupportList = ({
         </SupportLink>
       </div>
       {requests.length === 0 ? (
-        <p className="support-list__empty">{emptyList('support requests')}</p>
+        <EmptyState size="compact" label="No Support Requests">
+          {emptyList('support requests')}
+        </EmptyState>
       ) : (
         <ul className="support-list__items">
           {requests.map((request) => (

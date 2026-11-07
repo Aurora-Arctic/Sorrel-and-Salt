@@ -10,6 +10,7 @@ import { printed } from '../support/printed-text';
 // and a link to read the requests, and no Support dialog link, since the dialog could send nothing.
 
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({}),
   redirect: (url: string) => {
     throw new Error(`redirect:${url}`);
   },

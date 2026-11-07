@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import StackTable, { GroupChip, updatedColumn } from '../DataTable';
 import type { GroupKind } from '../GroupForm/types';
 import ListFrame, { ListBody } from '../ListFrame';
+import { GroupListBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 
 import { emptyList, noMatchText } from '../../lib/text';
@@ -36,7 +37,7 @@ const GroupList = ({
     {/* Keyed by the search shown, so another one starts the form again from it. */}
     {filter && <GroupListFilter key={filter.query} kind={kind} filter={filter} />}
 
-    <ListBody>
+    <ListBody skeleton={<GroupListBodySkeleton kind={kind} />}>
       {/* Roomy: a chip and the Edit pencil stand taller than a line of text. */}
       <StackTable
         columns={[

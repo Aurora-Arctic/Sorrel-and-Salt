@@ -4,7 +4,7 @@ import Modal from '@/components/Modal';
 import UserDetail from '@/components/UserDetail';
 import type { UserCoven, UserDetailProps, UserDetailUser } from '@/components/UserDetail/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { stubLocationAssign } from '../../support/location';
+import { leavingAtEachLoad, stubLocationAssign } from '../../support/location';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which happy-dom cannot follow.
@@ -314,6 +314,19 @@ describe('UserDetail', () => {
 
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
     expect(impersonateUserMock).toHaveBeenCalledWith({ userId: BO.id });
+  });
+
+  // The bar and the busy hint stay up through a full page load only when the page reports it is leaving first.
+  it('reports the page is leaving before it opens the site as the user', async () => {
+    const leaving = leavingAtEachLoad(assignMock);
+    impersonateUserMock.mockResolvedValue({ data: {}, error: null });
+    renderDetail({ canImpersonate: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Impersonate' }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
+    expect(leaving).toEqual([true]);
   });
 
   it('says so, and goes nowhere, when the endpoint refuses', async () => {

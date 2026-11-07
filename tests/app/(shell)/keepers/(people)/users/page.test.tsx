@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
+import { rowCells } from '../../../../../support/table';
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
@@ -93,7 +94,7 @@ async function renderPage(params: Record<string, string> = {}) {
 function cellUnder(name: string, heading: string): HTMLElement {
   const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
   const row = screen.getByRole('row', { name: new RegExp(name) });
-  return within(row).getAllByRole('cell')[headings.indexOf(heading)] as HTMLElement;
+  return rowCells(row)[headings.indexOf(heading)] as HTMLElement;
 }
 
 function lastRequest(): PageRequest {

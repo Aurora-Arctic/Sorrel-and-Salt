@@ -4,6 +4,7 @@ import CompendiumListFilter from '../CompendiumList/filter';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import JarLines from '../JarLines';
 import { covenCardActions, covenCardName } from './actions';
@@ -32,7 +33,7 @@ const CovenCards = ({
 }: CovenCardsProps): ReactElement => (
   <div data-density="compact">
     <IngredientSearch
-      shape="cards"
+      skeleton={<ListBodySkeleton label="Ingredients" density="compact" />}
       search={
         <CompendiumListFilter
           audience="coven"

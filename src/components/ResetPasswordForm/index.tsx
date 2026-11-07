@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { resetPassword } from '../../lib/auth-client';
 import { useResultFocus } from '../../lib/use-result-focus';
@@ -11,6 +10,7 @@ import PasswordField from '../PasswordField';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
 import type { ResetPasswordFormProps } from './types';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // The first reset spends the token and signs out every session the account held (claude-docs/components/reset-password-form.md).
 
@@ -67,9 +67,9 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
           signed out.
         </Notice>
         <p>
-          <Link className="btn btn--solid" href="/sign-in">
+          <PendingLink className="btn btn--solid" href="/sign-in">
             Sign In
-          </Link>
+          </PendingLink>
         </p>
       </div>
     );
@@ -83,9 +83,9 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
           minutes.
         </Notice>
         <p>
-          <Link className="btn btn--solid" href="/forgot-password">
+          <PendingLink className="btn btn--solid" href="/forgot-password">
             Ask for a New Link
-          </Link>
+          </PendingLink>
         </p>
       </div>
     );

@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { isAtPath } from '../../lib/at-path';
 import { PendingLink } from '../../lib/navigation';
-import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
 import { ChevronIcon } from '../IconTip/icons';
@@ -18,8 +17,6 @@ import './index.scss';
 // The account button in the shell's bar and its panel: Your Account, a link to pending invitations
 // when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
-
-const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
 
 const COUNT_CAP = 99;
 
@@ -139,7 +136,6 @@ const AccountMenu = ({
           <li className="account-menu__account">
             <PendingLink
               href={ACCOUNT_PATH}
-              navigationTarget={ACCOUNT_TARGET}
               className={
                 pending ? 'account-menu__item account-menu__item--counted' : 'account-menu__item'
               }
@@ -154,7 +150,6 @@ const AccountMenu = ({
                 <IconTip tip={`You Have ${invitations}`} placement="below">
                   <PendingLink
                     href={ACCOUNT_INVITATIONS_PATH}
-                    navigationTarget={ACCOUNT_TARGET}
                     className="account-menu__count-mark"
                     onClick={close}
                   >
@@ -179,7 +174,6 @@ const AccountMenu = ({
               >
                 <PendingLink
                   href={href}
-                  navigationTarget={siteLinkTarget(base, href)}
                   className={
                     counted
                       ? 'account-menu__item account-menu__item--counted'
@@ -197,7 +191,6 @@ const AccountMenu = ({
                     <IconTip tip={tip} placement="below">
                       <PendingLink
                         href={ADMIN_ASSIGNED_PATH as typeof href}
-                        navigationTarget={siteLinkTarget(base, ADMIN_ASSIGNED_PATH as typeof href)}
                         className="account-menu__count-mark"
                         onClick={close}
                       >
@@ -221,12 +214,8 @@ const AccountMenu = ({
             }
           >
             {senderCount > 0 ? (
-              <PendingLink
-                href={SUPPORT_LIST_PATH}
-                navigationTarget={ACCOUNT_TARGET}
-                className="account-menu__item"
-                onClick={close}
-              >
+              // Waiting requests: the row leads to the list that shows which, not to a blank form.
+              <PendingLink href={SUPPORT_LIST_PATH} className="account-menu__item" onClick={close}>
                 Support
                 <MenuCount count={senderCount} what="waiting on you" tipWhat="Waiting on You" />
               </PendingLink>

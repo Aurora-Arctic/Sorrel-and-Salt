@@ -6,6 +6,7 @@ import { useSteps } from '../../../.storybook/press';
 import { route } from '../../../.storybook/route';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import NewSpellAction from '../../app/(shell)/coven/[slug]/grimoire/(list)/new-spell-action';
+import { ListSkeleton } from '../ListFrame/skeleton';
 import TabbedPage from '../TabbedPage';
 import { slugify } from '../../lib/slugify';
 import GrimoireList from '.';
@@ -108,8 +109,20 @@ const Page = ({
     <TabbedPage
       title="Grimoire"
       tabs={[
-        { href: SPELLS_PATH, label: 'Spells', filtered: true, shape: 'cards', density: 'compact' },
-        { href: DRAFTS_PATH, label: 'Drafts', filtered: true, shape: 'cards', density: 'compact' },
+        {
+          href: SPELLS_PATH,
+          label: 'Spells',
+          skeleton: (
+            <ListSkeleton filter="Filter Spells" label="Spells" card="spell" density="compact" />
+          ),
+        },
+        {
+          href: DRAFTS_PATH,
+          label: 'Drafts',
+          skeleton: (
+            <ListSkeleton filter="Filter Spells" label="Spells" card="spell" density="compact" />
+          ),
+        },
       ]}
       action={<NewSpellAction covenName="Fixture Coven" />}
     >

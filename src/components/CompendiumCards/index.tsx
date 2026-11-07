@@ -2,11 +2,13 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
+import EmptyState from '../EmptyState';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import { cardName } from '../IngredientCard/card-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import AddIcon from '../AddIcon';
 import { emptyList } from '../../lib/text';
@@ -103,7 +105,7 @@ const CompendiumCards = ({
   myCovens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
-    shape="cards"
+    skeleton={<ListBodySkeleton label="Compendium" card="compendium" />}
     search={
       <CompendiumListFilter
         audience="public"
@@ -121,7 +123,9 @@ const CompendiumCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>{emptyText(filter, categories, facets, emptyList('ingredients'))}</p>
+      <EmptyState size="compact" label="No Ingredients">
+        {emptyText(filter, categories, facets, emptyList('ingredients'))}
+      </EmptyState>
     ) : (
       <IngredientCardList label="Compendium">
         {entries.map((entry) => (
