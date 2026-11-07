@@ -47,4 +47,5 @@ Ingredients and grimoire have a cross-area map: `ingredients.md` and the top of 
 - `workspace-compendium-entries.md`: the compendium entries a coven's cupboard holds.
 - `stock.md`: the stock table and the unit vocabulary.
 - `compendium-read.md`, `compendium-writes.md`, `compendium-cache.md`: the compendium's reads, writes and cache.
+- `ingredients.md`: a map of the ingredients module.
 - `grimoire.md`, `spell-visibility.md`, `spell-categories.md`: spells, who can read them, and their categories.

@@ -1,3 +1,27 @@
+## Summary
+
+This section maps the `grimoire` module across the files that describe it. DESIGN.md §5 and §6 are the specification; the detail is in the sections below and in `spell-visibility.md` and `spell-categories.md`.
+
+**What the module owns.** `src/modules/grimoire/` owns what a coven makes: its spells, their steps, the categories a member assigns, and the workings (casting records) with their participants and stock deductions. The ingredients a spell names come from the `ingredients` module (`ingredients.md`).
+
+**Tables.**
+
+- `spells` holds the spell, its `visibility`, its status (draft or complete) and a `revision` counter.
+- `spell_steps` holds an ordered list of steps. A step is an instruction, an ingredient laid in the jar (a layer), or both. A layer names a variant the coven knows, or a custom name written for that one jar.
+- `spell_categories` holds the _assigned_ categories only: what the author says the spell is for. The _derived_ categories are the union of the spell's ingredients' categories, stored nowhere. Conflating the two is a bug (`spell-categories.md`).
+- `spell_workings`, `spell_working_participants` and `spell_working_deductions` record a casting, who took part, and the stock it used.
+
+**Services.** `spells.ts` saves and deletes, `recipe.ts` saves the steps and layers, `spell-categories.ts` saves the assigned categories, `workings.ts` records a working, and `spell-reads.ts` with `visibility-rule.ts` read. Every one takes the `Membership` proof first.
+
+**Visibility rules** (`spell-visibility.md`).
+
+- A `workspace` spell is readable by every member, observers included. A `private` spell is readable by its author alone (`created_by`), stewards not excepted. The filter is one SQL predicate, so a private spell never reaches a resolver.
+- A draft's visibility moves either way. Once a spell is complete, `private` to `workspace` is allowed and `workspace` to `private` is refused with an explaining error. The lock reads the row's status before the write.
+- A complete spell never goes back to a draft: `updateSpell` refuses it, and a change goes through a draft copy (`duplicateSpell`). A shared spell can still be deleted.
+- Observers write nothing to a coven.
+
+**Where the detail lives.** Steps, workings and the reorder: the sections below. The grimoire search and its facet counts: "The grimoire search" below. The compendium and stock a spell draws on: `ingredients.md`, `stock.md`.
+
 ## The grimoire (M10.2)
 
 `src/modules/grimoire/schema/spells.ts` and `src/modules/grimoire/schema/spell-steps.ts` hold
