@@ -7,18 +7,7 @@ Its users are the sign-in panel's form
 [`ResetPasswordForm`](reset-password-form.md) and
 [`PasswordSection`](password-section.md).
 
-## Props
-
-`PasswordFieldProps` (`types.ts`):
-
-| Prop       | What it is                                                                    |
-| ---------- | ----------------------------------------------------------------------------- |
-| `label`    | The visible label, title case: "Password", "New Password"                     |
-| `value`    | The password typed so far                                                     |
-| `onChange` | Called with each new value                                                    |
-| `purpose`  | `current`, the password an account has, or `new`, one being chosen            |
-| `error`    | Optional: the server's refusal, said under the field                          |
-| `required` | Optional: marks the label and the control required, as every other field does |
+Props: `PasswordFieldProps` (`types.ts`); `purpose` is `current` or `new`.
 
 ## Contracts
 
@@ -33,8 +22,7 @@ Its users are the sign-in panel's form
   so a screen reader hears one control that is on or off; it is drawn as the
   mystic eye (`MysticEyeIcon`, from `IconTip`) inside the right-hand end of the input, the same
   eye in both states and the accent ink when pressed, with the input's end padding keeping the
-  text clear of it. Showing switches the input to `type="text"` with
-  spelling, capital and correction fix-ups off.
+  text clear of it. Showing switches the input to `type="text"` with spelling, capital and correction fix-ups off.
 - **A new password states its rules before any refusal**, as an InfoTip hint (`rules.ts`) the input also names in its description.
 - **The meter advises and never refuses.** For `new` only, while the field shows no error (a refused password is never rated Strong), `meter.tsx` shows
   zxcvbn's score (Very Weak to Strong) and its warning, in a polite live
@@ -49,18 +37,14 @@ Its users are the sign-in panel's form
   The longest line, "Very Weak. A common password.", measures 204px in Lexend 300
   at 13px, against the 224px of the narrowest card (320px viewport, 16px page
   gutters, 32px card padding). "Strength: " is in a visually hidden span: read
-  aloud, not drawn, because drawn it did not fit; the live region is empty until there is a verdict,
+  aloud, not drawn, because it does not fit; the live region is empty until there is a verdict,
   so nothing is announced before one. The sign-up form, the reset-password form
   and the account page's change-password form all use this one component.
 
-## Styling
+## Styling and tests
 
 Built from [`Field`](field.md)'s `FieldShell` and the existing `.input` and
 `.btn` classes; `index.scss` places the eye toggle inside the input's end and sets its size and
 ink from the tokens.
 
-## Testing
-
-`tests/components/PasswordField/index.test.tsx`: the `autocomplete` per
-purpose, the toggle's pressed state and what it does to the input, paste
-accepted, the meter only for `new`, and the error under the field.
+Tests: `tests/components/PasswordField/index.test.tsx`.
