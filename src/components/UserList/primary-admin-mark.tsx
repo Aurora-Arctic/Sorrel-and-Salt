@@ -6,7 +6,7 @@ import { CrownIcon } from './icons';
 import './controls.scss';
 
 // The primary keeper's crown beside its role, a button whose tip behaves as InfoTip's through `useTip`
-// (claude-docs/components/user-list.md, "Marks, logos and links with tips").
+// (claude-docs/components/user-list.md, "Contracts").
 const PrimaryAdminMark = (): ReactElement => {
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 

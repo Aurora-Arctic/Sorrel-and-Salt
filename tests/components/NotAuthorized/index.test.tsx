@@ -4,7 +4,7 @@ import NotAuthorized from '@/components/NotAuthorized';
 
 // What a signed-in non-keeper sees at `/keepers`: a refusal that says why,
 // and nothing that names a keeper or asks one for anything
-// (claude-docs/components/not-authorized.md).
+// (claude-docs/components/error-page.md).
 
 describe('NotAuthorized', () => {
   // Nothing to press and no one to write to: a request control or an address

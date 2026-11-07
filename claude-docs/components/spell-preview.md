@@ -57,6 +57,8 @@ The pane is a page smouldering from its bottom-right corner, as a spell card doe
 - The bar is `.spell-preview__bar`. The eye is `.spell-preview__awake`.
 - The steps take their Recipe Card look from `SpellRecipe/index.scss`, which `SpellRecipeBody` imports, so the pane and the recipe page share one set of step rules.
 
+- Spell Preview glow: theme red at 0.12 (light, wax red) and 0.08 (dark, ember red); each ember is a cooled fragment (`char`) under a heat that fades as it rises (`core` to `ember`); ash is the muted text ink at half strength.
+
 ## Not here
 
 Stories: `index.stories.tsx`, "Grimoire / Spell Preview", `States`, with Closed, Open (with categories, a toxic step, a one-off and a step whose ingredient was deleted since, and the screen kept awake) and Screen Awake Off. Tests: `tests/components/SpellPreview/index.test.tsx` for what shows and when; the pane's behaviour in the browser is story 85, which also counts the intent's and the note's lines in the pane and in print and asserts the burn's spread reaches the top-left corner.

@@ -13,7 +13,7 @@ import type { SpellRecipeAsideProps } from './types';
 import '../SpellBuilder/panels.scss';
 
 // The recipe page's side column of Category Match and In the Cupboard, read-only here, beside the text past tablet width and beneath it on a phone; a client part
-// (claude-docs/components/spell-recipe.md, "The aside component").
+// (claude-docs/components/spell-recipe.md, "The side column").
 
 export default function SpellRecipeAside({
   steps,

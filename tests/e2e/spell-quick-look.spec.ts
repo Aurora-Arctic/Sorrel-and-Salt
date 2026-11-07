@@ -69,7 +69,7 @@ test('the eye opens a spell in a modal over the list, keeps the filter, stacks i
   await expect(details).toHaveCount(0);
   await expect(look).toBeVisible();
   // Focus is back on the step's eye, whose tip opens with it; the next Escape is the tip's,
-  // which keeps the modal open around it (claude-docs/components/icon-tip.md, "Behaviour").
+  // which keeps the modal open around it (claude-docs/components/icon-tip.md, "Contracts").
   const stepEye = look.getByRole('link', { name: 'Quick Look Testwort' });
   await expect(stepEye).toBeFocused();
   await page.keyboard.press('Escape');

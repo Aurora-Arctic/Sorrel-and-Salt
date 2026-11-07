@@ -23,7 +23,7 @@ import {
 import { server } from '../../support/msw/server';
 
 // The new reference panel on its own: `ReferencePanel`, the citation sub-form beneath the References field, saving through MSW as /api/graphql answers.
-// How the field opens it, lists what it saves and is held while it is open is references.test.tsx's; what the schema refuses and how each field is tidied is tests/modules/ingredients/validation/'s (claude-docs/components/ingredient-form.md, "Testing").
+// How the field opens it, lists what it saves and is held while it is open is references.test.tsx's; what the schema refuses and how each field is tidied is tests/modules/ingredients/validation/'s (claude-docs/components/ingredient-form.md, "Stories and tests").
 
 /** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. Rendered here rather than by `renderWithClient`, because a summons re-renders the panel under the client it opened with. */
 function renderPanel() {

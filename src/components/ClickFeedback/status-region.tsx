@@ -6,7 +6,7 @@ import type { Announce } from './types';
 
 // The page's one polite status region, an `<output>` mounted with the page so a screen reader is
 // already listening when the first sentence arrives. Controls speak through `announce`
-// (claude-docs/components/click-feedback.md, "The status region").
+// (claude-docs/components/click-feedback.md, "Contracts").
 
 const NOTHING: Announce = () => undefined;
 

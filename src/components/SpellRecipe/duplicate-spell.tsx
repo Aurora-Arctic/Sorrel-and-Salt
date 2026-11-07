@@ -10,7 +10,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 
 // Duplicate: `duplicateSpell` makes a private draft copy, and the page leaves for the Drafts tab
 // with the copy open in the builder. The recipe page's button and the builder's Duplicate both
-// use it (claude-docs/components/spell-recipe.md, "Duplicate").
+// use it (claude-docs/components/spell-recipe.md, "The actions row").
 
 export const DuplicateSpellDocument = graphql(`
   mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {

@@ -16,7 +16,7 @@ import './index.scss';
 
 /**
  * The columns: name, address where asked, role, then joined, invited by, Updated and, where asked, a standing pause.
- * (claude-docs/components/member-list.md, "Columns").
+ * (claude-docs/components/member-list.md, "Contracts").
  */
 const columns = (
   currentUserId: string,

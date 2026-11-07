@@ -31,7 +31,7 @@ import type {
 import './index.scss';
 
 // The stock button on a coven card: a `ModalButton` opening a dialog with the coven's jars of the ingredient listed beside the chosen
-// jar's fields, the whole sent as one `saveStock` (claude-docs/components/stock-dialog.md, "How the dialog works").
+// jar's fields, the whole sent as one `saveStock` (claude-docs/components/stock-dialog.md, "The button and the dialog").
 
 const SaveStockDocument = graphql(`
   mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {

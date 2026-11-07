@@ -9,7 +9,7 @@ import SupportForm from '../SupportForm';
 import type { SupportPanelProps } from './types';
 
 // The body of the Support dialog: the form for a sender who may write, otherwise the reason there is none
-// (claude-docs/components/support-panel.md).
+// (claude-docs/components/support-form.md).
 
 const SupportPanel = ({
   state,

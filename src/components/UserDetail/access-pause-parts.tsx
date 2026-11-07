@@ -11,7 +11,7 @@ import '../SupportRequests/timeout-panel.scss';
 
 // The pieces a pause on access is drawn with, shared by the keeper's pause on the site (`access-pause-panel.tsx`) and an
 // owner's pause on one coven (`MemberList/pause-control.tsx`), so the two ask and list alike
-// (claude-docs/components/user-detail.md, "Site Access").
+// (claude-docs/components/user-detail.md, "Contracts").
 
 export const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'day', label: '1 Day' },

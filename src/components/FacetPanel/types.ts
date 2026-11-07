@@ -42,7 +42,7 @@ export interface FacetPanelProps {
   filter: FacetPanelFilter;
   /** Called once hydrated, on every change, with only the part that changed; the caller holds it, and nothing applies yet. Before hydration the surrounding GET form submits instead. */
   onChange: (patch: Partial<FacetPanelFilter>) => void;
-  /** Show the No Refs switch. The public and coven lists leave it off. */
+  /** Show the keeper-only switches: No Refs, No Form, Hidden (when `filter.hidden` is set) and Reviewed (when `filter.reviewed` is set and the facets carry it). The public and coven lists leave it off. */
   admin?: boolean;
   /** A search is on its way: every chip holds a placeholder where its count will be. */
   loading?: boolean;

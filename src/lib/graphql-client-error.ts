@@ -28,7 +28,7 @@ export class GraphQLClientError extends Error {
 
 /**
  * A STALE_WRITE answer: the save named a revision the row has moved past; `currentRevision` is the one it holds now. Still a `GraphQLClientError`, which
- * the autosave hook tells apart to pause and offer a choice (claude-docs/components/autosave.md, "The server's half").
+ * the autosave hook tells apart to pause and offer a choice (claude-docs/autosave.md, "The server's half").
  */
 export class StaleWriteError extends GraphQLClientError {
   readonly currentRevision: number;

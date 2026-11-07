@@ -8,7 +8,7 @@ import type { AuthInstance } from '../support/types';
 
 // The Sign Out button, through Better Auth's real endpoint: the session row goes, and the same cookie then
 // reads as no one. The Playwright server cannot make this call, since Better Auth refuses the plain-http
-// origin the remote browser reaches it on (claude-docs/components/account-menu.md, "Testing").
+// origin the remote browser reaches it on (claude-docs/components/account-menu.md, "Contracts").
 
 let sql: ReturnType<typeof postgres>;
 let auth: AuthInstance;

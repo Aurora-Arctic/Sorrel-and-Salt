@@ -38,6 +38,10 @@ A column sorts when it carries a `sort` (`ColumnSort`), which the list builds fr
 - **The cell is empty when either of `updatedBy` and `updatedAt` is null**, since a date with no one to ask about it says little.
 - The member list, the compendium list, the value lists and the group list draw it. The admin lists' names come from `editorStamps` (`src/app/(shell)/curator/editors.ts`), which reads them through `editorNamesForCurator` in one lookup per page, so a curator's screens render and show an editor whose account is gone as Unknown.
 
+## Styling
+
+- Tables: a table scrolls inside its frame; the frame is the size container a `.data-table--stack` table stacks by, named so a `.form` or `.page-header` container is not the one asked; sort arrow parts (head, stem, mate); `--roomy` centres taller rows, `--nowrap` one line; stacked row Edit sits top right in a two-track grid, placed by the grid so keyboard order stays.
+
 ## Not here
 
 Stories: `src/components/DataTable/index.stories.tsx`. Tests: none of its own; each list's test asserts the table it draws by role and label. The sortable headings and the Sort By select are asserted through the compendium list's test, the one list that sorts.

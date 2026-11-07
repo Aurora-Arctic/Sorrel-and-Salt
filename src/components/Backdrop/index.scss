@@ -37,7 +37,7 @@
 
 // The images are imported through this file so Next serves them under a content hash; each keeps its own proportions, which `background-size: 100% 100%` relies on.
 // The sorrel runs at three quarters of the salt's width; its shape and place are in _sorrel.scss
-// (claude-docs/components/backdrop.md, "Served under a content hash" and "Size and placement").
+// (claude-docs/components/backdrop.md, "Contracts" and "Size and placement").
 .backdrop--sorrel {
   @include sorrel-shape;
 }

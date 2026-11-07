@@ -13,7 +13,7 @@ import '../SupportRequests/timeout-panel.scss';
 
 // A pause on someone's access, inside a modal: the one that stands with Lift Pause, or the form that sets one, and the
 // earlier ones beneath. The user modal's Site Access and the member modal's Coven Access are both this, each with its
-// own words and its own writes (claude-docs/components/user-detail.md, "Site Access").
+// own words and its own writes (claude-docs/components/user-detail.md, "Contracts").
 
 /** What a refusal says: the service's own sentence, or the one generic sentence. */
 const refusal = (error: unknown) => readGraphqlFailure(error).alert ?? GENERIC_FAILURE;

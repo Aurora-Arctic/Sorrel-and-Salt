@@ -104,9 +104,15 @@ The card is drawn as the front of an apothecary drawer.
 
 What SpellCard shares with this card is written once in `_specimen-card.scss`: `specimen-card()` (the name's link stretched through `card-link()`, the pointer on a card whose name links, the title block, the badge row, the medium badge size and the plain chips passing a click through) and `specimen-card-compact()`. Each card passes its own class names; the corner, formal name, forms line and jar lines stay in this card's own files.
 
+- Card pieces: jar lines stop short of the card's edge by half the difference between `$action-icon-size` and the badge so centres align; quick look foot bar runs to the dialog's edges with a top hairline; card actions row and start group pass the pointer through so a press in the gaps opens the entry.
+
 ## Used by
 
 The public compendium list and the coven's Ingredients page, through [`ingredient-card-list.md`](ingredient-card-list.md).
+
+## The drawer
+
+- Drawer planes: light darkens toward iron-gall, dark lifts toward chalk so floor and sides come forward and the back wall sits almost on the page; slot interior is page under shadow ink in dark, iron-gall into parchment in light.
 
 ## Not here
 

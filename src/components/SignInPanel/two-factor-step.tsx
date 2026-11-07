@@ -12,7 +12,7 @@ import type { TwoFactorStepProps } from './types';
 
 // The second step of a password sign-in with two-factor on: a code from an authenticator app, or a
 // backup code. The right password has already been checked; this step's answer is what signs in
-// (claude-docs/components/sign-in-panel.md, "Two-factor").
+// (claude-docs/components/sign-in-panel.md, "Contracts").
 
 export const WRONG_CODE = "That code isn't right. Please try again.";
 export const CODE_LOCKED =

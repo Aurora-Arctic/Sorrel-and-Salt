@@ -14,7 +14,7 @@ import './index.scss';
 
 // The Quick Look modal a grimoire card's eye opens: the spell body, last edit, the Draft and Private
 // badges, Edit for a role that may, and a link to the recipe page; no Delete, which lives in Edit Spell.
-// A client part for RouteModal (claude-docs/components/spell-recipe.md, "The Quick Look component").
+// A client part for RouteModal (claude-docs/components/spell-recipe.md, "The Quick Look modal").
 
 export default function SpellLookDialog({
   closeHref,

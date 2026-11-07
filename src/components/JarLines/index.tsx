@@ -7,7 +7,7 @@ import type { JarLinesProps } from './types';
 
 // The jar lines for an ingredient card's `children` slot: one `li` per jar, form and quantity
 // first, the stock badge last. The dot is decorative, with a comma for a screen reader
-// (claude-docs/components/jar-lines.md).
+// (claude-docs/components/jar-shelf.md).
 export default function JarLines({ jars }: JarLinesProps): ReactElement {
   return (
     <ul>

@@ -10,7 +10,7 @@ import { SupportIcon } from '../IconTip/icons';
 import type { ReportThisProps } from './types';
 
 // The error pages' way to report what they show: a bug request with the status and the page filled in
-// (claude-docs/components/report-this.md). It opens the Support dialog over the page.
+// (claude-docs/components/error-page.md). It opens the Support dialog over the page.
 
 const ReportThis = ({ code, reference }: ReportThisProps): ReactElement => {
   const pathname = useActualPathname();

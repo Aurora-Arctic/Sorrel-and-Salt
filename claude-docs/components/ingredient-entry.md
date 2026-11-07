@@ -84,6 +84,10 @@ The entry takes the frame's wide column (`$wide-column`, allowed by `.page-colum
 - **Heading rule**: `entry-heading-rule` puts a `$hairline` under the h2 of Stock, Details, Forms and References, the heading text's width plus `space(4)`, `space(1)` under it, never wider than the column. Stock's rule follows its h2, not the head row.
 - **Skeleton** uses the same mixins: a Stock part (a heading bar over three jars sized from `$jar-top`, `$jar-drawing-width`, `$jar-drawing-height`, `$jar-plank`, `$jar-cell-min` in `_variables.scss`; always three, since form count and jars are unknown), Details, the side part, then forms. Its heading bars have no rule, so the page adds a few pixels when it loads.
 
+- Entry section rule: hairline as wide as the heading text plus `space(4)`.
+
+- Section grid: heading, text, side column on a phone; past a tablet the side column stands right of the text, the heading across both; not from the menu's breakpoint where text would be a few words wide.
+
 ## In Your Cupboard
 
 `held-mark.tsx` draws a shelf of two bottles (a corked one and a round flask) before the name of every entry this coven holds. It says "you hold this": the card's check says In Every Cupboard, the modal's list is In Your Cupboards, its link **See in Your Cupboard**.

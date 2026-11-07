@@ -21,7 +21,7 @@ const noSubscription = () => () => {};
 
 // The cookie read returns `''` for present-but-empty and `null` for none, and React warns when a
 // snapshot differs between its two reads. So the snapshot is the roster id the cookie names, or
-// `null` for anything else (claude-docs/components/sign-in-panel.md, "Last used").
+// `null` for anything else (claude-docs/components/sign-in-panel.md, "Contracts").
 const getLastUsedProvider = (): ProviderId | null => {
   const value = getLastUsedLoginMethod();
   return SOCIAL_PROVIDERS.find((provider) => provider.id === value)?.id ?? null;
@@ -47,7 +47,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   const [codeStep, setCodeStep] = useState(false);
   // Better Auth's documented read, taken after hydration: the server has no
   // `document`, so rendering the mark there and here would disagree
-  // (claude-docs/components/sign-in-panel.md, "Last used").
+  // (claude-docs/components/sign-in-panel.md, "Contracts").
   const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
   const lastUsedPassword = useSyncExternalStore(noSubscription, getLastUsedPassword, () => false);
   const passkeyLastUsed = useSyncExternalStore(noSubscription, getLastUsedPasskey, () => false);

@@ -16,7 +16,7 @@ import type { Variant } from './types';
 
 // The form's list field on its own: one box to type in, its entries inside it, on react-hook-form with the form's resolver, and no lookup (the suggestions are given, as `LookupListField` gives them).
 // The shared behaviour runs on a plain list and a pick-only one, the two ways an entry gets in; `ordered` and the folk names' own-name rule have their own describes, and the six lists otherwise differ only in the shape a typed entry is sent in, of which there are two.
-// What the box, chips and sortable list do on their own is Combobox's (tests/components/Combobox/index.test.tsx), and what needs the whole form (lookups wired, the payload) stays in index.test.tsx (claude-docs/components/ingredient-form.md, "Testing").
+// What the box, chips and sortable list do on their own is Combobox's (tests/components/Combobox/index.test.tsx), and what needs the whole form (lookups wired, the payload) stays in index.test.tsx (claude-docs/components/ingredient-form.md, "Stories and tests").
 
 /** The shapes the field takes; the form's six lists are these under their own names. */
 const PLAIN: Variant = {

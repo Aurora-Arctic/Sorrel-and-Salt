@@ -26,7 +26,7 @@ const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The duplicate warning on its own: `useDuplicateWarning` and the `NameField` that draws it, in a form whose save asks the warning's `check` before it sends, as the form's does.
-// What only the whole form does with it (the focus on Create Anyway, Save busy while it checks, an error elsewhere first) is index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
+// What only the whole form does with it (the focus on Create Anyway, Save busy while it checks, an error elsewhere first) is index.test.tsx's (claude-docs/components/ingredient-form.md, "Stories and tests").
 
 const TOMENTOSA: DuplicateNode = {
   id: 'claw-1',

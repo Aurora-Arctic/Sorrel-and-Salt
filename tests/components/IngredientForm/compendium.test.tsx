@@ -58,7 +58,7 @@ import {
 
 // The form on the compendium, and only what the mode changes: written with no coven, so every lookup asks with a null `workspaceId`, the vocabulary boxes are picked from the curated rows,
 // a substitute is picked from the compendium, the classification is required, and an entry given to it is edited, saved over and deleted.
-// A pick-only list box on its own is list-field.test.tsx's, and what the form does in either mode is index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
+// A pick-only list box on its own is list-field.test.tsx's, and what the form does in either mode is index.test.tsx's (claude-docs/components/ingredient-form.md, "Stories and tests").
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 // The Reviewed and Shown switches read the router to refresh the page after a save.

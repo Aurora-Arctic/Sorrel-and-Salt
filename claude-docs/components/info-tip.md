@@ -49,6 +49,8 @@ Tokens only. The button is the muted ink, the body ink on hover and focus, with 
 - **It fades in and out over 500ms** on the theme's easing, rising 2px as it appears, and takes the pointer only while open: `visibility` flips after the fade out, not before. Under reduced motion it appears and goes at once.
 - **The look and the fade are the `tip-bubble` mixin's**, shared with IngredientForm's tooltip on a cut-off list entry, so the two cannot drift. The tip's position and width stay its own.
 
+- Tip bubble: faded over 500ms and rising 2px as it opens, closed it takes no pointer once the fade ends; square-cornered at caption size; IconTip passes its quicker `$icon-tip-fade`. `tip-above` is `position: fixed` at the origin at rest so a closed bubble takes no room and no scrolling ancestor clips it; `$capped` keeps it to `$tip-width` and the window; `$align` (start/end/center/offset) pins to one edge and runs off screen, deprecated.
+
 ## Not here
 
 Stories: [`index.stories.tsx`](../../src/components/InfoTip/index.stories.tsx), `States`, with a control choosing Open, Closed or Long Text, in a `.field__label-row` in a column a form's width. Each opens its tip itself, as a tap on the ⓘ would. Tests: `tests/components/InfoTip/index.test.tsx` (the `dom` project, fake timers for the close delay), and `tests/e2e/tip-placement.spec.ts`, which measures every tip of the Add Ingredient dialog inside a 320px viewport and the formal name's on both entry pages inside a 390px one.

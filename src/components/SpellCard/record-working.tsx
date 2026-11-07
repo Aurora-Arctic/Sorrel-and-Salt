@@ -16,7 +16,7 @@ import type { SpellCardRecordWorkingProps } from './types';
 
 // Record a Working on a card: the dialog reads the spell's steps when it opens, as a list draws
 // many cards and most are never recorded from
-// (claude-docs/components/spell-card.md, "Record a Working, Edit and the More menu").
+// (claude-docs/components/spell-card.md, "Contracts").
 
 const RecordWorkingSetupDocument = graphql(`
   query RecordWorkingSetup($workspaceId: ID!, $spellId: ID!) {

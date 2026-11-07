@@ -4,7 +4,7 @@ import type { ProviderArt } from '../ProviderMark/types';
 import './icons.scss';
 
 // Each provider's own brand mark, from its published assets
-// (claude-docs/components/sign-in-panel.md, "Provider branding"). The fills are the artwork's, and
+// (claude-docs/components/sign-in-panel.md, "Contracts"). The fills are the artwork's, and
 // the grounds the marks sit on are the provider's colours from `$brand-palettes`, not our tokens.
 
 // Google's "G" logo, as published for "Sign in with Google" buttons. No chip: the mark is

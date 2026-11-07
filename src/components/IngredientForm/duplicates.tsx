@@ -89,7 +89,7 @@ const lookup = (workspaceId: string | null, name: string) =>
 /**
  * The warning for the name as typed: its matches, whether a save is held on them, and a save's
  * `check` and `dismiss`. A null coven asks the compendium alone; `omit` is the entry being edited
- * (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+ * (claude-docs/components/ingredient-form.md, "The duplicate warning").
  */
 export function useDuplicateWarning(
   workspaceId: string | null,
@@ -185,7 +185,7 @@ export function useDuplicateWarning(
 
   /**
    * After a match's + has added it: every lookup of both kinds is asked again, since the cached
-   * answers still say the coven lacks it (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+   * answers still say the coven lacks it (claude-docs/components/ingredient-form.md, "The duplicate warning").
    */
   const added = async (id: string): Promise<void> => {
     setExact((now) =>
@@ -274,7 +274,7 @@ const settledHeightOf = (list: HTMLUListElement): number => {
   const last = staying[staying.length - 1];
   if (!last) return 0;
   // From the edges as drawn, with the row's own end margin, which the list's resting height holds
-  // (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+  // (claude-docs/components/ingredient-form.md, "The duplicate warning").
   return (
     last.getBoundingClientRect().bottom -
     list.getBoundingClientRect().top +
@@ -285,7 +285,7 @@ const settledHeightOf = (list: HTMLUListElement): number => {
 /**
  * The list's rows as slots by place, and its slide between answers: a dropped row fades out as
  * the bottom slides up over it, a new row fades in as it slides down. Reduced motion settles at
- * once (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+ * once (claude-docs/components/ingredient-form.md, "The duplicate warning").
  */
 function useSlidingRows(
   matches: readonly Duplicate[],
@@ -302,7 +302,7 @@ function useSlidingRows(
   // every render. Set during render, as the hook above sets its own state.
   const [builtFor, setBuiltFor] = useState('');
   // Where the shapes are, by their own transition events: `fading` in, `in`, or off. An answer
-  // back mid-fade waits, so the change is never seen (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+  // back mid-fade waits, so the change is never seen (claude-docs/components/ingredient-form.md, "The duplicate warning").
   const [shapes, setShapes] = useState<'off' | 'fading' | 'in'>('off');
   const [held, setHeld] = useState<Held | null>(null);
   const key = matches.map((match) => match.id).join(' ');
@@ -482,7 +482,7 @@ interface Choice {
 /**
  * One list of the warning's matches, sliding between answers on its own (`useSlidingRows`), drawn
  * while it has a row, the leaving ones too. A `heading` names the list, an `h4` beneath the form's
- * Identity `h3` (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+ * Identity `h3` (claude-docs/components/ingredient-form.md, "The duplicate warning").
  */
 function MatchList({
   slide,
@@ -892,7 +892,7 @@ export function NameField({
                   {/* The id sits on the whole block, so the button it describes is read with the
                   names. Plain anchors, since the caller hands back a plain string, in a new tab so
                   the form's unsaved changes stay. Both stay mounted for the skeleton's fade
-                  (claude-docs/components/ingredient-form.md, "How the duplicate list behaves"). */}
+                  (claude-docs/components/ingredient-form.md, "The duplicate warning"). */}
                   <div id={warningId} className="ingredient-form__matches">
                     <p>{sentenceFor(blocking, asking, exact.length)}</p>
                     <MatchList

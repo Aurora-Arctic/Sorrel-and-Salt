@@ -9,7 +9,7 @@ import type { ProviderRowProps } from './types';
 
 // One provider as linked (Remove, which asks first), addable (Add) or unavailable (greyed Add
 // with a note), told apart by control and words, not hue. A press's failure is a callout under
-// the control (claude-docs/components/sign-in-methods.md, "The rows").
+// the control (claude-docs/components/sign-in-methods.md, "Contracts").
 export function ProviderRow({
   provider,
   state,

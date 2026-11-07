@@ -119,7 +119,7 @@ export async function GroupAction({ kind, searchParams }: GroupPageProps): Promi
 
 /**
  * A group vocabulary to add to, edit and retire. A modal over the list does the writing, opened by
- * `?new` or `?edit=<slug>` (claude-docs/components/group-form.md, "On the admin pages").
+ * `?new` or `?edit=<slug>` (claude-docs/components/group-form.md, "Contracts").
  */
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   const session = await requireCuratorSession();

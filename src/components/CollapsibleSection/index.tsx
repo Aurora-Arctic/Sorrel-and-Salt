@@ -36,7 +36,7 @@ export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
 /**
  * A form section as a disclosure under an `h3` (`h4` when nested): the heading's text is a button,
  * with a one-line summary of what is entered while closed and a flag on error. Fields stay in the
- * page while closed, hidden (claude-docs/components/collapsible-section.md, "How a section is built").
+ * page while closed, hidden (claude-docs/components/collapsible-section.md, "Behaviour").
  */
 export function CollapsibleSection({
   title,

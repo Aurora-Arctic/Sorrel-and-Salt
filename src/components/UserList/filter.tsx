@@ -9,7 +9,7 @@ import { ROLES, ROLE_LABELS } from './roles';
 import type { UserListFilterProps, UserListFilterValue } from './types';
 
 // The user list's filter in `FilterForm`: search text is sent by the magnifier or Enter; Role and the three switches apply on change
-// (claude-docs/components/user-list.md, "The user link and the filter").
+// (claude-docs/components/user-list.md, "Filter").
 const UserListFilter = ({
   query,
   awaitingApproval,

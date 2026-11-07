@@ -139,7 +139,7 @@
 
 // A chip at the end of a row opens its menu leftward, from its right edge, so the slide's clip does
 // not cut it; choice-chip.tsx measures on open and adds this class
-// (claude-docs/components/facet-panel.md, "Menus and tips inside the panel").
+// (claude-docs/components/facet-panel.md, "Layout and controls").
 .facet-chip__menu--end {
   inset-inline: auto 0;
 }

@@ -46,6 +46,8 @@ There is no box. A 3px bar runs down the start edge, and behind the text sits a 
 - **A button inside a warning or an error** (`.notice--warn .btn`, `.notice--error .btn`) takes its label from `$notice-button-ink` (`--notice-button-ink`), not from `$accent`, because on light the tint under the accent label measures 4.25:1 (warning) and 4.19:1 (error) on the page. The light value is `#33680f` (`$sorrel-notice-button`): 5.07:1 and 5.00:1 on the page, 5.61:1 and 5.53:1 on a card. Dark keeps `$accent`. The border stays `$accent`, and a hover or a focus fills the button as any `.btn` does. The two buttons-in-notice rows in `tests/scss/tokens.test.ts` hold the floor on the page and the card. Lighter tints were set aside because a 2% tint was needed, which leaves almost nothing of the tint.
 - **Another kind is a few lines**: a modifier class that sets `--notice-bar` and, if it leads with the triangle, `--notice-icon`, joined to the triangle's selector; then its role in `index.tsx` and a row in the table above. Each kind must clear its bar at 3:1 as a graphic and its text at 4.5:1 over its own tint on the page and on a card, as rows in `tests/scss/tokens.test.ts`.
 
+- Notice: no box, a 3px bar down the start edge and a tint of the bar's colour (`--notice-tint`, 7% light, 8% dark), so it sits on page and card alike.
+
 ## The demo coven's notice
 
 The `/coven/[slug]` layout draws a quiet warning (`kind="warn" quiet`, a status that never interrupts) under the `ContextRow` on every page of the demo coven (`workspace.demo`) and of no other.
@@ -54,6 +56,10 @@ The `/coven/[slug]` layout draws a quiet warning (`kind="warn" quiet`, a status 
 - **The "Demo" tag.** The coven page's `<h1>` carries a `badge badge--demo` reading "Demo" (tinted, in Local's inks) as `PageHeader`'s `tag`. The `<h1>` is a two-column grid (`page-title--tagged`), the name in the first column and the badge in the second at the top of the row, so a wrapped name leaves the badge beside its first line.
 - **The notice stands in a `coven-layout__demo-notice` section** with the content column's own width and gutter, so its box spans the content. The sentence sits in `coven-layout__demo-text`, which stops at the reading measure (`$measure`): the measure is on the text and never on the box.
 - **The spell preview pane** (`SpellPreview`, `demoNotice`) draws the same notice at its top, since the pane covers the layout's. Both import the sentences from `src/lib/demo-notice.ts`.
+
+## Result focus
+
+- Result focus: the submit button is disabled until the form is dirty again, and a disabled control cannot hold focus, so the browser would otherwise drop it to the page; settle() moves focus to the first invalid control inside ref, else to the Notice marked result.
 
 ## Not here
 

@@ -12,7 +12,7 @@ import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
 
 // The admin compendium form in a browser: the first axe scans of IngredientForm and its Combobox
-// (claude-docs/components/ingredient-form.md, "Testing").
+// (claude-docs/components/ingredient-form.md, "Stories and tests").
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

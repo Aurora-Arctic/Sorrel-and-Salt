@@ -72,7 +72,7 @@ export class InvalidCursor extends Error {
 
 /**
  * A save that named the revision it read, after another save moved the row on: neither refusal, as the actor may write and the input is
- * sound, but it was built on a stale copy. Carries the row's revision now (claude-docs/components/autosave.md, "The server's half").
+ * sound, but it was built on a stale copy. Carries the row's revision now (claude-docs/autosave.md, "The server's half").
  */
 export class StaleWrite extends Error {
   readonly currentRevision: number;

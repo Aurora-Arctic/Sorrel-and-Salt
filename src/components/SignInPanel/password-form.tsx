@@ -17,7 +17,7 @@ import type { PasswordFormProps } from './types';
 
 // The email and password half of the panel: sign in, or switch to create an account. Every refusal is
 // the server's, said where it belongs; nothing here judges a password but the meter's advice
-// (claude-docs/components/sign-in-panel.md, "Email and password").
+// (claude-docs/components/sign-in-panel.md, "Contracts").
 
 /** Sign-in's one refusal, the same for a wrong password and an unknown address. */
 export const WRONG_CREDENTIALS =

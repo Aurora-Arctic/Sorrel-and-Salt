@@ -6,7 +6,7 @@ import type { DayRange } from '@/components/DateRangeField/types';
 
 // The day-range field: a button showing the range, opening a calendar of two months with quick
 // picks beside it, where the first day picked starts the range and the second ends it
-// (claude-docs/components/date-range-field.md).
+// (claude-docs/components/date-field.md).
 
 const PICKS = [
   { label: 'First Week', range: () => ({ from: '2026-10-01', to: '2026-10-07' }) },

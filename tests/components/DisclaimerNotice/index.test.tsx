@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import DisclaimerNotice from '@/components/DisclaimerNotice';
 
 // The one line beside every safety-notes section that says the notes are not complete and links the
-// disclaimer page (claude-docs/components/disclaimer-notice.md).
+// disclaimer page (claude-docs/components/document-page.md).
 
 describe('DisclaimerNotice', () => {
   it('links the disclaimer page, as a note rather than a control', () => {

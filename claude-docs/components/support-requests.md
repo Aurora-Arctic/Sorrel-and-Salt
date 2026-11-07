@@ -39,3 +39,17 @@
 - **The page announces itself.** A visually hidden `<output>` in the list gives the result count ("3 Requests") after a filter change, and one in the dialog gives each save's outcome ("Reply sent.", "Request assigned.", "Time-out lifted."). The Subject cell wraps long unbroken text inside a capped width. The GitHub Issue and Time-Out forms ask before discarding typed input.
 - **Every action is a GraphQL mutation** (`use-support-action.ts`) and refreshes the page on success. A refusal shows as a notice, or beside its field where it names one.
 - **A curator reaches the page through `requireCuratorSession()`** and is shown the admin-only controls by none: the `viewer` prop hides them, the services refuse them regardless, and the page gives a curator no assignee list. A request neither marked nor assigned to the curator shows the same "no support request has that address" notice as an unknown id. `tests/e2e/admin-support-curator.spec.ts` proves it.
+
+## Request lifecycle
+
+- Request lifecycle transitions: open -> waiting_on_sender (staff reply marked waiting, reply.ts); open/waiting -> resolved (staff, staff.ts; or the sender on their own request, resolveMySupportRequest); open/waiting/resolved -> closed (staff, closeSupportRequest); waiting/resolved -> open (the sender's public message, keeps the assignee); resolved -> closed (the request's job, seven days after resolving, retention.ts); closed -> new request (the sender's message opens one linked to it). Staff replies and internal notes change nothing else. Each move is one guarded update, so a refused move writes nothing.
+
+- Retention stages: done once a day by the support-retention job as the System account: closing-soon notice from day 5, close on day 7, anonymising on the twelfth month after the close (keeps the row, topic, status and dates so counts survive; drops everything the sender wrote or is known by). The job reads due ids per stage a page at a time and hands each page to a batch; each batch re-reads its rows' status and dates before writing, so a batch run twice, two at once, or after a reopen changes nothing.
+
+- Sender's own reply on own request: open request adds to thread; waiting or resolved reopens it, clearing resolved_at and keeping the assignee; closed opens a new request carrying topic and assignee, linked to the closed one. Time-outs refuse it as they refuse a send; only the new request counts toward the daily limit.
+
+- Reply notice: the notice carries no reply text (read on the sender's support page behind sign-in); a signed-out sender with no such page is mailed the reply whole; either goes out through a retried job that stamps the reply once the mail is taken.
+
+## Create Issue
+
+- Create Issue prefill never carries the sender name or address; issueUrl is validated; a status change sends no mail

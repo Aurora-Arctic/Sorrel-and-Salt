@@ -3,7 +3,7 @@
 @use '../../scss/jar-motion' as *;
 
 // The jar shelf: jars stand on a thin plank with a concave bracket at either end under each
-// (claude-docs/components/jar-shelf.md, "Shelf geometry").
+// (claude-docs/components/jar-shelf.md, "Contracts").
 
 // The cell's top padding, the drawing's height and the bracket's size, from which the plank and
 // brackets are placed so they cannot drift.
@@ -23,7 +23,7 @@ $-bracket: 7px;
   align-items: start;
 
   // The outer ends carry no fillet: each cell draws its brackets' halves outside itself and the shelf clips sideways (`clip`, not `hidden`)
-  // (claude-docs/components/jar-shelf.md, "Shelf geometry").
+  // (claude-docs/components/jar-shelf.md, "Contracts").
   overflow-x: clip;
 
   @media (max-width: 30rem) {
@@ -48,7 +48,7 @@ $-bracket: 7px;
 
   // The fillets: a square at the plank's top with a quarter circle cut from its outer corner, drawn
   // just outside each cell's edges so the half at a row's end is clipped by `.jar-shelf` with no
-  // row-counting (claude-docs/components/jar-shelf.md, "Shelf geometry").
+  // row-counting (claude-docs/components/jar-shelf.md, "Contracts").
   &::before,
   &::after {
     @include list-marker-cleared;
@@ -129,7 +129,7 @@ $-bracket: 7px;
 }
 
 // The hover and focus on an editable jar, shared with the recipe page's jar lines
-// (claude-docs/components/jar-line.md, "Hover, focus and motion").
+// (claude-docs/components/jar-shelf.md, "Jar line").
 @include jar-press-motion('.jar-shelf__jar', '.jar-shelf__press', '> svg', '.jar-shelf__name');
 @include jar-shake-keyframes;
 
@@ -186,7 +186,7 @@ $-bracket: 7px;
 
 // A faceted jar's two bands, a step darker and lighter than the glass, from the text and card
 // colours since no token exists; they swap roles in the dark theme
-// (claude-docs/components/jar-shelf.md, "Paint").
+// (claude-docs/components/jar-shelf.md, "Contracts").
 .jar-shelf__shade {
   fill: color-mix(in srgb, $text-primary 8%, transparent);
 }

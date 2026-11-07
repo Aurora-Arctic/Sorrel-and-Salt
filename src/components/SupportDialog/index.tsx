@@ -28,7 +28,7 @@ import type { SupportPanelState } from '../SupportPanel/types';
 import type { SupportDialogState } from './types';
 
 // The Support dialog, open while the address carries `?support=<about>`. Drawn once by the root layout, which reads
-// nothing for it: the dialog asks what the visitor may do when it opens (claude-docs/components/support-dialog.md).
+// nothing for it: the dialog asks what the visitor may do when it opens (claude-docs/components/support-form.md).
 
 const SupportDialogStateDocument = graphql(`
   query SupportDialogState {

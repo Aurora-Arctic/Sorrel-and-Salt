@@ -14,7 +14,7 @@ import type { SpellVisibility } from '@/modules/grimoire';
 
 // Delete Spell: the question naming the spell, asked in a dialog before `deleteSpell` runs. Confirmed,
 // the page leaves for the grimoire list, replacing the history entry so Back does not return to a 404.
-// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "Delete Spell").
+// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "The actions row").
 
 export const DeleteSpellDocument = graphql(`
   mutation DeleteSpell($workspaceId: ID!, $id: ID!) {

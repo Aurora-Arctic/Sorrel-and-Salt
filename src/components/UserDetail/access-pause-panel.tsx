@@ -9,7 +9,7 @@ import PausePanel from './pause-panel';
 import type { AccessPauseEntry, PausePanelCopy } from './types';
 
 // A keeper's pause on a user's access to the site: nothing but support until an end, or with no end date, until lifted,
-// with a note saying why (claude-docs/components/user-detail.md, "Site Access"). Laid out on the support time-out panel's classes, so
+// with a note saying why (claude-docs/components/user-detail.md, "Contracts"). Laid out on the support time-out panel's classes, so
 // the two sections of the user modal read alike.
 
 const PauseDocument = graphql(`

@@ -68,3 +68,7 @@ keeps the page.
 - Asks what the visitor may do when it opens, through `/api/graphql` (the `supportDialogState` query, open to a signed-out caller and answered under the caller’s own session by `getMySupportDialogState`), and asks again at every open. The answer is `signedOut` (Sign In and the signed-out form), `unverified` (a line and a link to the email page instead of the form), `timedOut` (when the time-out ends, or null for one with no end date) or `form`. Until it arrives the dialog shows a form skeleton, and a failed read shows the generic failure notice, never an empty form.
 - The body is `SupportPanel` (above), which draws `SupportForm` for a sender who may write, inside a `RouteModal` titled Contact Support.
 - Reads the address through `useSearchParams`, so it sits in a Suspense boundary.
+
+## What a curator sees of the page path
+
+- curator [coven] redaction: redactPathForCurator in src/modules/support/services/staff.ts replaces the coven segment of a request's page path for a curator

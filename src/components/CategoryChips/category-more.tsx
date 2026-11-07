@@ -15,7 +15,7 @@ const EDGE_PX = 8;
 
 // The card's +N button and the panel behind it: a toggletip floating over the chip row, so the card's
 // height never changes (WCAG 1.4.13). A client child so `IngredientCard` stays server-compatible
-// (claude-docs/components/category-chips.md, "The +N toggletip").
+// (claude-docs/components/category-chips.md, "Contracts").
 
 const GRACE_MS = 120;
 

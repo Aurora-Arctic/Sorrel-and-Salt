@@ -49,6 +49,10 @@ The sticky search row on the ingredient lists is filled with the page colour so 
 
 Both source photographs are used **without a licence**, as stand-ins for the treatment: `salt-spoon-slate.jpg` from the Salt Association's website (`saltassociation.co.uk`, marked "© Salt Association"), and a Feast Magazine editorial image (`feastmagazine.com`). Licensed or in-house photographs of the same subjects replace both before launch, are run through the same script, and the stand-in files are removed. Nothing else should reference the stand-in files.
 
+## The image is tone and shape, not a picture
+
+- backdrop-masks: RGB is the subject's levelled luminance with a chroma floor; alpha is presence, spatial not tonal: the ground is the empty region connected to the border, so a shadow enclosed by the subject keeps full presence instead of reading as the lightest thing on parchment. SPECK_AREA: a present blob this small and dark is a knot or droplet; the tone cut is low because a loose salt grain is small and its shadowed side pulls its mean under the salt's brightness.
+
 ## Not here
 
 Stories: [`index.stories.tsx`](../../src/components/Backdrop/index.stories.tsx) has one story, `States`, with a control that chooses Every Page (the everyday size) or Front Door (inside a `.welcome-page` wrapper). The ornaments are fixed to the viewport, so they appear in the preview's corners. The toolbar's theme switch shows both themes.

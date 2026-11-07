@@ -74,7 +74,7 @@ $step-line: type-size('body') * 1.65;
 }
 
 // The card: the ingredient form's variant card look. Its grid is the open-and-closed one at the
-// end of this block, or the instruction step's (claude-docs/components/step-row.md, "The card").
+// end of this block, or the instruction step's (claude-docs/components/step-row.md, "Contracts").
 .step-row.step-row--card {
   display: grid;
   gap: 0 space(3);

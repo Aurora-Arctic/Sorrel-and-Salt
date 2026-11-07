@@ -8,7 +8,7 @@ import type { Tip, TipTiming } from './types';
 
 // A tip's open state as WCAG 1.4.13 asks: shown on hover (after it rests), focus or tap, kept open while
 // the pointer is over it, closed on Escape, blur or leaving. Used by InfoTip, UserList, IconTip and
-// Combobox's tooltips (claude-docs/components/info-tip.md, "Behaviour" and "Placement").
+// Combobox's tooltips (claude-docs/components/info-tip.md, "Contracts" and "Placement").
 
 // Long enough to cross from the control onto the tip.
 const CLOSE_DELAY_MS = 150;

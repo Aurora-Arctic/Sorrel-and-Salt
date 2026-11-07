@@ -7,7 +7,7 @@ import { clearMirror, writeMirror } from './mirror';
 import type { Autosave, AutosaveOptions, AutosaveView, SaveContext, SaveResult } from './types';
 
 // Saves a form while it is edited: a timer per run of changes, one save in flight, retries with backoff, and a pause on a lost race. A plain closure,
-// not state and effects, as timers and an in-flight promise must see each other's latest state. Why each number: claude-docs/components/autosave.md.
+// not state and effects, as timers and an in-flight promise must see each other's latest state. Why each number: claude-docs/autosave.md.
 
 /** The waits before each retry of a failed save, after which it stops at `failed`. */
 export const RETRY_DELAYS_MS = [2000, 5000, 15000] as const;
@@ -262,7 +262,7 @@ const ignore = () => {};
 /**
  * Saves `value` 3 s after the last change, and at most 30 s into a run of
  * changes, while `dirty` and `enabled`; at once when the tab is hidden, focus
- * leaves `root`, or `flush()` is called. claude-docs/components/autosave.md.
+ * leaves `root`, or `flush()` is called. claude-docs/autosave.md.
  */
 export function useAutosave<TValue>({
   value,

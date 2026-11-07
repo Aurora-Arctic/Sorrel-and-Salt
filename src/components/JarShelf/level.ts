@@ -13,7 +13,7 @@ const STEADY = 0.7;
 
 /**
  * The fill of a held jar: with a threshold, full is twice the threshold or the quantity, whichever
- * is more (claude-docs/components/jar-shelf.md, "The level").
+ * is more (claude-docs/components/jar-shelf.md, "Contracts").
  */
 export function fillOf({ quantity, threshold }: Pick<HeldJar, 'quantity' | 'threshold'>): Fill {
   const marked = threshold !== null && threshold > 0;

@@ -18,7 +18,7 @@ export const applyTheme = (theme: 'light' | 'dark'): void => {
 };
 
 // Mirrors globals.scss's three-state cascade: only a stored choice sets the attribute. Asks for `light` so "no
-// preference" resolves to dark (claude-docs/components/theme-toggle.md, "Shared contract").
+// preference" resolves to dark (claude-docs/components/theme-toggle.md, "Contracts").
 const resolveCurrentTheme = (): 'light' | 'dark' => {
   const stated = document.documentElement.getAttribute('data-theme');
   if (stated === 'light' || stated === 'dark') {
