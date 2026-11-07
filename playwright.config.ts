@@ -23,6 +23,9 @@ const STORIES_SPECS = /[\\/]stories[\\/]/;
 // e2e` never does.
 const WORKSHOP_SPECS = /[\\/]workshop[\\/]/;
 
+// The help screenshots write files into public/: playwright.help-screenshots.config.ts runs them on demand.
+const HELP_SCREENSHOT_SPECS = /[\\/]help-screenshots[\\/]/;
+
 // The audit: the suite in WebKit, Firefox and as a phone, on demand and never on CI. The three projects exist only under `E2E_AUDIT=1` (`npm run e2e:audit`),
 // dial the `playwright-audit` compose service through an endpoint of their own, and name no base URL, so each worker gets its own slot's server
 // (claude-docs/testing/e2e.md, "The audit"). The phone is `iPhone 15`, the oldest profile whose iOS meets the browser floor's iOS Safari 17.4.
@@ -67,7 +70,13 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS, WORKSHOP_SPECS],
+      testIgnore: [
+        CONFIGURED_PROVIDERS_SPEC,
+        COMPENDIUM_CACHE_SPEC,
+        STORIES_SPECS,
+        WORKSHOP_SPECS,
+        HELP_SCREENSHOT_SPECS,
+      ],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -91,6 +100,7 @@ export default defineConfig({
       COMPENDIUM_CACHE_SPEC,
       STORIES_SPECS,
       WORKSHOP_SPECS,
+      HELP_SCREENSHOT_SPECS,
     ]),
   ],
 });

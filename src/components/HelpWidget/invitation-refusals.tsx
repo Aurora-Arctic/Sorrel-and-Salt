@@ -6,17 +6,17 @@ import { CARD_REFUSAL_MESSAGES, INVITATION_REFUSAL_MESSAGES } from '@/modules/id
 
 const InvitationRefusals = (): ReactElement => (
   <figure className="figure help-widget">
-    <h4 className="help-widget__heading" id="invitation-link-refusals">
+    <p className="help-widget__heading" id="invitation-link-refusals">
       An Invitation Link
-    </h4>
+    </p>
     <ul aria-labelledby="invitation-link-refusals">
       {Object.entries(INVITATION_REFUSAL_MESSAGES).map(([reason, message]) => (
         <li key={reason}>{message}</li>
       ))}
     </ul>
-    <h4 className="help-widget__heading" id="invitation-card-refusals">
+    <p className="help-widget__heading" id="invitation-card-refusals">
       A Printed Card
-    </h4>
+    </p>
     <ul aria-labelledby="invitation-card-refusals">
       {Object.entries(CARD_REFUSAL_MESSAGES).map(([reason, message]) => (
         <li key={reason}>{message}</li>
