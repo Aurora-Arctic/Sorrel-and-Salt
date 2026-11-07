@@ -2,8 +2,6 @@ import type { MouseEvent } from 'react';
 import { describe, expect, it } from 'vitest';
 import { opensElsewhere } from '@/lib/opens-elsewhere';
 
-// A link that routes its own press (the pager's soft ends, the tabs, every
-// PendingLink) leaves to the browser any press that is not a plain left click.
 const press = (init: Partial<MouseEvent<HTMLAnchorElement>> = {}) =>
   ({
     button: 0,

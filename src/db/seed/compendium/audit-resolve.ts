@@ -17,7 +17,8 @@ import { WORKS } from './works';
 
 // Resolving by Wikipedia (`--resolve`): a citation headed "X" in a source printing no formal name is `resolved` when Wikipedia's page "X"
 // is, or redirects to, the article the entry cites as `stated` for its formal name. A disambiguation, genus or other species' page, no
-// page, or a heading another entry uses as a name leaves it. Pure: lookups in, resolutions out (claude-docs/db/compendium-seed/README.md, "The attribution audit").
+// page, or a heading another entry uses as a name leaves it. Pure: lookups in, resolutions out
+// (claude-docs/compendium/compendium-seed/README.md, "The attribution audit").
 
 /** What Wikipedia says of a title: the page it lands on, or that it has none. */
 export type PageInfo = { title: string; disambiguation?: boolean } | { missing: true };

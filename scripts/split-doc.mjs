@@ -1,18 +1,6 @@
-// Splits a claude-docs summary too large to read whole into one file per `## `
-// section, and per `### ` subsection the plan names, in a directory of the
-// summary's name; the summary becomes their index (claude-docs/README.md,
-// "What lives where"). Text moves as is. The only edits are to links: a `../`
-// on each relative one, since the files sit a directory down, and an intra-doc
-// anchor pointed at the file its heading moved to.
-//
-//   node scripts/split-doc.mjs <plan.json>
-//
-// The plan gives, in the summary's order, each section's file and the sentence
-// the index gives it, then any subsection to carve out, then the summary:
-//   { "sections": [{ "file": "orm-version", "sentence": "…" }, …],
-//     "ownFile": [{ "heading": "Fuzzy matching", "file": "fuzzy-matching" }],
-//     "doc": "claude-docs/db.md" }
-// Code citations are then pointed at the files by repoint-doc-citations.mjs.
+// Splits a claude-docs summary into one file per section, the summary becoming their index
+// (claude-docs/README.md, "What lives where, and what to read").
+// Usage: node scripts/split-doc.mjs <plan.json>; then repoint-doc-citations.mjs.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -22,7 +10,6 @@ import { slug } from 'github-slugger';
 
 const FENCE = /^\s*```/;
 
-/** Each `##`/`###` heading outside fenced code, with its line index. */
 function headings(lines) {
   const out = [];
   let fence = false;
@@ -34,7 +21,6 @@ function headings(lines) {
   return out;
 }
 
-/** The preamble, then each `## ` section as its heading and lines. */
 function sectionsOf(text) {
   const preamble = [];
   const sections = [];
@@ -50,7 +36,6 @@ function sectionsOf(text) {
 
 const trimEnd = (lines) => lines.join('\n').replace(/\s+$/, '');
 
-/** Hard-wrapped at 80 columns, as the summaries are. */
 function wrap(text) {
   const lines = [''];
   for (const word of text.split(' ')) {
@@ -61,11 +46,6 @@ function wrap(text) {
   return lines.join('\n');
 }
 
-/**
- * @param {string} text the summary
- * @param {{ dir: string, sections: { file: string, sentence: string }[],
- *   ownFile?: { heading: string, file: string }[] }} plan
- */
 export function splitDoc(text, plan) {
   const ownFile = plan.ownFile ?? [];
   const { preamble, sections } = sectionsOf(text);

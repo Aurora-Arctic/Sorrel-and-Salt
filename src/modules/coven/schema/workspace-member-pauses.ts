@@ -5,9 +5,7 @@ import { idColumn } from '../../../db/schema-parts';
 import { auditColumns, users } from '../../identity/schema/users';
 import { workspaces } from './workspaces';
 
-// A coven steward's pause on one member's access to that coven, one row per pause, kept as history; `created_by` is who set it. It
-// stands while it is live (not lifted, not deleted) and `until` is null or still ahead. Marked `namedWrites`: reached only through
-// its set and lift.
+// Live while not lifted, not deleted, and `until` is null or still ahead.
 export const workspaceMemberPauses = namedWrites(
   pgTable(
     'workspace_member_pauses',
@@ -20,7 +18,6 @@ export const workspaceMemberPauses = namedWrites(
       userId: uuid('user_id')
         .notNull()
         .references(() => users.id, { onDelete: 'cascade' }),
-      // Null for a pause with no end date.
       until: timestamp('until'),
       note: text('note'),
       message: text('message'),

@@ -18,7 +18,6 @@ const { membershipsOf } = vi.hoisted(() => ({
 }));
 vi.mock('@/lib/request-session', () => ({
   getSession: async () => SESSION,
-  // No pause stands on this viewer.
   getShellSession: async () => ({ session: SESSION }),
   requireSignedIn: async () => SESSION,
 }));
@@ -62,7 +61,6 @@ describe('the viewer and their roles inside one server render', () => {
   it('read the memberships once between them', async () => {
     const text = await render();
 
-    // Both readers answered, so each did ask.
     expect(text).toContain('1:member');
     expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(SESSION, ['u1']);
   });

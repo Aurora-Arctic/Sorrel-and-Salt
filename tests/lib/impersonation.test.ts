@@ -35,7 +35,6 @@ async function authUnder(flag: string, target: string) {
   return (await import('@/lib/auth')).auth;
 }
 
-/** Every `/admin/*` path the instance mounts, whichever plugin brought it. */
 function mountedAdminPaths(auth: Awaited<ReturnType<typeof authUnder>>): string[] {
   return Object.values(auth.api as Record<string, { path?: string }>)
     .map((endpoint) => endpoint.path)
@@ -43,7 +42,6 @@ function mountedAdminPaths(auth: Awaited<ReturnType<typeof authUnder>>): string[
     .sort();
 }
 
-/** What the handler answers for a bare POST to `path`, signed out. */
 async function statusOf(auth: Awaited<ReturnType<typeof authUnder>>, path: string) {
   const response = await auth.handler(
     new Request(`${ORIGIN}/api/auth${path}`, {
@@ -55,8 +53,6 @@ async function statusOf(auth: Awaited<ReturnType<typeof authUnder>>, path: strin
   return response.status;
 }
 
-// One environment each way: which environments turn it on is
-// impersonationEnabled's, above.
 describe('registration', () => {
   it('mounts exactly the two impersonation endpoints where it is on', async () => {
     const auth = await authUnder('true', 'preview');
@@ -64,7 +60,6 @@ describe('registration', () => {
     // The allowlist, compared by name: an endpoint a Better Auth upgrade adds
     // fails here rather than going through unnoticed.
     expect(mountedAdminPaths(auth)).toEqual([...IMPERSONATION_PATHS].sort());
-    // Answers, refusing a signed-out caller, rather than 404ing.
     expect(await statusOf(auth, '/admin/impersonate-user')).toBe(401);
   });
 

@@ -10,7 +10,7 @@ import {
 import { supportTitle } from './parts/support-title';
 import type { SupportReceivedProps } from './types';
 
-// Sent to a request's sender when it arrives. It names the request and carries the answer time, and none of what they wrote.
+// Carries none of what the sender wrote.
 
 const titleOf = (requestSubject: string): string =>
   supportTitle('We have your support request', requestSubject);
@@ -81,7 +81,6 @@ function signedOutRest(signedOut: boolean, url: string, part: SupportReceivedPro
       );
 }
 
-/** The receipt for `to`, rendered to the html and plain text `send` takes. */
 export const supportReceivedMessage = defineMessage<SupportReceivedProps>(
   ({ requestSubject }) => titleOf(requestSubject),
   SupportReceived,

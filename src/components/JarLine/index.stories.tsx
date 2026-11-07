@@ -2,9 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import JarLine from '.';
 import type { StockForm, StockJar } from '../StockDialog/types';
 
-// Render-only; the lines' content is asserted in tests/components/SpellBuilder and
-// tests/components/RecordWorking. Point at a pressable line to see the jar shake and the name grow.
-// Every name is invented.
 const meta = {
   title: 'Ingredients / Jar Line',
 } satisfies Meta;

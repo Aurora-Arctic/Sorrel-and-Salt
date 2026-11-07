@@ -4,10 +4,7 @@ import type { WelcomeProps } from './types';
 import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 
-// The public front door at `/`: what the site is, that it is invite-only, the
-// way in, and the way to the public compendium. The session changes exactly one
-// thing, the way in, so a signed-in visitor is never asked to sign in again.
-// See claude-docs/components/welcome.md.
+// The session changes exactly one thing, the way in (claude-docs/components/welcome.md).
 
 const Welcome = ({ landing }: WelcomeProps): ReactElement => (
   <div className="welcome">

@@ -54,10 +54,8 @@ import type {
   VocabularySuggestion,
 } from './types';
 
-/**
- * One page of the curated forms under `filter` in `(name, id)` order: live forms whose group is live too,
- * which is what "curated" means. Public reference data, so no proof. (claude-docs/db/compendium-read.md, "Vocabulary finders")
- */
+// Curated forms: live, with a live group. Public reference data, so no proof
+// (claude-docs/db/compendium-read.md, "Vocabulary finders").
 export function findIngredientFormValues(
   filter: IngredientFormValueFilter,
   page: PageRequest,
@@ -70,10 +68,6 @@ export function findIngredientFormValues(
   );
 }
 
-/**
- * How many forms `findIngredientFormValues` pages under `filter`, and how many come before `start`,
- * for "Page X of Y"; one statement over the page's own filter and key.
- */
 export function findIngredientFormValueCount(
   filter: IngredientFormValueFilter,
   start: Cursor | undefined,
@@ -86,10 +80,6 @@ export function findIngredientFormValueCount(
   );
 }
 
-/**
- * One page of a flat astrology vocabulary under `filter` in `(name, id)` order: its live rows, as it has
- * no group to be curated under. Public reference data, so no proof.
- */
 export function findAstrologyValues<TVocabulary extends AstrologyVocabulary>(
   vocabulary: TVocabulary,
   filter: AstrologyValueFilter,
@@ -98,11 +88,6 @@ export function findAstrologyValues<TVocabulary extends AstrologyVocabulary>(
   return findPage(vocabulary, [vocabulary.name], page, vocabularyArms(vocabulary, filter));
 }
 
-/**
- * How many rows `findAstrologyValues` pages under `filter`, and how many come
- * before `start` in its order: "Page X of Y", as `findIngredientFormValueCount`
- * counts the forms.
- */
 export function findAstrologyValueCount(
   vocabulary: AstrologyVocabulary,
   filter: AstrologyValueFilter,
@@ -111,10 +96,6 @@ export function findAstrologyValueCount(
   return findPageCount(vocabulary, [vocabulary.name], start, vocabularyArms(vocabulary, filter));
 }
 
-/**
- * One page of the categories under `filter`, by group name, then name, then id: live categories whose group
- * is live, read as the forms are. Public reference data, so no proof.
- */
 export function findCategoryPage(
   filter: CategoryFilter,
   page: PageRequest,
@@ -122,10 +103,6 @@ export function findCategoryPage(
   return findPage(categories, CATEGORY_ORDER, page, vocabularyArms(categories, filter));
 }
 
-/**
- * How many categories `findCategoryPage` pages under `filter`, and how many come before `start`
- * (null with none), for "Page X of Y"; one statement over the page's own filter and key.
- */
 export function findCategoryCount(
   filter: CategoryFilter,
   start: Cursor | undefined,
@@ -133,10 +110,6 @@ export function findCategoryCount(
   return findPageCount(categories, CATEGORY_ORDER, start, vocabularyArms(categories, filter));
 }
 
-/**
- * One page of the deities under `filter`, by tradition name, then name, then id: live deities whose
- * tradition is live, read as the categories are. Public reference data, so no proof.
- */
 export function findDeityPage(
   filter: DeityFilter,
   page: PageRequest,
@@ -144,19 +117,10 @@ export function findDeityPage(
   return findPage(deities, DEITY_ORDER, page, deityArms(filter));
 }
 
-/**
- * How many deities `findDeityPage` pages under `filter`, and how many come
- * before `start` in its order: "Page X of Y", as `findCategoryCount` counts
- * the categories, over the page's own filter and key.
- */
 export function findDeityCount(filter: DeityFilter, start: Cursor | undefined): Promise<PageCount> {
   return findPageCount(deities, DEITY_ORDER, start, deityArms(filter));
 }
 
-/**
- * One page of a group vocabulary (category groups, form groups or deity traditions), alphabetical,
- * narrowed by a name fragment. Public reference data, so no proof.
- */
 export function findGroupPage<TTable extends GroupTable>(
   table: TTable,
   filter: GroupFilter,
@@ -165,10 +129,6 @@ export function findGroupPage<TTable extends GroupTable>(
   return findPage(table, [table.name], page, groupArms(table, filter));
 }
 
-/**
- * How many groups `findGroupPage` pages under `filter`, and how many come
- * before `start` in its order: "Page X of Y" on the group's admin page.
- */
 export function findGroupCount(
   table: GroupTable,
   filter: GroupFilter,
@@ -177,15 +137,10 @@ export function findGroupCount(
   return findPageCount(table, [table.name], start, groupArms(table, filter));
 }
 
-/** A group filter's one arm, a name fragment; none with no query. */
 function groupArms(table: GroupTable, { query }: GroupFilter): SQL | undefined {
   return query ? containsText(table.name, query) : undefined;
 }
 
-/**
- * The filter a vocabulary's admin page and its count share: the group or tradition live (a correlated
- * `EXISTS`) plus the name and group arms, each absent when unset. A flat vocabulary has no group.
- */
 function vocabularyArms(
   vocabulary: ListedVocabulary,
   { query, groupId }: { query?: string; groupId?: string },
@@ -217,10 +172,8 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
   );
 }
 
-/**
- * The key of a grouped vocabulary: group name, own name (natural collation), then id, so namesakes in
- * different groups sit apart. A page and its count share it.
- */
+/** Group name, own name (natural collation), then id, so namesakes in different groups sit
+ * apart. The page and its count share it. */
 function groupedOrder({ items, groups, column }: TwoTierPair): ListOrder {
   const grouped = sql.identifier('grouped');
   return {
@@ -235,7 +188,6 @@ function groupedOrder({ items, groups, column }: TwoTierPair): ListOrder {
   };
 }
 
-/** The categories by group, then name; the deities by tradition, then name. */
 const CATEGORY_ORDER = groupedOrder(TWO_TIER.categories);
 const DEITY_ORDER = groupedOrder(TWO_TIER.deities);
 
@@ -266,10 +218,8 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
   return selectFrom(vocabulary, and(curated(vocabulary), inArray(vocabulary.id, [...ids])));
 }
 
-/**
- * The live other names of the deities among `deityIds`, in no
- * particular order — a loader's batch read. Global reference data, so no proof.
- */
+/** The live other names of these deities, in no particular order: a loader's batch read. No
+ * proof: global data. */
 export function findDeityOtherNames(
   deityIds: readonly string[],
 ): Promise<(typeof deityOtherNames.$inferSelect)[]> {
@@ -390,10 +340,6 @@ function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper }
   };
 }
 
-/**
- * The pair `vocabulary` is the items of in `TWO_TIER` — the table its rows are
- * filed under, and the column that files them — or none for a flat vocabulary.
- */
 function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
   return Object.values(TWO_TIER).find((pair) => pair.items === vocabulary);
 }

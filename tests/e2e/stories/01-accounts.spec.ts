@@ -52,8 +52,8 @@ test.describe('signing in', () => {
       await page.reload();
       await expect(page.getByRole('button', { name: 'Continue with Discord' })).toBeVisible();
       const focusedNames = new Set<string>();
-      // The theme toggle plus the four buttons; a few spare presses tolerate
-      // another tab stop without under-covering the roster.
+      // Spare presses beyond the provider buttons tolerate another tab stop; the theme toggle is
+      // one.
       for (let i = 0; i < PROVIDER_NAMES.length + 3; i++) {
         await page.keyboard.press('Tab');
         const text = await page.evaluate(() => document.activeElement?.textContent?.trim());
@@ -73,7 +73,6 @@ test.describe('signing in', () => {
       // Scoped to the page's own main: Next portals an empty alert-role route
       // announcer into the body on every page.
       await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
-      // The way back in is still offered beside it.
       await expect(page.getByRole('button', { name: 'Continue with Discord' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
     },
@@ -91,15 +90,11 @@ test.describe('the landing an account with no coven meets', () => {
       );
       expect(row.can_create_workspace).toBe(false);
 
-      // Signed in, the front door's way in is the landing, not sign-in again.
       await page.goto('/');
       await expect(page.getByRole('link', { name: 'Sign In', exact: true })).toHaveCount(0);
       await page.getByRole('link', { name: 'Continue', exact: true }).click();
       await expect(page).toHaveURL(/\/coven$/);
 
-      // The landing's own section says what to do next; with nothing to open,
-      // there is no switcher, no coven nav and no Create Coven, and no notice
-      // of an invitation, since none is waiting.
       const main = page.getByRole('main');
       await expect(main.getByRole('region')).toBeVisible();
       await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
@@ -129,7 +124,6 @@ test.describe('the landing an account with no coven meets', () => {
       const notice = page.getByRole('main').getByRole('status');
       await expect(notice).toBeVisible();
       await assertNoAccessibilityViolations(page);
-      // Still no coven: the invitation is waiting, not accepted.
       await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
 
       await notice.getByRole('link').click();
@@ -154,7 +148,6 @@ test.describe('creating a coven', () => {
         canCreate: true,
       });
 
-      // Before they have a coven, the landing offers the create page.
       await page.goto('/coven');
       const create = page
         .getByRole('main')
@@ -213,7 +206,6 @@ test.describe('creating a coven', () => {
       await expect(page).toHaveURL(/\/coven\/new-2$/);
       await expect(page.getByRole('heading', { level: 1, name: 'New' })).toBeVisible();
 
-      // The address is still the create page, not the coven called New.
       const again = await page.goto('/coven/new');
       expect(again?.status()).toBe(200);
       await expect(page.getByRole('textbox', { name: 'Name' })).toBeVisible();
@@ -234,14 +226,12 @@ test.describe('creating a coven', () => {
         [outsider.id]: false,
       });
 
-      // In no coven, the landing offers them nothing to create.
       await page.goto('/coven');
       await expect(page.getByRole('main').getByRole('region')).toBeVisible();
       await expect(
         page.getByRole('main').getByRole('link', { name: 'Create Coven', exact: true }),
       ).toHaveCount(0);
 
-      // By its address, the create page answers with a notice and no form.
       const response = await page.goto('/coven/new');
       expect(response?.status()).toBe(200);
       await expect(page.getByRole('main').getByRole('status')).toBeVisible();
@@ -250,8 +240,6 @@ test.describe('creating a coven', () => {
       await scanBothThemes(page);
       await assertNoSidewaysScroll(page);
 
-      // Seated in the holder's coven, their switcher lists it and still
-      // offers no Create Coven, where the holder's does.
       const [coven] = await withSql(
         (sql) => sql`select id from workspaces where slug = 'fixture-coven'`,
       );
@@ -328,7 +316,6 @@ test(
     const alpha = await makeCoven('Fixture Alpha', [[traveller, 'owner']]);
     const beta = await makeCoven('Fixture Beta', [[traveller, 'owner']]);
     const host = await makeUser(page, 'gamma-host@accounts-story.test', 'Fixture Gamma Host');
-    // A viewer there, who cannot open its members page.
     const gamma = await makeCoven('Fixture Gamma', [
       [host, 'owner'],
       [traveller, 'viewer'],
@@ -344,7 +331,6 @@ test(
     const switcher = page.getByRole('combobox', { name: 'Coven' });
     await expect(switcher).toHaveText('Fixture Alpha');
 
-    // Another coven, the same section.
     await switcher.click();
     await expect(page.getByRole('option', { name: 'Fixture Beta', exact: true })).toBeVisible();
     await assertNoAccessibilityViolations(page);
@@ -358,8 +344,6 @@ test(
         .getByRole('link', { name: 'Members', exact: true }),
     ).toHaveAttribute('aria-current', 'page');
 
-    // The place is the address's, not the session's: a second tab sits in
-    // another coven, and neither moves the other.
     const second = await page.context().newPage();
     await signInAgainAs(second, traveller);
     await second.goto(`/coven/${alpha.slug}`);
@@ -369,14 +353,11 @@ test(
     await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText('Fixture Beta');
     await second.close();
 
-    // Where they cannot open the section, they land on the coven's own page
-    // rather than a 404.
     await page.getByRole('combobox', { name: 'Coven' }).click();
     await page.getByRole('option', { name: 'Fixture Gamma', exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${gamma.slug}$`));
     await expect(page.getByRole('heading', { level: 1, name: 'Fixture Gamma' })).toBeVisible();
 
-    // From a coven's own page, to the next coven's.
     await page.getByRole('combobox', { name: 'Coven' }).click();
     await page.getByRole('option', { name: 'Fixture Alpha', exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${alpha.slug}$`));

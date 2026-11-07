@@ -47,7 +47,7 @@ merely absent:
   is, a refused coven a `Forbidden` in its own slots, and nothing clears it,
   since no write answers a cupboard entry yet), and `stepsBySpell`, `assignedCategoriesBySpell` and `derivedCategoriesBySpell` (`grimoire`, for `Spell.steps`, `Spell.categories` and `Spell.derivedCategories`, with `Spell.categoryGaps` worked out from the last two, M10.9: keyed `{ id, workspaceId }`, cached by the spell id, a refused coven a `Forbidden` in its own slots, and a spell the reader may not see answering empty). M6.11 adds no
   `membersByWorkspace`: `Workspace.members` reads a coven at a time
-  ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)). A test that builds a context
+  ([`data.md`, "A coven's members are read a coven at a time, without a loader"](../design-decisions/data.md#a-covens-members-are-read-a-coven-at-a-time-without-a-loader)). A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the
   `Loaders` type no longer admits. A factory is written in its module's `loaders/`, exported
   through the module's index, and spread into `LOADERS` here
@@ -58,10 +58,10 @@ merely absent:
   one record in `loaders/ingredient-children.ts`, each exported by name for
   `LOADERS`, and `clearIngredientChildren(loaders, row)` clears a row from
   every one in it, so an ingredient write clears a loader added there without
-  naming it (MB.211). A variant's three child loaders are keyed by the variant
+  naming it. A variant's three child loaders are keyed by the variant
   row's `{ id, ingredientId, workspaceId }` in a record of their own, which
   `clearIngredientChildren` empties whole: a write knows its ingredient, not
-  which of its variants the request has loaded (MB.218). The
+  which of its variants the request has loaded. The
   service needs the `workspaceId` to know which coven to check without a read
   of its own, and it never trusts it as the scope
   ([`db/ingredient-children.md`](../db/ingredient-children.md),
@@ -74,9 +74,9 @@ merely absent:
   signed out, and `providersByUser` and `usersByIdForAdmin` every key to a
   non-admin: each is `defineSignedInLoader(batch)`, which answers `Forbidden`
   in every slot without a session and hands `batch` a `Session` otherwise, so
-  the four services never see a null (MB.212). `usersById` refuses nobody
+  the four services never see a null. `usersById` refuses nobody
   signed in: a stranger's id answers `null` in its own slot. The ingredient loaders answer a compendium entry for
-  anyone, since the compendium is the public surface (MB.80), and refuse a
+  anyone, since the compendium is the public surface, and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders
   and `ingredientFormsById` answer anyone, since a vocabulary is public
   reference data: each is `definePublicLoader(batch)`, whose `batch` takes the

@@ -12,8 +12,7 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { SignedOutSupportFormProps } from './types';
 
-// The support form for a visitor with no account: the five topics open without an account, an address to
-// reply to, and the same subject and message. A topic passed in is chosen already when it is one of the five. It sends `sendSignedOutSupportRequest`; the reply comes by email alone.
+// Sends `sendSignedOutSupportRequest`; the reply comes by email alone.
 
 const SendSignedOutSupportRequestDocument = graphql(`
   mutation SendSignedOutSupportRequest($input: SignedOutSupportRequestInput!) {
@@ -24,7 +23,6 @@ const SendSignedOutSupportRequestDocument = graphql(`
 const SUBJECT_LIMIT = 120;
 const MESSAGE_LIMIT = 4000;
 
-/** The topics the service accepts without an account, in the order the signed-in form offers them. */
 const SIGNED_OUT_TOPICS = SUPPORT_ABOUTS.filter(({ value }) =>
   ['accessibility', 'bug', 'account', 'privacy', 'question'].includes(value),
 );

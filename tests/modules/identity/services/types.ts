@@ -26,7 +26,6 @@ export interface CreationFlagRow {
   updated_at: Date;
 }
 
-/** One `create_workspace` row of `user_privilege_changes` as the ledger tests read it, the enums cast to text. */
 export interface CreationChangeRow {
   user_id: string;
   change: string;
@@ -35,7 +34,6 @@ export interface CreationChangeRow {
   updated_by: string;
 }
 
-/** One `user_privilege_changes` row as the role tests read it, the enums cast to text. */
 export interface PrivilegeChangeRow {
   user_id: string;
   privilege: string;
@@ -52,14 +50,12 @@ export interface RoleRow {
   updated_by: string;
 }
 
-/** One ledger row as the privilege-change tests seed and read it back, in the service's order. */
 export interface LedgerRow {
   id: string;
   user_id: string;
   privilege: string;
 }
 
-/** One `admin_role_change_pauses` row as the pause tests read it. */
 export interface PauseRow {
   created_by: string;
   updated_by: string;
@@ -67,7 +63,6 @@ export interface PauseRow {
   ended: boolean;
 }
 
-/** A user's name and its stamps, as the name tests read them. */
 export interface NamedUserRow {
   id: string;
   name: string;
@@ -75,7 +70,6 @@ export interface NamedUserRow {
   updated_at: Date;
 }
 
-/** One `invitations` row as the invitation tests read it, the role cast to text. */
 export interface InvitationStateRow {
   id: string;
   workspace_id: string | null;
@@ -92,7 +86,6 @@ export interface InvitationStateRow {
   updated_by: string;
 }
 
-/** How an acceptance test shapes the invitation it inserts. */
 export interface InvitationFixture {
   email?: string;
   token?: string;
@@ -105,6 +98,5 @@ export interface InvitationFixture {
   expired?: boolean;
   revoked?: boolean;
   accepted?: boolean;
-  /** A card: bound to no address, coven or site role, in a batch. */
   card?: boolean;
 }

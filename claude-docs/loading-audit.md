@@ -15,7 +15,7 @@ Each cell is **Has**, **Lacks** or **N/A** (not applicable). **N/A** means the p
 Two points hold for the whole app and are not repeated in each table:
 
 - `FormActions` and `ConfirmedAction` both render a `BusyButton`. Every form and every confirm dialog built on them has a Control by construction. Both live in `src/components/Field/form-actions.tsx` and `src/components/UserList/confirmed-action.tsx`.
-- No route has a `loading.tsx` or a route-level `<Suspense>`, and none may (`claude-docs/loading.md`, "Why No loading.tsx"). Every route wait is a client transition held by `useOptimistic`, so the Region column describes the skeleton the link's target names, not a route file.
+- No route has a `loading.tsx` or a route-level `<Suspense>`, and none may ([`loading.md`](loading.md), "Why there is no `loading.tsx` and no route-level Suspense"). Every route wait is a client transition held by `useOptimistic`, so the Region column describes the skeleton the link's target names, not a route file.
 
 Some Region cells say "Has, see Part 2". That means a skeleton is drawn, and whether it matches the real page is judged in Part 2.
 
@@ -287,4 +287,4 @@ Sizes are rough minutes for the change, tests included. Every fix uses only the 
 
 ### Not Covered
 
-I did not read `claude-docs/design-decisions/m12.33-loading-standard.md` or `.claude/rules/components.md`. I did not run the app, so skeleton and page were compared by reading code, not by looking at them.
+I did not read the loading standard's decision record (now [`design-decisions/ui.md`](design-decisions/ui.md), "One Loading Standard for the Site") or `.claude/rules/components.md`. I did not run the app, so skeleton and page were compared by reading code, not by looking at them.

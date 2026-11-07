@@ -1,7 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The input with the eye toggle inside its right-hand end; the input's padding keeps the text clear of it.
 .password-field__control {
   position: relative;
   display: flex;

@@ -3,23 +3,19 @@ import { type ReactNode, Suspense, use, useEffect, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
 
-// The App Router as a component test sees it: each call a mock, which
-// `Navigating` turns into a navigation that stays on its way until the test
-// lets the new page arrive. Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const { NavigationProvider, reportLeaving, useNavigationState, usePendingNavigation } =
   await import('@/lib/navigation');
 
-// The one way the site navigates (claude-docs/design-decisions/m12.33-plan.md): each caller's own
+// The one way the site navigates (claude-docs/design-decisions/ui.md, "One Loading Standard for the Site"): each caller's own
 // `pending`, and a site-wide `busy` with the address it is headed for, which the bar and the
 // skeletons read wherever they sit (claude-docs/design-decisions/m11.9-plan.md, Part 1).
 
 /** The option links once passed to name their skeleton; it is gone, so passing it does nothing. */
 const OLD_TARGET = { region: 'coven', shape: 'cards' } as const;
 
-/** A caller of the hook: its button is `aria-busy` while its own navigation is on its way. */
 function Go({
   name,
   href,
@@ -71,7 +67,6 @@ const press = (name: string) =>
     fireEvent.click(screen.getByRole('button', { name }));
   });
 
-/** The event a browser fires on a page restored from the back-forward cache. */
 function pageshow(persisted: boolean): Event {
   const event = new Event('pageshow');
   Object.defineProperty(event, 'persisted', { value: persisted });
@@ -84,7 +79,6 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  // A full load reported by a test ends here, as does a page it left on its way.
   await act(async () => {
     for (const arrive of unarrived.splice(0)) arrive();
     window.dispatchEvent(pageshow(true));
@@ -175,7 +169,6 @@ describe('useNavigationState', () => {
 
     expect(state).toEqual({ busy: true, href: '/coven/testwort-circle/ingredients' });
     expect(screen.getByRole('button', { name: 'Switch' })).toHaveAttribute('aria-busy', 'true');
-    // The other caller started nothing: the page is busy, its own control is not.
     expect(screen.getByRole('button', { name: 'Other' })).toHaveAttribute('aria-busy', 'false');
 
     await arrive();
@@ -219,7 +212,6 @@ describe('useNavigationState', () => {
   });
 });
 
-/** A region that takes its children away while a navigation is on its way, as `MainBody` does. */
 function Region({ children }: { children: ReactNode }) {
   const { busy } = useNavigationState();
   return busy ? <output>Loading</output> : children;
@@ -248,7 +240,6 @@ describe('a navigation whose caller is taken off the page', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(state).toEqual({ busy: true, href: '/curator/forms' });
 
-    // Still waiting a while on: nothing the swap did has ended the wait.
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
@@ -292,7 +283,6 @@ describe('two navigations that overlap', () => {
 
     expect(state).toEqual({ busy: true, href: '/b' });
     expect(screen.getByRole('button', { name: 'B' })).toHaveAttribute('aria-busy', 'true');
-    // A was superseded: the wait is B's, so A's control is no longer the pressed one.
     expect(screen.getByRole('button', { name: 'A' })).toHaveAttribute('aria-busy', 'false');
 
     await first.arrive();

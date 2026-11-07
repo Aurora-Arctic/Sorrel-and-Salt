@@ -12,7 +12,6 @@ import type { IngredientSearchFormProps } from './types';
 
 const SearchText = createContext('');
 
-/** The text in the search box now, searched or not: for a field in the filter slot to carry. */
 export function useSearchText(): string {
   return useContext(SearchText);
 }

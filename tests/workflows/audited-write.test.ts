@@ -4,8 +4,7 @@ import { start } from 'workflow/api';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { auditedWriteWorkflow } from './fixtures/audited-write';
 
-// A real run of a test-only workflow (tests/workflows/fixtures/), not a production job: it shows what
-// the SDK's run does with a step that writes through `withAudit` as the System actor.
+// A test-only workflow (tests/workflows/fixtures/), not a production job.
 
 let sql: ReturnType<typeof postgres>;
 

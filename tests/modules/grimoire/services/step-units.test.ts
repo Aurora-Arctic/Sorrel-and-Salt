@@ -12,9 +12,6 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 
-// A step linking a form the coven holds a jar of must be measured in a unit the jar's converts to, so that making the spell can take it out of stock.
-// Weight and volume each convert within themselves; a count unit matches only itself. A custom step, and a form with no jar, are not checked. Every refusal is asserted by the rows left behind, read raw.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -24,7 +21,6 @@ beforeEach(async () => {
   await sql`truncate spells, ingredients cascade`;
 });
 
-/** A compendium ingredient with one form, `Testform`, which any coven may lay: its ids. */
 async function compendiumForm(name: string) {
   const ingredientId = await insertIngredient(
     sql,
@@ -36,7 +32,6 @@ async function compendiumForm(name: string) {
 
 type Form = Awaited<ReturnType<typeof compendiumForm>>;
 
-/** A jar of `form` in `unit`, held by `workspaceId`, written raw. */
 function jar(form: Form, unit: Unit, workspaceId = WORKSPACE_W_ID, deleted = false) {
   return insertStock(
     sql,
@@ -48,11 +43,9 @@ function jar(form: Form, unit: Unit, workspaceId = WORKSPACE_W_ID, deleted = fal
 const countSpells = async (): Promise<number> =>
   Number((await sql`select count(*) from spells`)[0].count);
 
-/** Every step row of the spell, live and tombstoned, in place order. */
 const stepRowsOf = (spellId: string) =>
   sql`select variant_id, name, unit, deleted_at from spell_steps where spell_id = ${spellId} order by position, id`;
 
-/** Creates a spell in W as B whose second step lays `form` in `unit`, after an instruction. */
 const create = (form: Form, unit: Unit, workspaceId = WORKSPACE_W_ID) =>
   createSpell(asUser(workspaceId === WORKSPACE_X_ID ? D : B), workspaceId, {
     title: 'Measured Jar',
@@ -126,12 +119,10 @@ describe('createSpell, a step measured against the coven’s jar', () => {
     await jar(form, 'ml', WORKSPACE_W_ID);
     await jar(form, 'g', WORKSPACE_X_ID);
 
-    // Why W's save could have been refused: X's jar of the very same form is
-    // in grams, and the check refuses a millilitre step against it under X's proof.
+    // Why W's save could have been refused: X's jar of the same form is in grams, and the check refuses a millilitre step against it under X's proof.
     await expect(create(form, 'ml', WORKSPACE_X_ID)).rejects.toMatchObject({
       issues: [{ path: ['steps', 1, 'unit'] }],
     });
-    // And W's own jar is read: a gram step is refused against it.
     await expect(create(form, 'g')).rejects.toBeInstanceOf(ValidationError);
 
     const spell = await create(form, 'tsp');
@@ -140,7 +131,6 @@ describe('createSpell, a step measured against the coven’s jar', () => {
 });
 
 describe('updateSpell, a step measured against the coven’s jar', () => {
-  /** A spell in W laying `form` in `unit` as its one step, written raw. */
   async function seeded(form: Form, unit: Unit) {
     return insertSpell(
       sql,
@@ -152,7 +142,6 @@ describe('updateSpell, a step measured against the coven’s jar', () => {
     );
   }
 
-  /** The spell's one live step's id. */
   const stepIdOf = async (spellId: string) =>
     (await sql`select id from spell_steps where spell_id = ${spellId} and deleted_at is null`)[0]
       .id as string;

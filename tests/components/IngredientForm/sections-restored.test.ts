@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sectionsRestored } from '@/components/IngredientForm/values';
 
-// The sections a restore writes into, read from the field paths a
-// history step names, so undo can open what it changed.
-
 describe('sectionsRestored', () => {
   it('names the section holding an ingredient field, a list box’s draft counting as its list', () => {
     const { sections, variants } = sectionsRestored(['name', 'colors', 'drafts.celestialBodies']);

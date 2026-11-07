@@ -1,10 +1,6 @@
-// Points each code citation of a split summary's section at the file the
-// section lives in, since the guard fails one named through the index
-// (claude-docs/README.md, "Comments in code"), then rewraps a comment the
-// longer path pushes past the print width. Run after split-doc.mjs; a dry run
-// unless --write.
-//
-//   node scripts/repoint-doc-citations.mjs claude-docs/db.md [--write]
+// Points each code citation of a split summary's section at the file the section lives in, then rewraps; run
+// after split-doc.mjs, a dry run unless --write (claude-docs/README.md, "Comments in code").
+// Usage: node scripts/repoint-doc-citations.mjs claude-docs/<summary>.md [--write]
 
 import { readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -17,11 +13,6 @@ const TOOLS = ['scripts/split-doc.mjs', 'scripts/repoint-doc-citations.mjs'];
 // A comment a tool reads ends a paragraph: rewrapping must never move it.
 const DIRECTIVE = /^(?:oxlint-|eslint-|@ts-|prettier-ignore|istanbul |c8 |v8 )/;
 
-/**
- * @param {string} text a citing file
- * @param {string} doc the split summary, `claude-docs/db.md`
- * @param {{ text: string, file: string }[]} headings every heading under it, with its file
- */
 export function repointCitations(text, doc, headings) {
   let count = 0;
   const out = text.replace(sectionOf(doc), (_, tail, quoted) => {
@@ -90,7 +81,6 @@ export function reflowComments(text, marker) {
   return lines.join('\n');
 }
 
-/** Every heading under a split summary's directory, as the guard reads them. */
 function headingsUnder(root, dir) {
   return readdirSync(join(root, dir)).flatMap((name) => {
     const file = `${dir}/${name}`;

@@ -52,7 +52,6 @@ const ReceivedInvitations = ({
             },
             {
               heading: 'Answer',
-              // At a card's top right, beside the coven.
               action: 'corner',
               cell: (invitation) => (
                 <div className="received-invitations__answer">

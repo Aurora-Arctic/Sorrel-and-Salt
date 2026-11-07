@@ -1,8 +1,5 @@
-// Imported by scripts Node runs directly (`node scripts/<name>.ts`), whose
-// type stripping erases an `import type` and keeps any other import: a plain
-// `import { Finding }` survives and fails at link time, since nothing here is a
-// runtime export. So a script imports this file with `import type`, and with
-// the `.ts` extension Node's resolver needs, as for its other relative imports.
+// Import this file with `import type` and the `.ts` extension: Node's type stripping keeps any other import,
+// which fails at link time.
 
 export interface Finding {
   file: string;
@@ -10,7 +7,6 @@ export interface Finding {
   statement: string;
 }
 
-/** One `src/db/migrations/meta/_journal.json` entry, as much as the order check reads. */
 export interface JournalEntry {
   idx: number;
   tag: string;
@@ -35,8 +31,7 @@ export interface AssertionResult {
 
 export interface ProbeResult {
   ok: boolean;
-  /** Present on success — which database actually answered. */
   identity?: { database: string; user: string; version: string };
-  /** Present on failure — already scrubbed, safe to print. */
+  /** Already scrubbed of secrets, so safe to print. */
   description?: string;
 }

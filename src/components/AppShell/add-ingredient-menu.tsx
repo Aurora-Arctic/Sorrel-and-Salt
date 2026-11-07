@@ -8,14 +8,13 @@ import type { AddDestination } from './types';
 
 // The chevron beside Add Ingredient and its menu of places, drawn by MenuButton rather than a second
 // hand-built menu; the chevron alone shows, its words hidden but still its name. With both kinds of place
-// they are two labelled groups, otherwise a plain list (claude-docs/components/app-shell.md, "The Add Ingredient button").
+// they are two labelled groups, otherwise a plain list (claude-docs/components/app-shell.md, "Contracts").
 
 export default function AddIngredientMenu({
   sections,
   className,
   onChoose,
 }: {
-  /** The places in the order to draw them: two or more groups, or one, which is drawn flat. */
   sections: readonly MenuSection<AddDestination>[];
   className: string;
   onChoose: (destination: AddDestination) => void;

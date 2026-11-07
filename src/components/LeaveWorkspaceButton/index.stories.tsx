@@ -10,8 +10,6 @@ import PageNav from '../PageNav';
 import { PendingLink } from '../../lib/navigation';
 import LeaveWorkspaceButton from '.';
 
-// Render-only; behaviour is asserted in tests/components/LeaveWorkspaceButton.
-// In the workshop the call reaches no server, so confirming shows the failure.
 const meta = {
   title: 'Coven / Leave Coven Button',
 } satisfies Meta;
@@ -21,9 +19,6 @@ type ChosenStory = StoryObj<{ state?: ReactNode }>;
 
 const ID = '00000000-0000-0000-0000-000000000001';
 
-// Leave: a practitioner just leaves. Only Steward: Leave asks what happens to the coven, a hand-over
-// to a member searched by name, or the deletion. One other member: offered by name, with nothing to
-// search. Only Member: nobody else in the coven, so deletion is the whole answer.
 export const States: Story = {
   render: () => (
     <StatesGrid
@@ -65,8 +60,6 @@ const MANY = [
   { userId: '00000000-0000-0000-0000-000000000003', name: 'Fixture C', role: 'viewer' as const },
 ];
 
-// A dialog open on a state a press reaches, as a person would. In the workshop no server
-// answers, so a confirmed Leave or a hand-over shows its failure.
 const Opened = ({ steps, children }: { steps: (() => void)[]; children: ReactNode }) => {
   useSteps(steps);
   return <>{children}</>;
@@ -107,8 +100,6 @@ const OPEN_STATES: Record<string, ReactNode> = {
   ),
 };
 
-// One story with a control to choose the state: each is a dialog open over the button, too big to
-// sit beside the others (claude-docs/workshop.md, rule 5).
 export const Open: ChosenStory = {
   args: { state: 'Member Asking' },
   argTypes: {
@@ -117,9 +108,6 @@ export const Open: ChosenStory = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// The coven's index page as src/app/(shell)/coven/[slug]/page.tsx draws it, in the
-// shell: role sentence, jump menu, Contents (Members only for a role that may read
-// it), Your Membership, and Delete This Coven for an owner. Fixture props.
 const ROLE_NAME = { owner: 'an owner', member: 'a member', viewer: 'a viewer' } as const;
 type Role = keyof typeof ROLE_NAME;
 
@@ -217,7 +205,6 @@ const OVERVIEW_STATES: Record<string, ReactNode> = {
   Observer: <OverviewPage role="viewer" />,
 };
 
-// The whole page, one story with a control to choose the caller's role.
 export const Overview: ChosenStory = {
   args: { state: 'Steward' },
   argTypes: {

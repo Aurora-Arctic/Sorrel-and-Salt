@@ -103,7 +103,6 @@ const ConfirmedAction = ({
   }
 
   const sending = step === 'sending';
-  // The warning and the reason, under the question, in a modal or over one.
   const details = (
     <>
       {/* Quiet, a status rather than an alert: this warning is read once, as

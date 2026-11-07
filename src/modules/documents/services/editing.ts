@@ -29,8 +29,6 @@ function toDraft(row: {
 }
 
 /**
- * The document with its published version and its open draft, for the editor to open on.
- *
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no live document holds the key.
  */
@@ -58,10 +56,9 @@ export async function readDocumentForEditing(
 }
 
 /**
- * Writes `body` into the document's draft. With no `expectedRevision` it opens the draft, and refuses if one is open already;
- * with one it writes into the open draft only while the draft is still at that revision.
+ * With no `expectedRevision` it opens the draft, refusing if one is open; with one it writes only while the draft is at that revision.
  *
- * @throws {Forbidden} the session is not a site keeper.
+ * @throws {Forbidden} not a keeper.
  * @throws {NotFound} the document is missing or deleted, or a revision was given and no draft is open.
  * @throws {StaleWrite} the draft has moved on, carrying the revision it is at now.
  */
@@ -92,7 +89,7 @@ export async function saveDocumentDraft(
 }
 
 /**
- * Publishes the document's open draft as its newest public version, and empties the cached public reads so the page shows it at once.
+ * Empties the cached public reads so the page shows it at once.
  *
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no draft is open.
@@ -115,8 +112,7 @@ export async function publishDocumentDraft(
 }
 
 /**
- * Throws the document's open draft away, as a soft delete, and leaves its published versions as they are. The next save opens a new draft.
- * Answers the discarded draft's id.
+ * A soft delete; the published versions stay. Answers the discarded draft's id.
  *
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {NotFound} no draft is open.
@@ -138,7 +134,7 @@ export async function discardDocumentDraft(
 }
 
 /**
- * Changes a document's title and lede, which make no new version, and empties the cached public reads.
+ * Makes no new version, and empties the cached public reads.
  *
  * @throws {Forbidden} the session is not a site keeper.
  * @throws {ValidationError} the title or lede is blank.

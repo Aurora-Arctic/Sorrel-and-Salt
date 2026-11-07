@@ -17,10 +17,8 @@ import type {
 } from './types';
 import './index.scss';
 
-// `/keepers/privilege-changes`' filter, table and pager. Render-only: the page reads one page
-// of the ledger through the identity service and hands it over
-// (claude-docs/components/privilege-ledger.md). The filter is `filter.tsx`, its one client
-// file.
+// `/keepers/privilege-changes`' filter, table and pager. Render-only: the page reads one page of the ledger through
+// the identity service (claude-docs/components/privilege-ledger.md).
 
 const CHANGE_LABELS = { grant: 'Granted', revoke: 'Revoked' } as const;
 
@@ -32,10 +30,6 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
   manual: 'Manual fix',
 };
 
-/**
- * The empty ledger, naming the filters in use as every admin list does: "No privilege changes
- * match “ada” and the privilege Keeper. Change or clear the filter to see more."
- */
 function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
   const filters = [
     query && `“${query}”`,
@@ -44,13 +38,11 @@ function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
   return noMatchText('privilege changes', filters, emptyList('privilege changes'));
 }
 
-/** A named user, linked to their `/keepers/users` row where the list has one. */
 const Person = ({ person }: LedgerPersonProps): ReactElement => {
   if (!person) return <em>Deleted account</em>;
   return person.href ? <a href={person.href}>{person.name}</a> : <span>{person.name}</span>;
 };
 
-/** The columns, each heading the label its cell carries as a card at phone width. */
 const COLUMNS: readonly StackColumn<PrivilegeLedgerEntry>[] = [
   {
     heading: 'When',

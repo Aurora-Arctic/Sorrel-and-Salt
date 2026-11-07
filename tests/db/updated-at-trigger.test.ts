@@ -8,10 +8,9 @@ import { truncateAllTables } from '../support/seeded-database';
 import { users } from '@/modules/identity/schema/users';
 import { findOne, withAudit } from '@/db/repository';
 
-// One function attached to every audited table —
-// claude-docs/db/updated-at.md, "updated_at is the database's".
+// One function attached to every audited table
+// (claude-docs/db/updated-at.md, "`updated_at` is the database's").
 const FUNCTION = 'set_updated_at';
-// Same name on every table: a trigger name is scoped to its table.
 const TRIGGER = 'set_updated_at';
 
 let sql: ReturnType<typeof postgres>;
@@ -24,7 +23,7 @@ const CATEGORY = '55555555-5555-5555-5555-555555555555';
 
 const THE_MILLENNIUM = '2000-01-01 00:00:00';
 
-/** The database's own clock, read as the column reads it — `timestamp`, not `timestamptz`. */
+/** Read as the column reads it: `timestamp`, not `timestamptz`. */
 async function databaseNow(): Promise<Date> {
   const [{ now }] = await sql<{ now: Date }[]>`select now()::timestamp as now`;
   return now;
@@ -56,8 +55,7 @@ async function insertUser(id = randomUUID(), overrides = ''): Promise<string> {
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
 
-  // Emptied first so beforeEach's `delete from users where id <> AUTHOR` finds
-  // nothing seeded still pointing at a user.
+  // Emptied first so beforeEach's delete of users finds nothing seeded still pointing at a user.
   await truncateAllTables(sql);
 
   await insertUser(AUTHOR);
@@ -169,8 +167,8 @@ describe('the updated_at trigger', () => {
 
     it('stores the database clock, not the application’s', async () => {
       const id = await insertUser();
-      // Only `Date` is faked, so the driver's timers stay real: `applyAudit`
-      // sends the year 2000 and the column gets this year.
+      // Only `Date` is faked, so the driver's timers stay real: `applyAudit` sends the year 2000
+      // and the column gets this year.
       vi.useFakeTimers({ toFake: ['Date'], now: new Date(`${THE_MILLENNIUM}Z`) });
 
       const [returned] = await withAudit(session, (write) =>
@@ -179,7 +177,6 @@ describe('the updated_at trigger', () => {
 
       vi.useRealTimers();
       expect(returned.updatedAt.getFullYear()).toBe((await databaseNow()).getFullYear());
-      // RETURNING reads the row the trigger already rewrote.
       const stored = await findOne(users, eq(users.id, id));
       expect(stored?.updatedAt).toEqual(returned.updatedAt);
     });
@@ -191,7 +188,6 @@ describe('the updated_at trigger', () => {
         write.update(users, { name: 'Renamed' }, eq(users.id, id)),
       );
 
-      // The database owns when; the session owns who (rule 3).
       expect(returned.updatedBy).toBe(AUTHOR);
     });
 
@@ -202,8 +198,6 @@ describe('the updated_at trigger', () => {
         write.softDelete(users, eq(users.id, id)),
       );
 
-      // `applyAudit('delete')` sets only `deleted_*`, so this column moved
-      // because the row was touched, not because the payload carried it.
       expect(returned.updatedAt.getFullYear()).not.toBe(2000);
       expect(returned.deletedBy).toBe(AUTHOR);
     });
@@ -293,8 +287,6 @@ describe('the updated_at trigger', () => {
     });
   });
 
-  // The hard-deleted join tables carry no `deleted_at`, so the function has to reach a row
-  // it can never soft-delete.
   describe('a join table carrying only the four stamps', () => {
     it('stamps a spell_categories row the same way', async () => {
       await sql`

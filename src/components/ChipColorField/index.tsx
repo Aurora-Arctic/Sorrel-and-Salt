@@ -27,10 +27,6 @@ import './index.scss';
 
 const GROUND = { colorDark: 'the dark card', colorLight: 'the light page' } as const;
 
-/**
- * The other colour of the pair, as the Match button shows it, short to fit the
- * hex's width; its accessible name says the rest, starting with what it shows.
- */
 const PARTNER_NAME = { colorDark: 'Light', colorLight: 'Dark' } as const;
 
 /** Chrome's format toggle: a chevron up over a chevron down. */
@@ -63,7 +59,6 @@ const ContrastIcon = (): ReactElement => (
   </svg>
 );
 
-/** Each format the keeper can choose, its name, and the channels it is typed in. */
 const FORMATS: FormatOption[] = [
   {
     format: 'hsba',
@@ -133,7 +128,6 @@ const ChipColorField = ({
   // The area is laid out in HSL for HSL and in HSB otherwise, as the picker lays it.
   const space = format === 'hsla' ? 'hsl' : 'hsb';
   const labelPoint = useMemo(() => failingLabelPoint(hue, column, space), [hue, column, space]);
-  // The veil's edge, drawn as a fine line in the ground's own ink.
   const edge = useMemo(() => contrastBoundary(hue, column, space), [hue, column, space]);
   const veil = useMemo(() => {
     const region = failingRegion(hue, column, space);
@@ -142,12 +136,10 @@ const ChipColorField = ({
   const partnerHex = partner && HEX_COLOR.test(partner) ? partner.toLowerCase() : undefined;
 
   const near = hex ? nearColor(hex, others) : undefined;
-  // A ratio at the floor or over it reads in the accent green.
   const passes = hex !== undefined && chipContrast(column, hex) >= MIN_CHIP_CONTRAST;
   const ratioId = `${id}-ratio`;
   const nearId = `${id}-near`;
   const lineId = `${id}-line`;
-  // Both halves of the pair are this colour: the ground's own theme picks one.
   const colors = hex ? chipColors({ colorDark: hex, colorLight: hex }) : undefined;
   const theme = column === 'colorDark' ? 'dark' : 'light';
 

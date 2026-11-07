@@ -1,13 +1,7 @@
 #!/usr/bin/env node
-// The board's calls in one file, so the lookup rule and the Project's field
-// ids live here rather than in each skill that needs them. Every call is a
-// `gh` invocation with an argument list — never a shell string, since a title
-// or a comment is text the shell would otherwise interpret. The Project's own
-// workflows place every tracked issue and set `Not Started` and `Done`; this
-// file sets the two statuses between them and never adds an item
+// The board's calls in one file, each a `gh` argument list, never a shell string; it never adds an item
 // (claude-docs/task-tracking.md, "Status").
-//
-// usage: node scripts/task-board.mjs <find|status|estimate|comment|list|reorder> …
+// Usage: node scripts/task-board.mjs <find|status|estimate|comment|list|reorder> ...
 
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
@@ -21,10 +15,8 @@ export const PROJECT = '1';
 export const STATUSES = ['Not Started', 'In Progress', 'In Review', 'Done'];
 export const TRACKED_LABEL = 'tracked';
 
-/** A refusal or a `gh` failure: printed as one line, never as a stack. */
 export class BoardError extends Error {}
 
-/** Runs `gh` with an argument list; a failure surfaces gh's own stderr. */
 export function gh(args, { input } = {}) {
   try {
     return execFileSync('gh', args, {
@@ -41,10 +33,7 @@ export function gh(args, { input } = {}) {
 
 export const ghJson = (args, options) => JSON.parse(gh(args, options));
 
-// ---------------------------------------------------------------------------
-// Issues — read through REST, one request per hundred against the core
-// budget. The GraphQL listing carried every issue's labels and cost enough
-// that two lookups in a minute tripped GitHub's secondary rate limit.
+// Issues are read through REST, because the GraphQL listing tripped GitHub's secondary rate limit.
 
 /** `<id> — `: the id plus the separator, so a short id cannot match a longer one that starts with it. */
 export const titlePrefix = (id) => `${id.toUpperCase()} — `;
@@ -56,7 +45,6 @@ export const matchesId = (title, id) => title.toUpperCase().startsWith(titlePref
 const STATES = { open: 'OPEN', closed: 'CLOSED' };
 const STATE_REASONS = { completed: 'COMPLETED', not_planned: 'NOT_PLANNED', reopened: 'REOPENED' };
 
-/** A REST issue in the shape the skills read. */
 export const shapeIssue = (issue) => ({
   number: issue.number,
   title: issue.title,
@@ -79,7 +67,6 @@ export const shapeTracked = (pages) =>
     .filter((issue) => !issue.pull_request)
     .map(shapeIssue);
 
-/** Every issue carrying the `tracked` label, open or closed. */
 export function listTracked() {
   const endpoint = `repos/${REPO}/issues?labels=${TRACKED_LABEL}&state=all&per_page=100`;
   return shapeTracked(ghJson(['api', '--paginate', '--slurp', endpoint]));
@@ -130,7 +117,6 @@ const ITEM_QUERY = `
     }
   }`;
 
-/** This Project's node among an issue's items, reshaped; null when there is none. */
 export function shapeItem(nodes, number = PROJECT) {
   const node = nodes.find((candidate) => String(candidate.project.number) === String(number));
   if (!node) return null;
@@ -144,7 +130,6 @@ export function shapeItem(nodes, number = PROJECT) {
   };
 }
 
-/** The issue's item on the Project, or null when the auto-add has not placed it. One point. */
 export function readItem(issue, number = PROJECT) {
   const [owner, name] = REPO.split('/');
   const query = ['-f', `query=${ITEM_QUERY}`, '-f', `owner=${owner}`, '-f', `name=${name}`];
@@ -219,10 +204,8 @@ export function setEstimate(issue, hours, { item } = {}) {
 // Order — the Project's manual item order is execution order: TASKS.md's wave table, wave by wave. `reorder` plans the fewest moves and makes them one paced
 // mutation at a time (claude-docs/task-tracking.md, "Order").
 
-/** The id off `<id> — Title`, or null for a title that does not open with an id. */
 export const idOf = (title) => new RegExp(String.raw`^(${ID}) — `).exec(title)?.[1] ?? null;
 
-/** A REST milestone: the open count is what decides that a wave is done. */
 export const shapeMilestone = (milestone) => ({
   number: milestone.number,
   title: milestone.title,
@@ -232,7 +215,6 @@ export const shapeMilestone = (milestone) => ({
   description: milestone.description ?? '',
 });
 
-/** Every milestone, open or closed. One REST page. */
 export function listMilestones() {
   const endpoint = `repos/${REPO}/milestones?state=all&per_page=100`;
   return ghJson(['api', '--paginate', '--slurp', endpoint]).flat().map(shapeMilestone);
@@ -256,7 +238,6 @@ const ITEMS_QUERY = `
     }
   }`;
 
-/** The pages of `ITEMS_QUERY` flattened in position order; a draft or a pull request has no number. */
 export function shapeItems(pages) {
   const projects = pages.map((page) => page.data.organization.projectV2);
   return {
@@ -272,7 +253,6 @@ export function listItems(number = PROJECT) {
   return shapeItems(ghJson(['api', 'graphql', '--paginate', '--slurp', ...args]));
 }
 
-/** Indices of one longest strictly increasing subsequence (patience sorting). */
 function longestIncreasing(values) {
   const tails = [];
   const tailIndex = [];
@@ -313,7 +293,6 @@ export function planMoves(target) {
   return moves;
 }
 
-/** A zero-padded wave number: how a row's number opens its milestone's title. */
 const waveTitle = (number) => `Wave ${String(number).padStart(2, '0')}`;
 
 /**
@@ -399,7 +378,6 @@ export function planReorder({ issues, milestones, listing, tasks }) {
   return plan;
 }
 
-/** The plan for the live board: the REST issue list, one milestones page, the items listing. */
 export function readReorderPlan() {
   return planReorder({
     issues: listTracked(),
@@ -452,7 +430,6 @@ export async function pacedWrite(fn) {
   }
 }
 
-/** Makes the plan's moves in order, at most `limit` of them; answers how many were made. */
 export async function applyReorder(plan, { limit = Infinity, onMove = () => {} } = {}) {
   let made = 0;
   for (const move of plan.moves.slice(0, limit)) {
@@ -478,9 +455,6 @@ function printReorderPlan(plan) {
   );
   for (const move of plan.moves) console.log(`  ${move.id} → after ${move.after}`);
 }
-
-// ---------------------------------------------------------------------------
-// Comments
 
 // A comment is public and indexed before anyone reads it, so a comment is
 // refused when it looks like it carries a value rather than a name. The rule
@@ -517,7 +491,6 @@ export const SECRET_PATTERNS = [
   },
 ];
 
-/** The first pattern the text trips, as `{ name, match }`, or null. */
 export function findSecret(text) {
   for (const { name, pattern, prepare, reject } of SECRET_PATTERNS) {
     const subject = prepare ? prepare(text) : text;
@@ -546,7 +519,6 @@ export function postComment(issue, text) {
 
 // Sync — an issue's title and body are its entry's heading and text, and its Estimate the heading's hours (claude-docs/task-tracking.md, "Sync").
 
-/** Where an entry's relative links resolve: its own directory, on staging. */
 const ENTRY_BASE = `https://github.com/${REPO}/blob/staging/claude-docs/tasks/`;
 
 /**
@@ -581,7 +553,6 @@ export function planSync(issue, entry) {
   return plan;
 }
 
-/** Brings one issue to its entry: title, body, then Estimate. */
 export function syncIssue(issue, entry) {
   const { body: current } = ghJson(['api', `repos/${REPO}/issues/${issue.number}`]);
   const plan = planSync({ title: issue.title, body: current }, entry);
@@ -598,9 +569,6 @@ export function syncIssue(issue, entry) {
   const estimate = entry.hours === undefined ? null : setEstimate(issue, entry.hours);
   return { ...plan, estimate };
 }
-
-// ---------------------------------------------------------------------------
-// CLI
 
 const USAGE = `usage: node scripts/task-board.mjs <command> …
 

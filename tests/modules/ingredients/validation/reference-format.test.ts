@@ -121,7 +121,6 @@ describe('FORMAT_OF', () => {
     expect(FORMAT_OF.edition('second')).toBe('2nd ed.');
     expect(FORMAT_OF.url(' example.org/x ')).toBe('https://example.org/x');
     expect(FORMAT_OF.authors(' Fixture,   Ada ')).toBe('Fixture, Ada');
-    // A day is the date input's own, and only trimmed.
     expect(FORMAT_OF.accessed(' 2026-10-06 ')).toBe('2026-10-06');
   });
 });

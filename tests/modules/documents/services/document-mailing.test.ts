@@ -28,11 +28,6 @@ import {
   insertDocumentVersion,
 } from '../../../support/db/insert-document';
 
-// Emailing every account about every document changed since the last email: the read the mailing page and its confirmation
-// show, the write that starts one joint mailing, a keeper's resume of a paused one, and the daily start that carries a mailing on
-// to the next UTC day. Each is a keeper's alone, through assertSiteAdmin. The run that sends the mail is tests/workflows/document-mailing.test.ts; the
-// signed-out caller is refused at the GraphQL scope (tests/db/graphql-query-scopes.test.ts).
-
 const { startJob, jobTokenActive } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
   jobTokenActive: vi.fn(async (_token: string) => false),
@@ -59,7 +54,6 @@ beforeEach(async () => {
   jobTokenActive.mockReset();
   jobTokenActive.mockResolvedValue(false);
   await sql`truncate documents cascade`;
-  // The privacy policy published at versions 1 and 2, with 3 an open draft; the terms at version 1. No disclaimer row.
   privacyId = await insertDocument(sql, { key: 'privacy', title: 'Fixture Policy' }, E.id);
   privacyV1 = await insertDocumentVersion(sql, privacyId, { number: 1 }, E.id);
   privacyV2 = await insertDocumentVersion(
@@ -74,7 +68,6 @@ beforeEach(async () => {
 });
 
 let made = 0;
-/** `count` accounts, verified unless `fields` says otherwise. */
 async function accounts(
   count: number,
   fields: { email_verified?: boolean; deleted?: boolean; domain?: string } = {},
@@ -98,13 +91,11 @@ async function accounts(
 
 interface MailingSeed {
   status?: 'sending' | 'sent' | 'replaced' | 'paused';
-  /** How many recipients are written as sent, and when. */
   sent?: number;
   sentAt?: 'today' | 'yesterday';
   startedSecondsAgo?: number;
 }
 
-/** A mailing of the versions to `recipients`, written raw as the service and the run would leave it. */
 async function mailing(
   versionIds: readonly string[],
   recipients: string[],
@@ -151,7 +142,6 @@ const statusOf = async (mailingId: string) =>
   (await sql`select status::text as status from document_mailings where id = ${mailingId}`)[0]!
     .status;
 
-/** A newly published version of the terms, past the first, so both documents are pending. */
 const publishTermsV2 = () =>
   insertDocumentVersion(sql, termsId, { number: 2, published_at: '2026-04-06 09:00:00' }, E.id);
 
@@ -170,7 +160,6 @@ describe('readDocumentMailings', () => {
   it('answers each pending document, with how many accounts a mailing would reach and in how many days', async () => {
     const overview = await readDocumentMailings(asUser(E));
 
-    // The privacy policy's version 2, not its open draft 3; the terms only at version 1, which no one is told about.
     expect(overview.pending).toEqual([
       {
         documentId: privacyId,
@@ -390,7 +379,6 @@ describe('emailDocumentsToEveryAccount', () => {
     expect(await statusOf(sending)).toBe('replaced');
     expect(await statusOf(paused)).toBe('replaced');
     expect(await statusOf(sent)).toBe('sent');
-    // The replaced mailing keeps what it sent.
     expect((await recipientsOf(sending)).filter((recipient) => recipient.sentAt)).toHaveLength(1);
   });
 
@@ -594,8 +582,7 @@ describe('startDailyDocumentMailing', () => {
   });
 });
 
-// Each call is made by direct id, as a forged request would make it. E's same call succeeds, A owns a coven and holds no site
-// role, B is a member, and F passes assertCurator, so each refusal is the admin check's.
+// Direct-id calls: E's same call succeeds, A holds no site role, B is a member and F passes assertCurator, so each refusal is the admin check's.
 describe('the mailing services are a keeper’s alone', () => {
   let pausedId: string;
   beforeEach(async () => {

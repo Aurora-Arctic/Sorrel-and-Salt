@@ -30,10 +30,8 @@ import type {
   SeedWorkspaceIngredient,
 } from './types';
 
-// The demo coven's cupboard, jars, spells and workings, written against the real compendium (the approved files under
-// `compendium/`), never the `standard` fixtures. Each compendium ingredient is named by its formal name and a form its file
-// lists. Additive, as the helpers are: a row that exists is left as it is, so a keeper's hand edit stands. An entry the
-// environment's compendium lacks is skipped and reported, never an error (claude-docs/db/demo-coven-seed.md, "Contents").
+// The demo coven's cupboard, jars, spells and workings, from the real compendium. Additive; an entry the
+// compendium lacks is skipped and reported (claude-docs/db/demo-scenario.md, "Contents").
 
 const COVEN: CovenTarget = { workspaceId: DEMO_WORKSPACE_ID, authorId: BOOTSTRAP_USER_ID };
 
@@ -201,10 +199,8 @@ export const DEMO_COVEN_SPELLS: SeedSpell[] = [
 ];
 
 /**
- * The ingredients a spell carries that match none of its assigned categories, chosen on purpose and at most two. The
- * Prosperity Bowl's lavender is one: the compendium lists lavender under neither Prosperity nor Success, so the bowl's
- * derived categories (the union of its ingredients') run wider than the two it intends, which is what the spell page shows
- * when the two kinds of category differ. The test reads this list and refuses a third.
+ * The ingredients a spell carries that match none of its assigned categories, on purpose and at most two; the
+ * test refuses a third.
  */
 export const DEMO_COVEN_EXCEPTIONS: readonly {
   spellId: string;

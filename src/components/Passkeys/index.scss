@@ -1,7 +1,5 @@
 @use '../../scss/variables' as *;
 
-// The list inside the account page's Passkeys section, laid out as the Sign-In Methods rows are: the rows, then Add a
-// Passkey at its own width beneath.
 .passkeys {
   display: flex;
   flex-direction: column;
@@ -17,7 +15,6 @@
   list-style: none;
 }
 
-// Name and day added, then the two actions at the end; a failure wraps onto a line of its own beneath.
 .passkeys__item {
   display: flex;
   flex-wrap: wrap;

@@ -16,14 +16,12 @@ import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The title link navigates through the shared hook, so the App Router is mocked.
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
   usePathname: () => '/here',
 }));
 
-// (claude-docs/components/spell-card.md): the card is presentational, so each
-// case is its props in and what rendered out. The spells are the test's own data.
+// claude-docs/components/spell-card.md
 
 const GROUP = { colorDark: '#7a5c99', colorLight: '#5b3f7a' };
 const BASE = {
@@ -139,14 +137,11 @@ describe('SpellCard', () => {
     press(screen.getByRole('button', { name: 'Record a Working of Fixture Working' }));
     const dialog = await screen.findByRole('dialog', { name: 'Record a Working' });
     expect(within(dialog).getByRole('status')).toHaveTextContent('Loading');
-    // The recorder starts as a participant, named by the page rather than a roster read on opening.
     expect(
       await within(dialog).findByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
     expect(asked).toEqual([{ workspaceId: 'workspace-1', spellId: 'spell-1' }]);
-    // The participant box searches the members as the user types, so the setup reads none.
     expect(sent[0]).not.toMatch(/\bmembers\b/);
-    // The ingredient step read on opening is the one the completion preview names.
     press(within(dialog).getByRole('button', { name: 'Complete' }));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
   });
@@ -301,7 +296,6 @@ describe('SpellCard', () => {
     expect(screen.queryByText('To keep the testwort fresh.')).not.toBeInTheDocument();
   });
 
-  // Complete is the default, so only a draft is marked.
   it('marks a draft with a Draft badge, and a complete spell with no status badge', () => {
     const { rerender } = render(<SpellCard {...BASE} status="draft" />);
     expect(within(screen.getByRole('article')).getByText('Draft')).toBeInTheDocument();
@@ -327,7 +321,6 @@ describe('SpellCard', () => {
     expect(card.getByText('Private')).toBeInTheDocument();
   });
 
-  // Who last changed the spell, drawn from what the caller hands in, as IngredientCard's.
   it('says who last edited the spell and when, given the edit', () => {
     render(<SpellCard {...BASE} lastEdit={{ by: 'Fixture A', at: '2026-09-01T12:00:00.000Z' }} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
@@ -367,7 +360,6 @@ describe('SpellCard', () => {
   });
 });
 
-// The title links to the spell's recipe page, through the shared navigation hook.
 describe('SpellCard link', () => {
   it('makes the title a link to the recipe page when given an address', () => {
     render(<SpellCard {...BASE} href={'/coven/fixture-coven/grimoire/spell-1' as Route} />);

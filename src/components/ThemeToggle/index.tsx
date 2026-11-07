@@ -7,20 +7,16 @@ import './index.scss';
 // The pre-paint script in src/app/pre-paint-scripts.tsx reads this key inline; keep in sync.
 export const STORAGE_KEY = 'theme';
 
-// The one theme write; the Storybook decorator calls it too.
 export const applyTheme = (theme: 'light' | 'dark'): void => {
   document.documentElement.setAttribute('data-theme', theme);
+  // Storage blocked: the theme applies for this page view and does not persist.
   try {
     window.localStorage.setItem(STORAGE_KEY, theme);
-  } catch {
-    // storage blocked — the theme applies for this page view and does not persist
-  }
+  } catch {}
 };
 
-// Mirrors globals.scss's three-state cascade: only a stored choice sets the
-// attribute, so on a light system with nothing stored it is absent while the
-// page is light. Asks for `light` so "no preference" resolves to dark.
-// claude-docs/components/theme-toggle.md, "Shared contract".
+// Mirrors globals.scss's three-state cascade: only a stored choice sets the attribute. Asks for `light` so "no
+// preference" resolves to dark (claude-docs/components/theme-toggle.md, "Contracts").
 const resolveCurrentTheme = (): 'light' | 'dark' => {
   const stated = document.documentElement.getAttribute('data-theme');
   if (stated === 'light' || stated === 'dark') {
@@ -45,7 +41,6 @@ const parkFacet = (facet: Element): void => {
 const prefersReducedMotion = (): boolean =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
-// When a facet finishes animating out, park it where its next entrance starts.
 const handleFacetTransitionEnd = (event: TransitionEvent): void => {
   const facet = event.target;
   if (
@@ -73,8 +68,6 @@ const ThemeToggle = ({ variant = 'corner' }: ThemeToggleProps): ReactElement => 
     };
   }, []);
 
-  // index.scss settles the visible facets before paint; this keeps the real
-  // class list correct, which is what the next click reads.
   useEffect(() => {
     const isLight = resolveCurrentTheme() === 'light';
     buttonRef.current?.setAttribute('aria-pressed', String(isLight));
@@ -93,8 +86,6 @@ const ThemeToggle = ({ variant = 'corner' }: ThemeToggleProps): ReactElement => 
     outgoingFacet?.classList.remove(PRE_ENTER_CLASS);
     outgoingFacet?.classList.add(OUT_CLASS);
     enteringFacet?.classList.remove(OUT_CLASS, PRE_ENTER_CLASS);
-    // No `transitionend` is coming, so park the outgoing facet now — the
-    // jump-cut reduced motion asks for anyway.
     if (outgoingFacet && prefersReducedMotion()) {
       parkFacet(outgoingFacet);
     }

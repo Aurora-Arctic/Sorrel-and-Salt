@@ -8,9 +8,6 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import { mockGraphQLQuery } from '../../../support/msw/graphql';
 
-// The members page, with the guard and the services mocked and the role check real, read off the access-control statements.
-// It proves who gets role controls and that a refusal from the service is a 404.
-
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
@@ -217,7 +214,6 @@ describe('the /coven/[slug]/members page', () => {
 
 // `?member=<id>` opens the member's modal over the list, from the rows the page already read.
 describe('the /coven/[slug]/members page, the member modal', () => {
-  /** The member modal's name: its eyebrow, then the name, then the address an owner is shown. */
   const VIEWING_MEMBER = 'Member, Name of u-member, u-member@testwort.test';
 
   it('links each name to its modal, keeping the cursor', async () => {

@@ -12,8 +12,6 @@ const { default: DocumentEditor } = await import('@/components/DocumentEditor');
 // The editor is a lazy chunk: its first import is slow under coverage and would overrun findByRole's 1 s wait.
 warmImport(() => import('@/components/DocumentEditor/editor'));
 
-// The public page heads its footnotes with a Sources heading the markdown does not hold, so the editor draws the same heading.
-
 async function renderEditor(body: string) {
   render(
     <DocumentEditor

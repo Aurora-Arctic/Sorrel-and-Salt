@@ -1,4 +1,4 @@
-## The coven guard (M6.10)
+## The coven guard
 
 Every page under `/coven/[slug]` belongs to one workspace, and the address is
 the only thing that says which. The guard reads the slug (the coven's name as
@@ -23,124 +23,113 @@ visitors four ways, all from the server:
   `requireCovenMembership()` in `src/lib/request-session.ts`, turns that
   `Forbidden` into Next's `notFound()`, the way `requireAdminSession()` turns
   its own into `forbidden()`. Any other error passes through as itself.
-- **A paused member is sent to the coven's paused page** (M15.56). A steward can
-  pause a member's access to one coven; the service then throws `AccessPaused`,
-  which is a kind of `Forbidden`, so the guard checks for it first and redirects
-  to `/coven-paused/<slug>`. That page sits outside the coven's layout, reads the
+- **A paused member is sent to the coven's paused page.** A steward can pause a
+  member's access to one coven; the service then throws `AccessPaused`, a kind
+  of `Forbidden`, so the guard checks for it first and redirects to
+  `/coven-paused/<slug>`. That page sits outside the coven's layout, reads the
   pause again through `pausedCovenBySlug`, says when it ends, and offers Leave
-  Coven, the one write a paused member keeps (`assertSeatToLeave`). So the coven is no dead end, the page carries
-  the coven switcher and links to each other coven the viewer can open, and every landing (`/coven`, the Your Coven
-  link, `signedInLanding`) passes over a paused coven for the next one; a stranger gets
-  the 404 there too, and a member with no pause standing is sent back
-  (claude-docs/design-decisions/m15.55-coven-access-pause.md, "What M15.56 adds").
+  Coven, the one write a paused member keeps (`assertSeatToLeave`). So the
+  coven is no dead end, the page carries the coven switcher and links to each
+  other coven the viewer can open, and every landing (`/coven`, the Your Coven
+  link, `signedInLanding`) passes over a paused coven for the next one. A
+  stranger gets the 404 there too, and a member with no pause standing is sent
+  back (claude-docs/design-decisions/auth.md, "How the coven access pause refuses a member, and what it decides along the way", "What
+  M15.56 adds").
 - **The workspace comes from the URL segment only.** Never a cookie or a
   "current workspace" stored on the session: two browser tabs can sit in two
-  covens without disagreeing (M6.9's switcher rewrites the address for the
-  same reason).
+  covens without disagreeing, and the switcher rewrites the address for the
+  same reason.
 - **Any role is let in.** The guard asks for `workspace: read`, which observer,
-  practitioner and steward all hold. A page that needs more — the members page, which
-  an observer gets a 404 from — asks the service for that itself.
+  practitioner and steward all hold. A page that needs more, such as the
+  members page, asks the service for that itself.
 - **A site keeper gets no way in.** Keepers curate the compendium and reach no
   workspace, so a keeper in no coven gets the 404 like anyone else.
 - **The layout calls it, and so does every page beneath it,** with the slug
-  from its own `params`, for the reason the admin pages do: a layout does not
-  re-run on client-side navigation. The lookup is wrapped in React's
-  `cache()`, so the layout, its page title and the page asking again cost one
-  query between them.
+  from its own `params`, because a layout does not re-run on client-side
+  navigation. The lookup is wrapped in React's `cache()`, so the layout, its
+  page title and the page asking again cost one query between them.
 - **The layout also names the coven in the page title.** Each page gives its
   own name ('Grimoire'), and the layout's title template adds the coven's:
   `Grimoire | Whitethorn Coven | Sorrel & Salt`. The template comes from
   `titleTemplate()` in `src/lib/site.ts`, so " | " is the one separator and no
   page writes the site's name itself (`tests/guards/page-titles.test.ts`).
 
-Tests: `tests/modules/coven/services/workspace-by-slug.test.ts` (against
-Postgres, every fixture user), `tests/lib/request-session.test.ts` (the 404
-mapping, and the paused redirect beside it), `tests/app/(shell)/coven-paused/page.test.tsx` (the paused page), `tests/app/coven/layout.test.tsx` (the layout calls the guard
-with its own segment) and `tests/e2e/coven.spec.ts` (a member at each role
-gets the page, a stranger and an unknown slug the same 404, in a real
-browser against the built server).
+## The coven index page
 
-## The coven index page (M9.15)
-
-`/coven/[slug]` is the page a coven opens on: where the switcher (M6.9), an
-accepted invitation (M7.5) and the shell's coven link (MB.7) land. It is
-`src/app/(shell)/coven/[slug]/page.tsx`, and like every page under the coven it runs
-the guard again with its own slug. Its head is an eyebrow ("Coven"), the coven's
-name as the heading, and a lede saying which role the caller holds and what that
-role lets them do (`WORKSPACE_ROLE_ACCESS`); the layout's title template gives
-its tab title the name too. The
-navigation shell (`src/app/(shell)/layout.tsx`, MB.7) wraps it, as it wraps
-every page under `/coven`, `/account` and `/keepers`.
+`/coven/[slug]` is the page a coven opens on: where the switcher, an accepted
+invitation and the shell's coven link land. It is
+`src/app/(shell)/coven/[slug]/page.tsx`, and like every page under the coven it
+runs the guard again with its own slug. Its head is an eyebrow ("Coven"), the
+coven's name as the heading, and a lede saying which role the caller holds and
+what that role lets them do (`WORKSPACE_ROLE_ACCESS`).
 
 **The section nav is the layout's.** `src/app/(shell)/coven/[slug]/layout.tsx`
-renders `CovenNav` above the page, inside the `.coven-layout` frame, so
-every page under the coven carries it without repeating it
-([`components/coven-nav.md`](../components/coven-nav.md)). Today it links
-the index, Overview, and Members for the roles holding `member: read`
-(M6.13). Each other section is linked by the task that builds its page,
-because `typedRoutes` refuses a link to a route the build does not contain:
-Ingredients by M9.6 and Grimoire by M10.11.
+renders `CovenNav` above the page, so every page under the coven carries it
+([`components/coven-nav.md`](../components/coven-nav.md)). It links the index,
+Overview, and Members for the roles holding `member: read`. A section's link is
+added by the task that builds its page, because `typedRoutes` refuses a link to
+a route the build does not contain.
 
-**The page is up to three sections, reached from a jump menu** (`PageNav`, laid out as the account page's is, `.page-with-nav`; MB.119):
+**The page is up to three sections, reached from a jump menu** (`PageNav`, laid
+out as the account page's is, `.page-with-nav`):
 
-| Section           | Shown to                                     | Holds                                                         |
-| ----------------- | -------------------------------------------- | ------------------------------------------------------------- |
-| Contents          | Every role                                   | A link to each such page, with a line saying what it is for   |
-| Your Membership   | Every role                                   | Leave Coven (M6.15; M6.16's guided exit for the only steward) |
-| Delete This Coven | Roles holding `workspace: delete` (stewards) | Delete Coven (M6.14's confirmation), under one sentence       |
+| Section           | Shown to                                     | Holds                                                       |
+| ----------------- | -------------------------------------------- | ----------------------------------------------------------- |
+| Contents          | Every role                                   | A link to each such page, with a line saying what it is for |
+| Your Membership   | Every role                                   | Leave Coven (with the only steward's guided exit)           |
+| Delete This Coven | Roles holding `workspace: delete` (stewards) | Delete Coven (with its confirmation), under one sentence    |
 
 Contents lists a page only if the caller can open it, so a link is never a
-404: Ingredients (M9.6) and the Grimoire (M10.11) for every role, observers included, and Members
-for roles holding `member: read`, in that order. The Grimoire line reads "What the coven makes: its
-spells, and the workings it has recorded." Each button says its own
-refusal in a callout under itself (M12.31). Leave
-and Delete are in sections of their own so the button that ends a seat is never
-beside the one that ends a coven.
+404: Ingredients and the Grimoire for every role, observers included, and
+Members for roles holding `member: read`, in that order. The Grimoire line reads
+"What the coven makes: its spells, and the workings it has recorded." Each
+button says its own refusal in a callout under itself. Leave and Delete are in
+sections of their own so the button that ends a seat is never beside the one
+that ends a coven.
 
 - **Leave is on this page, not the members page,** because an observer gets a
-  404 from the members page (M6.13) and must still be able to leave.
+  404 from the members page and must still be able to leave.
 - **Delete is shown by permission, never by rank.** The page asks
-  `rolePermits(role, { workspace: ['delete'] })`, the statement M6.14's
-  service checks, so the button and the service cannot disagree about who
-  may delete. Hiding it is presentation; the service is still the guard.
-- **Delete opens a confirmation and then deletes** (M6.14), through
-  `DeleteWorkspaceButton` ([`components/delete-workspace-button.md`](../components/delete-workspace-button.md)).
-  **Leave opens a confirmation and then leaves** (M6.15), through
-  `LeaveWorkspaceButton` ([`components/leave-workspace-button.md`](../components/leave-workspace-button.md)).
-  It is enabled for every role, so a test finds it by role and name with no
-  test id, and a disabled control is what M6.16 forbids. The coven's only
-  steward is shown both ways out on click, a hand-over or the deletion (M6.16;
-  [`components/leave-workspace-button.md`](../components/leave-workspace-button.md),
+  `rolePermits(role, { workspace: ['delete'] })`, the statement the delete
+  service checks, so the button and the service cannot disagree about who may
+  delete. Hiding it is presentation; the service is still the guard.
+- **Delete opens a confirmation and then deletes**, through
+  `DeleteWorkspaceButton`
+  ([`components/delete-workspace-button.md`](../components/delete-workspace-button.md)).
+  **Leave opens a confirmation and then leaves**, through
+  `LeaveWorkspaceButton`
+  ([`components/leave-workspace-button.md`](../components/leave-workspace-button.md)).
+  Leave is enabled for every role, so a test finds it by role and name with no
+  test id, and a disabled control is forbidden. The coven's only steward is
+  shown both ways out on click, a hand-over or the deletion
+  ([`components/leave-workspace-button.md`](../components/leave-workspace-button.md),
   "The only steward's guided exit").
 
-Tests: `tests/app/(shell)/coven/page.test.tsx` (the page guards its own slug; Leave
-for every role, Delete in its own section for the steward alone, Contents and the jump
-menu by role) and `tests/e2e/coven.spec.ts`
-(the same in a browser, keyboard reach and an axe scan).
+## The members page
 
-## The members page (M6.13)
+`/coven/[slug]/members` lists who is in the coven, with each person's role and
+joining date. Stewards and practitioners see it; an observer gets the same 404
+a stranger does, so the page's existence says nothing about anyone's role. The
+`member` role holds `member: read` and no other `member` statement, so inviting,
+changing a role, removing and reading members' addresses stay with stewards.
 
-`/coven/[slug]/members` lists who is in the coven, with each person's role
-and joining date. Stewards and practitioners see it; an observer gets the same 404 a
-stranger does, so the page's existence says nothing about anyone's role (the
-owner's call, 2026-10-12). The `member` role holds `member: read` and no
-other `member` statement, so inviting, changing a role, removing and reading
-members' addresses stay with stewards.
-
-- **The page asks the service, not the role.** It reads through
-  `listMembers`, which checks `member: read`; a `Forbidden` becomes
-  `notFound()`. The nav link is the other half: `covenSections(slug, role)`
-  shows Members when `rolePermits(role, { member: ['read'] })`, never by rank.
-- **Role controls are the owner's.** The page passes Change Role to
+- **The page asks the service, not the role.** It reads through `listMembers`,
+  which checks `member: read`; a `Forbidden` becomes `notFound()`. The nav link
+  is the other half: `covenSections(slug, role)` shows Members when
+  `rolePermits(role, { member: ['read'] })`, never by rank.
+- **Role controls are the steward's.** The page passes Change Role to
   `MemberList` only when the caller holds `member: update`. They are client
   components that send `updateMemberRole` through `/api/graphql`; the service
   refuses anyone else, and a change that would leave no steward. It moves a
-  member to any other role, and only ever an existing member:
-  invitations cannot grant ownership, so this is the only route to it.
-- **Addresses are the owner's** (M11.19). A steward sees an Email column with
-  each member's address, and no verified mark, since every member's address is verified. A seat is taken only by accepting an invitation, which matches a verified address, or by creating a coven, which an unverified account cannot reach, and an address changes only at verification. The addresses come from a statement only stewards
-  hold, `member: readEmail`, checked by the members service's `memberEmails`,
-  which reads `users.email` when the page is drawn,
+  member to any other role, and only ever an existing member: invitations
+  cannot grant ownership, so this is the only route to it.
+- **Addresses are the steward's.** A steward sees an Email column with each
+  member's address, and no verified mark, since every member's address is
+  verified: a seat is taken only by accepting an invitation, which matches a
+  verified address, or by creating a coven, which an unverified account cannot
+  reach, and an address changes only at verification. The addresses come from a
+  statement only stewards hold, `member: readEmail`, checked by the members
+  service's `memberEmails`, which reads `users.email` when the page is drawn,
   for the coven's own live members and nobody else, in SQL. The page asks for
   them only when `rolePermits(role, { member: ['readEmail'] })`; a member gets
   no Email column, and the service refuses them even though they hold
@@ -150,99 +139,78 @@ members' addresses stay with stewards.
   `memberEmailsByMember` loader, one read per page of members, and answers
   `FORBIDDEN` to everyone but a steward. Nothing is stored on
   `workspace_members`.
-- **A quiet note when there is one steward** (M6.16): if that person loses
-  access nobody can manage members. A status, not an alert, drawn above the
-  table from the whole roll (`memberRoster`), since one page cannot count stewards.
-- **The heading, tabs and Invite are the `(people)` layout's** (M7.6): the Members
-  page is a tabbed page (see "The invitations page"), so the page draws only the
+- **A quiet note when there is one steward**: if that person loses access
+  nobody can manage members. A status, not an alert, drawn above the table from
+  the whole roll (`memberRoster`), since one page cannot count stewards.
+- **The heading, tabs and Invite are the `(people)` layout's**: the Members page
+  is a tabbed page (see "The invitations page"), so the page draws only the
   roll.
-- **Paged by cursor** with Prev and Next, 25 to a page, through the same
-  helper as GraphQL.
+- **Paged by cursor** with Prev and Next, 25 to a page, through the same helper
+  as GraphQL.
 
-Tests: `tests/app/(shell)/coven/members.test.tsx` (who gets controls, the
-404), `tests/components/CovenNav/index.test.tsx` (the link by role),
-`tests/modules/coven/services/access-control.test.ts` (the pinned matrix),
-`tests/modules/coven/services/members.test.ts` and
-`tests/modules/coven/graphql/workspace-members.test.ts` (who may read the
-addresses, directly and over GraphQL),
-and `tests/e2e/coven.spec.ts` (walks story 9, untagged: an observer's 404, a promotion, the
-axe scan).
-
-## The invitations page (M7.6)
+## The invitations page
 
 `/coven/[slug]/invitations` lists the invitations a steward has sent and nobody
 has accepted: address, role and status (when a pending one expires, or when the
-invitee declined it, M10.34), newest first, paged by `?after` and
-`?before` with a "Page X of Y" count, and a Revoke on each pending row or a
-Remove on each declined one. Members and
-Invitations are the two tabs of one page, headed Members like the nav item (MB.119), in the route group
+invitee declined it), newest first, paged by `?after` and `?before` with a
+"Page X of Y" count, and a Revoke on each pending row or a Remove on each
+declined one. Members and Invitations are the two tabs of one page, headed
+Members like the nav item, in the route group
 `src/app/(shell)/coven/[slug]/(people)/`: its `layout.tsx` draws the shared
-`TabbedPage` (pill tabs, as admin's People), and its `@action` slot draws
-the Invite button, which opens `InviteDialog` (M7.4), at the end of the
-heading line on both tabs.
+`TabbedPage` (pill tabs, as admin's People), and its `@action` slot draws the
+Invite button, which opens `InviteDialog`, at the end of the heading line on
+both tabs.
 
 - **Stewards only, decided by the permission.** The layout leaves the
   Invitations tab out, the `@action` slot leaves Invite out, and the page
   answers anyone else with the `notFound()` a stranger gets, each from
-  `rolePermits(role, { member: ['invite'] })`, never by catching a
-  `Forbidden`. A member's visit therefore calls no pending service. The
-  services (`listPendingWorkspaceInvitations`, `countPendingWorkspaceInvitations`,
-  `revokeWorkspaceInvitation`) check `member: invite` again, so the list
-  is refused to a member by direct id too.
+  `rolePermits(role, { member: ['invite'] })`, never by catching a `Forbidden`.
+  A member's visit therefore calls no pending service. The services
+  (`listPendingWorkspaceInvitations`, `countPendingWorkspaceInvitations`,
+  `revokeWorkspaceInvitation`) check `member: invite` again, so the list is
+  refused to a member by direct id too.
 - **Revoke** asks first, then sends `revokeInvitation` through `/api/graphql`
-  and reads the page again. An accepted invitation is refused with a pointer
-  to member removal.
-- **Remove** (M10.34) is the same for a declined invitation: it asks first, then
-  sends the same `revokeInvitation`, and the row leaves the list. A declined
-  row stays listed until then, past its expiry.
+  and reads the page again. An accepted invitation is refused with a pointer to
+  member removal.
+- **Remove** is the same for a declined invitation: it asks first, then sends
+  the same `revokeInvitation`, and the row leaves the list. A declined row stays
+  listed until then, past its expiry.
 - **The Members link in the coven nav** stays current on this page (`matches`).
 
-Tests: `tests/app/(shell)/coven/invitations.test.tsx` (steward reads, practitioner and
-observer get the 404 and read nothing, the cursor keys),
-`tests/components/PendingInvitations/index.test.tsx` (Revoke asks, sends,
-refreshes, reports a refusal), and `tests/e2e/coven.spec.ts` (`@story-5`: the
-tab, the list, Invite on both tabs, a revoke, a member's missing tab and 404,
-the axe scans, the open dialog included).
-
-## The spell builder's dialog (M10.12)
+## The spell builder's dialog
 
 The spell builder has no page of its own: it opens in a modal over a Grimoire
 tab ([`components/spell-builder.md`](../components/spell-builder.md)), so it
 sits behind the tab's coven guard. The tab (`grimoire/(list)/grimoire-tab.tsx`)
 opens it empty under `?new=spell` only when
 `rolePermits(role, { spell: ['create'] })`, and reads a saved spell under
-`?edit=<id>` only when `rolePermits(role, { spell: ['update'] })`, so a
+`?edit=<id>` only when `rolePermits(role, { spell: ['update'] })`, so an
 observer, who writes nothing, gets the tab with no dialog and no spell is read
 for them. Hiding the dialog is a convenience: `createSpell` and `updateSpell`
 check the permission again, so an observer is refused by the API too. New Spell,
 drawn by `grimoire/(list)/layout.tsx` under the same `rolePermits` check, is
 never shown to an observer.
 
-Tests: `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx` (an
-steward and a practitioner get the dialog under either address, an observer gets
-neither and nothing is read; a steward and a practitioner get New Spell, an observer
-does not).
-
 ## A new account's landing
 
 A new account is seated as an observer in the demo coven at sign-up
-(`databaseHooks.user.create.after`, [`admin-bootstrap.md`](admin-bootstrap.md)), so
-it has a first coven and `signedInLanding` sends it to `/coven/sorrel-and-salt-demo`
-rather than to `/coven`, because the demo coven is its only coven. An account with
-a coven of its own lands there, and the demo coven never outranks it: `byCovenName`
-lists the demo coven last, and both `signedInLanding` and `/coven` take the first.
-Where no demo coven exists, or the seat failed to write,
-the landing is `/coven` as before. The seat is not `canCreateWorkspace`: the
-account still cannot create a coven.
+(`databaseHooks.user.create.after`, [`admin-bootstrap.md`](admin-bootstrap.md)),
+so it has a first coven and `signedInLanding` sends it to
+`/coven/sorrel-and-salt-demo` rather than to `/coven`, because the demo coven is
+its only coven. An account with a coven of its own lands there, and the demo
+coven never outranks it: `byCovenName` lists the demo coven last, and both
+`signedInLanding` and `/coven` take the first. Where no demo coven exists, or
+the seat failed to write, the landing is `/coven`. The seat is not
+`canCreateWorkspace`: the account still cannot create a coven.
 
-## The create page (M9.16)
+## The create page
 
-`/coven/new` is where someone holding `canCreateWorkspace` names a new
-coven. It is `src/app/(shell)/coven/new/page.tsx`, and it is reached two ways: from
-`/coven`, which offers it to a rights holder with no coven yet (M2.8), and
-from the switcher's Create Workspace choice, offered to anyone holding the
-right (M6.9). A successful create lands on the new coven's index page as its
-steward ([`components/create-workspace-form.md`](../components/create-workspace-form.md)).
+`/coven/new` is where someone holding `canCreateWorkspace` names a new coven. It
+is `src/app/(shell)/coven/new/page.tsx`, reached from `/coven`, which offers it
+to a rights holder with no coven yet, and from the switcher's Create Workspace
+choice, offered to anyone holding the right. A successful create lands on the
+new coven's index page as its steward
+([`components/create-workspace-form.md`](../components/create-workspace-form.md)).
 
 - **A context row only for someone with a coven.** The switcher alone, with no
   section nav, since the page belongs to no one coven; a first-time creator has
@@ -251,23 +219,16 @@ steward ([`components/create-workspace-form.md`](../components/create-workspace-
 - **A static segment beside `[slug]`.** Next routes `/coven/new` to this page
   before it tries `[slug]`, so the coven layout and its guard never run here.
   The page runs `requireSession()` itself.
-- **`new` is never a coven's slug.** Otherwise a coven named "New" could
-  never be reached. `isReservedCovenSlug` in `src/lib/coven-path.ts` names
-  the segment, and the creation service skips it when it picks a slug, as it
-  skips a taken one, so "New" becomes `new-2`. The service is the one place
-  a workspace slug is made, so nothing else needs the check. `covenSlugOf`
-  reads `/coven/new` as no workspace too, so the switcher shows none chosen
-  there.
-- **The right is read from the row, not the session.** Accepting an
-  invitation sets it mid-session (`Session`), so the page asks `getMe`.
+- **`new` is never a coven's slug.** Otherwise a coven named "New" could never
+  be reached. `isReservedCovenSlug` in `src/lib/coven-path.ts` names the
+  segment, and the creation service skips it when it picks a slug, as it skips a
+  taken one, so "New" becomes `new-2`. The service is the one place a workspace
+  slug is made, so nothing else needs the check. `covenSlugOf` reads
+  `/coven/new` as no workspace too, so the switcher shows none chosen there.
+- **The right is read from the row, not the session.** Accepting an invitation
+  sets it mid-session (`Session`), so the page asks `getMe`.
 - **A user without the right gets a notice, not a 404.** The page exists for
   everyone, so hiding it hides nothing. They see a quiet notice saying how to
-  get the right, and no form. Hiding the form is presentation:
-  `createWorkspace` refuses them with `Forbidden` whatever the page shows.
-- **Centred like the email page** (the owner's call, 2026-10-12): a
-  `.panel` in `.page-frame--narrow`.
-
-Tests: `tests/app/coven/new/page.test.tsx` (the form for a holder, the notice
-for anyone else), `tests/modules/coven/services/workspace-creation.test.ts`
-(the refusal, and "New" taking `new-2`), `tests/lib/coven-path.test.ts` and
-`tests/e2e/coven-create.spec.ts` (Story 3 in a real browser).
+  get the right, and no form. Hiding the form is presentation: `createWorkspace`
+  refuses them with `Forbidden` whatever the page shows.
+- **Centred like the email page:** a `.panel` in `.page-frame--narrow`.

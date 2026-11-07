@@ -3,7 +3,6 @@ import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
-/** One listed user: the row's own facts and the providers read beside it. */
 export interface UserListEntry {
   id: string;
   name: string;
@@ -15,14 +14,10 @@ export interface UserListEntry {
   agreedTermsVersion: number | null;
   agreedDisclaimerVersion: number | null;
   agreedEthicsVersion: number | null;
-  /** Provider ids, as the service sorted them. */
   providers: readonly string[];
   emailVerified: boolean;
-  /** Whether this is the primary keeper, whom no one can revoke. */
   primaryAdmin: boolean;
-  /** This page with the user’s modal open over it, `?user=<id>`. */
   openHref: Route;
-  /** The modal’s head, shown at once on a press: the one the loaded modal carries. */
   heading: ModalHeading;
   /** The support time-out standing on them, `until` null for one with no end; absent when none stands. */
   supportTimeout?: { until: Date | null };
@@ -31,7 +26,6 @@ export interface UserListEntry {
 }
 
 export interface UserListProps extends Partial<PagerHrefs<Route>> {
-  /** This page's users, in the list's order. */
   users: readonly UserListEntry[];
   /** The name-or-email filter as asked, blank for none. */
   query: string;
@@ -41,16 +35,13 @@ export interface UserListProps extends Partial<PagerHrefs<Route>> {
   role?: UserRole;
   /** Whether the list is narrowed to the users a support time-out stands on. */
   timedOut?: boolean;
-  /** Whether the list is narrowed to the users a site access pause stands on. */
   paused?: boolean;
 
-  /** Where this page stands, the pager's "Page X of Y"; none when left out. */
   position?: PagePosition;
   /** Whether impersonation is registered here, so each non-keeper row offers it. */
   canImpersonate?: boolean;
 }
 
-/** The filter the page shows, which the form starts from and compares against. */
 export interface UserListFilterProps {
   query: string;
   awaitingApproval: boolean;
@@ -59,18 +50,14 @@ export interface UserListFilterProps {
   paused?: boolean;
 }
 
-/** The filter as the address carries it: what `userListHref` writes. */
 export type UserListFilterValue = UserListFilterProps;
 
-/** A row's link to its user's privilege history. */
 export interface HistoryLinkProps {
-  /** The user's address, which the ledger's search is opened with. */
   email: string;
   /** The user's name, completing the link's accessible name. */
   name: string;
 }
 
-/** A row’s name, the link that opens its user’s modal. */
 export interface UserLinkProps {
   href: Route;
   heading: ModalHeading;
@@ -101,7 +88,6 @@ export interface RoleControlProps {
    * Role then says why it cannot be used.
    */
   paused?: boolean;
-  /** The role the user holds now, which Change Role does not offer. */
   role: UserRole;
   /** Drawn in the user's modal, so it asks over the modal's body. */
   inModal?: boolean;
@@ -111,7 +97,6 @@ export interface CreationControlProps {
   userId: string;
   /** The user's name, completing the button's accessible name and the question. */
   name: string;
-  /** Whether the user's address is verified; Approve warns when it is not. */
   emailVerified: boolean;
   /**
    * Whether keeper changes are paused for the viewing keeper, coven creation
@@ -124,30 +109,23 @@ export interface CreationControlProps {
   inModal?: boolean;
 }
 
-/** The pause on keeper grants and revokes, as the page read it. */
 export interface PauseControlProps {
   paused: boolean;
-  /** Whether the viewing keeper is the primary keeper, the only one who may flip it. */
   canToggle: boolean;
 }
 
-/** A control in view but unusable, and the reason it says why. */
 export interface LockedControlProps {
   label: string;
-  /** The button's accessible name, opening with `label`. */
   accessibleName?: string;
   className: string;
   reason: string;
 }
 
-/** A linked sign-in provider in the Logins cell, by its roster id. */
 export interface ProviderLogoProps {
   id: string;
 }
 
-/** A yes-or-no drawn as a check or a cross, with its word for a screen reader. */
 export interface UntilMarkProps {
-  /** What stands, opening the hidden text: "Timed out" or "Paused". */
   standing: string;
   /** When it ends; null for none. */
   until: Date | null;
@@ -155,10 +133,7 @@ export interface UntilMarkProps {
 
 export interface MarkProps {
   value: boolean;
-  /** The word the mark stands for: "Verified", "Yes". */
   label: string;
-  /** Whether a tip bubble shows the word on hover too, where the heading does not say it. */
   hint?: boolean;
-  /** The tip bubble's own words, where they differ from `label`; a bubble shows them on hover. */
   tip?: string;
 }

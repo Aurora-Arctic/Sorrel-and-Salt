@@ -14,10 +14,8 @@ import { useEffect, useState } from 'react';
 // Where an open list sits: beneath the box, as wide as its anchor, flipped above when there is more room there, on Floating UI, fixed so a scrolling ancestor cannot clip it
 // (claude-docs/components/combobox.md, "Where the list opens").
 
-/** Space kept between the list and the edge of the screen. */
 const EDGE_PX = 8;
 
-/** The padding all three middleware share: the edge, and the bar at the foot. */
 const edges = () => ({
   top: EDGE_PX,
   left: EDGE_PX,
@@ -40,11 +38,8 @@ export function useListPosition(
     placement: preferred = 'bottom-start',
     gap = 4,
   }: {
-    /** As wide as the anchor; false keeps the list's own width. */
     matchWidth?: boolean;
-    /** Where it opens when there is room; it flips to the other side when not. */
     placement?: Placement;
-    /** Pixels between the anchor and the list. */
     gap?: number;
   } = {},
 ) {
@@ -52,7 +47,6 @@ export function useListPosition(
 
   const { refs, elements, floatingStyles, placement, update } = useFloating({
     open: isOpen,
-    // The anchor places the list and gives it its width; the box when none.
     elements: { reference: anchor ?? control },
     placement: preferred,
     strategy: 'fixed',
@@ -85,7 +79,6 @@ export function useListPosition(
     ],
   });
 
-  // Followed only while open: a closed list has nothing to follow.
   const { reference, floating } = elements;
   useEffect(() => {
     if (!isOpen || !reference || !floating) return;

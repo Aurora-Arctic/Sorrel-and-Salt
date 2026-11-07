@@ -10,13 +10,10 @@ import type { ListDialog } from '@/lib/types';
 import { FILTER_ROWS, drawnOnServer, filterForm } from '../../support/filter-form';
 import type { FilterFormSubject, GroupedValueListSubject } from '../../support/types';
 
-// The soft pager and the filter navigate through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A curated vocabulary's filter, table and pager (`/curator/categories`, `/curator/forms`, `/curator/deities`): each value with its group, an Edit link opening it in the page's modal, and the filter that narrows them,
-// plus the flat celestial bodies and signs with no group (claude-docs/components/grouped-value-list.md). The kinds share every behaviour, so it runs on the deities, whose group goes by its own name; the others get only what they change, their page and their group's parameter.
-// Paging is Pager's, and the filter's spinner and its reset to the filter shown are CompendiumList's.
+// claude-docs/components/grouped-value-list.md
 
 const DEITIES: GroupedValueListSubject = {
   kind: 'deity',
@@ -76,7 +73,6 @@ describe('GroupedValueList', () => {
     expect(within(rows[1]).getByRole('cell', { name: entries[0].description })).toBeInTheDocument();
   });
 
-  // A deity is found by any of its other names, so its row says them.
   it("names a deity's other names under its name, and nothing for a deity with none", () => {
     const [testra, mockra] = entries;
     render(
@@ -92,7 +88,6 @@ describe('GroupedValueList', () => {
     expect(within(rows[2]).getByRole('rowheader', { name: 'Mockra' })).toBeInTheDocument();
   });
 
-  // Who last edited each row, and when, as the coven's member list has it.
   it('draws an Updated column', () => {
     render(<GroupedValueList {...props()} />);
 
@@ -108,8 +103,6 @@ describe('GroupedValueList', () => {
     );
   });
 
-  // The flat kinds: filed under nothing, so
-  // neither the table nor the filter offers a group.
   it('shows a flat kind with no group column and no group filter', () => {
     render(<GroupedValueList {...props({ kind: 'celestialBody', groups: undefined })} />);
 
@@ -160,7 +153,6 @@ describe('GroupedValueList', () => {
 
     it.each([
       { kind: 'category', path: '/curator/categories', group: 'group=g&' },
-      // A flat kind has no group to write.
       { kind: 'celestialBody', path: '/curator/celestial-bodies', group: '' },
     ] as const)('addresses the $kind page, its group as it names one', (other) => {
       expect(groupedValuesHref(other.kind, { query: 'q', group: 'g', after: 'a' }, 'new')).toBe(
@@ -169,9 +161,6 @@ describe('GroupedValueList', () => {
     });
   });
 
-  // A GET form to the page itself, as the user list's,
-  // applying as each field changes: the group once
-  // a choice settles, the name on its Search submit.
   describe('the filter', () => {
     beforeEach(() => {
       router.push.mockReset();
@@ -181,8 +170,6 @@ describe('GroupedValueList', () => {
     const searchbox = () => screen.getByRole('searchbox', { name: 'Name' });
     const groupBox = () => screen.getByRole('combobox', { name: DEITIES.groupLabel });
 
-    // The group goes under its own parameter by slug, from the type-ahead's
-    // hidden input, as the server's select sends it.
     const group = (slug: string) => `${DEITIES.groupParam}=${slug}`;
     const SUBJECT: FilterFormSubject = {
       label: DEITIES.filterName,
@@ -216,8 +203,7 @@ describe('GroupedValueList', () => {
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    // Typed into once hydrated, but drawn as a
-    // native select by the server, so the filter works before JavaScript.
+    // Drawn as a native select by the server, so the filter works before JavaScript.
     it('draws the group as a native select on the server, and as a type-ahead once hydrated', async () => {
       const { container, hydrate } = drawnOnServer(
         <GroupedValueList {...props({ filter: shown })} />,

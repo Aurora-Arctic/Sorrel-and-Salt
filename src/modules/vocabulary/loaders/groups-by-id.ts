@@ -11,15 +11,12 @@ import type {
 // Keyed by id and answered for anyone: the groups are public reference data,
 // and the services take no session.
 
-/** `Category.group`, batched: the group of every category loaded in one request. */
 export const categoryGroupsById = definePublicLoader<string, CategoryGroupRow>(categoryGroupsOf);
 
-/** `IngredientFormValue.group`, batched the same way. */
 export const ingredientFormGroupsById = definePublicLoader<string, IngredientFormGroupRow>(
   formGroupsOf,
 );
 
-/** `Deity.tradition`, batched the same way. */
 export const deityTraditionsById = definePublicLoader<string, DeityTraditionRow>(deityTraditionsOf);
 
 /**

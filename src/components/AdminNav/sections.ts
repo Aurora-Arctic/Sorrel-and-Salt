@@ -73,7 +73,6 @@ export const ADMIN_PAGES = {
       'The admin invitations waiting, the printed invitation cards, and who arrived by them.',
     tabs: [
       { href: '/keepers/invitations', label: 'Invitations' },
-      // Printed cards that admit one account each, and who arrived by them.
       { href: '/keepers/invitation-cards', label: 'Invitation Cards' },
       { href: '/keepers/card-sign-ups', label: 'Card Sign-Ups' },
     ],
@@ -113,7 +112,6 @@ export const ADMIN_PAGES = {
   },
 } as const satisfies Record<string, AdminPage>;
 
-/** The `/curator` area: the curation pages, for a curator and a keeper alike. */
 export const CURATOR_SECTIONS: readonly AdminSection[] = [
   {
     name: 'Compendium',
@@ -127,7 +125,6 @@ export const CURATOR_SECTIONS: readonly AdminSection[] = [
   },
 ];
 
-/** The `/keepers` area: the people, invitation, document and business-card pages, which are a keeper's, and Support, which a curator has too. */
 export const KEEPERS_SECTIONS: readonly AdminSection[] = [
   {
     name: 'People & Support',
@@ -144,11 +141,7 @@ export const KEEPERS_SECTIONS: readonly AdminSection[] = [
   },
 ];
 
-/**
- * The Keepers sections a viewer is shown: every page to a keeper, and a curator Support alone. Only what the
- * nav lists; each people and invitation page refuses a curator itself (claude-docs/auth/admin-guard.md,
- * "The curator guard").
- */
+// Only what the nav lists; each people and invitation page refuses a curator itself (claude-docs/auth/admin-guard.md, "The curator guard").
 export const adminSections = (managesPeople: boolean): readonly AdminSection[] =>
   KEEPERS_SECTIONS.map((section) => ({
     ...section,

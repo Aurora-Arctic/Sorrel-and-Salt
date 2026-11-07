@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import JarLines from '@/components/JarLines';
 import type { JarLine } from '@/components/JarLines/types';
 
-// The jar lines of a card (claude-docs/components/jar-lines.md). Fixture forms are invented.
+// claude-docs/components/jar-shelf.md
 const jar = (extra: Partial<JarLine> & Pick<JarLine, 'id' | 'form'>): JarLine => ({
   icon: null,
   quantity: 6,

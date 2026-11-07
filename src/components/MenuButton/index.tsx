@@ -20,7 +20,7 @@ import { PendingLink } from '../../lib/navigation';
 // (claude-docs/components/menu-button.md). Placed on Floating UI, fixed so a scrolling dialog
 // cannot clip it; a closing menu stays drawn, inert, until its fade ends.
 
-/** The gap between button and menu, space(2), as the stylesheet kept it before Floating UI. */
+/** space(2) in pixels: the gap between button and menu. */
 const MENU_GAP_PX = 8;
 
 /** Past the fade's own length (index.scss), for a browser that never reports its end. */
@@ -94,7 +94,6 @@ export default function MenuButton({
   ...choices
 }: MenuButtonProps): ReactElement {
   const [open, setOpenState] = useState(false);
-  // Still drawn: open, or fading out.
   const [drawn, setDrawn] = useState(false);
   // The item just chosen, which keeps its hover look while the menu fades: a
   // closing menu is inert, which drops the hover and would drain the fill in
@@ -181,8 +180,8 @@ export default function MenuButton({
         role="menuitem"
         tabIndex={-1}
         className={itemClass(item, chosen === item.key)}
-        // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and
-        // in the roving, read as unavailable. A press runs nothing and the menu stays open.
+        // `aria-disabled`, not `disabled`: the APG menu keeps a disabled item focusable and in
+        // the roving. A press runs nothing and the menu stays open.
         aria-disabled={item.disabled || undefined}
         // The mark joins the name, since the check that draws it is a glyph and says nothing.
         aria-label={item.mark ? `${item.label}, ${item.mark}` : undefined}
@@ -220,10 +219,8 @@ export default function MenuButton({
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         aria-busy={busy || undefined}
-        // `aria-disabled`, not `disabled`, while busy: a browser drops the focus of a
-        // control disabled under it to the body, so the keyboard would lose its place while
-        // an add runs. Read as unavailable all the same, and the press and ArrowDown refuse
-        // here.
+        // `aria-disabled`, not `disabled`, while busy: a disabled control drops the keyboard's focus to the body. The press
+        // and ArrowDown refuse here.
         aria-disabled={busy || undefined}
         onClick={() => {
           if (!busy) setOpen((was) => !was);
@@ -237,8 +234,6 @@ export default function MenuButton({
       >
         {busy && <Spinner />}
         {icon ? (
-          // An icon alone (a list card's More): the words still name the button, hidden,
-          // and no chevron, as the row's other icons have none.
           <>
             {!busy && icon}
             <span className="visually-hidden">{busy ? (busyLabel ?? label) : label}</span>

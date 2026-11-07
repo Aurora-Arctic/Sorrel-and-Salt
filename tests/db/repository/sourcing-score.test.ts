@@ -15,9 +15,6 @@ import {
 } from '../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../support/fixtures';
 
-// The admin list's sort by sourcing score is a SQL expression; the list a curator reads must come back in the order the pure
-// function's scores give, lowest first, then name, then id. The fixtures between them move every fact, past its cap where it has one.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -27,7 +24,6 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-/** A compendium entry; a botanical one takes a formal name of its own, as the formal name is its identity. */
 const entry = (name: string, overrides: Partial<IngredientFixture> = {}) =>
   insertIngredient(
     sql,
@@ -57,9 +53,7 @@ async function formsOf(id: string): Promise<string[]> {
   return rows.map((row) => row.id);
 }
 
-/** Every fact moved at least once, so a weight the SQL reads differently from the function puts an entry out of place. */
 async function seedEntries(): Promise<void> {
-  // A form citing nothing: -5.
   await entry('Testwort Bare');
 
   // A web page, unaudited and unlocated, nomenclature unknown, a safety note unsourced: 10 + 8 + 0 - 10 - 15 - 5.
@@ -138,7 +132,6 @@ async function seedEntries(): Promise<void> {
     });
   }
 
-  // No formal name to resolve, no form: +15.
   await entry('Testwort Nameless', { nomenclature: 'none', canonicalName: null, variants: [] });
 
   // Its one form cites the only source, located, the name backed 1 of 2 (7.5, rounded up); the entry's own second citation
@@ -167,7 +160,6 @@ async function seedEntries(): Promise<void> {
     },
   );
 
-  // Hidden from the public, still in a curator's list.
   const hidden = await entry('Testwort Hidden');
   await sql`update ingredients set shown = false where id = ${hidden}`;
 }
@@ -239,7 +231,6 @@ describe('the compendium list sorted by sourcing score', () => {
 
 type ListFilter = Parameters<typeof listCompendium>[0];
 
-/** Every row of `filter`, two at a time: forwards through `after`, and backwards from the end through `before`, put back in list order. */
 async function walkBothWays(
   filter: ListFilter,
 ): Promise<{ forwards: string[]; backwards: string[] }> {

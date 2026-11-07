@@ -77,7 +77,6 @@ function Link(
   );
 }
 
-// In the public page's scrolling frame and table style, its first row the header row as the markdown's is.
 function Table(props: PlateElementProps): ReactElement {
   const [head, ...body] = Children.toArray(props.children);
   return (
@@ -102,7 +101,6 @@ function HeaderCell(props: PlateElementProps): ReactElement {
   return <PlateElement as="th" {...props} />;
 }
 
-/** A source mark: the note's number, raised, where the text refers to it, drawn as the public page's link (index.scss). */
 function FootnoteMark(
   props: PlateElementProps<{ type: 'footnoteReference'; identifier: string; children: never[] }>,
 ): ReactElement {
@@ -114,7 +112,6 @@ function FootnoteMark(
   );
 }
 
-/** A source's entry: a numbered item of the public page's Sources list, one list per entry as each is its own block. */
 function FootnoteEntry(
   props: PlateElementProps<{ type: 'footnoteDefinition'; identifier: string; children: never[] }>,
 ): ReactElement {
@@ -131,7 +128,6 @@ function FootnoteEntry(
   );
 }
 
-/** The list around a paragraph the list plugin marks as a list item. */
 function List(props: PlateElementProps): ReactElement {
   const {
     listStyleType,
@@ -142,7 +138,6 @@ function List(props: PlateElementProps): ReactElement {
     listStart?: number;
     indent?: number;
   };
-  // The public page's list indent, once per level.
   const inset = `calc(${indent} * 1.25rem)`;
   const ordered = listStyleType === 'decimal';
   const Tag = ordered ? 'ol' : 'ul';
@@ -218,7 +213,6 @@ const PasteMarkdownPlugin = MarkdownPlugin.configure({
   },
 }));
 
-/** The plugins the editor runs. */
 export const editorPlugins = [
   ParagraphPlugin.withComponent(Paragraph),
   H2Plugin.withComponent(heading('h2')),

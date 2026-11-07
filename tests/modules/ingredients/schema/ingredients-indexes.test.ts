@@ -20,7 +20,6 @@ const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE_A = WORKSPACE_W_ID;
 const WORKSPACE_B = WORKSPACE_X_ID;
 
-/** The shared factory plus this file's author; the audit stamps are never the fixture's. */
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),

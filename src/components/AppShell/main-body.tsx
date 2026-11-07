@@ -27,7 +27,7 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   const leaving = useLeavingSkeleton(frame && <main>{frame}</main>);
   // The page is held beneath the skeleton rather than swapped for it, so the scroll
   // position the browser saves for Back is the page's
-  // (claude-docs/components/skeleton-fade.md).
+  // (claude-docs/components/skeleton.md).
   return (
     <div className={`${skeletonCoverHost(frame !== null)} ${skeletonFadeHost(leaving !== null)}`}>
       <div {...heldPage(frame !== null)}>{children}</div>

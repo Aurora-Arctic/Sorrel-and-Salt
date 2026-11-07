@@ -8,9 +8,6 @@ import GroupList from '.';
 import { slugify } from '../../lib/slugify';
 import { groupsHref } from './href';
 
-// Render-only; behaviour is asserted in tests/components/GroupList. Three seed
-// colour pairs copied from src/db/seed/category-groups.ts (a component may not
-// import it, CLAUDE.md rule 1). The phone stories stand for the `GroupPage` page.
 const meta = {
   title: 'Admin / Group List',
 } satisfies Meta;
@@ -40,8 +37,6 @@ const CategoryGroupsView = () => (
   />
 );
 
-// The Groups tab as the route draws it (`/curator/category-groups`): the app shell, the admin row,
-// the Categories heading with its Categories and Groups toggle, and the tab's Add.
 const defaultNode = (
   <AdminTabbedFrame
     shell
@@ -67,7 +62,6 @@ const formGroupsNode = (
         name,
         slug,
         description: 'An invented group, for the workshop.',
-        // The first has an icon; the second shows the generic.
         icon: name === GROUP_NAMES.form[0] ? ('mineral' as const) : null,
         ...FIXTURE_EDIT,
         editHref: groupsHref('form', {}, { edit: slug }),
@@ -79,7 +73,6 @@ const formGroupsNode = (
   />
 );
 
-/** Invented traditions as the page lists them, each Edit keeping the search. */
 const traditions = (names: readonly string[], query = '') =>
   names.map((name) => {
     const slug = slugify(name);
@@ -94,7 +87,6 @@ const traditions = (names: readonly string[], query = '') =>
     };
   });
 
-// The traditions take a name search, empty until one is asked.
 const traditionsNode = (
   <GroupList
     kind="tradition"
@@ -103,7 +95,6 @@ const traditionsNode = (
   />
 );
 
-// Searched by a fragment of the name, Clear drawn at the row's end.
 const TraditionsSearchedView = () => (
   <GroupList
     kind="tradition"
@@ -114,14 +105,12 @@ const TraditionsSearchedView = () => (
 
 const traditionsSearchedNode = <TraditionsSearchedView />;
 
-// A search matching nothing says what to change.
 const traditionsNoMatchesNode = (
   <GroupList kind="tradition" groups={[]} filter={{ query: 'nothing' }} />
 );
 
 const emptyNode = <GroupList kind="form" groups={[]} />;
 
-// The traditions' empty message names them.
 const traditionsEmptyNode = <GroupList kind="tradition" groups={[]} filter={{ query: '' }} />;
 
 const STATES: Record<string, ReactNode> = {

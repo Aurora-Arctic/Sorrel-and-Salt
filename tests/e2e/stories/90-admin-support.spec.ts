@@ -5,7 +5,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
 import { sendAs } from '../send-as';
 
-// Story 90: a keeper works through a support request on /keepers/support, and times its sender out. The sender's refused send
+// @story-90: a keeper works through a support request on /keepers/support, and times its sender out. The sender's refused send
 // is made through the API with the sender's own session, since the form that sends one is story 89's.
 
 test.beforeAll(async () => {

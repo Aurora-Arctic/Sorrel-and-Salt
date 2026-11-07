@@ -46,12 +46,10 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
-// Provider credentials and nothing else, so one import serves every test.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
 });
 
-// The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
@@ -64,12 +62,10 @@ beforeEach(async () => {
 const signIn = (provider: ProviderId, profile: Profile) =>
   signInThrough(auth, server, provider, profile);
 
-/** The `Set-Cookie` a response writes for `name`, whole, or undefined. */
 function setCookie(response: Response, name: string): string | undefined {
   return response.headers.getSetCookie().find((header) => header.startsWith(`${name}=`));
 }
 
-/** The provider id a response marks as last used, or undefined when it writes no mark. */
 function lastUsedOf(response: Response): string | undefined {
   return setCookie(response, LAST_USED_PROVIDER_COOKIE)?.split(';')[0].split('=')[1];
 }

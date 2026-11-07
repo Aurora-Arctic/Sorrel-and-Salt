@@ -10,7 +10,7 @@ import {
 } from '../support/db/table-metadata';
 
 // A catalogue sweep: a table added without `...auditColumns` fails here, where a per-file copy would not exist, and a spread removed from a schema file leaves the migrated columns standing.
-// Each module schema test pins its table's exact column set on the code side (claude-docs/testing/db-harness.md, "The db test harness").
+// Each module schema test pins its table's exact column set on the code side (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`").
 
 /** Hard-deleted, so four stamps and no tombstone. */
 const STAMPED = [

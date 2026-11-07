@@ -1,10 +1,7 @@
 @use 'variables' as *;
 @use 'mixins' as *;
 
-// The motion of a jar you can press: the drawing shakes once and the name grows, on hover where a
-// device really hovers and on keyboard focus (claude-docs/components/jar-line.md, "Hover, focus and motion").
-// `$scope` holds both the press and the drawing, `$svg` and `$name` are found beneath it, and
-// `$press` is the button, which may hold the name.
+// Hover where a device really hovers, and on keyboard focus (claude-docs/components/jar-shelf.md, "Jar line").
 @mixin jar-press-motion($scope, $press, $svg, $name, $origin: center) {
   // A transform has no effect on an inline box, hence the inline-block.
   #{$press} #{$name} {
@@ -41,7 +38,6 @@
     }
   }
 
-  // Reduced motion: no shake and no transition, and the name still changes size.
   @include reduced-motion {
     #{$press} #{$name} {
       transition: none;
@@ -53,8 +49,7 @@
   }
 }
 
-// A wobble that dies away: each swing smaller than the last, in degrees because no token holds an
-// angle. Included once, by the sheet that draws the jars.
+// In degrees because no token holds an angle. Included once, by the sheet that draws the jars.
 @mixin jar-shake-keyframes {
   @keyframes jar-shelf-shake {
     0% {

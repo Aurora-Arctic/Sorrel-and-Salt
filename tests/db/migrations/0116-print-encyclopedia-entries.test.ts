@@ -32,7 +32,6 @@ const STATEMENTS = SQL_TEXT.split('--> statement-breakpoint')
   .map((statement) => statement.replace(/^\s*--.*$/gm, '').trim())
   .filter(Boolean);
 
-/** The migration's (old key, new key) pairs, as its VALUES list writes them. */
 const PAIRS = [...SQL_TEXT.matchAll(/\('((?:[^']|'')*)',\s*'((?:[^']|'')*)'\)/g)].map(
   ([, from, to]) => [from.replace(/''/g, "'"), to.replace(/''/g, "'")] as const,
 );
@@ -42,7 +41,6 @@ const DE_GROOT = ['de-groot-religious-system-of-china-v4', 'de-groot-religious-s
 const DE_GROOT_KEYS = DE_GROOT.map((handle) => citationText(COMPENDIUM.sources[handle]));
 const isDeGroot = ([, to]: readonly [string, string]) => DE_GROOT_KEYS.includes(to);
 
-/** Volume IV as `compendium/sources/` held it before it carried a place, a publisher and the title page's wording. */
 const OLD_V4 = {
   ...COMPENDIUM.sources['de-groot-religious-system-of-china-v4'],
   place: undefined,
@@ -53,7 +51,6 @@ const OLD_V4 = {
 const OLD_V4_KEY = citationText(OLD_V4);
 const NEW_V4_KEY = DE_GROOT_KEYS[0];
 
-/** The real compendium cut down to jujube, which cites volume IV, under every real source. */
 function jujubeOnly(): LoadedCompendium {
   const files = COMPENDIUM.files.filter((file) => file.path.endsWith('/jujube-ziziphus-jujuba.md'));
   return {
@@ -73,7 +70,6 @@ const PRINT_WORKS = [
   '_Contemporary American Religion_',
 ];
 
-/** Gimbutas's "Slavic Religion" as the seed stored it before it carried the print details. */
 const OLD_FIELDS = {
   kind: 'chapter' as const,
   authors: 'Gimbutas, Marija',
@@ -105,7 +101,6 @@ const run = async () => {
   for (const statement of STATEMENTS) await sql.unsafe(statement);
 };
 
-/** A reference stored with the old fields under `seedKey`. */
 async function source(
   seedKey: string,
   extra: { workspace_id?: string; deleted?: boolean } = {},

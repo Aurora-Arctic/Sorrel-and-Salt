@@ -60,7 +60,6 @@ describe('the forms parameter', () => {
 });
 
 describe('the deities parameter', () => {
-  // Two deities of one name under two traditions, told apart by slug.
   const lookups = {
     deities: new Map([
       ['hecate-greek', 'id-greek'],

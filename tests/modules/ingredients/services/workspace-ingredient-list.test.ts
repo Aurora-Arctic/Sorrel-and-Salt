@@ -28,7 +28,6 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-/** An entry, compendium by default, with no formal name unless stated. */
 function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promise<string> {
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 }
@@ -42,14 +41,12 @@ function hold(
   return insertCupboardEntry(sql, { workspaceId, ingredientId, ...overrides }, A.id);
 }
 
-/** A compendium entry in W's cupboard. */
 async function held(name: string, overrides: Overrides<IngredientFixture> = {}): Promise<string> {
   const id = await add(name, overrides);
   await hold(id);
   return id;
 }
 
-/** A jar in `workspaceId` of the ingredient's form `form`, written raw. */
 async function stock(
   ingredientId: string,
   workspaceId = WORKSPACE_W_ID,
@@ -66,7 +63,6 @@ async function stock(
   );
 }
 
-/** Every label `session` is listed in `workspaceId` under `filter`, in the list's order. */
 async function listed(
   session: Session,
   workspaceId = WORKSPACE_W_ID,
@@ -78,7 +74,6 @@ async function listed(
   return page.edges.map(({ node }) => node.name);
 }
 
-/** The ids `session` is listed in `workspaceId` under `filter`. */
 async function idsListed(
   session: Session,
   workspaceId: string,
@@ -91,7 +86,6 @@ async function idsListed(
 }
 
 describe('listWorkspaceIngredients under source and inStock', () => {
-  /** A local entry, a held compendium entry and a local one with no jar. */
   async function seedSources(): Promise<void> {
     await stock(await add('Covenwort', { workspaceId: WORKSPACE_W_ID }));
     await add('Barecovenwort', { workspaceId: WORKSPACE_W_ID });
@@ -182,7 +176,6 @@ describe('listWorkspaceIngredients under source and inStock', () => {
 });
 
 describe('listWorkspaceIngredients under lowStockOnly', () => {
-  /** A held entry with one jar of `quantity` against `threshold`. */
   async function jarred(
     name: string,
     quantity: string | null,

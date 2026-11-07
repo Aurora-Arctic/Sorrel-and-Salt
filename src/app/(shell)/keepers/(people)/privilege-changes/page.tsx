@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   title: 'Privilege Changes',
 };
 
-/** One page of the ledger and its count, the first page again for a cursor that names no row of it. */
 function readLedgerPage(
   session: Session,
   filter: { query?: string; privilege?: LedgerPrivilege },
@@ -98,9 +97,7 @@ export default async function AdminPrivilegeChangesPage({
   const session = await requireAdminSession();
   const params: PrivilegeChangesSearchParams = await searchParams;
   const place = readListPlace(params);
-  // None rather than blank: the ledger's filter leaves an unasked field out.
   const query = place.query || undefined;
-  // Either privilege, or none: a hand-edited value is no filter.
   const privilege = oneOf(PRIVILEGES, single(params.privilege));
   const { changes, pageInfo, position } = await readLedger(
     session,

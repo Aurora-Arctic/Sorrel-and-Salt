@@ -21,7 +21,6 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
     filter: {
       ...filter,
       toxic: filter.toxic || null,
-      // A coven's list has no review filter.
       reviewed: null,
       source: filter.source || null,
       inStock: filter.inStock ?? false,

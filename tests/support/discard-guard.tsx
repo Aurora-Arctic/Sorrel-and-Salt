@@ -5,14 +5,8 @@ import { expect, type Mock, vi } from 'vitest';
 import Modal from '@/components/Modal';
 import { makeQueryClient } from '@/lib/graphql-client';
 
-// The guard over a keeper form's unsaved changes: its shape is tests/components/Modal's, on a form of
-// that test's own; each keeper form's test asserts its wiring through this, the form in a modal as its
-// page puts it, its close the modal's own (claude-docs/components/modal.md, "Unsaved changes").
+// Each keeper form's unsaved-changes wiring, asserted through the modal (claude-docs/components/modal.md, "Unsaved changes").
 
-/**
- * Renders the form in a modal, handed the modal's own close as its page's dialog hands it; answers the
- * modal's `onClose`. `strict` renders it under React's development double mount.
- */
 export function renderInModal(
   form: (done: () => void) => ReactNode,
   { strict = false }: { strict?: boolean } = {},
@@ -34,10 +28,6 @@ export function renderInModal(
 const button = (name: string) => screen.getByRole('button', { name });
 const asking = () => screen.queryByRole('button', { name: 'Discard Changes' });
 
-/**
- * After `change`, the form's Cancel and the modal's Escape each ask rather than close, and Discard Changes
- * closes. `cancel` finds the form's Cancel where a panel open in it has its own; `kept` asserts what Keep Editing kept.
- */
 export function expectGuardedWaysOut(
   onClose: Mock,
   change: () => void,
@@ -59,12 +49,7 @@ export function expectGuardedWaysOut(
   expect(onClose).toHaveBeenCalledTimes(1);
 }
 
-/**
- * A question over a form: the form inert, the question and the modal's Close live, and the focus on the safe
- * answer. Returns the question.
- */
 export function expectAskingOver(field: HTMLElement, safe: HTMLElement): HTMLElement {
-  // The innermost group holding it: the question's own.
   const question = screen
     .getAllByRole('group')
     .filter((group) => group.contains(safe))
@@ -78,10 +63,7 @@ export function expectAskingOver(field: HTMLElement, safe: HTMLElement): HTMLEle
   return question as HTMLElement;
 }
 
-/**
- * The live button named `name`: the question's own answer, where the inert form behind it has a button
- * of the same name (a confirm's Cancel over the form's Cancel).
- */
+// The question's own button, where the inert form behind it has one of the same name.
 export function answer(name: string): HTMLElement {
   const live = screen
     .getAllByRole('button', { name })
@@ -90,7 +72,6 @@ export function answer(name: string): HTMLElement {
   return live[0] as HTMLElement;
 }
 
-/** The question answered: the question `expectAskingOver` returned gone, and the form live again. */
 export function expectAnswered(field: HTMLElement, question: HTMLElement): void {
   expect(question).not.toBeInTheDocument();
   expect(field.closest('[inert]')).toBeNull();

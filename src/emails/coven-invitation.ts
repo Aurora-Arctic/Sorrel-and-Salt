@@ -12,7 +12,6 @@ import type { CovenInvitationProps } from './types';
 // The one place a coven invitation's link exists outside the reader's inbox:
 // only its token's hash is stored (claude-docs/db/invitations.md, "Inviting into a coven").
 
-/** The role as the mail names it, with its article: "an observer". */
 const ROLE_PROSE: Record<CovenInvitationProps['role'], string> = {
   viewer: 'an observer',
   member: 'a practitioner',
@@ -51,7 +50,6 @@ export function CovenInvitation({
   );
 }
 
-/** The coven invitation mail for `to`, rendered to the html and plain text `send` takes. */
 export const covenInvitationMessage = defineMessage<CovenInvitationProps>(
   ({ covenName }) => `Join ${covenName} on Sorrel & Salt`,
   CovenInvitation,

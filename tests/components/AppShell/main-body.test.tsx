@@ -16,12 +16,9 @@ vi.mock('@/app/skeletons', async () => ({
 const { usePendingNavigation } = await import('@/lib/navigation');
 const { default: MainBody } = await import('@/components/AppShell/main-body');
 
-// The shell's body. While a navigation is on its way it draws the destination's own skeleton,
-// chosen by the address from the registry, over the held page: for a page drawn straight in the
-// shell, and for a coven or admin page whose section host is not standing for it (going into a
-// coven from the compendium draws the whole frame). A section that is standing draws its own;
-// a move within the same page, a refresh, and an address no page answers draw nothing here
-// (claude-docs/design-decisions/m11.9-plan.md, Part 1).
+// The shell's body. While a navigation is on its way it draws the destination's skeleton, chosen by address from the registry,
+// over the held page, for a page drawn straight in the shell or a coven or admin page whose section host is not standing
+// for it; anything else draws nothing here (claude-docs/design-decisions/m11.9-plan.md, Part 1).
 
 let arrive = () => {};
 let go: (href: string) => void = () => {};
@@ -69,8 +66,7 @@ afterEach(async () => {
   await act(async () => arrive());
 });
 
-// The page under test hides nothing of its own, so anything hidden from
-// assistive technology is the skeleton left over the arrived page.
+// The page hides nothing of its own, so anything hidden from assistive technology is the skeleton.
 const hiddenFrom = (container: HTMLElement): Element | null =>
   container.querySelector('[aria-hidden="true"]');
 
@@ -204,8 +200,6 @@ describe('MainBody', () => {
     expectNoWait();
   });
 
-  // The skeleton stays over the arrived page for the fade, out of reach
-  // of assistive technology and the pointer, and leaves with no layout of its own.
   describe('when the page arrives', () => {
     beforeEach(() => {
       vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });

@@ -20,16 +20,10 @@ import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
-// `/keepers/users`' filter, table and pager. Render-only: the page reads
-// the list through the identity service and hands this one page of it. The
-// filter is a GET form to the page itself, so a filtered page is an address
-// (claude-docs/components/user-list.md).
+// `/keepers/users`' filter, table and pager. Render-only: the filter is a GET form to the page itself, so a filtered page is
+// an address (claude-docs/components/user-list.md).
 
-/**
- * The empty list, naming the filters in use, so
- * a keeper sees what to change: "No users match “ada” and the role Keeper.
- * Change or clear the filter to see more."
- */
+/** The empty list, naming the filters in use so a keeper sees what to change. */
 function noMatch({ query, role, awaitingApproval, timedOut, paused }: UserListFilterProps): string {
   const filters = [
     query && `“${query}”`,
@@ -51,17 +45,9 @@ function isFiltered({
   return Boolean(query || role || awaitingApproval || timedOut || paused);
 }
 
-/**
- * The columns, in table order. Impersonate is last, and only
- * where impersonation is registered: an action, its cell unlabelled as a
- * card, at the card's top right beside the name.
- */
 const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> | false)[] => [
   {
     heading: 'Name',
-    // The way into their privilege history, then the name, on every
-    // row: a keeper's changes are the ones most worth reading. The name opens
-    // the user's modal, their covens and Impersonate.
     cell: (user) => (
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
@@ -71,7 +57,6 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   },
   {
     heading: 'Email',
-    // Whether the address is verified, then the address, in one cell.
     cell: (user) => (
       <span className="user-list__email">
         <Mark
@@ -102,7 +87,6 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Can Create',
     className: 'user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    // Whether they may create covens. Approve and Revoke are the user modal's.
     cell: (user) => (
       <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
     ),
@@ -111,8 +95,6 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Support',
     className: 'user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    // A green check while they may send support requests; a red cross while a time-out stands, its end or that it has
-    // none in the tip.
     cell: ({ supportTimeout }) =>
       supportTimeout ? (
         <UntilMark standing="Timed out" until={supportTimeout.until} />
@@ -124,8 +106,6 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
     heading: 'Access',
     className: 'user-list__mark-column',
     headingClassName: 'user-list__mark-column',
-    // A green check while their site access is open; a red cross while a pause stands, its end or that it has none in
-    // the tip.
     cell: ({ accessPause }) =>
       accessPause ? (
         <UntilMark standing="Paused" until={accessPause.until} />
@@ -135,8 +115,6 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   },
   {
     heading: 'Logins',
-    // Logos, empty when none: a blank reads as none.
-    // This and Signed Up are facts no control changes, so muted (index.scss).
     className: 'user-list__fact user-list__mark-column',
     headingClassName: 'user-list__mark-column',
     cell: (user) => (
@@ -150,7 +128,6 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   {
     heading: 'Terms',
     className: 'user-list__fact',
-    // The joint version agreed to most recently, or a red cross when none was.
     cell: (user) =>
       user.agreedTermsVersion === null ? (
         <Mark value={false} label="Not agreed" />
@@ -167,8 +144,6 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
       </time>
     ),
   },
-  // Not on a keeper's row: the endpoint refuses one. Ruled in red,
-  // as acting as someone else is the table's one dangerous control.
   canImpersonate && {
     heading: 'Impersonate',
     action: 'corner',

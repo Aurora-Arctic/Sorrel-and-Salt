@@ -16,9 +16,8 @@ import type { NavigateOptions, NavigationState, PendingNavigation } from './type
 const IDLE: NavigationState = { busy: false, href: undefined };
 
 /**
- * The site-wide state: busy while any navigation is on its way, and the address it
- * is headed for. A navigation's part is the provider's optimistic value; a full
- * page load's part is the external store's.
+ * The site-wide state: busy while any navigation is on its way, and the address it is headed for. A navigation's part is the
+ * provider's optimistic value; a full page load's part is the external store's.
  */
 export function useNavigationState(): NavigationState {
   const active = useContext(ActiveNavigationContext);

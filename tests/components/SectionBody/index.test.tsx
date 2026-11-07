@@ -16,11 +16,9 @@ vi.mock('@/app/skeletons', async () => ({
 const { usePendingNavigation } = await import('@/lib/navigation');
 const { default: SectionBody } = await import('@/components/SectionBody');
 
-// A section's page under its context row. While a navigation to another page of the same section is
-// on its way, the old page is taken away at once and the destination's own skeleton, chosen by the
-// address from the registry, stands in its place under the row that stays. A coven's host answers
-// only its own coven, so nobody acts on the wrong coven's data under the right coven's row; anything
-// else is the shell's to draw, or nobody's (claude-docs/design-decisions/m11.9-plan.md, Part 1).
+// A section's page under its context row. While a navigation to another page of the section is on its way, the page is taken
+// away at once and the destination's skeleton stands in its place; a coven's host answers only its own coven
+// (claude-docs/design-decisions/m11.9-plan.md, Part 1).
 
 /** A control that starts a navigation to `href`, as the switcher and section nav do; or a refresh. */
 function Go({ name, href }: { name: string; href?: string }) {
@@ -180,8 +178,6 @@ describe('SectionBody for a coven', () => {
       vi.useRealTimers();
     });
 
-    // Once the page is back, the one thing hidden from assistive technology is
-    // the skeleton left over it for the fade.
     const overlay = (container: HTMLElement) => container.querySelector('[aria-hidden="true"]');
 
     it('shows the page at once and keeps the skeleton over it, hidden from assistive technology, until the fade is done', async () => {

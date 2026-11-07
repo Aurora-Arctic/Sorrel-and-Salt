@@ -6,9 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { byLabel, choose, press, redo, type, typeIn, undo } from '../../support/interact';
 import { HistoryProbe, type ProbeHandles } from '../../support/form-history';
 
-// Undo and redo for a react-hook-form form: what a chord, a pause and
-// a reset do to the history, and where the focus goes after a restore.
-
 function mount(
   props: Parameters<typeof HistoryProbe>[0] = {},
   options: Parameters<typeof render>[1] = {},
@@ -27,7 +24,6 @@ function mount(
   return { ...view, handles, values };
 }
 
-/** Puts the focus in the text box labelled `label`, where a person's keys would go. */
 const focusIn = (label: string) => act(() => byLabel(label, 'input').focus());
 
 /** The form's submit count, read from the store: `formState` only reports what a render subscribed to. */
@@ -86,7 +82,6 @@ describe('useFormHistory', () => {
       expect(values().kind).toBe('one');
       chord();
       expect(values().kind).toBe(then);
-      // The chord is not a letter for the select under focus to search with.
       expect(byLabel('Kind', '[role="combobox"]')).toHaveAttribute('aria-expanded', 'false');
     }
 
@@ -127,7 +122,6 @@ describe('useFormHistory', () => {
     choose('Kind', 'Three');
     focusIn('Title');
     undo();
-    // Both the pick and the title it emptied were one step, now one redo.
     expect(handles.current!.history.canUndo).toBe(false);
     expect(handles.current!.history.canRedo).toBe(true);
   });
@@ -187,7 +181,6 @@ describe('useFormHistory', () => {
   });
 
   describe('after a submit', () => {
-    // Two typed steps a pause apart, so undoing the second lands on a blank title.
     async function twoTitleEdits(submit: boolean) {
       vi.useFakeTimers({ toFake: ['Date'] });
       const view = mount();
@@ -272,7 +265,6 @@ describe('useFormHistory', () => {
     fireEvent.pointerUp(document);
     expect(values().level).toBe(3);
 
-    // A change after the hold is a step of its own.
     choose('Kind', 'Two');
     expect(values().kind).toBe('two');
 
@@ -321,7 +313,6 @@ describe('useFormHistory', () => {
 
   describe('what makes a step', () => {
     const steps = () => {
-      // Count steps by undoing until nothing is left.
       let count = 0;
       const { handles } = current;
       while (handles.current!.history.canUndo) {
@@ -438,7 +429,6 @@ describe('useFormHistory', () => {
     });
 
     it('falls back to the Undo button when there is nothing to land on', () => {
-      // The list starts empty, so undoing the added row leaves it nothing to land on.
       mount({ items: [] });
       choose('Kind', 'Two');
       press('Add Item');
@@ -559,7 +549,6 @@ describe('who owns a chord', () => {
   };
   const seen: { current: Pair | null } = { current: null };
 
-  /** An outer and an inner root, neither passing `ignore`. */
   function Bare() {
     const outer = useRef<HTMLDivElement>(null);
     const inner = useRef<HTMLDivElement>(null);

@@ -1,8 +1,6 @@
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 
-// A minimal `IngredientDetail` for the entry routes' tests, whose services are
-// mocked: one ingredient, no variants, categories or substitutes. Every name is
-// invented (CLAUDE.md, Testing).
+// Every name is invented (CLAUDE.md, Testing).
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -13,7 +11,6 @@ const STAMPS = {
   deletedBy: null,
 };
 
-/** A compendium entry by default (`workspaceId: null`); pass a coven id for its own. */
 export function entryDetail(overrides: Partial<IngredientRow> = {}): IngredientDetail {
   return {
     entry: {

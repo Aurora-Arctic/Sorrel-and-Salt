@@ -2,10 +2,6 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 
-// The `/coven/[slug]` index page. It runs the coven guard on its own slug, since a layout does not re-run on client-side navigation, and offers Leave to every role and Delete to an owner only.
-// The guard is mocked (tests/lib/request-session.test.ts's and the service's); the role check is real, read off the access-control statements.
-
-// The Delete control reads the router, which a page test has no app to give.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 const requireCovenMembership = vi.fn();
 const requireSession = vi.fn();

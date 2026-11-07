@@ -4,7 +4,6 @@ import { requireAdminSession } from '../../../../../../lib/request-session';
 import { readListPlace } from '../../../../curator/list-page';
 import type { CardsPageProps } from '../../invitation-cards/types';
 
-// Mint Cards, beside the page's heading while Invitation Cards is open: a link to the tab's `?mint`, keeping its filter and page.
 export default async function CardsAction({ searchParams }: CardsPageProps) {
   await requireAdminSession();
   const params = await searchParams;

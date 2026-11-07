@@ -25,13 +25,9 @@ export function FilterSelectField({
 }: FilterSelectFieldProps): ReactElement {
   const field = fieldDescription({ id: useId() });
   const hydrated = useHydrated();
-  // The choice once hydrated, for the box and the hidden input.
   const [chosen, setChosen] = useState(defaultValue);
-  // The select-only box's blank is a choice, "All Roles", as the native
-  // select's first option is; the type-ahead's is its placeholder and clear.
   const choices = useMemo(() => [{ value: '', label: all }, ...options], [all, options]);
   const className = fit ? 'filter-row__choice filter-row__choice--fit' : 'filter-row__choice';
-  /** Applies a choice other than the one shown. */
   const settle = (settled: string) => {
     if (settled !== defaultValue) onChange(settled);
   };
@@ -40,8 +36,6 @@ export function FilterSelectField({
     return (
       <FieldShell label={label} className={className} {...field}>
         {typeahead ? (
-          // A choice settled on the one shown, the box left unchanged say,
-          // applies nothing.
           <ComboboxTypeahead
             id={field.controlId}
             label={label}

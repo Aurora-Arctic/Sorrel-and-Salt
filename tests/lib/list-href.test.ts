@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { dialogParams, listHref, withParam } from '@/lib/list-href';
 import { list } from '@/lib/search-params';
 
-// The one shared path every list's address goes through (rule 5): a bare flag
-// is what the pages read `?new` and `?awaiting` by, and a blank filter must
-// leave no empty pair behind for the page to read as a filter.
+// A bare flag is what pages read `?new` and `?awaiting` by, and a blank filter must leave no empty pair behind (rule 5).
 describe('listHref', () => {
   it('writes true as a bare flag, in the order given', () => {
     expect(listHref('/keepers/users', { query: 'wort', awaiting: true, after: 'c' })).toBe(
@@ -25,8 +23,6 @@ describe('listHref', () => {
   });
 });
 
-// The modal's half of a list's address: the three href.ts files encode it alike, and the pages
-// read `new` by presence.
 describe('dialogParams', () => {
   it('writes the add form as a bare flag and an edit by its slug', () => {
     expect(listHref('/curator/categories', dialogParams('new'))).toBe('/curator/categories?new');
@@ -40,8 +36,6 @@ describe('dialogParams', () => {
   });
 });
 
-// A list filter is a repeated parameter, `?forms=Herb&forms=Oil`, which `list`
-// (src/lib/search-params.ts) reads back.
 describe('listHref, with a list', () => {
   it('writes each value as its own pair, in place', () => {
     expect(listHref('/compendium', { query: 'wort', forms: ['Herb', 'Oil'], after: 'c' })).toBe(
@@ -60,8 +54,6 @@ describe('listHref, with a list', () => {
   });
 });
 
-// One parameter added to an address that may already carry a query: a Quick Look, an edit dialog or a
-// deleted notice opened over a filtered list keeps the filter.
 describe('withParam', () => {
   it('starts the query on an address with none', () => {
     expect(withParam('/coven/testwort/grimoire', 'spell', 's1')).toBe(

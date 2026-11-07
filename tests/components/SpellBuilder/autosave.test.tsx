@@ -19,9 +19,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's autosave: what it sends and to whom, and the
-// banner offering back a copy kept in the browser. The save itself is the
-// engine's, tests/lib/autosave/use-autosave.test.tsx.
+// The save itself is the engine's, tests/lib/autosave/use-autosave.test.tsx.
 
 const SPELL = {
   id: 's9',
@@ -158,7 +156,6 @@ describe('the spell builder’s saves', () => {
       await vi.advanceTimersByTimeAsync(3100);
     });
 
-    // The rest of the spell saved; the blank row stayed, with nothing said about it.
     await waitFor(() => expect(created).toHaveLength(1));
     expect(created[0].input.steps ?? []).toHaveLength(0);
     expect(screen.queryByRole('alert')).toBeNull();
@@ -206,7 +203,6 @@ describe('the spell builder’s saves', () => {
       await vi.advanceTimersByTimeAsync(3100);
     });
 
-    // Nothing was sent, and nothing is said.
     expect(updated).toHaveLength(0);
     expect(screen.queryByText('Write the instruction, or remove it')).toBeNull();
     expect(screen.queryByText(/Could not save/i)).toBeNull();
@@ -286,7 +282,6 @@ describe('the recovery banner', () => {
 });
 
 describe('a save someone else got in first', () => {
-  /** Opens the saved spell, types an intent, and presses Save into a stale-write refusal. */
   async function conflict() {
     const sends = accept();
     mockGraphQLError('UpdateSpell', { code: 'STALE_WRITE', currentRevision: 5 });

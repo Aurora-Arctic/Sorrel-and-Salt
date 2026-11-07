@@ -1,7 +1,6 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 
-/** One tab: its own address, and the short label the tab row shows, title case. */
 export interface PageTab {
   href: Route;
   label: string;
@@ -14,13 +13,9 @@ export interface PageTab {
 export interface TabbedPageProps {
   /** The element drawn: `main` (the default), or `div` for a skeleton inside a body that already has the page's one landmark. */
   as?: 'main' | 'div';
-  /** The page's `h1`, title case, which names the tabs' nav too: "Categories". */
   title: string;
-  /** In their order along the row; the open one is found from the address. */
   tabs: readonly PageTab[];
-  /** The open tab's one action at the end of the heading's line, from the route group's `@action` slot; nothing for a tab with none. */
   action?: ReactNode;
-  /** The page's tabs hold a `.page-with-nav` column (the account): the head stands over the sections' column and the tabs sit beneath it at every width. */
   framed?: boolean;
   /** Puts the row on a line of its own beneath the heading at every width, instead of on the heading's line. */
   tabsBelow?: boolean;
@@ -36,13 +31,10 @@ export interface TabLinksProps {
   open?: string;
 }
 
-/** A tab on its way, shared by the tab row and the panel (`tab-switch.tsx`). */
 export interface TabSwitch {
   /** True from a tab's press until Next has rendered it. */
   pending: boolean;
-  /** The tab last pressed, whose skeleton the panel draws while it is on its way. */
   target?: PageTab;
-  /** Navigates to a tab inside the switch's transition. */
   go: (tab: PageTab) => void;
 }
 

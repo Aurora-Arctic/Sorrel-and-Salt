@@ -1,4 +1,3 @@
-/** One `invitations` row as the coven invitation tests read it, the enum cast to text. */
 export interface CovenInvitationStateRow {
   id: string;
   workspace_id: string | null;

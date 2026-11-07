@@ -1,1189 +1,238 @@
 # Combobox
 
-`src/components/Combobox/` — a text box that suggests as it is typed in, on
-Downshift's `useCombobox` (DESIGN.md §14): the hook owns the ARIA and the
-keyboard state, and the markup, the rows and the Sass are ours. M5.10a built
-it for `IngredientForm`'s form and folk-name lookups, and put it on every
-list field's box; MB.131 gave celestial bodies, signs, deities and substitutes their
-sources, and M5.10 and M8.10 adopt its debounce. MB.170 made a list's chips
-movable, on dnd-kit.
+`src/components/Combobox/` is a text box that suggests as it is typed in, built on Downshift's `useCombobox` ([`ingredients.md`, "A closed set wears the combobox"](../design-decisions/ingredients.md#a-closed-set-wears-the-combobox)). The hook owns the ARIA and the keyboard state; the markup, rows and Sass are ours. The folder also holds the closed-set boxes (select-only, type-ahead, multi-select), the chip a list draws inside its control (`ComboboxEntry`), and a sortable list of chips on dnd-kit. The chevron, plus and × icons are the shared set ([`icon-tip.md`](icon-tip.md)); the folder draws only a sortable chip's grip and a linked entry's chain.
 
-| File               | What it holds                                                                                                                                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators                                                                                                                               |
-| `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip                                                                                                                             |
-| `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit                                                                                                                                  |
-| `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one                                                                                                                                 |
-| `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                                                                                                                                                        |
-| `typeahead.tsx`    | `ComboboxTypeahead`, a closed set typed into, its list narrowing as it is                                                                                                                                     |
-| `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips                                                                                                                              |
-| `icons.tsx`        | A sortable chip's grip and a linked entry's chain. The chevron, the plus and the clear's × that every box draws are the shared set's `ChevronIcon`, `PlusIcon` and `CrossIcon` ([`icon-tip.md`](icon-tip.md)) |
-| `index.scss`       | The control, the list, a row, and the entry chip                                                                                                                                                              |
-| `types.ts`         | `ComboboxOption`, `Suggestions`, the props, and the row types                                                                                                                                                 |
+## Contracts
 
-## The props contract
+### Props
 
-| Prop               | Meaning                                                                                                                                                                                                                                                                                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | The box's id, which a label element's `htmlFor` names.                                                                                                                                                                                                                                                                                                  |
-| `label`            | What the box is called. The text of a visually hidden `<label>` of its own unless `labelId` is given, not an `aria-label`: Chrome's Issues panel flags an input no `<label>` names. Also the name of its list, "Form suggestions", its status region and its chevron, "Show Form suggestions".                                                          |
-| `labelId`          | The id of a label element naming the box, which then renders no label of its own.                                                                                                                                                                                                                                                                       |
-| `value`/`onChange` | The text, held by the caller: a form field's value, or a list's box.                                                                                                                                                                                                                                                                                    |
-| `onFocus`/`onBlur` | Called as the box takes and loses the focus, after the box shows or hides its own tip                                                                                                                                                                                                                                                                   |
-| `onPick`           | `(value, option)`: a suggestion chosen, or the typed row, which comes with `null`. The text is the caller's to change, so a field fills itself and a list empties its box.                                                                                                                                                                              |
-| `onCommit`         | Enter with no suggestion highlighted: a list's add. Without it, Enter closes an open list and otherwise reaches the form, as a text box's does.                                                                                                                                                                                                         |
-| `onRemoveLast`     | Backspace or Delete in an empty box: a list takes its last entry, as react-select does. With text in the box the keys edit it as usual.                                                                                                                                                                                                                 |
-| `suggestions`      | `{ options, pending }` for the text as it stands. Left out for a box with no source, which never opens, has no chevron and no status region.                                                                                                                                                                                                            |
-| `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                                                                                                                                                                                          |
-| `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                                                                                                                                                                                          |
-| `icon`             | A mark drawn before the text, `aria-hidden`: the type-ahead box's chosen icon, there while the box reads the chosen label (M12.7).                                                                                                                                                                                                                      |
-| `clear`            | `{ label, onClear, empty }`: a control that empties the box, "Clear Folk Names"; `empty` while there is nothing to clear, when it is hidden but keeps its room.                                                                                                                                                                                         |
-| `leading`          | A caller's own control drawn inside the control box before the text and any entries: a form's submit, say. A slot rather than a built-in, as Combobox knows nothing about forms.                                                                                                                                                                        |
-| `toggle`           | Whether a box with `suggestions` draws its chevron button; `true` unless said. Leave it out (`false`) for a free-text search that opens as you type.                                                                                                                                                                                                    |
-| `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                                                                              |
-| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference" makes something new (no typed row, there with a blank box too), "See All Results" applies a search to its list. See "The action row".                                                                                               |
-| `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                                                                              |
-| `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                                                                                      |
-| `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                                                                               |
-| `required`         | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                                                                                 |
-| `actionFirst`      | Whether the action row is the list's first row, nearest the box, rather than its last. `false` unless said. The spell builder's Add to Jar passes it: its action, `Add "<typed>" as a one-off ingredient`, stands for the typed text.                                                                                                                   |
-| `keepOpen`         | Whether the list stays open after a pick of a row, for the next; `false` unless said, so a single-value box closes. A list field, a facet type-ahead and the category picker pass it, since each pick adds an entry (M12.54). Escape, Tab and a press outside still close it, and the focus stays in the box. An action row closes the list either way. |
-| `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Left out too when a suggestion reads as the typed text, case and spaces aside. Enter with nothing highlighted still reaches `onCommit`.                                                                                        |
-| `typedIcon`        | The mark on the typed row, "Use what you typed": the same slot as an option's `icon`                                                                                                                                                                                                                                                                    |
-| `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank; the default is No match for “text”, and `false` says nothing. Outside the listbox, and read by the status. See "The empty message".                                                                                                                   |
-| `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                                                                         |
-| `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                                                                                      |
+The props are typed in `types.ts`; the facts that file cannot carry are here and under "Props in detail".
 
-A `ComboboxOption` is `{ value, label?, icon?, note?, meta?, curated?, heading?, key? }`: the text a
-pick writes, the row's text when it is more than the value ("Wax (Animal)"), a
-second line, `meta` (muted small print after the note on that line, kept to one line with an ellipsis, and part of the option's name: the spell builder's ingredient categories), which bucket it is in — `curated` for the two source buckets, or
-`heading` for a bucket the source names itself, a category's group (MB.126) —
-and what tells it from a row that reads
-the same. A row is keyed, for React and for Downshift, by `key` when it has
-one and by its bucket, heading, label and value otherwise: two substitute suggestions
-can share all three, a compendium entry and the coven's own copy of it, and
-only the ingredient's id tells them apart (MB.131). The row's accessible name is its
-label and its note, so two same-named forms are told apart by a screen
-reader as well as by the eye, and so is who claims a value.
+- **`label` is a visually hidden `<label>`**, not an `aria-label`, because Chrome's Issues panel flags an input no `<label>` names; `labelId` names a caller's own label instead, and then none is rendered.
+- **The text is the caller's.** `onPick(value, option)` gets the typed row with `null`, and the caller changes the text: a field fills itself, a list empties its box.
+- **A `ComboboxOption` is keyed** by `key` when it has one, else by its bucket, heading, label and value. Two substitute suggestions can share all three (a compendium entry and the coven's copy of it), and only the ingredient's id tells them apart.
+- **Icons are `ReactNode`s the caller draws**; the box has no icon vocabulary. They are `aria-hidden`, outside the name.
+- **`colors` on an option** is a group row's `{ colorDark, colorLight }`, set inline through `chipColors()`. The row is edged in a bar so the chip's colour shows before the pick; the group's name is still the bucket heading, so colour is never the only cue. The bar is a background image, not a border, so widening it on the highlighted row moves no text.
+- **`toggle={false}`** is for a free-text search: the list opens as you type, and a chevron promises a set to browse. No design system surveyed puts one on a search box (React Aria's SearchField, Apple's Human Interface Guidelines, Algolia Autocomplete).
+- **`leading`** is a slot, not a built-in, because the box knows nothing about forms. A press on it counts as inside the control, so it neither closes the list nor empties the box, and its click still fires (a submit goes through).
+- **`clear`** and its separator keep their room while `clear.empty` (hidden by `visibility`, out of the tree and tab order), so typing, choosing and clearing never change the control's width (which matters in a filter row). A pressed clear hides, so its owner puts the focus back in the box. The multi-select's does the same.
+- **`keepOpen`** keeps the list open after a pick, for the next: a list field, a facet type-ahead and the category picker pass it. An action row closes it either way.
+- **`offerTyped={false}`** is for text the caller would refuse, such as a repeat. Enter with nothing highlighted still reaches `onCommit`, which says why; with no suggestions either, the list stays shut. A closed set passes `noun="choice"`.
+- **`listAnchor`** is the element the open list spans: a list field passes its row, so the list covers the box and its Add together. The field holds the row in state through a callback ref, so the box is told once it exists.
 
-An option's `icon` (M12.7) is a `ReactNode`, not a typed name: the box has no
-icon vocabulary of its own, and the caller, which knows its domain's, hands in
-the finished element (the Form box passes `<FormIcon>`). It is drawn before the
-label in a `combobox__icon` span that is `aria-hidden`, so it adds nothing to the
-row's name. `ComboboxProps.typedIcon` does the same for the typed-text row, and
-`ComboboxProps.icon` for the box's text: the Form box passes the picked form's
-icon there, before the name, while it holds the pick (the owner's call, M12.7).
-A qualifier carries no icon of its own.
+### Behaviour
 
-An option may also carry `colors`, a group row's `{ colorDark, colorLight }`,
-which a category's row does (the owner's call, M5.6b). The row then takes the pair inline through
-`chipColors()` and the `is-coloured` class. The stylesheet draws a 3px bar in the theme's colour
-of the pair, its left edge level with the group heading's text and set a
-step in from the row's top and bottom, so each row's reads as its own, with the text a further two
-steps clear of the bar at its widest. The bar widens to 5px on the
-highlighted or hovered row, over 150ms, or at once under reduced motion. It
-is a background image rather than a border, so the widening moves no text
-and the highlight's wash still shows behind it. That wash is `$fill-highlight`, the accent 12% into the card, the one every menu's item wears too (M8.17, the owner's call of 2026-10-20; it was 22%). The list has no padding above or below its rows, so the first and last rows' wash meets the panel's edge, and those rows take the panel's inner corners (its radius less the 1px edge): the first row's top two, the last row's bottom two, and all four for a row alone, the owner's call of 2026-10-20 for every dropdown. In a grouped list the top is a heading, so only the last group's last row rounds. The dragged chip keeps its own opaque 22%, so it hides the chips it passes over. The colour says which group's chip a
-pick will become; the group's name is still the bucket's heading, so the
-colour is never the only cue.
+- **It changes no text itself.** Downshift's fill-on-select, select-on-blur and emptying of a closed box on Escape are turned off in the state reducer, so a blur, Escape and Enter all keep what was typed.
+- **Free text is the default.** Nothing is highlighted when the list opens; only an arrow key or the pointer highlights a row, and only a highlighted row is picked by Enter or a click. The list opens with an explicit first row, "Use what you typed: rhizome", so going past the vocabulary is a visible choice (the vocabulary carries no `Other`). The row is first because it is what a typist most often wants, one ArrowDown away. It is left out when a suggestion already reads as the typed text (label, or value with no label, compared with spaces trimmed and case aside): standing first, it would make Enter write "wax" over the suggestion's own "Wax". "Wax (Animal)" and "Wax (Substance)" do not read as "wax", so the row stays.
+- **Two buckets, told apart by structure.** Rows with `curated` set sit under "From Compendium" and "From Coven" headings, true because a compendium entry holds curated values alone, so every other value in use is the coven's. Each bucket is `role="group"` named by its heading, on a `div` inside a presentational `li`, because ARIA allows no `group` role on an `li` (axe's `aria-allowed-role`).
+- **Or the source's own buckets.** A row carrying `heading` is grouped under it, and once any row carries one `curated` is not read. Each heading is keyed by its place (`heading-0`), not its text, which may hold a space and would split the `aria-labelledby` reference.
+- **A pick closes the list**, unless `keepOpen` is set. Two rows that pick as the same text ("Wax (Animal)", "Wax (Substance)") are told apart after the pick by the caller's `qualifier`; a variant's `form` stores the string (DESIGN.md §5).
+- **It opens as text is typed, on ArrowDown, and from its chevron**, and only once there are rows; a list wanted while the lookup is pending opens as the rows arrive, the typed row counting as one. The pending `Spinner` shows after `$loading-delay`, so a quick answer never flashes it.
+- **Leaving the box shuts its list for good.** A list wanted but without rows is not open to Downshift, so without a blur dropping the wish, a late answer would open the list and Downshift would focus the box, pulling the focus from whatever was in use. An open list is Downshift's own to close.
+- **Enter.** A highlighted row is picked. Otherwise, with `onCommit`, Enter is the caller's and never the form's submit. Without `onCommit`, Enter closes an open list, and on a closed box reaches the form as any text box's Enter does.
+- **The control is the box.** A press on its padding, between the entries, or where a hidden clear keeps its room puts the caret in the text, as a plain input would. The control is `role="presentation"`; the box inside is what a reader and the keyboard reach.
+- **The list is announced** by a visually hidden `<output>`, named like the list, reading "3 suggestions", "No suggestions" or "Looking for suggestions" while open. It is its own region, not Downshift's `getA11yStatusMessage`, which announces on the box's state and not on rows arriving after the debounce. A ListField's own `<output>` is named "Folk Names changes" so the two are told apart.
+- **`aria-activedescendant`** is left off while no option is highlighted: Downshift writes `""`, which points at nothing and which a checker reads as a broken reference.
 
-## Behaviour
+#### Row order
 
-- **It changes no text itself.** Typing is reported through `onChange` and a
-  pick through `onPick`; Downshift's own fill-on-select is turned off in the
-  state reducer, as are its select-on-blur and its emptying of a closed box on
-  Escape. So a blur, Escape and Enter all keep what was typed.
-- **Escape on a closed box is left to the dialog.** Downshift would prevent
-  the key whenever the box holds text, which stops a modal around it hearing
-  its `cancel` event; the box marks it `preventDownshiftDefault` instead.
-  The one exception is the empty message: it is open content Downshift does not
-  know of, so Escape closes it alone and is prevented, as on an open list, and
-  the next Escape reaches the dialog.
-- **Leaving the box shuts its list for good.** The list is open only while
-  it is wanted and has rows, so a box left while its lookup had none to show
-  still wanted it, and the answer arriving later opened it, which Downshift
-  follows by focusing the box — pulling the focus out of whatever box was in
-  use (found by MB.221's e2e flow). A blur drops that wish; an open list is
-  Downshift's own to close.
-- **A pick closes the list, unless `keepOpen` says otherwise** (M12.54). The state reducer keeps the list open on a click or Enter that picks a row, so a list field or a facet filter takes several picks in a row without reopening it; Escape, Tab and a press outside close it as before. A single-value box leaves `keepOpen` off and closes on a pick.
-- **Free text is the default.** Nothing is highlighted when the list opens:
-  an arrow key or the pointer highlights a row, and only a highlighted row is
-  picked by Enter or a click. Typing past the vocabulary is therefore never
-  hijacked, and the list still opens with an explicit row, "Use what you typed: rhizome", so going past it is a visible choice rather than a discovered behaviour (M4.3a's argument: the vocabulary carries no `Other`). The row is first rather than last, the owner's call: it is the choice a typist most often wants, and one ArrowDown away. A caller passes `offerTyped={false}` for text it would refuse, and the row is not offered: a list does so for a repeat of what it holds (MB.174), so the row never offers what Add would refuse. Enter with nothing highlighted still reaches `onCommit`, which says why; with no suggestions either, the list stays shut. The row is also left out when a suggestion already reads as what was typed, its label (or its value, with no label) compared with spaces trimmed and case aside (M10.12): it would only repeat that suggestion, and standing first, it made Enter write the typed spelling, "wax", over the suggestion's own, "Wax". Two suggestions both valued "Wax" but labelled "Wax (Animal)" and "Wax (Substance)" keep it, since neither reads as "wax".
-- **Two buckets, told apart by structure.** Rows with `curated` set are
-  grouped under "From Compendium" and "From Coven" headings (renamed from
-  "Curated" and "In use" during MB.131, on the owner's call), `role="group"` inside the
-  listbox, each named by its heading. The group is a `div` inside a
-  presentational `li`, which the accessibility tree leaves out: ARIA allows
-  no `group` role on an `li`, which M5.5's scan caught (axe's
-  `aria-allowed-role`). The headings say where a value comes
-  from, and are true because a compendium entry holds curated values alone
-  (MB.162), so every value in use outside the lists is the coven's; a source whose rows carry no `curated`
-  lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label. Both write "Wax", since a variant's `form` stores the string, so after a pick the box tells them apart by its qualifier, the group a caller passes for the row it picked (MB.169; DESIGN.md §5).
-- **Or the source's own buckets** (MB.126). A row carrying a `heading` is
-  grouped under it, a category under its group's name, with the same
-  `role="group"` and heading as the curated buckets; once any row carries
-  one, `curated` is not read. The buckets stand in the order the headings
-  first appear in `options`, since the caller has sorted them, and a row
-  without a heading goes in a trailing unheaded bucket, outside every group
-  and after them. Each group's heading is keyed by its place, `heading-0`,
-  rather than its text, which may hold a space and would split the
-  `aria-labelledby` reference. The status region counts the rows as before.
-- **A pending lookup is shown and said.** While `suggestions.pending`, the
-  input carries `aria-busy` and the indicator strip holds a `Spinner` (it
-  shows after `$loading-delay`, so a quick answer never flashes it), beside
-  the status region's "Looking for" line. `CategoryPicker` gets it by passing
-  its `pending` through.
-- **It opens as text is typed, on ArrowDown, and from its chevron**, and only
-  once there are rows: a list wanted while the lookup is pending opens as
-  the rows arrive, the typed row counting as one. A box with no source never
-  opens. Typing sets the wish itself, in the input's own change handler,
-  rather than through Downshift's open callback alone: that callback fires
-  only when the open state differs from the props Downshift last committed,
-  so a key landing just after a pick closed the list, before that render
-  committed, read as no change and the list stayed shut (found by story 51's
-  flow, M10.16).
-- **Enter.** A highlighted row is picked. Otherwise, with `onCommit`, Enter is
-  the caller's and never the form's submit: a list adds the text. Without
-  `onCommit`, Enter closes an open list, and on a closed box reaches the form
-  as any text box's Enter does.
-- **The control is the box.** A press on its padding, between the entries,
-  or where a hidden clear keeps its room (MB.115, the owner's call), puts the
-  caret in the text, as pressing a plain input would. The control is
-  `role="presentation"`: the box inside it is what a reader and the keyboard
-  reach.
-- **The list is announced.** A visually hidden `<output>`, named "Form
-  suggestions", reads "3 suggestions", "No suggestions" or "Looking for
-  suggestions" while the list is open and nothing while it is closed. Its own
-  region rather than Downshift's `getA11yStatusMessage`, which announces on
-  the box's state and not on rows arriving after the debounce. The ListField's
-  own `<output>` for adds and removals is named "Folk Names changes" so the
-  two are told apart.
-- **The clear and its separator always hold their room** (MB.115, the
-  owner's call): drawn from the first render, and while there is nothing to
-  clear (`clear.empty`) hidden by `visibility`, out of the accessibility
-  tree (`aria-hidden`) and the tab order (`tabindex="-1"`, `disabled`),
-  but never out of the layout. So typing, choosing and clearing never change
-  the control's width, which matters wherever the control sizes itself, as
-  in a filter row. A pressed clear hides, so its owner puts the focus back in
-  the box. The multi-select's clear does the same.
-- **A `leading` control sits before the text.** It is drawn inside the control
-  box, ahead of the entries and the text, in its own wrapper that does not grow,
-  so the tab order matches the screen. A button given there takes the
-  `combobox__indicator` class, so it looks and focuses like the others. A press
-  on it counts as inside the control, so it does not close an open list or
-  empty the box, and its click still fires, so a submit goes through.
-- **Leave out the chevron (`toggle={false}`) on a free-text search.** The list
-  opens as you type, and a chevron promises a set to browse. No design system
-  surveyed puts one on a search box: React Aria's
-  [SearchField](https://react-aria.adobe.com/SearchField), Apple's Human
-  Interface Guidelines search fields, and Algolia Autocomplete, whose API
-  reference lists no toggle.
-- **The entries sit inside the control**, ahead of the text, each a chip with
-  its own × — the owner's call, after react-select's multi-select — with the
-  clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's
-  classes, `combobox__entry` and `combobox__entry-remove`, are drawn here so
-  that any list reuses them; `IngredientForm`'s entry adds its tooltip.
+The rows are the typed row first, then the curated bucket, then the in-use bucket: flat for Downshift, which numbers them, and bucketed for the headings. A caller with an `action` has the action row where it says instead of the typed row first. A typed box narrows a grouped list by the row's own label or its group's name (`matchesLabelOrGroup`, `match.ts`), so typing a tradition lists its deities; one place means every grouped list narrows alike.
+
+#### Typed box and Escape
+
+Escape on a closed box is left to the dialog: Downshift would prevent the key whenever the box holds text, which stops a modal around it hearing its `cancel` event, so the box marks it `preventDownshiftDefault`. The one exception is the empty message, open content Downshift does not know of (it has no rows, so `isOpen` is false): Escape closes it alone and is prevented, and the next Escape reaches the dialog.
+
+#### Typing always wants the list
+
+Downshift's open callback fires only when the open state differs from the props it last committed, so a key landing just after a pick closed the list, before that render committed, read as no change and the list stayed shut. The input's own `onChange` therefore sets the wish to open itself.
 
 ## Where the list opens
 
-The owner's calls in MB.154. `useListPosition` (`position.ts`) places the
-open list on Floating UI's `useFloating` (DESIGN.md §14):
+`useListPosition` (`position.ts`) places the open list on Floating UI's `useFloating`.
 
-- **As wide as its anchor.** A list field passes its row as `listAnchor`,
-  so its list spans the box and its Add together, the field's whole width;
-  a box with no anchor, the form field, spans itself. The field holds the
-  row in state through a callback ref, so the box is told once it exists.
-- **Never off the screen.** It opens beneath the box and flips above when
-  there is more room there (`flip`), 8px from the screen's edge, and is no
-  taller than the room it has: `size` sets `--combobox-list-room`, and the
-  stylesheet caps the list at `min(20rem, that)`, which holds the eight
-  seeded category groups without a scroll (M5.6, the owner's call). Its side is
-  `data-placement`, "bottom-start" or "top-start".
-- **Clear of the phone's bottom bar.** The shell's fixed bottom bar
-  (`.section-nav`, phone width only) sits over the foot of the window, which
-  Floating UI cannot see. `flip`, `shift` and `size` therefore take a
-  `bottom` padding of the edge plus the bar's measured height (its safe
-  area included), read at every placement, so a field near the foot opens its
-  list above rather than behind the bar. The bar is found by its class, as
-  the shell's own stylesheets already do. Without the padding `size` shrinks
-  the list to the sliver left and `flip` then measures that shrunken list,
-  which still "fits" below, so it never flips.
-- **Followed while open, and only then.** `autoUpdate` re-places it on a
-  scroll or a resize; a closed list, which Downshift keeps in the page, is
-  not followed.
-- **Fixed, not absolute**, so a scrolling ancestor — M8.16's modal — cannot
-  clip it.
-- **Shared with MenuButton.** Its menu is placed by the same hook with three
-  options the list leaves at their defaults: `placement: 'bottom-end'`
-  rather than `'bottom-start'`, so it hangs from the button's end edge and
-  flips to `top-end`; `gap: 8` rather than 4; and `matchWidth: false`
-  ([`menu-button.md`](menu-button.md), "Where it opens"; M8.17).
-- **A row never scrolls it sideways**: a word too long for the list, an
-  address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
-  row, `overflow-x: hidden` on the list).
+- **As wide as its anchor**: `listAnchor`, else the control.
+- **Never off the screen.** It flips above when there is more room there, sits 8px from the screen's edge, and is no taller than the room it has: `size` sets `--combobox-list-room` and the stylesheet caps the list at `min(20rem, that)`, which holds the eight seeded category groups without a scroll.
+- **Followed only while open** (`autoUpdate`); every box's closed list stays in the page, as Downshift asks.
+- **Fixed, not absolute**, so a scrolling ancestor such as a modal cannot clip it.
+- **Shared.** An entry's summary uses it with `matchWidth: false`. MenuButton's menu uses it with `placement: 'bottom-end'`, `gap: 8` (not 4) and `matchWidth: false` ([`menu-button.md`](menu-button.md), "Where it opens").
 
-happy-dom lays nothing out, so the tests give the viewport, the box, the anchor
-and the list the sizes Floating UI reads, as the sortable tests give the
-chips theirs.
+### Bottom bar room
+
+The phone's fixed bottom bar (`.section-nav`) sits over the foot of the window, which Floating UI cannot see. `flip`, `shift` and `size` therefore take a `bottom` padding of the edge plus the bar's measured height, read at every placement, so a field near the foot opens above. Without it `size` shrinks the list to the sliver left, which still "fits" below, so `flip` never fires. The height is measured, not restated from tokens, because only the browser knows the device's safe area; the bar is found by its class, not a prop threaded through every box.
+
+### The popup
+
+`combobox__popup` holds the listbox and, beneath it, the empty message; it is the one element placed, so the two move together. With `empty={false}` the listbox is placed itself. The `<ul>` keeps Downshift's `getMenuProps`, so its `id` and the input's `aria-controls` agree. Downshift counts only the input, the toggle and the listbox as inside, and closes on a press anywhere else. The `<ul>` scrolls, not the popup, because Downshift scrolls the highlighted row into view within the menu element and a scroller outside it is never moved.
 
 ## The empty message
 
-**The rule: a typed box never closes for having nothing to show; it says so.**
-The message is part of the Combobox, not something a caller must remember. A
-caller that passes no `empty` gets the default, "No match for “text”" (the
-typed text in curly quotes, from `noMatch` in `popup.tsx`, the one place it
-is worded). A caller may pass a more specific sentence ("Keep typing to
-search" in the ingredient search), or `false` where saying nothing is right
-(the ingredient search before it has searched). The multi-select box says
-"Every option is already chosen" when its list is opened with nothing left to
-offer; it takes no typed text, so it has no "no match". Both draw the same
-`combobox__empty` row from `popup.tsx`, inside the same placed popup.
+**A typed box never closes for having nothing to show; it says so.** The default is "No match for “text”" (`noMatch` in `popup.tsx`); a caller passes a more specific sentence ("Keep typing to search") or `false`. The multi-select box says "Every option is already chosen" when opened with nothing left; it takes no typed text, so has no "no match".
 
-- **`empty`** opens the popup once the lookup has settled (`pending` is
-  false), the text is not blank, the person wants the list open, and there
-  are no rows at all (the typed and action rows count as rows). The message
-  is drawn beneath the listbox, never in it: it is not an option, so a screen
-  reader must not count it as one. The status region reads the message; a
-  closed list is otherwise silent. With rows the status keeps its count and no
-  message shows. Downshift has no rows to hold here, so it still reads the
-  list as closed (`aria-expanded` is false).
-- **One placed popup.** When `empty` is passed, a `combobox__popup`
-  wrapper takes the place of the `<ul>` as the floating element (see "Where
-  the list opens"), so the listbox and message move together,
-  beneath the box or above it. The `<ul>` keeps Downshift's `getMenuProps`,
-  so its `id` and the input's `aria-controls` still agree. Every box has the popup now (only `empty={false}` goes without), and the multi-select's list sits in one too.
-  The popup is a panel and does not scroll; the `<ul>` does, in both cases,
-  because Downshift scrolls the highlighted row into view within the menu
-  element, and a scroller outside it is never moved (the Name box on
-  `/curator/compendium` once left an arrowed-to row hidden that way).
-- Styling stops at the tokens: the message takes a row's padding
-  inside the popup's surface, and the section's design review does the rest.
+- It shows once the lookup has settled (`pending` false), the text is not blank, the person wants the list open, and there are no rows at all. The typed and action rows count as rows, so a caller wanting the message passes `offerTyped={false}`.
+- It is drawn beneath the listbox, never in it, because it is not an option and a reader must not count it as one. The status reads it; with rows the status keeps its count and no message shows. Downshift still reads the list as closed (`aria-expanded` false).
 
 ## The action row
 
-`action` is a last row that does something rather than picking a suggestion.
-It has two users. "See All Results" ends the ingredient search's dropdown
-when there is another page, and applies the search to the list; it is reached
-by the arrow keys like a result, italic so it reads apart from the matches, and
-title case because it is a command, as a button is. It is no result, so the status does not count it.
+`action` is a last row that does something rather than picking a suggestion, in italics and Title Case (it is a command). Enter or a click calls `onSelect`, never `onPick`, and leaves the text as typed. It is no result, so the status does not count it. It stands in place of the typed row and is there whatever is typed, a blank box included, so ArrowDown or the chevron opens the list on this row alone before any suggestion arrives, and ArrowUp opens it on this row. `actionFirst` puts it nearest the box, for an action that stands for what was typed (the spell builder's `Add "<typed>" as a one-off ingredient`).
 
-The references' box (MB.154) is the other. A list whose entries can only be
-picked has
-nothing to do with what was typed: a search is not a source. Its caller
-passes `action`, and the list's last row reads its label, "New
-Reference…", with no typed row, and italic as that row is. Last since
-MB.115, the owner's call: the references' box lost its New Reference button
-to this row, so the sources found come first and making one is the way out
-at the end, as an "Add new…" row ends a picker's list; it was the first
-row, "Add a reference", under MB.154. It is there whatever the box holds, a
-blank box included, so ArrowDown or the chevron opens the list even before
-any suggestion has arrived, on this row alone until one does, and ArrowUp
-opens it on this row. Picking it, by click or by Enter, calls `onSelect`
-and never `onPick`, and leaves the text as typed. The caller still passes an `onCommit`, a no-op for the
-references, so that Enter with nothing highlighted never reaches the form.
+Users: "See All Results" ends the ingredient search's dropdown when there is another page; "New Reference…" ends the references box, whose entries can only be picked. The caller still passes a no-op `onCommit` there so Enter with nothing highlighted never reaches the form.
 
-**A second pick keeps the text** (a regression MB.154 found and fixed).
-Downshift remembers the last row picked, and with `selectedItem` held at
-`null` the next pick read as that prop changing, so Downshift wrote the null
-item's text, `''`, into the box. A list empties its box on a pick anyway, so
-nothing showed it until the action row, picked twice, emptied a search. The
-state reducer keeps the text on `ControlledPropUpdatedSelectedItem` as it
-does on a click or Enter.
-
-**A browser script must wait a frame between a click and a key.** Downshift
-reports a click's close through an effect, so a key pressed before React
-commits it is handled by the last render, which still has the list open:
-ArrowDown then moves the highlight rather than opening the list. Playwright's
-`locator.press` straight after a pick does this; a person moving from the
-mouse to the keys never does, and with half a second between them the list
-opens every time (traced during MB.154's browser pass). It is not a defect,
-and there is nothing to fix.
+- **A second pick keeps the text.** Downshift remembers the last row picked, and with `selectedItem` held at `null` the next pick reads as that prop changing and writes the null item's text, `''`, into the box. The state reducer keeps the text on `ControlledPropUpdatedSelectedItem` as it does on a click or Enter.
+- **A browser script must wait a frame between a click and a key.** Downshift reports a click's close through an effect, so a key pressed before React commits it is handled by the last render, which still has the list open: ArrowDown then moves the highlight rather than opening the list. Playwright's `locator.press` straight after a pick does this; a person never does. It is not a defect.
 
 ## The select-only box
 
-`ComboboxSelect` (`select.tsx`) is a closed set on the same control and
-list, for a field nothing is typed into: `IngredientForm`'s classification,
-and every closed enum DESIGN.md §14 names. A closed set holding several
-values is its multi-select sibling, below. The owner chose it
-over the native `<select>` during MB.131, so a form's fields share one look
-([`design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)).
-It is Downshift's `useSelect`, the hook for ARIA 1.2's select-only combobox:
-the control itself is the `role="combobox"` element, a `div` in the tab
-order, labelled by the field's label through `aria-labelledby`, with the
-field's hint and error, `aria-invalid` and `aria-required` on it. A press,
-ArrowDown or ArrowUp opens the list on the current choice; the arrows move,
-Enter or Space chooses, Escape closes and keeps the choice, and a letter
-jumps to the choice it starts. Escape on the open list closes the list
-alone: the box marks the key handled (`keepEscapeInList`, `escape.ts`),
-which `useSelect`, unlike `useCombobox`'s typed box, does not, so a modal
-around it does not take the key as a close request and shut, or ask a
-changed form to discard (MB.115). With the list shut, Escape reaches the
-modal as ever. The Modal workshop's `States`, state 'With Pickers', holds both pickers
-in a modal to try it. The DateField's month and year pickers are two of these
-boxes ([`date-field.md`](date-field.md)).
+`ComboboxSelect` (`select.tsx`) is a closed set on the same control and list, for a field nothing is typed into: every closed enum. It replaces the native `<select>` so a form's fields share one look ([`ingredients.md`, "A closed set wears the combobox"](../design-decisions/ingredients.md#a-closed-set-wears-the-combobox)). The DateField's month and year pickers are two of these ([`date-field.md`](date-field.md)).
 
-| Prop                 | Meaning                                                                                                                                                                                                                                                                                                                                |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                                                                                                                                                                                                                                                  |
-| `label`              | What the box is called, and its list's name, "Classification choices".                                                                                                                                                                                                                                                                 |
-| `value`/`onChange`   | The chosen value, held by the caller.                                                                                                                                                                                                                                                                                                  |
-| `choices`            | `{ value, label, icon?, disabled?, note? }` in order. One whose value is `''` is the choice that clears the set: "None".                                                                                                                                                                                                               |
-| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                                                                                                                                                                                                                                                               |
-| `required`           | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                                                                |
-| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                                                                                                                                                                                                                                                     |
-| `busy`               | A change this box started is on its way (M12.33): `aria-busy="true"` on the box and a `Spinner` in its indicators. The value shown is the caller's.                                                                                                                                                                                    |
-| `disabled`           | Shut: `aria-disabled="true"` on the box, out of the tab order, deaf to the pointer and the keys (Downshift leaves its handlers off), and drawn as a disabled input is, dashed, unfilled and faded, its field's label dimmed. A div, so `aria-disabled` rather than the attribute. The StockDialog's shut Unit before a form is chosen. |
+- **It is Downshift's `useSelect`**, ARIA 1.2's select-only combobox: the control itself is the `role="combobox"` element, a `div` in the tab order, labelled through `aria-labelledby`. Without `labelId`, `label` is its `aria-label`.
+- **A choice with value `''`** clears the set ("None"). `placeholder` shows while the value is none of the choices and is never in the list.
+- **A disabled choice** is listed where it stands, stepped over by the arrows and refused a press, its `note` on a second line (the coven picker's coven that already holds the entry).
+- **`disabled` on the box** is `aria-disabled="true"`, out of the tab order, deaf to the pointer and keys (Downshift leaves its handlers off). It is not the attribute, because Downshift would write `disabled` onto the `div`, where it means nothing.
+- **Ctrl or Cmd keydown on the closed box** sets `preventDownshiftDefault`, so Ctrl+Z, the form's undo ([`field.md`](field.md#undo-and-redo)), is not read as a letter that opens the list.
 
-A choice that is `disabled` (M9.12) is listed where it stands, `aria-disabled`, and
-stepped over by the arrows and refused a press, with its `note` on a second line
-beneath its name: the coven picker's coven that already holds the entry.
+### Escape on a picker's open list
 
-A choice's `icon` (M12.7), a drawn, decorative node such as a form group's
-[`FormIcon`](form-icon.md), shows before its label in its row and in the closed
-value, in the same `combobox__icon` span the suggesting box uses: `aria-hidden`
-and outside the accessible name. The type-ahead box passes it on to its rows
-too; the combobox knows no icon set.
-
-A Ctrl or Cmd keydown on the closed select is not Downshift's to take: its
-handler sets `preventDownshiftDefault`, so Ctrl+Z, the form's undo
-([`field.md`](field.md#undo-and-redo)), is not read as a letter to search for
-that opens the list.
-
-The chevron is drawn inside the control and hidden from assistive
-technology, since the whole control is the one target. The control takes the
-focus ring itself, where a suggesting box draws it for its inner text.
+`useSelect` closes the list but lets the key through, unlike `useCombobox`'s typed box, and inside a modal the `<dialog>` then takes it as a close request, shutting the modal or asking a changed form to discard. The box marks the key handled (`keepEscapeInList`, `escape.ts`), so the dialog's cancel does not fire while Downshift's own handler still closes the list. With the list shut, Escape reaches the modal as ever. The multi-select does the same.
 
 ## The type-ahead box
 
-`ComboboxTypeahead` (`typeahead.tsx`) is a closed set chosen by typing,
-react-select's single select: the owner's call in MB.115 for the curated
-values' groups, where a select-only box made the admin scroll for one among
-many. `GroupedValueForm`'s group field takes it through `SelectField`'s
-`typeahead`, and `GroupedValueList`'s group filter once hydrated, with its
-clear. It is the typing box above over the set's choices, not a third
-copy of the list: the text is its own, each choice is a row whose value is
-its label and whose `key` is the choice's value, and it passes
-`offerTyped={false}`, `highlightFirst` and `noun="choice"`, so the list
-is "Tradition choices" and holds nothing but choices. It is imported from
-its own file, `@/components/Combobox/typeahead`, since it imports the
-folder's index and the lint refuses an import cycle.
+`ComboboxTypeahead` (`typeahead.tsx`) is a closed set chosen by typing, react-select's single select, for where a select-only box makes a person scroll for one among many (`GroupedValueForm` through `SelectField`'s `typeahead`, `GroupedValueList`'s group filter). It is imported from `@/components/Combobox/typeahead`, not the folder's index, because it imports the index and the lint refuses an import cycle. It matches what a person types against a label they read, so it folds in their locale, not with the ingredient form's `fold` (which folds as the database does).
 
-- **Typing narrows the list** to the choices whose label holds the text,
-  whatever its case and wherever in the name. While the text is the chosen
-  label itself, nothing is narrowed: a box holding a choice opens on every
-  choice, as a select does.
-- **The first row is highlighted** as the list opens and narrows; the arrows
-  move, Enter or a click chooses, and Escape closes without choosing. A
-  press on the box opens it, as Downshift's input click does.
-- **Only a choice is ever the value.** Typing reports `''` as soon as the
-  text names no choice in full, and the choice once it does, in any case, so
-  "mockish" typed out chooses Mockish; left, the box reads the choice's own
-  label. Text naming no choice stays in the box, so what was typed is not
-  lost, while the value is none: a required field then shows its error on
-  save, as one never chosen does (`SelectField`, [`field.md`](field.md)).
-- **A pick or a value set from outside writes the choice's label** into the
-  box, unless the text already names it.
-- **A choice may carry a `qualifier`** (M6.16, a member's role): its row reads
-  the label with the qualifier in brackets, "Fixture B (Member)", as the
-  ingredient form's Form rows read "Wax (Substance)", and once chosen the box
-  shows the label with the qualifier after it, muted, its detail in the
-  tooltip ("A qualifier", below). The text a pick writes is still the label,
-  and typing matches the label alone, never the qualifier. The qualifier
-  shows while the box reads the chosen label as written; typed over in
-  another case, the box is being typed in and shows none.
-- **A choice may carry an `icon`** (M12.7, a form group's icon): drawn
-  before its label in its row, and once chosen ahead of the text in the box,
-  in the `combobox__icon` span, `aria-hidden`, through the suggesting
-  box's `icon` prop. It shows under the qualifier's reading: while the
-  box reads the chosen label as written, and not while it is typed in.
-- **With `clearable`, a clear** sits on the control's right before the
-  chevron, as a list's does, offered while the box holds text or a choice and
-  hidden in its place while it does not, so the box keeps one width: it
-  empties both and leaves the focus in the box.
-- **`onSettle` hears the value once the person is done with the box**, never
-  while they type: on a pick from the list (the choice's value), on the
-  clear (`''`), and on leaving the box (the choice its text names in full,
-  or `''`). It is called whether or not the value changed. A list filter
-  applies on it, comparing it with the choice the page shows, so typing
-  "mock" opens no list on the way to "Mockish" (MB.115, the owner's call;
-  [`filter-form.md`](filter-form.md)). `onChange` still hears every change,
-  typing included, for the caller's own state.
-
-| Prop                 | Meaning                                                                                                                                        |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                                              |
-| `label`              | What the box is called, and its list's name, "Tradition choices".                                                                              |
-| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                                     |
-| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing.                      |
-| `choices`            | `{ value, label, qualifier?, icon? }` in order; typing narrows them by label. A qualifier and an icon read in the row and, chosen, in the box. |
-| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                                       |
-| `required`           | `aria-required`, as the field marks it.                                                                                                        |
-| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.                         |
-| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                                             |
+- **Typing narrows the list** to the choices whose label holds the text, in any case. While the text is the chosen label itself nothing is narrowed: a box holding a choice opens on every choice.
+- **Only a choice is ever the value.** Typing reports `''` while the text names no choice in full and the choice once it does, in any case ("mockish" chooses Mockish); left, the box reads the choice's own label. Text naming no choice stays in the box, so a required field shows its error on save (`SelectField`, [`field.md`](field.md)).
+- **A choice's `qualifier`** (a member's role) shows after the label, "Fixture B (Member)"; the text a pick writes and the match are the label alone. Qualifier and `icon` show only while the box reads the chosen label as written, not while it is typed over in another case.
+- **`clearable`** puts a clear before the chevron, offered while the box holds text or a choice, hidden otherwise with its room kept; it empties both and leaves the focus in the box. It is a filter's way back to every group.
+- **`onSettle`** hears the value once the person is done with the box, never while they type: on a pick (the choice's value), the clear (`''`), and leaving (the choice the text names in full, or `''`). It is called whether or not the value changed. A list filter applies on it, comparing with the choice the page shows, so typing "mock" opens no list on the way to "Mockish" ([`filter-form.md`](filter-form.md)). `onChange` still hears every change.
 
 ## The multi-select box
 
-`ComboboxMultiSelect` (`multi-select.tsx`) is the select-only box for a
-closed set holding several values, in the order chosen: `IngredientForm`'s
-element since MB.159. It looks as a list field does, react-select's
-multi-select, the owner's call: each value chosen is a chip inside the
-control ahead of the box, the same `ComboboxEntry` a list draws with its ×,
-and a clear, "Clear Element", and the chevron sit on the control's right,
-parted by a line. Nothing is typed and nothing is added by a button: the
-list is the only way in, and it offers only the choices not yet made, so
-none is chosen twice.
+`ComboboxMultiSelect` (`multi-select.tsx`) is the select-only box for a closed set holding several values in the order chosen (react-select's multi-select): each value a `ComboboxEntry` chip. Nothing is typed; the list offers only choices not yet made.
 
-It is Downshift's `useSelect` with `useMultipleSelection`, the pairing
-Downshift documents for a multi-select, rather than keys handled by hand.
-`useSelect` owns the box and its list as `ComboboxSelect`'s does: a press,
-ArrowDown or ArrowUp opens it, the arrows move, Enter or Space chooses,
-Escape closes the list alone, as `ComboboxSelect`'s does, and a letter jumps. `useMultipleSelection` holds the chosen
-list and gives the box Backspace, which takes the last chip. Its own chip
-focus, the arrows moving between chips, is held off (`activeIndex` at -1):
-each chip's × is already a button in the tab order, as every list's is, and
-a second way through the chips would be a second tab model for one look.
-
-- **A choice appends, and the list stays open** for the next, with the row
-  below the chosen one under the highlight, as Downshift's multi-select
-  does. Once every choice is made the list has nothing to offer and does
-  not open.
-- **The control is presentational and the box inside it is the combobox**,
-  as the typed box's is, rather than the whole control as in
-  `ComboboxSelect`: the chips' × and the clear are buttons, and inside the
-  combobox a press or a key on them would be the box's too. The box takes
-  the text's place after the chips. It reads what it holds, "Air, Fire", in
-  visually hidden text, as a select reads its choice, and the placeholder
-  while nothing is chosen. The placeholder stays after the chips, hidden
-  from a screen reader there, while a choice is left, prompting for the
-  next, and goes once every choice is made (the owner's call at MB.115's
-  review). A press on the control's padding or its chevron
-  opens the list as a press on the box does.
-- **An × or the clear leaves the focus in the box**, since the pressed
-  button goes; the box is found by its id, since the caller's ref and
-  Downshift's two already share it.
-- **Each change is announced** in a visually hidden `<output>` named
-  "Element changes", "Added Air", "Removed Air" or "Cleared Element", as a
-  list field's are (WCAG 4.1.3).
-- **A choice may carry a count and be disabled** (M12.4), for a filter that
-  shows how many entries each value would leave. A row reads "Fire 9": the
-  count follows the label in its own span, small and muted with no brackets (as the facet panel's are), after a space that is a text node,
-  because an accessible name drops a space a span begins with. `hideZeros`
-  leaves out a row whose count is 0, and a choice's own `disabled` makes a
-  row that is listed but cannot be chosen. A disabled row is truly disabled (Downshift's
-  `isItemDisabled`: `aria-disabled`, skipped by the arrow keys, no choosing
-  by click or key), is listed after every row that can be chosen so the keys
-  meet those first, and keeps its text's ink rather than being dimmed. The list
-  closes once only disabled rows remain, as it does with none left; with
-  `hideZeros` and every count 0 there is nothing to list. A value
-  already chosen is a chip, never a row, so a chosen zero-count value stays
-  removable. `count`, `disabled` and `note` are the multi-select's: the
-  select-only box ignores them.
-- **A chip can carry an icon, a count, a loading mark and an outlined look**
-  (M12.4); see "An entry".
-
-| Prop                 | Meaning                                                                                                                                  |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                                                    |
-| `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's.                                                |
-| `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.                                                   |
-| `choices`            | `ComboboxChoice`s in order: `value`, `label`, and optionally `icon`, `count`, `disabled`, `note`; the list offers those not in `values`. |
-| `hideZeros`          | A choice whose `count` is 0 is left out of the list. Chosen values are never affected.                                                   |
-| `loading`            | The counts are still being read: each chip holds a placeholder where its count will be.                                                  |
-| `chipsOutlined`      | Draws the chips outlined, not filled (see "An entry").                                                                                   |
-| `removeNoun`         | Names each chip's x "Remove {Noun}: {Value}"; without it, "Remove {Value}".                                                              |
-| `placeholder`        | Shown, muted, while a choice is left, after the chips too; never in the list.                                                            |
-| `required`           | `aria-required`, as the field marks it.                                                                                                  |
-| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                                                       |
+- **It is `useSelect` with `useMultipleSelection`**, the pairing Downshift documents. `useMultipleSelection` holds the chosen list and gives the box Backspace, which takes the last chip. Chip focus by arrows is held off (`activeIndex` at -1): each chip's × is already a button in the tab order.
+- **A choice appends and the list stays open.** With nothing left, or only disabled rows left, the list does not open (the empty message says so).
+- **The control is presentational and the box inside is the combobox**, because the chips' × and the clear are buttons, and inside the combobox a press or key on them would be the box's. The box takes the text's place after the chips and reads what it holds ("Air, Fire") in visually hidden text. A press on the control's padding or chevron opens the list.
+- **The placeholder stays after the chips while a choice is left**, hidden from a screen reader there (read, it would sound like a choice); with nothing chosen and nothing left, `emptyPlaceholder` says so.
+- **Each change is announced** in a visually hidden `<output>` (WCAG 4.1.3).
+- **A chip's key is its position joined to its value**: a repeat can be loaded (the form refuses it only on save), and two chips must not share a key.
+- **Counts and disabled rows (a filter).** A row reads "Fire 9": the count follows the label in its own span, after a space that is a text node, because an accessible name drops a space a span begins with. `hideZeros` leaves out zero-count rows. A value already chosen is a chip, never a row, so a chosen zero-count value stays removable. A disabled row is listed after every choosable row so the keys meet those first, keeps its text's ink rather than being dimmed, and says why beside its count.
 
 ## An entry
 
-`ComboboxEntry({ value, errorId?, detail?, qualifier?, colors?, summary?, note?, icon?, count?, loading?, outlined?, removeNoun?, onRemove })`, a named export beside the
-default, is the chip a list passes in `entries`, inside a
-`ul.combobox__entries`. It is MB.133's entry moved out of `IngredientForm`
-so that every list draws the same one:
+`ComboboxEntry`, a named export, is the chip a list passes in `entries`, inside a `ul.combobox__entries`.
 
-- **Its × is a real button**, in the tab order, named "Remove Hedge Fixture"
-  rather than a bare "Remove", a 24px target, with the focus ring, and
-  described by the list's error when `errorId` names this entry, which also
-  draws the error edge on the chip. Backspace in the empty box is the other
-  way to take the last entry.
-- **A long text is cut off, never wrapped or let run.** The chip is no wider
-  than the control, and its text ends in an ellipsis where the control does,
-  so every chip stays one line and nothing scrolls the page sideways at
-  320px. The × never shrinks: the text gives way. The whole text stays
-  reachable three ways: it is the entry's text in the DOM, so a screen reader
-  reads it in full; the × is still named by it; and a tooltip,
-  `role="tooltip"`, shows it above the chip while the entry is hovered or its
-  × has focus. It is InfoTip's bubble and fade, through the `tip-bubble`
-  mixin, stays in the page while closed, faded out and `aria-hidden`, opens
-  only on an entry that is cut off, measured as it opens, closes on Escape
-  (WCAG 1.4.13), waits 150ms before closing as the pointer leaves so the
-  pointer can cross onto it, and breaks an unbroken text anywhere to stay
-  inside its measure. It runs from the chip's left edge as wide as its
-  words, up to InfoTip's measure (18rem, or the screen less its gutters),
-  past the chip and the control alike, the owner's call during MB.126: only
-  being cut off is wrong. `useTip` places it as it opens (Floating UI, `top-start`), shifting it
-  until it is inside the screen, and the qualifier's tip the same way.
-- **A detail tells what the chip leaves out** (MB.164). `detail`, a string
-  such as a linked substitute's "Dried leaf · Compendium entry", sits on its own line beneath the text in the tooltip, at the
-  caption size and in the bubble's own colour, since a muted one is not
-  checked against the bubble's ground. An entry with a detail always has
-  something to show, so its tooltip opens on hover and on its ×'s focus
-  whether the text is cut off or not. The detail also describes the ×, after
-  the list's error when one names the entry, so a screen reader hears it
-  without the tooltip: the reference reads it although the tooltip is
-  `aria-hidden` while closed.
-- **A coloured chip wears its group's pair** (MB.126). `colors`, a group
-  row's `{ colorDark, colorLight }`, sets both on the chip inline through
-  `chipColors()` and marks it `is-coloured`, and the stylesheet gives it
-  the full chip level (2026-10-19; `chip-wash()`, an inset ring for the edge): a wash of
-  the theme's colour, `light-dark()`, its text and × in the stirred label ink that holds
-  4.5:1 (`styling.md`, "Category chips"). It is
-  the wash `chip()` draws, not the mixin, which draws a pill: the
-  chip keeps its shape, padding and 24px ×, so a row mixes coloured and
-  plain chips without a jump. The ×'s and a sortable handle's focus rings
-  are drawn in the same ink as the label (`currentcolor`), and the grip in it too;
-  the ×'s hover keeps its own wash and ink, the error edge stays, and a
-  held chip takes the body ink back with the accent's wash. A sortable
-  entry passes `colors` the same way.
-- **A qualifier reads after the text on the tooltip's first line**, in
-  brackets — "Testward (Wards & Fixtures)", a category's group (MB.126), as a
-  picked deity's pill reads its tradition — and as the x's description
-  before the detail, the brackets left out. With one the tooltip opens
-  whether the text is cut off or not, as it does with a detail.
-- **A note says what kind of entry it is, to a screen reader alone.**
-  `note`, "name only" on a substitute typed rather than linked (MB.115), is
-  read in brackets after the text, visually hidden: the eye tells the kind by
-  the link mark a linked entry has and this one lacks.
-- **A summary turns the text into a button** (MB.115); see "A linked
-  entry's summary" below.
-- **An icon, a count, a loading mark and an outlined look** (M12.4), for the
-  filter's chips. `icon` leads the text, `aria-hidden`. `count` follows it as
-  as a small muted number, no brackets, outside the span that is cut off, so a long name loses its tail and
-  never its count, with its space a text node of the label's own so the chip
-  reads "Water 7". `loading` swaps the count for a shimmering placeholder
-  (the list skeleton's `skeleton-shimmer`, still under reduced motion),
-  `aria-hidden`, and `loading` wins over `count`. `removeNoun` names the x
-  "Remove {Noun}: {Value}" (`Remove Element: Water`) and that name is the same
-  whether or not the count has arrived, so a reader never meets a label that
-  changes under them. `outlined` draws the chip as an outline on the card
-  instead of a wash (the `outlined-chip` mixin, `_mixins.scss`); a coloured
-  chip stays washed, since its group's colour is its look.
+- **Its × is a real button**, named "Remove Hedge Fixture" (not a bare "Remove"), described by the list's error when `errorId` names this entry, which also draws the error edge on the chip.
+- **A long text is cut off, never wrapped**, so every chip is one line and nothing scrolls the page sideways at 320px. The whole text stays reachable: the × is named by it, and a `role="tooltip"` shows it while the entry is hovered or its × has focus.
+- **The tooltip is InfoTip's bubble and fade** (`tip-bubble`, `useTip`, [`info-tip.md`](info-tip.md)). It stays in the page while closed, `aria-hidden`; opens only on an entry that is cut off, measured as it opens; closes on Escape (WCAG 1.4.13); waits 150ms before closing so the pointer can cross onto it. It runs from the chip's left edge up to InfoTip's measure (18rem, or the screen less its gutters), past the chip and the control: only being cut off is wrong.
+- **`detail`** (a linked substitute's "Dried leaf · Compendium entry") sits beneath the text in the tooltip, in the bubble's own colour (a muted one is not checked against the bubble's ground). An entry with a detail or a qualifier always has something to show, so its tooltip opens whether the text is cut off or not. The detail describes the ×, after the list's error, so a reader hears it although the tooltip is `aria-hidden` while closed.
+- **`qualifier`** reads after the text on the tooltip's first line in brackets, and as the ×'s description before the detail.
+- **`colors`** sets the group's pair inline through `chipColors()`: its text and × in the label ink that holds 4.5:1 (`styling.md`, "Chips, badges and the solid-fill rule"). It keeps the plain chip's shape and 24px ×, so a row mixes the two without a jump.
+- **`note`** is read in brackets after the text, visually hidden: "name only" on a typed substitute, which lacks the link mark a linked one has.
+- **`count`** follows the text outside the cut-off span (a long name loses its tail, never its count), its space a text node so the chip reads "Water 7". **`loading`** swaps the count for a shimmering placeholder (kept under reduced motion), `aria-hidden`, and wins over `count`. **`removeNoun`** names the × "Remove {Noun}: {Value}", the same whether or not the count has arrived. **`outlined`** draws an outline (`outlined-chip`, `_mixins.scss`) instead of a wash; a coloured chip stays washed.
+- **The order a reader hears** on the ×: the list's error, the qualifier, then the detail. The handle (sortable) reads them before how it moves.
 
 ### An action on an entry
 
-An entry may carry one action button, ahead of its ×: `action`, `{ label, tip,
-icon, onClick, disabled? }` (M12.1, promoting a folk name). It is a real
-button in the tab order, named by `label` and described as the × is, with
-its `tip` shown on hover and focus by [IconTip](icon-tip.md). Its click
-removes nothing and does not touch a sortable entry's handle. A list gives
-one per row or none; the Combobox knows nothing of what it does.
+`action` (`EntryAction`, `types.ts`) is one button ahead of the ×, named by `label`, described as the × is, its `tip` shown by [IconTip](icon-tip.md). Its click removes nothing and does not touch a sortable entry's handle. A list gives one per row or none; the Combobox knows nothing of what it does.
 
 ## A linked entry's summary
 
-`summary`, `{ label, content }`, is what a linked entry opens: IngredientForm
-gives one to each substitute that links an ingredient
-([`ingredient-form.md`](ingredient-form.md), "A linked substitute's
-summary"). The chip's text becomes a button, `.combobox__entry-open`, led by
-a link mark (`LinkIcon`) in the accent, the text in the body ink with no underline at rest (underlined
-while its summary is open; the owner's call, 2026-10-19), both
-in the accent's hover when pointed at; it is named by the text, described as
-the × is, and says it opens a dialog and whether it is open
-(`aria-haspopup="dialog"`, `aria-expanded`, `aria-controls` while open).
-A press opens a non-modal `<dialog open>` named `label`, after the button in
-the chip, so the Tab order runs from the text into the panel and on to the ×.
-`content()` is called only while it is open, so what it holds may ask the
-server then. The behaviour is `useEntrySummary` (`summary.ts`):
+`summary`, `{ label, content }`, is what a linked entry opens: `IngredientForm` gives one to each substitute that links an ingredient ([`ingredient-form.md`](ingredient-form.md), "A linked substitute's summary"). A press opens a non-modal `<dialog open>` after the button in the chip, so Tab runs from the text into the panel and on to the ×. It opens by attribute, not `show()`, so the browser gives it no Escape of its own. `content()` is called only while open, so it may ask the server then. The behaviour is `useEntrySummary` (`summary.ts`), placed by `useListPosition` with `matchWidth: false`.
 
-- **It shuts four ways**: a second press of the button; Escape, from the
-  button or anywhere in the panel, which hands the focus back to the button;
-  a press anywhere else, on the capture phase, the focus left where the press
-  put it; and the focus moving out of both the button and the panel, by Tab
-  or otherwise. A blur to nowhere, a press on the panel's own text, keeps it.
-- **Escape is cancelled** (`preventDefault`). A modal `<dialog>` turns an
-  Escape nobody cancelled into its own `cancel` event, and the form's modal
-  answers that by asking to close with unsaved changes; cancelled, the key
-  shuts the panel alone, and the next Escape reaches the modal. Checked in
-  Chromium inside a modal `<dialog>`.
-- **It is placed by `useListPosition`**, as an open list is, with
-  `matchWidth: false`: beneath the chip, flipped above when there is more
-  room there, kept off the screen's edge, fixed rather than absolute so the
-  control and the modal clip nothing, and as wide as its words up to a tip's
-  measure, scrolled within the room it has.
-- **The tooltip stays shut while it is open**, since the panel says more,
-  and a press of the button closes an open tooltip.
+- **It shuts four ways**: a second press of the button; Escape, which hands the focus back to the button; a press anywhere else, on the capture phase; and the focus leaving both the button and the panel. A blur to nowhere, or a press on the panel's own text, keeps it.
+- **Escape is cancelled** (`preventDefault`): a modal `<dialog>` turns an Escape nobody cancelled into its own `cancel` event, and the form's modal asks to close with unsaved changes. Cancelled, the key shuts the panel alone and the next reaches the modal.
 - **A sortable entry takes none**: its text is already its handle.
 
 ## A sortable list
 
-`ComboboxSortableEntries({ entries, onMove })`, a named export, is what a
-list whose order means something passes in `entries` in place of its own
-`ul.combobox__entries` (MB.170). Each of `entries` is a chip's props with an
-`id`, its identity as it moves, which a react-hook-form list takes from its
-field array's `id`; `onMove(from, to)` is told of each entry put down in
-another's place, as indexes into `entries`, and the caller reorders. It is
-on dnd-kit's sortable preset, `@dnd-kit/core` and `@dnd-kit/sortable`, a
-standard package rather than a bespoke one, the task's preference
-(DESIGN.md §14, "A library to move a list's entries?"):
+`ComboboxSortableEntries({ entries, onMove })` is what a list whose order means something passes in place of its own `ul.combobox__entries`. Each entry is a chip's props with an `id`, its identity as it moves (a react-hook-form list takes it from its field array's `id`); `onMove(from, to)` gives indexes into `entries` and the caller reorders. It is on dnd-kit's sortable preset, a standard package rather than a bespoke one.
 
-- **Each chip's handle is its grip and its text, one button**, the owner's
-  call: six muted dots ahead of the text, so the chip reads as one and
-  shows it can be moved. It is a real `<button>`, in the tab order before the
-  chip's ×, with the focus ring, named for its entry as the × is, "Move
-  Mars", carrying dnd-kit's `aria-roledescription="sortable"`, and described
-  by the list's error and the entry's detail as the × is, then by how it
-  moves: "Press Space or Enter to pick it up, the arrow keys to move it, and
-  Space or Enter to put it down, or Escape to cancel." Its focus opens the
-  chip's tooltip, as the ×'s does. A list that is not sortable draws its
-  text bare, as before, with nothing to move it by.
-- **By pointer**, the chip is dragged onto another's place, the others
-  sliding aside, and dropped. A mouse or pen drag starts only once the
-  pointer has moved 4px, so a press focuses the handle and opens its tooltip
-  rather than starting one. A finger drags once it has rested on the handle
-  for `TOUCH_DRAG_DELAY_MS` (250ms for now, moving no more than 5px), on
-  dnd-kit's `TouchSensor`; the pointer sensor skips touch pointers so the
-  two never race. The delay is the owner's open question (M10.16), and the
-  one constant in [`src/lib/sortable`](../../src/lib/sortable/index.ts)
-  changes it for every sortable list. `touch-action: none` on the handle lets
-  a touch drag move the chip rather than the page. A pointer's chip is over whichever place's
-  centre is nearest its own, as dnd-kit's closest-centre collision has it.
-- **The chips making way sit where the row will put them.** dnd-kit's
-  `rectSortingStrategy` moves each chip onto the box of the chip whose place
-  it takes, which suits a grid of equal cells; chips of different widths
-  then overlapped, or left gaps, the owner's report during MB.170. So
-  [`flow.ts`](../../src/components/Combobox/flow.ts) lays the chips out as
-  the wrapping row does: in the order the move would give, each as wide as
-  it is, `columnGap` apart along a row and onto the next row once the list's
-  width is used up. The row's shape, its width and gaps, is measured as a
-  move starts (`shapeOf`), from the stylesheet, or from where the chips sit
-  where there is none, as in happy-dom. Each chip making way, and the moved chip
-  under the keyboard, is translated to its place in that layout, never
-  scaled, so what is shown while the chip is held is what the drop leaves.
-- **By keyboard**, Space or Enter lifts the focused chip, and Space or Enter
-  puts it down, or Escape puts it back. Between, Left and Right step it a
-  place along the list, whichever row that place is on; Up and Down jump it
-  a row, to the place on the row above or below whose centre is nearest its
-  own, and stay put from the first row or the last; and Home and End take
-  it to either end. Past either end it stays. The rows are those of the
-  layout the chips have at that moment, `flow.ts`'s, and the key is read by
-  `placeFor`. dnd-kit's own `sortableKeyboardCoordinates` goes by where the
-  chips sit, taking the nearest chip in the arrow's direction, and across
-  wrapped rows of chips of different widths that is not the next one: Left
-  from the second chip on a row landed on the row above, the owner's report
-  during MB.170. So the list's own coordinate getter chooses the place, sets
-  the chip at its place in the layout that makes, and records it as the
-  target, which the list's collision detection returns for a keyboard move
-  in place of the nearest box. A pointer move, which has pointer
-  coordinates, still takes the nearest. The focus stays on the moved chip's
-  handle throughout and after.
-- **Each step is said** in dnd-kit's live region, worded here by the entry's
-  text and place rather than dnd-kit's default, which names the id: "Picked
-  up Mars, at position 1 of 3.", "Mars moved to position 2 of 3.", "Mars put
-  down at position 2 of 3.", and "Move cancelled. Mars is back at position 1
-  of 3." dnd-kit reports a lifted chip over its own place at once, which would
-  talk over the lift, so that one report is left unsaid. The region and the
-  instructions take their ids from `useId`, since dnd-kit's own counter
-  would number a server render and the browser's apart.
-- **Shared with the spell builder's steps** (M10.16): the sensors, the
-  keyboard target with its collision detection, the handle's instructions and
-  this wording live in [`src/lib/sortable`](../../src/lib/sortable/index.ts),
-  decided in the Wave 13 review. Each list keeps its own layout, sorting
-  strategy and arrow keys: the chips flow in a wrapping row, the steps stand
-  in a column ([spell-builder.md](spell-builder.md), "Reordering").
-
-## A qualifier
-
-`qualifier`, `{ text, detail? }`, is what a pick leaves out of the box's
-text (MB.169). `IngredientForm`'s Form box passes a picked form's group,
-"Substance" for a picked "Wax", and its description as the detail. The box only
-draws it. Whether a pick holds, and when an edit drops it, is the caller's
-call.
-
-- **It follows the text, in brackets and muted**, so the box reads as the
-  row picked did, "Wax (Substance)", the owner's call. The muted ink is the
-  row's note's. The text's slot is as wide as the text while a qualifier
-  shows, sized by a hidden copy of the value in a one-cell grid, so the
-  qualifier sits straight after it; the slot is always in the page, so a pick
-  never remounts the box and takes its focus. The qualifier never shrinks: it
-  is a word or two, and a long text gives way first. A press on it puts the
-  caret in the text, as a press on the control's padding does.
-- **It is the box's description.** The input's `aria-describedby` lists the
-  caller's description first, a field's hint and error, then the qualifier's
-  text and its detail. A screen reader hears "(Substance)" without the
-  tooltip, and the reference reads the detail although its tooltip is
-  `aria-hidden` while closed.
-- **The detail is a tooltip**, `role="tooltip"`, in the entry tooltip's
-  bubble and fade, above the control with its left edge on the qualifier's,
-  and no wider than what is left of the control from there. Where the
-  qualifier starts is measured as the tip opens, since CSS alone cannot place
-  a box by one element and bound it by another. On a phone
-  (`$shell-phone-width`) it is centred over the control instead, as wide as
-  the control at most, and wraps: from the qualifier there was too little
-  room left to read (the owner's call). Above, because the list opens
-  beneath the box; on the qualifier's left edge, so the detail reads as the
-  qualifier's own (the owner's call at M6.16's review, 2026-10-12, which
-  replaced MB.115's right edge). It
-  opens while the qualifier is hovered and while the box has focus: the
-  qualifier is not a tab stop of its own, and the box is what the keyboard
-  reaches. Escape closes it (WCAG 1.4.13), as do a blur and the pointer
-  leaving, after the same 150ms the entry's waits. With no detail there is
-  no tooltip.
-- **It gets out of the way of typing.** The first printable key in the box (a
-  one-character key with no Ctrl, Alt or Meta held) closes the tooltip, and
-  so does the list opening, by typing, an arrow key or the chevron. Focus
-  coming back to the box or a hover on the qualifier opens it again. The
-  detail is still the box's description meanwhile, so a screen reader hears
-  it while typing (MB.115).
-- **The open state is `useTip`**, InfoTip's hook (`../InfoTip/use-tip.ts`),
-  shared with `ComboboxEntry`: open while the `canOpen` it is given says there
-  is something to show, closed at once on blur and on Escape anywhere in the
-  document, and after 150ms when the pointer leaves. Combobox kept a copy of
-  its own in `tip.ts` until MB.115 made the two one ([`info-tip.md`](info-tip.md)).
-
-## The debounce
-
-`src/lib/debounce.ts` holds the one debounce a typed lookup waits on:
-`useDebouncedValue(value, delayMs = DEBOUNCE_MS)` returns the value once it has
-stopped changing for 300ms, starting as the first value given so a lookup
-waits on typing and never on mounting. M5.10a built it here because M8.10,
-whose search was to carry it, had not landed; M5.10 and M8.10 adopt it rather
-than a second one.
-
-## Styling
-
-Tokens, mixins and the form primitives only. The control is the `.input`
-primitive opened up as a wrapping flex row, its padding a step down so the
-entries sit inside it. The rule is `.input.combobox__control`, compounded:
-the app emits the primitive as `body .input`, which a lone class loses to, so
-every box stood 8px over `$control-height` beside its button there (found in
-M5.5). The workshop scopes the primitives in `:where()`, which weighs
-nothing, so it never showed; a height check in
-`tests/e2e/admin-compendium.spec.ts` holds the app to it; the ring and the error edge are drawn on the control
-from the box's own states, `:has(.combobox__input:focus-visible)` and
-`.is-invalid`. The multi-select's box takes the text's place and styles,
-`.combobox__input--select`, so the same ring is drawn for it. The list floats beneath at the control's width on
-`modal-surface($shadow-floating)` with the input's edge; a highlighted row is
-a 22% wash of the accent on the card. A bucket's heading is muted small
-capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
-rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
-hovers in the warning's wash and ink. A linked entry's text is a button
-led by a link mark in the accent, the text in the body ink and not underlined
-at rest, both in the accent's hover when pointed at; the accent clears only the 3:1 a mark needs
-on the chip's wash, so the text keeps the body ink (`tests/scss/tokens.test.ts`).
-Its summary is the list's floating surface and edge. A box stands at `$control-height`, level with a text field and a button
-(MB.154): its text line, `$text-height`, is the control's height less its
-1px edge and its `space(1)` padding, and a typed box, a select's value and
-the qualifier's hidden copy all take it. The chip list carries `space(1)`
-above and below, so the first of several rows of chips does not sit against
-the top edge, the owner's call during MB.169; on the list rather than the
-control, as it was, so one row still fits the text's line and a box with
-chips stays at the control's height. Rows
-that wrap sit a step further apart than the items in a row, `space(2)`
-between rows and `space(1)` along one, in the control, the values and the
-chips alike, the owner's call for MB.170, so wrapped chips no longer read as
-one block. A sortable chip's handle is unboxed, so the chip still reads as
-one, with the focus ring and a grab cursor; its grip is the muted ink and
-stands in for the text's left inset. The chip being moved is plain to see
-once picked up, by keyboard or pointer, the owner's call during MB.170: the
-accent's 22% wash that a highlighted row wears, a 2px accent edge, the
-floating shadow, and its grip in the body ink. The accent edge stands in
-for an error's while the chip is held, and the error's comes back on the
-drop; the focus ring around its text is left off meanwhile, since the edge
-already marks it. The chips making way slide on
-dnd-kit's inline transition, which only an important rule outweighs, so
-under reduced motion they step instead. The
-qualifier is the muted ink at the text's size, as a row's note is muted, and its tooltip is the entry's bubble, the
-`tip-bubble` mixin. The × and the indicators fade into
-their hover as `.btn` does, on `theme-transition` and never under reduced
-motion, and draw it on `:focus-visible` as well as `:hover`, so Tab shows
-which one it has reached (MB.150). Every × and indicator is a 24px target,
-WCAG 2.2's minimum, the `$icon-size` token, around a `$glyph-size` mark; a
-tooltip on a cut-off entry stops at `$tip-width`, capped at the window, as
-InfoTip's does (MB.115). The lengths left raw are the control's own geometry
-and say so in a comment: the 6rem the text keeps before it wraps onto a row
-of its own (beside entries, the placeholder's width instead, `--combobox-room` from `room.ts`, in `ch` and never past the row, so the prompt shows whole or wraps under the chips), the list's 20rem height, the category bar's 3px and 5px, the
-grip's half-icon width, and the 1px edges.
-
-A count is the muted ink at the label's size (`.combobox__count` in a
-row, `.combobox__entry-count` in a chip). An outlined chip is the
-`outlined-chip` mixin: the body ink on the card with a 1px edge, `is-outlined`
-on the chip. The loading placeholder is 1.75ch by 0.8em, centred on the chip's
-line, filled with the chip's own ink at low strength so it shows on any chip.
-
-## Stories
-
-[`index.stories.tsx`](../../src/components/Combobox/index.stories.tsx):
-`TwoBuckets`, a form field with the vocabulary and the forms in use, its list open;
-`FolkNameList`, a list's box with its entries inside, an × on each, its suggestions open, a pick that adds and Backspace taking the last; and
-`Sortable`, seven celestial bodies wrapping onto a second row, each moved by its grip
-and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
-Substance, the group in the box and its description in a tooltip, dropped by
-an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an icon on each choice; `Typeahead`, the type-ahead box over five
-traditions, the value shown beneath it; and
-`MultiSelect`, the multi-select box with two elements chosen (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
-`EmptyMessage`, a lookup that settled with no rows, the popup saying so outside the list;
-`Leading`, a caller's own control at the box's start; `LoadingSearch`, a lookup under way, the box
-`aria-busy` with the ring beside the chevron; `LoadingSelect`, the select-only box while its change
-is on its way; `GroupedRows`, an open list with every kind of row (buckets under a group heading
-edged in the group's colour, a count, a disabled row with its reason, the typed row with its mark);
-`EntryChips`, a grid of one chip in each form (Plain, With A Summary, Outlined, With A Count, Count
-Loading, Naming What It Removes, Named By The List Error, With An Action, With An Action Shut, With
-An Icon, With A Qualifier And Detail, Coloured By Its Group);
-`CreateRow`, its list open on "New Reference" last whatever is typed, saying beneath the
-box each time it is picked; and `QualifierInForm`, the ingredient form's Form box under a Name
-field, "Wax" picked under Substance with a detail long enough to wrap, whose
-tooltip opens on focus or hover above the box from the qualifier's left edge. The suggestions are fixed, so typing
-filters nothing. Each story's box sits in a field of its own, its label above it as
-a form draws one, and the stories that open a list do it by pressing the
-chevron on mount, as a person would (`.storybook/press.ts`).
-
-## Testing
-
-The empty message has its own block in the same file: the message shown outside the listbox with the status reading it, none while pending, blank or unset, and the count kept once rows arrive.
-
-`tests/components/Combobox/index.test.tsx` renders the box with fixed
-suggestions and asserts: the box closed until something is typed; the rows,
-their buckets and the typed row, which echoes what was typed and comes first;
-headed rows grouped under their headings in first-seen order, and two
-same-named rows under different headings told apart and counted; a row's
-accessible name carrying its label and note; picking by keyboard and by
-click, and the typed row as `null`; the action row last with no typed row, there with a
-blank box and with no suggestions, calling `onSelect` by click or keyboard
-and never `onPick`; the typed row withheld under `offerTyped={false}`, the
-suggestions still shown, Enter still handed to `onCommit`, and the list shut
-when it would have been the only row; Enter handed to `onCommit` with the
-list open or closed, and otherwise closing the list or reaching the form;
-Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape,
-blur and a pick keeping the text, Escape prevented on the open list and on the empty message, and not on a closed box
-holding text; a box with no source never opening; the
-status region's count, and its busy and empty states; the qualifier read as
-the box's description after the field's own, a press on it putting the caret
-in the text, its detail's tooltip on hover
-and on the box's focus, closed by Escape and blur, and closed by a
-printable key and by the list opening, the detail still the box's
-description; the entry's ×, its
-tooltip on a detail and none on a text that fits without one, and its error
-read by its ×; a cut-off text's tooltip and where the list opens need layout,
-which happy-dom has none of;
-a linked entry's summary (MB.115), opened by its text alone, a typed
-entry having nothing to press, and shut by a second press, by Escape from
-inside it, cancelled and the focus handed back, by a press outside it and
-by the focus leaving it; the
-select-only box, its name, placeholder, list and choices, "None" among them,
-chosen by the keyboard, the arrows opening and moving, Enter choosing and
-Escape closing on what it had; the multi-select box, its name and
-placeholder, chips inside the control in the order chosen, the list
-offering only what is left and staying open, the arrows, Enter, Space and
-Escape, Backspace taking the last, an × and the clear, a press on the
-control opening it, its announcements naming each change, and nothing to
-offer once every choice is made; and a sortable list, each chip's handle
-named for it ahead of its ×, described by how it moves, a move by Space or
-Enter and the arrows announced at each step with the focus kept on the moved
-chip and the handle pressed while held, Escape putting it back, a move by
-pointer, and a press or a lift put straight back moving nothing; and, on
-wrapped rows of chips of different widths, one case a direction — Right a
-place along the list onto the next row, Up a row to the nearest place — Home
-and End to either end, and nothing past the first or last row. A row's or a
-chip's colours, the caret placed by a press on the control, the qualifier's
-place and brackets, the list's width, its fixed position and its room, and
-the chips' layout while one is held are presentation, owned by the workshop
-story and the Playwright scan. Role and label queries only, in the `dom`
-project.
-
-happy-dom lays nothing out, and dnd-kit finds where a chip may go from each
-chip's box, so `tests/support/sortable.ts` gives every chip one, on one
-line 100px apart, or with `wrapChips` as wide as its text and wrapped onto
-rows as the control wraps them, and drives a move: `moveByKeyboard` waits a task after
-each key, since the keyboard sensor listens a task after the lift, and
-`dragByPointer` waits out the 50ms after a drag in which the sensor
-swallows every click, so that it swallows no later test's.
-
-`tests/components/Combobox/typeahead.test.tsx` covers the type-ahead box:
-a required text combobox opening on a press with every choice and no typed
-row; typing narrowing the list in any case and anywhere in the name; the
-first match highlighted, the arrows moving and Enter choosing; a click
-choosing and Escape closing without choosing; a box holding a choice opening
-on every choice; and the value `''` while the text names no choice, the
-choice once it names one in any case, and its label written in as the box
-is left; and its clear, out of the accessibility tree and the tab order while
-the box is empty but still drawn, offered while it holds something, emptying
-it and keeping the focus; a qualified choice read with its qualifier in the
-row, describing the chosen box by it, and matched by its label alone; and
-`onSettle`, heard on a pick, the clear and
-leaving the box, with the choice the text names or `''`, and never while
-typed. The control's width, which happy-dom does not lay out,
-was measured in the workshop at MB.115: one width empty, mid-typing, chosen
-and cleared.
-
-`tests/components/Combobox/counts.test.tsx` covers M12.4's additions in the multi-select, the typed box and the chip: a row's and a chip's name carrying the count ("Fire 9"); `hideZeros` leaving a zero-count row out (and every row, with the box staying, when all are zero); a chosen zero-count value staying removable; the loading placeholder hidden from a reader and the x's name unchanged when the count arrives; and the icon and the outlined look on a chip.
-
-`tests/lib/debounce.test.tsx` covers the hook with fake timers.
-
-Accessibility is asserted in Playwright once a page holds the form, as
-[`ingredient-form.md`](ingredient-form.md) says; M5.5's
-`tests/e2e/admin-compendium.spec.ts` carries the first scan, with a lookup's
-list open in the compendium form's modal. It found the group role on an
-`li`, since fixed, and passes.
-
-## Placing the list
-
-### List placement
-
-The list sits beneath the box, as wide as its anchor (a list field's whole row, its box and Add together, or the box alone), and never off the screen: it flips above when there is more room there and is no taller than the room it has. It uses Floating UI rather than measuring by hand, since the flip, the room, and following a scroll or resize while open are its own. It is fixed rather than absolute, so a scrolling ancestor such as a modal cannot clip it. An entry's summary opens on the same placement, as wide as its own content (`matchWidth: false`). MenuButton's menu opens on the same rules from its button's end edge (`placement: 'bottom-end'`), or its start edge when the caller asks for `auto` and the button is in the window's start half, further off it (`gap`) and as wide as its items.
-
-### Bottom bar room
-
-The phone's fixed bottom bar takes room from the foot of the window, so a list that would open behind it flips above. The room is measured rather than restated from the Sass tokens, because the bar's height includes the device's safe area, which only the browser knows. The bar is found by its class, the one name the shell's own stylesheets already key on (`html:has(.section-nav)`), rather than a prop threaded through every Combobox, and is read when a list is placed, so the bar appearing at a narrower window is picked up on the next resize.
-
-### Followed only while open
-
-Every box's list is always in the page, as Downshift asks, and a closed one has nothing to follow.
-
-### The popup
-
-The popup holds a box's listbox and, beneath it, its message when there is nothing to list; it is the one element that is placed, so the two move together. Unwrapped (a typed box that says nothing, `empty={false}`), it is the listbox alone, placed itself. Downshift counts only the input, the toggle and the listbox as inside, and closes on a press anywhere else, the message included. The popup does not scroll: Downshift scrolls a highlighted row into view within the listbox element, so the listbox is the scroller and the popup only the panel.
-
-## Sortable chips
+- **Each chip's handle is its grip and its text, one button**, named for its entry ("Move Mars"), described by the list's error and the entry's detail, then by how it moves. Its focus opens the chip's tooltip. A list that is not sortable draws its text bare.
+- **By pointer**, a mouse or pen drag starts after 4px of movement, so a press focuses the handle and opens its tooltip rather than dragging. A finger drags after resting `TOUCH_DRAG_DELAY_MS` (250ms, moving no more than 5px) on `TouchSensor`; the pointer sensor skips touch so the two never race. The constant in [`src/lib/sortable`](../../src/lib/sortable/index.ts) sets it for every sortable list. `touch-action: none` on the handle lets a touch drag move the chip, not the page.
+- **By keyboard**, Up and Down jump a row to the place whose centre is nearest, and stay put from the first or last row; Left and Right step one place whichever row; past either end the chip stays. The focus stays on the moved chip's handle.
+- **Each step is said** in dnd-kit's live region, worded by the entry's text and place, not dnd-kit's default id. dnd-kit reports a lifted chip over its own place at once, which would talk over the lift, so that report is left unsaid. The region and instructions take ids from `useId`, since dnd-kit's counter would number a server render and the browser's apart.
+- **Shared with the spell builder's steps**: the sensors, keyboard target with its collision detection, handle instructions and wording live in `src/lib/sortable`. Each list keeps its own layout, sorting strategy and arrow keys: chips flow in a wrapping row, steps stand in a column ([spell-builder.md](spell-builder.md), "Reordering").
 
 ### Sortable layout
 
-dnd-kit's `rectSortingStrategy` moves each chip onto the box of the chip whose place it takes, which suits a grid of equal cells; chips of different widths then overlap or leave gaps. The wrapping row of `.combobox__entries` is therefore worked out by hand from the chips' widths and the row's shape, measured as a move starts, so a chip making way lands where it will sit once the move is put down. Sub-pixel widths sum a hair past the row a browser still fits them on. A gap the stylesheet does not give (happy-dom's) is read off where the chips sit instead.
+dnd-kit's `rectSortingStrategy` moves each chip onto the box of the chip whose place it takes, which suits equal cells; chips of different widths overlap or leave gaps. So [`flow.ts`](../../src/components/Combobox/flow.ts) lays the chips out as the wrapping row does, in the order the move would give. The row's shape (width, gaps) is measured as a move starts (`shapeOf`), from the stylesheet or, where there is none (happy-dom), from where the chips sit. Chips making way are translated, never scaled, so what shows while held is what the drop leaves.
 
-### Sortable keyboard
+The keyboard's next place comes from `flow.ts` (`placeFor`), not dnd-kit's `sortableKeyboardCoordinates`, which takes the nearest chip in the arrow's direction: across wrapped rows of different widths that is not the next one (Left from a row's second chip landed on the row above). The list's coordinate getter records the target, which the list's collision detection returns for a keyboard move in place of the nearest box; a pointer move still takes the nearest.
 
-The keyboard's next place is chosen by `flow.ts`, not dnd-kit's `sortableKeyboardCoordinates`, which takes the nearest chip in the arrow's direction: across wrapped rows of chips of different widths that is not the next one, so Left from a row's second chip could land on the row above. Left and Right step through the list, Up and Down find the row above or below in the layout the chips have now, and Home and End go to either end; past either end the chip stays. The lifted chip goes to its place in the layout it makes.
+## A qualifier
 
-## Escape and the keyboard
+`qualifier`, `{ text, detail? }`, is what a pick leaves out of the box's text: the Form box passes a picked form's group ("Substance" for "Wax") and its description as the detail. The box only draws it; whether a pick holds, and when an edit drops it, is the caller's.
 
-### Escape on a picker's open list
+- **It follows the text, in brackets and muted**, "Wax (Substance)". The text's slot is always in the page, so a pick never remounts the box and takes its focus. The qualifier never shrinks; a long text gives way.
+- **It is the box's description.** `aria-describedby` lists the caller's description first (hint and error), then the qualifier's text and its detail, so a reader hears "(Substance)" without the tooltip; the detail is read although its tooltip is `aria-hidden` while closed.
+- **The detail is a tooltip** (the entry tooltip's bubble and fade), above the control (the list opens beneath) with its left edge on the qualifier's. Where the qualifier starts is measured as the tip opens, since CSS cannot place a box by one element and bound it by another. On a phone (`$shell-phone-width`) it is shifted back inside the window and wraps.
+- **It opens while the qualifier is hovered and while the box has focus** (the qualifier is no tab stop). Escape closes it (WCAG 1.4.13), as do a blur and the pointer leaving, after 150ms. State is `useTip` ([`info-tip.md`](info-tip.md)).
+- **It gets out of the way of typing.** The first printable key (one character, no Ctrl, Alt or Meta; a shortcut is not typing) and the list opening, by typing, an arrow key or the chevron, both close it. Focus returning or a hover reopens it. The detail stays in the description meanwhile.
 
-Downshift's `useSelect` closes the list but lets the key through, unlike `useCombobox`'s typed box, and inside a modal the `<dialog>` then takes it as a close request, shutting the whole modal or asking a changed form to discard. Marking the key handled stops the dialog's; Downshift's own handler still runs after and closes the list. With the list shut, Escape is left alone and closes the modal as ever.
+## The debounce
 
-### Typed box and Escape
-
-On a box with no open list, Escape is the dialog's, unless the "no matches" message is showing. That message is open content Downshift does not know of (it has no rows, so its `isOpen` is false), so Escape closes it alone and goes no further, as on an open list. Otherwise Downshift prevents the key whenever the box holds text; the reducer keeps that text but cannot undo the `preventDefault`, which would stop the dialog's own cancel event.
-
-### Typing always wants the list
-
-Downshift's open callback alone is not enough: it fires only when the open state differs from the props it last committed, so a key landing just after a pick closed the list, before that render committed, read as no change and the list stayed shut. The input's `onChange` therefore sets the wish to open itself.
-
-### Typed box keys
-
-Enter with nothing highlighted is the caller's (a list's add) and never the form's submit. With no caller for it, Downshift closes an open list, and a closed box lets Enter reach the form as a text box does. Backspace or Delete in an empty box takes the last entry, as react-select's does.
-
-## What the list shows
-
-### Grouped match
-
-A typed box narrows a grouped list by the row's own label or the name of the group its row is listed under, so typing a tradition lists its deities and typing a category group lists its categories, beside any row whose own label holds the text. It is one place so every list set under headings narrows the same way, and a row's group is not a second thing a caller forgets to match.
-
-### Row order
-
-The rows show what was typed first, then curated, then in use, flat for Downshift (which numbers them) and bucketed for the headings. A source with one bucket shows no headings; one whose rows carry a `heading` names its own buckets, one per heading in the order the headings first appear since the caller has sorted them, with the rows that have none in a trailing unheaded bucket, keyed by the heading's place rather than its text, which may hold a space. A caller with an `action` has its action row last instead of the typed row first, blank box or not, since what it lists can only be picked: the sources found are what is looked for, and making one is the way out when none is. A caller refusing what was typed has no typed row. The curated headings say where a value comes from: a curated value is the compendium's, since its entries hold nothing else, and one only in use is this coven's own.
-
-### Typed row
-
-A suggestion whose row reads as the text typed, spaces and case aside, already offers it, so the typed row would only repeat it and stand first, where Enter takes the typed text rather than the suggestion's own spelling. It compares the row's text, the label where it has one: "Wax (Animal)" is not "wax", so that typed row stays, a choice the rows do not offer.
-
-### Pick handling
-
-Downshift would select the highlighted row on blur and empty a closed box on Escape; neither is wanted. A pick leaves the text alone: the caller sets it, so a list can empty its box rather than show what it just added. Downshift remembers the last row picked, so with `selectedItem` held at null the next pick reads as the prop changing and would write the null item's text, `''`, into the box. With `keepOpen`, a pick of a row leaves the list open for the next, as the multi-select box's `keepChoosing` does; the action row still closes it, since what it opens is somewhere else.
-
-### `aria-activedescendant`
-
-Downshift writes `aria-activedescendant=""` while no option is highlighted. An empty id points at nothing, and a checker reads it as a broken reference, so the attribute is left out.
-
-## The three boxes
-
-### Select-only box
-
-The hook owns the ARIA (a select-only combobox, as ARIA 1.2 has it) and the keyboard: the arrows, Enter and Space to choose, Escape to close, and a letter to jump to the choice it starts. Ctrl+Z is the form's undo, not a letter to search the list for; Downshift would take it and open the list. A disabled choice is shown and read but stepped over by the arrows and refused a press (a coven that already holds the entry, in the compendium picker). Downshift leaves the click and key handlers off a disabled box and would write `disabled` onto the div, where it means nothing, so the box says it with `aria-disabled` and leaves the tab order instead. Both boxes are floated as the suggesting box's is, so a modal holding one does not stretch.
-
-### Type-ahead box
-
-Its text is its own and narrows the list, and only a choice is ever the value. It is not re-exported from the folder's index, which it imports, since the lint refuses an import cycle. It does not use the ingredient form's `fold`, which keys entries as the database folds them: it matches what a person types against a label they read, so it folds in their locale. A value set from outside, a pick or a reset, writes its label into the box unless the text already names it: typing "mockish" chooses Mockish and keeps what was typed until the box is left. The text narrows the list once it is not the choice's own label, so a box holding a choice opens on every choice rather than on that one. A qualified choice's row reads its label with the qualifier in brackets, as the ingredient form's Form rows read "Wax (Substance)"; the text a pick writes is still the label alone, and the query matches that alone. Text that names no choice is no value: the field holds none, and a required one shows its error on save. Left naming a choice in another case, the box reads its label; the qualifier and icon appear once the box reads its label as written, since mid-typing in another case it is still being typed in. The clear is drawn from the first render, empty or not, so its room is kept while hidden.
-
-### Multi-select box
-
-It is the select-only box on Downshift's `useSelect` with `useMultipleSelection`, the pairing Downshift documents; the values chosen are the chips inside the control ahead of the box, each with its x, and a clear and the chevron on the right, as react-select's multi-select. Nothing is typed and the list offers only what is not yet chosen: when asked, only rows with a count above 0, and a disabled row (the caller's) after the rest, the order otherwise kept, last so that the arrow keys and the highlight that follows a choice meet every chooseable row first. The chips are not Downshift's to focus (held at none), since each already has its x in the tab order; the hook keeps Backspace in the box, which takes the last. A choice keeps the list open for the next, with the row below it under the highlight; a list with nothing left to offer opens to say so, as the typed box says it found nothing, and shuts once only disabled rows are left. An announcement says what the last change did, since a chip appearing or going says nothing itself. The position joins the value as the chip key: a repeat can be loaded (the form refuses it only on save), and two chips must not share a key. The chip box is found by its id rather than held in a ref, as the caller's ref and Downshift's two already share the box. A press on the control's padding or its chevron opens the list; an x and the clear are their own. The control is presentational, since the box inside is what a reader and the keyboard reach and the chips' x and the clear sit beside it, so a press or a key on them is never the box's. The visually hidden text reads the chosen choices as a select reads its choice. The placeholder stays after the chips while a choice is left, prompting for the next, and goes once every choice is made; beside chips it is for the eye alone (`aria-hidden`), as read it would sound like a choice. Nothing chosen and nothing left to offer says so rather than leaving a blank box. The clear is drawn while empty too, hidden, so the control keeps one width. A disabled zero-count row says why beside its count.
-
-## The control and its markup
-
-### Press on the control
-
-The control is the box: a press on its padding or between the entries puts the caret in the text, as pressing a plain input would. The qualifier reads as part of the text, and so does a press where the clear sits hidden, whose room the box keeps: `visibility` passes the press to the indicators' strip, which is the control's own ground.
-
-### Markup choices
-
-The hidden `<label>` is used where the caller names none because Chrome flags a field no label names, an `aria-label` notwithstanding; Downshift ties the two by id. The caller's own leading control sits ahead of the text so the tab order reads as the screen does; pressing a button in it is not a press on the control's ground, so `focusText` leaves it alone and its click still fires, and Downshift sees it inside the box. The text's slot is always in the page, so a pick adding the qualifier never remounts the box and takes its focus. The text input is one character wide of its own so that the slot, not the browser's default of twenty, decides how wide the text is. The field's own description comes first, then the qualifier's, so a reader hears the hint before what the pick adds. On blur, an open list is Downshift's to close; one wanted but empty is not open to it, so the wish is dropped, or the next answer would open the list and pull the focus back from wherever it has gone.
-
-### Indicators and message
-
-The clear is always drawn once the caller has one, hidden while there is nothing to clear, so its room and the separator's stay in the control and typing, choosing and clearing never change its width. The spinner comes after the clear, as react-select draws it, so it sits by the chevron rather than across the clear's held room. The "no matches" message is not an option, so it sits outside the listbox: a reader hears it through the status and would count it as a choice inside the list. The listbox's group is ARIA's own `group`, on a div inside a presentational `li`, since ARIA allows no `group` role on an `li` (axe's `aria-allowed-role`). The status lists what the list holds for a screen reader, as the rows arrive after the typing and nothing else says so.
-
-### Space before a count
-
-The space is a text node of the label's own, because an accessible name drops the one a span begins with.
-
-### Qualifier tip
-
-It opens on the box's focus as well as the qualifier's hover, since the qualifier is no stop of its own and the box is what the keyboard reaches. It gets out of the way of typing: the first printable key and the list opening both close it, and focus or a hover opens it again. The detail stays in the box's description, so a screen reader still hears it. A printable key is one character long; a shortcut is not typing.
-
-### Chips' room
-
-The text keeps room after a list's chips as wide as the placeholder, so the prompt for the next value shows whole, or wraps onto a row of its own under the chips, rather than being cut to a few letters. `ch` is a digit's width, a little wider than the average letter, so the room errs wide. Without chips the text has the row to itself and needs none; a qualified box sizes itself to its text.
-
-## The entry chip
-
-### What the chip does
-
-It is the one chip every list draws, moved here from the ingredient form. A text too long for the control is cut off with an ellipsis and shown whole in a tooltip while the entry is hovered or its x has focus, only when it is cut off, and closed by Escape (WCAG 1.4.13). An entry with a detail always has something to show, so its tooltip opens whether the text fits or not. In a sortable list the text is the handle the chip moves by, a grip ahead of it; the handle is a real button, so it is in the tab order with its focus ring, and dnd-kit's attributes give it a button's role, which it has already. An entry with a summary (a linked substitute) has its text as a button instead, led by a link mark, that opens the summary in a panel beneath the chip; a typed one stays plain text. A sortable entry's text is its handle, so it opens nothing. The tooltip is asked as it opens, and an open summary keeps it shut, saying more. The tooltip runs as wide as its words, past the chip and the control; only being cut off is wrong, and `useTip` keeps it on the screen. The count goes after the text, outside the span that is cut off, so a long name loses its tail and never its count; it is read with the chip's text, the placeholder being for the eye alone, and the space is a text node outside the span so the chip reads "Water 7". The x reads after its name, and the handle before how it moves: the error, the qualifier, then the detail. A group's fill is its own, and outlined chips are the neutral ones. The chip's group colour pair is read by the stylesheet; where a move has carried the chip it is translated only, so a chip keeps its own size wherever it goes. The tooltip is in the page while closed, faded out and `aria-hidden`, so it fades both ways as InfoTip's does; the qualifier sits after the text on its line, in brackets outside the span so the x's description reads the name alone; the detail is referenced by the x so it is read although the tooltip is `aria-hidden` while closed. The summary panel sits in the chip after its button, so the Tab order runs from the text into the panel and on to the x, and is placed beneath the chip, fixed, so the control never clips it. A non-modal dialog is opened by its attribute rather than `show()`, so the browser gives it no Escape of its own and the hook's is the one.
-
-### The linked entry's summary panel
-
-It is opened and shut by a press on the entry's text, placed beneath the chip as an open list is, and shut by Escape, a press anywhere else, or the focus leaving both the chip's button and the panel. Escape hands the focus back to the button and is kept from the modal the form may sit in: a `<dialog>` turns an Escape nobody cancelled into its own cancel, which would ask to close the whole form. A press anywhere else leaves the focus where the press put it, on the capture phase so a press the target stops still counts. A blur to nowhere, such as a press on the panel's own text, does not shut it.
-
-## Styling the box
-
-### Root
-
-Rows that wrap sit a step further apart than the items in a row, since a step of space read as one block.
-
-### Control
-
-The control takes `.input`'s edge, fill and states, as a flex row that wraps: the entries, then the text, then the indicators. The padding comes down a step so the entries sit inside it at the control's height. The rule is compounded with `.input`, whose primitive is `body .input` in the app: a lone class loses to it, and every box stood 8px over `$control-height` there, while the workshop's unweighted frame scope hid it.
-
-### The select-only box's styling
-
-It is weighted with `.input` as the control is, or that rule's caret wins over the whole box, text and padding alike.
-
-### Compact field
-
-The compact text height is the same line off the shorter `$control-height-compact` box.
-
-### List in a field
-
-It uses the box's own caption size, as the text it would put in the box.
-
-### Text slot
-
-It is a one-cell grid: the box takes the rest of the row, as it always has. With a qualifier it is as wide as the text instead, the cell sized by a hidden copy of the value in the box's own font and padding, so the qualifier follows the text. The track can shrink below its content, so a long text gives way inside the control.
-
-### Qualifier detail
-
-It sits above the control with its left edge on the qualifier's (not the right edge), so the detail reads as the qualifier's own. It is placed by `useTip` against the qualifier and kept on the screen: on a phone it is shifted back inside the window rather than centred over the control. It wraps within the measure. It is not beneath the box, as the list opens there.
-
-### Hidden clear
-
-The markup takes the clear and the separator out of the accessibility tree and the tab order; `visibility` takes them from the eye and the pointer.
-
-### Chevron
-
-`aria-expanded` sits on the input, button or control beside the indicator, never above it, so a selector on it cannot reach the chevron; the root carries `is-open` while the list is open, and the flip waits on it.
-
-## Styling the list
-
-### List
-
-It is placed by `useListPosition` (`position.ts`), its position, width and side set inline as there is room; the stylesheet gives its look, and no taller than 20rem, which shows the eight seeded category groups without a scroll, a measure of rows rather than a step of space, or the room it has, `--combobox-list-room`. A row never scrolls it sideways: an unbroken text, such as an address, breaks anywhere instead.
-
-### The popup's styling
-
-With an empty message the popup is the placed, bordered panel and the listbox inside it is a plain list with no panel of its own; without one, the list is the panel. The popup does not scroll: Downshift scrolls the highlighted row into view within the listbox element, so a scroller outside it is never moved and an arrowed-to row stays hidden. The listbox is the scroller and reads `--combobox-list-room`, which the placement sets on the popup and the listbox inherits.
-
-### Rows at the edges
-
-The rows at the panel's top and bottom edges take its inner corners, so a highlight there follows the curve rather than a square inside it. A row is a list's direct child, or the last group's last; one row alone is both first and last, and rounds all four. A group's heading, not a row, is the top of a grouped list. The panel's 1px edge is `floating-panel`'s, on the list or, inset, on the popup.
-
-### Disabled row
-
-It is truly disabled, not dimmed.
-
-## Styling the chips
-
-### Entry chip
-
-It is a filled, square-cornered chip in react-select's shape, neutral since a free-text entry has no group to take a colour from. The x's own target stands in for the right-hand padding; it never shrinks, the text gives way. It is positioned for a tooltip. The entries are a list with no margins, bullets or gap of typography-base's. The entries list has a step more room above the chips than the box's own padding, so the first of several rows does not sit against the top edge; it is on the list rather than the control, so one row still fits the text's line and the box stays at `$control-height`.
-
-### Group-coloured chip
-
-It uses the full level of the group's wash: the wash `chip()` draws, read from the pair `chipColors()` sets. It is not the mixin itself, which draws a pill: the shape, padding and x stay the plain chip's, so a row mixes the two without a jump. The entry has no border, so the edge is an inset ring.
-
-### Dragged chip
-
-The chip being moved is plain to see once picked up: the accent 22% into the card, opaque so it hides what it passes over, a 2px accent edge and the floating shadow, lifted over the chips it passes. The edge stands in for an error's while it is held; the error's comes back on the drop, and its handle still reads it meanwhile.
-
-### Linked entry
-
-Its text is a button that opens its summary, led by a link mark in the accent and underlined, so it reads as something to press and is told from a typed entry, plain text with no mark, by shape rather than colour. The text keeps the body ink, since the accent clears only 3:1 on the chip's wash, the mark's floor, and takes the accent's hover, which clears 4.5:1, when pointed at (`tests/scss/tokens.test.ts`). It is unboxed, so the chip still reads as one, and it shrinks with the chip so the text inside it can be cut off. There is no underline at rest, since the link mark ahead of the text tells a linked chip from a typed one; open, the text is underlined as the panel beneath is this chip's. The summary is placed by `useListPosition` beneath the chip, or above it when there is more room there, as wide as its words up to a tip's measure and scrolled within the room it has.
-
-### Sortable handle
-
-It is unboxed so the chip still reads as one, and it shrinks with the chip so the text inside can still be cut off.
-
-### Entry action
-
-An action on the entry before its x (promote a folk name) has the x's 24px target and glyph, square, and is in the accent a pointer or focus warms, since it makes rather than takes away. Its IconTip wrapper is the chip's flex item.
-
-### The entry's tip styling
-
-The cut-off entry's whole text is in InfoTip's bubble and fade, above the chip from its left edge, as wide as its words up to InfoTip's own measure, past the chip and the control alike; only being cut off is wrong. An unbroken text breaks anywhere to stay inside the measure. The detail line is on its own line beneath the text, in the bubble's own colour, since a muted one is not checked against its ground.
-
-### Count placeholder
-
-Where the count will be while a search runs: the shape and the shimmer are the list skeleton's (`skeleton-shimmer`, `_primitives.scss`); the fill is the chip's own ink at low strength, since a chip is a solid colour the quiet fill would vanish on.
-
-### Chip leading mark
-
-It is a form group's glyph, decorative, clear of the text, and as tall as the text beside it.
+`src/lib/debounce.ts` holds the one debounce a typed lookup waits on: `useDebouncedValue(value, delayMs = DEBOUNCE_MS)` returns the value once it has stopped changing for 300ms, starting as the first value given so a lookup waits on typing and never on mounting. Every typed lookup uses it, so none has a second.
 
 ## Props in detail
 
-- **`ComboboxOption.meta`** is a node rather than text so a caller can draw its words in colour (the spell picker's categories, in their groups' chips). The line stays one line and ends in an ellipsis where it runs long. Only its text counts toward the option's name.
+- **`ComboboxOption.meta`** is a node so a caller can colour its words (the spell picker's categories, in their groups' chips); only its text counts toward the option's name. **`badge`** is information only (the spell picker's In Jar), so a caller gives words a reader can use.
+- **`ComboboxChoice.group`** is a deity's tradition, drawn by the facet box's typing form only and an `optgroup` in the native select.
 
-- **`ComboboxOption.badge`** is information only (the spell picker's In Jar badge); a caller gives words a reader can use.
+## Styling
 
-- **`ComboboxOption.heading`** names the bucket a row is listed under, a category's group (MB.126): a source naming its own buckets, in place of `curated`'s two.
+Tokens, mixins and the form primitives only; the lengths left raw are the control's own geometry and say so in a comment (`index.scss`). Every × and indicator is a 24px target (`$icon-size`, WCAG 2.2's minimum).
 
-- **`ComboboxOption.colors`** is a category's group colour pair; the row is edged in it so the colour its chip will wear is seen before the pick.
+### Control
 
-- **`empty`**: the message of an open list whose lookup has settled with no rows and non-blank text. Left out, the default is No match for "text". Pass a more specific sentence where the caller knows more ("Keep typing to search"), or `false` where saying nothing is right. It is drawn in the popup outside the listbox (it is no option) and read by the status. The typed row counts as a row, so a caller wanting the message passes `offerTyped={false}`. A typed box never closes for having nothing to show.
+The rule is `.input.combobox__control`, compounded: the app emits the primitive as `body .input`, which a lone class loses to, so every box stood 8px over `$control-height`. The workshop scopes primitives in `:where()`, which weighs nothing, so it never showed; a height check in `tests/e2e/admin-compendium.spec.ts` holds the app to it. The select-only box is weighted with `.input` likewise, or that rule's caret wins over the whole box. The chip list's `space(1)` above and below sits on the list rather than the control, so a box with chips stays at the control's height.
 
-- **`clear`**: `empty` while there is nothing to clear. The clear and the separator beside it keep their room but are hidden, out of the accessibility tree and the tab order, so the control's width never changes as it fills or empties.
+### Chips' room
 
-- **`leading`** is a slot rather than a built-in because Combobox knows nothing about forms or what the caller wants pressed. A button given here should be styled `combobox__indicator` to match the others. A press on it is inside the box, so it neither closes an open list nor moves the focus.
+Beside entries the text keeps room as wide as the placeholder (`--combobox-room` from `room.ts`, in `ch`, never past the row), so the prompt shows whole or wraps under the chips instead of being cut to a few letters. `ch` is a digit's width, a little wider than the average letter, so the room errs wide.
 
-- **`action`** is a last row that does something rather than picking a suggestion. It is there whatever is typed, in place of the typed row, and set off in italics as the typed row is. Two callers use it: "New Reference" (MB.154; last since MB.115) makes something new for a list whose entries can only be picked, and "See All Results" (M8.10) applies the search to the list. It is reached by the arrow keys and picked by Enter or a click, which call `onSelect`. It is no result, so the status does not count it.
+### Text slot
 
-- **`offerTyped`**: false for text the caller would refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which says why.
+The text input is one character wide of its own so the slot, not the browser's default of twenty, decides. With a qualifier the cell is sized by a hidden copy of the value in the box's own font and padding.
 
-- **`actionFirst`** puts the action row nearest the box where the list opens beneath it, for an action that stands for what was typed, such as the spell builder's one-off ingredient.
+### Qualifier detail
 
-- **`keepOpen`**: the focus stays in the text after a pick. A single-value box closes on a pick, the default.
+Above the control, never beneath the box, where the list opens.
 
-- **`noun`**: a closed set's are "choice"s.
+### List
 
-- **`icon`** (on `ComboboxProps`) is the type-ahead box's chosen icon, there while the box reads the chosen label, as the select-only box's closed value draws its choice's (M12.7).
+`aria-expanded` sits on the input, button or control beside the indicator, never above it, so a selector on it cannot reach the chevron; the root carries `is-open` while open, and the flip waits on it.
 
-- **`listAnchor`** is the list field's row, its box and its Add together (MB.154).
+### The popup's styling
 
-- **`ComboboxQualifier`** is what a pick leaves out of the text, "Substance" for a picked "Wax" (MB.169).
+The listbox is the scroller and reads `--combobox-list-room`, which the placement sets on the popup.
 
-- **`EntryAction`** promotes a folk name to the display name (M12.1).
+### Rows at the edges
 
-- **`ComboboxEntryProps.qualifier`** is a category's group (MB.126), read as a picked deity's pill reads its tradition. The tooltip then opens whether the text is cut off or not, as it does for a `detail`. **`colors`** is the group colour pair from the row (MB.126), applied as the solid-fill rule asks.
+In a grouped list the top is a heading, so only the last group's last row takes the panel's inner corners.
 
-- **`ComboboxEntryProps.summary`** is a linked substitute's summary (MB.115): the text becomes a button, led by a link mark and underlined, that opens and shuts a small panel anchored to the chip. It is left out of a sortable entry, whose text is already its handle.
+### Entry chip
 
-- **`ComboboxEntryProps.icon`** is a form's group icon (M12.4); `count` is M12.4's count.
+Neutral because a free-text entry has no group to take a colour from. A group-coloured chip has no border, so its edge is an inset ring.
 
-- **`ComboboxChoice.qualifier`** is a member's role (M6.16). **`ComboboxChoice.count`** and **`group`** are M12.4's; `group` is a deity's tradition. **`disabled`** on a select-only box is M9.12's coven picker. **`busy`** on the select-only box is M12.33's.
+### Dragged chip
 
-- **`ComboboxSortableEntriesProps`** is a list whose order means something (MB.170).
+The edge stands in for an error's while held and the error's returns on the drop. The chips making way slide on dnd-kit's inline transition, which only an important rule outweighs, so under reduced motion they step.
 
-- **`ComboboxTypeaheadProps.onSettle`** is for a filter, which applies a choice rather than each letter typed: it compares the value with the one it shows. The settled value is a pick from the list, the clear (`''`), or leaving the box (the choice its text names in full, or `''`). **`clearable`** is a filter's way back to every group.
+### Linked entry
 
-- **`ComboboxMultiSelectProps.hideZeros`** is M12.4's.
+The accent clears only the 3:1 a mark needs on the chip's wash, so the text keeps the body ink (`tests/scss/tokens.test.ts`).
 
-**Forced colours.** The active option (`is-highlighted`) takes a `Highlight` fill with `HighlightText` ink, its count and note inheriting that ink. A chip takes a 1px `CanvasText` border, and the one being dragged a `Highlight` fill. The error edge is an inset shadow, so an invalid box or chip gets a second 1px `CanvasText` line drawn inside its edge as an outline, which the focus ring replaces while the field has focus. A shut select and a disabled chip action are `GrayText` in ink and border. The chip's action and remove buttons take their hover from the `icon-button` mixin.
+### Other
+
+The loading placeholder is filled with the chip's own ink at low strength so it shows on any chip.
+
+## Tests
+
+Tests are in `tests/components/Combobox/` (`dom` project), the sortable driver in `tests/support/sortable.ts`. happy-dom lays nothing out, so tests give the viewport, box, anchor, list and chips the sizes Floating UI and dnd-kit read; `moveByKeyboard` waits a task after each key (the keyboard sensor listens a task after the lift) and `dragByPointer` waits out the 50ms in which the sensor swallows every click. Presentation (colours, caret on a press, qualifier place, list width and position, the chips' layout while held) is owned by the workshop story and the Playwright scan, `tests/e2e/workshop/combobox.spec.ts`.
+
+## Used by
+
+`IngredientForm`, `CategoryPicker`, `FacetCombobox` ([`facet-combobox.md`](facet-combobox.md)), `GroupedValueForm` and `GroupedValueList`, the ingredient search, the spell builder, `WorkspaceSwitcher`, `DateField`, and `MenuButton` (placement only).
+
+## Not here
+
+The text a pick writes, and whether a qualifier holds (the caller). Icon sets. Forms: the box knows nothing of them.

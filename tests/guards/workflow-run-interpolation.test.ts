@@ -20,7 +20,6 @@ function yamlFiles(dir: string): string[] {
   });
 }
 
-/** Every `run` string anywhere in a parsed YAML document. */
 function runScripts(node: unknown): string[] {
   if (Array.isArray(node)) return node.flatMap(runScripts);
   if (node === null || typeof node !== 'object') return [];

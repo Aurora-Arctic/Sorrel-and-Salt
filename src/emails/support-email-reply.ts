@@ -10,8 +10,7 @@ import {
 import { cutSubject, supportTitle } from './parts/support-title';
 import type { SupportEmailReplyProps } from './types';
 
-// Sent to a signed-out visitor when staff reply. It names the request and links to its page, and carries none of the reply:
-// the reply is read on that page, behind the link.
+// Carries none of the reply: it is read on the page behind the link.
 
 const titleOf = (requestSubject: string): string =>
   supportTitle('Reply to your support request', requestSubject);
@@ -49,7 +48,6 @@ export function SupportEmailReply({
   );
 }
 
-/** The reply notice for `to`, rendered to the html and plain text `send` takes. */
 export const supportEmailReplyMessage = defineMessage<SupportEmailReplyProps>(
   ({ requestSubject }) => titleOf(requestSubject),
   SupportEmailReply,

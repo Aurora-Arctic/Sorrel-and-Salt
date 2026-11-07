@@ -17,7 +17,6 @@ export function categoryGroupsOf(ids: readonly string[]): Promise<(CategoryGroup
   return groupsOf(categoryGroups, ids);
 }
 
-/** The ingredient form groups by id, answered as `categoryGroupsOf` answers. */
 export function formGroupsOf(
   ids: readonly string[],
 ): Promise<(IngredientFormGroupRow | NotFound)[]> {

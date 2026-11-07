@@ -4,9 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import DateRangeField from '@/components/DateRangeField';
 import type { DayRange } from '@/components/DateRangeField/types';
 
-// The day-range field: a button showing the range, opening a calendar of two months with quick
-// picks beside it, where the first day picked starts the range and the second ends it
-// (claude-docs/components/date-range-field.md).
+// claude-docs/components/date-field.md
 
 const PICKS = [
   { label: 'First Week', range: () => ({ from: '2026-10-01', to: '2026-10-07' }) },
@@ -112,7 +110,6 @@ describe('DateRangeField', () => {
     render(<Harness initial={{ from: '2026-10-01', to: '2026-10-30' }} />);
     open();
     fireEvent.click(day('3 October 2026'));
-    // The first day starts a new range and leaves the calendar open for the last.
     expect(answer()).toBe('2026-10-03|');
     expect(screen.getByRole('dialog')).toBeVisible();
     fireEvent.click(day('12 October 2026'));

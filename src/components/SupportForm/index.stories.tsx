@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import SupportForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/SupportForm.
 const meta = { title: 'Support / Support Form', component: SupportForm } satisfies Meta<
   typeof SupportForm
 >;

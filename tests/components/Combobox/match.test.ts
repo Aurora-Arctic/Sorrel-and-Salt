@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchesLabelOrGroup } from '@/components/Combobox/match';
 
-// How every grouped list narrows as you type: the category picker and the
-// facet type-ahead both call this, so each proves only that it does.
 describe('matchesLabelOrGroup', () => {
   it.each([
     ['in the label', 'Moon', 'Celestial', 'moo', true],

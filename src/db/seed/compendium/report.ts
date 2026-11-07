@@ -1,7 +1,5 @@
-// What one compendium seed run did, entry by entry, and the lines it
-// prints. The seed builds the report; `scripts/db-seed.ts` prints it and
-// exits 1 when anything was refused, which fails the deploy's seed step and
-// posts the `REFUSED` block on the pull request (migrate.yml).
+// What one compendium seed run did, entry by entry; `scripts/db-seed.ts` prints it and exits 1 when anything
+// was refused.
 
 /** One entry the run met, by its file's path, with the fields the file and the row disagree on. */
 export interface EntryOutcome {

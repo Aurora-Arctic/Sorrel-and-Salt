@@ -5,8 +5,6 @@ import { ShellFrame } from '../../../.storybook/shell-frame';
 import Backdrop from '../Backdrop';
 import ErrorPage from '.';
 
-// Render-only; behaviour is asserted in tests/components/ErrorPage. Each story
-// carries its own `main.page-frame`, as the component does.
 const meta = {
   title: 'Pages / Error Page',
 } satisfies Meta;

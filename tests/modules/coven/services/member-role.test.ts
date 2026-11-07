@@ -9,9 +9,6 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Changing a member's role: owners only, any move between the three
-// roles, an existing member's row and nothing else.
-
 type Role = 'owner' | 'member' | 'viewer';
 
 async function insertCoven(name: string, members: [string, Role][]): Promise<string> {
@@ -55,7 +52,6 @@ describe('updateMemberRole', () => {
     expect((refusal as Error).message).toMatch(/lift the pause first/);
     expect(await roleOf(covenId, B.id)).toBe('member');
 
-    // A role change that is not a promotion to owner still goes through while the pause stands.
     await updateMemberRole(asUser(A), covenId, B.id, 'viewer');
     expect(await roleOf(covenId, B.id)).toBe('viewer');
 
@@ -144,7 +140,6 @@ describe('updateMemberRole', () => {
     await sql`update workspace_members set deleted_at = now(), deleted_by = ${A.id}
       where workspace_id = ${covenId} and user_id = ${C.id}`;
 
-    // D belongs to no coven here; C was removed; the invitee has no account row at all.
     for (const target of [D.id, C.id, '00000000-0000-4000-8000-000000000000']) {
       await expect(updateMemberRole(asUser(A), covenId, target, 'owner')).rejects.toThrow(
         Forbidden,

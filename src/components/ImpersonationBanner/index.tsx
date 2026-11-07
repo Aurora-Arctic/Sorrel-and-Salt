@@ -49,7 +49,6 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
     setPending(true);
     setFailed(false);
     report(undefined);
-    // A refusal answers `error`; a dropped connection throws. Either says so.
     const { error } = await stopImpersonating().catch((thrown: unknown) => ({ error: thrown }));
     if (error) {
       setPending(false);

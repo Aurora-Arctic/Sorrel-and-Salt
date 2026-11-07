@@ -8,9 +8,6 @@ import { assertMembership, firstCovenSlugOf, membershipsOf } from '@/modules/cov
 import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// Whose covens a caller may list: their own, and for a site keeper anyone's, by workspace and role alone, since a keeper still reaches nothing a coven holds.
-// There is one answer per key, in key order, as a DataLoader batch needs; a refused key is an Error in its slot rather than a rejection of the whole batch.
-
 const summary = (answer: Awaited<ReturnType<typeof membershipsOf>>[number]) =>
   answer instanceof Error
     ? answer
@@ -27,8 +24,7 @@ describe('membershipsOf', () => {
   });
 
   it("refuses another member's key in its own slot, leaving the caller's answered", async () => {
-    // Why B's key could have been answered: B holds a membership, and B's own
-    // call finds it.
+    // Why B's key could have been answered: B holds a membership, and B's own call finds it.
     const [bOwn] = await membershipsOf(asUser(B), [B.id]);
     expect(summary(bOwn)).toEqual([{ role: 'member', workspaceId: WORKSPACE_W_ID }]);
 
@@ -39,9 +35,7 @@ describe('membershipsOf', () => {
   });
 
   it('answers a site keeper asking after anyone, each with its workspace', async () => {
-    // Why this is the admin branch and not a membership: E's session carries
-    // the admin role, D holds a membership D's own call finds, and E is not a
-    // member of that workspace.
+    // Why this is the admin branch: E's session carries the admin role, and D's membership is one E is not a member of.
     expect(asUser(E).role).toBe('admin');
     const [dOwn] = await membershipsOf(asUser(D), [D.id]);
     expect(summary(dOwn)).toEqual([{ role: 'member', workspaceId: WORKSPACE_X_ID }]);
@@ -145,7 +139,6 @@ describe('firstCovenSlugOf', () => {
   });
 
   it('answers the paused coven when it is the only one, whose paused page offers Leave', async () => {
-    // D's one coven is X.
     await sql`
       insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
       values (${WORKSPACE_X_ID}, ${D.id}, null, ${D.id}, ${D.id})

@@ -7,8 +7,6 @@ import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { cardInvitationAttempts } from '@/modules/coven/schema/card-invitation-attempts';
 
-// A refused open of a card link is one row per card, account and reason, with a count.
-
 const OWN_COLUMNS = ['id', 'invitation_id', 'user_id', 'reason', 'attempts', 'last_attempted_at'];
 
 const UNIQUE_INDEX = 'card_invitation_attempts_card_user_reason_unique';
@@ -48,7 +46,6 @@ describe('card_invitation_attempts schema', () => {
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** A card, by the admin: no address, coven or role. */
 async function card(hash = 'a'.repeat(64)): Promise<string> {
   const [row] = await sql`
     insert into invitations (kind, token_hash, created_by, updated_by)
@@ -73,7 +70,6 @@ describe('card_invitation_attempts table', () => {
         insertCardAttempt(sql, { invitationId, userId: VISITOR }, ADMIN),
       );
 
-      // 23505 is unique_violation, named: this index refused.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(UNIQUE_INDEX);
     });

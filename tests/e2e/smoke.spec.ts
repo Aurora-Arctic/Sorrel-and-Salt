@@ -10,8 +10,6 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The front door, signed out: reachable without a redirect, nothing sideways at a phone's width, and
-// axe-clean in both themes. Signed in, it swaps only the way in (links are tests/app/page.test.tsx's).
 test('the entry page renders signed out, without a redirect', async ({ page }) => {
   await page.goto('/');
 

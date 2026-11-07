@@ -10,11 +10,8 @@ import type {
   UnknownStory,
 } from './types';
 
-// One entry per v1 story in §10 order, whether or not anything tested it — a
-// story with no test yet is a line on the report, not an omission. Every test
-// tagged `@story-N` counts, so a story may be walked from two files.
+// One entry per v1 story whether or not anything tested it: a story with no test yet is a line on the report, not an omission.
 
-/** A failure anywhere fails the story; a skip anywhere leaves it not fully verified. */
 export function statusOf(states: StoryState[]): StoryStatus {
   if (states.length === 0) return 'untested';
   if (states.some((state) => state === 'failed')) return 'failed';
@@ -64,7 +61,6 @@ const SUFFIX: Record<StoryStatus, string> = {
   untested: ' — no test yet',
 };
 
-/** The one-line tally: zero parts are left out, except the passing count. */
 export function summarizeChecklist({ counts, total }: Checklist): string {
   const parts = [`${counts.passed} of ${total} stories passing`];
   if (counts.failed) parts.push(`${counts.failed} failing`);
@@ -73,7 +69,6 @@ export function summarizeChecklist({ counts, total }: Checklist): string {
   return parts.join(' · ');
 }
 
-/** The stories under their section, sections in name order and stories in §10 order. */
 export function groupBySection(entries: readonly StoryEntry[]): Array<[string, StoryEntry[]]> {
   const groups = new Map<string, StoryEntry[]>();
   for (const entry of entries)
@@ -81,7 +76,6 @@ export function groupBySection(entries: readonly StoryEntry[]): Array<[string, S
   return [...groups].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
-/** The checklist as terminal text: a heading per section, a box per story, the strays, the tally. */
 export function formatChecklist(checklist: Checklist): string {
   const lines: string[] = [];
   for (const [section, entries] of groupBySection(checklist.stories)) {

@@ -8,18 +8,13 @@ import {
   ingredientResolver,
 } from '@/components/IngredientForm/values';
 
-// The ingredient form's resolver: what it adds over LocalIngredientInput, whose own rules are tests/modules/ingredients/validation/ingredient.test.ts's.
-// A variant's pick is not a field of its own: the box that made it is its Form's, so the schema's issue with the pick, or its text, lands on that variant's `form`.
-// Also the one mapping from an issue's path to a field, which the server's issues go through. These are pure functions, so they are called here rather than reached through a render.
+// A variant's pick is not a field of its own: its issue, or its text's, lands on that variant's `form`.
 
 const OPTIONS = { fields: {}, shouldUseNativeValidation: false };
 const SOURCE_ID = '9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
-/** The source a reference row links, as the form holds it. */
 const SOURCE_LINK = { id: SOURCE_ID, isGlobal: true, kind: 'book', title: 'A Herbal' } as const;
-/** A row's compendium attributes, none chosen. */
 const NO_ATTRIBUTES = { nameBasis: '' as const, supports: [] };
 
-/** Testwort, coming in one form, `variant`. */
 const withVariant = (variant: Partial<VariantFormValues>): IngredientFormValues => ({
   ...EMPTY_VALUES,
   name: 'Testwort',
@@ -27,7 +22,6 @@ const withVariant = (variant: Partial<VariantFormValues>): IngredientFormValues 
   variants: [{ ...EMPTY_VARIANT, form: 'Wax', ...variant }],
 });
 
-/** The error at `path` among the resolver's errors, or undefined. */
 const at = (errors: object, path: readonly (string | number)[]) =>
   path.reduce<unknown>(
     (node, key) => (node as Record<string | number, unknown> | undefined)?.[key],

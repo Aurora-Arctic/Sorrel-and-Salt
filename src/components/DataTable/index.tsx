@@ -47,10 +47,6 @@ function SortArrow({ current }: { current: ColumnSort['current'] }): ReactNode {
   );
 }
 
-/**
- * A sortable heading: a link to the column's other direction when the list is sorted by it, and to its first direction when
- * not. Its name says the order in force, "Name, Sorted A to Z"; the arrow is for the eye alone.
- */
 function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): ReactNode {
   const { current, href, labels } = sort;
   return (
@@ -65,7 +61,6 @@ function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): 
   );
 }
 
-/** The sort select's choices: the other orders first, then each sortable column both ways. */
 function sortChoices<Row>(
   columns: readonly StackColumn<Row>[],
   others: StackTableProps<Row>['otherOrders'] = [],

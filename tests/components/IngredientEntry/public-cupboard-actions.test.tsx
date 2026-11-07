@@ -35,7 +35,6 @@ const place = (n: 1 | 2, over: Partial<CupboardPlace> = {}): CupboardPlace => ({
 const INGREDIENT = '00000000-0000-4000-8000-0000000000aa';
 const FLOWER = '00000000-0000-4000-8000-0000000000f1';
 
-/** What Edit Stock reads for a coven: the entry's one form, and a jar of it. */
 const stock = (quantity: number): StockData => ({
   forms: [{ variantId: FLOWER, label: 'Flower' }],
   jars: [
@@ -88,7 +87,6 @@ function show(p: PublicCupboardActionsProps) {
   return render(view(p));
 }
 
-/** The open More menu's choices, read without pressing. */
 function shownChoices(): string[] {
   return within(screen.getByRole('menu', { name: 'More for Testwort' }))
     .getAllByRole('menuitem')
@@ -100,13 +98,11 @@ function choices(): string[] {
   return shownChoices();
 }
 
-/** An item of the three dots' menu. */
 function choose(name: string): void {
   fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }
 
-/** Picks a coven in a dialog's Coven dropdown. */
 function pickCoven(dialog: HTMLElement, name: string): void {
   fireEvent.click(within(dialog).getByRole('combobox', { name: 'Coven' }));
   fireEvent.click(within(dialog).getByRole('option', { name: new RegExp(`^${name}`) }));
@@ -142,8 +138,6 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
-  // The compendium's Edit is the page's main icon for a curator:
-  // its own link, named for the compendium it changes, never folded into the three dots.
   it("draws a curator's Edit in Compendium as the main icon, a link, the other choices in the dots", async () => {
     show(props([place(1, { held: true })], { edit: EDIT }));
 
@@ -153,8 +147,6 @@ describe('CupboardActions on the public page', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
     });
-    // Only the coven's choices are left, in the one Coven section the dots always draw,
-    // Remove among them and so no bin.
     expect(shownChoices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
     const menu = screen.getByRole('menu', { name: 'More for Testwort' });
     expect(within(menu).getByRole('group', { name: 'Coven' })).toBeInTheDocument();
@@ -162,7 +154,6 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('button', { name: 'Remove Testwort' })).not.toBeInTheDocument();
   });
 
-  // The same icon alone: no dots or bin, since the one coven permits nothing there.
   it("draws a curator's Edit in Compendium alone where nothing else is permitted", () => {
     // Why the dots could have shown: the one coven holds the entry, and nothing is permitted there.
     show(
@@ -179,8 +170,6 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('button', { name: /Add/ })).toBeNull();
   });
 
-  // No right to write the compendium means no main icon, whatever else the viewer may do: the
-  // owner's "always" is never hidden in the dots, not shown without permission.
   it('draws no main icon for a coven member who is not a curator, Annotate living in the dots', () => {
     show(props([place(1, { held: true })]));
 
@@ -197,8 +186,6 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('button', { name: /^(More|Remove)/ })).toBeNull();
   });
 
-  // The plus, as the compendium card has it: just before the
-  // pencil, and Add to Cupboard is no longer one of the pencil's choices.
   describe('the plus', () => {
     it('is a menu of both covens where one holds the entry, the holder disabled, with no Add in the dots', async () => {
       const calls = mockWrite<AddCupboardEntryMutation>('AddCupboardEntry', {
@@ -209,7 +196,6 @@ describe('CupboardActions on the public page', () => {
 
       const plus = screen.getByRole('button', { name: /^Add to My Ingredients: / });
       const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
-      // The plus first, then the icons.
       expect(plus.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
@@ -274,7 +260,6 @@ describe('CupboardActions on the public page', () => {
     );
     fireEvent.click(screen.getByRole('menuitem', { name: 'Remove' }));
     const dialog = screen.getByRole('alertdialog', { name: 'Remove from Cupboard' });
-    // One coven holds it, so nothing to ask.
     expect(within(dialog).queryByRole('combobox')).toBeNull();
     press(within(dialog).getByRole('button', { name: 'Remove' }));
 
@@ -333,9 +318,7 @@ describe('CupboardActions on the public page', () => {
     press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
 
-    // The re-read: the first coven no longer holds it, so its confirmation closes.
-    // The close hands the focus back to the three dots, which open their tip a step later (IconTip):
-    // inside an async act, so that update is awaited rather than left outside it.
+    // The close hands focus back to the three dots, which open their tip a step later (IconTip); awaited inside an async act.
     await act(async () => {
       rendered.rerender(view(props([place(1), place(2, { held: true })])));
     });
@@ -345,8 +328,7 @@ describe('CupboardActions on the public page', () => {
     expect(
       within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove' }),
     ).toBeEnabled();
-    // The dots' tip, shown by the focus the first close handed them, fades out as the dialog
-    // takes the focus: its fade timer ends inside an act, not after the test.
+    // The dots' tip fades out as the dialog takes focus: its fade timer ends inside an act, not after the test.
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
     });
@@ -389,8 +371,6 @@ describe('CupboardActions on the public page', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Label' })).toHaveValue('Their Testwort');
   });
 
-  // Edit Stock, first in the dots: the coven card's own dialog,
-  // for a coven that holds the entry and where the role may update stock.
   describe('Edit Stock', () => {
     it('goes first in the dots for a holding coven that may update stock', () => {
       show(props([place(1, { held: true, stock: stock(50) })]));

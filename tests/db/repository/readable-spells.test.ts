@@ -12,7 +12,7 @@ import { useTestDatabase } from '../../support/db/database';
 import { insertSpell } from '../../support/db/insert-spell';
 import { makeSpell } from '../../support/fixtures';
 
-// Who may read which spell, as one matrix of relationship × visibility (DESIGN.md §5; claude-docs/db/spell-visibility.md, "Reading"). Every finder reading a spell or its rows goes through `readableSpells`, so for each cell the direct-id read and both child tables must give the same answer; one that disagreed would be a second rule.
+// Who may read which spell, as one matrix of relationship × visibility (DESIGN.md §5; claude-docs/db/spell-visibility.md, "Reading: one predicate, nine finders, and why the generic ones refuse"). Every finder reading a spell or its rows goes through `readableSpells`, so for each cell the direct-id read and both child tables must give the same answer; one that disagreed would be a second rule.
 // Every refusal first proves the read could have succeeded: the row is there, live, in the coven, and its author reads it through all three reads.
 
 let sql: postgres.Sql;
@@ -29,11 +29,9 @@ type User = typeof A;
 const proofFor = (user: User, workspaceId: string = WORKSPACE_W_ID): Promise<Membership> =>
   assertMembership(asUser(user), workspaceId, { spell: ['read'] });
 
-/** A spell in W with one step and one assigned category, so both child tables hold a row. */
 const spellBy = (author: User, visibility: SpellVisibility): Promise<string> =>
   insertSpell(sql, makeSpell({ visibility, categories: ['Protection'] }), author.id);
 
-/** What each of the three reads says about the spell, for this proof. */
 async function reads(membership: Membership, spellId: string) {
   const [one, steps, categories] = await Promise.all([
     findOneSpell(membership, spellId),
@@ -64,9 +62,7 @@ interface Cell {
   relationship: string;
   author: User;
   reader: User;
-  /** The coven the reader's proof is for: X for D, who belongs to no other. */
   readerWorkspace?: string;
-  /** Soft-delete the spell, after its author has read it, before the reader tries. */
   softDeleted?: boolean;
   readable: Record<SpellVisibility, boolean>;
 }

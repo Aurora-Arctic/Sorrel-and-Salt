@@ -6,9 +6,8 @@ import './index.scss';
 
 // A jar you can press beside its name and words: the recipe page's In the Cupboard and the
 // completion preview draw their lines through it, so the shake and the name's growth are one thing
-// (claude-docs/components/jar-line.md).
+// (claude-docs/components/jar-shelf.md).
 
-/** One `li`: the jar, the name (the Edit Stock button where there is one), an optional control, and the words. */
 export default function JarLine({
   seed,
   kind,

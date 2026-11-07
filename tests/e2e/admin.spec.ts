@@ -6,15 +6,11 @@ import { signInAs } from './session';
 import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
 
-// The admin pages against the built server, for what the story suite (stories/07-admin.spec.ts,
-// 08-email-and-admin.spec.ts) does not walk: layout, the user list and its filters, a curator's refusals,
-// the zodiac filter and the edit stamps. A signed-out redirect is route-protection.spec.ts's.
+// For what the story suite (stories/07-admin.spec.ts, 08-email-and-admin.spec.ts) does not walk. A signed-out redirect is route-protection.spec.ts's.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The curation pages, each at its first tab: a group list is a tab of the list it organises,
-// and Astrology holds the celestial bodies and zodiac signs.
 const CURATION = [
   ['Compendium', '/curator/compendium'],
   ['Categories', '/curator/categories'],
@@ -38,7 +34,6 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
   for (const [name, href] of CURATION) {
     await expect(curatorNav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
   }
-  // Each area draws its own nav and not the other's.
   await expect(page.getByRole('navigation', { name: 'Keepers' })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 
@@ -49,12 +44,10 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['Support', '/keepers/support'],
     ['People', '/keepers/users'],
     ['Invitations', '/keepers/invitations'],
-    // The documents open on the terms of use, their first tab.
     ['Documents', '/keepers/documents/terms'],
     ['Business Cards', '/keepers/business-cards'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);
-  // A tab with a count is named "Support 0": its label, then its count.
   for (const [name, href] of pages) {
     await expect(
       keepersNav.getByRole('link', { name: new RegExp(`^${name}( \\d+)?$`) }),
@@ -64,7 +57,6 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
   await assertNoAccessibilityViolations(page);
 });
 
-// The pages moved, and nothing redirects from where they were: each old address is a 404 where it was asked for.
 test('the old /admin addresses answer 404 to an admin', async ({ page }) => {
   await signInAs(page, 'old-addresses@admin-guard.test', ['discord'], 'admin');
 
@@ -108,24 +100,19 @@ test('the old /admin addresses answer 404 to an admin', async ({ page }) => {
 test('an admin lists the users at /keepers/users, filtered, with their sign-in methods', async ({
   page,
 }) => {
-  // The one account here not yet approved, which the Needs Approval filter
-  // narrows the list to.
   await signInAs(page, 'not-an-admin@admin-users.test');
   await signInAs(page, 'an-admin@admin-users.test', ['discord', 'google'], 'admin');
 
   const response = await page.goto('/keepers/users?query=admin-users.test');
 
   expect(response?.status()).toBe(200);
-  // Users is the People page's first tab, and the one open here.
   const tab = page.getByRole('navigation', { name: 'People' }).getByRole('link', { name: 'Users' });
   await expect(tab).toHaveAttribute('href', '/keepers/users');
   await expect(tab).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('search').getByLabel('Name or Email')).toHaveValue(
     'admin-users.test',
   );
-  // A filter's switch takes Space as a checkbox does, which only a browser's keyboard handling shows,
-  // and applies the moment it changes: the address gains the flag, the list narrows to the one user not
-  // yet approved, and the switch, drawn afresh, has the focus back, so a second Space widens the list.
+  // A filter's switch takes Space as a checkbox does, which only a browser's keyboard handling shows; drawn afresh, it has the focus back.
   const awaiting = page.getByRole('search').getByRole('switch', { name: 'Needs Approval' });
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
   await awaiting.focus();
@@ -138,16 +125,12 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
   await expect(page).toHaveURL(/\/keepers\/users\?query=admin-users\.test$/);
   await expect(awaiting).not.toBeChecked();
 
-  // The filter's two matches, and nothing from admin-guard.test's earlier sign-ins.
   await expect(rows).toHaveCount(2);
   // Anchored on the name and the verified mark's word before it:
   // not-an-admin's address ends the same way.
   const admin = page.getByRole('row', {
     name: /Fixture Person Verified an-admin@admin-users\.test/,
   });
-  // The name, the address, the role, the creation flag, no standing time-out or pause, both sign-in
-  // methods, the terms version signing in agreed to, and the joining date: the account's state as the
-  // row carries it.
   await expect(admin.getByRole('cell')).toHaveText([
     /Fixture Person$/,
     /an-admin@admin-users\.test$/,
@@ -161,13 +144,11 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
     /^Version \d+\.\d+\.\d+$/,
     /\d/,
   ]);
-  // The mark's tip bubble shows on hover, a real browser's CSS.
   const email = admin.getByRole('cell').nth(1);
   const tip = email.locator('.user-list__tip');
   await expect(tip).toBeHidden();
   await email.locator('.user-list__mark').hover();
   await expect(tip).toBeVisible();
-  // So does each sign-in logo's.
   const discord = admin
     .getByRole('cell')
     .nth(6)
@@ -177,7 +158,6 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
   await assertNoAccessibilityViolations(page);
 });
 
-// The Support Timed Out and Access Paused switches narrow the list in SQL to the users a time-out or a pause stands on.
 test('an admin narrows the users to those timed out of support, and to those whose access is paused', async ({
   page,
 }) => {
@@ -202,7 +182,6 @@ test('an admin narrows the users to those timed out of support, and to those who
   await page.goto('/keepers/users?query=admin-filters.test');
   const filter = page.getByRole('search');
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
-  // The three users and the admin, before either switch narrows them.
   await expect(rows).toHaveCount(4);
 
   const timedOut = filter.getByRole('switch', { name: 'Support Timed Out' });
@@ -222,8 +201,7 @@ test('an admin narrows the users to those timed out of support, and to those who
   await assertNoAccessibilityViolations(page);
 });
 
-// A curator reaches every curation page and, under Keepers, Support alone. The Keepers nav leaving the rest out
-// is only what they see; each People, Invitations and Documents tab refuses them itself, and a coven they hold no seat in is a 404.
+// Under Keepers a curator sees Support alone, but the nav leaving the rest out is only what they see: each People, Invitations and Documents tab refuses them itself.
 test('a curator reaches /curator, the curation pages and /keepers with Support alone, and is refused People, Invitations, the documents and a coven', async ({
   page,
 }) => {
@@ -276,11 +254,8 @@ test('a curator reaches /curator, the curation pages and /keepers with Support a
     expect((await page.goto(path))?.status(), path).toBe(403);
   }
 
-  // The standard seed's coven W, which this curator holds no seat in.
   expect((await page.goto(`/coven/${slugify('Whitethorn Coven')}`))?.status()).toBe(404);
 });
-// The zodiac page's one flow, since the celestial bodies' CRUD covers the shared
-// modal: its list read through the address a filter makes.
 test('an admin filters the zodiac signs by part of a name', async ({ page }) => {
   await signInAs(page, 'filter-admin@admin-astrology.test', ['discord'], 'admin');
   const response = await page.goto('/curator/zodiac-signs');
@@ -291,7 +266,6 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   await expect(rows).toHaveCount(13);
   await expect(search.getByRole('combobox')).toHaveCount(0);
 
-  // Aries, Sagittarius and Aquarius hold "ar".
   await search.getByRole('searchbox', { name: 'Name' }).fill('AR');
   await searchButton.click();
   await expect(page).toHaveURL(/\/curator\/zodiac-signs\?query=AR$/);

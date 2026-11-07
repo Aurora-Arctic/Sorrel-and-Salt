@@ -19,7 +19,6 @@ const DeleteOwnIngredientDocument = graphql(`
   }
 `);
 
-/** Delete Ingredient's confirmation, in a dialog. */
 export function DeleteDialog({
   name,
   write,
@@ -44,7 +43,6 @@ export function DeleteDialog({
   );
 }
 
-/** The delete and what follows it, as `useCupboardWrites`'s remove; a refusal closes the confirmation and goes to `onRefused`. */
 export function useDeleteEntry({
   workspaceId,
   id,

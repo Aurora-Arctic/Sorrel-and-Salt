@@ -21,10 +21,7 @@ import { C, E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
-// The link in each mail about a signed-out request, which opens that one request with no session: the mail's step mints the
-// token afresh on every send and stores only its SHA-256 hash, so only the newest mailed link works
-// (claude-docs/design-decisions/m15.48-mailed-link.md, "A link in each mail that opens the request"). The page's
-// 404 is tests/e2e/support-view-link.spec.ts's; the last describe holds every GraphQL answer about the request to carrying neither the token nor its hash.
+// Only the newest mailed link works (claude-docs/design-decisions/support.md, "The mailed link and the signed-out reply"); the last describe holds every GraphQL answer to carrying neither token nor hash.
 
 const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string; html: string }[]);
 vi.mock('@/lib/mail', () => ({
@@ -52,7 +49,6 @@ const ORIGIN = 'http://localhost:3000';
 const mail: SupportNotifier = { origin: async () => ORIGIN };
 const VIEW_LINK = /http:\/\/localhost:3000\/support\/request#([A-Za-z0-9_-]{32,})/;
 const sha256Hex = (token: string) => createHash('sha256').update(token).digest('hex');
-/** Day 6 after a request resolved just now, inside its closing-soon window. */
 const noticeDay = () => Date.now() + 6 * 24 * 60 * 60 * 1000;
 
 beforeEach(async () => {
@@ -67,14 +63,12 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-/** The token in `text`'s view link; fails the test when there is none. */
 function tokenIn(text: string): string {
   const token = text.match(VIEW_LINK)?.[1];
   expect(token, text).toBeDefined();
   return token!;
 }
 
-/** Runs the status mail runs started since the last call, and returns the mails they sent. */
 async function runStatusMails() {
   const runs = startJob.mock.calls
     .filter(([job]) => job === supportStatusMail)
@@ -89,7 +83,6 @@ const hashOf = async (id: string) =>
   (await sql`select view_token_hash from support_requests where id = ${id}`)[0]?.view_token_hash as
     string | null;
 
-/** A signed-out send from `email`, its receipt run, and the token the receipt carried. */
 async function sendSignedOut(email = 'visitor@example.test', subject = 'The Testwort code') {
   await sendSignedOutSupportRequest(
     { about: 'account', email, subject, message: 'It never arrives.' },
@@ -202,7 +195,6 @@ describe('a signed-in sender’s mail', () => {
 });
 
 describe('the GraphQL schema', () => {
-  /** Every scalar field of `type` that takes no required argument, as a selection set; for a sender, without the staff-only fields. */
   function scalarsOf(type: GraphQLObjectType, staff: boolean): string {
     return Object.values(type.getFields())
       .filter((field) => !isObjectType(getNamedType(field.type)))
@@ -235,7 +227,6 @@ describe('the GraphQL schema', () => {
     // Precondition: the walk reaches the support request type.
     expect(fields).toContain('SupportRequest.subject');
 
-    // Query.supportRequestByViewToken is named for the token it takes; it answers the request.
     expect(
       fields.filter(
         (name) => /viewToken|tokenHash/i.test(name) && name !== 'Query.supportRequestByViewToken',
@@ -247,7 +238,6 @@ describe('the GraphQL schema', () => {
     const { id, token } = await sendSignedOut();
     const request = schema.getType('SupportRequest') as GraphQLObjectType;
     const reply = schema.getType('SupportReply') as GraphQLObjectType;
-    // Every scalar a keeper may select, staff-only fields included.
     const selection = `{ ${scalarsOf(request, true)} replies { ${scalarsOf(reply, true)} } }`;
     expect(selection).toContain('errorReference');
     await replyToSupportRequest(asUser(E), id, 'Which code?', mail);
@@ -256,7 +246,6 @@ describe('the GraphQL schema', () => {
       await run(asUser(E), `query ($id: ID!) { supportRequest(id: $id) ${selection} }`, {
         id,
       }),
-      // The signed-out sender has no session; the mailed-link page reads the request through its token.
       { errors: undefined, data: await getSupportRequestByViewToken(token) },
     ];
 

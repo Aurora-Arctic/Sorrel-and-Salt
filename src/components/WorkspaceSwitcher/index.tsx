@@ -32,7 +32,8 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  // A paused coven stays pickable: its layout sends the viewer on to the paused page, which says the same.
+  // A paused coven stays pickable: its layout sends the viewer on to the paused page, which
+  // says the same.
   const choices = workspaces.map(({ slug, name, paused }) => ({
     value: slug,
     label: name,

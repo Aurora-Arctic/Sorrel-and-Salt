@@ -53,20 +53,16 @@ const Contents = ({ sections, pending = false }: ContentsProps): ReactElement =>
   </div>
 );
 
-/** The `/keepers` index. */
 const AdminContents = ({ managesPeople }: AdminNavProps): ReactElement => (
   <Contents sections={adminSections(managesPeople)} />
 );
 
-/** The `/keepers` index as its skeleton: the same words, as plain hidden text. */
 export const AdminContentsPending = ({ managesPeople }: AdminNavProps): ReactElement => (
   <Contents sections={adminSections(managesPeople)} pending />
 );
 
-/** The `/curator` index. */
 export const CuratorContents = (): ReactElement => <Contents sections={CURATOR_SECTIONS} />;
 
-/** The `/curator` index as its skeleton: the same words, as plain hidden text. */
 export const CuratorContentsPending = (): ReactElement => (
   <Contents sections={CURATOR_SECTIONS} pending />
 );

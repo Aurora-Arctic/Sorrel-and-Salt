@@ -1,26 +1,20 @@
 import { marked, merge, UNDER_ENTRY } from './citation';
 import type { CitationKind, CitationPart, ShortCitationFields } from './types';
 
-// A source's Chicago short form ("Fixture, _Testwort Herbal_"): authors' surnames and a short title, for surfaces where the
-// whole entry would not fit. Pure and client-safe beside `citation.ts`, reading its `_…_` marks the same way
-// (claude-docs/db/references.md, "The short form").
+// Reads `citation.ts`'s `_…_` marks the same way (claude-docs/db/references.md, "The short form").
 
-/** The kinds that are part of a larger work, whose title is set in quotation marks. */
 const PART_KINDS: ReadonlySet<CitationKind> = new Set(['chapter', 'article', 'entry', 'web_page']);
 
 /** An editor's, translator's or compiler's role after the names: ", ed.", ", eds.", ", ed. and trans.". */
 const ROLE = /,\s*(?:eds?|trans|comps?)\.(?:\s*(?:,|and)\s*(?:eds?|trans|comps?)\.)*\s*$/i;
 
-/** "et al." closing a list of names, which stands for four or more. */
 const ET_AL = /,?\s+et\s+al\.?$/i;
 
 /** A generational suffix, which is not a name: "Jr.", "Sr.", "III". */
 const SUFFIX = /^(?:Jr|Sr)\.?$|^[IVX]+$/;
 
-/** Between two names after the first: a comma, "and", or both. */
 const NAME_BREAK = /\s*,\s*(?:and\s+)?|\s+and\s+/;
 
-/** The words that begin a surname rather than end a given name: "van", "de la". */
 const PARTICLES = new Set([
   'al',
   'bin',
@@ -44,7 +38,6 @@ const PARTICLES = new Set([
   'von',
 ]);
 
-/** The words a cut title does not end on: "Herbs and", "History of". */
 const DANGLING = new Set([
   'a',
   'an',
@@ -66,14 +59,9 @@ const DANGLING = new Set([
   'with',
 ]);
 
-/** Chicago's limit on a short title, in words. */
 const SHORT_TITLE_WORDS = 4;
 
-/**
- * `fields`' short form as italic or roman parts: surnames (two joined by "and", three in a series, four or more as the first and
- * "et al."), then the short title, italic for a book and quoted for a part. With no authors the title leads, except a
- * reference-work entry, cited "under" its headword. `continued` takes the comma a locator follows, inside the quotation marks.
- */
+/** Four or more authors give the first and "et al."; with no authors the title leads, except a reference-work entry, cited "under" its headword. `continued` puts the comma a locator follows inside the quotation marks. */
 export function renderShortCitation(
   fields: ShortCitationFields,
   continued = false,
@@ -96,15 +84,11 @@ export function renderShortCitation(
   return merge([...lead, ...body]);
 }
 
-/** The short form as one plain string, italics dropped: what a name or a message reads. */
 export function shortCitationText(fields: ShortCitationFields, continued = false): string {
   return plain(renderShortCitation(fields, continued));
 }
 
-/**
- * The surnames `authors` names, or undefined when it names no one. The field is written as a bibliography prints it ("Fixture,
- * Ada, and Bram Testwort"), so the first comma ends the first surname; with no comma it is one name as written.
- */
+/** Written as a bibliography prints it ("Fixture, Ada, and Bram Testwort"), so the first comma ends the first surname; with no comma it is one name as written. */
 function surnames(authors: string): string | undefined {
   let text = authors.trim().replace(ROLE, '');
   const etAl = ET_AL.test(text);
@@ -129,7 +113,6 @@ function surnames(authors: string): string | undefined {
   return names.join(' and ');
 }
 
-/** The surname of a name written uninverted: its last word, with any particle before it. */
 function surnameOf(name: string): string {
   const words = name.split(/\s+/);
   while (words.length > 1 && SUFFIX.test(words[words.length - 1])) words.pop();
@@ -138,10 +121,7 @@ function surnameOf(name: string): string {
   return words.slice(start).join(' ');
 }
 
-/**
- * The title's short form: the main title less a subtitle after a colon or a question, less an initial _A_, _An_ or _The_,
- * cut to four words, not ending on "and", "of" or a comma. `italic` is the title's style, each `_…_` span the other.
- */
+/** Cut to four words, not ending on "and", "of" or a comma. `italic` is the title's style, each `_…_` span the other. */
 function shortTitle(title: string, italic: boolean): CitationPart[] {
   const runs = marked(title.trim(), italic);
   const text = plain(runs);
@@ -170,7 +150,6 @@ function shortTitle(title: string, italic: boolean): CitationPart[] {
   );
 }
 
-/** `runs` up to the plain text's `end`. */
 function cut(runs: CitationPart[], end: number): CitationPart[] {
   const kept: CitationPart[] = [];
   let at = 0;
@@ -182,7 +161,6 @@ function cut(runs: CitationPart[], end: number): CitationPart[] {
   return kept;
 }
 
-/** `runs` as words, split at whitespace, each word the runs it spans. */
 function wordsOf(runs: CitationPart[]): CitationPart[][] {
   const words: CitationPart[][] = [];
   let word: CitationPart[] = [];
@@ -201,18 +179,15 @@ function wordsOf(runs: CitationPart[]): CitationPart[][] {
   return words;
 }
 
-/** A title in quotation marks, the comma a locator follows inside them. */
 function quoted(title: CitationPart[], continued: boolean): CitationPart[] {
   const comma = continued && !asks(title) ? ',' : '';
   return [roman('"'), ...title, roman(`${comma}"`)];
 }
 
-/** Whether a title ends on a question or an exclamation, which takes no comma after it. */
 const asks = (title: CitationPart[]) => /[?!]$/.test(plain(title));
 
 const plain = (runs: CitationPart[]) => runs.map((run) => run.text).join('');
 
-/** A word lower-cased, less the punctuation around it, to compare against a list. */
 const bare = (word: string) => word.toLowerCase().replace(/^\W+|\W+$/g, '');
 
 const roman = (text: string): CitationPart => ({ text, italic: false });

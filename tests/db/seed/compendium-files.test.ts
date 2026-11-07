@@ -10,13 +10,9 @@ import { loadCompendium, pathList } from '@/db/seed/compendium/load';
 import { SOURCES } from '@/db/seed/sources';
 import { fromRoot } from '../../support/paths';
 
-// The guard over the real compendium, database-free: the markdown files under `compendium/` are the seed's only source, so a lane's file meets this check before it merges.
-// The rules themselves, the status gate among them, are broken one at a time on invented entries in compendium/guard.test.ts and compendium/guard-files.test.ts.
-
 const loaded = loadCompendium(fromRoot('compendium'));
 const approved = loaded.files.filter((file) => file.status === 'approved');
 
-/** Every `locator` a value holds, at any depth. */
 function locatorsIn(value: unknown): string[] {
   if (Array.isArray(value)) return value.flatMap(locatorsIn);
   if (value === null || typeof value !== 'object') return [];

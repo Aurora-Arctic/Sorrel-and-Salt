@@ -6,9 +6,9 @@ import { BODY, DISPLAY } from './fonts';
 import { PALETTE } from './palette';
 import { Shelf } from './shelf';
 
-// The two share cards, 1200 by 630 on the dark theme, as the owner approved them (claude-docs/share-card.md, "The design").
+// The two share cards, 1200 by 630 on the dark theme, as the owner approved
+// them (claude-docs/seo/share-card.md, "The design").
 
-/** The side margin both cards keep. */
 const SIDE = 90;
 
 const display: CSSProperties = {
@@ -36,7 +36,6 @@ const page: CSSProperties = {
   color: PALETTE.chalk,
 };
 
-/** The site card's seven vessels and how full each is. */
 const SITE_SHELF: readonly JarShapeName[] = [
   'bottle',
   'hex',
@@ -51,7 +50,6 @@ const SITE_LEVELS = [0.7, 0.45, 0.8, 0.6, 0.35, 0.7, 0.55];
 /** The tagline's first sentence; the rest is the compendium's caveat, which a preview has no room for. */
 const SITE_LINE = `${SITE_TAGLINE.split('. ')[0].replace(/\.$/, '')}.`;
 
-/** `/` and `/compendium`: the site's name and tagline above a shelf of seven jars. */
 export function SiteCard(): ReactElement {
   return (
     <div style={page}>
@@ -106,10 +104,6 @@ const chipIn = (color: string): CSSProperties => ({
   border: `1.5px solid ${color}`,
 });
 
-/**
- * A compendium entry: the site's name and a Compendium eyebrow, the entry's name and formal name, its first
- * categories as chips in their group's colour, and a band along the foot with one segment per group.
- */
 export function EntryCard({ card }: { card: CompendiumShareCard }): ReactElement {
   const shown = card.categories.slice(0, CHIPS);
   const more = card.categories.length - shown.length;

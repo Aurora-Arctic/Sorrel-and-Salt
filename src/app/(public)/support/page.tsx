@@ -23,8 +23,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-// Open to a signed-out visitor, who is offered Sign In in place of the form. An unverified account is
-// sent to confirm its address; a timed-out sender is told when that ends, or that it has no end date.
 export default async function SupportPage({ searchParams }: SupportPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);
   let state: SupportPanelState;

@@ -14,7 +14,6 @@ const READER = 'src/db/repository/select.ts';
 
 const read = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 
-/** Every TypeScript file under `src/`, lint probes aside. */
 function sourceFiles(): string[] {
   const files = inject('repoFiles').filter(
     (file) =>

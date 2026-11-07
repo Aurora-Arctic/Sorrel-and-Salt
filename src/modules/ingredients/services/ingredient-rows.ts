@@ -45,8 +45,7 @@ import type {
 import type { LocalIngredientInput } from '../validation/ingredient';
 import type { ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 
-// What an ingredient write does the same way in either tier, shared by the two services
-// (claude-docs/db/ingredient-children.md, "Ingredient row writes"). `memberships` is none for a compendium entry.
+// `memberships` is none for a compendium entry (claude-docs/db/ingredient-children.md, "Ingredient row writes").
 
 /** The proof that `session` may read coven `workspaceId`'s ingredients, or `undefined` so a batch skips that coven. */
 export async function proofFor(
@@ -79,7 +78,6 @@ export function ingredientColumns(fields: IngredientFields) {
   };
 }
 
-/** The parsed input split into row fields, the lists `resolvePicks` checks, and the child lists as sent. */
 export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
   const { folkNames, substitutes, references, deities, variants, ...fields } = parsed;
   return {
@@ -126,7 +124,6 @@ export async function writeChildren(
   const references = children.references ?? [];
   const categoryIds = children.categoryIds ?? [];
   const variants = children.variants ?? [];
-  // The ingredient's own rows, beside its forms'.
   const parent: ChildOwner = { ingredientId, variantId: null, at: [] };
 
   if (mode === 'add') {
@@ -347,7 +344,6 @@ function pickedForm(
   return name;
 }
 
-/** Pushes an issue at `path`, beside the entry, for each id naming no live category. */
 function refuseDeadCategories(
   ids: readonly string[],
   live: ReadonlySet<string>,
@@ -411,7 +407,6 @@ async function replaceDeities(
   }
 }
 
-/** The live rows `owner` holds of a form-naming child table: the ingredient's own, or one form's. */
 function heldBy<TTable extends typeof ingredientCategories | typeof ingredientSubstitutes>(
   memberships: readonly Membership[],
   owner: ChildOwner,
@@ -486,8 +481,6 @@ async function replaceFolkNames(
 }
 
 /**
- * Writes a new owner's substitutes, each held to `refuseUnlinkable`.
- *
  * @throws {ValidationError} a link the tier rule forbids, pathed to its entry.
  */
 async function addSubstitutes(
@@ -500,8 +493,6 @@ async function addSubstitutes(
 }
 
 /**
- * Brings the owner's live substitutes to exactly `entries` (claude-docs/db/ingredient-children.md, "Ingredient row writes").
- *
  * @throws {ValidationError} a new link the tier rule forbids, pathed to its entry.
  */
 async function replaceSubstitutes(
@@ -548,14 +539,11 @@ async function bringSubstitutesTo(
   }
 }
 
-/** What makes two substitutes one: the ingredient linked, or else the name as written. */
 function keyOf(linkedId: string | null, name: string | null): string {
   return linkedId ? `link:${linkedId}` : `name:${name}`;
 }
 
 /**
- * Refuses each new substitute link the tier rule forbids (claude-docs/db/ingredient-children.md, "Ingredient row writes").
- *
  * @throws {ValidationError} one issue per refused entry, pathed to it or to its `substituteVariantId`.
  */
 async function refuseUnlinkable(
@@ -606,8 +594,6 @@ async function refuseUnlinkable(
 }
 
 /**
- * Writes a new owner's references, each held to `refuseUncitable`.
- *
  * @throws {ValidationError} a reference the tier rule forbids, pathed to its entry.
  */
 async function addReferenceLinks(
@@ -620,8 +606,6 @@ async function addReferenceLinks(
 }
 
 /**
- * Brings the owner's references to exactly `entries` (claude-docs/db/ingredient-children.md, "Ingredient row writes").
- *
  * @throws {ValidationError} a new reference the tier rule forbids, pathed to its entry.
  */
 async function replaceReferenceLinks(
@@ -643,7 +627,6 @@ async function replaceReferenceLinks(
   );
 }
 
-/** The diff both writes share. */
 async function bringReferencesTo(
   write: AuditWriter,
   memberships: readonly Membership[],
@@ -653,7 +636,6 @@ async function bringReferencesTo(
 ) {
   const held = new Map(current.map((link) => [link.referenceId, link]));
   const listed = new Set(entries.map((entry) => entry.referenceId));
-  // A link names one sourced row: the ingredient, or one of its forms.
   const cites =
     owner.variantId === null
       ? { ingredientId: owner.ingredientId }
@@ -678,8 +660,6 @@ async function bringReferencesTo(
 }
 
 /**
- * Refuses each new reference the tier rule forbids, in one read for the list (claude-docs/db/ingredient-children.md, "Ingredient row writes").
- *
  * @throws {ValidationError} one issue per refused entry, pathed to it.
  */
 async function refuseUncitable(
@@ -709,8 +689,6 @@ async function refuseUncitable(
 }
 
 /**
- * Writes a new ingredient's forms, each with its own children, in the order sent.
- *
  * @throws {ValidationError} as `writeVariant` and each child's writer do.
  */
 async function addVariants(
@@ -729,8 +707,7 @@ async function addVariants(
 }
 
 /**
- * Brings the ingredient's live forms to exactly `variants`: kept by `id`, else by folded form, dropped first
- * (claude-docs/db/ingredient-children.md, "Ingredient row writes").
+ * Kept by `id`, else by folded form; dropped rows go first.
  *
  * @throws {ValidationError} as `writeVariant` and each child's writer do.
  */
@@ -789,14 +766,11 @@ function matchVariants(variants: readonly PickedVariant[], current: readonly Var
   });
 }
 
-/** A form as `ingredient_variants_form_unique` folds it, `lower(btrim(form))`. */
 export function foldForm(form: string): string {
   return form.trim().toLowerCase();
 }
 
 /**
- * Inserts `variant` as a form of the ingredient, or rewrites `row` where a column differs, and answers the row's id.
- *
  * @throws {ValidationError} another live form folds alike, reported on that entry's `form`.
  */
 async function writeVariant(
@@ -851,8 +825,6 @@ async function writeVariant(
 }
 
 /**
- * The folk name `folkNameId` of ingredient `ingredientId` and the ingredient's other live folk names, read before a promotion.
- *
  * @throws {NotFound} the ingredient holds no live folk name with this id.
  */
 export async function readPromotedFolkName(
@@ -885,13 +857,9 @@ export async function swapFolkName(
   await write.insert(ingredientFolkNames, { ingredientId, name: previousName });
 }
 
-/** What a collision is reported from: the label and the formal name alone. */
 type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
 
-/**
- * A write that broke one of the coven's unique indexes, as a `ValidationError` on the field that caused it;
- * any other error unchanged (claude-docs/db/ingredient-children.md, "Ingredient row writes").
- */
+/** Other errors pass unchanged (claude-docs/db/ingredient-children.md, "Ingredient row writes"). */
 export async function refuseCollision(
   error: unknown,
   membership: Membership,

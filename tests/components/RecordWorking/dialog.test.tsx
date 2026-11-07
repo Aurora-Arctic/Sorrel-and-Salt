@@ -24,12 +24,10 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The Record a Working dialog: a draft saved from a complete spell's page, or an existing working
-// changed (claude-docs/components/record-working.md).
+// claude-docs/components/record-working.md
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const SPELL = '00000000-0000-4000-8000-000000000002';
-// The coven's members as the server holds them: the box searches them as the user types.
 const MEMBERS = [
   { id: 'u1', name: 'Testa Owner' },
   { id: 'u2', name: 'Mocka Member' },
@@ -37,7 +35,6 @@ const MEMBERS = [
 const RECORDER = { userId: 'u1', name: 'Testa Owner' };
 const STEPS = [{ id: 's1', name: 'Testwort' }];
 
-/** Answers the participant box's search as the server does, with the members whose name holds the text. */
 function mockMembers(users: readonly { id: string; name: string | null }[] = MEMBERS) {
   const asked: RecordWorkingMembersQueryVariables[] = [];
   mockGraphQLQuery<RecordWorkingMembersQuery, RecordWorkingMembersQueryVariables>(
@@ -154,7 +151,6 @@ describe('Record a Working', () => {
 
   it('leaves the members already taking part out of the matches', async () => {
     openButton();
-    // Both names hold the letter, and the recorder already takes part.
     fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
       target: { value: 'a' },
     });
@@ -423,14 +419,12 @@ describe('Edit Working', () => {
     const complete = within(dialog()).getByRole('button', { name: 'Complete' });
     if (enabled) expect(complete).toBeEnabled();
     else expect(complete).toBeDisabled();
-    // The reason is written under the buttons, where a keyboard or touch reader finds it without the tip.
     const reason = within(dialog()).queryByText('Complete on or after 1 January 2999');
     if (enabled) expect(reason).toBeNull();
     else {
       expect(reason).toBeVisible();
       expect(complete).toHaveAccessibleDescription('Complete on or after 1 January 2999');
     }
-    // A draft dated ahead still saves.
     expect(within(dialog()).getByRole('button', { name: 'Save Working' })).toBeInTheDocument();
   });
 

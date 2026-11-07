@@ -3,17 +3,14 @@ import type postgres from 'postgres';
 // The one way a test seeds a refused card open it is not testing the writing of: raw, as `insertStock` is,
 // so setup does not depend on the attempts service (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
-/** One account's refused opens of one card, for one reason. */
 export interface CardAttemptFixture {
   invitationId: string;
   userId: string;
   reason?: string;
   attempts?: number;
-  /** Written already soft-deleted, by `author`. */
   deleted?: boolean;
 }
 
-/** Writes `attempt`'s row stamped by `author` and returns its id. */
 export async function insertCardAttempt(
   sql: postgres.Sql,
   attempt: CardAttemptFixture,

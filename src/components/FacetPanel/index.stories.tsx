@@ -5,9 +5,6 @@ import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
 import type { FacetPanelFilter, FacetPanelProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/FacetPanel. A change is held
-// until Apply Filters or a close, and marks the chips "loading" briefly. Counts are
-// fixed. Narrow the preview below the tablet width for the modal sheet.
 const meta = {
   title: 'Forms / Facet Panel',
 } satisfies Meta;
@@ -57,7 +54,6 @@ const FACETS: CompendiumFacetCounts = {
   withoutForms: 4,
 };
 
-// The coven's counts: Source's two values (one at zero), In Stock and Low Stock Only.
 const COVEN_FACETS: CompendiumFacetCounts = {
   ...FACETS,
   source: [
@@ -92,11 +88,8 @@ function Panel({
   start?: FacetPanelFilter;
   admin?: boolean;
   facets?: CompendiumFacetCounts;
-  /** Open on desktop widths as the story loads, so the layout is seen without a click. */
   open?: boolean;
-  /** The chip whose menu is opened once the panel is, so the menu is seen without a click. */
   menu?: string;
-  /** The viewer's covens, for the In My Covens field. */
   covens?: FacetPanelProps['covens'];
 }) {
   const [filter, setFilter] = useState(start);
@@ -104,7 +97,6 @@ function Panel({
   const timer = useRef(0);
   const frame = useRef<HTMLDivElement>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
-  // Press Filters once hydrated, on the wide layout only (below it the sheet is modal).
   useEffect(() => {
     if (!open || !window.matchMedia(WIDE).matches) return;
     const button = frame.current?.querySelector<HTMLButtonElement>('.facet-panel__button');
@@ -144,15 +136,10 @@ function Panel({
   );
 }
 
-// Nothing chosen: Filters alone, no Clear All.
 const defaultNode = <Panel open={false} />;
 
-// The public compendium's panel: Categories with Match at its right, Forms with Toxic, and no
-// Source, In Stock or No Refs. Open on desktop.
 const publicNode = <Panel />;
 
-// Chosen values: the count on the button (every chosen value, so seven here; Match counts
-// none), Clear All beside it, Match with its hint for two categories.
 const chosenNode = (
   <Panel
     start={{
@@ -166,17 +153,14 @@ const chosenNode = (
   />
 );
 
-// Two forms and Toxic: the Filters button reads 3, one for each chosen value.
 const formsAndToxicNode = (
   <Panel start={{ ...NONE, forms: ['test-oil', 'test-resin'], toxic: 'toxic' }} />
 );
 
-// Two categories alone: Match appears, with its hint, and adds nothing to the Filters count.
 const matchShownNode = (
   <Panel start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }} />
 );
 
-// A facet whose every value counts nothing keeps its field, with an empty list.
 const allZeroFacetNode = (
   <Panel
     facets={{
@@ -186,12 +170,8 @@ const allZeroFacetNode = (
   />
 );
 
-// Fewer than two categories: the Match chip stays, on All, disabled and dashed, its hint saying
-// when it applies.
 const matchStuckNode = <Panel start={{ ...NONE, categories: ['warding'] }} />;
 
-// Either Toxic value counting nothing: every matching entry shares one toxicity, so the
-// chip rests on Any, is disabled, and says why in its hint.
 const toxicStuckNode = (
   <Panel
     start={{ ...NONE, toxic: 'toxic' }}
@@ -205,8 +185,6 @@ const toxicStuckNode = (
   />
 );
 
-// Either source counting nothing: every matching entry comes from the other, so the chip rests
-// on All, is disabled, and says why when the pointer or focus is on it.
 const sourceStuckNode = (
   <Panel
     facets={{
@@ -220,11 +198,8 @@ const sourceStuckNode = (
   />
 );
 
-// The admin list also has the No Refs switch, after Toxic on the Forms row.
 const adminNode = <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
-// The coven's list adds a Source chip and the In Stock and Low Stock Only
-// switches on the Forms row. Their values count on the Filters button (3 here).
 const covenNode = (
   <Panel
     facets={COVEN_FACETS}
@@ -232,12 +207,10 @@ const covenNode = (
   />
 );
 
-// The coven's controls with nothing chosen: Source rests on All and the switch is off.
 const covenEmptyNode = (
   <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />
 );
 
-// The Match chip open, two categories chosen: the menu of radios fades in under the chip.
 const matchMenuNode = (
   <Panel
     menu="Match"
@@ -245,7 +218,6 @@ const matchMenuNode = (
   />
 );
 
-// The coven's Source chip open: Local and Compendium with their counts, no brackets.
 const sourceMenuNode = (
   <Panel
     menu="Source"
@@ -254,11 +226,8 @@ const sourceMenuNode = (
   />
 );
 
-// The keeper's Toxic chip open, with No Refs on the same row.
 const toxicMenuNode = <Panel menu="Toxic" admin start={NONE} />;
 
-// A signed-in viewer in two covens: In My Covens beside Forms and Toxic, each half the line,
-// one coven picked. The covens carry no counts.
 const inMyCovensNode = (
   <Panel
     covens={[
@@ -269,7 +238,6 @@ const inMyCovensNode = (
   />
 );
 
-// The keeper's Reviewed strip, on Needs Review: Reviewed and Needs Review with their counts.
 const adminReviewedNode = (
   <Panel
     admin

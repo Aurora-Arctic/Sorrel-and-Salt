@@ -3,8 +3,6 @@ import { SupportDialogStateDocument } from '@/gql/graphql';
 import { answerQuery } from '../../../.storybook/mock-api';
 import SupportDialog from '.';
 
-// Render-only; behaviour is asserted in tests/components/SupportDialog. The address carries the
-// parameters that open it, and the fake API (.storybook/mock-api.ts) answers the state query.
 const answering = (kind: 'form' | 'unverified') => ({
   msw: {
     handlers: [

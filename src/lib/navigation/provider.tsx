@@ -17,7 +17,7 @@ import type { NavigateOptions } from './types';
 /** The navigation on its way: who started it, and the address it is headed for. */
 export type ActiveNavigation = { owner: symbol; href: string | undefined };
 
-/** What the provider lets a caller do. `owner` is the caller's own identity, for its `pending`. */
+/** `owner` is the caller's own identity, for its `pending`. */
 export type NavigationActions = {
   navigate: (owner: symbol, href: string, options?: NavigateOptions) => void;
   refresh: (owner: symbol) => void;
@@ -26,11 +26,7 @@ export type NavigationActions = {
 export const ActiveNavigationContext = createContext<ActiveNavigation | undefined>(undefined);
 export const NavigationActionsContext = createContext<NavigationActions | null>(null);
 
-/**
- * Owns every navigation the site starts. It is mounted once and never unmounts, so
- * a wait is never lost with the control that began it; React puts the optimistic
- * wait back when the transition ends. A mounted form with unsaved changes is waited on first. (claude-docs/design-decisions/m12.33-loading-standard.md, "Navigation provider")
- */
+/** Mounted once and never unmounts, so a wait is never lost with the control that began it; React puts the optimistic wait back when the transition ends. A mounted form with unsaved changes is waited on first (claude-docs/design-decisions/ui.md, "Navigation provider"). */
 export function NavigationProvider({ children }: { children: ReactNode }): ReactElement {
   const router = useRouter();
   const [active, setActive] = useOptimistic<ActiveNavigation | undefined>(undefined);

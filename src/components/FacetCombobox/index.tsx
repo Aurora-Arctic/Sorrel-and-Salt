@@ -90,7 +90,6 @@ export default function FacetCombobox({
   const shown = choices.filter(
     (choice) => !(hideZeros && choice.count === 0) || values.includes(choice.value),
   );
-  // The choices of one group together, the groups in the order they first appear.
   const groups: { group: string | undefined; rows: (typeof choices)[number][] }[] = [];
   for (const choice of shown) {
     const at = groups.find((entry) => entry.group === choice.group);

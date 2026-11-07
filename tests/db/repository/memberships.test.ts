@@ -87,9 +87,7 @@ describe('the Membership proof', () => {
           role: 'member',
           pause: { until: new Date('2099-01-01T00:00:00Z') },
         });
-        // A paused member still holds the seat: invitations count it as taken.
         await expect(findWorkspaceRole(B.id, WORKSPACE_W_ID)).resolves.toBe('member');
-        // Another member of the same coven is untouched.
         await expect(findWorkspaceSeat(C.id, WORKSPACE_W_ID)).resolves.toEqual({
           role: 'viewer',
           pause: null,
@@ -138,7 +136,6 @@ describe('the Membership proof', () => {
     const summary = (rows: { userId: string; workspaceId: string; role: string }[]) =>
       rows.map(({ userId, workspaceId, role }) => ({ userId, workspaceId, role }));
 
-    /** A fresh coven with A as its owner, written as the seed would: no proof exists yet. */
     async function covenOwnedByA(name: string) {
       const { slug } = makeWorkspace({ name });
       const [workspace] = await withAudit(asUser(A), (write) =>
@@ -164,7 +161,6 @@ describe('the Membership proof', () => {
     });
 
     it('answers nothing for a user in no workspace, and no query for no users', async () => {
-      // E is the site keeper and a member of nothing (the fixture cast).
       await expect(findMembershipsOfUsers([E.id])).resolves.toEqual([]);
       await expect(findMembershipsOfUsers([])).resolves.toEqual([]);
     });
@@ -201,7 +197,6 @@ describe('the Membership proof', () => {
       expect(ids).toEqual([WORKSPACE_W_ID]);
     });
 
-    // The switcher and the compendium's In My Covens mark a paused coven from this one read, as the seat read does.
     describe('the pause standing on each seat', () => {
       async function pauseB(until: string | null) {
         await sql`
@@ -281,7 +276,6 @@ describe('the Membership proof', () => {
 });
 
 describe('findMemberPage, a coven roll keyed on the pair', () => {
-  /** A coven owned by A whose seats all joined at one instant, so only the tiebreak orders them. */
   async function covenJoinedAtOnce(name: string, others: string[]) {
     const { slug } = makeWorkspace({ name });
     const [workspace] = await withAudit(asUser(A), (write) =>

@@ -5,7 +5,6 @@ import { type Unit, dimensionOf } from '@/modules/ingredients/schema/units';
 // as `insertIngredient` is, so setup does not depend on the stock service
 // (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
-/** A jar of one form, in one coven. Amounts are `numeric` text, as Postgres reads them. */
 export interface StockFixture {
   workspaceId: string;
   ingredientId: string;
@@ -13,14 +12,9 @@ export interface StockFixture {
   quantityOnHand?: string | null;
   unit?: Unit | null;
   lowStockThreshold?: string | null;
-  /** Written already soft-deleted, by `author`. */
   deleted?: boolean;
 }
 
-/**
- * Writes `stock`'s row stamped by `author`, its dimension the unit's as the
- * CHECK demands, and returns its id.
- */
 export async function insertStock(
   sql: postgres.Sql,
   stock: StockFixture,

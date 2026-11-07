@@ -10,7 +10,6 @@ import type { ReferenceFields } from './types';
 // bibliography form, two-tiered as ingredients are.
 const KINDS = ['book', 'chapter', 'article', 'entry', 'web_page'];
 
-// Text as Chicago prints it, nullable, and non-blank when set.
 const OPTIONAL_TEXT = [
   'authors',
   'container',
@@ -96,7 +95,6 @@ beforeEach(async () => {
 });
 
 describe('references table', () => {
-  // A closed list is the database's and the code's alike.
   it('holds the five kinds, as the code declares them', async () => {
     const [row] = await sql`select enum_range(null::reference_kind)::text[] as kinds`;
 
@@ -149,13 +147,11 @@ describe('references table', () => {
     it('refuses a kind outside the five', async () => {
       const error = await failureOf(addReference({ ...BOOK, kind: 'other' }));
 
-      // 22P02 is invalid_text_representation: the enum cast refusing the value.
       expect(error.code).toBe('22P02');
     });
   });
 
-  // 23514 is check_violation, named: each refusal is the CHECK the field
-  // error is pathed from, where NOT NULL alone would accept ''.
+  // Each refusal is the CHECK the field error is pathed from, where NOT NULL alone would accept ''.
   describe('text is non-blank when set', () => {
     it('refuses a blank title', async () => {
       const error = await failureOf(addReference({ ...MINIMAL.chapter, title: '   ' }));

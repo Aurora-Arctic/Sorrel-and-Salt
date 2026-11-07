@@ -42,24 +42,19 @@ import { glyphAdvances } from '../invitation-cards/text';
 import type { CardAssets } from '../invitation-cards/types';
 import type { Embedded, Rect, SheetCard } from './types';
 
-// The Letter sheet both the invitation cards and the business cards print on. Every length below is in points (72 to the
-// inch) on the portrait page, measured from its top left with y running down.
+// Every length below is in points (72 to the inch), y running down from the page's top left.
 
 const PT = 72;
 export const PAGE = { width: 8.5 * PT, height: 11 * PT };
 const TRIM = { width: 3.5 * PT, height: 2 * PT };
 const BLEED = 0.125 * PT;
-/** Two cards across the page and five down, each standing upright. */
 const COLUMNS = 2;
 const ROWS = CARDS_PER_SHEET / COLUMNS;
 const BLOCK_SIZE = {
   width: COLUMNS * TRIM.width + 2 * BLEED,
   height: ROWS * TRIM.height + 2 * BLEED,
 };
-/**
- * The block of ten cards and its bleed, 7.25 × 10.25 in, centred: 5/8 in from each side and 3/8 in from the top and the
- * bottom, so a printer's unprintable edge clips neither the bleed nor the crop marks outside it.
- */
+/** Centred, 5/8 in from each side and 3/8 in from the top and bottom, so a printer's unprintable edge clips neither the bleed nor the crop marks. */
 export const BLOCK = {
   x: (PAGE.width - BLOCK_SIZE.width) / 2,
   y: (PAGE.height - BLOCK_SIZE.height) / 2,
@@ -70,13 +65,9 @@ const ARTBOARD_SCALE = PT / PX_PER_INCH;
 // Crop marks sit on each cut line's extension, clear of the bleed; at the top and bottom they end 18.75 pt from the paper's
 // edge, outside the 1/4 in a printer may leave unprinted.
 const MARK = { width: 0.75, gap: 2.25, length: 6 };
-/**
- * The sheet label's place: in the margin below the block, 8 pt in from the first trim, its baseline 21 pt from the paper's
- * edge, so its 5 pt letters stand clear of the block above and of the 1/4 in a printer may leave unprinted below.
- */
+/** In the margin below the block, clear of the 1/4 in a printer may leave unprinted below. */
 export const LABEL_AT = { x: BLOCK.x + BLEED + 8, baseline: PAGE.height - 21 };
 
-/** The top left of card i's trim on its sheet: two across the page, five down. */
 function cardTrim(i: number): { x: number; y: number } {
   return {
     x: BLOCK.x + BLEED + (i % COLUMNS) * TRIM.width,
@@ -89,16 +80,11 @@ export function backPosition(i: number): number {
   return Math.floor(i / COLUMNS) * COLUMNS + (COLUMNS - 1 - (i % COLUMNS));
 }
 
-/**
- * Starts a page with y running down from its top left. Both faces stand upright: a portrait page turned over its long edge
- * keeps its top at the top, so the backs need no half turn, and a cut card turned side over side, like a book page, shows
- * its back right way up.
- */
+// Both faces stand upright: a portrait page turned over its long edge keeps its top at the top, so the backs need no half turn.
 function frameOperators(): Operator[] {
   return [concatTransformationMatrix(1, 0, 0, -1, 0, PAGE.height)];
 }
 
-/** Moves the origin to card i's artboard, its trim on the card's cut, in the artboard's pixels. */
 function artboardOperators(i: number): Operator[] {
   const trim = cardTrim(i);
   const inset = ARTBOARD.trimInset * ARTBOARD_SCALE;
@@ -169,16 +155,11 @@ function cropMarkOperators(): Operator[] {
   return ops;
 }
 
-/** Adds a blank portrait Letter page to the document. */
 export function addSheetPage(doc: PDFDocument): PDFPage {
   return doc.addPage([PAGE.width, PAGE.height]);
 }
 
-/**
- * Draws one page: the soot block, then every picture, then every overlay, then every card's words and extras, all clipped to the
- * block's outer edge, so no picture lands over a neighbour's words. A position with no card stays plain soot, so the block
- * prints and cuts as a full one. The crop marks and the label, in page points, go outside it.
- */
+// All clipped to the block's outer edge, so no picture lands over a neighbour's words; the crop marks and the label go outside it.
 export function drawSheet(
   page: PDFPage,
   cards: SheetCard[],
@@ -223,7 +204,6 @@ const fontkit = (
   'default' in fontkitModule ? fontkitModule.default : fontkitModule
 ) as typeof fontkitModule;
 
-/** Embeds the card fonts, subset, and both pictures tinted into the print inks, once each for the whole document. */
 export async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedded> {
   doc.registerFontkit(fontkit);
   const keys: FontKey[] = ['cormorant600', 'lexend300', 'lexend400', 'lexend500'];
@@ -241,7 +221,6 @@ export async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise
   };
 }
 
-/** Embeds a picture tinted into the print inks: an 8-bit DeviceCMYK image, its alpha a DeviceGray soft mask. */
 function embedPicture(doc: PDFDocument, png: Uint8Array): PDFRef {
   const { rgba, width, height } = decodePng(png);
   const { cmyk, alpha } = tintPicture(rgba, width, height);

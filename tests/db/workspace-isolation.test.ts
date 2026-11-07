@@ -21,10 +21,6 @@ import { insertStock } from '../support/db/insert-stock';
 import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 
-// An outsider and a site keeper are both refused a coven's ingredients and grimoire, by direct id and on every write, without learning whether the row exists (rule 4).
-// This is the per-entity sweep; each rule behind a refusal is its service's, and the Membership mechanism is tests/db/repository/finders.test.ts's.
-// Actors reach for **W** (owned by A, worked in by B and C); **D**'s own workspace is X and **E** is a site keeper in none: neither buys a byte of W.
-
 let sql: ReturnType<typeof postgres>;
 
 beforeAll(() => {
@@ -50,11 +46,9 @@ beforeEach(async () => {
 
 const FABRICATED_ID = '00000000-0000-0000-0000-00000000dead';
 
-/** W's own ingredient, seeded through the shared inserter and stamped by A. */
 const seedIngredient = () =>
   insertIngredient(sql, makeIngredient({ workspaceId: WORKSPACE_W_ID }), A.id);
 
-/** W's jar of the ingredient's one form, stamped by A. */
 async function seedStock(ingredientId: string) {
   const variantId = await variantIdOf(sql, ingredientId, 'Testform');
   return insertStock(
@@ -70,7 +64,6 @@ const quantityOf = async (stockId: string) =>
       .quantity_on_hand,
   );
 
-/** A shared spell in W, one layer and one assigned category, stamped by A. */
 const seedSpell = () =>
   insertSpell(
     sql,
@@ -78,7 +71,6 @@ const seedSpell = () =>
     A.id,
   );
 
-/** A rewrite of the ingredient as the coven's own form would send it. */
 function hijack(): Parameters<typeof updateWorkspaceIngredient>[3] {
   const {
     workspaceId: _tier,
@@ -102,7 +94,6 @@ const nameOf = async (ingredientId: string) =>
 const visibilityOf = async (spellId: string) =>
   (await sql`select visibility from spells where id = ${spellId}`)[0].visibility as string;
 
-/** What a refused call threw, or the test fails because it went through. */
 const refusalOf = (attempt: Promise<unknown>) =>
   attempt.then(
     () => expect.fail('the call was not refused'),

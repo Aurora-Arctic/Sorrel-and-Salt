@@ -12,8 +12,7 @@ import type { ResetPasswordFormProps } from './types';
 import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 
-// The reset page's form: the new password for the account a mailed link names. The token is spent by the
-// first reset, which signs out every session the account held (claude-docs/components/reset-password-form.md).
+// The first reset spends the token and signs out every session the account held (claude-docs/components/reset-password-form.md).
 
 export const GENERIC_RESET_ERROR = "We couldn't set your new password. Please try again.";
 

@@ -2,9 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { updatedColumn } from '@/components/DataTable/updated-column';
 
-// The Updated column every audited list shares. Each list proves it
-// shows the column; who and when, and withholding both together, are proved
-// here once.
 const cell = (row: { updatedBy: string | null; updatedAt: Date | null }) =>
   render(<div>{updatedColumn<typeof row>().cell(row)}</div>).container;
 

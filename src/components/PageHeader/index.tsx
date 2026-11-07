@@ -6,10 +6,7 @@ import './index.scss';
 const classes = (...names: (string | false | undefined)[]): string =>
   names.filter(Boolean).join(' ');
 
-// Every page's head: the heading with its one primary action on the same line, the action at the end
-// (claude-docs/styling.md, "Buttons"), and, where the page carries them, an eyebrow above and a lede
-// beneath in a `.header` column. No client directive and no hook, so a server page renders it
-// directly; an action that needs the browser is a client component of its own.
+// No client directive and no hook, so a server page renders it (claude-docs/styling.md, "Buttons").
 const PageHeader = ({
   title,
   pendingTitle,

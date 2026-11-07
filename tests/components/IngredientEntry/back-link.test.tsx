@@ -7,7 +7,6 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ back: vi.fn() }) }));
 
 const { default: BackLink } = await import('@/components/IngredientEntry/back-link');
 
-// A fake Navigation API: an entry list, an index, and the event Next's history write fires.
 class FakeNavigation extends EventTarget {
   index = 0;
   urls = [`${window.location.origin}/coven/x/grimoire?tab=spells`];
@@ -20,8 +19,7 @@ class FakeNavigation extends EventTarget {
 }
 const navigation = new FakeNavigation();
 
-// Next writes the history inside an insertion effect (its HistoryUpdater), and the browser fires
-// `currententrychange` from that very call.
+// Next writes the history inside an insertion effect, and the browser fires `currententrychange` from that call.
 function HistoryWrite({ pushes }: { pushes: number }) {
   useInsertionEffect(() => {
     if (pushes === 0) return;
@@ -62,7 +60,6 @@ describe('BackLink', () => {
       screen.getByRole('button', { name: 'Navigate' }).click();
     });
 
-    // The link still follows the history once the write is done.
     expect(screen.getByRole('link', { name: /Grimoire/ })).toHaveAttribute(
       'href',
       '/coven/x/grimoire?tab=spells',

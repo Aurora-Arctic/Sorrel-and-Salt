@@ -24,7 +24,6 @@ import type { GrimoireFilterProps, GrimoireListFilter } from './types';
 // the title search and the Filters (n) panel, holding the Categories line alone, applied in one soft
 // navigation when it shuts. Spells and Drafts are two tabs, not a status filter (claude-docs/components/grimoire-list.md).
 
-/** What the panel holds: the categories and their match mode, then the four facets. */
 interface Held {
   categories: readonly string[];
   categoryMode: CategoryMode;
@@ -59,7 +58,6 @@ const NONE: Held = {
   makers: [],
 };
 
-/** The tab's address under the filter shown, the panel's categories and the text typed set over it. */
 const hrefFor = (path: Route, filter: GrimoireListFilter, held: Held, query: string): Route =>
   GRIMOIRE_PARAMS.href(
     path,
@@ -112,8 +110,6 @@ const PanelCategories = ({
         held.makers.length
       }
       clearHref={path}
-      // Shut any other way than Apply Filters, whose submit applies the text as well: the
-      // categories held, under the text the page shows, and nothing at all when none changed.
       onApply={() => {
         if (changed) apply(hrefFor(path, filter, held, filter.query));
       }}
@@ -231,8 +227,6 @@ const GrimoireFilterRow = ({
       clear={false}
       className="grimoire-list__row"
       searchHref={(query) => hrefFor(path, filter, held, query)}
-      // A picked title opens the spell's Quick Look over the list as shown, as the card's eye
-      // does: the page and the filter kept, the text typed and not searched not applied.
       pickHref={({ id }) => lookHrefOf(GRIMOIRE_PARAMS.href(path, filter, { ...cursor }), id)}
       pickHeading={({ name }) => ({ title: name })}
       pickPlace={SPELL_LOOK_PLACE}
@@ -253,7 +247,6 @@ const GrimoireFilterRow = ({
   );
 };
 
-/** The filter an address holds, read from the same parameter table the page reads. */
 function filterOf(href: string): GrimoireListFilter {
   const params: Record<string, string[]> = {};
   const { searchParams } = new URL(href, 'http://localhost');

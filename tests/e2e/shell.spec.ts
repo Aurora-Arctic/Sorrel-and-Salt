@@ -6,9 +6,7 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 
-// The application shell against the built server: the bar, the context row and the section navs that frame
-// every signed-in page, at a desktop and a phone's width. It proves what a component test cannot: where the
-// browser lays the bottom bar, which element takes the focus after a key, and the scans over the whole frame.
+// What a component test cannot prove: where the browser lays the bottom bar, which element takes the focus after a key, and the scans over the whole frame.
 
 const ALPHA = { name: 'Shell Alpha', slug: 'shell-alpha' };
 const BETA = { name: 'Shell Beta', slug: 'shell-beta' };
@@ -24,8 +22,7 @@ const users = {
 test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
 
-  // `signInAs` wants a page; only its rows matter here, so the page, and the
-  // session it holds, is thrown away. Each test signs in again for itself.
+  // Only the rows matter: the page and its session are thrown away.
   const setup = await browser.newPage({ baseURL: slotUrl(slot) });
   try {
     await seedFixtures(setup);
@@ -78,7 +75,6 @@ async function seedFixtures(page: Page): Promise<void> {
   }
 }
 
-/** The theme button, in the bar at every width. */
 async function toggleTheme(page: Page): Promise<void> {
   const toggle = page.getByRole('button', { name: 'Toggle light and dark mode' });
   const before = await toggle.getAttribute('aria-pressed');
@@ -96,9 +92,7 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
 
   const banner = page.getByRole('banner');
   await expect(banner).toBeVisible();
-  // The brand leads to the front page, which redirects no one.
   await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
-  // A non-admin's Site nav holds the Compendium and, as a member, Your Coven; never Curator or Keepers.
   await expect(
     page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
   ).toBeVisible();
@@ -112,7 +106,6 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
     'page',
   );
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(ALPHA.name);
-  // A member writes to the coven, so the bar offers Add Ingredient.
   await expect(banner.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeEnabled();
 
   const account = banner.getByRole('button', { name: 'Fixture Person' });
@@ -123,9 +116,7 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
     'href',
     '/account',
   );
-  // Sign Out, refused: the refusal is routed rather than awaited from Better Auth, since whether it refuses
-  // depends on the origin the browser reaches the server on. The panel stays open with a callout under the
-  // button and the focus on it (claude-docs/components/click-feedback.md).
+  // Sign Out is refused by route, not awaited from Better Auth, since whether it refuses depends on the origin the browser reaches the server on (claude-docs/components/click-feedback.md).
   await page.route('**/api/auth/sign-out', (route) =>
     route.fulfill({ status: 403, json: { code: 'INVALID_ORIGIN', message: 'Invalid origin' } }),
   );
@@ -142,8 +133,6 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   await assertNoAccessibilityViolations(page);
   await page.unroute('**/api/auth/sign-out');
 
-  // The callout takes the first Escape and the menu stays open; the next
-  // closes the menu.
   await page.keyboard.press('Escape');
   await expect(failure).toHaveCount(0);
   await expect(account).toHaveAttribute('aria-expanded', 'true');
@@ -182,13 +171,11 @@ test('at a phone the coven nav is the bottom bar and the keyboard reaches the wh
   expect(box!.y + box!.height).toBeGreaterThanOrEqual(PHONE.height - 2);
   expect(box!.y + box!.height).toBeLessThanOrEqual(PHONE.height + 0.5);
 
-  // The theme switch stays in the bar at a phone's width too, and the account panel no longer carries one.
   const account = page.getByRole('banner').getByRole('button', { name: 'Fixture Person' });
   await expect(
     page.getByRole('banner').getByRole('button', { name: 'Toggle light and dark mode' }),
   ).toBeVisible();
 
-  // From the top: the skip link, then the brand, then the rest. Bounded.
   await page.reload();
   await expect(overview).toBeVisible();
   const focused = async () =>
@@ -235,8 +222,6 @@ test('at a phone the curator nav folds its later tabs behind More', async ({ pag
   await expect(more).toBeFocused();
 });
 
-// One scan per page template at each width, in both themes: the
-// shell is the frame all three share, so its surfaces are checked here.
 const PAGES = [
   ['a coven page', 'member', `/coven/${ALPHA.slug}`, 'Coven'],
   ['a curator tabbed page', 'admin', '/curator/categories', 'Curator'],
@@ -274,8 +259,6 @@ test('the curator row fits the window at 642px, without overflowing', async ({ p
   // branch and then see the script hide a tab (the gate's one flaky test).
   const nav = await fittedAdminNav(page);
   await expect(nav).toBeVisible();
-  // Either More holds the tabs that do not fit, or all of them fit and are
-  // in view; never a tab cut off with neither.
   const more = nav.getByRole('button', { name: /More|Astrology|Deities/ });
   if ((await more.count()) > 0) {
     await expect(more).toBeVisible();
@@ -287,19 +270,15 @@ test('the curator row fits the window at 642px, without overflowing', async ({ p
   expect(fits).toBe(true);
 });
 
-// Wider than the phone the row shows the leading tabs that fit and puts the rest behind More. These measure
-// what a component test can only stand widths in for: which tabs are drawn, which control carries the
-// current page, and whether the row overflows its box. A hidden tab is drawn but not visible.
+// A hidden tab is drawn but not visible.
 const rowLinks = (nav: Locator) => nav.getByRole('link').filter({ visible: true });
 
-/** The curator nav, the longer of the two area rows, once the script has fitted it. */
 async function fittedAdminNav(page: Page): Promise<Locator> {
   const nav = page.getByRole('navigation', { name: 'Curator' });
   await expect(nav).toHaveAttribute('data-fit', '');
   return nav;
 }
 
-/** Whether the row's tabs and More overflow the list that holds them. */
 const rowOverflows = (nav: Locator) =>
   nav
     .getByRole('list')
@@ -310,7 +289,6 @@ test('at a tablet width, More carries the current page when its tab is hidden be
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
-  // Narrow enough that the last of the five curation tabs, Astrology, goes behind More.
   await page.setViewportSize({ width: 700, height: 800 });
 
   // Why More could carry it: on a page whose tab is in the row it does not.
@@ -336,9 +314,7 @@ test('at a tablet width, a navigation fits the row afresh for the new current ta
   page,
 }) => {
   await signInAgainAs(page, users.admin.id);
-  // A width where the bolder current tab tips the count: the compendium
-  // page, loaded fresh, fits fewer tabs than the forms page does, whose
-  // tabs all fit with no More. From about 774px to 780px in Chromium.
+  // From about 774px to 780px in Chromium, the bolder current tab tips the count.
   await page.setViewportSize({ width: 777, height: 800 });
   await page.goto('/curator/compendium');
   const fresh = await rowLinks(await fittedAdminNav(page)).count();
@@ -399,7 +375,6 @@ test('before the script runs, a desktop curator row shows every tab and no More'
   for (const link of await admin.getByRole('link').all()) await expect(link).toBeVisible();
   await expect(admin.getByRole('button')).toHaveCount(0);
 
-  // The server's markup still names every section, each tab once.
   const hrefs = await admin
     .getByRole('link')
     .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
@@ -407,9 +382,7 @@ test('before the script runs, a desktop curator row shows every tab and no More'
   release();
 });
 
-// A tab goes behind More only when the row has no room for it. More was once reserved as wide as the widest tab
-// it hid, so at 680px the coven row showed Overview alone. Each width puts the first hidden tab back in the row:
-// that row must overflow, or the tab was hidden with room. Swept across the tablet band, as fonts move the edge.
+// More was once reserved as wide as the widest tab it hid, so at 680px the coven row showed Overview alone. Swept across the tablet band, as fonts move the edge.
 async function tuckedWithRoom(nav: Locator): Promise<boolean> {
   return nav
     .getByRole('list')

@@ -4,8 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { useClickFeedback } from '@/components/ClickFeedback';
 import { StatusRegionProvider, useAnnounce } from '@/components/ClickFeedback/status-region';
 
-// The click-feedback callout, design F (claude-docs/components/click-feedback.md): a failed click's sentence in a callout under the control,
-// a badge on the control that brings it back, and the control described by the failure until the next try clears it.
+// claude-docs/components/click-feedback.md, design F.
 
 const REFUSED = 'Testwort is in a spell, so it cannot be removed.';
 const OTHER = 'Mossbell could not be saved.';
@@ -41,8 +40,7 @@ const badge = (name = 'Remove') =>
   screen.getByRole('button', { name: `Show the error for ${name}` });
 const dismiss = () => screen.getByRole('button', { name: 'Dismiss' });
 
-// Each step awaited inside act: Floating UI places the callout and the badge
-// in a promise, whose state lands after the event that opened them.
+// Each step awaited inside act: Floating UI places the callout and badge in a promise that lands after the event.
 const settle = (step: () => unknown) =>
   act(async () => {
     step();
@@ -51,7 +49,6 @@ const press = (element: Element) => settle(() => fireEvent.click(element));
 const focus = (element: HTMLElement) => settle(() => element.focus());
 const pointerDown = (element: Element) => settle(() => fireEvent.pointerDown(element));
 
-/** The click that fails: the control pressed, with the focus on it as a press leaves it. */
 async function fail(name = 'Remove') {
   await focus(control(name));
   await press(control(name));
@@ -75,7 +72,6 @@ describe('useClickFeedback', () => {
 
     expect(screen.queryByRole('alert')).toBeNull();
     expect(badge()).toHaveAttribute('aria-expanded', 'false');
-    // Back on what opened it: the control, for a callout the failure opened.
     expect(control()).toHaveFocus();
 
     await focus(badge());
@@ -84,7 +80,6 @@ describe('useClickFeedback', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(REFUSED);
     expect(badge()).toHaveAttribute('aria-expanded', 'true');
 
-    // The badge is a toggle: pressed again, it closes the callout it opened.
     await press(badge());
     expect(screen.queryByRole('alert')).toBeNull();
     expect(badge()).toHaveAttribute('aria-expanded', 'false');

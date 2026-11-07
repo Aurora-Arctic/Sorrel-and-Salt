@@ -30,9 +30,7 @@ type EditorRef = ReturnType<typeof useEditorRef>;
 interface ToolbarButton {
   label: string;
   icon: ReactElement;
-  /** Whether the selection already has what the button applies; absent for a button that only adds. */
   pressed?: (editor: EditorRef) => boolean;
-  /** Whether the button has something to act on; absent for a button that always has. */
   available?: (editor: EditorRef) => boolean;
   run: (editor: EditorRef) => void;
 }
@@ -40,7 +38,6 @@ interface ToolbarButton {
 const inBlock = (type: string) => (editor: EditorRef) =>
   Boolean(editor.selection) && editor.api.some({ match: { type } });
 
-/** The top-level block holding the selection's end, or the document's end when nothing is selected. */
 function nextBlockPath(editor: EditorRef): [number] {
   const index = editor.selection?.focus.path[0] ?? editor.children.length - 1;
   return [index + 1];
@@ -79,7 +76,6 @@ const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
         pressed: (editor) => Boolean(editor.api.hasMark(KEYS.italic)),
         run: (editor) => editor.tf.toggleMark(KEYS.italic),
       },
-      // Link opens its own dialog, so `run` is not used.
       { label: 'Link', icon: <LinkIcon />, run: () => undefined },
     ],
   },
@@ -120,7 +116,6 @@ const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
       },
     ],
   },
-  // Last, after the buttons that format.
   {
     label: 'History',
     buttons: [
@@ -140,7 +135,6 @@ const GROUPS: { label: string; buttons: ToolbarButton[] }[] = [
   },
 ];
 
-/** Every button in the order the arrow keys move through them. */
 const BUTTONS = GROUPS.flatMap((group) => group.buttons);
 
 const Toolbar = (): ReactElement => {

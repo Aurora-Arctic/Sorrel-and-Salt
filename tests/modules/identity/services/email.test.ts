@@ -47,7 +47,6 @@ async function userRow(id: string): Promise<EmailUserRow> {
   return row as EmailUserRow;
 }
 
-/** When the row's last verification mail went out; `null` for never. */
 async function setSentAt(id: string, at: string | null): Promise<void> {
   await sql`update users set verification_sent_at = ${at === null ? null : sql`now() - ${at}::interval`} where id = ${id}`;
 }

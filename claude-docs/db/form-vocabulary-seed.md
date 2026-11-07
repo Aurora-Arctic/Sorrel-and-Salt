@@ -1,16 +1,11 @@
-## The form vocabulary seed (M4.3a)
+## The form vocabulary seed
 
 `src/db/seed/forms.ts` seeds DESIGN.md §5's form vocabulary: six
 `ingredient_form_groups` rows — Botanical, Animal, Mineral, Substance, Fluid,
-Curio — then the 78 `ingredient_forms` §5's table files under them, including
-the twelve MB.28 first wrote and the seventeen the animal-derived and
-whole-organism cases added. **It is not a scenario**, for the same reason
-[the category seed](category-seed.md) is not one, and it lands a
-task ahead of M1.22 for the same reason too: M1.22's ingredients carry `form`
-values, and those should come from a vocabulary that already exists.
+Curio — then the 78 `ingredient_forms` §5's table files under them. **It is not a scenario**, for the same reason [the category seed](category-seed.md) is not one: ingredients carry `form` values, and those should come from a vocabulary that already exists.
 `npm run db:seed:forms` runs it — `scripts/db-seed.ts` with a `forms` argument,
 the second target on the same script, because the client import there is one
-of the six pinned exemptions (["Who may import the client"](client-imports.md)).
+of the six pinned exemptions (["Who may import the client"](repository-files.md)).
 
 Everything structural is [the category seed](category-seed.md)'s, and since
 MB.51 literally so — both call [`seedTwoTierVocabulary`](seed-module.md) with
@@ -28,10 +23,7 @@ by source — Botanical, Animal, Mineral — for what still has the shape it gre
 or was dug in; three by state for what has lost it: Fluid for what pours, Curio
 for a made or found object, Substance for what has neither shape nor flow. A
 powdered mineral is therefore a `powder`, and the ingredient's name says what it
-was. The first cut of this vocabulary grouped by process instead — organism
-part, preparation, matter — which named a group after a verb and put 21 of its
-29 rows in one section; review keeps any group from holding more than half
-the list.
+was. Review keeps any group from holding more than half the list.
 
 **There is no `Other`.** A value that fits no form is typed as free text on a
 coven's ingredient — a variant's `form` is text, not a foreign key — and
@@ -57,7 +49,7 @@ so after its inserts the seed brings every live form's slug to
 TypeScript, since one in SQL would be a second slug rule. A form's `seed_key`
 stays the slug it was seeded under, `slugify(name)`, as a seed key never
 changes after insert (MB.171), so the seed still keys a form by its name
-([`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md)).
+([`ingredients.md`, "The admin forms page: the slug, the redirect, the stale pick"](../design-decisions/ingredients.md#the-admin-forms-page-the-slug-the-redirect-the-stale-pick)).
 
 **The descriptions are the criterion, not decoration.** §5's argument for the
 non-blank CHECK is that a curated value exists to explain itself, so the
@@ -66,11 +58,7 @@ explains nothing.
 
 **One row per kind of thing, not one per word.** `salve` and `balm` are one
 `ointment`, and `tincture`, `infusion` and `hydrosol` are one `concoction` — each
-description naming the words it stands in for. The second merge is the sharper
-case: those three differ by solvent (spirit, water, distillation), and that
-distinction is neither universally held nor reliably known at the moment
-someone is labelling a bottle, so three rows asked a question the vocabulary
-has no business asking. One genus, and the ingredient name carries the rest. That only works because the
+description naming the words it stands in for. Those three differ by solvent, which is neither universally held nor reliably known when someone labels a bottle, so the ingredient name carries it. That only works because the
 suggestion query reads descriptions as well as names (§5, M4.7a): a reader
 types `salve`, the dropdown offers _Ointment_, and the vocabulary stays short
 without going missing at the word people reach for. A name match outranks a
@@ -78,18 +66,10 @@ description match, so `wax` still offers _Wax_ first. It is also why a
 description is worth writing carefully beyond review: it is now search surface,
 and `ingredient_forms_trgm` indexes the description beside the name (M4.7a).
 
-**A description defines its own form and stops there.** An earlier draft ended
-several of them with a redirect — "Set firm, it is a balm", "Distilled off a
-plant it is hydrosol" — and a test asserted 30 such pairs named each other.
-Both are gone: a definition that has to enumerate its neighbours is doing the
-dropdown's job, the clauses read as instructions rather than descriptions, and
-the test pushed toward padding a line to keep it passing. Where two forms are
-genuinely close, the group headers and the words themselves carry it.
+**A description defines its own form and stops there.** One that has to enumerate its neighbours is doing the dropdown's job. Where two forms are genuinely close, the group headers and the words themselves carry it.
 
 **The vocabulary is §5's own table**, group by group, each form filed where
-§5 files it. Holding the literal to the table is review's: MB.225 retired the
-test that parsed DESIGN.md to compare them, since a test of a doc's wording
-proves no behaviour. `forms.test.ts` keeps what a re-run leaves of a keeper's
+§5 files it. Holding the literal to the table is review's, since a test of a doc's wording proves no behaviour. `forms.test.ts` keeps what a re-run leaves of a keeper's
 edits.
 
 ## Form value service details
@@ -105,7 +85,7 @@ edits.
 
 ## Form group service details
 
-`src/modules/vocabulary/services/ingredient-form-groups.ts` holds the ingredient form groups: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/m5.6b-admin-groups.md).
+`src/modules/vocabulary/services/ingredient-form-groups.ts` holds the ingredient form groups: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/ingredients.md, "The admin group pages: where a deleted group's rows go").
 
 - A form's slug is its name and its group's. A rename therefore moves every live form's slug under the group, and a delete first moves its live forms to the group the admin names (`moveTo`), each re-slugged there. A group with no live form needs no `moveTo`.
 - The forms stay curated either way, so no compendium entry's pick, nor a coven's, is orphaned, and no ingredient is rewritten: an ingredient holds a form's name, not its slug.

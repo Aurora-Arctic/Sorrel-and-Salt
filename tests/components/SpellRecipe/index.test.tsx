@@ -13,8 +13,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/here',
 }));
 
-// (claude-docs/components/spell-recipe.md): the page body is presentational, so each
-// case is props in and what rendered out. The spells are the test's own data.
+// claude-docs/components/spell-recipe.md
 
 const instruction = (id: string, body: string): RecipeStep => ({ kind: 'instruction', id, body });
 const ingredient = (
@@ -332,7 +331,6 @@ describe('SpellRecipe', () => {
         'In the Cupboard',
         'Workings',
       ]);
-      // The two jar links are nested under one group label, and the group is narrow-only whole.
       const group = within(screen.getByRole('navigation', { name: 'On This Page' })).getByRole(
         'list',
         { name: 'The Cupboard' },
@@ -373,7 +371,6 @@ describe('SpellRecipe', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
       const side = screen.getByRole('complementary', { name: 'The Cupboard' });
       const section = screen.getByRole('region', { name: 'Workings' });
-      // The menu names them in this order, so the keyboard and a screen reader meet them so too.
       expect(
         linksOf()
           .map((link) => link.textContent)

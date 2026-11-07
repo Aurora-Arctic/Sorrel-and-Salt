@@ -6,8 +6,6 @@ import type { CardAssets } from '@/lib/invitation-cards/types';
 import { saveFile } from '@/components/AdminCards/save-file';
 import BusinessCards from '@/components/BusinessCards';
 
-// The fonts and pictures, the PDF and the save are each their own module's; here they stand in, so the test reads what
-// the form hands them and when.
 vi.mock('@/lib/invitation-cards/assets', () => ({ fetchCardAssets: vi.fn() }));
 vi.mock('@/lib/business-cards/pdf', () => ({ renderBusinessCards: vi.fn() }));
 vi.mock('@/components/AdminCards/save-file', () => ({ saveFile: vi.fn() }));

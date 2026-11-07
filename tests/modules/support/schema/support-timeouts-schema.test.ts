@@ -68,7 +68,7 @@ describe('support_timeouts table', () => {
           values (null, null, 'Spam', ${ADMIN}, ${ADMIN})`,
     );
 
-    // 23514 is check_violation: the column is nullable, so only the CHECK can refuse it.
+    // The column is nullable, so only the CHECK can refuse it.
     expect(error.code).toBe('23514');
   });
 

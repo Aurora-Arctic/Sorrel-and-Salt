@@ -13,10 +13,8 @@ import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import { unverifiedWarning } from './warning';
 import type { RoleControlProps } from './types';
 
-// The user modal's Change Role (one control for every role, curator included): it asks which role the
-// user moves to, with an optional ledger reason. The primary keeper's, and every one while admin
-// changes are paused, stays in view but locked, its reason in a tip
-// (claude-docs/components/user-list.md).
+// The user modal's Change Role: asks which role, with an optional ledger reason. Kept in view but locked for the
+// primary keeper's and while admin changes are paused (claude-docs/components/user-list.md).
 
 const SetUserRoleDocument = graphql(`
   mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {
@@ -43,7 +41,7 @@ const RoleControl = ({
   const label = 'Change Role';
   const accessibleName = `${label} for ${name}`;
   const openClass = 'btn btn--quiet btn--small';
-  // The primary admin's own reason first: it holds whether or not changes are paused.
+  // The primary keeper's own reason comes first: it holds whether or not changes are paused.
   const reason = primaryAdmin
     ? PRIMARY_ADMIN_REFUSAL
     : paused
@@ -59,9 +57,6 @@ const RoleControl = ({
       />
     );
   }
-  // Up the list is a promotion, down it a demotion; the confirm says which,
-  // green for one and red for the other, as the choice is made. Only a
-  // promotion vouches for the address, so only it warns.
   const promoting = outranks(chosen, role);
   return (
     <ConfirmedAction
@@ -95,8 +90,6 @@ const RoleControl = ({
       withNote
       announcement={`${name} is now ${roleLabel(chosen)}.`}
       inModal={inModal}
-      // Beside its fact in the user's modal, not in a button row: a refusal
-      // there is the callout too.
       refusalInModal="callout"
       send={(note) => graphqlRequest(SetUserRoleDocument, { userId, role: chosen, note })}
     />

@@ -1,13 +1,7 @@
 #!/usr/bin/env node
-// Builds the workshop as a static Storybook site. Storybook's CLI exits non-zero
-// when a build fails, so this only passes the arguments through and relays that
-// exit code; it exists so `npm run workshop:build` has one place to change.
-// See claude-docs/workshop.md, "The build gate".
-//
+// Builds the workshop as a static Storybook site, relaying Storybook's exit code (claude-docs/workshop.md,
+// "The build gate").
 // Usage: npm run workshop:build [-- --outDir <dir>]
-//   e.g. npm run workshop:build -- --outDir public/workshop
-// `--outDir` is this script's name for Storybook's `--output-dir`; the build uses
-// relative asset paths, so no base option is needed to serve it under /workshop/.
 
 import { spawn } from 'node:child_process';
 

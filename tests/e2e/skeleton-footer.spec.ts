@@ -3,14 +3,10 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// A skeleton taller than the page it is laid over still pushes the footer down: while a navigation from the short
-// Keepers index is on its way, everything the waiting main draws ends above the footer's top.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** Holds back every React Server Components answer once `hold()` is called, until `release()`. */
 async function holdServerAnswers(page: Page) {
   const held: Route[] = [];
   let holding = false;
@@ -31,7 +27,6 @@ async function holdServerAnswers(page: Page) {
   };
 }
 
-/** The lowest edge, in page coordinates, of the waiting main and everything it draws, and the footer's top edge. */
 const edges = (page: Page) =>
   page.evaluate(() => {
     const main = document.querySelector('main:has(output)');
@@ -46,7 +41,6 @@ const edges = (page: Page) =>
     };
   });
 
-/** A link to press: in the named navigation, or in the page's main when `nav` is absent. */
 type Press = { nav?: string; link: string };
 
 // From the Keepers index, which is shorter than each skeleton below: the documents editor (a keeper section), the

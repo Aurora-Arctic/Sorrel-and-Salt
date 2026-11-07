@@ -3,7 +3,6 @@
 import { useId, useState } from 'react';
 import Modal from '../Modal';
 
-/** The dialog that asks for a link's address, and links the words that were selected when it opened. */
 export default function LinkDialog({
   onAdd,
   onClose,

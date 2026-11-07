@@ -12,9 +12,7 @@ import SpellRecipeSummary from './summary';
 import { CATEGORY_MATCH_ID, INVENTORY_ID, JAR_ID, STEPS_ID, WORKINGS_ID } from './sections';
 import type { SpellRecipeProps } from './types';
 
-// A saved spell as a page: purpose, four facts, steps, note (the body's two boxes, which Quick Look
-// also draws). Read-only; the page's controls (Record, Edit, Preview, the three dots) are the
-// `action` slot's, for the roles that may. Its print
+// A saved spell as a page, read-only; the page's controls are the `action` slot's, for the roles that may. Its print
 // layout is `src/scss/_print.scss` (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({
@@ -39,7 +37,6 @@ const SpellRecipe = ({
   // The side column's lines carry the Quick Look eyes, so a step names its ingredient plainly; the
   // Quick Look modal, which has no side column, keeps the eye on its steps.
   const plain = steps.map((step) => (step.kind === 'ingredient' ? { ...step, look: null } : step));
-  // One entry per section drawn, so none links to nothing.
   const entries: PageNavEntry[] = [
     ...(steps.length > 0 ? [{ href: `#${STEPS_ID}` as const, label: 'Steps' }] : []),
     // The side column stands beside the recipe from a tablet up, so the menu names its two

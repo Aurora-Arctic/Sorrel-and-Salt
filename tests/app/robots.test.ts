@@ -8,9 +8,6 @@ vi.mock('@/modules/ingredients', () => ({
   ]),
 }));
 
-// A crawler is let into the public compendium on production and
-// nowhere else; every other deploy asks to be left alone.
-
 afterEach(() => vi.unstubAllEnvs());
 
 describe('robots', () => {

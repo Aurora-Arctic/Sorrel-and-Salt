@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { supportEmailReplyMessage } from '@/emails/support-email-reply';
 
-// What the mail carries: the request it names and the link to its page, and none of what staff wrote.
-
 const REQUEST_PAGE = 'http://localhost:8000/support/request/token';
 
 describe('supportEmailReplyMessage', () => {

@@ -13,15 +13,12 @@ import { GENERIC, LAST_WAY_IN, refusal } from './refusal';
 import type { PasskeysProps } from './types';
 import './index.scss';
 
-// The account page's list of this account's passkeys, each renamable and removable, and Add a Passkey beneath.
-// Every call is the passkey plugin's own route; the heading and intro are the page's
-// (claude-docs/components/passkeys.md).
+// Every call is the passkey plugin's own route (claude-docs/components/passkeys.md).
 
 const ADD = 'Add a Passkey';
 export const ADD_FAILED = 'No passkey was added. Try again, or add one from another device.';
 export { LAST_WAY_IN };
 
-/** The plugin's rows as the list holds them. */
 const listed = (rows: readonly { id: string; name?: string | null; createdAt: Date | string }[]) =>
   rows.map(({ id, name, createdAt }): AccountPasskey => ({
     id,
@@ -30,7 +27,6 @@ const listed = (rows: readonly { id: string; name?: string | null; createdAt: Da
   }));
 
 const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
-  // Seeded from the server's list; each change answers in place, then refreshes the page's server-rendered sections.
   const [rows, setRows] = useState(passkeys);
   const [adding, setAdding] = useState(false);
   const { refresh } = usePendingNavigation();
@@ -69,7 +65,6 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
     return undefined;
   };
 
-  // A refusal rejects with its sentence, which the row's confirm shows under Remove.
   const handleRemove = async (target: AccountPasskey): Promise<void> => {
     const result = await passkeyActions
       .deletePasskey({ id: target.id })

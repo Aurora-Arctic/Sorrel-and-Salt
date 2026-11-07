@@ -18,34 +18,26 @@ export type {
 
 export type UserRow = typeof users.$inferSelect;
 
-/** What an Updated stamp shows of an editor: the account and its display name, no ledger field. */
 export type EditorName = Pick<UserRow, 'id' | 'name'>;
 
-/** What `/keepers/invitations` is narrowed by. Each part is optional, and absent means no filter. */
 export interface AdminInvitationFilter {
-  /** A fragment of the invited address, case-insensitive. */
   email?: string;
-  /** Only the invitations lapsing within the next 24 hours. */
   expiringSoon?: boolean;
 }
 
-/** One site access pause: standing, run out or lifted. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
-/** The origin a site access pause mail links from, which the mail job carries. Handed to the service by the GraphQL context. */
 export interface AccessPauseNotifier {
   /** The origin a mailed link is built on. @throws {Error} where none resolves. */
   origin(): Promise<string>;
 }
 
-/** One site access pause mail, as its job carries it: the pause's id and the origin, and nothing of the user's. */
 export type AccessPauseMail = {
   kind: 'access-pause';
   pauseId: string;
   origin: string;
 };
 
-/** One row of the privilege ledger. */
 export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
 
 /** What the provider said at this callback — never the stored row, which a later feature may set. */
@@ -64,19 +56,10 @@ export type PrimaryAdminOutcome =
   | 'unverified'
   | 'profile-email-differs';
 
-/**
- * How what the email service decides gets delivered. Built per request by the
- * GraphQL context, because it reaches Better Auth and a service may not.
- */
+/** Built per request by the GraphQL context, because it reaches Better Auth and a service may not. */
 export interface EmailVerificationSender {
-  /** Mails the row's own, still-unverified address its link again, landing on the way to `next`. */
   resend(email: string, next?: string): Promise<void>;
-  /**
-   * Mails account `userId`'s pending address a link that, followed from the row's session, makes it the row's address,
-   * landing on the way to `next`.
-   */
   requestChange(userId: string, next?: string): Promise<void>;
-  /** Whether the request's session was created less than `seconds` ago. */
   sessionIsFresh(seconds: number): Promise<boolean>;
   /** Tells account `userId`'s address, the one being left, that a change to its pending address was asked for. Names that address's domain only; never throws on a failed send. */
   notifyChangeRequested(userId: string): Promise<void>;
@@ -84,68 +67,46 @@ export interface EmailVerificationSender {
   defer(task: () => Promise<void>): void;
 }
 
-/**
- * How a password is added to an account that has none. Built per request by the GraphQL context, as
- * `EmailVerificationSender` is, because Better Auth's set-password endpoint is reachable only on the server.
- */
+/** Built per request by the GraphQL context, as `EmailVerificationSender` is, because Better Auth's set-password endpoint is reachable only on the server. */
 export interface PasswordSetter {
-  /**
-   * Gives the request's signed-in account `newPassword`, under every rule a sign-up's password obeys, and
-   * mails the account a notice. @throws {ValidationError} on `newPassword` when a rule refuses it, the
-   * breached-password check cannot answer, or the account already has a password.
-   */
+  /** @throws {ValidationError} on `newPassword` when a rule refuses it, the breached-password check cannot answer, or the account already has a password. */
   set(newPassword: string): Promise<void>;
   /** Whether the request's session is younger than Better Auth's `freshAge`; `false` with no session. */
   sessionIsFresh(): Promise<boolean>;
 }
 
-/** Whether keeper changes are paused, and whether the asking admin may switch that. */
 export interface AdminRoleChangePauseState {
   paused: boolean;
   /** Only the primary keeper may pause or resume. */
   canToggle: boolean;
 }
 
-/**
- * How an invitation's link, admin or coven, reaches the invited address. Built per request by the GraphQL context, as
- * `EmailVerificationSender` is, because a service may not import Better Auth's origin resolution.
- */
+/** Built per request by the GraphQL context, because a service may not import Better Auth's origin resolution. */
 export interface InvitationSender {
-  /**
-   * Mails the invited address of the address invitation `invitationId` the link that accepts it, through the secret-link job: the
-   * run holds the id and the origin, and its step gives the invitation a fresh token when it sends. Never throws on a failed send.
-   */
+  /** The run holds the id and the origin, and its step gives the invitation a fresh token when it sends. Never throws on a failed send. */
   invitation(invitationId: string): Promise<void>;
 }
 
-/** An invitation into a coven: it names the workspace and the role it seats the person at. */
 export type WorkspaceInvitationRow = InvitationRow & {
   workspaceId: string;
   role: NonNullable<InvitationRow['role']>;
 };
 
-/**
- * A pending coven invitation as its invitee's `/coven` landing shows it: coven, role, sender and expiry.
- * Never the token, which no response carries, nor the invited address.
- */
+/** Never the token, which no response carries, nor the invited address. */
 export interface ReceivedInvitation {
   id: string;
   covenName: string;
   covenSlug: string;
   role: NonNullable<InvitationRow['role']>;
-  /** Null once the sender's account is gone. */
   inviterName: string | null;
   expiresAt: Date;
   note: string | null;
 }
 
-/** Why an invitation link cannot be accepted by this session, one reason per link. */
 export type InvitationRefusal =
   | 'invalid'
   | 'accepted'
-  /** A card the signed-in account itself accepted. */
   | 'used-by-you'
-  /** A card, refused because the signed-in account has already accepted another. */
   | 'used-another-card'
   | 'declined'
   | 'revoked'
@@ -155,17 +116,13 @@ export type InvitationRefusal =
   | 'unverified'
   | 'paused';
 
-/** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =
-  /** The site role accepting grants, curator or keeper. */
   | { acceptable: true; tier: 'site'; siteRole: InvitableSiteRole }
-  /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
+  /** The name goes to the matching verified account alone. */
   | { acceptable: true; tier: 'workspace'; slug: string; name: string }
-  /** A card: it names no coven, role or batch, and accepting lands on the account's own page. */
   | { acceptable: true; tier: 'card' }
   | { acceptable: false; reason: InvitationRefusal; message: string };
 
-/** The accept service's checks, inside the module: a refusal, or the invitation and the account it admits. */
 export type InvitationCheck =
   /** `card` when the link is a card's, found or shaped like one, so the words fit a printed card. */
   | { refusal: InvitationRefusal; card?: boolean }
@@ -176,51 +133,33 @@ export type InvitationCheck =
       tier: 'workspace';
       invitation: WorkspaceInvitationRow;
       user: UserRow;
-      /** The live coven, as the invited account may be told it. */
       coven: InvitedCoven;
     };
 
-/** Where a card stands: pending until accepted, revoked or past its date. */
 export type CardState = 'pending' | 'accepted' | 'expired' | 'revoked';
 
-/** A pending card as its landing page tells a signed-out visitor of it: whether its batch was minted for beta testers. */
 export interface LiveCard {
   beta: boolean;
 }
 
-/** A mint's answer: the batch, its expiry, and each card's token, which no later read returns. */
 export interface MintedCards {
   batchId: string;
   expiresAt: Date;
   tokens: string[];
 }
 
-/**
- * A mail carrying a secret link, as its job's run holds it: ids and the request's `/api/auth` base, never the token, the
- * address or the link. The step reads the address and the token, or signs one, when it sends.
- */
+/** Ids and the request's `/api/auth` base, never the token, the address or the link. */
 export type SecretLink =
-  /** The sign-up or resend verification link, landing on the way to `next`. */
   | { kind: 'verification'; userId: string; authBase: string; next: string | null }
-  /** The password reset link. */
   | { kind: 'reset'; userId: string; authBase: string }
-  /** The lockout notice, with its reset link, for a lock of `minutes`. */
   | { kind: 'lockout'; userId: string; authBase: string; minutes: number }
-  /** The change-of-address link, sent to the row's pending address and landing on the way to `next`. */
   | { kind: 'change'; userId: string; authBase: string; next: string | null }
   /** An address invitation's link, coven or admin, on a token its step mints when it sends, so only the newest mailed link works. */
   | { kind: 'invitation'; invitationId: string; origin: string };
 
-/**
- * An account notice, as its job's run holds it: ids, a kind and the site origin, never the address or the mail. The step reads
- * the address from the row when it sends.
- */
+/** Ids, a kind and the site origin, never the address or the mail. */
 export type AccountNotice =
-  /** Tells the address being left that a change to the row's pending address was asked for. */
   | { kind: 'change-requested'; userId: string; origin: string }
-  /** Tells the account a sign-up arrived for its address, in place of the second account that is not made. */
   | { kind: 'account-exists'; userId: string; origin: string }
-  /** Tells the account its password was just replaced, and `how`. */
   | { kind: 'password-changed'; userId: string; origin: string; how: 'reset' | 'change' | 'set' }
-  /** Tells the address a completed change left, held in the row's `former_email`, where the account went. */
   | { kind: 'change-completed'; userId: string; origin: string };

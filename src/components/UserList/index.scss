@@ -3,25 +3,21 @@
 @use 'layers' as *;
 
 // The user list's own rules: cell alignment, marks and tips, the sticky Impersonate column and its stacked-card fallback; the layout primitives are shared
-// (claude-docs/components/user-list.md, "The list's stylesheet").
+// (claude-docs/components/user-list.md, "Styling").
 
-// Every cell centred on its row rather than on the text's baseline, which
-// the primitive uses: these rows mix text with logo circles, marks and
-// buttons, whose boxes put their baselines at different heights, so on the
-// baseline a row's contents sat unevenly.
+// Every cell centred on its row, not on the text's baseline: these rows mix text with logo circles, marks and buttons
+// whose baselines differ.
 .user-list .data-table td {
   vertical-align: middle;
 }
 
 // No cell wraps (`.data-table--nowrap`, `--roomy`); borders are separate so each rule belongs to its own cell, not the grid
-// (claude-docs/components/user-list.md, "The list's stylesheet").
+// (claude-docs/components/user-list.md, "Styling").
 .user-list .data-table {
   border-collapse: separate;
   border-spacing: 0;
 }
 
-// A yes-or-no column's mark: green for yes, red for no, the colours the
-// accent and the error notices already carry.
 .user-list__mark {
   display: inline-flex;
 
@@ -70,14 +66,12 @@
   }
 }
 
-// The history link, then the name, side by side.
 .user-list__name {
   display: inline-flex;
   align-items: center;
   gap: space(1);
 }
 
-// The history link's tip is placed against this.
 .user-list__history {
   @include tip-anchor;
 }
@@ -111,7 +105,6 @@
   @include tip-above($tip-layer, false);
 }
 
-// Email and its verified mark, side by side.
 .user-list__email {
   display: inline-flex;
   align-items: center;
@@ -127,7 +120,6 @@
     font-size: type-size('caption');
   }
 
-  // The mark columns (Can Create, Support, Access) and Logins: each heading centred over its marks or logos.
   .user-list .user-list__mark-column {
     text-align: center;
   }
@@ -146,14 +138,12 @@
   z-index: $tip-layer;
 }
 
-// The role cell: the role and the primary keeper's crown, side by side.
 .user-list__role-name {
   display: inline-flex;
   align-items: center;
   gap: space(1);
 }
 
-// The crown and its tip, the tip placed against this wrapper.
 .user-list__primary {
   @include tip-anchor;
 }
@@ -169,9 +159,6 @@
   }
 }
 
-// The pause on keeper changes, beside the page's heading as its `.page-header`
-// child: the warning while paused and the button on one line. At a
-// phone's width the page header spans them across the line, a line each.
 .user-list__pause {
   display: flex;
   align-items: center;
@@ -184,10 +171,8 @@
   }
 }
 
-// The email under the name in the user modal's head. Lives here, not in
-// Modal's sheet: the heading object is built by the page for this list's
-// modal and shown at once on a press, before the body's stylesheet matters,
-// and Modal's own qualifier stays inline for its other callers.
+// Lives here, not in Modal's sheet: the heading shows at once on a press, before the body's
+// stylesheet loads.
 .user-list__modal-email {
   display: block;
 }

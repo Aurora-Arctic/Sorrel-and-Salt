@@ -12,9 +12,6 @@ import { answerQuery, useMockHandlers } from '../../../.storybook/mock-api';
 import IngredientSearch, { IngredientSearchForm } from '.';
 import type { IngredientSearchMatch } from './types';
 
-// Render-only; behaviour is asserted in tests/components/IngredientSearch. The
-// dropdown asks `/api/graphql`, which the workshop does not serve, so the
-// workshop's fake API answers it (.storybook/mock-api.ts). Names are invented.
 const meta = {
   title: 'Ingredients / Ingredient Search',
 } satisfies Meta;
@@ -31,9 +28,6 @@ const matches = (count: number): IngredientSearchMatch[] =>
     nomenclature: index % 2 === 0 ? 'botanical' : 'none',
   }));
 
-// What the dropdown's lookups answer with: the rows the story's controls pick
-// now. The handlers read this on each request, so a change of control is heard
-// without a reload.
 const lookup: { rows: IngredientSearchMatch[]; hasNextPage: boolean } = {
   rows: [],
   hasNextPage: false,
@@ -58,9 +52,7 @@ const LOOKUPS = [
   })),
 ];
 
-/** Answers the dropdown's lookups with `rows`, the compendium's and a coven's alike. */
 function useCannedMatches(rows: IngredientSearchMatch[], hasNextPage: boolean): void {
-  // The handlers read `lookup` when a request arrives, so an effect sets it before any can.
   useEffect(() => {
     lookup.rows = rows;
     lookup.hasNextPage = hasNextPage;
@@ -145,17 +137,13 @@ const ROWS = { Few: matches(4), Many: matches(25), None: [] as IngredientSearchM
 interface StatesArgs {
   scope: 'Compendium' | 'Coven';
   shape: 'Table' | 'Cards';
-  /** Type in the box to see the dropdown; "Many" ends in See All Results. */
   matches: keyof typeof ROWS;
-  /** None: empty box. Testwort: a search shown, so Clear is drawn. W: under the search floor. */
   query: 'None' | 'Testwort' | 'W';
   filterFields: boolean;
   pickHeading: boolean;
   previousPage: boolean;
 }
 
-// Render-only. The box starts empty: focus it and type "wort" to see the
-// dropdown (a few matches, a full list ending in See All Results, or none).
 export const States: StoryObj<StatesArgs> = {
   args: {
     scope: 'Compendium',

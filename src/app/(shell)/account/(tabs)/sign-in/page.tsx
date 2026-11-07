@@ -38,8 +38,6 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     accountPasskeys(),
   ]);
   const linkError = linkErrorMessage(params.error);
-  // Which row the failure belongs in; anything not on the roster leaves it
-  // at the head of the section.
   const failedProvider =
     typeof params.provider === 'string' && isRosterProvider(params.provider)
       ? params.provider

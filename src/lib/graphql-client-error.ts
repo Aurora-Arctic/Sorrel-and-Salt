@@ -4,10 +4,7 @@ import type { GraphQLFormattedError } from 'graphql';
 // graphql-failure.ts test for it with `instanceof`, and a component test that
 // replaces `@/lib/graphql-client` with a stub must not take the class with it.
 
-/**
- * A request that got an answer but not a whole one: a non-2xx status, GraphQL `errors`, or no `data`. `status` is read by `shouldRetry`, `errors` by
- * the form readers in graphql-failure.ts (claude-docs/graphql/client.md, "A GraphQL error rejects").
- */
+/** `status` is read by `shouldRetry`, `errors` by the form readers in graphql-failure.ts (claude-docs/graphql/client.md, "A GraphQL error rejects"). */
 export class GraphQLClientError extends Error {
   readonly status: number;
   readonly errors: readonly GraphQLFormattedError[] | undefined;
@@ -26,10 +23,7 @@ export class GraphQLClientError extends Error {
   }
 }
 
-/**
- * A STALE_WRITE answer: the save named a revision the row has moved past; `currentRevision` is the one it holds now. Still a `GraphQLClientError`, which
- * the autosave hook tells apart to pause and offer a choice (claude-docs/components/autosave.md, "The server's half").
- */
+/** Still a `GraphQLClientError`, which the autosave hook tells apart to pause and offer a choice (claude-docs/autosave.md, "The server's half"). */
 export class StaleWriteError extends GraphQLClientError {
   readonly currentRevision: number;
 

@@ -12,9 +12,7 @@ import {
   ValidationError,
 } from '@/lib/errors';
 
-// The route's mapping, run through a real Yoga instance so what is asserted is the response
-// body a browser receives. The schema is a throwaway, since no production field throws each
-// type; tests/app/api/graphql/route.test.ts asserts the route itself carries the mapping.
+// A throwaway schema, since no production field throws each type; tests/app/api/graphql/route.test.ts asserts the route carries the mapping.
 
 const ISSUES = [
   { path: ['canonicalName'], message: 'A botanical name is required' },
@@ -234,8 +232,6 @@ describe('service errors over GraphQL', () => {
     expect(body.errors[0].extensions ?? {}).not.toHaveProperty('code', 'INTERNAL_SERVER_ERROR');
   });
 
-  // A refusal is one error among a response's others; the fields that
-  // resolved still answer.
   it('maps each error in a response on its own', async () => {
     const { body } = await run('{ ok refusedPart crashedPart }');
 

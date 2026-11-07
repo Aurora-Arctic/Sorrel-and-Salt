@@ -7,7 +7,6 @@ import { CompendiumEditLink } from '../IconTip';
 import { EDIT_ENTRY_EYEBROW } from './edit-heading';
 import type { EditableEntry } from './types';
 
-/** Edit in Compendium as the one icon where it is the page head's only action (a curator in no coven): the cards' pencil, named for the compendium, linking into the edit dialog. */
 export function EditPencil({
   href,
   entry,

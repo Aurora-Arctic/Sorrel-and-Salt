@@ -7,7 +7,6 @@ import type { CompendiumSlugEntry } from '@/modules/ingredients';
 // catalog at `/.well-known/ai-catalog.json` and `/.well-known/ard.json`. Every URL is built on
 // `siteUrl`, never the request's host (claude-docs/seo/ai-discovery.md).
 
-/** The public compendium's own summary, shared by both files. */
 const SUMMARY =
   'A public reference of the ingredients used in spellwork, each entry with its sources.';
 
@@ -42,7 +41,6 @@ export function buildLlmsTxt(entries: readonly CompendiumSlugEntry[]): string {
 // A bracket in a name would end the link text early.
 const linkText = (text: string) => text.replace(/[[\]\\]/g, (char) => `\\${char}`);
 
-/** The `: note` after a link: the entry's description cut by `describe`; none for an entry without one. */
 function note(description: string | null): string {
   const text = description ? describe(description) : '';
   return text ? `: ${linkText(text)}` : '';
@@ -51,7 +49,6 @@ function note(description: string | null): string {
 /** The catalog's media type: the AI Catalog draft's SHOULD; ARD names none for `ard.json`. */
 export const CATALOG_MEDIA_TYPE = 'application/ai-catalog+json';
 
-/** The catalog body for both well-known paths. */
 export type AiCatalog = {
   specVersion: string;
   host: { displayName: string };

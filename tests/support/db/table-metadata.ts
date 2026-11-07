@@ -4,7 +4,7 @@ import type { ForeignKeyFacts } from './types';
 
 // Transcribed, never read off `src/db/audit.ts`: a table compared against
 // `Object.keys(auditColumns)` matches for any value of `auditColumns`, an
-// empty one included (claude-docs/testing/db-harness.md, "The db test harness").
+// empty one included (claude-docs/testing/db-harness.md, "The db test harness — `tests/support/db/`").
 export const STAMP_COLUMNS: readonly string[] = [
   'created_at',
   'created_by',
@@ -12,7 +12,6 @@ export const STAMP_COLUMNS: readonly string[] = [
   'updated_by',
 ];
 
-/** What a hard-deleted join table must not carry. */
 export const DELETE_COLUMNS: readonly string[] = ['deleted_at', 'deleted_by'];
 
 export const AUDIT_COLUMNS: readonly string[] = [
@@ -92,7 +91,6 @@ function foreignKeyFacts(fk: ForeignKey): ForeignKeyFacts {
   };
 }
 
-/** `getTableConfig` plus the lookups every schema test builds on top of it. */
 export function tableFacts(table: PgTable) {
   const { columns, indexes, checks, primaryKeys, foreignKeys } = getTableConfig(table);
   const facts = foreignKeys.map(foreignKeyFacts);
@@ -109,7 +107,6 @@ export function tableFacts(table: PgTable) {
       indexes.map((index) => [index.config.name as string, index] as const),
     ),
     foreignKeyByColumn: Object.fromEntries(facts.map((fk) => [fk.column, fk])),
-    /** The table's own references — the ones that are not an audit id pointing at `users`. */
     nonAuditForeignKeys: facts.filter((fk) => !auditColumnNames.has(fk.column)),
   };
 }

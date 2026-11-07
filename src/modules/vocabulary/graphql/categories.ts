@@ -11,7 +11,6 @@ import type { CategoryRow } from '../types';
 import { CategoryGroupRef } from './category-groups';
 import { curatedVocabularyWrites } from './curated';
 
-// The category vocabulary as a chip reads it: each category with its group, whose two stored colours the chip wears.
 // Public reference data, so no scope and no `audit`: who curated a row is the admin pages' business. The writes are the site admin's.
 
 export const CategoryRef = curatedVocabularyWrites({

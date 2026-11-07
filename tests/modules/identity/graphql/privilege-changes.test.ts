@@ -6,11 +6,6 @@ import { useTestDatabase } from '../../../support/db/database';
 import { run } from '../../../support/graphql/run';
 import type { PrivilegeChangesResult } from './types';
 
-// `privilegeChanges`, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's page with every field, the filters reaching the service, subject and actor in one read per page, and the `admin` scope's refusal.
-// The order, the page boundary and who the service refuses are services/privilege-changes.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
-
-// The query count, observed at the repository: the user read is wrapped so
-// the test counts calls without changing what they answer.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -27,8 +22,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-// Ten rows over four subjects and three actors, the bootstrap user among the
-// actors as a seeded row's is, so one page names seven users.
 const SUBJECTS = [A, B, C, D];
 const ACTORS = [E.id, BOOTSTRAP_USER_ID, A.id];
 

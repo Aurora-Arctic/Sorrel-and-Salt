@@ -12,9 +12,6 @@ import type { SupportView } from '@/lib/support-path';
 import { A, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
-// The admin page's six views by direct call: the statuses and assignment each returns, the Needs Staff order, a curator's
-// scope in the counts, and what an internal note leaves out.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;

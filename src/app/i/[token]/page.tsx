@@ -17,10 +17,8 @@ export const metadata: Metadata = {
 // Cached so a second render in the request reads once (CLAUDE.md rule 1).
 const liveCard = cache(liveCardOf);
 
-// The card's back says what the site is; the page says it as a sentence with the site's name.
 const LEDE = `${WORDMARK} is ${BACK_LEDE.charAt(0).toLowerCase()}${BACK_LEDE.slice(1)}`;
 
-/** What every card's page says: the site, then what the card gives; an ordinary card adds its one free month. */
 const Welcome = ({ beta }: { beta: boolean }): ReactElement => (
   <section className="card-landing__part" aria-labelledby="card-welcome-text">
     <p id="card-welcome-text">{LEDE}</p>
@@ -36,7 +34,6 @@ const Welcome = ({ beta }: { beta: boolean }): ReactElement => (
   </section>
 );
 
-/** What an early card's page adds: the site is unfinished, and the holder's covens get free months once it charges. */
 const Early = (): ReactElement => (
   <section className="card-landing__part" aria-labelledby="card-early">
     <h2 id="card-early">You’re Among the First</h2>
@@ -58,9 +55,6 @@ const Early = (): ReactElement => (
   </section>
 );
 
-// A card's short link, printed small: a welcome while the card is live, a word for an early card's holder, then the same
-// panel as `/invite/[token]`, as a card beside the words on a wide window. The welcome is read with no session, as the
-// visitor holds only the card. A card that is not live shows the panel alone, which says why.
 export default async function CardPage({ params }: InvitePageProps) {
   const { token } = await params;
   const card = await liveCard(token);

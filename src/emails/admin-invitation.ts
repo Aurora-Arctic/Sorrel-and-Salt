@@ -11,9 +11,7 @@ import type { AdminInvitationProps } from './types';
 
 // The one place a keeper invitation's link exists outside the reader's inbox: only
 // its token's hash is stored (claude-docs/auth/admin-users.md, "Inviting a keeper").
-// The subject names the site role it grants, curator or keeper.
 
-/** The role as the mail names it, with its article: "an admin". */
 const ROLE: Record<AdminInvitationProps['siteRole'], { title: string; prose: string }> = {
   curator: { title: 'a Curator', prose: 'a curator' },
   admin: { title: 'a Keeper', prose: 'a keeper' },
@@ -51,7 +49,6 @@ export function AdminInvitation({
   );
 }
 
-/** The admin invitation mail for `to`, rendered to the html and plain text `send` takes. */
 export const adminInvitationMessage = defineMessage<AdminInvitationProps>(
   ({ siteRole }) => `You Are Invited to Be ${ROLE[siteRole].title}`,
   AdminInvitation,

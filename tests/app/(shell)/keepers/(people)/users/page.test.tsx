@@ -8,9 +8,6 @@ import type { PageRequest } from '@/lib/types';
 import { filterForm, sent } from '../../../../../support/filter-form';
 import { rowCells } from '../../../../../support/table';
 
-// The `/keepers/users` page: the guard, then the identity reads (a page of users and its count), the search parameters turned into the filter and the page, and the pager's links keeping the filter.
-// The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/user-list.test.ts's.
-
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
@@ -45,7 +42,6 @@ vi.mock('@/modules/coven', () => ({ membershipsOf }));
 const standingTimeoutsOf = vi.fn();
 vi.mock('@/modules/support', () => ({ standingTimeoutsOf }));
 
-// The modal also reads the user's support time-outs, which are the support page tests' to prove; none here.
 vi.mock('@/app/(shell)/keepers/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
 
 const { default: AdminUsersPage } = await import('@/app/(shell)/keepers/(people)/users/page');
@@ -63,7 +59,6 @@ const user = (index: number) => ({
   emailVerified: true,
 });
 
-/** A membership as the coven service answers one, its workspace beside it. */
 const COVEN_ROW = {
   workspaceId: '11111111-2222-4333-8444-555555555555',
   userId: user(1).id,
@@ -76,7 +71,6 @@ const COVEN_ROW = {
   },
 };
 
-/** The user modal’s name: its eyebrow, then the name and the address. */
 const VIEWING_01 = 'User, Listed Fixture 01, listed-1@users.test';
 
 const entry = (index: number) => {
@@ -84,8 +78,6 @@ const entry = (index: number) => {
   return { node, cursor: { key: [node.name], id: node.id } };
 };
 
-// The tab's action beside the heading, the switch on keeper changes, and the
-// tab's content, as the route group's layout puts them on one page.
 async function renderPage(params: Record<string, string> = {}) {
   const [action, page] = await Promise.all([
     UsersAction(),
@@ -99,7 +91,6 @@ async function renderPage(params: Record<string, string> = {}) {
   );
 }
 
-/** The cell in a user's row under the column with this heading. */
 function cellUnder(name: string, heading: string): HTMLElement {
   const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
   const row = screen.getByRole('row', { name: new RegExp(name) });
@@ -169,7 +160,6 @@ describe('the /keepers/users page', () => {
         inverted: false,
       },
     );
-    // Counted from the page's first row, under the same filter.
     expect(countUsers).toHaveBeenCalledOnce();
     expect(countUsers).toHaveBeenCalledWith(
       ADMIN,
@@ -182,7 +172,6 @@ describe('the /keepers/users page', () => {
   it('shows each user with the providers read for them', async () => {
     await renderPage();
 
-    // None linked leaves the cell empty.
     expect(cellUnder('Listed Fixture 01', 'Logins')).toHaveTextContent('Google');
     expect(cellUnder('Listed Fixture 02', 'Logins')).toHaveTextContent(/^$/);
   });
@@ -216,8 +205,6 @@ describe('the /keepers/users page', () => {
     ).toBeInTheDocument();
   });
 
-  // Whether a row is the primary keeper's is the identity service's
-  // answer, asked of each row as the page reads it.
   it('labels the row the service says is the primary keeper, and no other', async () => {
     isPrimaryAdmin.mockImplementation((node: { id: string }) => node.id === user(2).id);
 
@@ -230,7 +217,6 @@ describe('the /keepers/users page', () => {
     expect(within(other).queryByText('Primary Keeper')).not.toBeInTheDocument();
   });
 
-  // The switch's state, as the identity service answers it for this keeper.
   it('states whether keeper changes are paused, asked as the guard’s session', async () => {
     adminRoleChangePauseState.mockResolvedValue({ paused: true, canToggle: true });
 
@@ -318,8 +304,6 @@ describe('the /keepers/users page', () => {
   });
 });
 
-// `?user=<id>` opens the user’s modal over the list, holding the
-// covens the coven service answers for them, read with the navigation.
 describe('the /keepers/users page, the user modal', () => {
   it('reads the user and their covens as the guard’s session, and shows them in the modal', async () => {
     await renderPage({ query: 'listed', user: user(1).id });
@@ -398,8 +382,6 @@ describe('the /keepers/users page, the user modal', () => {
     expect(membershipsOf).not.toHaveBeenCalled();
   });
 
-  // Each row’s name opens the modal, keeping the filter, under the head the
-  // modal carries once loaded.
   it('links each name to its modal, keeping the filter', async () => {
     await renderPage({ query: 'listed', role: 'user' });
 
@@ -455,8 +437,6 @@ describe('the /keepers/users page, the user modal', () => {
   });
 });
 
-// The page offers impersonation where the plugin is registered, and
-// only there; the gate itself is tests/lib/impersonation.test.ts's.
 describe('the /keepers/users page, impersonation', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -473,7 +453,6 @@ describe('the /keepers/users page, impersonation', () => {
   });
 });
 
-/** What the filter form sends for `name`: once hydrated, a select-only box's hidden input. */
 function filterSends(name: string): string | null {
   return new URLSearchParams(sent(filterForm('Filter Users'))).get(name);
 }

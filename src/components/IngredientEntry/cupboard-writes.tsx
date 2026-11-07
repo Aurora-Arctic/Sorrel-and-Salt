@@ -34,7 +34,6 @@ const MakeItOursDocument = graphql(`
   }
 `);
 
-/** Make It Ours's confirmation, naming the entry as the coven calls it. */
 export function MakeItOursQuestion({ name }: { name: string }): ReactElement {
   return (
     <>
@@ -43,11 +42,9 @@ export function MakeItOursQuestion({ name }: { name: string }): ReactElement {
   );
 }
 
-/** What Make It Ours changes, beneath its confirmation. */
 export const MAKE_IT_OURS_DETAILS =
   "You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it.";
 
-/** Remove's confirmation, which says what goes with the entry. */
 export function RemoveFromCupboardQuestion({ name }: { name: string }): ReactElement {
   return (
     <>
@@ -56,7 +53,6 @@ export function RemoveFromCupboardQuestion({ name }: { name: string }): ReactEle
   );
 }
 
-/** Make It Ours asked in a dialog, as Leave Coven asks; with `covens` it first asks which coven, inside the `.form` stack that spaces the picker's field. */
 export function MakeItOursDialog({
   name,
   write,
@@ -86,7 +82,6 @@ export function MakeItOursDialog({
   );
 }
 
-/** Remove asked in a dialog, the same way, asking which coven the same way too. */
 export function RemoveDialog({
   name,
   write,

@@ -9,10 +9,8 @@ long form of `CLAUDE.md`'s GitHub task tracking section, and are not restated
 here. Everything reaches the board through `gh`, and the calls the skills
 make are wrapped once in
 `scripts/task-board.mjs`, so the lookup rule and the Project's field ids live
-in one file rather than four skills. The board moved
-here from Asana; the argument for the move, and for accepting that a public
-repo makes every issue and comment public, is the decision record for MB.89.
-The rule that costs is under **Comments**.
+in one file rather than four skills. The repo is public, so every issue and
+comment is public too; the rule that costs is under **Comments**.
 
 ## The board
 
@@ -23,11 +21,11 @@ The rule that costs is under **Comments**.
 | `Status`    | Single-select field: `Not Started` · `In Progress` · `In Review` · `Done`.                                                                                                                                                                                                                                                |
 | `Estimate`  | Number field, in hours — the `· Nh` on the task's heading in `tasks/<milestone>.md`.                                                                                                                                                                                                                                      |
 | Milestones  | One per wave (`Wave 07 — GraphQL`) and per pre-wave grouping, plus a closed `Retired — not done`, so every issue has one. A wave's description is its id list on the first line, then a link to its [`waves/wave-NN.md`](waves/) on `staging`, the one home of its reasoning; `reorder` reads the first line (**Order**). |
-| Issue types | `Bug` for a task that fixes a bug, a failure that reached a PR, staging or production; `Task` for everything else, whatever its id (2026-10-11, the owner's call, replacing "`Bug` for `MB.*`"). The org has to have both types enabled; `gh issue create --type` fails otherwise.                                        |
+| Issue types | `Bug` for a task that fixes a bug, a failure that reached a PR, staging or production; `Task` for everything else, whatever its id. The org has to have both types enabled; `gh issue create --type` fails otherwise.                                                                                                     |
 | Labels      | `tracked` on every task, the Project's auto-add filter; `hotfix` on a task that branches off `main`.                                                                                                                                                                                                                      |
 | Sub-issues  | Only for a genuine parent/child; a wave is a milestone, never a parent issue.                                                                                                                                                                                                                                             |
 
-How each object is named, labelled and kept is the rule file's "Board layout".
+The rules for naming, labelling and keeping each object are in `.claude/rules/task-tracking.md`, under "Board layout".
 
 ## The title rule
 
@@ -146,12 +144,12 @@ pattern can catch: it refuses text that trips one of its `SECRET_PATTERNS`
 (connection strings, `vercel.com` and `console.neon.tech` URLs, the common
 token prefixes, `Bearer` followed by a token, a long token-like run that is not
 a git SHA, an email address) and names the pattern class rather than echoing
-the match. `Bearer $ASANA_PAT` passes; the value would not.
+the match. `Bearer $TOKEN` passes; the value would not.
 
-A comment carried over from Asana opens with `[YYYY-MM-DD HH:MM UTC]`, and
+A comment that records an earlier event opens with `[YYYY-MM-DD HH:MM UTC]`, and
 that bracket is its true date. GitHub stamps a comment with the moment it is
-posted and offers no override, so on anything older than the migration the
-bracket is the date and the comment's own metadata is not.
+posted and offers no override, so for such a comment the bracket is the date
+and the comment's own metadata is not.
 
 ## `scripts/task-board.mjs`
 
@@ -193,6 +191,8 @@ not the budget, and the fix is fewer calls per command rather than waiting an
 hour.
 
 ## Sync
+
+A closed task's entry is its heading line only; its body is in `claude-docs/archive/tasks-closed-waves.tar.gz`. Never run `task-board.mjs sync` on a closed id: it would blank the issue body.
 
 **An issue mirrors its entry, and stays mirrored.** Its title is the entry's
 heading, `<ID> — <title>`, a retired one's struck-through title written
@@ -247,72 +247,6 @@ GitHub never writes a PR body into git, so a PR that finishes several tasks name
 
 The tally's hand-kept list of ids stays for work done outside git: dashboard or console work, or a merge made before the title rule.
 
-## Migration
+### scripts/task-board.mjs
 
-`scripts/migrate-asana-to-github.mjs` moved the board. It is one-off but every
-step is idempotent and resumable: `apply` looks each object up before writing
-it, and a run started again picks up where the last one stopped. It has to,
-because of the write limits below. The subcommands run in this order, each
-taking `--file <path>` for the export JSON (default `/tmp/asana-export.json`;
-the scratchpad is where it belongs, since it holds every note and comment the
-board ever had):
-
-1. **`export`** — reads the Asana project through its REST API with
-   `ASANA_PAT`: the project's tasks, each task's subtasks recursively, and each
-   task's stories, keeping the `comment` ones. One JSON tree.
-2. **`plan`** — reads the export and the breakdown and prints what `apply` would
-   do: counts, the milestone table, unplaced ids, ids whose notes mention a
-   hotfix without the name saying so, ids on the board with no task
-   heading. A name that starts with a task id and `—` (or the older `-`,
-   normalised) is an issue; any other card is a milestone. An issue's milestone
-   is its parent card's name, or failing a parent the wave whose row in
-   `TASKS.md`'s execution-order table names it, or none — reported, never
-   guessed. Status comes from the Asana marker (`▶ ` → `In Progress`, `◔ ` →
-   `In Review`, completed → `Done`), the estimate from the task's heading,
-   the type from the id, the `hotfix` label from the name. An id-bearing card
-   under an id-bearing card becomes a sub-issue.
-3. **`scan`** — every body, comment and milestone description through
-   `findSecret`; a hit prints the task id, the pattern class and a 120-character
-   snippet and the run exits 1. `apply` runs it first and stops on a hit;
-   `--skip-scan` is for text the owner has read and accepted.
-4. **`apply --project <number>`** — labels (`tracked`, `hotfix`; `gh issue
-create --label` fails on a missing one), milestones (created open, and
-   closed only in the final step, because `--milestone <name>` on create may
-   not resolve a closed one), issues in `TASKS.md` heading order then the rest,
-   close state, comments in `created_at` order (an identical trimmed body is
-   skipped), Project item with `Status` and `Estimate`, sub-issue links, then
-   the milestone closes. One progress line per object and a summary.
-5. **`verify --project <number>`** — export counts against GitHub: issues,
-   closed issues, comments, milestones, Project items. Exit 1 on a mismatch.
-
-**Rate limits.** Asana's free plan allows 150 requests a minute, so `export`
-spaces requests about 450 ms apart and honours a `429`'s `Retry-After`.
-GitHub's secondary limit for content creation is about 80 writes a minute and
-500 an hour, so `apply` spaces writes 1.5 s apart, retries once after a
-`403`/`429` (waiting `retry-after` or, since the hourly cap sends none and a minute never
-clears it, 300 s — `task-board.mjs`'s `pacedWrite`, which `reorder` shares), and a full run of several hundred
-issues plus their comments spans several invocations — which is why every step
-is idempotent rather than merely careful.
-
-**Prerequisites.** `gh` authenticated with a fine-grained PAT carrying the
-org's Projects permission and the repo's Issues, Contents, Pull requests and
-Workflows permissions; `ASANA_PAT` in the environment for `export` only; the
-org's issue types `Bug` and `Task` enabled; the Project existing with its two
-fields, since the script resolves them and creates neither.
-
-**The Asana project is renamed archived, not deleted.** Older PR bodies carry
-an `Asana task:` permalink, and every migrated issue body ends with `Asana:
-<permalink>`; both keep resolving only while the workspace exists. Nothing is
-written there again.
-
-### What the free Asana plan cost, restored
-
-| On Asana's free plan                                                                | On GitHub                                                                                                                    |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Status lived in the task name as a marker (`▶ `, `◔ `), custom fields being premium | `Status` is a Project single-select; a title is never rewritten for a status change.                                         |
-| The estimate lived only in `TASKS.md`                                               | `Estimate` is a Project number field, summable in a view.                                                                    |
-| Type lived nowhere after the rebuild                                                | Issue type `Bug` for a fix, `Task` otherwise.                                                                                |
-| Dependencies were premium                                                           | `gh issue edit --add-blocked-by` is free.                                                                                    |
-| Rules were premium; every status change was a hand edit                             | The Action closes the issue on merge and the Project's built-in workflows add by label and set `Done`.                       |
-| Lookup was two API calls per id, over wave cards and their subtasks, with no search | One REST listing of the tracked issues and a title-prefix match; the exact-segment rule stays, since search still tokenises. |
-| Writes went through an MCP server that had to be authorised and exposed no tag tool | `gh`, already authenticated in the devcontainer, covers issues, milestones, types, sub-issues and Projects.                  |
+task-board REST read: one request per hundred against the core budget; the GraphQL listing carried every issue's labels and two lookups a minute tripped the secondary rate limit. tasks-md range is not a numeric span.

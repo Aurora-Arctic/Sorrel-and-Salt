@@ -16,20 +16,12 @@ import type { ComboboxOption } from './types';
 
 const noop = () => {};
 
-// Render-only; behaviour is asserted in tests/components/Combobox. The
-// suggestions are fixed, so typing filters nothing: the rows are the shape
-// each story shows, with what was typed as the last row once there is text.
 const meta = {
   title: 'Forms / Combobox',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * A box in a field of its own, its label above it as a form draws it: a bare
- * label sat a couple of pixels off the control, where the field's label row
- * stands a step clear.
- */
 function Labelled({
   label,
   children,
@@ -76,7 +68,6 @@ const NAMES: ComboboxOption[] = [
   { value: 'Fixture Bane', note: 'Used by Mockleaf, Fixturewort' },
 ];
 
-/** A lookup that settled with no rows: the popup opens and says so, outside the list. */
 export const EmptyMessage: Story = {
   render: () => {
     const [value, setValue] = useState('zzz');
@@ -100,11 +91,9 @@ export const EmptyMessage: Story = {
   },
 };
 
-/** A field whose suggestions come in two buckets: the vocabulary, then values in use outside it. */
 export const TwoBuckets: Story = {
   render: () => {
     const [value, setValue] = useState('');
-    // Opened as a person's press of the chevron would, so both buckets show.
     usePressOnMount('Show Form suggestions');
     return (
       <Labelled label="Form">
@@ -124,11 +113,6 @@ export const TwoBuckets: Story = {
   },
 };
 
-/**
- * A pick's qualifier: "Wax" picked under Substance, reading "Wax (Substance)"
- * with the group muted, its description in a tooltip on hover or focus. An edit away from
- * the picked value drops it, as the form's field does.
- */
 export const Qualifier: Story = {
   render: () => {
     const [value, setValue] = useState('Wax');
@@ -162,19 +146,13 @@ export const Qualifier: Story = {
   },
 };
 
-/**
- * A list's box: entries inside the control with an x each, one cut off with a
- * tooltip. A pick adds rather than fills; Backspace in the empty box takes the last.
- */
 const ListView = () => {
   const [value, setValue] = useState('');
-  // One entry too long for the control: cut off, its whole text in a tooltip.
   const [entries, setEntries] = useState([
     'Hedge Fixture',
     'Fixture Bane',
     'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam',
   ]);
-  // Opened as a person's press of the chevron would, so the suggestions show.
   usePressOnMount('Show Folk Name suggestions');
   const add = (text: string) => {
     const trimmed = text.trim();
@@ -218,11 +196,6 @@ const ListView = () => {
 
 export const FolkNameList: Story = { render: ListView };
 
-/**
- * A list whose order means something: each chip moved by its handle,
- * the grip and text, dragged by pointer, or lifted with Space, moved with the
- * arrows and put down with Space. Enough chips to wrap onto a second row.
- */
 export const Sortable: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -280,16 +253,10 @@ export const Sortable: Story = {
   },
 };
 
-/**
- * A list whose entries can only be picked, the references': its last
- * row makes something new, "New Reference", whatever is typed, in place of
- * the typed row. Picking it says so beneath the box.
- */
 export const CreateRow: Story = {
   render: () => {
     const [value, setValue] = useState('');
     const [made, setMade] = useState(0);
-    // Opened as a person's press of the chevron would, so the last row shows.
     usePressOnMount('Show Reference suggestions');
     return (
       <Labelled label="Reference">
@@ -313,7 +280,6 @@ export const CreateRow: Story = {
   },
 };
 
-/** A box with no source yet: it never opens, and Enter adds as Add does. */
 export const NoSource: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -338,7 +304,6 @@ const KINDS = ['Botanical', 'Fungal', 'Zoological', 'Mineral', 'Chemical', 'Unkn
   (label) => ({ value: label.toLowerCase(), label }),
 );
 
-/** The select-only box: a closed set, nothing typed, a placeholder until a choice. */
 export const SelectOnly: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -359,7 +324,6 @@ export const SelectOnly: Story = {
   },
 };
 
-/** The select-only box with an icon on each choice, in the list and the closed value. */
 export const SelectWithIcons: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -388,10 +352,6 @@ const TRADITIONS = ['Fixtural', 'Mockish', 'Old Testic', 'Stubbish', 'Testwardis
   (label) => ({ value: label.toLowerCase(), label }),
 );
 
-/**
- * The type-ahead box: a closed set typed into. The list narrows to the choices
- * holding the text, the first is highlighted, and only a choice becomes the value.
- */
 export const Typeahead: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -420,11 +380,6 @@ const ELEMENTS = ['Earth', 'Air', 'Fire', 'Water', 'Spirit'].map((label) => ({
   label,
 }));
 
-/**
- * The multi-select box: a closed set holding several, each choice a chip with its
- * x inside the control, a clear and the chevron on the right. The list offers only
- * what is left, and Backspace takes the last.
- */
 export const MultiSelect: Story = {
   render: () => {
     const [values, setValues] = useState(['fire', 'air']);
@@ -445,9 +400,6 @@ export const MultiSelect: Story = {
   },
 };
 
-// The qualifier as the ingredient form draws it: "Wax" picked under Substance in
-// the Form box, with a detail long enough to wrap. Focus or a hover on
-// "(Substance)" opens the tooltip; the first printable key or the list closes it.
 const LONG_DETAIL =
   'A long description, as a curated form can carry: what the form is, how it is prepared, and what sets it apart from another form of the same name.';
 
@@ -487,7 +439,6 @@ const QualifiedField = (): ReactElement => {
 
 export const QualifierInForm: Story = { render: () => <QualifiedField /> };
 
-/** A caller's own control at the box's start, such as a form's submit. */
 export const Leading: Story = {
   render: () => {
     const [value, setValue] = useState('');
@@ -514,7 +465,6 @@ export const Leading: Story = {
   },
 };
 
-/** A lookup under way: the box is `aria-busy` and the ring turns beside the chevron. */
 export const LoadingSearch: Story = {
   render: () => {
     const [value, setValue] = useState('moon');
@@ -536,7 +486,6 @@ export const LoadingSearch: Story = {
   },
 };
 
-/** The select-only box while its change is on its way: choice shown, `aria-busy`, ring. */
 export const LoadingSelect: Story = {
   render: () => {
     const [value, setValue] = useState('fungal');
@@ -586,11 +535,6 @@ const GROUPED: ComboboxOption[] = [
   },
 ];
 
-/**
- * An open list in rows of every kind: buckets under a group heading edged in the
- * group's colour, a count, a disabled row with its reason, the typed row with its
- * mark, and the first row highlighted. The box is marked required.
- */
 export const GroupedRows: Story = {
   render: () => {
     const [value, setValue] = useState('te');
@@ -619,11 +563,6 @@ export const GroupedRows: Story = {
 
 const GLYPH = <span aria-hidden="true">*</span>;
 
-/**
- * One chip in each form: plain, linked, outlined, with a count (and while loading),
- * naming what it removes, flagged by its list's error, with an action, with a
- * group icon, and coloured by its group.
- */
 export const EntryChips: Story = {
   render: () => (
     <StatesGrid

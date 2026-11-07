@@ -39,7 +39,7 @@ import {
 // error alone. CupboardEntryForm also imports ListField and MultiSelectField.
 
 /**
- * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick fills the field with
+ * A text field whose box suggests as it is typed in (claude-docs/components/combobox.md): a pick fills the field with
  * the suggestion's value, and free text stays as typed. What a pick links is the caller's, told of
  * each pick and each edit; what it adds to the box is its qualifier.
  */
@@ -193,13 +193,10 @@ export function ListField({
   const errorId = `${id}-error`;
   const focusBox = () => boxElement.current?.focus();
 
-  // What the list holds, and for folk names the name, which a repeat is
-  // judged against: watched only there, so Name's typing redraws no other list.
   const listed: AnyListEntry[] = useWatch({ control, name });
   const ingredientName = useWatch({ control, name: 'name', disabled: name !== 'folkNames' });
   const nameToRefuse = name === 'folkNames' ? ingredientName : undefined;
   const repeat = (text: string) => repeatOf(listed, text, undefined, nameToRefuse);
-  // The lookup leaves out what the list holds, as the References search does.
   const offered = useMemo(
     () =>
       suggestions && {
@@ -207,8 +204,6 @@ export function ListField({
         options: suggestions.options
           .filter(
             (option) =>
-              // A pick-only list offers the curated rows alone: a value only in
-              // use is one the compendium refuses.
               !(pickOnly && option.curated === false) &&
               !repeatOf(listed, option.value, option.link, nameToRefuse),
           )
@@ -237,8 +232,6 @@ export function ListField({
     .join(' ');
   const describedBy = [hint && hintId, message && errorId].filter(Boolean).join(' ');
 
-  // Once a submit has shown errors, a change to the list revalidates it and
-  // its box, as an edit to any other field does: adding empties the box.
   const revalidate = () => {
     if (isSubmitted) void trigger([name, box]);
   };
@@ -252,8 +245,6 @@ export function ListField({
     focusBox();
     return true;
   };
-  // A pick-only list's Enter on text it has not picked from: refused at the
-  // box as a repeat is, the text kept to search on.
   const unpicked = (text: string) => {
     if (text.trim() === '') return;
     const why = `Pick "${text.trim()}" from the list`;
@@ -261,7 +252,6 @@ export function ListField({
     setAnnouncement(why);
     focusBox();
   };
-  // Gone once the text it judged is changed, or something is added.
   const clearRefusal = () => {
     const type = getFieldState(box).error?.type;
     if (type === 'repeat' || type === 'unpicked') clearErrors(box);
@@ -297,9 +287,8 @@ export function ListField({
     revalidate();
   };
 
-  // Keyed by the field array's id, which follows an entry through a move. Text and detail are read
-  // from the watched values: the field array's rows are a snapshot that an entry's own field (a
-  // substitute's form, picked beside the list) does not refresh.
+  // Text and detail are read from the watched values: the field array's rows are a snapshot
+  // that an entry's own field (a substitute's form, picked beside the list) does not refresh.
   const substitutes = holdsSubstitutes(name);
   const chips = fields.map((row, index) => {
     const entry = listed[index] ?? row;
@@ -309,7 +298,6 @@ export function ListField({
       id: row.id,
       value,
       detail: entryDetail(entry),
-      // A substitute's link opens its summary; its typed text is a name only.
       summary: linked
         ? substituteSummary(entry as SubstituteListEntry, value, workspaceId)
         : undefined,

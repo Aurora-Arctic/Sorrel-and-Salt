@@ -17,24 +17,18 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 // Import them from this file, never from db/audit.ts, which exports only the factories (claude-docs/db/audit-columns.md).
 const usersId: UsersIdReference = () => users.id;
 export const auditStampColumns = auditStampColumnsReferencing(usersId);
-// The four stamps plus two, spread from the same instance, so the six-column
-// set has one definition and the two cannot drift (CLAUDE.md rule 3).
 export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencing(usersId) };
 
 // A counter the database adds one to on every UPDATE, through the shared `bump_revision()` trigger each table attaches in its
 // own migration. A save names the revision it read and is refused if the row has moved. Named `revision`, not `version`, which v2
-// keeps for a saved snapshot (claude-docs/db/grimoire.md, "Revision"; claude-docs/design-decisions/m13.14-autosave.md).
+// keeps for a saved snapshot (claude-docs/db/grimoire.md, "Revision"; claude-docs/design-decisions/grimoire.md, "Long forms autosave, and edits of one row can conflict").
 export const revisionColumn = () => integer('revision').notNull().default(1);
 
-// Keepers curate the global vocabularies and manage the people page; curators
-// curate the same vocabularies and reach no people page. A closed set
-// of site roles, so a column is enough.
 export const userRole = pgEnum('user_role', ['user', 'curator', 'admin']);
 
-// Better Auth's adapter table plus the app columns. `name`/`image` keep Better
-// Auth's names (DESIGN.md was corrected, not the fields). `created_by`
-// self-references `users.id`; the sign-up hook and seed bootstrap satisfy it
-// within one statement (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
+// Better Auth's adapter table plus the app columns; `name` and `image` keep its
+// names. `created_by` self-references `users.id`, which the sign-up hook and seed
+// satisfy within one statement (claude-docs/db/audit-columns.md, "Audit columns and applyAudit").
 export const users = pgTable(
   'users',
   {
@@ -54,9 +48,7 @@ export const users = pgTable(
     // The address a completed change left, until its notice is sent or every attempt at it failed. Not unique, for the same
     // reason: the address is free for another account the moment the change completes.
     formerEmail: text('former_email'),
-    // The `twoFactor` plugin's user flag: true once an authenticator is confirmed.
     twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
-    // When the account agreed to the terms of use; null until it does.
     termsAcceptedAt: timestamp('terms_accepted_at'),
     // The numbers of the terms, disclaimer and code of ethics versions the account last agreed to, all three at once; null until
     // it does. Any one other than its document's newest published version counts as not agreed (claude-docs/auth/admin-bootstrap.md,
@@ -67,14 +59,13 @@ export const users = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // Partial per CLAUDE.md rule 4.
     liveUnique('users_email_unique', table, table.email),
     // Better Auth lowercases on every write; this holds a hand-written row to
     // the same, so the unique index above is case-insensitive in effect and at
     // most one live row can match ADMIN_BOOTSTRAP_EMAIL.
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
     // The flag lets anyone create a workspace, so every role but `user` holds it and the gate never reads `role` beside it.
-    // Not partial: it states a fact about the row, deleted or not (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+    // Not partial: it states a fact about the row, deleted or not (claude-docs/design-decisions/auth.md, "Every admin holds `canCreateWorkspace`").
     // It names `user`, not the privileged roles, so the migration adding `curator` need not use the new value it adds.
     check(
       'users_privileged_can_create_workspace',

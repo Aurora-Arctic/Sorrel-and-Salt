@@ -1,4 +1,3 @@
-/** One `admin_role_change_pauses` row as the pause tests read it, `ended` for whether `ended_at` is set. */
 export interface PauseRow {
   created_by: string;
   updated_by: string;
@@ -6,7 +5,6 @@ export interface PauseRow {
   ended: boolean;
 }
 
-/** One `user_privilege_changes` row as the ledger tests read it, enums and timestamps cast to text. */
 export interface PrivilegeChangeRow {
   id: string;
   user_id: string;

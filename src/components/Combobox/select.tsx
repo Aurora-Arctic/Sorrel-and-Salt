@@ -39,7 +39,6 @@ export function ComboboxSelect({
       labelId,
       menuId: `${id}-list`,
       getItemId: (index) => `${id}-row-${index}`,
-      // Shown and read, but stepped over by the arrows and refused a press.
       isItemDisabled: (choice) => Boolean(choice?.disabled),
       onSelectedItemChange: ({ selectedItem }) => {
         if (selectedItem) onChange(selectedItem.value);
@@ -121,7 +120,6 @@ export function ComboboxSelect({
       {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
       <ul
         className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        // Placed beneath or above the box, as there is room (useListPosition).
         style={listStyle}
         data-placement={placement}
         {...getMenuProps({ ref: setList, 'aria-label': `${label} choices` })}

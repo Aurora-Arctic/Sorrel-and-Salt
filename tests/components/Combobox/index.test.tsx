@@ -21,9 +21,7 @@ import {
 } from '../../support/sortable';
 import type { HarnessProps } from './types';
 
-// A text box that suggests as it is typed in, on Downshift's `useCombobox`:
-// the suggestions in their buckets, what was typed as the last row, and a
-// pick that writes nothing itself (claude-docs/components/combobox.md).
+// Downshift's `useCombobox` (claude-docs/components/combobox.md).
 
 const WAX_ANIMAL: ComboboxOption = {
   value: 'Wax',
@@ -42,7 +40,6 @@ const ONE_BUCKET: Suggestions = {
   pending: false,
 };
 
-/** The box with its text held outside it, as a form holds a field's. */
 function Harness({ initial = '', ...props }: HarnessProps) {
   const [value, setValue] = useState(initial);
   return (
@@ -135,15 +132,13 @@ describe('Combobox', () => {
     expect(within(curated).getAllByRole('option')).toHaveLength(2);
     expect(within(inUse).getAllByRole('option')).toHaveLength(1);
     expect(within(inUse).getByRole('option', { name: /Rhizomes/ })).toBeInTheDocument();
-    // What was typed is neither curated nor in use.
     expect(screen.getByRole('option', { name: 'Use what you typed: wax' })).not.toBe(
       within(curated).queryByRole('option', { name: /typed/ }),
     );
     expect(within(inUse).queryByRole('option', { name: /typed/ })).not.toBeInTheDocument();
   });
 
-  // An option's icon is decoration, left out of the name a screen
-  // reader gets. Where it sits beside the label is layout, which happy-dom does not draw.
+  // An option's icon is decoration, left out of the accessible name.
   it('draws an option icon without adding it to the name', () => {
     const suggestions: Suggestions = {
       options: [{ value: 'Wax', icon: <svg /> }, { value: 'Rhizomes' }],
@@ -171,7 +166,6 @@ describe('Combobox', () => {
     ]);
   });
 
-  // A source that names its own buckets, a category under its group.
   describe('headed suggestions', () => {
     const HEADED: Suggestions = {
       options: [
@@ -266,7 +260,6 @@ describe('Combobox', () => {
 
     expect(onPick).toHaveBeenCalledWith('Wax', WAX_SUBSTANCE);
     expect(box()).toHaveAttribute('aria-expanded', 'false');
-    // The text is the caller's to set: it still reads what was typed.
     expect(box()).toHaveValue('wax');
   });
 
@@ -281,8 +274,6 @@ describe('Combobox', () => {
   });
 
   describe('kept open for the next pick', () => {
-    // A box that adds each pick to a list: the list stays open after a pick,
-    // with the focus still in the text, and only leaving it closes it.
     it('stays open after a pick by click, with the focus in the text, where a single box closes', () => {
       const onPick = vi.fn();
       const { unmount } = render(<Harness suggestions={TWO_BUCKETS} onPick={onPick} keepOpen />);
@@ -400,7 +391,6 @@ describe('Combobox', () => {
 
       type('fix');
       fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
-      // The click closed the list; ArrowUp opens it on its last row.
       key('ArrowUp');
       expect(box()).toHaveAttribute(
         'aria-activedescendant',
@@ -410,12 +400,10 @@ describe('Combobox', () => {
 
       expect(onSelect).toHaveBeenCalledTimes(2);
       expect(onPick).not.toHaveBeenCalled();
-      // The text is the caller's: picking the row leaves it as typed.
       expect(box()).toHaveValue('fix');
     });
   });
 
-  // A typed row that only repeats a suggestion is no choice of its own.
   describe('the typed row when a suggestion matches it', () => {
     const BANE: Suggestions = { options: [{ value: 'Fixture Bane' }], pending: false };
 
@@ -469,7 +457,6 @@ describe('Combobox', () => {
     });
   });
 
-  // A list withholds the typed row for text it would refuse.
   describe('the typed row withheld', () => {
     it('offers the suggestions without it', () => {
       render(<Harness suggestions={ONE_BUCKET} offerTyped={false} />);
@@ -601,7 +588,6 @@ describe('Combobox', () => {
 
     type('wax');
     expect(screen.getByRole('status', { name: 'Form suggestions' })).toHaveTextContent(/\S/);
-    // The typed row alone is a list.
     expect(options()).toEqual([expect.stringContaining('wax')]);
 
     rerender(<Harness suggestions={TWO_BUCKETS} />);
@@ -642,8 +628,6 @@ describe('Combobox', () => {
     expect(status()).toBeEmptyDOMElement();
   });
 
-  // What a pick leaves out of the text, a picked form's group, muted
-  // inside the control before the indicators, its detail in a tooltip.
   describe('a qualifier', () => {
     const DETAIL = 'Candle and poppet wax.';
     const tooltip = () => screen.queryByRole('tooltip');
@@ -703,8 +687,6 @@ describe('Combobox', () => {
       expect(tooltip()).not.toBeInTheDocument();
     });
 
-    // The tip gets out of the way of typing, and comes back on focus
-    // or a hover; the detail stays in the box's description throughout.
     it('closes its tooltip at the first printable key and when the list opens', async () => {
       render(
         <Harness
@@ -729,8 +711,6 @@ describe('Combobox', () => {
       expect(tooltip()).not.toBeInTheDocument();
     });
   });
-  // The entry a list draws inside the control: moved here from IngredientForm
-  // , whose tests still cover it in the form.
   describe('an entry', () => {
     const tooltip = () => screen.queryByRole('tooltip');
     const entryText = (value: string) =>
@@ -753,8 +733,6 @@ describe('Combobox', () => {
 
     afterEach(() => vi.restoreAllMocks());
 
-    // The prompt for the next entry
-    // stays beside the chips while nothing is typed.
     it('keeps the placeholder of the box beside its entries', () => {
       render(
         <Harness
@@ -782,8 +760,6 @@ describe('Combobox', () => {
       expect(onRemove).toHaveBeenCalledTimes(1);
     });
 
-    // A linked entry's text opens a panel beside the chip, which shuts on a second press, on Escape (cancelled, so a modal around the form takes no cancel from it), on a press elsewhere and on the focus leaving it.
-    // Escape hands the focus back to the text.
     describe('with a summary', () => {
       const panel = () => screen.queryByRole('dialog', { name: 'About Hedge Fixture' });
       const opener = () => screen.getByRole('button', { name: 'Hedge Fixture' });
@@ -815,7 +791,6 @@ describe('Combobox', () => {
 
         expect(opener()).toHaveAttribute('aria-expanded', 'false');
         expect(panel()).not.toBeInTheDocument();
-        // The typed entry has its x and nothing else to press.
         expect(screen.queryByRole('button', { name: 'Typed Fixture' })).not.toBeInTheDocument();
 
         fireEvent.click(opener());
@@ -837,7 +812,6 @@ describe('Combobox', () => {
         expect(fireEvent.keyDown(link, { key: 'Escape' })).toBe(false);
         expect(panel()).not.toBeInTheDocument();
         expect(opener()).toHaveFocus();
-        // Shut, an Escape is left alone for whatever holds the form.
         expect(fireEvent.keyDown(opener(), { key: 'Escape' })).toBe(true);
       });
 
@@ -866,9 +840,7 @@ describe('Combobox', () => {
       expect(tooltip()).not.toBeInTheDocument();
     });
 
-    // What a chip leaves out, such as a linked substitute's form and
-    // tier. The test above is the precondition: the same text, with no
-    // detail, opens nothing.
+    // The test above is the precondition: the same text with no detail opens nothing.
     describe('with a detail', () => {
       const DETAIL = 'Dried leaf · Compendium entry';
 
@@ -928,11 +900,8 @@ describe('Combobox', () => {
     });
   });
 
-  // A list whose order means something, its chips moved by a handle
-  // each, on dnd-kit's sortable preset, by keyboard or by pointer.
   describe('sortable entries', () => {
     const handle = (value: string) => screen.getByRole('button', { name: `Move ${value}` });
-    /** Everything the page's status regions say: dnd-kit's own is one. */
     const announced = () =>
       screen
         .getAllByRole('status')
@@ -956,7 +925,6 @@ describe('Combobox', () => {
       expect(move).toHaveAttribute('aria-roledescription', 'sortable');
       expect(move).toHaveAccessibleDescription(/\S/);
       expect(move).toHaveTextContent('Venus');
-      // In the tab order, before the x beside it.
       expect(move).not.toHaveAttribute('tabindex', '-1');
       expect(
         move.compareDocumentPosition(screen.getByRole('button', { name: 'Remove Venus' })) &
@@ -971,7 +939,6 @@ describe('Combobox', () => {
       act(() => mars.focus());
       await press(mars, ' ');
       expect(announced()).toMatch(/Mars\D+1\D+3/);
-      // Held: pressed.
       expect(mars).toHaveAttribute('aria-pressed', 'true');
       await press(mars, 'ArrowRight');
       expect(announced()).toMatch(/Mars\D+2\D+3/);
@@ -982,8 +949,7 @@ describe('Combobox', () => {
       expect(handle('Mars')).not.toHaveAttribute('aria-pressed', 'true');
     });
 
-    // On wrapped rows the arrows moved a chip by where the chips sit, so Left from the second chip on row 2 went to a chip on row 1 whose corners were nearer, and the chips making way overlapped or left gaps.
-    // Left and Right now step through the list, Up and Down jump a row, and the chips making way sit as the row would lay them out.
+    // Regression: on wrapped rows the arrows moved a chip by where chips sit, so chips making way overlapped or left gaps.
     describe('on wrapped rows', () => {
       const SEVEN = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].map(
         (value) => ({ id: value, value, onRemove: () => {} }),
@@ -1090,7 +1056,6 @@ describe('Combobox', () => {
     });
   });
 
-  // The closed-set sibling: the same control and list, nothing typed.
   describe('the select-only box', () => {
     const ELEMENTS = [
       { value: '', label: 'None' },
@@ -1191,7 +1156,6 @@ describe('Combobox', () => {
       expect(element()).toHaveAttribute('aria-expanded', 'false');
       expect(element()).toHaveTextContent('Earth');
 
-      // Escape closes without choosing what the arrows reached.
       fireEvent.keyDown(element(), { key: 'ArrowDown' });
       fireEvent.keyDown(element(), { key: 'ArrowDown' });
       fireEvent.keyDown(element(), { key: 'Escape' });
@@ -1247,8 +1211,6 @@ describe('Combobox', () => {
     });
   });
 
-  // A closed set holding several values: the select-only box, its
-  // choices drawn as chips inside the control, as a list's entries are.
   describe('the multi-select box', () => {
     const FIVE = [
       { value: 'earth', label: 'Earth' },
@@ -1293,7 +1255,6 @@ describe('Combobox', () => {
       expect(elements()).toBeRequired();
       expect(elements()).toHaveAttribute('aria-describedby', 'elements-hint');
       expect(elements()).toHaveTextContent('Choose elements');
-      // Nothing to type, and no Add: the list is the only way in.
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /^Add/ })).not.toBeInTheDocument();
 
@@ -1306,7 +1267,6 @@ describe('Combobox', () => {
 
       fireEvent.click(elements());
       pick('Fire');
-      // Still open, for the next choice, without the one just made.
       expect(elements()).toHaveAttribute('aria-expanded', 'true');
       expect(offered()).toEqual(['Earth', 'Air', 'Water', 'Spirit']);
       pick('Earth');
@@ -1321,12 +1281,9 @@ describe('Combobox', () => {
           .getAllByRole('listitem')
           .map((chip) => chip.textContent),
       ).toEqual([expect.stringContaining('Fire'), expect.stringContaining('Earth')]);
-      // The box reads what it holds, as a select reads its choice.
       expect(elements()).toHaveTextContent('Fire, Earth');
     });
 
-    // A placeholder that went with the first chip left nothing prompting for the next.
-    // In a modal, an Escape let through shuts the whole dialog, as the select-only box's test says.
     it('keeps Escape to itself while its list is open, and lets it through once shut', () => {
       render(<MultiHarness />);
 
@@ -1341,7 +1298,6 @@ describe('Combobox', () => {
     it('keeps the placeholder after the chips while a choice is left, for the eye alone, and drops it once none is', () => {
       render(<MultiHarness />);
       const prompt = () => within(elements()).queryByText('Choose elements');
-      // Read as the box's text while nothing is chosen.
       expect(prompt()).not.toHaveAttribute('aria-hidden');
 
       fireEvent.click(elements());
@@ -1377,7 +1333,6 @@ describe('Combobox', () => {
 
       press('Enter');
       expect(chosen()).toBe('air');
-      // The row below takes the chosen one's place under the highlight.
       active('Fire');
       press(' ');
       expect(chosen()).toBe('air,fire');
@@ -1395,7 +1350,6 @@ describe('Combobox', () => {
       fireEvent.mouseDown(control);
       expect(elements()).toHaveFocus();
       expect(elements()).toHaveAttribute('aria-expanded', 'true');
-      // An x is its own: pressing it opens nothing.
       fireEvent.keyDown(elements(), { key: 'Escape' });
       fireEvent.mouseDown(screen.getByRole('button', { name: 'Remove Earth' }));
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
@@ -1435,8 +1389,6 @@ describe('Combobox', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Clear Element' }));
       expect(chosen()).toBe('');
       expect(elements()).toHaveFocus();
-      // Nothing left to clear: kept in place for its room, but out of
-      // the tree and the tab order.
       expect(screen.queryByRole('button', { name: 'Clear Element' })).not.toBeInTheDocument();
       expect(
         screen
@@ -1468,16 +1420,13 @@ describe('Combobox', () => {
       pick('Spirit');
       expect(chosen()).toBe('earth,air,fire,water,spirit');
 
-      // Choosing the last closes the list, as before.
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
 
-      // Asking for it again opens it to say so, rather than going dead.
       fireEvent.click(elements());
       expect(elements()).toHaveAttribute('aria-expanded', 'true');
       expect(status()).toHaveTextContent(/\S/);
       expect(screen.queryByRole('option')).not.toBeInTheDocument();
 
-      // Enter has nothing to take, and Escape closes it.
       press('Enter');
       expect(chosen()).toBe('earth,air,fire,water,spirit');
       press('Escape');
@@ -1486,8 +1435,6 @@ describe('Combobox', () => {
   });
 });
 
-// The empty message: a settled lookup with no rows says so, outside the
-// listbox, and it is no option.
 describe('Combobox empty message', () => {
   const NONE: Suggestions = { options: [], pending: false };
   const status = () => screen.getByRole('status', { name: 'Form suggestions' });
@@ -1532,7 +1479,6 @@ describe('Combobox empty message', () => {
 
     type('zzz');
 
-    // The message names what was typed, shown outside the listbox as well as announced.
     const shown = screen.getAllByText(/zzz/).filter((node) => !status().contains(node));
     expect(shown.length).toBeGreaterThan(0);
     expect(shown[0]).toBeVisible();
@@ -1547,17 +1493,14 @@ describe('Combobox empty message', () => {
     type('zzz');
     expect(screen.getByText('Nothing Found', { selector: 'div' })).toBeVisible();
 
-    // The message is open content, so Escape closes it and goes no further.
     expect(key('Escape')).toBe(false);
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
     expect(status()).not.toHaveTextContent('Nothing Found');
     expect(box()).toHaveValue('zzz');
 
-    // Nothing shown, text in the box: the key is the dialog's.
     expect(key('Escape')).toBe(true);
     expect(box()).toHaveValue('zzz');
 
-    // Typing again asks for the message again.
     type('zzzz');
     expect(screen.getByText('Nothing Found', { selector: 'div' })).toBeVisible();
   });

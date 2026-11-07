@@ -4,8 +4,6 @@ import { Forbidden } from '@/lib/errors';
 import { membershipsByUser } from '@/modules/coven';
 import { A, B, asUser } from '../../../support/as-user';
 
-// The query count, observed at the repository: every read the service makes
-// is wrapped so the test counts calls without changing what they answer.
 const repository = vi.hoisted(() => ({
   findMembershipsOfUsers: vi.fn(),
   findManyByIds: vi.fn(),

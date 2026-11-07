@@ -48,7 +48,6 @@ export function readSupportPlace(params: SupportSearchParams): {
   };
 }
 
-/** The same filter as the service takes it. */
 export function serviceFilter({
   about,
   view,

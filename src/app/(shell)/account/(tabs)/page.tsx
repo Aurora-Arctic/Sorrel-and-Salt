@@ -21,8 +21,6 @@ export const metadata: Metadata = {
   title: 'Your Account',
 };
 
-// The account page: name, address and waiting coven invitations, each its own section under its own heading, with ids
-// prefixed so no form's id meets them.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
@@ -35,7 +33,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       (start) => countReceivedInvitations(session, start),
     ),
   ]);
-  // The pager stays at the section: a page of invitations is what was asked for.
   const invitationsHref = (cursor: Record<string, string>) =>
     `${ACCOUNT_PATH}?${new URLSearchParams(cursor).toString()}#${ACCOUNT_INVITATIONS_ID}` as Route;
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = invitations.pageInfo;

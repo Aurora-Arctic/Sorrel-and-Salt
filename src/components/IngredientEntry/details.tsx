@@ -10,7 +10,6 @@ import type { DetailsMarks } from './types';
 // link to the page. Plain values and a plain function, so the server page and the client link build
 // the same head.
 
-/** The list's modal place the details modal shows in (`RouteModalProps.place`), apart from the edit modal's that an Edit opens over it. */
 export const DETAILS_PLACE = 'details';
 
 /** The details modal's head: the entry's name, and over it the formal name with its tip and states; no eyebrow, so the entry's name alone names the dialog. */

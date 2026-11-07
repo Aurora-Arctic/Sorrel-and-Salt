@@ -1,24 +1,13 @@
-## Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
+## Fuzzy matching: one index, and a rule every caller is bound by
 
 **`ingredients_trgm` is one multicolumn index, not two single-column ones.**
 `USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops)` — a multicolumn
 GIN index is reachable from a predicate naming either column on its own, which
-is a property of the access method rather than a hope. That it is reached is
-asserted by `EXPLAIN` on the SQL the services send (MB.184):
-`common-names-plan.test.ts` matches `name` alone and `duplicates-plan.test.ts`
-`name` or `canonical_name`, both under `enable_seqscan = off`, so reduce the
-index to `name` alone and the duplicates plan reddens: an `OR` reaches a
-bitmap scan only when both arms have an index, so the plan loses
-`Bitmap Index Scan on ingredients_trgm` altogether;
-`ingredients-trigram.test.ts` keeps the index's expression and the negative
-control, a `similarity()` comparison that reaches no index on the same rows
-where `%` reaches it; the index's name and partiality are
-`tests/db/schema-drift.test.ts`'s (MB.226).
+is a property of the access method rather than a hope. That it is reached is asserted by `EXPLAIN` on the SQL the services send: `common-names-plan.test.ts` matches `name` alone and `duplicates-plan.test.ts` `name` or `canonical_name`, both under `enable_seqscan = off`. An `OR` reaches a bitmap scan only when both arms have an index, so reducing the index to `name` alone reddens the duplicates plan. `ingredients-trigram.test.ts` keeps the index's expression and the negative control, a `similarity()` comparison that reaches no index on the same rows where `%` reaches it; the index's name and partiality are `tests/db/schema-drift.test.ts`'s.
 It is neither unique nor partial: the three unique indexes _reserve_
 an identity, so a tombstone must fall outside them, while this one only answers
 "what is this called" for a finder that filters `deleted_at` itself.
-`ingredient_folk_names_trgm` stays its own index over its own table (M4.4a),
-and is reached independently.
+`ingredient_folk_names_trgm` stays its own index over its own table, and is reached independently.
 
 **The index is only half of it. A match must be written `name % $1`, with
 `pg_trgm.similarity_threshold` set per transaction — never
@@ -34,9 +23,6 @@ directions:
 - `%` alone means "similar by `pg_trgm.similarity_threshold`", which defaults
   to **0.3**, not the 0.4 DESIGN.md §9 specifies. So the threshold is set with
   `SET LOCAL` inside the matching transaction, and does not leak past it.
-
-One is a correctness bug in the results, the other a performance bug invisible
-until the table is big.
 
 **The threshold is set by `selectFrom`, not by its callers.** A finder asks
 for a similarity read by handing `selectFrom` a `Similarity` — an `orderBy`
@@ -59,14 +45,14 @@ so they are not the read-side `withAudit` that MB.29 declined to build. Inside a
 savepoint on the write's own transaction, which ends them with the read
 ([`write-path.md`](write-path.md), "Reads inside a write").
 
-**`findSimilarIngredients` (M4.7) is the first finder bound by both halves.**
-It answers story 16's "did you mean": live ingredients in the compendium or
+**`findSimilarIngredients` is the first finder bound by both halves.**
+It answers "did you mean": live ingredients in the compendium or
 the workspace of one of its proofs — none, for the admin's compendium form,
-reads the compendium alone (M5.5) — whose display name, formal name or a live folk name is
+reads the compendium alone — whose display name, formal name or a live folk name is
 `%`-similar to the name, best first by the greatest of the three
 similarities. It reads one keyset page at a time, keyed `[-score, name]` and
 marked `similarityMatch`, and carries each row's score, because
-`possibleDuplicates` (MB.11) pages it through the helper
+`possibleDuplicates` pages it through the helper
 (claude-docs/graphql/schema.md, "`possibleDuplicates`"). Each row
 carries `canonical_name`, which is what tells five Cat's Claws apart. The
 three matches are a `UNION ALL` under `id IN (…)`, and each detail is
@@ -84,7 +70,7 @@ load-bearing:
 `ingredient: ['read']`: every row it can return is one a reader of that
 workspace could already list.
 
-**Its `EXPLAIN` test needs more rows than M4.6's.** `duplicates-plan.test.ts`
+**Its `EXPLAIN` test needs more rows than the common-name one.** `duplicates-plan.test.ts`
 captures the SQL the service actually sends, by rebuilding the connection with
 a logger, and plans it with `enable_seqscan = off`. That is not enough on its
 own. The folk-name arm filters `deleted_at IS NULL`, which is exactly
@@ -95,12 +81,9 @@ plan shows a real choice between the probe and the walk. With 2,000 names
 sharing one prefix, the plan shows the walk even for a query that can reach
 the trigram index.
 
-**Accent insensitivity is the compendium search's, through `unaccent`** (M8.5;
-["The compendium read"](compendium-read.md)). It is not the fuzzy matches': `%` reads the raw
+**Accent insensitivity is the compendium search's, through `unaccent`** (["The compendium read"](compendium-read.md)). It is not the fuzzy matches': `%` reads the raw
 columns and the raw trigram indexes, and one diacritic barely moves a trigram
 score, so the duplicate warning is accent-tolerant without folding. Folding it
 too would be a small task of its own, not a gap.
 
-**The exact match is not fuzzy** (M12.20): `compendiumMatches` compares `lower(name)` and `lower(canonical_name)` for equality over the compendium alone, with no `%`, so it reads no trigram index.
-
-Full column list and the CHECK constraints' exact text: DESIGN.md §5.
+**The exact match is not fuzzy** `compendiumMatches` compares `lower(name)` and `lower(canonical_name)` for equality over the compendium alone, with no `%`, so it reads no trigram index.

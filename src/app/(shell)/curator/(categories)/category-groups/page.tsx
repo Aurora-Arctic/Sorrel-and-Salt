@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: 'Category Groups',
 };
 
-// The category groups, in the page shape every group vocabulary shares.
 export default function AdminCategoryGroupsPage({ searchParams }: GroupRouteProps) {
   return GroupPage({ kind: 'category', searchParams });
 }

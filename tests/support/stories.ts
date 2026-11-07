@@ -9,7 +9,6 @@ const SECTION_HEADING = /^## 10\. User stories\s*$/m;
 const NEXT_SECTION = /^## \d+\./m;
 const STORY_LINE = /^(\d+)\. (.+?)\s*$/;
 
-/** The numbered items between the §10 heading and the next `## n.` heading. */
 export function parseStories(design: string): Story[] {
   const heading = SECTION_HEADING.exec(design);
   if (!heading) {

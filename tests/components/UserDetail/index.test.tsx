@@ -13,13 +13,10 @@ vi.mock('@/lib/auth-client', () => ({
   impersonateUser: (...args: unknown[]) => impersonateUserMock(...args),
 }));
 const assignMock = vi.fn();
-// The role and creation controls read the page again after a write.
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The body of the modal over `/keepers/users`: render-only, so the page
-// owns the read and this owns what a keeper sees of it
-// (claude-docs/components/user-detail.md).
+// claude-docs/components/user-detail.md
 
 beforeEach(() => {
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
@@ -59,7 +56,6 @@ const ADA: UserDetailUser = {
   email: 'ada@fixture.test',
   role: 'admin',
 };
-// A curator, who holds the creation flag as every curator must.
 const CY: UserDetailUser = {
   ...FACTS,
   id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
@@ -90,7 +86,6 @@ const props = (overrides: Partial<UserDetailProps> = {}): UserDetailProps => ({
   ...overrides,
 });
 
-// In a modal, as the page draws it: the question needs the modal's layer.
 const renderDetail = (overrides: Partial<UserDetailProps> = {}) =>
   render(
     <Modal title="Bo Fixturewort" onClose={vi.fn()}>
@@ -98,7 +93,6 @@ const renderDetail = (overrides: Partial<UserDetailProps> = {}) =>
     </Modal>,
   );
 
-// Bo as one who never agreed to any terms.
 const NEVER_AGREED = {
   ...BO,
   agreedTermsVersion: null,
@@ -106,7 +100,6 @@ const NEVER_AGREED = {
   agreedEthicsVersion: null,
 };
 
-/** The value beside the fact with this term. */
 function factOf(term: string): HTMLElement {
   const found = screen.getAllByRole('term').find((dt) => dt.textContent === term);
   expect(found, `a fact termed ${term}`).toBeDefined();
@@ -352,9 +345,7 @@ describe('UserDetail', () => {
   });
 });
 
-// A refusal of the role or creation control is a callout under the
-// control inside this dialog too: Escape or a press elsewhere closes it without
-// closing the modal.
+// A refusal is a callout under the control inside this dialog too: Escape or a press elsewhere closes it without closing the modal.
 describe('UserDetail, when the service refuses a change', () => {
   const settle = (step: () => unknown) =>
     act(async () => {
@@ -390,7 +381,6 @@ describe('UserDetail, when the service refuses a change', () => {
       const badge = () =>
         screen.queryByRole('button', { name: `Show the error for ${refusal.control}` });
 
-      /** The modal open on the user, the control pressed and its question confirmed, refused. */
       async function refuse() {
         onClose.mockReset();
         mockGraphQLError(refusal.operation, { code: 'FORBIDDEN', message: refusal.message });

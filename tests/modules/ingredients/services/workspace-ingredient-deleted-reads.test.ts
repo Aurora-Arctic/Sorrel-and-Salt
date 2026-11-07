@@ -64,7 +64,6 @@ describe('a deleted coven ingredient', () => {
   const member = asUser(B);
   const ref = (id: string) => [{ id, workspaceId: WORKSPACE_W_ID }];
 
-  /** Whether `read` answers, rather than refusing with NotFound. */
   const answers = <T>(read: Promise<T>, shows: (answer: T) => boolean) =>
     read.then(shows, (error: unknown) => {
       if (error instanceof NotFound) return false;
@@ -118,7 +117,6 @@ describe('a deleted coven ingredient', () => {
         return Array.isArray(cited) && cited.length > 0;
       },
     ],
-    // The fixture's own form, a variant.
     [
       'its variants',
       async (id) => {

@@ -22,7 +22,6 @@ const StuckMark = (): ReactElement => {
         if (stuck) row.setAttribute('data-stuck', 'true');
         else row.removeAttribute('data-stuck');
       },
-      // The root's top edge is moved down to where the row sticks.
       { rootMargin: `-${top}px 0px 0px 0px`, threshold: 0 },
     );
     observer.observe(mark);

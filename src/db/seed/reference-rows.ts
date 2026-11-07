@@ -6,10 +6,8 @@ import { citationText } from '../../lib/citation';
 import { references } from '../../modules/ingredients/schema/references';
 import type { SeedTransaction, SeedWork } from './types';
 
-// The compendium-tier `references` rows a reference-data seed wants, shared by
-// the sources seed and the compendium seed so both key a
-// work on one citation and a work the one wrote is linked, not twinned, by
-// the other (claude-docs/db/references.md, "How the seed reads the docs").
+// The compendium-tier `references` rows a reference-data seed wants, shared so a work is linked, not twinned
+// (claude-docs/db/references.md, "How the seed reads the docs").
 
 /**
  * Every wanted source's id by its citation, inserting the missing ones. A row a seed wrote answers by its key, `null` when soft-deleted (neither re-inserted
@@ -70,11 +68,8 @@ const WORK_COLUMNS = [
 ] as const satisfies readonly (keyof SeedWork)[];
 
 /**
- * Sets each present source a seed wrote to its work's fields and `scholarly` mark, either way, unless a person edited the row: that one
- * is kept and returned by the name the caller gave its work, with the columns that differ. A row's key is its rendered citation, so
- * only a field the citation does not print differs, or every field once a migration has rewritten a key to a work's new citation.
- * A soft-deleted source is left alone, and so is one the works do not name, so each seed restates its own list. A source two names
- * cite takes the mark if either gives it.
+ * Restates each present source's fields and `scholarly` mark unless a person edited the row, which is kept
+ * and returned (claude-docs/db/references.md, "How the seed reads the docs").
  */
 export async function restateWorks(
   tx: SeedTransaction,

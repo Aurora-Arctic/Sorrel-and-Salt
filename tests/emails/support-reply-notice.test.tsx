@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { supportReplyNoticeMessage } from '@/emails/support-reply-notice';
 
-// What the mail carries: whom it goes to and the one link to the support page, and nothing of the reply.
-
 const SUPPORT_PAGE = 'http://localhost:8000/account/support';
 
 describe('supportReplyNoticeMessage', () => {

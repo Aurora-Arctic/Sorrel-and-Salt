@@ -6,10 +6,7 @@ import { opensElsewhere } from '../opens-elsewhere';
 import { LinkPendingContext } from './link-pending';
 import { usePendingNavigation } from './use-navigation';
 
-/**
- * The one link the site draws. A plain press navigates through the shared hook, so the page bar and the destination's skeleton follow; a press meant for a
- * new tab or window, or a link that opens elsewhere, is left to the browser.
- */
+/** The one link the site draws: a plain press navigates through the shared hook; a press meant for a new tab or window is left to the browser. */
 export function PendingLink({
   onClick,
   href,

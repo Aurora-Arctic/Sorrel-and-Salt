@@ -50,7 +50,6 @@ function emptyText({ about, errorCode }: Filter): string {
   return noMatchText('support requests', filters, emptyList('support requests'));
 }
 
-/** The request's state as text badges under its title: the open one in the accent's tint, the rest muted. */
 const StatusBadges = ({ status }: { status: SupportStatus }): ReactElement => (
   <div className="badges">
     <span className={statusBadgeClass(status)}>{STATUS_LABELS[status]}</span>
@@ -94,7 +93,6 @@ const SupportRequests = ({
   opened,
   assignees = [],
 }: SupportRequestsProps): ReactElement => {
-  // The sender's modal opens on top of the request when one is open, which stays beneath it.
   const userHref =
     viewer.role === 'admin'
       ? (id: string) => supportHref(filter, cursor, opened?.id, id)
@@ -204,7 +202,6 @@ const SupportRequests = ({
               },
               {
                 heading: 'Sender',
-                // Empty for an anonymised request, which the stacked card then drops, label and all.
                 className: 'support-requests__sender-cell',
                 cell: (request) =>
                   !request.anonymised && (

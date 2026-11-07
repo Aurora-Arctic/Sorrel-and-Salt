@@ -5,9 +5,6 @@ import type { DocumentUpdatedProps } from './types';
 const subjectOf = (documents: DocumentUpdatedProps['documents']): string =>
   documents.length === 1 ? `We Updated Our ${documents[0]!.title}` : 'We Updated Our Documents';
 
-// Sent to every account when a keeper mails the documents changed since the last mailing. It lists each document under its title,
-// with the keeper's summary of what changed and a link to it; a document an account agrees to adds that it will be asked to agree
-// again at its next visit.
 export function DocumentUpdated({
   url,
   origin = new URL(url).origin,
@@ -35,7 +32,6 @@ export function DocumentUpdated({
   );
 }
 
-/** The mail telling `to` which documents changed, rendered to the html and plain text `send` takes. */
 export const documentUpdatedMessage = defineMessage<DocumentUpdatedProps>(
   ({ documents }) => subjectOf(documents),
   DocumentUpdated,

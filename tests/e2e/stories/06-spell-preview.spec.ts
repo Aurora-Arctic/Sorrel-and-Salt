@@ -6,8 +6,6 @@ import { signInAgainAs, signInAs } from '../session';
 import { insertSpell, insertStep, localIngredient, seedCoven, withSql } from './coven-ingredients';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
-// Spell Preview, the spell full screen with nothing else on it (story 85).
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -60,11 +58,9 @@ test(
       await expect(steps).toHaveCount(1);
       await expect(steps).toContainText('Fixture Previewwort');
       await expect(steps).toContainText('2 g');
-      // The Ingredients section the printed spell keeps, with the amount beside the name.
       await expect(
         pane.getByRole('list', { name: 'Ingredients' }).getByRole('listitem'),
       ).toContainText('Fixture Previewwort');
-      // Nothing but Close to press, and nothing to follow away.
       await expect(pane.getByRole('button')).toHaveCount(1);
       await expect(pane.getByRole('link')).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
@@ -72,7 +68,6 @@ test(
       await expect(pane).toHaveCount(0);
       await expect(preview).toBeFocused();
       expect(await page.evaluate(() => window.scrollY)).toBe(before);
-      // Close does the same.
       await preview.click();
       await page
         .getByRole('dialog', { name: 'Fixture Working' })
@@ -101,7 +96,6 @@ test(
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
 
-    // A direct link opens the pane, a refresh keeps it, and Close drops the parameter.
     await page.goto(`${recipePath}?preview`);
     await expect(pane).toBeVisible();
     await page.reload();
@@ -111,7 +105,6 @@ test(
     expect(new URL(page.url()).searchParams.has('preview')).toBe(false);
     expect(new URL(page.url()).pathname).toBe(recipePath);
 
-    // Opened from the button, Back closes it and Forward opens it again.
     await page.getByRole('button', { name: /^Preview Spell/ }).click();
     await expect(pane).toBeVisible();
     expect(new URL(page.url()).searchParams.has('preview')).toBe(true);
@@ -131,7 +124,6 @@ async function closePane(page: Page, pane: Locator) {
   await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true);
 }
 
-// A spell long enough to scroll in the pane at a phone's height, left on its page with the pane shut.
 async function seedLongSpell(page: Page, slug: string) {
   const coven = await seedCoven(page, `Fixture Coven ${slug}`, `${slug}.test`, { A: 'owner' });
   const spellId = await withSql(async (sql) => {
@@ -284,8 +276,6 @@ test(
     await expect(awake).toHaveAttribute('aria-pressed', 'true');
     expect(await counts()).toEqual({ requests: 1, releases: 0 });
     await assertNoAccessibilityViolations(page);
-    // The background is there and hidden from assistive technology, and under reduced motion nothing
-    // in it moves.
     const scene = pane.locator('.spell-preview__scene');
     await expect(scene).toHaveAttribute('aria-hidden', 'true');
     const running = () =>
@@ -316,14 +306,12 @@ test(
     expect(Math.abs(stride[0] - stride[1])).toBeLessThan(0.5);
     await page.emulateMedia({ reducedMotion: 'reduce' });
     expect(await running()).toBe(0);
-    // Off releases the lock; on asks again.
     await awake.click();
     await expect(awake).toHaveAttribute('aria-pressed', 'false');
     expect(await counts()).toEqual({ requests: 1, releases: 1 });
     await awake.click();
     await expect(awake).toHaveAttribute('aria-pressed', 'true');
     expect(await counts()).toEqual({ requests: 2, releases: 1 });
-    // Closing the pane releases it.
     await pane.getByRole('button', { name: 'Close' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     expect(await counts()).toEqual({ requests: 2, releases: 2 });
@@ -359,10 +347,7 @@ test(
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
-    // What the two layouts share, in rem so paper's smaller type does not count: the gaps from the
-    // title to the lead, the categories to the facts strip, the strip to the Ingredients row, that row
-    // to the note, and one step to the next; and the lines the intent and the note break into, which
-    // match only when the two columns hold the same characters.
+    // In rem so paper's smaller type does not count: the gaps between the parts, and the lines the intent and the note break into, which match only when the two columns hold the same characters.
     const layout = () =>
       page.evaluate(() => {
         const pane = document.querySelector('.spell-preview[open]');
@@ -406,14 +391,11 @@ test(
     const ingredients = pane.getByRole('list', { name: 'Ingredients' });
     const steps = pane.getByRole('list', { name: 'Steps' });
 
-    // Wide: Ingredients to the left of the steps, its heading level with the Steps heading
-    // over them, and the column the printed sheet's width in the pane's rem.
     expect((await box(ingredients)).right).toBeLessThanOrEqual((await box(steps)).left);
     expect(Math.abs((await box(heading)).top - (await box(instructions)).top)).toBeLessThanOrEqual(
       1,
     );
     expect((await box(instructions)).bottom).toBeLessThanOrEqual((await box(steps)).top);
-    // The close X ends where the content does.
     const close = await box(pane.getByRole('button', { name: 'Close' }));
     const content = await box(pane.locator('.spell-preview__content'));
     expect(Math.abs(close.right - content.right)).toBeLessThanOrEqual(1);

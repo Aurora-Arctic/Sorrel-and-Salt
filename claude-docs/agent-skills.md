@@ -1,11 +1,8 @@
 # Agent skills
 
-This summary is self-contained — M0's transcripts and decision records are
-archived and are not required reading.
-
 Claude skills for this repo, at `.claude/skills/<name>/SKILL.md`, invoked as
-`/<name>`. [`CLAUDE.md`](../CLAUDE.md)'s Skills section is the trigger table;
-this page holds the shape.
+`/<name>`. Each session lists every skill with its description, which is its
+trigger; this page holds the shape.
 
 | Skill                 | Does                                                                                                                                                                                                                                                                                                                            |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -58,12 +55,9 @@ skills, so their `haiku` setting only applies to a direct `/create-feature` or
   follows. A file two skills share goes inside one of them, so that every
   directory under `.claude/skills/` is a skill.
 - **Adding a skill means adding its row to the table above**, in the same
-  PR. `CLAUDE.md` no longer tables them, the owner's call during MB.154:
-  every session already lists each skill with its description, which is its
-  trigger, so the table there only repeated it, at a cost against
-  `CLAUDE.md`'s 20 KB budget. (Its transcript was archived by
-  M0.34, and MB.31 retired the obligation to keep writing one — a PR body
-  carries what an entry would have said.)
+  PR. `CLAUDE.md` does not table them: every session already lists each skill
+  with its description, which is its trigger, and a second table would cost
+  against `CLAUDE.md`'s 20 KB budget.
 
 There are deliberately **no** "testing conventions", "component documentation"
 or "CI debugging" skills: that guidance lives in `CLAUDE.md` and `claude-docs/`,
@@ -88,8 +82,7 @@ summary of task tracking, and the token-spending rules. It stays within 20 KB. T
 
 **How one loads.** Claude Code reads a rule file's `paths:` frontmatter, a list
 of globs from the repo root, and adds the file to the session once the **Read
-tool** opens a file one of them matches; from then on it stays. A fresh
-session checked this in MB.144: reading a file under `src/db/` brought in the
+tool** opens a file one of them matches; from then on it stays. Reading a file under `src/db/` brought in the
 database rule alone, a component brought in the components rule and not the
 database's, and the same `src/db/` file read with `head` through the shell
 brought in nothing. So a session that reads through the shell, as auto mode
@@ -101,7 +94,7 @@ A rule file is the long form of lines in `CLAUDE.md`, never a rule of its own:
 a rule every task must know belongs in `CLAUDE.md`, and a rule file only
 restates it at length.
 
-**What holds it.** Review, since MB.224: code used only by agents is never
+**What holds it.** Review: code used only by agents is never
 tested ([`testing/layer-ownership.md`](testing/layer-ownership.md), "What a test
 may assert"). A rule file carries `paths:` (without, it would load on every
 turn, `CLAUDE.md`'s cost under another name) and a glob that matches a file (or

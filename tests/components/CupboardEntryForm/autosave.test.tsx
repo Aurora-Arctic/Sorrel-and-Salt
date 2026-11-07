@@ -19,8 +19,7 @@ import { leavingAtEachLoad, stubLocationReload } from '../../support/location';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The annotation form's autosave: what it sends and against which revision. The save machinery itself
-// is the engine's, tests/lib/autosave/use-autosave.test.tsx.
+// The save machinery is tests/lib/autosave/use-autosave.test.tsx's.
 
 type Variables = AnnotateCupboardEntryMutationVariables;
 
@@ -61,7 +60,6 @@ function renderForm(props: Partial<CupboardEntryFormProps> = {}) {
   return { onDone, ...view };
 }
 
-/** Accepts each save, answering the revision after the one it was written against. */
 function acceptSaves(): Variables[] {
   const calls: Variables[] = [];
   mockGraphQLMutation<AnnotateCupboardEntryMutation, Variables>(
@@ -131,7 +129,6 @@ describe('the annotation form saves as it is edited', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     first.unmount();
 
-    // A reload reads the row the save wrote: the label, at the revision it answered.
     renderForm({ overrides: { ...NONE, label: 'Fixture Wort' }, revision: 4 });
 
     expect(label()).toHaveValue('Fixture Wort');

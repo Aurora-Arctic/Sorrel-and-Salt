@@ -24,10 +24,9 @@ export const ingredientCategories = pgTable(
     ...auditStampColumns,
   },
   (table) => [
-    // The pair is the identity, on the parent or on one form; a surrogate id
-    // would allow duplicates. Two unique indexes rather than a primary key,
+    // The pair is the identity, on the parent or on one form: two unique indexes,
     // since a key's columns cannot be null. Partial on the variant, not on a
-    // tombstone: the table is hard-deleted.
+    // tombstone, because the table is hard-deleted.
     uniqueIndex('ingredient_categories_ingredient_category_unique')
       .on(table.ingredientId, table.categoryId)
       .where(sql`${table.variantId} is null`),

@@ -39,10 +39,8 @@ const ProviderButton = ({
         ref={anchorRef}
         busy={busy}
         busyLabel="Signing In"
-        // The brand colour class is dropped entirely once unavailable, rather than layered
-        // under a disabled modifier: `.btn[aria-disabled='true']` (_primitives.scss) styles
-        // this state, and a brand-colour class alongside it would tie in specificity, the
-        // winner then depending on which stylesheet loads second.
+        // The brand colour class is dropped once unavailable rather than layered under `.btn[aria-disabled='true']`, which
+        // would tie in specificity and be decided by stylesheet order.
         className={
           available
             ? `btn sign-in-panel__button sign-in-panel__button--${provider.id}`

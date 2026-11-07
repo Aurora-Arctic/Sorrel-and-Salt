@@ -6,14 +6,11 @@ import Pager from '@/components/Pager';
 import { Navigating } from '../../support/navigating';
 import { stubLocationAssign } from '../../support/location';
 
-// A soft end navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A paged list's Prev and Next (claude-docs/components/pager.md): an end with
-// no page is disabled rather than hidden, and a lone page has no pager.
+// claude-docs/components/pager.md
 
-/** A pager where a list puts it, in its frame's body beneath the list. */
 const paged = (pager: ReactElement) => (
   <ListFrame>
     <ListBody skeleton={null}>
@@ -46,7 +43,6 @@ describe('Pager', () => {
       expect(end(off)).toHaveAttribute('aria-disabled', 'true');
       expect(end(off)).not.toHaveAttribute('href');
       expect(end(on)).toHaveAttribute('href');
-      // Prev first and Next second whichever is off, so neither moves.
       expect(within(pages()).getAllByRole('link')).toEqual([end('Prev'), end('Next')]);
     },
   );
@@ -73,9 +69,6 @@ describe('Pager', () => {
   });
 });
 
-// The end followed puts the tabs' skeleton, with
-// its one status, in place of the list and the pager, until the page
-// renders or the browser leaves, as a filter does.
 describe('Pager, once an end is followed', () => {
   const assign = vi.fn();
   beforeEach(() => {

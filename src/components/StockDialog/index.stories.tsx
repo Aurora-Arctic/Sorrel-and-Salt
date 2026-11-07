@@ -7,9 +7,6 @@ import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mo
 import StockDialog from '.';
 import type { StockForm, StockJar } from './types';
 
-// Render-only; behaviour is asserted in tests/components/StockDialog. The fake API
-// (.storybook/mock-api.ts) answers the call, and the two refused states each get a
-// refusal the real server can send. Every name is invented.
 const meta = {
   title: 'Ingredients / Stock Dialog',
 } satisfies Meta;
@@ -58,7 +55,6 @@ const Dialog = ({ jars, openOn }: { jars: StockJar[]; openOn?: string }): ReactE
   />
 );
 
-/** Sets a box's value as typing would, so react-hook-form hears it. */
 function type(box: HTMLInputElement | null | undefined, value: string): void {
   if (!box) return;
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(box, value);
@@ -74,10 +70,6 @@ const choose = (index: number): void =>
 const press = (selector: string): void =>
   document.querySelector<HTMLButtonElement>(selector)?.click();
 
-// The field issues a batch of two edits and a removal can earn, in the shape
-// src/graphql/errors.ts sends a ValidationError (claude-docs/components/stock-dialog.md,
-// "Saving"): an issue on each edited jar's box. The server checks every row before
-// reading a jar, so this refusal carries field issues only.
 const REFUSED = [
   answerMutation(SaveStockDocument, () =>
     refusal({
@@ -95,27 +87,14 @@ const REFUSED = [
   ),
 ];
 
-// The refusal of the whole batch, in the shape src/graphql/errors.ts sends a
-// NotFound: a jar it names is gone, or another coven's, so nothing is saved.
-// No path in the batch, so no field is marked and the sentence is the alert.
 const GONE = [
   answerMutation(SaveStockDocument, () =>
     refusal({ message: 'No such stock in this coven', code: 'NOT_FOUND', path: ['saveStock'] }),
   ),
 ];
 
-// With neither state, a save is answered as accepted.
 const NONE: RequestHandler[] = [];
 
-// Pressed already, as after a click on the stock button: Dried Leaf chosen and
-// badged Low Stock (with every form held, Resin is listed as unmeasured). With no
-// jar, the fields' column holds its place so the dialog keeps its size.
-// `remove` presses the chosen jar's bin, so its removal waits for Save Stock.
-// `save` types into the chosen jar's Quantity and presses Save Stock, which NOT_FOUND
-// answers: the server's sentence in the alert, no form marked, input kept.
-// `refuse` edits Dried Leaf's Quantity and Oil's Low Stock At, removes Resin and
-// presses Save Stock, which REFUSAL answers: both forms marked, Dried Leaf chosen with
-// its error in view, Resin still staged, no alert.
 const Pressed = ({
   jars,
   remove = false,
@@ -151,7 +130,6 @@ const Pressed = ({
         () => press('dialog button[type="submit"]'),
       );
     }
-    // One step a tick, each after the render the last one caused.
     const timers = steps.map((step, at) => setTimeout(step, 100 * (at + 1)));
     return () => timers.forEach(clearTimeout);
   }, [remove, save, refuse]);
@@ -168,12 +146,8 @@ const openAllHeldNode = <Pressed jars={[LEAF, OIL, RESIN]} />;
 const openRefusedNode = <Pressed jars={[LEAF, OIL, RESIN]} refuse />;
 const openFailedNode = <Pressed jars={[LEAF, OIL]} save />;
 const openRemovingNode = <Pressed jars={[LEAF, OIL]} remove />;
-// `openOn` names the form chosen as the dialog opens; a form with no jar is added as a new row.
 const openOnAHeldFormNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[1].variantId} />;
 const openOnAFormNotHeldNode = <Pressed jars={[LEAF, OIL]} openOn={FORMS[2].variantId} />;
-
-// A modal draws in the page's own document, so its stories sit in a frame of
-// their own (claude-docs/workshop.md).
 
 const STOCK_STATES: Record<string, ReactNode> = {
   Open: openNode,
@@ -181,7 +155,6 @@ const STOCK_STATES: Record<string, ReactNode> = {
   'Open On A Form Not Held': openOnAFormNotHeldNode,
   'Open None Held': openNoneHeldNode,
   'Open All Held': openAllHeldNode,
-  // Refused rows carry the Needs a Fix flag in the form list.
   'Open Refused': openRefusedNode,
   'Open Failed': openFailedNode,
   'Open Removing': openRemovingNode,

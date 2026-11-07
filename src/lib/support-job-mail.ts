@@ -9,14 +9,10 @@ import type { Message } from './types';
 // The support mails a job's step renders from the row when it sends, so a run carries ids and never an address or a subject.
 // Only templates and paths are imported, as the step bundle takes in everything this file reaches.
 
-/** Where a signed-out sender's mail leads: the request's own page when it carries a token, the support form when it does not. */
 const signedOutPath = (viewToken: string | undefined) =>
   viewToken ? supportViewPath(viewToken) : SUPPORT_PATH;
 
-/**
- * The closing-soon notice, linked from `origin`. A signed-out sender has no page to open, so `requestId` is null and the mail
- * links to the support form; a signed-in sender's opens the request.
- */
+/** A signed-out sender has no page to open, so `requestId` is null and the mail links to the support form. */
 export function supportClosingNoticeMessage(
   origin: string,
   to: string,
@@ -37,10 +33,7 @@ export function supportClosingNoticeMessage(
   });
 }
 
-/**
- * The mail telling a sender of a staff reply, linked from `origin`. A signed-in sender is told one is waiting, with no reply text,
- * and linked to the request; a signed-out sender is told the same, linked to the request’s page behind their mailed link.
- */
+/** A signed-out sender is linked to the request’s page behind their mailed link. */
 export function supportReplyMessage(
   origin: string,
   to: string,
@@ -68,10 +61,7 @@ const STATUS_MESSAGES = {
   resolved: supportResolvedMessage,
 };
 
-/**
- * The received or resolved mail, linked from `origin`. A signed-out sender has no page to open, so `requestId` is null and the
- * mail links to the support form; a signed-in sender's opens the request.
- */
+/** A signed-out sender has no page to open, so `requestId` is null and the mail links to the support form. */
 export function supportStatusMessage(
   mail: keyof typeof STATUS_MESSAGES,
   origin: string,

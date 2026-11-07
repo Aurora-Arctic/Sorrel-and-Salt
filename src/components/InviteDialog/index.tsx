@@ -29,19 +29,15 @@ const CreateInvitationDocument = graphql(`
 /** The roles on offer, least first. Steward is not one: the schema's enum has no such value. */
 const ROLES: readonly InviteRole[] = ['viewer', 'member'];
 
-/** What holds whichever role is chosen, read with the group. */
 const STEWARDSHIP_NOTE =
   'A steward can make them a steward from the members page once they have joined.';
 
-/** The button, and the modal's head. */
 const INVITE_LABEL = 'Invite';
 const INVITE_TITLE = 'Invite Someone';
 
 /**
- * The form inside the modal, so its guard over unsaved changes reaches the
- * modal's Close button, Escape and backdrop (claude-docs/components/modal.md,
- * "Unsaved changes"). Once the invitation is sent it shows the confirmation in
- * place of the form, so the same invitation cannot be sent twice from here.
+ * The form inside the modal, so its guard over unsaved changes reaches Close, Escape and the backdrop
+ * (claude-docs/components/modal.md, "Unsaved changes"). Once sent it shows the confirmation in place of the form.
  */
 const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement => {
   const { refresh } = usePendingNavigation();
@@ -51,15 +47,12 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   const [role, setRole] = useState<InviteRole>('viewer');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
-  // The address the mail went to, once it has: what the confirmation names.
   const [sentTo, setSentTo] = useState<string>();
   const { aria: emailAria, ...emailField } = fieldDescription({
     id: emailId,
     error: failure.field?.message,
   });
 
-  // Anything typed is a change: Cancel, and every other way out, asks first
-  // (as the admin invitation form does); a sent invitation does not.
   const discard = useDiscardGuard(sentTo === undefined && email !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -115,7 +108,6 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
           disabled={sending}
           onChange={(event) => {
             setEmail(event.target.value);
-            // The refusal was of what was typed, which has changed.
             if (failure.field) setFailure({});
           }}
         />

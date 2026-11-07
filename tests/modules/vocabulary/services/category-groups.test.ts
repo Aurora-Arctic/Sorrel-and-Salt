@@ -19,16 +19,11 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// The category-group writes, the site admin's alone. Each colour is held to 4.5:1 against its own theme's harder surface.
-// A group is deleted only once its live categories have somewhere to go: the admin names a group and they move there in the same write, links untouched (claude-docs/design-decisions/m5.6b-admin-groups.md).
-// The seeded groups stay, so every group a test writes is `Fixture …` and every category `Testcraft …`.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
-/** A seeded group, the one a moved category lands in. */
 let seededId: string;
 beforeAll(async () => {
   const [row] = await sql<{ id: string }[]>`
@@ -36,7 +31,6 @@ beforeAll(async () => {
   seededId = row.id;
 });
 
-// Every row a test writes goes, the links before the categories before the groups.
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   await sql`delete from categories where name like 'Testcraft%'`;
@@ -45,13 +39,9 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// The site role is the one thing a vocabulary write turns on, so one non-keeper
-// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
-// owner, whose workspace role is the highest and is still no site role.
+// One non-keeper stands for all (claude-docs/testing/acting-as-fixture-users.md): an owner, the highest coven role and still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
-// a curator's success proves the write calls assertCurator, and that a keeper
-// passes assertCurator is proved once in identity's site-admin tests.
+// A curator stands for both curation roles: assertSiteAdmin refuses one, so its success proves the write calls assertCurator.
 const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<CategoryGroupInput> = {}): CategoryGroupInput {
@@ -64,7 +54,6 @@ function input(overrides: Partial<CategoryGroupInput> = {}): CategoryGroupInput 
   };
 }
 
-/** Seeds a group directly, stamped by A — not through the code under test. */
 async function seedGroup(name: string): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     insert into category_groups (name, slug, color_dark, color_light, description, created_by, updated_by)
@@ -73,7 +62,6 @@ async function seedGroup(name: string): Promise<string> {
   return row.id;
 }
 
-/** Seeds a category under `groupId`, stamped by A. */
 async function seedCategory(name: string, groupId: string): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     insert into categories (name, slug, description, group_id, created_by, updated_by)
@@ -97,7 +85,6 @@ const countNamed = async (name: string) => {
   return row.n as number;
 };
 
-/** An issue list, or the test fails because the write went through. */
 async function issuesOf(attempt: Promise<unknown>) {
   const error = await attempt.then(
     () => undefined,
@@ -121,7 +108,6 @@ describe('listCategoryGroups', () => {
   });
 });
 
-// "Page X of Y" on the group page: what the list pages, counted in its order.
 describe('countCategoryGroups', () => {
   it('counts the groups listCategoryGroups pages, and how many come before a page’s first row', async () => {
     const first = await resolvePage({ first: 2 }, listCategoryGroups);
@@ -196,8 +182,7 @@ describe('createCategoryGroup', () => {
   it.each(NON_ADMINS)(
     'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
     async (_who, user) => {
-      // Why it could have passed: the guard is all that refuses it. The user
-      // holds no site role, and the same input is written for a curator.
+      // Why it could have passed: the guard is all that refuses it; the same input is written for a curator.
       expect(asUser(user).role).toBe('user');
       expect(asUser(F).role).toBe('curator');
 

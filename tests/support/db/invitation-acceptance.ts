@@ -52,7 +52,6 @@ export function setUpInvitationAcceptance(onClient: (client: postgres.Sql) => vo
     });
   }
 
-  /** A site-tier invitation unless a workspace is named, pending unless a stamp is given. */
   async function invite(fixture: InvitationFixture = {}): Promise<string> {
     const {
       email = INVITED,

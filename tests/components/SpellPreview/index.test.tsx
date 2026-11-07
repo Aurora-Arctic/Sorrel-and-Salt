@@ -48,8 +48,7 @@ vi.mock('next/navigation', () => ({
 
 const { default: SpellPreview } = await import('@/components/SpellPreview');
 
-// The Preview pane: a button on the recipe page opens the spell full screen, with only the title,
-// the ingredients with their amounts and the steps (claude-docs/components/spell-preview.md).
+// claude-docs/components/spell-preview.md
 
 const STEPS: RecipeStep[] = [
   {
@@ -117,7 +116,6 @@ afterEach(() => {
   Reflect.deleteProperty(navigator, 'wakeLock');
 });
 
-// A stand-in for the Screen Wake Lock API: each request hands back a lock that can be released.
 function fakeWakeLock(request?: () => Promise<unknown>) {
   const locks: { released: boolean; release: () => Promise<void>; onrelease: () => void }[] = [];
   const asked = vi.fn(
@@ -178,7 +176,6 @@ describe('SpellPreview', () => {
     expect(within(dialog).getByText('Keeps the hearth warm.')).toBeTruthy();
     expect(within(dialog).getByText('Squat Amber Jar')).toBeTruthy();
     expect(within(dialog).getByText('Best on a cold night.')).toBeTruthy();
-    // The Ingredients section: the amount in a cell of its own, beside the name.
     expect(within(dialog).getByRole('heading', { name: 'Ingredients' })).toBeTruthy();
     const needs = within(within(dialog).getByRole('list', { name: 'Ingredients' })).getAllByRole(
       'listitem',
@@ -199,7 +196,6 @@ describe('SpellPreview', () => {
         .getAllByRole('button')
         .map((b) => b.getAttribute('aria-label') ?? b.textContent),
     ).toEqual(['Close']);
-    // An icon button: the name is for assistive technology only, and the mark is a drawn icon.
     const close = within(dialog).getByRole('button', { name: 'Close' });
     expect(close.querySelector('svg')).not.toBeNull();
     expect(close.textContent).toBe('Close');
@@ -365,7 +361,6 @@ describe('SpellPreview', () => {
       await settle();
       expect(sign()?.getAttribute('aria-pressed')).toBe('false');
       expect(tip()).toBe('Keep the Screen from Sleeping');
-      // The name stays, so the toggle is one control with a state, not two.
       expect(sign()).not.toBeNull();
     });
 
@@ -374,7 +369,6 @@ describe('SpellPreview', () => {
       render(onPage());
       press(opener());
       await settle();
-      // The browser drops the lock when the tab is hidden.
       await act(async () => {
         await locks[0]?.release();
       });

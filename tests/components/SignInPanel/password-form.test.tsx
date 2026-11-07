@@ -10,7 +10,7 @@ import {
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { installHistory, setQuery } from './search-params';
 
-// Story 70's form. Better Auth's client is mocked at the two calls it makes, so each test sets the
+// The password sign-in form (@story-70). Better Auth's client is mocked at the two calls it makes, so each test sets the
 // answer the server gives; tests/db/password-sign-in.test.ts proves the server gives it.
 const signInEmail = vi.fn();
 const signUpEmail = vi.fn();
@@ -171,7 +171,6 @@ describe('SignInPanel, email and password', () => {
     const notice = screen.getByRole('status');
     expect(notice).toHaveTextContent(/someone@password-form\.test/);
     expect(notice).toHaveFocus();
-    // Back at sign-in, the address kept and the password cleared.
     expect(submit('Sign In')).toBeDisabled();
     expect(field('Email Address')).toHaveValue('someone@password-form.test');
     expect(field('Password')).toHaveValue('');

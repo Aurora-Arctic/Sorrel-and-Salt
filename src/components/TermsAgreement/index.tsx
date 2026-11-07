@@ -15,10 +15,8 @@ import type { TermsAgreementProps } from './types';
 import './index.scss';
 import { reportLeaving } from '../../lib/navigation';
 
-// The acceptance page's body: where to read the terms, and the one button that records agreement. The mutation names the version
-// shown, and the server refuses one no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
+// The server refuses a version no longer in force (claude-docs/auth/admin-bootstrap.md, "The terms page").
 
-/** Each agreed document's title, as its public page heads it; each page is at `/<key>`. */
 const DOCUMENT_TITLES: Record<AgreementDocumentKey, string> = {
   terms: 'Terms of Use',
   disclaimer: 'Disclaimer',

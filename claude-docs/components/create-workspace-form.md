@@ -1,11 +1,11 @@
 # CreateWorkspaceForm
 
 `src/components/CreateWorkspaceForm/` is the form on the create-workspace
-page, `/coven/new` (M9.16, Story 3), on screen the Create Coven page. It takes one value, the coven's name,
-and sends it to `createWorkspace`, the mutation M6.7 built. On success the
-browser goes to the new coven's index page, `/coven/<slug>` (M9.15), and the
+page, `/coven/new`, on screen the Create Coven page. It takes one value, the coven's name,
+and sends it to `createWorkspace`, the mutation that makes a coven. On success the
+browser goes to the new coven's index page, `/coven/<slug>`, and the
 router refreshes, so the shell's coven switcher, listed from a layout a push
-does not re-run, includes the new coven (MB.7). It is a
+does not re-run, includes the new coven. It is a
 client component, and it takes no props.
 
 The page around it, `src/app/(shell)/coven/new/page.tsx`, decides whether to draw it
@@ -35,11 +35,10 @@ the creation service still refuses a user without the right
 
 ## Leaving with a name typed
 
-With a name typed, the form asks before it is left (M13.14, story 32):
-closing the tab or reloading raises the browser's own question, and a link
+With a name typed, the form asks before it is left closing the tab or reloading raises the browser's own question, and a link
 or any other in-app navigation asks "You have unsaved changes. Discard
 them?" with Discard Changes and Keep Editing, in a dialog titled "Discard
-Changes?" over the page, not in the form's card (the owner's call). It is `useDiscardGuard`, as the modal forms use
+Changes?" over the page, not in the form's card. It is `useDiscardGuard`, as the modal forms use
 ([`modal.md`](modal.md), "Unsaved changes"), given `!empty && !busy`, so
 nothing asks while the coven is being made or on the way to it.
 
@@ -55,10 +54,8 @@ none. The reading is the shared `readGraphqlFailure(error, ['name'])`.
 ## The field
 
 Labelled "Name", marked required, with the placeholder "Add a name". It
-has no info tip: the one it had restated its label, so it went (the owner's
-call, 2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip").
-Its one extra fact, that the coven's address is made from the name, is not
-put back as a visible `.field__hint` line unless the owner asks for it. The
+has no info tip, since one would restate its label ([`info-tip.md`](info-tip.md), "When a field gets a tip").
+The fact that the coven's address is made from the name has no visible `.field__hint` line. The
 input is described by its error alone, through `fieldDescription`. `autoComplete="off"`, since a browser has nothing useful to
 offer for a new coven's name.
 
@@ -67,24 +64,10 @@ offer for a new coven's name.
 No stylesheet and no wrapper: the component renders its notice and its
 `<form>` straight into the page's `.page-frame__section`, whose column
 already spaces them `space(3)` apart, as it spaces the heading above. The page centres it
-the way the email page centres its form, at the owner's request
-(2026-10-12): `main.page-frame.page-frame--narrow` gives the width, and a
+the way the email page centres its form: `main.page-frame.page-frame--narrow` gives the width, and a
 `.page-frame__section.panel` gives the ground and stacks the page's heading
-over the form ([`styling.md`](../styling.md), "The page frame"). Its look past
-the tokens is MB.119's, the coven section's design review.
+over the form ([`styling.md`](../styling.md), "The page frame").
 
-## Stories
+## Stories and tests
 
-`index.stories.tsx`, titled "Coven / Create Coven Form": `States`, with a control that chooses Empty, Name Typed, Needs an Invitation or Refused After Submitting, inside the app shell and the
-page's real frame, panel and heading. The toolbar viewport menu shows it at 375px.
-
-## Testing
-
-`tests/components/CreateWorkspaceForm/index.test.tsx` uses role and label
-queries against MSW, which answers in the route's own error shape. It covers
-the name field drawing no tip, nothing to create until a name is typed, the create and the address it goes
-to, the button held busy until the next page, and both error surfaces. The
-page is `tests/app/(shell)/coven/new/page.test.tsx`: the form for a rights holder and
-a status notice for anyone else. `tests/e2e/coven-create.spec.ts` walks Story
-3 in a real browser: a coven made from the keyboard, a second one, the "New"
-slug, the page without the right, and an axe scan in both themes.
+`src/components/CreateWorkspaceForm/index.stories.tsx` ("Coven / Create Coven Form", inside the app shell and the page's real frame, panel and heading; the toolbar viewport menu shows it at 375px) and `tests/components/CreateWorkspaceForm/index.test.tsx` (role and label queries against MSW, which answers in the route's own error shape). The page is `tests/app/(shell)/coven/new/page.test.tsx`. `tests/e2e/coven-create.spec.ts` covers a coven made from the keyboard, a second one, the "New" slug, the page without the right, and an axe scan in both themes.

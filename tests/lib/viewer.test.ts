@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// What the shell draws, assembled from the session, the user row and the
-// viewer's memberships. The services are mocked: what they decide is theirs
-// to test (tests/modules/); here, only how the answers are put together.
+// The services are mocked (tests/modules/); here, only how their answers are put together.
 
 const requireSignedIn = vi.fn();
 const getSession = vi.fn();
@@ -19,14 +17,12 @@ const rolePermits = vi.fn((role: string, statement?: { member?: string[] }) =>
 vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession, getShellSession }));
 vi.mock('@/modules/support', () => ({ getMySupportCounts }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
-// The switcher's order is the coven module's too; stood in for by the rule it states.
 const byCovenName = (a: { name: string; demo?: boolean }, b: { name: string; demo?: boolean }) =>
   Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
 const { covenRolesIfSignedIn, viewerIfSignedIn, viewerOf } = await import('@/lib/viewer');
 
-/** The viewer for a shell session, read the way viewerIfSignedIn reads it, without the request cache. */
 async function viewerFor(shell: { session: typeof SESSION | { userId: string; role: 'admin' } }) {
   getShellSession.mockResolvedValueOnce(shell);
   return (await viewerIfSignedIn())!;
@@ -234,7 +230,6 @@ describe('viewerOf', () => {
   });
 });
 
-// The public frame's read: the same viewer, or nothing, and never a redirect.
 describe('viewerIfSignedIn', () => {
   it('is null for a signed-out visitor, without asking for the viewer or redirecting', async () => {
     getShellSession.mockResolvedValue(null);
@@ -254,7 +249,6 @@ describe('viewerIfSignedIn', () => {
   });
 });
 
-// A paused viewer's shell: support and the pause, and nothing the pause closes.
 describe('a paused viewer', () => {
   const until = new Date('2027-01-02T03:04:00Z');
 

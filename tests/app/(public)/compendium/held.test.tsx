@@ -1,20 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// What the public compendium page tells each card about the viewer's covens: whether every coven they may write in holds the entry, and which ones do.
-// The cards, cached reads and viewer are mocked; a visitor and a viewer are asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
-
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
 const viewerIfSignedIn = vi.fn();
-// The viewer's role in each coven, which decides what the three dots hold.
 const covenRolesIfSignedIn = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
 
-// What Edit Stock opens with is `entry-stock.ts`'s, tests/app/entry-stock.test.ts; here only which
-// (coven, entry) pairs it is asked for, and that its answer reaches the place.
 const readEntryStock = vi.fn();
 vi.mock('@/app/entry-stock', () => ({
   readEntryStock,
@@ -85,11 +79,9 @@ const shell = (...workspaces: ReturnType<typeof coven>[]) => ({
   workspaces,
 });
 
-/** The entries as the cards were handed them. */
 async function entriesGiven(): Promise<Record<string, unknown>[]> {
   cards.mockClear();
   await Page({ searchParams: Promise.resolve({}) }).then((tree) => {
-    // The page returns a tree whose cards element holds the props: read them off it.
     const found: Record<string, unknown>[] = [];
     const walk = (node: unknown): void => {
       if (!node || typeof node !== 'object') return;
@@ -146,7 +138,6 @@ describe('the public compendium page, for the cards’ held state', () => {
     });
     expect(held).toMatchObject({ id: 'id-held', held: true, heldIn: ['w-1'] });
     expect(free).toMatchObject({ id: 'id-free', held: false, heldIn: [] });
-    // The check is a mark, not a link: no address for it.
     for (const each of [held, free]) expect(each).not.toHaveProperty('heldHref');
   });
 
@@ -210,8 +201,6 @@ describe('the public compendium page, for the cards’ held state', () => {
     });
   });
 
-  // The three dots: the covens that hold the entry, where the
-  // viewer's role lets them annotate, make it theirs or remove it.
   describe('the places the three dots act in', () => {
     const placesOf = (each: Record<string, unknown>) =>
       each.places as { workspaceId: string; canAnnotate: boolean; canRemove: boolean }[];
@@ -292,8 +281,6 @@ describe('the public compendium page, for the cards’ held state', () => {
   });
 });
 
-// How many of the viewer's covens hold each entry, any role, for the count on its plus or
-// check; and every coven of theirs for the filter's In My Covens, the ones they only view too.
 describe('the public compendium page, for the holding count and In My Covens', () => {
   it('names every coven holding each entry, one the viewer only views included', async () => {
     viewerIfSignedIn.mockResolvedValue(
@@ -323,7 +310,6 @@ describe('the public compendium page, for the holding count and In My Covens', (
       { id: 'w-1', name: 'bbb' },
     ]);
 
-    // A viewer alone has no plus to count on, but the filter is theirs too.
     viewerIfSignedIn.mockResolvedValue(shell(coven('w-view', 'aaa', false)));
     await entriesGiven();
     expect(propsGiven().myCovens).toEqual([{ id: 'w-view', name: 'aaa' }]);

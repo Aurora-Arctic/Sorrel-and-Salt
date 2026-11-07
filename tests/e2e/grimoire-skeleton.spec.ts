@@ -5,10 +5,9 @@ import { signInAgainAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 
-// The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder
-// card is as tall as a real spell card and the grid has as many columns, at a desktop and a phone width.
-// At Compact, the wait's cards are as tall as the loaded compact cards.
-// The wait on a spell page draws the recipe's own frame, where the spell will stand, under the page bar.
+// The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder card is as tall as a
+// real spell card and the grid has as many columns, at desktop and phone width, and at Compact. The wait on a spell page
+// draws the recipe's own frame under the page bar.
 
 /** How far a placeholder card may be from a real card's height, in pixels. */
 const HEIGHT_TOLERANCE = 2;
@@ -45,7 +44,6 @@ test.beforeAll(async ({ browser }) => {
   }
 });
 
-/** Holds back every server-component answer from `hold()` until `release()`, prefetches excepted. */
 async function holdServerAnswers(page: Page) {
   const held: Route[] = [];
   let holding = false;
@@ -67,7 +65,6 @@ async function holdServerAnswers(page: Page) {
   };
 }
 
-/** The first card's height and the column count of the card grid, in the skeleton or on the page. */
 const cardGrid = (page: Page, waiting: boolean) =>
   page.evaluate((inSkeleton) => {
     const root = inSkeleton
@@ -99,7 +96,6 @@ for (const width of [1280, 375]) {
       return (await cardGrid(page, true))!;
     };
 
-    // From another section.
     await page.goto(`/coven/${coven.slug}/members`);
     server.hold();
     await page
@@ -113,7 +109,6 @@ for (const width of [1280, 375]) {
     const spells = (await cardGrid(page, false))!;
     expect(spells.height).toBeGreaterThan(0);
 
-    // Between its tabs.
     server.hold();
     await page.getByRole('link', { name: 'Drafts', exact: true }).click();
     const betweenTabs = await waitingGrid();

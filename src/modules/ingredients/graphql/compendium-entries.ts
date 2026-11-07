@@ -15,15 +15,13 @@ import { clearIngredientChildren } from '../loaders/ingredient-children';
 import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
-// The compendium's writes, a curator's or an admin's: scoped here
-// and refused again by the service, which is the real gate, as the
-// category writes are. Neither input names a tier or a stamp — the
-// compendium is the mutation, and the stamps are the session's.
+// The compendium's writes, scoped to curators here and refused again by the
+// service, the real gate. Neither input names a tier or a stamp.
 
 const SHOWN =
   'Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.';
 
-/** A compendium entry as the admin's form sends it: `IngredientInput`'s fields with `nomenclature` required, as the compendium declares one for every entry. */
+// `nomenclature` is required, as the compendium declares one for every entry.
 const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput', {
   fields: (t) => ({
     ...ingredientInputFields(t, { tier: 'compendium', whole: false }),
@@ -31,10 +29,8 @@ const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput',
   }),
 });
 
-// An update replaces the entry, so a field left out would be cleared — the
-// categories above all, which the form may not show. Non-null makes leaving
-// one out a schema error, and "" or [] clears one, as `IngredientUpdateInput`
-// does for a coven's.
+// An update replaces the entry, so a field left out is cleared: non-null makes
+// leaving one out a schema error, and "" or [] clears one.
 const CompendiumIngredientUpdateInput = builder.inputType('CompendiumIngredientUpdateInput', {
   description: 'The whole entry, replacing the row. Every field is sent, and "" or [] clears one.',
   fields: (t) => ({
@@ -43,8 +39,7 @@ const CompendiumIngredientUpdateInput = builder.inputType('CompendiumIngredientU
   }),
 });
 
-const END_REDIRECT =
-  "Confirms ending another entry's redirect from the address this write takes (MB.82).";
+const END_REDIRECT = "Confirms ending another entry's redirect from the address this write takes.";
 
 builder.mutationField('createCompendiumIngredient', (t) =>
   t.field({
@@ -106,10 +101,9 @@ builder.mutationField('deleteCompendiumIngredient', (t) =>
   }),
 );
 
-// The curator's review mark: set or cleared by hand, curator-scoped
-// here and refused again by the service. It answers the entry and never the
-// mark, which `Ingredient` does not carry: the admin page reads it through
-// the service, and a client refreshes after the write.
+// The curator's review mark, curator-scoped here and refused again by the
+// service. It answers the entry, not the mark, which `Ingredient` does not
+// carry, so a client refreshes after the write.
 builder.mutationField('setCompendiumEntryReviewed', (t) =>
   t.field({
     type: IngredientRef,

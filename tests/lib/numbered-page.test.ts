@@ -36,9 +36,7 @@ describe('readPageCursors', () => {
   });
 });
 
-// The pages that list through readNumberedPage (the admin people tabs, the
-// members and invitations pages, the compendium) each prove only that they
-// pass their cursor to it; what it does with a cursor of another list is here.
+// Pages that list through readNumberedPage each prove only that they pass their cursor to it; what it does with another list's cursor is here.
 describe('readNumberedPage', () => {
   const ROW = { node: { id: ID }, cursor: { key: ['k001'], id: ID } };
   const count = () => Promise.resolve({ totalCount: 1, countBefore: 0 });

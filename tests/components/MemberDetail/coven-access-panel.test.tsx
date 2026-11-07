@@ -10,9 +10,7 @@ import { announced } from '../../support/click-feedback';
 import { graphqlLink, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The member modal's Coven Access section: an owner's pause on one member's access to the coven, and its lifting. The
-// page's own read says whether a pause stands; the member's pauses are read as the modal opens, and again after either
-// write (claude-docs/components/member-detail.md, "Coven Access").
+// claude-docs/components/member-detail.md, "Coven Access"
 
 const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh, replace: vi.fn() }) }));
@@ -37,7 +35,6 @@ const STANDING = {
   liftedBy: null,
 };
 
-/** Answers the pauses query with `history`, counting the reads, and records each mutation's name and variables. */
 function serve(history: readonly object[]) {
   const reads = { count: 0 };
   mockGraphQLQuery('MemberPauses', () => {
@@ -229,7 +226,6 @@ describe('CovenAccessPanel, while a pause stands', () => {
     expect(within(section()).getAllByText('Paused').length).toBeGreaterThan(0);
     expect(within(section()).queryByRole('button', { name: 'Pause Access' })).toBeNull();
     expect(await within(section()).findByText('Cooling off')).toBeInTheDocument();
-    // The standing pause is not listed again among the earlier ones.
     const ledger = within(section()).getByRole('list', { name: 'Earlier Pauses' });
     expect(within(ledger).getAllByRole('listitem')).toHaveLength(1);
 

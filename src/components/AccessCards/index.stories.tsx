@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import AccessCards from '.';
 import type { AccessRole, AccessRow } from './types';
 
-// Render-only; the cards' reading and contents are asserted in tests/components/AccessCards.
 const meta = { title: 'Pages / Access Cards', component: AccessCards } satisfies Meta<
   typeof AccessCards
 >;

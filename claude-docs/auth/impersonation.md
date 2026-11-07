@@ -1,4 +1,4 @@
-## Impersonation (MB.53)
+## Impersonation
 
 A keeper can sign in as a specific user, in local development, on staging and
 on a hotfix preview, to reproduce what that user sees rather than guess at it.
@@ -38,7 +38,7 @@ the session listing and revoking endpoints, the ban endpoints, and
 `has-permission`. Each writes through the adapter, outside `withAudit`.
 `set-role` would be a second way to grant admin, past M2.9's ledger and the
 primary keeper's protection, and `remove-user` could hard-delete the primary
-admin ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)).
+admin ([`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)).
 So `impersonation()` keeps `impersonateUser` and `stopImpersonating` from the
 plugin's endpoints and drops the rest.
 
@@ -77,7 +77,7 @@ a keeper looks.
   under the shell's paused notice, and every other signed-in GraphQL call answers `ACCESS_PAUSED`.
   The banner, drawn by the root layout, stays on every page, so Stop still works. Once the pause is
   lifted or runs out the same impersonation reaches the normal pages
-  (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
+  (`claude-docs/design-decisions/auth.md`, "What the site access pause closes, and what it decides along the way").
 - **An impersonation lasts an hour**, Better Auth's default. The session row
   expires on its own if Stop is never pressed.
 - **No target check beyond the role.** Better Auth looks the target up by id
@@ -95,14 +95,14 @@ publishes it as `app.impersonated_by` beside `app.current_user_id`, from the
 session and never a request body, in the same transaction-local
 `set_config(..., true)` ([`db/write-path.md`](../db/write-path.md)). Like
 `app.privilege_route` it is published on every write, and unlike
-`app.current_user_id`, which the privilege trigger reads (MB.195), it has no
+`app.current_user_id`, which the privilege trigger reads, it has no
 reader in v1. It is empty on every write that is not an impersonation.
 
 ### Not a third access path
 
 Impersonation swaps the session cookie, which a GraphQL mutation cannot do
 cleanly, and it lives under `/api/auth/*`, the one exception rule 1 already
-names ([`graphql-only-exception.md`](graphql-only-exception.md)). Nothing else
+names ([`config.md`](config.md), "The one exception to the GraphQL-only rule"). Nothing else
 moves off GraphQL. The user list a keeper picks a target from is MB.52's
 ordinary read.
 
@@ -133,17 +133,17 @@ name and address, and carries Stop Impersonating, at the top of every page
   absent where it is shut (one environment each way, the gate's matrix
   covering the rest), and the declined ban columns. That a keeper target is refused is the
   db file's, through the endpoint, not a pin of `allowImpersonatingAdmins`
-  (MB.188).
+  .
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-keeper is
   refused, a keeper target is refused, and the impersonation session is B's
   with E recorded. B's coven is what the session sees, and `/keepers`'s check
   refuses it. Stop restores E's own session. A paused user is handed over, the session reads as paused, a
   signed-in GraphQL call through the real route answers `ACCESS_PAUSED` while a public read answers, Stop restores E, and
   the same impersonation reads as signed in once the pause is lifted. The file builds Better Auth once,
-  with the flags on, in its `beforeAll` (MB.188).
+  with the flags on, in its `beforeAll`.
 - `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
   under an impersonation stamped as the user acted as — the session above is
   B's, so that is the write stamped B.
 - `tests/db/schema-drift.test.ts`: the column and its foreign key, against
-  the schema file (MB.226).
+  the schema file.
 - The component, page and layout tests: the control and the banner.

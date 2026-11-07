@@ -37,7 +37,6 @@
   }
 }
 
-// The editable text, at the public page's text size, in a box as wide as the column.
 .document-editor__text [role='textbox'] {
   min-height: 24rem;
   padding: space(2) 1.125rem;
@@ -45,7 +44,6 @@
   outline: none;
 }
 
-// One group of related buttons, close together, with a line between it and the group before.
 .document-editor__group {
   display: flex;
   gap: space(1);
@@ -82,14 +80,12 @@
     min-height: 2.25rem;
   }
 
-  // A pressed button (Bold on bold text) keeps the quiet button's pointed-at look.
   .btn--quiet[aria-pressed='true'] {
     border-color: $edge-highlight;
     background-color: $fill-highlight-field;
   }
 }
 
-// A source mark's number is no link here, as it leads nowhere while editing, but it wears the public page's link look.
 .document-editor__text .document-page__marks span {
   padding-inline: space(1);
   color: $text-primary;

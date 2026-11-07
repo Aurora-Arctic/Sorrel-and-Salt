@@ -10,9 +10,6 @@ import HTMLElementConfigContentModelEnum from 'happy-dom/lib/config/HTMLElementC
 // it (`expectConsole`, tests/support/console-guard.ts) fails.
 installConsoleGuard();
 
-// The `dom` project's half of the setup; setup-msw.ts is the half both
-// projects share.
-
 // RTL registers this itself under `globals: true` (its entry checks for a
 // global `afterEach`); the explicit call is a harmless duplicate from the port.
 afterEach(() => {
@@ -26,8 +23,6 @@ afterEach(async () => {
   await act(() => (window as unknown as Window).happyDOM.waitUntilComplete());
 });
 
-// Emptied after every test, as the render is: what one test stores — a theme,
-// a remembered choice — is not there for the next to find.
 afterEach(() => {
   window.localStorage.clear();
 });

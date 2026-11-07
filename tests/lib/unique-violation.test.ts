@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { violatedUniqueIndex } from '@/lib/unique-violation';
 
-/** What postgres.js throws for SQLSTATE 23505, reduced to the fields read. */
 function driverError(constraint: string, code = '23505'): Error {
   return Object.assign(new Error('duplicate key value violates unique constraint'), {
     code,
@@ -24,7 +23,6 @@ describe('violatedUniqueIndex', () => {
   });
 
   it('answers undefined for any other database error', () => {
-    // 23514 is a CHECK violation, which also carries a constraint name.
     expect(violatedUniqueIndex(driverError('herbs_name_not_blank', '23514'))).toBeUndefined();
   });
 

@@ -3,9 +3,6 @@ import type { ReactNode } from 'react';
 import ReceivedInvitations from '.';
 import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/ReceivedInvitations.
-// Each story sits in the account page's Invitations section, a panel in the narrow
-// frame, because the list's stacked rows depend on the panel's width.
 const meta = {
   title: 'Account / Invitations Received',
 } satisfies Meta;
@@ -60,7 +57,6 @@ const oneInvitationNode = <Page invitations={[ONE]} />;
 
 const defaultNode = <Page invitations={SEVERAL} />;
 
-// The section is always on the account page, so an empty list is drawn too.
 const emptyNode = <Page invitations={[]} />;
 
 const lastPageNode = (

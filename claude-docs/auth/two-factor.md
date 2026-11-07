@@ -1,4 +1,4 @@
-## Two-factor (M16.10)
+## Two-factor
 
 Someone who signs in with a password can add a second step: a six-digit code
 from an authenticator app, or one of ten backup codes. It is offered, never

@@ -2,8 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEBOUNCE_MS, useDebouncedValue } from '@/lib/debounce';
 
-// The one debounce a typed lookup waits on (claude-docs/components/combobox.md,
-// "The debounce"): a value settles once it has stopped changing for the delay.
+// The one debounce a typed lookup waits on (claude-docs/components/combobox.md, "The debounce").
 
 describe('useDebouncedValue', () => {
   beforeEach(() => {

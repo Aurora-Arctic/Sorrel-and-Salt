@@ -7,7 +7,6 @@ import CovenNav from '../CovenNav';
 import WorkspaceSwitcher from '../WorkspaceSwitcher';
 import ContextRow from '.';
 
-// Render-only; behaviour is asserted in tests/components/ContextRow.
 const meta = {
   title: 'Shell / Context Row',
 } satisfies Meta;
@@ -39,9 +38,6 @@ const AdminName = () => (
   </PendingLink>
 );
 
-// Admin row: "Admin" home link, then the nav (a keeper's ends with People). Coven
-// row: the switcher leads, then the coven's nav (a viewer's has no Members). The
-// zero-coven row is the switcher alone, with only Create Coven to choose.
 export const States: Story = {
   render: () => (
     <StatesGrid

@@ -9,9 +9,7 @@ import { server } from './msw/server';
 import { choose, press, type } from './interact';
 import type { GroupedValueFormCase, GroupedValueFormSubject } from './types';
 
-// GroupedValueForm is one form for every grouped vocabulary. What every kind shares is written once as rows
-// tests/components/GroupedValueForm runs with `it.each`; a kind gets its own describe only for what it changes.
-// The group field is found by the subject's own label.
+// What every grouped vocabulary kind shares is rows tests/components/GroupedValueForm runs with `it.each`.
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
@@ -35,8 +33,6 @@ function renderSubject(subject: GroupedValueFormSubject, editing = false) {
 }
 
 export const ADDING: GroupedValueFormCase[] = [
-  // The owner's rule for every form: Save is offered only when there is
-  // something to save.
   [
     'keeps Save off until something is entered',
     (subject) => {
@@ -91,7 +87,6 @@ export const ADDING: GroupedValueFormCase[] = [
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     },
   ],
-  // The group is typed into, the list narrowing as it is, and only a listed group is ever the value.
   [
     'takes its group by typing, the list narrowing to the groups holding the text',
     async (subject) => {
@@ -155,7 +150,6 @@ export const EDITING: GroupedValueFormCase[] = [
   [
     'holds no group while the text names none, and refuses it on Save',
     async (subject) => {
-      // No answer is set up: the form refuses it before asking the server.
       const onDone = renderSubject(subject, true);
 
       expect(group(subject)).not.toHaveAttribute('aria-invalid');

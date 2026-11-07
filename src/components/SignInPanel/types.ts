@@ -1,38 +1,31 @@
 import type { ProviderId } from '../../lib/types';
 
-/** A sign-in under way on the panel: a provider's hop, or the passkey prompt. */
 export type SignInAttempt = ProviderId | 'passkey';
 
 export interface SignInPanelProps {
-  /** Where a successful sign-in returns to, already run through safeReturnPath; absent, the landing is the account's role's. */
+  /** Already run through safeReturnPath; absent, the landing is the account role's. */
   next?: string;
   /** A readable sentence for a failed callback, from signInErrorMessage — never a raw code. */
   error?: string;
-  /** Providers this environment has credentials for; the rest render greyed out. */
   configured: readonly ProviderId[];
 }
 
 export interface ProviderButtonProps {
   provider: { id: ProviderId; label: string };
-  /** Whether this environment has credentials for the provider. */
   available: boolean;
   /** Whether this browser last signed in with it. */
   lastUsed: boolean;
-  /** The sign-in under way on the panel, if any. */
   signingIn: SignInAttempt | null;
-  /** Starts the sign-in; resolves to the failure's sentence, or nothing once the redirect starts. */
   onSignIn: (providerId: ProviderId) => Promise<string | undefined>;
 }
 
 export interface PasswordFormProps {
-  /** Where a successful sign-in returns to, as the panel's `next`. */
   next?: string;
   /** Whether this browser last signed in with a password. */
   lastUsed: boolean;
   /** The address typed, held by the panel so it survives a trip back to the provider buttons. */
   email: string;
   onEmailChange: (email: string) => void;
-  /** Returns to the provider buttons. */
   onBack: () => void;
   /** Called at each submit, so the panel clears its own error. */
   onStart?: () => void;
@@ -41,19 +34,15 @@ export interface PasswordFormProps {
 }
 
 export interface PasskeyButtonProps {
-  /** Where a successful sign-in returns to, as SignInPanelProps' `next`. */
   next?: string;
   /** Whether this browser last signed in with a passkey. */
   lastUsed: boolean;
-  /** The sign-in under way on the panel, if any: `'passkey'` while this button's prompt is open. */
   signingIn: SignInAttempt | null;
   /** Records the prompt opening (`'passkey'`) or failing (`null`), so the panel holds every other control. */
   onSigningIn: (attempt: 'passkey' | null) => void;
 }
 
 export interface TwoFactorStepProps {
-  /** Where a successful sign-in returns to, as the panel's `next`. */
   next?: string;
-  /** Back to the password, with the reason when the server ended the attempt. */
   onRestart: (reason?: string) => void;
 }

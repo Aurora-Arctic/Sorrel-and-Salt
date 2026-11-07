@@ -33,6 +33,6 @@ The coven page (`src/app/(shell)/coven/[slug]/page.tsx`) and its skeleton (`skel
 
 ## Stories and tests
 
-`Coven / Coven Home`: `States`, with a control that chooses As Steward, As Practitioner, As Observer, Demo Coven, Pending Facts Known and Pending Facts Unknown, all inside the coven's shell with invented names.
+`Coven / Coven Home`: `States`, with a control that chooses As Steward, As Practitioner, As Observer, Demo Coven, "Pending, Facts Known" and "Pending, Facts Unknown", all inside the coven's shell with invented names.
 
-Tests: none yet. Neither this component nor `CovenFacts` has a test file under `tests/`.
+No test file under `tests/` covers this component or `CovenFacts`.

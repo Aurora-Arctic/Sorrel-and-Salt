@@ -15,13 +15,10 @@ import './index.scss';
 // last editor and made count, and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where
 // `href` is given (claude-docs/components/spell-card.md).
 
-/** What a spell with no title is called, here and wherever it is listed. */
 export const UNTITLED_SPELL = 'Untitled Spell';
 
-/** The modal place the Quick Look shows in, apart from the spell builder's. */
 export const SPELL_LOOK_PLACE = 'look';
 
-/** The id of a spell's title heading, which the card names itself by. */
 const spellTitleId = (id: string): string => `spell-${id}-title`;
 
 const SpellCard = ({
@@ -78,9 +75,6 @@ const SpellCard = ({
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
       {(lastEdit != null || made != null || lookHref || editHref || recordWorking || more) && (
-        // The foot, as IngredientCard's, so cards in one grid row end on the same line: who last edited
-        // and how often it has been made on one line, then the actions on one row, the Quick Look eye at
-        // the left (the start group) and Record a Working, the Edit pencil and the More menu at the right.
         <div className="specimen__foot">
           {(lastEdit != null || made != null) && (
             <div className="spell-card__foot-line">

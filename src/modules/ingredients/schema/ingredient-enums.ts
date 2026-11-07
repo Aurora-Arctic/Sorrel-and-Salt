@@ -30,15 +30,13 @@ export const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
   'zoological',
 ]);
 
-/** Whether a nomenclature’s formal name is set in italics; one rule for the entry page and the card. */
 export const isBinomial = (kind: string): boolean => BINOMIAL_KINDS.has(kind);
 
 export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
 export type IngredientElement = (typeof INGREDIENT_ELEMENTS)[number];
 
-// How Chicago renders a source: the kind decides the punctuation and
-// the default italics, and which fields a row needs. `entry` is a
-// reference-work entry, cited "under" its headword; there is no `other`,
+// How Chicago renders a source: the kind decides the punctuation and the fields
+// a row needs. `entry` is cited "under" its headword; there is no `other`,
 // which would render a guess.
 export const REFERENCE_KINDS = ['book', 'chapter', 'article', 'entry', 'web_page'] as const;
 
@@ -86,10 +84,9 @@ export const CITED_VARIANT_FIELDS = [
 
 export type CitedVariantField = (typeof CITED_VARIANT_FIELDS)[number];
 
-// Not a column: the toxic setting a search takes, kept here so the
-// GraphQL enum, the filter's Zod schema and the facet screen read one list.
-// `any` is no filter; `toxic` keeps an entry flagged on itself or on a live
-// form, and `not_toxic` one flagged on neither.
+// Not a column: the toxic setting a search takes, so the GraphQL enum, the
+// filter's Zod schema and the facet screen read one list. `toxic` keeps an
+// entry flagged on itself or on a live form.
 export const TOXIC_FILTERS = ['any', 'toxic', 'not_toxic'] as const;
 
 export type ToxicFilter = (typeof TOXIC_FILTERS)[number];
@@ -101,10 +98,9 @@ export const CATEGORY_MODES = ['all', 'any'] as const;
 
 export type CategoryMode = (typeof CATEGORY_MODES)[number];
 
-// Not a column: where a coven's list entry comes from, kept here so the
-// GraphQL enum, the filter's Zod schema and the coven's address read one list.
-// `local` is the coven's own entry, `compendium` one it holds a jar of; leaving
-// the setting out keeps both.
+// Not a column: where a coven's list entry comes from, so the GraphQL enum, the
+// filter's Zod schema and the coven's address read one list. `local` is the
+// coven's own entry, `compendium` one it holds a jar of.
 export const INGREDIENT_SOURCES = ['local', 'compendium'] as const;
 
 export type IngredientSource = (typeof INGREDIENT_SOURCES)[number];
@@ -120,6 +116,5 @@ export type CompendiumListing = (typeof COMPENDIUM_LISTINGS)[number];
 export const COMPENDIUM_SORTS = ['name', 'sourcing_score'] as const;
 export type CompendiumSort = (typeof COMPENDIUM_SORTS)[number];
 
-/** Which way a compendium sort runs: `asc` is its first-click direction, `desc` the reverse. */
 export const COMPENDIUM_ORDERS = ['asc', 'desc'] as const;
 export type CompendiumOrder = (typeof COMPENDIUM_ORDERS)[number];

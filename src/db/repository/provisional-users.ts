@@ -19,10 +19,8 @@ function provisional(userId?: string) {
 }
 
 /**
- * Hard-deletes one provisional account if it has lapsed (unverified, with a
- * provider `accounts` row, idle or older than the cap), outside `withAudit`:
- * a tombstone would block Better Auth's sign-in. A user with a privilege-ledger
- * row is kept. Returns whether the row went. (claude-docs/db/write-path.md, "Removing a lapsed provisional account")
+ * Hard-deletes a lapsed provisional account outside `withAudit`; a tombstone would block Better Auth's
+ * sign-in (claude-docs/db/write-path.md, "Removing a lapsed provisional account").
  */
 export async function deleteLapsedProvisionalUser(
   userId: string,
@@ -67,10 +65,8 @@ export async function provisionalSecondsLeft(
 }
 
 /**
- * One page of the ids of provisional accounts that have lapsed, by the database's clock: in id
- * order after `after` (from the start when null), at most `limit`. The daily cleanup deletes each
- * through `deleteLapsedProvisionalUser`; paging by id keeps a page deleted meanwhile from moving
- * the next one.
+ * One page of lapsed provisional account ids by the database's clock, in id order after `after`; the daily
+ * cleanup deletes each (claude-docs/db/write-path.md, "Removing a lapsed provisional account").
  */
 export async function findLapsedProvisionalUserIds(
   lifetimeSeconds: number,

@@ -54,36 +54,23 @@ export default async function CovenIngredientsPage({
   const query = await searchParams;
   const filter: CovenListFilter = COVEN_PARAMS.read(query);
   const { after, before } = readPageCursors(query);
-  // The list as it is, with no dialog: where the dialog closes and saves back to.
   const listHref = covenIngredientsHref(workspace.slug, { ...filter, after, before });
   const mayEdit = rolePermits(membership.role, { ingredient: ['update'] });
-  // The entry whose details are open over the list, `?entry=<id>`: any member's, an observer's too,
-  // since the details only read.
   const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
   const viewed = entryId ? await readViewedEntry(membership, entryId) : undefined;
-  // The list with the details open, which an edit modal opens over and closes back to.
   const here = { ...filter, after, before, entry: viewed ? entryId : undefined };
   const hereHref = covenIngredientsHref(workspace.slug, here);
   const editId = typeof query.edit === 'string' && query.edit ? query.edit : undefined;
-  // Read only for a role that may edit: an observer's `?edit` opens nothing and reads nothing.
   const edited = mayEdit && editId ? await readEditedEntry(workspace.id, editId) : undefined;
   const annotateId =
     typeof query.annotate === 'string' && query.annotate ? query.annotate : undefined;
-  // The same rule for Annotate, as the entry page's: a compendium entry the coven holds, a
-  // retired one included; an own entry or one not held opens nothing.
   const annotated =
     mayEdit && annotateId ? await heldCompendiumEntry(membership, annotateId) : undefined;
-  // A held compendium entry's More: Make It Ours and Remove, on the permissions their services
-  // assert. An own entry's Delete is in its Edit Ingredient dialog, not on the card.
   const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
   const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
-  // The foot's Edit Stock pencil, on the permission `saveStock` asserts: none for an observer.
   const mayStock = rolePermits(membership.role, { inventory: ['update'] });
-  // A card's Edit and Annotate open over the list alone, never over details.
   const placed = (dialog: CovenListDialog) =>
     covenIngredientsHref(workspace.slug, { ...filter, after, before }, dialog);
-  // What a card's foot may do to an entry, for the role. Quick Look draws the same through
-  // `covenCardActions`; only its Edit opens over the details, `editHref`, not over the list.
   const footOf = (
     own: boolean,
     shown: Parameters<typeof editHeading>[0] & { id: string },
@@ -94,7 +81,6 @@ export default async function CovenIngredientsPage({
     ...(!own && { mayMakeOurs, mayRemove: mayDelete }),
   });
 
-  // The address names categories and deities by slug; the service filters by id.
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
   const lookups = {
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
@@ -113,7 +99,6 @@ export default async function CovenIngredientsPage({
   });
 
   const entries = page.edges.map(({ node, cupboardEntry }, i): CovenCardEntry => {
-    // The coven's own label and overrides stand over the compendium's.
     const shown = applyCupboardEntry(node, cupboardEntry);
     const own = node.workspaceId !== null;
     return {
@@ -185,8 +170,6 @@ export default async function CovenIngredientsPage({
           opened={
             viewed && {
               ...viewedDetailsOf(viewed, workspace.slug),
-              // The card's own controls for this entry: Edit over the details or Annotate, and More,
-              // whose remove goes back to the list, which closes them.
               actions: covenCardActions(
                 {
                   id: viewed.shown.id,
@@ -217,8 +200,6 @@ export default async function CovenIngredientsPage({
             edit={{
               href: hereHref,
               closeHref: hereHref,
-              // A save stays where the edit opened from, the list or the details over it, fetched
-              // again; a delete goes back to the list, the details' entry gone.
               deletedHref: listHref,
               savedHref: hereHref,
               opened: edited && {
@@ -245,8 +226,6 @@ export default async function CovenIngredientsPage({
                 ...cupboardFormValues(annotated.entry, annotated.cupboardEntry),
               }
             }
-            // Make It Ours and Remove in the dialog's More menu, on the permissions the entry page
-            // reads; a remove returns to this list.
             more={{
               covenSlug: workspace.slug,
               canMakeOurs: mayMakeOurs,

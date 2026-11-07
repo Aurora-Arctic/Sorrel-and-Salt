@@ -15,7 +15,6 @@ import { SEND_WINDOW_SECONDS, refuseTimedOut, refuseTimedOutReply } from './time
 export const SEND_LIMIT = 10;
 export { SEND_WINDOW_SECONDS, refuseTimedOut, refuseTimedOutReply };
 
-/** Refuses a sender who has used the day's allowance of new requests. */
 export function refuseOverLimit(recent: number): void {
   if (recent >= SEND_LIMIT) {
     throw new Forbidden(

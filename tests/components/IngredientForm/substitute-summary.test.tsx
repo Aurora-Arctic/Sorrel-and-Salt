@@ -14,8 +14,7 @@ import { renderWithClient } from '../../support/ingredient-form';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/msw/ingredient-lookups';
 
-// A substitute list's chips: a linked ingredient's chip is a button that opens a summary of it, read through /api/graphql on opening, and a typed name's is plain text that opens nothing.
-// How the panel opens and shuts (a second press, Escape, a press outside) is Combobox's (tests/components/Combobox/index.test.tsx, "with a summary").
+// Panel open and shut is Combobox's (tests/components/Combobox/index.test.tsx, "with a summary").
 
 const MOCKWORT_ID = '0d4f2c1a-6b3e-4a5d-8c7f-9e0a1b2c3d4e';
 const DRIED_LEAF_ID = '71c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e';
@@ -46,7 +45,6 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
   celestialBodies: ['Moon'],
   zodiacSigns: null,
   colors: [],
-  // The form adds a celestial body of its own to the ingredient's.
   variants: [
     {
       id: DRIED_LEAF_ID,
@@ -60,7 +58,6 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
   ],
 };
 
-/** Answers `IngredientSummary` with `ingredient`, recording each ask. */
 function offerSummary(ingredient = MOCKWORT) {
   const calls: IngredientSummaryQueryVariables[] = [];
   mockGraphQLQuery<IngredientSummaryQuery, IngredientSummaryQueryVariables>(
@@ -73,7 +70,6 @@ function offerSummary(ingredient = MOCKWORT) {
   return calls;
 }
 
-/** The ingredient's substitutes, one linked and one typed, as an edit opens them. */
 function renderSubstitutes(entryHref?: (ingredient: { slug: string }) => string) {
   const Harness = () => {
     const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
@@ -100,7 +96,6 @@ function renderSubstitutes(entryHref?: (ingredient: { slug: string }) => string)
 const LINKED_TEXT = 'Mockwort (Fixtura vulgaris) · Dried Leaf';
 const opener = () => screen.getByRole('button', { name: LINKED_TEXT });
 const summary = () => screen.getByRole('dialog', { name: `About ${LINKED_TEXT}` });
-/** What the summary says of `term`, as its description list pairs them. */
 const fact = (term: string) =>
   within(summary()).getByText(term, { selector: 'dt' }).nextElementSibling;
 
@@ -111,12 +106,9 @@ describe('a substitute list’s chips', () => {
 
     expect(opener()).toHaveAttribute('aria-haspopup', 'dialog');
     expect(opener()).toHaveAttribute('aria-expanded', 'false');
-    // Both keep their x, named as before.
     expect(screen.getByRole('button', { name: `Remove ${LINKED_TEXT}` })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove Zest Root' })).toBeInTheDocument();
-    // The typed name is text, with nothing to press but its x.
     expect(screen.queryByRole('button', { name: 'Zest Root' })).not.toBeInTheDocument();
-    // Nothing is read until a chip is opened.
     expect(calls).toHaveLength(0);
   });
 
@@ -132,11 +124,8 @@ describe('a substitute list’s chips', () => {
     expect(within(summary()).getByText(MOCKWORT.description ?? '')).toBeInTheDocument();
     expect(fact('Form')).toHaveTextContent('Dried Leaf');
     expect(fact('Elements')).toHaveTextContent('Water');
-    // The ingredient's celestial body and the form's own, together.
     expect(fact('Celestial Bodies')).toHaveTextContent('Moon, Saturn');
-    // A list with nothing in it is left out.
     expect(within(summary()).queryByText('Colours', { selector: 'dt' })).not.toBeInTheDocument();
-    // No page to link, so no link.
     expect(within(summary()).queryByRole('link')).not.toBeInTheDocument();
   });
 

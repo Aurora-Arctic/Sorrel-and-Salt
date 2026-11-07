@@ -13,9 +13,8 @@ import type { InvitationAcceptanceProps } from './types';
 import type { PageHeaderProps } from '../PageHeader/types';
 import './index.scss';
 
-// `/invite/[token]` and `/i/[token]` share this one panel: the page reads where the visitor stands and this shows it. Accept
-// sends the mutation, which decides, and a refusal is shown in the service's words
-// (claude-docs/components/invitation-acceptance.md).
+// `/invite/[token]` and `/i/[token]` share this panel: the page reads where the visitor stands, Accept sends the mutation, and
+// a refusal shows in the service's words (claude-docs/components/invitation-acceptance.md).
 
 const AcceptInvitationDocument = graphql(`
   mutation AcceptInvitation($token: String!) {
@@ -31,19 +30,16 @@ const RecordCardAttemptDocument = graphql(`
   }
 `);
 
-/** What a site invitation grants, by the role it names. */
 const SITE_GRANTS = {
   curator: "You've been invited to be a curator of Sorrel & Salt.",
   admin: "You've been invited to be a keeper of Sorrel & Salt.",
 } as const;
 
-/** What a coven's invitation grants when the page has not the coven's own name. */
 const WORKSPACE_GRANT = "You've been invited to join a coven on Sorrel & Salt.";
 
 const SIGNED_OUT_GRANT =
   "You've been invited to Sorrel & Salt. Sign in with an account whose email address is the one this invitation was sent to.";
 
-/** What a card grants, and what a signed-out visitor holding one is told: no address, no batch. */
 const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
 
 const CARD_SIGNED_OUT_GRANT =
@@ -78,18 +74,17 @@ const Accept = ({
     report(undefined);
     try {
       await graphqlRequest(AcceptInvitationDocument, { token });
-      // Busy until the landing replaces this page. A success is the landing
-      // itself, so nothing is announced (the decision record's §5, rule 1).
+      // A success is the landing itself, so nothing is announced.
       navigate(landing);
     } catch (error) {
       setSending(false);
-      // No fields of its own, so the reader always answers with an alert;
-      // the fallback only satisfies its type.
+      // The fallback only satisfies the type: the reader always answers with an alert.
       report(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
     }
   }
 
-  // A `div`, not the other states' `p`: the callout is a `div`.
+  // A `div`, not the other states' `p`: the callout is a `div`, and a `div` in a `p` is
+  // invalid HTML.
   return (
     <div className="invitation-acceptance__actions">
       {/* `aria-disabled` rather than `disabled` while it sends: a disabled
@@ -109,8 +104,7 @@ const Accept = ({
   );
 };
 
-// Tells the server a signed-in account opened a link it refused, once per view. The service decides whether
-// the open is worth a row; a failure is ignored, as the refusal on the page already says all there is to say.
+// A failure is ignored: the refusal on the page already says all there is to say.
 const RecordRefusal = ({ token }: { token: string }): null => {
   const sent = useRef(false);
   useEffect(() => {

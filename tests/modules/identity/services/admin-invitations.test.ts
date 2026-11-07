@@ -43,7 +43,6 @@ const ORIGIN = 'http://localhost:8000';
 /** More than the list's page, so every row is read in one. */
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
-/** The pending invitations a keeper is listed, in the list's order, on one page. */
 const pending = async (filter: Parameters<typeof listPendingAdminInvitations>[1] = {}) =>
   (await listPendingAdminInvitations(asUser(E), filter, PAGE)).map(({ node }) => node);
 
@@ -220,7 +219,6 @@ describe('createAdminInvitation', () => {
     expect(await invitations()).toEqual([]);
   });
 
-  // The site role is the keeper's pick, and the row records it.
   it('invites to the curator role, recording it on the row', async () => {
     await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
 
@@ -323,7 +321,6 @@ describe('listPendingAdminInvitations', () => {
     ]);
   });
 
-  // The list's two filters, each in the finder's SQL.
   const listedEmails = async (filter: Parameters<typeof listPendingAdminInvitations>[1]) =>
     (await pending(filter)).map(({ email }) => email).sort();
 

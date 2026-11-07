@@ -10,8 +10,7 @@ import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
 // A coven's own ingredients, written as IngredientForm submits them. Neither
-// input names a tier or a stamp: the coven is the argument the proof is asked
-// for, and the stamps are the session's (claude-docs/graphql/schema.md, "The workspace
+// input names a tier or a stamp (claude-docs/graphql/schema.md, "The workspace
 // ingredient mutations").
 
 /** DESIGN.md §7's `IngredientInput`: only `name` is required. */
@@ -19,10 +18,9 @@ const IngredientInput = builder.inputType('IngredientInput', {
   fields: (t) => ingredientInputFields(t, { tier: 'coven', whole: false }),
 });
 
-// An update replaces the row, so a field left out would be cleared. Non-null
-// makes leaving one out a schema error; GraphQL has no required-but-nullable
-// field, so a caller clears with an empty value instead of null — which is
-// why `elements` is a list: a single enum had no empty value to send.
+// An update replaces the row, so a field left out is cleared. GraphQL has no
+// required-but-nullable field, so a caller clears with an empty value, which is
+// why `elements` is a list.
 const IngredientUpdateInput = builder.inputType('IngredientUpdateInput', {
   description:
     'The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one.',

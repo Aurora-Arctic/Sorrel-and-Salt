@@ -5,9 +5,6 @@ import { waitForSleep } from '@workflow/vitest';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { provisionalAccountExpiry } from '@/modules/identity/jobs/provisional-expiry';
 
-// The provisional-expiry job, run end to end by the SDK's local world: the run's first sleep is
-// woken by the test rather than waited out, and its step then reads the database as it stands.
-
 const DOMAIN = '@provisional-expiry-run.test';
 
 let sql: ReturnType<typeof postgres>;
@@ -20,7 +17,6 @@ afterAll(async () => {
   await sql.end();
 });
 
-/** A user holding a provider sign-in, as a sign-up through one leaves it. */
 async function signUp(label: string, verified: boolean): Promise<string> {
   const [{ id }] = await sql`
     insert into users (name, email, email_verified, created_by, updated_by)
@@ -51,7 +47,6 @@ async function backdate(userId: string, by: string): Promise<void> {
 const exists = async (userId: string) =>
   (await sql`select 1 from users where id = ${userId}`).length === 1;
 
-/** Wakes the run's pending sleep, standing in for the window passing. */
 async function wake(run: Awaited<ReturnType<typeof start>>): Promise<void> {
   const sleepId = await waitForSleep(run);
   await getRun(run.runId).wakeUp({ correlationIds: [sleepId] });

@@ -8,10 +8,6 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Deleting a workspace: owners only, a soft delete of the workspace
-// row alone. Members lose access because the lookups that admit them stop
-// finding a deleted workspace; their rows are left as they were.
-
 type Role = 'owner' | 'member' | 'viewer';
 
 async function insertCoven(name: string, members: [string, Role][]): Promise<string> {

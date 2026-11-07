@@ -3,9 +3,8 @@ import PageHeader from '../PageHeader';
 import './index.scss';
 import { PendingLink } from '../../lib/navigation';
 
-// The body of `src/app/(shell)/forbidden.tsx`: what a signed-in account sees at a page it cannot open.
-// It says so in one sentence for every area, sets its own `<title>` (React hoists it), and offers the way back — never who the keepers are or
-// a way to ask them (claude-docs/components/not-authorized.md).
+// The body of `src/app/(shell)/forbidden.tsx`: one sentence for every area and the way back, never who the keepers are or a way to
+// ask them (claude-docs/components/error-page.md, "Not Authorized"). It sets its own `<title>`.
 
 const NotAuthorized = (): ReactElement => (
   <div className="not-authorized">

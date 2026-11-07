@@ -34,12 +34,10 @@ beforeEach(async () => {
   clearDataCache();
 });
 
-/** An entry, compendium by default, with no formal name unless stated. */
 function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promise<string> {
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 }
 
-/** A jar in `workspaceId` of the ingredient's form `form`, written raw. */
 async function stock(
   ingredientId: string,
   workspaceId: string,
@@ -55,7 +53,6 @@ async function stock(
   );
 }
 
-/** The compendium entry `ingredientId` in `workspaceId`'s cupboard, with `overrides`. */
 async function hold(
   ingredientId: string,
   workspaceId = WORKSPACE_W_ID,
@@ -64,18 +61,15 @@ async function hold(
   await insertCupboardEntry(sql, { workspaceId, ingredientId, ...overrides }, A.id);
 }
 
-/** A live vocabulary row's id, by name. */
 async function idOf(table: 'categories' | 'deities', name: string): Promise<string> {
   const [row] = await sql`
     select id from ${sql(table)} where name = ${name} and deleted_at is null`;
   return row.id as string;
 }
 
-/** The values of one kind, whatever their counts. */
 const valuesOf = (facets: IngredientFacets, kind: keyof IngredientFacets) =>
   facets[kind].map(({ value }) => value);
 
-/** The values of one kind some entry carries. */
 const countedOf = (facets: IngredientFacets, kind: keyof IngredientFacets) =>
   facets[kind].filter(({ count }) => count > 0).map(({ value }) => value);
 
@@ -547,7 +541,6 @@ describe('workspaceIngredientFacets', () => {
   });
 });
 
-/** How many entries the coven list shows `session` in W under `filter`. */
 async function listedCount(
   session: Session,
   filter: Parameters<typeof countWorkspaceIngredients>[2],

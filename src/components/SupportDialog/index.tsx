@@ -27,10 +27,7 @@ import type { SupportPanelState } from '../SupportPanel/types';
 import type { SupportDialogState } from './types';
 import { PendingLink } from '../../lib/navigation';
 
-// The Support dialog, open while the address carries `?support=<about>` on any page, with
-// `?error=<status>` when it comes from an error page. Drawn once by the root layout, which reads nothing
-// for it: the dialog asks what the visitor may do when it opens, through /api/graphql. Closing drops the
-// parameters and keeps the page (claude-docs/components/support-dialog.md).
+// Drawn once by the root layout, which reads nothing for it (claude-docs/components/support-form.md).
 
 const SupportDialogStateDocument = graphql(`
   query SupportDialogState {

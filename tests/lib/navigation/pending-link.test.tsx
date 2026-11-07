@@ -4,15 +4,11 @@ import { useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
 
-// The App Router as a component test sees it (tests/support/navigating.tsx).
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const { PendingLink, useNavigationState } = await import('@/lib/navigation');
 const { default: LinkHint } = await import('@/components/LinkHint');
-
-// The one link the site draws: a plain press navigates through the shared hook, so the bar and
-// the destination's skeleton follow; a press the browser means for a new tab or window is left to it.
 
 const MEMBERS = '/coven/fixture-coven/members' as Route;
 
@@ -92,7 +88,6 @@ describe('PendingLink', () => {
       unhandled = fireEvent.click(link(), { button: 0 });
     });
 
-    // The link took the press: the browser does not also load the address.
     expect(unhandled).toBe(false);
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push.mock.calls[0]?.[0]).toBe('/coven/fixture-coven/members');

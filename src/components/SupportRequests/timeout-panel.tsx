@@ -84,7 +84,6 @@ const LiftButton = ({
   />
 );
 
-/** The time-out that stands: a badge, its end, the note, who set it and when, and Lift. */
 const StandingCard = ({
   timeout,
   name,
@@ -108,10 +107,8 @@ const StandingCard = ({
   </div>
 );
 
-/** Who a time-out is set on: a user, or a signed-out request whose sender has no account and is named by the address it wrote from. */
 type TimeoutTarget = { userId: string } | { requestId: string };
 
-/** The form that sets a time-out: how long, the note, and a confirm before it is sent. */
 const TimeoutForm = ({ target, name }: { target: TimeoutTarget; name: string }): ReactElement => {
   const { refresh } = usePendingNavigation();
   const [span, setSpan] = useState<PauseSpan>('day');
@@ -186,11 +183,6 @@ const TimeoutForm = ({ target, name }: { target: TimeoutTarget; name: string }):
   );
 };
 
-/**
- * A user's time-outs: the one that stands, or the form to set one, and the earlier ones beneath, or
- * with `earlierHref` a history icon by the heading linking to where they are listed.
- * `timeouts` is newest first.
- */
 const TimeoutPanel = ({
   target,
   name,
@@ -202,7 +194,8 @@ const TimeoutPanel = ({
   timeouts: SupportTimeoutEntry[];
   earlierHref?: Route;
 }): ReactElement => {
-  // Read once per render of the panel: a time-out that lapses while it is open shows as past on the next.
+  // Read once per render of the panel: a time-out that lapses while it is open shows as past
+  // on the next.
   const [now] = useState(() => Date.now());
   const [folded, setFolded] = useState(false);
   const standing = timeouts.find((timeout) => stands(timeout, now));

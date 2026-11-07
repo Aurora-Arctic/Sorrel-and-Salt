@@ -3,17 +3,12 @@ import type { ReactNode } from 'react';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import PasswordSection from '.';
 
-// Render-only; behaviour is asserted in tests/components/PasswordSection. Nothing is mocked: a submit
-// fails into the alert region. The TanStack Query client comes from the workshop's global provider
-// (.storybook/components.tsx).
 const meta = {
   title: 'Account / Password Section',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;
 
-// Inside the account page's frame and section, on its panel, as src/app/(shell)/account/page.tsx writes
-// them, so the workshop shows what the page shows.
 const Section = ({ hasPassword }: { hasPassword: boolean }) => (
   <ShellFrame area="none" open="/account">
     <main className="page-frame page-frame--narrow">
@@ -38,9 +33,7 @@ const Section = ({ hasPassword }: { hasPassword: boolean }) => (
 );
 
 const STATES_STATES: Record<string, ReactNode> = {
-  // An account with a password changes it, asked for the current one.
   Change: <Section hasPassword />,
-  // An account with providers alone sets a first one.
   Set: <Section hasPassword={false} />,
 };
 

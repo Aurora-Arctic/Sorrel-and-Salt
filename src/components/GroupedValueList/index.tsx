@@ -25,10 +25,7 @@ const GroupedValueList = ({
   position,
 }: GroupedValueListProps): ReactElement => {
   const { title, label, plural, group } = KINDS[kind];
-  // A form's name is shown in title case; the other kinds' names as saved.
   const shown = (name: string): string => (kind === 'form' ? formLabel(name) : name);
-  // An empty list says how to fill it; a filtered one with no rows, which
-  // filters left none: the name, and the group by its name.
   const groupName = groups.find(({ slug }) => slug === filter.group)?.name ?? filter.group;
   const empty = noMatchText(
     plural,

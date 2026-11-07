@@ -8,7 +8,6 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 // and the entry page). One file so both agree on amounts, numeric strings in the row and numbers on
 // screen. Per request, never cached (rule 6). See claude-docs/components/stock-dialog.md.
 
-/** The coven's jars of the entry, read under the stock service's own check. */
 export async function covenJarsOf(
   session: Session,
   workspaceId: string,
@@ -19,7 +18,6 @@ export async function covenJarsOf(
   return jars;
 }
 
-/** What the Edit Stock dialog reads of an entry: every form it comes in, and the coven's jars. */
 export const stockDialogOf = (
   variants: readonly { id: string; form: string }[],
   jars: readonly StockRow[],

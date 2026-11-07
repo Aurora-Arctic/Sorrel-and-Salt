@@ -2,25 +2,18 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// The App Router as a component test sees it: each call a mock. Vitest hoists
-// the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
 const { NavigationProvider, useLeaveGuard, usePendingNavigation } =
   await import('@/lib/navigation');
 
-// A form's unsaved changes, kept from leaving the page: the browser's own question on closing
-// the tab or reloading, and the form's on an in-app navigation.
-
-/** A tab close or reload as the browser raises it: true when something cancelled it. */
 function unload(): boolean {
   const event = new Event('beforeunload', { cancelable: true });
   window.dispatchEvent(event);
   return event.defaultPrevented;
 }
 
-/** A form with changes or none, guarded; `ask` is what it does when asked to let go. */
 function Form({
   dirty,
   ask = () => {},
@@ -36,7 +29,6 @@ function Form({
   return null;
 }
 
-/** A link: its button navigates to `href`. */
 function Go({ href }: { href: string }) {
   const navigation = usePendingNavigation();
   return (

@@ -5,9 +5,7 @@ import { auditColumns } from '../../identity/schema/users';
 import { documentMailings } from './document-mailings';
 import { documentVersions } from './document-versions';
 
-// One published version a mailing tells every account about, with what changed in the keeper's words. One email lists every
-// item of its mailing, so the mailing covers every document changed since the last email. Marked `namedWrites`: items are
-// written by the method that starts their mailing alone.
+// One email lists every item of its mailing. Marked `namedWrites`: written by the method that starts their mailing alone.
 export const documentMailingItems = namedWrites(
   pgTable(
     'document_mailing_items',

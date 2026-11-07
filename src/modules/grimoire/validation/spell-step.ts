@@ -3,10 +3,8 @@ import { requiredText } from '../../../lib/validation';
 import { MAX_QUANTITY } from '../../ingredients/schema/quantities';
 import { UNITS } from '../../ingredients/schema/units';
 
-// One step of a spell's recipe, as the builder and the mutation both read it.
-// It mirrors spell_steps' CHECKs (src/modules/grimoire/schema/spell-steps.ts)
-// one for one, so the database refuses nothing a user could have been told
-// about here. The CHECK each rule mirrors is named beside it.
+// Mirrors spell_steps' CHECKs (src/modules/grimoire/schema/spell-steps.ts) one for one, so the database refuses nothing a user
+// could have been told about; the CHECK each rule mirrors is named beside it.
 
 // Not a CHECK: a negative amount says something, so it is said here, in the
 // words the stock schema uses (claude-docs/db/stock.md).
@@ -28,10 +26,7 @@ export const SpellStepInput = z
     // where it is absent, and a saved step left out of the list is removed
     // (claude-docs/db/grimoire.md, "Saving a recipe").
     id: z.guid({ error: 'This step is not one of the spell’s' }).nullish(),
-    // What to do at this step.
     body: present('Write the instruction, or remove it'),
-    // A linked ingredient and the form of it laid, or a name written for this
-    // jar and its form.
     ingredientId: z.guid({ error: 'Choose an ingredient from the list' }).nullish(),
     variantId: z.guid({ error: 'Choose a form from the list' }).nullish(),
     name: present('Give the ingredient a name'),

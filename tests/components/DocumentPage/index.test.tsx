@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import DocumentPage from '@/components/DocumentPage';
 import { slugify } from '@/lib/slugify';
 
-// The public document page (claude-docs/components/document-page.md): a heading, the date the text was last changed, and a
-// version's markdown rendered beneath on the server, with nothing read from a session.
+// claude-docs/components/document-page.md
 
 const DAY = new Date('2026-03-04T00:00:00Z');
 
@@ -13,7 +12,6 @@ type Props = Parameters<typeof DocumentPage>[0];
 const show = (body: string, extra: Partial<Props> = {}) =>
   render(<DocumentPage title="Fixture Policy" updatedOn={DAY} body={body} {...extra} />);
 
-/** The element a fragment link points at. */
 function targetOf(link: HTMLElement): HTMLElement {
   const href = link.getAttribute('href') ?? '';
   expect(href).toMatch(/^#./);
@@ -41,8 +39,6 @@ describe('DocumentPage', () => {
     expect(screen.getByText('What the fixture keeps.')).toBeTruthy();
   });
 
-  // The menu is read from the markdown's own headings: an `##` with `###`s under it is a group, each `###` an entry in it; an `##`
-  // with none is an entry itself; a deeper heading is in no menu.
   it('builds the On This Page menu from the ## and ### headings, each linking to its heading', () => {
     show(
       [
@@ -78,12 +74,10 @@ describe('DocumentPage', () => {
     expect(targetOf(links[1])).toBe(
       screen.getByRole('heading', { level: 3, name: 'Fixture First Part' }),
     );
-    // The deeper heading is still on the page, just not in the menu.
     expect(screen.getByRole('heading', { level: 4, name: 'Fixture Deep' })).toBeTruthy();
   });
 
-  // On a phone the menu folds into a disclosure, closed so the page lands on its text (PageNav's
-  // `collapsible`; tests/components/PageNav covers the fold). The environment reports a narrow viewport.
+  // On a phone the menu folds into a disclosure (tests/components/PageNav covers the fold); the environment reports a narrow viewport.
   it('folds the On This Page menu into a closed disclosure on a narrow viewport, opened by its summary', () => {
     show('## Fixture Section\n\nFixture text.');
     const nav = screen.getByRole('navigation', { name: 'On This Page' });
@@ -103,13 +97,11 @@ describe('DocumentPage', () => {
 
   // A heading's text need not be unique in a document, but an id must be, or the menu's second link lands on the first heading.
   describe('two headings with the same text', () => {
-    /** Every id on the page that more than one element holds. */
     function repeatedIds(): string[] {
       const ids = [...document.querySelectorAll('[id]')].map((element) => element.id);
       return [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
     }
 
-    /** Asserts the menu's links named `label` land, in order, on these very headings: equal-looking elements are not enough. */
     function expectMenuLandsOn(label: string, headings: HTMLElement[]): void {
       const nav = screen.getByRole('navigation', { name: 'On This Page' });
       const targets = within(nav).getAllByRole('link', { name: label }).map(targetOf);
@@ -163,7 +155,6 @@ describe('DocumentPage', () => {
     });
   });
 
-  // Each source is a footnote: its marks link down to its entry in the Sources list, and the entry links back to every mark.
   describe('sources', () => {
     const BODY = [
       '## Fixture Claims',
@@ -185,7 +176,6 @@ describe('DocumentPage', () => {
       expect(herbal.tagName).toBe('LI');
       expect(herbal).toHaveTextContent('A Fixture Herbal');
       expect(targetOf(secondMark)).toHaveTextContent('A Second Fixture');
-      // The list sits under the Sources heading.
       expect(
         sources.compareDocumentPosition(herbal) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
@@ -216,7 +206,6 @@ describe('DocumentPage', () => {
     });
   });
 
-  // HTML written in a body is text, never an element, so a body can run nothing.
   it('prints raw HTML as text, never as elements', () => {
     const { container } = show(
       [
@@ -330,7 +319,6 @@ describe('DocumentPage', () => {
     ).toEqual(['Fixture Member', 'Writes']);
   });
 
-  // The earlier published versions, newest first, each linked to its own page and dated by its own publish.
   it('links each earlier version it is given to that version, dated, newest first', () => {
     show('## Fixture Section\n\nFixture text.', {
       history: [
@@ -346,8 +334,6 @@ describe('DocumentPage', () => {
     expect(second.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  // A part of a page that depends on code, such as the privacy policy's access cards, stays in code: the markdown names where it
-  // goes with a paragraph that is only `{name}`, and the page hands the renderer what to draw there.
   describe('a placeholder paragraph', () => {
     const cards = (
       <aside aria-label="Fixture Cards">
@@ -364,7 +350,6 @@ describe('DocumentPage', () => {
       );
 
       const drawn = screen.getByRole('complementary', { name: 'Fixture Cards' });
-      // A placeholder is a block of its own, never a paragraph's content.
       expect(drawn.closest('p')).toBeNull();
       expect(screen.queryByText('{fixture-cards}')).toBeNull();
       const opening = screen.getByText('Fixture opening.');

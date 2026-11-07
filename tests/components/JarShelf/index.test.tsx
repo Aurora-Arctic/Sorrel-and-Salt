@@ -6,9 +6,7 @@ import { LIQUID, pick } from '@/components/JarShelf/pick';
 import { BOTTLES, JARS } from '@/components/JarShelf/shapes';
 import type { ShelfForm } from '@/components/JarShelf/types';
 
-// The shelf of drawn jars on the entry page: which vessel a form gets, how full it
-// stands, and what the shelf says for a form with a jar and one without. The press that opens
-// Edit Stock is proved with the entry, in tests/components/IngredientEntry.
+// The press that opens Edit Stock is proved with the entry, in tests/components/IngredientEntry.
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
@@ -123,7 +121,6 @@ describe('JarShelf', () => {
     expect(within(items[4]!).getByRole('button', { name: '4 g, Low Stock' })).toHaveTextContent(
       '4 g',
     );
-    // Unmeasured and empty jars have nothing to flag, so their text stays plain.
     expect(within(items[2]!).queryByRole('button')).toBeNull();
     expect(within(items[3]!).queryByRole('button')).toBeNull();
   });
@@ -166,7 +163,6 @@ describe('JarShelf', () => {
   it('hides every drawing from a screen reader and gives each its own clip', () => {
     const { container } = render(<JarShelf forms={FORMS} seed="Testwort" />);
 
-    // Four jars, and the Out of Stock symbol beside the oil's amount.
     const drawings = container.querySelectorAll('svg');
     expect(drawings).toHaveLength(5);
     for (const drawing of drawings) expect(drawing).toHaveAttribute('aria-hidden', 'true');

@@ -37,7 +37,6 @@ function fillText() {
   fireEvent.change(message(), { target: { value: ' The text is too faint. ' } });
 }
 
-// Writes the subject and message, and chooses Bug when the form opened with nothing chosen.
 function fill() {
   fillText();
   if (!within(aboutGroup()).queryByRole('radio', { checked: true })) {

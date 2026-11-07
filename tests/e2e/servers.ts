@@ -33,9 +33,7 @@ const PROVIDER_ENV_VARS = [
 // clientCredentials() treats '' as unset, so a developer's real credentials cannot turn this server into
 // the configured one.
 const UNCONFIGURED_PROVIDERS = Object.fromEntries(PROVIDER_ENV_VARS.map((name) => [name, '']));
-// Enough for a provider to count as configured, and useless to any real
-// authorization endpoint — which is why no test may click a provider button
-// against this server.
+// Enough for a provider to count as configured, and useless to a real authorization endpoint, so no test may click a provider button against this server.
 const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
@@ -108,10 +106,9 @@ export const SLOTS_ONLY = 'E2E_SLOT_SERVERS_ONLY';
 export const SERVERS_READY = 'e2e servers ready';
 
 /**
- * The one `webServer` entry a Playwright run needs: a script that builds once, then starts every server
- * together and prints SERVERS_READY when all answer. Playwright starts separate
- * entries one after another, each waiting for its own, which cost more than the servers' boot did.
- * The `SIGTERM` lets the script stop its servers, which run in process groups of their own.
+ * The one `webServer` entry a Playwright run needs: a script that builds once, starts every server together and prints
+ * SERVERS_READY when all answer (separate entries start one after another, which cost more than the boot). `SIGTERM` lets it stop
+ * its servers, which run in process groups of their own.
  */
 export const startupServer = (slotsOnly = false) => ({
   env: (slotsOnly ? { [SLOTS_ONLY]: '1' } : {}) as Record<string, string>,

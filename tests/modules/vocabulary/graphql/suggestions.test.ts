@@ -9,16 +9,12 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { AstrologySuggestionConnection } from './types';
 
-// The transport half of the suggestion lookup: two connection fields over one type, a page each, and the compendium-only mode.
-// Who is refused, what each bucket holds and the thresholds are services/suggestions.test.ts's, and a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
-
 let sql: ReturnType<typeof postgres>;
 
 useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-  // One workspace entry with an uncurated value in each column.
   await insertIngredient(
     sql,
     makeIngredient({
@@ -97,9 +93,7 @@ describe('zodiacSuggestions', () => {
   });
 });
 
-// The admin's compendium form has no coven to name, so a null
-// workspaceId reads the compendium tier alone — the curated rows, and the
-// values written in the compendium, never a coven's.
+// The admin's compendium form has no coven to name, so a null workspaceId reads the compendium tier alone.
 describe.each([
   ['celestialBodySuggestions', 'sedna', 'Sedna', 'Sedna Fixture'],
   ['zodiacSuggestions', 'cetus', 'Cetus', 'Cetus Fixture'],

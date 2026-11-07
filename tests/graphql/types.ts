@@ -1,10 +1,8 @@
-/** A row of the pagination tests' throwaway schema: a branch or a leaf. */
 export interface Leaf {
   id: string;
   name: string;
 }
 
-/** What a `leaves` page query answers. */
 export type LeavesData = {
   leaves: {
     edges: { cursor: string; node: { name: string } }[];
@@ -12,7 +10,6 @@ export type LeavesData = {
   };
 };
 
-/** What a `leaves` page query answers when it asks for the counts. */
 export type CountedData = {
   leaves: {
     totalCount?: number;

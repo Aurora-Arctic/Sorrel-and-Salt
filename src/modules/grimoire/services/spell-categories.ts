@@ -6,16 +6,12 @@ import type { ValidationIssue } from '../../../lib/types';
 import type { Membership } from '@/modules/coven';
 import { categories } from '@/modules/vocabulary/schema/categories';
 
-// How a save writes the categories a spell is assigned: what it intends, never the ones its ingredients bring.
-// The ids a save sends are the whole set; the pairs are reached through the spell (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+// The categories a spell is assigned: what it intends, never the ones its ingredients bring.
+// The ids a save sends are the whole set; the pairs are reached through the spell (claude-docs/db/grimoire.md, "Saving its categories").
 
-/** A category picked twice is one, so the set is written once. */
 const distinctIds = (ids: readonly string[]): string[] => [...new Set(ids)];
 
 /**
- * Refuses an id that names no live category, at its index, before anything is
- * written: a category deleted since the builder loaded, or one that never was.
- *
  * @throws {ValidationError} at `['categoryIds', index]` for each such id.
  */
 export async function checkCategories(ids: readonly string[]): Promise<void> {
@@ -31,17 +27,13 @@ export async function checkCategories(ids: readonly string[]): Promise<void> {
   if (issues.length > 0) throw new ValidationError(issues);
 }
 
-/** The pairs a spell holds now, read as the caller, before the save's transaction. */
 export async function heldCategories(membership: Membership, spellId: string): Promise<string[]> {
   return (await findManyInSpell(membership, spellCategories, spellId)).map(
     (pair) => pair.categoryId,
   );
 }
 
-/**
- * Brings the spell's pairs to exactly `ids`: a listed pair is kept, a dropped one hard-deleted, a new one inserted.
- * A pair whose category is soft-deleted is left in place.
- */
+/** A pair whose category is soft-deleted is left in place. */
 export async function writeCategories(
   write: AuditWriter,
   spellId: string,

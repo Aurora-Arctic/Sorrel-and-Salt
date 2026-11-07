@@ -9,7 +9,6 @@ import type { MemberPauseMail } from '../types';
 
 // The coven access pause mail, built from the rows when it is sent, so the job that retries it carries ids alone.
 
-/** The mail for `mail` as the rows stand, or null when there is none to send: the pause is gone or lifted, or its member or coven has gone. */
 export async function memberPauseMessageFor(mail: MemberPauseMail): Promise<Message | null> {
   const pause = await findWorkspaceMemberPauseForMail(mail.pauseId);
   if (!pause || pause.liftedAt) return null;
@@ -21,7 +20,7 @@ export async function memberPauseMessageFor(mail: MemberPauseMail): Promise<Mess
   return memberPauseNotice(mail.origin, member.email, coven.name, pause);
 }
 
-/** Builds and sends `mail`; true once the transport took it, false when there was none to send. A transport failure throws, so a job's step is retried. */
+/** A transport failure throws, so a job's step is retried. */
 export async function sendMemberPauseMail(mail: MemberPauseMail): Promise<boolean> {
   const message = await memberPauseMessageFor(mail);
   if (!message) return false;

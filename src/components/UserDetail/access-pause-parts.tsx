@@ -11,7 +11,7 @@ import '../SupportRequests/timeout-panel.scss';
 
 // The pieces a pause on access is drawn with, shared by the keeper's pause on the site (`access-pause-panel.tsx`) and an
 // owner's pause on one coven (`MemberList/pause-control.tsx`), so the two ask and list alike
-// (claude-docs/components/user-detail.md, "Site Access").
+// (claude-docs/components/user-detail.md, "Contracts").
 
 export const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'day', label: '1 Day' },
@@ -21,12 +21,11 @@ export const SPANS: readonly { value: PauseSpan; label: string }[] = [
   { value: 'none', label: 'No End Date' },
 ];
 
-/** What the message field says about itself, beneath it. */
 const MESSAGE_HINT = 'Emailed to them, up to 500 characters.';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** The instant a pause of this span ends: counted from `now`, the end of the picked day in the viewer's own zone, or none. */
+/** Null for no end date; undefined while no valid end can be read from the picked day. */
 export function endOf(span: PauseSpan, day: string, now: Date): Date | null | undefined {
   if (span === 'none') return null;
   if (span === 'day') return new Date(now.getTime() + DAY_MS);
@@ -41,19 +40,15 @@ export function endOf(span: PauseSpan, day: string, now: Date): Date | null | un
   return Number.isNaN(end.getTime()) ? undefined : end;
 }
 
-/** Whether a picked end can be sent: no end, or an end still ahead. */
 export const endReady = (end: Date | null | undefined): boolean =>
   end === null || (end?.getTime() ?? 0) > Date.now();
 
-/** Whether a pause of this span can be confirmed: the rule both pause screens hold their confirm by. */
 export const pauseReady = (span: PauseSpan, day: string): boolean =>
   endReady(endOf(span, day, new Date()));
 
-/** Whether a pause still stands: not lifted, and with no end or an end still ahead. */
 export const stands = (pause: AccessPauseEntry, now: number): boolean =>
   pause.liftedAt === null && (pause.until === null || pause.until.getTime() > now);
 
-/** A pause's end as words: the end in the viewer's zone, or that it has none. */
 export const Until = ({ until }: { until: Date | null }): ReactElement =>
   until ? (
     <>
@@ -63,7 +58,6 @@ export const Until = ({ until }: { until: Date | null }): ReactElement =>
     <>with no end date</>
   );
 
-/** How long a pause lasts, the day it ends when picked, and its note. */
 export const PauseFields = ({
   span,
   onSpan,

@@ -11,7 +11,6 @@ export const supportSendCounts = pgTable(
   'support_send_counts',
   {
     id: idColumn(),
-    // Which kind of key `key` is: an email address or a client address.
     kind: text('kind').notNull(),
     // The HMAC of the address, in hex.
     key: text('key').notNull(),

@@ -1,9 +1,5 @@
 @use '../../scss/variables' as *;
 
-// What a group list adds to the list primitives (`.list-frame`, `.data-table`
-// with `--stack` and `--roomy` through DataTable, `.chip`, `.pager`, and
-// IconTip's Edit pencil): the description's measure.
-
 // Running text that is not a `<p>`, so it takes the measure itself.
 .group-list__description {
   max-width: $measure;

@@ -23,7 +23,6 @@ import {
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// A keeper mints a batch of cards, lists them and withdraws one or the batch; the token is returned once and the row holds its hash.
 // The curator boundary is the first describe; what a card admits is invitation-acceptance-by-token.test.ts's.
 
 let sql: postgres.Sql;
@@ -94,7 +93,6 @@ describe('mintInvitationCards', () => {
       expect(row.revoked_at).toBeNull();
       expect(row.created_by).toBe(E.id);
     }
-    // Only the hash is stored: no column holds a token.
     expect(rows.map((row) => row.token_hash).sort()).toEqual(minted.tokens.map(sha256).sort());
     expect(JSON.stringify(rows)).not.toContain(minted.tokens[0]);
   });

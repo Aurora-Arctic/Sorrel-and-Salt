@@ -234,7 +234,7 @@ export const rules = {
   },
 
   // A modal gives the focus back to its opener however it closes, and the mechanism is Modal's own (`modal.tsx`)
-  // (claude-docs/design-decisions/m8.17-plan.md, "Giving the focus back"). A `.focus()` in a file that draws a dialog is a
+  // (claude-docs/design-decisions/m8.17-editing-a-coven-ingredient.md, "Giving the focus back"). A `.focus()` in a file that draws a dialog is a
   // hand-built return unless the allowance below says so; it is counted by call, and a stale count is reported, so it only shrinks.
   'modal-focus-return-through-modal': {
     create: (context) => {

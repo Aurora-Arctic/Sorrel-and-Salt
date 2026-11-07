@@ -59,8 +59,9 @@ const demoNode = (
     name="Demo Coven"
     demo
     role="owner"
-    access={{ ...STEWARD, canDelete: false }}
+    access={STEWARD}
     leave={leave}
+    remove={remove}
   />
 );
 

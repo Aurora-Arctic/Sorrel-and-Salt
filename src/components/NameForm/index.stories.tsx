@@ -4,18 +4,12 @@ import { ShellFrame } from '../../../.storybook/shell-frame';
 import PageNav from '../PageNav';
 import NameForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/NameForm. Nothing is
-// mocked: a submit fails into the alert region. The TanStack Query client comes
-// from the workshop's global provider (.storybook/components.tsx).
 const meta = {
   title: 'Account / Name Form',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Inside the account page's frame and section, on its panel, as
-// src/app/(shell)/account/page.tsx writes them, so the workshop shows what the page
-// shows.
 const Section = ({ name }: { name: string }) => (
   <ShellFrame area="none" open="/account">
     <main className="page-frame page-frame--narrow page-with-nav">
@@ -44,10 +38,8 @@ const Section = ({ name }: { name: string }) => (
   </ShellFrame>
 );
 
-// The usual visit: the name the provider gave, nothing to save until edited.
 const defaultNode = <Section name="Ada Fixture" />;
 
-// A long name, to see the field hold it.
 const longNameNode = (
   <Section name="Adelheid Wilhelmina Fixture-Testwort of the Lower Fixture Coven" />
 );

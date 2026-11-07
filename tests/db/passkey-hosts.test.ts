@@ -44,7 +44,6 @@ beforeEach(async () => {
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 });
 
-/** An account holding `key` as its passkey, written as the plugin writes a registration. */
 async function accountWith(key: SoftKey): Promise<string> {
   const id = randomUUID();
   await sql`
@@ -65,10 +64,6 @@ async function signedInAs(response: Response, host: string): Promise<string | un
   return (await session.json())?.user?.id;
 }
 
-/**
- * A sign-in at `host` from a page at `origin`, the authenticator signing over
- * `rpId` (by default the one the host's options name).
- */
 async function verifyAt(host: string, origin: string, key: SoftKey, rpId?: string) {
   const { response: optionsResponse, options } = await authenticationOptions(auth, host);
   return auth.handler(

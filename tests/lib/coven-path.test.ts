@@ -8,7 +8,6 @@ describe('covenSlugOf', () => {
     ['/account', null],
     ['/coven', null],
     ['/compendium/coven/x', null],
-    // The create page's segment is no workspace's.
     [NEW_COVEN_PATH, null],
   ])('reads %s as %s', (path, expected) => {
     expect(covenSlugOf(path)).toBe(expected);
@@ -29,7 +28,6 @@ describe('pathInCoven', () => {
 describe('isReservedCovenSlug', () => {
   it('reserves the create page’s segment and the values of `?new` that open a dialog, and nothing else', () => {
     expect(isReservedCovenSlug('new')).toBe(true);
-    // The values of `?new` that open a dialog rather than name a coven.
     expect(isReservedCovenSlug('spell')).toBe(true);
     expect(isReservedCovenSlug('ingredient')).toBe(true);
     // A value naming a coven is a prefix and then the whole slug, so a slug may start

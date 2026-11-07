@@ -5,9 +5,6 @@ import { buildLoaders } from '@/graphql/loaders';
 import { NotFound } from '@/lib/errors';
 import { categoryGroupsById } from '@/modules/vocabulary';
 
-// The query count, observed at the repository: the one read each batch makes
-// is wrapped so the test counts calls without changing what they answer, and
-// the role lookup is wrapped to show a public read never makes one.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn(), findWorkspaceSeat: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
@@ -33,8 +30,6 @@ async function seededIds(table: 'category_groups' | 'ingredient_form_groups'): P
   return rows.map((row) => row.id as string);
 }
 
-// `ingredientFormGroupsById` is built by the same helper as `categoryGroupsById`, so
-// only the latter runs; a loader's per-request cache is tests/graphql/loaders's.
 describe('the categoryGroupsById loader', () => {
   const name = 'categoryGroupsById' as const;
   const table = 'category_groups' as const;

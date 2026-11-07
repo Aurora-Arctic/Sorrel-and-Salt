@@ -6,8 +6,7 @@ import { useNavigationState } from '../../lib/navigation';
 import Notice from '../Notice';
 import type { DemoNoticeProps } from './types';
 
-// The demo coven's warning. It sits above the section body, so the body's skeleton does not cover it;
-// it leaves as soon as a switch to another coven starts, so the coven loading is not read as the demo.
+// It sits above the section body so the body's skeleton does not cover it, and leaves when a switch starts.
 export default function DemoNotice({ slug, text }: DemoNoticeProps): ReactElement | null {
   const { busy, href } = useNavigationState();
   const heading = href === undefined ? null : covenSlugOf(href.split(/[?#]/)[0] ?? href);

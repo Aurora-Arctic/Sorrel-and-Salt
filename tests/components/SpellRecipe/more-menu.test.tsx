@@ -17,8 +17,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The recipe page's three dots: Duplicate for a role that may create a spell, Delete for one
-// that may delete, and Print for every role (claude-docs/components/spell-recipe.md).
+// claude-docs/components/spell-recipe.md
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';

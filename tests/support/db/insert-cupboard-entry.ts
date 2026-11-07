@@ -4,7 +4,6 @@ import type postgres from 'postgres';
 // raw, as `insertStock` is, so setup does not depend on the entry service
 // (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
-/** A compendium entry's presence in one coven's cupboard; an omitted override is null, the compendium's value. */
 export interface CupboardEntryFixture {
   workspaceId: string;
   ingredientId: string;
@@ -15,11 +14,9 @@ export interface CupboardEntryFixture {
   celestialBodies?: string[] | null;
   zodiacSigns?: string[] | null;
   colors?: string[] | null;
-  /** Written already soft-deleted, by `author`. */
   deleted?: boolean;
 }
 
-/** Writes the entry stamped by `author` and returns its id. */
 export async function insertCupboardEntry(
   sql: postgres.Sql,
   entry: CupboardEntryFixture,

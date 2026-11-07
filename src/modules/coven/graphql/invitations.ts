@@ -5,13 +5,9 @@ import { membershipsOf } from '../services/memberships';
 import { createInvitation, revokeWorkspaceInvitation } from '../services/invitations';
 import { WorkspaceRef } from './workspace';
 
-// The workspace tier of `Invitation`: the fields `identity` cannot
-// name, and the mutation that makes one. No field carries the token or a
-// link: the token exists only in the mail (claude-docs/db/invitations.md,
-// "Inviting into a coven").
+// No field carries the token or a link (claude-docs/db/invitations.md, "Inviting into a coven").
 
-// Not `WorkspaceRole`: an owner is not invitable, and the schema says so
-// before the service does.
+// Not `WorkspaceRole`: an owner is not invitable.
 const InvitableRoleEnum = builder.enumType('InvitableRole', { values: ['viewer', 'member'] });
 
 builder.objectField(InvitationRef, 'role', (t) =>
@@ -23,8 +19,7 @@ builder.objectField(InvitationRef, 'role', (t) =>
   }),
 );
 
-// From the caller's own covens, which one loader already batches: a caller
-// outside the invitation's coven is answered none, as for an admin invitation.
+// A caller outside the invitation's coven is answered none.
 builder.objectField(InvitationRef, 'workspace', (t) =>
   t.field({
     type: WorkspaceRef,
@@ -70,8 +65,7 @@ builder.mutationField('revokeInvitation', (t) =>
   }),
 );
 
-// On `InvitationCard` from here, as `Invitation.workspace` is: identity may import no module. A site admin reads which
-// covens an account belongs to, by name and role only (the same read as `User.memberships`).
+// Here because identity may import no module.
 builder.objectField(InvitationCardRef, 'ownedCovens', (t) =>
   t.field({
     type: [WorkspaceRef],
@@ -84,8 +78,7 @@ builder.objectField(InvitationCardRef, 'ownedCovens', (t) =>
   }),
 );
 
-// Here for the same reason: the CSV's Covens Owned column is read through this module, in one batched lookup for every
-// account on the list. The admin check stays in `cardArrivalsCsv`.
+// Here for the same reason; the admin check stays in `cardArrivalsCsv`.
 builder.queryField('cardArrivalsCsv', (t) =>
   t.string({
     description:

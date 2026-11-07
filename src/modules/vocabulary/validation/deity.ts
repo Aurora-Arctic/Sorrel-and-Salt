@@ -11,7 +11,6 @@ export const DeityInput = curatedValueInput('deity').extend({
 
 export type DeityInput = z.output<typeof DeityInput>;
 
-/** The refusal of an other name a deity already holds, naming that deity. */
 export const otherNameHeldBy = (deity: string) => `${deity} already has this other name`;
 
 /** The index of every entry of `names` that repeats an earlier one, case folded as the unique index folds it, passing over blanks, which are dropped before the write. */

@@ -4,7 +4,7 @@
 
 ## What it asks the server for
 
-Nothing, once the page is open. The form fetches the card fonts and pictures from `public/invitation-cards/` when it mounts (`fetchCardAssets`, the same files the invitation cards use), and Generate builds the PDF from them in the browser and saves it with `saveFile`. There is no GraphQL call, no service and no database write, so nothing typed is kept. The end-to-end spec records every request after the fields are filled and expects none.
+Nothing, once the page is open. The form fetches the card fonts and pictures from `public/invitation-cards/` when it mounts (`fetchCardAssets`, the same files the invitation cards use), and Generate builds the PDF from them in the browser and saves it with `saveFile`. There is no GraphQL call, no service and no database write, so nothing typed is kept.
 
 ## The form
 

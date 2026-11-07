@@ -67,7 +67,6 @@ function renderActions(props: Partial<CupboardActionsProps> = {}) {
   );
 }
 
-/** The actions under the entry's page heading, as the page draws them. */
 const onPage = (props: Partial<CupboardActionsProps> = {}) => (
   <QueryClientProvider client={queryClient}>
     <main>
@@ -84,20 +83,17 @@ function renderOnPage(props: Partial<CupboardActionsProps> = {}) {
 
 const button = (name: string) => screen.queryByRole('button', { name });
 
-/** The open More menu's choices, read without pressing. */
 function shownChoices(): string[] {
   return within(screen.getByRole('menu', { name: 'More for Testwort' }))
     .getAllByRole('menuitem')
     .map((item) => item.textContent ?? '');
 }
 
-/** Opens the three dots and reads the choices in it, in order. */
 function choices(): string[] {
   fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
   return shownChoices();
 }
 
-/** An item of the three dots' menu. */
 function choose(name: string): void {
   fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
@@ -106,9 +102,6 @@ function choose(name: string): void {
 describe('CupboardActions', () => {
   beforeEach(() => router.push.mockClear());
 
-  // The icons at the end of the name's row, the cards' own: on a
-  // coven's page the main one is Annotate, a link to the page's `?annotate`, named for the entry
-  // (its tip is IconTip's to prove); then the three dots, a menu. No plain Annotate or Edit.
   it('draws Annotate as the main icon, a link named for the entry, then the three dots', async () => {
     renderActions({ held: true });
 
@@ -127,7 +120,6 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  // Adding is the plus's alone: the old Add to Cupboard is gone.
   it('offers no Add without a plus while the coven lacks the entry, though its role may add', () => {
     // Why Add could have shown: the role may add (`canAdd`) and the coven lacks the entry.
     expect(BASE.canAdd && !BASE.held).toBe(true);
@@ -136,8 +128,6 @@ describe('CupboardActions', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  // The dots draw the labelled section even though every choice is the coven's:
-  // the lone Coven section, and no Compendium one for an empty side.
   it('puts Make It Ours and Remove in the three dots, in a Coven section, not Add, once the coven holds it', () => {
     renderActions({ held: true });
 
@@ -150,8 +140,6 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  // The page always draws the three dots, so a member who may remove but
-  // not make it ours finds Remove in a menu of one, never a bin beside it.
   it('draws Remove in the three dots, with no bin, where it is the one choice left', () => {
     renderActions({ held: true, canMakeOurs: false });
 
@@ -168,8 +156,6 @@ describe('CupboardActions', () => {
     it("joins the three dots on a coven's page, in its own section after the coven's, a link to the edit address", () => {
       renderActions({ held: true, edit });
 
-      // Annotate is the main icon here, so the menu holds the other two, in two sections with the
-      // viewer's side, the coven's, first.
       expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toBeInTheDocument();
       expect(choices()).toEqual(['Make It Ours', 'Remove', 'Edit in Compendium']);
       const menu = screen.getByRole('menu', { name: 'More for Testwort' });
@@ -199,7 +185,6 @@ describe('CupboardActions', () => {
 
     expect(choices()).toEqual(['Make It Ours']);
     expect(screen.getByRole('group', { name: 'Coven' })).toBeInTheDocument();
-    // No main icon without a right behind it, and no bin.
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
@@ -295,8 +280,7 @@ describe('CupboardActions', () => {
     await waitFor(() => expect(button('More for Testwort')).toHaveFocus());
   });
 
-  // The entry's page heading takes the focus once the re-read says the coven no longer holds it, because Remove went with its menu and the control left may be another element.
-  // Until then the confirmation stays, busy, as ConfirmedAction's does.
+  // The page heading takes focus once the re-read says the coven no longer holds the entry, because Remove went with its menu.
   it("reads the page again once the entry is removed, and closes onto the page's heading when the re-read drops it", async () => {
     mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
       'RemoveCupboardEntry',
@@ -383,7 +367,6 @@ describe('CupboardActions', () => {
       within(screen.getByRole('alertdialog')).getByRole('button', { name: /Remov/ }),
     ).toBeDisabled();
 
-    // The navigation lands: the list's page replaces the entry's in one commit.
     view.rerender(
       <QueryClientProvider client={queryClient}>
         <main>
@@ -521,9 +504,6 @@ describe('CupboardActions', () => {
     );
   });
 
-  // The plus beside the pencil on a coven's page too: the page's `plus` names every coven the viewer may add in and which of them hold the entry.
-  // Edit Stock on the coven's own page is first in the dots and opens this coven's dialog at once with no coven to choose,
-  // for a coven that holds the entry and where the role may update stock; the page hands over the stock only then.
   describe('Edit Stock', () => {
     const FLOWER = '00000000-0000-4000-8000-0000000000f1';
     const STOCK: StockData = {
@@ -555,7 +535,6 @@ describe('CupboardActions', () => {
     it('is not offered while the coven lacks the entry, whatever stock came', () => {
       renderActions({ held: false, stock: STOCK });
 
-      // With nothing else to offer the dots are not even drawn.
       expect(screen.queryByRole('button', { name: 'More for Testwort' })).toBeNull();
       expect(screen.queryByRole('menuitem', { name: 'Edit Stock' })).toBeNull();
     });

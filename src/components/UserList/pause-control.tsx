@@ -41,7 +41,6 @@ const STATES = {
     send: () => graphqlRequest(ResumeAdminRoleChangesDocument),
   },
   open: {
-    // No sentence while changes are on: only the button.
     state: undefined,
     label: 'Pause Keeper Changes',
     done: 'Keeper changes are paused.',
@@ -60,7 +59,6 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
   const { refresh } = usePendingNavigation();
   const copy = STATES[paused ? 'paused' : 'open'];
   const [sending, setSending] = useState(false);
-  // Resume's refusal, in a callout under it, as a row's is.
   const feedback = useClickFeedback({ name: copy.label });
 
   async function toggle() {
@@ -110,7 +108,6 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           {feedback.feedback}
         </>
       ) : (
-        // Its refusal is said under it by the confirmation, as a row's is.
         <ConfirmedAction
           label={copy.label}
           accessibleName={copy.label}

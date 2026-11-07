@@ -131,7 +131,6 @@ describe('ingredient', () => {
     });
 
     it('as FORBIDDEN under a coven the caller is not in', async () => {
-      // D is signed in and a member elsewhere.
       expect(asUser(D).userId).toBe(D.id);
 
       const result = await run(asUser(D), { id: localId, workspaceId: WORKSPACE_W_ID });
@@ -221,7 +220,6 @@ describe('ingredient', () => {
         references: [{ reference: { title: 'Fixture Barks' }, locator: 'p. 3' }],
         audit: { createdBy: A.id, updatedBy: A.id },
       },
-      // The ingredient's own Testform, which owns none of the bark's children.
       expect.objectContaining({
         form: 'Testform',
         formChoice: null,

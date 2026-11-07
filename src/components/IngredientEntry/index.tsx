@@ -64,8 +64,6 @@ function substituteItems(
   hrefOf: IngredientEntryProps['hrefOf'],
 ): ReactNode[] {
   return substitutes.map((substitute, at) => {
-    // A typed name, or a link whose ingredient was deleted, reads as text under its last name; so
-    // does one the caller has no page for.
     const href = substitute.ingredient ? hrefOf(substitute.ingredient) : undefined;
     const label = substituteLabel(substitute);
     return (
@@ -83,7 +81,6 @@ function substituteItems(
   });
 }
 
-/** Each form's anchor: its name through `slugify` (`#form-oil`); names that still slug alike ("oil", "oil.") take a count. */
 function formAnchors(variants: readonly VariantDetail[]): string[] {
   const seen = new Map<string, number>();
   return variants.map(({ variant }) => {
@@ -102,14 +99,11 @@ function FormSection({
 }: {
   detail: VariantDetail;
   anchor: string;
-  /** The note numbers its own sources take, which end its text. */
   numbers: readonly number[];
   hrefOf: IngredientEntryProps['hrefOf'];
 }): ReactElement {
   const { variant, icon, categories, substitutes } = detail;
   const nameId = `${anchor}-name`;
-  // Only what the form adds: the ingredient's own fields stand above, and a form inherits them
-  // (DESIGN.md §5).
   const rows = correspondences(variant).filter((row) => row.values.length > 0);
   const hasLists = rows.length > 0 || categories.length > 0 || substitutes.length > 0;
   const addsNothing =
@@ -183,7 +177,6 @@ function ReplacesBlock({
 }): ReactElement {
   const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
   const whyId = `${block.id}-why`;
-  // Directly under the list, in both blocks.
   const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
     <p className="ingredient-entry__see-all">
       <PendingLink href={replaces.allHref}>
@@ -237,23 +230,16 @@ const IngredientEntry = ({
   hiddenFromPublic = false,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
-  // `entry` is the row as the compendium has it, which edit and identity use; `shown` lays the
-  // coven's cupboard entry over it for what the page says. Three kinds: ours (a coven's row,
-  // Local), the compendium's held here (marked), and the compendium's not held (neither).
   const { entry } = detail;
   const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
   const held = !local && cupboardEntry != null;
-  // The curators' review mark, shown to everyone on a compendium entry.
   const reviewedAt = reviewedAtOf(detail);
   // Where the review row stands (reviewControl), it draws the badge, so the marks leave it out.
   const markedReviewAt = reviewControl ? undefined : reviewedAt;
-  // Either page's cupboard choices, which take the curator's Edit into their menu.
   const choices = cupboard ?? covens;
-  // New or Updated reads off the compendium entry's own stamps; a coven's own entry has none.
   const recency = local ? null : entryRecency(entry.createdAt, entry.updatedAt);
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
-  // Caution as the card counts it: notes on the entry as this coven reads them, or on any form.
   const caution = [shown.safetyNotes, ...variants.map(({ variant }) => variant.safetyNotes)].some(
     (notes) => said(notes),
   );
@@ -264,7 +250,6 @@ const IngredientEntry = ({
     variants.map(({ variant }) => formLabel(variant.form)),
   );
 
-  // Only the fields the client parts use cross to them, not the whole row.
   const editable = {
     id: entry.id,
     name: entry.name,
@@ -284,9 +269,6 @@ const IngredientEntry = ({
           <PausedNotice until={accessPause.until} className="ingredient-entry__pause" />
         )}
         {(back || recency || toxic || caution) && (
-          // One row for the way back (left, first for a screen reader), the New / Updated marker
-          // (top right) and the one safety badge beside the marker or in its place; the badge alone
-          // where neither else shows.
           <div className="back-bar ingredient-entry__bar">
             {back && (
               <BackLink href={back.href} label={back.label} also={back.also}>
@@ -313,12 +295,10 @@ const IngredientEntry = ({
               (edit || cupboard || covens) && (
                 <>
                   {edit && !(choices && !local) && edit.coven ? (
-                    // A coven's own entry: Edit and Delete in one menu.
                     <OwnEntryActions edit={edit} entry={editable} />
                   ) : (
                     edit &&
                     !(choices && !local) && (
-                      // Edit alone, as for a curator in no coven: a link straight into the dialog.
                       <EditPencil href={edit.href} entry={editable} eyebrow={editEyebrow(edit)} />
                     )
                   )}
@@ -388,7 +368,6 @@ const IngredientEntry = ({
               // The forms take the line References takes, so the menu opens each the same way.
               apart: at === 0,
             })),
-            // With notes the section lists two blocks; with none it is one link.
             ...(notes.notes.length > 0
               ? [
                   {
@@ -501,9 +480,8 @@ const IngredientEntry = ({
     </article>
   );
 
-  // The provider holds a pressed Edit on its way, shared by the link and the dialog. The admin
-  // layout has one above its pages, these two routes have none, and a provider already above is
-  // kept.
+  // RouteModalProvider holds a pressed Edit on its way for the link and dialog.
+  // The admin layout has one above its pages; these two routes have none.
   return edit || cupboard || covens ? (
     <RouteModalProvider>
       {page}

@@ -4,14 +4,12 @@ import SignOutButton from '@/components/AccountMenu/sign-out-button';
 import { GENERIC_FAILURE } from '@/lib/graphql-failure';
 import { leavingAtEachLoad } from '../../support/location';
 
-// Mocked wholesale: a real call would reach /api/auth, and its success
-// navigates, which happy-dom cannot follow.
+// Mocked wholesale: a real call reaches /api/auth and navigates, which happy-dom cannot follow.
 const signOutMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({ signOut: () => signOutMock() }));
 const assignMock = vi.fn();
 
-// Each press awaited inside act: the refusal lands in a promise, and the
-// callout is placed in another (claude-docs/components/click-feedback.md).
+// Each press awaited inside act: the refusal and the callout land in separate promises (claude-docs/components/click-feedback.md).
 const press = (element: Element) =>
   act(async () => {
     fireEvent.click(element);

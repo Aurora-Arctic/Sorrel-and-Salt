@@ -19,23 +19,18 @@ $theme-toggle-icon-arc: 130deg;
   @include theme-transition(background-color, color, transform);
 }
 
-// The pinned corner (the root layout, for pages with no application shell).
 .theme-toggle--corner {
   position: fixed;
-  // At the window's top; on touch the banner in the flow scrolls away beneath it.
   top: 0;
   // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
   right: var(--scrollbar-width, 0);
-  // Above the impersonation banner, which runs beneath this corner.
   z-index: layer('toggle');
   display: flex;
   align-items: center;
   justify-content: center;
   width: $toggle-corner;
   height: $toggle-corner;
-  // Pulls the icon off the pivot corner.
   padding: 0 0 0.75rem 1rem;
-  // Centred on the pinned top-right corner, so only the quarter in the viewport paints.
   clip-path: circle($toggle-corner at 100% 0%);
   // The parked facet sits past the window's right edge. The clip hides it but
   // still lets it count as overflow, which Chrome's device emulator pans to;
@@ -58,10 +53,8 @@ $theme-toggle-icon-arc: 130deg;
   }
 }
 
-// The root layout is session-free, so it cannot know a page has the shell around it and
-// always mounts the corner. The shell has its own disc in the bar, so this hides the corner
-// on any page that holds the shell or the public frame. Written here, with the toggle,
-// rather than in the shell.
+// The root layout is session-free and always mounts the corner, so hide it where the shell
+// or public frame has its own disc.
 body:has(.app-shell, .public-frame) > .theme-toggle--corner {
   display: none;
 }
@@ -130,15 +123,12 @@ $theme-toggle-facet: 1.1875rem;
   inset: 0;
   width: 100%;
   height: 100%;
-  // Pivot at the icon's top-right corner, the one the button is pinned to.
   transform-origin: 100% 0;
   @include theme-transition(transform);
   transform: rotate(0deg);
 
-  // Raw palette, not the runtime tokens: the knotwork is not themed, so only the
-  // rotate swaps the facets. The 5% box difference balances their visual weight;
-  // a box rather than `scale()` because --out / --pre-enter overwrite `transform`.
-  // claude-docs/components/theme-toggle.md, "Icons".
+  // Raw palette, not the runtime tokens: the knotwork is not themed. A box rather than `scale()` because --out /
+  // --pre-enter overwrite `transform` (claude-docs/components/theme-toggle.md, "Icons").
   &--dark {
     fill: $soot;
     inset: -6% auto auto 6%;
@@ -164,10 +154,8 @@ $theme-toggle-facet: 1.1875rem;
   }
 }
 
-// Settles the visible resting state at first paint, so a light visitor never
-// sees the sun swing in. Included under both light tiers, mirroring globals.scss
-// selector for selector, because the attribute alone covers only a stored
-// choice, not a light system preference.
+// Settles the visible resting state at first paint, so a light visitor never sees the sun swing in. Included under
+// both light tiers, mirroring globals.scss, since the attribute alone covers only a stored choice.
 @mixin theme-toggle-light-facets {
   .theme-toggle__facet--light.theme-toggle__facet--pre-enter {
     transform: rotate(0deg);

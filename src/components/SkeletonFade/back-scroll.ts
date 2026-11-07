@@ -1,6 +1,6 @@
 // The scroll position Back returns to, kept by the app: the skeleton takes the window to the top before the router writes
 // the new history entry, so the browser's own saved position for the page left would be 0
-// (claude-docs/components/skeleton-fade.md, "Back after a skeleton").
+// (claude-docs/components/skeleton.md, "Back after a skeleton").
 
 /** The history-state field holding the page's own scroll position. */
 const KEY = 'skeletonScrollY';

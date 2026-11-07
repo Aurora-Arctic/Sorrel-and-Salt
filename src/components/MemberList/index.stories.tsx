@@ -5,9 +5,6 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
 import type { MemberListEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/MemberList. A member's
-// view leaves the addresses out; a steward's draws them and the Access column, where the
-// viewer's row shows a standing pause. No row holds an action: the member modal does.
 const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;
@@ -49,8 +46,6 @@ const MEMBERS: readonly MemberListEntry[] = [
 
 const defaultNode = <MemberList members={MEMBERS} currentUserId="u-bo" />;
 
-// A steward's view: the addresses, and the viewer's standing pause in the Access column. The rows hold no actions;
-// those are the member modal's (Coven / Member Detail).
 const OWNER_VIEW: readonly MemberListEntry[] = MEMBERS.map((member) => ({
   ...member,
   paused: member.role === 'viewer' ? { until: null } : null,
@@ -60,9 +55,6 @@ const ownerViewNode = (
   <MemberList members={OWNER_VIEW} currentUserId="u-ada" showEmail showAccess />
 );
 
-// The page's composition: the sole-steward note inside the list frame, ahead of
-// the list, so the frame's gap spaces it (src/app/(shell)/coven/[slug]/
-// (people)/members/page.tsx). The note is the page's, not MemberList's.
 const SoleOwnerPage = () => (
   <ListFrame>
     <Notice kind="warn" quiet>
@@ -77,7 +69,6 @@ const SoleOwnerPage = () => (
 
 const soleOwnerNode = <SoleOwnerPage />;
 
-// A steward's view where an address is not on file and the editor's name is withheld.
 const gapsNode = (
   <MemberList
     members={[
@@ -90,7 +81,6 @@ const gapsNode = (
   />
 );
 
-// The addresses without the Access column.
 const addressesOnlyNode = <MemberList members={MEMBERS} currentUserId="u-cy" showEmail />;
 
 const STATES_STATES: Record<string, ReactNode> = {

@@ -5,8 +5,7 @@ import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { entryDetail } from '../../support/entry-detail';
 
-// The details modal's body (claude-docs/components/ingredient-entry.md, "The details modal"): the entry page's Details section cut down to the caution, categories, folk names and correspondences, drawn by the page's own blocks.
-// Every value is the test's own data, so finding one proves what rendered.
+// claude-docs/components/ingredient-entry.md, "The details modal"
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -61,7 +60,6 @@ const variant = (form: string, safetyNotes: string | null): VariantDetail => ({
   references: [],
 });
 
-/** A full entry: notes on it and on one form, and something in every block. */
 function full(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
   const base = entryDetail({
     description: 'A fixture description.',
@@ -80,7 +78,6 @@ function full(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
   };
 }
 
-/** What a correspondence row lists: the definition beside its term. */
 const rowOf = (term: string): string =>
   screen.getByText(term, { selector: 'dt' }).nextElementSibling!.textContent!;
 
@@ -90,7 +87,6 @@ describe('IngredientSummary', () => {
 
     const caution = screen.getByRole('region', { name: 'Caution' });
     expect(within(caution).getByText('Fixture entry caution.')).toBeInTheDocument();
-    // The entry's own notes only: a form's stay on the page's form sections.
     expect(screen.queryByText('Fixture oil caution.')).not.toBeInTheDocument();
     expect(
       within(screen.getByRole('list', { name: 'Categories' })).getByText('Testwards'),
@@ -102,8 +98,6 @@ describe('IngredientSummary', () => {
     expect(rowOf('Deities')).toBe('Fixtura (Fixture Pantheon)');
   });
 
-  // A curated deity's other names follow its tradition, so a reader
-  // who knows it by another name finds it; a typed name has none to show.
   it('names each deity with its tradition and its other names', () => {
     render(
       <IngredientSummary
@@ -124,8 +118,6 @@ describe('IngredientSummary', () => {
 
   it('names the forms that carry a caution of their own, and no form when none does', () => {
     const { unmount } = render(<IngredientSummary detail={full()} />);
-    // The form with notes is named, inside the caution, so the two read as one
-    // warning; the one without is not. Within the caution: the Forms block names both.
     const caution = screen.getByRole('region', { name: 'Caution' });
     expect(within(caution).getByText(new RegExp(formLabel('testoil')))).toBeInTheDocument();
     expect(within(caution).queryByText(new RegExp(formLabel('testroot')))).not.toBeInTheDocument();
@@ -198,8 +190,7 @@ describe('IngredientSummary', () => {
   it('leaves out the substitutes, the references and Similar', () => {
     render(<IngredientSummary detail={full()} />);
 
-    // Why they could show: the detail carries substitutes, its own and a form's, and the
-    // summary is drawn. No Details heading: the dialog's title names the entry.
+    // Why they could show: the detail carries substitutes, its own and a form's.
     expect(screen.getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Details' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Substitutes' })).not.toBeInTheDocument();
@@ -251,12 +242,10 @@ describe('IngredientSummary', () => {
       />,
     );
 
-    // The page says each of these is empty (the IngredientEntry tests); the modal hides them.
     expect(screen.queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Correspondences' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Categories' })).not.toBeInTheDocument();
-    // One line says so, so the body is not left blank.
     expect(screen.getByText('No details recorded.')).toBeInTheDocument();
     expect(
       screen.queryByText(
@@ -270,7 +259,6 @@ describe('IngredientSummary', () => {
     expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     unmount();
 
-    // A caution alone is something recorded.
     const { unmount: unmount2 } = render(
       <IngredientSummary
         detail={full({
@@ -286,7 +274,6 @@ describe('IngredientSummary', () => {
     expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     unmount2();
 
-    // So is a description alone.
     render(
       <IngredientSummary
         detail={full({
@@ -305,8 +292,7 @@ describe('IngredientSummary', () => {
   it("keeps a block's filled rows and drops its empty ones", () => {
     render(<IngredientSummary detail={full({ folkNames: [], deities: [] })} />);
 
-    // Why the rows could show: the entry has elements and celestial bodies, and the
-    // block draws those two.
+    // Why the rows could show: the entry has elements and celestial bodies.
     expect(rowOf('Elements')).toBe('Fire');
     expect(rowOf('Celestial Bodies')).toBe('Fixture Moon');
     for (const term of ['Zodiac Signs', 'Colours', 'Deities']) {
@@ -325,8 +311,7 @@ describe('IngredientSummary', () => {
     function measures(scrollHeight: number, lineHeight = 24): void {
       vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
       const real = window.getComputedStyle.bind(window);
-      // Everything else still reads the real style (the role queries need it); only
-      // the two figures this component measures are the test's.
+      // Everything else still reads the real style (the role queries need it).
       vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
         const style = real(element, pseudo);
         return new Proxy(style, {
@@ -354,11 +339,9 @@ describe('IngredientSummary', () => {
       fireEvent.click(more);
       const less = screen.getByRole('button', { name: 'Show Less' });
       expect(less).toHaveAttribute('aria-expanded', 'true');
-      // Open, the region it controls holds the whole text.
       expect(document.getElementById(less.getAttribute('aria-controls') ?? '')).toHaveTextContent(
         'A fixture description.',
       );
-      // Opening it stays in the modal: the address is unchanged.
       expect(window.location.href).toBe(before);
 
       fireEvent.click(less);
@@ -419,7 +402,6 @@ describe('IngredientSummary', () => {
         'href',
         `/coven/second-fixture/ingredients/${ENTRY}`,
       );
-      // The last block: the categories come before it in the document.
       const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
       expect(headings[headings.length - 1]).toBe('In Your Cupboards');
       expect(headings).toContain('Categories');
@@ -460,7 +442,6 @@ describe('IngredientSummary', () => {
           covens={covens}
         />,
       );
-      // The links are where the entry is held, not something recorded of it.
       expect(screen.getByText('No details recorded.')).toBeInTheDocument();
       expect(
         within(screen.getByRole('list', { name: 'In Your Cupboards' })).getAllByRole('link'),
@@ -481,10 +462,8 @@ describe('IngredientSummary', () => {
         formLabel('testoil'),
         formLabel('testroot'),
       ]);
-      // A compendium page passes no jars: no quantity, no stock state, no badge.
       expect(screen.queryByText(/Unmeasured|Not Stocked/)).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Stock/ })).not.toBeInTheDocument();
-      // After the caution in the document, so also after the description.
       const caution = screen.getByRole('region', { name: 'Caution' });
       expect(
         caution.compareDocumentPosition(screen.getByRole('heading', { name: 'Forms' })) &
@@ -519,9 +498,7 @@ describe('IngredientSummary', () => {
       const seed = lineOf('testseed');
       expect(seed).toHaveTextContent('0 g');
       expect(within(seed).getByRole('button', { name: 'Out of Stock' })).toBeInTheDocument();
-      // No jar: the coven holds the form in no jar, which is not out of stock. Nothing shows
-      // on screen, but the line's text, which a screen reader
-      // reads, still says so.
+      // No jar is not out of stock: nothing shows on screen, but the line's text, which a screen reader reads, says so.
       const root = lineOf('testroot');
       expect(within(root).getByText('Not Stocked')).toBeInTheDocument();
       expect(within(root).queryByRole('button')).not.toBeInTheDocument();

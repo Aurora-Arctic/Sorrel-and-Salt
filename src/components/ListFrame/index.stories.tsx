@@ -5,9 +5,6 @@ import type { ReactNode } from 'react';
 import Pager from '../Pager';
 import ListFrame, { ListBody, ListNavigationContext } from '.';
 
-// Render-only; behaviour is asserted in the tests of CompendiumList, UserList and
-// Pager. A list's frame around a small table and pager; `Pending` holds a page on
-// its way. A whole list on its way is GroupedValueList's `CategoriesPending`.
 const meta = {
   title: 'Layout / List Frame',
 } satisfies Meta;
@@ -48,8 +45,6 @@ const pendingNode = (
   </ListNavigationContext.Provider>
 );
 
-// A list of cards on its way: `shape="cards"` swaps the table's skeleton for a grid of
-// card shapes, the same grid the real list draws.
 const pendingCardsNode = (
   <ListNavigationContext.Provider value={{ pending: true, searching: false, go: () => undefined }}>
     <ListFrame className="card-list">

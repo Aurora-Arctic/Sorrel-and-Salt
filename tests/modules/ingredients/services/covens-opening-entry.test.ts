@@ -46,7 +46,6 @@ beforeEach(async () => {
   await sql`update ingredients set deleted_at = now() where id = ${retiredHeldByW}`;
 });
 
-/** The row as the page holds it: only what the read looks at. */
 async function row(id: string) {
   const [found] = await sql<{ id: string; workspaceId: string | null; deletedAt: Date | null }[]>`
     select id, workspace_id as "workspaceId", deleted_at as "deletedAt" from ingredients where id = ${id}`;

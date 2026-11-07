@@ -57,7 +57,6 @@ export function FacetTypeahead({
       disabled: isOut(choice) || undefined,
       note: choice.note,
     }))
-    // A disabled row lists last, within its heading as the headings are drawn.
     .sort((a, b) => Number(Boolean(a.disabled)) - Number(Boolean(b.disabled)));
 
   const chosen = values.flatMap((value) => choices.filter((choice) => choice.value === value));

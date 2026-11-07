@@ -6,10 +6,8 @@ import './index.scss';
 
 const said = (notes: string | null | undefined): notes is string => (notes ?? '').trim() !== '';
 
-// The ingredient's caution as a region of its own, labelled by its visible
-// Caution heading rather than an aria-label, so the word a reader sees is the
-// name a screen reader announces. Text to read, not a control, so nothing in
-// it takes focus. claude-docs/components/safety-note.md.
+// The ingredient's caution as a region labelled by its visible Caution heading, not an aria-label. Text to read, so
+// nothing in it takes focus (claude-docs/components/safety-note.md, "Contracts").
 const SafetyNote = ({
   safetyNotes,
   variants = [],

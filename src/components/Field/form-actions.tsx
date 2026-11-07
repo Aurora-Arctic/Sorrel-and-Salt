@@ -27,7 +27,6 @@ export function FormActions({
 }: FormActionsProps): ReactElement {
   const reasonId = useId();
   const off = !dirty || submitting;
-  // Told only while Save is off for a reason the form can say.
   const told = off && saveReason ? saveReason : null;
   const save = (
     <BusyButton

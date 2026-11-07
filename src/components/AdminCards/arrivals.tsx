@@ -18,8 +18,7 @@ import { NO_ARRIVALS_FILTER } from './href';
 import type { AdminArrivalsProps, ArrivalsActionsProps, ArrivalsFilter } from './types';
 import './index.scss';
 
-// The People page's Card Sign-Ups tab, `/keepers/card-sign-ups`: every account that accepted a card, with the date, the
-// batch and the covens it owns, and a CSV of them (claude-docs/components/admin-cards.md).
+// (claude-docs/components/admin-cards.md)
 
 const ArrivalsCsvDocument = graphql(`
   query CardArrivalsCsv($query: String) {
@@ -27,13 +26,11 @@ const ArrivalsCsvDocument = graphql(`
   }
 `);
 
-/** The CSV of the arrivals the filter shows: the same query the list holds. */
 export const readArrivalsCsv = async (
   filter: ArrivalsFilter = NO_ARRIVALS_FILTER,
 ): Promise<string> =>
   (await graphqlRequest(ArrivalsCsvDocument, { query: filter.query || undefined })).cardArrivalsCsv;
 
-/** The empty list, naming the search in use so a keeper sees what to change. */
 function emptyText({ query }: ArrivalsFilter): string {
   return noMatchText('sign-ups', query ? [`“${query}”`] : [], 'No one has accepted a card yet.');
 }

@@ -7,10 +7,6 @@ import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 
-// A compendium entry in a coven's cupboard: the coven's page shows the coven's label and changes with the
-// marks, the public page of the entry shows neither, and a coven's own entry with no formal name passes
-// the scan with its list of the compendium entries it might be.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -64,20 +60,16 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(
     page.getByRole('heading', { level: 1, name: 'Fixture Our Hedgewort' }),
   ).toBeVisible();
-  // The compendium's own name is no longer a 'Called ... in the Compendium' line (13d8bff3);
-  // it is the link in the In the Compendium list, named with its formal name.
+  // The compendium's own name is the link in the In the Compendium list, named with its formal name.
   await expect(
     page
       .getByRole('list', { name: /^In the Compendium/ })
       .getByRole('link', { name: /^Fixture Reference Wort/ }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
-  // Annotated wins over Compendium.
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
-  // A coven's entry carries the disclaimer line under its notes as the public page does.
   await expect(page.getByRole('link', { name: 'Read the Disclaimer' }).first()).toBeVisible();
-  // At a phone's width, the narrowest a section signs off at.
   await page.setViewportSize({ width: 375, height: 812 });
   await assertNoAccessibilityViolations(page);
 

@@ -10,7 +10,6 @@ import type { AccountNotice } from '../types';
 
 // The account notices, built from the rows when they are sent, so the job that retries one carries ids alone.
 
-/** The mail for `notice` as the rows stand, or null when there is none to send: the account is gone or unmailable, or has nothing to say. */
 export async function accountNoticeMessage(notice: AccountNotice): Promise<Message | null> {
   const user = await findOneById(users, notice.userId);
   if (!user || isPlaceholderEmail(user.email)) return null;
@@ -40,7 +39,7 @@ export async function accountNoticeMessage(notice: AccountNotice): Promise<Messa
   );
 }
 
-/** Builds and sends the mail for `notice`; true once the transport took it, false when there was none to send. A transport failure throws, so a job's step is retried. */
+/** A transport failure throws, so a job's step is retried. */
 export async function sendAccountNotice(notice: AccountNotice): Promise<boolean> {
   if (notice.kind === 'change-completed') return sendChangeCompleted(notice);
   const message = await accountNoticeMessage(notice);
@@ -49,8 +48,7 @@ export async function sendAccountNotice(notice: AccountNotice): Promise<boolean>
 }
 
 /**
- * Sends the change-completed notice to the row's former address and, once the transport took it, clears the address, matched on
- * it and on the move the mail named, so a move made while it was going out is still told.
+ * Clears the address only once the transport took it, matched on it and on the move the mail named, so a move made while it was going out is still told.
  */
 async function sendChangeCompleted(notice: AccountNotice): Promise<boolean> {
   const user = await findOneById(users, notice.userId);

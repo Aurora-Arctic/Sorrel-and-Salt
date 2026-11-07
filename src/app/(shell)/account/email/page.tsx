@@ -12,8 +12,6 @@ export const metadata: Metadata = {
   title: 'Your Email',
 };
 
-// The narrow page frame centres the form inside the shell, on a panel as the account page's
-// sections are, with the way on to the account page inside the card.
 export default async function EmailPage({ searchParams }: EmailPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const [me, landing] = await Promise.all([getMe(session), signedInLanding(session)]);
@@ -35,7 +33,6 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
           landing={landing}
           error={verifyErrorMessage(params.error)}
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
-          // Inside the card, as a secondary button; the form offers it only to a verified account.
           accountPath={ACCOUNT_PATH}
         />
       </div>
