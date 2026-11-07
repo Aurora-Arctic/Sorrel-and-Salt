@@ -32,6 +32,32 @@
   }
 }
 
+// The row an address names (CSS `:target`): a tint behind it with an accent bar at its start, so not by colour alone,
+// reaching a step past the column each side so the text and the rules stay put. The tint arrives stronger and settles
+// (`target-arrive`, in the primitives); under reduced motion it is the settled tint at once. `$block-end` reaches the
+// tint past the row's bottom edge, for a row spaced by its margin rather than its padding.
+@mixin target-highlight($block-end: 0) {
+  &:target {
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      inset: 0 calc(-1 * #{space(3)});
+      inset-block-end: $block-end;
+      border-inline-start: $rule-heavy solid $accent;
+      background-color: $fill-highlight-field;
+      animation: target-arrive calc(#{$motion-long} * 3) $motion-easing;
+
+      @include reduced-motion {
+        animation: none;
+      }
+    }
+  }
+}
+
 // Light is the system's preference, which a stored choice of theme may still override.
 @mixin color-scheme-light {
   @media (prefers-color-scheme: light) {

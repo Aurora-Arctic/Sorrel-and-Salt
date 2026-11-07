@@ -514,6 +514,12 @@
     }
   }
 
+  @keyframes target-arrive {
+    from {
+      background-color: color-mix(in srgb, $accent 28%, $surface-card);
+    }
+  }
+
   @keyframes skeleton-shimmer {
     from {
       background-position: 100% 0;

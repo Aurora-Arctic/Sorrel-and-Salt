@@ -113,6 +113,10 @@
     border-block-start: 1px solid $hairline;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 
+    // The question an address names, as the glossary marks a term. The tint reaches as far below the answer as the
+    // padding stands above the question, short of the next rule, so it clears Back to Top beneath the last question.
+    @include target-highlight(calc(-1 * #{space(5)}));
+
     h3 {
       margin: 0 0 space(2);
       font-size: heading-size(4);
