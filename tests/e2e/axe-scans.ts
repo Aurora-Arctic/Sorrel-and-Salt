@@ -55,10 +55,11 @@ export const ROUTE_SCANS = [
   { route: '/sign-in', as: ['signedOut'] },
   { route: '/forgot-password', as: ['signedOut'] },
   { route: '/reset-password', as: ['signedOut'] },
-  { route: '/help', as: [], unbuilt: true },
-  { route: '/help/glossary', as: [], unbuilt: true },
-  { route: '/help/[slug]', as: [], unbuilt: true },
-  { route: '/help/[parent]/[slug]', as: [], unbuilt: true },
+  { route: '/help', as: ['signedOut', 'user'] },
+  { route: '/help/glossary', as: ['signedOut'] },
+  { route: '/help/search', as: ['signedOut'] },
+  { route: '/help/[slug]', as: ['signedOut'] },
+  { route: '/help/[slug]/[child]', as: ['signedOut'] },
 
   // An account with no coven seat, or one held back by the gates.
   { route: '/coven', as: ['user'] },
@@ -106,7 +107,12 @@ export const ROUTE_SCANS = [
   { route: '/keepers/business-cards', as: ['keeper'] },
   { route: '/keepers/documents', as: ['keeper'] },
   { route: '/keepers/documents/[key]', as: ['keeper'] },
-  { route: '/keepers/help', as: [], unbuilt: true },
+  { route: '/keepers/help', as: ['keeper'] },
+
+  // Staff help, which curators and keepers read.
+  { route: '/help/staff', as: ['curator', 'keeper'] },
+  { route: '/help/staff/[slug]', as: ['curator', 'keeper'] },
+  { route: '/help/staff/[slug]/[child]', as: ['curator', 'keeper'] },
 ] as const satisfies readonly RouteScan[];
 
 export const MODAL_SCANS = [
@@ -204,6 +210,7 @@ export const MODAL_SCANS = [
   { id: 'card-attempts', source: 'src/components/AdminCards/attempts.tsx', as: 'keeper' },
   { id: 'date-range-field', source: 'src/components/DateRangeField/index.tsx', as: 'keeper' },
   { id: 'document-link', source: 'src/components/DocumentEditor/link-dialog.tsx', as: 'keeper' },
+  { id: 'help-article', source: 'src/app/(shell)/keepers/help/dialog.tsx', as: 'keeper' },
 ] as const satisfies readonly ModalScan[];
 
 export type ScannedRoute = (typeof ROUTE_SCANS)[number]['route'];

@@ -276,10 +276,16 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/sign-in': () => '/sign-in',
   '/forgot-password': () => '/forgot-password',
   '/reset-password': () => '/reset-password?token=fixture-not-a-token',
-  '/help': () => null,
-  '/help/glossary': () => null,
-  '/help/[slug]': () => null,
-  '/help/[parent]/[slug]': () => null,
+  // The shipped help, which the standard seed loads.
+  '/help': () => '/help',
+  '/help/glossary': () => '/help/glossary',
+  '/help/search': () => '/help/search?q=coven',
+  '/help/[slug]': () => '/help/getting-started',
+  '/help/[slug]/[child]': () => '/help/getting-started/signing-in',
+  '/help/staff': () => '/help/staff',
+  '/help/staff/[slug]': () => '/help/staff/curating-a-compendium-entry',
+  '/help/staff/[slug]/[child]': () =>
+    '/help/staff/curating-a-compendium-entry/source-an-entry-with-references',
   '/coven': () => '/coven',
   '/coven/new': () => '/coven/new',
   '/invite/[token]': (w) => `/invite/${w.tokens.invite}`,
@@ -320,7 +326,7 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
   '/keepers/business-cards': () => '/keepers/business-cards',
   '/keepers/documents': () => '/keepers/documents',
   '/keepers/documents/[key]': () => '/keepers/documents/terms',
-  '/keepers/help': () => null,
+  '/keepers/help': () => '/keepers/help',
 };
 
 const dialogNamed = (page: Page, name: string | RegExp) => page.getByRole('dialog', { name });
@@ -596,6 +602,10 @@ export const MODAL_OPENERS: Record<ScannedModal, (page: Page, world: World) => P
     await page.getByRole('textbox', { name: 'Document Text' }).click();
     await page.getByRole('button', { name: 'Link', exact: true }).click();
     return dialogNamed(page, 'Add Link');
+  },
+  'help-article': async (page) => {
+    await visit(page, '/keepers/help?new');
+    return dialogNamed(page, 'Add Help Article');
   },
 };
 
