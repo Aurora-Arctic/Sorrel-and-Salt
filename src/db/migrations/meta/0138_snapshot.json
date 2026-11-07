@@ -1,6 +1,6 @@
 {
-  "id": "12f15f0e-80b5-45c3-abbf-03ef9b8fac10",
-  "prevId": "6a3ca6ed-4580-43e3-b944-a424b13b5073",
+  "id": "5bd1941f-8cf1-468e-b0fb-0288d93ce7aa",
+  "prevId": "12f15f0e-80b5-45c3-abbf-03ef9b8fac10",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2711,6 +2711,233 @@
         "spells_complete_has_title": {
           "name": "spells_complete_has_title",
           "value": "\"spells\".\"status\" <> 'complete' OR \"spells\".\"title\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.help_articles": {
+      "name": "help_articles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "pg_catalog.gen_random_uuid()"
+        },
+        "kind": {
+          "name": "kind",
+          "type": "help_article_kind",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "audience": {
+          "name": "audience",
+          "type": "help_audience",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'public'"
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "summary": {
+          "name": "summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seed_key": {
+          "name": "seed_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "search_vector": {
+          "name": "search_vector",
+          "type": "tsvector",
+          "primaryKey": false,
+          "notNull": false,
+          "generated": {
+            "as": "setweight(to_tsvector('english', title), 'A') || setweight(to_tsvector('english', coalesce(summary, '')), 'B') || setweight(to_tsvector('english', body), 'C')",
+            "type": "stored"
+          }
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "help_articles_slug_unique": {
+          "name": "help_articles_slug_unique",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"help_articles\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "help_articles_seed_key_unique": {
+          "name": "help_articles_seed_key_unique",
+          "columns": [
+            {
+              "expression": "seed_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"help_articles\".\"seed_key\" is not null and \"help_articles\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "help_articles_search_vector_idx": {
+          "name": "help_articles_search_vector_idx",
+          "columns": [
+            {
+              "expression": "search_vector",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "help_articles_parent_id_help_articles_id_fk": {
+          "name": "help_articles_parent_id_help_articles_id_fk",
+          "tableFrom": "help_articles",
+          "tableTo": "help_articles",
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "help_articles_created_by_users_id_fk": {
+          "name": "help_articles_created_by_users_id_fk",
+          "tableFrom": "help_articles",
+          "tableTo": "users",
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "help_articles_updated_by_users_id_fk": {
+          "name": "help_articles_updated_by_users_id_fk",
+          "tableFrom": "help_articles",
+          "tableTo": "users",
+          "columnsFrom": ["updated_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "help_articles_deleted_by_users_id_fk": {
+          "name": "help_articles_deleted_by_users_id_fk",
+          "tableFrom": "help_articles",
+          "tableTo": "users",
+          "columnsFrom": ["deleted_by"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "help_articles_term_no_position": {
+          "name": "help_articles_term_no_position",
+          "value": "\"help_articles\".\"kind\" <> 'term' or \"help_articles\".\"position\" is null"
+        },
+        "help_articles_term_no_parent": {
+          "name": "help_articles_term_no_parent",
+          "value": "\"help_articles\".\"kind\" <> 'term' or \"help_articles\".\"parent_id\" is null"
+        },
+        "help_articles_not_own_parent": {
+          "name": "help_articles_not_own_parent",
+          "value": "\"help_articles\".\"parent_id\" is distinct from \"help_articles\".\"id\""
+        },
+        "help_articles_term_public": {
+          "name": "help_articles_term_public",
+          "value": "\"help_articles\".\"kind\" <> 'term' or \"help_articles\".\"audience\" = 'public'"
         }
       },
       "isRLSEnabled": false
@@ -9038,6 +9265,16 @@
       "name": "spell_visibility",
       "schema": "public",
       "values": ["private", "workspace"]
+    },
+    "public.help_article_kind": {
+      "name": "help_article_kind",
+      "schema": "public",
+      "values": ["faq", "article", "term"]
+    },
+    "public.help_audience": {
+      "name": "help_audience",
+      "schema": "public",
+      "values": ["public", "staff", "keeper"]
     },
     "public.user_privilege": {
       "name": "user_privilege",

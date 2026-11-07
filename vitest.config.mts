@@ -29,6 +29,7 @@ export const DB_FREE = [
   'tests/db/seed/documents-files.test.ts',
   'tests/modules/coven/schema/workspaces-schema.test.ts',
   'tests/modules/documents/mailing-pace.test.ts',
+  'tests/modules/help/schema/help-articles-schema.test.ts',
   'tests/modules/coven/services/access-control.test.ts',
   'tests/modules/identity/services/site-admin.test.ts',
   'tests/modules/identity/services/workshop-access.test.ts',
