@@ -30,3 +30,15 @@ Compute has a dollar cost on Vercel, which is what makes an N+1 a billing bug. `
 - **Errors are mapped once, on the way out.** A service throws `ValidationError`, `Forbidden`, `NotFound` or `StaleWrite` from `src/lib/errors.ts`, and `src/graphql/errors.ts`'s `maskError` attaches the code. The message is the service's, verbatim — never rewritten at the transport — and anything else leaves masked, in every environment (claude-docs/graphql/errors.md, "Errors").
 - **A revisioned mutation takes `expectedRevision: Int` and returns `revision: Int!`** (M13.16). The input names the revision the client read, and `null` writes whatever the row holds (Keep My Version); the payload hands back the revision written, for the next save to name. A lost race leaves as `STALE_WRITE` with `extensions.currentRevision`, and the client rejects with `StaleWriteError` (claude-docs/components/autosave.md, "The server's half").
 - **Running a query by hand.** A signed-in browser opening `/api/graphql` on the dev server gets Altair (claude-docs/manual-api-testing.md).
+
+## Access paths outside /api/graphql
+
+`CLAUDE.md` rule 1 allows no application-data path besides `/api/graphql` and services called from server components. The paths outside both carry no application data beyond what is named here:
+
+- **`/api/auth/*`**: the OAuth handshake.
+- **`/llms.txt` and `/.well-known/*.json`**: sessionless public files, serving only the public compendium.
+- **Share-card images**: Next generates them from each `opengraph-image.tsx` for `/`, `/compendium` and a compendium entry. They are sessionless and draw only what the public compendium shows.
+- **`/.well-known/workflow/`**: the durable job routes the SDK generates. They carry no application data and run services as the seeded System account.
+- **`/api/cron/`**: the daily cron routes. Vercel Cron calls them with the `CRON_SECRET` bearer, they refuse any other call, carry no application data and only start a job (claude-docs/design-decisions/m15.46-daily-jobs-from-vercel-cron.md).
+
+Admin is not an exception: it goes through `/api/graphql` like everything else.
