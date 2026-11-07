@@ -25,22 +25,20 @@ client component taking `path` (the page the request is about), and optionally `
   note, "Opened from the Error 404 page. You can change it.", in place of the limit. The Page field starts as `path`, and the sender may edit or clear it; an empty field (or only
   spaces) sends no `path`. The server takes any text up to 500 characters, which the field's note says,
   and a longer one is refused with a field error shown on the Page field. The Page must be a path on this site: empty, or starting with `/` (not `//`), or with the site's own address, `SITE_ORIGIN` in `src/lib/site.ts` (`https://sorrelandsalt.com`). Anything else is refused with "Start with / or the site's address.", by `isSitePage` in the form and by the same check in `SupportRequestInput`, which the signed-out request shares, so the GraphQL path cannot skip it.
+- **`errorReference` is shown and sent.** With an error number the Page field's note reads "Opened from the Error 500 page, reference abc123. You can change it.", the reference in a `code` element, and it goes as `errorReference`. The service trims it, refuses more than 100 characters, and stores it on
+  `support_requests.error_reference`, where the admin request dialog shows it as Error Reference beside the error
+  number, with a Copy button.
 - **Closing asks first while text is typed or the Page differs from its starting value**, through
   `useDiscardGuard`. Cancel and Done exist only when
   `onDone` is given, because a page has nothing to close.
 - A refusal is said in an alert above the form; a refused subject, message or page is said beside its field.
-
-- **`errorReference` is shown and sent.** With an error number the Page field's note reads "Opened from the Error 500 page, reference abc123. You can change it.", the reference in a `code` element, and it goes as `errorReference`. The service trims it, refuses more than 100 characters, and stores it on
-  `support_requests.error_reference`, where the admin request dialog shows it as Error Reference beside the error
-  number, with a Copy button.
-
 - **The signed-out form offers five of the seven topics** (Accessibility, Bug, Account & Sign-In, Privacy & Data, Question), with the same labels and hints as this form, from `SUPPORT_ABOUTS`. `SIGNED_OUT_ABOUTS` in `src/modules/support/validation/support.ts` is the service's list; Compendium Entry and Feedback need an account.
 
 ## Support panel
 
 `src/components/SupportPanel/` — the body of `/support` and of the Support dialog. It takes the state the page or the dialog's slot worked out and
 draws one of three things: Sign In for a signed-out visitor, the end of a time-out, or that it has no end date, in place of the form,
-or [`SupportForm`](support-form.md). `returnTo` is where Sign In brings the visitor back (the support page by default; the dialog passes its own address) and `onDone` closes the dialog. The caller decides the state; the panel decides nothing about access.
+or `SupportForm`. `returnTo` is where Sign In brings the visitor back (the support page by default; the dialog passes its own address) and `onDone` closes the dialog. The caller decides the state; the panel decides nothing about access.
 
 For a signed-out visitor the Sign In notice and `SignedOutSupportForm` sit in one `.support-panel--signed-out` grid, `space(4)` apart. The notice has no margin, and the form's first group has none above it and its legend none above it, so the grid gap is the whole distance.
 
@@ -68,5 +66,5 @@ keeps the page.
 ### Contracts
 
 - Asks what the visitor may do when it opens, through `/api/graphql` (the `supportDialogState` query, open to a signed-out caller and answered under the caller’s own session by `getMySupportDialogState`), and asks again at every open. The answer is `signedOut` (Sign In and the signed-out form), `unverified` (a line and a link to the email page instead of the form), `timedOut` (when the time-out ends, or null for one with no end date) or `form`. Until it arrives the dialog shows a form skeleton, and a failed read shows the generic failure notice, never an empty form.
-- The body is [`SupportPanel`](support-form.md#support-panel), which draws [`SupportForm`](support-form.md) for a sender who may write, inside a `RouteModal` titled Contact Support.
+- The body is `SupportPanel` (above), which draws `SupportForm` for a sender who may write, inside a `RouteModal` titled Contact Support.
 - Reads the address through `useSearchParams`, so it sits in a Suspense boundary.

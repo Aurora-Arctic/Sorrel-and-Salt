@@ -1,6 +1,6 @@
 # Record Working
 
-`src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one (M13.7).
+`src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one
 
 | File                  | What it holds                                                                                                                                                   |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,7 +41,7 @@ Working", calls `updateWorking` and closes on Save. Only the recorder or a membe
 refuses anyone else), and a complete working that is shared holds the switch on and shut, since a
 complete working's visibility only widens.
 
-With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also draws a bin named "Delete Working <date>" beside the Save buttons, the one place a working is deleted, since a row carries no bin. It asks `DeleteWorkingQuestion` (in `SpellWorkings/delete-working.tsx`) through `ConfirmQuestion`, runs `remove` (the shared `useDeleteWorking` mutation), then closes. The form no longer counts as changed once it is removed, so closing does not ask to discard it. `EditWorkingAction` passes `deleteWorking` only when the row's `canChange` is true, and a new working never has one.
+With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also draws a bin named "Delete Working <date>" beside the Save buttons, the one place a working is deleted, since a row carries no bin. It asks `DeleteWorkingQuestion` (in `SpellWorkings/delete-working.tsx`) through `ConfirmQuestion`, runs `remove` (the shared `useDeleteWorking` mutation), then closes. Once removed, the form does not count as changed, so closing does not ask to discard it. `EditWorkingAction` passes `deleteWorking` only when the row's `canChange` is true, and a new working never has one.
 
 ## Completing a working
 
@@ -79,18 +79,15 @@ server (`plan-deductions.ts`), so the two agree.
 `CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label?, workedOn? }` and is what a
 draft working's row puts beside its other actions. The recipe page sets `label` to "Complete Working <date>".
 
-Browser flows: stories 76 and 78 in `tests/e2e/stories/06-grimoire.spec.ts`.
+Browser flows: `tests/e2e/stories/06-grimoire.spec.ts`.
 
 ## Styling
 
-`index.scss`, tokens only:
+`index.scss`:
 
 - **The form** (`.working-form`) starts Share With the Coven's switch at the line's start, as the ingredient form's Toxic switch is, rather than centred as the filter bar's.
 - **The deduction preview** (`.working-deductions`) is a column of `JarLine`s `space(3)` apart with no marker. A long name wraps rather than being cut, and each line's parts wrap whole at `type-size('small')` with tabular figures. A short line (`.working-deductions__short`) is in `$warning`.
 
-## Stories
+## Not here
 
-`src/components/RecordWorking/index.stories.tsx`, titled "Grimoire / Record Working": `States`,
-with a control that chooses one of Closed, Open, Private Spell, Deduction Preview, Shortfall, Edit
-Working, Edit Complete Working, Delete Working, Complete Working (a draft row's flask pressed, opening
-the dialog titled Complete Working over the deduction preview) or Dated Ahead.
+Stories: `src/components/RecordWorking/index.stories.tsx` (`Grimoire / Record Working`, one `States` story).
