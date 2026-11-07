@@ -54,7 +54,7 @@
       Where Lore Comes From" and the paragraph in "Ethical and Sustainable
       Sourcing" that says IUCN and CITES status are planned.
 - [ ] Draft and approval ingredients process.
-- [ ] Versioning and history tracking for items.
+- [ ] Versioning and history tracking for items (edit history; DESIGN.md §13, "Edit history").
 - [ ] Allow curators to view some of other curators/admins info so they can collaborate.
 - [ ] Swap the email page's address validation for my personal email
       validation library. v1's rule is `validateEmailAddress` in
@@ -92,7 +92,7 @@
 
 ### V2
 
-- [ ] Suggest compendium additions.
+- [ ] Suggest compendium additions, and category suggestions (DESIGN.md §13, "Compendium and category suggestions").
 - [ ] Compendium of pre built spells
 - [ ] Admin editor comment sections for curated entries.
 - [ ] Both private and public comment sections for compendium entries.
@@ -114,3 +114,18 @@
 
 - [ ] Add label printing.
 - [ ] Add wikipedia.
+
+### Deferred by the design doc
+
+Each item below is out of scope for v1: do not build it, and do not leave hooks for it beyond what DESIGN.md names. The design and the reason for each is in DESIGN.md §13, under the heading shown. Subscription billing and edit history are listed above.
+
+- [ ] The notes subsystem, stories 35–46 (DESIGN.md §13, "Notes — the three-tier experience log"). Story numbers 35–46 are not reused.
+- [ ] Spell approval for observers (viewer spell approval; DESIGN.md §13, "Spell approval for observers").
+- [ ] Bulk add from the compendium (DESIGN.md §13, "Bulk add from the compendium"; the partial-with-report rule is `claude-docs/design-decisions/mw15-bulk-add-partial-with-report.md`).
+- [ ] Duplicate merge tooling (DESIGN.md §13, "Duplicate merge").
+- [ ] GraphQL response caching (DESIGN.md §13, "GraphQL response caching").
+- [ ] A mailed sign-in link or code (DESIGN.md §13, "A mailed sign-in link or code").
+- [ ] Note moderation (DESIGN.md §13, "Note moderation").
+- [ ] Physical uses (DESIGN.md §13, "Physical uses").
+- [ ] Linking a coven's own ingredient to the compendium: the Link dialog, This Is It, and splitting an entry across compendium entries (DESIGN.md §13, "Link to the Compendium"). In v1 a coven annotates a compendium entry or makes it its own, and that is the only direction.
+- [ ] Showing who reviewed a compendium entry, saved spell notes, a workshop-viewer role, and try before sign-up (DESIGN.md §13, under those four headings).

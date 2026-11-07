@@ -63,6 +63,10 @@ decisions make it hold:
   being absent and by the direct URL or action being refused, since "no rows"
   alone proves nothing.
 
+## Story numbering
+
+Story numbers 35–46 are **not reused**; v1 is 74 stories, numbered 1–34, 47–64 and 70–91. Every one of the 74 numbers is tagged by at least one spec under `tests/e2e/stories/`.
+
 ## The reporter
 
 `tests/support/story-playwright-reporter.ts` is a Playwright reporter named in
