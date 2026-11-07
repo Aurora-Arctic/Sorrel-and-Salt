@@ -14,8 +14,8 @@ export interface IngredientCardProps {
   label: string;
   formalName?: string | null;
   nomenclature?: NomenclatureKind | null;
-  /** Each category with its group, or by id alone where a `CardCategoryVocabulary` above the card holds it. */
-  categories?: readonly (CardCategory | CardCategoryRef)[];
+  /** Each category by id, named by the `CardCategoryVocabulary` above the card. */
+  categories?: readonly CardCategoryRef[];
   /**
    * The entry's live forms, read from its variants: each draws its group's icon before its name on
    * the secondary line, and * the notes of those that have any. Structural, so a GraphQL variant

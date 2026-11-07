@@ -82,7 +82,6 @@ export default async function CovenIngredientsPage({
   });
 
   const [categories, deities] = await Promise.all([readCategories(), readDeities()]);
-  const known = new Set(categories.map(({ id }) => id));
   const lookups = {
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
     deities: new Map(deities.map(({ slug, id }) => [slug, id])),
@@ -107,7 +106,7 @@ export default async function CovenIngredientsPage({
       canonicalName: shown.canonicalName,
       nomenclature: shown.nomenclature,
       // By id: the cards read each category's name and colours from `categories`, sent once.
-      categories: categoryRefs(page.categories[i], known),
+      categories: categoryRefs(page.categories[i]),
       variants: page.variants[i],
       toxic: shown.toxic,
       safetyNotes: shown.safetyNotes,

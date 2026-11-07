@@ -3,7 +3,7 @@ import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { CompendiumCoven } from '../AddIcon/types';
 import type { CompendiumListProps } from '../CompendiumList/types';
 import type { EntryRecency } from '../EntryMarks/types';
-import type { CardCategory, CardCategoryRef } from '../IngredientCard/types';
+import type { CardCategoryRef } from '../IngredientCard/types';
 import type { CupboardPlace } from '../IngredientEntry/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { MyCoven } from '../FacetPanel/types';
@@ -36,7 +36,7 @@ export interface CompendiumCardEntry {
   slug: string;
   canonicalName: string | null;
   nomenclature: NomenclatureKind;
-  categories: readonly (CardCategory | CardCategoryRef)[];
+  categories: readonly CardCategoryRef[];
   variants: readonly SafetyVariant[];
   toxic: boolean;
   safetyNotes: string | null;

@@ -98,22 +98,15 @@ describe('IngredientCard', () => {
   });
 
   it('lays the body out as the top row, the categories, the forms, then the jar lines', () => {
+    const group = { colorDark: '#112233', colorLight: '#445566' };
     render(
-      <IngredientCard
-        {...BASE}
-        kind="own"
-        variants={[LEAF]}
-        categories={[
-          {
-            category: { id: 'c1', name: 'Testing' },
-            group: { colorDark: '#112233', colorLight: '#445566' },
-          },
-        ]}
-      >
-        <ul aria-label="Jars">
-          <li>Testleaf</li>
-        </ul>
-      </IngredientCard>,
+      <CardCategoryVocabulary categories={[{ id: 'c1', name: 'Testing', group }]}>
+        <IngredientCard {...BASE} kind="own" variants={[LEAF]} categories={[{ id: 'c1' }]}>
+          <ul aria-label="Jars">
+            <li>Testleaf</li>
+          </ul>
+        </IngredientCard>
+      </CardCategoryVocabulary>,
     );
 
     const follows = (a: HTMLElement, b: HTMLElement) =>
@@ -153,11 +146,16 @@ describe('IngredientCard', () => {
 
   it('puts the categories past the limit behind a +N button', () => {
     const group = { colorDark: '#112233', colorLight: '#445566' };
-    const categories = Array.from({ length: CATEGORY_CHIP_LIMIT + 3 }, (_, i) => ({
-      category: { id: `c${i}`, name: `Fixture Category ${i + 1}` },
+    const vocabulary = Array.from({ length: CATEGORY_CHIP_LIMIT + 3 }, (_, i) => ({
+      id: `c${i}`,
+      name: `Fixture Category ${i + 1}`,
       group,
     }));
-    render(<IngredientCard {...BASE} categories={categories} />);
+    render(
+      <CardCategoryVocabulary categories={vocabulary}>
+        <IngredientCard {...BASE} categories={vocabulary.map(({ id }) => ({ id }))} />
+      </CardCategoryVocabulary>,
+    );
 
     expect(screen.getByRole('button', { name: /3 more categories for/i })).toHaveTextContent('+3');
   });
@@ -170,27 +168,23 @@ describe('IngredientCard', () => {
       { id: 'c-other', name: 'Fixture Other', group },
     ];
     const KNOWN = { category: { id: 'c-known', name: 'Fixture Known' }, group };
-    const UNLISTED = { category: { id: 'c-unlisted', name: 'Fixture Unlisted' }, group };
 
-    it('draws a chip for an id from the vocabulary above it, and a whole category as given', () => {
+    it('draws a chip for each id the vocabulary above it holds, and none for an id it lacks', () => {
       render(
         <CardCategoryVocabulary categories={VOCABULARY}>
-          <IngredientCard {...BASE} categories={[{ id: 'c-known' }, UNLISTED]} />
+          <IngredientCard {...BASE} categories={[{ id: 'c-known' }, { id: 'c-unlisted' }]} />
         </CardCategoryVocabulary>,
       );
 
       expect(screen.getByText('Fixture Known')).toBeInTheDocument();
-      expect(screen.getByText('Fixture Unlisted')).toBeInTheDocument();
       // Only the card's own categories are drawn, not the whole vocabulary.
       expect(screen.queryByText('Fixture Other')).toBeNull();
+      expect(screen.getAllByRole('listitem')).toHaveLength(1);
     });
 
-    it('names by id only the categories the vocabulary holds, and keeps the rest whole', () => {
-      expect(categoryRefs([KNOWN, UNLISTED], new Set(['c-known']))).toEqual([
+    it('names every category by id, keeping the forms that carry it', () => {
+      expect(categoryRefs([KNOWN, { ...KNOWN, forms: ['testoil'] }])).toEqual([
         { id: 'c-known' },
-        UNLISTED,
-      ]);
-      expect(categoryRefs([{ ...KNOWN, forms: ['testoil'] }], new Set(['c-known']))).toEqual([
         { id: 'c-known', forms: ['testoil'] },
       ]);
     });

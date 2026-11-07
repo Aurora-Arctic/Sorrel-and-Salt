@@ -13,8 +13,6 @@ import DetailsLink from '../IngredientEntry/details-link';
 import { detailsHeading } from '../IngredientEntry/details';
 import { route } from '../../../.storybook/route';
 
-
-export default meta;
 type Story = StoryObj<{ onUse: () => void; onRestock: () => void; lastPressed: string }>;
 
 const VARIANTS: SafetyVariant[] = [
@@ -62,6 +60,7 @@ const meta = {
     ),
   ],
 } satisfies Meta;
+export default meta;
 
 const BASE = {
   href: route('/compendium/ingredients/testwort-testalis'),
@@ -216,11 +215,7 @@ const withStartActionsNode = (onRestock: () => void): ReactNode => (
 
 const manyCategoriesNode = (
   <div style={{ inlineSize: '20rem' }}>
-    <IngredientCard
-      {...BASE}
-      kind="compendium"
-      categories={categoryRefs(MANY_CATEGORIES)}
-    />
+    <IngredientCard {...BASE} kind="compendium" categories={categoryRefs(MANY_CATEGORIES)} />
   </div>
 );
 

@@ -1,12 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import IngredientCard from '../IngredientCard';
-import { ENTRIES, jarLinesOf } from './story-fixtures';
+import { categoryRefs } from '../IngredientCard/category-refs';
+import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
+import { CATEGORY_VOCABULARY, ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
 import { route } from '../../../.storybook/route';
 
 const meta = {
   title: 'Ingredients / Ingredient Card List',
+  decorators: [
+    (Story) => (
+      <CardCategoryVocabulary categories={CATEGORY_VOCABULARY}>
+        <Story />
+      </CardCategoryVocabulary>
+    ),
+  ],
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
@@ -20,7 +29,7 @@ const CompendiumCards = () => (
         label={e.label}
         formalName={e.formalName}
         nomenclature={e.nomenclature}
-        categories={e.categories}
+        categories={categoryRefs(e.categories)}
         variants={e.variants}
         toxic={e.toxic}
         safetyNotes={e.safetyNotes}
@@ -39,7 +48,7 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
         label={e.label}
         formalName={e.formalName}
         nomenclature={e.nomenclature}
-        categories={e.categories}
+        categories={categoryRefs(e.categories)}
         variants={e.variants}
         toxic={e.toxic}
         safetyNotes={e.safetyNotes}

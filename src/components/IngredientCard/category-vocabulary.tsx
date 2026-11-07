@@ -30,13 +30,10 @@ export const CardCategoryVocabulary = ({
   return <Vocabulary.Provider value={byId}>{children}</Vocabulary.Provider>;
 };
 
-/** A card's categories with their names and groups, an id read from the vocabulary above it. */
-export function useNamedCategories(
-  categories: readonly (CardCategory | CardCategoryRef)[],
-): CardCategory[] {
+/** A card's categories with their names and groups, each id read from the vocabulary above it. */
+export function useNamedCategories(categories: readonly CardCategoryRef[]): CardCategory[] {
   const byId = useContext(Vocabulary);
   return categories.flatMap((category) => {
-    if ('category' in category) return [category];
     const named = byId.get(category.id);
     if (named == null) return [];
     return [category.forms ? { ...named, forms: category.forms } : named];

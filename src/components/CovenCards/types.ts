@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import type { CompendiumListFilterProps, CompendiumListProps } from '../CompendiumList/types';
 import type { EntryKind } from '../EntryMarks/types';
-import type { CardCategory, CardCategoryRef } from '../IngredientCard/types';
+import type { CardCategoryRef } from '../IngredientCard/types';
 import type { LastEditProps } from '../LastEdit/types';
 import type { JarLine } from '../JarLines/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
@@ -14,7 +14,7 @@ export interface CovenCardEntry {
   label: string;
   canonicalName: string | null;
   nomenclature: NomenclatureKind;
-  categories: readonly (CardCategory | CardCategoryRef)[];
+  categories: readonly CardCategoryRef[];
   variants: readonly SafetyVariant[];
   toxic: boolean;
   safetyNotes: string | null;
