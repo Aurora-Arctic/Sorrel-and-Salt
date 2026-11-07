@@ -22,6 +22,10 @@ An article page answers 404 for a row that is not a public article, and for a ch
 
 `/help/staff`, `/help/staff/[slug]` and `/help/staff/[slug]/[child]` call `requireCuratorSession()` before any read, are never cached, and are `noindex`. They answer 404 for a public row, so a public row has one address. The `/curator` and `/keepers` layouts link to `/help/staff`.
 
+## Layout
+
+Every help page is one centred reading column: each component's root carries `.help-page` (`_primitives.scss`), `max-width: $measure` and `margin-inline: auto`, so the heading, the search box, the lists and the text share the text's edges. It stands inside the public layout's `.page-column` and inside the staff layout's `.page-frame`, so the two areas cannot differ. A primitive rather than a component style, because a route loads a component's stylesheet only when it draws the component. An article whose body has three or more `##` sections also carries `.page-with-nav`, which takes the document pages' pair (`$document-menu-column`, `$measure`) and centres on its own.
+
 ## Ids
 
 Only the FAQ entries (`HelpIndex`) and the terms (`HelpGlossary`) carry an id, their slug. `renderMarkdown` gives each h2 and h3 an id from its text, so `HelpIndex` and `HelpGlossary` pass every slug, and the ids earlier answers took, as its `reserved` argument; no heading claims an anchor.
@@ -30,6 +34,11 @@ Only the FAQ entries (`HelpIndex`) and the terms (`HelpGlossary`) carry an id, t
 
 Every help page but the front page (`/help`, and the staff index, whose h1 is Staff Help) is headed by a level-one "Help" ("Staff Help" on a staff article), then the search box, then the page's own title as a level-two heading: the article's title, "Glossary" or "Search Help". The document `<title>` and metadata keep the page's own title. The Markdown body is drawn with `renderMarkdown(body, placeholders, reserved, true)`, whose last argument moves every heading down a level (h2 becomes h3), so the outline stays h1, h2, h3; the seed text is unchanged. The glossary does the same for its definitions.
 
+- **A sub page links its parent** between the search box and its title ("Back to Your Coven"), and nothing more: the tree is two levels below the index, so one link stands in for a trail. The page reads the parent for its title, by the same finder that answered the sub page, so a parent the reader may not open is a 404.
+- **An article with three or more `##` sections draws a contents menu**, `PageNav` labelled "On This Page", collapsible and non-sticky, as the document pages do; fewer sections are in view without one. The entries are read before the headings move down, so each jumps to an `h3`.
+- **The index lists the glossary among the guides**, as a described item ("The words Sorrel & Salt uses, and what each one means."), so the Guides section is always drawn. The FAQ is open text with no accordion, and the glossary has no A–Z bar.
+- **Search results** open with a count ("7 results for “steward”", an `output`), then each result under a label of its kind (Question, Guide or Term) and, for a row whose audience is not `public`, "Staff"; the staff search is the only one that returns such rows. A query that finds nothing says so and links the guides and the glossary; an empty query draws neither results nor links.
+
 ## Links to help
 
-`Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. The keepers and curator layouts link `/help/staff` as "Staff Help" in a `nav`.
+`Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the account menu (`AccountMenu`, a "Help" row before Support), the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. An empty Ingredients list and an empty Grimoire tab each end with a "Learn More" link to their guide, built by `publicGuidePath(slug)` (`src/lib/help-paths.ts`) from the guide's slug, which is its title's. The keepers and curator layouts link `/help/staff` as "Staff Help" in a `nav`.
