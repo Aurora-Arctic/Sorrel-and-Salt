@@ -641,6 +641,7 @@ swap their children for a skeleton, which unmounts the link that was pressed.
   error, so nothing settles by hand.
 - Where two navigations overlap the later one's value shows, and the value goes
   when the last of them has ended.
+- A push to another path moves the address bar and history at once (`pushState` with the current entry's router state), then calls `router.replace`, so Back during the wait returns to the page left and a redirect adds no entry ([`../loading.md`](../loading.md), "Why there is no `loading.tsx`").
 - A navigation waits first on any mounted form with unsaved changes
   (`useLeaveGuard`). A refresh leaves the page where it is, so nothing holds it.
 

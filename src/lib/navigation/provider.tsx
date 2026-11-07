@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   type ReactElement,
   type ReactNode,
@@ -9,6 +9,7 @@ import {
   useEffect,
   useMemo,
   useOptimistic,
+  useRef,
   useState,
 } from 'react';
 import { LeaveGuardContext, holdTraversals, leaveGuardSlot } from './leave-guard';
@@ -26,9 +27,28 @@ export type NavigationActions = {
 export const ActiveNavigationContext = createContext<ActiveNavigation | undefined>(undefined);
 export const NavigationActionsContext = createContext<NavigationActions | null>(null);
 
+/**
+ * Moves the address bar and the history to `href` before the router has the page. Next writes its own entry only when the page arrives, so a Back pressed in
+ * the meantime would pass the page being left. The entry carries the current one's router state, which Next's `pushState` patch takes as its own and leaves the
+ * router alone; the router then replaces this entry, with the page's final address, when it arrives. Only a move to another path qualifies, and only on an entry the router wrote.
+ */
+function pushAtOnce(href: string, from: string): boolean {
+  if (!href.startsWith('/') || href.startsWith('//')) return false;
+  const state: unknown = window.history.state;
+  if (!state || (state as { __NA?: unknown }).__NA !== true) return false;
+  if (new URL(href, window.location.href).pathname === from) return false;
+  window.history.pushState(state, '', href);
+  return true;
+}
+
 /** Mounted once and never unmounts, so a wait is never lost with the control that began it; React puts the optimistic wait back when the transition ends. A mounted form with unsaved changes is waited on first (claude-docs/design-decisions/ui.md, "Navigation provider"). */
 export function NavigationProvider({ children }: { children: ReactNode }): ReactElement {
   const router = useRouter();
+  const pathname = usePathname();
+  const shown = useRef(pathname);
+  useEffect(() => {
+    shown.current = pathname;
+  }, [pathname]);
   const [active, setActive] = useOptimistic<ActiveNavigation | undefined>(undefined);
   const [guards] = useState(leaveGuardSlot);
   useEffect(() => holdTraversals(guards), [guards]);
@@ -43,7 +63,9 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
         guards.leave(() =>
           startTransition(() => {
             setActive({ owner, href });
-            const go = options?.replace ? router.replace : router.push;
+            // The router replaces an entry already pushed, so a redirect on the way leaves one entry, not two.
+            const pushed = !options?.replace && pushAtOnce(href, shown.current);
+            const go = options?.replace || pushed ? router.replace : router.push;
             if (routerOptions) go(href as never, routerOptions);
             else go(href as never);
           }),
