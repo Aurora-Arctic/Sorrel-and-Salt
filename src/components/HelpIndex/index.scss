@@ -15,7 +15,6 @@
 
     .lede {
       margin-block: 0 space(4);
-      color: $text-muted;
     }
 
     .help-search {
@@ -34,10 +33,10 @@
   }
 
   &__guides {
+    @include list-reset;
+
     display: grid;
     gap: space(3);
-    padding: 0;
-    list-style: none;
 
     @media (min-width: 40rem) {
       grid-template-columns: 1fr 1fr;
@@ -45,14 +44,15 @@
   }
 
   // A left bar that turns accent on hover; the title's link covers the card (card-link), so the card is one target.
+  // The hover rule names .card--quiet too, as that primitive's own hover border would otherwise outrank it.
   &__guide {
     position: relative;
     border-inline-start: $rule-heavy solid $hairline;
     border-start-start-radius: radius('sharp');
     border-end-start-radius: radius('sharp');
 
-    &:hover,
-    &:focus-within {
+    &.card--quiet:hover,
+    &.card--quiet:focus-within {
       border-inline-start-color: $accent;
     }
 

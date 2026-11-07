@@ -14,7 +14,7 @@ const GLOSSARY = {
   href: '/help/glossary',
 };
 
-// The help front page: a band holding the lede, the search box and the quick links, then the guides with the glossary among them, and the FAQ. Each FAQ entry is an
+// The help front page: a band holding the lede, the search box and the quick links (only the box, unbanded, when it is handed neither), then the guides with the glossary among them, and the FAQ. Each FAQ entry is an
 // anchor from its slug; nothing else on the page takes an id, so a slug shared with an article never doubles one
 // (claude-docs/components/help-pages.md).
 const HelpIndex = ({
@@ -36,19 +36,23 @@ const HelpIndex = ({
   return (
     <div className="help-page help-index">
       <PageHeader title={heading} />
-      <div className="help-index__band">
-        {lede && <p className="lede">{lede}</p>}
-        <HelpSearchForm size="hero" />
-        {quickLinks.length > 0 && (
-          <ul className="help-index__quick" aria-label="Quick Links">
-            {quickLinks.map((link) => (
-              <li key={link.href}>
-                <a href={link.href}>{link.title}</a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {lede || quickLinks.length > 0 ? (
+        <div className="help-index__band">
+          {lede && <p className="lede">{lede}</p>}
+          <HelpSearchForm size="hero" />
+          {quickLinks.length > 0 && (
+            <ul className="help-index__quick" aria-label="Quick Links">
+              {quickLinks.map((link) => (
+                <li key={link.href}>
+                  <a href={link.href}>{link.title}</a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : (
+        <HelpSearchForm />
+      )}
       <section aria-label="Guides">
         <h2>Guides</h2>
         <ul className="help-index__guides">

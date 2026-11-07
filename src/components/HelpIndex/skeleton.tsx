@@ -12,7 +12,7 @@ const GuideBars = () => (
   </li>
 );
 
-// A help index with its guides still to come: the page's own heading and band, the quick links as bars, and the
+// A help index with its guides still to come: the page's own heading and band (or its unbanded search box), the quick links as bars, and the
 // guide cards as bars. The FAQ beneath is content, so it is left out.
 export const HelpIndexSkeleton = ({
   heading = 'Help',
@@ -23,7 +23,7 @@ export const HelpIndexSkeleton = ({
 }): ReactElement => (
   <div className="help-page help-index">
     <PageHeader title={heading} />
-    {lede && (
+    {lede ? (
       <div className="help-index__band">
         <p className="lede">{lede}</p>
         <HelpSearchForm size="hero" />
@@ -35,6 +35,8 @@ export const HelpIndexSkeleton = ({
           ))}
         </ul>
       </div>
+    ) : (
+      <HelpSearchForm />
     )}
     <section aria-label="Guides">
       <h2>Guides</h2>

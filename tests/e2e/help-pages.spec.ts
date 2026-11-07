@@ -333,3 +333,23 @@ test.describe('accessibility', () => {
     });
   }
 });
+
+test.describe('look', () => {
+  test("a guide card's left bar takes the accent while it is hovered", async ({ page }) => {
+    await page.goto('/help');
+    const guide = page.getByRole('region', { name: 'Guides' }).getByRole('listitem').first();
+    const bar = () => guide.evaluate((card) => getComputedStyle(card).borderInlineStartColor);
+    const accent = await page.evaluate(() => {
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--accent)';
+      document.body.append(probe);
+      const colour = getComputedStyle(probe).color;
+      probe.remove();
+      return colour;
+    });
+
+    expect(await bar()).not.toBe(accent);
+    await guide.hover();
+    await expect.poll(bar).toBe(accent);
+  });
+});
