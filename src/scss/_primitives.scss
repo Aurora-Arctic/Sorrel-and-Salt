@@ -1376,7 +1376,7 @@
 
   // The heading alone fills the first row, so the card's top is the second row's: the first paragraph's, however many
   // lines the heading takes. On a phone the card follows the words.
-  .card-landing__grid > .card-landing__title,
+  .card-landing__grid > .card-landing__head,
   .card-landing__grid > .card-landing__words {
     grid-column: 1;
   }
@@ -1422,15 +1422,17 @@
 
   // One heading on two lines, the greeting above the name: block spans, so the name reads whole, and the greeting two
   // steps down the heading scale. The grid's row gap stands in for the heading face's own margin.
-  .card-landing__title {
+  .card-landing__head {
     margin-bottom: 0;
+  }
 
+  .card-landing__title {
     > span {
       display: block;
     }
   }
 
-  .card-landing__title-greeting {
+  .card-landing__title > .page-title__greeting {
     font-size: heading-size(3);
     line-height: 1.2;
   }

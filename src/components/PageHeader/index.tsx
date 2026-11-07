@@ -13,6 +13,7 @@ const PageHeader = ({
   title,
   pendingTitle,
   level = 'h1',
+  greeting,
   id,
   eyebrow,
   lede,
@@ -40,7 +41,13 @@ const PageHeader = ({
     </Heading>
   ) : (
     <Heading id={id} className={headingClassName} {...focus}>
-      {title}
+      {greeting ? (
+        <>
+          <span className="page-title__greeting">{greeting}</span> <span>{title}</span>
+        </>
+      ) : (
+        title
+      )}
       {suffix && <> {suffix}</>}
     </Heading>
   );

@@ -3,6 +3,7 @@ import { cache } from 'react';
 import type { ReactElement } from 'react';
 import { SupportIcon } from '../../../components/IconTip/icons';
 import SupportLink from '../../../components/SupportLink';
+import PageHeader from '../../../components/PageHeader';
 import { BACK_LEDE, WORDMARK } from '../../../lib/invitation-cards/copy';
 import InvitationPanel from '../../invite/[token]/invitation-panel';
 import type { InvitePageProps } from '../../invite/[token]/types';
@@ -76,9 +77,12 @@ export default async function CardPage({ params }: InvitePageProps) {
   return (
     <PageFrame className={`card-landing welcome-page${card.beta ? '' : ' card-landing--single'}`}>
       <div className="card-landing__grid">
-        <h1 className="card-landing__title">
-          <span className="card-landing__title-greeting">Welcome to</span> <span>{WORDMARK}</span>
-        </h1>
+        <PageHeader
+          title={WORDMARK}
+          greeting="Welcome to"
+          className="card-landing__head"
+          headingClassName="card-landing__title"
+        />
         <div className="card-landing__words">
           <Welcome beta={card.beta} />
           {card.beta && <Early />}

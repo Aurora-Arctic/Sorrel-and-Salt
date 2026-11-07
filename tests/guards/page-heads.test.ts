@@ -26,10 +26,12 @@ describe('page heads', () => {
       return count > allowed ? [file] : [];
     });
 
-    // Preconditions: the scan read the app's pages and components, and PageHeader itself draws an h1.
+    // Preconditions: the scan read the app's pages and components, the pattern matches a real h1, and PageHeader
+    // draws an h1 unless a page asks it for an h2.
     expect(files.length).toBeGreaterThan(100);
     expect(files).toContain('src/app/(public)/compendium/page.tsx');
-    expect(readFileSync('src/components/PageHeader/index.tsx', 'utf8')).toMatch(H1);
+    expect(HIDDEN_LOADING).toMatch(H1);
+    expect(readFileSync('src/components/PageHeader/index.tsx', 'utf8')).toContain("level = 'h1'");
     for (const [file, line] of Object.entries(EXEMPT)) {
       expect(readFileSync(file, 'utf8')).toContain(line);
     }
