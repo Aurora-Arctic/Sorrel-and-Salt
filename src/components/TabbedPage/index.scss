@@ -25,7 +25,6 @@ $track-inset: calc(1px + 0.125rem);
   max-width: 100%;
   height: $pill-height;
   padding: 0.125rem;
-  // Cancels the page header's nudge of its non-heading items and sets the track 0.125rem lower, level with the heading's text.
   top: 0;
   translate: 0 0.125rem;
   border: 1px solid $hairline;
@@ -40,17 +39,13 @@ $track-inset: calc(1px + 0.125rem);
   padding-inline: space(4);
 }
 
-// A framed page (the account): its tabs hold a `.page-with-nav`, which centres a menu and a column of sections (_primitives.scss). The head
-// stands over that column of sections, and its tabs sit on a line of their own beneath the heading at every width, as the reflow below does for a narrow one.
 @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-  // The pair of menu and sections is centred: the sections start half the menu and its gap right of the middle, less half their column.
   .tabbed-page--framed > .page-header {
     max-width: $narrow-column;
     margin-inline-start: calc(50% + (#{space(8)} * 3 + #{space(6)} - #{$narrow-column}) / 2);
   }
 }
 
-// From the width where the page-with-nav gains its third column the sections sit at the middle.
 @media (min-width: calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
   .tabbed-page--framed > .page-header {
     margin-inline-start: calc(50% - #{$narrow-column} / 2);
@@ -63,7 +58,6 @@ $track-inset: calc(1px + 0.125rem);
   margin-bottom: 2.5rem;
 }
 
-// A page that sets `tabsBelow` puts its row on a line of its own beneath the heading at every width, by the same forced break.
 .tabbed-page--framed > .page-header:not(:has(.add-action)),
 .tabbed-page--tabs-below > .page-header:not(:has(.add-action)) {
   &::after {
@@ -108,7 +102,6 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-// A tabbed page with a labelled action keeps it on the heading's line down to `$tabbed-action-below-width`, then beneath the heading; the Add is untouched.
 @container page-header (max-width: #{$narrow-column}) {
   .tabbed-page > .page-header:not(:has(.add-action)) > h1 {
     flex: 1 1 auto;
@@ -126,7 +119,6 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-// In the plus band the heading yields first: a zero basis keeps the pills and the plus on the line, and a long heading wraps its own words.
 @container page-header (min-width: calc(#{$tabbed-reflow-width} + 0.01rem)) and (max-width: #{$tabbed-plus-width}) {
   .tabbed-page > .page-header:has(.add-action) > h1 {
     flex: 1 1 0;
@@ -134,7 +126,6 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-// From `$tabbed-reflow-width` down the pills drop beneath the heading and its plus, ordered after the action; the plus switches separately at `$tabbed-plus-width`.
 @container page-header (max-width: #{$tabbed-reflow-width}) {
   .tabbed-page > .page-header:has(.add-action) > h1 {
     flex: 1 1 calc(100% - #{$control-height} - #{space(5)});
@@ -146,7 +137,6 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-// At `$add-below-width` and under the Add is the labelled button again and goes beneath the heading, which has the line to itself.
 @container page-header (max-width: #{$add-below-width}) {
   .tabbed-page > .page-header:has(.add-action) {
     > h1 {
@@ -179,7 +169,6 @@ $track-inset: calc(1px + 0.125rem);
 // scrolls inside the track with no scrollbar (claude-docs/components/tabbed-page.md, "The track and the pills").
 .tabbed-page__row {
   display: flex;
-  // What the pill and the links measure their place from.
   position: relative;
   flex: 0 1 auto;
   align-items: center;
@@ -207,13 +196,10 @@ $track-inset: calc(1px + 0.125rem);
   }
 }
 
-// A pill: 2.25rem less the track's edge and air, in the caption size, its label on one line. Its hit area is padded back to `$control-height`
-// by a transparent box above and below it, inside the row's scrollport so nothing is clipped.
 .tabbed-page__row a {
   display: flex;
   position: relative;
   align-items: center;
-  // The count's own leading space is dropped in a flex row, so this gap alone parts the label from the count.
   gap: space(2);
   box-sizing: border-box;
   height: calc(#{$pill-height} - 2 * #{$track-inset});
@@ -237,8 +223,6 @@ $track-inset: calc(1px + 0.125rem);
     color: $text-primary;
   }
 
-  // Pressed for as long as the pointer is down (`src/lib/press-feedback.ts` marks a tap, which `:active` alone misses on a phone):
-  // the fill under the label at once and the segment sunk a pixel; not on a tab that is on its way.
   &:is(:active, [data-pressed]):not([aria-disabled='true']) {
     background-color: $segment-pill;
     color: $text-primary;
@@ -256,7 +240,6 @@ $track-inset: calc(1px + 0.125rem);
   color: $text-primary;
 }
 
-// The pill is drawn by the open link itself as the server sends the page, then by the one sliding element beneath the links (`tab-links.tsx`), which `data-sliding` marks.
 @mixin tab-pill {
   border: 1px solid $accent;
   border-radius: radius('pill');
@@ -277,7 +260,6 @@ $track-inset: calc(1px + 0.125rem);
   visibility: hidden;
 }
 
-// Sliding from tab to tab, its width easing to the new one's; under reduced motion it jumps. Shown by `inherit`, not `visible`, which showed the pill through a held skeleton (SkeletonFade, `.skeleton-held`).
 .tabbed-page__row[data-sliding] > .tabbed-page__pill {
   visibility: inherit;
   transition:
@@ -303,12 +285,10 @@ $track-inset: calc(1px + 0.125rem);
   @include busy-faded;
 }
 
-// The open tab's content, or its loading state: any notice, then the list, a `space(5)` apart as `.list-frame` spaces a list's.
 .tabbed-page__panel {
   @include stack;
 }
 
-// The new tab's content, faded in as it replaces the skeleton; content the server drew before any tab was pressed has no `data-arrived` and shows at once.
 .tabbed-page__panel[data-arrived] {
   @include arrived;
 }

@@ -41,7 +41,6 @@ const RoleControl = ({
   const label = 'Change Role';
   const accessibleName = `${label} for ${name}`;
   const openClass = 'btn btn--quiet btn--small';
-  // The primary admin's own reason first: it holds whether or not changes are paused.
   const reason = primaryAdmin
     ? PRIMARY_ADMIN_REFUSAL
     : paused
@@ -57,9 +56,6 @@ const RoleControl = ({
       />
     );
   }
-  // Up the list is a promotion, down it a demotion; the confirm says which,
-  // green for one and red for the other, as the choice is made. Only a
-  // promotion vouches for the address, so only it warns.
   const promoting = outranks(chosen, role);
   return (
     <ConfirmedAction
@@ -93,8 +89,6 @@ const RoleControl = ({
       withNote
       announcement={`${name} is now ${roleLabel(chosen)}.`}
       inModal={inModal}
-      // Beside its fact in the user's modal, not in a button row: a refusal
-      // there is the callout too.
       refusalInModal="callout"
       send={(note) => graphqlRequest(SetUserRoleDocument, { userId, role: chosen, note })}
     />

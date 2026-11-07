@@ -10,15 +10,10 @@ import './index.scss';
 // two cannot drift. Their styles are the list's own, imported here so a
 // caller outside the list draws them styled; Sass bundles the file once.
 
-/** A provider by its roster label, or by its id when the roster has none. */
 function providerLabel(id: string): string {
   return SOCIAL_PROVIDERS.find((provider) => provider.id === id)?.label ?? id;
 }
 
-/**
- * A linked provider as its logo, named in a tip and in hidden text. A provider with no logo keeps its id as text, so
- * the account still says it is linked.
- */
 export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
   if (!isRosterProvider(id)) return <span>{label}</span>;

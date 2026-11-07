@@ -64,7 +64,6 @@ const ReplyForm = ({
   /** The sender's standing time-out; the form says they cannot answer until it ends, or that it has no end date. */
   senderTimedOut?: { until: Date | null };
   resolve?: ReactNode;
-  /** The viewer may add an internal note but not reply: no mode choice, and the form is a note form. */
   noteOnly?: boolean;
 }): ReactElement => {
   const [body, setBody] = useState('');

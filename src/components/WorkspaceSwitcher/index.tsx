@@ -18,7 +18,6 @@ import './index.scss';
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
-// The create page and a paused coven's page are each one panel in the narrow column.
 const NARROW_PANEL: NavigationTarget = { region: 'main', shape: 'form', frame: 'narrow' };
 
 function targetOf(path: string): NavigationTarget {
@@ -41,7 +40,6 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  // A paused coven stays pickable: its layout sends the viewer on to the paused page, which says the same.
   const choices = workspaces.map(({ slug, name, paused }) => ({
     value: slug,
     label: name,
@@ -53,7 +51,6 @@ export default function WorkspaceSwitcher({
     const arrivedAt = focusAfterSwitch === covenSlugOf(pathname);
     focusAfterSwitch = undefined;
     if (arrivedAt) box.current?.focus();
-    // Read once, on mount: the address then is the mount's.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // The switch is over and this box is still here: the address changed
@@ -80,7 +77,6 @@ export default function WorkspaceSwitcher({
         inputRef={box}
         onChange={(value) => {
           const chosen = workspaces.find((workspace) => workspace.slug === value);
-          // A page that said which covens it opens in is believed only at its own address.
           const opens = registration?.path === pathname ? registration.slugs : undefined;
           // A paused coven goes straight to its paused page, the one page of it the guard would let through.
           const href =

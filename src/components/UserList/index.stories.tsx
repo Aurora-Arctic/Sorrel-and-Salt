@@ -7,10 +7,6 @@ import TabbedPage from '../TabbedPage';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
-/**
- * A row as the page builds it: its name opens the user's modal, an
- * address the workshop does not serve, under the head the page gives it.
- */
 const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntry => ({
   ...user,
   openHref: '#user',
@@ -21,9 +17,6 @@ const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntr
   },
 });
 
-// Render-only; behaviour is asserted in tests/components/UserList. The filter, the
-// pager and each name's privilege changes icon reach `/keepers/users` and
-// `/keepers/privilege-changes`, which the workshop does not serve.
 const meta = {
   title: 'Admin / User List',
 } satisfies Meta;
@@ -52,7 +45,6 @@ const USERS: readonly UserListEntry[] = [
     role: 'user',
     canCreateWorkspace: false,
     createdAt: new Date('2026-05-06T07:08:09Z'),
-    // Never agreed, so the Terms column says so.
     agreedTermsVersion: null,
     agreedDisclaimerVersion: null,
     agreedEthicsVersion: null,
@@ -60,7 +52,6 @@ const USERS: readonly UserListEntry[] = [
     emailVerified: false,
     primaryAdmin: false,
   }),
-  // Approved, so the row shows Yes.
   listed({
     id: 'u-cy',
     name: 'Cy Fixturewort',
@@ -71,18 +62,12 @@ const USERS: readonly UserListEntry[] = [
     agreedTermsVersion: 1,
     agreedDisclaimerVersion: 1,
     agreedEthicsVersion: 1,
-    // Facebook among them, so its mark shows.
     providers: ['facebook', 'google'],
     emailVerified: true,
     primaryAdmin: false,
   }),
 ];
 
-// Each story sits inside the admin layout's frame and the People page, Users tab
-// open, with the switch on keeper changes beside the heading where a story gives it.
-
-// The page as /keepers/users draws it where impersonation is registered. Impersonate and Pause Keeper Changes each ask
-// first; the call reaches no server, so confirming shows the refusal. Drawn in the app shell.
 const defaultNode = (
   <ShellFrame area="admin">
     <TabbedPage
@@ -95,8 +80,6 @@ const defaultNode = (
   </ShellFrame>
 );
 
-// The same page for the primary keeper, the one keeper who may pause: the switch
-// is a usable red Pause Keeper Changes rather than the dashed, locked resting button.
 const primaryAdminNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
@@ -116,8 +99,6 @@ const FilteredView = () => (
 
 const filteredNode = <FilteredView />;
 
-// A middle page of a list longer than one: the page's 25, by name, and the
-// pager beneath them, both ends live and where the page stands between.
 const PAGE_TWO: readonly UserListEntry[] = Array.from({ length: 25 }, (_, index) =>
   listed({
     id: `u-page-${index + 26}`,
@@ -149,7 +130,6 @@ const PageTwo = (): ReactElement => (
 
 const middlePageNode = <PageTwo />;
 
-// Every filter in use, which the sentence names. Spread, since a `role` attribute reads as an ARIA role.
 const EVERY_FILTER = { query: 'nobody', role: 'admin', awaitingApproval: true } as const;
 
 const roleFilterNode = (
@@ -169,16 +149,12 @@ const noMatchesNode = (
   </AdminTabbedFrame>
 );
 
-// Where impersonation is not registered: no Impersonate column.
 const withoutImpersonationNode = (
   <AdminTabbedFrame page="people">
     <UserList users={USERS} query="" awaitingApproval={false} />
   </AdminTabbedFrame>
 );
 
-// The primary keeper, labelled with the crown and its tip. Dee is a curator, in bold
-// as a keeper is, and Yes under Can Create, as every curator holds it. Change Role
-// is the user modal's (UserDetail's stories).
 const adminRolesNode = (
   <AdminTabbedFrame page="people">
     <UserList
@@ -220,16 +196,12 @@ const adminRolesNode = (
   </AdminTabbedFrame>
 );
 
-// The switch as the Users tab's action beside the heading, as /keepers/users draws it.
-// Paused: the warning and a usable Resume.
 const adminChangesPausedNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} />
   </AdminTabbedFrame>
 );
 
-// Paused, to another admin: the warning, and Resume locked with its reason in a
-// tip.
 const adminChangesNotPrimaryNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
     <UserList users={USERS} query="" awaitingApproval={false} />

@@ -19,23 +19,17 @@ $theme-toggle-icon-arc: 130deg;
   @include theme-transition(background-color, color, transform);
 }
 
-// The pinned corner (the root layout, for pages with no application shell).
 .theme-toggle--corner {
   position: fixed;
-  // At the window's top; on touch the banner in the flow scrolls away beneath it.
   top: 0;
-  // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
   right: var(--scrollbar-width, 0);
-  // Above the impersonation banner, which runs beneath this corner.
   z-index: layer('toggle');
   display: flex;
   align-items: center;
   justify-content: center;
   width: $toggle-corner;
   height: $toggle-corner;
-  // Pulls the icon off the pivot corner.
   padding: 0 0 0.75rem 1rem;
-  // Centred on the pinned top-right corner, so only the quarter in the viewport paints.
   clip-path: circle($toggle-corner at 100% 0%);
   // The parked facet sits past the window's right edge. The clip hides it but
   // still lets it count as overflow, which Chrome's device emulator pans to;
@@ -58,8 +52,6 @@ $theme-toggle-icon-arc: 130deg;
   }
 }
 
-// The root layout is session-free and always mounts the corner, so this hides it on any page that holds the shell or
-// the public frame, which have their own disc in the bar.
 body:has(.app-shell, .public-frame) > .theme-toggle--corner {
   display: none;
 }
@@ -128,7 +120,6 @@ $theme-toggle-facet: 1.1875rem;
   inset: 0;
   width: 100%;
   height: 100%;
-  // Pivot at the icon's top-right corner, the one the button is pinned to.
   transform-origin: 100% 0;
   @include theme-transition(transform);
   transform: rotate(0deg);
@@ -168,7 +159,6 @@ $theme-toggle-facet: 1.1875rem;
     opacity: 1;
   }
 
-  // The dark facet carries no --pre-enter class in the markup, so park it directly.
   .theme-toggle__facet--dark {
     transform: rotate(-$theme-toggle-icon-arc);
     opacity: 0;

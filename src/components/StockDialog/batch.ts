@@ -8,7 +8,6 @@ import type { StockBatchRows, StockForm, StockJar, StockRow } from './types';
 
 const AMOUNTS: readonly (keyof StockFormValues)[] = ['quantityOnHand', 'unit', 'lowStockThreshold'];
 
-/** The rows the dialog opens on: one per jar held, by its form's name from A to Z, as the jars arrive in no fixed order. */
 export function openingRows(jars: readonly StockJar[], forms: readonly StockForm[]): StockRow[] {
   const labelOf = (jar: StockJar) =>
     forms.find((form) => form.variantId === jar.variantId)?.label ?? '';
@@ -22,11 +21,9 @@ export function openingRows(jars: readonly StockJar[], forms: readonly StockForm
     }));
 }
 
-/** Whether a row's amounts differ from a jar's as it opened: an update to send, and the list's Edited mark. */
 export const changed = (row: StockFormValues, opening: StockFormValues): boolean =>
   AMOUNTS.some((key) => row[key] !== opening[key]);
 
-/** The batch, and which row each create and update entry came from. */
 export function stockBatch(
   rows: readonly StockRow[],
   jars: readonly StockJar[],
@@ -51,7 +48,6 @@ export function stockBatch(
   return { input, from };
 }
 
-/** The row field an issue names, from its path in the batch: an amount beside its box, a new jar's form on its row; anything else goes to the alert. */
 export function rowFieldOf(
   path: readonly (string | number)[],
   from: StockBatchRows,

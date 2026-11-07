@@ -1,7 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The page's own rules, structure only: the list's column, the "Unassigned" ink and the detail's stack.
 .support-requests {
   @include stack;
 }
@@ -13,7 +12,6 @@
   }
 }
 
-// A date reads as a muted caption, as the invitation cards' Minted On does.
 .support-requests__fact {
   color: $text-muted;
   font-size: type-size('caption');
@@ -44,8 +42,6 @@
   color: $text-muted;
 }
 
-// The opened request: the request and its reply on the left, a keeper's settings in a narrow column
-// on the right, stacked once the screen is a phone's with the settings after the reply.
 .support-detail {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 15rem;
@@ -95,7 +91,6 @@
   }
 }
 
-// From, Sent, Page and Error in two columns, the term above its value in the muted ink.
 .support-detail__facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -107,7 +102,6 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  // The term and its value stand one step apart: the term's bottom margin (1) and the value's zero top margin.
   dt {
     margin: 0 0 space(1);
     color: $text-muted;
@@ -136,18 +130,15 @@
   vertical-align: middle;
 }
 
-// A bare icon beside a heading at the text's own size, as Copy is.
 .support-detail__icon {
   @include icon-button(1.5em, 1em);
   vertical-align: middle;
 }
 
-// The pencil beside the issue link: bare too, with the standard icon glyph (`.btn--icon`'s 1.5rem).
 .support-detail__icon--standard {
   @include icon-button(2rem, 1.5rem);
 }
 
-// The Time-Out fold is the column's last section and keeps only its top rule; the Issue draws the same one.
 .support-detail__side .collapsible-section:last-child {
   border-block-end: 0;
 }
@@ -156,7 +147,6 @@
   margin-block-end: 0;
 }
 
-// The Issue title and section carry no margin of their own; the main column's gap is the only space around them.
 .support-detail__issue {
   @include stack(2);
   margin-block: 0;
@@ -205,7 +195,6 @@
   gap: space(2);
 }
 
-// The date sits flush right on the head line, and stays right when the head wraps.
 .support-detail__meta > time {
   margin-inline-start: auto;
 }
@@ -215,12 +204,10 @@
   font-size: type-size('small');
 }
 
-// The word Internal in a thread tag, and the whole Internal Note option on the Send As chip, in the warning ink.
 .support-detail__internal {
   color: $warning;
 }
 
-// The reply form sits under the thread behind a hairline; Reply on the left, Resolve opposite.
 .support-detail__reply {
   padding-block-start: space(5);
   border-block-start: 1px solid $hairline;
@@ -246,7 +233,6 @@
   gap: space(3);
 }
 
-// The switch centres its label and toggle by default; in the side column and the reply form they sit flush left with the fields around them.
 .support-detail__side .switch,
 .support-detail__reply .switch {
   align-items: start;
@@ -279,13 +265,11 @@
   }
 }
 
-// The sender's name and the sprout after it, centred on each other.
 .support-requests__sender {
   display: inline-flex;
   align-items: center;
 }
 
-// The beta tester's sprout after the sender's name: a status mark whose press only opens its tip.
 .support-requests__beta {
   @include icon-button($cursor: default);
 
@@ -298,7 +282,6 @@
   }
 }
 
-// The status word and its marks on one line.
 .support-requests__status {
   display: inline-flex;
   align-items: center;
@@ -318,7 +301,6 @@
   }
 }
 
-// Resolved wears the Local badge's green.
 .support-requests__mark--resolved {
   color: badge-token('local', 'fg');
 
@@ -327,7 +309,6 @@
   }
 }
 
-// Waiting on the sender wears the warning ochre.
 .support-requests__mark--waiting {
   color: $warning;
 
@@ -336,7 +317,6 @@
   }
 }
 
-// Open wears the error red, the secondary ink.
 .support-requests__mark--open {
   color: $secondary;
 
@@ -344,8 +324,6 @@
     color: $secondary;
   }
 }
-
-// Closed wears the body ink, the mark's own colour; anonymised, the same box, wears the faded one below.
 
 // Anonymised wears the disabled look (muted ink at the disabled opacity) on the icon alone, so the focus ring keeps full strength.
 .support-requests__mark--anonymised {

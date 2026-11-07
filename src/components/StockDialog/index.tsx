@@ -107,7 +107,6 @@ interface JarProps {
   onUndo: () => void;
 }
 
-/** The chosen jar: its form as the heading with Remove at its end, over its three fields; staged for removal the fields are put away, kept as typed, and Remove becomes Undo. */
 function Jar({ index, label, added, onRemove, onUndo }: JarProps): ReactElement {
   const id = useId();
   const {
@@ -117,7 +116,6 @@ function Jar({ index, label, added, onRemove, onUndo }: JarProps): ReactElement 
   const removed = useWatch({ control, name: `rows.${index}.removed` });
   const error = errors.rows?.[index]?.variantId?.message;
   return (
-    // Named by the form alone, so "New" is not part of the group's name.
     <fieldset
       className="stock-dialog__jar"
       aria-labelledby={`${id}-name`}
@@ -145,7 +143,6 @@ function Jar({ index, label, added, onRemove, onUndo }: JarProps): ReactElement 
       {removed ? (
         <p className="stock-dialog__removed">Removed when you save.</p>
       ) : (
-        // Quantity and Unit on one row, Low Stock At beneath at Quantity's width.
         <div className="stock-dialog__fields">
           <StockFields<StockDialogValues> prefix={`rows.${index}`} form={label} />
         </div>
@@ -154,7 +151,6 @@ function Jar({ index, label, added, onRemove, onUndo }: JarProps): ReactElement 
   );
 }
 
-/** The fields' place before there is a form: the chosen jar's layout with its fields shut, in a throwaway form so nothing typed here reaches the dialog. */
 function NoJar(): ReactElement {
   const id = useId();
   const stand = useForm<StockFormValues>({ defaultValues: EMPTY_STOCK });
@@ -177,11 +173,9 @@ function NoJar(): ReactElement {
   );
 }
 
-/** The forms held by no row yet, a staged removal still holding its own. */
 const unheld = (forms: readonly StockForm[], rows: readonly StockRow[]): StockForm[] =>
   forms.filter((form) => !rows.some((row) => row.variantId === form.variantId));
 
-/** The row a field path such as `rows.2.unit` names. */
 const rowOf = (field: string): number => Number(field.split('.')[1]);
 
 /** The form inside the modal, so its unsaved-changes guard reaches the modal's Close, Escape and backdrop (claude-docs/components/modal.md, "Unsaved changes"). */
@@ -225,7 +219,6 @@ const StockDialogForm = ({
   const rows = useWatch({ control, name: 'rows' }) ?? [];
   const discard = useDiscardGuard(isDirty);
   const sent = useRef(false);
-  // The chosen form, by its variant, as a row's index moves when an added row before it goes; the first form from A to Z to start.
   const [chosenVariant, setChosenVariant] = useState<string | null>(
     openOn ?? getValues('rows')[0]?.variantId ?? null,
   );
@@ -236,7 +229,6 @@ const StockDialogForm = ({
   const labelOf = (variantId: string) =>
     forms.find((form) => form.variantId === variantId)?.label ?? '';
   const addable = unheld(forms, rows);
-  // The chosen row, or the first when the chosen one has gone.
   const found = rows.findIndex((row) => row.variantId === chosenVariant);
   const chosen = found >= 0 ? found : rows.length > 0 ? 0 : -1;
 
@@ -249,7 +241,6 @@ const StockDialogForm = ({
     setFocusAdded(null);
   }, [focusIndex, setFocus]);
 
-  /** New, or a held jar whose amounts differ from when the dialog opened. */
   const edited = (row: StockRow): boolean => {
     if (row.removed) return false;
     if (row.jarId === null) return true;
@@ -286,7 +277,6 @@ const StockDialogForm = ({
       }
       return;
     }
-    // Once, however the button is pressed: the dialog fades out after `close`.
     if (sent.current) return;
     sent.current = true;
     close();

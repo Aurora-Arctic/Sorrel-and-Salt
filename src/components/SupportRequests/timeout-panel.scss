@@ -3,17 +3,14 @@
 
 // The Time-Out panel's own styles, so it looks the same in the request dialog and the user modal.
 
-// The fold's body ends a half-rem under its last control, not the section's default.
 .timeout-panel .collapsible-section__fields {
   padding-block-end: space(2);
 }
 
-// The heading and summary sit a half-rem apart, not the section's default quarter.
 .timeout-panel .collapsible-section__head {
   gap: space(2);
 }
 
-// The shut fold's line: the Timed Out badge, then the end in the muted ink.
 .timeout-panel__summary {
   display: inline-flex;
   flex-wrap: wrap;
@@ -21,12 +18,10 @@
   gap: space(2);
 }
 
-// The muted ink for notes and the setter.
 .timeout-panel__muted {
   color: $text-muted;
 }
 
-// A bare icon beside the heading at the text's own size.
 .timeout-panel__icon {
   @include icon-button(1.5em, 1em);
   vertical-align: middle;
@@ -41,7 +36,6 @@
   }
 }
 
-// A standing time-out: the badge and end, the note and setter in the muted ink, Lift beneath.
 .timeout-panel__card {
   @include stack(2);
   padding: space(3) space(4);
@@ -62,7 +56,6 @@
   gap: space(2);
 }
 
-// Earlier time-outs, one line each under a small uppercase label.
 .timeout-panel__ledger {
   @include stack(2);
 }

@@ -3,11 +3,6 @@ import { listHref } from '../../lib/list-href';
 import type { PagerCursor } from '../../lib/types';
 import type { UserListFilterValue } from './types';
 
-// The address of `/keepers/users` under a filter and cursor, with a user's modal open or not. The
-// pager and filter leave `user` out, closing the modal as every list's drop `?edit=`. `awaiting`,
-// `timed-out` and `paused` are bare flags, each read by its presence.
-
-/** The page itself, unfiltered: where the filter submits. */
 export const USERS_PATH: Route = '/keepers/users';
 
 /**

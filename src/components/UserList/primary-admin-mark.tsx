@@ -11,7 +11,6 @@ const PrimaryAdminMark = (): ReactElement => {
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
-    // Hover on the wrapper, which holds the tip as well as the mark.
     <span
       ref={anchor}
       className="user-list__primary"

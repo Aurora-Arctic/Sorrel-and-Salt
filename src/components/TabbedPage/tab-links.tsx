@@ -10,7 +10,6 @@ import { FacetCount } from '../FacetPanel/facet-count';
 import { useTabSwitch } from './tab-switch';
 import type { TabLinksProps } from './types';
 
-/** The most a tab count shows; a larger one reads "99+". */
 const COUNT_CAP = 99;
 
 // The tabs' links: a client part because only `usePathname()` knows which tab is open. Pressing another tab navigates through the
@@ -20,7 +19,6 @@ const TabLinks = ({ tabs, open: openTab }: TabLinksProps): ReactElement => {
   const { pending, target, go } = useTabSwitch();
   const track = useRef<HTMLUListElement>(null);
   const pill = useRef<HTMLLIElement>(null);
-  // The open tab is the one named by `open` when given, else the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match.
   const openHref =
     openTab ??
     tabs
@@ -53,7 +51,6 @@ const TabLinks = ({ tabs, open: openTab }: TabLinksProps): ReactElement => {
       }
     };
     place();
-    // Again whenever its tab or the track changes size, as a web font arriving or a phone turned on its side widens it.
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(place);
     observer.observe(row);

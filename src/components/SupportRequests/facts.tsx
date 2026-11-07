@@ -11,9 +11,7 @@ export interface SupportFactsProps {
   errorCode: number | null;
   /** The crash digest; staff only, so the sender's dialog leaves it out and the Error fact shows the code alone. */
   errorReference?: string | null;
-  /** Rows drawn before Sent. */
   lead?: ReactNode;
-  /** Facts drawn after Sent, sharing its row. */
   afterSent?: ReactNode;
 }
 

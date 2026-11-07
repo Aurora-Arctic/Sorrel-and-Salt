@@ -18,9 +18,6 @@ import SenderName from './sender-name';
 import SupportFacts from './facts';
 import SupportThread from './thread';
 
-// A request opened: the facts and thread for anyone who may read it, Reply and Resolve for a keeper or the assigned
-// curator, settings for a keeper alone. The service is the guard; what a viewer may not do is not drawn.
-
 const AssignDocument = graphql(`
   mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {
     assignSupportRequest(id: $id, assigneeId: $assigneeId) {
@@ -65,7 +62,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           errorCode={request.errorCode}
           errorReference={request.errorReference}
           lead={
-            // An anonymised request has no sender to show.
             !request.anonymised && (
               <div className="support-detail__fact--wide">
                 <dt>From</dt>
@@ -116,7 +112,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
         <SupportThread
           entries={[
-            // An anonymised request keeps only what staff wrote: the sender's message and follow-ups are emptied.
             ...(request.anonymised
               ? []
               : [
@@ -144,7 +139,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
         />
 
         {request.anonymised ? (
-          // An anonymised request is owned by the System account, and the service refuses any change to it.
           <Notice kind="caution" quiet className="support-detail__anonymised">
             This request is anonymised. It takes no notes or replies, and its settings cannot be
             changed.
@@ -247,7 +241,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   );
 };
 
-/** The sender's standing time-out: not lifted, and with no end or an end still ahead. */
 const standingTimeout = (timeouts: SupportTimeoutEntry[]): SupportTimeoutEntry | undefined =>
   timeouts.find((timeout) => stands(timeout, Date.now()));
 

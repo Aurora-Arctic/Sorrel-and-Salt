@@ -19,7 +19,6 @@ const UserListFilter = ({
 }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();
-  /** The filter shown with one field changed, the search text typed carried, from the first page. */
   const hrefWith = (change: Partial<UserListFilterValue>) =>
     userListHref({ query: draftQuery.trim(), awaitingApproval, role, timedOut, paused, ...change });
 

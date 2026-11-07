@@ -28,7 +28,6 @@ const LiftDocument = graphql(`
   }
 `);
 
-/** The site's words for a pause on a user. */
 const copyFor = (name: string): PausePanelCopy => ({
   noteHint: 'Seen by staff only, up to 500 characters.',
   notePlaceholder: 'Why, for staff',
@@ -47,10 +46,6 @@ const copyFor = (name: string): PausePanelCopy => ({
   lifted: 'Pause lifted.',
 });
 
-/**
- * A user's access pauses: the one that stands, or the form to set one, and the earlier ones beneath. `pauses` is newest
- * first.
- */
 const AccessPausePanel = ({
   userId,
   name,
@@ -60,7 +55,6 @@ const AccessPausePanel = ({
   name: string;
   pauses: AccessPauseEntry[];
 }): ReactElement => {
-  // Read once per render of the panel: a pause that runs out while it is open shows as past on the next.
   const [now] = useState(() => Date.now());
   const standing = pauses.find((pause) => stands(pause, now));
   return (

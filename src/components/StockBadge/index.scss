@@ -6,7 +6,6 @@
 .stock-badge {
   @include button-reset(help);
 
-  // A square the height of a medium badge, the drawing centred in it.
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;

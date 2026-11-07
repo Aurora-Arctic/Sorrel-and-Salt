@@ -38,7 +38,6 @@ export const StockIcon = ({
   </svg>
 );
 
-/** A button that opens a Low or Out tip, shared by the badge and the entry page's shelf; each brings its own name, class and face. */
 export const StockTip = ({
   state,
   threshold,

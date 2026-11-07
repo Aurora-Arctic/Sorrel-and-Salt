@@ -28,7 +28,6 @@
   @include stack(1);
 }
 
-// A form in the list, positioned for its badge, which sits at the top right of the name's line.
 .stock-dialog__pick {
   position: relative;
 
@@ -48,10 +47,8 @@
   padding-inline-end: calc(#{$control-height-compact} + #{space(2)});
   border-radius: radius('control');
   text-align: start;
-  // The pointer's answer at its own pace, not the theme's 400ms fade.
   transition: background-color $motion-short ease-out;
 
-  // Every state in the accent's green, a step apart: a hovered form halfway to the chosen look, the chosen one a touch stronger under the pointer.
   &:hover:not([aria-current='true']) {
     background-color: color-mix(in srgb, $accent 6%, transparent);
   }
@@ -112,8 +109,6 @@
   color: $accent-hover;
 }
 
-// The mark on a form the refused save named: drawn as a warning, read as
-// "Needs a Fix" in the list button's name.
 .stock-dialog__flag {
   color: $secondary;
   font-weight: 700;
@@ -129,7 +124,6 @@
   color: $text-muted;
 }
 
-// Add Form and its Add button on one line, under the list.
 .stock-dialog__add {
   @include stack(2);
   padding-block-start: space(3);
@@ -153,7 +147,6 @@
   border: 0;
 }
 
-// The form's name, Remove (or Undo) at the line's end.
 .stock-dialog__head {
   display: flex;
   align-items: center;
@@ -168,7 +161,6 @@
   margin: 0;
 }
 
-// Quantity, Unit and Low Stock At one under another, each the column's full width.
 .stock-dialog__fields {
   @include stack(3);
 
@@ -192,8 +184,6 @@
 .stock-dialog__placeholder {
   color: $text-placeholder;
 }
-
-// A narrow dialog (a phone): the list stacks above the fields.
 
 @container stock-dialog (max-width: 30rem) {
   .stock-dialog__columns {

@@ -4,8 +4,6 @@ import { WORKINGS } from '../../../.storybook/grimoire-fixtures';
 import { WorkingsSection as Section } from '../../../.storybook/grimoire-workings';
 import type { WorkingView } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SpellWorkings. The controls are the recipe page's own, given
-// here as the page gives them. A dropdown, not a grid: the section's heading carries a fixed id.
 const meta = { title: 'Grimoire / Spell Workings' } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;
@@ -13,8 +11,6 @@ type Story = StoryObj<{ state?: ReactNode }>;
 const [draft, privateWorking, complete] = WORKINGS as [WorkingView, WorkingView, WorkingView];
 
 const STATES: Record<string, ReactNode> = {
-  // A draft (Draft badge, its warning line, Complete and the pencil), a private one the viewer
-  // recorded (Private badge and pencil), and one another member recorded (no controls).
   'Every Kind of Row': <Section workings={WORKINGS} />,
   None: <Section workings={[]} />,
   'None for a Viewer': <Section workings={[]} canRecord={false} />,

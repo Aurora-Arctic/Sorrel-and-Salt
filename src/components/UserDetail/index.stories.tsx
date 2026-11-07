@@ -7,8 +7,6 @@ import '../UserList/index.scss';
 import UserDetail from '.';
 import type { UserCoven, UserDetailUser } from './types';
 
-// Render-only; behaviour is asserted in tests/components/UserDetail. Impersonate reaches Better Auth, which the
-// workshop does not serve: the question can be seen, its answer cannot.
 const meta = {
   title: 'Admin / User Detail',
 } satisfies Meta;
@@ -41,7 +39,6 @@ const ADA: UserDetailUser = {
   primaryAdmin: true,
   canCreateWorkspace: true,
 };
-// A curator: the role in bold, no coven-creation control, and Impersonate.
 const DEE: UserDetailUser = {
   ...FACTS,
   id: 'u-dee',
@@ -80,8 +77,6 @@ const COVENS: readonly UserCoven[] = [
   },
 ];
 
-// The dialog the users page opens: User over the name, the address beneath it.
-// The head is the page's user-heading.tsx, written out here as the UserList story does.
 const inDialog = (user: Pick<UserDetailUser, 'name' | 'email'>, body: ReactNode): ReactNode => (
   <InModal
     eyebrow="User"
@@ -96,29 +91,24 @@ const defaultNode = inDialog(BO, <UserDetail user={BO} memberships={COVENS} canI
 
 const noCovensNode = inDialog(BO, <UserDetail user={BO} memberships={[]} canImpersonate />);
 
-// Several providers and an unverified address.
 const severalProvidersNode = inDialog(MANY, <UserDetail user={MANY} memberships={COVENS} />);
 
-// The primary keeper carries the crown. No Impersonate on an admin: the endpoint refuses one.
 const adminNode = inDialog(ADA, <UserDetail user={ADA} memberships={COVENS} canImpersonate />);
 
 const curatorNode = inDialog(DEE, <UserDetail user={DEE} memberships={[]} canImpersonate />);
 
 const withoutImpersonationNode = inDialog(BO, <UserDetail user={BO} memberships={COVENS} />);
 
-// Keeper changes are locked for the viewing admin: the controls say why.
 const changesPausedNode = inDialog(
   BO,
   <UserDetail user={BO} memberships={COVENS} canImpersonate changesPaused />,
 );
 
-// A user who may create covens, so the control is a plain Revoke beside the red Impersonate.
 const mayCreateCovensNode = inDialog(
   BO,
   <UserDetail user={{ ...BO, canCreateWorkspace: true }} memberships={COVENS} canImpersonate />,
 );
 
-// A keeper who is not the primary one: no crown.
 const otherAdminNode = inDialog(
   { name: 'Eve Fixturewort', email: 'eve@fixture.test' },
   <UserDetail
@@ -133,13 +123,11 @@ const otherAdminNode = inDialog(
   />,
 );
 
-// No sign-in method on file.
 const noProvidersNode = inDialog(
   BO,
   <UserDetail user={{ ...BO, providers: [] }} memberships={COVENS} />,
 );
 
-// Site Access with no pause standing: the form, and an earlier pause lifted.
 const accessOpenNode = inDialog(
   BO,
   <UserDetail
@@ -159,7 +147,6 @@ const accessOpenNode = inDialog(
   />,
 );
 
-// Site Access with an open-ended pause standing, and Lift Pause.
 const accessPausedNode = inDialog(
   BO,
   <UserDetail
@@ -179,7 +166,6 @@ const accessPausedNode = inDialog(
   />,
 );
 
-// Press the red Impersonate to see its question, with a red confirm, over the modal.
 export const InAModal: Story = {
   render: () => {
     const [open, setOpen] = useState(true);
@@ -197,8 +183,6 @@ export const InAModal: Story = {
     );
   },
 };
-
-// In its own iframe: `showModal()` puts the dialog in the top layer.
 
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,

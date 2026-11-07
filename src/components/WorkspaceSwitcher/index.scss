@@ -5,9 +5,6 @@
 // before its chevron rather than shrinking to the word. A width, not a gap, so off the space
 // scale; the list's below, like AccountMenu's 13rem, is a floating-panel width.
 $switcher-min-width: 12rem;
-// The open list's narrowest width: wider than the closed box, so under a
-// short chosen name the list still has room for a longer one and for the
-// Create Coven row with its plus.
 $switcher-list-min-width: 15rem;
 
 // The coven's name as the context row's lead: the name in the display face with a chevron inside a hairline, so the
@@ -16,7 +13,6 @@ $switcher-list-min-width: 15rem;
   min-width: $switcher-min-width;
   max-width: 100%;
 
-  // On a phone the control fills the row, as the context row gives it the whole width.
   @media (max-width: $shell-phone-width) {
     width: 100%;
   }
@@ -37,8 +33,6 @@ $switcher-list-min-width: 15rem;
       background-color: $fill-quiet;
     }
 
-    // Open is told by the edge going from a hairline to the body ink, a
-    // change of weight and not of hue.
     &[aria-expanded='true'] {
       border-color: $text-primary;
     }
