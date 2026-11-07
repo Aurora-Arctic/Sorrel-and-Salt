@@ -108,11 +108,12 @@
     display: flex;
     flex-direction: column;
   }
+}
 
-  &--next {
-    margin-inline-start: auto;
-    text-align: end;
-  }
+// Above `.back-link--forward`’s own margins, which would otherwise undo the push to the end.
+.help-article__steps > .help-article__step--next {
+  margin-inline-start: auto;
+  text-align: end;
 }
 
 .help-article__step-title {
