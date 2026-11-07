@@ -18,7 +18,7 @@
 
 `sections.ts` holds the list as `covenSections(slug, canReadMembers)`, each entry a `SectionNavItem` ([`section-nav.md`](section-nav.md)); `index.tsx` stays a server component. Members stays open on `/coven/[slug]/invitations` too (its `matches`), and Grimoire is current on its Drafts tab. Members is `apart`, a group of its own behind a hairline, as People is in the admin nav: it is the coven's people, not its contents. All four fit a phone's bottom bar, so it never needs More.
 
-Each entry also carries a `target`, `covenTarget(href)` (`src/lib/coven-path.ts`), saying what the page draws on its way: the coven region is the coven's own body, so a press replaces only that body with a skeleton. The target is a card list under a title and filter for Ingredients, a table under a title and tab row for Members and Invitations, a page with its contents menu for the coven home and one ingredient's page, and a plain page otherwise. The switcher and the home's Contents use the same mapping. What the target does is [`loading.md`](../loading.md)'s, "Where the pieces are used".
+A press on a section is a `PendingLink`, so the wait draws the destination's skeleton. The registry (`src/app/skeletons.ts`) gives each coven page a `coven`-host skeleton, so a press replaces only the coven's own body under the context row. The switcher and the home's Contents work the same way. How the skeleton is chosen is [`loading.md`](../loading.md)'s, "How a skeleton is chosen".
 
 ## Contracts
 

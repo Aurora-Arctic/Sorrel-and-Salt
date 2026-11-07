@@ -7,6 +7,7 @@ import PageHeader from '../../../components/PageHeader';
 import { BACK_LEDE, WORDMARK } from '../../../lib/invitation-cards/copy';
 import InvitationPanel from '../../invite/[token]/invitation-panel';
 import type { InvitePageProps } from '../../invite/[token]/types';
+import PageFrame from '@/components/PageFrame';
 import { liveCardOf } from '@/modules/identity';
 
 export const metadata: Metadata = {
@@ -61,16 +62,14 @@ export default async function CardPage({ params }: InvitePageProps) {
 
   if (!card) {
     return (
-      <main className="page-frame page-frame--narrow">
+      <PageFrame narrow>
         <InvitationPanel token={token} here={here} />
-      </main>
+      </PageFrame>
     );
   }
 
   return (
-    <main
-      className={`page-frame card-landing welcome-page${card.beta ? '' : ' card-landing--single'}`}
-    >
+    <PageFrame className={`card-landing welcome-page${card.beta ? '' : ' card-landing--single'}`}>
       <div className="card-landing__grid">
         <PageHeader
           title={WORDMARK}
@@ -86,6 +85,6 @@ export default async function CardPage({ params }: InvitePageProps) {
           <InvitationPanel token={token} here={here} headingLevel="h2" />
         </div>
       </div>
-    </main>
+    </PageFrame>
   );
 }

@@ -6,6 +6,7 @@ import { longMinuteInZone } from '@/lib/utc';
 import { printed } from '../../support/printed-text';
 import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
 import type { MemberListEntry } from '@/components/MemberList/types';
+import { rowCells } from '../../support/table';
 
 // claude-docs/components/member-list.md
 
@@ -173,7 +174,7 @@ describe('MemberList', () => {
       [OWNER, 'owner@testwort.test'],
       [MEMBER, 'member@testwort.test'],
     ] as const) {
-      expect(within(rowOf(member.name)).getAllByRole('cell')[1]).toHaveTextContent(address);
+      expect(rowCells(rowOf(member.name))[1]).toHaveTextContent(address);
     }
   });
 

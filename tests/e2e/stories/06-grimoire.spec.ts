@@ -453,7 +453,7 @@ test(
       await dots.click();
       await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     };
-    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+    const question = page.getByRole('alertdialog', { name: 'Delete Spell', exact: true });
 
     // Why the delete could be refused: B is not the author, and the spell is complete and
     // shared. B is a member of the coven, which is what the delete asks.
@@ -543,7 +543,7 @@ test(
       .getByRole('button', { name: 'More for Card Doomed Working', exact: true })
       .click();
     await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
-    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+    const question = page.getByRole('alertdialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
     await assertNoAccessibilityViolations(page);
     await question.getByRole('button', { name: 'Delete', exact: true }).click();

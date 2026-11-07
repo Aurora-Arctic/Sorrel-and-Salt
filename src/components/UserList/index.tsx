@@ -9,17 +9,21 @@ import UserLink from './user-link';
 import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import RoleTip from '../RoleTip';
 import ListFrame, { ListBody } from '../ListFrame';
+import { UserListBodySkeleton } from './skeleton';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { agreedVersionOfColumns, formatAgreementVersion } from '../../lib/agreement-version';
+import { PendingLink } from '../../lib/navigation';
+import { USERS_PATH } from './href';
 import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
-// `/keepers/users`' filter, table and pager. Render-only: the page reads the list through the identity service. The
-// filter is a GET form to the page itself (claude-docs/components/user-list.md).
+// `/keepers/users`' filter, table and pager. Render-only: the filter is a GET form to the page itself, so a filtered page is
+// an address (claude-docs/components/user-list.md).
 
+/** The empty list, naming the filters in use so a keeper sees what to change. */
 function noMatch({ query, role, awaitingApproval, timedOut, paused }: UserListFilterProps): string {
   const filters = [
     query && `“${query}”`,
@@ -29,6 +33,16 @@ function noMatch({ query, role, awaitingApproval, timedOut, paused }: UserListFi
     paused && 'Access Paused',
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText('users', filters, emptyList('users'));
+}
+
+function isFiltered({
+  query,
+  role,
+  awaitingApproval,
+  timedOut,
+  paused,
+}: UserListFilterProps): boolean {
+  return Boolean(query || role || awaitingApproval || timedOut || paused);
 }
 
 const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> | false)[] => [
@@ -162,13 +176,23 @@ const UserList = ({
       paused={paused}
     />
 
-    <ListBody>
+    <ListBody skeleton={<UserListBodySkeleton canImpersonate={canImpersonate} />}>
       {/* Roomy, and each cell on one line, the table scrolling in its frame. */}
       <StackTable
         columns={columns(canImpersonate)}
         rows={users}
         rowKey={(user) => user.id}
         empty={noMatch({ query, role, awaitingApproval, timedOut, paused })}
+        emptyLabel={
+          isFiltered({ query, role, awaitingApproval, timedOut, paused }) ? 'No Matches' : undefined
+        }
+        emptyAction={
+          isFiltered({ query, role, awaitingApproval, timedOut, paused }) ? (
+            <PendingLink href={USERS_PATH} className="btn btn--quiet">
+              Clear Filters
+            </PendingLink>
+          ) : undefined
+        }
         className="data-table--roomy data-table--nowrap"
       />
 

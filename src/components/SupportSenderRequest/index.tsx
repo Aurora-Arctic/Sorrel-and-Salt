@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { listHref } from '../../lib/list-href';
 import { SITE_NAME } from '../../lib/site';
@@ -9,6 +8,7 @@ import SupportSenderReplyBox from './reply-box';
 import SupportSenderResolveButton from './resolve-button';
 import type { SupportSenderRequestProps } from './types';
 import '../SupportRequests/index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // Staff replies are named for the site and tagged "Staff", never by the staff member's name (claude-docs/components/support-sender-request.md).
 
@@ -53,9 +53,9 @@ const SupportSenderRequest = ({
         <p className="support-sender-request__closed">
           This request is closed.{' '}
           {request.followUpId ? (
-            <Link href={listHref(SUPPORT_LIST_PATH, { request: request.followUpId })}>
+            <PendingLink href={listHref(SUPPORT_LIST_PATH, { request: request.followUpId })}>
               Open Your Follow-Up
-            </Link>
+            </PendingLink>
           ) : (
             'Write a new request from Support to follow it up.'
           )}

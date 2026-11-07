@@ -38,7 +38,7 @@ Each batch shows its count of refused opens across all its cards. Above zero, an
   - The Refusal is the reason in full, with the count and the first and latest times beneath it, each a `LocalTime` kept on one line.
 - **The dialog is `size="listed"` (49rem)**, so the four columns show as a table above the stacking width and stack as cards below it. The Email cell has a `<wbr />` before the @ and each dot, so a long address breaks only between its parts.
 - **The batches table is `data-table--nowrap`**, and the `data-table-nowrap` mixin reaches only that table's own cells (`> thead > tr > th`, `> tbody > tr > td`), so this dialog's table, opened from one of its cells, wraps as normal.
-- **Loading.** The first page shows the standard [`Skeleton`](skeleton.md) at once. A later page keeps the rows and Show More is a `BusyButton` ([`loading.md`](../loading.md)).
+- **Loading.** The first page shows three placeholder rows of the table's own columns at once, announced once as "Loading". A later page keeps the rows and Show More is a `BusyButton` ([`loading.md`](../loading.md)).
 - **A paragraph under the head says** every card listed already admits nobody, because the list is a record and no card in it can be opened or revoked from here.
 
 ### Mint Cards (`mint-form.tsx`)

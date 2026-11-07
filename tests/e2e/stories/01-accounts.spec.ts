@@ -1,11 +1,13 @@
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from '../axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, scanBothThemes } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import type { Locator, Page } from '@playwright/test';
 import { makeCoven, makeUser, seatsOf, withSql } from './accounts-setup';
 
-// People and covens are written by SQL (accounts-setup.ts); each flow's own step goes through the page.
+// Signing in, the landing an account with no coven meets, creating a coven and moving between covens, walked
+// against the built server. People and covens are written by SQL (accounts-setup.ts); each flow's own step
+// goes through the page.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -15,14 +17,6 @@ test.beforeAll(async () => {
 // with aria-disabled, with or without a developer's .env.local. CI cannot finish a live OAuth round trip, so
 // the sign-in is walked up to the provider's door.
 const PROVIDER_NAMES = ['Discord', 'Google', 'Microsoft'];
-
-async function scanBothThemes(page: Page): Promise<void> {
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await settleTransitions(page);
-    await assertNoAccessibilityViolations(page);
-  }
-}
 
 /** Presses Tab until `target` holds the focus, bounded so a lost focus fails rather than hangs. */
 async function tabTo(page: Page, target: Locator): Promise<boolean> {
@@ -175,6 +169,7 @@ test.describe('creating a coven', () => {
 
       await expect(page).toHaveURL(/\/coven\/fixture-coven$/);
       await expect(page.getByRole('heading', { level: 1, name: 'Fixture Coven' })).toBeVisible();
+      // Delete is drawn by the owner's permission: the page agrees with the row.
       await expect(
         page.getByRole('main').getByRole('button', { name: 'Delete Coven', exact: true }),
       ).toBeVisible();
@@ -368,6 +363,7 @@ test(
     await expect(page).toHaveURL(new RegExp(`/coven/${alpha.slug}$`));
     await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText('Fixture Alpha');
 
+    // A holder of the right also reaches the create page from it.
     await page.getByRole('combobox', { name: 'Coven' }).click();
     await page.getByRole('option', { name: 'Create Coven', exact: true }).click();
     await expect(page).toHaveURL(/\/coven\/new$/);

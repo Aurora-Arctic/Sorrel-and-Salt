@@ -1,10 +1,15 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The shared loading skeleton, a line of text or a control-sized block, drawn wherever a part of a
+// page is on its way. Each bar is the shared `skeleton-shape` (_mixins.scss), a quiet fill with a
+// lighter band, and a single slow pulse under reduced motion.
+
 // Shown at once with a short fade: the press has taken the old content away, so holding the
-// skeleton back would leave the panel blank. A size container, so its rows turn to cards under the
-// width the real table stacks at.
+// skeleton back would leave the panel blank. A size container, so what a skeleton holds can turn
+// to cards under the width the real table stacks at.
 .skeleton {
+  display: block;
   container: skeleton / inline-size;
   @include arrived($motion-short);
 }
@@ -20,796 +25,70 @@
   @include stack;
 }
 
-.skeleton__shapes span {
+// Every bar: a rounded bar, the shimmer passing across it.
+.skeleton__shapes > span {
   @include skeleton-shape;
-}
-
-// A list page's heading row, laid out by `.page-header` as the page lays its own. The column's gap spaces the heading
-// from the filter row, so the heading's own bottom margin would be a second gap.
-.skeleton__shapes .skeleton__header {
-  margin-bottom: 0;
-}
-
-// The heading bar sits in a row of its own that takes no box until the header narrows (below).
-.skeleton__title-row {
-  display: contents;
-}
-
-.skeleton__shapes .skeleton__header .skeleton__title {
-  top: 0;
-  height: calc(heading-size(1) * 1.1);
-}
-
-.skeleton__shapes .skeleton__action {
-  width: 8rem;
-  height: $control-height;
-}
-
-.skeleton__header:has(> .skeleton__tabs) {
-  justify-content: flex-start;
-
-  > .skeleton__action {
-    margin-inline-start: auto;
-  }
-}
-
-@container page-header (max-width: #{$add-below-width}) {
-  .skeleton__header > .skeleton__title-row {
-    display: block;
-    flex-basis: 100%;
-  }
-
-  .skeleton__shapes .skeleton__header > .skeleton__action {
-    top: 0;
-    margin-inline-start: 0;
-  }
-
-  .skeleton__shapes .skeleton__header:has(> .skeleton__tabs) > .skeleton__action {
-    margin-inline-start: 0;
-  }
-
-  .skeleton__shapes .skeleton__header > .skeleton__tabs {
-    flex-basis: 100%;
-    order: 1;
-  }
-}
-
-.skeleton__header--tabs-below {
-  &::after {
-    content: '';
-    flex-basis: 100%;
-    order: 1;
-    height: 0;
-  }
-
-  > .skeleton__tabs {
-    order: 2;
-    margin-top: calc(-1 * #{space(3)});
-  }
-}
-
-.skeleton__shapes .skeleton__tabs--wide {
-  width: 36rem;
-  max-width: 100%;
-}
-
-.skeleton__shapes .skeleton__tabs {
-  top: 0;
-  width: 11rem;
-  height: 2.25rem;
-  border-radius: radius('pill');
-}
-
-.skeleton__filter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: space(3) space(5);
-
-  > span {
-    height: $control-height;
-  }
-}
-
-.skeleton__field {
-  flex: 1 1 $filter-search-basis;
-}
-
-.skeleton__field--short {
-  flex: 0 1 $filter-choice-width;
-}
-
-.skeleton__field--button {
-  flex: 0 0 5.75rem;
-}
-
-.skeleton__switch {
-  @include stack(2);
-
-  flex: 0 0 auto;
-  width: calc(#{$switch-width} + #{space(4)});
-
-  > span:nth-child(1) {
-    width: 100%;
-    height: calc(type-size('small') * 1.3);
-  }
-
-  > span:nth-child(2) {
-    width: $switch-width;
-    height: $control-height;
-  }
-}
-
-.skeleton__count {
-  padding-block: calc((type-size('body') * 1.65 - 1rem) / 2);
-
-  > span {
-    width: 7rem;
-    height: 1rem;
-  }
-}
-
-.skeleton__head,
-.skeleton__row {
-  display: grid;
-  grid-template-columns: 2fr 3fr 1fr;
-  gap: space(5);
-  padding: space(3);
-}
-
-.skeleton__head {
-  border-bottom: 1px solid $text-muted;
-
-  > span {
-    width: 60%;
-    height: 0.75rem;
-  }
-}
-
-.skeleton__row:nth-child(odd) {
-  background-color: $surface-card;
-}
-
-.skeleton__table--columns {
-  .skeleton__head,
-  .skeleton__row {
-    grid-template-columns: repeat(var(--skeleton-columns), minmax(0, 1fr));
-  }
-
-  .skeleton__row > span:nth-child(n) {
-    width: 70%;
-    justify-self: start;
-  }
-}
-
-// Uneven lengths, so the rows read as text rather than a grid of bricks.
-.skeleton__row > span:nth-child(1) {
-  width: 70%;
-}
-
-.skeleton__row:nth-child(3n) > span:nth-child(1) {
-  width: 50%;
-}
-
-.skeleton__row > span:nth-child(2) {
-  width: 90%;
-}
-
-.skeleton__row:nth-child(even) > span:nth-child(2) {
-  width: 65%;
-}
-
-.skeleton__row > span:nth-child(3) {
-  width: 4rem;
-  justify-self: end;
-}
-
-.skeleton__cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, #{$ingredient-card-min}), 1fr));
-  gap: space(4);
-}
-
-.skeleton__card {
-  @include stack(3);
-  min-height: 11.25rem;
-  padding: space(4);
-  border-radius: radius('surface');
-  background-color: $surface-card;
-
-  > span:nth-child(1) {
-    width: 60%;
-    height: 1.25rem;
-  }
-
-  > span:nth-child(2) {
-    width: 40%;
-  }
-
-  > span:nth-child(3) {
-    width: 75%;
-    margin-block-start: auto;
-  }
-}
-
-.skeleton__card--spell {
-  min-height: 0;
-
-  > span:nth-child(1) {
-    width: 60%;
-    height: calc(heading-size(3) * 1.15);
-  }
-
-  > span:nth-child(2) {
-    width: 35%;
-    margin-block-start: space(5);
-  }
-
-  > span:nth-child(3) {
-    width: 100%;
-    height: $control-height;
-    margin-block-start: 0;
-  }
-}
-
-// Compact, inside an ancestor that says `data-density="compact"` (the coven lists), unless a
-// stored Regular choice sits on <html>: the narrower column, tighter gap and padding of the compact
-// cards (`.ingredient-card-list`, IngredientCard/_compact.scss), so the list does not jump on arrival.
-[data-density='compact']:not(:root[data-card-density='regular'] *) {
-  .skeleton__cards {
-    grid-template-columns: repeat(
-      auto-fill,
-      minmax(min(100%, #{$ingredient-card-min-compact}), 1fr)
-    );
-    gap: space(3);
-  }
-
-  .skeleton__card {
-    gap: space(2);
-    padding: space(3) space(4);
-  }
-}
-
-.skeleton__pager {
-  display: flex;
-  justify-content: center;
-  gap: space(3);
-
-  > span {
-    width: 5rem;
-    height: $control-height;
-  }
-}
-
-@container skeleton (max-width: #{$table-stack-width}) {
-  .skeleton__table {
-    @include stack(3);
-  }
-
-  .skeleton__head {
-    display: none;
-  }
-
-  .skeleton__row {
-    grid-template-columns: 1fr;
-    gap: space(2);
-    border-radius: radius('surface');
-    background-color: $surface-card;
-  }
-
-  .skeleton__row > span:nth-child(3) {
-    width: 100%;
-    height: 2rem;
-    justify-self: stretch;
-  }
-
-  .skeleton__table--columns .skeleton__row {
-    grid-template-columns: 1fr;
-  }
-
-  .skeleton__table--columns .skeleton__row > span:nth-child(n) {
-    width: 70%;
-  }
-}
-
-@container skeleton (max-width: #{$narrow-column}) {
-  .skeleton__filter > span {
-    flex-basis: 100%;
-  }
-
-  .skeleton__filter > .skeleton__field--button:not(:last-child) {
-    flex: 1 1 0;
-  }
-
-  .skeleton__switch {
-    flex-direction: row;
-    align-items: center;
-    width: calc(#{$switch-width} * 2 + #{space(4)} + #{space(2)});
-
-    > span:nth-child(1) {
-      flex: 1;
-    }
-  }
-}
-
-.skeleton__form-field {
-  @include stack(2);
-}
-
-.skeleton__label {
-  width: 7rem;
 }
 
 .skeleton__shapes .skeleton__box {
   height: $control-height;
 }
 
-.skeleton__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: space(3);
-
-  > span {
-    width: 6rem;
-    height: $control-height;
-  }
-}
-
-.skeleton__shapes .skeleton__title {
-  width: 40%;
-  height: 1.75rem;
-}
-
-// A lede that wraps to two lines, as the pages' do: each line a body line
-// (1.65, typography-base) tall, a bar of 1rem sat in it, so the head is the
-// real one's height. The second line stops short, as a last line does.
-.skeleton__lede {
-  display: flex;
-  flex-direction: column;
-  gap: calc(type-size('body') * 1.65 - 1rem);
-  max-width: $measure;
-  padding-block: calc((type-size('body') * 1.65 - 1rem) / 2);
-
-  > span:nth-child(2) {
-    width: 60%;
-  }
-}
-
-// A list page's lede is longer than the line on a phone, so it takes a third line there.
-.skeleton__shapes .skeleton__lede-more {
-  display: none;
-}
-
-@media (max-width: $shell-phone-width) {
-  .skeleton__shapes .skeleton__lede:has(> .skeleton__lede-more) {
-    > span:nth-child(2) {
-      width: auto;
-    }
-
-    > .skeleton__lede-more {
-      display: block;
-      width: 40%;
-    }
-  }
-}
-
-.skeleton__plain {
-  @include stack;
-}
-
-.skeleton__intro {
-  @include stack(2);
-}
-
-.skeleton__shapes .skeleton__intro > .skeleton__title {
-  width: 40%;
-  height: calc(heading-size(1) * 1.1);
-}
-
-.skeleton__shapes .skeleton__eyebrow {
-  width: 20%;
-  height: type-size('overline');
-  margin-block: calc((type-size('overline') * 1.65 - type-size('overline')) / 2);
-}
-
-// An ingredient's head as the page sets it (.ingredient-entry__head): the same
-// padding above and the same gap between its rows, so the title lands where
-// the real one does.
-.skeleton__intro--entry {
-  @include stack(3);
-
-  padding-block-start: space(4);
-}
-
-// Under the title the real head holds one row of badges, as tall as a tip's
-// button, not a lede of two lines.
-.skeleton__intro--entry > .skeleton__lede {
-  padding-block: calc((#{$icon-size} - 1rem) / 2);
-}
-
-.skeleton__shapes .skeleton__entry-bar {
-  position: relative;
-  top: calc(-1 * #{space(4)});
-  width: 12%;
-  height: type-size('small');
-  margin-block: calc((type-size('small') * 1.3 - type-size('small')) / 2)
-    calc(space(3) + (type-size('small') * 1.3 - type-size('small')) / 2);
-}
-
-.skeleton__shapes .skeleton__intro--entry > .skeleton__eyebrow {
-  margin-block: calc((#{$icon-size} - type-size('overline')) / 2);
-}
-
-.skeleton__menu {
-  @include stack(3);
-
-  padding: space(3) 0;
-
-  > span {
-    width: 80%;
-    height: 1.25rem;
-  }
-}
-
-@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-  .skeleton__menu > span {
-    margin-inline-start: auto;
-  }
-}
-
-// An ingredient's entry fills the wide column, using the entry's own grid mixin. Written here as
-// well as in IngredientEntry's stylesheet, since a route loads a component's stylesheet only when
-// it draws the component.
-.skeleton__shapes .ingredient-entry--with-nav {
-  @include stack(6);
-  @include entry-nav-grid;
-
-  > * {
-    box-sizing: border-box;
-    margin-block: 0;
-  }
-}
-
-.skeleton__entry-body {
-  @include entry-body('.skeleton__entry-details', '.skeleton__entry-side');
-}
-
-.skeleton__entry-body > .skeleton__entry-section {
-  @include entry-column-section;
-}
-
-.skeleton__entry-forms > .skeleton__entry-section {
-  @include entry-section('.skeleton__heading');
-}
-
-.skeleton__entry-forms {
-  @include entry-forms;
-}
-
-.skeleton__shapes .skeleton__heading {
-  width: 30%;
-  height: calc(heading-size(2) * 1.15);
-}
-
-.skeleton__entry-text {
-  @include stack(4);
-
-  > span:nth-child(1) {
-    width: 100%;
-  }
-
-  > span:nth-child(2) {
-    width: 90%;
-  }
-
-  > span:nth-child(3) {
-    width: 60%;
-  }
-}
-
-.skeleton__entry-body > .skeleton__entry-side {
-  @include entry-column-side;
-}
-
-.skeleton__entry-forms .skeleton__entry-side {
-  @include entry-side;
-}
-
-.skeleton__stock {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax($jar-cell-min, 1fr));
-  align-items: start;
-
-  @media (max-width: 30rem) {
-    grid-template-columns: repeat(auto-fill, minmax($jar-cell-min-narrow, 1fr));
-  }
-}
-
-.skeleton__jar {
-  display: grid;
-  justify-items: center;
-  gap: space(2);
-  min-width: 0;
-  padding: $jar-top space(1) space(3);
-  background: linear-gradient($fill-quiet, $fill-quiet) 0
-    calc(#{$jar-top} + #{$jar-drawing-height}) / 100% $jar-plank no-repeat;
-
-  > span:nth-child(1) {
-    width: $jar-drawing-width;
-    height: $jar-drawing-height;
-    border-radius: radius('control');
-  }
-
-  // A name's line, as JarShelf sets it; the amount's line measures 1rem on the page,
-  // the bar's own height, so it is left at that.
-  > span:nth-child(2) {
-    width: 70%;
-    height: calc(#{type-size('small')} * 1.3);
-  }
-
-  > span:nth-child(3) {
-    width: 50%;
-    height: 1rem;
-  }
-}
-
-.skeleton__entry-block {
-  @include stack(2);
-
-  > span:nth-child(1) {
-    width: 40%;
-    height: 1.25rem;
-  }
-
-  > span:nth-child(2) {
-    width: 80%;
-  }
-}
-
-.skeleton__section {
-  @include stack(3);
-}
-
-.skeleton__section > .skeleton__label {
-  height: 1.25rem;
-}
-
-.skeleton__list {
-  @include stack(3);
-}
-
-.skeleton__entry {
-  @include stack(1);
-
-  > span:nth-child(1) {
-    width: 12rem;
-    max-width: 50%;
-  }
-
-  > span:nth-child(2) {
-    width: 55%;
-  }
-}
-
-.skeleton__block {
-  @include stack(3);
-
-  padding: space(5);
-  border-radius: radius('surface');
-  background-color: $surface-card;
-
-  > span:nth-child(1) {
-    width: 30%;
-    height: 1.25rem;
-  }
-
-  > span:nth-child(2) {
-    width: 90%;
-  }
-
-  > span:nth-child(3) {
-    width: 70%;
-  }
-}
-
-// The line shape: a bar the height of a line of text for each line, for a
-// sentence or a short list that loads in place (the substitute summary's, the
-// deduction preview's), so it does not jump when the text arrives.
+// A bar the height of a line of text, for a sentence or a short list that loads in place, so it
+// does not jump when the text arrives.
 .skeleton__shapes .skeleton__line {
   width: 70%;
 }
 
-// The admin index head is a bare h1 and a line (no `.header` column), so its
-// heading keeps the h1 own bottom margin, which the line sits under.
-.skeleton__shapes .skeleton__intro--loose > .skeleton__title {
-  margin-block-end: space(2);
-}
-
-.skeleton__shapes .skeleton__line-bar {
-  width: 70%;
-  max-width: $measure;
-}
-
-.skeleton__shapes .skeleton__button {
-  width: 8rem;
-  height: $control-height;
-}
-
-.skeleton__requests {
-  @include stack(4);
-}
-
-.skeleton__requests-bar {
+// A panel's heading bar holds the height of the section heading it stands for, so the lede beneath
+// it stands where the real one will.
+.panel-skeleton__title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: space(3);
+  min-block-size: 2.5rem;
 
-  > span:first-child {
-    inline-size: 11rem;
-    block-size: 0.75rem;
-  }
-
-  > span:last-child {
-    inline-size: 7.5rem;
-    block-size: 2rem;
-    border-radius: radius('control');
+  > .skeleton {
+    flex: 1;
   }
 }
 
-.skeleton__requests-rows {
-  @include stack(3);
+// Bars that stand for words, each as tall as the line of text it replaces, so a section keeps its place
+// when the words arrive; the bar is drawn inside the line, as the lede's is.
+.skeleton-text .skeleton__line {
+  block-size: 1lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
 }
 
-.skeleton__request {
-  @include stack(2);
-  padding: space(3) space(4);
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  background-color: $surface-page;
+// A section heading's bar fills the heading's own line height, which is far taller than body text.
+.skeleton-text h2 .skeleton__line {
+  block-size: 0.5lh;
+  border-block: 0.25lh solid transparent;
 }
 
-.skeleton__request-subject {
-  inline-size: 60%;
-  block-size: 1.25rem;
-}
-
-.skeleton__request-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(1) space(3);
-
-  > span {
-    inline-size: 4rem;
-    block-size: 0.75rem;
+// A contents entry's name and description are each a line of the small text the entry sets, 20px high,
+// with no space between the description's lines.
+.skeleton-text .admin-contents__list {
+  .skeleton__shapes {
+    gap: 0;
   }
 
-  > .skeleton__request-badge {
-    inline-size: 4.5rem;
-    block-size: 1.25rem;
-    border-radius: radius('pill');
+  .skeleton__line {
+    block-size: 1rem;
+    border-block: 0.125rem solid transparent;
   }
 }
 
-// A spell's page, in the recipe's own grid (`.spell-recipe--with-nav`). Written here as well as in SpellRecipe's
-// stylesheet, since a route loads a component's stylesheet only when it draws the component.
-.skeleton__recipe {
-  @include stack(2);
-  @include entry-nav-grid;
-
-  column-gap: space(6);
-
-  > .page-nav {
-    grid-row: 2 / span 2;
-  }
-
-  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-    row-gap: 0;
-
-    > .skeleton__recipe-columns {
-      margin-block: space(2);
-    }
-
-    > .skeleton__recipe-head {
-      margin-block-end: space(2);
-    }
-
-    > .page-nav {
-      margin-block-start: space(2);
-    }
-  }
-
-  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
-    > .skeleton__recipe-head {
-      max-width: $measure;
-    }
-  }
-}
-
-.skeleton__recipe-head {
-  @include stack(2);
-}
-
-.skeleton__recipe-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: space(3);
-}
-
-.skeleton__shapes .skeleton__recipe-back {
-  width: 6rem;
-  height: 1.125rem;
-  margin-block-end: space(3);
-}
-
-.skeleton__shapes .skeleton__recipe-edited {
-  width: 10rem;
-  height: calc(type-size('caption') * 1.65);
-  margin-block: space(5) space(2);
-}
-
-.skeleton__shapes .skeleton__recipe-title {
-  width: 60%;
-  height: calc(heading-size(1) * 1.1);
-}
-
-@media (max-width: $shell-phone-width) {
-  .skeleton__shapes .skeleton__recipe-title {
-    height: calc(heading-size(1) * 1.1 * 2);
-  }
-
-  .skeleton__recipe > .page-nav {
-    margin-block-start: space(5);
-  }
-
-  .skeleton__recipe-columns {
-    margin-block-start: space(5);
-  }
-
-  .skeleton__recipe-aside {
-    order: -1;
-  }
-}
-
-.skeleton__recipe-actions {
-  display: flex;
-  gap: space(2);
-  flex: 0 0 auto;
-
-  > span {
-    width: $icon-size-large;
-    height: $icon-size-large;
-  }
-}
-
-.skeleton__recipe-columns {
-  @include entry-section;
-}
-
-.skeleton__recipe-main {
-  @include stack(4);
-
-  min-width: 0;
-}
-
-.skeleton__recipe-aside {
-  @include entry-side;
-}
-
-.skeleton__document {
-  @include stack(4);
-
-  .skeleton__actions {
-    justify-content: flex-start;
-  }
-}
-
-.skeleton__shapes .skeleton__document .skeleton__box {
-  height: 24rem;
-}
-
-.skeleton--document .skeleton__header--tabs-below > .skeleton__tabs {
-  margin-top: calc(#{space(4)} - #{space(3)});
+// Real words as bars (SkeletonText): transparent text over the shared fill, which an inline box
+// paints once per wrapped line. No `box-decoration-break`: past the browser floor, and without it a
+// broken line only loses its rounded end.
+.skeleton-run {
+  @include skeleton-fill;
+  color: transparent;
+  // Nothing a link or a focus state would draw shows around the bar.
+  text-decoration: none;
+  text-shadow: none;
+  box-shadow: none;
+  border: 0;
+  outline: 0;
 }

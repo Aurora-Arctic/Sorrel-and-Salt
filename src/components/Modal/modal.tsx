@@ -54,7 +54,7 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
  * says, else the page's heading; only if nothing took the focus meanwhile (a page a save opens
  * may). The dialog is already out of the page, so a focus that was in it is on the body.
  */
-function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo']): void {
+export function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo']): void {
   const now = document.activeElement;
   if (now && now !== document.body) return;
   const target =

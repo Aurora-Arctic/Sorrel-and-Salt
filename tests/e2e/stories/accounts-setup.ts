@@ -73,12 +73,12 @@ async function rollOf(page: Page, names: readonly string[]): Promise<Record<stri
   const headings = await table.getByRole('columnheader').allInnerTexts();
   const role = headings.findIndex((heading) => heading.trim() === 'Role');
   const roll: Record<string, string> = {};
-  // The first row is the column headings.
+  // The first row is the column headings; the name is the row heading, so the cells start after it.
   for (const row of rows.slice(1)) {
     const cells = row.getByRole('cell');
-    const text = (await cells.nth(0).innerText()).trim();
+    const text = (await row.getByRole('rowheader').innerText()).trim();
     const name = names.find((each) => text.startsWith(each)) ?? text;
-    roll[name] = (await cells.nth(role).innerText()).trim().split(/\s/)[0];
+    roll[name] = (await cells.nth(role - 1).innerText()).trim().split(/\s/)[0];
   }
   return roll;
 }

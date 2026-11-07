@@ -425,3 +425,58 @@
 .spell-recipe .spell-inventory {
   scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
+
+// The skeleton's action: a box as wide as the head's marks and buttons, hung from the title's top.
+.spell-recipe__head .page-header > .spell-recipe__pending-action {
+  position: relative;
+  inline-size: 9.5rem;
+  block-size: $icon-size-large;
+  top: 0;
+
+  > .skeleton {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.spell-recipe__pending-chips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    inline-size: 5.75rem;
+    block-size: 1.5625rem;
+    margin: 0;
+  }
+}
+
+// The skeleton's bars stand as tall as what they stand for: the back link's line and the title's.
+.spell-recipe--pending {
+  .spell-recipe__bar {
+    min-block-size: 1.4375rem;
+  }
+
+  .spell-recipe__head h1 .skeleton__line {
+    block-size: 1lh;
+  }
+}
+
+.spell-recipe--pending .spell-recipe__intent .skeleton__line {
+  block-size: 1lh;
+}
+
+// A phone's title shares its line with the icons and wraps to a second line.
+@media (max-width: $shell-phone-width) {
+  .spell-recipe--pending .spell-recipe__head h1 .skeleton__line {
+    block-size: calc(2lh + 1.6875rem);
+  }
+}
+
+// The menu lists three entries on a phone and one past it (the side panels are in its stack only
+// there).
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  .spell-recipe--pending > .page-nav .page-nav__pending:nth-child(n + 2) {
+    display: none;
+  }
+}

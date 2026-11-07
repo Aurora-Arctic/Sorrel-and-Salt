@@ -1,6 +1,6 @@
 # Loading
 
-The standard for every wait on the site: what a person sees between pressing something and the answer arriving, why it looks that way, and how a developer adds a new wait that follows it. The decision record, with the sources and their quotations, is [`ui.md`, "One Loading Standard for the Site"](design-decisions/ui.md#one-loading-standard-for-the-site).
+The standard for every wait on the site: what a person sees between pressing something and the answer arriving, why it looks that way, and how a developer adds a new wait that follows it. The decision record, with the sources and their quotations, is [`ui.md`, "One Loading Standard for the Site"](design-decisions/ui.md#one-loading-standard-for-the-site). How a skeleton is chosen, by the address being navigated to, and why each skeleton sits beside its page, is [`design-decisions/m11.9-skeletons-beside-pages.md`](design-decisions/m11.9-skeletons-beside-pages.md); the browser measurements behind it are [`loading-audit.md`](loading-audit.md).
 
 ## The three parts
 
@@ -27,11 +27,11 @@ The spinner and the dot wait **100ms** before they show, so an answer that arriv
 
 ### Region
 
-The region is the part of the page that is about to change. While it changes, the old content is hidden and put out of reach (`visibility: hidden`, `inert`, `aria-hidden`) and the [`Skeleton`](components/skeleton.md) of the new content stands over it. For the shell's two bodies, `MainBody` and `SectionBody`, the old page stays mounted at its full height beneath the skeleton rather than being swapped out, so the page does not shrink before the browser saves the scroll position that Back returns to ([`SkeletonFade`](components/skeleton.md), the "The page is held, not swapped" item).
+The region is the part of the page that is about to change. While it changes, the old content is hidden and put out of reach (`visibility: hidden`, `inert`, `aria-hidden`) and the [`Skeleton`](components/skeleton.md) of the new content stands over it. For the shell's two bodies, `MainBody` and `SectionBody`, the old page stays mounted at its full height beneath the skeleton rather than being swapped out, so the page does not shrink before the browser saves the scroll position that Back returns to ([`skeleton.md`](components/skeleton.md), "Skeleton fade").
 
-The skeleton has seven shapes: `table`, `cards`, `form`, `page`, `contents` and `recipe` for a whole page (`recipe` is a spell's own page), and `line` for one line of text still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. A compact `cards` filter row also draws the Compact switch where the loaded row has it, and the filter row sits where the loaded page's does at desktop and phone widths.
+The skeleton of a page is a `skeleton.tsx` beside the page, built from the page's own components (`PageHeader`, `TabbedPage`, `PageNav`, `ListFrame`, `StackTable`, the card frames) with placeholder content in them, so it has the page's own boxes and cannot drift from them. The `Skeleton` component itself has two shapes only: `line` (a line of text still being fetched) and `block` (a control-sized box). Everything bigger is made of the page's own parts (["Adding a page: its skeleton"](#adding-a-page-its-skeleton)).
 
-When the real content arrives, the skeleton does not vanish: the shell's bodies keep the last one over the arrived page, `aria-hidden` and out of layout, and it fades out over 200ms (`$arrive-duration`) while the page shows through ([`SkeletonFade`](components/skeleton.md)). A navigation that drew no skeleton (a refresh) fades nothing, a new wait mid-fade takes the skeleton back at once, and under reduced motion the page shows at once.
+When the real content arrives, the skeleton does not vanish: the shell's bodies keep the last one over the arrived page, `aria-hidden` and out of layout, and it fades out over 200ms (`$arrive-duration`) while the page shows through ([`skeleton.md`](components/skeleton.md), "Skeleton fade"). A navigation that drew no skeleton (a refresh) fades nothing, a new wait mid-fade takes the skeleton back at once, and under reduced motion the page shows at once.
 
 A skeleton shows **at once**, with no wait, because the press has already hidden the old content: holding the skeleton back would leave an empty panel for 100ms, which is the jump the skeleton is there to avoid. The Skeleton itself fades in over 150ms.
 
@@ -52,9 +52,9 @@ The `loading-motion` mixin does this swap in one place, so no component invents 
 Switching covens is the longest wait on the site, because the new coven's layout and page both read from the database.
 
 1. Choosing a coven in the switcher shows the picked name and a spinner at once, with `aria-busy` on the box (`ComboboxSelect`'s `busy` prop).
-2. [`SectionBody`](components/section-body.md) takes the old coven's page away at once, with no dimming, so nobody acts on the wrong coven's data. It does this when the site is busy and the target's region is `coven`.
-3. The **destination section's** skeleton takes its place, inside a `<main>` of its own, because the pages draw their own `<main>` and the landmark would otherwise vanish during the wait. That `<main>` also holds a visually hidden `<h1>Loading</h1>`, because the skeleton replaces the page's `h1` and axe's page-has-heading-one rule fails otherwise; `MainBody` does the same. A screen reader therefore hears both the heading and the skeleton's "Loading" status.
-   The switcher works out the target with `covenTarget` (`src/lib/coven-path.ts`): cards under a title and a filter for Ingredients, a table under a title and a tab row for Members and Invitations, a page with its contents menu for the coven home, and a plain page for anything else. Choosing Create Coven aims at the `main` region with a `form` shape instead, since that page is not inside a coven.
+2. [`SectionBody`](components/section-body.md) takes the old coven's page away at once, with no dimming, so nobody acts on the wrong coven's data. It does this when the site is busy and the destination is a page of any coven.
+3. The **destination section's** skeleton takes its place, inside a `<main>` of its own, because the pages draw their own `<main>` and the landmark would otherwise vanish during the wait. That `<main>` holds one visually hidden "Loading" `<output>` and no heading of its own: each skeleton draws its page's own `PageHeader` `h1`, so a wait has exactly one level-one heading (axe's page-has-heading-one rule), and `MainBody` does the same. `tests/guards/skeleton-heading.test.tsx` renders every registered skeleton and fails one without that `h1`.
+   The switcher's link goes to the coven's home, or to the same section in the new coven; the registry (["How a skeleton is chosen"](#how-a-skeleton-is-chosen)) gives the skeleton for that address. Choosing Create Coven goes to `/coven/new`, a `main` page, so `MainBody` draws its skeleton.
 4. When the new coven renders, the content fades in, and focus returns to the switcher. The `[slug]` layout remounts on a switch, so focus would otherwise drop to `<body>`. The switcher sets a module-level flag when a switch to another coven starts, and the next switcher to mount reads it once and focuses its box. A module variable survives the remount, as component state cannot, and dies with the page, so a reload never refocuses. A switch that ends without a remount (a refusal) clears the flag. Returning focus to the switcher is a judgement, not a sourced rule.
 
 ## Why there is no `loading.tsx` and no route-level Suspense
@@ -64,11 +64,27 @@ Next's `loading.js` wraps the page in a `<Suspense>` boundary and shows its fall
 1. **The guards' status codes would be lost.** A streaming page response begins with a `200` status, fixed once the body starts to stream, which happens when a Suspense fallback renders. A `notFound()`, `forbidden()` or `unauthorized()` called after that point can no longer change it (Next.js, `loading.js`, "Status codes"). The site depends on its guards answering with the right code: a non-member at `/coven/[slug]` gets a 404, `/admin` shows its not-authorized page with a 403, and a retired ingredient slug answers a 308. A route `loading.tsx` would turn each into a `200`.
 2. **Rendering without JavaScript would break.** A direct request, such as a typed address, a bookmark or a crawler, gets the whole page from the server in the first response, with no loading state streamed ahead of it ([`components/tabbed-page.md`](components/tabbed-page.md), "Contracts").
 
-So every pending state on the site is a **client transition**. A router call made inside a React transition stays pending until the new page has rendered (React, `useTransition`: `isPending` "stays `true` until all Actions complete and the final state is shown to the user").
+The same two reasons are why the skeleton is drawn by the client from the registry rather than streamed. So every pending state on the site is a **client transition**. A router call made inside a React transition stays pending until the new page has rendered (React, `useTransition`: `isPending` "stays `true` until all Actions complete and the final state is shown to the user").
 
 The wait itself is held by `useOptimistic`. A value set with it inside a transition lasts as long as that transition and goes back by itself when the transition ends, whether the page arrived, another navigation took over, or the request failed. `NavigationProvider` (`src/lib/navigation/provider.tsx`) is mounted once in `src/app/providers.tsx` and never unmounts. It holds that value and the router, and every navigation and refresh the site starts is a transition it opens. Nothing is ever settled by hand. The transition must live above every region: a transition kept in the pressed component ends when `MainBody` or `SectionBody` unmounts that component, which would end the wait at once and bring the old page back.
 
 `useLinkStatus` from Next reports only the link it sits inside, and says nothing to the rest of the page; that is why the provider's shared state exists. Next recommends it for a subtle inline hint with a 100ms animation delay, and the site's `LinkHint` is that hint.
+
+## How a skeleton is chosen
+
+The **destination address** chooses the skeleton, not the link that was pressed. `src/app/skeletons.ts` is the registry: it maps each route pattern (the folder names under `src/app`, with route groups and `@` slots ignored) to `{ host, Skeleton }`. A link carries only its `href`. `NavigationProvider` stores that `href` as the active navigation, and `useNavigationState()` returns `{ busy, href }`. `skeletonFor(body, href, pathname)` (`src/lib/navigation/skeleton-for.ts`) matches the address against the patterns (`route-match.ts`, which handles `[slug]`, `[id]`, `[number]`, `[token]` and `[key]`, drops the query string, and is the site's own because Next has no client-side matcher) and says which body draws it.
+
+There are three hosts:
+
+| Host    | Body drawn in                                           | Draws when                                                                                      |
+| ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `main`  | `MainBody` (`.app-shell__main`, shell and public frame) | The registry entry names `main`, or names a section host that is not standing for the address.  |
+| `coven` | `SectionBody` in the coven layout                       | The entry names `coven` and both the current page and the destination are in a coven (any two). |
+| `admin` | `SectionBody` in the `/curator` or `/keepers` layout    | The entry names `admin` and the destination is in the same area as the current page.            |
+
+The coven host stands for a switch between two covens, so the header and switcher stay up and busy through the wait. A section host that does not stand (a link from the Compendium into a coven page, or from `/curator` into `/keepers`) falls back to `MainBody`, which draws the whole frame.
+
+**Nothing draws** when the destination's path is the one already showing (a pager, filter or tab change keeps its own skeleton in `ListFrame` or the tab panel), when the navigation is a refresh, which has no `href`, or when the address matches no registered pattern. In those cases the page stays up under the bar alone.
 
 ## How to adopt it
 
@@ -78,52 +94,111 @@ Navigation goes through one set of pieces in `src/lib/navigation/`, all exported
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PendingLink`            | The link the site draws, in place of a bare `next/link` where the press navigates. A plain press navigates through the shared hook; a press meant for a new tab or window, or a link with its own `target`, is left to the browser. It sets `aria-busy` on the anchor while its navigation is pending, and tells a `LinkHint` inside it (see below). |
 | `usePendingNavigation()` | Returns `{ pending, navigate(href, options), refresh() }`. Use it for any navigation that is not a link: a button that pushes, a redirect after a save, a refresh. `pending` is true while this caller's navigation is the one showing; the site-wide state carries it for the rest.                                                                 |
-| `reportLeaving()`        | For a wait that ends with the browser leaving the page, such as redirecting to a sign-in provider: it keeps the page bar up until the browser unloads.                                                                                                                                                                                               |
+| `reportLeaving()`        | For a wait that ends with the browser leaving the page, such as redirecting to a sign-in provider: it keeps the page bar up until the browser unloads. A restored page (`pageshow` with `persisted`) clears it.                                                                                                                                      |
 | `NavigationBar`          | The bar. Mounted once in `src/app/providers.tsx`; a developer does not render it again.                                                                                                                                                                                                                                                              |
-| `Skeleton`               | The region. `shape` is `table`, `cards`, `form`, `page`, `contents`, `recipe` or `line`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                                                                                                |
+| `Skeleton`               | A line or a block for a part that loads in place. `shape` is `line` or `block`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                                                                                                         |
 | `Spinner`                | The control's ring, inside a button or field; see [`busy-button.md`](components/busy-button.md).                                                                                                                                                                                                                                                     |
 | `loading-motion`         | The Sass mixin for any new piece that moves to say something is loading; it brings the reduced-motion pulse and the optional 100ms wait with it.                                                                                                                                                                                                     |
 
-`navigate(href, options)` takes `{ replace, scroll, target }`:
+`navigate(href, options)` takes `{ replace, scroll }`:
 
 - `replace` replaces the history entry rather than adding one.
 - `scroll: false` keeps the scroll position, as a filter or pager does. The router sees options **only when a caller gives some**, so a plain call is a plain `push(href)`.
-- `target` says where the page is headed: `{ region: 'coven' | 'admin' | 'main', shape, title?, action?, filter? }`. Whatever draws the region's skeleton reads it from the store. On `PendingLink` the same thing is the prop `navigationTarget`, because an anchor's own `target="_blank"` keeps its name.
+
+There is no option naming a skeleton: the address already says which page is coming, so a link cannot name the wrong one.
 
 A navigation waits first on any mounted page form with unsaved changes (`useLeaveGuard`): that form asks Discard Changes or Keep Editing, and the navigation starts only on Discard Changes. A refresh is never held ([`components/modal.md`](components/modal.md), "Unsaved changes").
 
-`NavigationProvider` holds the site-wide wait (who started it and its target) in React context, so the bar and the regions can follow a navigation that a button elsewhere in the tree started. `useNavigationState()` joins it with the one thing React cannot see, the `leaving` flag of a small external store, set by `reportLeaving()` and cleared only by a restored page. Outside the provider (a Storybook story, a component test) `usePendingNavigation` makes a plain router call in a transition and shows no wait.
+`NavigationProvider` holds the site-wide wait (who started it and the destination `href`) in React context, so the bar and the regions can follow a navigation that a button elsewhere in the tree started. `useNavigationState()` joins it with the one thing React cannot see, the `leaving` flag of a small external store, set by `reportLeaving()` and cleared only by a restored page. Outside the provider (a Storybook story, a component test) `usePendingNavigation` makes a plain router call in a transition and shows no wait.
 
 **When navigations overlap.** The later navigation's wait shows, and its caller alone is `pending`; the earlier caller's `pending` goes false at once. React drops the wait only when the last overlapping transition has ended, so the first page to arrive does not clear a wait that a second navigation is still owed. Component tests read this state from committed renders (an effect), because React re-runs a suspended transition's render with the value already put back.
 
-**Where the pieces are used.** The links that draw a skeleton name a target:
+### Adding a page: its skeleton
 
-- The site bar's links, and their copies in the account menu, use `siteLinkTarget(base, href)` (`src/components/AppShell/site-target.ts`): the `main` region, each in the frame its page sits in. `/compendium` is cards under a title and a filter in the wide column; `/coven` is a page in the narrow column, or, when the link goes straight to a lone coven's home (`href` differs from `base`), a page with its contents menu; `/admin` is a wide page. The account links are a page with the jump menu.
-- The admin navigation, and the `Admin` lead in the admin context row, use `adminTarget` (`src/components/AdminNav/target.ts`), the `admin` region, so the row and its nav stay while the page changes: `page` for `/curator` and `/keepers`, `cards` for `/curator/compendium`, and `table` for the rest.
-- The coven's section links (each carries a `target` in `SectionNav`'s props) and the Contents on the coven home name the `coven` target `covenTarget` gives for the section's address.
-- Every link into an ingredient's page names the page it draws through `ingredientLinkTarget(href, fromCoven?)` (`site-target.ts`): a Compendium entry is a `main` `page` with its jump menu (`entry`); a coven's own entry is the `coven` region's `page` with its jump menu (`covenTarget` knows an address with an id beneath `ingredients`), or, from outside the coven (the admin shell's Add Ingredient), the `main` region's; the Compendium list is `siteLinkTarget('/compendium')`. The skeleton always draws the jump menu, though the page draws it only for an entry that has forms. A same-page save in the entry dialog, and the delete that returns to the list, keep what they had.
-- A pager or filter in a `ListFrame`, a tab, and the route modal's provider navigate through the hook directly; they keep their own skeletons.
+1. Add `skeleton.tsx` beside the `page.tsx`. Where a layout stays up during the wait (a `TabbedPage` layout, the coven layout, the curator and keepers layouts), it sits beside that layout instead.
+2. Build it from the page's own components, with placeholder content in them:
+   - `PageHeader` with the real title, or `pendingTitle` where the title is only known from data; `eyebrow`, `lede` and `action` take `Skeleton` blocks.
+   - `PageColumn`, `PageFrame` and `PageWithNav`, the layout components the page itself uses.
+   - `TabbedPage` with its real `tabs` array, imported from the module the layout uses; each tab carries its own `skeleton` (see below).
+   - `PageNav` with static entries.
+   - `ListFrame` with `disabled` (its controls drawn disabled and `aria-hidden`) and `ListBodySkeleton`, which draws the page's real column headings over placeholder rows, or the page's card frame (`IngredientCard` and `SpellCard` export their frames, which the card and its skeleton both draw). A `StackTable` takes `pendingRows`.
+3. Add the entry to `src/app/skeletons.ts`: the route pattern, the host, the component. Then add the route to `navigations` in `tests/e2e/skeleton-layout.spec.ts` and run the spec for it ([The layout spec](#the-layout-spec)).
+4. `tests/guards/skeletons.test.ts` enforces both: it fails when a `page.tsx` has no entry (bar the pages listed in the test by name, each with its reason: auth forms with no data, the root landing, the signed-out request page), and when an entry names no page.
 
-**What `MainBody` covers.** `MainBody` (`src/components/AppShell/main-body.tsx`) answers a `main` target by hiding everything inside `.app-shell__main` and laying one `<main>` holding the skeleton over it, so the page frame is covered as well as the page's content. The hidden page stays mounted at its full height, and the skeleton is pinned to the top of the window under the bar, wherever the page was scrolled to. The `<main>` takes the frame the target names, top-aligned and never centred in the window: `wide`, `with-nav` and `entry` use `page-column`, `narrow` uses `page-frame page-frame--narrow`, and no frame the standard `page-frame`. A narrow `form` sits on a `panel`, as the real form does. `with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid (the narrow column), and `entry` the same menu in `.ingredient-entry--with-nav`, the wide column an ingredient's page fills, from the one `entry-nav-grid` mixin the page shares. The admin index is the `contents` shape (sections of links). The target's `head` (`eyebrow` for the coven home and an ingredient's page, `title` for Account) shapes the head the page draws; `tabsBelow` puts the tab track on its own line beneath the heading; `tabs` draws the tab track in the heading row; `columns` and `fields` size a `table` skeleton's columns and filter controls to the page's (the admin Support list); and a route modal can show its own `detail` skeleton as `loadingBody` rather than the form's. A navigation with no target, such as a refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
+**`PageTab.skeleton` and `ListBody`'s `skeleton`.** A `TabbedPage` tab carries the `skeleton` its panel draws while that tab is on its way. It is optional on `PageTab`: a tab whose page is cheap or already there, and the tab row of a page that is not a tab destination, need none, and a tab without one shows an empty panel while it is on its way, under the page bar ([`design-decisions/m11.9-skeletons-beside-pages.md`](design-decisions/m11.9-skeletons-beside-pages.md), "`PageTab.skeleton` stays optional"). `ListBody` always swaps in a skeleton while a pager or filter is pending, so its `skeleton` prop is required.
 
-**The public pages wait the same way.** A signed-out visitor's Compendium pages sit in `PublicFrame`, not the shell, and its body is the same `MainBody`, so a press of the frame's Compendium link (`siteLinkTarget('/compendium')`), a card or an entry's own links draws the destination's skeleton under the frame's bar. In both chromes the page sits in a wrapper `div` (`.app-shell__main`), the skip link's target is an empty span just before it, and the `(public)` layout renders the page's own `<main>` inside the wrapper: during a wait `MainBody` hides that `main` (`aria-hidden`, `inert`) and lays the skeleton's over it, so the page still exposes one `main` and one h1. A `main` on the wrapper would nest the two. There is no `loading.tsx` here either, so a direct request for an unknown entry still answers 404 and a moved one 308.
+### How closely a skeleton matches its page
+
+The skeleton mostly looks like the page it stands for, so switching pages has no layout jump; where content is dynamic it may be a little off. The line is between what is **static** and what is **dynamic**:
+
+- **Static** parts are drawn exactly, in the page's own components and classes, and stand where the real ones will: the heading, the page header, the eyebrow, the lede, the actions, the tabs, the filter row, the page menu, the table headings, the editor's toolbar and the frame around the page.
+- **Dynamic** parts may be a little off: the contents of cards, the widths of table cells and the text of a published document. A skeleton draws bars of about the right size for these.
+
+A title that comes from data (an entry's or a spell's name) is dynamic in its text, so its bar is a `pendingTitle` and only its position counts.
+
+### The layout spec
+
+`tests/e2e/skeleton-layout.spec.ts` is the gate for this standard. For every route in its list it signs in, holds the server's answer, clicks the real link, and measures the skeleton. It then lets the page arrive and measures that. It checks two things:
+
+- **Each static part is within 2px of the page's** on x, y, width and height. The parts are the heading, header, eyebrow, lede, actions, tabs, filter row, page menu, table headings and toolbar.
+- **The frame does not move** between the skeleton and the arrived page: the site bar and the context row stay where they were.
+
+Every route runs at two widths, 1280 and 375, in the light theme. Dark mode swaps colours only, so it is not run.
+
+Rules the spec follows:
+
+- A table wider than its frame scrolls sideways inside it. Then the frame's box is the static part, not the table's.
+- Lists and tables inside `.document-page__body` are published text, so they are not required.
+- It waits until nothing on the page has `aria-busy="true"` before measuring. A part that loads after the page arrives (the document editor, which `next/dynamic` loads) must mark its own placeholder `aria-busy="true"` so the spec measures it once it is drawn.
+- The origin page's frame is read at the top of that page, before it is scrolled to bring the clicked link on screen. The window goes to the top when the skeleton appears ([Frames, context rows and the scroll](#frames-context-rows-and-the-scroll)), so the skeleton's frame must match the origin's at the top, and the page's must match the skeleton's.
+- It waits on conditions, never on the network going quiet or a fixed time: the origin's heading shown and its link hydrated before the click; after the answer, the skeleton and its fade gone, nothing busy, and the heading shown.
+- Each user signs in once per worker, and that user's cases share the browser state.
+
+To run it for named routes (the pattern is the route name followed by `at`):
+
+```sh
+BETTER_AUTH_SECRET=local-dev-not-a-real-secret \
+  npx playwright test tests/e2e/skeleton-layout.spec.ts --grep "(keepers-document|keepers-documents) at "
+```
+
+### Frames, context rows and the scroll
+
+Some pages sit in a layout that draws a row of its own above the page: the context row (the coven switcher or the admin area's row). A skeleton for such a page is drawn without that row when the host stands, because the layout keeps it up. When the host does not stand, `framed(host, Page)` in `src/components/SkeletonFrame` wraps the skeleton in a `SkeletonContextRow` and the page's column (`.page-column` or `.coven-layout`), so the frame is the same either way. `skeletonFor` does this for every `main` skeleton that is not standing, so a registered skeleton never draws a frame itself.
+
+The window scrolls to the top, instantly, as a host (`MainBody` or `SectionBody`) starts drawing a destination's skeleton. It runs once per wait, in `useLeavingSkeleton` (`src/components/SkeletonFade`), which both hosts call. A click made far down the page therefore moves the page once, at the tap, and the arrived page has no scroll left to reset. A navigation that draws no host skeleton (a pager, a filter, a sort) and a route modal do not scroll. Next's own scroll on arrival is left on and has nothing to do. The hook saves the left page's position into its history entry before it scrolls and restores it on Back or Forward ([`components/skeleton.md`](components/skeleton.md), "Back after a skeleton"). The skeleton cover is pinned under the site bar (`.skeleton-cover__pin`); with the page at the top, the context row above the cover needs no extra allowance.
+
+### A skeleton runs no query
+
+A skeleton must not render a component that runs a data hook such as a query: it would fetch, or fail without the provider, only to draw a placeholder. Draw the component's markup with the same classes instead, as `DocumentEditorSkeleton` does for the editor's head and toolbar. `tests/guards/skeleton-heading.test.tsx` renders every registered skeleton and fails on a query hook (it reports "No QueryClient set").
+
+### Where the skeletons are used
+
+- `MainBody` (`src/components/AppShell/main-body.tsx`) answers a `main` skeleton by hiding everything inside `.app-shell__main` and laying one `<main>` holding the skeleton over it, so the page frame is covered as well as the page's content. The hidden page stays mounted at its full height, and the skeleton is pinned to the top of the window under the bar. The skeleton draws its own frame, so `MainBody` adds none.
+- `SectionBody` does the same for a `coven` or `admin` skeleton, inside the section's layout, so the coven's or admin area's row and navigation stay while the page changes.
+- A pager or filter in a `ListFrame`, a tab, and the route modal's provider navigate through the hook directly; they keep their own skeletons. A route modal shows its own `loadingBody`, with the modal skeleton beside the modal (`SupportRequests`).
+- **The public pages wait the same way.** A signed-out visitor's Compendium pages sit in `PublicFrame`, not the shell, and its body is the same `MainBody`. In both chromes the page sits in a wrapper `div` (`.app-shell__main`), the skip link's target is an empty span just before it, and the `(public)` layout renders the page's own `<main>` inside the wrapper: during a wait `MainBody` hides that `main` (`aria-hidden`, `inert`) and lays the skeleton's over it, so the page still exposes one `main` and one h1. A `main` on the wrapper would nest the two. There is no `loading.tsx` here either, so a direct request for an unknown entry still answers 404 and a moved one 308.
 
 **The dot inside a `PendingLink`.** `LinkHint` reads Next's `useLinkStatus`, which only sees a navigation that Next's own `<Link>` started. A `PendingLink` navigates through the shared hook, so `useLinkStatus` never reports it pending. `PendingLink` therefore wraps its children in `LinkPendingContext` (`src/lib/navigation/link-pending.ts`), and `LinkHint` shows its dot when either the hook or the enclosing context says pending.
 
-### The guard
+### The guards
 
-The lint rule `sorrel/no-bare-router-navigation` (`lint/source-sweeps.js`) fails when a file under `src/` outside `src/lib/navigation/` calls `router.push`, `router.replace` or `router.refresh`, because a bare call moves the page with no signal. The match is by name: a receiver whose name ends in `router` (`router`, `appRouter`), so a router held under another name is not seen. Next's `<Link>` is not covered. Nothing is exempt; the fix is `usePendingNavigation`.
+Three lint rules in `lint/source-sweeps.js` keep a wait from going unsignalled. Nothing is exempt except the files named in a rule's own list.
+
+- `sorrel/no-bare-router-navigation` fails when a file under `src/` outside `src/lib/navigation/` calls `router.push`, `router.replace` or `router.refresh`, because a bare call moves the page with no signal. The match is by name: a receiver whose name ends in `router` (`router`, `appRouter`), so a router held under another name is not seen. The fix is `usePendingNavigation`.
+- `sorrel/in-app-link-through-pending-link` fails when a file under `src/` imports the `Link` component from `next/link` (it reports the import), because a bare `<Link>` navigates with no bar and no skeleton. The fix is `PendingLink`. Three files are named in the rule with their reasons: `pending-link.tsx` itself, `Pager/pager-link.tsx` (it reports pending to the list) and `TabbedPage/tab-links.tsx` (it reports to the tab row). Importing only `useLinkStatus` or a type is fine. A plain `<a>` is not matched, which is how the `target="_blank"` links in `TermsAgreement` stay out of the router their tests do not mount. An allowlisted file that stops importing `Link` is reported too, so the list stays true.
+- `sorrel/full-page-load-reports-leaving` fails when a function calls `location.assign`, `location.replace` or `location.reload` (also on `window` or `document`) without a `reportLeaving()` call earlier in the same function. A load inside a callback is not covered by a report in the function around it. Without the report the page bar goes out while the browser is still on its way. Setting `location.href` is not matched.
 
 ### Adding a wait: the steps
 
 1. A **link** that navigates: `PendingLink`, with a `LinkHint` inside if it is a text link in the page (not a menu link, which takes none).
 2. A **button** whose action is slow: `BusyButton` with a `busyLabel`.
-3. A navigation from code: `usePendingNavigation`, and a `target` when a skeleton should follow.
-4. An area that changes: a `Skeleton` of the right `shape`, swapped in with `SwapPanel`.
-5. A new animation for a wait: `@include loading-motion(...)`, never a bare `animation`, so reduced motion is handled.
-6. A wait that ends with the browser leaving: `reportLeaving()`.
+3. A navigation from code: `usePendingNavigation`.
+4. A **page** a navigation can reach: `skeleton.tsx` beside it and an entry in `src/app/skeletons.ts` ([Adding a page: its skeleton](#adding-a-page-its-skeleton)).
+5. An area that changes in place: a `ListBody` with its `skeleton`, a tab's `skeleton`, or a `Skeleton` of `line` or `block`, swapped in with `SwapPanel`.
+6. A new animation for a wait: `@include loading-motion(...)`, never a bare `animation`, so reduced motion is handled.
+7. A wait that ends with the browser leaving: `reportLeaving()`.
 
-A save in a route modal navigates nothing, so it shows the `BusyButton` and no bar. On close, the modal replaces the address with its close address and then calls `refresh` from the same navigation hook, so the bar shows if the refresh is slow; a refresh has no target, so no skeleton replaces the page.
+A save in a route modal navigates nothing, so it shows the `BusyButton` and no bar. On close, the modal replaces the address with its close address and then calls `refresh` from the same navigation hook, so the bar shows if the refresh is slow; a refresh has no destination, so no skeleton replaces the page.
 
 ## Research
 

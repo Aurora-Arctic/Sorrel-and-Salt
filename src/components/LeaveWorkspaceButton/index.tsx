@@ -4,7 +4,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { LeaveWorkspaceDocument } from './documents';
 import OwnerExit from './owner-exit';
 import type { LeaveWorkspaceButtonProps } from './types';

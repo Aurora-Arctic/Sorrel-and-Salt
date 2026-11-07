@@ -43,8 +43,7 @@ the ingredient page ([`ingredient-entry.md`](ingredient-entry.md)). A plain text
 
 The dot is the link's part of the standard's first part, the control
 ([`../loading.md`](../loading.md)). A link that navigates is a `PendingLink`
-from `src/lib/navigation/`, which also puts up the page bar and, when given a
-`navigationTarget`, the destination's skeleton. `useLinkStatus` reports only a navigation that
+from `src/lib/navigation/`, which also puts up the page bar and, through the registry, the destination's skeleton. `useLinkStatus` reports only a navigation that
 Next's own `<Link>` started, and a `PendingLink` navigates through the shared hook instead. So
 `PendingLink` wraps its children in `LinkPendingContext`
 (`src/lib/navigation/link-pending.ts`), and `LinkHint` shows its dot when

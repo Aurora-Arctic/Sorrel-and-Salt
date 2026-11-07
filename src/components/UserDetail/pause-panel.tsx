@@ -5,8 +5,9 @@ import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import { CollapsibleSection } from '../CollapsibleSection';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import Skeleton from '../Skeleton';
 import { LocalDay } from '../SupportRequests/day-range';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { Ledger, PauseFields, Until, endOf, pauseReady } from './access-pause-parts';
 import type { PausePanelProps, PauseSpan, StandingPause } from './types';
 import '../SupportRequests/timeout-panel.scss';
@@ -142,6 +143,7 @@ const PausePanel = ({
   name,
   standing,
   earlier,
+  earlierLoading = false,
   copy,
   noteRequired,
   pause,
@@ -181,7 +183,11 @@ const PausePanel = ({
             onChanged={onChanged}
           />
         )}
-        {earlier.length > 0 && <Ledger pauses={earlier} />}
+        {earlierLoading ? (
+          <Skeleton shape="line" count={2} />
+        ) : (
+          earlier.length > 0 && <Ledger pauses={earlier} />
+        )}
       </CollapsibleSection>
     </div>
   );

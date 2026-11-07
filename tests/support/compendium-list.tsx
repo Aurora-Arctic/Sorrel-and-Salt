@@ -43,6 +43,7 @@ export const FilterRow = ({
   >): ReactElement => (
   <QueryClientProvider client={client}>
     <IngredientSearch
+      skeleton={null}
       search={<AudienceFilter {...filterProps} />}
       previousHref={previousHref}
       nextHref={nextHref}

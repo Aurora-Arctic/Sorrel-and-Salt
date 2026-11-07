@@ -81,8 +81,18 @@ const eyebrowAndLedeNode = (
 
 const AtPhoneWidth = () => <Long />;
 
+// A head whose title is not known yet, as a skeleton draws it: a bar in the h1.
+const pendingTitleNode = (
+  <InAdminLayout open="/curator/compendium">
+    <main>
+      <PageHeader pendingTitle />
+    </main>
+  </InAdminLayout>
+);
+
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
+  'Pending Title': pendingTitleNode,
   'Heading Alone': headingAloneNode,
   'Long Heading With Action': longHeadingWithActionNode,
   'With Lead': withLeadNode,

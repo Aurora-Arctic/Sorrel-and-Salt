@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const liveCardOf = vi.fn();
 vi.mock('@/modules/identity', () => ({ liveCardOf }));
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({}),
   usePathname: () => '/i/betatoken',
   useSearchParams: () => new URLSearchParams(),
 }));

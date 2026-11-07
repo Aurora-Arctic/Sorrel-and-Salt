@@ -248,6 +248,11 @@ export const rules = {
           reason:
             'the Filters panel is a dialog of its own, not a Modal, open beside the page from the tablet width up: it gives the focus back to its button only when the focus was inside it',
         },
+        'src/components/ConfirmDialog/index.tsx': {
+          calls: 1,
+          reason:
+            'an alert dialog of its own, not a Modal: it takes the focus to Cancel, its safe answer, as it opens; Modal has no initial-focus prop',
+        },
         'src/components/Modal/confirm-overlay.tsx': {
           calls: 5,
           reason:
@@ -263,7 +268,7 @@ export const rules = {
           reason:
             'not a return to the opener: the print window takes the focus, the warning puts it on its safe answer as it opens, and after Stay, Go Back, Esc, Close or an outside click it goes to the two-factor section rather than to the button or link that opened the dialog',
         },
-        'src/components/UserList/confirmed-action.tsx': {
+        'src/components/ConfirmedAction/index.tsx': {
           calls: 1,
           reason:
             'the focus going in, not back: the question puts it on the confirm, which the warning describes, as the modal opens',
@@ -504,6 +509,113 @@ export const rules = {
           };
 
           visitStatements(program.body, false);
+        },
+      };
+    },
+  },
+
+  // An in-app link is a `PendingLink`, so the page bar and the skeletons follow the press. A bare `next/link` `<Link>` moves
+  // the page with no signal. The status hook and types are fine, and the allowlist holds the files that build on `Link` itself.
+  'in-app-link-through-pending-link': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx?$/.test(file) || isStory(file)) return {};
+      /** The files that import `next/link` for its component, each with the reason. */
+      const ALLOWED = {
+        'src/lib/navigation/pending-link.tsx':
+          'PendingLink is the one wrapper every in-app link goes through',
+        'src/components/Pager/pager-link.tsx':
+          'the pager link reports its own pending state to the list, not the page bar',
+        'src/components/TabbedPage/tab-links.tsx':
+          'a tab link reports its press to the tab row, which greys the tabs',
+      };
+      const allowed = file in ALLOWED;
+      let imported = false;
+      return {
+        ImportDeclaration(node) {
+          if (node.source.value !== 'next/link' || node.importKind === 'type') return;
+          const draws = node.specifiers.some(
+            (specifier) =>
+              specifier.type !== 'ImportSpecifier' ||
+              (specifier.importKind !== 'type' &&
+                (specifier.imported.name ?? specifier.imported.value) !== 'useLinkStatus'),
+          );
+          if (!draws) return;
+          imported = true;
+          if (!allowed) {
+            context.report({
+              node,
+              message:
+                'Link through PendingLink (@/lib/navigation), so the page bar and the skeletons follow the press',
+            });
+          }
+        },
+        'Program:exit'(program) {
+          if (allowed && !imported) {
+            context.report({
+              node: program,
+              message: `This file no longer imports the next/link component, so take it off the allowlist in lint/source-sweeps.js (${ALLOWED[file]})`,
+            });
+          }
+        },
+      };
+    },
+  },
+
+  // A full page load (`location.assign`, `replace` or `reload`) is reported first, so the bar and the busy hint stay up
+  // through the load instead of dropping when the request settles. Checked per function: a load in a callback is not
+  // covered by a report in the function around it.
+  'full-page-load-reports-leaving': {
+    create: (context) => {
+      const file = fileOf(context);
+      if (!/^src\/.*\.tsx?$/.test(file) || isStory(file)) return {};
+      const isLocation = (node) =>
+        (node.type === 'Identifier' && node.name === 'location') ||
+        (node.type === 'MemberExpression' &&
+          !node.computed &&
+          node.property.type === 'Identifier' &&
+          node.property.name === 'location' &&
+          node.object.type === 'Identifier' &&
+          ['window', 'document'].includes(node.object.name));
+      const FUNCTIONS = new Set([
+        'ArrowFunctionExpression',
+        'FunctionExpression',
+        'FunctionDeclaration',
+      ]);
+      /** Whether `root` calls reportLeaving() before `before`, not looking inside a function of its own. */
+      const reportsBefore = (root, before) => {
+        const visit = (node) => {
+          if (node !== root && FUNCTIONS.has(node.type)) return false;
+          if (
+            node.type === 'CallExpression' &&
+            node.callee.type === 'Identifier' &&
+            node.callee.name === 'reportLeaving' &&
+            node.range[1] <= before
+          )
+            return true;
+          return children(node).some(visit);
+        };
+        return visit(root);
+      };
+      return {
+        CallExpression(node) {
+          const { callee } = node;
+          if (
+            callee.type !== 'MemberExpression' ||
+            callee.computed ||
+            callee.property.type !== 'Identifier' ||
+            !['assign', 'replace', 'reload'].includes(callee.property.name) ||
+            !isLocation(callee.object)
+          )
+            return;
+          let fn = node.parent;
+          while (fn && !FUNCTIONS.has(fn.type)) fn = fn.parent;
+          if (fn && reportsBefore(fn, node.range[0])) return;
+          context.report({
+            node,
+            message:
+              'Call reportLeaving() first, in the same function, so the page bar stays up through the full page load',
+          });
         },
       };
     },

@@ -13,8 +13,7 @@
 - **Escape closes it and returns the focus to the button.** It listens on the window and skips an Escape something else already took (`defaultPrevented`). With a failed Sign Out's callout open, the first Escape closes the callout and the next closes the menu. A press outside it closes it, and so does a press on a link in it. The panel is in the page only while open.
 - **The name is said once**, on the button. The avatar disc (up to two initials, from the first and last words of the name) is `aria-hidden`.
 - **Every link in the panel is a `PendingLink`** ([`loading.md`](../loading.md)): it starts the navigation through the shared hook and sets `aria-busy` while it runs.
-  - Your Account and the invitations count both name the `main` region and the `page` shape, since both lead to the account page.
-  - The site links name `main` through `siteLinkTarget` (`AppShell/site-target.ts`), the one rule the bar's links share: cards under a title and filter for `/compendium`, a narrow page for `/coven`, a wide page for `/curator` and `/keepers`, and a page for the rest.
+  - The destination's address chooses the skeleton (`src/app/skeletons.ts`), so the site links and the account links name nothing.
 - **The panel lists**, in order: Your Account (a link to `/account`, not for an unverified viewer), the site links at or under `$shell-tablet-width`, then Sign Out. **The theme switch is not in the panel.** It stays in the shell's bar at every width.
 - **Waiting invitations show in three places.**
   - **A dot on the avatar disc**, `aria-hidden` with the disc.
@@ -40,7 +39,9 @@ The button and the panel's frame are in the page's first scripts. The rows insid
 
 - At or under `$shell-tablet-width` the name stays in the page visually hidden, the chevron goes, and the button is a `$control-height` square, because with the name an admin's bar ran past the window from 642px up. The button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
 - The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's own edge would cut an outside one.
-- The panel does not clip (no `overflow: hidden`), so the count's tip can hang past its edge. The last row is always Sign Out, which has room around it, so no wash meets the bottom corners.
+- The panel is between `$panel-min-width` (15rem) and `$panel-max-width` (18rem) wide, or the button's own width if that is greater, through the `floating-panel` mixin the switcher's list uses too. Rows are `$panel-row-height` tall (2.8125rem, 45px; the switcher's rows use it too) and run edge to edge of the panel, with no padding around them, no gap between them and no rounding.
+- Sign Out is a row like the others (`.account-menu__item`), under a 1px hairline (`.account-menu__signout`) that sets it apart, with no padding around it (`.account-menu__signout-action`); a failure floats beneath it in a callout, its badge on the button's corner.
+- The panel does not clip (no `overflow: hidden`), so the count's tip can hang past its edge. The last row is always Sign Out, whose own wash takes the panel's bottom rounding.
 - The count is the site's badge in the `attention` palette ([`styling.md`](../styling.md), "Badge palettes"), laid over the row's right end so Your Account's wash still runs edge to edge beneath it. On hover it keeps `$text-on-color` and darkens (`filter: brightness(0.85)`), because the typography's link hover would otherwise recolour the label.
 - In forced-colours mode the disc's `$accent` fill is dropped, so a 1px `CanvasText` border draws the circle. The invitations dot is drawn by its fill alone, so it does not show in forced-colours mode.
 

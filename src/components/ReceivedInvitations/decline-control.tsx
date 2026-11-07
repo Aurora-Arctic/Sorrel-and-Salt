@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import type { AcceptControlProps } from './types';
 
 // A received invitation's Decline: it asks first, then sends `declineInvitationById`; the page and

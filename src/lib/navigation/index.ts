@@ -7,7 +7,6 @@ export type {
   LeaveGuardOptions,
   NavigateOptions,
   NavigationState,
-  NavigationTarget,
   PendingNavigation,
 } from './types';
 export { useNavigationState, usePendingNavigation } from './use-navigation';

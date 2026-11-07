@@ -21,6 +21,7 @@ import type { FilterFormSubject } from '../../support/types';
 import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { rowCells } from '../../support/table';
 
 // claude-docs/components/admin-cards.md
 
@@ -225,7 +226,7 @@ describe('AdminCards', () => {
     expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
     const headings = within(list).getAllByRole('columnheader');
     expect(headings.map((h) => h.textContent)).toEqual(['Name', 'Email', 'Card', 'Refusal']);
-    const cells = within(row).getAllByRole('cell');
+    const cells = rowCells(row);
     expect(within(cells[0]).getByRole('link', { name: 'Other Wort' })).toBeInTheDocument();
     expect(cells[1]).toHaveTextContent('other@example.test');
   });
@@ -304,7 +305,7 @@ describe('AdminCards', () => {
     expect(within(list).getByText('Unknown')).toBeInTheDocument();
     expect(within(list).queryByRole('link')).toBeNull();
     const removed = within(list).getByText('Removed account').closest('tr') as HTMLElement;
-    expect(within(removed).getAllByRole('cell')[1]).toBeEmptyDOMElement();
+    expect(rowCells(removed)[1]).toBeEmptyDOMElement();
   });
 
   it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
@@ -339,12 +340,8 @@ describe('AdminCards', () => {
       .getAllByRole('columnheader')
       .findIndex((cell) => cell.textContent === 'Beta');
     expect(column).toBeGreaterThan(-1);
-    expect(
-      within(within(first!).getAllByRole('cell')[column]!).getByText('Yes'),
-    ).toBeInTheDocument();
-    expect(
-      within(within(second!).getAllByRole('cell')[column]!).getByText('No'),
-    ).toBeInTheDocument();
+    expect(within(rowCells(first!)[column]!).getByText('Yes')).toBeInTheDocument();
+    expect(within(rowCells(second!)[column]!).getByText('No')).toBeInTheDocument();
   });
 
   it('opens the mint form by the address, from a link', () => {
@@ -665,7 +662,7 @@ describe('AdminArrivals', () => {
     expect(within(head).queryByRole('columnheader', { name: 'Account' })).toBeNull();
     expect(within(head).getByText('Accepted On')).toBeInTheDocument();
     expect(within(head).getByText('Covens Owned')).toBeInTheDocument();
-    const cells = within(first).getAllByRole('cell');
+    const cells = rowCells(first);
     expect(within(cells[0]).getByRole('link', { name: 'Wort Tester' })).toBeInTheDocument();
     expect(cells[1]).toHaveTextContent('wort@example.test');
     expect(within(first).getByText('Testwort Coven, Second Coven')).toBeInTheDocument();
@@ -673,7 +670,7 @@ describe('AdminArrivals', () => {
     const beta = headings.findIndex((cell) => cell.textContent === 'Beta');
     expect(beta).toBeGreaterThan(-1);
     expect(within(cells[beta]!).getByText('Yes')).toBeInTheDocument();
-    expect(within(within(second).getAllByRole('cell')[beta]!).getByText('No')).toBeInTheDocument();
+    expect(within(rowCells(second)[beta]!).getByText('No')).toBeInTheDocument();
   });
 
   it("opens the account's user modal from its name, and leaves a removed account as plain text", () => {

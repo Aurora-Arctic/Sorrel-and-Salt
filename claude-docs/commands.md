@@ -41,8 +41,8 @@ BETTER_AUTH_SECRET=local-dev-not-a-real-secret npm run test:stories
 
 A bare `npx playwright test <spec>` takes no lock, so wrap it:
 `flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test <spec>`.
-Locally a run reuses an e2e server already listening on its port
-(`reuseExistingServer`), so a server left running under a different secret
+One `webServer` entry (`scripts/e2e-servers.ts --playwright`) builds once and starts every server together (testing/e2e.md).
+Locally a run reuses an e2e server already listening on its port, so a server left running under a different secret
 refuses every cookie the run signs: stop it, or pick another `E2E_PORT_BASE`.
 A worktree has no `.env.local`, since the file is not committed: copy `/app`'s
 in before the run, for the server's other settings.
@@ -72,7 +72,7 @@ waits for any migration running, and its summary lists every `UPDATED`,
 | `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`graphql/manual-api-testing.md`](graphql/manual-api-testing.md))                          |
 | `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`testing/debugging.md`](testing/debugging.md))                                                                                                             |
 | `npm run jobs:web`                                     | A web page on **3456** listing the job runs the dev server has made, with their steps and events, read from `.next/workflow-data/`; the deployed runs are on the Vercel dashboard                               |
-| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                                      |
+| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec,                                                                                     |
 | `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint, then `lint:css`; `lint:fix` is Oxlint's alone                                                                                                                                                           |
 | `npm run lint:css`                                     | Stylelint over `src/**/*.scss` and `.storybook/**/*.scss`, configured below the table                                                                                                                           |
 | `npm run lint:unused`                                  | knip, listing unused files, exports, types and dependencies; CI runs it as the non-blocking `checks / unused` leg, described below the table                                                                    |

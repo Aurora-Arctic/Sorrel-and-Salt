@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 import type { MouseEvent, ReactElement, ReactNode } from 'react';
 import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import { listReturnHref } from './back-href';
 import './back-link.scss';
 
@@ -90,7 +89,6 @@ export default function BackLink({
     <PendingLink
       className={className ? `back-link ${className}` : 'back-link'}
       href={(historyHref ?? href) as Route}
-      navigationTarget={ingredientLinkTarget(href)}
       onClick={goBack}
     >
       <BackChevron />

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import { route } from '../../../.storybook/route';
 import SpellCard, { SpellCardFilters } from '.';
+import { SpellCardSkeleton } from './skeleton';
 import type { SpellCardProps } from './types';
 import './index.stories.scss';
 
@@ -102,6 +103,12 @@ export const States: Story = {
           Compact: (
             <div data-density="compact">
               <SpellCard {...BASE} {...LISTED} id="compact-listed" />
+            </div>
+          ),
+          Loading: <SpellCardSkeleton />,
+          'Loading Compact': (
+            <div data-density="compact">
+              <SpellCardSkeleton />
             </div>
           ),
           'Compact Private Draft': (

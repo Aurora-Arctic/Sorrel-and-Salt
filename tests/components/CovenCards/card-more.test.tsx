@@ -96,7 +96,7 @@ describe('CardMore', () => {
     renderOnPage({ ...HELD, leaveHref: LIST });
 
     choose('House Salt', 'Remove');
-    press(within(await screen.findByRole('dialog')).getByRole('button', { name: /^Remove/ }));
+    press(within(await screen.findByRole('alertdialog')).getByRole('button', { name: /^Remove/ }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(LIST));
     expect(router.refresh).not.toHaveBeenCalled();
@@ -107,11 +107,11 @@ describe('CardMore', () => {
     renderOnPage(HELD);
 
     choose('House Salt', 'Remove');
-    const ask = screen.getByRole('dialog');
+    const ask = screen.getByRole('alertdialog');
     press(within(ask).getByRole('button', { name: /^Remove/ }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(more('House Salt')).toHaveFocus();
     expect(router.refresh).not.toHaveBeenCalled();
   });

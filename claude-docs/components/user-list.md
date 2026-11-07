@@ -29,7 +29,7 @@
 
 ### Actions that ask first
 
-The creation control, the role control (both in the user modal), Impersonate, the pause switch and the invitations' Revoke share `ConfirmedAction` (`confirmed-action.tsx`), built on `useClickFeedback` ([`click-feedback.md`](click-feedback.md)); each supplies its words and write. The service is the guard.
+The creation control, the role control (both in the user modal), Impersonate, the pause switch and the invitations' Revoke share [`ConfirmedAction`](confirmed-action.md), built on `useClickFeedback` ([`click-feedback.md`](click-feedback.md)); each supplies its words and write. The service is the guard.
 
 - The confirm sends the write and stays busy until the page is read again. The control is keyed by its action, so the refreshed modal mounts the other action fresh rather than keeping the busy state. A control that survives the re-read passes `closeOnSent`.
 - `announcement` is said in the page's status region once the action has worked, and left out where success leaves the page. `refusal` replaces the service's sentence; `onSent` replaces the refresh (Impersonate passes both).
@@ -46,11 +46,11 @@ The creation control, the role control (both in the user modal), Impersonate, th
 ### Pause switch
 
 - **The switch on keeper changes is the Users tab's action** ("Pausing keeper changes" in `auth/admin-users.md`). The People page draws it beside its heading from `src/app/(shell)/keepers/(people)/@action/users/page.tsx` ([`tabbed-page.md`](tabbed-page.md)), keyed by the state so the refresh after a flip mounts a fresh one. Both pages read the pause through `src/app/(shell)/keepers/(people)/pause-state.ts`, cached per request.
-- For the primary keeper (`canToggle`) Pause asks first ([`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)); Resume gives back what the pause stopped, so it sends at once. A refusal shows under the pressed button, which keeps focus: Resume is `aria-disabled` while it sends, not `disabled`. Any other keeper gets a `LockedControl`. Pause and Resume share one look so the control does not change as it flips.
+- For the primary keeper (`canToggle`) Pause asks first ([`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)); Resume gives back what the pause stopped, so it sends at once. A refusal shows under the pressed button, which keeps focus: Resume is `aria-disabled` while it sends, not `disabled`. Any other keeper is shown no control at all: the page's one sentence about the pause says whether changes are on, and "Keeper changes are paused." while they are paused. Pause and Resume share one look so the control does not change as it flips.
 
 ### Locked controls
 
-A control that cannot be used says why: the primary keeper's Change Role, Change Role and Approve or Revoke while keeper changes are paused to a keeper the pause binds, and the pause switch for any keeper but the primary one.
+A control that cannot be used says why: the primary keeper's Change Role, Change Role and Approve or Revoke while keeper changes are paused to a keeper the pause binds.
 
 - It is `aria-disabled`, not `disabled`, so it keeps its place in the tab order and a click lands. Activating it sends nothing; it opens the tip and mounts the reason afresh as an alert, so a screen reader hears it each time.
 - The reason is the button's description, in a tip opened by hover, focus or a tap, kept while the pointer is on it, closed on Escape (WCAG 1.4.13), through `useTip`. It is placed fixed against the viewport, not its cell: the table's frame scrolls and would clip it.

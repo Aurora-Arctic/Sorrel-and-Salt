@@ -12,7 +12,7 @@ import { invitationsLock } from './lock';
 import type { AdminInvitationsPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Keeper Invitations',
+  title: 'Invitations',
 };
 
 // One page of the pending invitations and its count, newest first. A cursor naming no row gives the

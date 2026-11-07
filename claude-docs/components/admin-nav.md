@@ -27,18 +27,18 @@
 
 ## The wait for an admin page
 
-`target.ts` holds `adminTarget(href)`, which says what each admin page draws while it is on its way, from one table keyed by the page's first-tab address. `index.tsx` sets it on each section, and `AdminContents` passes the same function for its links. What a target does is [`loading.md`](../loading.md)'s ("Where the pieces are used").
+A link carries only its address. Each admin page has a `skeleton.tsx` beside it (`src/app/(shell)/curator/skeleton.tsx`, `src/app/(shell)/keepers/skeleton.tsx`) and an entry in `src/app/skeletons.ts` under the `admin` host, drawn from the page's own components: its heading, the action at the heading's end, its filter row, then the list. How the skeleton is chosen is [`loading.md`](../loading.md)'s ("How a skeleton is chosen").
 
-- **Every wait belongs to the `admin` region.** It is the `/keepers` layout's `SectionBody` ([`section-body.md`](section-body.md)): it swaps only the page under the context row, so the row and this nav stay while the wait shows. Links into admin from elsewhere (the site bar, the account menu) keep `main`, since there the whole page changes.
-- **The shapes.** `/keepers` draws its own heading, so its target is `page`. The Curator and Keepers leads in the context row name `admin` and `page` directly. The Compendium has one tab and so no tab row, and the index has none.
-- **The index is the `contents` shape**, drawn in every route into `/keepers`.
+- **The `admin` host is the area layout's `SectionBody`** ([`section-body.md`](section-body.md)): it swaps only the page under the context row, so the row and this nav stay while the wait shows. The Curator and Keepers leads in the context row are each a `PendingLink` to the area's index. Links into admin from elsewhere (the site bar, the account menu) come from outside the area, so `MainBody` draws the whole frame.
+- **The tab row is the page's own.** The tabbed pages (Categories, Forms, Deities, Celestial Bodies, Users) draw their skeleton inside the real `TabbedPage` with its real `tabs`; the Compendium has one tab and so no tab row, and the index has none.
+- **The index's skeleton is `AdminNav/skeleton.tsx`**, sections of links under its own heading.
 
 ## The index
 
 `AdminContents`, exported beside the nav, is each area's index table of contents: a `section` per section of the area, each with its name as an `h2` and a list of its pages. Each page is a link to its first tab with its one line beneath it, which is the link's `aria-describedby` too.
 
 - `src/app/(shell)/keepers/page.tsx` renders it under the heading and a lede, a `<p class="lede">` saying what the area is for. `tests/e2e/admin.spec.ts` measures that paragraph against the reading measure, so the lede stays a `<p>` in `main`.
-- **The page is centred** by `.admin-index` (`src/scss/_primitives.scss`) on the `/keepers` page's `<main>`. Its wait (the `contents` shape of `Skeleton`) carries the same class, so the swap is in place.
+- **The page is centred** by `.admin-index` (`src/scss/_primitives.scss`) on the `/keepers` page's `<main>`. Its skeleton (`AdminNav/skeleton.tsx`) carries the same class, so the swap is in place; the other admin pages' waits keep the wide column.
 - **Its links are in the body ink, followed or not**, because the default link colours would make the admin and coven overviews differ by the browser's history.
 
 ## Styling

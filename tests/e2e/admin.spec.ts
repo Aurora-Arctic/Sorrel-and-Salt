@@ -131,8 +131,9 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
   const admin = page.getByRole('row', {
     name: /Fixture Person Verified an-admin@admin-users\.test/,
   });
+  // The name is the row's header, so the cells begin at the address.
+  await expect(admin.getByRole('rowheader')).toHaveText(/Fixture Person$/);
   await expect(admin.getByRole('cell')).toHaveText([
-    /Fixture Person$/,
     /an-admin@admin-users\.test$/,
     /^Keeper/,
     // A mark alone: every keeper may create a workspace, and the users CHECK
@@ -144,14 +145,14 @@ test('an admin lists the users at /keepers/users, filtered, with their sign-in m
     /^Version \d+\.\d+\.\d+$/,
     /\d/,
   ]);
-  const email = admin.getByRole('cell').nth(1);
+  const email = admin.getByRole('cell').nth(0);
   const tip = email.locator('.user-list__tip');
   await expect(tip).toBeHidden();
   await email.locator('.user-list__mark').hover();
   await expect(tip).toBeVisible();
   const discord = admin
     .getByRole('cell')
-    .nth(6)
+    .nth(5)
     .locator('.user-list__hint:has(.provider-mark--discord)');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();

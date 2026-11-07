@@ -37,6 +37,8 @@ import type { SpellRecipeParams } from './types';
 // The page calls `requireSession()` and draws its own `<main>`.
 
 const spellOf = cache(async (slug: string, id: string) => {
+  // A malformed id names no spell, so it is a 404 before any read.
+  if (!RowId.safeParse(id).success) notFound();
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
   try {

@@ -15,7 +15,7 @@
   - A plain press opens the modal at once through the modal provider ([`modal.md`](modal.md), "Opening at once"). The link stays for a new tab or a press before the script loads.
   - Both keep the filter and the page shown, and the form closes back to the tab at that page.
   - While locked it is the locked control instead, and `?invite` opens nothing.
-- **Revoke asks first**, through `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled "Revoke Invitation": "Revoke the invitation to <address>? Its link will say it was withdrawn." A refusal is said in a callout under Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)).
+- **Revoke asks first**, through [`ConfirmedAction`](confirmed-action.md), in a modal titled "Revoke Invitation": "Revoke the invitation to <address>? Its link will say it was withdrawn." A refusal is said in a callout under Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)).
 - **A locked control** is `UserList/locked-control.tsx`'s `LockedControl`: `aria-disabled` with the reason in a tip, and said again as an alert on a click.
 - **The invite form** (`invite-form.tsx`) is a `RouteModal` titled "New Invitation", the link's own name ([`modal.md`](modal.md)). Its fields:
   - **Email Address**, required.

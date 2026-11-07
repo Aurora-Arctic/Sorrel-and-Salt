@@ -9,7 +9,14 @@ import { setup } from '../../scripts/setup';
 // .env.example names every variable src/ and scripts/ read and nothing else (claude-docs/secrets.md, "Every variable").
 
 // Set by the tool that runs the code (Next, Vercel, GitHub Actions, a test runner), never by a developer, so a key in .env.example would only shadow it.
-const TOOL_SET = [/^NODE_ENV$/, /^PORT$/, /^CI$/, /^VERCEL_/, /^GITHUB_/];
+const TOOL_SET = [
+  /^NODE_ENV$/,
+  /^PORT$/,
+  /^CI$/,
+  /^VERCEL_/,
+  /^GITHUB_/,
+  /^E2E_SLOT_SERVERS_ONLY$/,
+];
 // Files that read a variable through a name held in a table, so every quoted variable name in them counts as a read.
 const NAME_MAP_READERS = ['src/lib/social-providers-config.ts'];
 // The one helper that reads `process.env[name]` for a name its callers pass as a literal, which the scan reads at the call.

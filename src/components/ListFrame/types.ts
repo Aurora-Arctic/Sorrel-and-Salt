@@ -21,13 +21,17 @@ export interface ListNavigation {
 }
 
 export interface ListFrameProps {
+  /** The list's own root class, beside `list-frame`: "user-list". */
   className?: string;
+  /** Draws the list as a placeholder: its controls disabled and the whole frame hidden from assistive technology, for a skeleton. */
+  disabled?: boolean;
+  /** The filter, then the `ListBody`. */
   children: ReactNode;
 }
 
 export interface ListBodyProps {
-  shape?: 'table' | 'cards';
-  /** With `cards`: the card the list draws, so its skeleton does too: the grimoire's spell card. */
-  card?: 'spell';
+  /** What the body draws while another page is on its way: the list's own placeholder. */
+  skeleton: ReactNode;
+  /** The table or its empty state, then the pager: what the skeleton stands in for. */
   children: ReactNode;
 }

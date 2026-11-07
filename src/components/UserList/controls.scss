@@ -2,14 +2,8 @@
 @use '../../scss/mixins' as *;
 @use 'layers' as *;
 
-// Compounded with `.notice`, whose rule is `body .notice` in the app: a lone class loses to it.
-.notice.user-list__warning {
-  margin-block: space(5);
-}
-
-.user-list__note {
-  margin-block: space(5) space(6);
-}
+// Controls that stand outside the table too: the locked control and the crown's tips. Each file imports this, so AdminInvitations takes only these
+// rules, not the whole list's stylesheet.
 
 // The primary keeper's Revoke and the tip saying why it cannot be used, the
 // tip placed against this wrapper.

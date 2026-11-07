@@ -3,7 +3,6 @@
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { graphql } from '@/lib/graphql-document';
-import { covenTarget } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
@@ -38,7 +37,7 @@ export function useDuplicateSpell(
     },
     onSuccess: (copyId) => {
       const href = hrefOf(copyId);
-      navigate(href, { target: covenTarget(href.split('?')[0]!) });
+      navigate(href);
     },
     onError: (error) => onError(readGraphqlFailure(error).alert ?? GENERIC_FAILURE),
   });

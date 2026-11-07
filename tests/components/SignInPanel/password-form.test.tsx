@@ -23,6 +23,7 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
 }));
 
 vi.mock('next/navigation', async () => ({
+  useRouter: () => ({}),
   useSearchParams: (await import('./search-params')).useSearchParams,
 }));
 

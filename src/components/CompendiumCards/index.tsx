@@ -3,12 +3,14 @@ import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
 import { facetChoices, vocabulariesOf } from '../CompendiumList/facets';
+import EmptyState from '../EmptyState';
 import { CompendiumEditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import { CardCategoryVocabulary } from '../IngredientCard/category-vocabulary';
 import { cardName } from '../IngredientCard/card-name';
 import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import IngredientSearch from '../IngredientSearch';
 import AddIcon from '../AddIcon';
 import { emptyList } from '../../lib/text';
@@ -105,7 +107,7 @@ const CompendiumCards = ({
   myCovens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
-    shape="cards"
+    skeleton={<ListBodySkeleton label="Compendium" card="compendium" />}
     search={
       <CompendiumListFilter
         audience="public"
@@ -123,14 +125,14 @@ const CompendiumCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>
+      <EmptyState size="compact" label="No Ingredients">
         {emptyText(
           filter,
           categories,
           facetChoices(counts, vocabulariesOf(categories, vocabulary)),
           emptyList('ingredients'),
         )}
-      </p>
+      </EmptyState>
     ) : (
       <CardCategoryVocabulary categories={categories}>
         <IngredientCardList label="Compendium">

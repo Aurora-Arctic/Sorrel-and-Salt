@@ -1,5 +1,4 @@
 import type { Route } from 'next';
-import type { NavigationTarget } from '../../lib/navigation';
 
 export type SectionIconName =
   | 'overview'
@@ -26,8 +25,8 @@ export interface SectionNavItem {
   /** Current only at its own address: the coven index is the ancestor of every coven page. */
   exact?: boolean;
   matches?: readonly Route[];
+  /** Starts a new group: a hairline stands before it in the row, and above it in the More list. */
   apart?: boolean;
-  target?: NavigationTarget;
 }
 
 export interface SectionNavProps {

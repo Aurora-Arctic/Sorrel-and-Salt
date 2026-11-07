@@ -1,6 +1,6 @@
 'use client';
 
-import { usePendingNavigation } from '../../lib/navigation';
+import { usePendingNavigation, reportLeaving } from '../../lib/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { GraphQLClientError, StaleWriteError } from '../../lib/graphql-client-error';
@@ -242,6 +242,7 @@ const CupboardEntryForm = ({
 
   const reload = async (): Promise<void> => {
     await autosave.resolveConflict('reload');
+    reportLeaving();
     window.location.reload();
   };
 

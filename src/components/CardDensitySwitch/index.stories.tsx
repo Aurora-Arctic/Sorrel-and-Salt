@@ -1,3 +1,4 @@
+import { ListBodySkeleton } from '../ListFrame/skeleton';
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement, ReactNode } from 'react';
 import CardDensitySwitch from '.';
@@ -24,7 +25,7 @@ const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
       <main>
         <div className="page-column">
           <IngredientSearch
-            shape="cards"
+            skeleton={<ListBodySkeleton label="Ingredients" />}
             search={
               <CompendiumListFilter
                 audience="coven"

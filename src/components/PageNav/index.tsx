@@ -3,6 +3,8 @@
 import { type ReactElement, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { useSlide } from '../../lib/use-slide';
+import Skeleton from '../Skeleton';
+import SkeletonText from '../Skeleton/text';
 import { ChevronIcon } from '../IconTip/icons';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
@@ -35,7 +37,12 @@ const inTabletBand = (): boolean =>
   typeof window.matchMedia === 'function' && window.matchMedia(TABLET_BAND).matches;
 const inTabletBandNever = (): boolean => false;
 
-export default function PageNav({ label, entries, collapsible }: PageNavProps): ReactElement {
+export default function PageNav({
+  label,
+  entries,
+  collapsible,
+  pending,
+}: PageNavProps): ReactElement {
   const [current, setCurrent] = useState(entries[0]?.href);
   const wide = useSyncExternalStore(subscribeToBand, inTabletBand, inTabletBandNever);
   const hydrated = useHydrated();
@@ -118,8 +125,27 @@ export default function PageNav({ label, entries, collapsible }: PageNavProps): 
     </li>
   );
 
-  // The entries stay one flat list for the observer above; only the drawing nests a group.
-  const list = (
+  // The entries stay one flat list for the observer above; only the drawing
+  // nests a group, its label naming its list.
+  const list = pending ? (
+    <ul aria-hidden="true">
+      {entries.length > 0
+        ? entries.map((entry) => (
+            <li key={entry.href}>
+              <span className="page-nav__pending">
+                <SkeletonText>{entry.label}</SkeletonText>
+              </span>
+            </li>
+          ))
+        : Array.from({ length: pending === true ? 6 : pending }, (_, at) => (
+            <li key={at}>
+              <span className="page-nav__pending">
+                <Skeleton shape="line" quiet />
+              </span>
+            </li>
+          ))}
+    </ul>
+  ) : (
     <ul>
       {itemsOf(entries).map((item, at) =>
         item.kind === 'entry' ? (

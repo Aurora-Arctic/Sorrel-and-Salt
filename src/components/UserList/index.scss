@@ -5,8 +5,8 @@
 // The user list's own rules: cell alignment, marks and tips, the sticky Impersonate column and its stacked-card fallback; the layout primitives are shared
 // (claude-docs/components/user-list.md, "Styling").
 
-// Every cell centred on its row rather than on the baseline the primitive uses: these rows mix text with logo
-// circles, marks and buttons, whose baselines sit at different heights.
+// Every cell centred on its row, not on the text's baseline: these rows mix text with logo circles, marks and buttons
+// whose baselines differ.
 .user-list .data-table td {
   vertical-align: middle;
 }
@@ -164,7 +164,8 @@
   align-items: center;
   gap: space(3);
 
-  // Compounded with `.notice`, whose rule is `body .notice` in the app: a lone class loses to it.
+  // Compounded with `.notice`, whose primitive is `body .notice` in the app,
+  // as `.notice.confirmed-action__warning` is: a lone class loses to it there.
   .notice.user-list__pause-state {
     margin: 0;
   }

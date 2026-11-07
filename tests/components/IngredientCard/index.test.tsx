@@ -10,8 +10,10 @@ import { categoryRefs } from '@/components/IngredientCard/category-refs';
 import { CardCategoryVocabulary } from '@/components/IngredientCard/category-vocabulary';
 import { StockBadge } from '@/components/StockBadge';
 
-// claude-docs/components/ingredient-card.md
+// (claude-docs/components/ingredient-card.md): the card is presentational, so each case is its props in and what rendered out. The names, forms and notes are the test's own data.
+// Marks are found by their exact text and asserted by presence or absence, never by what the words say.
 
+// The name link navigates through the shared hook, so the App Router is mocked.
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
@@ -318,12 +320,14 @@ describe('IngredientCard actions', () => {
   });
 });
 
+// The name link is the card's one way onward, and the page it leads to draws
+// its own skeleton while it loads: the card names that page by its address.
 describe('IngredientCard navigation', () => {
   let target: unknown;
   function Probe() {
     const state = useNavigationState();
     useEffect(() => {
-      target = state.target;
+      target = state.href;
     });
     return null;
   }
@@ -340,7 +344,7 @@ describe('IngredientCard navigation', () => {
     await act(async () => arrive());
   });
 
-  it('presses through to a compendium entry as a main page with its jump menu', async () => {
+  it('presses through to a compendium entry by its address', async () => {
     render(
       <Navigating push={router.push} arrives={arrives()}>
         <IngredientCard {...BASE} />
@@ -351,10 +355,10 @@ describe('IngredientCard navigation', () => {
       fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
     });
     expect(router.push.mock.calls[0]?.[0]).toBe(HREF);
-    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    expect(target).toBe(HREF);
   });
 
-  it("presses through to a coven's entry as a coven page with its jump menu", async () => {
+  it("presses through to a coven's entry by its address", async () => {
     render(
       <Navigating push={router.push} arrives={arrives()}>
         <IngredientCard
@@ -368,7 +372,7 @@ describe('IngredientCard navigation', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('link', { name: 'Fixture Testwort' }), { button: 0 });
     });
-    expect(target).toEqual({ region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' });
+    expect(target).toBe('/coven/fixture-coven/ingredients/some-id');
   });
 });
 

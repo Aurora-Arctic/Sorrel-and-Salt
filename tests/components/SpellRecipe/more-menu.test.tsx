@@ -184,11 +184,11 @@ describe('SpellMoreMenu', () => {
     renderMenu();
 
     choose('Delete');
-    const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
+    const ask = screen.getByRole('alertdialog', { name: 'Delete Spell' });
     expect(within(ask).getByText('Fixture Working')).toBeInTheDocument();
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(dots()).toHaveFocus();
     expect(calls).toEqual([]);
   });
@@ -196,7 +196,7 @@ describe('SpellMoreMenu', () => {
   it('tells the author of a private spell only what is true of it: no one else loses it', () => {
     renderMenu({ visibility: 'private' });
     choose('Delete');
-    const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
+    const ask = screen.getByRole('alertdialog', { name: 'Delete Spell' });
     expect(ask).not.toHaveTextContent(/member/);
     expect(ask).toHaveTextContent(
       'Delete Fixture Working? It is gone for good, and nothing in stock changes.',
@@ -206,7 +206,7 @@ describe('SpellMoreMenu', () => {
   it('tells the deleter of a shared spell that the coven loses it', () => {
     renderMenu({ visibility: 'workspace' });
     choose('Delete');
-    expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
+    expect(screen.getByRole('alertdialog', { name: 'Delete Spell' })).toHaveTextContent(
       'Delete Fixture Working? It leaves the grimoire for every member of the coven, and nothing in stock changes.',
     );
   });
@@ -224,14 +224,14 @@ describe('SpellMoreMenu', () => {
     const view = renderMenu({ queryClient });
 
     choose('Delete');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(DELETED_HREF));
     expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
     expect(router.push).not.toHaveBeenCalled();
     // Busy until the list arrives, so the focus is not handed back to the page first.
     expect(
-      within(screen.getByRole('dialog')).getByRole('button', { name: /Delet/ }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: /Delet/ }),
     ).toBeDisabled();
 
     view.rerender(
@@ -251,10 +251,10 @@ describe('SpellMoreMenu', () => {
     renderMenu();
 
     choose('Delete');
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(dots()).toHaveFocus();
   });
 });

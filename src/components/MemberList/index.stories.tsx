@@ -61,7 +61,7 @@ const SoleOwnerPage = () => (
       This coven has one steward. If that person loses access, nobody can manage its members. Make
       another member a steward to be safe.
     </Notice>
-    <ListBody>
+    <ListBody skeleton={null}>
       <MemberList members={OWNER_VIEW} currentUserId="u-ada" showEmail showAccess />
     </ListBody>
   </ListFrame>

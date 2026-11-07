@@ -1,3 +1,4 @@
+import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ListFrame, {
@@ -30,7 +31,7 @@ const Ways = () => {
 const frame = (
   <ListFrame>
     <Ways />
-    <ListBody>
+    <ListBody skeleton={null}>
       <table aria-label="Fixtures" />
     </ListBody>
   </ListFrame>
@@ -75,7 +76,7 @@ describe('ListBody, pending', () => {
         value={{ pending: true, searching: false, go: () => undefined }}
       >
         <ListFrame>
-          <ListBody shape="cards">
+          <ListBody skeleton={<ListBodySkeleton label="Cards" />}>
             <p>Fixture content</p>
           </ListBody>
         </ListFrame>

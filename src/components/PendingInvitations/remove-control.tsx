@@ -3,7 +3,7 @@
 import type { ReactElement } from 'react';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import type { RevokeControlProps } from './types';
 
 // Revoking a declined row stamps it pending; the link keeps saying declined, as the invitee's answer outranks the stamp (claude-docs/components/pending-invitations.md).

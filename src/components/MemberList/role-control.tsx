@@ -5,7 +5,7 @@ import type { WorkspaceRole } from '@/modules/coven';
 import { graphql } from '@/lib/graphql-document';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { RadioGroupField } from '../Field';
-import ConfirmedAction from '../UserList/confirmed-action';
+import ConfirmedAction from '../ConfirmedAction';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { RoleControlProps } from './types';

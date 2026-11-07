@@ -2,7 +2,6 @@
 
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import LastEdit from '../LastEdit';
 import { CompendiumEditLink, EditLink } from '../IconTip';
 import EntryMarks, { RecencyMark } from '../EntryMarks';
@@ -81,11 +80,7 @@ export function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement
   const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
   return (
     <div className="ingredient-details-foot">
-      <PendingLink
-        className="btn"
-        href={pageHref}
-        navigationTarget={ingredientLinkTarget(pageHref)}
-      >
+      <PendingLink className="btn" href={pageHref}>
         {label}
       </PendingLink>
     </div>

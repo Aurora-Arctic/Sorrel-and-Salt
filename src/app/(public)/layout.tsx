@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import AppShell from '../../components/AppShell';
 import PublicFrame from '../../components/PublicFrame';
+import PageColumn from '../../components/PageColumn';
 import { viewerIfSignedIn } from '../../lib/viewer';
 
 // The frame for pages a signed-out visitor may open; a route group, so URLs are unchanged. It reads
@@ -13,14 +14,14 @@ export default async function PublicLayout({ children }: { children: ReactNode }
     return (
       <PublicFrame>
         <main>
-          <div className="page-column">{children}</div>
+          <PageColumn as="div">{children}</PageColumn>
         </main>
       </PublicFrame>
     );
   return (
     <AppShell viewer={shell.viewer} workspaces={shell.workspaces}>
       <main>
-        <div className="page-column">{children}</div>
+        <PageColumn as="div">{children}</PageColumn>
       </main>
     </AppShell>
   );

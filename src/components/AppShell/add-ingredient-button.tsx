@@ -1,7 +1,6 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { ingredientLinkTarget } from './site-target';
 import type { Route } from 'next';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { type ReactElement, Suspense, useRef, useState } from 'react';
@@ -241,7 +240,7 @@ const AddIngredientButton = ({
                 // without `?new`, which closes the dialog.
                 leaving.current = true;
                 const href = `/coven/${adding.slug}/ingredients/${ingredient.id}`;
-                navigate(href as Route, { target: ingredientLinkTarget(href, !onAdmin) });
+                navigate(href as Route);
               }}
             />
           )}

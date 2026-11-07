@@ -1,12 +1,12 @@
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
-import { ingredientLinkTarget } from '../AppShell/site-target';
 import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
 import SpellMarks from '../SpellMarks';
 import SpellMoreMenu from '../SpellRecipe/more-menu';
+import { SpellCardFrame } from './frame';
 import CardRecordWorking from './record-working';
 import type { SpellCardProps } from './types';
 import './index.scss';
@@ -48,19 +48,7 @@ const SpellCard = ({
         ? 'Made once'
         : `Made ${workingCount} times`;
   return (
-    <article className="spell-card specimen" aria-labelledby={spellTitleId(id)}>
-      {/* The card's face and shadow, and the warm glow behind them, as layers, so the
-          smouldering edge (_smoulder.scss) can burn a real hole in the face and its shadow.
-          First, so the content paints over them; decoration only, so hidden from assistive
-          technology and named in nothing. */}
-      <span className="spell-card__glow" aria-hidden="true" />
-      <span className="spell-card__face" aria-hidden="true">
-        <span className="spell-card__face-paper">
-          <span className="spell-card__face-corner">
-            <span className="spell-card__face-hole" />
-          </span>
-        </span>
-      </span>
+    <SpellCardFrame labelledBy={spellTitleId(id)}>
       <div className="specimen__top">
         <div className="spell-card__heading">
           <Heading id={spellTitleId(id)} className="spell-card__title">
@@ -71,7 +59,7 @@ const SpellCard = ({
             {href ? (
               // The recipe page draws its own frame while it loads, so the link names it.
               // The link stretches over the whole card, as an ingredient card's name does.
-              <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
+              <PendingLink href={href}>
                 <span className="spell-card__title-text">
                   {name} <LinkHint />
                 </span>
@@ -132,16 +120,7 @@ const SpellCard = ({
           )}
         </div>
       )}
-      {/* The smoulder's ember line and char rim, over the content (_smoulder.scss). */}
-      <span className="spell-card__burn" aria-hidden="true">
-        <span className="spell-card__burn-paper">
-          <span className="spell-card__burn-corner">
-            <span className="spell-card__burn-hole" />
-          </span>
-          <span className="spell-card__burn-curve" />
-        </span>
-      </span>
-    </article>
+    </SpellCardFrame>
   );
 };
 

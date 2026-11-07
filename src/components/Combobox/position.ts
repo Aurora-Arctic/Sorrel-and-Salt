@@ -74,7 +74,21 @@ export function useListPosition(
       offset(gap),
       // A function, so the bar is read at every placement; a list that would open behind it flips above.
       flip((state) => ({ padding: edges(state) })),
-      shift((state) => ({ padding: edges(state) })),
+      // Never held further in than the anchor itself stands, so a control closer than the edge to the window's side has its list line up with it.
+      shift((state) => {
+        const { rects } = state;
+        const { left, right, ...rest } = edges(state);
+        return {
+          padding: {
+            ...rest,
+            left: Math.min(left, Math.max(0, rects.reference.x)),
+            right: Math.min(
+              right,
+              Math.max(0, window.innerWidth - rects.reference.x - rects.reference.width),
+            ),
+          },
+        };
+      }),
       size((state) => ({
         padding: edges(state),
         // As wide as the anchor unless told not to be, no taller than the room it has.

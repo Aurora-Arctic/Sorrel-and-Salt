@@ -80,7 +80,7 @@ function CardRecordWorkingDialog({
         ) : setup.isError ? (
           <Notice kind="error">{GENERIC_FAILURE}</Notice>
         ) : (
-          <Skeleton shape="form" />
+          <Skeleton shape="block" count={4} />
         )
       }
     </Modal>

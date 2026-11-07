@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const pathname = vi.fn<() => string>();
 const search = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({}),
   usePathname: () => pathname(),
   useSearchParams: () => new URLSearchParams(search()),
 }));

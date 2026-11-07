@@ -135,8 +135,8 @@ async function userRow(page: Page, email: string) {
   return page.getByRole('row', { name: new RegExp(email.replace(/[.+]/g, '\\$&')) });
 }
 
-/** The role cell, the third: its text opens with the role. */
-const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(2);
+/** The role cell, the second after the row heading: its text opens with the role. */
+const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(1);
 
 async function userModal(page: Page, row: ReturnType<Page['getByRole']>, name: string) {
   await row.getByRole('link', { name, exact: true }).click();
@@ -179,8 +179,11 @@ async function inviteAdmin(
   if (reason) await dialog.getByRole('textbox', { name: 'Reason' }).fill(reason);
   await dialog.getByRole('button', { name: 'Send Invitation' }).click();
   await expect(
-    page.getByRole('region', { name: 'Keeper Invitations' }).getByRole('status'),
-  ).toContainText(email);
+    page
+      .getByRole('region', { name: 'Keeper Invitations' })
+      .getByRole('status')
+      .filter({ hasText: email }),
+  ).toBeVisible();
   return mailedPath(email, INVITE_LINK);
 }
 
@@ -315,7 +318,7 @@ test(
     const { userId: admin } = await signInAs(page, address('granting-admin'), ['discord'], 'admin');
     const row = await userRow(page, granteeEmail);
     await expect(roleCell(row)).toHaveText(/^User/);
-    await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+    await expect(row.getByRole('cell').nth(2)).toHaveText(/^No/);
 
     const granting = await chooseRole(page, row, 'Fixture Person', 'Keeper');
     await expect(granting).toContainText('Fixture Person');
@@ -325,7 +328,7 @@ test(
     await expect(granting).toHaveCount(0);
 
     await expect(roleCell(row)).toHaveText(/^Keeper/);
-    await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
+    await expect(row.getByRole('cell').nth(2)).toHaveText('Yes');
 
     await signInAgainAs(page, grantee);
     await expectAdminArea(page, true);
@@ -338,7 +341,7 @@ test(
     await revoking.getByRole('button', { name: 'Demote' }).click();
     await expect(revoking).toHaveCount(0);
     await expect(roleCell(again)).toHaveText(/^User/);
-    await expect(again.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+    await expect(again.getByRole('cell').nth(2)).toHaveText(/^Yes/);
     await expect(
       page.getByRole('dialog').getByRole('button', { name: 'Change Role for Fixture Person' }),
     ).toBeVisible();
@@ -404,9 +407,11 @@ test.describe('the primary admin', () => {
       const status = page.getByRole('main').getByRole('status');
 
       await visit(page, list);
-      const unusable = page.getByRole('button', { name: 'Pause Keeper Changes' });
-      await expect(unusable).toHaveAttribute('aria-disabled', 'true');
-      await expect(unusable).toHaveAccessibleDescription(/\S/);
+      // Only the primary keeper is shown the switch; the list has loaded once the grantee's row is there.
+      await expect(
+        page.getByRole('row', { name: new RegExp(granteeEmail.replace(/[.]/g, '\\.')) }),
+      ).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Pause Keeper Changes' })).toHaveCount(0);
       await expect(status).toHaveCount(0);
 
       // Scoped to the modal: the button that opens it has the same name.
@@ -440,7 +445,7 @@ test.describe('the primary admin', () => {
       expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       await visit(page, list);
       await expect(roleCell(row)).toHaveText(/^User/);
-      await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+      await expect(row.getByRole('cell').nth(2)).toHaveText(/^No/);
 
       await signInAgainAs(page, primary);
       await visit(page, list);
@@ -530,7 +535,7 @@ test(
     await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
     await approving.getByRole('button', { name: 'Approve' }).click();
     await expect(approving).toHaveCount(0);
-    await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+    await expect(row.getByRole('cell').nth(2)).toHaveText(/^Yes/);
     const granting = await chooseRole(page, row, 'Ledger Fixturewort', 'Keeper');
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
     await granting.getByRole('button', { name: 'Promote' }).click();
@@ -556,8 +561,8 @@ test(
     // Every user's changes, not only this subject's.
     await expect(rows.first()).toBeVisible();
     expect(await rows.count()).toBeGreaterThan(3);
-    await expect(rows.first().getByRole('cell').nth(1)).toHaveText('Ledger Fixturewort');
-    await expect(rows.first().getByRole('cell').nth(4)).toHaveText('Manual fix');
+    await expect(rows.first().getByRole('cell').nth(0)).toHaveText('Ledger Fixturewort');
+    await expect(rows.first().getByRole('cell').nth(3)).toHaveText('Manual fix');
     for (const colorScheme of ['dark', 'light'] as const) {
       await page.emulateMedia({ colorScheme });
       await assertNoAccessibilityViolations(page);
@@ -582,7 +587,7 @@ test(
     // The labels are the only rendering of the privilege, the change and the route, so they are the state here.
     await expect(rows).toHaveCount(3);
     const cells = async (index: number) => rows.nth(index).getByRole('cell').allTextContents();
-    expect((await cells(0)).slice(1)).toEqual([
+    expect(await cells(0)).toEqual([
       'Ledger Fixturewort',
       'Keeper',
       'Revoked',
@@ -590,7 +595,7 @@ test(
       'Breakglass Operator',
       'Restored after the audit',
     ]);
-    expect((await cells(1)).slice(1)).toEqual([
+    expect(await cells(1)).toEqual([
       'Ledger Fixturewort',
       'Keeper',
       'Granted',
@@ -598,7 +603,7 @@ test(
       'Ledger Keeper',
       'Curates the celestial bodies',
     ]);
-    expect((await cells(2)).slice(1)).toEqual([
+    expect(await cells(2)).toEqual([
       'Ledger Fixturewort',
       'Coven Creation',
       'Granted',
@@ -609,12 +614,8 @@ test(
     const times = await Promise.all(
       [0, 1, 2].map(async (index) =>
         Date.parse(
-          (await rows
-            .nth(index)
-            .getByRole('cell')
-            .first()
-            .locator('time')
-            .getAttribute('datetime')) ?? '',
+          (await rows.nth(index).getByRole('rowheader').locator('time').getAttribute('datetime')) ??
+            '',
         ),
       ),
     );
@@ -635,8 +636,8 @@ test(
       `/keepers/privilege-changes?query=${encodeURIComponent(part)}&privilege=create_workspace`,
     );
     await expect(rows).toHaveCount(1);
-    await expect(rows.first().getByRole('cell').nth(1)).toHaveText('Ledger Fixturewort');
-    await expect(rows.first().getByRole('cell').nth(5)).toHaveText('Ledger Keeper');
+    await expect(rows.first().getByRole('cell').nth(0)).toHaveText('Ledger Fixturewort');
+    await expect(rows.first().getByRole('cell').nth(4)).toHaveText('Ledger Keeper');
     await privilege.click();
     await choices.getByRole('option', { name: 'Keeper', exact: true }).click();
     await expect(page).toHaveURL(/privilege=admin$/);
@@ -680,7 +681,7 @@ test(
     await assertNoAccessibilityViolations(page);
     await send.click();
 
-    await expect(section.getByRole('status')).toContainText(invited);
+    await expect(section.getByRole('status').filter({ hasText: invited })).toBeVisible();
     const row = section.getByRole('row', { name: new RegExp(invited.replace(/[.]/g, '\\.')) });
     await expect(row).toContainText('Curates the resins');
     await expect(row).toContainText('Curator');
@@ -768,9 +769,7 @@ test(
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     await expect(rows).toHaveCount(2);
     const changes = await Promise.all(
-      [0, 1].map(async (index) =>
-        (await rows.nth(index).getByRole('cell').allTextContents()).slice(1),
-      ),
+      [0, 1].map(async (index) => await rows.nth(index).getByRole('cell').allTextContents()),
     );
     expect([...changes].sort((a, b) => a[1].localeCompare(b[1]))).toEqual([
       [
@@ -819,9 +818,7 @@ test(
     const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
     await expect(rows).toHaveCount(2);
     const changes = await Promise.all(
-      [0, 1].map(async (index) =>
-        (await rows.nth(index).getByRole('cell').allTextContents()).slice(1),
-      ),
+      [0, 1].map(async (index) => await rows.nth(index).getByRole('cell').allTextContents()),
     );
     expect([...changes].sort((a, b) => a[1].localeCompare(b[1]))).toEqual([
       [

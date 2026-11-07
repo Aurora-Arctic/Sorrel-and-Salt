@@ -14,6 +14,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { leavingAtEachLoad, stubLocationReload } from '../../support/location';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -84,6 +85,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 describe('the annotation form saves as it is edited', () => {
@@ -145,5 +147,22 @@ describe('the annotation form saves as it is edited', () => {
 
     await waitFor(() => expect(sent).toHaveLength(1));
     expect(sent[0]).toMatchObject({ input: { label: 'Mine' }, expectedRevision: 7 });
+  });
+
+  // The bar and the busy hint stay up through the reload only when the page reports it is leaving first.
+  it('reports the page is leaving before Reload Latest reloads it', async () => {
+    const reloadMock = vi.fn();
+    const leaving = leavingAtEachLoad(reloadMock);
+    mockGraphQLError('AnnotateCupboardEntry', { code: 'STALE_WRITE', currentRevision: 7 });
+    renderForm();
+    typeIn(label(), 'Mine');
+    await wait(3100);
+    expect(await screen.findByText('This entry was changed elsewhere.')).toBeInTheDocument();
+    stubLocationReload(reloadMock);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reload Latest' }));
+
+    await waitFor(() => expect(reloadMock).toHaveBeenCalledOnce());
+    expect(leaving).toEqual([true]);
   });
 });

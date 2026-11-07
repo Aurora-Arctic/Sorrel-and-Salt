@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import ForgotPasswordForm from '../../components/ForgotPasswordForm';
 import PageHeader from '../../components/PageHeader';
+import PageFrame from '@/components/PageFrame';
+import { PendingLink } from '@/lib/navigation';
 
 export const metadata: Metadata = {
   title: 'Forgot Password',
@@ -13,9 +14,10 @@ export const metadata: Metadata = {
 // No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is reachable while signed out.
 export default function ForgotPasswordPage() {
   return (
-    <main className="page-frame page-frame--narrow">
+    <PageFrame narrow>
       <div className="panel">
         <PageHeader
+          className="card-page-header"
           headingClassName="auth-title"
           title="Forgot Your Password?"
           lede={
@@ -24,9 +26,9 @@ export default function ForgotPasswordPage() {
         />
         <ForgotPasswordForm />
         <p className="forgot-password-form__back">
-          <Link href="/sign-in">Back to Sign In</Link>
+          <PendingLink href="/sign-in">Back to Sign In</PendingLink>
         </p>
       </div>
-    </main>
+    </PageFrame>
   );
 }

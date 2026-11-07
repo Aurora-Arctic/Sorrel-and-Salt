@@ -1,7 +1,6 @@
 'use client';
 
 import type { Route } from 'next';
-import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
 import { graphql } from '@/lib/graphql-document';
@@ -12,6 +11,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
 import './index.scss';
+import { PendingLink } from '../../lib/navigation';
 
 // The `/account/email` page's form and the account page's Email section (`embedded`): the address, its
 // verification state, and a new one. Every submit sends mail rather than writing the row, so success
@@ -130,9 +130,9 @@ const EmailForm = ({
         <p className="email-form__continue">
           {/* Cast: `next` is whatever page sent us here, already run through
               safeReturnPath, so it is a same-site path but not a known route. */}
-          <Link className="btn btn--solid" href={(next as Route | undefined) ?? landing}>
+          <PendingLink className="btn btn--solid" href={(next as Route | undefined) ?? landing}>
             Continue
-          </Link>
+          </PendingLink>
           {accountPath && (
             <a className="btn btn--quiet" href={accountPath}>
               Continue to Account
