@@ -5,7 +5,7 @@
 `planet` and `zodiac` before them), in
 `src/modules/vocabulary/schema/astrology.ts`, migration
 `0023_correspondence-vocabularies.sql`, seeded by `src/db/seed/astrology.ts`
-(["The astrology vocabulary seed"](astrology-vocabulary-seed.md)), and read
+(["The astrology vocabulary seed"](../compendium/astrology-vocabulary-seed.md)), and read
 by a member's autofill (["The member's autofill"](member-autofill.md)). They
 replace a TypeScript constant of the same lists, deleted with the seed: a list
 a keeper cannot extend without a deploy is the shape `form` had before MB.35,

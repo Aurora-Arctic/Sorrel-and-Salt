@@ -25,7 +25,7 @@ answer.
   compendium's pages and the files a crawler reads (MB.80), with the icon and
   manifest files M11.16 will add, listed ahead of it. M12.34 adds `/opengraph-image`, the site's
   share card that a link preview fetches with no cookie; the compendium's own cards sit under
-  `/compendium/*` ([`../share-card.md`](../share-card.md)). The `(public)` route
+  `/compendium/*` ([`../share-card.md`](../seo/share-card.md)). The `(public)` route
   group holds these pages, and its layout draws the chrome without redirecting
   ([`app-shell.md`](../components/app-shell.md), "Why a route group"). Off
   production (`VERCEL_ENV` not `production`) the proxy also sets

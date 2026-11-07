@@ -85,7 +85,7 @@ nothing in `Docker/docker-compose.yaml` to publish a port from.
 
 From the **host**, the `make` equivalents are `make dev-debug`,
 `make test-debug`, `make test-ui`, `make e2e-ui`, `make e2e-trace`, exactly
-mirroring [`commands.md`](commands.md) (neither `make` nor `docker` exists
+mirroring [`commands.md`](../commands.md) (neither `make` nor `docker` exists
 inside the devcontainer itself — run the npm scripts directly there).
 
 ## Server-side debugging
@@ -236,7 +236,7 @@ under the same rule** (M10.25): set in the same place, `ws://playwright-audit:44
 for the WebKit, Firefox and phone audit's browsers (`make playwright-audit-up`,
 Microsoft's image on the `audit` profile), and read only when `E2E_AUDIT=1`
 asks for the audit (`npm run e2e:audit`), so its presence alone changes
-nothing for `npm run e2e` ([`testing/e2e.md`](testing/e2e.md), "The audit").
+nothing for `npm run e2e` ([`testing/e2e.md`](e2e.md), "The audit").
 
 **The remote branch also moves `baseURL`, and deliberately not the readiness
 check.** When `PLAYWRIGHT_WS_ENDPOINT` is set, every `baseURL` becomes

@@ -432,7 +432,7 @@ column is null, so a CHECK closes the gap wherever the ingredient may be null.
   has none or several.
 - `ingredient_categories.variant_id`, nullable: the pair primary key became
   two unique indexes, one on the parent's pairs and one on a form's
-  ([`ingredient_categories`](ingredient-categories.md)).
+  ([`ingredient_categories`](categories.md)).
 - `ingredient_substitutes.variant_id`, the form a row stands in for, and
   `substitute_variant_id`, the linked ingredient's form, under its own
   composite key against `substitute_id` and a CHECK that it has one beside
@@ -479,3 +479,76 @@ Notes that used to sit as comments on `src/modules/ingredients/schema/ingredient
 - **Indexes.** The formal name is unique once per tier whatever the form, as two indexes: a constraint carries no WHERE and `nullsNotDistinct()` exists only on constraints. Label uniqueness is the workspace tier only: inside one drawer an ambiguous label is a mistake, in the compendium it is the point. The slug index for the workspace tier carries no tier predicate, as DESIGN.md §5 writes it, because a null `workspace_id` collides with nothing in a btree.
 - **Shown flag.** `shown` says whether the public compendium shows the entry: `true` by default, so every row there already reads as shown. A hidden entry is kept, never deleted, and a coven's own entry is always shown. A curator sets it through one service, the seed sets it only when it first lands an entry (hidden when neither the entry nor any of its forms names a category), and every public read excludes `shown = false` in SQL, while admin screens and a coven's cupboard still see the entry. Migration `0109` applied that same rule once to the rows already there, since nobody could have chosen Show or Hide before it, and migration `0117` hid once every live shown entry with no live category (the category and its group live, the pair on the entry or on a live form). `ingredients_tier_shown`, on `(workspace_id, shown)` where `deleted_at IS NULL`, serves that read.
 - **Trigram indexes.** One multicolumn `gin_trgm_ops` index serves a predicate on either column alone (asserted by EXPLAIN in ingredients-trigram.test.ts). It is not partial. A match must be written `name % $1` under a per-transaction `pg_trgm.similarity_threshold`, never `similarity(name, $1) > 0.4`, which no trigram index can answer. The folded twin goes through `unaccent_immutable` (migration 0026) for the compendium search's accent-insensitive `<%`; only an expression index lets a fold reach a trigram index. It sits beside the raw one because the fuzzy finders still match the raw columns.
+
+### Workspaces and membership (M6.2)
+
+`src/modules/coven/schema/workspaces.ts` holds DESIGN.md §5's two workspace tables and
+the `workspace_role` enum (`viewer`, `member`, `owner`). The declaration
+order reads as a hierarchy and is not one: M6.3 gives each role its own
+permission statements, so nothing compares two roles (see ["The Membership
+proof"](membership-proof.md)).
+`0004_black_slyde.sql` is the migration.
+
+- **`workspaces`** — `id`, `name`, `slug`, + audit, and **nothing else**.
+  There is no `kind` column and no automatically created workspace: every
+  workspace behaves identically, taking members and being deleted by a steward.
+  `workspaces-schema.test.ts` pins the whole column set rather than asserting
+  the absence of one name, so a later `kind`/`type`/`personal` column turns it
+  red instead of going unnoticed. The entity is `workspaces` even though it
+  routes under `/coven/[slug]`; only the URL segment says coven (§5's naming
+  note).
+- **`workspaces_slug_unique`** is partial on `deleted_at IS NULL`, per the
+  [partial-index convention](soft-delete.md) — the slug is what
+  `/coven/[slug]` routes on, so a plain unique constraint would let a deleted
+  workspace hold a name hostage forever.
+- **`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, `invitedBy`
+  (nullable), + audit, with a composite primary key on the pair and no surrogate `id`. The
+  pair _is_ the membership's identity: a surrogate key would let the same user
+  join the same workspace twice, with two rows disagreeing about their role.
+  `joinedAt` is deliberately distinct from `created_at` — a role change
+  rewrites the row without changing when the person joined. `invitedBy`
+  references `users.id` and holds the sender of the invitation that seated the
+  person (M10.26). It is not `created_by`, which is the person who accepted,
+  since acceptance runs under their session. It is written at the moment of
+  seating, not worked out later from `invitations`: a person removed and invited
+  back has several accepted invitations, and the database clock
+  (`accepted_at`) and the app clock (`joined_at`) need not order them the same
+  way. Revival overwrites it, a role change leaves it, a creator has null, and
+  the name resolves through the co-member finder, which still names someone
+  removed since.
+- **`owner` is a role here but not an invitable one.** That narrowing lives on
+  `invitations` (M7.1; one table since MB.201), whose check constraint rejects it — see
+  ["Invitations"](invitations.md); the Steward role is granted afterwards by an existing steward on
+  the members page.
+- Both tables carry the full six-column audit spread, and every `*_by` column
+  references `users.id` as MB.5 specifies. `workspace_members` keeps all six
+  despite being a join table — MB.34 hard-deletes two others, and this is not
+  one of them: who removed whom, and when, is worth keeping. The tables are inert at Wave 3 —
+  nothing queries them until M6.3's service and its `Membership` proof land in
+  Wave 5, which is the point of CLAUDE.md's table-task-then-behaviour-task
+  rule.
+
+### The provisional-account delete (MB.67)
+
+`deleteLapsedProvisionalUser(userId, lifetimeSeconds, capSeconds)` is the one hard delete of a table
+carrying `deleted_at`, and it is a named export rather than a loosening of
+`write.delete`'s type. It removes the one `users` row named, if it is unverified,
+holds at least one `accounts` row, and has an `updated_at` older than
+`now()` minus the lifetime or a `created_at` older than `now()` minus the
+cap, and answers whether it did. `accounts` and `sessions` follow by their
+`ON DELETE CASCADE`, as do the account's rows in `user_access_pauses`, `workspace_member_pauses` and `support_timeouts`, whose
+`user_id` cascades too. A pause or a support time-out sanctions the account it names and records nothing else, so unlike the privilege
+ledger below it neither keeps the account nor blocks the delete. `support_timeouts.user_id` was a plain foreign key until migration 0120, which re-adds it with `ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` over `accounts` is `existsIn`'s, so the delete builds no read
+of its own. `provisionalSecondsLeft(userId, ...)` is its read-only partner: how long until the row lapses, or null when it will not (it is verified, vouched for, has no provider account, or is gone). The expiry job's step calls the two in turn.
+
+It skips a row holding any `user_privilege_changes` row (MB.204), as
+`not(existsIn(...))`, the negation `citesNothing` uses. Such an account is
+one a keeper has vouched for, and the ledger references it with a plain
+foreign key, so deleting it would fail. The rows are not deleted with it either:
+`forbid_rewrite` refuses that, and the ledger is the history.
+
+It is hard for a reason outside this layer: Better Auth reads `users` by
+address with no `deleted_at` filter, so a tombstone would keep refusing the
+owner's sign-in. It runs outside `withAudit` because no surviving row is left to stamp, though its caller is a job whose other writes would run as the System actor. Two partial indexes serve it, one per half of the `OR`:
+`users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
+each `WHERE email_verified = false`. The rest is [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Provisional accounts".

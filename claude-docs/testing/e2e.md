@@ -469,7 +469,7 @@ during it, at the cost of one image pull and no CI minutes. The pieces:
   by the `devcontainer` compose service alone, beside
   `PLAYWRIGHT_WS_ENDPOINT`, and read only under `E2E_AUDIT=1`
   (`tests/e2e/slots.ts`'s `auditWsEndpoint`), by the rule in
-  [`debugging.md`](../debugging.md): never baked into an npm script, never
+  [`debugging.md`](debugging.md): never baked into an npm script, never
   read unconditionally. Its presence alone changes nothing.
 - **The story suite runs there too**: `playwright.stories.config.ts` adds the same
   three projects under the same flag (built by `auditProjects` in

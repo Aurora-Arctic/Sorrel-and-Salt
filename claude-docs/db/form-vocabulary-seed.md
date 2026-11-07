@@ -10,7 +10,7 @@ task ahead of M1.22 for the same reason too: M1.22's ingredients carry `form`
 values, and those should come from a vocabulary that already exists.
 `npm run db:seed:forms` runs it — `scripts/db-seed.ts` with a `forms` argument,
 the second target on the same script, because the client import there is one
-of the six pinned exemptions (["Who may import the client"](client-imports.md)).
+of the six pinned exemptions (["Who may import the client"](repository-files.md)).
 
 Everything structural is [the category seed](category-seed.md)'s, and since
 MB.51 literally so — both call [`seedTwoTierVocabulary`](seed-module.md) with

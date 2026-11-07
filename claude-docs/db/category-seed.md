@@ -7,7 +7,7 @@ consumes what this writes, which is why §6's seed lands a task ahead of it.
 `npm run db:seed:categories` runs it; that is `scripts/db-seed.ts` with a
 `categories` argument rather than a script of its own, because the client
 import is one of the six pinned exemptions
-(["Who may import the client"](client-imports.md)) and a seventh is a decision.
+(["Who may import the client"](repository-files.md)) and a seventh is a decision.
 
 **Idempotency keys on the seed key and ignores `deleted_at`** (MB.172), which
 is stronger than the partial unique index gives on its own: the index only
@@ -82,7 +82,7 @@ and there is no shell on either database, so a vocabulary nobody can run by
 hand has to arrive with the deploy that needs it. M4.3a's form vocabulary
 and MB.93's celestial body and zodiac vocabularies share that step, that gate and
 that summary — see ["The form vocabulary seed"](form-vocabulary-seed.md),
-["The astrology vocabulary seed"](astrology-vocabulary-seed.md) and
+["The astrology vocabulary seed"](../compendium/astrology-vocabulary-seed.md) and
 `claude-docs/ci/deploy.md`.
 
 One rule a later scenario inherits: write through the handle, stamping via

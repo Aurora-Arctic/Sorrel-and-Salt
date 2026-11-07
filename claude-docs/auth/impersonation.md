@@ -102,7 +102,7 @@ reader in v1. It is empty on every write that is not an impersonation.
 
 Impersonation swaps the session cookie, which a GraphQL mutation cannot do
 cleanly, and it lives under `/api/auth/*`, the one exception rule 1 already
-names ([`graphql-only-exception.md`](graphql-only-exception.md)). Nothing else
+names ([`graphql-only-exception.md`](config.md)). Nothing else
 moves off GraphQL. The user list a keeper picks a target from is MB.52's
 ordinary read.
 

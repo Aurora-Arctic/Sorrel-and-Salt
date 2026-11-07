@@ -418,7 +418,7 @@ person edited the row: that one is kept, and `db:seed:sources` prints a
 found by its key, which is its citation, so the fields that differ are the ones
 the citation does not print, or all of them once a migration has rewritten the
 key to a source's new citation
-([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
+([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "Citation
 attributes on a present entry"). A soft-deleted one is neither re-inserted
 nor linked anew. A live compendium reference nobody seeded whose citation is
 a source's to the letter is linked rather than duplicated, and never written
@@ -491,7 +491,7 @@ restates each present link's two attributes where they differ from its file,
 and each present source's fields and `scholarly` mark, either way, where they
 differ from its work, unless a person edited that link or that source: a person's edit is
 kept, and the run prints a `KEPT` line for it without failing
-([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
+([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "Citation
 attributes on a present entry").
 
 ## Reference service details

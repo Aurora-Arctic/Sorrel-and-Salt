@@ -1,7 +1,7 @@
 ## The deity vocabulary seed (list MB.127; seed MB.129)
 
 The starting list for `deity_traditions` and `deities`
-([the model](deity-vocabulary.md)), recorded by MB.127 for MB.129 to seed:
+([the model](../db/deity-vocabulary.md)), recorded by MB.127 for MB.129 to seed:
 88 traditions and 290 deities, in the order the two tables below give
 them. The owner asked for a broad list, 100 to 200, across the practices the
 project serves, and that the deities be grouped by tradition; the five
@@ -26,7 +26,7 @@ Apollo is Greek, and his description says Roman too; Lilith is Akkadian &
 Babylonian, and hers names Jewish folklore. A practice that wants a second
 row, a Roman Apollo, can have one under the same name: the slug carries the
 tradition, `apollo-roman`, as a form's carries its group
-([the form seed](form-vocabulary-seed.md)).
+([the form seed](../db/form-vocabulary-seed.md)).
 
 **A tradition is a people or a religion, never a region**, the owner's call:
 Irish, Welsh and Gaulish & British rather than Celtic; Sumerian, Akkadian

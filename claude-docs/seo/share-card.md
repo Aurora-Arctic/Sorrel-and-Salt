@@ -52,7 +52,7 @@ An entry's card is drawn on its first request and served from Next's cache after
 
 **What the docs say.** The `opengraph-image` page says a generated image is a special Route Handler, cached by default unless it uses a request-time API or uncached data. `how-revalidation-works.md` says `revalidateTag` invalidates every cache entry carrying the tag. No doc says that a route's cached response carries the tags of the `unstable_cache` reads made while drawing it, which is what lets a keeper edit reach the card.
 
-**What trying showed.** It does. The card reads `readCompendiumEntry`, which is cached under `compendium` ([`db/compendium-cache.md`](db/compendium-cache.md)), and the test "an entry's share card is drawn once, until a keeper edit draws it again" in `tests/e2e/compendium-cache.spec.ts` shows it on the one e2e server whose cache holds:
+**What trying showed.** It does. The card reads `readCompendiumEntry`, which is cached under `compendium` ([`db/compendium-cache.md`](../db/compendium-cache.md)), and the test "an entry's share card is drawn once, until a keeper edit draws it again" in `tests/e2e/compendium-cache.spec.ts` shows it on the one e2e server whose cache holds:
 
 1. It reads the card's address from the entry page's `og:image` and draws the card.
 2. It renames the entry in Postgres directly, keeping its slug, and asks again: the bytes are the same, so the card was not drawn again.

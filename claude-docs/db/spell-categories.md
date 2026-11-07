@@ -15,7 +15,7 @@ nothing can: the two are the same pair of columns pointing at the same
 `categories` rows, and the difference is which table they came from.
 
 - **The composite primary key is the assignment's identity**, with no
-  surrogate `id`, for [`ingredient_categories`](ingredient-categories.md)'
+  surrogate `id`, for [`ingredient_categories`](categories.md)'
   reason. A duplicate is a `23505` naming
   `spell_categories_spell_id_category_id_pk`, whoever adds it — the pair is the
   identity and the stamps are only who touched it, so a second member toggling

@@ -16,7 +16,7 @@ const membership = await assertMembership(session, workspaceId, { workspace: ['r
 **Everything the browser starts goes through `/api/graphql`**: every mutation,
 and every read that happens without a navigation. `createContext` builds the
 same `Session` from the request's headers (["The request
-context"](request-context.md)), and the resolver calls the same function.
+context"](endpoint.md)), and the resolver calls the same function.
 
 ```ts
 // The `signedIn` scope has already refused a null session by the time this runs.
@@ -40,13 +40,13 @@ resolve: async (_query, { workspaceId }, { session }) =>
   fails a `'use server'` directive, which no `no-restricted-imports` rule
   could see. There are no bespoke route handlers beyond
   this one and `/api/auth/*`
-  ([`auth/graphql-only-exception.md`](../auth/graphql-only-exception.md)); the
+  ([`auth/graphql-only-exception.md`](../auth/config.md)); the
   three public files `/llms.txt`, `/.well-known/ai-catalog.json` and
   `/.well-known/ard.json` (M12.2) take no session, serve only what the public compendium already shows and are named in
   lint's allowlist, one by one
   ([`seo/ai-discovery.md`](../seo/ai-discovery.md)); the share-card images Next generates from each
   `opengraph-image.tsx` (M12.34) take no session either and draw only what the public compendium shows
-  ([`share-card.md`](../share-card.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
+  ([`share-card.md`](../seo/share-card.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
   `src/app/`, by its path: a file is not an import either.
 - **Admin is not an exception to either.** `/keepers`'s pages read through
   services, and its writes go through this endpoint
@@ -60,4 +60,4 @@ resolve: async (_query, { workspaceId }, { session }) =>
 - **The boundary is mechanical.** Lint stops a resolver, page or component
   importing anything under `src/db` at runtime, and `server-only` fails the
   build of a client bundle that reaches a service (["The access
-  boundary"](access-boundary.md)).
+  boundary"](protections.md)).

@@ -67,7 +67,7 @@ created, and only when that sign-in's provider vouches for the address
 - **Every keeper grant also seats the steward of the demo coven**, in the same
   `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
   MB.59 grant and an accepted admin invitation. See
-  [`db/demo-coven-seed.md`](../db/demo-coven-seed.md), "How a keeper gains and
+  [`db/demo-coven-seed.md`](../db/demo-scenario.md), "How a keeper gains and
   loses the seat".
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
@@ -330,7 +330,7 @@ verification window, and three hours at most. The argument is
   the owner, since Better Auth looks a user up by address without our
   `deleted_at` filter, and no row survives to carry a stamp. The delete is
   the repository's one named `deleteLapsedProvisionalUser`
-  ([`db/provisional-account-delete.md`](../db/provisional-account-delete.md)),
+  ([`db/provisional-account-delete.md`](../db/identity-model.md)),
   since `write.delete` rejects a table carrying `deleted_at` by design.
 - **Seeded rows are never removed.** They hold no `accounts` row, so nobody
   can sign in to them. The seeded bootstrap user stays unverified on
@@ -827,7 +827,7 @@ keyset page newest first, which GraphQL serves as the paged `userAccessPauses` q
 - **Sign-up writes outside `withAudit(session, fn)`**, as one of CLAUDE.md
   rule 3's two identity bootstraps: there is no session yet, because the
   write is how one comes to exist. Like `/api/auth/*` itself (["The one
-  exception to the GraphQL-only rule"](graphql-only-exception.md)), it is
+  exception to the GraphQL-only rule"](config.md)), it is
   Better Auth's own create-user flow writing straight to the adapter, with
   no service function in between to call `withAudit`. The promotions above
   are not such writes: by then the user is authenticated.

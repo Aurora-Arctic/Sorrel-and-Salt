@@ -3,7 +3,7 @@
 `src/db/seed/astrology.ts` seeds DESIGN.md §5's celestial body and zodiac
 table: nineteen `celestial_bodies` and thirteen `zodiac_signs`, in §5's order, as the
 `CELESTIAL_BODIES` and `ZODIAC_SIGNS` literals. It takes
-[the form seed](form-vocabulary-seed.md)'s shape —
+[the form seed](../db/form-vocabulary-seed.md)'s shape —
 reference data rather than a scenario, `npm run db:seed:astrology` as a
 third `scripts/db-seed.ts` target, run by `migrate.yml` in the same step as the
 other two, idempotent by seed key and ignoring `deleted_at` (MB.172), updating nothing
@@ -30,7 +30,7 @@ edits.
 
 **Sources.** Researched when M4.5 settled the lists, and recast in Chicago form
 by MB.156, each page fetched again on October 6, 2026. MB.156 seeds each as a
-compendium `references` row ([references.md](references.md)), linked to the
+compendium `references` row ([references.md](../db/references.md)), linked to the
 bodies and signs its nested line names: those it gives correspondences or
 readings for.
 

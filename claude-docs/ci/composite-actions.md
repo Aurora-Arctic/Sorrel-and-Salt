@@ -92,4 +92,4 @@ would need no edit at any call site; nothing passes it today.
 step runs; a composite contributes steps and nothing above them, and the only
 job-level `uses:` is a reusable workflow, which is a whole job rather than a
 piece spliced into one. That repetition is the price of the shape and stays
-where [Container jobs](container-jobs.md) describes it.
+where [Container jobs](reusable-checks.md) describes it.

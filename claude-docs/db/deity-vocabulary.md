@@ -5,7 +5,7 @@
 `deity_traditions` groups it: Hecate under Greek, Brigid under Irish. Both are
 in the `vocabulary` module, in `src/modules/vocabulary/schema/deities.ts`
 (MB.128), seeded by `src/db/seed/deities.ts` (MB.129) from
-["The deity vocabulary seed"](deity-vocabulary-seed.md), read by a member's
+["The deity vocabulary seed"](../compendium/deity-vocabulary-seed.md), read by a member's
 autofill, `deitySuggestions` (MB.130, on
 [the member's autofill](member-autofill.md)), and curated at `/curator/deities`
 and `/curator/deity-traditions` (MB.132). MB.131 puts that autofill on
@@ -51,7 +51,7 @@ god several traditions honour is filed under one, and the description names
 the others (Apollo is Greek, and his description says Roman too). A
 tradition is a people or a religion, never a region — Irish rather than
 Celtic, Akan rather than African — the owner's call, argued in
-[the seed doc](deity-vocabulary-seed.md).
+[the seed doc](../compendium/deity-vocabulary-seed.md).
 
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`**, on both tables,
 as on the four tables in [the categories section](categories.md), and global
@@ -169,9 +169,9 @@ same deity, such as Woden for Odin. They are rows of `deity_other_names`
   page and in its count alike (`deityArms` in
   `src/db/repository/vocabularies.ts`).
 - **The seed loads them** from `DEITIES[].otherNames`, never re-adding a name
-  a keeper removed ([the seed's doc](deity-vocabulary-seed.md#other-names)),
+  a keeper removed ([the seed's doc](../compendium/deity-vocabulary-seed.md#other-names)),
   and a compendium entry file may name a deity by one of them
-  ([the compendium seed's rule](compendium-seed/README.md)).
+  ([the compendium seed's rule](../compendium/compendium-seed/README.md)).
 
 ## Deity service details
 

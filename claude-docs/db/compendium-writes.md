@@ -121,7 +121,7 @@ and `insertInCompendium` would overwrite it if it were not.
 columns on the entry's row, `curator_reviewed_at` and `curator_reviewed_by`
 (M14.5's migration 0081, with a check that both are set or neither), and it is what
 keeps the seed from rewriting an entry a person has checked
-([the seed's "Write-once"](compendium-seed/README.md#write-once-and-how-a-correction-lands)).
+([the seed's "Write-once"](../compendium/compendium-seed/README.md#write-once-and-how-a-correction-lands)).
 The service sets it, never the repository writer: `createCompendiumEntry`,
 `updateCompendiumEntry` (even when nothing else changed) and
 `promoteCompendiumFolkName` spread `reviewMark(curator, new Date())` into the row they

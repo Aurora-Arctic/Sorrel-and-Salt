@@ -305,3 +305,61 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   the runner fetched) seeds rather than guesses: the seed is additive, so a
   false positive costs one extra `npm run` where a false negative is an empty
   vocabulary in production.
+
+### Neon snapshots
+
+- **`migrate.yml` snapshots production before it migrates it** (M1.6), by
+  branching Neon's `main` branch as `snapshot-<short sha>` through the Neon
+  API. That branch is the known-good point
+  [`db/snapshot-and-restore.md`](../db/snapshot-and-restore.md)'s restore
+  runbook promotes back to if a migration corrupts data. A rerun of the same
+  commit finds that branch already there and keeps it, because it holds the
+  database from before the first attempt migrated it. Preview never
+  snapshots — a staging or hotfix database is already disposable. The step is
+  guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` and warns rather than fails
+  while they are unset (`claude-docs/secrets.md`).
+- **`neon-snapshot-prune.yml` is the only scheduled workflow in the repo** —
+  Sundays at 06:00 UTC, outside any deploy window, plus `workflow_dispatch`.
+  Nothing calls it. **Neon's free tier caps a project at 10 branches in
+  total**, and `production`, `staging`, every retained snapshot and every open
+  hotfix preview's ephemeral branch draw on that one quota, so `snapshot-*`
+  branches cannot be left to accumulate: the workflow keeps the newest
+  `KEEP_SNAPSHOTS` (3) and deletes the rest. It carries the same inline
+  warn-and-skip guard on those two secrets — not the `vercel-secrets-guard`
+  action, which checks three others ([Composite actions](composite-actions.md)).
+
+### Smoke checks
+
+None remain.
+
+Every composite action is exercised by the checks that use it on the same push
+— a broken `job-summary` or `pr-comment` fails `checks`, `vitest` and
+`playwright` at once — and `checkout-to-app` is the first step of nearly every
+job in the repo. So `composite-actions-check.yml`, a workflow testing the
+actions that exist to de-duplicate the workflows, went with MB.32.
+
+**That argument covers only what those checks would notice.** A check that
+reads a file's _contents_ cannot tell a stale copy from a live one, which is
+how `checkout-to-app` left deleted files on disk in every job for months
+without one failing. What closes it is not a job: the images carry no source
+layer, so a stale file has nothing to survive _as_. That is the sweep-task rule's tell — a job would make stale files _absent_, the
+image makes them _impossible_ — and "something else would have noticed" is not
+a guard. The story, including the job built first and replaced, is MB.42's
+and [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md).
+
+**A workflow must never publish a status-check context `pr-gate.yml` also
+publishes.** Two runs reporting one `job / job` context leave it unclear which
+of them a branch ruleset gates on; the cost is the ambiguity, not the minutes.
+For the same reason `build-db-image.yml` has no `pull_request` trigger, since
+`pr-gate.yml` already calls it. MB.15 deleted the two workflows that broke the
+rule and tells how they were found.
+
+The gate's path filters carry each image's inputs to the checks that run
+against it. `Docker/Dockerfile.node` is listed on `lint`, `typecheck` and
+`build`, the three checks that run _inside_ that image, and deliberately not in
+the `*shared` anchor, which also feeds `destructive_ddl`. `vitest` and
+`playwright` list `Docker/Dockerfile.postgres` and `Docker/postgres-init/**`,
+the same two paths the database image's hash tag is computed from, so a
+Dependabot PR bumping Postgres runs both suites against the new image on its
+own PR rather than leaving that to whichever unrelated PR touches `src/**`
+next (fixed in M4.7's PR); `playwright` lists `Docker/Dockerfile.e2e` too.

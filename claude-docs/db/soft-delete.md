@@ -119,7 +119,7 @@ builds the subquery on the same `db`, ANDs `notSoftDeleted(table)` itself —
 can neither append to it nor await it. The outer row is named through its own
 table's columns, which Drizzle qualifies, so the subquery correlates without
 an alias. What stays a `sql` string is what no builder can say — ["Where
-queries may be built"](query-building.md) lists it.
+queries may be built"](repository-files.md) lists it.
 
 **The mechanical guard.** This is a code sweep (CLAUDE.md's sweep-task rule),
 so it landed as the mechanism above plus a guard — and since MB.33 the sweep is
@@ -143,7 +143,7 @@ alone, the co-member hatch the asked-about user's seat and row alone, the cupboa
 layer").
 
 A query built _outside_ the repository is the linter's job, not this test's —
-see ["Where queries may be built"](query-building.md). It was this test's until MB.33, by
+see ["Where queries may be built"](repository-files.md). It was this test's until MB.33, by
 reading every tracked source file as text and looking for `.select(`, which
 banned one spelling of a finder rather than the capability: `function findX()`
 was caught and `const findX = () =>` was not, the global regex carried its

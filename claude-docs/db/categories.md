@@ -19,7 +19,7 @@ Each is global and keeper-curated, carries the columns §5 lists, and lists
 alphabetically by `name`.
 
 A category reaches an ingredient through
-[`ingredient_categories`](ingredient-categories.md) (M4.4) and a spell through
+[`ingredient_categories`](categories.md) (M4.4) and a spell through
 [`spell_categories`](spell-categories.md) (M10.4), both join tables and so both
 hard-deleted — each has its own section.
 
@@ -333,3 +333,51 @@ Facts the comments in `src/modules/vocabulary/schema/` and `validation/` cite.
 - **Category groups.** A table rather than an enum so a keeper can add a ninth without DDL. Two colours, because one hex cannot clear 4.5:1 on both grounds; stored as hexes because a runtime group has no build-time Sass token. No CHECK on the contrast: the service (and the form, before the request) validates, so the refusal can name the column and the ratio. Refused, never corrected, as `unitConvert` refuses. No order column: groups list alphabetically. The slug is unique alone because two groups may both display "Protection". A category's slug is unique globally rather than per group, because a chip filter and the seed's idempotency key both read the slug alone; it carries no `workspaceId` and no colour of its own, which makes assigned-versus-derived comparable.
 - **Deity traditions and deities.** A tradition is `ingredient_form_groups` in shape: a people or a religion, never a region; no colour (it labels a suggestion, not a chip); no order column; no trigram index. A deity's slug is unique globally rather than per tradition, and its display name is deliberately unindexed: one god honoured under two traditions is two rows, and the autofill tells them apart by tradition. The description and `deity_other_names` are search surface. Other names are rows rather than `text[]` because a `text` row takes a trigram index; full `auditColumns`, so removing one leaves a tombstone. The deity input's `otherNames` is the whole list the form shows, each trimmed, an absent list read as empty, because a save brings the stored names to the list sent; the schema has no refinement so the form can still `omit` and `extend` it.
 - **Forms and form groups.** A form group sections a dropdown rather than colouring a chip, so it has no colour pair; it carries the icon that stands for it, as data on the row, and a NULL `icon` is the generic icon. The icon is an enum rather than a CHECK because adding one is then `ALTER TYPE … ADD VALUE`, expand-only. The form slug is unique globally rather than per group, and the display name is unindexed: two live forms may both be "Wax". The trigram index lets the autofill match a description as well as a name: typing `salve` offers Ointment. The icon list is written once in `schema/form-group-icons.ts`, which imports nothing, so a client component can reach it; the generic icon is not in it. A group's input takes the icon as one of the six or none (null and absent both mean none, since the service writes the group whole).
+
+### `ingredient_categories` (M4.4)
+
+Story 22's table: `ingredientId`, `categoryId`, + the four audit stamps, keyed
+on the pair. An ingredient carries several categories and a category holds
+several ingredients, which is what makes "both protective and cleansing"
+answerable.
+
+- **The pair is the assignment's identity**, as on `workspace_members`.
+  There is no surrogate `id`: one would let the same category be assigned to
+  the same ingredient twice, with nothing downstream able to tell the two rows
+  apart. Since MB.217 a pair may file one form instead, through a nullable
+  `variant_id`, so the composite primary key became two unique indexes: a
+  duplicate on the ingredient itself is a `23505` naming
+  `ingredient_categories_ingredient_category_unique`, on
+  `(ingredient_id, category_id) WHERE variant_id IS NULL`, and on a form one
+  naming `ingredient_categories_variant_category_unique`, on
+  `(variant_id, category_id) WHERE variant_id IS NOT NULL`. A form's pair still
+  carries its `ingredient_id`, held to the variant's own by the composite key
+  `ingredient_categories_variant_fk`, so a category filter on
+  `ingredient_id` reads the ingredient's pairs and its forms' alike.
+- **Both sides are foreign keys** —
+  `ingredient_categories_ingredient_id_ingredients_id_fk` and
+  `ingredient_categories_category_id_categories_id_fk`. A category is referenced
+  by **id**, unlike a variant's `form`, free text: there is no vocabulary
+  question here at all, since the row _is_ the link and a dangling id on either
+  side is a chip that renders nothing.
+- **Indexed in both directions.** The parent pair's unique index leads on
+  `ingredient_id`, which answers "what is this ingredient tagged with";
+  `ingredient_categories_category_id_idx` leads on `category_id` for "what is in
+  this category", which would otherwise scan every assignment in the database.
+  `ingredient_id` rides along on the second so that question is answerable from
+  the index alone, mirroring what the pair's index already does for the first. It is not
+  unique — uniqueness is the pair indexes' job, and a unique index here would
+  refuse a category its second ingredient.
+- **No `deleted_at` predicate, because there is no tombstone to dodge.** The
+  [partial-index convention](soft-delete.md) exists so a soft-deleted row cannot reserve its
+  name forever; this table hard-deletes, so the pair is either there or it is
+  not, and `WHERE deleted_at IS NULL` would not even compile against its
+  columns. The two pair indexes are partial on `variant_id` instead, which
+  `tests/db/partial-unique-indexes.test.ts` sweeps by deleting the holder
+  outright. `write.delete` names the parent's own pair with `variantId: null`.
+
+Its reader is M4.8's `categoriesByIngredient` loader, through
+`findManyOfIngredients` and never a generic finder
+(see ["Ingredient children"](ingredient-children.md)). §12's
+assigned-versus-derived distinction reads it from the derived side: a spell's
+derived categories are the union of what this table holds for its ingredients.
