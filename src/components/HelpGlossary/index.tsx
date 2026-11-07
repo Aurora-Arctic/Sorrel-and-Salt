@@ -26,7 +26,15 @@ const HelpGlossary = ({ terms }: HelpGlossaryProps): ReactElement => {
       <dl>
         {terms.map((term, index) => (
           <div key={term.slug} id={term.slug} className="help-glossary__entry">
-            <dt>{term.title}</dt>
+            <dt>
+              {term.title}
+              {/* The mark is drawn by CSS, so the term reads as its title alone. */}
+              <a
+                className="help-glossary__self"
+                href={`#${term.slug}`}
+                aria-label={`Link to ${term.title}`}
+              />
+            </dt>
             <dd>{definitions[index]}</dd>
           </div>
         ))}

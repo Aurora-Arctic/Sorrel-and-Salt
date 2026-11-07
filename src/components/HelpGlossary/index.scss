@@ -1,16 +1,64 @@
 @use '../../scss/variables' as *;
 
+// One row per term: the term beside its definition from 40rem, stacked beneath it on a phone.
 .help-glossary {
+  dl {
+    margin: 0;
+  }
+
   &__entry {
-    margin-block-end: space(5);
+    padding-block: space(4);
+    border-block-start: 1px solid $hairline;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+
+    @media (min-width: 40rem) {
+      display: grid;
+      grid-template-columns: 11rem 1fr;
+      gap: space(4);
+    }
   }
 
   dt {
-    font-weight: 600;
+    margin-block-end: space(1);
+    font-family: $font-heading;
+    font-size: heading-size(4);
+    font-weight: 700;
+    line-height: 1.2;
   }
 
   dd {
     margin-inline-start: 0;
+
+    > p:first-child {
+      margin-block-start: 0;
+    }
+
+    > p:last-child {
+      margin-block-end: 0;
+    }
+  }
+
+  // Hidden until the row is hovered or the link takes focus; it keeps its place so the term does not shift.
+  &__self {
+    margin-inline-start: space(2);
+    font-family: $font-body;
+    font-size: type-size('body');
+    font-weight: 400;
+    color: $text-muted;
+    text-decoration: none;
+    opacity: 0;
+
+    &::before {
+      content: '#';
+    }
+
+    &:focus-visible,
+    .help-glossary__entry:hover & {
+      opacity: 1;
+    }
+
+    &:hover {
+      color: $accent;
+    }
   }
 }

@@ -87,3 +87,18 @@ describe('HelpGlossary marks', () => {
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 });
+
+describe('HelpGlossary links to self', () => {
+  it('gives each term a link to its own anchor, named for the term', () => {
+    render(<HelpGlossary terms={TERMS} />);
+
+    for (const term of screen.getAllByRole('term')) {
+      const title = term.textContent!;
+      const slug = TERMS.find((entry) => entry.title === title)!.slug;
+      expect(within(term).getByRole('link', { name: `Link to ${title}` })).toHaveAttribute(
+        'href',
+        `#${slug}`,
+      );
+    }
+  });
+});
