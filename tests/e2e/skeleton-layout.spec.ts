@@ -312,6 +312,9 @@ interface Layout {
   headings: string | null;
   /** The first list item is a card or a stacked row, whose height is static; a table row's wraps. */
   itemIsCard: boolean;
+  /** The box the table scrolls sideways in, and whether its rows overrun it; cell contents set a nowrap row's width. */
+  tableFrame: Box | null;
+  tableScrolls: boolean;
 }
 
 /** The site bar and the context row, which stay on screen across the navigation. */
@@ -354,6 +357,10 @@ const layoutOf = (page: Page, inSkeleton: boolean) =>
       ].find((element) => shown(element) && !element.closest('nav, header, form')) ??
       null;
     const item = table ? table.querySelector('tbody tr') : (list?.firstElementChild ?? null);
+    let frame = table?.parentElement ?? null;
+    while (frame && !['auto', 'scroll'].includes(getComputedStyle(frame).overflowX)) {
+      frame = frame.parentElement;
+    }
     const stacked =
       !!table && getComputedStyle(table.querySelector('thead') ?? table).display === 'none';
     return {
@@ -387,6 +394,8 @@ const layoutOf = (page: Page, inSkeleton: boolean) =>
             .join('|')
         : null,
       itemIsCard: !table || stacked,
+      tableFrame: box(frame),
+      tableScrolls: !!frame && frame.scrollWidth > frame.clientWidth + 1,
     };
   }, inSkeleton);
 
@@ -405,6 +414,7 @@ function staticDimensions(part: string, navigation: Navigation, layout: Layout):
     case 'list':
       return ['x', 'y', 'w'];
     case 'item':
+      if (layout.tableScrolls) return ['x', 'y'];
       return layout.itemIsCard ? ['x', 'y', 'w', 'h'] : ['x', 'y', 'w'];
     default:
       return ['x', 'y', 'w', 'h'];
@@ -415,8 +425,10 @@ function staticDimensions(part: string, navigation: Navigation, layout: Layout):
 function differences(navigation: Navigation, skeleton: Layout, arrived: Layout): string[] {
   const found: string[] = [];
   for (const part of Object.keys(arrived.parts)) {
-    const want = arrived.parts[part];
-    const got = skeleton.parts[part];
+    // A table wider than its frame scrolls inside it, so the frame is the static part, not the table.
+    const framed = part === 'list' && arrived.tableScrolls;
+    const want = framed ? arrived.tableFrame : arrived.parts[part];
+    const got = framed ? (skeleton.tableFrame ?? skeleton.parts[part]) : skeleton.parts[part];
     // A list with nothing in it is content: an empty page shows no rows for the skeleton's to match.
     if ((part === 'item' || part === 'list') && !want) continue;
     if (want && !got) {
