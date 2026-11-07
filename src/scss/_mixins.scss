@@ -4,20 +4,26 @@
 @use 'sass:string';
 @use './variables' as *;
 
-// One duration/easing pair for every colour fade, so everything reacting to
-// the toggle stays in lockstep.
-@mixin theme-transition($props...) {
+// One transition list for a state change (a hover, a flip, a fade): each property at the long duration
+// and one easing. A theme change has no transition of its own; ThemeToggle cross-fades the page.
+@mixin motion($props...) {
   $transitions: ();
 
   @each $prop in $props {
-    $transitions: list.append(
-      $transitions,
-      #{$prop} $theme-transition-duration $theme-transition-easing,
-      comma
-    );
+    $transitions: list.append($transitions, #{$prop} $motion-long $motion-easing, comma);
   }
 
   transition: $transitions;
+}
+
+// A hover or focus fade of `$props`, set on the hover and focus rule so it runs into that state and
+// never on a theme change; snapped under reduced motion.
+@mixin state-fade($props...) {
+  @include motion($props...);
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 @mixin reduced-motion {
@@ -266,12 +272,6 @@
   color: $text-primary;
   border-radius: radius('surface');
   box-shadow: $shadow;
-
-  @include theme-transition(background-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
 }
 
 // The full level's three colours, for a chip of any shape: an 8% wash of the group colour, a 35%
@@ -339,12 +339,6 @@
   @if $size != regular and $size != compact {
     @error 'Unknown chip size "#{$size}". Expected regular or compact.';
   }
-
-  @include theme-transition(background-color, border-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
 }
 
 // A badge's padding, the label lowered by its size's optical-drop: Lexend's capitals sit above the
@@ -390,12 +384,6 @@
     color: badge-token($palette, 'fg');
     border: 1px solid badge-token($palette, 'border');
   }
-
-  @include theme-transition(background-color, border-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
 }
 
 // A badge's size: text, sides and the height it holds. The badge mixin sets the
@@ -436,8 +424,8 @@
   visibility: hidden;
   transform: translateY(2px);
   transition:
-    opacity $fade $theme-transition-easing,
-    transform $fade $theme-transition-easing,
+    opacity $fade $motion-easing,
+    transform $fade $motion-easing,
     visibility 0s linear $fade;
 
   &.is-open {
@@ -456,8 +444,8 @@
   visibility: visible;
   transform: none;
   transition:
-    opacity $fade $theme-transition-easing,
-    transform $fade $theme-transition-easing,
+    opacity $fade $motion-easing,
+    transform $fade $motion-easing,
     visibility 0s;
 
   @include reduced-motion {
@@ -1021,7 +1009,6 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   background-color: transparent;
   color: $text-muted;
   cursor: $cursor;
-  @include theme-transition(background-color, color);
 
   svg {
     width: $glyph;
@@ -1031,6 +1018,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   &:hover,
   &:focus-visible {
     color: $text-primary;
+    @include state-fade(background-color, color);
   }
 
   // A button takes the shared ring; Chromium otherwise draws its own default one. A link keeps the
@@ -1069,7 +1057,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 // horizontal edge (`rotateX`) and the caller names the transition. Eased, and still under reduced
 // motion. `$open` ends in `>` for a parent; `$props` ease alongside the turn.
 @mixin chevron-flip($open, $props...) {
-  @include theme-transition(transform, $props...);
+  @include motion(transform, $props...);
 
   @include reduced-motion {
     transition: none;
@@ -1268,7 +1256,6 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 @mixin icon-link {
   color: $text-primary;
   text-decoration: none;
-  @include theme-transition(color);
 
   svg {
     width: 1em;
@@ -1276,12 +1263,13 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
     margin-inline-start: space(1);
     vertical-align: -0.125em;
     transform-origin: left center;
-    @include theme-transition(transform);
+    @include motion(transform);
   }
 
   &:hover,
   &:focus-visible {
     color: $accent;
+    @include state-fade(color);
 
     svg {
       transform: scale(1.2);

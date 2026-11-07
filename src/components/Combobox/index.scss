@@ -754,7 +754,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
   min-width: 0;
   border-radius: radius('sharp');
-  @include theme-transition(color);
 
   .combobox__entry-mark {
     color: $accent;
@@ -763,6 +762,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &:hover,
   &:hover .combobox__entry-mark {
     color: $accent-hover;
+    @include state-fade(color);
   }
 
   &:focus-visible {

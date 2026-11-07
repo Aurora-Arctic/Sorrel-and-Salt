@@ -795,7 +795,7 @@ dnd-kit's inline transition, which only an important rule outweighs, so
 under reduced motion they step instead. The
 qualifier is the muted ink at the text's size, as a row's note is muted, and its tooltip is the entry's bubble, the
 `tip-bubble` mixin. The × and the indicators fade into
-their hover as `.btn` does, on `theme-transition` and never under reduced
+their hover as `.btn` does, with `state-fade` and never under reduced
 motion, and draw it on `:focus-visible` as well as `:hover`, so Tab shows
 which one it has reached (MB.150). Every × and indicator is a 24px target,
 WCAG 2.2's minimum, the `$icon-size` token, around a `$glyph-size` mark; a

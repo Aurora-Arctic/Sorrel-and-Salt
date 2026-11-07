@@ -29,14 +29,11 @@ $switcher-list-min-width: 15rem;
     border-color: $hairline;
     background-color: transparent;
     cursor: pointer;
-    @include theme-transition(background-color, border-color);
-    @include reduced-motion {
-      transition: none;
-    }
 
     &:hover {
       border-color: $hairline;
       background-color: $fill-quiet;
+      @include state-fade(background-color);
     }
 
     // Open is told by the edge going from a hairline to the body ink, a

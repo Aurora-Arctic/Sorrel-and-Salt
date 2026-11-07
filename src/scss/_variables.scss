@@ -692,8 +692,8 @@ $top-inset: var(--top-inset, 0px);
 // ---------------------------------------------------------------------------
 // Motion and layout
 // ---------------------------------------------------------------------------
-$theme-transition-duration: 400ms;
-$theme-transition-easing: ease-in-out;
+$motion-long: 400ms;
+$motion-easing: ease-in-out;
 
 // How long a tip bubble takes to fade in and out: 500ms (claude-docs/components/info-tip.md, "Styling").
 $tip-fade: 500ms;

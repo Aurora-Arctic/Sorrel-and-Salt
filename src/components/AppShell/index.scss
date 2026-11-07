@@ -59,10 +59,10 @@
     color: $text-primary;
     text-decoration: none;
     white-space: nowrap;
-    @include theme-transition(background-color, color);
 
     &:hover {
       background-color: $fill-quiet;
+      @include state-fade(background-color);
     }
 
     // Inside the link, where the bar's edge would clip an outside ring.
@@ -72,10 +72,6 @@
 
     &[aria-current='page'] {
       @include nav-current;
-    }
-
-    @include reduced-motion {
-      transition: none;
     }
   }
 }

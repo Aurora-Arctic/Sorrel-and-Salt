@@ -98,8 +98,7 @@
   transition:
     inset-block-start $motion-medium ease,
     box-shadow $motion-medium ease,
-    background-color $motion-medium ease,
-    color $theme-transition-duration $theme-transition-easing;
+    background-color $motion-medium ease;
 
   // A tip outlives the hover (it stays open a moment after the pointer leaves), so the
   // card stays raised while one of its tips is open.

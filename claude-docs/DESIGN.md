@@ -1661,13 +1661,13 @@ src/components/IngredientCard/
 
 Shared partials in `src/scss/`, `@use`'d directly by whichever component needs them — never routed through a parent:
 
-| Partial            | Carried over from `resume-2026`                                                             | Added                                             |
-| ------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `_variables.scss`  | Screen/print colors, shadows, transitions, font stacks                                      | The eight seed group colors, safety-badge palette |
-| `_mixins.scss`     | `theme-transition()`, `reduced-motion`, `focus-ring()`, `card-surface()`, `tooltip-arrow()` | `modal-surface()`, `chip()`, `badge()`            |
-| `_typography.scss` | Global body/heading rules                                                                   | unchanged                                         |
-| `_buttons.scss`    | Button fill system, `.dismiss-button`                                                       | unchanged                                         |
-| `_print.scss`      | Print-URL reveal, print tiers                                                               | Spell recipe print layout                         |
+| Partial            | Carried over from `resume-2026`                                                                   | Added                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `_variables.scss`  | Screen/print colors, shadows, transitions, font stacks                                            | The eight seed group colors, safety-badge palette |
+| `_mixins.scss`     | `motion()`, `state-fade()`, `reduced-motion`, `focus-ring()`, `card-surface()`, `tooltip-arrow()` | `modal-surface()`, `chip()`, `badge()`            |
+| `_typography.scss` | Global body/heading rules                                                                         | unchanged                                         |
+| `_buttons.scss`    | Button fill system, `.dismiss-button`                                                             | unchanged                                         |
+| `_print.scss`      | Print-URL reveal, print tiers                                                                     | Spell recipe print layout                         |
 
 Modern module system throughout — `@use '../../scss/variables' as *;`, never the deprecated `@import`.
 

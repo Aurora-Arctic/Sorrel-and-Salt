@@ -91,7 +91,6 @@
   text-align: start;
   text-decoration: none;
   white-space: nowrap;
-  @include theme-transition(background-color);
 
   // Grey, the quiet fill: green marks a menu's one primary action alone (`--primary`, below),
   // so every other plain item is pointed at, focused and chosen in the grey.
@@ -99,14 +98,11 @@
   &:focus-visible,
   .is-closing &.is-chosen {
     background-color: $fill-quiet;
+    @include state-fade(background-color);
   }
 
   // Held, not faded: the menu's own fade-out is the only motion on the way out.
   .is-closing & {
-    transition: none;
-  }
-
-  @include reduced-motion {
     transition: none;
   }
 
@@ -119,17 +115,13 @@
 // hover and focus as that button is.
 .menu-button__item--destructive {
   color: $secondary;
-  @include theme-transition(background-color, color);
-
-  @include reduced-motion {
-    transition: none;
-  }
 
   &:hover,
   &:focus-visible,
   .is-closing &.is-chosen {
     background-color: $secondary;
     color: $text-on-color;
+    @include state-fade(background-color, color);
   }
 }
 

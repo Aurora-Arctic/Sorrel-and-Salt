@@ -68,11 +68,6 @@
     background-color: $surface-card;
     border-radius: radius('surface');
     padding: space(5);
-    @include theme-transition(background-color, border-color);
-
-    @include reduced-motion {
-      transition: none;
-    }
   }
 
   // A heading with a tag at its top right: the name in the first column and the tag in the second,
@@ -171,12 +166,12 @@
     text-decoration: none;
     cursor: pointer;
     box-shadow: $shadow-floating;
-    @include theme-transition(background-color, border-color, color, box-shadow);
 
     &:hover,
     &:focus-visible {
       background-color: $accent;
       color: $text-on-color;
+      @include state-fade(background-color, color);
     }
 
     &:focus-visible {
@@ -995,7 +990,7 @@
   // flip, as `rotateX` on an SVG part is not drawn in every browser.
   .data-table__sort-turn {
     transform-origin: 12px 12px;
-    @include theme-transition(transform);
+    @include motion(transform);
 
     @include reduced-motion {
       transition: none;
@@ -1196,11 +1191,6 @@
     font-size: type-size('small');
     // A step over the 300 body weight: coloured text at this size thins out.
     font-weight: 400;
-    @include theme-transition(border-color, background-color, color);
-
-    @include reduced-motion {
-      transition: none;
-    }
 
     // A link takes the notice's own text colour, which each kind has checked
     // on its tint, and an underline so it does not rely on colour: the plain
@@ -1520,7 +1510,6 @@
     font-family: $font-body;
     font-size: type-size('body');
     font-weight: 400;
-    @include theme-transition(background-color, border-color, box-shadow, color);
 
     &::placeholder {
       color: $text-placeholder;
@@ -1529,6 +1518,7 @@
 
     &:hover {
       border-color: $text-primary;
+      @include state-fade(border-color);
     }
 
     &:focus-visible {
@@ -2042,11 +2032,11 @@
     border: 1px solid $hairline;
     border-radius: radius('surface');
     background-color: $surface-page;
-    @include theme-transition(border-color, background-color);
 
     &:hover:not(:has(input:disabled)) {
       border-color: $accent;
       background-color: $surface-card-hover;
+      @include state-fade(border-color, background-color);
     }
 
     &:has(input:checked) {
@@ -2127,7 +2117,6 @@
     box-sizing: border-box;
     inline-size: 3rem;
     block-size: 3rem;
-    @include theme-transition(background-color, color);
 
     // Hidden but still focusable and reachable, as a screen-reader-only
     // control is: its own ring is drawn on the segment by :has below.
@@ -2148,6 +2137,7 @@
 
     &:hover {
       background-color: color-mix(in srgb, $accent 12%, $surface-card);
+      @include state-fade(background-color);
     }
 
     &:has(input:checked) {
@@ -2437,7 +2427,6 @@
     padding: space(3) 0;
     border-top: 1px solid $hairline;
     background: $surface-card;
-    @include theme-transition(background-color, border-color);
 
     > .btn {
       width: 66.6%;

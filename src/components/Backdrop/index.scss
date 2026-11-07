@@ -12,11 +12,6 @@
   pointer-events: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
-  @include theme-transition(opacity);
-
-  @include reduced-motion {
-    transition: none;
-  }
 
   // A shape behind text is what someone asking for more contrast is asking
   // to be rid of.

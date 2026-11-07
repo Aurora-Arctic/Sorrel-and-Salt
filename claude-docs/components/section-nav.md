@@ -115,8 +115,8 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
   chevron, except on a More button standing in for a hidden current page
   (it wears that page's icon and label), where a muted one at the tab's end
   says there is more.
-- **Motion.** The tab fills ease with the theme's transition; More's sheet
-  fades in and out over the theme's duration (it stays displayed, and
+- **Motion.** The tab fills ease in on hover (`state-fade`); More's sheet
+  fades in and out over the long motion duration (`$motion-long`) (it stays displayed, and
   `hidden` takes it out of sight with `visibility`, held until the fade has
   run, as a tip's bubble is) and its chevron flips with `rotateX(180deg)` over the same duration;
   under `prefers-reduced-motion: reduce` there is none.
