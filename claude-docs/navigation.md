@@ -43,3 +43,15 @@ story's own timer (idle, the 100ms hold-back, the bar for 2.5s, the fade, idle)
 using `LOADING_DELAY_MS` and `BAR_FADE_MS`, with no store or router. The
 reduced-motion pulse is seen with the OS or devtools setting; the story pin does
 not reach a CSS media query.
+
+### Holding Back and Forward
+
+Leave guard traversal: a traversal is cancelable only inside the top-level document, and one from the browser's own buttons only after the person has used the page (the HTML standard's "history-action activation"), so event.cancelable is read and anything else goes through.
+
+### Loading bar timing
+
+Navigation timing: the values mirror the Sass tokens $loading-delay and $arrive-duration (the page bar's stylesheet); the bar's delay and fade are timed in JavaScript since a CSS animation-delay cannot be cancelled by a navigation that settles first.
+
+### The actual pathname
+
+Actual pathname: Next's usePathname answers /_not-found for an address no route matches, since that screen is prerendered under the framework's own route, so a screen that reports or names the page reads the address bar once it is in the browser; before that it gives the router's path unless that is the framework's, then null.

@@ -300,3 +300,11 @@ Failed and Conflict, then Recovery Notice, the recovery notice alone.
 and the conflict notice going where `conflictInto` points. The recovery notice's Keep and Discard are proved through the spell
 builder's tests (`tests/components/SpellBuilder/autosave.test.tsx`). Axe runs in Playwright, on the
 spell builder.
+
+### Retrying a save
+
+Autosave retry: while still busy, a change or a flush during the wait rides on the retry, which sends the latest value; `error` waits for the last attempt: set, it means the save failed for good.
+
+### Leave warning
+
+m13.14: beforeunload on every long form
