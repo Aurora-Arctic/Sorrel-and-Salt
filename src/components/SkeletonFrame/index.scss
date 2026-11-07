@@ -8,3 +8,9 @@
   inline-size: 12rem;
   block-size: 2.8125rem;
 }
+
+// The create-coven panel's form is taller than its two bars; the page frame centres its content, so
+// the bars take the difference as room beneath.
+.panel.new-coven-skeleton {
+  padding-block-end: 4.25rem;
+}

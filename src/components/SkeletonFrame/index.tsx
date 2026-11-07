@@ -33,3 +33,14 @@ export function framed(host: SkeletonHost, Page: ComponentType): ComponentType {
   frames.set(Page, Framed);
   return Framed;
 }
+
+/** The context row a page draws above itself, its lead a bar the size of the switcher. */
+export const SkeletonContextRow = (): ReactElement => (
+  <ContextRow
+    lead={
+      <span className="skeleton-frame__lead">
+        <Skeleton shape="block" quiet />
+      </span>
+    }
+  />
+);
