@@ -121,7 +121,7 @@ The `## M… —` sections that followed the execution order moved to [`tasks/`]
 | [`tasks/m12.md`](tasks/m12.md) | M12 — Ingredient UI additions · _48 live tasks · 245 hours · 6 retired (M12.38–M12.41, M12.49, M12.50)_       |
 | [`tasks/m13.md`](tasks/m13.md) | M13 — Grimoire additions · _23 live tasks · 66.5 hours · 1 retired (M13.19)_                                  |
 | [`tasks/m14.md`](tasks/m14.md) | M14 — Sweep close-out additions · _13 tasks · 59.5 hours_                                                     |
-| [`tasks/m15.md`](tasks/m15.md) | M15 — Launch additions · _82 tasks · 278 hours_                                                               |
+| [`tasks/m15.md`](tasks/m15.md) | M15 — Launch additions · _82 tasks · 282 hours_                                                               |
 | [`tasks/m16.md`](tasks/m16.md) | M16 — More login options · _11 tasks · 30 hours_                                                              |
 | [`tasks/m17.md`](tasks/m17.md) | M17 — Fast follow · _18 tasks · 83 hours_                                                                     |
 | [`tasks/m20.md`](tasks/m20.md) | M20 — Ethical warnings · _15 tasks · 36 hours_                                                                |
