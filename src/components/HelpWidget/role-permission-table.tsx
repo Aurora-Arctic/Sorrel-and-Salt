@@ -45,6 +45,22 @@ export const STATEMENT_LABELS: {
   },
 };
 
+/** A statement of the access check, by its resource and action. */
+type Statement = {
+  [R in keyof Statements]: { resource: R; action: Statements[R][number] };
+}[keyof Statements];
+
+/**
+ * Statements no screen offers yet, left out of the table so it lists nothing a reader cannot do. Renaming a coven has
+ * no screen; the task that builds one takes `workspace.update` off this list and brings the row back.
+ */
+export const HIDDEN_STATEMENTS: readonly Statement[] = [
+  { resource: 'workspace', action: 'update' },
+];
+
+const hidden = (resource: string, action: string): boolean =>
+  HIDDEN_STATEMENTS.some((each) => each.resource === resource && each.action === action);
+
 const RolePermissionTable = (): ReactElement => (
   <figure className="figure help-widget">
     <div className="data-table-frame">
@@ -62,19 +78,21 @@ const RolePermissionTable = (): ReactElement => (
         </thead>
         <tbody>
           {(Object.keys(STATEMENT_LABELS) as (keyof Statements)[]).flatMap((resource) =>
-            Object.entries(STATEMENT_LABELS[resource]).map(([action, label]) => (
-              <tr key={`${resource}.${action}`}>
-                <th scope="row">{label}</th>
-                {WORKSPACE_ROLE_LABELS.map(({ value }) => {
-                  const allowed = rolePermits(value, { [resource]: [action] });
-                  return (
-                    <td key={value}>
-                      <Mark value={allowed} label={allowed ? 'Yes' : 'No'} />
-                    </td>
-                  );
-                })}
-              </tr>
-            )),
+            Object.entries(STATEMENT_LABELS[resource])
+              .filter(([action]) => !hidden(resource, action))
+              .map(([action, label]) => (
+                <tr key={`${resource}.${action}`}>
+                  <th scope="row">{label}</th>
+                  {WORKSPACE_ROLE_LABELS.map(({ value }) => {
+                    const allowed = rolePermits(value, { [resource]: [action] });
+                    return (
+                      <td key={value}>
+                        <Mark value={allowed} label={allowed ? 'Yes' : 'No'} />
+                      </td>
+                    );
+                  })}
+                </tr>
+              )),
           )}
         </tbody>
       </table>
