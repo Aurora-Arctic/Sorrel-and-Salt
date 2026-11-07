@@ -40,6 +40,7 @@ export const PAGE_PATTERNS: readonly string[] = [
   '/i/[token]',
   '/invite/[token]',
   '/keepers',
+  '/keepers/business-cards',
   '/keepers/card-sign-ups',
   '/keepers/documents',
   '/keepers/documents/[key]',
