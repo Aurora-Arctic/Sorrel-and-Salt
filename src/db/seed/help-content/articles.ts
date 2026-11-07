@@ -6,7 +6,7 @@ const gettingStarted = article(
   'How to sign in, what the Demo Coven is, and how invitations and printed cards bring you into a coven.',
   `Sorrel & Salt is invite-gated. Signing in by any method gives you an account and an [[Observer]] seat in the [[Demo Coven]], and nothing else. The [[Compendium]] is the one part anyone can read without an account.
 
-The sub pages below cover signing in, the Demo Coven, and invitations and printed cards.`,
+The sub pages below cover signing in, the Demo Coven, accepting an invitation, redeeming a printed card and searching this help. If something is not working, the Troubleshooting section lists the usual causes.`,
 );
 const gettingStartedPages = [
   subPage(
@@ -36,13 +36,35 @@ If you have turned on two-factor sign-in, the next step asks for "Code From Your
   subPage(
     gettingStarted,
     3,
-    'Accepting an Invitation or a Printed Card',
-    'What an invitation or a printed card does when you use it.',
-    `An invitation seats you in a [[Coven|coven]] as an [[Observer]] or a [[Practitioner]]. To accept it, your account's verified email address must match the address the invitation was sent to. Accepting also lets you create covens of your own.
+    'Accept an Invitation',
+    'How to accept an invitation sent to your email address.',
+    `An [[Invitation|invitation]] seats you in a [[Coven|coven]] as an [[Observer]] or a [[Practitioner]]. It is mailed to an address, and your account's verified email address must match that address. Accepting also lets you create covens of your own.
 
-An invitation never lowers a role you already hold. If the link does not work, the page says why: the invitation is invalid, already accepted, declined, revoked or expired, it was sent to a different address, your address is not yet confirmed, or the coven has since been deleted.
+Open the link in the email, sign in if the page asks you to, and choose "Accept Invitation". You can also accept from your account page: its "Invitations" section lists "Your Invitations" with "Accept" and "Decline" on each row, and "Decline" asks you to confirm in "Decline Invitation".
 
-A printed card seats you nowhere and grants no role. It lets your account create a coven, once per account. A [[Keeper]] mints cards; see the Keeper pages.`,
+An invitation lasts seven days, and it never lowers a role you already hold. If the link does not work, the page says why. "My Invitation Link Does Not Work", in Troubleshooting, lists each reason and what to do.`,
+  ),
+  subPage(
+    gettingStarted,
+    4,
+    'Redeem a Printed Card',
+    'What a printed card does and how to use it.',
+    `A printed card is handed to you by a [[Keeper]]. It carries a link and a QR code. Unlike an [[Invitation|invitation]], it is tied to no email address and seats you in no [[Coven|coven]], and it grants no role. What it does is let your account create a coven, once per account.
+
+Open the link, or scan the QR code, and sign in if asked. When the card is accepted you land on the "Create Coven" page with the note "Your card is accepted: you can now start a coven." and you will be the coven's [[Steward]]. See "Create a Coven" for the next step.
+
+A card you have already used says so and points you to your account to start a coven. If you have already used one card, a second is refused and stays free for someone else. A card that is not valid, has been withdrawn or has expired is refused too, and the page says which. "My Invitation Link Does Not Work" gives the wording.`,
+  ),
+  subPage(
+    gettingStarted,
+    5,
+    'Search the Help Centre',
+    'How to find a help page by what it says.',
+    `Type in the "Search Help" box and choose "Search". The results page is titled "Search Help". A blank search finds nothing.
+
+The search looks in each page's title, summary and body. A match in the title ranks above a match in the summary, and a match in the summary ranks above one in the body. If no page matches the words, it falls back to titles close to what you typed, so a misspelt title still finds its page.
+
+You are shown only the pages you may read. Pages for [[Curator|curators]] and [[Keeper|Keepers]] never appear in a public search. Search engines do not index the results page.`,
   ),
 ];
 
@@ -58,11 +80,11 @@ const compendiumPages = [
   subPage(
     compendium,
     1,
-    'Searching and Filtering',
+    'Search and Filter the Compendium',
     'How to search the Compendium and narrow the list.',
     `A search needs at least 2 characters. The filter panel can narrow the list by:
 
-- Categories, with "Match" set to All (an entry must be in every chosen category) or Any (in at least one).
+- Categories, with "Match" set to All (an entry must be in every chosen [[Category|category]]) or Any (in at least one).
 - Forms.
 - Toxic: Any, Toxic or Not Toxic.
 - Source: All, Local or [[Compendium]].
@@ -75,18 +97,18 @@ Some filters, such as Reviewed, are for [[Curator|curators]] only.`,
   subPage(
     compendium,
     2,
-    'Reading an Entry and Its Sources',
+    'Read an Entry and Its Sources',
     'What an entry page shows and where its claims come from.',
     `An entry's page shows its [[Formal Name|formal name]], folk names, description, safety notes, correspondences and categories, and each form it comes in as its own [[Variant|variant]] beneath it.
 
-What the [[Compendium]] says, it sources. A source is a reference: a work with a locator pointing to where in it the claim is found. A source can also say what it supports, and the basis of a name.`,
+What the [[Compendium]] says, it sources. A source is a [[Reference|reference]]: a work with a locator pointing to where in it the claim is found. A reference can also say what it supports, and the basis of a name.`,
   ),
   subPage(
     compendium,
     3,
     'The Toxic Flag and Safety Notes',
     'How toxicity is marked on an ingredient and on each form.',
-    `An ingredient and each of its forms carry safety notes and a toxic flag. A form's flag is its own: a form form-note reads "This form adds only its Toxic mark to what the ingredient says."
+    `An ingredient and each of its forms carry safety notes and a toxic flag. A form's flag is its own: a form's note reads "This form adds only its Toxic mark to what the ingredient says."
 
 The entry page shows toxic if the ingredient or any of its forms is toxic. The Toxic filter keeps an entry flagged on itself or on any live form.`,
   ),
@@ -95,7 +117,7 @@ The entry page shows toxic if the ingredient or any of its forms is toxic. The T
 const yourCoven = article(
   3,
   'Your Coven',
-  'Roles, invitations, and joining or leaving a coven.',
+  'Roles, invitations, pauses, and joining, leaving or deleting a coven.',
   `A [[Coven|coven]] is a group that shares ingredients and a [[Grimoire|grimoire]]. Every member has one of three roles, shown as [[Steward]], [[Practitioner]] or [[Observer]].`,
 );
 const yourCovenPages = [
@@ -106,27 +128,62 @@ const yourCovenPages = [
     'What each coven role can do.',
     `- **[[Observer]]**: reads ingredients, stock, spells and workings, and the [[Coven|coven]] itself. Writes nothing.
 - **[[Practitioner]]**: adds, edits and removes ingredients, spells and workings, reads and updates stock, and sees the other members.
-- **[[Steward]]**: everything a Practitioner can do, plus seeing members' email addresses, inviting, changing and removing members, pausing a member, and editing or deleting the coven.
+- **[[Steward]]**: everything a Practitioner can do, plus seeing members' email addresses, inviting, changing and removing members, pausing a member, and deleting the coven.
 
 A Steward cannot be paused. A [[Keeper]]'s site role is separate from these.`,
   ),
   subPage(
     yourCoven,
     2,
-    'Inviting Someone',
-    'How a Steward invites a new member.',
-    `A [[Steward]] chooses "Invite", which opens "Invite Someone". Enter their "Email Address", pick a "Role", and choose "Send Invitation".
+    'Create a Coven',
+    'How to start a coven of your own.',
+    `Starting a [[Coven|coven]] needs permission. You get it by accepting an [[Invitation|invitation]], by redeeming a printed card, or when a [[Keeper]] grants it. Only a Keeper takes it away, and covens you already made stay.
 
-An invitation grants [[Observer]] or [[Practitioner]] only. A Steward makes someone a Steward afterwards. An invitation lasts seven days, and a second invitation to the same address replaces the pending one. An address that already belongs to a member is refused, and invitations are limited to 20 in 60 minutes.`,
+With permission, choose "Create Coven" in the coven switcher. The page says "Start a coven of your own. You will be its steward." Enter a "Name" and choose "Create Coven". You become the coven's [[Steward]].
+
+Without permission, the page says: "Creating a coven needs an invitation from someone already using Sorrel & Salt, or a keeper's approval."`,
   ),
   subPage(
     yourCoven,
     3,
-    'Removing Members and Leaving',
-    'How a seat ends, by removal or by leaving.',
-    `A [[Steward]] can remove a member. The seat is ended, and the member invited back has the same seat revived. The last Steward cannot be removed.
+    'Invite Someone',
+    'How a Steward invites a new member.',
+    `A [[Steward]] chooses "Invite", which opens "Invite Someone". Enter their "Email Address", pick a "Role", and choose "Send Invitation".
 
-Any member, a paused one too, can choose "Leave Coven". You lose access to its ingredients and its [[Grimoire|grimoire]] until a Steward invites you back, and your own entries stay with the [[Coven|coven]]. If you are the last Steward, make another member a Steward first. If you are the only member, delete the coven instead.`,
+An [[Invitation|invitation]] grants [[Observer]] or [[Practitioner]] only. A Steward makes someone a Steward afterwards. An invitation lasts seven days, and a second invitation to the same address replaces the pending one. An address that already belongs to a member is refused, and invitations are limited to 20 in 60 minutes.`,
+  ),
+  subPage(
+    yourCoven,
+    4,
+    "Pause and Lift a Member's Access",
+    "How a Steward stops a member's access for a while, and restores it.",
+    `A [[Pause|pause]] keeps a member's place in the [[Coven|coven]] but stops them opening it or changing anything in it until the pause ends. Only a [[Steward]] pauses a member, and a Steward's own access cannot be paused.
+
+Open the member and find the "Coven Access" section. Choose "Pause Access", then pick how long: 1 Day, 1 Week, 1 Month, Until a Date, or No End Date. A date must be in the future. You can add a note, seen by the coven's Stewards only, and a message to the member that is emailed to them. Each is up to 500 characters. If the email fails, the pause still stands.
+
+While a pause stands, a second pause is refused. Choose "Lift Pause" and confirm with "Lift" to restore access sooner.
+
+A paused member who opens the coven sees "Access Paused" with the time it ends, or a note that it has no end date. They can still ask the coven's Steward, or Support, about it, choose "Leave Coven", or open their other covens from "Your Other Covens".`,
+  ),
+  subPage(
+    yourCoven,
+    5,
+    'Remove a Member or Leave',
+    'How a seat ends, by removal or by leaving.',
+    `A [[Steward]] can remove a member: choose "Remove" on the member, then confirm in "Remove Member". The seat is ended, and the member invited back has the same seat revived. The last Steward cannot be removed.
+
+Any member, a [[Pause|paused]] one too, can choose "Leave Coven" and confirm. The page says: "You lose access to its ingredients and its grimoire until a steward invites you back." Your own entries stay with the [[Coven|coven]].
+
+If you are the only Steward and other members remain, leaving opens a choice titled "What Happens to the Coven?". Choose "Hand It to" a member you pick under "New Steward", and "Promote and Leave" makes them a Steward first, then you leave. That is two steps: if the leave fails, you stay and the coven has two Stewards. The other choice is "Delete Coven". If you are the only member, delete the coven instead of leaving it.`,
+  ),
+  subPage(
+    yourCoven,
+    6,
+    'Delete a Coven',
+    'What deleting a coven does and who can do it.',
+    `Only a [[Steward]] can delete a [[Coven|coven]]. Open the coven and find the "Delete Coven" section. Once deleted, the coven becomes inaccessible to every member, Stewards included. The page warns: "Nothing is destroyed, but only an administrator with database access can restore it."
+
+The [[Demo Coven]] cannot be deleted. A coven has no rename, so to change its name you create a new one.`,
   ),
 ];
 
@@ -136,19 +193,19 @@ const ingredients = article(
   "Your coven's own ingredients and stock: what you have.",
   `Ingredients are your [[Coven|coven]]'s own list of what it holds. They come from the [[Compendium]] or are made by you, and each can carry stock.
 
-The sub pages cover adding, forms, stock and filters.`,
+The sub pages cover adding, forms, stock, finding ingredients, and annotating a Compendium entry.`,
 );
 const ingredientPages = [
   subPage(
     ingredients,
     1,
-    'Adding From the Compendium or Making Your Own',
+    'Add an Ingredient',
     'The two ways an ingredient joins your list.',
     `Choose "Add Ingredient". The form asks for a classification and a [[Formal Name|formal name]], then folk names, a description, safety notes, a toxic mark, an element, celestial bodies, zodiac signs and categories. It is grouped into Identity, Details & Care, Correspondences, Relations and Sources. Correspondences also holds Colours and Deities, and Relations holds Categories and Substitute Ingredients.
 
 If the formal name matches a [[Compendium]] entry, the form offers "Add to My Ingredients: <name>" so you can hold the shared entry instead of a duplicate.
 
-An entry's menu offers Annotate, Make It Ours, Remove, Edit Stock and Delete Ingredient. "Make It Ours" turns a held Compendium entry into your own.`,
+The form saves itself as you work; see "Your Spell Saves Itself" for how that works.`,
   ),
   subPage(
     ingredients,
@@ -157,27 +214,38 @@ An entry's menu offers Annotate, Make It Ours, Remove, Edit Stock and Delete Ing
     'How one ingredient comes in several forms.',
     `An ingredient's identity is its [[Formal Name|formal name]] alone. Each form it comes in, such as dried or fresh, is a [[Variant|variant]] beneath it. A variant adds to its ingredient and never removes anything from it. A form is plain text, not a choice from a list.
 
-A form can have its own safety notes and toxic mark.`,
+A form can have its own safety notes and toxic mark.
+
+An ingredient can also list folk names. A folk name can replace the displayed name, and it is never a unique identifier, so two ingredients may share one.`,
   ),
   subPage(
     ingredients,
     3,
-    'Stock Levels',
+    'Track Stock',
     'How quantity, units and the low-stock badge work.',
-    `Each form has one stock jar per [[Coven|coven]]. A jar holds a "Quantity" (which may be blank), a "Unit", a source and an acquired date.
+    `Each form has one stock jar per [[Coven|coven]]. A jar holds a "Quantity" (which may be blank), a "Unit", a source and an acquired date. Choose "Edit Stock" on an ingredient to change it.
 
 "Low Stock At" sets the amount at or below which the jar is badged Low Stock, and zero turns the badge off. A jar at nothing shows Out of Stock. If you set no threshold, a counted unit defaults to 3, and grams and millilitres to 10 g or 15 ml; a jar without a unit has none.
 
-Units are milligrams, grams, kilograms, ounces and pounds for weight; millilitres, litres, teaspoons, tablespoons, UK and US fluid ounces and cups for volume; and pieces, drops and pinches for counts.`,
+Units are milligrams, grams, kilograms, ounces and pounds for weight; millilitres, litres, teaspoons, tablespoons, UK and US fluid ounces and cups for volume; and pieces, drops and pinches for counts. Changing the unit keeps the numbers as typed. It does not convert them.`,
   ),
   subPage(
     ingredients,
     4,
-    'Folk Names and Category Filters',
-    'Finding ingredients by other names and by category.',
-    `An ingredient can list folk names. A folk name can replace the displayed name. A folk name is never a unique identifier, so two ingredients may share one.
+    'Find Ingredients',
+    'Finding ingredients by name, category and stock.',
+    `Use "Filter Ingredients" to narrow your list by category, form, toxic mark and stock.`,
+  ),
+  subPage(
+    ingredients,
+    5,
+    'Annotate an Entry or Make It Ours',
+    'Changing how your coven sees a Compendium entry.',
+    `A [[Compendium]] entry your [[Coven|coven]] holds has a menu with Edit Stock, Annotate, Make It Ours and Remove.
 
-Ingredients can be listed by category, form, toxic mark and stock.`,
+**Annotate** opens a form with seven fields: Label, Description, Safety Notes, Elements, and lists of celestial bodies, zodiac signs and colours. Each field has "Restore Original" to go back to the Compendium's text. The Label stands in for the Compendium's name on your pages, and no two entries in a coven share one. The form saves itself as you work.
+
+**Make It Ours** asks "Make <name> your coven's own?" and explains: "You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it." Choose "Make It Ours" to confirm.`,
   ),
 ];
 
@@ -191,7 +259,7 @@ const grimoirePages = [
   subPage(
     grimoire,
     1,
-    'Building a Spell',
+    'Build a Spell',
     'The parts of a spell and where each goes.',
     `In the spell builder, fill in "Title", "Intent", "Jar Description" and "Seal Wax". Add steps. Under "When to Work It", pick "Moon Phase" and "Day"; these are suggestions. Add a note under Notes, and assign categories.`,
   ),
@@ -199,8 +267,19 @@ const grimoirePages = [
     grimoire,
     2,
     'Steps and Units',
-    'What a step can hold.',
-    `A step is an instruction, an ingredient, or a custom name. A custom name is never added to your Ingredients and adds nothing to a spell's derived categories. A step with an ingredient or a name may carry a quantity and a unit. A spell may use one form in several steps, and steps keep the order you give them.`,
+    'What a step can hold, and what the stock marks mean.',
+    `A step is an instruction, an ingredient, or a custom name. A custom name is never added to your Ingredients and adds nothing to a spell's derived categories. A step with an ingredient or a name may carry a quantity and a unit. A spell may use one form in several steps, and steps keep the order you give them.
+
+A step that names an ingredient is checked against your jars. There are six results:
+
+- **Out**: "The jar is empty, so there is nothing to put in."
+- **Not Enough**: "The jar holds less than this step needs."
+- **Units Differ**: "The units don't match, so it can't tell if you have enough."
+- **Low**: "The jar is at or below the coven's Low mark."
+- **One-Off**: "Used in this spell only; not kept in your cupboard."
+- **No jar**: the ingredient has no jar, and the "In the Cupboard" panel says you have no jar.
+
+A form used in several steps is judged on the sum of its steps. Units are converted only within one dimension, so a weight cannot be set against a volume or a count. The marks also show in the quick look.`,
   ),
   subPage(
     grimoire,
@@ -223,25 +302,33 @@ A complete spell shared with the coven cannot be made private again, and a compl
   subPage(
     grimoire,
     5,
-    'Duplicating a Spell',
+    'Duplicate a Spell',
     'Making a private draft copy.',
     `Choose "Duplicate". The copy's title gets " (Copy)", and it is a private draft. The recipe is copied; workings, the revision count and history stay behind. A category that has been deleted is not carried over.`,
   ),
   subPage(
     grimoire,
     6,
-    'Quick Look and Preview',
-    'Looking at a spell or an ingredient without leaving the list.',
-    `The eye on a list opens a quick look: the details in a window over the list. A spell's preview has a "Screen Awake" toggle, with the tips "Keep the Screen from Sleeping" and "Let the Screen Sleep".`,
+    'Find and Preview Spells',
+    'Filtering the Grimoire, the Drafts list, and the quick look.',
+    `The [[Grimoire]] has two tabs, Spells and Drafts. The Drafts tab lists draft spells.
+
+"Filter the Grimoire" narrows the list by "Moon Phases", "Days of the Week", "Coven Members" and visibility. The moon phases are New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent, Dark Moon, Waxing Moon and Waning Moon. Days start on Monday. Orders are recently updated, recently created and title.
+
+The eye on a list opens a quick look: the details in a window over the list. A spell's preview has a "Screen Awake" toggle, with the tips "Keep the Screen from Sleeping" and "Let the Screen Sleep".`,
   ),
   subPage(
     grimoire,
     7,
-    'Moon Phase and Day Filters',
-    'Finding spells by when they are worked.',
-    `The [[Grimoire]] can be filtered by "Moon Phases", "Days of the Week", "Coven Members" and visibility. The moon phases are New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent, Dark Moon, Waxing Moon and Waning Moon. Days start on Monday.
+    'Your Spell Saves Itself',
+    'How autosave works and what its messages mean.',
+    `The spell builder, the ingredient form and the Annotate form each save as you work. This is [[Autosave]].
 
-Orders are recently updated, recently created and title.`,
+A save starts 3 seconds after your last change, and at most 30 seconds into a long run of changes. It also saves when the tab is hidden or focus leaves the form. A copy is kept in your browser until the server confirms the save, and the browser asks before the tab closes with an unsaved change.
+
+The status shows "Saving…", then "Saved <time>", or "Draft saved <time>" for a draft. If a save fails it tries again after 2, 5 and 15 seconds. After that it stops at "Could not save." with "Retry". If someone else changed the same thing first, you can choose "Reload Latest" or "Keep My Version".
+
+The spell builder saves first when you choose Close, and it never sends a blank new instruction.`,
   ),
 ];
 
@@ -255,18 +342,18 @@ const workingPages = [
   subPage(
     workings,
     1,
-    'Recording a Working',
+    'Record a Working',
     'How to record that you worked a spell.',
-    `On a spell, choose "Record a Working". Set the Date, name the Participants, who must be members of the [[Coven|coven]], and add a Note. A working of a draft spell is refused, and a working cannot be more widely visible than its spell. Nothing leaves your jars until the working is completed.`,
+    `On a spell, choose "Record a Working". Set the Date, name the Participants, who must be members of the [[Coven|coven]], and add a Note. A working of a draft spell is refused, and a working cannot be more widely visible than its spell: a private spell's working cannot be shared until the spell is. Nothing leaves your jars until the working is completed.`,
   ),
   subPage(
     workings,
     2,
-    'Completing a Working and Taking Stock Out',
+    'Complete a Working and Take Stock Out',
     'What completing does to your jars.',
-    `Choose "Complete Working". The dialog lists the Deductions to take from your jars, and its fields (Name, Form, Quantity, Unit and "Add to Jar") let you adjust them. The recorder or a named participant can complete it. It is refused if already complete, if the spell is a draft, or if the day is yet to come.
+    `Choose "Complete Working". The dialog lists the Deductions to take from your jars, and its fields (Name, Form, Quantity, Unit and "Add to Jar") let you adjust them. The summary says "Completing takes nothing from the jars for N ingredient(s)." for any ingredient it skips. It skips one when the units differ, the jar has no amount, the step has no amount, the ingredient is not in stock, or it is a one-off ingredient.
 
-A jar short of stock goes to zero and the shortfall is recorded. If a deduction fails, the working stays a draft and nothing is taken. Deleting a working never puts stock back, and only its recorder can delete it. A completed working's visibility only widens.`,
+The recorder or a named participant can complete it. A jar short of stock goes to zero and the shortfall is recorded. If a deduction fails, the working stays a draft and nothing is taken. Deleting a working never puts stock back, and only its recorder can delete it. A completed working's visibility only widens.`,
   ),
 ];
 
@@ -282,30 +369,32 @@ const accountPages = [
     1,
     'Passwords and Lockout',
     'Password rules, resets and what locks an account.',
-    `A password is 15 to 128 characters. Five wrong passwords lock password sign-in for 1 minute, and each following lock lasts 5, 15 and then 60 minutes, which repeats. A quiet 24 hours restarts the count. Provider and passkey sign-in are never locked.
+    `A password is 15 to 128 characters, and a password known from a data breach is refused. Five wrong passwords lock password sign-in for 1 minute, and each following lock lasts 5, 15 and then 60 minutes, which repeats. A quiet 24 hours restarts the count. While locked, even the right password is refused. Provider and passkey sign-in are never locked.
 
 "Forgot Password?" then "Send Reset Link" mails a link that lasts 15 minutes, to a verified address only. Resetting a password signs out your other sessions.`,
   ),
   subPage(
     account,
     2,
-    'Passkeys',
-    'Signing in without a password.',
-    `Under Passkeys, choose "Add a Passkey". You can "Rename" or "Remove" one. Sign in with "Sign In with a Passkey".`,
+    'Sign-In Methods',
+    'The ways you can sign in, and how to add or remove one.',
+    `The "Sign-In Methods" section lists a row for each provider, with "Add" or "Remove". "Remove" opens "Remove Sign-In Method" to confirm. There are also rows for Password ("Set Password" or "Manage Password") and Passkeys ("Manage Passkeys"). You cannot remove the last way you have to sign in: its Remove is greyed with a reason.
+
+Under Passkeys, choose "Add a Passkey". You can "Rename" or "Remove" one. Sign in with "Sign In with a Passkey".`,
   ),
   subPage(
     account,
     3,
-    'Authenticator App',
+    'Turn On Two-Factor Sign-In',
     'Two-factor sign-in with a code from an app.',
-    `Choose "Turn On Two-Factor" and confirm with "Confirm Your Password". You get a key you can copy ("Copy Key") and ten backup codes, each usable once, which you can "Copy", "Download" or "Print". "Turn Off Two-Factor" turns it off.
+    `Choose "Turn On Two-Factor" and confirm with "Confirm Your Password". You get a key you can copy ("Copy Key") and ten backup codes, each usable once, which you can "Copy", "Download" or "Print". The codes are shown once. "Turn Off Two-Factor" turns it off.
 
-Too many wrong codes lock this step for 15 minutes.`,
+Two-factor guards password sign-ins only. An account with no password is told to "Set a Password" first. Too many wrong codes lock this step for 15 minutes.`,
   ),
   subPage(
     account,
     4,
-    'Changing Your Email',
+    'Change Your Email',
     'How your address changes.',
     `Open "Your Email" and choose "Send Confirmation". Your address changes only when you use the link sent to the new one, which lasts one hour. Your session must be under 24 hours old, and you can ask again after 60 seconds. The old address is sent a notice. A new address that someone else already holds gets the same answer and no mail.`,
   ),
@@ -321,21 +410,111 @@ const supportPages = [
   subPage(
     support,
     1,
-    'Sending a Request and Reading Replies',
-    'The request form and where replies arrive.',
+    'Send a Support Request',
+    'The request form.',
     `Both forms ask "What Is This About?", which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address ("We reply to this address."), a Subject and a Message. Choose "Send Request". The signed-in form offers Accessibility, Bug, Account & Sign-In, [[Compendium]] Entry, Privacy & Data, Feedback and Question. The signed-out form offers Accessibility, Bug, Account & Sign-In, Privacy & Data and Question.
 
-A reply is read on the support page behind sign-in, and the email only tells you one has arrived. A signed-out sender is mailed the reply whole. Reply with "Your Reply". A reply is at most 4,000 characters. A request you sent while signed out moves to your account once the account has that address verified.`,
+A request you sent while signed out moves to your account once the account has that address verified.`,
   ),
   subPage(
     support,
     2,
+    'Read and Answer a Reply',
+    'Following a request while signed in.',
+    `A reply is read on the support page behind sign-in, and the email only tells you one has arrived. Staff replies are tagged "Staff" and your own "You".
+
+Write under "Your Reply" and choose "Reply". Choose "Resolve" if your question is answered. A request that has been timed out cannot be replied to. A closed request shows "This request is closed." with "Open Your Follow-Up", or tells you to write a new request from Support.`,
+  ),
+  subPage(
+    support,
+    3,
+    'Read a Reply Without Signing In',
+    'Following a request sent while signed out.',
+    `The email only tells you a reply has arrived. Open the link in it to read the reply at \`/support/request\`. Only the newest link works, and it lasts 30 days. A closed request no longer opens.
+
+Write under "Your Reply", up to 4,000 characters, and choose "Reply". A client takes 60 reads a day, and a request takes 5 replies a day.`,
+  ),
+  subPage(
+    support,
+    4,
     'What the Statuses Mean',
     'The four states of a request.',
     `- **Open**: waiting for us.
 - **Waiting on Sender**: we asked you something. Your reply reopens it.
 - **Resolved**: answered. You can resolve your own. If you write again it reopens, and otherwise it is closed seven days later.
 - **Closed**: finished. A message after that starts a new, linked request.`,
+  ),
+];
+
+const troubleshooting = article(
+  9,
+  'Troubleshooting',
+  'Causes and fixes for the most common problems.',
+  `Each page here starts from what you see and lists the usual causes. If none fits, send a [[Support Request|support request]].`,
+);
+const troubleshootingPages = [
+  subPage(
+    troubleshooting,
+    1,
+    'I Cannot Sign In',
+    'Why a sign-in is refused.',
+    `- A password sign-in that fails five times locks for 1 minute, then 5, 15 and 60 minutes. While locked, even the right password is refused. A passkey or provider sign-in still works. See "Passwords and Lockout".
+- A password under 15 characters, or one known from a data breach, is refused when you set it.
+- If you turned on two-factor sign-in, the next step asks for "Code From Your App". Choose "Use a Backup Code" if you have lost the app.
+- A provider button is greyed when this copy of the site has no credentials for it. Use another method.`,
+  ),
+  subPage(
+    troubleshooting,
+    2,
+    'My Invitation Link Does Not Work',
+    'The reason each refusal gives and what to do.',
+    `The page tells you the reason. In order:
+
+- "This invitation link isn't valid. Check that you opened the whole link from the email."
+- "This invitation has already been accepted."
+- "This invitation was declined. If you change your mind, ask whoever sent it for a new one."
+- "This invitation was withdrawn. Ask whoever sent it for a new one."
+- "This invitation has expired. Ask whoever sent it for a new one."
+- "The coven this invitation was for has been deleted, so it can't be accepted."
+- "This invitation was sent to a different email address. Sign in with the account that uses that address."
+- "Your email address isn't confirmed yet. Confirm it, then open this link again to accept."
+- "Keeper changes are paused, so this invitation can't be accepted until they are resumed." This one applies to invitations from a Keeper only.
+- A printed card you have used: "You've already used this card. You can start a coven from your account."
+- A second printed card: "You've already used an invitation card, so this one stays free for someone else."
+
+A printed card has three wordings of its own. An unknown code says "That code doesn't match a card. Check the link or the QR code printed on the card and try again." A withdrawn card says "This card has been withdrawn." An expired card says "This card has expired." Each is followed by "You can still join by invitation: ask a coven to invite you."`,
+  ),
+  subPage(
+    troubleshooting,
+    3,
+    'I Cannot Complete a Working',
+    'Why "Complete Working" is refused.',
+    `- "A working can't be completed before its day."
+- "This working is already complete."
+- The spell is a draft: "A spell takes workings once the spell is complete."
+- Only the person who recorded a working, or someone named on it, can change it. Only its recorder can delete it.
+- A private spell's working cannot be shared with the coven: "Share the spell first."
+- A participant must be a member of the coven: "Choose a member of this coven".`,
+  ),
+  subPage(
+    troubleshooting,
+    4,
+    'I Cannot Convert a Unit',
+    'Why a conversion is refused.',
+    `Conversion works within one dimension only: weight to weight, or volume to volume. A weight cannot become a volume, because no table of densities exists. A count (pieces, drops and pinches) cannot be converted at all. The refusal is given as a result, never a guess.
+
+Within volume, a teaspoon is 5 ml, a tablespoon is 15 ml and a cup is 250 ml. Changing the unit on a jar keeps the numbers as typed and does not convert them.`,
+  ),
+  subPage(
+    troubleshooting,
+    5,
+    'I Cannot Remove or Leave',
+    'Why a seat cannot end.',
+    `- "This is the last steward, and a coven needs one. Make another member a steward first."
+- "You are the only member. Delete the coven instead of leaving it."
+- Removing someone who is not in the coven says "That person is not a member of this coven".
+
+If you are the only Steward, "Leave Coven" opens "What Happens to the Coven?" to hand it to another member or delete it. See "Remove a Member or Leave".`,
   ),
 ];
 
@@ -356,4 +535,6 @@ export const PUBLIC_ARTICLES = [
   ...accountPages,
   support,
   ...supportPages,
+  troubleshooting,
+  ...troubleshootingPages,
 ];

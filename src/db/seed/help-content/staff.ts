@@ -1,7 +1,7 @@
 import { article, subPage } from './build';
 
 const curating = article(
-  9,
+  10,
   'Curating a Compendium Entry',
   'How curators and Keepers add and correct Compendium entries.',
   `[[Curator|Curators]] and [[Keeper|Keepers]] curate the [[Compendium]], its vocabularies and the site documents, and review [[Support Request|support requests]]. They have no access to any [[Coven|coven]]'s ingredients or [[Grimoire|grimoire]], except the [[Demo Coven]].
@@ -13,7 +13,7 @@ const curatingPages = [
   subPage(
     curating,
     1,
-    'Sourcing With References',
+    'Source an Entry With References',
     'Attaching the sources an entry rests on.',
     `What the [[Compendium]] says, it sources. In the ingredient form, add a reference to the ingredient or to a form. Each reference has a "Locator", which points to where in the work the claim is found, a "Name Basis" and "Supports". "New Reference" adds a work that is not yet in the list.
 
@@ -33,7 +33,7 @@ In the [[Compendium]] filters, a curator's "Reviewed" choice has the values Any,
 ];
 
 const vocab = article(
-  10,
+  11,
   'Vocabularies and Categories',
   'The lists curators keep that the rest of the site draws on.',
   `[[Curator|Curators]] keep the categories, the groups they are filed under, and the other curated lists: astrology, deities and the traditions they belong to, and the values an ingredient's form can take. They are the same for every [[Coven|coven]], so a change shows everywhere.
@@ -43,7 +43,7 @@ Deleting a category group moves its categories rather than removing them. A cate
 );
 
 const queue = article(
-  11,
+  12,
   'Working the Support Queue',
   'How curators and Keepers answer support requests.',
   `Requests appear under [[Support Request|Support Requests]], which can be filtered by status and by "About". A [[Keeper]] sees every request, and a [[Curator|curator]] only those marked "Shared With Curators" or assigned to them. A curator does not see a signed-out sender's address, though a reply still reaches it.
@@ -66,7 +66,7 @@ const queuePages = [
   subPage(
     queue,
     2,
-    'Timing a Sender Out and Turning a Request Into an Issue',
+    'Time a Sender Out and Link a Request to an Issue',
     'Stopping a sender, and linking a request to a GitHub issue.',
     `A [[Keeper]] can time out a signed-in user, or a signed-out sender's address, until a date or with no end. It needs a note and a message of 500 characters or fewer. The sender cannot send new requests meanwhile; earlier ones stay and staff can still reply. A signed-in user is mailed the message and a signed-out sender is not. "Lift" ends one at once.
 
@@ -76,17 +76,25 @@ In the "Issue" panel a Keeper links a request to a GitHub issue on this reposito
 ];
 
 const grants = article(
-  12,
-  "Keeper and Coven-Creation Grants, and the Primary Keeper's Pause",
-  'Who can become a Keeper or create covens, and how the primary Keeper can freeze changes.',
-  `Only a [[Keeper]] grants or revokes the right to create [[Coven|covens]], and only a Keeper makes another Keeper. Accepting an invitation, a printed card, or being made a Keeper or [[Curator|curator]] turns the right on.
+  13,
+  'Granting Coven Creation or the Keeper Role',
+  'Who can become a Keeper or create covens.',
+  `Only a [[Keeper]] grants or revokes the right to create [[Coven|covens]], and only a Keeper makes another Keeper. Accepting an invitation, a printed card, or being made a Keeper or [[Curator|curator]] turns the right on. Every change is recorded; see "Read the Privilege Ledger".
 
-The primary Keeper is the Keeper whose address is the one the site was set up with. Only they can choose "Pause Keeper Changes" or "Resume Keeper Changes". While paused, no other Keeper can grant or revoke the Keeper role, approve or revoke coven creation, or invite a Keeper. The primary Keeper's own changes still pass.`,
+While Keeper changes are paused, a Keeper other than the primary Keeper cannot grant or revoke the Keeper role or approve or revoke coven creation. See "Pausing Keeper Changes".`,
+  'keeper',
+);
+
+const pausingKeeper = article(
+  14,
+  'Pausing Keeper Changes',
+  'How the primary Keeper freezes changes to Keeper roles.',
+  `The primary Keeper is the Keeper whose address is the one the site was set up with. Only they can choose "Pause Keeper Changes" or "Resume Keeper Changes". While paused, no other Keeper can grant or revoke the Keeper role, approve or revoke coven creation, invite a Keeper, or [[Pause|pause]] a Keeper's access. The primary Keeper's own changes still pass.`,
   'keeper',
 );
 
 const inviteStaff = article(
-  13,
+  15,
   'Inviting a Curator or Keeper',
   'Giving someone a site role.',
   `Accepting a site invitation raises the person's role to [[Curator|curator]] or [[Keeper]], never lowers it, and turns on their right to create [[Coven|covens]]. A Keeper also gets a [[Steward]] seat in the [[Demo Coven]]. While Keeper changes are paused, the invitation cannot be accepted until they are resumed.`,
@@ -94,7 +102,7 @@ const inviteStaff = article(
 );
 
 const cards = article(
-  14,
+  16,
   'Minting Printed Cards',
   'Making printed invitation cards.',
   `Choose "Mint Cards". Set the "Number of Sheets" (each sheet holds 10 cards, up to 50 sheets), "Expires On" (90 days from now unless you change it), a "Note" of up to 500 characters, and whether to tick "Print Backs" and "Beta Testers".
@@ -102,17 +110,52 @@ const cards = article(
 Each card's token is shown once, at minting. Only a hash is stored, so a token cannot be shown again. A card seats nobody and grants no role: it lets an account create a [[Coven|coven]], once per account.`,
   'keeper',
 );
+const cardPages = [
+  subPage(
+    cards,
+    1,
+    'Read Card Sign-Ups',
+    'Who has accepted a printed card.',
+    `Open Card Sign-Ups in the Keepers area. "Filter Card Sign-Ups" searches by "Name, Email or Batch". The columns are Name, Email, Accepted On, Batch, Beta and Covens Owned, which reads "None yet" for an account that has made no coven. Choose "Download CSV" to save the list as \`card-sign-ups.csv\`.`,
+    'keeper',
+  ),
+];
+
+const businessCards = article(
+  17,
+  'Make Your Business Cards',
+  'Printing your own business cards from the Keepers area.',
+  `Open Business Cards in the Keepers area. It makes a Letter sheet of ten business cards with your name, email and phone. Fill in "Name", "Email" and "Phone", all required. The switch "Include Backs" adds the backs. Choose "Generate".
+
+The PDF is built in your browser and nothing you type is saved. The file is named \`business-cards-\` and your name, made into a slug, and the page says "Saved as <file>." If it fails, it says "The PDF could not be built. Try again."`,
+  'keeper',
+);
 
 const documentsArticle = article(
-  15,
+  18,
   'Editing Site Documents',
   'Changing the privacy policy, disclaimer, code of ethics and terms.',
   `[[Keeper|Keepers]] edit the site's documents. An edit opens a draft; publishing the draft makes a new version and shows it at once. You can discard a draft, and published versions stay. If someone else has changed the draft since you opened it, your save is refused and the editor shows where it stands now. A document's title and lede can be changed without making a new version.`,
   'keeper',
 );
 
+const documentPages = [
+  subPage(
+    documentsArticle,
+    1,
+    'Mail a New Version to Every Account',
+    'Telling every account that a document changed.',
+    `Open Documents in the Keepers area. There are tabs for Terms of Use, Disclaimer, Code of Ethics, Privacy Policy and "Email Updates". The "Email Every Account" panel lists the documents under "Changed since the last email", and the number of accounts and days.
+
+Each changed document needs a "Summary of the <document>": what changed in that version, in your words. Every account reads it in the email. Choose "Send Emails" to confirm. Each account may be asked to agree again at its next visit.
+
+A mailing pauses when the mail provider's monthly allowance is used, and "Resume Mailing" restarts it. A "Last Email" heading shows how far the last mailing got.`,
+    'keeper',
+  ),
+];
+
 const writingHelp = article(
-  16,
+  19,
   'Writing Help Articles',
   'How a Keeper adds, edits and deletes help entries.',
   `Only a [[Keeper]] writes help. Open Help in the Keepers area. A [[Curator|curator]] reads staff help and writes none of it.
@@ -183,15 +226,37 @@ Opening a sub page at its top-level address redirects to the address beneath its
   subPage(
     writingHelp,
     4,
-    'Who Reads What, and How Search Finds It',
-    'The reach of each kind of reader, and how the help search ranks.',
+    'Who Reads What',
+    'The reach of each kind of reader.',
     `A signed-out reader and any signed-in user who is not staff reads Public entries. A [[Curator|curator]] reads Public and Staff entries, and a [[Keeper]] reads all three. A curator reads staff help at /help/staff, which lists the Staff and Keeper entries. A curator is not shown a Keeper entry, even by its address.
 
-The search is at /help/search and takes a query in "q". A blank query finds nothing. It looks in the title, the summary and the body, and a match in the title ranks above one in the summary, which ranks above one in the body. If no entry matches the words, it falls back to titles close to what was typed, so a misspelt title still finds its page. Search shows a reader only the entries that reader may read, so a Staff entry never appears in a public search.
+Search shows a reader only the entries that reader may read, so a Staff entry never appears in a public search. See "Search the Help Centre" for how it ranks.
 
-A search page is not indexed by search engines, and the pages of Staff help are not either.`,
+The search page is not indexed by search engines, and neither are the pages of Staff help.`,
   ),
 ];
+
+const pauseUser = article(
+  20,
+  "Pause a User's Access",
+  'Stopping an account from using the site for a while.',
+  `Open Users in the Keepers area, open the user, and find the "Site Access" section. A [[Pause|pause]] needs a note, seen by staff only, and a "Message to User". Each is required and up to 500 characters. Choose how long it lasts, then confirm. The toasts read "Access paused." and "Pause lifted."
+
+The primary [[Keeper]], yourself, and stand-in accounts cannot be paused. A user who is already paused must be lifted first. Setting a pause ends every session of the user. While Keeper changes are paused, a Keeper other than the primary Keeper cannot pause a Keeper.
+
+A paused user sees "Access Paused". The rest of the site reopens after the end, or once a Keeper lifts the pause if there is no end date. Support stays reachable, and the [[Compendium]] stays open to everyone.`,
+  'keeper',
+);
+
+const ledger = article(
+  21,
+  'Read the Privilege Ledger',
+  'The record of who was granted or lost a site privilege.',
+  `Open Privilege Changes in the Keepers area, which only a [[Keeper]] can read. "Filter Privilege Changes" searches by "Name or Email" and by "Privilege": Keeper, Curator or Coven Creation.
+
+The columns are When, User, Privilege, Change (Granted or Revoked), How (Seeded, By an admin, Invitation accepted, Card accepted or Manual fix), Changed By and Note.`,
+  'keeper',
+);
 
 export const STAFF_ARTICLES = [
   curating,
@@ -200,9 +265,15 @@ export const STAFF_ARTICLES = [
   queue,
   ...queuePages,
   grants,
+  pausingKeeper,
   inviteStaff,
   cards,
+  ...cardPages,
+  businessCards,
   documentsArticle,
+  ...documentPages,
   writingHelp,
   ...writingHelpPages,
+  pauseUser,
+  ledger,
 ];

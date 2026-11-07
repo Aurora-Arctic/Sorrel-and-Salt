@@ -20,15 +20,20 @@ const FAQ: string[] = [
   'Do I Need an Account to Read the Compendium?',
   'Why Did Signing In Only Give Me the Demo Coven?',
   'How Do I Get My Own Coven?',
-  'Who Can See My Spells?',
-  "Why Can't a Complete Spell Go Back to Private or Draft?",
-  'Can I Convert Grams to Millilitres?',
+  'Why Was I Sent to the Terms Page?',
   "What's the Difference Between the Compendium and My Ingredients?",
   "Why Can't I Edit a Compendium Entry?",
+  'Who Can See My Spells?',
+  "Why Can't a Complete Spell Go Back to Private or Draft?",
+  'Does My Spell Save Automatically?',
+  'Why Does My Spell Say a Step Is Short?',
+  'Can I Convert Grams to Millilitres?',
   'How Do I Change My Email?',
   "I'm Locked Out of My Password",
+  'Why Is My Access Paused?',
   'How Do I Leave a Coven?',
   'How Do I Ask for Help or Report an Accessibility Bug?',
+  'Can I Undo a Change in a Form?',
 ];
 
 /** Each parent with its sub pages, every sub page at its parent's audience unless named. */
@@ -36,14 +41,20 @@ const SECTIONS: { title: string; audience: Audience; children: (string | Expecte
   {
     title: 'Getting Started',
     audience: 'public',
-    children: ['Signing In', 'The Demo Coven', 'Accepting an Invitation or a Printed Card'],
+    children: [
+      'Signing In',
+      'The Demo Coven',
+      'Accept an Invitation',
+      'Redeem a Printed Card',
+      'Search the Help Centre',
+    ],
   },
   {
     title: 'The Compendium',
     audience: 'public',
     children: [
-      'Searching and Filtering',
-      'Reading an Entry and Its Sources',
+      'Search and Filter the Compendium',
+      'Read an Entry and Its Sources',
       'The Toxic Flag and Safety Notes',
     ],
   },
@@ -52,52 +63,77 @@ const SECTIONS: { title: string; audience: Audience; children: (string | Expecte
     audience: 'public',
     children: [
       'Steward, Practitioner and Observer',
-      'Inviting Someone',
-      'Removing Members and Leaving',
+      'Create a Coven',
+      'Invite Someone',
+      "Pause and Lift a Member's Access",
+      'Remove a Member or Leave',
+      'Delete a Coven',
     ],
   },
   {
     title: 'Ingredients',
     audience: 'public',
     children: [
-      'Adding From the Compendium or Making Your Own',
+      'Add an Ingredient',
       'Variants and Forms',
-      'Stock Levels',
-      'Folk Names and Category Filters',
+      'Track Stock',
+      'Find Ingredients',
+      'Annotate an Entry or Make It Ours',
     ],
   },
   {
     title: 'Grimoire',
     audience: 'public',
     children: [
-      'Building a Spell',
+      'Build a Spell',
       'Steps and Units',
       'Intent Against Derived Categories',
       'Drafts, Private and Shared',
-      'Duplicating a Spell',
-      'Quick Look and Preview',
-      'Moon Phase and Day Filters',
+      'Duplicate a Spell',
+      'Find and Preview Spells',
+      'Your Spell Saves Itself',
     ],
   },
   {
     title: 'Workings',
     audience: 'public',
-    children: ['Recording a Working', 'Completing a Working and Taking Stock Out'],
+    children: ['Record a Working', 'Complete a Working and Take Stock Out'],
   },
   {
     title: 'Account and Security',
     audience: 'public',
-    children: ['Passwords and Lockout', 'Passkeys', 'Authenticator App', 'Changing Your Email'],
+    children: [
+      'Passwords and Lockout',
+      'Sign-In Methods',
+      'Turn On Two-Factor Sign-In',
+      'Change Your Email',
+    ],
   },
   {
     title: 'Support',
     audience: 'public',
-    children: ['Sending a Request and Reading Replies', 'What the Statuses Mean'],
+    children: [
+      'Send a Support Request',
+      'Read and Answer a Reply',
+      'Read a Reply Without Signing In',
+      'What the Statuses Mean',
+    ],
+  },
+  {
+    title: 'Troubleshooting',
+    audience: 'public',
+    children: [
+      'I Cannot Sign In',
+      'My Invitation Link Does Not Work',
+      'I Cannot Complete a Working',
+      'I Cannot Convert a Unit',
+      'I Cannot Remove or Leave',
+    ],
   },
   {
     title: 'Curating a Compendium Entry',
     audience: 'staff',
-    children: ['Sourcing With References', 'Formal Names, Common Names and Needs-Review'],
+    children: ['Source an Entry With References', 'Formal Names, Common Names and Needs-Review'],
   },
   { title: 'Vocabularies and Categories', audience: 'staff', children: [] },
   {
@@ -106,20 +142,22 @@ const SECTIONS: { title: string; audience: Audience; children: (string | Expecte
     children: [
       'What the Statuses Mean for Staff',
       {
-        title: 'Timing a Sender Out and Turning a Request Into an Issue',
+        title: 'Time a Sender Out and Link a Request to an Issue',
         audience: 'keeper',
         parent: 'Working the Support Queue',
       },
     ],
   },
-  {
-    title: "Keeper and Coven-Creation Grants, and the Primary Keeper's Pause",
-    audience: 'keeper',
-    children: [],
-  },
+  { title: 'Granting Coven Creation or the Keeper Role', audience: 'keeper', children: [] },
+  { title: 'Pausing Keeper Changes', audience: 'keeper', children: [] },
   { title: 'Inviting a Curator or Keeper', audience: 'keeper', children: [] },
-  { title: 'Minting Printed Cards', audience: 'keeper', children: [] },
-  { title: 'Editing Site Documents', audience: 'keeper', children: [] },
+  { title: 'Minting Printed Cards', audience: 'keeper', children: ['Read Card Sign-Ups'] },
+  { title: 'Make Your Business Cards', audience: 'keeper', children: [] },
+  {
+    title: 'Editing Site Documents',
+    audience: 'keeper',
+    children: ['Mail a New Version to Every Account'],
+  },
   {
     title: 'Writing Help Articles',
     audience: 'keeper',
@@ -127,9 +165,11 @@ const SECTIONS: { title: string; audience: Audience; children: (string | Expecte
       'The Help Article Form',
       'Audiences, Parents and Sub Pages',
       'Slugs and Addresses',
-      'Who Reads What, and How Search Finds It',
+      'Who Reads What',
     ],
   },
+  { title: "Pause a User's Access", audience: 'keeper', children: [] },
+  { title: 'Read the Privilege Ledger', audience: 'keeper', children: [] },
 ];
 
 const TERMS: string[] = [
@@ -156,6 +196,8 @@ const TERMS: string[] = [
   'Demo Coven',
   'Invitation',
   'Support Request',
+  'Pause',
+  'Autosave',
 ];
 
 const EXPECTED_ARTICLES: Expected[] = SECTIONS.flatMap(({ title, audience, children }) => [
@@ -239,8 +281,7 @@ describe('the shipped help list', () => {
 
   it('puts the support queue’s time-out page under the staff parent, for keepers only', () => {
     const page = ofKind('article').find(
-      (article) =>
-        plain(article.title) === 'Timing a Sender Out and Turning a Request Into an Issue',
+      (article) => plain(article.title) === 'Time a Sender Out and Link a Request to an Issue',
     );
     expect(page).toBeDefined();
     expect(page?.audience).toBe('keeper');

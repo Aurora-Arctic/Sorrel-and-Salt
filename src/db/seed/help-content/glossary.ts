@@ -13,7 +13,7 @@ export const GLOSSARY_ENTRIES = [
   ),
   term(
     'Steward',
-    'The top coven role. A Steward can do everything a Practitioner can, and also invites and removes members and edits or deletes the coven.',
+    'The top coven role. A Steward can do everything a Practitioner can, and also invites, pauses and removes members and deletes the coven.',
   ),
   term(
     'Practitioner',
@@ -83,5 +83,13 @@ export const GLOSSARY_ENTRIES = [
   term(
     'Support Request',
     "A message to the site's Keepers and curators asking for help or reporting a problem.",
+  ),
+  term(
+    'Pause',
+    "A time-limited stop to someone's access. A Steward can pause a member of a coven, and a Keeper can pause an account's access to the site.",
+  ),
+  term(
+    'Autosave',
+    'Saving a form for you as you work, a few seconds after your last change, so that you do not have to choose Save.',
   ),
 ];
