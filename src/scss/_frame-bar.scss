@@ -1,12 +1,10 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// The parts of the site's top bar that AppShell and PublicFrame draw alike, written once so a change reaches both.
-// `$block` is the frame's class; what differs stays in each frame's own stylesheet
+// The top bar AppShell and PublicFrame draw alike; what differs stays in each frame's own stylesheet
 // (claude-docs/components/public-frame.md, "Styling").
 @mixin frame-bar($block) {
-  // The top edge a sticky row of a page (IngredientSearch’s search row) holds at: just under
-  // this bar.
+  // The top edge a sticky page row (IngredientSearch's search row) holds at: just under this bar.
   .#{$block} {
     --sticky-top: #{$shell-bar-height};
   }
@@ -45,7 +43,6 @@
     flex: none;
     align-items: center;
     min-height: $control-height;
-    // A step of air on the right, between the name and the nav.
     padding-right: space(1);
     color: $text-primary;
 
@@ -80,8 +77,7 @@
     }
   }
 
-  // Narrower than the phone width: the initials stand in for the name, which stays for a
-  // screen reader.
+  // Narrower than the phone width: the initials stand in for the name, which stays for a screen reader.
   @media (max-width: $shell-brand-width) {
     .#{$block}__brand {
       justify-content: center;

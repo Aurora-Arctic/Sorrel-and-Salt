@@ -26,15 +26,13 @@
     scroll-padding: 0;
   }
 
-  // White paper, which a printer leaves bare, rather than the screen's ground.
   body:has(.spell-recipe) {
     // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without named pages prints on its default sheet
     page: recipe;
     background: none;
     color: $text-primary;
 
-    // Chrome that does nothing on paper. The Draft and Private badges stay in the head, so a printed
-    // draft is not taken for a finished spell; the Edited line goes.
+    // The Draft and Private badges stay in the head, so a printed draft is not taken for a finished spell.
     .backdrop,
     .skip-link,
     .skip-target,
@@ -62,8 +60,7 @@
       padding: 0;
     }
 
-    // The sheet's content width: what the paper gives, stated so a print emulation on a wide
-    // window lays the text out as the paper does.
+    // Stated so a print emulation on a wide window lays the text out as the paper does.
     .spell-recipe {
       max-width: $print-content-width;
       margin: 0;
@@ -74,8 +71,7 @@
       max-width: none !important;
     }
 
-    // The coven's name stands as plain text with nothing under it: no box, no chevron, no ground,
-    // no rule. The section nav beside it is gone, so the divider that told them apart goes too.
+    // The section nav beside it is gone, so the divider that told them apart goes too.
     .context-row {
       border-bottom: 0;
       background: none;
@@ -103,20 +99,16 @@
       }
     }
 
-    // Two columns under a head that runs across, the layout the Spell Preview pane shares
-    // (_recipe-columns.scss).
     .spell-recipe {
       @include recipe-columns;
     }
 
-    // A step's line at the body's size: the screen's caption size is too small for paper. It stays
-    // muted, under the amount and name.
+    // The screen's caption size is too small for paper; it stays muted, under the amount and name.
     .spell-recipe__steps .step-row__body,
     .spell-recipe__steps .step-row__note .meta {
       font-size: type-size('body');
     }
 
-    // A step or a heading is not split across pages.
     .step-row,
     .spell-recipe__summary li {
       break-inside: avoid;
