@@ -1,11 +1,10 @@
-## References (MB.151; tables MB.152)
+## References
 
 `references` is one source per row — a book, a chapter, an article, a
 reference-work entry or a web page — kept once and linked from every row it
 supports through `reference_links`, so a book fifty herbs cite is one row
-edited in one place. Both tables are in the `ingredients` module, built by
-MB.152 in `0042_references`, written by MB.153's services and MB.156's seed,
-read on the form (MB.154) and the ingredient page (MB.155). The argument for
+edited in one place. Both tables are in the `ingredients` module (migration `0042_references`),
+written by its services and the seed, and read on the ingredient form and page. The argument for
 each shape is [`mb.151-references.md`](../design-decisions/mb.151-references.md);
 DESIGN.md §5, "References", is the specification this doc expands.
 
@@ -41,7 +40,7 @@ admits therefore renders without a branch for a missing required field.
 There is no unique index: two rows may be the same book, since nothing short
 of a librarian identifies a source; the one index is the seed's, on
 `seed_key`, which records the citation it rendered at insert, so a reference
-a keeper has since edited is still its own (MB.171).
+a keeper has since edited is still its own.
 
 ```sql
 CHECK (url IS NULL OR url ~ '^https?://');
@@ -68,23 +67,23 @@ form, and the service refuses each on a coven's citation or source with an
 explaining `ValidationError`. `supports` names only fields the citation's
 owner has: an entry's from `CITED_ENTRY_FIELDS`, a form's from
 `CITED_VARIANT_FIELDS` (`src/modules/ingredients/schema/ingredient-enums.ts`),
-by the column's own names. The sourcing score (M14.24) reads them from the row.
+by the column's own names. The sourcing score reads them from the row.
 
-**The sourced tables are listed once** (MB.207). `SOURCED` in
+**The sourced tables are listed once.** `SOURCED` in
 `src/modules/ingredients/schema/reference-links.ts` maps each property —
 `ingredientId`, `deityId`, `deityTraditionId`, `celestialBodyId`, `zodiacSignId`,
 `ingredientVariantId` — to its column and the table it keys into, and the six
 foreign keys, the six partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
-A seventh sourced table is one entry there, and the migration `db:generate`
-writes from it drops and re-adds `reference_links_one_row`, which takes an
-`.ack.md` sidecar ([destructive DDL](expand-contract.md)). MB.217's
-`ingredientVariantId`, a form's own sources beside its ingredient's, was the
-last added: `ingredient_variant_id`, `reference_links_ingredient_variant_unique`
-and a six-column CHECK, in migration `0063`. The repository
-reads the links of any of them through the registry (MB.208):
+A seventh sourced table is one entry there. The migration `db:generate`
+writes from it drops and re-adds `reference_links_one_row` (the DROP CONSTRAINT
+takes an `.ack.md` sidecar, [destructive DDL](expand-contract.md)), and the new
+unique index and the widened CHECK are built from the list. `ingredientVariantId`,
+a form's own sources beside its ingredient's, was the last added (migration
+`0063`). The repository reads the links of any of them through the registry:
 `findReferencesOf` and `citesNothing` take a `SourcedKey` and read its
-column and its table from `SOURCED`. What writes the new links is still code
-of its own.
+column and its table from `SOURCED`, so reading the new links costs nothing
+more. What writes them is still code of its own, as the ingredient services
+and the sources seed each write the links they own.
 
 **One link per reference per row, and the index serves the read.** Each
 partial unique index leads on its sourced id, so a read of one ingredient's
@@ -104,14 +103,14 @@ the Latin "s.v." the 17th used and allows "under" for clarity; the project
 always writes it, in the locator and in an `entry`'s citation alike, so the
 two never differ. The renderer leaves the locator out of the citation, since
 a bibliography entry names the work, and the page shows it in the note that
-cites the work (MB.155).
+cites the work.
 
 **The tier rule is the service's.** A compendium entry's or a vocabulary
 row's link names a compendium reference; a coven ingredient's names the
 compendium's or its own coven's. A CHECK cannot read the reference's row, so
 the service refuses anything else as a field error pathed to the entry, and
 the read ANDs the same rule. A compendium reference is written only under the
-`SiteAdmin` proof and a coven's only under its `Membership`, whoever links it.
+`Curator` proof (`assertCurator`) and a coven's only under its `Membership`, whoever links it.
 
 **Alphabetical by the rendered citation, sorted in the service.** The key is
 the plain citation, less a leading quotation mark (any the formatter
@@ -135,14 +134,14 @@ soft-delete exception.
 ingredient's own transaction, which a module above `ingredients` could not be
 called from without a cycle. A vocabulary row's references are read from
 `ingredients`, as `User.memberships` is added from `coven`. The
-compendium-tier rows belong to the tier seam's extraction unit, and MB.153's
+compendium-tier rows belong to the tier seam's extraction unit, and the
 finders are named in the tier seam (claude-docs/db/tier-seam.md, "The tier seam").
 
-### Reading and writing them (MB.153)
+### Reading and writing them
 
 **A reference is written in its tier.** `createReference` and
 `updateReference` in `services/references.ts` take a `workspaceId`: null is
-the compendium, under `assertSiteAdmin` and the writer's
+the compendium, under `assertCurator` and the writer's
 `insertInCompendium` and `updateByIdInCompendium`; a coven's is under
 `assertMembership(…, { ingredient: ['create'] })` or `['update']` and the
 writer's workspace methods. The proof is asked before the input is read. So a
@@ -153,10 +152,10 @@ cleared — and reaches every row citing it. The `ingredient` statements stand
 for a reference's, since a coven's reference exists to be cited by its
 ingredients and the roles that write one write the other. A
 compendium-tier write expires the `compendium` tag once it has committed,
-and a coven's does not, since no cached read holds a coven's reference (M8.7;
-([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
+and a coven's does not, since no cached read holds a coven's reference
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag").
 
-**One reference is read whole by id** for the form that edits it (MB.115):
+**One reference is read whole by id** for the form that edits it:
 `getReference(session, workspaceId, id)`, through `readersOf` under
 `ingredient: ['read']` and `findManyReferences`, so its tiers are the
 picker's — without a coven the compendium's alone, with one that coven's
@@ -168,7 +167,7 @@ contents are private.
 **An ingredient's links are written in its own save.** Both tiers' create and
 update reach `addReferenceLinks` and `replaceReferenceLinks` in
 `services/ingredient-rows.ts` through `writeChildren`, inside the ingredient's
-`withAudit`, as they reach the substitutes' writes (MB.211). The list is brought to what was sent: a link is
+`withAudit`, as they reach the substitutes' writes. The list is brought to what was sent: a link is
 matched by its reference, so one still listed keeps its row and takes the
 locator sent, one dropped is soft-deleted, a new one is inserted, and a list
 that changes nothing writes nothing. Only the links the ingredient shows are
@@ -192,14 +191,13 @@ finder needs, and a `SourcedKey` cannot name a column that is not a sourced
 link. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
 `referencesByIngredient` batches it behind `Ingredient.references`. A
-variant's links (MB.217's `ingredientVariantId`) are read as an ingredient's,
-through `inUseVariantParent`, the variant live and its ingredient readable
-(MB.218); `referencesOfVariants` and `referencesByVariant` sit behind
+variant's links (`ingredientVariantId`) are read as an ingredient's,
+through `inUseVariantParent`, the variant live and its ingredient readable; `referencesOfVariants` and `referencesByVariant` sit behind
 `IngredientVariant.references`.
 
 **The picker's search** is `findReferenceSuggestions(memberships, query,
 page)`: the live references of the compendium and a proof's coven — no
-proof, for a compendium entry, reads the compendium's alone (M5.5) — whose
+proof, for a compendium entry, reads the compendium's alone — whose
 `authors`, `title` or `container` the query is word-similar to (`<%` at the
 compendium search's 0.5), each side through `unaccent_immutable`, keyed
 `[-score, title]`. The score is the best field's word similarity, a field
@@ -214,13 +212,13 @@ measured, if the table outgrows it.
 arm `citesNothing('ingredientId')` keeps an entry with no live link to a live compendium
 reference — the entries whose bibliography reads empty, so one whose only
 link was unlinked, or cites a retracted source, is listed. Under the union
-rule (MB.218) a source on one of the entry's live forms sources the entry, so
+rule a source on one of the entry's live forms sources the entry, so
 the arm also asks that no live variant `cites('ingredientVariantId')`: an
 entry whose only citation is on its oil is not listed.
 
 Every finder here is on the tier seam (claude-docs/db/tier-seam.md, "The tier seam").
 
-### Formatting and checks (MB.154)
+### Formatting and checks
 
 The owner's calls while building the form's field. Each is in the shared
 schema, so the service stores and refuses what the form does, whoever sends
@@ -250,7 +248,7 @@ would have dropped the five one-link-per-source indexes, or a list of
 locators, which would have changed the column's type. Chicago lists a work
 once, with its places beside it; the Locator's tip says so.
 
-**What is refused, beside its field**, on top of MB.153's CHECK mirrors:
+**What is refused, beside its field**, on top of the CHECK mirrors:
 
 - `published` with no four-digit year, unless it reads "n.d." or
   "forthcoming" — "1985", "November 1950", "Summer/Autumn 2013" and
@@ -266,9 +264,9 @@ once, with its places beside it; the Locator's tip says so.
   is refused at `modified`; a day refused as not yet come is not refused
   again for its order, and a malformed day only as malformed.
 
-**Measured against the seed.** Every one of the 278 sources MB.156 seeds
+**Measured against the seed.** Every one of the 278 sources the sources seed writes
 passed these checks, and none was changed by a format, its locators
-included, when MB.154 ran them all through the schema: the rules hold
+included, when they were all run through the schema: the rules hold
 Chicago's real variety, and no seeded citation, and so no `seed_key`, moves
 (unless the renderer's own wording changes: "A change to the wording", below).
 The seed writes through its own path and is not parsed by the schema; an
@@ -276,7 +274,7 @@ admin's later edit of a seeded source is.
 
 ### The renderer
 
-`renderCitation(ref): CitationPart[]` in `src/lib/citation.ts` (MB.153), pure
+`renderCitation(ref): CitationPart[]` in `src/lib/citation.ts`, pure
 and client-safe, beside `slugify`: the page, the picker, the service's sort
 call it. Each part is `{ text, italic }`. `citation`
 on the wire is the parts joined, plain — `citationText` — and a surface that
@@ -333,8 +331,8 @@ drops each missing piece with its punctuation.
 
 ### The short form
 
-`renderShortCitation(fields, continued?)` in `src/lib/short-citation.ts`
-(MB.115), beside the renderer and as pure, gives a source's Chicago short
+`renderShortCitation(fields, continued?)` in `src/lib/short-citation.ts`,
+beside the renderer and as pure, gives a source's Chicago short
 form, as the notes-bibliography style shortens a note, as the same `{ text, italic }`
 parts, and `shortCitationText` as one plain string. The ingredient form's
 reference rows show it where the whole entry would not fit on a line
@@ -375,15 +373,14 @@ that shows it selects them beside `citation` and the schema is unchanged.
   after a title ending in "?" or "!". Unlike a note, it ends in no period:
   the row is a label.
 
-### How the seed reads the docs (MB.156)
+### How the seed reads the docs
 
 `src/db/seed/sources.ts` seeds the sources the vocabulary seed docs record
 as compendium-tier rows: the deity doc's "Sources" and the astrology doc's.
 The categories and the forms are the project's own design and cite nothing.
 `SOURCES` is a literal, each entry a reference's fields and the rows it
-supports, transcribed from both docs; review holds the two in step, since
-MB.225 retired the test that parsed the docs and compared them through the
-renderer. `sources.test.ts` keeps the seed's behaviour: compendium rows keyed
+supports, transcribed from both docs; review holds the two in step, since no
+test parses the docs and compares them through the renderer. `sources.test.ts` keeps the seed's behaviour: compendium rows keyed
 by citation, a tradition's source reaching every deity under it, and what a
 re-run leaves of a keeper's edits. The docs hold one shape the literal
 transcribes:
@@ -401,14 +398,14 @@ transcribes:
 - **The astrology doc.** Each source is a bullet, and its nested
   `Linked to:` line names the bodies and signs it supports.
 
-Normalising the deity doc into that shape (MB.156) moved the embedded
+Normalising the deity doc into that shape moved the embedded
 locators onto the links, recast the comma-form Wikipedia citations in period
 form, made "Revised" a last-modified date, and turned "Originally published
 in …" and the "Existence confirmed …" tails into notes; a back-reference
 ("Atsma, 'Pan' (above)") became the full citation. The astrology doc's
 sources were recast in Chicago form from pages fetched again.
 
-**Keyed by `seed_key`** (MB.171). A reference the seed writes records the
+**Keyed by `seed_key`.** A reference the seed writes records the
 citation it rendered, so one a keeper has since edited is still its own and
 is neither overwritten nor twinned. A run restates a present source's fields
 and its `scholarly` mark, set or cleared, to match `sources.ts`, unless a
@@ -457,7 +454,7 @@ unless a person edited it
 (`tests/db/migrations/0116-print-encyclopedia-entries.test.ts`,
 `tests/db/seed/sources-print-entries.test.ts`).
 
-### How the compendium seed cites its sources (MB.242)
+### How the compendium seed cites its sources
 
 `src/db/seed/compendium.ts` writes the compendium's entries with their
 sources, through the same reference insert as the sources seed:
@@ -495,17 +492,15 @@ attributes on a present entry").
 
 ## Reference service details
 
-`src/modules/ingredients/services/references.ts` writes and reads references, kept once in their tier and linked from every row they support.
+`src/modules/ingredients/services/references.ts` is the service described under "Reading and writing them" above. What that section does not say:
 
-- Two tiers, as ingredients are: a null `workspaceId` is the compendium's, written under the `Curator` proof alone, and a coven's is written under its `Membership`, whoever links it. A member who cites a compendium reference reads it and cannot change it. Nothing deletes one in v1.
-- An update replaces the row rather than merging into it, so every optional field left out is cleared; the edit reaches every row citing the reference, which is the point of keeping a source once. A coven's reference is in no cached read; the compendium-tier write revalidates the `compendium` tag like every keeper mutation.
-- Reading one by id returns the compendium's without a coven, and with one that coven's own or the compendium's, never another coven's, whose existence is private. The tiers are the picker's, read under the same `ingredient: ['read']`, so it returns no row the picker would not offer.
-- The picker matches authors, title and container, best match first. A blank query, or one under the compendium search's `MIN_QUERY_LENGTH`, offers all by title. Without a coven it offers the compendium's alone, which is all a compendium entry may cite.
-- An id that is not a uuid names nothing and would be a driver error at the comparison.
+- A member who cites a compendium reference reads it and cannot change it.
+- The picker's blank query, or one under the compendium search's `MIN_QUERY_LENGTH`, offers all by title. Without a coven it offers the compendium's alone, which is all a compendium entry may cite.
+- An id that is not a uuid names nothing, and is refused before the comparison, where it would be a driver error.
 
 ## Reference links schema details
 
-- **Adding a seventh sourced table** is one entry in `SOURCED` in `src/modules/ingredients/schema/reference-links.ts`: its column, its partial unique index and the widened CHECK are built from the list. The migration `db:generate` then writes drops and re-adds `reference_links_one_row`, and that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's `findReferencesOf` and `citesNothing` take a key of the registry and read its table, so reading the new links costs nothing more; writing them is still code of its own, as the ingredient services and the sources seed each write the links they own.
+- **Adding a seventh sourced table**: see "The sourced tables are listed once" above.
 - **Why one table.** A nullable key per sourced table under one `num_nonnulls` CHECK, as a spell's layers do, rather than a join table per table, which would cost a table, a trigger, a finder and a loader each.
-- **Indexes.** One live link per reference per row, partial per rule 4. Each leads on its sourced id, so a read of one row's links uses it and no plain parent index is built beside them. None leads on `reference_id`: nothing reads from a reference back to its links, and a reference is never hard-deleted.
+- **Indexes.** One live link per reference per row, partial per rule 4; see "One link per reference per row" above.
 - **The `references` table.** Every field is text as Chicago prints it (`authors` with its role, `published` at a year's or a season's precision), because name order and dates are not mechanical across sources; only the two days are `date`s. There is no unique index: nothing short of a librarian identifies a source, so the seed is idempotent by the rendered citation instead.
