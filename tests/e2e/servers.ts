@@ -5,7 +5,6 @@ import {
   e2eDatabaseUrl,
   slotDatabase,
 } from './database';
-import type { SpecialServer } from '../support/server-selection';
 import { PRIMARY_ADMIN_EMAIL } from './session';
 import {
   COMPENDIUM_CACHE_PORT,
@@ -99,32 +98,24 @@ const compendiumCacheServer = {
   }),
 };
 
-const SPECIAL_SERVERS = {
-  'configured-providers': configuredProvidersServer,
-  'compendium-cache': compendiumCacheServer,
-};
+/** Every server a run needs, in the order they are started: the slot servers, then the two special ones. */
+export const allServers = [...slotServers, configuredProvidersServer, compendiumCacheServer];
 
-/** The slot servers and the special ones named, in the order they are started. */
-export const serversFor = (special: SpecialServer[]) => [
-  ...slotServers,
-  ...special.map((name) => SPECIAL_SERVERS[name]),
-];
-
-/** Every server a full run needs. */
-export const allServers = serversFor(['configured-providers', 'compendium-cache']);
+/** The env flag that tells scripts/e2e-servers.ts to leave the two special servers out (the story suite has none). */
+export const SLOTS_ONLY = 'E2E_SLOT_SERVERS_ONLY';
 
 /** What scripts/e2e-servers.ts prints when every server answers: the `webServer` entry waits for it. */
 export const SERVERS_READY = 'e2e servers ready';
 
 /**
- * The one `webServer` entry a Playwright run needs: a script that builds once, then starts the slot servers
- * and the special ones named together and prints SERVERS_READY when all answer. Playwright starts separate
+ * The one `webServer` entry a Playwright run needs: a script that builds once, then starts every server
+ * together and prints SERVERS_READY when all answer. Playwright starts separate
  * entries one after another, each waiting for its own, which cost more than the servers' boot did.
  * The `SIGTERM` lets the script stop its servers, which run in process groups of their own.
  */
-export const startupServer = (special: SpecialServer[]) => ({
+export const startupServer = (slotsOnly = false) => ({
+  env: (slotsOnly ? { [SLOTS_ONLY]: '1' } : {}) as Record<string, string>,
   command: 'npx tsx scripts/e2e-servers.ts --playwright',
-  env: { E2E_SPECIAL_SERVERS: special.join(',') },
   wait: { stdout: new RegExp(SERVERS_READY) },
   timeout: 240_000,
   gracefulShutdown: { signal: 'SIGTERM' as const, timeout: 15_000 },

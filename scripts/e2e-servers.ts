@@ -14,18 +14,12 @@
 // Usage: npm run e2e:servers
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { SERVERS_READY, allServers, serversFor } from '../tests/e2e/servers.ts';
-import type { SpecialServer } from '../tests/support/server-selection.ts';
+import { SERVERS_READY, SLOTS_ONLY, allServers, slotServers } from '../tests/e2e/servers.ts';
 
-// `--playwright` is how playwright.config.ts's one `webServer` entry runs this: the special servers are the
-// ones `E2E_SPECIAL_SERVERS` names rather than both, a build is skipped when the slot servers are already
+// `--playwright` is how playwright.config.ts's one `webServer` entry runs this: a build is skipped when the slot servers are already
 // up (as `reuseExistingServer` did), and SERVERS_READY is printed for the entry to wait for.
 const forPlaywright = process.argv.includes('--playwright');
-const servers = forPlaywright
-  ? serversFor(
-      (process.env.E2E_SPECIAL_SERVERS ?? '').split(',').filter(Boolean) as SpecialServer[],
-    )
-  : allServers;
+const servers = forPlaywright && process.env[SLOTS_ONLY] ? slotServers : allServers;
 
 const READY_TIMEOUT_MS = 60_000;
 const [first] = servers;

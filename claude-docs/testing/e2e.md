@@ -163,16 +163,7 @@ bundle. Placeholder ids are useless to a real authorization endpoint, so
 nothing may click a provider button against 8100; the spec aborts and fails
 on any request to `/api/auth/sign-in/`.
 
-**Both special servers start only when a selected spec needs them**
-(`specialServersFor` in `tests/support/server-selection.ts`, read by
-`playwright.config.ts` from `process.argv`). A run that names spec files and
-nothing that can widen the selection starts the special server of each named
-spec, if any; a filter is a pattern matched against the spec's path, a `:line`
-suffix dropped. A run that names no file, or passes `--project`, `--grep`,
-`--grep-invert` (CI's build-only run), `--last-failed`, `--ui` or any other option
-but `--reporter=`, `--workers=`, `--retries=`, `--timeout=`, `--repeat-each=`,
-`--trace=`, `--max-failures=`, `--headed` and `--quiet`, starts both, so a full run
-and the CI job always do. The story config starts neither.
+The story config starts neither special server.
 
 **The compendium-cache server is the last** (M8.6): `npm run start` on
 **8101** against `sorrel_e2e_cache`, which no spec reseeds, and the one
@@ -186,14 +177,7 @@ ignores that spec too
 - **`tests/e2e/database.ts`** — the same two-tier shape as the Vitest harness,
   through the same `tests/support/seeded-database.ts` (M1.27).
   `seedE2eTemplate()` builds `sorrel_e2e_template` — `sorrel_template`
-  cloned, migrated and `standard`-seeded, ~1 s — unless the template a
-  previous run left is current: the build stores a SHA-256 of
-  `src/db/migrations/`, `src/db/seed/`, `compendium/`, `documents/`,
-  `scripts/db-seed.ts` and `drizzle.config.ts` (`tests/support/template-hash.ts`) as
-  a comment on the database, and a run that computes the same hash leaves it
-  alone. The comment is written last, so a seed that failed leaves none and the
-  next run reseeds. A change to `sorrel_template` itself, or to anything else
-  the seed reads, is not seen: drop `sorrel_e2e_template` to force a reseed. `cloneE2eDatabases()`
+  cloned, migrated and `standard`-seeded, ~1 s — and `cloneE2eDatabases()`
   clones every slot's `sorrel_e2e_<slot>`, `sorrel_e2e_providers` and
   `sorrel_e2e_cache` from it,
   tens of milliseconds each. `e2eDatabaseUrl(database)` swaps
@@ -215,7 +199,7 @@ ignores that spec too
   none
   ([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md),
   "Setup runs after the servers").
-  `global-teardown.ts` leaves the template for the next run; the slot and
+  `dropE2eTemplate()` removes the template again: `global-teardown.ts` drops it after the last spec; the slot and
   providers databases are left for inspection.
 
 #### Reseeding between spec files
@@ -527,7 +511,7 @@ during it, at the cost of one image pull and no CI minutes. The pieces:
 
 **Every e2e run from the devcontainer serialises on
 `flock /tmp/sorrel-e2e.lock`** (M10.25 writes down what sessions already
-did). Two runs collide on `sorrel_e2e_template`, which global setup rebuilds when its inputs change, and the slot databases, which it recreates on every run, even when their ports differ, and a second session's run may be
+did). Two runs collide on `sorrel_e2e_template`, which global setup drops and rebuilds, and the slot databases, which it recreates on every run, even when their ports differ, and a second session's run may be
 invisible to `ps`. So a run from a session is
 `flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=local-dev-not-a-real-secret npx playwright test …`;
 `npm run e2e:audit` takes the lock itself, and the path is fixed so that

@@ -8,7 +8,7 @@ import { startupServer } from './tests/e2e/servers';
 export default defineConfig({
   ...baseConfig,
   testDir: './tests/e2e/stories',
-  webServer: startupServer([]),
+  webServer: startupServer(true),
   retries: process.env.CI ? 1 : 0,
   passWithNoTests: true,
   reporter: [

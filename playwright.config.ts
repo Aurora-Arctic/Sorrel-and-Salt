@@ -7,7 +7,6 @@ import {
   browserUrl,
 } from './tests/e2e/slots';
 import { startupServer } from './tests/e2e/servers';
-import { specialServersFor } from './tests/support/server-selection';
 
 const CONFIGURED_PROVIDERS_SPEC = /sign-in-configured-providers\.spec\.ts/;
 
@@ -63,9 +62,8 @@ export default defineConfig({
     : process.env.CLAUDECODE
       ? [['dot'], ['html', HTML_REPORT]]
       : [['html', HTML_REPORT]],
-  // Production build, against the e2e databases rather than the dev one. The two special servers start only
-  // when the specs named on the command line need them; a full run starts both.
-  webServer: startupServer(specialServersFor(process.argv)),
+  // Production build, against the e2e databases rather than the dev one.
+  webServer: startupServer(),
   projects: [
     {
       name: 'chromium',
