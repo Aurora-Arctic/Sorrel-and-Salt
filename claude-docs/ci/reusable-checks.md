@@ -117,17 +117,8 @@
     script reads set-but-empty as "no migrations changed, scan nothing" and
     _unset_ as "work out what this branch changed from git" — the second is a
     local convenience and must never be what CI does.
-  - ⚠️ **It is a leg, not a job of its own, so it cannot be dropped without
-    the matrix noticing.** As a separate job it was deleted by MB.32 and ran on
-    nothing from 2026-09-17 until MB.37, PRs #104–#107 and migrations `0005`
-    and `0006` included, while the `changes` job kept computing its filters and
-    nothing looked wrong. MB.37 has that window and what it fixed besides; it is also
-    why `0002`'s sidecar was written retroactively
-    (`claude-docs/db/expand-contract.md`).
-  - Its `run-destructive-ddl: false` path exists for a merge-queue caller (same
-    reason as `gitflow`'s `should-run` — `merge_group` has no diffable source
-    ref, so it can only trust that `pr-gate.yml` already gated the PR before it
-    reached the queue). None exists until M7.A.1 restores `merge-queue.yml`.
+  - **It is a leg, not a job of its own**, so the matrix notices if it is dropped: a separate job could be deleted while the `changes` job kept computing its filters and nothing looked wrong (`claude-docs/db/expand-contract.md`).
+  - Its `run-destructive-ddl: false` input is for a merge-queue caller (`aggregating-workflows.md`, the "No `merge_group` workflow exists" item); no caller passes it.
 
 - **`checks / migration-order`** (MB.173) — refuses a migration journal
   Drizzle's migrator would apply out of order, via

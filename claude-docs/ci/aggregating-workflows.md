@@ -119,21 +119,7 @@
   lock, so two merges never migrate at once.
 - **`close-task-on-merge.yml`** (MB.89) — closes the issue a merged PR's body names with `Closes #N` when the PR merges into `staging`, because GitHub's own closing keywords fire only on the default branch.
 - **`e2e-cache.yml`** (MB.234) — on a push to `staging` that touches the e2e build's inputs, calls `build-e2e-image.yml`, `build-db-image.yml` and `playwright.yml` with `build-only: true`, so the e2e build cache is saved where every pull request's Playwright job can restore it. Its job names are not `pr-gate.yml`'s, so it publishes no check name the gate does ([Reusable checks](reusable-checks.md)).
-- **`merge-queue.yml` was deleted by MB.32, and is restored from git history
-  when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this
-  entire job graph — the same checks with `merge-queue: true`, plus
-  `destructive-ddl` (a workflow of its own then) and `gitflow` with
-  `should-run: false` so their check names reported rather than hung — for a
-  queue that has never run. **"Require merge
-  queue" is deliberately OFF** on `main` and `staging`, so `merge_group` never
-  fires until M7.A.1 flips that setting, once there is more than one
-  contributor; M7.A.1 is trigger-based and a prerequisite for nothing. The
-  `merge-queue` input it fed survives on `checks.yml`, `vitest.yml`,
-  `playwright.yml` and `gitflow.yml`, and `pr-comment`'s fail-only merge-queue
-  thread with it, so bringing the file back is a revert rather than a redesign.
-  Nothing passes it today. Restoring it must re-express its `destructive-ddl`
-  job as `run-destructive-ddl: false` on its `checks` call, since MB.37 made
-  that a leg and deleted `destructive-ddl.yml`.
+- **No `merge_group` workflow exists.** "Require merge queue" is off on `main` and `staging`, so `merge_group` never fires. The `merge-queue` input survives on `checks.yml`, `vitest.yml`, `playwright.yml` and `gitflow.yml`, and `pr-comment`'s fail-only merge-queue thread with it; nothing passes it. A queue caller would also pass `run-destructive-ddl: false` on its `checks` call and `should-run: false` to `gitflow`, since `merge_group` has no diffable source ref and can only trust that `pr-gate.yml` already gated the PR.
 - Every check job `needs: gitflow`, so a PR from the wrong source branch burns
   no CI time on the rest. `gitflow.yml`'s own `should-run: false` path is there
   for a merge-queue caller, which sees only a synthetic head ref rather than
