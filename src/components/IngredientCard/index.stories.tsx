@@ -5,6 +5,7 @@ import { fn } from 'storybook/test';
 import { StatesGrid } from '../../../.storybook/states-grid';
 import { Jars } from './story-jars';
 import IngredientCard from '.';
+import { IngredientCardSkeleton } from './skeleton';
 import type { SafetyVariant } from '../SafetyNote/types';
 import DetailsLink from '../IngredientEntry/details-link';
 import { detailsHeading } from '../IngredientEntry/details';
@@ -306,6 +307,7 @@ export const States: Story = {
           'New Without Safety': newWithoutSafetyNode,
           'Last Edited': lastEditedNode,
           Compendium: defaultNode,
+          Loading: <IngredientCardSkeleton />,
         }}
       />
     );
