@@ -1138,13 +1138,13 @@ The held noun follows the vocabulary: a coven's own stock is its cupboard (`CLAU
 
 ### Decision
 
-1. **The list stays followed through a close that only a pending lookup causes.** `useListPosition` (`src/components/Combobox/position.ts`) follows the list with `autoUpdate` while it is open, or while the box still wants it and a lookup is in flight (the `follow` option). The answer's reopen then subscribes nothing again; a close by Escape, a pick or a blur still ends the subscription.
+1. **A pending lookup never closes an open list**, which keeps its last rows or shows the loading row (`claude-docs/components/combobox.md`, "The loading row"). `useListPosition` (`src/components/Combobox/position.ts`) follows the list with `autoUpdate` only while it is open, so typing subscribes nothing again; a close by Escape, a pick or a blur ends the subscription.
 2. **Each placing measures the phone's bottom bar once** (`measureBar`), and `flip`, `shift` and `size` share the result.
 3. **The `size` step writes the list's `width` and `--combobox-list-room` only when they change.**
 4. **Kept:** the ResizeObserver and the layout-shift tracking, because the list's own size decides whether it flips above the box, and a page that shifts moves the box.
 5. **The input's `name` is left to React.** `aria-busy` is not touched either: React writes an ordinary attribute only when its value changes, so each write is a real change.
 
-`tests/components/Combobox/keystroke.test.tsx` proves no `aria-busy` write on a key that leaves it as it was, no unchanged style write on the list across a key and a pending close, and one subscription across that close.
+`tests/components/Combobox/keystroke.test.tsx` proves no `aria-busy` write on a key that leaves it as it was, no unchanged style write on the list across a key and a pending lookup, and one subscription across that lookup.
 
 ### Why
 

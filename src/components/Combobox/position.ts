@@ -53,13 +53,10 @@ export function useListPosition(
     matchWidth = true,
     placement: preferred = 'bottom-start',
     gap = 4,
-    follow = false,
   }: {
     matchWidth?: boolean;
     placement?: Placement;
     gap?: number;
-    /** Followed while closed too, so a list that closes only for a pending lookup reopens without subscribing again. */
-    follow?: boolean;
   } = {},
 ) {
   const [control, setControl] = useState<HTMLElement | null>(null);
@@ -101,11 +98,10 @@ export function useListPosition(
   });
 
   const { reference, floating } = elements;
-  const following = isOpen || follow;
   useEffect(() => {
-    if (!following || !reference || !floating) return;
+    if (!isOpen || !reference || !floating) return;
     return autoUpdate(reference, floating, update);
-  }, [following, reference, floating, update]);
+  }, [isOpen, reference, floating, update]);
 
   return {
     setControl,

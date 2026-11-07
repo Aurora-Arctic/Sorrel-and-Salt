@@ -27,7 +27,7 @@ const ROWS = [{ value: 'Testwort' }, { value: 'Mockleaf' }];
 /** A lookup still in flight, with rows that stay the same whatever is typed. */
 const IN_FLIGHT: Suggestions = { options: ROWS, pending: true };
 const ANSWERED: Suggestions = { options: ROWS, pending: false };
-/** A new lookup in flight with nothing kept from the last: the list closes only because of it. */
+/** A new lookup in flight with no rows of its own yet: the list keeps the last ones. */
 const LOOKING: Suggestions = { options: [], pending: true };
 
 /** The box with its text held outside it, as a form holds a field's; no typed row and no empty message, so the list is open exactly while it has rows. */
@@ -110,7 +110,7 @@ describe('Combobox keystroke', () => {
     expect(written().map((record) => record.attributeName)).toContain('aria-busy');
   });
 
-  it('writes the list’s width and room only when they change, across a key and a pending close', async () => {
+  it('writes the list’s width and room only when they change, across a key and a pending lookup', async () => {
     const user = userEvent.setup();
     const { rerender } = render(<Field suggestions={ANSWERED} />);
     await settle();
@@ -120,10 +120,10 @@ describe('Combobox keystroke', () => {
     await settle();
     expect(box()).toHaveAttribute('aria-expanded', 'true');
 
-    // A new lookup with nothing kept closes the list; its answer opens it again where it was.
+    // A new lookup keeps the last rows open until its answer replaces them.
     rerender(<Field suggestions={LOOKING} />);
     await settle();
-    expect(box()).toHaveAttribute('aria-expanded', 'false');
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
     rerender(<Field suggestions={ANSWERED} />);
     await settle();
     expect(box()).toHaveAttribute('aria-expanded', 'true');
@@ -135,7 +135,7 @@ describe('Combobox keystroke', () => {
     expect(repeats).toEqual([]);
   });
 
-  it('keeps following the list through a close that only a pending lookup caused', async () => {
+  it('keeps following the list, open, through a pending lookup', async () => {
     const user = userEvent.setup();
     const { rerender } = render(<Field suggestions={ANSWERED} />);
 
@@ -147,11 +147,29 @@ describe('Combobox keystroke', () => {
 
     rerender(<Field suggestions={LOOKING} />);
     await settle();
-    expect(box()).toHaveAttribute('aria-expanded', 'false');
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
     rerender(<Field suggestions={ANSWERED} />);
     await settle();
 
     expect(box()).toHaveAttribute('aria-expanded', 'true');
+    expect(subscriptions.count).toBe(1);
+  });
+
+  it('places the list once for the loading row, and keeps it there as the rows arrive', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<Field suggestions={LOOKING} />);
+
+    await user.type(box(), 'T');
+    await settle();
+    expect(list()).toHaveAttribute('aria-busy', 'true');
+    expect(list().style.getPropertyValue('--combobox-list-room')).not.toBe('');
+    expect(subscriptions.count).toBe(1);
+
+    rerender(<Field suggestions={ANSWERED} />);
+    await settle();
+
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
+    expect(list()).not.toHaveAttribute('aria-busy');
     expect(subscriptions.count).toBe(1);
   });
 
