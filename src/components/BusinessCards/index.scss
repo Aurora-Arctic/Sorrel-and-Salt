@@ -4,3 +4,9 @@
   align-items: flex-start;
   align-self: flex-start;
 }
+
+// The page's heading is centred over the form's centred column; the tabbed page's own header rule starts it at the left.
+.tabbed-page:has(.business-cards) > .page-header {
+  justify-content: center;
+  text-align: center;
+}
