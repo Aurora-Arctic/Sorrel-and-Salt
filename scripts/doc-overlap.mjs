@@ -1,13 +1,6 @@
-// Reports the runs of eight words that two or more live docs share — the
-// measure behind "One home per fact" (claude-docs/README.md): a fact stated in
-// two docs is two edits to correct. A report, not a guard: a citation's clause
-// legitimately repeats a few words of what it cites, so no threshold is right.
-//
-//   node scripts/doc-overlap.mjs [--pairs N]   the total, and the N largest pairs (30)
-//   node scripts/doc-overlap.mjs <a.md> <b.md> the passages a shares with b
-//
-// The live docs are the tracked Markdown under CLAUDE.md, .claude/ and
-// claude-docs/, less archive/ and transcripts/, which are frozen.
+// Reports the runs of eight words that two or more live docs share, a report and not a guard ("One home per
+// fact", claude-docs/README.md).
+// Usage: node scripts/doc-overlap.mjs [--pairs N] | <a.md> <b.md>
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync, realpathSync } from 'node:fs';

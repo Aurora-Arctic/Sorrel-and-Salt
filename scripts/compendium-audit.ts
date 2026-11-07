@@ -1,27 +1,8 @@
 #!/usr/bin/env node
-// The compendium attribution audit: ranks the citations whose source
-// may describe another taxon than the entry's formal name, by four
-// heuristics, and prints the table (claude-docs/db/compendium-seed/README.md,
-// "The attribution audit"). `--report`, the default, writes nothing.
-// `--apply`, run only after the curator has read the report, marks each
-// flagged file `needs-review` and adds one Questions block per citation; a
-// second run adds nothing.
-//
-// `--resolve` settles instead: a citation headed "X" becomes `resolved` when
-// Wikipedia's page "X" is, or redirects to, the article the entry cites as
-// `stated` for its own formal name (never a collision, a disambiguation page
-// or another taxon's page). It reads the redirect answers from a local cache;
-// `--fetch` first asks Wikipedia for the ones the cache lacks.
-//
-// Usage: npm run compendium:audit -- [--report | --apply | --resolve [--fetch] [--dry-run] [--cache <file>]] [--all] [--wiki <dir>]... [--limit <n>]
-//   --all     with --apply, also write the candidates that name no other formal name
-//   --wiki    a folder of fetched `<Title>.wikitext` pages; repeatable. By default every
-//             `shards/*/wiki` folder under the seed lanes' scratch folder.
-//   --limit   print only the first n candidates of the table
-//   --resolve write `nameBasis: resolved`, `headedAs` and `resolvedBy` on each citation Wikipedia settles
-//   --fetch   with --resolve, fetch the redirect answers the cache lacks (the only network use)
-//   --dry-run with --resolve, write no file
-//   --cache   the redirect cache, a JSON file outside git; by default wiki-lookups.json beside the shards
+// Ranks the compendium citations whose source may describe another taxon than the entry's
+// (claude-docs/db/compendium-seed/README.md, "The attribution audit").
+// Usage: npm run compendium:audit -- [--report | --apply | --resolve [--fetch]] (claude-docs/commands.md,
+// "Compendium attribution audit")
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { formatReport } from '../src/db/seed/compendium/audit.ts';

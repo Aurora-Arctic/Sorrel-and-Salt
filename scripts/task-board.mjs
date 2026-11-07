@@ -1,13 +1,7 @@
 #!/usr/bin/env node
-// The board's calls in one file, so the lookup rule and the Project's field
-// ids live here rather than in each skill that needs them. Every call is a
-// `gh` invocation with an argument list — never a shell string, since a title
-// or a comment is text the shell would otherwise interpret. The Project's own
-// workflows place every tracked issue and set `Not Started` and `Done`; this
-// file sets the two statuses between them and never adds an item
+// The board's calls in one file, each a `gh` argument list, never a shell string; it never adds an item
 // (claude-docs/task-tracking.md, "Status").
-//
-// usage: node scripts/task-board.mjs <find|status|estimate|comment|list|reorder> …
+// Usage: node scripts/task-board.mjs <find|status|estimate|comment|list|reorder> ...
 
 import { execFileSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
@@ -42,9 +36,7 @@ export function gh(args, { input } = {}) {
 export const ghJson = (args, options) => JSON.parse(gh(args, options));
 
 // ---------------------------------------------------------------------------
-// Issues — read through REST, one request per hundred against the core
-// budget. The GraphQL listing carried every issue's labels and cost enough
-// that two lookups in a minute tripped GitHub's secondary rate limit.
+// Issues are read through REST, because the GraphQL listing tripped GitHub's secondary rate limit.
 
 /** `<id> — `: the id plus the separator, so a short id cannot match a longer one that starts with it. */
 export const titlePrefix = (id) => `${id.toUpperCase()} — `;

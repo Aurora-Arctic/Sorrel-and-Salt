@@ -1,8 +1,5 @@
-// Imported by scripts Node runs directly (`node scripts/<name>.ts`), whose
-// type stripping erases an `import type` and keeps any other import: a plain
-// `import { Finding }` survives and fails at link time, since nothing here is a
-// runtime export. So a script imports this file with `import type`, and with
-// the `.ts` extension Node's resolver needs, as for its other relative imports.
+// Import this file with `import type` and the `.ts` extension: Node's type stripping keeps any other import,
+// which fails at link time.
 
 export interface Finding {
   file: string;

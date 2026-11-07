@@ -1,13 +1,7 @@
 /**
- * Assert, and report on, the environment `vercel pull` wrote — run by
- * deploy.yml and migrate.yml before anything consumes that file
- * (claude-docs/ci/deploy.md, "Deploy").
- *
- * A required key that is missing, empty, a placeholder or not a connection
- * string fails the job with its own named cause; every key the pull returned
- * is reported with a classification and never a value, even when the run is
- * about to fail. The input is a FILE PATH, never argv or an environment
- * variable carrying the value: argv is visible to `ps` and echoed by `set -x`.
+ * Asserts and reports on the environment `vercel pull` wrote, before deploy.yml and migrate.yml consume it
+ * (claude-docs/ci/deploy.md, "Deploy"). The input is a file path, never argv or an environment variable: argv
+ * shows in `ps` and `set -x`.
  */
 
 import { readFileSync } from 'node:fs';

@@ -1,10 +1,6 @@
-// Points each code citation of a split summary's section at the file the
-// section lives in, since the guard fails one named through the index
-// (claude-docs/README.md, "Comments in code"), then rewraps a comment the
-// longer path pushes past the print width. Run after split-doc.mjs; a dry run
-// unless --write.
-//
-//   node scripts/repoint-doc-citations.mjs claude-docs/db.md [--write]
+// Points each code citation of a split summary's section at the file the section lives in, then rewraps; run
+// after split-doc.mjs, a dry run unless --write (claude-docs/README.md, "Comments in code").
+// Usage: node scripts/repoint-doc-citations.mjs claude-docs/<summary>.md [--write]
 
 import { readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';

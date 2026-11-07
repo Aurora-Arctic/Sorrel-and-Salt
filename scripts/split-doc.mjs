@@ -1,18 +1,6 @@
-// Splits a claude-docs summary too large to read whole into one file per `## `
-// section, and per `### ` subsection the plan names, in a directory of the
-// summary's name; the summary becomes their index (claude-docs/README.md,
-// "What lives where"). Text moves as is. The only edits are to links: a `../`
-// on each relative one, since the files sit a directory down, and an intra-doc
-// anchor pointed at the file its heading moved to.
-//
-//   node scripts/split-doc.mjs <plan.json>
-//
-// The plan gives, in the summary's order, each section's file and the sentence
-// the index gives it, then any subsection to carve out, then the summary:
-//   { "sections": [{ "file": "orm-version", "sentence": "…" }, …],
-//     "ownFile": [{ "heading": "Fuzzy matching", "file": "fuzzy-matching" }],
-//     "doc": "claude-docs/db.md" }
-// Code citations are then pointed at the files by repoint-doc-citations.mjs.
+// Splits a claude-docs summary into one file per section, the summary becoming their index
+// (claude-docs/README.md, "What lives where").
+// Usage: node scripts/split-doc.mjs <plan.json>; then repoint-doc-citations.mjs.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';

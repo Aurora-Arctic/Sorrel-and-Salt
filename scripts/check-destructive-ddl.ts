@@ -1,25 +1,8 @@
 #!/usr/bin/env node
-// Flags destructive DDL in the migrations this branch adds or changes unless an
-// acknowledgement sidecar (`<migration>.ack.md`, carrying a line matching
-// ACK_LINE_RE) sits beside the migration. The policy, the five forms and the
-// sidecar are in claude-docs/db/expand-contract.md, "Expand/contract and the destructive-DDL
-// check"; keep ACK_LINE_RE and that doc in sync. It reads nothing from GitHub.
-//
-// The file list, in precedence order: DESTRUCTIVE_DDL_FILES (CI's changed-file
-// list, JSON or newline-separated; set-but-empty means "nothing changed" and
-// checks nothing), then positional filenames, then a diff against the
-// branch's Gitflow base. Whatever the source, only `*.sql` is scanned.
-//
-// Limitations: every `ALTER COLUMN ... TYPE` is flagged whether or not it
-// narrows, since telling the two apart needs a real SQL parser; `ALTER INDEX
-// ... RENAME` is flagged though it cannot break a rollback.
-//
-// Usage:
-//   npm run check:destructive-ddl                        # what this branch adds
-//   npm run check:destructive-ddl -- --base origin/main  # against another base
-//   npm run check:destructive-ddl -- --all               # every committed migration
-//   npm run check:destructive-ddl -- <file> [file...]    # scan only these files
-//   npm run check:destructive-ddl -- --self-test         # the fixtures under scripts/__fixtures__/destructive-ddl/
+// Flags destructive DDL in the migrations this branch adds or changes unless an `.ack.md` sidecar sits beside
+// them (claude-docs/db/expand-contract.md, "Expand/contract and the destructive-DDL check").
+// Usage: npm run check:destructive-ddl [-- --base <ref> | --all | --self-test | <file>...]
+// (claude-docs/commands.md, "Destructive DDL check")
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';

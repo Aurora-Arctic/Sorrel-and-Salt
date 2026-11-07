@@ -83,10 +83,8 @@ export function describeConnectionError(error: unknown, url: string | undefined)
   if (!(error instanceof Error)) {
     return scrub(String(error), url);
   }
-  // `code` is not a property of `Error`, and every layer puts something
-  // different there — Node's socket errors `ECONNREFUSED`/`ENOTFOUND`,
-  // postgres.js the server's five-character SQLSTATE. Read defensively: an
-  // error carrying no code at all still has to be reported.
+  // `code` is not a property of `Error` and each layer puts something different there, so read it
+  // defensively.
   const raw: unknown = (error as unknown as Record<string, unknown>).code;
   const code = typeof raw === 'string' ? raw : undefined;
 

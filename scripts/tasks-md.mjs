@@ -1,8 +1,5 @@
-// The breakdown's reader, shared by the board script, the migration and the
-// project-progress tally: task headings in file order, and the execution-order
-// table's rows with their `→` ranges expanded. A range means the headings
-// between its ends in file order, not a numeric span, so a task added between
-// two numbered ones sits inside it (claude-docs/task-tracking.md, "Order").
+// The breakdown's reader: task headings in file order, and the execution-order table's rows with `→` ranges
+// expanded; a range is the headings between its ends in file order (claude-docs/task-tracking.md, "Order").
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

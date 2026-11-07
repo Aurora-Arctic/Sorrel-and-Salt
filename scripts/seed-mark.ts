@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-// Marks one compendium entry file for update: writes `seedUpdate:
-// <hash>` into its frontmatter, the hash of the file as it stands, so the
-// next seed run applies the change. Refuses a file that is not `approved`.
-//
+// Marks one compendium entry file for update by writing `seedUpdate: <hash>` into its frontmatter; refuses a
+// file that is not `approved`.
 // Usage: npm run seed:mark compendium/ingredients/<nomenclature>/<slug>.md
 import { readFileSync, writeFileSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
