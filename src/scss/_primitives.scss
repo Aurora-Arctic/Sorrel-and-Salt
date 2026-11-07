@@ -1343,7 +1343,8 @@
     grid-column: 1;
   }
 
-  // The card keeps pace with a long welcome on a wide window; on a phone it simply follows the words.
+  // The card keeps pace with a long welcome on a wide window; on a phone it simply follows the words, half the row gap
+  // further down than a paragraph would be, so it stands apart from them.
   .card-landing__grid > .card-landing__card {
     position: sticky;
     top: calc(#{$shell-bar-height} + #{space(4)});
@@ -1354,6 +1355,7 @@
       position: static;
       grid-row: auto;
       grid-column: 1;
+      margin-top: space(3);
     }
   }
 
@@ -1373,6 +1375,7 @@
     grid-column: 1;
     justify-self: start;
     max-width: $card-landing-card-width;
+    margin-top: space(3);
 
     @media (max-width: #{$shell-phone-width}) {
       max-width: none;
