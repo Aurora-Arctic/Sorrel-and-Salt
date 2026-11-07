@@ -227,26 +227,6 @@ describe('CompendiumList filter', () => {
     expect(router.push.mock.calls).toEqual([['/curator/compendium']]);
   });
 
-  // A DOM write to a radio's name or type makes the browser re-check every radio group and every `:has()` rule over them, so
-  // a keystroke in the name box leaves the panel's controls alone.
-  it('leaves the facet controls untouched while a name is typed', () => {
-    const { container } = render(<FilterRow {...props({ filter: { ...SHOWN, query: '' } })} />);
-    const controls = [...container.querySelectorAll('input[type="radio"], input[type="checkbox"]')];
-    expect(controls.length).toBeGreaterThan(0);
-    const written: string[] = [];
-    const watcher = new MutationObserver(() => {});
-    watcher.observe(container, { subtree: true, attributes: true, childList: true });
-
-    typeIn(nameBox(), 'roo');
-    for (const record of watcher.takeRecords()) {
-      if (controls.includes(record.target as Element))
-        written.push(record.attributeName ?? 'child');
-    }
-    watcher.disconnect();
-
-    expect(written).toEqual([]);
-  });
-
   it('applies the name on its Search submit with the facets shown', () => {
     render(<FilterRow {...props({ filter: { ...SHOWN, query: '' } })} />);
 

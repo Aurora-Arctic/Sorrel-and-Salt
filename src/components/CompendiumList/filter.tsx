@@ -169,14 +169,13 @@ const PanelFacets = ({
   panel: FacetPanelFilter;
   onPanel: (next: FacetPanelFilter) => void;
 }): ReactElement => {
+  const text = useSearchText();
   const apply = useApplyFilter();
   const { pending } = useListNavigation();
   const where = whereOf({ audience, covenSlug });
   const coven = where.covenSlug !== undefined;
   const shown = panelOf(filter, coven, audience === 'admin');
   const changed = JSON.stringify(panel) !== JSON.stringify(shown);
-  // The typed name matters only once a facet differs; until then a keystroke leaves the panel alone.
-  const text = useSearchText(changed);
   const live = useLiveFacets({
     held: heldFilter(filter, panel, text.trim()),
     enabled: changed,
