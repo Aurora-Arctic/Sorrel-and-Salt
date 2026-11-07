@@ -15,7 +15,7 @@
    - Squash/rebase merges don't leave merge commits, so don't rely on `git log --merges`. Instead, for each PR in that list, it is included when `git merge-base --is-ancestor <mergeCommit.oid> origin/<from>` succeeds (it is on the base) and `git merge-base --is-ancestor <mergeCommit.oid> origin/<into>` fails (the target doesn't have it yet). Sort the matches by `mergedAt`.
    - If the lookup comes back empty despite commits in range (e.g. someone pushed straight to `<from>` without a PR), work from the commit log instead, and step 2 writes no section.
 
-2. **Write the `## Included PRs` section** of the PR body: one line per PR step 1 matched, as `- [#<number>](<url>) <title> — @<author.login>`, so each is attributed to whoever actually authored it. When step 1 matched none, omit the section rather than inventing entries.
+2. **Write the `## Included PRs` section** of the PR body: one line per PR step 1 matched, as `- [#<number>](<url>) <title> — `@<author.login>``, so each is attributed to whoever actually authored it. When step 1 matched none, omit the section rather than inventing entries.
 
 ## Notes
 
