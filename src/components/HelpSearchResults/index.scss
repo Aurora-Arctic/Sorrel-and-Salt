@@ -3,18 +3,38 @@
 
 .help-results__count {
   display: block;
+  margin-block-end: space(4);
   color: $text-muted;
 }
 
+// Each row a two-column grid: the chips down the start, the title and summary beside them, a hairline between rows.
 .help-results__list {
-  padding: 0;
-  list-style: none;
+  @include list-reset;
 
-  li + li {
-    margin-block-start: space(4);
+  > li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 space(3);
+    align-items: baseline;
+    padding-block: space(3);
   }
 
-  p {
+  > li + li {
+    border-block-start: 1px solid $hairline;
+  }
+
+  a {
+    grid-column: 2;
+    font-size: $nav-link-size;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  p:not(.help-results__labels) {
+    grid-column: 2;
     margin-block: space(1) 0;
   }
 
@@ -22,15 +42,20 @@
   mark {
     background-color: transparent;
     color: inherit;
-    font-weight: 600;
+    font-weight: 500;
   }
 }
 
-// The chips stand above the title, so the title keeps the line and the chips say what it opens.
+// The chips stand at the row's start, in one column wide enough for the longest kind, so every title starts level.
 .help-results__labels {
   display: flex;
-  gap: space(2);
-  margin-block: 0 space(1);
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  flex-direction: column;
+  gap: space(1);
+  align-items: flex-start;
+  min-width: 4.5rem;
+  margin: 0;
 }
 
 .help-results__kind {

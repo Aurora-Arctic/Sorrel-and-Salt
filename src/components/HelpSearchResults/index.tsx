@@ -7,7 +7,7 @@ import './index.scss';
 
 const KIND = { faq: 'Question', article: 'Guide', term: 'Term' } as const;
 
-// The search box holding the words, a count, then the results in the order handed (the search's rank), each under
+// The search box holding the words, a count, then the results in the order handed (the search's rank), each beside
 // a chip saying what kind of page it opens and, for a row only staff read, a Staff chip, with the searched words
 // marked. No results draws no list; an unmatched query says so in the site's No Matches status
 // (claude-docs/components/help-pages.md).
@@ -42,8 +42,12 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
         <div role="status" aria-label="No Matches" className="help-results__no-match">
           <p>Nothing matches “{query}”. Try fewer or different words.</p>
           <p className="help-results__ways">
-            <a href="/help">Browse the Guides</a>
-            <a href="/help/glossary">Read the Glossary</a>
+            <a className="btn btn--quiet" href="/help">
+              Browse the Guides
+            </a>
+            <a className="btn btn--quiet" href="/help/glossary">
+              Read the Glossary
+            </a>
           </p>
         </div>
       )
