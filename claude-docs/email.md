@@ -7,7 +7,7 @@ The decision record behind delivery and verification is
 ## Sending
 
 `src/lib/mail-transport.ts`'s `deliver({ to, subject, text, html })` is the one
-way a mail reaches a transport (MB.65), called by a mail job's step or, for one
+way a mail reaches a transport, called by a mail job's step or, for one
 try in the request, by `send` in `src/lib/mail.ts`. `MAIL_TRANSPORT` picks Resend in production, the Mailtrap Sandbox
 in previews and Mailpit in compose and CI; unset, the message is logged and not
 sent. `send` never throws. A recipient under
@@ -83,7 +83,7 @@ the run argument, then runs the step itself. Real retries are tested in the
 `tests/workflows/support-status-mail.test.ts`,
 `tests/workflows/support-retention.test.ts`).
 
-## Templates: React Email (MB.66)
+## Templates: React Email
 
 A message is a React component in `src/emails/`, rendered twice by `render`
 from `react-email` (which depends on `@react-email/render`, so there is still
@@ -127,7 +127,7 @@ await send(await verifyEmailMessage({ to, url, providers }));
   not ask for it. Headings keep their case in the text part, which the converter
   would otherwise capitalise. The wordmark's link is dropped from the text part
   (`ignoreHref` on `a.ss-wordmark` in `renderParts`), so the first address a
-  text client shows is the action's, not the homepage (MB.118).
+  text client shows is the action's, not the homepage.
 - **Where things go.** A template is a top-level `src/emails/<name>.ts` with
   a sibling `<name>.stories.tsx`. The frame every mail shares is
   `src/emails/parts/layout.ts`
@@ -136,9 +136,9 @@ await send(await verifyEmailMessage({ to, url, providers }));
   templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the
   link, the origin and the part. Not in `src/components/`: a mail is
   not a page component. Tests mirror the path, in `dom` since each is a
-  `.tsx` (MB.97), and assert what a mail carries — its recipient, its link,
+  `.tsx`, and assert what a mail carries — its recipient, its link,
   the providers it names — never its wording or its look, which the stories
-  show (MB.229).
+  show.
 - **Plain words.** A mail is read by anyone who signed in, often on a phone:
   short sentences, everyday vocabulary, and one thing to do.
 
@@ -167,7 +167,7 @@ does it, so each piece has an email-safe stand-in.
   surround, which is readable whichever way it goes.
   `tests/emails/verify-email.test.tsx` pins the shape.
 - **Zoho Mail inverts every colour it can see, so the dark is written in the
-  two forms it leaves alone** (MB.262). Measured on 2026-10-16 in Zoho Mail's
+  two forms it leaves alone**. Measured on 2026-10-16 in Zoho Mail's
   web client, by reading the DOM it builds from four probe mails; the Android
   app shows the same result. In its Night mode Zoho drops `<style>` whole, and
   in its Day mode it keeps plain rules but drops every `@media` block, so the
@@ -250,7 +250,7 @@ does it, so each piece has an email-safe stand-in.
 - **The wordmark** is "Sorrel & Salt" at the top right, small, in the
   heading face, linking to the site's origin: the one place the site is named,
   in the band beside the sorrel.
-- **Desktop Outlook reads Word's CSS, so three rules hold for it** (MB.118).
+- **Desktop Outlook reads Word's CSS, so three rules hold for it**.
   The `@font-face` rules sit under `@media screen`: Word skips the block, so it
   never meets an uninstalled first face, which would send it to Times New Roman
   rather than the next font in the stack. Every text element carries its
@@ -323,7 +323,7 @@ the owner reads them in the clients.
 | `src/emails/account-exists.ts`                    | `src/lib/auth.ts`'s `mailExistingHolder`, the `before` hook's `answerHeldSignUp`, at a password sign-up to an address that already has an account, through `scheduleAccountNotice` (`kind: 'account-exists'`) and the `accountNoticeMail` job, whose step renders it with `accountExistsNotice` in `src/lib/account-notice-mail.ts` | That someone tried to make an account with the address and none was made, a link to `/sign-in`, and how the account signs in (its password, its linked providers, or both); never a name, since whoever made the sign-up need not be the holder                                                      |
 | `src/emails/reset-password.ts`                    | `src/lib/auth.ts`'s `mailResetLink`, Better Auth's `sendResetPassword`, from `/forgot-password`, to a verified address only                                                                                                                                                                                                         | The single-use `/reset-password` link that lasts 15 minutes, that a new password signs the account out everywhere, and that a reader who did not ask can ignore it; never a name, since anyone can ask for it for any address                                                                        |
 | `src/emails/password-changed.ts`                  | `scheduleAccountNotice` (`kind: 'password-changed'`), after a reset (`onPasswordReset`), a change (the `/change-password` after hook) or a first password set (`passwordSetter`), sent by the `accountNoticeMail` job, whose step renders it with `passwordChangedNotice` in `src/lib/account-notice-mail.ts`                       | That the password was reset, changed or added, which sessions were signed out, and a link to `/forgot-password` for a holder who made no change                                                                                                                                                      |
-| `src/emails/admin-invitation.ts`                  | `createAdminInvitation` (MB.70), through `invitationSender` in `src/lib/invitation-mail.ts` and the `secretLinkMail` job (`kind: 'invitation'`), whose step mints the token with `rotateInvitationToken` and renders it with `invitationLinkMessage` in `src/lib/invitation-link-mail.ts`                                           | The `/invite/[token]` link, the only place its token exists, to the invited address: the inviting admin's name, the site role it grants (M11.20), that the link lasts seven days, and to sign in with an account that uses the address                                                               |
+| `src/emails/admin-invitation.ts`                  | `createAdminInvitation`, through `invitationSender` in `src/lib/invitation-mail.ts` and the `secretLinkMail` job (`kind: 'invitation'`), whose step mints the token with `rotateInvitationToken` and renders it with `invitationLinkMessage` in `src/lib/invitation-link-mail.ts`                                                   | The `/invite/[token]` link, the only place its token exists, to the invited address: the inviting admin's name, the site role it grants (M11.20), that the link lasts seven days, and to sign in with an account that uses the address                                                               |
 | `src/emails/coven-invitation.ts`                  | `createInvitation` (M7.3), the same way as the admin invitation                                                                                                                                                                                                                                                                     | The `/invite/[token]` link, the only place its token exists, to the invited address: the inviting owner's name, which coven and what role, that the link lasts seven days, and to sign in with an account that uses the address                                                                      |
 | `src/emails/support-reply-notice.ts`              | `replyToSupportRequest`, through the reply's own job (`src/modules/support/jobs/support-reply-notice.ts`), whose step renders it from the rows with `supportReplyMessage` in `src/lib/support-job-mail.ts` and sets `support_replies.notice_sent_at`; the signed-out sender's `support-email-reply.ts` goes the same way            | A short notice that names the request (subject and heading read "Reply to your support request: <subject>", the subject cut at 80 characters) and a link that opens that request (`/account/support?request=<id>`); never the reply text (M15.1)                                                     |
 | `src/emails/support-received.ts`                  | `sendSupportRequest` and `sendSignedOutSupportRequest`, once the request is saved, through the `supportStatusMail` job (`kind: 'received'`), whose step renders it from the request with `supportStatusMessage` in `src/lib/support-job-mail.ts`                                                                                    | That the request arrived and will be answered within 5 working days, naming it (subject cut at 80 characters). A signed-in sender’s link opens the request (`/account/support?request=<id>`); a signed-out sender’s goes to `/support`, which needs no account. Never what the sender wrote (M15.45) |

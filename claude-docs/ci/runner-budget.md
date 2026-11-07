@@ -24,8 +24,7 @@ The sizing is [`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.
   ~245 counted at MB.98. Runs cost nothing now, so the count matters only for
   how long a developer waits.
 - **`e2e-cache.yml` costs about 2½ GitHub-hosted minutes per push to
-  `staging` that touches the e2e build's inputs**
-  (MB.234). It saves the e2e build cache a pull request's Playwright job
+  `staging` that touches the e2e build's inputs**. It saves the e2e build cache a pull request's Playwright job
   restores, and is the only run that saves it (MB.235; [Reusable
   checks](reusable-checks.md)). Estimated from `pr-gate.yml`'s jobs on run
   38102191294: the two image jobs take about 16s and 31s when the image is

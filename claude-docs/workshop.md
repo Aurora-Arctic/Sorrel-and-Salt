@@ -39,8 +39,7 @@ without a page routed to it.
   each story in an iframe of its own, so `Modal`'s top layer (`showModal()`)
   covers the story and not the sidebar. This replaces the `iframed`
   setting Ladle needed (M5.6).
-- **A page component's story renders inside the page's real frame**
-  (MB.116): the `main` its route draws, with the same classes, such as
+- **A page component's story renders inside the page's real frame**: the `main` its route draws, with the same classes, such as
   `<main className="page-frame">` for `NotAuthorized` or
   `page-frame page-frame--narrow` for a form page. A story that drew the
   component bare would show a column the app never draws, since the frame
@@ -174,7 +173,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
     interactive "host validation disabled" prompt unless it is told which hosts
     to accept. `localhost` is the owner's browser, `devcontainer` the e2e remote
     browser; any other Host header gets 403. Vite's `server.allowedHosts` stays.
-  - **`reducedMotion` parameter (MB.1).** `prefers-reduced-motion: reduce` is a
+  - **`reducedMotion` parameter.** `prefers-reduced-motion: reduce` is a
     real OS/browser setting with no toolbar control to dispatch, so a story sets
     `parameters: { reducedMotion: true }` (ThemeToggle's `ReducedMotion` is the
     first) to get it simulated instead of merely documented: the decorator patches
@@ -225,12 +224,12 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   `.workshop-story-frame p` (0,1,1) outranked every component's own `p` class
   (0,1,0), so the workshop drew `EmailForm`'s notice at body size with the
   paragraph margin, and `AdminNav`'s rows with the ◆ bullet the page never
-  shows (MB.114).
+  shows.
 - **`navigation.tsx`** — three wrappers for the stories that need more than the
   framework's fixed answer, which put a different value in the same contexts
   Next's real hooks read. `WorkshopPathname` sets another address for
   `usePathname`, so AdminNav's stories show the current-page marker on People, and
-  a tabbed page's story can open any tab (MB.115). `WorkshopNavigation` is told
+  a tabbed page's story can open any tab. `WorkshopNavigation` is told
   where `push` and `replace` were asked to go: a `RouteModal` closes by navigating,
   so without it a story's modal stays mounted as a native modal dialog, invisible
   once faded and holding the whole page inert (M10.33). The framework's
@@ -335,7 +334,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   `.storybook/` because the app never imports it; `foundations.scss` holds only
   reference-page chrome, nested under `.fd`.
 
-## Mail templates (MB.66)
+## Mail templates
 
 - **`src/emails/*.stories.tsx`** is the second story glob in `main.ts`: one
   story file beside each mail template, titled `Emails / …`. The shared frame
@@ -356,7 +355,7 @@ all`: the same rules a client in that scheme applies, nothing re-styled. A
 
 ## Review screenshots
 
-`scripts/review-screenshots.mjs` is a design review's camera (MB.116): it
+`scripts/review-screenshots.mjs` is a design review's camera: it
 shoots each page a review lists at 375×812 and 412×915, in the dark and the
 light theme, full page, into the directory it is given —
 `.reports/<task>-screenshots/` by convention, gitignored with the rest of
@@ -381,7 +380,7 @@ node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
   `/iframe.html?id=...` path that has no `globals`.
 - **`--storage-state <file>`** is a Playwright storage-state file carrying a
   signed-in session's cookies, for a page behind sign-in.
-- **Both widths are touch screens** (MB.115): every browser context is
+- **Both widths are touch screens**: every browser context is
   opened with `hasTouch` and `isMobile`, so the page's `(hover: none)`
   query holds as it does on a phone. A desktop browser at phone width would
   otherwise show what no phone does, such as the impersonation banner tucked
@@ -438,7 +437,7 @@ A story whose component asks the server gets an answer from Mock Service Worker 
   type-checked.
 - **The gate runs in CI, and not in pre-commit.** `workshop:build` runs on
   `checks.yml`'s `build` leg. Pre-commit is lint,
-  `format:check` and typecheck on the files a commit changes, test-free by decision (MB.38): a hook that
+  `format:check` and typecheck on the files a commit changes, test-free by decision: a hook that
   runs tests is a hook people start skipping, and a PR cannot skip CI.
 
 ### Rebuilding the workshop container (after M12.53)

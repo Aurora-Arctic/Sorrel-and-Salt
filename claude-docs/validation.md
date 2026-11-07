@@ -70,10 +70,9 @@ compare with a `uuid` column, since anything else is a driver error there.
 and malformed refused alike with the message saying what to choose: a
 category's or a form's `groupId`, a deity's `traditionId`. It is
 `RowId`'s shape rather than `z.uuid()`'s, which refuses the seed's
-hand-written ids and so refused a parent the service would have found
-(MB.209).
+hand-written ids and so refused a parent the service would have found.
 
-The text shapes every module shares are there too (MB.209), so a message or
+The text shapes every module shares are there too, so a message or
 a rule changes in one place:
 
 - **`requiredText(message)`**: trimmed, and blank or missing refused with
@@ -98,7 +97,7 @@ refused, and that is "required", not "blank". They differ only in
 
 - **`LocalIngredientInput`**, for the workspace tier. Only `name` is required.
   With no formal name and no kind, `nomenclature` becomes `none`, so story 29's
-  one-field stub saves. A `null` kind counts as no kind. A formal name with no kind becomes `unknown` (MB.161):
+  one-field stub saves. A `null` kind counts as no kind. A formal name with no kind becomes `unknown`:
   the one kind that admits a name without claiming its system, where `none`
   would contradict the name and `botanical` is the silent guess §5 forbids.
 - **`CompendiumIngredientInput`**, for the compendium tier. The admin must answer
@@ -108,7 +107,7 @@ Rules both variants enforce:
 
 - **The kind↔name coupling**, in both directions, as the database CHECK does:
   `none` with a formal name is refused, any of the five named kinds without
-  one is refused, and `unknown` takes either (MB.161). Both are pathed to `canonicalName`, so the CHECK is never
+  one is refused, and `unknown` takes either. Both are pathed to `canonicalName`, so the CHECK is never
   what a user sees.
 - **`canonicalName`** is optional and trimmed, and a blank one becomes
   `null` — which the database CHECK on the column accepts, so a blank never
@@ -117,7 +116,7 @@ Rules both variants enforce:
   checks a variant's `form` against the curated vocabulary: on a coven's
   ingredient it is an autofill and not a constraint, and the compendium's
   check reads the database, so it is the service's (below). Whether a
-  variant's `formId`, the curated form picked (MB.167), names a curated form,
+  variant's `formId`, the curated form picked, names a curated form,
   and whether its `form` folds to that form's name, read the database too
   (DESIGN.md §5, `ingredient_forms`).
 - **Folk names, within one ingredient.** `name` may not also be one of the
@@ -187,7 +186,7 @@ Rules both variants enforce:
   `color`): free text, each entry trimmed, blank entries dropped by
   `dropBlankEntries` after the cross-field rules, and a list left with no
   entries `null`. A repeat but for case is refused at the repeat, blanks
-  counted, as a folk name's is (MB.167), though no unique index stands behind
+  counted, as a folk name's is, though no unique index stands behind
   a list, so a list is never silently stored doubled. An entry is never
   reordered, since each list keeps the order entered. Neither schema has a single field left,
   so a caller still sending `planet` has it stripped like any unknown key.
@@ -200,7 +199,7 @@ Rules both variants enforce:
   astrology vocabularies"), and on a coven's ingredient an entry off them is
   as valid as one on them. A colour has no vocabulary and no suggestions.
 
-**A compendium entry holds curated values alone** (MB.162). After
+**A compendium entry holds curated values alone**. After
 `CompendiumIngredientInput` parses, `createCompendiumEntry` and
 `updateCompendiumEntry` hold each variant's `form` and each deity to a pick of a live
 curated row — a form under a live group, a deity under a live tradition —
@@ -220,7 +219,7 @@ and colours have no list and are not checked
 ([`db/identity-model.md`](db/identity-model.md), "The ingredient identity
 model").
 
-**An ingredient's forms are `variants`** (MB.219). Each entry is a whole
+**An ingredient's forms are `variants`**. Each entry is a whole
 form, every field but `id` sent, as `IngredientVariantInput` declares it,
 since an entry replaces the row it names: `form` through `requiredText`,
 `""` and `[]` for none elsewhere, and the parse keeps them as sent, so what
@@ -240,7 +239,7 @@ refused at `['variants', i, 'substitutes', j, 'substituteVariantId']`
 ingredient whole, and a name needs no form. Seeds write raw, not through the
 schema, so a seeded link is not held to it. With no `variants` sent the
 list is left absent, and the service reads it as no form, as an absent child
-list always reads. The GraphQL input types require it (MB.222), so through the
+list always reads. The GraphQL input types require it, so through the
 API a client sends `[]` for none.
 
 The schemas describe a whole ingredient, as the form submits it on create and
@@ -278,7 +277,7 @@ non-blank CHECKs need. The text fields are one list, `REFERENCE_TEXT_FIELDS`,
 read off `FORMAT_OF` in `reference-format.ts`, whose type is every
 `CitationFields` key but `kind`, so a field the renderer gains and the
 formatter lacks fails the type check; the schema is built from the list, with
-`title`, `url` and the two days overriding it (MB.209). `url`
+`title`, `url` and the two days overriding it. `url`
 is an absolute http(s) address a browser can follow, and `modified` and
 `accessed` are calendar days, `YYYY-MM-DD` (`CalendarDay`). Per `kind`: a chapter, an
 article and an entry each need their `container`, named as the kind names it
@@ -303,15 +302,15 @@ since a form's rename moves no compendium entry's address.
 the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `color`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
 refused otherwise with "Choose a colour, as a hex like #4e8bc2". Each is then
 held to 4.5:1 against its own theme's harder surface, the dark card or the
-light page (MB.36), through `chipContrast` in `src/lib/contrast.ts`, and
+light page, through `chipContrast` in `src/lib/contrast.ts`, and
 refused at its own column with the ratio: "The light theme colour reads
 2.99:1 on the light page — it needs at least 4.5:1". The ratio is cut to two
 places rather than rounded, so a refused 4.499 never shows as 4.50. The check
 is the schema's rather than the service's alone, so the form refuses before
 the request; it reads nothing but the hex, so it stays client-safe. The pair is then held to one hue, to within 10° (`MAX_HUE_DISTANCE`, `src/lib/group-colors.ts`), or to two greys, and refused at `colorLight` otherwise; Zod runs that object-level check even after a colour has failed its own, so it speaks only once both colours have passed.
 
-The celestial body and zodiac vocabularies (MB.95) share one shape:
+The celestial body and zodiac vocabularies share one shape:
 `vocabulary/validation/astrology-value.ts` builds `CelestialBodyInput` and
 `ZodiacSignInput` as the shape alone, each saying its own noun — "Give the
 sign a name".
-The spell (MB.8) adds its own schema when it lands.
+The spell adds its own schema when it lands.

@@ -1,6 +1,6 @@
 # Debugging — summary
 
-This summary is self-contained (MB.22, MB.23) — nothing here
+This summary is self-contained — nothing here
 requires opening `package.json`, `makefile`, `Docker/docker-compose.yaml`,
 `.devcontainer/`, `Docker/Dockerfile.e2e`, or `playwright.config.ts` to
 follow.
@@ -64,14 +64,14 @@ attached at all.
 | Port  | What                                                                                            | Where it's forwarded/published                                                                                            |
 | ----- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | 8000  | `next dev`                                                                                      | devcontainer.json, `app` service (Docker/docker-compose.yaml)                                                             |
-| 8001+ | `next start`, one per e2e worker slot (MB.112)                                                  | devcontainer.json forwards 8001 alone; slot `n` serves on `8001 + n`, reached inside the compose network                  |
+| 8001+ | `next start`, one per e2e worker slot                                                           | devcontainer.json forwards 8001 alone; slot `n` serves on `8001 + n`, reached inside the compose network                  |
 | 8100  | `next start`, e2e configured providers (`FIRST_SLOT_PORT + 99` in `tests/e2e/slots.ts`)         | none — reached inside the compose network                                                                                 |
 | 8101  | `next start`, the one e2e server that keeps its compendium data cache (`FIRST_SLOT_PORT + 100`) | none — reached inside the compose network                                                                                 |
 | 8102  | `next start`, the e2e workshop server (`FIRST_SLOT_PORT + 101`)                                 | none — reached inside the compose network                                                                                 |
 | 5432  | Postgres                                                                                        | `postgres` service (Docker/docker-compose.yaml)                                                                           |
 | 8025  | Mailpit UI and REST API                                                                         | `mailpit` service (Docker/docker-compose.yaml)                                                                            |
 | 3456  | Job viewer (`npm run jobs:web`)                                                                 | job viewer service (Docker/docker-compose.yaml)                                                                           |
-| 4983  | Drizzle Studio (MB.21)                                                                          | devcontainer.json, `studio` service                                                                                       |
+| 4983  | Drizzle Studio                                                                                  | devcontainer.json, `studio` service                                                                                       |
 | 9229  | Node inspector — `next dev --inspect`                                                           | devcontainer.json, `app` service                                                                                          |
 | 9230  | Node inspector — `vitest --inspect-brk`                                                         | devcontainer.json only (no long-running compose service serves this)                                                      |
 | 9231  | Node inspector — Playwright runner (manual)                                                     | devcontainer.json only — reserved, nothing listens by default                                                             |
@@ -80,7 +80,7 @@ attached at all.
 | 51204 | Vitest UI (`@vitest/ui` default port)                                                           | devcontainer.json only                                                                                                    |
 | 61000 | Storybook workshop                                                                              | pre-existing (M0.30), `workshop` service                                                                                  |
 | 4444  | `playwright run-server` (remote browser)                                                        | `playwright-server` service (Docker/docker-compose.yaml, profile `e2e`) — dialed by the runner, never opened in a browser |
-| 7900  | Playwright display — codegen, `page.pause()` (MB.23)                                            | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
+| 7900  | Playwright display — codegen, `page.pause()`                                                    | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
 
 The 8100 to 8102 rows are derived: `FIRST_SLOT_PORT` is 8001 or `E2E_PORT_BASE`, and a different base moves all three.
 All the
@@ -266,7 +266,7 @@ _do_ open in a host browser are the forwarded ports: 9323 for the trace
 viewer, 9324 for UI mode. Both work the same over a remote browser as over a
 local one, because both are the _runner's_ own UI, not the browser's.
 
-**Headed/interactive Playwright draws on a virtual display (MB.23).**
+**Headed/interactive Playwright draws on a virtual display.**
 `playwright-server` carries a virtual display (Xvfb + a window manager),
 reachable from an ordinary host browser tab at **`http://localhost:7900`**
 over noVNC — `page.pause()`'s Inspector overlay and UI mode's live locator
@@ -306,7 +306,7 @@ a hardcoded spec path or argument-plumbing that serves exactly one
 debugging session's worth of value. Port 9231 is still reserved and
 forwarded for when you need it.
 
-### Recording a spec (MB.23)
+### Recording a spec
 
 `make docker-codegen NAME=<spec>` (host) starts `playwright-server` if it
 isn't already up, then `exec`s `playwright codegen` into it as your own
@@ -385,7 +385,7 @@ sorrel` against the running compose Postgres: a raw SQL prompt for poking
   a test is doing.
 - **Drizzle Studio** (`npm run db:studio` / `make db-studio` /
   `make docker-studio`, port 4983) — a visual browser for the local
-  database (MB.21). Its own UI is hosted externally at
+  database. Its own UI is hosted externally at
   `https://local.drizzle.studio` and connects back to the forwarded/published
   port; not re-explained here beyond that it's part of the same "how do I
   see what the database actually holds" story as `DEBUG_SQL` and `db-psql`.
