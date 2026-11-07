@@ -6,10 +6,6 @@ import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { CategoryGroupNode } from './types';
 
-// The three category-group writes over the wire: the transport's half (claude-docs/testing/layer-ownership.md).
-// That is the loaders cleared by a write, `moveTo` reaching the delete, and per write one refusal per error code, read as the browser reads it. Roles and colour and collision rules are services/category-groups.test.ts's;
-// signed-out and non-keeper scope refusals are tests/db/graphql-query-scopes.test.ts's.
-
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
@@ -88,7 +84,6 @@ describe('updateCategoryGroup', () => {
       insert into categories (name, slug, description, group_id, created_by, updated_by)
       values ('Testcraft Filed', 'testcraft-filed', 'Seeded', ${id}, ${E.id}, ${E.id})`;
     const session = asUser(E);
-    // One set of loaders across the three, so the read before fills the cache.
     const context = { loaders: createLoaders(session) };
     const READ = `query { categories(query: "Testcraft Filed") { edges { node { group { name } } } } }`;
     const before = await run(session, READ, {}, context);

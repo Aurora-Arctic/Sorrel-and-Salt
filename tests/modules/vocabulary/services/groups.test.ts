@@ -5,9 +5,6 @@ import { NotFound } from '@/lib/errors';
 import { categoryGroupsOf } from '@/modules/vocabulary';
 import { A } from '../../../support/as-user';
 
-// The two group lookups behind `Category.group` and `IngredientFormValue.group`: public reference data, answered in key order, with a `NotFound` in the slot of a missing or retired group so a loader rejects that key alone.
-// `formGroupsOf` is the same call over the same `groupsOf`, differing only in its table, so only the category groups run these tests.
-
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();

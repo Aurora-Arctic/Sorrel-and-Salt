@@ -10,17 +10,12 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { FormSuggestionConnection } from './types';
 
-// The transport half of the form lookup: the nodes, each curated row carrying its group and every suggestion its claimants, a page by cursor and the compendium-only mode.
-// Who is refused, what each bucket holds and the scope are services/form-suggestions.test.ts's, and a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
-
 let sql: ReturnType<typeof postgres>;
 
 useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
-  // A compendium entry claiming a curated form, and a workspace entry with an
-  // uncurated one.
   await insertIngredient(sql, makeIngredient({ variants: [makeVariant({ form: 'root' })] }), A.id);
   await insertIngredient(
     sql,
@@ -53,7 +48,6 @@ describe('formSuggestions', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.formSuggestions.edges.map((edge) => edge.node)).toEqual([
       {
-        // What a pick sends.
         id: await curatedFormId(sql, 'Root'),
         value: 'Root',
         description: expect.any(String),
@@ -74,8 +68,7 @@ describe('formSuggestions', () => {
   });
 });
 
-// The admin's compendium form has no coven to name, so a null
-// workspaceId reads the compendium tier alone.
+// The admin's compendium form has no coven to name, so a null workspaceId reads the compendium tier alone.
 describe('formSuggestions without a coven', () => {
   const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>
     runOperation<{ formSuggestions: FormSuggestionConnection }>(

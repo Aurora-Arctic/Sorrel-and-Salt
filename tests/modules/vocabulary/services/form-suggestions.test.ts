@@ -16,9 +16,6 @@ import {
 } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
-// DESIGN.md §5 and §9: the `form` autofill offers the curated vocabulary first, each row with its group, then uncurated values in use in the compendium and the caller's workspace, each suggestion naming the in-scope ingredients that claim it.
-// The vocabulary is the seed's, revived per test since some tests retire a row; `ingredients` is emptied per test, so every in-use value and claimant is one this file wrote.
-
 let sql: ReturnType<typeof postgres>;
 
 useTestDatabase((client) => (sql = client));
@@ -33,7 +30,6 @@ beforeEach(async () => {
   await sql`update ingredient_form_groups set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-/** A row of this file's: its one form stated, as its one variant, and no formal name (so `none`) unless one is stated. */
 function addIngredient({
   form,
   ...entry
@@ -46,7 +42,6 @@ function addIngredient({
   );
 }
 
-/** A second live form sharing a seeded one's display name, in another group. */
 async function addForm(name: string, group: string): Promise<string> {
   const [row] = await sql`
     insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
@@ -58,7 +53,6 @@ async function addForm(name: string, group: string): Promise<string> {
   return row.id as string;
 }
 
-/** A live group of this file's, with a form under it for each name given. */
 async function addGroup(group: string, names: string[]): Promise<void> {
   await sql`
     insert into ingredient_form_groups (name, slug, description, created_by, updated_by)
@@ -95,7 +89,6 @@ function pageOf(
   return resolvePage(args, (request) => suggestForms(session, workspaceId, query, request));
 }
 
-/** Every suggestion in one page — the lists here are far shorter than the maximum. */
 async function all(
   session: Session,
   query: string,
