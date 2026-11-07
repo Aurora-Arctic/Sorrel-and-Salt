@@ -22,30 +22,22 @@ interface PathCommands {
   commands: { command: string; args: number[] }[];
 }
 
-/** A closed outline as x, y pairs in artboard px. */
 type Polygon = number[];
 /** One shape's outlines, filled together under the nonzero rule, so a ring's reversed inner outline is its hole. */
 type Shape = Polygon[];
 
 export interface CodeShadows {
-  /** The mask's rectangle on the artboard, in px. */
   x: number;
   y: number;
   width: number;
   height: number;
-  /** The mask's size in pixels. */
   columns: number;
   rows: number;
-  /** How much of each mask pixel the column's shapes cover, from 0 to 1, before the blur. */
   coverage(link: string): Float32Array;
-  /** The blurred coverage, scaled so its darkest pixel is the shadow's opacity. */
   mask(link: string): Uint8Array;
 }
 
-/**
- * The shadows behind one batch's code column. The words are the same on every card, so they are traced once;
- * each card's code is added to them.
- */
+// The words are the same on every card, so they are traced once and each card's code is added.
 export function codeShadows(fonts: CardFonts, column: TextItem[], code: QrItem): CodeShadows {
   const sigma = (SHADOW_RADIUS / 2) * MASK_SCALE;
   const pad = Math.ceil(3 * sigma) + 2;
@@ -197,7 +189,6 @@ interface Grid {
   rows: number;
 }
 
-/** Adds a shape's coverage to the grid: each subrow's spans inside the outlines, under the nonzero rule. */
 function fillShape(coverage: Float32Array, grid: Grid, shape: Shape) {
   const edges: { x0: number; y0: number; x1: number; y1: number; dir: number }[] = [];
   let minY = Infinity;
@@ -264,7 +255,6 @@ function addSpan(
   if (c1 < grid.columns) coverage[base + c1] += (x1 - c1) * weight;
 }
 
-/** Three box blurs each way, which together come within a few per cent of a Gaussian of the given deviation. */
 function gaussianBlur(values: Float32Array, columns: number, rows: number, sigma: number) {
   const boxes = boxSizes(sigma, 3);
   let a = Float32Array.from(values);
@@ -290,10 +280,7 @@ function boxSizes(sigma: number, n: number): number[] {
   return Array.from({ length: n }, (_, i) => (i < m ? lower : upper));
 }
 
-/**
- * One box blur along every line of the grid: `length` samples `step` apart, lines `stride` apart. Samples past the
- * ends count as nothing, so the blur fades out rather than piling up at the grid's edge.
- */
+// Samples past the ends count as nothing, so the blur fades out rather than piling up at the grid's edge.
 function boxPass(
   from: Float32Array,
   to: Float32Array,
