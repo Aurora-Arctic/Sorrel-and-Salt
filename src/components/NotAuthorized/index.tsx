@@ -3,9 +3,7 @@ import type { ReactElement } from 'react';
 import PageHeader from '../PageHeader';
 import './index.scss';
 
-// The body of `src/app/(shell)/forbidden.tsx`: what a signed-in non-keeper sees at
-// the keepers pages. It says why and offers the way back — never who the keepers are or
-// a way to ask them (claude-docs/components/not-authorized.md).
+// It says why and offers the way back, never who the keepers are or a way to ask them (claude-docs/components/error-page.md).
 
 const NotAuthorized = (): ReactElement => (
   <div className="not-authorized">

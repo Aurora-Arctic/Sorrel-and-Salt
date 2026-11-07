@@ -13,10 +13,8 @@ import {
 // pair) and Coven Members (makers' ids, each checked, repeats dropped).
 const { query, categories, categoryMode } = COMPENDIUM_PARAMS.entries;
 
-/** The two visibilities a spell has, as the address spells them. */
 export const VISIBILITIES = ['private', 'workspace'] as const;
 
-/** What each visibility is called on screen: a spell shared with the coven reads "Shared". */
 export const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
   private: 'Private',
   workspace: 'Shared',
@@ -37,7 +35,6 @@ export const GRIMOIRE_PARAMS = defineSearchParams({
   makers: searchParam<string[]>({
     name: 'maker',
     variable: 'makerIds',
-    // A hand-edited value that is not an id reads as no filter, as a bad enum value does.
     read: (raw) => [...new Set(list(raw).filter((id) => RowId.safeParse(id).success))],
     write: (value) => value,
     toVariable: (value) => (value.length > 0 ? value : undefined),

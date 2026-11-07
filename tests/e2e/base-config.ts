@@ -10,13 +10,9 @@ import { E2E_SLOTS, wsEndpoint } from './slots';
 // a CLI `--reporter` replaces it and with it the html report's folder.
 export const HTML_REPORT = { outputFolder: '.reports/playwright-report', open: 'never' } as const;
 
-// What the e2e and story configs share: where output goes, the worker count, the setup and teardown that
-// reseed the slot databases, and the browser options. The workshop config takes only the output folder,
-// `forbidOnly` and browser options.
 export const baseConfig = {
   outputDir: '.reports/test-results',
   fullyParallel: true,
-  // One per slot server; tests/e2e/slots.ts.
   workers: E2E_SLOTS,
   forbidOnly: !!process.env.CI,
   globalSetup: './tests/e2e/global-setup.ts',

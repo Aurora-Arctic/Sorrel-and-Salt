@@ -6,7 +6,6 @@ export default async function KeepersPage() {
   const { role } = await requireCuratorSession();
   const managesPeople = role === 'admin';
 
-  // A head with a lede, then a table of contents in the nav's own sections.
   return (
     <main className="admin-index">
       <PageHeader

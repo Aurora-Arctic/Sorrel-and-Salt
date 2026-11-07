@@ -17,7 +17,6 @@ import type { FilterFormProps, FilterValue } from './types';
 // a choice settles, the search on submit or Enter, each opening the first page softly through
 // `ListFrame`. A GET form, so it submits natively before hydration (claude-docs/components/filter-form.md).
 
-/** A value the page shows a filter by: a blank, `false`, an empty list or none is no filter. */
 const isSet = (value: FilterValue): boolean =>
   typeof value === 'string'
     ? value.trim() !== ''
@@ -25,10 +24,6 @@ const isSet = (value: FilterValue): boolean =>
       ? value.length > 0
       : value === true;
 
-/**
- * The caller's controls, which the row marks `aria-disabled` while a list is
- * on its way: a select-only box among them, a `div` with the combobox role.
- */
 const FIELD_CONTROLS =
   'input:not([type="hidden"]), select, textarea, button, a[href], [role="combobox"]';
 
@@ -42,7 +37,6 @@ const PRESSES = ['keydown', 'beforeinput', 'mousedown', 'click', 'paste', 'drop'
  */
 const refocus = { wanted: false, at: -1 };
 
-/** The row's controls in document order: the ones the row marks while a list is on its way. */
 const controlsOf = (row: Element) => [...row.querySelectorAll<HTMLElement>(FIELD_CONTROLS)];
 
 /**
@@ -117,8 +111,8 @@ const FilterForm = ({
     };
   }, [pending]);
 
-  // The search's submit, or Enter in any box. Always offered: the same text again reads
-  // the list again, which is harmless, where a disabled submit read as dead.
+  // Always offered: the same text again reads the list again, harmless, where a disabled submit
+  // read as dead.
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;

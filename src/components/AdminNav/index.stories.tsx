@@ -3,34 +3,22 @@ import type { ReactElement, ReactNode } from 'react';
 import { AdminFrame as Frame } from '../../../.storybook/admin-frame';
 import { AdminContents } from '.';
 
-// Render-only; behaviour is asserted in tests/components/AdminNav. `managesPeople`
-// is the one prop. The workshop's `usePathname` stub answers `/keepers/users`
-// (.storybook/navigation.ts), so People is current. Each story sits in `AdminFrame`.
 const meta = {
   title: 'Admin / Nav',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Wider than a tablet: six tabs along the row, People set apart by a hairline
-// and marked by weight and the heavy rule. The narrower shapes are
-// SectionNav's stories.
 const defaultNode = <Frame />;
 
-// Other pages current: the nav marks whichever page the address belongs to.
 const categoriesCurrentNode = <Frame open="/curator/category-groups" />;
 
 const astrologyCurrentNode = <Frame open="/curator/zodiac-signs" />;
 
 const invitationsCurrentNode = <Frame open="/keepers/invitations" />;
 
-// A curator's nav: the five curation pages, and no People. Opened on the
-// compendium, since a curator never reaches the People page.
 const curatorNode = <Frame open="/curator/compendium" managesPeople={false} />;
 
-// The `/keepers` index under the nav: a lede, then the contents in the nav's
-// sections. The page is a server component, so its heading and lede are copied
-// here. Opened at `/keepers`, where no page is current.
 const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElement => (
   <Frame shell open="/keepers" managesPeople={managesPeople}>
     <main>
@@ -47,7 +35,6 @@ const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElem
 
 const indexPageNode = <Index />;
 
-// The index as a curator reads it: the Compendium section alone.
 const indexPageCuratorNode = <Index managesPeople={false} />;
 
 const STATES: Record<string, ReactNode> = {
@@ -66,8 +53,6 @@ export const States: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// Narrow, where the nav moves to the bar at the foot of the window. Its own
-// story: a width is pinned for the whole story, not for a state.
 export const NarrowPinned: Story = {
   render: () => <Frame open="/curator/compendium" />,
   globals: { viewport: { value: 'w375', isRotated: false } },

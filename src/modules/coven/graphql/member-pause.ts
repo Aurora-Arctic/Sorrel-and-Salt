@@ -22,7 +22,6 @@ const WorkspaceMemberPauseRef = builder
       until: t.expose('until', { type: 'DateTime', nullable: true }),
       note: t.exposeString('note', { nullable: true }),
       liftedAt: t.expose('liftedAt', { type: 'DateTime', nullable: true }),
-      // Named through `usersById` as a member's name is: one read for every pause on the page.
       setBy: t.field({
         type: CoMemberRef,
         description: 'The owner who set the pause.',
@@ -83,7 +82,6 @@ builder.mutationField('liftMemberAccessPause', (t) =>
   }),
 );
 
-// On `Workspace`, as its members are: the members page's dialog asks for one member's pauses through the coven it already holds.
 builder.objectField(WorkspaceRef, 'memberPauses', (t) =>
   t.pagedConnection({
     type: WorkspaceMemberPauseRef,

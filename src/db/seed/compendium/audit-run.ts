@@ -48,7 +48,6 @@ export function shardWikiDirs(base: string): string[] {
 }
 
 export interface AuditRunOptions {
-  /** The compendium folder. */
   root: string;
   wiki: ReadonlyMap<string, string>;
   mode: 'report' | 'apply';
@@ -58,7 +57,6 @@ export interface AuditRunOptions {
 
 export interface AuditRunResult {
   report: AuditReport;
-  /** The files `apply` changed, relative to the root; empty on `report`. */
   changed: string[];
   /** Why a file could not be read or written; the loader's issues stop the run. */
   issues: string[];
@@ -97,17 +95,14 @@ export function runAudit(options: AuditRunOptions): AuditRunResult {
 }
 
 export interface ResolveRunOptions {
-  /** The compendium folder. */
   root: string;
   lookup: PageLookup;
   /** The fetched Wikipedia pages, read for a taxobox naming an entry's own article. */
   wiki?: ReadonlyMap<string, string>;
-  /** Settle and report, writing no file. */
   dryRun?: boolean;
 }
 
 export interface ResolveRunResult extends ResolveReport {
-  /** The files written, relative to the root. */
   changed: string[];
   issues: string[];
 }

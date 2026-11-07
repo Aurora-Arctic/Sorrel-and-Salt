@@ -25,8 +25,7 @@ import type {
   IngredientFormValueRow,
 } from '../types';
 
-// The curated form vocabulary: public reads, and writes for a curator or a keeper alone. A form a live entry's variant picked
-// holds, and a rename reaches the variant (claude-docs/db/form-vocabulary-seed.md, "Form value service details").
+// A live pick holds a form, and a rename reaches the variant (claude-docs/db/form-vocabulary-seed.md, "Form value service details").
 
 // The list and its count, held in the data cache under the `compendium` tag (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('ingredient-form-page', findIngredientFormValues);
@@ -41,7 +40,6 @@ const FORMS: CuratedVocabulary<typeof ingredientForms> = {
   addressHint: ' or group',
 };
 
-/** One page of the curated form vocabulary under `filter`: a public read, so no session. A blank query is no query. */
 export function listIngredientFormValues(
   filter: IngredientFormValueFilter,
   page: PageRequest,
@@ -49,7 +47,6 @@ export function listIngredientFormValues(
   return list.list(filter, page);
 }
 
-/** How many forms `listIngredientFormValues` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countIngredientFormValues(
   filter: IngredientFormValueFilter,
   start: Cursor | undefined,
@@ -58,8 +55,6 @@ export function countIngredientFormValues(
 }
 
 /**
- * The live form at this address — how the admin page opens one to edit.
- *
  * @throws {NotFound} no live form holds the slug.
  */
 export async function getIngredientFormValueBySlug(slug: string): Promise<IngredientFormValueRow> {
@@ -69,8 +64,6 @@ export async function getIngredientFormValueBySlug(slug: string): Promise<Ingred
 }
 
 /**
- * Adds a form, its slug derived from the name and the group's name.
- *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} the input breaks `IngredientFormValueInput`, names no live group, or its slug is a live form's.
  */

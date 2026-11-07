@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: siteUrl('/privacy') },
 };
 
-// The text is read from the database, so the page is built per request and never frozen at build time.
+// Read from the database per request, so the page is never frozen at build time.
 export const dynamic = 'force-dynamic';
 
 export default function Page() {

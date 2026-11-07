@@ -19,10 +19,6 @@ import { VALUE_KINDS } from './value-kinds';
 import type { ModalHeading } from '../../../components/Modal/types';
 import type { ValueGroupRow, ValuePageProps, ValueRow, ValueSearchParams } from './types';
 
-// The page every curated value vocabulary shares: categories, forms, deities, celestial bodies and
-// zodiac signs. Each route's `page.tsx` keeps its `metadata` and hands its kind here. Read through
-// the services and paged by the cursor helper (rules 1 and 8); writes are the modal's.
-
 // One page of the kind under the filter, with "Page X of Y" counted from its
 // first row (src/lib/pagination.ts). Cached so a second render in the request
 // reads once, and so keyed by primitives rather than a filter object.
@@ -51,7 +47,6 @@ const readValues = cache(
 async function readPlace(kind: GroupedValueKind, params: ValueSearchParams) {
   const { query, after, before, editSlug, adding } = readListPlace(params);
   const groupSpec = KINDS[kind].group;
-  // Blank is no filter: a native submit sends `group=`.
   const groupParam = groupSpec?.param === 'tradition' ? params.tradition : params.group;
   const groupSlug = groupSpec ? single(groupParam) || undefined : undefined;
   const groups = (await VALUE_KINDS[kind].readGroups?.()) ?? [];
@@ -131,7 +126,6 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
       description: node.description,
       otherNames: node.otherNames,
       groupName: own?.name ?? '',
-      // A chip only for a group with a pair: a category's.
       groupColors:
         own?.colorDark && own.colorLight
           ? { colorDark: own.colorDark, colorLight: own.colorLight }

@@ -3,17 +3,12 @@ import type { ReactElement, ReactNode } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
 import { FIXTURE_WORKSPACES, ShellFrame } from '../../../.storybook/shell-frame';
 
-// Render-only; behaviour is asserted in tests/components/AppShell. Each story
-// draws the shell as a layout does (.storybook/shell-frame.tsx) around a stub
-// page. The workshop's router goes nowhere, so a press only closes a list.
 const meta = {
   title: 'Shell / App Shell',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// A coven's index page: the coven's name for its heading, in the coven layout's
-// column (src/app/(shell)/coven/[slug]/page.tsx).
 const CovenStub = (): ReactElement => (
   <main>
     <h1>Fixture Coven</h1>
@@ -21,7 +16,6 @@ const CovenStub = (): ReactElement => (
   </main>
 );
 
-// The admin index page, in the admin layout's column (src/app/(shell)/keepers/page.tsx).
 const AdminStub = (): ReactElement => (
   <main>
     <h1>Admin</h1>
@@ -29,8 +23,6 @@ const AdminStub = (): ReactElement => (
   </main>
 );
 
-// The account pages sit in the narrow page frame, which spaces them from the
-// shell's bar (src/app/(shell)/account/page.tsx and its email page).
 const AccountStub = ({ heading }: { heading: string }): ReactElement => (
   <main className="page-frame page-frame--narrow">
     <h1>{heading}</h1>
@@ -38,7 +30,6 @@ const AccountStub = ({ heading }: { heading: string }): ReactElement => (
   </main>
 );
 
-// The create page's frame, as src/app/(shell)/coven/new/page.tsx draws it.
 const CreateStub = (): ReactElement => (
   <main className="page-frame page-frame--narrow">
     <div className="page-frame__section panel">
@@ -50,7 +41,6 @@ const CreateStub = (): ReactElement => (
   </main>
 );
 
-// Opens the Add Ingredient menu once drawn, as a press would.
 const MenuOpened = ({ children }: { children: ReactNode }): ReactElement => {
   usePressOnMount('Choose Where to Add');
   return <>{children}</>;
@@ -59,9 +49,6 @@ const MenuOpened = ({ children }: { children: ReactNode }): ReactElement => {
 const ONE_COVEN = [FIXTURE_WORKSPACES[0]];
 const CURATOR = { name: 'Fixture Curator', canCurate: true };
 
-// One control chooses the whole shell around a stub page. Add Menu Open: the coven
-// where the viewer may not write is disabled. Create Page: the switcher alone.
-// Account Page: no context row. Unverified: brand, account menu and theme disc only.
 const STATES: Record<string, ReactNode> = {
   Member: (
     <ShellFrame>

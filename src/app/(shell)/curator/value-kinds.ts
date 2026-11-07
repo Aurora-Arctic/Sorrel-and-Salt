@@ -22,9 +22,7 @@ import type { ValueKindSource } from './types';
 // so `value-page.tsx` reads every kind alike: the deities' service calls the group `traditionId`,
 // and the astrology services take the vocabulary first (`GroupedValueList/kinds.ts` holds the copy).
 
-/** A flat vocabulary, read through the astrology services by its field. */
 const flat = (field: 'celestialBodies' | 'zodiacSigns'): ValueKindSource => ({
-  // Only a query: a flat vocabulary has no group to filter by.
   list: ({ query }, page) => listAstrologyValues(field, { query }, page),
   count: ({ query }, start) => countAstrologyValues(field, { query }, start),
   getBySlug: (slug) => getAstrologyValueBySlug(field, slug),
@@ -43,9 +41,7 @@ export const VALUE_KINDS: Record<GroupedValueKind, ValueKindSource> = {
     getBySlug: getIngredientFormValueBySlug,
     readGroups: GROUP_READERS.form,
   },
-  // A deity's group is its tradition, by that name in its service.
   deity: {
-    // Its other names in one read for the page, so its row can say them.
     list: async ({ query, groupId }, page) => {
       const entries = await listDeities({ query, traditionId: groupId }, page);
       const otherNames = await deityOtherNamesOf(entries.map(({ node }) => node.id));

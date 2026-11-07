@@ -16,12 +16,10 @@ import type { AccountMenuProps } from './types';
 // The rows of the account menu's panel. The menu loads this file the first time it opens, so a page
 // does not carry it until the button is pressed (claude-docs/components/account-menu.md).
 
-// The account page: its sections beside the jump menu.
 const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
 
 const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
 
-// The red circle inside a row's link, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
 function MenuCount({
   count,
   what,
@@ -29,7 +27,6 @@ function MenuCount({
 }: {
   count: number;
   what: string;
-  /** The tip's words after the count, in title case: "Assigned to You". */
   tipWhat: string;
 }): ReactElement {
   const { shown, tip } = supportTip(count, tipWhat);
@@ -51,7 +48,6 @@ export interface AccountMenuPanelProps extends Pick<AccountMenuProps, 'verified'
   pendingInvitations: number;
   assignedSupport: number;
   waitingSupport: number;
-  /** Closes the panel: a link press leaves the page, and the panel should not outlive it. */
   close: () => void;
 }
 
@@ -154,7 +150,6 @@ export default function AccountMenuPanel({
           }
         >
           {senderCount > 0 ? (
-            // Waiting requests: the row leads to the list that shows which, not to a blank form.
             <PendingLink
               href={SUPPORT_LIST_PATH}
               navigationTarget={ACCOUNT_TARGET}

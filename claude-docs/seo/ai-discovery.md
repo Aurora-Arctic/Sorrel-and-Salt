@@ -66,3 +66,7 @@ Every page also names the catalog from its head, as
 "Link Relation Discovery" lets a page do this, and an agent that finds no `Link`
 header reads it. ARD names `rel="ard"` for `ard.json` instead; we do not emit
 that yet.
+
+### Keeping copies out of search
+
+Noindex: entry opens Quick Look over the compendium and support the support dialog over any page, so each makes an address a copy of a real page; kept out of search results with links still followed. Anything but a production deploy tells search engines to index nothing because staging is a public URL that would otherwise be indexed as a duplicate of the compendium. VERCEL_ENV, not NODE_ENV, which is production on every deploy, staging included (the test impersonation uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.

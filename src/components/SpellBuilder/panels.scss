@@ -5,13 +5,11 @@
 // Category Match and In the Cupboard: the two panels the builder and the recipe page's side column
 // both draw, in a stylesheet of their own so the recipe page loads these and not the whole builder's.
 
-// What a panel says while it has nothing to show.
 .spell-aside__empty {
   margin: 0;
   color: $text-muted;
 }
 
-// In the Cupboard: the panel and its list of `JarLine`s.
 .spell-inventory {
   @include stack(2);
 }
@@ -84,7 +82,6 @@ $inventory-eye-box: math.div($icon-size + $icon-size-large, 2);
   }
 }
 
-// Category Match: Carried, Missing and Extra, each a row of chips.
 .comparison-panel {
   @include stack(2);
 

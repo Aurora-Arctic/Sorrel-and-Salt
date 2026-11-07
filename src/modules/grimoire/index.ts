@@ -1,6 +1,4 @@
-// The grimoire module's behaviour surface. Schema tables are reached at
-// `@/modules/grimoire/schema/*`; `services/*` and `types.ts` are internal to
-// the module.
+// Schema tables are reached at `@/modules/grimoire/schema/*`; `services/*` and `types.ts` are internal.
 export * from './services/spell-visibility';
 export * from './services/spells';
 export * from './services/spell-reads';

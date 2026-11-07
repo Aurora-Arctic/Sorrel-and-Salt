@@ -195,20 +195,11 @@ function defineKind<Input extends object>({
   };
 }
 
-/**
- * What a curated value's delete leaves behind, for each kind a compendium entry uses: picked (a form, a
- * deity) or listed (a body, a sign). A coven's ingredient that wrote the value keeps it as its own.
- */
 const USED_DELETE_NOTE =
   "You can't delete it while a compendium entry uses it. Covens' ingredients keep what they wrote, as their own value.";
 
-/** What saving a renamed value does, for every kind a compendium entry uses. */
 const USED_RENAME_NOTE = 'Saving renames it on every compendium entry that uses it.';
 
-/**
- * What a description is for, on the kinds whose suggestions match it as well
- * as the name (src/modules/vocabulary/services/suggestions.ts).
- */
 const SEARCHED_DESCRIPTION_HINT =
   "What it is, in the words a reader reaches for. The ingredient form's suggestions match it as well as the name.";
 
@@ -229,8 +220,6 @@ const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, des
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
     noun: LIST_KINDS.category.label,
-    // No Description tip: its label and placeholder say it. The searched kinds keep
-    // theirs, a flow.
     describe: 'What this category covers',
     group: {
       label: 'Group',
@@ -249,7 +238,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   form: defineKind({
     noun: LIST_KINDS.form.label,
-    // A curated form explains itself: "the bark of the root, not the stem" (DESIGN.md §5).
     describe: 'What this form is, and what it is not',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     group: {
@@ -257,8 +245,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
       placeholder: 'Choose a group',
     },
     deleteNote: USED_DELETE_NOTE,
-    // A rename carries onto every compendium entry that picked the form, though no
-    // entry's address moves: a form is no part of one.
     renameNote: USED_RENAME_NOTE,
     schema: IngredientFormValueInput,
     toInput: withGroup,
@@ -279,12 +265,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
       hint: 'The people or religion that honours them. A god several honour is filed under one, and the description names the others.',
     },
     deleteNote: USED_DELETE_NOTE,
-    // A rename carries onto every compendium entry that picked the deity, though no
-    // entry's address moves: a deity is no part of one.
     renameNote: USED_RENAME_NOTE,
-    // The input calls the group its tradition, and the other names
-    // `otherNames`; the form's fields stay `groupId` and `folkNames`, a
-    // list of entries as ListField keeps one (GroupedValueValues says why).
     inputKeys: { groupId: 'traditionId' },
     schema: DeityInput.omit({ traditionId: true, otherNames: true }).extend({
       groupId: DeityInput.shape.traditionId,
@@ -315,7 +296,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     remove: DeleteCelestialBodyDocument,
   }),
   zodiacSign: defineKind({
-    // The long form on every button: Save Zodiac Sign.
     noun: LIST_KINDS.zodiacSign.label,
     describe: 'What this sign is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
@@ -329,7 +309,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
 };
 
-/** The field an input key names, under the kind's own name for it where it has one. */
 const fieldOf = ({ inputKeys }: GroupedValueFormKind, key: unknown): FieldName | undefined =>
   FIELDS.find((field) => (inputKeys?.[field] ?? field) === key);
 
@@ -361,15 +340,11 @@ const GroupedValueForm = ({
     formState: { errors, isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
-  // Cancel, and every other way out of the modal, asks first while the form has changes;
-  // a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
-  // Undo and redo, off while a question is up over the form.
   const root = useRef<HTMLFormElement>(null);
   const history = useFormHistory(methods, { root, enabled: !discard.asking && !confirming });
   const [alert, setAlert] = useState<string>();
   const name = useWatch({ control, name: 'name' });
-  // Trimmed, as the schema trims: a space added to the end renames nothing.
   const renamed =
     renameNote !== undefined && value !== undefined && (name ?? '').trim() !== value.name;
 
@@ -379,14 +354,12 @@ const GroupedValueForm = ({
 
   const remove = useMutation({ mutationFn: (valueId: string) => spec.remove(valueId) });
 
-  /** Sends the input; a refusal lands beside its field, or above the fields. */
   const send = async (input: GroupedValueValues): Promise<void> => {
     setAlert(undefined);
     try {
       await save.mutateAsync(input);
       onDone();
     } catch (error) {
-      // An other name's refusal, `['otherNames', 2]`, lands on that entry.
       placeServerIssues(error, setError, ({ path: [key, ...rest] }) => {
         if (key === 'otherNames' && typeof rest[0] === 'number') {
           return `folkNames.${rest[0]}.value` as const;
@@ -406,7 +379,6 @@ const GroupedValueForm = ({
   const choices = groups.map((each) => ({
     value: each.id,
     label: each.name,
-    // Only a form group has an icon; one with none shows the generic.
     icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
   }));
   const rootError = errors.root?.message ?? alert;
@@ -482,7 +454,6 @@ const GroupedValueForm = ({
               hint={group.hint}
               placeholder={group.placeholder}
               options={choices}
-              // Typed into to narrow the groups.
               typeahead
               required
             />

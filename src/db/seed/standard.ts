@@ -107,9 +107,7 @@ export const FIXTURE_USERS = {
   },
 } satisfies Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G', FixtureUser>;
 
-/** W — the workspace A owns and B and C work in. */
 export const WORKSPACE_W_ID = '00000000-0000-0000-0001-000000000001';
-/** X — unrelated, and the other half of every isolation assertion. */
 export const WORKSPACE_X_ID = '00000000-0000-0000-0001-000000000002';
 
 // No slug is written down (CLAUDE.md's slug rule). Exported so the fixture

@@ -7,13 +7,8 @@ const LABELS: Partial<Record<Unit, string>> = {
   fl_oz_us: 'fl oz (US)',
 };
 
-/** A unit as the page writes it: its code, bar the fluid ounces'. */
 export const unitLabel = (unit: Unit): string => LABELS[unit] ?? unit;
 
-/**
- * The Unit field's choices: none first, then every unit in the vocabulary's
- * own order (weight, volume, count), each worded by `unitLabel`.
- */
 export const UNIT_OPTIONS: readonly SelectOption[] = [
   { value: '', label: 'None' },
   ...UNITS.map((unit) => ({ value: unit, label: unitLabel(unit) })),

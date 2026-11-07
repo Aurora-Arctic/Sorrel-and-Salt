@@ -22,7 +22,6 @@ describe('auth secret', () => {
     await expect(import('@/lib/auth')).rejects.toThrow('BETTER_AUTH_SECRET is not set');
   });
 
-  // Both variables share the one rule: outside production, unset is allowed.
   it('does not throw when BETTER_AUTH_SECRET and ADMIN_BOOTSTRAP_EMAIL are unset outside production', async () => {
     vi.stubEnv('BETTER_AUTH_SECRET', '');
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
@@ -33,9 +32,7 @@ describe('auth secret', () => {
   });
 });
 
-// Both id and secret, never an empty string, which Better Auth reads as a configured provider.
-// The roster is Google, Discord, Facebook and Microsoft; Apple is not offered, for a client
-// secret that expires every six months (claude-docs/auth/social-providers.md, "Social providers").
+// Both id and secret, never an empty string, which Better Auth reads as configured. Apple is not offered, for a client secret that expires every six months (claude-docs/auth/config.md, "Social providers").
 describe('social providers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -331,9 +328,7 @@ describe('sign-up hook seat', () => {
   });
 });
 
-// Everything the primary keeper's protection rests on holds only while the
-// variable is set, so a deployed build refuses to start without it; the check
-// keys on NODE_ENV=production, as BETTER_AUTH_SECRET's does.
+// The primary keeper's protection holds only while the variable is set, so a deployed build refuses to start without it (keyed on NODE_ENV=production, as BETTER_AUTH_SECRET's is).
 describe('ADMIN_BOOTSTRAP_EMAIL', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -447,14 +442,11 @@ describe('email verification', () => {
     const before = (await configuredAuth()).options.databaseHooks?.user?.update?.before;
     if (!before) throw new Error('databaseHooks.user.update.before is not configured');
 
-    // Outside any request: no request state, no endpoint context.
     expect(await before({ name: 'Renamed Person' } as never, undefined as never)).toBeUndefined();
   });
 });
 
-// Better Auth's limiter (claude-docs/auth/rate-limiting.md, "Rate limiting"). Each value is
-// pinned because a dependency bump moving its default would change who is
-// limited, or stop limiting anyone, with no diff here to review.
+// Better Auth's limiter (claude-docs/auth/rate-limiting.md, "Rate limiting"), pinned because a dependency bump moving a default would change who is limited with no diff here.
 describe('rate limiting', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -477,9 +469,7 @@ describe('rate limiting', () => {
   });
 });
 
-// DESIGN.md names no session lifetime, so Better Auth's defaults apply and are
-// not pinned here. What is pinned is the one option that would hold a revoked
-// role open.
+// Better Auth's session defaults are not pinned; the one option that would hold a revoked role open is.
 describe('session cookie cache', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

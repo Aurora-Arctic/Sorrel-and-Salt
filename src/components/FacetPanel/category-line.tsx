@@ -9,9 +9,6 @@ import { FieldShell } from '../Field/shell';
 import { ChoiceChip } from './choice-chip';
 import type { CategoryLineChoice, CategoryLineProps } from './types';
 
-// The Categories line, shared by the ingredient lists' panel (./index.tsx) and the grimoire's, so
-// both pick categories and set Match the same way.
-
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'any', label: 'Any' },

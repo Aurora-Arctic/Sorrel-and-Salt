@@ -10,20 +10,13 @@ import { formGroupIcon, ingredientFormGroups } from '@/modules/vocabulary/schema
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from './types';
 
-// The eight curated vocabularies, driven off the registry the repository and the seed read, so a ninth is covered by the line that adds it.
-// What every vocabulary shares runs once per table; foreign keys, NOT NULL and the partial unique indexes are the drift test's and the sweeps' (claude-docs/testing/db-harness.md, "The db test harness").
-
 const AUTHOR = FIXTURE_USERS.A.id;
 const SHARED = ['id', 'name', 'slug', 'description', 'seed_key'];
 
-// One hex per theme on a category group: the chip colour is the group's pair.
 const COLOURS = { color_dark: '#c9a66b', color_light: '#7a5a1f' };
 
 const nameOf = (table: PgTable) => getTableConfig(table).name;
 
-// What a group carries beside the shared columns, and what an insert of one
-// needs, which are not the same list: a category group's two colours are NOT
-// NULL, a form group's icon is nullable, so an insert needs no value.
 const GROUP_EXTRAS = new Map<PgTable, { own: string[]; values: Row }>([
   [categoryGroups, { own: Object.keys(COLOURS), values: COLOURS }],
   [ingredientFormGroups, { own: ['icon'], values: {} }],
@@ -37,7 +30,6 @@ const PAIRS = Object.values(TWO_TIER).map((pair) => ({
   groupExtra: GROUP_EXTRAS.get(pair.groups)?.values ?? {},
 }));
 
-/** Every vocabulary table, with what it carries beside the shared columns. */
 const TABLES = [
   ...PAIRS.flatMap(({ items, groups, groupColumn, groupOwn, groupExtra }) => [
     { table: groups, own: groupOwn, parent: undefined },
@@ -61,10 +53,8 @@ const DRIZZLE = Object.fromEntries(
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** A short token no seeded row and no other call holds. */
 const token = () => crypto.randomUUID().slice(0, 8);
 
-// Invented names throughout, each carrying a fresh token.
 function vocabularyRow(overrides: Row = {}): Row {
   const t = token();
   return {
@@ -82,7 +72,6 @@ async function insert(table: string, row: Row): Promise<string> {
   return inserted.id as string;
 }
 
-/** A row of `table`, filed under a fresh group when the table is two-tier. */
 async function rowOf(entry: (typeof TABLES)[number], overrides: Row = {}): Promise<Row> {
   if (!entry.parent) {
     return vocabularyRow({ ...(entry.table === 'category_groups' ? COLOURS : {}), ...overrides });
@@ -108,7 +97,6 @@ describe.each(TABLES)('$table', (entry) => {
         insert(entry.table, await rowOf(entry, { description: blank })),
       );
 
-      // 23514 is check_violation, named: the refusal is this CHECK's.
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe(`${entry.table}_description_not_blank`);
     }
@@ -134,8 +122,7 @@ describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, grou
   });
 });
 
-// The icon standing for a form group: a closed list, so an enum, and
-// nullable, since NULL is the generic icon rather than a missing answer.
+// A closed list, so an enum, and nullable: NULL is the generic icon, not a missing answer.
 describe('ingredient_form_groups.icon', () => {
   it('holds exactly the six icons, as the code declares them', async () => {
     const [range] = await sql`select enum_range(null::form_group_icon)::text[] as icons`;

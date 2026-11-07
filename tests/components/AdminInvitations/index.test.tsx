@@ -16,14 +16,11 @@ import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
 
-// The Invitations tab: render-only, so the page owns the read
-// and this owns what a keeper sees of it and sends, New Invitation beside the
-// heading included (claude-docs/components/admin-invitations.md).
+// claude-docs/components/admin-invitations.md
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The pause's reason, as the page passes it.
 const PAUSED = ADMIN_CHANGES_PAUSED_REFUSAL;
 
 const INVITATIONS = [
@@ -51,7 +48,6 @@ beforeEach(() => {
 
 const dialog = () => screen.getByRole('dialog', { name: 'New Invitation' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
-/** A role's radio, by the start of its name: its description is read after it. */
 const roleRadio = (role: 'Curator' | 'Keeper') =>
   within(dialog()).getByRole('radio', { name: new RegExp(`^${role}`) });
 
@@ -99,7 +95,6 @@ describe('AdminInvitations', () => {
     expect(send()).toBeDisabled();
     expect(within(dialog()).getByRole('textbox', { name: 'Email Address' })).toBeRequired();
     expect(within(dialog()).getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
-    // The lesser role is the one a keeper has to choose against.
     expect(roleRadio('Curator')).toBeChecked();
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: ' cass@example.test ' },
@@ -154,9 +149,7 @@ describe('AdminInvitations', () => {
     expect(calls).toEqual([{ email: 'cass@example.test', siteRole: 'admin' }]);
   });
 
-  // Every way out asks first while the form has anything typed: the
-  // guard's shape is tests/components/Modal's, and this its wiring; the close
-  // it makes is the modal's, back to the tab.
+  // Every way out asks first while the form has anything typed; the guard's shape is tests/components/Modal's.
   it('asks before Cancel or Escape discards what was typed, and closes on Discard Changes', () => {
     render(<AdminInvitations invitations={[]} inviting />);
 
@@ -232,7 +225,6 @@ describe('AdminInvitations', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  // In view but unusable while paused, as the role controls are.
   it('locks Invite and every Revoke with the pause as the reason', () => {
     render(
       <>
@@ -241,7 +233,6 @@ describe('AdminInvitations', () => {
       </>,
     );
 
-    // Not opened even by the form's address.
     expect(screen.queryByRole('dialog')).toBeNull();
     const invite = screen.getByRole('button', { name: 'New Invitation' });
     expect(invite).toHaveAttribute('aria-disabled', 'true');
@@ -257,8 +248,7 @@ describe('AdminInvitations', () => {
   });
 });
 
-// The filter: FilterForm's loading state and Clear are CompendiumList's to test, and the shared rows assert the address this one builds and which values count as a filter.
-// This file proves the switch carries the email and the invite form keeps the filter and the page shown. It is a soft navigation from the first page, as every page under /keepers runs its own guard.
+// FilterForm's loading state and Clear are CompendiumList's to test.
 describe('AdminInvitations filter', () => {
   const FERN = { email: 'fern', expiringSoon: true };
   const email = () => screen.getByRole('searchbox', { name: 'Email' });

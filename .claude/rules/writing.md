@@ -28,12 +28,7 @@ Everything written here is read by developers with very different amounts of exp
 
 ## Code comments
 
-A comment is read in the editor, by someone with the code and nothing else open, so these rules apply there most of all. The rule for what a comment may say is in claude-docs/README.md, "Comments in code"; this is how it is worded.
-
-- **Say what the thing is first, in everyday words**, then the one clause of why if the obvious alternative would be wrong. `Rows the viewer may see, filtered in SQL so a private spell never reaches the resolver.`
-- **Present tense, no actors, no time.** Not "X was added so that", "the owner chose", "until Y lands" or a date; the code is, and the comment says what it is.
-- **One idea per line, one line per field or prop.** A second sentence is allowed when the first cannot carry the fact. A third is the limit; past it the explanation belongs in a doc section, cited by path and heading.
-- **A doc pointer is a citation, not a summary.** `(claude-docs/db/keyset-pages.md, "Keyset pages")` after the clause it supports; never a paragraph restating the section.
+A comment is read in the editor, by someone with the code and nothing else open. What it may say, how long it may be, and how it is worded are in claude-docs/README.md, "Comments in code".
 
 ## Where precision still wins
 

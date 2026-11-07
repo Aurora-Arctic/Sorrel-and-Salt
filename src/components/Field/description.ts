@@ -1,10 +1,9 @@
 import type { FieldDescription, FieldDescriptionInput } from './types';
 
 /**
- * A field's ids, and the attributes that tie the control to its hint, note
- * and error: `aria-describedby` makes each read with the field — the hint
- * too, though its tip is closed — and `aria-invalid` is what draws the error
- * edge, so one cannot ship without the other.
+ * A field's ids, and the attributes that tie the control to its hint, note and error. `aria-describedby` reads each
+ * with the field, the hint too though its tip is closed; `aria-invalid` draws the error edge, so one cannot ship
+ * without the other.
  */
 export function fieldDescription({
   id,

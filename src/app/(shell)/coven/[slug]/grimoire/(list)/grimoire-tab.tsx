@@ -30,14 +30,8 @@ import type { GrimoireTabProps } from './types';
 import { readViewedEntry } from '../../ingredients/reads';
 import { viewedDetailsOf } from '../../ingredients/viewed-details';
 
-// One grimoire tab, Spells or Drafts: the slug guard, the address as the filter, and one page of 24
-// cards. Per request, never cached (rule 6). A function, not a component, so a test awaits each
-// page whole. Dialogs: claude-docs/design-decisions/m10.12-spell-builder-modal.md.
-// A delete on a spell's page leaves for this tab with `?deleted=<name>`, which a success Notice
-// above the list says once. A role that may record, update, duplicate or delete a spell gets each
-// card's Record a Working button, Edit pencil and More menu, links back to this address with
-// `deleted` or `?edit=<id>` added.
-/** `closeHref` with a saved spell's dialog open over it. */
+// One grimoire tab, Spells or Drafts. Per request, never cached (rule 6). A function, not a component, so a test awaits
+// each page whole. Dialogs: claude-docs/design-decisions/grimoire.md, "The spell builder is a modal".
 const editHrefOf = (closeHref: Route, id: string): Route => withParam(closeHref, 'edit', id);
 
 /**
@@ -83,7 +77,6 @@ export async function grimoireTab({
   const { after, before } = readPageCursors(query);
   const path = `/coven/${workspace.slug}/grimoire${beneath}` as Route;
 
-  // The address names categories by slug; the service filters by id.
   const categories = await readCategories();
   const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
   const variables = JSON.stringify(GRIMOIRE_PARAMS.variables(filter, lookups));
@@ -92,7 +85,6 @@ export async function grimoireTab({
     readGrimoireCategoryCounts(workspace.id, variables, status),
     readGrimoireFacetCounts(workspace.id, variables, status),
   ]);
-  // A category no readable spell of this tab carries is not in the counts: it holds none.
   const counted = categories.map((category) => ({
     ...category,
     count: counts.get(category.id) ?? 0,
@@ -100,9 +92,6 @@ export async function grimoireTab({
 
   const facets = facetsOf(filter, facetCounts);
 
-  // The dialog the address opens, if this role may write a spell. `?new` is read first: this
-  // coven's `spell-<slug>` or `spell` is New Spell; any other is the shell's Add Ingredient, with a
-  // saved spell's `?edit` waiting beneath it. One dialog at a time; a non-id `edit` reads nothing.
   const role = membership.role;
   const adding = query[NEW];
   const edit = adding === undefined ? query.edit : undefined;
@@ -115,12 +104,9 @@ export async function grimoireTab({
   // record, as the spell page's. The dialog reads the steps once opened, so the list reads none.
   const canRecord =
     rolePermits(role, { working: ['create'] }) && rolePermits(role, { member: ['read'] });
-  // The recorder by name, from the viewer the shell layout already read this request.
   const recorder = canRecord
     ? { userId: membership.userId, name: (await viewerOf()).viewer.name }
     : undefined;
-  // Where a delete from the card or the Quick Look lands: this tab as it was, filter and page
-  // kept, `?spell` dropped, with the name for the Notice.
   const deletedHrefOf = (title: string | null): Route => deletedHrefFor(closeHref, title);
   const opened =
     opensNewSpell(single(adding) ?? null, workspace.slug) && canCreate
@@ -131,22 +117,16 @@ export async function grimoireTab({
           )
         : undefined;
 
-  // Quick Look: `?spell=<id>` opens a read-only modal for any role, and waits beneath another
-  // dialog the way `?edit` does. Its Edit link is the card pencil's own check.
   const look = query.spell;
   const lookId =
     adding === undefined && opened === undefined && typeof look === 'string'
       ? RowId.safeParse(look)
       : undefined;
-  // The tab with the Quick Look open, which its steps' eyes add `&entry=` to and the details close back to.
   const lookHref = lookId?.success ? lookHrefOf(closeHref, lookId.data) : undefined;
   const looked =
     lookHref && lookId?.success
       ? await readLookedSpell(workspace.id, lookHref, lookId.data)
       : undefined;
-  // An ingredient step's eye opens the ingredient's details over the spell's modal, at
-  // `&entry=<id>`, read as the coven's Ingredients page reads it. It waits on the spell's modal:
-  // no spell open, no details.
   const entryId = typeof query.entry === 'string' && query.entry ? query.entry : undefined;
   const viewed =
     entryId && looked && !('failed' in looked)

@@ -13,12 +13,10 @@ import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 
-// The filter navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The search shell and its row: a type-ahead over the compendium's ranked search, whose dropdown follows the debounced text while the list changes only on Enter, a pick or the action row
-// (claude-docs/components/ingredient-search.md, "Testing").
+// claude-docs/components/ingredient-search.md, "Testing"
 
 const PATH = '/compendium';
 const searchHref = (text: string) => `${PATH}?query=${encodeURIComponent(text)}` as never;
@@ -32,10 +30,8 @@ const match = (n: number): IngredientSearchMatch => ({
   nomenclature: 'botanical',
 });
 
-/** Every variables object the lookup was asked with, in order. */
 let asked: Record<string, unknown>[] = [];
 
-/** Answers the lookup with `matches`, recording what it was asked. */
 function offer(matches: IngredientSearchMatch[], hasNextPage = false) {
   asked = [];
   mockGraphQLQuery('IngredientSearchMatches', (variables) => {
@@ -46,7 +42,6 @@ function offer(matches: IngredientSearchMatch[], hasNextPage = false) {
   });
 }
 
-/** A slot field that reads the text typed, as a filter applying on its change would. */
 const SlotField = (): ReactElement => <output aria-label="Typed">{useSearchText()}</output>;
 
 function renderSearch(
@@ -83,13 +78,11 @@ const box = () => screen.getByRole('combobox', { name: 'Name' });
 const form = () => filterForm('Filter Ingredients');
 const status = () => screen.getByRole('status', { name: 'Name results' });
 
-/** Focuses the box and types `text` as one change. */
 function typeName(text: string) {
   act(() => box().focus());
   typeIn(box(), text);
 }
 
-/** Lets the debounce pass and the lookup answer. */
 async function settle() {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
@@ -190,7 +183,6 @@ describe('IngredientSearch', () => {
     renderSearch();
 
     typeName('w');
-    // At once, with no debounce to wait for: nothing is being asked.
     expect(status().textContent).not.toBe('');
     expect(screen.getByText(status().textContent ?? '', { selector: 'div' })).toBeVisible();
     await act(async () => {
@@ -221,7 +213,6 @@ describe('IngredientSearch', () => {
     typeName('wort');
     await settle();
 
-    // The 25 results, then the action row (there is another page).
     await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(26));
     expect(asked.every((variables) => !('after' in variables) && !('before' in variables))).toBe(
       true,
@@ -321,9 +312,6 @@ describe('IngredientSearch', () => {
     expect(screen.getByText('Results go here')).toBeInTheDocument();
   });
 
-  // A pick opens the item's Quick Look, so under a route
-  // modal opener it opens there, in the place the page's details modal stands in, and the
-  // modal shows its head at once while its page loads.
   it('opens a pick through the route modal opener, under its heading and in its place', async () => {
     offer([match(1), match(2)]);
     const open = vi.fn();
@@ -406,7 +394,6 @@ describe('IngredientSearch', () => {
   describe('inside a coven', () => {
     const WORKSPACE = 'workspace-w';
 
-    /** Answers the coven's lookup with `nodes`, recording the compendium lookup if it is ever sent. */
     function offerCupboard(
       nodes: (IngredientSearchMatch & { label?: string | null })[],
       hasNextPage = false,
@@ -480,7 +467,6 @@ describe('IngredientSearch', () => {
     const WORKSPACE = 'workspace-w';
     const GRIMOIRE: SearchSource = { kind: 'grimoire', workspaceId: WORKSPACE, status: 'complete' };
 
-    /** Answers the grimoire lookup with `titles`, recording the compendium lookup if it is ever sent. */
     function offerSpells(titles: (string | null)[]) {
       asked = [];
       const spellsAsked: Record<string, unknown>[] = [];

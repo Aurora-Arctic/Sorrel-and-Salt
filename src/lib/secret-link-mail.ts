@@ -13,10 +13,6 @@ import type { Message, ProviderId } from './types';
 /** Where a reset link always lands, so a request cannot point it anywhere else. */
 export const RESET_PASSWORD_PAGE = '/reset-password';
 
-/**
- * A sign-up or resend verification link for `email`, signed now for `lifetimeSeconds`, under `authBase` (the request's own
- * `/api/auth`), landing on the email page's confirmed view and carrying `next` on to Continue.
- */
 export async function verificationLinkMessage(
   authBase: string,
   email: string,
@@ -34,10 +30,7 @@ export async function verificationLinkMessage(
   return verifyEmailMessage({ to: email, url, providers });
 }
 
-/**
- * The change-of-address link, mailed to `pending`, signed now for `lifetimeSeconds` as the change from `current`: `updateTo` plus
- * this `requestType` is the branch of /verify-email that swaps the address and verifies it in one write.
- */
+/** `updateTo` plus this `requestType` is the branch of /verify-email that swaps the address and verifies it in one write. */
 export async function changeLinkMessage(
   authBase: string,
   current: string,
@@ -57,19 +50,17 @@ export async function changeLinkMessage(
   return verifyEmailMessage({ to: pending, url, purpose: 'change', providers });
 }
 
-/** The reset link for `token` under `authBase`, as Better Auth builds it, landing on the reset page. */
 function resetLink(authBase: string, token: string): string {
   const link = new URL(`${authBase}/reset-password/${token}`);
   link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
   return link.toString();
 }
 
-/** The password reset mail for `token`. */
 export function resetLinkMessage(authBase: string, to: string, token: string): Promise<Message> {
   return resetPasswordMessage({ to, url: resetLink(authBase, token) });
 }
 
-/** The lockout mail, carrying the reset link for `token` so the owner can choose a new password at once. */
+/** So the owner can choose a new password at once. */
 export function lockNoticeMessage(
   authBase: string,
   to: string,

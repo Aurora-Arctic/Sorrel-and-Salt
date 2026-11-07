@@ -14,10 +14,8 @@ import type {
   PageRequest,
 } from './types';
 
-// CLAUDE.md rule 8, the one pagination rule: the numbers, the cursor codec,
-// and the page a connection is built from; the shapes they pass are in
-// `types.ts`. claude-docs/graphql/pagination.md, "Pagination". The sizes and the codec live in
-// `cursor.ts`, which the browser loads too, and are re-exported here for the server.
+// CLAUDE.md rule 8, the one pagination rule (claude-docs/graphql/pagination.md, "Pagination"). The sizes
+// and the cursor codec live in `cursor.ts`, which the browser loads too.
 
 export {
   CARD_PAGE_SIZE,
@@ -29,20 +27,13 @@ export {
 
 const LIMITS = { defaultSize: DEFAULT_PAGE_SIZE, maxSize: MAX_PAGE_SIZE };
 
-/**
- * The rows a page will hold: the client's `first` or `last`, 25 without one,
- * and never more than 100. The one number the complexity limit prices a
- * connection by, so a query costs what it will actually fetch.
- */
+/** The one number the complexity limit prices a connection by, so a query costs what it will actually fetch. */
 export function pageSize(args: Pick<ConnectionArgs, 'first' | 'last'>): number {
   validateConnectionArguments(args);
   return getConnectionPageSize({ args, ...LIMITS }).expectedSize;
 }
 
-/**
- * A connection from a page finder: decodes the cursors, clamps the size, asks `fetch` for one row more than the page, and builds
- * the edges and page info. `fetch` sees a `PageRequest`, never the raw arguments, so no finder can skip the clamp.
- */
+/** `fetch` sees a `PageRequest`, never the raw arguments, so no finder can skip the clamp. */
 export async function resolvePage<T, Edge extends object = {}>(
   args: ConnectionArgs,
   fetch: (request: PageRequest) => PageEntry<T, Edge>[] | Promise<PageEntry<T, Edge>[]>,
@@ -78,11 +69,7 @@ export async function resolvePage<T, Edge extends object = {}>(
   };
 }
 
-/**
- * One page of a list, `size` rows (`DEFAULT_PAGE_SIZE`, or `CARD_PAGE_SIZE` for a card list) after `after` or before `before`, with its
- * position for "Page X of Y": `count` reads the total and the rows before the page, and the page is floor(before / size) + 1 of
- * ceil(total / size), never under one. Every admin list reads through it, so the arithmetic is written once.
- */
+/** Every admin list reads through it, so the arithmetic is written once: the page is floor(before / size) + 1 of ceil(total / size), never under one. */
 export async function resolveNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },
   fetch: (request: PageRequest) => PageEntry<T, Edge>[] | Promise<PageEntry<T, Edge>[]>,
@@ -102,10 +89,7 @@ export async function resolveNumberedPage<T, Edge extends object = {}>(
   return { ...page, position, totalCount };
 }
 
-/**
- * Every row a page finder holds, read `MAX_PAGE_SIZE` at a time in its own order, for a service that must act on all of them. Through
- * the finder, not an unpaged read, so "live" means what the list means and no read is unbounded.
- */
+/** Through the finder, not an unpaged read, so "live" means what the list means and no read is unbounded. */
 export async function allPages<T, Edge extends object = {}>(
   read: (request: PageRequest) => Promise<PageEntry<T, Edge>[]>,
 ): Promise<T[]> {

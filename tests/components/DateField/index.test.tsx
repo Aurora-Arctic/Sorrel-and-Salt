@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DateField from '@/components/DateField';
 
-// The day picker field: a button showing the day, opening a calendar that cannot pick past `max`
-// (claude-docs/components/date-field.md).
+// claude-docs/components/date-field.md
 
 function Harness({
   initial = '2026-03-10',

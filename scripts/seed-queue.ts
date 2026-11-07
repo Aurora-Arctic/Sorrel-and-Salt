@@ -1,9 +1,6 @@
 #!/usr/bin/env node
-// Lists the compendium entry files marked `status: needs-review`: the
-// owner's queue, each with its Questions for the Curator to settle. Exits 1
-// when the loader could not read a file, since a queue that leaves one out is
-// wrong, and 0 otherwise, an empty queue included.
-//
+// Lists the compendium entry files marked `status: needs-review`; exits 1 when the loader could not read a
+// file.
 // Usage: npm run seed:queue
 import { loadCompendium } from '../src/db/seed/compendium/load.ts';
 

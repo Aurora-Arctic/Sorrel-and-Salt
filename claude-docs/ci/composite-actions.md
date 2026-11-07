@@ -1,6 +1,6 @@
 ## Composite actions
 
-`.github/actions/` — five actions. `duration` is an **optional** input on
+`.github/actions/` — six actions, adding `vercel-secrets-guard`. `duration` is an **optional** input on
 `job-summary` and `pr-comment`, so restoring the timer actions MB.32 deleted
 would need no edit at any call site; nothing passes it today.
 
@@ -9,7 +9,7 @@ would need no edit at any call site; nothing passes it today.
   `./.github/actions/<name>` once checked out; this one runs _before_ that
   checkout exists, so **callers must reference it by full
   `Aurora-Arctic/Sorrel-and-Salt/...@main` path**.
-  - **Copy-only is sufficient because the image carries no source** (MB.42).
+  - **Copy-only is sufficient because the image carries no source**.
     `cp -a` overlays and never deletes, which is safe only when there is
     nothing underneath for a stale file to survive _as_: `Dockerfile.node`
     copies in the two manifests, runs `npm ci`, and stops, so `node_modules` is
@@ -17,7 +17,7 @@ would need no edit at any call site; nothing passes it today.
     job ever sees; `Dockerfile.e2e` is the same. How a baked-in `COPY . .`
     once left every deleted file on disk in every job, and why removing the
     layer beat cleaning up after it, is MB.42's and
-    [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md).
+    [`ci.md`, "The CI images carry no source layer"](../design-decisions/ci.md#the-ci-images-carry-no-source-layer).
   - **Review is what keeps it that way.** Each Dockerfile copies an allowlist
     — the two manifests, plus `Docker/playwright-entrypoint.sh` for
     `Dockerfile.e2e`'s `headed` stage — and `COPY src src` is as much a
@@ -51,7 +51,7 @@ would need no edit at any call site; nothing passes it today.
   than pushing an untagged ref), and `secrets.GITHUB_TOKEN` (`secrets` is out
   of scope inside a composite, so the registry password is an input — the same
   route `vercel-secrets-guard` takes).
-  - **The layer cache is in the registry** (MB.99). buildx reads and writes
+  - **The layer cache is in the registry**. buildx reads and writes
     `ghcr.io/<repo>/<path>:buildcache` with `mode=max`, one tag per image
     beside its hash tags, so a build on one PR warms the next PR's and every
     branch reads the same copy. `mode=max` caches the stages before the
@@ -68,7 +68,7 @@ would need no edit at any call site; nothing passes it today.
     access. Exporting there also rewrote layers the push had just uploaded,
     where a registry export finds those blobs and writes a manifest. The
     measurements are
-    [`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md),
+    [`ci.md`, "The CI Vitest job: DOM only where needed, GitHub's runner"](../design-decisions/ci.md#the-ci-vitest-job-dom-only-where-needed-githubs-runner),
     "Facts the plan rests on".
   - **Cost.** GHCR storage is free for a public repo. Each build moves
     `:buildcache` and leaves the previous cache manifest untagged, the same
@@ -92,4 +92,8 @@ would need no edit at any call site; nothing passes it today.
 step runs; a composite contributes steps and nothing above them, and the only
 job-level `uses:` is a reusable workflow, which is a whole job rather than a
 piece spliced into one. That repetition is the price of the shape and stays
-where [Container jobs](container-jobs.md) describes it.
+where [Container jobs](reusable-checks.md) describes it.
+
+### Image build
+
+mb.96: a manifest-last tag push makes cancelled builds harmless

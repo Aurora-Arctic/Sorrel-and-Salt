@@ -4,9 +4,6 @@ import { StatesGrid } from '../../../.storybook/states-grid';
 import SaveStatus, { RecoveryNotice } from '.';
 import type { SaveStatusProps } from './types';
 
-// Every state an autosaving form's status line takes, side by side, and the banner a form
-// opens with when this browser kept typing it never saved.
-// Render-only: the once-per-burst announcement is the component test's.
 const meta = {
   title: 'Feedback / Save Status',
 } satisfies Meta;

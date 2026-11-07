@@ -6,8 +6,6 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { users } from '@/modules/identity/schema/users';
 import type { UserRole } from '@/lib/session';
 
-// Schema shape via Drizzle's introspection; the seeded rows are asserted in
-// seeded-template.test.ts.
 describe('users schema', () => {
   const { byName } = tableFacts(users);
 
@@ -69,7 +67,6 @@ describe('users email case', () => {
 
     const error = await failureOf(insert('Owner@Case-Check.test'));
 
-    // 23514 is check_violation: the unique index alone would have let it in.
     expect(error.code).toBe('23514');
     expect(error.constraint_name).toBe('users_email_lower_case');
     const matches = await sql`
@@ -97,8 +94,8 @@ describe('users email case', () => {
   });
 });
 
-// The flag is what lets anyone create a workspace, keepers included, so a CHECK holds every keeper to it rather than the gate reading `role` beside it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
-// It holds for every role but `user`, curators included (claude-docs/design-decisions/m11.20-curator-role.md).
+// The flag is what lets anyone create a workspace, keepers included, so a CHECK holds every keeper to it rather than the gate reading `role` beside it (claude-docs/design-decisions/auth.md, "Every admin holds `canCreateWorkspace`").
+// It holds for every role but `user`, curators included (claude-docs/design-decisions/auth.md, "A third site role, `curator`").
 describe('users privileged creation flag', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {
@@ -123,7 +120,6 @@ describe('users privileged creation flag', () => {
   it('refuses a keeper row without the flag', async () => {
     const error = await failureOf(insert('flagless-admin@admin-flag.test', 'admin', false));
 
-    // 23514 is check_violation.
     expect(error.code).toBe('23514');
     expect(error.constraint_name).toBe(CONSTRAINT);
   });

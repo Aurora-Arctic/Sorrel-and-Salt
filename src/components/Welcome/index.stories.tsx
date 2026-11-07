@@ -3,9 +3,6 @@ import type { ReactElement, ReactNode } from 'react';
 import Backdrop from '../Backdrop';
 import Welcome from '.';
 
-// Render-only; behaviour is asserted in tests/components/Welcome. The page decides
-// `landing` from the session; a story fixes it. Each sits in the page's real frame,
-// `main.page-frame.welcome-page` (claude-docs/workshop.md).
 const meta = {
   title: 'Pages / Welcome',
 } satisfies Meta;
@@ -26,10 +23,8 @@ const SignedOut = (): ReactElement => (
   </Page>
 );
 
-// What every signed-out visitor sees at `/`.
 const defaultNode = <SignedOut />;
 
-// The same page for a visitor with a live session: the way in is the landing.
 const signedInNode = (
   <Page>
     <Welcome landing="/coven" />

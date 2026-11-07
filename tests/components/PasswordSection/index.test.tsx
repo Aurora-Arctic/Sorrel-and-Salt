@@ -12,9 +12,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { PASSWORD_CHECK_UNAVAILABLE } from '@/lib/password-refusals';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The account page's Password section. Changing goes through Better Auth's client, mocked at its one
-// call; setting a first password is the `setPassword` mutation, answered by MSW in /api/graphql's shape.
-// tests/db/password-reset.test.ts proves what the server does with each.
+// Changing goes through Better Auth's client, mocked at its one call; tests/db/password-reset.test.ts proves what the server does with each.
 const changePassword = vi.fn();
 const requestPasswordReset = vi.fn();
 let sessionEmail: string | undefined = 'testwort@example.com';

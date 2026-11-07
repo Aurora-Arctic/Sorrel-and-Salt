@@ -8,10 +8,6 @@ import { signInAgainAs, signInAs } from './session';
 import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 
-// The parts of a coven invitation no story walks: the /coven notice and the account menu's count of waiting
-// invitations, the shell's redraw after an accept, declining, and a link to a coven since deleted. Each worker
-// builds the owner and coven first, and every walk invites a new address.
-
 const COVEN_NAME = 'Fixture Invite Coven';
 const DOMAIN = '@workspace-invitation.test';
 const run = randomUUID().slice(0, 8);
@@ -33,8 +29,7 @@ async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
 test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
 
-  // `signInAs` wants a page; only its rows matter here, so the page, and the
-  // session it holds, is thrown away. Each test signs in again for itself.
+  // Only the rows matter: the page and its session are thrown away.
   const setup = await browser.newPage({ baseURL: slotUrl(slot) });
   try {
     ownerId = (await signInAs(setup, address('owner'))).userId;
@@ -60,7 +55,6 @@ async function mailedInvitePath(to: string): Promise<string> {
   return new URL(link).pathname;
 }
 
-/** The owner invites `email` as a member from the coven's Members page. */
 async function ownerInvites(page: Page, email: string): Promise<void> {
   await signInAgainAs(page, ownerId);
   await page.goto(`/coven/${COVEN_SLUG}/members`);
@@ -74,10 +68,6 @@ async function ownerInvites(page: Page, email: string): Promise<void> {
   await expect(dialog).toHaveCount(0);
 }
 
-/**
- * What the invite page says to a signed-in reader whose link is dead, each refusal also measured at a
- * phone's width.
- */
 async function refusalAt(page: Page, path: string): Promise<string> {
   await page.goto(path);
   await expect(page.getByRole('heading', { level: 1, name: 'Your Invitation' })).toBeVisible();
@@ -98,14 +88,12 @@ test.describe('a coven’s invitation from the account page', () => {
     await ownerInvites(page, invited);
     const banner = page.getByRole('banner');
 
-    // Another signed-in account, with no seat anywhere, is told of none.
     await signInAs(page, address('other'));
     await page.goto('/coven');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: 'See your invitations' })).toHaveCount(0);
     await expect(banner.getByRole('button', { name: 'Fixture Person', exact: true })).toBeVisible();
 
-    // D holds the invited address, verified, and never opens the mail.
     await signInAs(page, invited);
     await page.goto('/coven');
     const see = page.getByRole('link', { name: 'See your invitations' });
@@ -113,7 +101,6 @@ test.describe('a coven’s invitation from the account page', () => {
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
-    // The account menu says so too, its count a link to the same section.
     const account = banner.getByRole('button', { name: 'Fixture Person, 1 coven invitation' });
     await account.click();
     await expect(banner.getByRole('link', { name: '1 Coven Invitation' })).toHaveAttribute(
@@ -129,7 +116,6 @@ test.describe('a coven’s invitation from the account page', () => {
 
     await expect(page).toHaveURL(new RegExp(`/coven/${COVEN_SLUG}$`));
     await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
-    // The shell redrew: nothing is waiting any more.
     await expect(banner.getByRole('button', { name: 'Fixture Person', exact: true })).toBeVisible();
   });
 });
@@ -143,7 +129,6 @@ test.describe('a declined coven invitation', () => {
     const linkPath = await mailedInvitePath(invited);
     const banner = page.getByRole('banner');
 
-    // E holds the invited address, verified, and answers from the account page.
     await signInAs(page, invited);
     await page.goto('/account#account-invitations');
     await expect(
@@ -154,7 +139,6 @@ test.describe('a declined coven invitation', () => {
     await expect(dialog).toBeVisible();
     await dialog.getByRole('button', { name: 'Decline', exact: true }).click();
 
-    // The page read again: the row is gone and the shell no longer counts it.
     await expect(dialog).toHaveCount(0);
     await expect(
       page.getByRole('button', { name: `Decline the invitation to ${COVEN_NAME}` }),
@@ -171,7 +155,6 @@ test.describe('a declined coven invitation', () => {
     const declinedMessage = await refusalAt(page, linkPath);
     expect(declinedMessage).not.toBe(await refusalAt(page, '/invite/not-a-real-token'));
 
-    // The owner still lists it, marked declined, with Remove in place of Revoke.
     await signInAgainAs(page, ownerId);
     await page.goto(`/coven/${COVEN_SLUG}/invitations`);
     const row = page.getByRole('row').filter({ hasText: invited });
@@ -198,15 +181,12 @@ test.describe('a declined coven invitation', () => {
     );
     expect(removed).toEqual({ declined: true, revoked: true });
 
-    // Removing it from the list leaves the link saying what the invitee answered.
     await signInAgainAs(page, (await userIdOf(invited)) as string);
     expect(await refusalAt(page, linkPath)).toBe(declinedMessage);
   });
 });
 
-// Last in the file: it deletes the coven every walk above shares. Workers take
-// a file's tests in order, each in a database of its own, so none runs it
-// before an earlier test of the same file.
+// Last in the file: it deletes the coven every walk above shares; workers take a file's tests in order.
 test.describe('a deleted coven’s invitation', () => {
   test('F’s link is refused for a reason of its own once the coven is deleted', async ({
     page,

@@ -14,8 +14,6 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { userAccessPauses } from '@/modules/identity/schema/user-access-pauses';
 import type { NamedWrites } from '@/db/types';
 
-// A site admin's pause on a user's access, one row per pause so each keeps who set it, who lifted it and when.
-
 const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'message', 'lifted_at', 'lifted_by'];
 const LIFTED_TOGETHER = 'user_access_pauses_lifted_together';
 const ONE_LIVE = 'user_access_pauses_one_live';
@@ -85,7 +83,6 @@ describe('user_access_pauses table', () => {
       values (pg_catalog.gen_random_uuid(), 'Testnote', ${ADMIN}, ${ADMIN})
     `);
 
-    // 23503 is foreign_key_violation.
     expect(error.code).toBe('23503');
   });
 
@@ -123,7 +120,6 @@ describe('user_access_pauses table', () => {
       values (${PAUSED}, ' \t ', ${ADMIN}, ${ADMIN})
     `);
 
-    // 23502 is not_null_violation; 23514 is check_violation.
     expect(none.code).toBe('23502');
     expect(none.column_name).toBe('note');
     expect(blank.code).toBe('23514');
@@ -137,7 +133,6 @@ describe('user_access_pauses table', () => {
 
     const second = await failureOf(livePause());
 
-    // 23505 is unique_violation: the one-live index.
     expect(second.code).toBe('23505');
     expect(second.constraint_name).toBe(ONE_LIVE);
   });
@@ -175,7 +170,6 @@ describe('user_access_pauses table', () => {
       values (${PAUSED}, 'Testnote', ${ADMIN}, ${ADMIN}, ${ADMIN})
     `);
 
-    // 23514 is check_violation.
     expect([noBy.code, noAt.code]).toEqual(['23514', '23514']);
     expect([noBy.constraint_name, noAt.constraint_name]).toEqual([
       LIFTED_TOGETHER,
@@ -184,11 +178,8 @@ describe('user_access_pauses table', () => {
   });
 });
 
-// The repository's surface: setting and lifting under the `SiteAdmin` proof, the standing pause for a user, and every pause for a user.
-// The table is marked `namedWrites`, so every generic write is refused at compile time (user-access-pauses-schema.type-check.ts).
 describe('the repository', () => {
   const admin = assertSiteAdmin(asUser(E));
-  /** The first page of a user's pauses, its rows alone. */
   const historyOf = async (userId: string) =>
     (await findUserAccessPausePage(admin, userId, { limit: 25, inverted: false })).map(
       (entry) => entry.node,

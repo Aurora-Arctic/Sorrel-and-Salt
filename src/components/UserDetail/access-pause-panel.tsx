@@ -9,7 +9,7 @@ import PausePanel from './pause-panel';
 import type { AccessPauseEntry, PausePanelCopy } from './types';
 
 // A keeper's pause on a user's access to the site: nothing but support until an end, or with no end date, until lifted,
-// with a note saying why (claude-docs/components/user-detail.md, "Site Access"). Laid out on the support time-out panel's classes, so
+// with a note saying why (claude-docs/components/user-detail.md, "Contracts"). Laid out on the support time-out panel's classes, so
 // the two sections of the user modal read alike.
 
 const PauseDocument = graphql(`
@@ -28,7 +28,6 @@ const LiftDocument = graphql(`
   }
 `);
 
-/** The site's words for a pause on a user. */
 const copyFor = (name: string): PausePanelCopy => ({
   noteHint: 'Seen by staff only, up to 500 characters.',
   notePlaceholder: 'Why, for staff',
@@ -47,10 +46,6 @@ const copyFor = (name: string): PausePanelCopy => ({
   lifted: 'Pause lifted.',
 });
 
-/**
- * A user's access pauses: the one that stands, or the form to set one, and the earlier ones beneath. `pauses` is newest
- * first.
- */
 const AccessPausePanel = ({
   userId,
   name,
@@ -60,7 +55,8 @@ const AccessPausePanel = ({
   name: string;
   pauses: AccessPauseEntry[];
 }): ReactElement => {
-  // Read once per render of the panel: a pause that runs out while it is open shows as past on the next.
+  // Read once when the panel mounts: a pause that runs out while it is open shows as past on
+  // its next mount.
   const [now] = useState(() => Date.now());
   const standing = pauses.find((pause) => stands(pause, now));
   return (

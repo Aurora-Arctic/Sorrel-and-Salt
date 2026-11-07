@@ -3,8 +3,6 @@ import { type ReactNode, useState } from 'react';
 import PasswordField from '.';
 import type { PasswordPurpose } from './types';
 
-// Render-only; behaviour is asserted in tests/components/PasswordField. Each state starts with a
-// value, so the meter and the toggle show without typing.
 const meta = {
   title: 'Forms / Password Field',
 } satisfies Meta;

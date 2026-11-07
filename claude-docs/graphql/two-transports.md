@@ -8,7 +8,7 @@ the same service function, so a permission checked once holds for both.
 serialized and no request is made to the app's own endpoint.
 
 ```ts
-// A coven's layout and its page (M6.10), each asking:
+// A coven's layout and its page, each asking:
 const session = await requireSession();
 const membership = await assertMembership(session, workspaceId, { workspace: ['read'] });
 ```
@@ -16,7 +16,7 @@ const membership = await assertMembership(session, workspaceId, { workspace: ['r
 **Everything the browser starts goes through `/api/graphql`**: every mutation,
 and every read that happens without a navigation. `createContext` builds the
 same `Session` from the request's headers (["The request
-context"](request-context.md)), and the resolver calls the same function.
+context"](endpoint.md)), and the resolver calls the same function.
 
 ```ts
 // The `signedIn` scope has already refused a null session by the time this runs.
@@ -40,13 +40,13 @@ resolve: async (_query, { workspaceId }, { session }) =>
   fails a `'use server'` directive, which no `no-restricted-imports` rule
   could see. There are no bespoke route handlers beyond
   this one and `/api/auth/*`
-  ([`auth/graphql-only-exception.md`](../auth/graphql-only-exception.md)); the
+  ([`auth/config.md`](../auth/config.md), "The one exception to the GraphQL-only rule"); the
   three public files `/llms.txt`, `/.well-known/ai-catalog.json` and
-  `/.well-known/ard.json` (M12.2) take no session, serve only what the public compendium already shows and are named in
+  `/.well-known/ard.json` take no session, serve only what the public compendium already shows and are named in
   lint's allowlist, one by one
   ([`seo/ai-discovery.md`](../seo/ai-discovery.md)); the share-card images Next generates from each
-  `opengraph-image.tsx` (M12.34) take no session either and draw only what the public compendium shows
-  ([`share-card.md`](../share-card.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
+  `opengraph-image.tsx` take no session either and draw only what the public compendium shows
+  ([`../seo/share-card.md`](../seo/share-card.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
   `src/app/`, by its path: a file is not an import either.
 - **Admin is not an exception to either.** `/keepers`'s pages read through
   services, and its writes go through this endpoint
@@ -55,9 +55,9 @@ resolve: async (_query, { workspaceId }, { session }) =>
   have checked. Each service's tests refuse by direct call
   (`tests/modules/*/services/`), and each field's GraphQL file reads the same
   refusal as the browser does, `extensions.code` through the shared harness
-  (MB.186). A test of the two paths agreeing over a throwaway schema went with
+  . A test of the two paths agreeing over a throwaway schema went with
   MB.227: with the check in the service and nowhere else, it repeated both.
 - **The boundary is mechanical.** Lint stops a resolver, page or component
   importing anything under `src/db` at runtime, and `server-only` fails the
   build of a client bundle that reaches a service (["The access
-  boundary"](access-boundary.md)).
+  boundary"](protections.md)).

@@ -7,9 +7,7 @@ import { documentMailing } from '@/modules/documents/jobs/document-mailing';
 import { MAILING_BATCH_SIZE, MAILING_DAILY_CAP } from '@/modules/documents/mailing-pace';
 import { insertDocumentMailing, insertDocumentVersion } from '../support/db/insert-document';
 
-// The run that emails every account about a published document, end to end in the SDK's local world. The run carries the
-// mailing's id and the origin alone, and mails the mailing's recipient rows, so each test writes exactly the rows it mails. Mail
-// goes to a stand-in Mailpit, or a stand-in Resend where a quota answer is needed, both answering fetch in this process.
+// The run carries the mailing's id and the origin alone and mails the mailing's recipient rows, so each test writes exactly the rows it mails.
 
 const DOMAIN = '@document-mailing-run.test';
 const ORIGIN = 'http://localhost:3000';
@@ -18,15 +16,13 @@ const RESEND_URL = 'https://api.resend.com/emails';
 const SUMMARY = 'We now keep sign-in records for ninety days.';
 
 let sql: ReturnType<typeof postgres>;
-/** How many sends the stand-in refuses with a 503 before it takes the next one. */
 let failNext = 0;
 /** When set, the stand-in Resend answers 429 with this name once `quotaAfter` sends have been taken. */
 let quota: { name: string; after: number } | null = null;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
 
-// The stand-ins answer fetch itself rather than listening on a port: the local world finds its own queue by the port this process
-// listens on, so a second listener would take its deliveries.
+// The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
 const realFetch = globalThis.fetch;
 async function transport(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = input instanceof Request ? input.url : String(input);
@@ -94,7 +90,6 @@ beforeEach(async () => {
 });
 
 let made = 0;
-/** `count` verified accounts to mail. */
 async function accounts(count: number): Promise<{ id: string; email: string }[]> {
   const rows = Array.from({ length: count }, () => {
     made += 1;
@@ -113,7 +108,6 @@ async function accounts(count: number): Promise<{ id: string; email: string }[]>
 }
 
 let versionNumber = 100;
-/** A new published version of the seeded document `key`: its id, and the document's title. */
 async function publishedVersion(key: string): Promise<{ versionId: string; title: string }> {
   const [document] =
     await sql`select id, title from documents where key = ${key} and deleted_at is null`;
@@ -132,11 +126,9 @@ interface MailingSeed {
   status?: 'sending' | 'sent' | 'replaced' | 'paused';
   /** Seconds before now the mailing was started, which orders the queue. */
   startedSecondsAgo?: number;
-  /** Writes every recipient as sent now. */
   allSent?: boolean;
 }
 
-/** A mailing of the version or versions to `recipients`, written raw as the service would leave it. */
 async function mailing(
   versionIds: string | readonly string[],
   recipients: { id: string }[],
@@ -193,7 +185,6 @@ describe('the document mailing run', () => {
     await getRun(run.runId).wakeUp({ correlationIds: [sleepId] });
 
     await expect(run.returnValue).resolves.toBe('sent');
-    // Every recipient once, and no one else.
     expect(received.map((mail) => mail.to).sort()).toEqual(
       readers.map((reader) => reader.email).sort(),
     );
@@ -213,7 +204,6 @@ describe('the document mailing run', () => {
     const sleepId = await waitForSleep(run);
     // Precondition: recipients are left, so a run that ignored the status would mail them.
     expect(await sentCount(mailingId)).toBe(MAILING_BATCH_SIZE);
-    // What the service leaves when a keeper mails the document again.
     await sql`update document_mailings set status = 'replaced' where id = ${mailingId}`;
     await getRun(run.runId).wakeUp({ correlationIds: [sleepId] });
 
@@ -261,13 +251,11 @@ describe('the document mailing run', () => {
 
     const today = await start(documentMailing, [mailingId, ORIGIN]);
 
-    // Ten sends were left of today's cap, counted across every mailing.
     await expect(today.returnValue).resolves.toBe('tomorrow');
     expect(received).toHaveLength(10);
     expect(await sentCount(mailingId)).toBe(10);
     expect((await mailingRow(mailingId)).status).toBe('sending');
 
-    // The next UTC day: every send so far was yesterday's.
     await sql`update document_mailing_recipients set sent_at = sent_at - interval '1 day' where sent_at is not null`;
     const tomorrow = await start(documentMailing, [mailingId, ORIGIN]);
 
@@ -286,7 +274,6 @@ describe('the document mailing run', () => {
     const run = await start(documentMailing, [mailingId, ORIGIN]);
 
     await expect(run.returnValue).resolves.toBe('tomorrow');
-    // Two taken, one refused, and the refusal is not retried.
     expect(attempts).toHaveLength(3);
     expect(await sentCount(mailingId)).toBe(2);
     expect(await mailingRow(mailingId)).toMatchObject({ status: 'sending', finished_at: null });
@@ -321,7 +308,6 @@ describe('the document mailing run', () => {
     const { versionId } = await publishedVersion('privacy');
     const readers = await accounts(4);
     const mailingId = await mailing(versionId, readers);
-    // The first send is taken; the second is refused, which fails the batch's step.
     let taken = 0;
     const refuseSecond = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = input instanceof Request ? input.url : String(input);
@@ -352,7 +338,6 @@ describe('the document mailing run', () => {
     expect(attempts).toHaveLength(MAILING_BATCH_SIZE);
     expect((await mailingRow(mailingId)).status).toBe('sending');
 
-    // What the daily cron does when a run sleeps across midnight.
     const second = await start(documentMailing, [mailingId, ORIGIN]);
 
     await expect(second.returnValue).resolves.toBe('duplicate');
@@ -361,7 +346,6 @@ describe('the document mailing run', () => {
     await getRun(first.runId).wakeUp({ correlationIds: [sleepId] });
 
     await expect(first.returnValue).resolves.toBe('sent');
-    // Every address tried once and taken once.
     expect(attempts.sort()).toEqual(readers.map((reader) => reader.email).sort());
     expect(received).toHaveLength(readers.length);
   });
@@ -371,7 +355,6 @@ describe('the document mailing run', () => {
     const { versionId } = await publishedVersion('privacy');
     const readers = await accounts(4);
     const mailingId = await mailing(versionId, readers);
-    // The transport takes two sends, then refuses every send after them, on every attempt.
     const downAfterTwo = async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = input instanceof Request ? input.url : String(input);
       if (url.startsWith(MAILPIT_URL) && received.length >= 2) failNext = 1;
@@ -396,7 +379,6 @@ describe('the document mailing run', () => {
     }
     const reachedFirst = received.map((mail) => mail.to);
 
-    // The next day's run, as the daily cron starts it, once the transport is back.
     attempts.length = 0;
     const next = await start(documentMailing, [mailingId, ORIGIN]);
 
@@ -459,7 +441,6 @@ describe('the document mailing run', () => {
       expect(mail.text).toContain(terms.title);
       expect(mail.text).toContain(`${ORIGIN}/privacy`);
       expect(mail.text).toContain(`${ORIGIN}/terms`);
-      // The terms are among the items, so the mail asks for agreement.
       expect(mail.text).toMatch(/agree/i);
     }
   });

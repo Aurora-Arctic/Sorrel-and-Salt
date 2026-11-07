@@ -23,21 +23,19 @@ export type NavigationTarget = {
   /** A `cards` wait draws the Grimoire's spell cards, not the Ingredients cards. */
   card?: 'spell';
   /**
-   * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
-   * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column
-   * with a side menu drawn, on a `page`) or `entry` (the wide column with a side menu, an ingredient's page). None is the standard centred frame.
-   */
-  /**
    * The head of a `page` or `contents`: `eyebrow` draws an eyebrow above the
    * title, `title` the title alone; none is a title and a lede.
    */
   head?: 'eyebrow' | 'title';
+  /**
+   * The frame the destination sits in, so a `main` wait is drawn in it: `wide` (the page column),
+   * `narrow` (a forms column), `with-nav` (the narrow column with a side menu, on a `page`) or
+   * `entry` (the wide column with a side menu, an ingredient's page). None is the centred frame.
+   */
   frame?: 'wide' | 'narrow' | 'with-nav' | 'entry';
 };
 
-/** What `navigate` takes beyond the address. */
 export type NavigateOptions = {
-  /** Replace the history entry rather than adding one. */
   replace?: boolean;
   /** `false` keeps the scroll position, as a filter or pager does. */
   scroll?: boolean;
@@ -46,7 +44,6 @@ export type NavigateOptions = {
 };
 
 export type PendingNavigation = {
-  /** True while a navigation this caller started is on its way. */
   pending: boolean;
   navigate: (href: string, options?: NavigateOptions) => void;
   refresh: () => void;
@@ -60,23 +57,18 @@ export type NavigationState = {
 
 /** A form's hold on leaving the page, registered with the provider while it is mounted. */
 export type LeaveGuard = {
-  /** True while the form has changes leaving would lose. */
   dirty: () => boolean;
-  /** Asks whether to leave, calling `proceed` only if the answer is yes. */
   ask: (proceed: () => void) => void;
 };
 
 /** Where the provider keeps the mounted forms' guards, and consults them before navigating. */
 export type LeaveGuardSlot = {
-  /** Registers a guard; returns its removal. */
   put: (guard: LeaveGuard) => () => void;
-  /** True while some mounted guard has changes. */
   held: () => boolean;
   /** Calls `go` at once when no guard has changes; otherwise asks the first that has. */
   leave: (go: () => void) => void;
 };
 
-/** What `useLeaveGuard` takes beyond its changes and its question. */
 export type LeaveGuardOptions = {
   /** Called as the page is hidden: a tab switched away from, or closed on a phone. */
   onHide?: () => void;

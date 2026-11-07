@@ -78,8 +78,4 @@ export function ConfirmQuestion({
   );
 }
 
-/**
- * Said, as a warning notice, in a confirmation over a form whose page goes with the answer (Make It
- * Ours's over the Annotate dialog).
- */
 export const UNSAVED_CHANGES_LOST = 'Changes you have not saved are lost.';

@@ -1,10 +1,8 @@
 import type { IngredientElement as ElementKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { CupboardValues } from './types';
 
-// The form's values as react-hook-form holds them. The own-entry form's list
-// fields keep an entry as `{ value }` and its typing box under `drafts.<list>`,
-// so these do too; everything outside this file speaks `CupboardValues`.
-
+// Entries of the list fields are `{ value }` and their typing boxes sit under `drafts.<list>`;
+// everything outside this file speaks `CupboardValues`.
 export interface CupboardFormValues {
   label: string;
   description: string;

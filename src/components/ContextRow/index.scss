@@ -26,7 +26,6 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   padding-inline: space(4);
 }
 
-// A hairline between lead and nav, centred down the row with a step of air at each end.
 .context-row__lead {
   position: relative;
   display: flex;
@@ -34,7 +33,6 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   align-items: center;
   min-width: 0;
   margin-right: space(2);
-  // Air above and below the switcher, so its edge is never the row's.
   padding-block: space(2);
   padding-right: space(5);
 
@@ -49,8 +47,6 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   }
 }
 
-// The area's name as its home link: "Curator" or "Keepers", to its index. Set as the heading it reads
-// as; the underline arrives on hover and focus.
 .context-row__name {
   margin: 0;
   color: inherit;
@@ -61,8 +57,7 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
     text-decoration: underline;
   }
 
-  // The h4's face and size, so "Admin" matches the coven row's switcher; line height
-  // 1 rather than 1.25, since the name never wraps and the lead's padding sets the air.
+  // Line height 1, not 1.25: the name never wraps and the lead's padding sets the air.
   @include heading-face;
   font-size: heading-size(4);
   line-height: 1;
@@ -78,7 +73,6 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
     padding-inline: $phone-air;
   }
 
-  // The lead has the whole row, and no hairline since nothing follows it.
   .context-row__lead {
     flex: 1 1 auto;
     padding-block: $phone-air;

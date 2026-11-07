@@ -29,7 +29,6 @@ const SetEmailDocument = graphql(`
   }
 `);
 
-/** How long the submit stays down after a send: one mail a minute from a form. */
 export const RESEND_DELAY_SECONDS = 60;
 
 /** As the column stores it, so "unchanged" compares what the server would see. */
@@ -47,7 +46,6 @@ export const CHANGE_STATUS = "Enter a new email address and we'll send it a conf
 
 function statusLine(email: string, verified: boolean): string {
   if (email === '') return NO_EMAIL_STATUS;
-  // A verified account back to change it: the confirmation is the other view.
   if (verified) return CHANGE_STATUS;
   return UNVERIFIED_STATUS;
 }
@@ -92,7 +90,6 @@ const EmailForm = ({
   const coolingDown = secondsLeft > 0;
 
   const mutation = useMutation({
-    // The link it asks for lands back here, and Continue goes on to `next`.
     mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address, next }),
     onSuccess: (_data, address) => {
       setSentTo(normalise(address));
@@ -146,8 +143,6 @@ const EmailForm = ({
     );
   }
 
-  // Only a verified, unchanged address has nothing to send: an unverified one
-  // resends its link, and any edit is a change request.
   const nothingToDo = verified && normalise(value) === email;
   const { aria, ...field } = fieldDescription({ id: fieldId, error: fieldError });
 

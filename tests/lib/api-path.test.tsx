@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// The workshop sets WORKSHOP_API_PREFIX at build time, so each client has to
-// read it when it loads: the stubs are in place before a fresh import.
+// The workshop sets WORKSHOP_API_PREFIX at build time, so the stubs go in before a fresh import.
 describe('the API address prefix', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

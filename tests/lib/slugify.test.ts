@@ -8,7 +8,6 @@ describe('slugify', () => {
     expect(slugify('Nightmare Protection')).toBe('nightmare-protection');
   });
 
-  // Seven of §6's eight group names carry an ampersand; the package expands it.
   it('expands an ampersand to "and" rather than dropping it', () => {
     expect(slugify('Protection & Defense')).toBe('protection-and-defense');
     expect(slugify('Craft & Change')).toBe('craft-and-change');
@@ -65,8 +64,6 @@ describe('ingredientSlug', () => {
   });
 });
 
-// A form's address carries its group, so two live forms called "Wax" under two groups hold two
-// addresses, as DESIGN.md §5 lets them.
 describe('formSlug', () => {
   it('joins the name and the group under the one slug rule', () => {
     expect(formSlug('Wax', 'Substance')).toBe('wax-substance');
@@ -75,8 +72,6 @@ describe('formSlug', () => {
   });
 });
 
-// A deity's address carries its tradition, as a form's carries its group, so a Greek and a Roman
-// Hecate hold two addresses.
 describe('deitySlug', () => {
   it('joins the name and the tradition under the one slug rule', () => {
     expect(deitySlug('Hecate', 'Greek')).toBe('hecate-greek');

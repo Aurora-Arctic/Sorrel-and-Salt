@@ -42,11 +42,9 @@ export const supportRequests = pgTable(
     message: text('message').notNull(),
     // The page it was sent from, with the segment after `/coven/` redacted.
     path: text('path').notNull(),
-    // The HTTP status of the error page it was sent from.
     errorCode: integer('error_code'),
     status: supportRequestStatus('status').notNull().default('open'),
     assignedTo: uuid('assigned_to').references(() => users.id),
-    // Whether a curator may read it without being assigned it.
     curatorVisible: boolean('curator_visible').notNull().default(false),
     issueUrl: text('issue_url'),
     resolvedBy: uuid('resolved_by').references(() => users.id),
@@ -57,7 +55,6 @@ export const supportRequests = pgTable(
     closedAt: timestamp('closed_at'),
     // When the closing-soon notice went out for the current resolution: set only once the mail transport took it, cleared by a reopen.
     closingNoticeSentAt: timestamp('closing_notice_sent_at'),
-    // The closed request this one follows up, when a sender wrote on a closed one.
     linkedFrom: uuid('linked_from').references((): AnyPgColumn => supportRequests.id),
     // The digest Next gives an error page, so a request can be matched to the server log line.
     errorReference: text('error_reference'),

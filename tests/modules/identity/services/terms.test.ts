@@ -18,7 +18,7 @@ import { insertDocument, insertDocumentVersion } from '../../../support/db/inser
 // The versions in force are each agreed document's highest published version number: the terms, the disclaimer and the code of
 // ethics, which the terms include. An account has agreed when it recorded all three. Agreement is recorded by the service alone,
 // stamped with the session's user, and only at the three numbers in force, so a page left open across a publish cannot agree to the
-// text it showed (claude-docs/design-decisions/m15.79-agreement-covers-three-documents.md).
+// text it showed (claude-docs/design-decisions/support.md, "Agreeing to the terms covers the disclaimer and the code of ethics").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -40,7 +40,6 @@ async function row(id: string): Promise<AgreementRow> {
   return found as AgreementRow;
 }
 
-/** The row's stored agreement, as the gate reads it. */
 const agreedOf = (found: AgreementRow): AgreedVersion => ({
   terms: found.agreed_terms_version,
   disclaimer: found.agreed_disclaimer_version,
@@ -181,7 +180,6 @@ describe('agreeToTerms', () => {
 
 // Publishing goes through the admin's own services, as the editor does, so the numbers in force move the way they move in use.
 describe('a newly published document', () => {
-  /** Saves a changed body into a draft of `key` and publishes it, as E. */
   async function publishAnEdit(key: DocumentKey): Promise<void> {
     const documentId = documentIds[key] as string;
     const editing = await readDocumentForEditing(asUser(E), key);

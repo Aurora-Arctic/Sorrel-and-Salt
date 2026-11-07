@@ -39,7 +39,6 @@ const NONE = '—';
 // a formal name: Edit and Quick Look read it after their verb.
 const nameOf = (entry: CompendiumListEntry): string => cardName(entry.name, entry.canonicalName);
 
-/** The direction the address asks for: `?order=desc` reverses a sort, and absent is its first direction. */
 const directionOf = (filter: Filter): SortDirection =>
   filter.order === 'desc' ? 'descending' : 'ascending';
 
@@ -69,7 +68,6 @@ const scoreSort = (filter: Filter): ColumnSort => ({
   labels: { ascending: 'Lowest First', descending: 'Highest First' },
 });
 
-/** A search's own order, which no heading gives: the phone's select offers it, and clearing the search returns to it too. */
 const bestMatch = (filter: Filter): OtherOrder[] =>
   filter.query
     ? [
@@ -81,13 +79,10 @@ const bestMatch = (filter: Filter): OtherOrder[] =>
       ]
     : [];
 
-/** The columns under `filter`, which sets each sortable heading's order; Edit's pencil stands at a card's top right on a phone. */
 const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[] => [
   {
     heading: 'Name',
     sort: nameSort(filter),
-    // The Quick Look eye opens the entry's details over the list, left of the name; then the entry's
-    // public page by its stored slug, which offers a curator Edit. The pencil opens the edit modal here.
     cell: (entry) => (
       <>
         <DetailsLink opens={entry.details} name={nameOf(entry)} />{' '}
@@ -140,7 +135,6 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
     heading: 'Categories',
     className: 'compendium-list__categories',
     headingClassName: 'compendium-list__categories',
-    // The card's chips: the first two, the rest behind +N (CategoryChips).
     cell: (entry) =>
       entry.categories.length ? (
         <CategoryChips categories={entry.categories} label={entry.name} compact />
@@ -169,10 +163,8 @@ const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[]
   },
 ];
 
-/** A filter's value, bold. The search sentence above boxes its values instead. */
 const value = (text: string): ReactNode => <strong>{text}</strong>;
 
-/** "A", "A and B", "A, B and C" over nodes: `joinAnd`'s rule, for parts that are not strings. */
 const andNodes = (items: readonly ReactNode[]): ReactNode =>
   items.map((item, index) => (
     <Fragment key={index}>
@@ -181,7 +173,6 @@ const andNodes = (items: readonly ReactNode[]): ReactNode =>
     </Fragment>
   ));
 
-/** Values joined by a word, each bold: “a” or “b”. */
 const orValues = (values: readonly string[]): ReactNode =>
   values.map((each, index) => (
     <Fragment key={index}>
@@ -190,7 +181,6 @@ const orValues = (values: readonly string[]): ReactNode =>
     </Fragment>
   ));
 
-/** Bold names after a joining word: Fire or Water. */
 const joinedNames = (names: readonly string[], word: string): ReactNode =>
   names.map((each, index) => (
     <Fragment key={index}>
@@ -199,10 +189,6 @@ const joinedNames = (names: readonly string[], word: string): ReactNode =>
     </Fragment>
   ));
 
-/**
- * The empty list, naming the filters in use ("No entries match “wort”, the form “Oil”…"), or, with none,
- * how to begin the compendium. A node, as the values are bold; `noMatchText` is the string form.
- */
 export function emptyText(
   {
     query,
@@ -220,16 +206,13 @@ export function emptyText(
   }: Filter,
   known: readonly CompendiumCategoryChoice[],
   facets: CompendiumFacetCounts,
-  /** What an unfiltered empty list says: the keeper's tells how to begin it. */
   whenEmpty = `${emptyList('ingredients')} Add the first with Add Ingredient.`,
 ): ReactElement {
-  // A deity by its name and tradition, the pair that tells two of one name apart.
   const deityNames = deities.flatMap((slug) => {
     const deity = facets.deities.find(({ value }) => value === slug);
     return deity ? `${deity.label} (${deity.tradition})` : [];
   });
   const toxicLabel = facets.toxic.find(({ value }) => value === toxic)?.label;
-  // By name, the ones the page knows; a slug it does not is not filtering anything.
   const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
   const filters = [
     query && value(`“${query}”`),

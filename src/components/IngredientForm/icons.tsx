@@ -26,10 +26,8 @@ export function SourceEditIcon(): ReactElement {
   );
 }
 
-/** A cross: take this row out. The shared set's cross, which the type-ahead's clear draws too. */
 export { CrossIcon as RemoveIcon } from '../IconTip/icons';
 
-/** An arrow up, the way a folk name rises to be the display name: promote this row. */
 export function PromoteIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">

@@ -4,7 +4,6 @@ import { useEffect, useRef } from 'react';
 import CategoryChips from '.';
 import type { CardCategory } from './types';
 
-// Render-only; what shows and when is asserted in tests/components/CategoryChips.
 const meta = {
   title: 'Ingredients / Category Chips',
 } satisfies Meta;
@@ -23,7 +22,6 @@ const make = (count: number): CardCategory[] =>
     group: GROUPS[i % GROUPS.length],
   }));
 
-// Opens the +N panel as a person would, by pressing the button in its own frame.
 const PanelOpen = () => {
   const frame = useRef<HTMLDivElement>(null);
   useEffect(() => frame.current?.querySelector('button')?.click(), []);
@@ -34,7 +32,6 @@ const PanelOpen = () => {
   );
 };
 
-// The limit is two chips: past that the rest sit behind a +N button.
 export const States: Story = {
   render: () => (
     <StatesGrid
@@ -44,7 +41,6 @@ export const States: Story = {
         'One In The More Button': <CategoryChips categories={make(3)} label="Testwort" />,
         'Several In The More Button': <CategoryChips categories={make(6)} label="Testwort" />,
         'More Panel Open': <PanelOpen />,
-        // In a bounded, scrolling frame, as the admin table holds it: the panel is not clipped.
         'In A Scrolling Frame': (
           <div
             style={{ overflowX: 'auto', inlineSize: '18rem', padding: '1rem', border: '1px solid' }}
@@ -52,7 +48,6 @@ export const States: Story = {
             <CategoryChips categories={make(6)} label="Testwort" />
           </div>
         ),
-        // The entry's own chip, then two only its forms carry: dashed, each with a tip naming the forms.
         'On A Form Only': (
           <CategoryChips
             categories={[
@@ -64,7 +59,6 @@ export const States: Story = {
             showAll
           />
         ),
-        // Both sizes: the regular one the card wears, the compact one the table does.
         Sizes: (
           <div style={{ display: 'grid', gap: '1rem' }}>
             <CategoryChips categories={make(3)} label="Testwort" />

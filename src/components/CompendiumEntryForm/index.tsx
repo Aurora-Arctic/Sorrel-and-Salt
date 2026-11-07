@@ -5,8 +5,7 @@ import IngredientForm from '../IngredientForm';
 import SourcingScore from '../SourcingScore';
 import type { CompendiumEntryFormProps } from './types';
 
-// The compendium's ingredient form as both of its edit dialogs draw it, so the admin list's and the
-// entry page's are one thing; each passes its own navigation, as each has its own addresses.
+// Shared by the admin list's and the entry page's edit dialogs; each passes its own navigation.
 export default function CompendiumEntryForm({
   sourcing,
   ...fields

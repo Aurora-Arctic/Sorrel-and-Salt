@@ -75,7 +75,6 @@ describe('RemoveControl, where the focus lands', () => {
     graphqlRequest.mockReset();
   });
 
-  /** The roll's heading, and the one row while it is in the page. */
   function Roll({ present }: { present: boolean }) {
     return (
       <main>

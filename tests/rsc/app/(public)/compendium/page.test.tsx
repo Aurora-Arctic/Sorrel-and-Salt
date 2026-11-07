@@ -4,10 +4,9 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CLIENT_MANIFEST } from '../../../../support/client-references.mts';
 
-// What the public compendium page hands React to send to the browser: its Flight payload, the data
-// `self.__next_f.push` carries beside the HTML. The reads and the viewer are mocked; every
-// `'use client'` module is a client reference (tests/support/client-references.mts), so the payload
-// holds each client component's props as Next sends them.
+// The public compendium page's Flight payload, the data `self.__next_f.push` carries beside the HTML. The reads
+// and the viewer are mocked and every `'use client'` module is a client reference
+// (tests/support/client-references.mts), so the payload holds each client component's props as Next sends them.
 
 vi.mock('next/navigation', () => ({ redirect: vi.fn(), notFound: vi.fn() }));
 // A package's client module is outside the plugin's reach, as Vitest loads packages untransformed.

@@ -8,11 +8,10 @@ import { heldFormsOf, stockOf, variantsOf, type StockKey } from '@/modules/ingre
 // coven holds of it. Per viewer, so never inside the cached compendium read (rule 6); one call to each
 // service for the whole page. See claude-docs/components/stock-dialog.md.
 
-/** The key a coven's stock of an entry is found under in what `readEntryStock` returns. */
 export const stockKey = (workspaceId: string, ingredientId: string): string =>
   `${workspaceId}:${ingredientId}`;
 
-/** A pair to read: `own` where the entry is the coven's own, whose forms are read in that coven. */
+/** A pair to read; own marks the coven's own entry, whose forms are read in that coven. */
 export type StockAsk = StockKey & { own?: boolean };
 
 /**

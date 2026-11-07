@@ -22,19 +22,14 @@
 }
 
 .entry-mark__tip {
-  // Placed by `useTip`, which keeps it on the screen wherever the badge wraps to.
   @include tip-above;
 }
 
-// The New / Updated marker: icon and word in the accent ink, a step larger than badge text. The
-// inks are the `new` and `updated` badge palettes', held to the text floor in both themes
-// (`tests/scss/tokens.test.ts`).
 .recency-mark {
   display: inline-flex;
   align-items: center;
   gap: space(1);
   font-family: $font-body;
-  // Half way between the overline and caption sizes.
   font-size: calc((#{type-size('overline')} + #{type-size('caption')}) / 2);
   font-weight: 600;
   line-height: 1.2;

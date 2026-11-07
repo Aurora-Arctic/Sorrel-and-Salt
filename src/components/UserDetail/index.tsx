@@ -27,7 +27,6 @@ const ordered = (memberships: readonly UserCoven[]): UserCoven[] =>
     (a, b) => workspaceRoleRank(a.role) - workspaceRoleRank(b.role) || a.name.localeCompare(b.name),
   );
 
-/** A UTC date, as the table's Signed Up column writes one. */
 const Day = ({ at }: { at: Date }): ReactElement => (
   <time dateTime={at.toISOString()}>{at.toISOString().slice(0, 10)}</time>
 );

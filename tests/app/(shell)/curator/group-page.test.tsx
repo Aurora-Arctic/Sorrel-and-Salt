@@ -7,14 +7,9 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupKind } from '@/components/GroupForm/types';
 
-// The page every group vocabulary shares (src/app/(shell)/curator/group-page.tsx): the guard, one page of groups, and the modal its address opens (`?new` empty, `?edit=` a group by slug, told how many rows its delete must move).
-// The shape runs on the category groups; the form groups and deity traditions get only what they change, their path and services (claude-docs/testing/layer-ownership.md, rule 5).
-// The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/vocabulary's.
-
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 
-// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/curator/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
   rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
 );
@@ -76,8 +71,6 @@ const entry = <T extends { id: string; name: string }>(node: T) => ({
 });
 
 async function renderPage(params: Record<string, string> = {}, kind: GroupKind = 'category') {
-  // The tab's action beside the heading, and the tab's content, as the
-  // route group's layout puts them on one page.
   const [action, page] = await Promise.all([
     GroupAction({ kind, searchParams: Promise.resolve(params) }),
     GroupPage({ kind, searchParams: Promise.resolve(params) }),
@@ -148,7 +141,6 @@ describe('a group page, on the category groups', () => {
     });
   });
 
-  // Which cursor is readable is tests/lib/search-params.test.ts's.
   it('reads the page after the cursor in the address', async () => {
     const after = encodeCursor({ key: ['Fixture Mending'], id: MENDING.id });
 

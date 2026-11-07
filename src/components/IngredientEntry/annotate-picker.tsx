@@ -8,17 +8,12 @@ import { ANNOTATE_HEADING } from './annotate-heading';
 import CovenChoice from './coven-choice';
 import type { CupboardPlace } from './types';
 
-// Which coven's annotations to edit, asked on the public entry page where two or more of the
-// viewer's covens hold the entry and permit annotating it; it then opens that coven's Annotate
-// dialog at `?annotate=<covenSlug>` and closes as it opens.
-
 export default function AnnotatePicker({
   places,
   defaultWorkspaceId,
   onClose,
   returnTo,
 }: {
-  /** The holding covens that permit annotating, with their addresses. */
   places: readonly Pick<CupboardPlace, 'workspaceId' | 'name' | 'annotateHref'>[];
   defaultWorkspaceId: string;
   onClose: () => void;

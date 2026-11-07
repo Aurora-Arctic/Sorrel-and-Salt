@@ -7,75 +7,50 @@ import type { ComboboxOption } from '../Combobox/types';
 import type { ModalHeading } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
-/** One ingredient the search box's dropdown offers: enough to label a row and to build the address a pick opens. */
 export interface IngredientSearchMatch {
   id: string;
   slug: string;
-  /** What the ingredient is called here. */
   name: string;
-  /** Its formal name, null for none. */
   canonicalName: string | null;
-  /** Its naming system, which a pick's dialog head sets the formal name by. */
   nomenclature: NomenclatureKind;
 }
 
-/** A dropdown row: the combobox's option, carrying the ingredient it stands for. A spell's row carries the spell id as `id` and `slug`. */
 export interface IngredientSearchOption extends ComboboxOption {
   match?: IngredientSearchMatch;
 }
 
-/** What the type-ahead suggests from: the compendium (default), a coven's cupboard by its label, or a coven's grimoire by spell title. */
 export type SearchSource =
   | { kind: 'compendium' }
   | { kind: 'cupboard'; workspaceId: string }
   | { kind: 'grimoire'; workspaceId: string; status?: SpellStatus };
 
 export interface IngredientSearchProps extends Partial<PagerHrefs<Route>> {
-  /** The consumer's client filter row, normally an `IngredientSearchForm`. */
   search: ReactNode;
-  /** The consumer's own action, an Add or a Create: drawn beneath the filter row. */
   action?: ReactNode;
-  /** The results: a table, cards or an empty state. */
   children: ReactNode;
-  /** Where this page stands among them all, for the pager. */
   position?: PagePosition;
-  /** The list's own root class, beside `list-frame`. */
   className?: string;
-  /** The shape the results take while a page loads: a table (the default) or cards. */
   shape?: 'table' | 'cards';
   /** With `cards`: the card the list draws, so its skeleton does too: the grimoire's spell card. */
   card?: 'spell';
 }
 
 export interface IngredientSearchFormProps {
-  /** The form's accessible name, title case: "Filter the Compendium". */
   label: string;
-  /** The page itself: the form's native GET target and the unfiltered first page Clear opens. */
   action: Route;
-  /** The text the list shows, which the box starts from. */
   query: string;
-  /** Each value of the filter the page shows: Clear is drawn while any is set. */
   shown: readonly FilterValue[];
-  /** The list with `query` set to `text` and the other filters kept, from the first page. */
   searchHref: (text: string) => Route;
-  /** Where a picked ingredient opens: on a list with a Quick Look, its details modal over the list as it stands. Left out, a pick applies its row's text as the search. */
   pickHref?: (match: IngredientSearchMatch) => Route;
-  /** The head of the route modal a pick opens, shown while its content loads. Given, a pick opens `pickHref` as a route modal; left out, a plain navigation. */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
-  /** The page's place for the modal a pick opens (`RouteModalProps.place`), where the page has more than one. */
   pickPlace?: string;
-  /** What the type-ahead suggests from: the compendium when left out. */
   source?: SearchSource;
-  /** Draw the form's own Clear while a filter is shown. Default true. */
   clear?: boolean;
-  /** Joins the form's class. */
   className?: string;
-  /** The filter slot: the consumer's other fields, after the search box. */
   children?: ReactNode;
 }
 
 export interface IngredientSearchBoxProps {
-  /** The draft text the box shows. */
   text: string;
   onText: (text: string) => void;
   searchHref: IngredientSearchFormProps['searchHref'];
@@ -85,7 +60,6 @@ export interface IngredientSearchBoxProps {
   source?: IngredientSearchFormProps['source'];
 }
 
-/** The kinds of filter the search sentence can name, in the order it names them. */
 export type SearchSentenceFacet =
   | 'query'
   | 'covens'
@@ -110,52 +84,32 @@ export type SearchSentenceFacet =
   | 'hidden'
   | 'reviewed';
 
-/** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
 export interface SearchSentenceFilter {
   query?: string | null;
-  /** The public compendium only: ids of the viewer's covens an entry is held in, any of them. */
   covens?: readonly string[];
-  /** Held in none of the picked covens, or with none picked none of the viewer's. */
   covensNot?: boolean;
-  /** Category slugs. */
   categories?: readonly string[];
-  /** `all` (the default) lists entries in every category, `any` in at least one. */
   categoryMode?: 'all' | 'any';
-  /** The grimoire's moon phases, as the spells word them. */
   moonPhases?: readonly string[];
-  /** The grimoire's days of the week, as the spells word them. */
   daysOfWeek?: readonly string[];
-  /** The grimoire's visibility, one of `private`, `workspace`; empty or left out is Any. */
   visibility?: string;
-  /** The grimoire's makers, by user id. */
   makers?: readonly string[];
   forms?: readonly string[];
-  /** Deity slugs. */
   deities?: readonly string[];
   zodiac?: readonly string[];
   celestialBodies?: readonly string[];
   elements?: readonly string[];
-  /** The address's own choice: `toxic`, `not_toxic`, or `any` / left out for either. */
   toxic?: ToxicFilter | null;
-  /** A coven's list only: where the entry came from, `local` or `compendium`; left out for both. */
   source?: 'local' | 'compendium' | null;
-  /** A coven's list only: entries with a jar not at 0. */
   inStock?: boolean;
-  /** A coven's list only: entries with a jar badged Low Stock or Out of Stock. */
   lowStockOnly?: boolean;
-  /** Admin lists only. */
   nomenclature?: string | null;
-  /** Admin lists only. */
   withoutReferences?: boolean;
-  /** Admin lists only. */
   withoutForms?: boolean;
-  /** Admin lists only. */
   hidden?: boolean;
-  /** Admin lists only: `reviewed`, `needs_review`, or left out for either. */
   reviewed?: 'reviewed' | 'needs_review' | null;
 }
 
-/** The kinds that choose from a vocabulary, and so take display labels. */
 export type SearchSentenceLabelFacet =
   | 'covens'
   | 'categories'
@@ -167,12 +121,10 @@ export type SearchSentenceLabelFacet =
   | 'celestialBodies'
   | 'elements';
 
-/** Display labels by chosen value. A value with no label is named by itself. */
 export type SearchSentenceLabels = Partial<
   Record<SearchSentenceLabelFacet, Readonly<Record<string, string>>>
 >;
 
-/** One piece of the sentence: plain text, a chosen value, or a join, the bare word ("or", "and") between two values; the spaces round a join are text. */
 export type SearchSentenceFragment =
   | { kind: 'text'; text: string }
   | { kind: 'join'; text: string }
@@ -181,11 +133,8 @@ export type SearchSentenceFragment =
 export interface SearchSentenceInput {
   filter: SearchSentenceFilter;
   labels?: SearchSentenceLabels;
-  /** The number of entries the list found. */
   total: number;
-  /** The noun for one entry and for any other number. Defaults to ingredient. */
   noun?: { one: string; other: string };
-  /** An admin list: names Nomenclature and No Refs. */
   admin?: boolean;
 }
 

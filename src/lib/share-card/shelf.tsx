@@ -7,7 +7,6 @@ import { PALETTE } from './palette';
 // the paint `src/components/JarShelf/index.scss` gives each part, in the shelf's drawing order
 // (claude-docs/components/jar-shelf.md).
 
-/** The paint a lid, cork, cloth or facet takes on the shelf. */
 function paintOf(paint: JarPart['paint']) {
   if (paint === 'cork') {
     return { fill: PALETTE.chalk, fillOpacity: 0.35, stroke: PALETTE.chalk, strokeWidth: 1.2 };
@@ -26,10 +25,7 @@ function part(drawn: JarPart, key: number): ReactElement {
   return <path key={key} {...props} />;
 }
 
-/**
- * One vessel filled to `level`, `size` tall: lid, level, a faceted jar's shade and shine, glass, facets, wave.
- * `id` names its clip path, so it is unique on the card.
- */
+/** `id` names its clip path, so it is unique on the card. */
 function Vessel({
   shape,
   size,
@@ -90,11 +86,7 @@ function Vessel({
   );
 }
 
-/**
- * Vessels `vessel` px tall standing on the shelf's plank, with a bracket under each boundary between two
- * of them and none at the ends. The plank, bracket and radius are the page's 1.5, 7 and 6.4 px under its
- * 29.97 px drawing, scaled to `vessel`.
- */
+/** The plank, bracket and radius are the page's 1.5, 7 and 6.4 px under its 29.97 px drawing, scaled to `vessel`. */
 export function Shelf({
   shapes,
   levels,
@@ -113,7 +105,6 @@ export function Shelf({
   const cell = vessel * 1.2 + gap;
   const width = cell * shapes.length;
   const height = plank + bracket;
-  // Each bracket is a square hanging from the plank with its two outer bottom corners cut by a quarter circle.
   let brackets = '';
   for (let i = 1; i < shapes.length; i++) {
     const x = cell * i;

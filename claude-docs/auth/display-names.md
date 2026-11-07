@@ -1,7 +1,7 @@
-## Display names (MB.10)
+## Display names
 
 A members list shows each member's name, and a row will show who last edited
-it (M6.11, M6.18). Both read one loader, `usersById`
+it. Both read one loader, `usersById`
 (`src/modules/identity/loaders/users-by-id.ts`), which answers a user id with
 that user's display name and nothing else of the row: never the email
 address. It batches every id a request asks for into one read.
@@ -27,12 +27,12 @@ stranger's name by guessing an id.
   editor may have left the coven since, and the viewer saw the name when the
   edit was made. A deleted user keeps the name their row held when it was
   deleted, a value nothing rewrites, so the answer is stable (the owner's
-  call, [`mb.10-co-member-display-names.md`](../design-decisions/mb.10-co-member-display-names.md)).
-- **An inviter's name reaches the invitee** (M10.32). The account page's
+  call, [`auth.md`, "A deleted co-member reads under their last name"](../design-decisions/auth.md#a-deleted-co-member-reads-under-their-last-name)).
+- **An inviter's name reaches the invitee**. The account page's
   Invitations section lists the pending coven invitations addressed to the viewer's verified
   email with who sent each, read by `findReceivedInvitationInviters` and not
   by the loader: the invitee shares no coven with the inviter yet, and the
-  mail already names them (M7.3), so the list says no more than the mail.
+  mail already names them, so the list says no more than the mail.
 - **The viewer's own seat must be live.** The scope is the covens the viewer
   is in now, so leaving a coven ends the viewer's view of its members.
 - **A site keeper gets nothing extra.** Keepers curate the compendium and reach
@@ -63,4 +63,4 @@ every row of the table above, each with the precondition that would have let
 it succeed; `tests/modules/identity/loaders/users-by-id.test.ts` holds the
 one read per batch and the per-request construction.
 
-**A second caller: the Ingredients list (M6.18).** A card's last-edit line names its editor with `displayNamesOf` too, not the `usersById` loader, since the list is a server component and not a GraphQL request. `lastEditsOf` (`src/modules/ingredients/services/last-edits.ts`) picks each card's newest edit first and then asks for all the editors' names in one `displayNamesOf` call, so a page of 24 cards costs one name read, never one per card. A null name (a stranger, or a non-uuid id) leaves the card showing the time alone.
+**A second caller: the Ingredients list.** A card's last-edit line names its editor with `displayNamesOf` too, not the `usersById` loader, since the list is a server component and not a GraphQL request. `lastEditsOf` (`src/modules/ingredients/services/last-edits.ts`) picks each card's newest edit first and then asks for all the editors' names in one `displayNamesOf` call, so a page of 24 cards costs one name read, never one per card. A null name (a stranger, or a non-uuid id) leaves the card showing the time alone.

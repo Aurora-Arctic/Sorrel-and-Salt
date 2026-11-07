@@ -189,8 +189,6 @@ describe('SignInPanel', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(error);
   });
 
-  // The callback's error is the page's, from the server; a press is a new
-  // attempt, so it goes, and a failure of that press is said under its button.
   it('clears a passed-in error at a press, and says that press’s failure under its button alone', async () => {
     socialMock.mockResolvedValue({ error: { message: 'x' } });
     const error = signInErrorMessage('access_denied')!;

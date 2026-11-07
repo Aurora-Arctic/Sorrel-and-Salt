@@ -22,7 +22,6 @@ import type { Logged } from '../../support/db/types';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../support/fixtures';
 import type { Overrides } from '../../support/fixtures';
 
-// How many compendium entries each facet value would list, read in one grouped query per kind. Each count is checked against the list's own count under the filter the value stands for, so the facets cannot drift from the arms that match.
 // The ingredient tables are emptied per test, so every row a count could come from is one this file wrote.
 
 const logged = vi.hoisted(() => [] as Logged[]);
@@ -46,12 +45,10 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-/** A compendium entry with no formal name unless stated. */
 function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promise<string> {
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 }
 
-/** A live vocabulary row's id, by name. */
 async function idOf(table: 'categories' | 'deities', name: string): Promise<string> {
   const [row] = await sql`
     select id from ${sql(table)} where name = ${name} and deleted_at is null`;
@@ -69,7 +66,6 @@ const KINDS: Kind[] = [
   'toxic',
 ];
 
-/** The list filter a facet value stands for: `base` with the value as its kind's only selection, or, for a category under `all`, added to those already chosen. */
 function only(base: IngredientFilter, kind: Kind, value: string): IngredientFilter {
   switch (kind) {
     case 'forms':
@@ -91,15 +87,12 @@ function only(base: IngredientFilter, kind: Kind, value: string): IngredientFilt
   }
 }
 
-/** `{ value: count }` for one kind, so a test names the counts it means. */
 function counts(facets: IngredientFacets, kind: Kind): Record<string, number> {
   return Object.fromEntries(facets[kind].map(({ value, count }) => [value, count]));
 }
 
-// The order of each kind's values, the same on the compendium's read and a coven's: names alphabetical in natural-language order (case set aside, an accented letter beside its plain one), a category under its group, a deity under its tradition,
-// signs and bodies by curated position then unpositioned by name; never by count (claude-docs/design-decisions/m12.52-facet-sort-order.md). Each list's counts run against its alphabetical order, so a count order and a code-unit order would each read differently.
+// Order of each kind's values (claude-docs/design-decisions/ingredients.md, "How each search facet sorts its values").
 describe("the order of each kind's values", () => {
-  /** Ids of the invented curated rows, by name. */
   const ids = new Map<string, string>();
   const idsOf = (...names: string[]) => names.map((name) => ids.get(name) as string);
 
@@ -157,8 +150,6 @@ describe("the order of each kind's values", () => {
       )} returning id, name`;
     for (const row of [...categoryRows, ...deityRows])
       ids.set(row.name as string, row.id as string);
-    // Curated with no position, as a curator's addition is: each sorts after
-    // the positioned rows, among the other unpositioned ones by name.
     await sql`
       insert into zodiac_signs ${sql(
         ['Zuvsign', 'ébsign', 'Aardsign'].map((name) => ({ name, slug: slug(name), ...stamps })),
@@ -187,7 +178,6 @@ describe("the order of each kind's values", () => {
   ];
 
   describe.each(reads)('on $read read', ({ workspaceId, facets }) => {
-    /** Six entries, the first carrying every value and each later one fewer, so counts fall as names rise: zedform on all six, Alphaform on one; Ashmark on five, Zestmark on one; Dunmar on five, Yorrow on one; Pisces and Vesta on all six. */
     async function seedEntries(): Promise<void> {
       const forms = [
         'zedform',
@@ -386,7 +376,6 @@ describe('findCompendiumFacets', () => {
   let hecate: string;
   let apollo: string;
 
-  /** Four compendium entries spread over every kind, and a coven entry that matches them all and must count for none. */
   async function seedEntries(): Promise<void> {
     protection = await idOf('categories', 'Protection');
     cleansing = await idOf('categories', 'Cleansing');
@@ -470,8 +459,6 @@ describe('findCompendiumFacets', () => {
 
     const facets = await findCompendiumFacets({});
 
-    // The coven entry carries Resin, Protection, Leo, Sun, fire and Hecate,
-    // and its toxic flag; none of them counts it.
     expect(counts(facets, 'forms')).toEqual({ Resin: 2, Root: 2, Bark: 1, Testform: 1 });
     expect(counts(facets, 'categories')).toEqual({ [protection]: 2, [cleansing]: 2 });
     expect(counts(facets, 'deities')).toEqual({ [hecate]: 2, [apollo]: 2 });
@@ -484,7 +471,6 @@ describe('findCompendiumFacets', () => {
   it("counts a sign or body a live form holds, as the list reads it, and a retired form's for nothing", async () => {
     const onForm = { celestialBodies: ['Mars'], zodiacSigns: ['Aries'] };
     await add('Alphawort', { variants: [makeVariant(), makeVariant({ form: 'Oil', ...onForm })] });
-    // Held by the entry and two forms, it counts once.
     await add('Betawort', {
       ...onForm,
       variants: [makeVariant({ ...onForm }), makeVariant({ form: 'Oil', ...onForm })],
@@ -555,7 +541,6 @@ describe('findCompendiumFacets', () => {
 
     const facets = await findCompendiumFacets({});
 
-    // The order is another block's subject; here only the membership.
     expect(facets.zodiacSigns.map(({ value }) => value).sort()).toEqual(
       signs.map((row) => row.name as string).sort(),
     );
@@ -613,7 +598,6 @@ describe('findCompendiumFacets', () => {
   });
 
   describe('its statements', () => {
-    /** The statements `read` sends, `set_config` aside. */
     async function readsOf(read: () => Promise<unknown>): Promise<Logged[]> {
       logged.length = 0;
       await read();
@@ -658,7 +642,6 @@ describe('findCompendiumFacets', () => {
   });
 
   describe('the entries citing no reference', () => {
-    /** Links a fresh compendium book from the entry, or from its form `form`. */
     async function cite(ingredientId: string, form?: string): Promise<string> {
       const book = await insertReference(sql, {}, A.id);
       if (form) {

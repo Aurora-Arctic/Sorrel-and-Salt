@@ -14,7 +14,7 @@ import { asManualFix } from '../../../support/db/privileges';
 import type { PauseRow } from './types';
 
 // The primary keeper switches keeper grants and revokes off for every other keeper while a rogue one is dealt with, and back on. Only the primary keeper may flip it, and only the primary keeper is exempt from it
-// (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting"; claude-docs/auth/admin-users.md, "Pausing keeper changes").
+// (claude-docs/design-decisions/auth.md, "Granting"; claude-docs/auth/admin-users.md, "Pausing keeper changes").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

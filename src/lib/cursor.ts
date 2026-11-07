@@ -1,14 +1,14 @@
 import { InvalidCursor } from './errors';
 import type { Cursor } from './types';
 
-// The page sizes and the cursor codec, which the browser reads too: a hand-edited cursor in an address is checked before it is
-// sent. Apart from `pagination.ts`, which builds pages with the schema builder, so the browser never loads the server's packages,
-// and in `btoa` and `TextEncoder` rather than `Buffer`, which the browser would need a copy of. claude-docs/graphql/pagination.md.
+// The page sizes and the cursor codec, which the browser reads too, to check a hand-edited cursor
+// before sending it. Apart from `pagination.ts` so the browser never loads the server's packages, and
+// on `btoa` and `TextEncoder`, not `Buffer` (claude-docs/graphql/pagination.md, "Pagination").
 
 export const DEFAULT_PAGE_SIZE = 25;
 /** What a card list pages by: 24 divides by 1, 2, 3 and 4 columns, so the last row of the grid is full. */
 export const CARD_PAGE_SIZE = 24;
-/** The hard server-side maximum. A client asking for more gets this many, not an error. */
+/** A client asking for more gets this many, not an error. */
 export const MAX_PAGE_SIZE = 100;
 
 function toBase64Url(text: string): string {

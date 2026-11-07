@@ -11,8 +11,7 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { SupportViewReplyFormProps } from './types';
 
-// The reply box on the page a signed-out request's mailed link opens. It sends `replyToSupportRequestByViewToken`, which
-// needs no session: the token is the proof.
+// Sends `replyToSupportRequestByViewToken`, which needs no session: the token is the proof.
 
 const ReplyByViewTokenDocument = graphql(`
   mutation ReplyToSupportRequestByViewToken($token: String!, $body: String!, $website: String) {
@@ -48,7 +47,6 @@ const SupportViewReplyForm = ({ token, onSent }: SupportViewReplyFormProps): Rea
       });
       setBody('');
       setSending(false);
-      // The page reads the request again, so the reply shows in the thread.
       onSent();
     } catch (error) {
       setSending(false);

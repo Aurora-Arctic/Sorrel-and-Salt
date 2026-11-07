@@ -1,7 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Chip text one step under the caption it takes elsewhere, in a card or a table cell alike.
 .category-chips .chip {
   font-size: type-size('overline');
 }
@@ -29,7 +28,6 @@
     @include focus-ring;
   }
 
-  // The hairline fill is dropped: hover takes a Highlight edge, open a Highlight fill.
   @include forced-colors {
     &:hover {
       border-color: Highlight;
@@ -48,8 +46,7 @@
 // inline; this is its look and its fade.
 .category-more__panel {
   @include modal-surface($shadow-floating);
-  // Above the rows beneath and their Edit pencils; inside a card it meets only the card's
-  // own context, which the lift below raises over its neighbours.
+  // Above the rows beneath and their Edit pencils; in a card the lift below raises it.
   z-index: layer('floating');
   display: flex;
   flex-wrap: wrap;

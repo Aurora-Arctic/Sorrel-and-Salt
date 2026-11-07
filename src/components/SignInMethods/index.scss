@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The list inside the account page's Sign-In Methods section, whose frame,
-// heading and intro are the page's own primitives (`.page-frame__section`,
-// `.header`). A callback error's notice, then the rows.
 .sign-in-methods {
   @include stack(3);
 }
@@ -15,8 +12,6 @@
   list-style: none;
 }
 
-// Mark, label, then the action at the end; the note, the reason and a
-// failure each wrap onto a line of their own beneath.
 .sign-in-methods__item {
   display: flex;
   flex-wrap: wrap;
@@ -60,9 +55,6 @@
   flex-basis: 100%;
 }
 
-// A stale session's way to a fresh one, above the rows: the line saying why
-// no row offers Remove, then Sign In Again at its own width, and a failure
-// beneath.
 .sign-in-methods__fresh {
   display: flex;
   flex-direction: column;

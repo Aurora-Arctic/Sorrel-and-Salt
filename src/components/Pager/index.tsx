@@ -4,15 +4,11 @@ import PagerLink from './pager-link';
 import type { PagerEndProps, PagerProps } from './types';
 import './index.scss';
 
-// A paged list's Prev and Next, centred under it on the `.pager` primitive
-// (claude-docs/components/pager.md). An end with no page is disabled rather than hidden, so
-// neither control moves from one page to the next. A list of one page has no pager at all.
+// An end with no page is disabled rather than hidden (claude-docs/components/pager.md).
 
 const PagerEnd = ({ href, soft, label }: PagerEndProps): ReactElement => {
-  // An anchor cannot be `disabled`: a link with no address and
-  // `aria-disabled`, which `.btn` draws as off and nothing can follow. The
-  // role is not redundant: an `<a>` without `href` is no link to assistive
-  // technology, and a disabled Prev should still read as the pager's Prev.
+  // An anchor cannot be `disabled`: a link with no address and `aria-disabled`, which `.btn` draws as off. The role stays,
+  // as an `<a>` without `href` is no link to assistive technology.
   if (!href) {
     return (
       // oxlint-disable-next-line jsx-a11y/anchor-is-valid, jsx-a11y/no-redundant-roles

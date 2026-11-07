@@ -5,7 +5,7 @@ import { signInAgainAs, signInAs } from '../session';
 import { withSql } from './accounts-setup';
 import { insertSpell } from './coven-ingredients';
 
-// Story 87: a new account lands in the demo coven as a viewer and can leave it, and a site keeper owns it. `signInAs`
+// @story-87: a new account lands in the demo coven as a viewer and can leave it, and a site keeper owns it. `signInAs`
 // writes the account's rows by SQL and so skips the sign-up hook; the viewer seat the hook writes is written here
 // by SQL as well. The sign-up hook is not walked here, because the suite runs no OAuth provider; the
 // end-to-end sign-up in tests/db/email-verification.test.ts proves it.
@@ -55,13 +55,11 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
           page.getByRole('button', { name: /^(Add|New) /, disabled: false }),
         ).toHaveCount(0);
       }
-      // The add dialog's address opens nothing for a viewer.
       await page.goto(`${DEMO_PATH}/grimoire?new=spell`);
       await expect(page.getByRole('dialog')).toHaveCount(0);
     });
 
     await test.step('a seeded spell’s preview carries the demo notice', async () => {
-      // The suite's template holds no demo spells, so one is written for the viewer to open.
       const spellId = await withSql(async (sql) => {
         const [demo] = await sql`select id from workspaces where demo and deleted_at is null`;
         return insertSpell(sql, demo.id, 'Testwort Working', 'workspace', userId, 'complete');

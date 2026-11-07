@@ -5,13 +5,8 @@ import { fieldDescription } from './description';
 import { FieldShell } from './shell';
 import type { ReasonFieldProps } from './types';
 
-/** What a Reason is for, behind its info tip: where a keeper's change is kept. */
 const REASON_HINT = 'Kept with the change in the record of who changed what.';
 
-/**
- * The optional Reason a keeper gives a change, kept in the ledger beside it: a plain-state text box with
- * its hint behind a tip. `hint` says where the reason is kept when that is not the change itself.
- */
 export function ReasonField({
   value,
   onChange,

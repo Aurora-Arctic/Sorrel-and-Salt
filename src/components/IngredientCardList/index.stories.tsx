@@ -5,9 +5,6 @@ import { ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
 import { route } from '../../../.storybook/route';
 
-// Render-only; wrapping and density are asserted in tests/components/IngredientCardList.
-// The same nine entries for the public compendium (no marks, jars or actions) and
-// the coven's Ingredients page. The preview ignores `meta.width`; set the viewport.
 const meta = {
   title: 'Ingredients / Ingredient Card List',
 } satisfies Meta;

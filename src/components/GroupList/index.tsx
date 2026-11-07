@@ -15,11 +15,6 @@ import './index.scss';
 // render-only. A name search heads the list only for a kind whose page hands it a `filter`. Each Edit is
 // an address, so Back closes its modal (claude-docs/components/group-list.md).
 
-/**
- * What an empty list says: how to fill it, with the page header's Add, named
- * as that button is (`group-page.tsx`); or, searched with no rows, the search
- * that left none, as every admin list says it.
- */
 function emptyMessage(kind: GroupKind, filter: Filter | undefined): string {
   const { plural, add } = KINDS[kind];
   return noMatchText(
@@ -45,7 +40,6 @@ const GroupList = ({
       {/* Roomy: a chip and the Edit pencil stand taller than a line of text. */}
       <StackTable
         columns={[
-          // A category group's name in its own chip, which is how a reader meets the pair.
           {
             heading: 'Name',
             cell: (group) => (

@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { pauseNotifier } from '@/lib/pause-mail';
 
-// The pause notifier hands the three pause services the request's own origin and nothing else: each service starts a run with
-// it, and the run's step builds the link to the support page from it. Sending is the services' tests.
+// The notifier hands the pause services the request's own origin and nothing else; the run's step builds the support link from it.
 
 const { send } = vi.hoisted(() => ({ send: vi.fn(async () => {}) }));
 vi.mock('@/lib/mail', () => ({ send }));

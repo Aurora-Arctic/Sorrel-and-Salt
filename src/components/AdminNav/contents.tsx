@@ -20,7 +20,6 @@ const Contents = ({ sections }: ContentsProps): ReactElement => (
         <h2 id={`admin-section-${at}`}>{name}</h2>
         <ul className="admin-contents__list">
           {pages.map(({ label, description, tabs: [{ href }] }) => (
-            // Each page at its first tab, as the nav links it.
             <li key={href}>
               <PendingLink
                 href={href}
@@ -40,12 +39,10 @@ const Contents = ({ sections }: ContentsProps): ReactElement => (
   </div>
 );
 
-/** The `/keepers` index. */
 const AdminContents = ({ managesPeople }: AdminNavProps): ReactElement => (
   <Contents sections={adminSections(managesPeople)} />
 );
 
-/** The `/curator` index. */
 export const CuratorContents = (): ReactElement => <Contents sections={CURATOR_SECTIONS} />;
 
 export default AdminContents;

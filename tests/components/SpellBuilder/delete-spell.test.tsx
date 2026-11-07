@@ -18,9 +18,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// Delete in the spell builder's Edit dialog, as the ingredient's Edit dialog has its
-// Delete: a bin icon at the far end of the row, which asks over the form, and once confirmed
-// leaves the autosave and the save on close nothing to send.
+// A confirmed delete leaves the autosave and the save on close nothing to send.
 
 const SPELL = {
   id: 's9',
@@ -50,7 +48,6 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
 const del = (title = 'Fixture Working') =>
   screen.queryByRole('button', { name: `Delete Spell ${title}` });
 
-// Outside a modal the question stands in the form as a fieldset.
 const asked = async () =>
   (await screen.findByRole('button', { name: 'Cancel' })).closest('fieldset') as HTMLElement;
 

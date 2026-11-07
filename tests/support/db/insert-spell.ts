@@ -6,11 +6,7 @@ import type { SpellFixture } from '../fixtures/types';
 // insert-ingredient.ts's terms: the raw client, one transaction, the author's
 // stamps and the GUC (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
-/**
- * Writes `fixture`'s spell, its steps and assigned categories, stamped by `author` (`created_by`), and returns
- * the spell's id. A layer's ingredient id is not tier-checked, so a test can write a cross-coven link; an
- * ingredient with no variant leaves the layer's variant null, for the CHECK to refuse.
- */
+// A layer's ingredient id is not tier-checked, so a test can write a cross-coven link; an ingredient with no variant leaves the layer's variant null, for the CHECK to refuse.
 export async function insertSpell(
   sql: postgres.Sql,
   fixture: SpellFixture,

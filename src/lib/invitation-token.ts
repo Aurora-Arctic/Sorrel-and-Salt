@@ -3,10 +3,7 @@ import { randomBytes } from 'node:crypto';
 // The one generator for an invitation's token, on either tier. Not beside `hashToken`, as a service may not import the repository's internals, nor in a module,
 // as both identity and coven mint one (claude-docs/db/invitations.md, "Written and read by tier").
 
-/**
- * 32 bytes from the CSPRNG, base64url: 256 bits, unguessable, and safe in a
- * path. Never `Math.random()` (CLAUDE.md, "Invitation tokens").
- */
+/** Never `Math.random()` (CLAUDE.md, "Invitation tokens"). */
 export function newToken(): string {
   return randomBytes(32).toString('base64url');
 }
@@ -19,10 +16,7 @@ const CARD_TOKEN_LENGTH = 16;
 // with `%` would make the first symbols likelier than the rest.
 const UNBIASED_LIMIT = Math.floor(256 / CARD_TOKEN_ALPHABET.length) * CARD_TOKEN_ALPHABET.length;
 
-/**
- * A card's token: 16 symbols of `CARD_TOKEN_ALPHABET`, about 93 bits, short enough for a sparse QR code. Each
- * symbol is a `crypto.randomBytes` byte kept only below `UNBIASED_LIMIT`; never `Math.random()` and never `%` alone.
- */
+/** About 93 bits, short enough for a sparse QR code. Never `Math.random()` and never `%` alone. */
 export function newCardToken(): string {
   let token = '';
   while (token.length < CARD_TOKEN_LENGTH) {
@@ -37,7 +31,7 @@ export function newCardToken(): string {
 
 const CARD_TOKEN_SHAPE = new RegExp(`^[${CARD_TOKEN_ALPHABET}]{${CARD_TOKEN_LENGTH}}$`);
 
-/** Whether a string has the shape of a card's token: an address invitation's is longer, so a mistyped card code is told apart from a mistyped link. */
+/** An address invitation's is longer, so a mistyped card code is told apart from a mistyped link. */
 export function looksLikeCardToken(token: string): boolean {
   return CARD_TOKEN_SHAPE.test(token);
 }

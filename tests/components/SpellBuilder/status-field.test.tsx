@@ -26,7 +26,6 @@ beforeEach(() => {
   offerCategories([]);
 });
 
-// The spell builder's status control: a spell is a draft until marked complete, and a complete spell shows no button because it cannot be reopened.
 // That the service keeps a complete spell titled is tests/modules/grimoire's; here the builder refuses a blank title on the title field and sends the chosen status.
 
 function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
@@ -102,7 +101,6 @@ function acceptUpdate() {
 
 const title = () => screen.getByRole('textbox', { name: 'Title' });
 const shared = () => screen.getByRole('switch', { name: VISIBILITY_LABELS.workspace });
-// The question Mark Complete asks of a shared draft, named by its whole text.
 const completing = (name: string) =>
   screen.queryByRole('group', { name: new RegExp(`^Mark ${name} Complete\\?`) });
 
@@ -127,7 +125,6 @@ describe('SpellBuilder status', () => {
       status: 'complete',
       visibility: 'private',
     });
-    // A private spell's completion locks nothing, so nothing is asked.
     expect(completing('Fixture Working')).toBeNull();
   });
 

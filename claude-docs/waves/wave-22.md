@@ -2,7 +2,7 @@
 
 **The row is** `M22.1 → M22.7`.
 
-**This wave exists on the owner's call of 2026-11-07**, made while M17.18 was scoped: the build work for promotional email consent and for the switchable support mails is 7 tasks, so it gets a wave of its own and not a place on Wave 21 (Billing and memberships). The tasks are in [`tasks/m22.md`](../tasks/m22.md) and the reasoning is the decision record, [`m17.18-promotional-email-consent.md`](../design-decisions/m17.18-promotional-email-consent.md), with the research in [`email/promotional-consent.md`](../email/promotional-consent.md). Nothing in the wave runs until the owner schedules it. Its trigger is a decision to send the first promotional mail, or to let users switch off support mail.
+The build work for promotional email consent and for the switchable support mails. It is separate from Wave 21 (Billing and memberships) because it has no dependency on billing. The tasks are in [`tasks/m22.md`](../tasks/m22.md); the decision is [`support.md`, "Promotional email needs recorded consent, withdrawn in one click"](../design-decisions/support.md#promotional-email-needs-recorded-consent-withdrawn-in-one-click) and the research is [`email/promotional-consent.md`](../email/promotional-consent.md). Nothing in the wave runs until the owner schedules it. Its trigger is a decision to send the first promotional mail, or to let users switch off support mail.
 
 **The order is the dependency order.**
 
@@ -13,5 +13,3 @@
 5. **M22.7** collects the stories.
 
 **Every task follows CLAUDE.md's Testing rules and Wave 21's standard of naming the tests it ships: an authorisation test asserts that direct-id access is refused and shows why it could have succeeded, every table has audit and catalogue tests, a story is proved by a browser flow, and no task is met by a skipped or flaky test.**
-
-**The owner approved all seven tasks on 2026-11-07**, as the record proposes them.

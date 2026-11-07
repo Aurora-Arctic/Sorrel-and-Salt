@@ -1,4 +1,4 @@
-## Fixture factories (M1.25)
+## Fixture factories
 
 **`tests/support/fixtures/`** is `makeIngredient`, `makeSpell` and
 `makeWorkspace` — plain objects with sensible defaults, so a test states the
@@ -99,7 +99,7 @@ a reason it was never about.
   `ingredients_nomenclature_declares_canonical_name` ties the two, so
   `{ nomenclature: 'none' }` drops the formal name and `{ nomenclature:
 'mineral' }` supplies one. Every one of §5's seven kinds has an answer.
-- **An ingredient's forms are its `variants`** (MB.222). `IngredientFixture`
+- **An ingredient's forms are its `variants`**. `IngredientFixture`
   has no `form` or `formId`: the row has none, so a form is a
   `VariantFixture` in its `variants` list, a form and whatever that form
   adds — its own description, safety notes, lists, categories and typed

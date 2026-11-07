@@ -14,8 +14,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The /account/email form. MSW answers the mutation in the shape /api/graphql answers (tests/support/msw/graphql.ts), so the component reads back the route's own error mapping, not a hand-written body
-// (claude-docs/components/email-form.md).
+// MSW answers the mutation in /api/graphql's shape (tests/support/msw/graphql.ts), so the component reads the route's own error mapping (claude-docs/components/email-form.md).
 
 function renderForm(ui: ReactNode) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
@@ -24,7 +23,6 @@ function renderForm(ui: ReactNode) {
 const emailField = () => screen.getByRole('textbox', { name: 'Email Address' });
 const submit = () => screen.getByRole('button', { name: 'Send Confirmation' });
 
-/** Answers `SetEmail` with the row as it is, recording the variables it was sent. */
 function acceptSetEmail() {
   const calls: SetEmailMutationVariables[] = [];
   mockGraphQLMutation<SetEmailMutation, SetEmailMutationVariables>('SetEmail', (variables) => {
@@ -41,8 +39,6 @@ describe('EmailForm', () => {
     expect(emailField()).toHaveValue('ada@example.test');
   });
 
-  // The account page's Email section: the section heads it, and a
-  // followed link's confirmed view stays the email page's.
   it('embedded, shows no heading of its own and never the confirmed view', () => {
     renderForm(<EmailForm embedded email="ada@example.test" verified confirmed landing="/coven" />);
 
@@ -65,8 +61,6 @@ describe('EmailForm', () => {
     expect(screen.getByText(UNVERIFIED_STATUS)).toBeInTheDocument();
   });
 
-  // A followed link's landing: the address is proved, so there is nothing to
-  // type — only the address, its state, and the way on.
   it("shows only the verified line, the address and Continue once confirmed, to the account's landing when it was going nowhere else", () => {
     const { unmount } = renderForm(
       <EmailForm
@@ -80,7 +74,6 @@ describe('EmailForm', () => {
 
     expect(screen.getByText(VERIFIED_STATUS)).toBeInTheDocument();
     expect(screen.getByText('ada@example.test')).toBeInTheDocument();
-    // Where the account was going wins over its role's landing.
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven/hearth');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
@@ -90,8 +83,6 @@ describe('EmailForm', () => {
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/keepers');
   });
 
-  // Back later to change it: neither the confirmation nor Continue, since
-  // nothing was just proved; the field, prefilled, with nothing to send yet.
   it('offers a verified account the field alone when it comes back to change the address', () => {
     renderForm(<EmailForm email="ada@example.test" verified landing="/coven" />);
 
@@ -130,14 +121,12 @@ describe('EmailForm', () => {
 
     const status = await screen.findByRole('status');
     expect(status).toHaveTextContent('new@example.test');
-    // The typed value goes as typed; normalising is the service's job. With
-    // no `next`, none is sent: the link lands by role when it is followed.
+    // The typed value goes as typed; normalising is the service's job.
     expect(calls).toEqual([{ email: 'New@Example.test' }]);
     // The row's own address (still the old one) is never what the message names.
     expect(status).not.toHaveTextContent('old@example.test');
   });
 
-  // The link it asks for lands back here, and Continue goes on from there.
   it('sends where Continue goes with the address, so the mailed link carries it', async () => {
     const calls = acceptSetEmail();
     renderForm(
@@ -150,8 +139,7 @@ describe('EmailForm', () => {
     expect(calls).toEqual([{ email: 'ada@example.test', next: '/keepers' }]);
   });
 
-  // The form sends one mail per minute, so a held-down Enter key or a nervous reader cannot fill an inbox.
-  // The clock is faked so the minute passes at once; `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`, as the IngredientForm files fake it.
+  // One mail per minute: the clock is faked so the minute passes at once, and `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`.
   it('waits out a cooldown after a send, refusing a submit meanwhile, then offers to send again', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     onTestFinished(() => {
@@ -251,8 +239,6 @@ describe('EmailForm', () => {
     expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
   });
 
-  // The sign-up mail went out before the page was ever seen, so the server's
-  // wait is the countdown's starting point rather than a surprise on submit.
   it('starts counting down from the wait the server reports', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     onTestFinished(() => {
@@ -262,7 +248,6 @@ describe('EmailForm', () => {
       <EmailForm email="ada@example.test" verified={false} landing="/coven" waitSeconds={1} />,
     );
 
-    // The one button, whatever its caption says of the wait.
     const button = screen.getByRole('button');
     expect(button).toBeDisabled();
     await act(() => vi.advanceTimersByTimeAsync(1000));
@@ -270,9 +255,7 @@ describe('EmailForm', () => {
     expect(button).toBe(submit());
   });
 
-  // No browser bubble: the form is `noValidate` and the input not `required`,
-  // so an empty field reaches the server and its sentence lands beside the
-  // input like every other refusal.
+  // No browser bubble: the form is `noValidate`, so an empty field reaches the server.
   it("sends an empty field to the server and shows its refusal beside the input, not the browser's", async () => {
     mockGraphQLError('SetEmail', {
       code: 'VALIDATION',

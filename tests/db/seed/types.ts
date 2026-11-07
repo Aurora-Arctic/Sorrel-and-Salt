@@ -1,20 +1,14 @@
 import type { SeedDatabase, SeedRunOptions } from '@/db/seed/types';
 
-/** One seed entry point under the shape every seed shares: a scenario, or a reference-data seed run alone, and the tables that run is the seed of (empty before it, filled by it, every row the bootstrap user's). */
 export interface SeedEntry {
   name: string;
-  /** The seeds this one reads from, run for real first. */
   prepare?: (handle: SeedDatabase) => Promise<void>;
-  /** The seed itself, which a dry run rolls back. */
   seed: (handle: SeedDatabase, options?: SeedRunOptions) => Promise<unknown>;
-  /** The seed the fill sweep runs in place of `seed`, when the other sweeps take a smaller input: the compendium's real files, where they take the fixture. */
   fillSeed?: (handle: SeedDatabase) => Promise<void>;
-  /** `prepare`, then `seed`. */
   run: (handle: SeedDatabase) => Promise<void>;
   tables: string[];
 }
 
-/** A `celestial_bodies` or `zodiac_signs` row. */
 export interface VocabularyRow {
   id: string;
   name: string;
@@ -94,17 +88,14 @@ export interface DeityRow {
   deleted_at: Date | null;
 }
 
-/** What a seeded source links, as the seed docs name it. */
 export type DocLinkKind = 'tradition' | 'deity' | 'celestialBody' | 'zodiacSign';
 
-/** One link a source's place in the seed docs gives it. */
 export interface DocLink {
   kind: DocLinkKind;
   name: string;
   locator: string | null;
 }
 
-/** A `references` row as the sources seed writes it; its fields render as a citation. */
 export interface ReferenceRow {
   id: string;
   workspace_id: string | null;
@@ -134,7 +125,6 @@ export interface ReferenceRow {
   deleted_at: Date | null;
 }
 
-/** A `reference_links` row. */
 export interface ReferenceLinkRow {
   id: string;
   reference_id: string;

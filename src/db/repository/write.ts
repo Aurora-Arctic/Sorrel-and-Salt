@@ -71,10 +71,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       .where(and(notSoftDeleted(table), where))
       .returning() as never;
 
-  // An UPDATE that changes nothing keeps its stamps (the `set_updated_at()`
-  // trigger); a touch is the one that must move them, and says so for
-  // its own statement through `app.touch_row`, then clears it so no later
-  // write in the transaction reads it.
+  // A touch must move the stamps an unchanged UPDATE keeps, so it flags its own statement
+  // (claude-docs/db/updated-at.md, "`updated_at` is the database's").
   const touch = async (table: PgTable, where: SQL | undefined) => {
     await tx.execute(sql`select set_config('app.touch_row', 'on', true)`);
     const touched = await update(table, {}, where);
@@ -176,10 +174,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         .delete(retiredIngredientSlugs)
         .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
         .returning(),
-    // Two statements, the entries then their variants: no slug moves, so every holding row takes the same
-    // rewrite. A list is rebuilt in its own order, each value folding to `from` replaced and every other kept
-    // as written. A variant is reached through its entry's tier and liveness by a correlated `EXISTS`, so a
-    // coven's variant is never reached. Returns the entries' rows.
+    // Two statements, entries then variants; a variant is reached through its entry's tier and liveness, so a
+    // coven's is never touched. Returns the entries' rows.
     carryAstrologyRename: async (_curator, list, from, to) => {
       const fromFold = fold(from);
       const entry = sql.identifier('entry');
@@ -206,10 +202,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       );
       return rows;
     },
-    // One statement over the variants: no slug moves, since a slug carries no
-    // form, so every pick takes the same rewrite. The entry's tier
-    // and liveness by the builder's correlated `EXISTS`, so a coven's variant
-    // is never reached.
+    // One statement over the variants; reached through the entry's tier and liveness, so a coven's variant is
+    // never touched.
     carryFormRename: (_curator, formId, form) =>
       update(
         ingredientVariants,
@@ -222,10 +216,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
           ),
         ),
       ),
-    // One statement: no slug moves and the name is the deity's own, so every
-    // link takes the same rewrite. `deity_id` is matched here as the service
-    // read it, and the entry's tier and liveness by the builder's correlated
-    // `EXISTS`, so a coven's link is never reached.
+    // One statement over the links; `deity_id` is matched as the service read it, and a coven's link is never
+    // touched.
     carryDeityRename: (_curator, deityId, name) =>
       update(
         ingredientDeities,
@@ -313,10 +305,8 @@ export async function withAudit<T>(
 }
 
 /**
- * Gives the pending address invitation `invitationId` a fresh token, storing only its hash, and returns the token, or null
- * when the invitation is accepted, declined, revoked, expired, a card, or in a deleted coven. Takes no proof: the invitation
- * mail's step holds the id alone, so it writes as the System account. Only that step's service may call it, which
- * tests/guards/invitation-token-rotation.test.ts holds (CLAUDE.md rule 5).
+ * Gives the pending address invitation a fresh token, storing its hash, and returns the token, or null when
+ * it cannot be mailed. Takes no proof: only the invitation mail's step may call it (CLAUDE.md rule 5).
  */
 export async function rotateInvitationToken(
   invitationId: string,

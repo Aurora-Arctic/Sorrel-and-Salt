@@ -1,7 +1,6 @@
 import UPNG from '@pdf-lib/upng';
 import { CHALK, LABEL, MUTED, SOOT, SORREL_BRIGHT } from './layout';
 
-/** A DeviceCMYK colour, each channel from 0 (no ink) to 1 (solid). */
 export type Cmyk = readonly [number, number, number, number];
 
 // The owner's chosen print tile, 100-A4: black replacement 100%, column A (none of soot's colour kept), row 4 (contrast 4, lift +36).
@@ -19,7 +18,7 @@ const hexRgb = (hex: string): Rgb => {
 const luminance = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
 const clamp = (v: number, max: number) => Math.max(0, Math.min(max, v));
 
-/** RGB (0–255) to CMYK, with g of the grey shared by C, M and Y moved into K. No colour profile: the printer's own sets the result. */
+// No colour profile is applied: the printer's own sets the printed result.
 function toCmyk(rgb: Rgb, g: number): Cmyk {
   const [c, m, y] = rgb.map((v) => 1 - v / 255);
   const k = g * Math.min(c, m, y);
@@ -27,7 +26,6 @@ function toCmyk(rgb: Rgb, g: number): Cmyk {
   return [(c - k) / (1 - k), (m - k) / (1 - k), (y - k) / (1 - k), k];
 }
 
-/** HSL (hue in degrees, saturation and lightness 0–1) to RGB (0–255), for the hues 0–180 soot's family stays within. */
 function hsl(h: number, s: number, l: number): Rgb {
   const c = (1 - Math.abs(2 * l - 1)) * s;
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
@@ -45,10 +43,7 @@ const SOOT_SATURATION =
   (Math.max(...SOOT_RGB) - Math.min(...SOOT_RGB)) / (Math.max(...SOOT_RGB) + Math.min(...SOOT_RGB));
 const TEXT_SATURATION = COLOUR_KEPT * SOOT_SATURATION;
 
-/**
- * Soot with only the kept share of its colour: M and Y move from C's level towards soot's own, and K rises
- * until the ground reads as dark as soot in full.
- */
+// M and Y move from C's level towards soot's own, and K rises until the ground reads as dark as soot in full.
 function groundInk(): Cmyk {
   const [c, m, y, k] = toCmyk(SOOT_RGB, BLACK_REPLACEMENT);
   const M = c + COLOUR_KEPT * (m - c);
@@ -65,10 +60,8 @@ export const HEADING_INK = toCmyk(
 );
 export const MUTED_INK = toCmyk(hsl(HUE, TEXT_SATURATION, 0.72), BLACK_REPLACEMENT);
 export const LABEL_INK = toCmyk(hexRgb(LABEL), BLACK_REPLACEMENT);
-/** The ink a picture's lightest pixels print in: chalk, in the same black replacement. */
 export const PICTURE_LIGHT_INK = toCmyk(hexRgb(CHALK), BLACK_REPLACEMENT);
 
-/** The business card's green rule. */
 export const RULE_INK = toCmyk(hexRgb(SORREL_BRIGHT), BLACK_REPLACEMENT);
 
 const INKS: Record<string, Cmyk> = {
@@ -78,18 +71,13 @@ const INKS: Record<string, Cmyk> = {
   [SORREL_BRIGHT]: RULE_INK,
 };
 
-/** The print ink of a colour the card layout draws in; a colour without one is a mistake, so it throws. */
 export function inkOf(colour: string): Cmyk {
   const ink = INKS[colour];
   if (!ink) throw new Error(`No print ink for ${colour}`);
   return ink;
 }
 
-/**
- * Tints a picture into the tile's inks. Each pixel's colour is stretched from the opaque pixels' mean by the contrast and
- * raised by the lift; its luminance then places it between the ground, at the 1st-percentile luminance, and chalk at white.
- * Returns 8-bit CMYK, four bytes a pixel, and the alpha, one byte a pixel, for the image's soft mask.
- */
+// Returns 8-bit CMYK and, separately, the alpha for the image's soft mask.
 export function tintPicture(
   rgba: Uint8Array,
   width: number,
@@ -129,7 +117,6 @@ export function tintPicture(
   return { cmyk, alpha };
 }
 
-/** Decodes a PNG to 8-bit RGBA, whatever its own depth and colour type. */
 export function decodePng(png: Uint8Array): { rgba: Uint8Array; width: number; height: number } {
   const image = UPNG.decode(png.slice().buffer);
   return { rgba: new Uint8Array(UPNG.toRGBA8(image)[0]), width: image.width, height: image.height };

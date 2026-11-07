@@ -8,8 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 
-// The workshop gate asks Better Auth for the session; that lookup is mocked
-// here, and request-session.test.ts covers what it does with the answer.
+// The session lookup is mocked; request-session.test.ts covers what it does with the answer.
 const sessionFromHeaders = vi.hoisted(() => vi.fn<(headers: Headers) => Promise<Session | null>>());
 vi.mock('@/lib/request-session', () => ({ sessionFromHeaders }));
 
@@ -36,13 +35,10 @@ function request(path: string, cookie?: string, headers: Record<string, string> 
   });
 }
 
-/** The request headers `NextResponse.next({ request: { headers } })` forwards upstream. */
 function forwarded(response: Response, name: string): string | null {
   return response.headers.get(`x-middleware-request-${name}`);
 }
 
-// The matcher only keeps the proxy off what is never a page. Which pages are
-// public is PUBLIC_ROUTES, below.
 describe('the proxy matcher', () => {
   it.each([
     '/',
@@ -66,9 +62,7 @@ describe('the proxy matcher', () => {
     expect(matches(path)).toBe(true);
   });
 
-  // Imported assets ship under /_next/static/media, so the backdrop's images are imported
-  // rather than dropped into public/. Nothing in public/ is exempt: a file placed there is a
-  // protected page to the matcher (redirected to /sign-in, HTML where the browser asked for an image) until its own entry is added.
+  // A file placed in public/ is a protected page to the matcher until it has an entry; imported assets ship under /_next/static/media.
   it.each(['/favicon.ico', '/robots.txt', '/images/anything.webp'])(
     'still runs on a public-file path with no entry, %s',
     (path) => {
@@ -95,7 +89,6 @@ describe('the proxy matcher', () => {
     },
   );
 
-  // Only that one prefix is exempt: every other path under /.well-known/ still reaches the proxy.
   it.each([
     '/.well-known/other',
     '/.well-known/ai-catalog.json',
@@ -113,23 +106,17 @@ describe('public routes', () => {
     '/sign-in',
     '/sign-in?next=%2Fcoven%2Fhearth&error=access_denied',
     '/invite/2b7c5e2f8a',
-    // Asking for a reset link, and the page the mailed link opens.
     '/forgot-password',
     '/reset-password?token=abc',
     '/reset-password?error=INVALID_TOKEN',
-    // Where a paused account's pages send it.
     '/access-paused',
-    // A mail client fetches the mail's images and fonts with no cookie.
     '/email/images/salt-dark.png',
     '/email/fonts/lexend-latin.woff2',
-    // The one public surface, and the files a crawler or browser asks for.
     '/compendium',
     '/compendium?category=herbs',
     '/compendium/ingredients/x',
-    // The support page offers a signed-out visitor Sign In and holds no data.
     '/support',
     '/support?support=bug&error=404',
-    // The public documents carry no application data.
     '/privacy',
     '/disclaimer',
     '/terms',
@@ -151,8 +138,6 @@ describe('public routes', () => {
     expect(response.headers.get('x-middleware-next')).toBe('1');
   });
 
-  // Deny-by-default holds for lookalikes: an entry names a whole path, or a
-  // whole segment with `/*`, so a route that merely starts with one is protected.
   it.each([
     '/sign-in-help',
     '/sign-in/elsewhere',
@@ -179,16 +164,13 @@ describe('public routes', () => {
     expect((await proxy(request(path))).status).toBe(307);
   });
 
-  // A public page that asks for a sign-in part-way — accepting an invitation —
-  // needs its own path back, the same as a protected one.
   it('forwards the return path on a public route too', async () => {
     const response = await proxy(request('/invite/2b7c5e2f8a'));
     expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/invite/2b7c5e2f8a');
   });
 });
 
-// Staging is a public URL, so off production every response asks search engines to index
-// nothing. The test is VERCEL_ENV, as impersonation's is.
+// Staging is a public URL, so off production every response asks search engines to index nothing.
 describe('X-Robots-Tag', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -245,7 +227,6 @@ describe('X-Robots-Tag', () => {
     expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex, follow');
   });
 
-  // The list's later pages are real pages with their own canonical, so they stay indexable.
   it.each(['/compendium?after=c', '/compendium?before=c'])(
     'leaves the compendium pager page %s indexable on production',
     async (path) => {
@@ -281,7 +262,6 @@ describe('proxy', () => {
     expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in`);
   });
 
-  // An unrelated cookie is not a session: the check is for Better Auth's name.
   it('redirects when the only cookie is not a session cookie', async () => {
     expect((await proxy(request('/coven/hearth', 'theme=dark'))).status).toBe(307);
   });
@@ -319,7 +299,6 @@ describe('the workshop', () => {
   const actAs = (role: Session['role']) =>
     sessionFromHeaders.mockResolvedValue({ userId: USER_ID, role });
 
-  /** The request goes on to a file under /workshop/: passed through, or sent there. */
   function reachesTheWorkshop(response: NextResponse): boolean {
     return (
       response.headers.get('x-middleware-next') === '1' ||
@@ -327,10 +306,7 @@ describe('the workshop', () => {
     );
   }
 
-  /**
-   * Each refusal below is the gate reading who is asking, not a path the proxy never sees or a response that would have failed anyway:
-   * the same request with a keeper's live session reaches the files.
-   */
+  // Each refusal is the gate reading who is asking: the same request with a keeper's live session reaches the files.
   async function expectAnAdminReaches(path: string) {
     expect(matches(path)).toBe(true);
     sessionFromHeaders.mockReset();
@@ -355,8 +331,7 @@ describe('the workshop', () => {
     await expectAnAdminReaches(path);
   });
 
-  // A cookie present but not live — expired, revoked, forged. The cookie-only
-  // check alone would have let it through to the files.
+  // A cookie present but not live; the cookie-only check alone would let it through.
   it('redirects a cookie Better Auth does not recognise to /sign-in', async () => {
     sessionFromHeaders.mockResolvedValue(null);
 
@@ -367,8 +342,7 @@ describe('the workshop', () => {
     await expectAnAdminReaches('/workshop/index.html');
   });
 
-  // The cookie is real and the session live, so what refuses is the role and
-  // nothing else. A curator curates the compendium and has no workshop.
+  // The cookie is real and the session live, so only the role refuses.
   describe.each(['user', 'curator'] as const)('a signed-in %s', (role) => {
     it.each(['/workshop', ...PATHS])('is refused %s with a plain 403', async (path) => {
       actAs(role);
@@ -416,10 +390,7 @@ describe('the workshop', () => {
     );
   });
 
-  /**
-   * Whether `policy`, on a page at `page`, lets scripts request `url`: CSP Level 3's `connect-src`, falling back to `default-src`.
-   * A scheme-less source takes the page's; a source ending `/` matches every path beneath it; an unknown keyword throws.
-   */
+  /** CSP Level 3 `connect-src`, falling back to `default-src`; throws on an unknown keyword. */
   function connectAllows(
     policy: string | null,
     url: string,
@@ -447,9 +418,7 @@ describe('the workshop', () => {
     });
   }
 
-  // The proxy may see an address other than the one in the browser's bar: `next start` bound to
-  // 0.0.0.0, a Docker port mapping, or a host that ends TLS and forwards plain http. The policy
-  // must name the browser's address, or Storybook's own fetches are refused.
+  // The proxy may see another address than the browser's bar (`next start` on 0.0.0.0, a Docker port mapping, TLS ended upstream); the policy must name the browser's.
   it.each<{ seen: string; headers: Record<string, string>; page: string }>([
     {
       seen: 'http://0.0.0.0:8200/workshop/index.html',
@@ -504,8 +473,7 @@ describe('the workshop', () => {
     },
   );
 
-  // The workshop's own code runs on this origin with a keeper's cookie. The
-  // policy lets it fetch Storybook's own files and nothing else on the origin.
+  // The policy lets the workshop's code fetch Storybook's own files and nothing else on the origin.
   describe.each(['/workshop', '/workshop/index.html', '/workshop/iframe.html'])(
     "the admin's policy at %s",
     (path) => {

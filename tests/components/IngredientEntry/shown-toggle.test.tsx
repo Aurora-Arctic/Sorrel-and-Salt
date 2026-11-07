@@ -15,8 +15,6 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The curator's Shown in Compendium switch on a compendium entry: it saves on the flip.
-
 const ID = '00000000-0000-4000-8000-000000000002';
 
 function renderToggle(shown: boolean) {
@@ -66,8 +64,7 @@ describe('ShownToggle', () => {
 
   // Regression: off then straight back on saved the off and lost the on.
   it('keeps the last position when flipped twice while the first save is still out', async () => {
-    // The entry as the server holds it, each write setting it; the first write's answer is held
-    // back so the second press lands while it is still out.
+    // The first write's answer is held back so the second press lands while it is still out.
     let stored = true;
     const calls: SetCompendiumEntryShownMutationVariables[] = [];
     let releaseFirst: () => void = () => undefined;
@@ -91,7 +88,6 @@ describe('ShownToggle', () => {
     press(toggle());
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toEqual({ id: ID, shown: false });
-    // Straight back on, before the off has answered.
     press(toggle());
     releaseFirst();
 

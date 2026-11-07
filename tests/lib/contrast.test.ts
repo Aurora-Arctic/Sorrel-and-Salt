@@ -9,9 +9,6 @@ import {
   relativeLuminance,
 } from '@/lib/contrast';
 
-// The contrast floor a category group's colours are held to on write, each against the harder of
-// its own theme's two surfaces.
-
 describe('HEX_COLOR', () => {
   it('takes a whole #rrggbb hex in either case, and nothing shorter or longer', () => {
     expect(['#4e8bc2', '#4E8BC2'].every((hex) => HEX_COLOR.test(hex))).toBe(true);

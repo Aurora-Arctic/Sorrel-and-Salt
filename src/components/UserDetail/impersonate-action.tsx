@@ -51,7 +51,7 @@ const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => 
             setBusy(false);
             throw error;
           }
-          // Left busy: the page is replaced by the load below.
+          // Stays busy: the page is replaced by the load below.
           window.location.assign(IMPERSONATION_LANDING);
         }}
         onKeep={() => setAsked(false)}

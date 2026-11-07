@@ -5,10 +5,9 @@ import { signInAgainAs } from './session';
 import { slotUrl } from './slots';
 import { seedCoven, type Coven } from './stories/coven-ingredients';
 
-// Quick Look, Add Ingredient and the Account menu load their code the first time they open, not with
-// the page, so the page that carries them is lighter to download and to start. Each is opened once
-// on a page that has settled: the browser fetches a script it had not, and the dialog or menu then
-// works (claude-docs/components/modal.md; claude-docs/components/account-menu.md).
+// Quick Look, Add Ingredient and the Account menu load their code on first open, not with the page. Each is
+// opened once on a settled page: the browser fetches a script it had not, and the dialog or menu then works
+// (claude-docs/components/modal.md; claude-docs/components/account-menu.md).
 
 const COVEN = 'Fixture Coven First Open';
 let coven: Coven;

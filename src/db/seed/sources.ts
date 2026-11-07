@@ -6136,10 +6136,8 @@ export async function seedSources(
 }
 
 /**
- * The same seed inside the caller's transaction, after the vocabularies it links. A reference is known by its `seed_key` (the citation
- * as rendered when seeded), so an edited one is never twinned; a target row by its own `seed_key`, so a renamed deity keeps its sources.
- * Nothing present is updated bar a source's fields and `scholarly` mark, which follow this list unless a person edited the row; that one
- * is kept and returned, named by its citation. Nothing soft-deleted is re-inserted. Assumes the GUC is published and the bootstrap user exists.
+ * The same seed inside the caller's transaction, after the vocabularies it links; assumes the GUC is
+ * published and the bootstrap user exists (claude-docs/db/references.md, "How the seed reads the docs").
  */
 export async function seedVocabularySources(tx: SeedTransaction): Promise<VocabularySourceKept[]> {
   const referenceIds = await insertMissingReferences(

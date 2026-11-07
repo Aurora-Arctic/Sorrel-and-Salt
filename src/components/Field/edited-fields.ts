@@ -4,14 +4,11 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import type { FieldValues, UseFormSubscribe } from 'react-hook-form';
 
 /**
- * The field paths the person has edited since the form (re)started, handed
- * down so a field can ask whether its error may be drawn (`errorShown`). Null
- * outside a form that tracks edits, where a field's error then waits only for
- * the field to be left.
+ * The field paths edited since the form (re)started, so a field can ask whether its error may be drawn (`errorShown`).
+ * Null outside a form that tracks edits, where an error waits only for the field to be left.
  */
 export const EditedFieldsContext = createContext<ReadonlySet<string> | null>(null);
 
-/** The surrounding form's edited fields, or null where none are tracked. */
 export const useEditedFieldsContext = (): ReadonlySet<string> | null =>
   useContext(EditedFieldsContext);
 
@@ -23,8 +20,7 @@ export function useEditedFields<V extends FieldValues>(
   subscribe: UseFormSubscribe<V>,
 ): { edited: ReadonlySet<string>; clear: () => void } {
   const record = useRef<Set<string>>(new Set());
-  // A new set per change, so what is handed down changes identity and the
-  // fields and sections reading it render again.
+  // A new set per change, so what is handed down changes identity and its readers render again.
   // oxlint-disable-next-line react/refs -- the ref is read once, in a state initialiser or after a held pointer, never to draw something else
   const [edited, setEdited] = useState<ReadonlySet<string>>(record.current);
 

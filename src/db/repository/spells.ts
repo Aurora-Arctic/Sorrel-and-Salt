@@ -34,10 +34,8 @@ export function readableSpells(membership: Membership): SQL | undefined {
 }
 
 /**
- * The reader rule for a working: its spell must be readable, and the working itself is the coven's if shared, else its
- * recorder's or a named participant's. A working is never wider than its spell, but it keeps its own visibility when
- * the spell widens, so the working's column is read here beside the spell's. Live only: the participant and deduction rows have no
- * `deleted_at` and are reached through this.
+ * The reader rule for a working: its spell is readable, and the working is the coven's if shared, else its
+ * recorder's or a participant's. Live only: the participant and deduction rows have no `deleted_at`.
  */
 export function readableWorkings(membership: Membership): SQL | undefined {
   return and(

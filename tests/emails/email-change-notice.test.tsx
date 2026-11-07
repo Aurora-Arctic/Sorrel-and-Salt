@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
 
-// What the mail carries: whom it goes to, when, which domain, and no link that acts. Its wording and design are the story's (src/emails/email-change-notice.stories.tsx).
-
 const ORIGIN = 'http://localhost:8000';
 const AT = new Date('2026-10-30T14:05:00Z');
 

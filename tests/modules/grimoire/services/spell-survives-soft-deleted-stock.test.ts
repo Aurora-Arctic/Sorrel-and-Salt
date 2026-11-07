@@ -10,10 +10,6 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// A spell names an ingredient and a form, never the coven's jar of it
-// , so running out of the jar, which soft-deletes the stock row, leaves
-// the recipe whole. What changes is only that the form is no longer held.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -23,7 +19,6 @@ beforeEach(async () => {
   await sql`truncate spells, ingredients cascade`;
 });
 
-/** A spell with a held ingredient, a one-off ingredient and an instruction, and the held jar's id. */
 async function seedSpell() {
   const ingredientId = await insertIngredient(
     sql,
@@ -62,8 +57,7 @@ describe('a spell whose ingredient has had its stock row soft-deleted', () => {
   it('reads in full, with every step as it was', async () => {
     const { spell, jarId } = await seedSpell();
     const before = await readSteps(spell);
-    // Why it could have changed: the jar is live until deleted, and is the only
-    // thing deleted.
+    // Why it could have changed: the jar is live until deleted, and is the only thing deleted.
     expect(
       (await sql`select 1 from inventory_items where id = ${jarId} and deleted_at is null`).length,
     ).toBe(1);

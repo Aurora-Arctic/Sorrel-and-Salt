@@ -3,9 +3,6 @@ import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import { usePressOnMount } from '../../../.storybook/press';
 import { useClickFeedback } from '.';
 
-// Render-only; opening, closing and focus are asserted in tests/components/ClickFeedback,
-// placement and axe in tests/e2e/workshop/click-feedback.spec.ts. Each button
-// stands for an action whose service refuses it.
 const meta = {
   title: 'Surfaces / Click Feedback',
 } satisfies Meta;
@@ -47,8 +44,6 @@ const row: CSSProperties = {
   gap: '0.5rem',
 };
 
-// A text button, as a menu item or a fold toggle is: no border, so no corner
-// for the badge. Every `.btn` has a border, `.btn--quiet` included.
 const borderless: CSSProperties = {
   border: 0,
   padding: 0,
@@ -58,8 +53,6 @@ const borderless: CSSProperties = {
   cursor: 'pointer',
 };
 
-// Three bordered buttons, and a borderless one last, with room to its right
-// for the badge that goes beside it.
 const Row = ({ style }: { style?: CSSProperties }) => (
   <div style={{ ...row, ...style }}>
     <Action label="Leave Coven" />
@@ -74,8 +67,6 @@ const Pressed = ({ name, style }: { name: string; style?: CSSProperties }) => {
   return <Row style={style} />;
 };
 
-// Pinned: in a box too narrow for either alignment, the callout pinned inside
-// it, its arrow still under the control.
 const PinnedView = () => {
   usePressOnMount('Remove');
   return (
@@ -88,10 +79,6 @@ const PinnedView = () => {
   );
 };
 
-// Every placement the badge and callout take. Each state but Resting presses its
-// button once drawn, so it opens on the refusal. Bordered: badge on the corner.
-// Borderless: badge beside the button. Near Right Edge: callout's end under the
-// control's end. Pinned: see PinnedView.
 const STATES: Record<string, ReactNode> = {
   Resting: <Row />,
   Bordered: <Pressed name="Remove" />,
@@ -106,8 +93,6 @@ export const States: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// Refused, then a later try that succeeds: the badge and the callout both go,
-// fading out, which the workshop spec samples.
 export const ThenSucceeds: Story = {
   render: () => {
     const { anchorRef, report, feedback } = useClickFeedback({ name: 'Remove' });

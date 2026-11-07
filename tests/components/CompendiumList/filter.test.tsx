@@ -44,15 +44,10 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The compendium's filter row and its search sentence, drawn without the table beneath them, as IngredientSearch draws them above it.
-// What the list does while a filter is on its way, giving way to its status, is index.test.tsx's, since only it renders the table.
-
-/** The compendium's page as the App Router draws it: the row under the filter its address shows, which a push changes inside the row's transition, as Next renders the new page. */
 function RoutedCompendium(): ReactElement {
   const [filter, setFilter] = useState<CompendiumListFilter>(NO_FILTER);
   router.push.mockImplementation((href: string) => {
     const params = new URL(href, 'http://localhost').searchParams;
-    // The page reads its address through the table; so does this stand-in.
     setFilter(
       COMPENDIUM_PARAMS.read(
         Object.fromEntries([...new Set(params.keys())].map((name) => [name, params.getAll(name)])),
@@ -62,12 +57,9 @@ function RoutedCompendium(): ReactElement {
   return <FilterRow {...props({ filter })} />;
 }
 
-// The filter row: the name search, then the Filters button with the panel of facets.
-// Every address it pushes carries the name typed and every facet shown.
 describe('CompendiumList filter', () => {
   readyFilterRow(router.push);
   const pushed = () => new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
-  /** The form's fields as the browser would send them. */
   const fields = (form: HTMLElement) => new URLSearchParams(sent(form));
 
   it.each(['admin', 'public'] as const)('draws no Compact switch in the %s list', (audience) => {
@@ -75,8 +67,6 @@ describe('CompendiumList filter', () => {
     expect(screen.queryByRole('switch', { name: 'Compact' })).toBeNull();
   });
 
-  // The server draws the panel open inside the GET form, each facet a native control, so the
-  // whole filter submits before any script runs.
   it('sends the name and every facet from the form the server drew, categories included', () => {
     const { container } = drawnOnServer(
       <FilterRow
@@ -101,8 +91,6 @@ describe('CompendiumList filter', () => {
     expect(sentFields.get('categoryMode')).toBe('any');
   });
 
-  // The panel covers the results, so a change in it is held, not applied: the address moves
-  // once, when the panel is closed or Apply Filters is pressed.
   it('holds a change in the open panel, and Apply Filters applies them all in one push', () => {
     render(
       <FilterRow
@@ -139,7 +127,6 @@ describe('CompendiumList filter', () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
-  // Each toggle is written as 1 and, turned off, left out of the address, beside the facets shown.
   it.each([
     {
       toggle: 'No Refs',
@@ -184,8 +171,7 @@ describe('CompendiumList filter', () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
-  // The server counts forms with the forms chosen left out of the filter, so the other forms
-  // keep their counts; the open panel must offer them while one is held.
+  // The server counts forms with the chosen forms left out of the filter, so the open panel must offer the others.
   it('still offers the other forms, with their counts, after one is picked before Apply', async () => {
     mockGraphQLQuery('CompendiumFacetCounts', () => ({
       compendiumFacets: {
@@ -235,9 +221,6 @@ describe('CompendiumList filter', () => {
     ]);
   });
 
-  // A pick opens the entry's Quick Look, its details modal,
-  // over the list as it stands, the page and the filter kept and the text typed but
-  // not searched not applied. Each list keys its details as its own eye does.
   describe('picking a name from the dropdown', () => {
     const PAGE = { after: 'cursor-x' };
     const TESTWORT = {
@@ -316,8 +299,6 @@ describe('CompendiumList filter', () => {
     });
   });
 
-  // The row is not drawn afresh for a facet, so the open panel and the focus in it survive
-  // the change; a new name does draw it afresh.
   it('keeps the same form through a facet change, and draws a new one for a new name', async () => {
     render(<RoutedCompendium />);
     const before = row();
@@ -478,12 +459,9 @@ describe('CompendiumList filter', () => {
       counts: { ...COUNTS, deities: DEITIES.map(({ id }, i) => ({ value: id, count: i + 1 })) },
       vocabulary: { deities: DEITIES, formIcons: {} },
     };
-    // The sentence is the status outside the search landmark, where the comboboxes keep theirs.
     const sentence = () => listStatus()[0];
 
-    // The old line backspaced, then the new one typed in full. The ticks write the line to a ref and
-    // the render only shows it, so a phase runs to its end in one act and renders once; the next
-    // phase's interval starts from that render, so each phase takes its own act.
+    // Each phase runs to its end in one act: the ticks write the line to a ref and the render only shows it; the next phase's interval starts from that render.
     const typeOut = async () => {
       await act(() => vi.advanceTimersByTimeAsync(1500));
       await act(() => vi.advanceTimersByTimeAsync(1500));
@@ -523,7 +501,6 @@ describe('CompendiumList filter', () => {
         />,
       );
 
-      // The sentence shows categories in lower case.
       expect(sentence()).toHaveTextContent('testcraft');
       expect(sentence()).not.toHaveTextContent('test-x-slug');
     });
@@ -542,14 +519,11 @@ describe('CompendiumList filter', () => {
 
       expect(pushed().has('query')).toBe(false);
       expect(typing()).toBe(true);
-      // The old line is backspaced before the lead is typed: once the lead is whole, the
-      // line holds no term.
       await typeOut();
       expect(typedLine()).toContain('Searching for ingredients');
       expect(typedLine()).not.toContain('matching');
     });
 
-    // The whole typed sentence while a search is on its way: the first line and the clauses
     it('drops a facet being removed from the typed sentence, and names the new term and facet', async () => {
       typingClock();
       render(

@@ -3,7 +3,6 @@ import type postgres from 'postgres';
 // What a variant write left behind, read raw: the two ingredient services' tests assert the rows a
 // save wrote, tombstones included, rather than what a reader shows.
 
-/** Every form of the ingredient, live and soft-deleted, by form and then age. */
 export function variantRowsOf(sql: postgres.Sql, ingredientId: string) {
   return sql`
     select id, form, form_id, description, safety_notes, celestial_bodies, deleted_at, deleted_by,
@@ -12,17 +11,12 @@ export function variantRowsOf(sql: postgres.Sql, ingredientId: string) {
     order by lower(form), created_at`;
 }
 
-/** The ingredient's live forms' text, in form order. */
 export async function liveFormsOf(sql: postgres.Sql, ingredientId: string): Promise<string[]> {
   return (await variantRowsOf(sql, ingredientId))
     .filter((row) => row.deleted_at === null)
     .map((row) => row.form as string);
 }
 
-/**
- * One form's own children as rows: its category pairs, its live substitutes
- * and its live reference links, each with the transaction that last wrote it.
- */
 export async function variantChildrenOf(sql: postgres.Sql, variantId: string) {
   const [categories, substitutes, references] = await Promise.all([
     sql`
@@ -39,7 +33,6 @@ export async function variantChildrenOf(sql: postgres.Sql, variantId: string) {
   return { categories, substitutes, references };
 }
 
-/** The live form of `ingredientId` called `form`, case aside: its id. */
 export async function variantIdOf(
   sql: postgres.Sql,
   ingredientId: string,

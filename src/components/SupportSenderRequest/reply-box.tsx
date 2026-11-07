@@ -11,8 +11,7 @@ import Notice from '../Notice';
 import { useSupportAction } from '../SupportRequests/use-support-action';
 import type { SupportSenderReplyBoxProps } from './types';
 
-// The sender's answer on their own request, sent through /api/graphql. While they are timed out the box and the button are
-// shut and a notice above them says when it ends, or that it has no end date; the service refuses the message too.
+// While they are timed out the box and the button are shut; the service refuses the message too.
 
 const SendDocument = graphql(`
   mutation SendSupportMessage($requestId: ID!, $body: String!) {

@@ -13,9 +13,6 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 const { default: AccountMenu } = await import('@/components/AccountMenu');
 const { initialsOf } = await import('@/components/AccountMenu/initials');
 
-// The account button and its disclosure panel. A disclosure, so the
-// button states whether the panel is open and which element it controls.
-
 const button = () => screen.getByRole('button', { name: 'Fixture Owner' });
 
 /** Presses the account button and waits for the panel's rows, which load on the first press. */
@@ -128,9 +125,6 @@ describe('AccountMenu', () => {
   });
 });
 
-// Coven invitations waiting for the viewer's address: the count is a
-// link of its own to the account page's Invitations section, beside Your
-// Account, which still opens the page itself; the button says how many.
 describe('AccountMenu with pending invitations', () => {
   it('links the count to the Invitations section and leaves Your Account on the page', async () => {
     render(<AccountMenu name="Fixture Owner" verified pendingInvitations={2} />);

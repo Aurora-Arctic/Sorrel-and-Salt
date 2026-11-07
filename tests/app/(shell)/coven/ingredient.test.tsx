@@ -11,13 +11,9 @@ import {
 } from '@/components/CovenSwitchTargets/context';
 import { entryDetail } from '../../../support/entry-detail';
 
-// A coven's ingredient page, with the guard and the services mocked.
-// It proves the coven in the address is what the lookup is given, that a refusal is a 404, and which of Edit and the compendium link each kind of entry gets.
-
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
-// The edit dialog is a client part, which asks for the router.
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ notFound, useRouter: () => router }));
 
@@ -32,9 +28,7 @@ const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
 const compendiumMatchesOf = vi.fn();
 const getCupboardEntry = vi.fn();
-// Which of the viewer's covens an entry opens in is the service's to say; none unless a test says so.
 const covensOpeningEntry = vi.fn();
-// Which rows are retired is the service's to say; live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
 const stockOf = vi.fn();
 const lastEditsOf = vi.fn();
@@ -45,18 +39,13 @@ vi.mock('@/modules/ingredients', () => ({
   getCupboardEntry,
   covensOpeningEntry,
   isRetired,
-  // The permission Make It Ours is offered on, as the service asserts it.
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
-  // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
   isAnnotated: () => false,
-  // The jars are the stock service's to scope; here only what the page asks it for.
   stockOf,
-  // Who last changed the stock; the service asserts the membership.
   lastEditsOf,
 }));
 
-// The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
   default: () => <form aria-label="Fixture Form" />,
 }));
@@ -64,15 +53,10 @@ vi.mock('@/components/IngredientForm', () => ({
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 
-// The plus's covens are plus-covens.ts's to read; here only which entries ask for them,
-// and that what comes back reaches the pair beside the pencil. None unless a test says so.
 const covensHolding = vi.fn();
 const plusCovensOf = vi.fn();
 vi.mock('@/app/plus-covens', () => ({ covensHolding, plusCovensOf }));
 
-// The cupboard buttons are client parts that send mutations, so the page
-// renders under a query client.
-// The coven layout holds the provider the switcher reads; a probe stands in for the switcher.
 function Registration() {
   const registration = useCovenSwitchRegistration();
   return (
@@ -104,9 +88,6 @@ const params = (id = ID, search: Record<string, string> = {}) => ({
 
 const compendiumRow = () => entryDetail().entry;
 const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-own' }).entry;
-// Edit, a plain link when it is the only choice, or Edit Compendium Entry in the Edit menu
-// beside the cupboard's choices, opened here.
-// Edit is the compendium's edit; Edit Stock is a different choice and is asserted by its own tests.
 const edits = () => {
   const menu = screen.queryByRole('button', { name: /^Edit\b/, expanded: false });
   if (menu) fireEvent.click(menu);
@@ -116,7 +97,6 @@ const edits = () => {
   ];
 };
 
-// A cupboard row with no overrides, as the cupboard reads hand it back.
 const HELD_ROW = {
   id: 'fixture-jar',
   label: null,
@@ -304,8 +284,6 @@ describe('the coven ingredient page', () => {
   });
 
   it('offers a retired entry the coven holds Annotate, Make It Ours and Remove, but no compendium Edit, Add or public link', async () => {
-    // The coven keeps annotating its row and may take the entry as its own or remove it. The
-    // live-only cupboard read finds nothing; the retired-entry read carries the row in the detail.
     getIngredient.mockResolvedValue(compendiumRow());
     ingredientDetailOf.mockResolvedValue({
       ...entryDetail(),
@@ -318,7 +296,6 @@ describe('the coven ingredient page', () => {
     });
     renderPage(await Page(params()));
 
-    // Annotate is the main icon and the three dots hold the rest.
     expect(screen.getByRole('link', { name: /^Annotate\b/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^More for\b/ }));
     const items = screen.getAllByRole('menuitem').map((item) => item.textContent);
@@ -363,7 +340,6 @@ describe('the coven ingredient page', () => {
 });
 
 describe('the coven ingredient page’s plus', () => {
-  // The plus stands left of the pencil on a coven's page too.
   const OTHER = { id: 'w-other', name: 'Other Coven' };
   const HOLDING = [{ id: WORKSPACE.id, slug: WORKSPACE.slug, name: WORKSPACE.name }];
 
@@ -432,7 +408,6 @@ describe('the coven ingredient page’s Annotate', () => {
       zodiacSigns: null,
       colors: null,
     });
-  // Annotate is the card's main icon, a link, where one coven may annotate.
   const annotateLink = () => screen.getByRole('link', { name: /^Annotate\b/ });
 
   it('links Annotate to this very page with a bare ?annotate, and draws no dialog until asked', async () => {
@@ -471,8 +446,6 @@ describe('the coven ingredient page’s Annotate', () => {
   });
 });
 
-// Compendium on every compendium entry in a coven, and the shelf before the
-// name for one the cupboard holds.
 describe('the coven ingredient page’s marks', () => {
   const compendiumMark = () =>
     screen.queryAllByRole('status').find((s) => !/Review/.test(s.textContent ?? '')) ?? null;
@@ -625,7 +598,6 @@ describe('the coven ingredient page’s stock', () => {
     deletedAt: null,
     deletedBy: null,
   };
-  // One form, Testroot, and one jar of it holding 5 g.
   const withRoot = async (row: ReturnType<typeof compendiumRow>, detail: object = {}) => {
     const variant = {
       id: VARIANT_ID,
@@ -667,7 +639,6 @@ describe('the coven ingredient page’s stock', () => {
     renderPage(await Page(params()));
   };
   const stock = () => screen.queryByRole('region', { name: 'Stock' });
-  // The heading's button and the one jar's, each named for the ingredient; none for a viewer.
   const editStock = () => screen.queryAllByRole('button', { name: /^Edit Stock\b/ });
 
   it('asks for this coven’s jars of the entry alone, and lists them under Stock for a held entry', async () => {
@@ -702,7 +673,6 @@ describe('the coven ingredient page’s stock', () => {
 // draws, so a held entry's page reads them once.
 describe('the coven ingredient page’s Edit Stock', () => {
   const VARIANT_ID = '00000000-0000-4000-8000-0000000000c1';
-  // One form, Testroot, and no jar yet: the dots are offered from the forms alone.
   const withForm = async (row: ReturnType<typeof compendiumRow>, detail: object = {}) => {
     const variant = { id: VARIANT_ID, ingredientId: row.id, workspaceId: null, form: 'testroot' };
     getIngredient.mockResolvedValue(row);
@@ -719,7 +689,6 @@ describe('the coven ingredient page’s Edit Stock', () => {
     renderPage(await Page(params()));
   };
   const held = () => getCupboardEntry.mockResolvedValue(HELD_ROW);
-  // The dots on the heading are the cupboard's menu; Edit Stock is among their choices.
   const stockItem = () => {
     const dots = screen.queryByRole('button', { name: /^More for\b/ });
     if (dots) fireEvent.click(dots);
@@ -747,8 +716,6 @@ describe('the coven ingredient page’s Edit Stock', () => {
     expect(stockItem()).toBeNull();
   });
 
-  // A retired entry reads its forms through the coven's cupboard entry, so the detail
-  // carries them for the coven that holds it and none for one that does not.
   const retired = (cupboardEntry: typeof HELD_ROW | null) => {
     getCupboardEntry.mockResolvedValue(cupboardEntry);
     return withForm(compendiumRow(), { retired: true, cupboardEntry });
@@ -779,8 +746,6 @@ describe('the coven ingredient page’s Edit Stock', () => {
   });
 });
 
-// The coven switcher stays on this page when the next coven opens it. Which covens do is the
-// service's, per viewer; the page asks it once and passes the slugs up to the switcher.
 describe('the coven ingredient page’s coven switch', () => {
   const ADDRESS = `/coven/${WORKSPACE.slug}/ingredients/${ID}`;
 

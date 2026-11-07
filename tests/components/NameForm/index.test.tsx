@@ -19,7 +19,6 @@ const nameField = () => screen.getByRole('textbox', { name: 'Name' });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 
-/** Answers `SetName` with the row renamed as the server would, trimmed. */
 function acceptSetName() {
   const calls: SetNameMutationVariables[] = [];
   mockGraphQLMutation<SetNameMutation, SetNameMutationVariables>('SetName', (variables) => {
@@ -58,7 +57,6 @@ describe('NameForm', () => {
 
     expect(await screen.findByRole('status')).toBeVisible();
     expect(calls).toEqual([{ name: ' Ada Renamed ' }]);
-    // The saved name is the new baseline, as the server stored it.
     expect(nameField()).toHaveValue('Ada Renamed');
     expect(save()).toBeDisabled();
   });

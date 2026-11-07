@@ -14,7 +14,6 @@ describe('covenSlugOf', () => {
     ['/account', null],
     ['/coven', null],
     ['/compendium/coven/x', null],
-    // The create page's segment is no workspace's.
     [NEW_COVEN_PATH, null],
   ])('reads %s as %s', (path, expected) => {
     expect(covenSlugOf(path)).toBe(expected);
@@ -35,7 +34,6 @@ describe('pathInCoven', () => {
 describe('isReservedCovenSlug', () => {
   it('reserves the create page’s segment and the values of `?new` that open a dialog, and nothing else', () => {
     expect(isReservedCovenSlug('new')).toBe(true);
-    // The values of `?new` that open a dialog rather than name a coven.
     expect(isReservedCovenSlug('spell')).toBe(true);
     expect(isReservedCovenSlug('ingredient')).toBe(true);
     // A value naming a coven is a prefix and then the whole slug, so a slug may start
@@ -88,9 +86,6 @@ describe('pathInCoven from a page the coven registered', () => {
   });
 });
 
-// While a coven page is on its way its region draws the page that arrives: the
-// heading and filter of the cupboard, the heading and tabs of the people, the
-// home's own contents menu.
 describe('covenTarget', () => {
   it('draws an ingredient\x27s own page as a page with its jump menu, not the cards of the list above it', () => {
     expect(covenTarget('/coven/a/ingredients/some-id')).toEqual({

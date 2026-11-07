@@ -77,7 +77,6 @@ export async function publicCupboardOf(
   );
   if (!offers) return undefined;
 
-  // Only a holding coven of the viewer's that may annotate opens the dialog.
   const asked = single(searchParams.annotate);
   const annotating = covens.find(
     ({ covenSlug, held: holds, canAnnotate }) => covenSlug === asked && holds && canAnnotate,

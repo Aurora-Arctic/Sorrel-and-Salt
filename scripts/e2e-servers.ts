@@ -1,17 +1,7 @@
 #!/usr/bin/env node
-// Leaves the e2e servers running between local runs: builds `.next-e2e` once,
-// starts every server `npm run e2e` would, and stops them on Ctrl-C. A run then
-// attaches to them (`reuseExistingServer`, on whenever CI is unset) and skips the
-// build and the boots. It is a developer-run process beside `npm run dev`, and
-// staleness is the developer's: after a code change, stop it and start it again,
-// which rebuilds. No file watcher, no hash check (claude-docs/testing/e2e.md,
-// "Keeping the servers warm").
-//
-// Run through `tsx` because the server list is TypeScript (tests/e2e/servers.ts)
-// and the point is to share it with the Playwright configs rather than keep a
-// compiled copy that could drift; scripts/db-seed.ts does the same.
-//
-// Usage: npm run e2e:servers
+// Leaves the e2e servers running between local runs; after a code change, stop it and start it again
+// (claude-docs/testing/e2e.md, "Keeping the servers warm").
+// Usage: npm run e2e:servers. Run through `tsx` because the server list is TypeScript (tests/e2e/servers.ts).
 
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { allServers } from '../tests/e2e/servers.ts';

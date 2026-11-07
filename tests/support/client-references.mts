@@ -1,9 +1,8 @@
 import type { Plugin } from 'vite';
 
-// The `rsc` project's stand-in for Next's bundler: a module that opens with `'use client'` is
-// replaced by client references, so a Flight render serialises its element's props, as the app's
-// server does, rather than run its hooks under the `react-server` build, which has none.
-// `CLIENT_MANIFEST` is the manifest `renderToReadableStream` resolves those references through.
+// The `rsc` project's stand-in for Next's bundler: a `'use client'` module becomes client references, so a
+// Flight render serialises its props, as the server does, rather than run hooks the `react-server` build lacks.
+// `CLIENT_MANIFEST` is what `renderToReadableStream` resolves those references through.
 
 const USE_CLIENT = /^\s*(?:\/\/[^\n]*\n\s*|\/\*[\s\S]*?\*\/\s*)*['"]use client['"]/;
 

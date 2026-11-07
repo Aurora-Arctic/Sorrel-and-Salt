@@ -5,7 +5,7 @@ import { findPossibleDuplicates } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
 
-// The query findPossibleDuplicates actually sends, planned. Its results look the same whether or not the trigram indexes are reachable, so the plan is the only evidence (claude-docs/db/fuzzy-matching.md, "Fuzzy matching").
+// The query findPossibleDuplicates actually sends, planned. Its results look the same whether or not the trigram indexes are reachable, so the plan is the only evidence (claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule every caller is bound by").
 // The connection is rebuilt with a logger rather than the query copied here: a hand-written copy would prove a plan for SQL the service may not send.
 
 const logged = vi.hoisted(() => [] as Logged[]);
@@ -30,13 +30,11 @@ beforeEach(() => {
   logged.length = 0;
 });
 
-/** Every statement the service sent, in order, from one call. */
 async function statementsFor(name: string): Promise<Logged[]> {
   await findPossibleDuplicates(asUser(B), WORKSPACE_W_ID, name, { limit: 26, inverted: false });
   return [...logged];
 }
 
-/** The one statement reading `ingredients`, which is the match itself. */
 function match(statements: Logged[]): Logged {
   const reads = statements.filter(({ query }) => /from "ingredients"/.test(query));
   expect(reads).toHaveLength(1);

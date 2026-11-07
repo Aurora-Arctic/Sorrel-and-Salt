@@ -38,10 +38,8 @@
   }
 }
 
-// A wait: the page stays where it was, at its full height, and the
-// skeleton is laid over it. `visibility` rather than `display: none`, which
-// would collapse the page and clamp the scroll before the browser saves it for
-// Back; `heldPage` puts the page out of reach as well (`inert`).
+// A wait: the page stays at its full height with the skeleton laid over it. `visibility` rather than `display: none`,
+// which would collapse the page and clamp the scroll before the browser saves it for Back; `heldPage` adds `inert`.
 .skeleton-held {
   visibility: hidden;
 }
@@ -52,11 +50,8 @@
   position: relative;
 }
 
-// While waiting, the held page and the cover share one grid cell, so the box is as tall as the
-// taller of the two and the footer stays below a skeleton taller than the page it covers; a
-// cover placed absolutely would add no height and paint over the footer. The cover stretches to
-// the cell, so its frame, pinned just under the bar (the frames' `--sticky-top`), is in the
-// window however far down the page was scrolled.
+// While waiting, the held page and the cover share one grid cell, so the footer stays below a skeleton taller than
+// the page; an absolutely placed cover would add no height. The frame is pinned under the bar (`--sticky-top`).
 .skeleton-cover-host--waiting {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

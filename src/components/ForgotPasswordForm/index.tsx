@@ -9,8 +9,7 @@ import Notice from '../Notice';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
 import './index.scss';
 
-// The forgot-password page's form: asks Better Auth to mail a reset link. Every address gets the same
-// answer, so the page never says whether one has an account (claude-docs/components/forgot-password-form.md).
+// Every address gets the same answer, so the page never says whether one has an account (claude-docs/components/forgot-password-form.md).
 
 export const GENERIC_RESET_REQUEST_ERROR = "We couldn't send the link. Please try again.";
 
@@ -19,12 +18,10 @@ const ForgotPasswordForm = (): ReactElement => {
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
   const [alert, setAlert] = useState<string>();
-  // The address the last request was answered for, which the notice names.
   const [sentTo, setSentTo] = useState<string>();
 
   const ready = email.trim() !== '' && !pending;
   const { ref, settle } = useResultFocus<HTMLDivElement>();
-  // Set by Use a Different Address, so the empty form it brings back opens with the cursor in it.
   const [retyping, setRetyping] = useState(false);
 
   const request = async (address: string): Promise<void> => {
@@ -48,7 +45,6 @@ const ForgotPasswordForm = (): ReactElement => {
     void request(email.trim());
   };
 
-  // The form comes back empty, with the cursor in it, for an address typed wrong.
   const useAnotherAddress = (): void => {
     setSentTo(undefined);
     setAlert(undefined);

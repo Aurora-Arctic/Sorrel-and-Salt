@@ -8,11 +8,8 @@ import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 
-// `/keepers/privilege-changes`' filter, table and pager: render-only,
-// so the page owns the read and this owns what a keeper sees of it
-// (claude-docs/components/privilege-ledger.md).
+// claude-docs/components/privilege-ledger.md
 
-// The filter applies through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
@@ -111,8 +108,6 @@ describe('PrivilegeLedger', () => {
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    // A select-only box once hydrated, as every
-    // closed set in the row is, over the native select the server draws.
     it('offers every privilege, after the option for all, as a native select on the server and a select-only box once hydrated', async () => {
       const { container, hydrate } = drawnOnServer(
         <PrivilegeLedger changes={[GRANT]} filter={{}} />,

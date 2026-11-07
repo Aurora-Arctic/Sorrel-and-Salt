@@ -32,16 +32,11 @@ const pagerOf = (page: Page) => page.getByRole('navigation', { name: 'Pages' });
 const backLink = (page: Page) => page.getByRole('link', { name: /^Back to / });
 const cardLink = (card: Locator) => card.getByRole('heading').getByRole('link');
 
-/** The address as a link names it: path and query, no origin. */
 const pathAndQuery = (address: string) => {
   const url = new URL(address);
   return `${url.pathname}${url.search}`;
 };
 
-/**
- * The repro: search the list, go to page 2, scroll a card to the middle of the window and open
- * it. Returns the page-2 list's address and the opened card's top as it was, for the return.
- */
 async function openFromSecondPage(page: Page, list: Locator, entryPath: RegExp) {
   await searchCovenList(page, SEARCH);
   await expect(pagerOf(page).getByText('Page 1 of 2')).toBeVisible();
@@ -68,7 +63,6 @@ async function openFromSecondPage(page: Page, list: Locator, entryPath: RegExp) 
   return { listAddress, entryAddress: page.url(), name: name.trim(), top };
 }
 
-/** Presses Back to … and checks the list is the one left, with the card where it was. */
 async function returnToList(
   page: Page,
   list: Locator,
@@ -127,13 +121,11 @@ test.describe('the compendium', () => {
     await searchCovenList(page, SEARCH);
     const entry = (await cardLink(cardsIn(compendiumList(page)).first()).getAttribute('href'))!;
 
-    // Opened with no page before it.
     const fresh = await page.context().newPage();
     await fresh.goto(entry);
     await expect(backLink(fresh)).toHaveAttribute('href', '/compendium');
     await fresh.close();
 
-    // Opened from a page that is not the list: the site's home.
     await page.goto('/');
     await page.goto(entry);
     await expect(backLink(page)).toHaveAttribute('href', '/compendium');
@@ -167,7 +159,6 @@ test.describe("a coven's Ingredients page", () => {
     );
     await returnToList(page, ingredientList(page), opened);
 
-    // Opened directly, with no page before it, the link is the bare list.
     const fresh = await page.context().newPage();
     await fresh.goto(opened.entryAddress);
     await expect(backLink(fresh)).toHaveAttribute('href', listPath);

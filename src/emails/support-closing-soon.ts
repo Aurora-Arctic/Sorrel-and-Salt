@@ -10,12 +10,10 @@ import {
 import { supportTitle } from './parts/support-title';
 import type { SupportClosingSoonProps } from './types';
 
-// Sent to a request's sender before a resolved request closes, on its fifth day or as soon after as the job runs. It names the
-// request, says how long is left and carries none of the thread.
+// Names the request and carries none of the thread.
 
 const HOUR_MS = 60 * 60 * 1000;
 
-/** How long is left, in words: hours under a day, whole days from one up, each to the nearest. */
 export function timeLeft(ms: number): string {
   const hours = Math.round(ms / HOUR_MS);
   if (hours < 1) return 'less than an hour';
@@ -77,7 +75,6 @@ export function SupportClosingSoon({
   );
 }
 
-/** The closing-soon notice for `to`, rendered to the html and plain text `send` takes. */
 export const supportClosingSoonMessage = defineMessage<SupportClosingSoonProps>(
   ({ requestSubject }) => titleOf(requestSubject),
   SupportClosingSoon,

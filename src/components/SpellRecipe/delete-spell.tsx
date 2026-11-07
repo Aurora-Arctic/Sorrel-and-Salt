@@ -14,7 +14,7 @@ import type { SpellVisibility } from '@/modules/grimoire';
 
 // Delete Spell: the question naming the spell, asked in a dialog before `deleteSpell` runs. Confirmed,
 // the page leaves for the grimoire list, replacing the history entry so Back does not return to a 404.
-// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "Delete Spell").
+// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "The actions row").
 
 export const DeleteSpellDocument = graphql(`
   mutation DeleteSpell($workspaceId: ID!, $id: ID!) {
@@ -51,11 +51,6 @@ export function useDeleteSpell({
   return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
 }
 
-/**
- * The question naming the spell in bold, then one sentence on what deleting it does: a shared
- * spell leaves the whole coven's grimoire, a private one only its author's. Asked by the recipe
- * page's More menu and the builder's bin.
- */
 export function DeleteSpellWords({
   name,
   visibility,
@@ -73,7 +68,6 @@ export function DeleteSpellWords({
   );
 }
 
-/** The question naming the spell and its two answers. */
 function DeleteSpellQuestion({
   name,
   visibility,

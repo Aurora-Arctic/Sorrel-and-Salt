@@ -1,11 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
-/**
- * Moves focus to the answer of a form's submit. The submit button is disabled until the form is dirty
- * again, and a disabled control cannot hold focus, so the browser would otherwise drop it to the page.
- * Call `settle()` once the answer is set: focus goes to the first invalid control inside `ref`, else to
- * the `Notice` marked `result`.
- */
+/** The disabled submit button cannot hold focus, so call `settle()` once the answer is set. */
 export function useResultFocus<T extends HTMLElement>(): {
   ref: RefObject<T | null>;
   settle: () => void;

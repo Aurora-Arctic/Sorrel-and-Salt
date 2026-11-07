@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 
 // An entry's marks, hidden from assistive technology since the entry's text names it. The chevron, plus and cross every box draws are the shared set's (IconTip/icons.tsx).
 
-/** A sortable entry's grip, six dots ahead of its text: the sign it can be moved. */
 export function GripIcon(): ReactElement {
   return (
     <svg className="combobox__entry-grip" viewBox="0 0 8 16" aria-hidden="true" focusable="false">
@@ -15,7 +14,6 @@ export function GripIcon(): ReactElement {
   );
 }
 
-/** Two links of a chain ahead of a linked entry's text: the sign it names a real row and opens it. */
 export function LinkIcon(): ReactElement {
   return (
     <svg className="combobox__entry-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false">

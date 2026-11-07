@@ -69,7 +69,6 @@ export function EmailChangeNotice({
   );
 }
 
-/** The notice for `to`, rendered to the html and plain text `send` takes. */
 export const emailChangeNoticeMessage = defineMessage<EmailChangeNoticeProps>(
   ({ stage }) => SUBJECT[stage],
   EmailChangeNotice,

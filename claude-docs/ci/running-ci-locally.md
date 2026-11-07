@@ -6,11 +6,11 @@
 one `-P …=catthehacker/ubuntu:act-latest` line per `runs-on` label the
 workflows pin — `ubuntu-26.04` alone — and `--pull=false`.
 
-- **One target covers every `checks.yml` job** (MB.32), where there was one per
+- **One target covers every `checks.yml` job**, where there was one per
   check workflow before the collapse: `make act-check` runs lint,
   `make act-check CHECK=typecheck` runs typecheck, and so on through `format`,
-  `build`, `audit`, `destructive-ddl` (MB.37) and `migration-order` (MB.173).
-  `-j <leg>` is what keeps `act` from running all eight, and `make act-test` chains lint, format,
+  `build`, `audit`, `destructive-ddl` and `migration-order`.
+  `-j <leg>` is what keeps `act` from running all nine, and `make act-test` chains lint, format,
   typecheck and destructive-ddl. `act-image` builds the `testing` target
   locally under the exact tag the job's required `image` input names, so
   `docker run` never reaches GHCR and the container `credentials:` block is a

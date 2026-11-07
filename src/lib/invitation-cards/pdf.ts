@@ -87,10 +87,7 @@ function qrOperators(link: string, at: QrItem): Operator[] {
   return ops;
 }
 
-/**
- * Embeds a card's shadow: an image of solid ground ink the mask's size, its soft mask the blurred column. Every
- * shadow's ink is the same, so it is compressed once and its bytes shared.
- */
+// Every shadow's ink is the same, so it is compressed once and its bytes shared.
 function shadowEmbedder(doc: PDFDocument, shadows: CodeShadows) {
   const image = {
     Type: 'XObject',
@@ -118,7 +115,6 @@ function shadowEmbedder(doc: PDFDocument, shadows: CodeShadows) {
   };
 }
 
-/** Builds the print PDF: per sheet of ten, a page of fronts, then (unless `backs` is false) a page of their backs. */
 export async function renderCardSheets(
   { links, batch, expiresAt, backs = true }: CardSheetsInput,
   assets: CardAssets,

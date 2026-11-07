@@ -28,7 +28,6 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-// The curated forms an entry here picks, as the keeper's autofill would.
 let herb: string;
 let earth: string;
 beforeAll(async () => {
@@ -82,10 +81,8 @@ const remove = (session: Session | null, id: string) =>
 const read = (session: Session | null, id: string) =>
   run<{ ingredient: { id: string; name: string } | null }>(session, READ, { id });
 
-/** One whole form as the input type requires it, picked: every field but its id. */
 const formOf = (form: string, formId: string) => variantInput(makeVariant({ form }), { formId });
 
-/** Testwort as the admin's form sends it, its one form picked from the curated list. */
 const testwort = (overrides: Record<string, unknown> = {}) => ({
   name: 'Testwort',
   canonicalName: 'Fixtura testalis',
@@ -94,7 +91,6 @@ const testwort = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-/** A nameless entry of earth, graveyard-dirt shaped, under `name`. */
 const earthy = (name: string) => ({
   name,
   canonicalName: null,
@@ -124,7 +120,6 @@ function whole(input: Record<string, unknown>): Record<string, unknown> {
   return { ...empty, ...Object.fromEntries(sent) };
 }
 
-/** The live category names an entry is filed under, alphabetically. */
 const categoriesOf = async (id: string) =>
   (
     await sql`
@@ -325,7 +320,6 @@ describe('updateCompendiumIngredient', () => {
 });
 
 describe('deleteCompendiumIngredient', () => {
-  /** The ids of the whole compendium as the public list answers them. */
   async function listedIds(): Promise<string[]> {
     const result = await run<{ compendium: { edges: { node: { id: string } }[] } }>(
       asUser(B),

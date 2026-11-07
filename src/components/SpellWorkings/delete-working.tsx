@@ -25,7 +25,6 @@ export function useDeleteWorking({ workspaceId, workingId }: DeleteWorkingProps)
   });
 }
 
-/** The question naming the working by its day, asked in the Edit dialog. */
 export function DeleteWorkingQuestion({ name }: { name: string }): ReactElement {
   return (
     <>

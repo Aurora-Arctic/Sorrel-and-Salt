@@ -68,7 +68,7 @@ const OkQuery = graphql(`
   sent is the same query text as before, so the server and the wire are
   unchanged. Codegen's compiler plugin, the usual way to do this, did not split
   the documents under Turbopack
-  ([record](../design-decisions/m15.8-compiler-plugin-under-turbopack.md)).
+  ([`graphql.md`, "Each GraphQL document ships as its caller's text"](../design-decisions/graphql.md#each-graphql-document-ships-as-its-callers-text)).
   Stories and tests may still import a generated `...Document` from
   `src/gql/graphql.ts`, as they are not in the app's bundle.
 - **Enums are string unions** (`enumsAsTypes`), so no enum object ships to the

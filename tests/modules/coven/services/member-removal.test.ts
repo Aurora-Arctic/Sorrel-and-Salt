@@ -10,10 +10,6 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Removing a member and leaving: both soft-delete the membership row,
-// stamped from the session, and both run the last-owner guard. The revive
-// write is the way back for a person invited again.
-
 type Role = 'owner' | 'member' | 'viewer';
 
 async function insertCoven(name: string, members: [string, Role][]): Promise<string> {

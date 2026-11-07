@@ -5,15 +5,9 @@ import { renderToString } from 'react-dom/server';
 import { expect, onTestFinished } from 'vitest';
 import type { FilterFormCase, FilterFormSubject } from './types';
 
-// Six admin lists filter through the shared FilterForm. What every one must do with its own wiring (the page
-// it submits to, the field names, the search's address, what draws Clear, the row's key) is written once as
-// rows each list runs with `it.each`; the rest stays in the list's test (claude-docs/components/filter-form.md).
+// The rows every FilterForm list runs with `it.each` (claude-docs/components/filter-form.md).
 
-/**
- * A filter row's form by its name. The name is on the `<search>` around it, the
- * row's one landmark, which jsdom's role table cannot find, so it is found by
- * its label and the form taken from inside.
- */
+// The name is on the `<search>` landmark, which jsdom's role table cannot find: found by label, the form taken from inside.
 export const filterForm = (name: string, scope: Pick<typeof screen, 'getByLabelText'> = screen) => {
   const form = scope.getByLabelText(name).querySelector<HTMLFormElement>('form');
   if (!form) throw new Error(`The filter row named "${name}" holds no form.`);
@@ -24,17 +18,11 @@ const form = (subject: FilterFormSubject) => filterForm(subject.label);
 const searchbox = (subject: FilterFormSubject) =>
   screen.getByRole(subject.searchRole ?? 'searchbox', { name: subject.searchLabel });
 
-/** The form's fields as an address query, as a native submit sends them. */
 export const sent = (filter: HTMLElement): string =>
   new URLSearchParams(
     [...new FormData(filter as HTMLFormElement)].map(([name, value]) => [name, String(value)]),
   ).toString();
 
-/**
- * `page` as the server draws it, in the document, and `hydrate()` to run
- * the browser's hydration over that markup, for a field drawn one way on the
- * server and another once hydrated. Both are undone when the test finishes.
- */
 export function drawnOnServer(page: ReactElement): {
   container: HTMLElement;
   hydrate: () => Promise<void>;
@@ -79,8 +67,6 @@ export const FILTER_ROWS: FilterFormCase[] = [
       expect(subject.push.mock.calls).toEqual([[subject.searched], [subject.searched]]);
     },
   ],
-  // Clear's loading state is CompendiumList's to test; this asserts which of
-  // the list's values count as a filter, and where Clear goes.
   [
     'starts from each part of a filter shown alone, drawing Clear to the unfiltered page, and draws none while no filter is',
     (subject) => {

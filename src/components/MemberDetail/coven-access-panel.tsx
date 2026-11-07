@@ -70,11 +70,9 @@ export const MemberPausesDocument = graphql(`
   }
 `);
 
-/** A person on a pause, named; a withheld name reads as Unknown. */
 const person = (who: { id: string; name?: string | null } | null | undefined) =>
   who ? { id: who.id, name: who.name ?? 'Unknown' } : null;
 
-/** A coven's words for a pause on a member. */
 const copyFor = (name: string): PausePanelCopy => ({
   noteHint: "Seen by the coven's stewards only, up to 500 characters.",
   notePlaceholder: 'Why, for stewards',

@@ -20,8 +20,7 @@ import {
 } from './variants-harness';
 import { press } from '../../support/interact';
 
-// A variant's substitutes: offered form by form, ranked by the variant's own form and group, a typed name kept as a name. Rendered by ./variants-harness.tsx.
-// The link a picked row sends, and the save refusing a link that names no form, are variants.test.tsx's, on the whole form (claude-docs/components/ingredient-form.md, "The variants").
+// claude-docs/components/ingredient-form.md, "The variants"
 
 describe('a variant’s substitutes', () => {
   beforeEach(() => {
@@ -46,21 +45,16 @@ describe('a variant’s substitutes', () => {
     ]);
   });
 
-  // A variant's substitute is picked form by
-  // form, and a link always names one.
   it('offers an ingredient only as its forms, one row each, and one in no form not at all', async () => {
     renderVariants({ workspaceId: WORKSPACE_ID });
 
     const list = await openSubstitutes(await addOil());
 
     await waitFor(() => within(list).getByRole('option', { name: /^Tinctwort/ }));
-    // Tinctwort and Oilwort come in one form each: that form's row alone.
     expect(within(list).getAllByRole('option')).toHaveLength(2);
     expect(within(list).getAllByRole('option', { name: /^Tinctwort · Tincture/ })).toHaveLength(1);
     expect(within(list).getAllByRole('option', { name: /^Oilwort · OIL/ })).toHaveLength(1);
-    // Plainwort comes in none: nothing of it to link.
     expect(within(list).queryByRole('option', { name: /^Plainwort/ })).toBeNull();
-    // There is no second picker to name a form with.
     expect(within(variant('Oil')).queryByRole('combobox', { name: /^Form of / })).toBeNull();
   });
 

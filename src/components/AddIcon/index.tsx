@@ -20,13 +20,9 @@ import './index.scss';
 // pencil. Tip and accessible name are ADD then the entry's name; a client component of its own so the
 // card stays a server component (claude-docs/components/compendium-cards.md, "Contracts").
 
-/**
- * How long the check holds after a success before it fades back to the plus:
- * about 1s, long enough to be seen, short enough that the plus is soon back.
- */
+/** How long the check holds before fading back to the plus: long enough to be seen. */
 export const ADDED_HOLD_MS = 1000;
 
-/** What the plus draws after an add: nothing yet, or the coven it added to and whether that left none lacking it. */
 interface Added {
   to: string;
   last: boolean;
@@ -66,7 +62,7 @@ const Glyph = ({
 /**
  * The plus: with one writable coven it adds there directly, with no quantity, and the page reads
  * again; with two or more it opens a menu of every coven, never adding at once. A refusal is a
- * callout under the plus (claude-docs/components/add-icon.md, "What the plus is").
+ * callout under the plus (claude-docs/components/add-icon.md, "Contracts").
  */
 const AddIcon = ({
   name: entry,
@@ -111,7 +107,6 @@ const AddIcon = ({
     // No fields of its own, so the reader always answers with an alert.
     onError: (error) => feedback.report(readGraphqlFailure(error).alert),
   });
-  // Once the refusal has re-enabled the plus: the menu's item that was pressed is gone.
   const refused = add.isError;
   useEffect(() => {
     if (refused) plus.current?.focus();
@@ -136,8 +131,6 @@ const AddIcon = ({
   };
   const glyph = <Glyph state={state} busy={busy} onFaded={fade.onAnimationEnd} />;
 
-  // The control is the one thing that differs: a menu where the viewer writes in several
-  // covens, a plain button for the one coven (or the default where the page named none).
   const control =
     covens.length > 1 ? (
       <MenuButton

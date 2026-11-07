@@ -1,7 +1,6 @@
-// The accessibility sweep's scan list: every route the app serves and every modal it draws, each with the
-// people it is scanned as. tests/e2e/axe.spec.ts scans what this lists, and tests/guards/axe-scans.test.ts
-// fails when a page under src/app, a route in DESIGN.md §9 or a file drawing a modal has no entry here.
-// Plain data, with no Playwright import, so the Vitest guard can read it.
+// The accessibility sweep's scan list: every route and modal, each with the people it is scanned as.
+// tests/e2e/axe.spec.ts scans it; tests/guards/axe-scans.test.ts fails on a page, a DESIGN.md §9 route or a
+// modal file with no entry. Plain data, with no Playwright import, so the Vitest guard can read it.
 
 /** Who a scan signs in as. Coven roles are the schema's; `user` holds no coven seat. */
 export type Persona =

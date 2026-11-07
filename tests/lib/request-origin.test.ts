@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { requestOrigin } from '@/lib/request-origin';
 
-// The origin both mail senders build their link on. Better Auth's resolver is
-// mocked: which hosts it allows is tests/lib/auth.test.ts's "baseURL", and
-// the link a real request gets is the senders' own tests'.
+// Better Auth's resolver is mocked: which hosts it allows is tests/lib/auth.test.ts's "baseURL", and the link a real request gets is the senders' own tests'.
 const resolveBaseURL = vi.fn();
 const BASE_URL = { allowedHosts: ['sorrelandsalt.com'], fallback: 'https://sorrelandsalt.com' };
 

@@ -8,10 +8,9 @@ import {
 import { requestOrigin } from './request-origin';
 import { safeReturnPath } from './sign-in';
 
-// Where the email page's decisions meet Better Auth: a resend goes through its endpoint, and a change goes to the secret-link
-// job, which signs the token its /verify-email endpoint honours under the request's own base URL, so a preview host links to
-// itself. Handed to the service by the GraphQL context, as a service may not import `auth`
-// (claude-docs/auth/admin-bootstrap.md, "The email page"); imported at call time, for the reason `requestOrigin` gives.
+// Where the email page's decisions meet Better Auth; handed to the service by the GraphQL context, as a
+// service may not import `auth` (claude-docs/auth/admin-bootstrap.md, "The email page"). Imported at call
+// time, as `requestOrigin` explains.
 
 export function emailVerificationSender(request: Request): EmailVerificationSender {
   return {

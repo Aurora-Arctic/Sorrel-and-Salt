@@ -5,13 +5,10 @@ import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
-// Who the primary keeper is: read from ADMIN_BOOTSTRAP_EMAIL at each check, never stored (claude-docs/design-decisions/m2.9-granting-admin.md,
+// Who the primary keeper is: read from ADMIN_BOOTSTRAP_EMAIL at each check, never stored (claude-docs/design-decisions/auth.md, "Granting and revoking admin",
 // "The primary keeper"). Its own file so the role service and the pause both ask it without importing each other.
 
-/**
- * Whether `user` is the primary admin: a live keeper whose email matches
- * ADMIN_BOOTSTRAP_EMAIL as it reads now. Nobody is while it is unset.
- */
+/** Nobody is while ADMIN_BOOTSTRAP_EMAIL is unset. */
 export function isPrimaryAdmin(user: Pick<UserRow, 'email' | 'role' | 'deletedAt'>): boolean {
   const email = primaryAdminEmail();
   return (
@@ -22,7 +19,6 @@ export function isPrimaryAdmin(user: Pick<UserRow, 'email' | 'role' | 'deletedAt
   );
 }
 
-/** Whether the session's user is the primary keeper, read off their own live row. */
 export async function actsAsPrimaryAdmin(session: Session): Promise<boolean> {
   const self = await findOneById(users, session.userId);
   return self !== undefined && isPrimaryAdmin(self);

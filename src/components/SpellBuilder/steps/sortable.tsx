@@ -21,7 +21,6 @@ import type { SortableStepsProps } from './types';
 // The jar's steps in order, each moved by a handle on the dnd-kit setup of `src/lib/sortable`; keyboard Space or Enter lifts, arrows, Home and End move, Escape cancels
 // (claude-docs/components/spell-builder.md, "Reordering").
 
-/** The keys that move a lifted step: a column has no Left or Right. */
 const STEP_KEYS = new Set(['ArrowUp', 'ArrowDown', 'Home', 'End']);
 
 export function SortableSteps({ ids, names, onMove, children }: SortableStepsProps): ReactElement {
@@ -32,10 +31,8 @@ export function SortableSteps({ ids, names, onMove, children }: SortableStepsPro
   const { target, collisionDetection } = useKeyboardTarget();
 
   /**
-   * The keyboard's next place: the step above or below the place the lifted
-   * step is over, or either end, and no further. The step is set where it
-   * will sit there: at that place's top going up, and with its bottom at that
-   * place's bottom going down, since steps differ in height.
+   * The keyboard's next place: the step above or below the one the lifted step is over, or either end. The step is
+   * set at that place's top going up and at its bottom going down, since steps differ in height.
    */
   const coordinateGetter: KeyboardCoordinateGetter = (event, { context }) => {
     const { active, over, droppableRects } = context;

@@ -24,7 +24,7 @@ describe('the stock decrement path', () => {
       ),
     );
 
-    // The writer, its declaration in the writer's type, and the one service that calls it (M13.5). The demo seed is the
+    // The writer, its declaration in the writer's type, and the one service that calls it. The demo seed is the
     // named exemption: it runs on the seed's own transaction with no Membership to hand the writer, and it only replays
     // deductions recorded with their shortfall.
     const allowed = [

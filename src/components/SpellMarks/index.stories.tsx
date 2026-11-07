@@ -2,8 +2,6 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import SpellMarks from '.';
 import { StatesGrid } from '../../../.storybook/states-grid';
 
-// Render-only; which badge shows where is asserted through its users, in
-// tests/components/SpellRecipe and tests/components/SpellCard.
 const meta = {
   title: 'Grimoire / Spell Marks',
 } satisfies Meta;

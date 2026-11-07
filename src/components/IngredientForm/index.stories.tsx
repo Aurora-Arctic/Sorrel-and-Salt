@@ -42,14 +42,8 @@ import type {
 } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
-// Render-only; behaviour is asserted in tests/components/IngredientForm. The fake
-// API (.storybook/mock-api.ts) answers lookups with the invented rows below,
-// filtered by what was typed, and a save after a pause. "What to try" above the
-// form says what to type. The query client comes from .storybook/preview.tsx.
 const meta = {
   title: 'Ingredients / Ingredient Form',
-  // Every story is answered from the rows below, and the one that shows a wait
-  // for good (`hangAllOperations`) says so in its own `beforeEach`.
   beforeEach: ({ msw }) => msw.use(CANNED_API),
 } satisfies Meta;
 export default meta;
@@ -57,11 +51,9 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
 
-/** Case-folded substring, standing in for the server's trigram match: enough to filter as you type. */
 const matches = (query: string, ...texts: (string | null)[]) =>
   texts.some((text) => text?.toLowerCase().includes(query.trim().toLowerCase()));
 
-// A curated row carries the id a pick sends; one only in use has none.
 const FORMS: FormSuggestionsQuery['formSuggestions']['edges'][number]['node'][] = [
   {
     id: '00000000-0000-4000-8000-000000000101',
@@ -193,8 +185,6 @@ const DEITIES = [
   },
 ];
 
-// The two Testworts differ only in forms and tier, which a picked pill's
-// tooltip tells. A row's forms are its variants.
 const INGREDIENTS = [
   {
     id: '00000000-0000-4000-8000-000000000201',
@@ -202,7 +192,6 @@ const INGREDIENTS = [
     canonicalName: 'Fixtura testalis',
     description: 'A fixture herb, for the workshop.',
     isGlobal: true,
-    // In forms, so a variant's substitutes rank it and offer it form by form.
     variants: [
       { id: '00000000-0000-4000-8000-000000000401', form: 'Dried leaf', formChoice: null },
       { id: '00000000-0000-4000-8000-000000000402', form: 'Oil', formChoice: null },
@@ -236,11 +225,6 @@ const INGREDIENTS = [
   },
 ];
 
-/**
- * What a linked substitute's summary reads of each ingredient above:
- * its classification and correspondences, and each form's own, which add to
- * the ingredient's.
- */
 const SUMMARIES = Object.fromEntries(
   INGREDIENTS.map((row) => [
     row.id,
@@ -248,7 +232,6 @@ const SUMMARIES = Object.fromEntries(
       id: row.id,
       name: row.name,
       canonicalName: row.canonicalName,
-      // Long enough to run past the panel's three lines and be cut.
       description:
         'An invented herb for the workshop, gathered at dusk from the hedge and hung to dry in bundles. Its leaf is used in washes, its root in sachets, and its smoke to clear a room before working.',
       nomenclature: row.canonicalName ? 'botanical' : 'unknown',
@@ -271,15 +254,11 @@ const SUMMARIES = Object.fromEntries(
   ]),
 ) satisfies Record<string, IngredientSummaryQuery['ingredient']>;
 
-// Invented sources in both tiers (a book, an article by two authors, a web
-// page), one long enough to wrap and one with an address, rendered by the one
-// renderer the server uses. Each one's fields are kept whole for the edit.
 const SOURCE_FIELDS = new Map<string, CitationFields>();
 const source = (id: string, isGlobal: boolean, fields: CitationFields) => {
   SOURCE_FIELDS.set(id, fields);
   return summaryOf(id, isGlobal, fields);
 };
-/** A source as a row carries it: its citation, and the fields its short form is made of. */
 const summaryOf = (id: string, isGlobal: boolean, fields: CitationFields) => ({
   id,
   isGlobal,
@@ -320,8 +299,6 @@ const SOURCES = [
   }),
 ];
 
-// One of each place a match can be, so a coven's form shows both groups:
-// a compendium entry the coven holds, one it does not, and the coven's own.
 const CATS_CLAW: PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'][] = [
   {
     id: 'claw-1',
@@ -352,14 +329,9 @@ const CATS_CLAW: PossibleDuplicatesQuery['possibleDuplicates']['edges'][number][
   },
 ];
 
-/** How long a save takes to be accepted: long enough to see Save busy and shut. */
 const SAVE_DELAY_MS = 2000;
 
-/**
- * The seed's eight groups and colour pairs, copied from
- * src/db/seed/category-groups.ts (a component may not import it, CLAUDE.md
- * rule 1), each with two invented categories.
- */
+/** Copied from src/db/seed/category-groups.ts, which a component may not import. */
 const CATEGORY_GROUPS = [
   ['Protection & Defense', '#5d8ab1', '#286ba6', ['Testward', 'Fixture Shield']],
   ['Cleansing & Release', '#50a58e', '#1d755d', ['Rinse Trial', 'Mock Release']],
@@ -383,16 +355,10 @@ const page = <N,>(nodes: N[], first: number) => ({
   edges: nodes.slice(0, first).map((node) => ({ node })),
 });
 
-/**
- * The answer to one lookup, by its operation name, or undefined for any other
- * operation. Each is typed as its query's result, so a fixture that drifts
- * from the schema stops compiling.
- */
 function answer(operation: string, variables: Record<string, unknown>): object | undefined {
   const query = String(variables.query ?? variables.name ?? '');
   const first = Number(variables.first ?? 10);
   switch (operation) {
-    // The curator's delete question counts the covens holding the entry.
     case 'CompendiumEntryUsers':
       return { compendiumEntryUsers: 3 };
     case 'FormSuggestions':
@@ -442,7 +408,6 @@ function answer(operation: string, variables: Record<string, unknown>): object |
         },
       } satisfies IngredientSuggestionsQuery;
     case 'CompendiumSubstitutes':
-      // The compendium's own entries alone, as `compendium(query)` answers.
       return {
         compendium: page(
           INGREDIENTS.filter((row) => row.isGlobal && matches(query, row.name, row.canonicalName)),
@@ -491,7 +456,6 @@ function answer(operation: string, variables: Record<string, unknown>): object |
       } satisfies ReferenceQuery;
     }
     case 'UpdateReference': {
-      // Kept, so the edit opened again reads what was saved.
       const id = String(variables.id);
       const input = variables.input as CitationFields;
       SOURCE_FIELDS.set(id, input);
@@ -516,9 +480,7 @@ function answer(operation: string, variables: Record<string, unknown>): object |
     case 'PickerCategories':
       return { categories: page(CATEGORIES, CATEGORIES.length) } satisfies PickerCategoriesQuery;
     case 'PossibleDuplicates':
-      // Only a name close to "Cat's Claw" is near anything.
       return {
-        // The compendium's form asks with no coven: compendium entries alone, held by none.
         possibleDuplicates: page(
           !query.toLowerCase().includes('cat')
             ? []
@@ -566,8 +528,6 @@ function answer(operation: string, variables: Record<string, unknown>): object |
       } satisfies UpdateCompendiumIngredientMutation;
     }
     case 'PromoteFolkName':
-      // The swap as the server answers it: the folk name in as the name, the
-      // old name left in the list.
       return {
         promoteFolkName: {
           id: ENTRY.id,
@@ -588,7 +548,6 @@ function answer(operation: string, variables: Record<string, unknown>): object |
   }
 }
 
-/** The two writes, each answered after `SAVE_DELAY_MS`. */
 const SAVES = new Set([
   'CreateWorkspaceIngredient',
   'CreateCompendiumIngredient',
@@ -599,18 +558,11 @@ const SAVES = new Set([
   'UpdateReference',
 ]);
 
-/**
- * The refusal a save meets, or undefined for a save that lands. A name holding
- * "taken" is refused on the name, "refuse" as a whole, "retired" on its first
- * category. A reference is refused the same way by its title.
- */
 function saveRefusal(operation: string, variables: Record<string, unknown>) {
   const input = variables.input as
     { name?: string; title?: string; categoryIds?: string[] } | undefined;
   const field = operation.endsWith('Reference') ? 'title' : 'name';
   const name = String(input?.[field] ?? '');
-  // A compendium save whose name holds "redirect" would take another entry's
-  // old address, until it is sent again confirmed.
   if (
     /redirect/i.test(name) &&
     operation.endsWith('CompendiumIngredient') &&
@@ -639,7 +591,6 @@ function saveRefusal(operation: string, variables: Record<string, unknown>) {
       ],
     });
   }
-  // A retired category, picked before a keeper deleted it: the first pick's.
   if (/retired/i.test(name) && input?.categoryIds?.length) {
     return refusal({
       message: 'Validation failed',
@@ -656,11 +607,6 @@ function saveRefusal(operation: string, variables: Record<string, unknown>) {
   return undefined;
 }
 
-/**
- * Answers every lookup from the rows above, and a save after `SAVE_DELAY_MS`,
- * refused or accepted. Set on the meta's `beforeEach`, so each story starts
- * with it.
- */
 const CANNED_API = answerOperations(
   ({ operationName, variables }) => {
     const data = answer(operationName, variables);
@@ -677,12 +623,10 @@ type CompendiumFormProps =
       }
     : never;
 
-/** The form as the admin draws it over a compendium entry: lookups ask the compendium alone. */
 function CompendiumForm(props: CompendiumFormProps) {
   return <IngredientForm workspaceId={null} duplicateHref={compendiumDuplicateHref} {...props} />;
 }
 
-/** What to type for each state the form can be in, beside it in the workshop. */
 function WhatToTry() {
   return (
     <details open className="story-guide">
@@ -801,13 +745,7 @@ function WhatToTry() {
   );
 }
 
-/**
- * Every lookup answered and the save faked, with what to type for each state
- * beside it. Unframed: the form takes its width from whatever holds it.
- */
 const CovenView = () => {
-  // Where Save Ingredient would go: the page holding the form navigates on
-  // 'open', and the workshop has no page to go to, so it says so instead.
   const [opens, setOpens] = useState<string | null>(null);
   const onSaved = ({ id }: SavedIngredient, next: AfterSave) =>
     setOpens(next === 'open' ? `/coven/fixture-coven/ingredients/${id}` : null);
@@ -830,7 +768,6 @@ const CovenView = () => {
 };
 const covenNode = <CovenView />;
 
-/** One of INGREDIENTS as a substitute's link, as an edit reads it back. */
 const linkOf = ({
   id,
   canonicalName,
@@ -846,14 +783,11 @@ const linkOf = ({
   variants: variants.map(({ id: variantId, form }) => ({ id: variantId, form, group: null })),
 });
 
-/** Where a near match links: a coven's entry page, or on the admin's page that entry's modal. */
 const covenDuplicateHref = ({ id }: { id: string }) => `/coven/fixture-coven/ingredients/${id}`;
 const compendiumDuplicateHref = ({ slug }: { slug: string }) => `/curator/compendium?edit=${slug}`;
 
-/** Where a summary links its entry on the admin's page: that entry's modal. */
 const entryHref = ({ slug }: { slug: string }) => `/curator/compendium?edit=${slug}`;
 
-/** One of SOURCES as a reference row, cited at `locator`. */
 const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') => ({
   value: citation,
   link,
@@ -862,8 +796,6 @@ const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') =>
   supports: [],
 });
 
-// The entry the edit story opens: a celestial body, a category, three sources (a
-// book, an article by two authors, a web page) and two forms, one with details.
 const ENTRY = {
   id: '00000000-0000-4000-8000-000000000301',
   values: {
@@ -871,8 +803,6 @@ const ENTRY = {
     name: 'Testwort',
     nomenclature: 'botanical',
     canonicalName: 'Fixtura testalis',
-    // Two forms, the first with details of its own and the second
-    // with none, so their summary lines show both.
     variants: [
       {
         ...EMPTY_VARIANT,
@@ -886,12 +816,9 @@ const ENTRY = {
           description: null,
         },
         safetyNotes: 'Dry away from damp.',
-        // Its own toxic flag, the entry's left off: its card line says so.
         toxic: true,
         celestialBodies: [{ value: 'Mercury' }],
         categoryIds: [CATEGORIES[0].id, CATEGORIES[1].id],
-        // A form's link names one form of what it links: Fixturewort
-        // in its one form, beside a name typed.
         substitutes: [
           {
             value: 'Fixturewort',
@@ -917,8 +844,6 @@ const ENTRY = {
     ],
     description: 'A fixture herb, for the workshop.',
     celestialBodies: [{ value: 'Mercury' }],
-    // Two linked compendium entries (one in a form of it) and a typed name: the
-    // linked chips lead with a link mark and open a summary.
     substitutes: [
       { value: 'Fixturewort', link: linkOf(INGREDIENTS[2]) },
       {
@@ -928,31 +853,23 @@ const ENTRY = {
       },
       { value: 'Hedge Mockroot' },
     ],
-    // Testward, one of the categories the stand-in answers the picker with.
     categoryIds: [CATEGORIES[0].id],
     references: [cited(SOURCES[0], 'p. 112'), cited(SOURCES[1], 'p. 14'), cited(SOURCES[2])],
   } satisfies IngredientFormValues,
 };
 
-/**
- * Opens the form's section titled `title` once the story is drawn, by its
- * heading. An edit opens with every section closed. Within `root`, an open
- * variant's card, it opens that variant's section of the name.
- */
 function openSection(title: string, root: ParentNode = document): void {
   [...root.querySelectorAll<HTMLButtonElement>('.collapsible-section__toggle')]
     .find((button) => button.textContent === title && button.ariaExpanded === 'false')
     ?.click();
 }
 
-/** Opens the entry's Dried leaf by its Edit, sections closed as an edit's are; returns its card. */
 function openDriedLeaf(): HTMLElement | null {
   const edit = document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]');
   edit?.click();
   return edit?.closest<HTMLElement>('.ingredient-form__variant') ?? null;
 }
 
-/** What the compendium form adds to the coven's, beside it in the workshop. */
 function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
   return (
     <details open className="story-guide">
@@ -1000,7 +917,6 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
   );
 }
 
-/** The admin's form for a new compendium entry: no coven, so every lookup asks the compendium alone. */
 const CompendiumView = () => {
   return (
     <>
@@ -1011,7 +927,6 @@ const CompendiumView = () => {
 };
 const compendiumNode = <CompendiumView />;
 
-/** The admin's form over an existing compendium entry: one save, and a delete. */
 const CompendiumEntryView = () => {
   return (
     <>
@@ -1022,7 +937,6 @@ const CompendiumEntryView = () => {
 };
 const compendiumEntryNode = <CompendiumEntryView />;
 
-/** The same entry with its Correspondences open, the other sections summarised. */
 export const CompendiumEntrySectionOpen: Story = {
   render: () => {
     useEffect(() => openSection('Correspondences'), []);
@@ -1030,11 +944,6 @@ export const CompendiumEntrySectionOpen: Story = {
   },
 };
 
-/**
- * The same entry, a colour left typed in its box, saved: the save refuses the
- * text, and Correspondences, closed, opens on the error, flagged, the box
- * focused. Submitted once drawn, Save being off until a change.
- */
 export const CompendiumEntrySaveError: Story = {
   render: () => {
     useEffect(() => {
@@ -1044,8 +953,6 @@ export const CompendiumEntrySaveError: Story = {
       <CompendiumForm
         entry={{
           ...ENTRY,
-          // Without its links: the stand-in's ids are no ids the schema
-          // takes, so a save would refuse each, and the colour is the one error.
           values: {
             ...ENTRY.values,
             substitutes: [],
@@ -1063,14 +970,8 @@ export const CompendiumEntrySaveError: Story = {
   },
 };
 
-/**
- * The same entry with its first form open, as its Edit leaves it: the form's
- * own sections closed, as an edit's are, each summarising what it holds
- *.
- */
 export const CompendiumEntryVariantOpen: Story = {
   render: () => {
-    // Pressed once it is drawn: which form is open is the form's own state.
     useEffect(() => {
       openSection('Forms');
       openDriedLeaf();
@@ -1079,7 +980,6 @@ export const CompendiumEntryVariantOpen: Story = {
   },
 };
 
-/** The same form open, with its own Correspondences opened by its heading, the rest summarised. */
 export const CompendiumEntryVariantSectionOpen: Story = {
   render: () => {
     useEffect(() => {
@@ -1091,18 +991,12 @@ export const CompendiumEntryVariantSectionOpen: Story = {
   },
 };
 
-/**
- * A coven's new ingredient with a form just added from the New Form box: it
- * opens first of the cards with every one of its sections open, as a new
- * entry's are. Typed and added once drawn, as a person would.
- */
 export const VariantAdded: Story = {
   render: () => {
     useEffect(() => {
       const box = document.querySelector<HTMLInputElement>('input[name="drafts.variants"]');
       if (!box) return;
       setInputValue(box, 'Oil');
-      // Once the typed text has reached the form, as a press after typing would.
       const timer = setTimeout(() =>
         document.querySelector<HTMLButtonElement>('button[aria-label="Add Form"]')?.click(),
       );
@@ -1112,11 +1006,6 @@ export const VariantAdded: Story = {
   },
 };
 
-/**
- * The same entry, Mockleaf, in no form, among its substitutes, with its first form
- * open and that form's Substitute Ingredients copied. Testwort links its Dried
- * leaf, and the notice names Mockleaf, skipped, with Copy Anyway. Pressed once drawn.
- */
 export const CompendiumEntryCopySkipped: Story = {
   render: () => {
     useEffect(() => {
@@ -1143,10 +1032,8 @@ export const CompendiumEntryCopySkipped: Story = {
   },
 };
 
-/** The same entry with its first source open and its Edit Source pressed: the panel prefilled. */
 export const CompendiumEntryEditSource: Story = {
   render: () => {
-    // Pressed once drawn: the pencil opens the row, then Edit Source opens the panel.
     useEffect(() => {
       openSection('Sources');
       document
@@ -1165,10 +1052,6 @@ export const CompendiumEntryEditSource: Story = {
   },
 };
 
-/**
- * The same entry with its first linked substitute's summary open:
- * pressed once it is drawn, the summary being the chip's own state.
- */
 export const CompendiumEntrySubstituteSummary: Story = {
   render: () => {
     useEffect(() => {
@@ -1181,11 +1064,6 @@ export const CompendiumEntrySubstituteSummary: Story = {
   },
 };
 
-/**
- * The edit in its modal, as the admin compendium opens it: the eyebrow over the
- * entry's names, Open All / Close All beside them, and the header staying at the
- * top as the form scrolls.
- */
 const CompendiumEntryInModalForm = () => {
   return (
     <Reopenable>
@@ -1205,22 +1083,15 @@ const CompendiumEntryInModalForm = () => {
 
 export const CompendiumEntryInModal: Story = { render: () => <CompendiumEntryInModalForm /> };
 
-/** Scrolls the modal's body to this share of the way down, 0 the top and 1 the foot. */
 function scrollBody(share: number): void {
   const body = document.querySelector<HTMLElement>('.modal-dialog__body');
   if (body) body.scrollTop = (body.scrollHeight - body.clientHeight) * share;
 }
 
-/**
- * The edit in its modal, every section open and scrolled to the foot, where
- * Delete Ingredient is, and pressed: the question over the long form,
- * centred in the part in view, the form dimmed and held beneath it.
- */
 export const AskingToDeleteInModal: Story = {
   render: () => {
     useEffect(() => {
       press('Open All');
-      // Once the opened sections are laid out, as a person scrolls after opening.
       const later = requestAnimationFrame(() => {
         scrollBody(1);
         press('Delete Ingredient');
@@ -1231,10 +1102,6 @@ export const AskingToDeleteInModal: Story = {
   },
 };
 
-// Promoting a folk name: the arrow on a saved folk name's chip, and the
-// question it always asks.
-
-/** The entry with two saved folk names, which only a saved entry has. */
 const PROMOTABLE = {
   ...ENTRY,
   values: {
@@ -1246,7 +1113,6 @@ const PROMOTABLE = {
   },
 };
 
-/** The promotable entry's form, Identity open, optionally with the question asked and a change made. */
 function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolean }) {
   useEffect(() => {
     openSection('Identity');
@@ -1257,7 +1123,6 @@ function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolea
       }
     }
     if (asking) {
-      // Next tick, after the change is in the form's state.
       setTimeout(
         () =>
           document
@@ -1272,24 +1137,16 @@ function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolea
   return <CompendiumForm entry={PROMOTABLE} entryHref={entryHref} mayPromote />;
 }
 
-/** A compendium entry's folk names, each saved one with its arrow ahead of the ×. */
 export const PromoteControl: Story = {
   render: () => <PromotableEntry asking={false} changed={false} />,
 };
 
-/** The question over a form with nothing to save: Promote and Cancel. */
 export const PromoteQuestion: Story = { render: () => <PromotableEntry asking changed={false} /> };
 
-/** The question over a form with a change: Save & Promote, Discard & Promote, and Cancel. */
 export const PromoteQuestionWithChanges: Story = {
   render: () => <PromotableEntry asking changed />,
 };
 
-/**
- * A coven's ingredient: the question without the compendium's note that the
- * swap is global. The coven's form does not edit yet, so the question
- * stands alone, open over nothing.
- */
 export const PromoteQuestionCoven: Story = {
   render: () => {
     const promotion = usePromoteFolkName(WORKSPACE_ID, PROMOTABLE.id);
@@ -1310,11 +1167,6 @@ export const PromoteQuestionCoven: Story = {
   },
 };
 
-/**
- * A linked substitute's summary while its read is on the way: the chip is pressed
- * open and the request left unanswered, so the `line` skeleton shows. The
- * ingredient's id is fresh each time, so no cached summary can answer.
- */
 export const LoadingSubstituteSummary: Story = {
   beforeEach: ({ msw }) => msw.use(hangAllOperations()),
   render: () => {
@@ -1345,9 +1197,6 @@ export const LoadingSubstituteSummary: Story = {
   },
 };
 
-// The duplicates notice in its two states: the warning while a name is typed, and
-// the notice once a save is held on it, told apart by words as well as colour.
-// Built from fixed state rather than the lookup, so both show at once.
 const NEAR_MATCHES = CATS_CLAW.map((match) => ({
   ...match,
   isGlobal: true,

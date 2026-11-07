@@ -18,10 +18,6 @@ import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 
-// The reads over the cupboard-entries table: a coven's entry for a compendium entry, one or a batch
-// under the coven's proof, and the compendium entries a typed name names exactly. Each case seeds the
-// rows the read must leave out beside the row it must keep.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -34,7 +30,6 @@ beforeEach(async () => {
 const w = () => assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['read'] });
 const x = () => assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] });
 
-/** A compendium entry, by its label. */
 const compendiumEntry = (name: string, canonicalName: string | null = null) =>
   insertIngredient(
     sql,
@@ -123,7 +118,6 @@ describe('findCupboardEntriesOf', () => {
   });
 });
 
-/** Soft-deletes the ingredient, as a curator's delete or a coven's own does. */
 async function softDelete(id: string) {
   await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${id}`;
 }

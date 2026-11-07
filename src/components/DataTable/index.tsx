@@ -8,7 +8,6 @@ import type { ColumnSort, SortChoice, StackColumn, StackTableProps } from './typ
 // phone width. It carries the explicit roles WebKit needs once `display` changes, and each cell's
 // `data-label` (claude-docs/components/data-table.md). Render-only, so a server component's list stays one.
 
-/** The cell's class: the column's own, then the card-corner placement for a corner action. */
 function cellClass<Row>({ className, action }: StackColumn<Row>): string | undefined {
   return (
     [className, action === 'corner' && 'data-table__card-action'].filter(Boolean).join(' ') ||
@@ -45,10 +44,6 @@ function SortArrow({ current }: { current: ColumnSort['current'] }): ReactNode {
   );
 }
 
-/**
- * A sortable heading: a link to the column's other direction when the list is sorted by it, and to its first direction when
- * not. Its name says the order in force, "Name, Sorted A to Z"; the arrow is for the eye alone.
- */
 function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): ReactNode {
   const { current, href, labels } = sort;
   return (
@@ -63,7 +58,6 @@ function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): 
   );
 }
 
-/** The sort select's choices: the other orders first, then each sortable column both ways. */
 function sortChoices<Row>(
   columns: readonly StackColumn<Row>[],
   others: StackTableProps<Row>['otherOrders'] = [],
@@ -126,8 +120,6 @@ function StackTable<Row>({
           {rows.map((row) => (
             <tr key={rowKey(row)} {...tableRole('row')}>
               {shown.map((column) => (
-                // An action's cell has no label: it spans the card, or stands at
-                // its top right beside the first line.
                 <td
                   key={column.heading}
                   className={cellClass(column)}

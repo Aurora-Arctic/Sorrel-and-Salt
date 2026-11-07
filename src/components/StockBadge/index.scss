@@ -2,11 +2,10 @@
 @use '../../scss/mixins' as *;
 
 // The badge is a bare drawing in the matching jar's colour, not a `.badge`, so the badge palettes
-// and sizes do not reach it (claude-docs/components/stock-badge.md, "Where the badge sits and what it draws").
+// and sizes do not reach it (claude-docs/components/stock-badge.md, "The badge").
 .stock-badge {
   @include button-reset(help);
 
-  // A square the height of a medium badge, the drawing centred in it.
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;

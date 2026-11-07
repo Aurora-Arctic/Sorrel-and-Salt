@@ -18,7 +18,7 @@ import { CompendiumFacetsRef } from './ingredient-facets';
 // The filtering is the service's, in SQL (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
 
 /**
- * The six facet arguments the compendium and a coven's ingredient list share (claude-docs/design-decisions/m11.22-search-facets.md):
+ * The six facet arguments the compendium and a coven's ingredient list share (claude-docs/design-decisions/ingredients.md, "Search facets take lists and a toxic setting"):
  * any value within a list matches, and every argument given must match.
  */
 export const facetArgs = builder.args((t) => ({
@@ -53,10 +53,6 @@ export const facetArgs = builder.args((t) => ({
   }),
 }));
 
-/**
- * The category arguments the compendium and a coven's ingredient list share:
- * the ids, and how many of them an entry needs.
- */
 export const categoryArgs = builder.args((t) => ({
   categoryIds: t.idList({ required: false }),
   categoryMode: t.field({
@@ -107,8 +103,6 @@ builder.queryField('compendium', (t) =>
   }),
 );
 
-// How many entries each filter value would list, under the same
-// arguments as `compendium`, so the counts sit beside the page they narrow.
 builder.queryField('compendiumFacets', (t) =>
   t.field({
     type: CompendiumFacetsRef,
@@ -163,7 +157,6 @@ builder.queryField('ingredient', (t) =>
   }),
 );
 
-/** The filter's arguments, the page's left to `t.pagedConnection`. */
 function filterOf({
   query,
   categoryIds,

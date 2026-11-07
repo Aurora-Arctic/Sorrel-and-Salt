@@ -15,8 +15,6 @@ import type { SupportNotifier } from '@/modules/support';
 import { A, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
-// A sender resolving their own request, and the two counts the account menu draws from.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;

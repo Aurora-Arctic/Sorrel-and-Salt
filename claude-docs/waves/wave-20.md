@@ -1,6 +1,6 @@
 # Wave 20 — Ethical warnings
 
-**This wave exists on the owner's call of 2026-11-06**, made while M17.3 was scoped: the build for the ethical warnings on ingredients, and the questions it leaves in `compendium/ethics/`, are fifteen tasks, so they get a wave instead of sitting on Wave 17 (Fast follow), which holds scoping and audits. They are `M20.1 → M20.15` ([`tasks/m20.md`](../tasks/m20.md)). The decision record is [`m17.3-ethical-ingredient-warnings.md`](../design-decisions/m17.3-ethical-ingredient-warnings.md).
+**This wave exists on the owner's call of 2026-11-06**, made while M17.3 was scoped: the build for the ethical warnings on ingredients, and the questions it leaves in `compendium/ethics/`, are fifteen tasks, so they get a wave instead of sitting on Wave 17 (Fast follow), which holds scoping and audits. They are `M20.1 → M20.15` ([`tasks/m20.md`](../tasks/m20.md)). The decision record is [`ingredients.md`, "The ethical warnings on ingredients"](../design-decisions/ingredients.md#the-ethical-warnings-on-ingredients).
 
 **The row is** `M20.1 → M20.15`.
 

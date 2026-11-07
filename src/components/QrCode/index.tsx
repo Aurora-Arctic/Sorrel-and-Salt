@@ -2,8 +2,7 @@ import type { ReactElement } from 'react';
 import { qrShapes, roundedSquarePath } from '../../lib/qr';
 import type { QrCodeProps } from './types';
 
-// The same round dots and rounded finders as the printed invitation card (src/lib/qr). The shapes fill
-// with `currentcolor`, so the caller sets the dot colour with `color`.
+// The shapes fill with `currentcolor`, so the caller sets the dot colour with `color`.
 const QrCode = ({ value, label, className }: QrCodeProps): ReactElement => {
   const { size, dotRadius, dots, finders } = qrShapes(value);
   return (

@@ -8,14 +8,10 @@ import { insertReference, insertReferenceLink } from '../support/db/insert-refer
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// The public compendium entry page as a signed-out visitor sees it, for what no story walks: the 308 for a moved
-// slug and the page at a phone's width.
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** A user to stamp the rows with, signed in on a page that is closed again at once. */
 async function authorOf(
   browser: import('@playwright/test').Browser,
   baseURL: string | undefined,

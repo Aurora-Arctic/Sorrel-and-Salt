@@ -15,18 +15,12 @@ import { asManualFix } from '../../../support/db/privileges';
 import { makeIngredient } from '../../../support/fixtures/ingredient';
 import type { PrivilegeChangeRow, RoleRow } from './types';
 
-// A keeper makes a user a keeper, or stops one being one, from `/keepers/users`, declared `via: 'admin'` so the trigger on `users` records each change in the privilege ledger.
-// The primary keeper, named by ADMIN_BOOTSTRAP_EMAIL when the check runs, cannot be revoked, and a count under a lock refuses leaving no keeper at all (claude-docs/design-decisions/m2.9-granting-admin.md, "Granting" and "Revoking").
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
 const DOMAIN = '@user-role.test';
-// Invented accounts beside the cast: one who may not create a coven and has
-// not verified their address, one who may, a second keeper, the address the
-// variable names, and one soft-deleted.
 const PLAIN = '00000000-0000-0000-0000-0000000000d1';
 const APPROVED = '00000000-0000-0000-0000-0000000000d2';
 const OTHER_ADMIN = '00000000-0000-0000-0000-0000000000d3';
@@ -36,7 +30,6 @@ const CURATOR = '00000000-0000-0000-0000-0000000000d6';
 const NOWHERE = '00000000-0000-0000-0000-0000000000d9';
 const PRIMARY_EMAIL = `owner${DOMAIN}`;
 
-/** Inserts a user on this file's domain; a keeper or curator is declared as a `psql` fix declares one. */
 async function insertUser(
   id: string,
   name: string,
@@ -96,7 +89,6 @@ afterEach(async () => {
   await sql`drop function if exists refuse_demo_seat()`;
 });
 
-/** Every case starts from no demo coven, whether or not the template holds one. */
 async function removeDemoCoven(): Promise<void> {
   // The coven's contents reference its row, so they go first; the cascade also empties the tables that hang off them.
   await sql`truncate spell_workings, spells, inventory_items, workspace_compendium_entries, ingredients cascade`;
@@ -104,7 +96,6 @@ async function removeDemoCoven(): Promise<void> {
   await sql`delete from workspaces where id = ${DEMO_WORKSPACE_ID}`;
 }
 
-/** The user's seat in the demo coven, live or not; `undefined` where there is no row. */
 async function demoSeat(userId: string) {
   const [row] = await sql<{ role: string; deleted: boolean }[]>`
     select role::text, deleted_at is not null as deleted from workspace_members
@@ -113,7 +104,6 @@ async function demoSeat(userId: string) {
   return row;
 }
 
-/** The ledger, oldest first, the enums cast to text. */
 async function changes(): Promise<PrivilegeChangeRow[]> {
   return sql<PrivilegeChangeRow[]>`
     select user_id, privilege::text, change::text, via::text, note, created_by, created_at

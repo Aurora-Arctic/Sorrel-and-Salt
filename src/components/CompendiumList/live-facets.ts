@@ -95,8 +95,6 @@ const CompendiumFacetCountsDocument = graphql(`
   }
 `);
 
-// The coven's twin: the same counts over the coven's cupboard, with the Source strip and the
-// two stock switches beside them, which `covenFacetCounts` maps.
 const CovenFacetCountsDocument = graphql(`
   query CovenFacetCounts(
     $workspaceId: ID!
@@ -188,9 +186,7 @@ export function useLiveFacets({
   enabled: boolean;
   categories: readonly CompendiumCategoryChoice[];
   vocabulary: CompendiumFacetVocabulary;
-  /** A coven's id: given, the counts are the coven cupboard's and carry its Source and stock counts. */
   workspaceId?: string;
-  /** The admin list: hidden entries are counted in, as the list shows them. */
   admin?: boolean;
 }): { facets: CompendiumFacetCounts | undefined; loading: boolean } {
   const lookups = {
@@ -207,8 +203,6 @@ export function useLiveFacets({
           admin,
         )
       : {
-          // The coven table needs the three choices only a coven has; a panel that left them out
-          // holds none.
           ...COVEN_PARAMS.variables(
             { source: '', inStock: false, lowStockOnly: false, ...held },
             lookups,
@@ -217,7 +211,6 @@ export function useLiveFacets({
         },
   );
   const settled = useDebouncedValue(variables, DEBOUNCE_MS);
-  // Only one of the two asks is ever enabled: the page is the compendium's or a coven's.
   const compendium = useQuery({
     ...graphqlQuery(
       CompendiumFacetCountsDocument,
@@ -239,7 +232,6 @@ export function useLiveFacets({
   });
   const facets = useMemo(() => {
     const idsOf = vocabulariesOf(categories, vocabulary);
-    // The answer's toxic counts are the two settings; the type is the filter's, which adds `any`.
     const settings = (toxic: { value: ToxicFilter; count: number }[]) =>
       toxic.flatMap(({ value, count }) => (value === 'any' ? [] : [{ value, count }]));
     if (coven.data) {
@@ -248,8 +240,6 @@ export function useLiveFacets({
     }
     if (compendium.data) {
       const answer = compendium.data.compendiumFacets;
-      // The review counts come back keyed by the filter's own Boolean; null for anyone who does not
-      // curate.
       const reviewed =
         answer.reviewed?.map(({ value, count }) => ({
           value: value ? ('reviewed' as const) : ('needs_review' as const),

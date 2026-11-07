@@ -4,8 +4,6 @@ import ProviderMark from '.';
 import { ProviderUnavailableNote } from './unavailable-note';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 
-// Render-only, and presentation alone: the marks are checked by eye here and
-// by axe on the pages that show them.
 const meta = {
   title: 'Sign In / Provider Mark',
 } satisfies Meta;
@@ -23,7 +21,6 @@ const Marks = () => (
   </div>
 );
 
-// Facebook Chip: Facebook's mark as a brand button draws it, on its blue chip.
 export const States: Story = {
   render: () => (
     <StatesGrid

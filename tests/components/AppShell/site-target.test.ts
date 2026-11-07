@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ingredientLinkTarget, siteLinkTarget } from '@/components/AppShell/site-target';
 
-// A main-region wait is drawn in the destination's own frame.
 describe('siteLinkTarget', () => {
   it('draws the Compendium as wide cards under a heading and a filter, with no Add', () => {
     const target = siteLinkTarget('/compendium', '/compendium');
@@ -38,9 +37,6 @@ describe('siteLinkTarget', () => {
   });
 });
 
-// A link into an ingredient's page draws that page's frame: the
-// compendium entry is a wide page with its jump menu; a coven's entry sits
-// under the coven's context row, so it is the coven region's.
 describe('ingredientLinkTarget', () => {
   it('draws a compendium entry as a wide page with its jump menu', () => {
     expect(ingredientLinkTarget('/compendium/ingredients/fixture-testwort')).toEqual({

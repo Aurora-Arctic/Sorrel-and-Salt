@@ -15,10 +15,6 @@ import {
 } from '@/lib/group-colors';
 import { colorDistance } from '@/lib/near-color';
 
-// A category group's two colours as one family: one hue to within MAX_HUE_DISTANCE, as every
-// seeded pair is, and a partner derived from whichever is chosen first (hue kept, saturation
-// scaled as the seeds scale it, lightness solved for the partner's own ground).
-
 describe('toHsl', () => {
   it('reads a hex as hue, saturation and lightness', () => {
     const [hue, saturation, lightness] = toHsl('#4e8bc2');
@@ -34,7 +30,6 @@ describe('toHsl', () => {
 
 describe('hueDistance', () => {
   it('measures the short way round the wheel', () => {
-    // 344° and 4° are twenty degrees apart, not 340.
     expect(hueDistance('#cb6883', '#c26a5e')).toBeLessThan(25);
     expect(hueDistance('#4e8bc2', '#0c5393')).toBeLessThan(1);
   });
@@ -57,7 +52,6 @@ describe('the seeded pairs', () => {
 });
 
 describe('pairedColor', () => {
-  // Each seeded colour with the column its partner fills.
   const seeded = CATEGORY_GROUPS.flatMap((group) => [
     [group.colorDark, 'colorLight'] as const,
     [group.colorLight, 'colorDark'] as const,
@@ -73,8 +67,6 @@ describe('pairedColor', () => {
     }
   });
 
-  // The lightness is the one nearest the ground that clears it, so the
-  // partner is no darker or lighter than it needs to be.
   it('lands a tenth over the floor, not far past it', () => {
     for (const [source, column] of seeded) {
       expect(chipContrast(column, pairedColor(source, column))).toBeLessThan(4.8);
@@ -91,9 +83,7 @@ describe('pairedColor', () => {
   });
 
   it('comes close to the seed it stands in for', () => {
-    // Mind & Spirit's light colour from its dark one: the seed is #6e4ce6.
     expect(colorDistance(pairedColor('#8e7bd1', 'colorLight'), '#6e4ce6')).toBeLessThan(0.03);
-    // Protection & Defense's dark colour from its light one: the seed is #5d8ab1.
     expect(colorDistance(pairedColor('#286ba6', 'colorDark'), '#5d8ab1')).toBeLessThan(0.03);
   });
 
@@ -126,8 +116,6 @@ describe('contrastBoundary', () => {
     }
   });
 
-  // The seeded blue sits on the passing side of its own theme's line: above
-  // it on the dark card, where light passes; below on the light page.
   it('puts a passing colour on the passing side, for each ground', () => {
     const dark = points(contrastBoundary(208, 'colorDark', 'hsb'));
     const [, sDark, bDark] = toHsb('#4e8bc2');
@@ -149,7 +137,6 @@ describe('contrastBoundary', () => {
   });
 });
 
-/** A hex as hue, saturation and brightness, each as the picker shows it, 0–360 and 0–100. */
 function toHsb(hex: string): [number, number, number] {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
   const max = Math.max(r, g, b);
@@ -159,7 +146,6 @@ function toHsb(hex: string): [number, number, number] {
 }
 
 describe('passesAt', () => {
-  // At hue 208 on the dark card: white at the top-left passes, black at the bottom fails.
   it('reads the area as the picker lays it out, y up', () => {
     expect(passesAt(208, 'colorDark', 'hsb', 0, 100)).toBe(true);
     expect(passesAt(208, 'colorDark', 'hsb', 50, 0)).toBe(false);
@@ -174,7 +160,6 @@ describe('boundaryPoints', () => {
     expect(contrastBoundary(208, 'colorDark', 'hsb')).toBe(
       `M ${points.map(([x, y]) => `${x} ${y.toFixed(2)}`).join(' L ')}`,
     );
-    // Each point sits on the floor: just above passes, just below fails.
     for (const [x, y] of points.slice(1, -1)) {
       expect(passesAt(208, 'colorDark', 'hsb', x, 100 - y + 0.5)).toBe(true);
       expect(passesAt(208, 'colorDark', 'hsb', x, 100 - y - 0.5)).toBe(false);
@@ -183,7 +168,6 @@ describe('boundaryPoints', () => {
 });
 
 describe('failingRegion', () => {
-  /** Whether a point lies in the polygon, by ray casting. */
   const inside = (polygon: [number, number][], [x, y]: [number, number]) => {
     let hit = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
@@ -213,8 +197,6 @@ describe('failingRegion', () => {
 });
 
 describe('failingLabelPoint', () => {
-  // On the dark card the veil deepens to the right, where saturated blues
-  // stay dark; on the light page it deepens to the left, where pale greys sit.
   it("centres the label across on the veiled side's own centre of area", () => {
     const [dark] = failingLabelPoint(208, 'colorDark', 'hsb') as [number, number];
     const [light] = failingLabelPoint(208, 'colorLight', 'hsb') as [number, number];

@@ -9,8 +9,6 @@ import { seedInvitationCards } from '@/db/seed/invitation-cards';
 import { batchName } from '@/components/AdminCards/batches';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
-// The fake invitation cards the `demo` scenario seeds for the admin Invitation Cards and Card Sign-Ups tabs, run against the `standard` cast.
-
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 

@@ -59,7 +59,6 @@ afterAll(() => server.close());
 
 let auth: AuthInstance;
 
-// Provider credentials and nothing else, so one import serves every test.
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
 });

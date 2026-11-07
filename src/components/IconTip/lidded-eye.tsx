@@ -2,13 +2,10 @@ import { type ReactElement, useId } from 'react';
 import type { LiddedEyeIconProps } from './types';
 import './lidded-eye.scss';
 
-// The open and shut upper lids of the mystic eye's 16-unit grid, and the lower lid that closes the
-// gap the iris shows through; lidded-eye.scss carries the same shapes to move between them.
 const LID_OPEN = 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
 const LID_SHUT = 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8';
 const LOWER_LID = 'C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z';
 
-/** The mystic eye with a lid: open, it is the Quick Look eye; shut, the upper lid lies on the lower and lashes hang from it. The lid moves between the two. */
 export function LiddedEyeIcon({ open, className }: LiddedEyeIconProps): ReactElement {
   const clipId = useId();
   const lid = open ? LID_OPEN : LID_SHUT;

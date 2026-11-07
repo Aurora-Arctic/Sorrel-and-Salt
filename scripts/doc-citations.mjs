@@ -50,12 +50,10 @@ export function citingFiles(root) {
     .filter((file) => !file.startsWith(`${DOCS}/`) && !file.startsWith('src/db/migrations/'));
 }
 
-/** Every `claude-docs/….md` a text names, in source order, with duplicates dropped. */
 export function citationsIn(text) {
   return [...new Set(text.match(CITATION) ?? [])];
 }
 
-/** Every `doc.md, "Section"` a text makes, against the full path the text names for `doc.md`. */
 export function sectionCitesIn(text) {
   const cited = citationsIn(text);
   return [...text.matchAll(SECTION)].flatMap(([, doc, quoted]) => {

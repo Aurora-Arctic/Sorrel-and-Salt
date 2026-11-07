@@ -15,9 +15,6 @@ import type {
   DeclineInvitationByIdResult,
 } from './types';
 
-// The three mutations, the transport's half (claude-docs/testing/layer-ownership.md): a keeper's answer, which carries no token and no link, the session as the actor, and one refusal per error code.
-// Which callers, addresses and links the services refuse is services/admin-invitations.test.ts's and services/invitation-acceptance-by-token.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
-
 let sql: ReturnType<typeof postgres>;
 
 beforeAll(() => {
@@ -34,7 +31,6 @@ const INVITED = `grantee${DOMAIN}`;
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
-/** A sender that records the invitations it was asked to mail, by id: the token is minted by the mail's step, never here. */
 function recordingSender() {
   const sent: string[] = [];
   const sender: InvitationSender = {
@@ -231,14 +227,10 @@ describe('Mutation.acceptInvitation', () => {
 
 const ACCEPT_BY_ID = `mutation ($id: ID!) { acceptInvitationById(id: $id) { id acceptedAt } }`;
 
-// The transport's half: the answer, and one error code per refusal. Whose
-// address admits, and every dead state, are
-// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.acceptInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
 
-  /** A coven invitation into W for the grantee's address, from A. */
   async function inviteGrantee(expired = false) {
     const [{ id }] = await sql`
       insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at)
@@ -295,14 +287,10 @@ describe('Mutation.acceptInvitationById', () => {
 
 const DECLINE_BY_ID = `mutation ($id: ID!) { declineInvitationById(id: $id) { id declinedAt acceptedAt } }`;
 
-// The transport's half: the answer, `Invitation.declinedAt`, and one
-// error code per refusal. Whose address admits, and every dead state, are
-// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.declineInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
 
-  /** A pending coven invitation into W for the grantee's address, from A. */
   async function inviteGrantee(token = 'pending-token') {
     const [{ id }] = await sql`
       insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)

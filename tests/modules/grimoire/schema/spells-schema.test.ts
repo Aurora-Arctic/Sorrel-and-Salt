@@ -6,8 +6,6 @@ import { type SpellOverrides, makeSpell, spellColumns } from '../../../support/f
 import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/spells';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// §5's columns, `visibility` included — claude-docs/db/grimoire.md,
-// "The grimoire".
 // `revision` is the counter a save names to detect a clash.
 const OWN_COLUMNS = [
   'id',
@@ -40,7 +38,6 @@ const OTHER_COVEN = WORKSPACE_X_ID;
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-// The factory writes the row; this file supplies the coven and the author.
 // `status` and `visibility` are dropped so each column's own default is what the tests observe; a value spelled out would make "defaults to draft" assert what it just wrote.
 async function record(overrides: SpellOverrides = {}): Promise<string> {
   const {
@@ -79,7 +76,6 @@ beforeEach(async () => {
 });
 
 describe('spells table', () => {
-  // What §8's example writes, and so the least a spell can be.
   it('accepts a spell that is only a title in a workspace', async () => {
     const id = await record({ title: 'Hearth Guard' });
 
@@ -98,7 +94,6 @@ describe('spells table', () => {
     }
   });
 
-  // The single free-text note on a spell, beside its steps.
   it('holds a note', async () => {
     const id = await record({ note: 'Keep by the hearth.' });
 
@@ -117,8 +112,7 @@ describe('spells table', () => {
     expect(count).toBe(3);
   });
 
-  // In the column rather than the service, so a spell written by any path is
-  // a draft until something says otherwise.
+  // In the column rather than the service, so a spell written by any path is a draft until something says otherwise.
   it('defaults a new spell to draft', async () => {
     const id = await record();
 
@@ -127,9 +121,7 @@ describe('spells table', () => {
     expect(row.status).toBe('draft');
   });
 
-  // In the column, so a spell written by any path — a seed, a fixture, a
-  // service that never mentions visibility — joins the shared grimoire
-  // rather than disappearing into its author's.
+  // In the column, so a spell written by any path (a seed, a fixture, a service that never mentions visibility) joins the shared grimoire.
   it('defaults a new spell to workspace visibility', async () => {
     const id = await record();
 
@@ -138,8 +130,7 @@ describe('spells table', () => {
     expect(row.visibility).toBe('workspace');
   });
 
-  // Exactly two of each in v1; v2's `proposed`/`approved` and §13's
-  // `public` are an `ALTER TYPE ... ADD VALUE`, which is why each is an enum.
+  // Exactly two of each in v1; v2's `proposed`/`approved` and §13's `public` are an `ALTER TYPE ... ADD VALUE`, which is why each is an enum.
   it('holds the statuses and visibilities the code declares', async () => {
     const [row] = await sql`
       select enum_range(null::spell_status)::text[] as statuses,
@@ -154,15 +145,12 @@ describe('spells table', () => {
     const status = await failureOf(cast('proposed'));
     const visibility = await failureOf(share('public'));
 
-    // 22P02 is invalid_text_representation — the enum refusing the cast.
     expect(status.code).toBe('22P02');
     expect(visibility.code).toBe('22P02');
   });
 });
 
-// Autosave writes a draft on the first keystroke, before the member
-// may have named it, so a title is required only to complete a spell
-// (claude-docs/db/grimoire.md, "The grimoire").
+// Autosave writes a draft before the member may have named it, so a title is required only to complete a spell (claude-docs/db/grimoire.md, "Column decisions").
 describe('a spell with no title', () => {
   const CHECK_COMPLETE_HAS_TITLE = 'spells_complete_has_title';
 
@@ -189,7 +177,6 @@ describe('a spell with no title', () => {
 
     const error = await failureOf(untitled('complete'));
 
-    // 23514 is check_violation.
     expect(error.code).toBe('23514');
     expect(error.constraint_name).toBe(CHECK_COMPLETE_HAS_TITLE);
   });

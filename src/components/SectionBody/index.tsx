@@ -44,10 +44,8 @@ export default function SectionBody({
   // (SkeletonFade); without the hidden heading, since the page has its own.
   const leaving = useLeavingSkeleton(skeleton && <main>{skeleton}</main>);
 
-  // The page is held beneath the skeleton rather than swapped for it, so the scroll position
-  // the browser saves for Back is the page's. The outer box is what the skeleton is laid over;
-  // the section's own frame keeps the page as its direct children, so its flex column and gap
-  // are untouched, and the skeleton stands in a copy of that frame.
+  // The page is held beneath the skeleton rather than swapped, so the scroll position the browser saves for Back is the
+  // page's. The skeleton stands in a copy of the section's frame, so its flex column and gap are untouched.
   return (
     <div className={skeletonCoverHost(skeleton !== null)}>
       <div {...heldPage(skeleton !== null, `${className} ${skeletonFadeHost(leaving !== null)}`)}>

@@ -66,7 +66,6 @@ function compendiumInput(
 const seeded = (overrides: Partial<IngredientFixture> = {}) =>
   insertIngredient(sql, makeIngredient({ workspaceId: null, ...overrides }), A.id);
 
-/** A coven's own ingredient, in W unless named. */
 const local = (workspaceId = WORKSPACE_W_ID) =>
   insertIngredient(
     sql,
@@ -172,7 +171,6 @@ describe('setCompendiumEntryReviewed', () => {
 });
 
 describe('a curator write to an entry leaves the mark as it was (the owner, 2026-10-23)', () => {
-  /** Reviewed by E at a date long past, or never reviewed. */
   async function entry(reviewed: boolean): Promise<string> {
     const created = await createCompendiumEntry(asUser(E), compendiumInput());
     if (reviewed) {
@@ -296,10 +294,8 @@ async function stampsOfSlug(id: string) {
 describe('the Reviewed filter', () => {
   const PAGE = { limit: 26, inverted: false } as const;
 
-  /** A compendium entry of its own name and no formal one, so several can stand together. */
   const named = (name: string) => seeded({ name, nomenclature: 'none', canonicalName: null });
 
-  /** Two compendium entries, one reviewed by F, and a coven's own entry. */
   async function twoEntries() {
     const reviewed = await named('Alphawort');
     const unreviewed = await named('Betawort');

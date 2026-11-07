@@ -5,11 +5,6 @@ import { UNMEASURABLE_UNIT, measurable } from '@/modules/grimoire/validation/ste
 import type { SpellStepSend, SpellStepValue, StepCategory, StepJar } from './types';
 import type { SafetyMarkProps } from '../../SafetyNote/types';
 
-// The step list's values: a saved step as the builder holds it, a held step as
-// a save sends it, and what the list works out from its steps — the unit rule
-// and the derived categories. No React here.
-
-/** The categories a step brings: its ingredient's and its form's, once each. */
 const categoriesOf = (step: SpellBuilderStep): StepCategory[] => [
   ...(step.ingredient?.categories ?? []),
   ...(step.variant?.categories ?? []),
@@ -22,7 +17,6 @@ type JarRow = {
   variant: { id: string };
 };
 
-/** The coven's jar of `variantId`, from the ingredient's jars: a form has one jar per coven. Null where it holds none. */
 export const jarOf = (stock: readonly JarRow[], variantId: string): StepJar | null => {
   const jar = stock.find((row) => row.variant.id === variantId);
   return jar
@@ -34,11 +28,9 @@ export const jarOf = (stock: readonly JarRow[], variantId: string): StepJar | nu
     : null;
 };
 
-/** The unit of that jar; null where there is none, or one with no unit. */
 export const jarUnitOf = (stock: readonly JarRow[], variantId: string): Unit | null =>
   jarOf(stock, variantId)?.unit ?? null;
 
-/** A saved step as the builder holds it. */
 export function stepValueOf(step: SpellBuilderStep): SpellStepValue {
   const variantId = step.variant?.id ?? null;
   return {
@@ -94,7 +86,6 @@ export const restoredSteps = (
     return stepId === step.stepId && rowKey === step.rowKey ? step : { ...step, stepId, rowKey };
   });
 
-/** A new step, as the picker or the one-off adds it: no quantity yet, and the unit its jar is kept in. */
 export const newStep = (
   step: Pick<
     SpellStepValue,
@@ -113,13 +104,11 @@ export const newStep = (
   stepId: null,
   rowKey: newRowKey(),
   quantity: '',
-  // The unit its form is stocked in, where the coven holds some: a start the member can change.
   unit: step.jarUnit ?? '',
   savedUnit: null,
   body: null,
 });
 
-/** A new instruction-only step: no ingredient, and a blank text the member writes. */
 export const newInstruction = (): SpellStepValue => ({
   ...newStep({
     ingredientId: null,
@@ -170,7 +159,6 @@ export function warningOf(step: Pick<SpellStepValue, 'safety' | 'form'>): string
   return noted.some((notes) => (notes ?? '').trim() !== '') ? 'Caution: has safety notes.' : null;
 }
 
-/** Whether `step` is only an instruction: no ingredient and no one-off name. */
 export const isInstruction = (step: Pick<SpellStepValue, 'ingredientId' | 'name'>): boolean =>
   step.ingredientId === null && step.name === null;
 
@@ -235,13 +223,8 @@ export const stepsChanged = (
 // name is read before every move of it and every Add and Remove.
 const INSTRUCTION_NAME_LENGTH = 40;
 
-/** What an instruction is called before anything is written in it. */
 const BLANK_INSTRUCTION = 'New Instruction';
 
-/**
- * What a step is called where it is read out: "Fixture Rosewort", or with its
- * form, "Fixture Rosewort (Dried Leaf)"; an instruction, by its text.
- */
 export function stepNameOf({ name, form, body }: SpellStepValue): string {
   if (name === null) {
     const text = (body ?? '').trim();
@@ -253,7 +236,6 @@ export function stepNameOf({ name, form, body }: SpellStepValue): string {
   return form ? `${name} (${formLabel(form)})` : name;
 }
 
-/** Whether `step` is an instruction with no text. */
 const blankInstruction = (step: SpellStepValue): boolean =>
   isInstruction(step) && (step.body ?? '').trim() === '';
 

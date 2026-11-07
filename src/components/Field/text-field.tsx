@@ -7,10 +7,6 @@ import { FieldShell } from './shell';
 import type { TextFieldProps } from './types';
 import { useField } from './use-field';
 
-/**
- * A text input or textarea in whichever react-hook-form form provides it, reading and showing its
- * own error, so every react-hook-form form draws its text fields through one.
- */
 export function TextField<V extends FieldValues = FieldValues>({
   name,
   label,
@@ -34,8 +30,6 @@ export function TextField<V extends FieldValues = FieldValues>({
 }: TextFieldProps<V>): ReactElement {
   const { register, setValue, getFieldState } = useFormContext<V>();
   const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
-  // Tidied as it is left, the way the server will store it; an error it was
-  // showing is judged again on the tidied text.
   const tidy = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const text = event.target.value;
     const formatted = format?.(text) ?? text;

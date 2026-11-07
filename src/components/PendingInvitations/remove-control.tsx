@@ -6,9 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { RevokeControlProps } from './types';
 
-// A declined invitation's Remove: it asks first, then sends `revokeInvitation`, which stamps a
-// declined row as a pending one. The link keeps saying declined, the invitee's answer outranking
-// the stamp (claude-docs/components/pending-invitations.md).
+// Revoking a declined row stamps it pending; the link keeps saying declined, as the invitee's answer outranks the stamp (claude-docs/components/pending-invitations.md).
 
 const RemoveDeclinedInvitationDocument = graphql(`
   mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {

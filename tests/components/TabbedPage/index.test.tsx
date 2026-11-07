@@ -14,9 +14,7 @@ vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: ()
 
 const { default: TabbedPage } = await import('@/components/TabbedPage');
 
-// A page in tabs: its heading, a nav of links named for the page,
-// one per tab with the open one marked from the address, and the open tab's
-// content beneath (claude-docs/components/tabbed-page.md).
+// claude-docs/components/tabbed-page.md
 
 const TABS = [
   { href: '/keepers/users', label: 'Users' },
@@ -42,7 +40,6 @@ describe('TabbedPage', () => {
     );
 
     expect(screen.getByRole('main')).toContainElement(screen.getByRole('heading', { level: 1 }));
-    // The action is the page's, beside its heading: neither a tab nor the content.
     const action = within(screen.getByRole('main')).getByRole('link', { name: 'Pause' });
     expect(tabs()).not.toContain(action);
     expect(screen.getByRole('table', { name: 'Users' })).not.toContainElement(action);
@@ -66,7 +63,6 @@ describe('TabbedPage', () => {
 
   it.each([
     ['/keepers/users', ['/keepers/users']],
-    // An address in none of the tabs marks none.
     ['/curator/compendium', []],
   ])('marks only the tab open at %s as the current page', (path, expected) => {
     pathname.mockReturnValue(path);
@@ -109,7 +105,6 @@ describe('TabbedPage', () => {
     },
   );
 
-  // Users is open; Invitations is pressed, and Next has not yet rendered it.
   const renderNavigating = () =>
     render(
       <Navigating push={router.push}>
@@ -127,7 +122,6 @@ describe('TabbedPage', () => {
 
   it('greys every tab and the action and puts a status in place of the content while a pressed tab is on its way', async () => {
     renderNavigating();
-    // Before the press: every tab and the action can be pressed, and the content shows.
     expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
     expect(action()?.closest('[inert]')).toBeNull();
     expect(within(panel()).queryByRole('status')).not.toBeInTheDocument();
@@ -143,12 +137,9 @@ describe('TabbedPage', () => {
     expect(action()?.closest('[inert]')).not.toBeNull();
     expect(within(panel()).getByRole('status')).toBeInTheDocument();
     expect(within(panel()).queryByRole('table', { name: 'Users' })).not.toBeInTheDocument();
-    // The page shown is still Users until Invitations renders; the pressed
-    // tab is the one on its way.
     expect(open()).toEqual(['/keepers/users']);
     expect(busy()).toEqual(['/keepers/invitations']);
 
-    // A second press while the first is on its way goes nowhere.
     await act(async () => {
       fireEvent.click(tab('Privilege Changes'));
     });
@@ -156,8 +147,6 @@ describe('TabbedPage', () => {
   });
 
   it('moves the current page to the pressed tab once it has rendered', () => {
-    // A navigation that renders at once: the address moves and the
-    // transition ends in the same update.
     const Switching = () => {
       const [, rendered] = useState(0);
       router.push.mockImplementation((href: string) => {
@@ -192,7 +181,6 @@ describe('TabbedPage', () => {
     fireEvent.pointerUp(users);
     expect(users).not.toHaveAttribute('data-pressed');
 
-    // A touch that turns into a scroll of the track is not a press.
     fireEvent.pointerDown(users, { button: 0, pointerType: 'touch' });
     fireEvent.pointerCancel(users);
     expect(users).not.toHaveAttribute('data-pressed');

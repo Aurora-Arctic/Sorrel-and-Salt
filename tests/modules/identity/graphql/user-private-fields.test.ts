@@ -40,8 +40,6 @@ describe.each(['email', 'emailVerified', 'role', 'canCreateWorkspace'])('User.%s
   });
 });
 
-// One field stands for the four: they share the `selfOrAdmin` scope. The
-// refusals above name each field; this is the admit that makes them a refusal.
 it('resolves for a site admin', async () => {
   expect(asUser(E).role).toBe('admin');
 

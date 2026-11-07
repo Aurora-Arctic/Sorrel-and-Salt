@@ -26,7 +26,6 @@ const RemoveControl = ({
   <ConfirmedAction
     label="Remove"
     accessibleName={`Remove ${name}`}
-    // Plain on a row and in the member modal alike: the red is the confirm's.
     openClass={inModal ? 'btn btn--quiet' : 'btn btn--quiet btn--small'}
     title="Remove Member"
     question={

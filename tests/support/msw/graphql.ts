@@ -67,10 +67,6 @@ function thrownFor({
   }
 }
 
-/**
- * Answers the named operation as /api/graphql answers a service that threw, the body built by the route's
- * own mapping. No `path` or `locations`: it answers for the operation, not one field.
- */
 export function mockGraphQLError(operationName: string, error: MockedError) {
   const body: GraphQLResponseBody<GraphQLQuery> = {
     errors: [maskError(thrownFor(error), 'Unexpected error.')],

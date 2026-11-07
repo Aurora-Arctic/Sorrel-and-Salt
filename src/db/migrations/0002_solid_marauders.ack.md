@@ -32,4 +32,4 @@ The risk the rule exists to catch is the other half, and it does not arise eithe
 
 This sidecar is new, not a port. [PR #73](https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/73) carries **no** acknowledgement line and never did: it merged during the window MB.32 opened and MB.37 closed, when `destructive-ddl` had been dropped from `pr-gate.yml` and ran on nothing. So this migration was never asked for a line, and the reasoning above was reconstructed from the migration and the schema rather than recovered from the PR.
 
-`claude-docs/db.md` previously stated that these statements "were acknowledged when they landed". That was false, and MB.48 corrects it there. Recording the correction here too, because this file is where someone checking the claim will look.
+`claude-docs/db/README.md` previously stated that these statements "were acknowledged when they landed". That was false, and MB.48 corrects it there. Recording the correction here too, because this file is where someone checking the claim will look.

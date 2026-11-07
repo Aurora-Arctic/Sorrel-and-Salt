@@ -9,8 +9,6 @@ import PageHeader from '../PageHeader';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import { route } from '../../../.storybook/route';
 
-// Render-only; what shows and when is asserted in tests/components/CovenCards. The filter
-// navigates to /coven/<slug>/ingredients, which the workshop does not serve.
 const meta = {
   title: 'Ingredients / Coven Cards',
 } satisfies Meta;
@@ -59,14 +57,11 @@ const entry = (id: string, label: string, over: Partial<CovenCardEntry> = {}): C
   ...over,
 });
 
-// One of the coven's own, with two jars (one low); a compendium entry it names, relabelled; and
-// one with no jar, which is information only.
 const ENTRIES = [
   entry('own-1', 'Testwort', {
     kind: 'own',
     canonicalName: 'Fixtura testalis',
     nomenclature: 'botanical',
-    // A note on the ingredient shows the Caution badge; the line beneath the jars is its latest edit.
     safetyNotes: 'Dilute before use.',
     lastEdit: { by: 'Fixture A', at: new Date().toISOString() },
     variants: [
@@ -94,10 +89,8 @@ const BASE: CovenCardsProps = {
   canAdd: true,
 };
 
-// A viewer: the same jar lines, and no way to add.
 const forAViewerNode = <CovenCards {...BASE} canAdd={false} />;
 
-// A page with a neighbour on each side.
 const middlePageNode = (
   <CovenCards
     {...BASE}
@@ -107,20 +100,14 @@ const middlePageNode = (
   />
 );
 
-// An empty cupboard: a practitioner is offered the first add, an observer is told which roles can add.
 const emptyNode = <CovenCards {...BASE} entries={[]} total={0} />;
 
 const emptyForAViewerNode = <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />;
 
-// A search that matched nothing: the region says only what to do, pointing at the filter row's
-// clears (the search sentence above already names the search), and hands the search to the Compendium.
 const noMatchesNode = (
   <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
 );
 
-// A member's full foot: Edit or Annotate, then the Edit Stock pencil. A compendium entry adds More,
-// holding Make It Ours and Remove; the coven's own entry has no More, since its Delete is in Edit
-// Ingredient. The jar lines stay, a badge per jar; no coven card has a forms line.
 const STOCK: Record<string, CovenCardEntry['stock']> = {
   'own-1': {
     forms: [
@@ -156,8 +143,6 @@ const withStockNode = (
   />
 );
 
-// A member of the coven, as the site shows the page to one: every foot control, Caution, and the
-// latest edit. The viewer's state keeps the plain entries.
 const defaultNode = withStockNode;
 
 export const WithStock: Story = { render: () => withStockNode };
@@ -174,8 +159,6 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  // The page around the list, as src/app/(shell)/coven/[slug]/ingredients/page.tsx draws it: the
-  // shell with the coven switcher and nav, then the Ingredients heading.
   render: ({ state }) => (
     <ShellFrame area="coven" open="/coven/fixture-coven/ingredients">
       <main>

@@ -8,7 +8,7 @@ import { get, post, pwnedRange } from '../support/password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
-// Story 72 through Better Auth's real `/sign-in/email`: the per-account lock in DESIGN.md §8, "Passwords", and
+// Password lockout (@story-72) through Better Auth's real `/sign-in/email`: the per-account lock in DESIGN.md §8, "Passwords", and
 // claude-docs/auth/passwords.md, "Lockout". Counts are seeded in SQL rather than reached by a hundred sign-ins.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
@@ -66,7 +66,6 @@ async function verifiedAccount(email = OWNER, password = RIGHT) {
   send.mockReset();
 }
 
-/** Puts the account's count at `count`, with no lock, as if that many wrong passwords had come before. */
 async function seedFailures(count: number, email = OWNER) {
   await sql`
     insert into sign_in_failures (user_id, count)
@@ -83,12 +82,11 @@ async function failureRow(email = OWNER) {
   return row as { count: number; locked_until: Date | null } | undefined;
 }
 
-/** Removes the row: what the guard reads, and nothing else. */
 async function removeRow(email = OWNER) {
   await sql`delete from sign_in_failures where user_id = (select id from users where email = ${email})`;
 }
 
-/** Moves the clock past the lock by moving the lock into the past, so no timer is faked inside scrypt. */
+/** Moves the lock into the past, so no timer needs faking inside scrypt. */
 async function expireLock(email = OWNER) {
   await sql`
     update sign_in_failures set locked_until = now() - interval '1 second'
@@ -96,7 +94,6 @@ async function expireLock(email = OWNER) {
   `;
 }
 
-/** Everything a caller can see of a response but its clock. */
 async function observable(response: Response) {
   const headers = [...response.headers.entries()].filter(([name]) => name !== 'date');
   return { status: response.status, headers, body: await response.text() };

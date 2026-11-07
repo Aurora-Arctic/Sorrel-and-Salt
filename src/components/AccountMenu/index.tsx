@@ -45,7 +45,6 @@ const AccountMenu = ({
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
 
-  // A link press leaves the page; the panel should not outlive it.
   const close = (): void => setOpen(false);
 
   // Open only: a closed menu listens for nothing. Escape is heard on the window so

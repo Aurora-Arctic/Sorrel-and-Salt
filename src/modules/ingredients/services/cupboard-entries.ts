@@ -56,7 +56,6 @@ import {
 import { type Membership, assertMembership, byCovenName, membershipsOf } from '@/modules/coven';
 import { curatedNames } from '@/modules/vocabulary';
 
-// A compendium entry in a coven's cupboard: the coven's row naming it and the merge laying its overrides over the entry
 // (claude-docs/db/workspace-compendium-entries.md, "Reading it").
 
 /** Whether `row` is a compendium entry the curators retired: soft-deleted, yet read by covens whose cupboard names it. */
@@ -78,8 +77,8 @@ export async function heldCompendiumEntry(
 }
 
 /**
- * The coven's live cupboard entry for this compendium entry, or null (claude-docs/db/workspace-compendium-entries.md,
- * "Cupboard entry service details"). Any member, observers included.
+ * The coven's live cupboard entry for this compendium entry, or null.
+ * Any member, observers included.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  */
@@ -119,7 +118,6 @@ export async function cupboardEntriesOf(
   });
 }
 
-/** One coven's live cupboard entries for these ingredients, or the refusal its proof threw. */
 async function entriesOf(
   session: Session,
   workspaceId: string,
@@ -136,8 +134,6 @@ async function entriesOf(
 }
 
 /**
- * One page of the compendium entries named exactly `name` but for case: the Add flow's question.
- *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  */
 export async function findCompendiumMatches(
@@ -152,23 +148,19 @@ export async function findCompendiumMatches(
   return findCompendiumMatchPage(trimmed, page);
 }
 
-// The three writes, each opening with the coven's own check and writing through `withAudit`
-// (claude-docs/db/workspace-compendium-entries.md, "Writing it").
-
 const NO_ENTRY = 'No such compendium entry';
 const NO_ROW = 'This coven does not hold that compendium entry';
 const HELD = 'Your coven already holds this entry';
 const ENTRY_INDEX = 'workspace_compendium_entries_workspace_ingredient_unique';
 const LABEL_INDEX = 'workspace_compendium_entries_workspace_label_unique';
 
-/** The seven overrides the input sets, leaving out the keys it does not mention. */
 function setColumns(input: CupboardEntryInput): Partial<CupboardEntryInput> {
   return Object.fromEntries(
     Object.entries(input).filter(([, value]) => value !== undefined),
   ) as Partial<CupboardEntryInput>;
 }
 
-/** Refuses a label the coven already uses, case folded; `exceptId` is the entry being written (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details"). */
+/** Refuses a label the coven already uses, case folded; `exceptId` is the entry being written (claude-docs/db/workspace-compendium-entries.md, "Writing it"). */
 async function refuseLabelTaken(
   membership: Membership,
   label: string | null | undefined,
@@ -190,8 +182,6 @@ async function refuseLabelTaken(
 }
 
 /**
- * The own-ingredient side of the label rule: refuses a name a cupboard entry of this coven carries as its label.
- *
  * @throws {ValidationError} on `name`.
  */
 export async function refuseCupboardLabelAsName(
@@ -205,7 +195,6 @@ export async function refuseCupboardLabelAsName(
   }
 }
 
-/** A write that broke one of the table's unique indexes, as a `ValidationError`; any other error unchanged. */
 function refuseRace(error: unknown): never {
   switch (violatedUniqueIndex(error)) {
     case ENTRY_INDEX:
@@ -219,8 +208,6 @@ function refuseRace(error: unknown): never {
 }
 
 /**
- * Adds a compendium entry to this coven's cupboard: one row naming it, with the overrides `input` carries; no jar, no form.
- *
  * @throws {Forbidden} the caller may not create this coven's ingredients.
  * @throws {NotFound} no live compendium entry has this id.
  * @throws {ValidationError} the coven already holds the entry, the input breaks `CupboardEntryInput`, or the label is used.
@@ -256,9 +243,6 @@ export async function addCupboardEntry(
 }
 
 /**
- * Changes this coven's overrides of a compendium entry it holds, retired or not
- * (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details").
- *
  * @throws {Forbidden} the caller may not update this coven's ingredients.
  * @throws {NotFound} this coven holds no live cupboard entry for this id.
  * @throws {ValidationError} the patch breaks `CupboardEntryInput`, or the label is used.
@@ -299,9 +283,6 @@ export async function annotateCupboardEntry(
 }
 
 /**
- * Takes a compendium entry out of this coven's cupboard, refused while the coven holds a jar of any of its forms
- * (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details").
- *
  * @throws {Forbidden} the caller may not delete this coven's ingredients.
  * @throws {NotFound} this coven holds no live cupboard entry for this id.
  * @throws {ValidationError} the coven holds jars of it.
@@ -337,11 +318,9 @@ export async function removeCupboardEntry(
   });
 }
 
-/** The names, sorted and without repeats. */
 const sortedNames = (names: readonly string[]) =>
   [...new Set(names)].sort((a, b) => a.localeCompare(b));
 
-/** One batch read's answers, flattened; a `Forbidden` slot is the caller's own refusal. */
 function answered<T>(slots: readonly (T[] | Forbidden)[]): T[] {
   return slots.flatMap((slot) => {
     if (slot instanceof Forbidden) throw slot;
@@ -352,19 +331,17 @@ function answered<T>(slots: readonly (T[] | Forbidden)[]): T[] {
 // Making a held compendium entry the coven's own (claude-docs/db/workspace-compendium-entries.md,
 // "Converting a compendium entry into our own" and "Cupboard entry service details").
 
-/** What making an entry the coven's own asks of a role; exported so the entry page offers it on exactly this permission. */
 export const MAKE_IT_OURS_PERMISSION = {
   ingredient: ['create', 'delete'],
   inventory: ['update'],
 } as const;
 
-/** A substitute of the entry naming the entry itself, whose link the copy points at itself. */
 interface SelfLink {
   variantId: string | null;
   substituteVariantId: string | null;
 }
 
-/** The entry as a coven write's input, read as the entry page reads it (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details"). */
+/** The entry as a coven write's input, read as the entry page reads it (claude-docs/db/workspace-compendium-entries.md, "Reading it"). */
 async function ownValuesOf(
   session: Session,
   merged: IngredientRow,
@@ -492,9 +469,6 @@ async function ownValuesOf(
 }
 
 /**
- * Makes the compendium entry `ingredientId`, which this coven holds, the coven's own, in one transaction
- * (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details").
- *
  * @throws {Forbidden} the caller may not create and delete this coven's ingredients and update its stock.
  * @throws {NotFound} this coven holds no cupboard entry for this id.
  * @throws {ValidationError} the label, formal name or name is already used by another entry of the coven.
@@ -596,8 +570,6 @@ export async function convertCompendiumEntryToLocal(
 }
 
 /**
- * Which of these compendium entries the coven's cupboard holds, as a set of ids, uncached (CLAUDE.md rule 6).
- *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  */
 export async function heldCompendiumEntryIds(
@@ -611,8 +583,6 @@ export async function heldCompendiumEntryIds(
 }
 
 /**
- * The same question across several covens: each coven's held ids by its id, one proof per coven.
- *
  * @throws {Forbidden} the caller may not read one of these covens' ingredients.
  */
 export async function heldCompendiumEntryIdsIn(
@@ -627,7 +597,7 @@ export async function heldCompendiumEntryIdsIn(
   return held;
 }
 
-/** The viewer's own covens that hold this compendium entry, by name; per viewer, so never cached (claude-docs/db/workspace-compendium-entries.md, "Cupboard entry service details"). */
+/** The viewer's own covens that hold this compendium entry, by name; per viewer, so never cached (claude-docs/db/workspace-compendium-entries.md, "Counting covens"). */
 export async function covensHoldingEntry(
   session: Session,
   ingredientId: string,

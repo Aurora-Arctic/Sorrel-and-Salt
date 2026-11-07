@@ -18,8 +18,6 @@ import { requireVerified, viewerOf } from './access';
 import { supportTiersForSenders } from './lifecycle';
 import type { SupportSenderTier } from './lifecycle';
 
-// The batches behind the loaders on a request: its replies, its sender's time-outs, and the people named on it.
-
 /**
  * The replies to each request, oldest first, none where the viewer may not read the request: a reader's scope is in the
  * query, so a hidden request's replies are never fetched.

@@ -13,7 +13,6 @@ vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
 const ID = '00000000-0000-0000-0000-000000000001';
 
-/** Presses Delete Coven, then the same-named confirm inside the modal it opens. */
 async function openAndConfirm() {
   render(<DeleteWorkspaceButton workspaceId={ID} name="Fixture Coven" />);
   fireEvent.click(screen.getByRole('button', { name: /^Delete Coven/ }));

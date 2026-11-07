@@ -28,10 +28,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Environment — commit .env.example, never a real one
-.env
-.env.*
+.env*
 !.env.example
-.env*.local
 Docker/.env
 
 # Local database and container state
@@ -79,7 +77,6 @@ desktop.ini
 .scratch**.**
 tmp
 .cache
-.env*
 
 # Deliberate lint violations written by the tests/guards/lint-*-boundary.test.ts guards
 __lint-probe*__/

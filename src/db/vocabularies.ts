@@ -7,10 +7,8 @@ import {
   ingredientForms,
 } from '../modules/vocabulary/schema/ingredient-forms';
 
-// The curated vocabularies by shape, listed once for the repository and the
-// seed alike: tables and the types derived from them, no client, so the seed
-// and a finder read the same pairs. A ninth vocabulary is a line here, and
-// the repository's grouping, its unions and the seed's item rows follow.
+// The curated vocabularies by shape, listed once for the repository and the seed alike; no client is
+// imported.
 
 /** An item table, the group table it is filed under, and the item's property keying it. */
 function pairOf<TItems extends PgTable, TGroups extends PgTable, TKey extends keyof TItems>(

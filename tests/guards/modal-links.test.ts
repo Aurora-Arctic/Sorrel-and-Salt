@@ -1,9 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, inject } from 'vitest';
 
-// A link that opens a modal changes the address, and a plain `next/link` scrolls the page to the top
-// on that. Every such link goes through `ModalLink`, which turns the scroll off, so a file that opens
-// a modal by address does not import `next/link` itself.
+// A plain `next/link` scrolls to the top when the address changes, so every link that opens a modal goes through `ModalLink`.
 
 const OPENS_A_MODAL = /useOpenModalClick|supportHref|SUPPORT_PARAM|IconLink/;
 const PLAIN_LINK = /from 'next\/link'/;

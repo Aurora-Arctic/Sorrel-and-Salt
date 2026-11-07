@@ -1,59 +1,31 @@
 # Sorrel & Salt
 
-A compendium, ingredient store and grimoire — the admin-curated ingredient
-reference (**compendium**), each workspace's own stock (**ingredients**), and
-the spells a workspace makes (**grimoire**).
+Sorrel & Salt is an invite-only web app for covens (groups of practitioners) to keep what they have and what they make. It has three parts: the keeper-curated ingredient reference (the **compendium**, public to read), each workspace's own ingredients and stock (**ingredients**), and the spells a workspace makes (**grimoire**).
 
-Next.js 16 · React 19 · TypeScript · PostgreSQL 18 + Drizzle · GraphQL.
-The specification is [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md); the rules
-every change follows are in [`CLAUDE.md`](CLAUDE.md).
-
-> **Status: M0 complete.** The toolchain, styling foundation, component
-> workshop, Docker stack and CI/CD pipeline are in place. The database, the
-> GraphQL layer and the product features themselves begin at M1 — see the
-> header of the [`makefile`](makefile) for the schedule.
+It is built with Next.js, React, TypeScript, PostgreSQL and Drizzle, and GraphQL. The specification is [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md). The rules every change follows are in [`CLAUDE.md`](CLAUDE.md).
 
 ## Local setup
 
-1. Install [Node.js](https://nodejs.org/) **26.6.0** — the version
-   [`Docker/Dockerfile.node`](Docker/Dockerfile.node) and the deploy workflow
-   pin. Node 22 ships npm 10, which cannot read this repo's lockfile.
-2. Clone the repo and `cd sorrel-and-salt`.
-3. `npm install`
-4. `npm run dev` — Next.js dev server on <http://localhost:8000>.
-5. `make help` — lists every make target and marks the ones that are still
-   placeholders.
-6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck,
-   on the files you changed). The git hook runs the same checks on the files
-   you staged.
+1. Clone the repo and run `cd Sorrel-and-Salt`.
+2. `npm ci`
+3. `npm run setup`
+4. Start the stack with `make docker-up`, or open the folder in VS Code and choose "Reopen in Container".
+5. `npm run dev` starts the dev server on <http://localhost:8000>.
 
-The Docker stack (`make docker-up`) and the component workshop
-(`npm run workshop`, on 61000) both work today, as do `npm run db:migrate` and
-`npm run db:seed` (the `minimal` scenario, M1.21; `standard` and `demo` land in
-M1.22–M1.23). Still to come: GraphQL codegen (M3.5) — `npm run codegen` exits
-non-zero until then. Verify with the **`:coverage`** script variants — a plain
-`npm run test` pass can still fail CI's 80% threshold.
+[`claude-docs/day-1.md`](claude-docs/day-1.md) walks through the first day, and [`claude-docs/commands.md`](claude-docs/commands.md) lists every command.
 
-`make` and `docker` are host-level; the devcontainer has neither, so run the
-npm scripts directly inside it.
+`make` and `docker` run on the host. The devcontainer has neither, so run the npm scripts directly inside it.
+
+Before every commit, run `npm run pre-commit` (lint, format check and types on the files you changed). The git hook runs the same checks on the files you staged. To verify a change, run the `:coverage` script variants: a plain `npm run test` pass can still fail CI's 80% threshold.
 
 ## Gitflow
 
-`feature/*` → `staging`; `staging` → `main` via `release/MAJOR.MINOR.PATCH`.
-`hotfix/*` opens both; `main-sync/*` brings `main` back down. Staging carries the
-same branch protections as production. One task per PR. See
-[`CLAUDE.md`](CLAUDE.md) for the full workflow.
+`feature/*` goes to `staging`, and `staging` goes to `main` through `release/MAJOR.MINOR.PATCH`. `hotfix/*` opens both, and `main-sync/*` brings `main` back down. Staging carries the same branch protections as production. One task per PR. [`CLAUDE.md`](CLAUDE.md) has the full workflow.
 
-Deploys are CI-only:
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) deploys through
-the Vercel CLI on a push to `main` (production) or `staging` (preview), and on a
-`hotfix/*` → `main` PR (preview URL commented on the PR). `vercel.json` disables
-Vercel's own Git integration; nothing else deploys.
+Deploys are CI-only. [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) deploys through the Vercel CLI on a push to `main` (production) or `staging` (preview), and on a `hotfix/*` to `main` PR (preview URL commented on the PR). `vercel.json` disables Vercel's own Git integration, and nothing else deploys.
 
 ## Documentation
 
-- [`CLAUDE.md`](CLAUDE.md) — architecture rules, domain invariants, conventions.
-- [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md) — the specification.
-- [`claude-docs/`](claude-docs/) — subsystem summaries, a doc per component, and
-  per-task design decisions.
-  [`claude-docs/README.md`](claude-docs/README.md) explains the layout.
+- [`CLAUDE.md`](CLAUDE.md): architecture rules, domain invariants and conventions.
+- [`claude-docs/DESIGN.md`](claude-docs/DESIGN.md): the specification.
+- [`claude-docs/`](claude-docs/): subsystem summaries, a doc per component, and per-task design decisions. [`claude-docs/README.md`](claude-docs/README.md) explains the layout.

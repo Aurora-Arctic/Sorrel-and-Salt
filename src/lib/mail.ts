@@ -5,11 +5,8 @@ import type { Message } from './types';
 // the one mail with no row to rebuild it from. A retried mail goes through its module's job instead, whose run holds ids and
 // never the message (claude-docs/email.md, "Sending"). Never throws: a send that fails is logged by `deliver`.
 
-/** Sends `message` through MAIL_TRANSPORT once; logged, never thrown, when it cannot be. */
 export async function send(message: Message): Promise<void> {
   try {
     await deliver(message);
-  } catch {
-    // `deliver` logged it.
-  }
+  } catch {}
 }

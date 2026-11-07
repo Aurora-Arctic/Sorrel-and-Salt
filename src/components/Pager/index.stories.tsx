@@ -3,8 +3,6 @@ import { StatesGrid } from '../../../.storybook/states-grid';
 import ListFrame from '../ListFrame';
 import Pager from '.';
 
-// Render-only; behaviour is asserted in tests/components/Pager. A pager sits
-// in its list's ListFrame, which holds its navigation.
 const meta = {
   title: 'Layout / Pager',
 } satisfies Meta;

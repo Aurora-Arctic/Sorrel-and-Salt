@@ -18,11 +18,9 @@
     flex-direction: column;
   }
 
-  // A card scrolled well off screen skips its layout and paint until it nears the viewport, which keeps a
-  // long page quick on a slow device. `auto` in the size remembers the card's real height once drawn, so the
-  // scrollbar settles. Paint containment would clip the tips and turn the fixed category panel into one
-  // positioned inside the card, so a card that is hovered, focused or has a panel open opts out. Pure
-  // enhancement: a browser without it draws every card, as before.
+  // Off-screen cards skip layout and paint; `auto` keeps each card's drawn height for the scrollbar.
+  // A hovered, focused or panel-open card opts out: paint containment would clip its tips and
+  // re-anchor the fixed category panel. Enhancement only: without it every card draws.
   @supports (content-visibility: auto) {
     > li:not(:hover, :focus-within, :has(.category-more__panel.is-open)) {
       // stylelint-disable-next-line plugin/use-baseline -- enhancement: every card draws where unsupported
@@ -32,16 +30,11 @@
     }
   }
 
-  // The grimoire lays its spell cards in this grid too, and a spell card's foot sits at its
-  // bottom by the specimen's own `margin-top: auto` once the card fills its item.
   .ingredient-card,
   .spell-card {
     flex: 1 1 auto;
   }
 
-  // Compact: a narrower column and a tighter gap, to go with the compact card the same attribute switches
-  // on (IngredientCard/_compact.scss). A stored Regular choice sets data-card-density="regular" on <html>
-  // and turns it off.
   &[data-density='compact']:not(:root[data-card-density='regular'] *) {
     grid-template-columns: repeat(
       auto-fill,

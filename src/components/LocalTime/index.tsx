@@ -5,11 +5,7 @@ import { longMinuteInZone, minuteInZone, shortDayInZone, shortMinuteInZone } fro
 import type { LocalTimeProps } from './types';
 import { useLocalTime } from './use-local-time';
 
-/**
- * An instant to the minute (`2026-10-30 2:05 pm`, or `28 August 2026, 12:00 am` with `long`) in a `<time>` carrying the full instant. The server and
- * hydration print UTC; once hydrated it prints the viewer's own zone, read as an external store so
- * the two renders never mismatch.
- */
+/** The server and hydration print UTC; once hydrated it prints the viewer's zone, read as an external store so the two renders never mismatch. */
 const LocalTime = ({ at, timeZone, long, short }: LocalTimeProps): ReactElement => {
   const print = (zone: string | undefined): string => {
     if (short === 'day') return shortDayInZone(at, zone);

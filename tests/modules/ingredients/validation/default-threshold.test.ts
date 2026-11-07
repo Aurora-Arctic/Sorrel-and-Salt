@@ -6,7 +6,6 @@ import { defaultThreshold } from '@/modules/ingredients/validation/default-thres
 // services/stock.test.ts keeps one write per call site to show the service
 // stores what this returns.
 describe('defaultThreshold', () => {
-  // 3 for count, 10 g for weight and 15 ml for volume, in the unit asked for.
   it.each([
     ['piece', 3],
     ['drop', 3],

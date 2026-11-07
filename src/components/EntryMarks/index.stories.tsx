@@ -6,7 +6,6 @@ import EntryMarks, { RecencyMark } from '.';
 import { route } from '../../../.storybook/route';
 import { StatesGrid } from '../../../.storybook/states-grid';
 
-// Render-only; what shows and when is asserted in tests/components/EntryMarks.
 const meta = {
   title: 'Ingredients / Entry Marks',
 } satisfies Meta;
@@ -25,8 +24,6 @@ const mark = (props: ComponentProps<typeof EntryMarks>) => (
 
 const FORM = { form: 'Dried' };
 
-// A compendium entry no cupboard names carries no mark outside a coven, so
-// the public compendium's cell draws nothing; the note says so.
 export const States: Story = {
   render: () => (
     <StatesGrid
@@ -72,8 +69,6 @@ export const States: Story = {
   ),
 };
 
-// The New / Updated marker: New and Updated on an ingredient card and in the entry
-// page's heading area.
 const CARD = {
   href: route('/compendium/ingredients/testwort-testalis'),
   label: 'Testwort',

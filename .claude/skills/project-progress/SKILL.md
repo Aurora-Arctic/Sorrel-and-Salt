@@ -8,7 +8,7 @@ description: Use when the user asks how far along the project is (e.g. "project 
 
 # project-progress
 
-Show a summary of completed, remaining and total **tasks** and **hours**, sized for a quick read. It runs on local data. The GitHub issues are the source of truth for status, but the default mode leaves them alone so the figures need no board call; verify mode reads them in one.
+Show completed, remaining and total **tasks** and **hours** from local data, with no board call; verify mode reads the board in one.
 
 | Figure | Local source                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -38,6 +38,6 @@ Run this only when the user asks to check against the board ("verify", "check th
 
 ## Notes
 
-- Everything is read-only: the skill changes no files, branches or issues. The one exception is an edit to `tally.mjs` that the user approves in verify mode. `create-pr` ends the body of each PR it opens or updates with `tally.mjs`'s output; that write is `create-pr`'s, not this skill's.
-- The open-branch count is any `feature/*`/`hotfix/*` branch, local or pushed, whose id has not merged — even one with no commits yet. A retired id is excluded. It measures work under way, not open PRs.
-- A task done in a PR whose branch, subject and title all omit its id will read as remaining. Verify mode catches it, and the fix is the done-outside-git list, not a looser regex. An id mentioned mid-sentence is a reference, not a completion.
+- Read-only, except an edit to `tally.mjs` the user approves in verify mode. `create-pr` ends each PR body with `tally.mjs`'s output; that write is `create-pr`'s.
+- The open-branch count is any `feature/*` or `hotfix/*` branch, local or pushed, whose id has not merged, even with no commits yet. A retired id is excluded.
+- A task merged in a PR whose branch, subject and title all omit its id reads as remaining. Verify mode catches it; the fix is the done-outside-git list, not a looser regex. An id mentioned mid-sentence is a reference, not a completion.

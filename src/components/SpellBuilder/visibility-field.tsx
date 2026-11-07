@@ -24,8 +24,7 @@ export function SpellVisibilityField({
   const [asking, setAsking] = useState(false);
   const [sharing, setSharing] = useState(false);
 
-  // The saved spell's visibility is the last save's, which the form starts from.
-  // The one-way rule binds a complete spell only; the lock is read from the saved status.
+  // The one-way rule binds a complete spell only, so the lock reads the saved status.
   const complete = created && defaultValues?.status === 'complete';
   const shared = complete && defaultValues?.visibility === 'workspace';
 

@@ -5,7 +5,6 @@
 // and tucked above the page where a pointer can hover, sliding down near the top; while tucked, the
 // rule and a sliver show (claude-docs/components/impersonation-banner.md, "Styling").
 $impersonation-banner-peek: space(2);
-// How far below the sliver a pointer still counts as near the top.
 $impersonation-banner-reach: space(4);
 
 // A wrapping row of the sentence and Stop. On touch, with nothing to hover it back, it stays in the flow
@@ -19,16 +18,13 @@ $impersonation-banner-reach: space(4);
   // More below than above: wrapped on a phone, Stop sits on the bottom row,
   // and the rule beneath it would otherwise crowd it.
   padding: space(2) space(5) space(3);
-  // Thick enough to read as a warning by its weight as well as its colour,
-  // which is all of it the tucked banner shows.
   border-bottom: $rule-heavy solid $secondary;
   background-color: $surface-card;
 }
 
-// `0px`, not `0`: the fallback is used inside `calc()` by everything that
-// offsets by the inset, and a unitless zero there is invalid.
 @media (hover: none) {
   :root {
+    // `0px`, not `0`: the fallback is used inside `calc()`, where a unitless zero is invalid.
     --top-inset: var(--impersonation-banner-height, 0px);
   }
 
@@ -59,8 +55,6 @@ $impersonation-banner-reach: space(4);
     transform: translateY(calc(-100% + #{$impersonation-banner-peek}));
     @include motion(transform);
 
-    // The reach below the sliver: invisible, and part of the banner, so
-    // hovering it counts as hovering the banner.
     &::after {
       content: '';
       position: absolute;

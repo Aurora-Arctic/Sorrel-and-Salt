@@ -77,10 +77,8 @@ export function userAccessPauseWrites({
   // `now()` beside the trigger's `updated_at`, so the two read alike.
   const lifted = () => ({ liftedAt: sql`now()`, liftedBy: session.userId });
   return {
-    // The live row is closed first, run out or standing, so the one-live index takes the new one. No conflict target: a pause
-    // set for the same user in a transaction alongside wins the slot, and this call writes nothing rather than failing.
-    // Every session the user holds ends in the same transaction, so their next request is signed out; a session row has no
-    // audit columns or `deleted_at`, and Better Auth deletes it the same way at sign-out.
+    // Closes the live row first so the one-live index takes the new pause; no conflict target, so a racing
+    // pause wins and this writes nothing. Ends the user's sessions in the same transaction.
     setUserAccessPause: async (_admin, userId, { until, note, message }) => {
       await update(userAccessPauses, lifted(), liveFor(userId));
       await tx.delete(sessions).where(eq(sessions.userId, userId));

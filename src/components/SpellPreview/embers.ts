@@ -1,11 +1,8 @@
 import type { Ember } from './types';
 
-// The embers behind the pane, fixed rather than drawn at random so the picture is the same on every
-// open and nothing runs on the client to place them. Ten rise from the hearth glow under the burn
-// (`x`, a percentage across), ten from the charred edge itself (`right` and `bottom` in rem,
-// following the hole's top: lower where its curve comes down at the left end, higher at the corner).
-// `w`, `h` in pixels; `br` an uneven border radius; `d` the life in seconds, `delay` negative so the
-// first frame is mid-flight; `sway` the drift in pixels.
+// The embers behind the pane, fixed rather than random so the picture is the same on every open and nothing runs on
+// the client to place them. `x` is a percentage, `right` and `bottom` rem, `w` and `h` pixels, `d` seconds, `delay`
+// negative so the first frame is mid-flight.
 export const HEARTH_EMBERS: readonly Ember[] = [
   {
     kind: 'hot',

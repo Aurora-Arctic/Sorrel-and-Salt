@@ -46,7 +46,6 @@ function centroid(values: ArrayLike<number>) {
   return { x: shadows.x + (x / sum) * scale, y: shadows.y + (y / sum) * scale };
 }
 
-// The middle of the mask's inked extent across and down, in artboard px.
 function extentMiddle(of: CodeShadows, values: ArrayLike<number>) {
   const inked = (count: number, value: (i: number, j: number) => number, other: number) => {
     const hit = Array.from({ length: count }, (_, i) =>
@@ -61,7 +60,6 @@ function extentMiddle(of: CodeShadows, values: ArrayLike<number>) {
   };
 }
 
-// The mask's value under an artboard point.
 function at(x: number, y: number): number {
   const col = Math.floor(((x - shadows.x) / shadows.width) * shadows.columns);
   const row = Math.floor(((y - shadows.y) / shadows.height) * shadows.rows);

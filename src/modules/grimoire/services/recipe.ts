@@ -10,14 +10,12 @@ import type { z } from 'zod';
 import type { SpellStepInput } from '../validation/spell-step';
 import { UNMEASURABLE_UNIT, measurable } from '../validation/step-unit';
 
-// How a save writes a spell's recipe: the steps a member sends are
-// the whole recipe, in order, so a step's place is its index, a saved step
-// left out is removed, and a step with no id is new. claude-docs/db/grimoire.md,
-// "Saving a recipe", says why each part is the way it is.
+// How a save writes a spell's recipe: the steps sent are the whole recipe, in order, so a step's place is its index, a saved step
+// left out is removed, and a step with no id is new (claude-docs/db/grimoire.md, "Saving a recipe").
 
 type ParsedStep = z.output<typeof SpellStepInput>;
 
-/** The step row's own columns as a save writes them: every one stated, so a field left out is cleared. */
+/** Every column stated, so a field left out is cleared. */
 function stepColumns(step: ParsedStep, place: number) {
   return {
     body: step.body ?? null,
@@ -32,7 +30,6 @@ function stepColumns(step: ParsedStep, place: number) {
   };
 }
 
-/** Whether writing `columns` would leave `row` as it is. */
 function unchanged(columns: ReturnType<typeof stepColumns>, row: SpellStepRow): boolean {
   return Object.entries(columns).every(([key, value]) => {
     const stored = row[key as keyof typeof columns];
@@ -43,7 +40,6 @@ function unchanged(columns: ReturnType<typeof stepColumns>, row: SpellStepRow): 
   });
 }
 
-/** Whether the step lays a different ingredient, form or custom name than the row. */
 function identityChanged(step: ParsedStep, row: SpellStepRow): boolean {
   return (
     (step.ingredientId ?? null) !== row.ingredientId ||
@@ -53,13 +49,7 @@ function identityChanged(step: ParsedStep, row: SpellStepRow): boolean {
 }
 
 /**
- * Refuses, before anything is written, a step that names a saved step this
- * spell has no live row for, and a link the coven may not lay: a form that is
- * not live, of an ingredient that is not live in the compendium or this
- * coven, or of another ingredient than the step names. A saved step whose
- * link is unchanged is not checked again, so a step laying an ingredient
- * deleted since keeps it (claude-docs/db/spell-visibility.md, "What a spell
- * holds").
+ * A saved step whose link is unchanged is not checked again (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
  * @throws {ValidationError} at each offending step's `id` or `ingredientId`.
  */
@@ -101,10 +91,7 @@ export async function checkRecipe(
   if (issues.length > 0) throw new ValidationError(issues);
 }
 
-/**
- * A step laying a form the coven holds a jar of, in a unit that jar cannot be measured in. Which steps are exempt:
- * claude-docs/db/grimoire.md, "Grimoire service and schema details".
- */
+/** Which steps are exempt: claude-docs/db/grimoire.md, "Saving a recipe". */
 async function unmeasurableSteps(
   membership: Membership,
   steps: readonly ParsedStep[],
@@ -132,10 +119,7 @@ async function unmeasurableSteps(
   });
 }
 
-/**
- * Writes the recipe `steps` over the spell's live `existing` steps, inside the caller's transaction. A moving step is first
- * moved aside to a free place and name, because the unique indexes are checked row by row. Call `checkRecipe` first.
- */
+/** A moving step is first moved aside to a free place and name, because the unique indexes are checked row by row. Call `checkRecipe` first. */
 export async function writeRecipe(
   write: AuditWriter,
   spellId: string,

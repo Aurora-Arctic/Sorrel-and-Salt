@@ -44,7 +44,6 @@ const read = async (session: Session | null, ref: IngredientKey) =>
     ({ reference, locator }) => [reference.title, locator],
   );
 
-/** An ingredient citing `titles`, each a compendium book of its own, with a locator per book. */
 async function addCiting(name: string, workspaceId: string | null, titles: string[]) {
   const id = await insertIngredient(
     sql,

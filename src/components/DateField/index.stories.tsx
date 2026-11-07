@@ -5,8 +5,6 @@ import { StatesGrid } from '../../../.storybook/states-grid';
 import { FieldShell, fieldDescription } from '../Field';
 import DateField from '.';
 
-// Render-only; picking, the keys and the popover's place are asserted in tests/components/DateField.
-// Each cell is the field under its label, as the Record a Working form draws it.
 const meta = {
   title: 'Forms / Date Field',
 } satisfies Meta;
@@ -14,7 +12,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const DAY = '2026-10-24';
-/** A spy that records each pick. */
 const onChange = fn();
 
 const Field = ({
@@ -32,7 +29,6 @@ const Field = ({
   min?: string;
   disabled?: boolean;
   error?: string;
-  /** Pressed open once drawn, as a person would. */
   open?: boolean;
 }): ReactElement => {
   const [value, setValue] = useState(initial);
@@ -59,10 +55,6 @@ const Field = ({
   );
 };
 
-// The two open calendars come last, so each floats below its own cell with nothing beneath it.
-// With Max is open on the days that cannot be chosen: those after the 24th are faded and refused,
-// and the next-month step is faded too, stopped at October. With Min opens on its month, the days
-// before it faded and refused.
 export const States: Story = {
   render: () => (
     <StatesGrid

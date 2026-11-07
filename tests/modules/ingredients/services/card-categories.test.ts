@@ -35,7 +35,6 @@ const filedOnForms = (workspaceId: string | null = null) =>
     ],
   });
 
-/** One ingredient's answer, as names, and each form-only one's forms. */
 async function cardOf(
   session: Session | null,
   ref: IngredientKey,

@@ -25,11 +25,8 @@ import '../CompendiumList/index.scss';
 
 const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${slug}` as Route;
 
-// Named with the formal name too, as two entries can share a name.
 const nameOf = (entry: CompendiumCardEntry): string => cardName(entry.name, entry.canonicalName);
 
-// The foot's add mark: the plus while some coven the viewer may write in lacks the entry, the
-// check once every one holds it. Both need a default coven.
 const markOf = (
   entry: CompendiumCardEntry,
   action: CompendiumCardsProps['action'],
@@ -63,7 +60,6 @@ const editOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
     />
   ) : undefined;
 
-// The three dots, where a coven that holds the entry lets the viewer do something about it.
 const moreOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
   entry.places && entry.places.length > 0 ? (
     <CompendiumCardMore
@@ -74,8 +70,6 @@ const moreOf = (entry: CompendiumCardEntry): ReactElement | undefined =>
     />
   ) : undefined;
 
-// The foot, up to three icons in this order: the add mark, Edit in Compendium, then
-// the three dots. Nothing for someone with none of them.
 const footOf = (
   entry: CompendiumCardEntry,
   action: CompendiumCardsProps['action'],
@@ -155,7 +149,6 @@ const CompendiumCards = ({
               recency={entry.recency}
               actions={footOf(entry, action, workspaceId, covens)}
               startActions={
-                // The Quick Look eye at the card's bottom left, for everyone.
                 entry.details && <DetailsLink opens={entry.details} name={nameOf(entry)} />
               }
             />

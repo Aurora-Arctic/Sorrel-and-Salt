@@ -18,7 +18,7 @@ import type {
 } from '../types';
 
 // The steps every curated vocabulary's admin write is made of, shared so that how a slug collision, a missing row or a group's move
-// is refused is one edit (claude-docs/modules.md, "Vocabulary shared write steps"). Internal to the module.
+// is refused is one edit (claude-docs/modules.md, "Shared steps inside a module"). Internal to the module.
 
 /** A write that broke the vocabulary's slug index, as a `ValidationError` on `name` naming the row holding the address; any other error unchanged. */
 export async function refuseSlugCollision(
@@ -41,8 +41,6 @@ export async function refuseSlugCollision(
 }
 
 /**
- * The live row `id` names in the vocabulary.
- *
  * @throws {NotFound} none does, an id that is not a uuid included.
  */
 export async function liveRow<TTable extends CuratedTable>(
@@ -54,7 +52,6 @@ export async function liveRow<TTable extends CuratedTable>(
   return row;
 }
 
-/** The input parsed, its group checked live, and the group, whose name a form's or a deity's slug carries. */
 export async function parseUnderLiveParent<
   Schema extends ZodType<Record<Column, string>>,
   Column extends string,
@@ -71,7 +68,6 @@ export async function parseUnderLiveParent<
   return { fields, parent: row };
 }
 
-/** The live group a delete's `count` rows move to, or the refusal on `moveTo` when none is named or it names no other live group. */
 export async function moveTarget<TTable extends GroupTable>(
   group: CuratedGroup<TTable>,
   id: string,
@@ -98,7 +94,7 @@ export async function moveTarget<TTable extends GroupTable>(
 
 /**
  * Rewrites a group whole, its slug following the name, and on a rename the slug of every live row under it whose slug carries the
- * group's name (claude-docs/modules.md, "Vocabulary shared write steps").
+ * group's name (claude-docs/modules.md, "Shared steps inside a module").
  *
  * @throws {ValidationError} a move onto another row's address, or the group's own slug is a live group's.
  * @throws {NotFound} no live group has this id.
@@ -138,7 +134,7 @@ export async function updateGroup<TTable extends GroupTable>(
 }
 
 /**
- * Soft-deletes a group, first moving its live rows to the group `moveTo` names (claude-docs/modules.md, "Vocabulary shared write steps").
+ * Soft-deletes a group, first moving its live rows to the group `moveTo` names (claude-docs/modules.md, "Shared steps inside a module").
  *
  * @throws {ValidationError} on `moveTo`, a missing target, or a row that would move onto another row's address.
  * @throws {NotFound} no live group has this id.
@@ -159,7 +155,6 @@ export async function deleteGroup(
 
   await withAudit(session, async (write) => {
     for (const { row, slug } of moves) {
-      // The column is the descriptor's own, so the values are built by name.
       const values = { [members.parentColumn]: target?.id, ...(members.slugOf && { slug }) };
       await write.updateById(members.table, row.id, values);
     }
@@ -171,7 +166,6 @@ export async function deleteGroup(
   });
 }
 
-/** The rows, each beside the slug `groupName` gives it: its own where the group is no part of it. */
 function movedUnder(
   members: MovedRows,
   rows: readonly GroupMove['row'][],

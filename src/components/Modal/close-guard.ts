@@ -6,9 +6,7 @@ import type { CloseGuard, CloseGuardSlot } from './types';
 // modal: a form there guards its own Cancel alone.
 export const CloseGuardContext = createContext<CloseGuardSlot | null>(null);
 
-/** An empty slot, for a modal to provide and consult. */
 export function closeGuardSlot(): CloseGuardSlot {
-  // Several forms in one modal each put a guard; the first that holds the close back asks.
   const guards = new Set<CloseGuard>();
   return {
     put: (guard) => {

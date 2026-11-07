@@ -62,7 +62,7 @@ suggestionConnection('formSuggestions', FormSuggestionRef, suggestForms);
 
 // A form's shape without the claimants: the tradition tells two same-named
 // deities apart as a group does two forms, but a deity is no part of an
-// ingredient's identity (claude-docs/graphql/schema.md, "deitySuggestions").
+// ingredient's identity (claude-docs/graphql/schema.md, "Suggestion fields").
 const DeitySuggestionRef = builder.objectRef<DeitySuggestion>('DeitySuggestion').implement({
   fields: (t) => ({
     id: t.exposeID('id', {
@@ -75,7 +75,7 @@ const DeitySuggestionRef = builder.objectRef<DeitySuggestion>('DeitySuggestion')
     matchedName: t.exposeString('matchedName', {
       nullable: true,
       description:
-        "The other name the query matched (M14.23), which the deity's own name does not show; null when its name matched, or it was found another way.",
+        "The other name the query matched, which the deity's own name does not show; null when its name matched, or it was found another way.",
     }),
     curated: t.exposeBoolean('curated'),
   }),

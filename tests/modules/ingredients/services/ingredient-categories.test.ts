@@ -45,18 +45,15 @@ async function categoryId(name: string): Promise<string> {
   return row.id as string;
 }
 
-/** A W-local stub: no formal name, and so `none`. */
 const local = (overrides: Overrides<IngredientFixture> = {}) =>
   makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none', ...overrides });
 
-/** A compendium stub: no formal name, and so `none`. */
 const entry = (overrides: Overrides<IngredientFixture> = {}) =>
   makeIngredient({ workspaceId: null, nomenclature: 'none', ...overrides });
 
 /** Seeds an ingredient through the shared inserter, stamped by A — not through the code under test. */
 const seed = (fixture: IngredientFixture) => insertIngredient(sql, fixture, A.id);
 
-/** The whole stub as either service takes it, filed under these categories. */
 const input = (categoryIds: string[]) => ({
   name: 'Testwort',
   nomenclature: 'none' as const,
@@ -74,14 +71,12 @@ function pairRows(ingredientId: string) {
 const categoryIdsOf = async (ingredientId: string) =>
   (await pairRows(ingredientId)).map((row) => row.category_id as string).sort();
 
-/** What the read answers for one ingredient: each category's name. */
 async function readBack(session: Session | null, id: string, workspaceId: string | null) {
   const [answer] = await categoriesOf(session, [{ id, workspaceId }]);
   if (answer instanceof Error) throw answer;
   return answer.map((category) => category.name);
 }
 
-/** The issues a refused write carried, by path and message. */
 async function refusal(write: Promise<unknown>) {
   const error = await write.catch((caught: unknown) => caught);
   expect(error).toBeInstanceOf(ValidationError);

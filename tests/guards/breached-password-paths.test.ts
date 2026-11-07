@@ -4,23 +4,16 @@ import { auth } from '@/lib/auth';
 import { BREACHED_CHECK_PATHS } from '@/lib/breached-password';
 import { HELD_PASSWORD_FIELDS } from '@/lib/held-password-paths';
 
-// The breached-password check reaches only the routes `BREACHED_CHECK_PATHS` names, so an endpoint a Better Auth
-// upgrade or a new plugin adds would take a new password unchecked. This reads every endpoint the configured
-// instance registers and fails on one that takes a password and is on no list below (claude-docs/auth/passwords.md).
+// An endpoint a Better Auth upgrade or plugin adds that takes a password and is on no list below would take it unchecked (claude-docs/auth/passwords.md).
 
-/** The body fields an endpoint takes a password in, whether a new one or one it checks against the account. */
 const PASSWORD_FIELDS = ['password', 'newPassword'];
 
-/**
- * Endpoints that check a password the account already holds, which the breached check has no reason to see. Past
- * sign-in, the list is the one the lockout hooks read, so naming an endpoint here also counts and holds its guesses.
- */
+/** Endpoints that check a password the account already holds; past sign-in the list is the lockout hooks' too, so naming one here also counts its guesses. */
 const CHECKS_A_HELD_PASSWORD = ['/sign-in/email', ...Object.keys(HELD_PASSWORD_FIELDS)];
 
 /** Endpoints with no route, so no path to match: each is called only inside `withBreachedCheck`, from the file named. */
 const SERVER_ONLY_WRAPPED: Record<string, string> = { setPassword: 'src/lib/password-setter.ts' };
 
-/** Endpoints whose body has no schema to read, each with why it takes no password. */
 const NO_BODY_SCHEMA: Record<string, string> = {
   '/sign-up/email': 'on BREACHED_CHECK_PATHS',
   '/sign-out': 'takes no body',

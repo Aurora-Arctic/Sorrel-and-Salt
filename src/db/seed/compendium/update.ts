@@ -41,7 +41,9 @@ import type {
 
 // The seed's update path for an entry already present (state table: "Write-once,
 // and how a correction lands"). Children are reconciled by key, never dropped and
-// re-created, because stock rows and spell layers hold a variant id. (claude-docs/db/compendium-seed/README.md, "Reconciling an entry that is already present")
+// re-created, because stock rows and spell layers hold a variant id.
+// (claude-docs/compendium/compendium-seed/README.md, "Reconciling an entry that
+// is already present")
 
 /** One approved entry file as the seed takes it. */
 export interface SeedItem {

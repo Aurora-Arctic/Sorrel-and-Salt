@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 
 // A document's earlier published versions each have a page of their own, `/<document>/versions/<number>`; a draft, or a number
-// never published, is a 404 (claude-docs/design-decisions/m15.59-document-editor-scope.md, "History"). The seed publishes each
+// never published, is a 404 (claude-docs/design-decisions/support.md, "History"). The seed publishes each
 // document as version 1.
 
 const DOCUMENTS = [

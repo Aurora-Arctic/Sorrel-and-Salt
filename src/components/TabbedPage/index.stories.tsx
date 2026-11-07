@@ -10,18 +10,12 @@ import TabbedPage from '.';
 import { TabSwitchContext } from './tab-switch';
 import type { TabSwitch } from './types';
 
-// Render-only; behaviour is asserted in tests/components/TabbedPage. The People page
-// as `/keepers/invitations` draws it: the admin frame and nav, the heading with its
-// three tabs, Invitations open, and its New Invitation. The workshop's stub names
-// the open address (.storybook/navigation.ts); a tab switch provided above the
-// page says a tab is on its way.
 const meta = {
   title: 'Layout / Tabbed Page',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Users pressed and on its way, a tab whose list opens with a filter.
 const ON_ITS_WAY = { pending: true, target: ADMIN_PAGES.people.tabs[0], go: () => undefined };
 
 const People = ({
@@ -44,10 +38,6 @@ const Invitations = () => (
   </People>
 );
 
-// Users pressed and on its way: New Invitation and every tab greyed and closed to
-// another press, the Users pill in its pending look while Invitations is still the
-// current page, and the list's skeleton shimmering below. At 375px the rows are
-// cards. Under reduced motion the shapes stand still.
 const Loading = ({ tab = ON_ITS_WAY }: { tab?: TabSwitch }) => (
   <TabSwitchContext.Provider value={tab}>
     <Invitations />
@@ -57,15 +47,10 @@ const Loading = ({ tab = ON_ITS_WAY }: { tab?: TabSwitch }) => (
 const invitationsNode = <Invitations />;
 const loadingStateNode = <Loading />;
 
-// A tab whose content opens with no filter on its way, Invitations: the same
-// skeleton without the filter row.
 const loadingUnfilteredNode = (
   <Loading tab={{ ...ON_ITS_WAY, target: ADMIN_PAGES.people.tabs[1] }} />
 );
 
-// The last tab open, Privilege Changes, at 375px: the three pills fit under the
-// heading, and a row too wide would scroll inside its track to centre the open
-// tab. Privilege Changes has no action.
 const privilegeChangesTabNode = (
   <People open="/keepers/privilege-changes" action={null}>
     <PrivilegeLedger
@@ -86,9 +71,6 @@ const privilegeChangesTabNode = (
   </People>
 );
 
-// The Add as a list page draws it (`AddAction`: a labelled button, and a plus for the
-// narrow header), where Default has the plain New Invitation link. At 600px wide the
-// plus sits at the heading's end; at 382px the label drops beneath the heading.
 const addActionLabelAndPlusNode = (
   <People
     action={
@@ -101,8 +83,6 @@ const addActionLabelAndPlusNode = (
   </People>
 );
 
-// A page with a single tab (a member who cannot invite sees only Members)
-// draws no row of pills.
 const singleTabNode = (
   <AdminFrame open={ADMIN_PAGES.people.tabs[0].href}>
     <TabbedPage title="People" tabs={[ADMIN_PAGES.people.tabs[0]]}>
@@ -126,26 +106,21 @@ export const States: Story = {
   render: ({ state }) => <div>{state}</div>,
 };
 
-// The widths the comments above name, pinned so they do not wait on the
-// toolbar: the plus at the heading's end with the pills on its line, ...
 export const AddActionAt600: Story = {
   globals: { viewport: { value: 'w600', isRotated: false } },
   render: () => addActionLabelAndPlusNode,
 };
 
-// ... the label beneath the heading, where the plus gives way to it, ...
 export const AddActionAt382: Story = {
   globals: { viewport: { value: 'w382', isRotated: false } },
   render: () => addActionLabelAndPlusNode,
 };
 
-// ... and the loading skeleton's rows as cards.
 export const LoadingAt375: Story = {
   globals: { viewport: { value: 'w375', isRotated: false } },
   render: () => loadingStateNode,
 };
 
-// The last tab open at the width its comment names.
 export const PrivilegeChangesAt375: Story = {
   globals: { viewport: { value: 'w375', isRotated: false } },
   render: () => privilegeChangesTabNode,

@@ -1,10 +1,6 @@
 import { covenSlugOf, covenTarget } from '../../lib/coven-path';
 import type { NavigationTarget } from '../../lib/navigation';
 
-/**
- * What a site link's page draws while it is on its way, in the frame the page sits in. The bar's links
- * and the account menu's copies of them share this.
- */
 export const siteLinkTarget = (base: string, href: string = base): NavigationTarget => {
   if (base === '/compendium') {
     return {
@@ -26,11 +22,6 @@ export const siteLinkTarget = (base: string, href: string = base): NavigationTar
   return { region: 'main', shape: 'page' };
 };
 
-/**
- * What a link into the ingredients draws while it is on its way, from the address alone. A coven's
- * entry is the coven region's (`fromCoven`: only the coven's body changes); anything else changes the
- * whole main. None for any other address.
- */
 export const ingredientLinkTarget = (
   href: string,
   fromCoven: boolean = true,

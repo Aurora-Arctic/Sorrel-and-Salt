@@ -2,9 +2,7 @@
 @use '../../scss/mixins' as *;
 @use './sorrel' as *;
 
-// Each photograph is a grey image whose alpha is the subject; the theme's blend (`screen` or `multiply`) and token fades pick the layer shown.
-// `z-index: -1` on a body child paints above the page colour and beneath every in-flow element
-// (claude-docs/components/backdrop.md, "The image is tone and shape, not a picture" and "Stacking").
+// `z-index: -1` on a body child paints above the page colour and beneath every in-flow element (claude-docs/components/backdrop.md, "Contracts").
 .backdrop {
   position: fixed;
   z-index: -1;
@@ -30,14 +28,11 @@
   opacity: $ornament-multiply;
 }
 
-// The images are imported through this file so Next serves them under a content hash; each keeps its own proportions, which `background-size: 100% 100%` relies on.
-// The sorrel runs at three quarters of the salt's width; its shape and place are in _sorrel.scss
-// (claude-docs/components/backdrop.md, "Served under a content hash" and "Size and placement").
+// Imported through this file so Next serves them under a content hash; `background-size: 100% 100%` relies on each keeping its proportions (claude-docs/components/backdrop.md, "Size and placement").
 .backdrop--sorrel {
   @include sorrel-shape;
 }
 
-// The keyframes the climb in _sorrel.scss names, here because every page loads this file.
 @keyframes sorrel-follow {
   to {
     top: var(--sorrel-rest);
@@ -52,9 +47,7 @@
   background-image: url('./salt-spoon.webp');
 }
 
-// The salt rises with the footer as it scrolls into view and stays above it, as the sorrel follows the bar
-// (the footer's view timeline is in SiteFooter/index.scss). Without scroll-driven animations the footer's
-// opaque fill covers the salt instead.
+// Without scroll-driven animations the footer's opaque fill covers the salt instead.
 @keyframes salt-rise {
   from {
     bottom: var(--salt-rest);
@@ -89,8 +82,6 @@
   }
 }
 
-// On a phone the section nav is a bar fixed along the bottom; the salt
-// sits above it rather than behind it.
 @media (max-width: #{$shell-phone-width}) {
   body:has(.section-nav) .backdrop--salt {
     --salt-rest: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
@@ -99,13 +90,11 @@
   }
 }
 
-// Larger on the front door, the one page with room for it; the page's own
-// wrapper class is the hook, so the layout needs no route awareness.
+// The page's own wrapper class is the hook, so the layout needs no route awareness.
 body:has(.welcome-page) .backdrop {
   --backdrop-width: clamp(20rem, 47.5vw, 45rem);
 }
 
-// The card landing page draws the front door's art at two thirds of its size, each term of the clamp scaled.
 body:has(.card-landing) .backdrop {
   --backdrop-width: clamp(13.333rem, 31.667vw, 30rem);
 }

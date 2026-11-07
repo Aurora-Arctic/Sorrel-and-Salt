@@ -2,10 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ThemeToggle from '@/components/ThemeToggle';
 
-// The theme swap: one cross-fade of the whole page through `document.startViewTransition` where the
-// browser has it, and an instant swap where it does not or where reduced motion is asked for
-// (claude-docs/components/theme-toggle.md). happy-dom has no View Transitions API, so each test
-// states which browser it stands for.
+// The theme swap: one cross-fade through `document.startViewTransition` where the browser has it, an instant
+// swap where it does not or reduced motion is asked for (claude-docs/components/theme-toggle.md). happy-dom
+// has no View Transitions API, so each test states which browser it stands for.
 
 const toggle = () => screen.getByRole('button', { name: 'Toggle light and dark mode' });
 const theme = () => document.documentElement.getAttribute('data-theme');

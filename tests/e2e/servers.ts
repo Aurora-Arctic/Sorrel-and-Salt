@@ -14,9 +14,7 @@ import {
   slotPort,
 } from './slots';
 
-// The servers an e2e run needs, defined once so that playwright.config.ts, playwright.stories.config.ts
-// and scripts/e2e-servers.ts (`npm run e2e:servers`, which leaves them running between runs) start the
-// same servers with the same environment.
+// Defined once so every Playwright config and scripts/e2e-servers.ts start the same servers with the same environment.
 
 const PROVIDER_ENV_VARS = [
   'GOOGLE_CLIENT_ID',
@@ -33,9 +31,7 @@ const PROVIDER_ENV_VARS = [
 // clientCredentials() treats '' as unset, so a developer's real credentials cannot turn this server into
 // the configured one.
 const UNCONFIGURED_PROVIDERS = Object.fromEntries(PROVIDER_ENV_VARS.map((name) => [name, '']));
-// Enough for a provider to count as configured, and useless to any real
-// authorization endpoint — which is why no test may click a provider button
-// against this server.
+// Enough for a provider to count as configured, and useless to a real authorization endpoint, so no test may click a provider button against this server.
 const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
@@ -75,8 +71,8 @@ const serverEnv = (
   ...providers,
 });
 
-// The first slot's server builds; Playwright starts the entries in order, so
-// every later one serves the build the first has finished.
+// The first slot's server builds; Playwright starts the entries in order, so every later
+// one serves the build the first has finished.
 export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
   command: slot === 0 ? 'npm run build && npm run start' : 'npm run start',
   url: serverUrl(slotPort(slot)),
@@ -108,5 +104,4 @@ const compendiumCacheServer = {
   }),
 };
 
-/** Every server a full run needs, in the order Playwright starts them. */
 export const allServers = [...slotServers, configuredProvidersServer, compendiumCacheServer];

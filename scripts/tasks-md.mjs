@@ -1,15 +1,8 @@
-// The breakdown's reader, shared by the board script, the migration and the
-// project-progress tally: task headings in file order, and the execution-order
-// table's rows with their `→` ranges expanded. A range means the headings
-// between its ends in file order, not a numeric span, so a task added between
-// two numbered ones sits inside it (claude-docs/task-tracking.md, "Order").
+// A range is the headings between its ends in file order (claude-docs/task-tracking.md, "Order").
 
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-/**
- * The breakdown's files in reading order: TASKS.md, whose table names the waves, then the milestone sections. Declared, not listed, as the order expands a range.
- */
 export const TASKS_FILES = [
   'claude-docs/TASKS.md',
   'claude-docs/tasks/m0.md',
@@ -40,11 +33,9 @@ export const TASKS_FILES = [
   'claude-docs/tasks/mw.md',
 ];
 
-/** A repo-relative path, resolved from this script rather than the cwd. */
 const fromRepo = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
 
-// `ID` and `HEADING` are what the project-progress tally imports, so the skill
-// reads the same headings the same way.
+// `ID` and `HEADING` are what the project-progress tally imports, so the skill reads the same headings the same way.
 export const ID = String.raw`[A-Z]+[0-9]*(?:\.[A-Z0-9]+)*[a-z]?`;
 // `**<id> — Title** · 2h …` or `**<id> — ~~Title~~** · **RETIRED …**`
 export const HEADING = new RegExp(String.raw`^\*\*(${ID}) — .*?\*\* · (?:([0-9.]+)h|\*\*RETIRED)`);
@@ -53,11 +44,7 @@ export const WAVE_ROW = /^\| \*\*(\d+) — ([^|*]+?)\*\*\s*\|([^|]*)\|/;
 export const ID_ONLY = new RegExp(String.raw`^(${ID})$`);
 export const ID_RANGE = new RegExp(String.raw`^(${ID})\s*→\s*(${ID})$`);
 
-/**
- * The ids a cell names, in its order: ids kept, ranges expanded by `order`,
- * anything else (a row's prose tail after a comma) dropped. A range whose
- * ends are not both headings, in that order, is reported rather than guessed.
- */
+// A range whose ends are not both headings, in that order, is reported rather than guessed.
 export function expandIds(cell, order) {
   const index = new Map(order.map((id, i) => [id, i]));
   const ids = [];
@@ -100,16 +87,11 @@ export function readTasksMd(text) {
   return { order, hours, retired, waves, unresolved };
 }
 
-/**
- * A retired heading's title, `<id> — ~~Title~~`, as its issue's is `<id> — [RETIRED] Title` (.claude/rules/task-tracking.md, "Board layout"); tildes show literally in an issue title.
- */
+// Tildes show literally in an issue title (.claude/rules/task-tracking.md, "Board layout").
 const retiredTitle = (title) =>
   title.replace(new RegExp(String.raw`^(${ID}) — ~~(.*)~~$`), '$1 — [RETIRED] $2');
 
-/**
- * One task's entry: its heading's title (a retired one's as `retiredTitle` marks it), the hours, and the text to the next heading, which is its issue's body
- * (claude-docs/task-tracking.md, "Sync"). Null when no heading carries the id. Matched whatever its case, as `find` matches a title, and the answer carries the heading's own.
- */
+// Matched whatever its case, as `find` matches a title; the answer carries the heading's own (claude-docs/task-tracking.md, "Sync").
 export function readEntry(text, id) {
   const lines = text.split('\n');
   const start = lines.findIndex(
@@ -128,9 +110,7 @@ export function readEntry(text, id) {
   };
 }
 
-/** Every file in `TASKS_FILES`, in that order, as one text. */
 export const loadTasksMdText = () =>
   TASKS_FILES.map((path) => readFileSync(fromRepo(path), 'utf8')).join('\n');
 
-/** `readTasksMd` over the files on disk. */
 export const loadTasksMd = () => readTasksMd(loadTasksMdText());

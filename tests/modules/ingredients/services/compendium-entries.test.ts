@@ -409,7 +409,6 @@ describe('a deleted entry', () => {
   const SLUG = 'testwort-fixtura-testalis';
   const MOVED_OFF = 'testwort-before-a-relabel';
 
-  /** Whether `read` answers, rather than refusing with NotFound. */
   const answers = <T>(read: Promise<T>, shows: (answer: T) => boolean) =>
     read.then(shows, (error: unknown) => {
       if (error instanceof NotFound) return false;
@@ -478,7 +477,6 @@ describe('a deleted entry', () => {
         return Array.isArray(cited) && cited.length > 0;
       },
     ],
-    // The fixture's own form.
     [
       'its variants',
       async (id) => {

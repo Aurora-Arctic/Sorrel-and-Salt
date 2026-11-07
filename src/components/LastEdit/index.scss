@@ -22,13 +22,12 @@
   }
 }
 
-// InfoTip's bubble: placed by `useTip` when it opens, kept on the screen.
 .last-edit__bubble {
   @include tip-above;
 }
 
-// Left-aligned above the buttons it sits over, `space(5)` clear of what is above. The ink
-// `$last-edit-ink` holds 4.5:1 on the card and the page in both themes (tests/scss/tokens.test.ts).
+// The ink `$last-edit-ink` holds 4.5:1 on the card and the page in both themes
+// (tests/scss/tokens.test.ts).
 .meta.last-edit {
   margin-block-start: space(5);
   text-align: start;
@@ -40,7 +39,6 @@
   color: $last-edit-ink;
 }
 
-// The card's foot: the buttons follow the line with no gap of their own.
 .specimen__foot > .last-edit + .specimen__actions {
   margin-top: 0;
 }

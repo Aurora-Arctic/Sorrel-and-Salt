@@ -6,10 +6,6 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
-// The transport's half of `timeOutSupportSender`: the message to the user is a required argument, handed to the service and
-// stored on the time-out beside the note. What the mail says, and who may set one, is the service's
-// (tests/modules/support/services/timeout-mail.test.ts).
-
 const { startJob } = vi.hoisted(() => ({
   startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
 }));

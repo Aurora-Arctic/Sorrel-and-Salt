@@ -30,8 +30,8 @@ export const sessions = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    // The keeper acting as `user_id`, on an impersonation session alone; the
-    // `admin` plugin's column, registered outside production only.
+    // The `admin` plugin's column, set on an impersonation session alone; registered outside
+    // production only.
     impersonatedBy: uuid('impersonated_by').references(() => users.id),
   },
   (table) => [index('sessions_userId_idx').on(table.userId)],
@@ -89,11 +89,7 @@ export const rateLimits = pgTable('rate_limits', {
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
 });
 
-// One row per account with a failed password sign-in, and none otherwise. No
-// audit columns: nobody writes it by hand and a failed sign-in has no session.
-// `last_failed_at` is when the last failure came, which the quiet period runs
-// from, and `locked_until` the end of the current lock; the schedule that
-// sets them is the lockout's, not the table's.
+// No audit columns: nobody writes it by hand and a failed sign-in has no session.
 export const signInFailures = pgTable('sign_in_failures', {
   userId: uuid('user_id')
     .primaryKey()

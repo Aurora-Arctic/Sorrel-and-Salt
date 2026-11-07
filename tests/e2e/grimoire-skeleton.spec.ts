@@ -5,10 +5,7 @@ import { signInAgainAs, signInAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 
-// The wait on the Grimoire draws the Grimoire's own cards, not the Ingredients list's: each placeholder
-// card is as tall as a real spell card and the grid has as many columns, at a desktop and a phone width.
-
-/** How far a placeholder card may be from a real card's height: a line of text's worth. */
+/** How far a placeholder card's height may differ from a real card's: a line of text. */
 const HEIGHT_TOLERANCE = 12;
 
 let coven: Coven;
@@ -39,7 +36,6 @@ test.beforeAll(async ({ browser }) => {
   }
 });
 
-/** Holds back every server-component answer from `hold()` until `release()`, prefetches excepted. */
 async function holdServerAnswers(page: Page) {
   const held: Route[] = [];
   let holding = false;
@@ -61,7 +57,6 @@ async function holdServerAnswers(page: Page) {
   };
 }
 
-/** The first card's height and the column count of the card grid, in the skeleton or on the page. */
 const cardGrid = (page: Page, waiting: boolean) =>
   page.evaluate((inSkeleton) => {
     const root = inSkeleton
@@ -93,7 +88,6 @@ for (const width of [1280, 375]) {
       return (await cardGrid(page, true))!;
     };
 
-    // From another section.
     await page.goto(`/coven/${coven.slug}/members`);
     server.hold();
     await page
@@ -107,7 +101,6 @@ for (const width of [1280, 375]) {
     const spells = (await cardGrid(page, false))!;
     expect(spells.height).toBeGreaterThan(0);
 
-    // Between its tabs.
     server.hold();
     await page.getByRole('link', { name: 'Drafts', exact: true }).click();
     const betweenTabs = await waitingGrid();
@@ -121,16 +114,14 @@ for (const width of [1280, 375]) {
   });
 }
 
-/** How far a placeholder region may be from the loaded page's, in either axis: a line of text's worth. */
+/**
+ * How far a placeholder region may differ from the loaded page's, in either axis: a line of text.
+ */
 const REGION_TOLERANCE = 12;
 const SPELL_TITLE = 'Calm Charm';
 
 type Box = { x: number; y: number; width: number; height: number };
 
-/**
- * The boxes of a spell page's regions, in the skeleton (found by the skeleton's own shapes, which carry no
- * role) or on the loaded page (found by role and label).
- */
 const recipeRegions = (page: Page, waiting: boolean) =>
   page.evaluate((inSkeleton) => {
     const box = (element: Element | null | undefined): Box | null => {
@@ -208,7 +199,6 @@ for (const width of [1280, 375]) {
         REGION_TOLERANCE,
       );
     }
-    // The side column is as wide as the real one; the title and its icons end where the real ones do.
     expect(Math.abs(waiting.aside!.width - loaded.aside!.width)).toBeLessThanOrEqual(
       REGION_TOLERANCE,
     );
@@ -267,9 +257,6 @@ for (const width of [1280, 375]) {
   });
 }
 
-// Every list page whose wait draws a filter row draws it where the loaded page's row is: measured from the
-// window's top edge, in the wait (pinned there) and on the page that arrives, at a desktop and a phone width.
-
 let adminId = '';
 
 test.beforeAll(async ({ browser }) => {
@@ -281,7 +268,6 @@ test.beforeAll(async ({ browser }) => {
   }
 });
 
-/** The top edge of the filter row: the wait's, or the loaded page's (`.filter-row`). */
 const filterRowTop = (page: Page, waiting: boolean) =>
   page.evaluate((inSkeleton) => {
     if (inSkeleton) {

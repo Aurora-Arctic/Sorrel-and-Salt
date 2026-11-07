@@ -132,7 +132,6 @@ export async function substitutesOf(
   return answer((id) => substitutesShown(rows.filter(({ row }) => row.ingredientId === id)));
 }
 
-/** What may stand in for each variant: that form's own rows, sorted by shown name. */
 export async function substitutesOfVariants(
   session: Session | null,
   refs: readonly VariantKey[],
@@ -156,7 +155,6 @@ export async function referencesOf(
   return answer((id) => cited((link) => link.ingredientId === id));
 }
 
-/** The references each variant cites: that form's own sources, alphabetical by citation. */
 export async function referencesOfVariants(
   session: Session | null,
   refs: readonly VariantKey[],
@@ -233,7 +231,6 @@ async function admit<K extends IngredientKey | VariantKey>(
   };
 }
 
-/** The categories a batch's pairs file, as a lookup from one parent to its categories, sorted by name; one read for the batch. */
 async function filedUnder(
   links: readonly (typeof ingredientCategories.$inferSelect)[],
 ): Promise<(owns: (link: typeof ingredientCategories.$inferSelect) => boolean) => CategoryRow[]> {
@@ -247,7 +244,6 @@ async function filedUnder(
       .sort(byName);
 }
 
-/** One parent's substitute rows as §7's `Substitute`, sorted by shown name; a link names the ingredient and form it leads to. */
 function substitutesShown(
   rows: Awaited<ReturnType<typeof findSubstitutesIncludingSoftDeleted>>,
 ): SubstituteRow[] {
@@ -264,7 +260,6 @@ function substitutesShown(
     .sort(byName);
 }
 
-/** A batch's reference links as a lookup from one parent to its references and each link's own columns, alphabetical by rendered citation. */
 function citedBy(
   rows: Awaited<ReturnType<typeof findReferencesOf>>,
 ): (owns: (link: (typeof rows)[number]['link']) => boolean) => CitedReference[] {

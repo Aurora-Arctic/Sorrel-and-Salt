@@ -11,7 +11,6 @@ import './index.scss';
 // the pause on their access to the coven and their removal (claude-docs/components/member-detail.md). Laid out as the
 // user modal is, on its classes; render-only, the page deciding what the viewer may do.
 
-/** A UTC date, as the table's Joined column writes one. */
 const Day = ({ at }: { at: Date }): ReactElement => (
   <time dateTime={at.toISOString()}>{at.toISOString().slice(0, 10)}</time>
 );

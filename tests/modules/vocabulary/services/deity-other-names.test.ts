@@ -7,10 +7,6 @@ import type { DeityInput } from '@/modules/vocabulary/validation/deity';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// A deity's other names, written on the deity form as an entry's common names are. A save brings the live rows to the list sent.
-// A name is refused twice on one deity, or on two deities of one tradition, and the refusal names the deity holding it. Only a curator or a keeper writes them.
-// Every deity this file writes is named `Fixture …`, so the seeded vocabulary stays.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
@@ -42,7 +38,6 @@ function input(overrides: Partial<DeityInput> = {}): DeityInput {
   };
 }
 
-/** A deity written directly, stamped by A — not through the code under test. */
 async function seed(name: string, otherNames: string[] = [], traditionName = 'Greek') {
   const [row] = await sql<{ id: string }[]>`
     insert into deities (name, slug, description, tradition_id, created_by, updated_by)
@@ -56,7 +51,6 @@ async function seed(name: string, otherNames: string[] = [], traditionName = 'Gr
   return row.id;
 }
 
-/** The deity's live other names, as stored, alphabetically. */
 async function liveNames(deityId: string): Promise<string[]> {
   const rows = await sql<{ name: string }[]>`
     select name from deity_other_names
@@ -64,7 +58,6 @@ async function liveNames(deityId: string): Promise<string[]> {
   return rows.map((row) => row.name);
 }
 
-/** Every row the deity ever held, live or not, with who stamped it. */
 async function allRows(deityId: string) {
   return sql<{ id: string; name: string; deleted_at: Date | null; deleted_by: string | null }[]>`
     select id, name, deleted_at, deleted_by, created_by from deity_other_names

@@ -155,7 +155,7 @@ export const IngredientFacetsRef = builder
 export const ReviewFacetCountRef = builder
   .objectRef<FacetCount<ReviewFacetValue>>('ReviewFacetCount')
   .implement({
-    description: 'A Reviewed setting, and how many entries it would list (M14.8).',
+    description: 'A Reviewed setting, and how many entries it would list.',
     fields: (t) => ({
       value: t.boolean({
         description:

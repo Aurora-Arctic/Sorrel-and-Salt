@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 
 /**
- * The module `load` imports, or null until it arrives. It fetches only once `wanted` is true, so a
- * component can draw its frame at once and pull the code in behind it. A failed load leaves null:
- * the frame stays on its loading state rather than throwing into the page. The bundler caches the
- * import, so a second use resolves without another request.
+ * The module `load` imports, or null until it arrives; it fetches only once `wanted` is true, so a
+ * component draws its frame at once. A failed load leaves null, so the frame stays on its loading state
+ * rather than throwing; the bundler caches the import, so a second use makes no new request.
  */
 export function useLazyModule<M>(load: () => Promise<M>, wanted: boolean): M | null {
   const [module, setModule] = useState<M | null>(null);

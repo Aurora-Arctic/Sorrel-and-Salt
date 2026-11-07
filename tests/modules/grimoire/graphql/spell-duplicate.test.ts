@@ -7,9 +7,6 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { makeSpell } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// `duplicateSpell` over the wire: what the transport adds to services/spell-duplicate.test.ts,
-// which owns who may duplicate what. Here: the answer is the new spell, and one refusal per code.
-
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;

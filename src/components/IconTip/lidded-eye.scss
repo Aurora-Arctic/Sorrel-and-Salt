@@ -11,7 +11,6 @@
 
   overflow: visible;
 
-  // The lashes go at once as the lid lifts, and come back once it has come down.
   .lidded-eye__lashes {
     opacity: 1;
     transition: opacity 120ms ease-out 140ms;

@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { adminTarget } from '@/components/AdminNav/target';
 
-// The wait under the admin menu is drawn as the page that arrives: its
-// heading, its Add or other action, its filter row, then the list.
 describe('adminTarget', () => {
   it.each(['/curator', '/keepers'])(
     'draws the %s index as sections of links, which carries its own heading and has no cards',

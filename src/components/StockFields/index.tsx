@@ -4,10 +4,8 @@ import { SelectField, TextField } from '../Field';
 import type { StockFieldsProps, StockFormValues } from './types';
 import { UNIT_OPTIONS } from './units';
 
-// A jar's three amounts for any react-hook-form form that holds a jar: under a row's `prefix`
-// ("rows.0") in the StockDialog, or at the form's top level in the add dialog. Changing the
-// unit never converts the quantity or the threshold: the numbers stay as typed.
-// claude-docs/components/stock-fields.md.
+// A jar's three amounts for any react-hook-form form that holds a jar, under a row's `prefix` or at the top level.
+// Changing the unit never converts the numbers (claude-docs/components/stock-fields.md).
 export default function StockFields<V extends FieldValues = StockFormValues>({
   prefix,
   form,
