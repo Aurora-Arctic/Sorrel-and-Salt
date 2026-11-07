@@ -148,3 +148,8 @@
 [data-density='compact']:not(:root[data-card-density='regular'] *) {
   @include spell-card-compact;
 }
+
+// The skeleton's bars, closer than the shared stack so five of them stand as tall as the card's content.
+.spell-card .skeleton__shapes {
+  gap: space(3);
+}
