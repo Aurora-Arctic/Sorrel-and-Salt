@@ -154,3 +154,9 @@ sign-out call, and finds it said beside the button, with axe. The refusal is
 routed rather than waited for from Better Auth, since whether the served build
 refuses it depends on the origin the browser reaches it on (Better Auth refuses
 a plain-http origin, as it would any `/api/auth` POST there).
+
+## Loading on first press
+
+The button and the panel's frame are in the page's first scripts. The rows inside the panel
+(`panel.tsx`) load on the first press through `useLazyModule`, and show a `status` until they arrive.
+The counts the rows need are read by `counts.ts`, not by the button.

@@ -326,3 +326,10 @@ The form's own confirmation and the annotate menu's are drawn in the one place, 
 The link is a quiet way back above the heading: small and muted, with a chevron before it and no underline, and its ink deepens on hover and focus. The head is a stack, so the link keeps to its own width rather than stretching across the column, and the row is lifted to the head's top edge by `top`.
 
 **Forced colours.** A jumped-to note, mark or source (`:target`) takes a 1px `Highlight` outline, since its fill is dropped; in the normal themes all three take the same quiet fill. The shown switch mirrors the `.switch` primitive: a `CanvasText` thumb, a `Highlight` track with a `HighlightText` thumb when on, and `GrayText` when disabled, with no `forced-color-adjust`.
+
+## Loading on first open
+
+The details dialog and Add Ingredient's form load their code on first open. The details dialog draws
+its frame with the entry's heading and a `status` at once, then the parts in `details-parts.tsx`
+replace the status. `details-dialog.tsx` holds the frame; the shell's Add Ingredient control loads the
+form the same way (see [`modal.md`](modal.md), "Contents that load on first open").
