@@ -31,6 +31,8 @@ export interface SupportSenderRequestProps {
   request: SupportSenderRequestEntry;
   /** The reply form to draw on an unclosed request in place of the signed-in one, with the Resolve button left out. */
   reply?: ReactNode;
+  /** The level of the Thread heading: 2 on a page whose only heading above it is its h1. */
+  headingLevel?: 2 | 3;
 }
 
 export interface SupportSenderReplyBoxProps {

@@ -16,7 +16,11 @@ import '../SupportRequests/index.scss';
 // the link to its follow-up. The page behind a mailed link passes its own `reply` form, which needs no session, and has no
 // Resolve button.
 
-const SupportSenderRequest = ({ request, reply }: SupportSenderRequestProps): ReactElement => (
+const SupportSenderRequest = ({
+  request,
+  reply,
+  headingLevel,
+}: SupportSenderRequestProps): ReactElement => (
   <div className="support-detail support-detail--single">
     <div className="support-detail__main">
       <SupportFacts
@@ -25,6 +29,7 @@ const SupportSenderRequest = ({ request, reply }: SupportSenderRequestProps): Re
         errorCode={request.errorCode}
       />
       <SupportThread
+        headingLevel={headingLevel}
         entries={[
           {
             id: request.id,
