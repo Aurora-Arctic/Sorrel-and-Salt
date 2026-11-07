@@ -4,7 +4,6 @@
 // A choice chip (ChoiceChip): "Match: All" and a caret opening a menu of radios. A `<details>`,
 // so it opens before the script runs; once run, the menu fades and stays until the fade ends.
 .facet-chip__bar {
-  // The chip and its icon: what a chip's tip is placed against.
   display: flex;
   align-items: center;
   gap: space(1);
@@ -66,7 +65,6 @@
     cursor: default;
   }
 
-  // The tint is dropped, so hover takes a Highlight edge and a shut chip GrayText.
   @include forced-colors {
     &:hover {
       border-color: Highlight;
@@ -88,7 +86,6 @@
     background-color: Highlight;
     color: HighlightText;
 
-    // The name and caret set their own muted ink.
     * {
       color: inherit;
     }
@@ -106,7 +103,6 @@
   font-weight: 500;
 }
 
-// An option's icon, a glyph wide, ahead of its label on the chip and in the menu.
 .facet-chip__icon {
   display: inline-flex;
   margin-inline-end: space(1);
@@ -119,7 +115,6 @@
 }
 
 .facet-chip__caret {
-  // A chevron five eighths of a glyph wide and three eighths high.
   inline-size: calc(#{$glyph-size} * 0.625);
   block-size: calc(#{$glyph-size} * 0.375);
   color: $text-muted;

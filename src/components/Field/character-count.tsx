@@ -5,7 +5,6 @@ import type { CharacterCountProps } from './types';
 // region that is always drawn so a screen reader announces the text as it appears. It never stops typing: the
 // server is the authority on the limit (claude-docs/components/field.md, "Character count").
 
-/** The share of the limit after which the count shows. */
 const SHOWN_AFTER = 0.75;
 
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;

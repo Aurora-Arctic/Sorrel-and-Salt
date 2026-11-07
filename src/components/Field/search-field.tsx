@@ -6,11 +6,6 @@ import { MagnifierIcon } from './icons';
 import { FieldShell } from './shell';
 import type { SearchFieldProps } from './types';
 
-/**
- * A list filter's search box, drawn first in the row: a text box with its own submit, a magnifier
- * named Search, inside its edge; the submit is the form's, so Enter and a press both apply the
- * search, and before hydration the same press sends the form as a GET.
- */
 export function SearchField({
   id,
   label,

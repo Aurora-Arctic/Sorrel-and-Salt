@@ -4,11 +4,8 @@ import { type ReactElement, useId } from 'react';
 import { useTip } from '../InfoTip/use-tip';
 
 type TipMarkProps = {
-  /** The badge's word. */
   label: string;
-  /** The badge palette, as `badge--<palette>`. */
   palette: 'retired' | 'annotated' | 'local';
-  /** The sentence the tip says. */
   tip: string;
 };
 

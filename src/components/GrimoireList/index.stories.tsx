@@ -12,8 +12,6 @@ import GrimoireList from '.';
 import { GRIMOIRE_PARAMS } from './params';
 import type { GrimoireFacets, GrimoireListFilter, GrimoireListProps, GrimoireSpell } from './types';
 
-// Render-only; behaviour is asserted in tests/components/GrimoireList. The filter and the pager navigate to a route the
-// workshop does not serve. Each state is the tab as src/app/(shell)/coven/[slug]/grimoire/(list) draws it.
 const meta = {
   title: 'Grimoire / Grimoire List',
 } satisfies Meta;
@@ -24,10 +22,8 @@ const COVEN = '/coven/fixture-coven/grimoire';
 const SPELLS_PATH = route('/coven/fixture-coven/grimoire');
 const DRAFTS_PATH = route('/coven/fixture-coven/grimoire/drafts');
 
-/** The filter with nothing picked, as an address with no parameters reads. */
 const NO_FILTER: GrimoireListFilter = GRIMOIRE_PARAMS.read({});
 
-/** Every category, by slug, with how many spells of the tab each would leave. */
 const CATEGORIES: GrimoireListProps['categories'] = GRIMOIRE_CATEGORIES.map((category, i) => ({
   ...category,
   slug: slugify(category.name),
@@ -54,7 +50,6 @@ const FACETS: GrimoireFacets = {
   ],
 };
 
-/** One spell as the tab hands it to its card, with every control a steward's role gets. */
 const spell = (
   id: string,
   title: string | null,
@@ -102,7 +97,6 @@ const DRAFTS: GrimoireSpell[] = [
   spell('draft-untitled', null, { status: 'draft', visibility: 'private', intent: null }, []),
 ];
 
-// The page around the list: the shell, then the layout's heading, New Spell and the two tabs.
 const Page = ({
   drafts = false,
   children,
@@ -124,10 +118,6 @@ const Page = ({
   </ShellFrame>
 );
 
-/**
- * One tab of the list: Spells unless `drafts`, every spell on one page unless a page is named,
- * seen by a member unless `canCreate` is false.
- */
 const Tab = ({
   drafts = false,
   spells = drafts ? DRAFTS : SPELLS,
@@ -167,8 +157,6 @@ const Tab = ({
   );
 };
 
-// Two categories matched on any, a moon phase, a day, Private and one maker: the Filters button
-// counts six, and the sentence above the results says each.
 const PICKED: GrimoireListFilter = {
   ...NO_FILTER,
   categories: ['protection', 'clarity'],
@@ -179,8 +167,6 @@ const PICKED: GrimoireListFilter = {
   makers: ['user-a'],
 };
 
-// Filters pressed once drawn, as a person would, on the wide layout (below it the sheet is modal).
-// Its boxes are Moon Phases, Days of the Week and Coven Members.
 const FiltersOpen = (): ReactElement => {
   useSteps([() => document.querySelector<HTMLButtonElement>('.facet-panel__button')?.click()]);
   return (
@@ -191,22 +177,15 @@ const FiltersOpen = (): ReactElement => {
 };
 
 const STATES: Record<string, ReactNode> = {
-  // A complete card's cauldron opens its dialog, which sits on Loading or shows the error Notice
-  // here: the workshop serves no /api/graphql.
   Spells: <Tab />,
   Drafts: <Tab drafts />,
-  // No spell on the tab and no filter: the tab says so, and New Spell at the heading is the way in.
   'No Spells': <Tab spells={[]} />,
   'No Drafts': <Tab drafts spells={[]} />,
-  // The same, as an observer sees it: a second line names who can write a spell.
   'No Spells For An Observer': <Tab spells={[]} canCreate={false} />,
   'No Drafts For A Viewer': <Tab drafts spells={[]} canCreate={false} />,
-  // A filter that matched nothing: the hint to widen it, not the empty tab's line.
   'No Matches': <Tab spells={[]} filter={{ ...PICKED, query: 'nothing' }} total={0} />,
-  // Next alone, at the right where it is on every other page.
   'First Page': <Tab page={{ at: 1, of: 3 }} total={60} />,
   'Middle Page': <Tab page={{ at: 2, of: 3 }} total={60} />,
-  // Previous alone, at the left.
   'Last Page': <Tab spells={SPELLS.slice(0, 2)} page={{ at: 3, of: 3 }} total={50} />,
   'Facets and Categories Picked': <Tab spells={SPELLS.slice(1, 2)} filter={PICKED} total={1} />,
   'Filters Open With Picks': <FiltersOpen />,

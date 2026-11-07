@@ -143,7 +143,6 @@ function defineKind<Input extends object>({
   const send = saveRequest(create, update);
   return {
     ...copy,
-    // The schema's output is the input the mutation takes; its type is the values'.
     resolver: zodResolver(schema) as unknown as Resolver<GroupValues>,
     save: (values, id) => send(values as unknown as Input, id),
     remove: async (variables) => {
@@ -152,10 +151,6 @@ function defineKind<Input extends object>({
   };
 }
 
-/**
- * What differs between the vocabularies: what a group is called, the rows it
- * holds, what a move does to them, and the requests that write it.
- */
 const KINDS: Record<GroupKind, GroupFormKind> = {
   category: defineKind({
     // A category's address is its name alone, so a move changes none.
@@ -169,10 +164,7 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   form: defineKind({
     // A form's address carries its group's name, so a move re-addresses it.
     moved: "Each form keeps its name and takes its new group's address.",
-    // The question a form group answers: what kind of thing is it (DESIGN.md §5).
     describe: 'What kind of thing the forms in this group are',
-    // Drops the two empty colours, which a form group's input does not take,
-    // and reads the radio group's empty value, None, as the null that clears the icon.
     schema: IngredientFormGroupInput.extend({
       icon: z.preprocess(
         (icon) => (icon === '' ? null : icon),
@@ -183,9 +175,7 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     update: UpdateIngredientFormGroupDocument,
     remove: DeleteIngredientFormGroupDocument,
   }),
-  // A deity's tradition: a form group's shape, under its own name.
   tradition: defineKind({
-    // A deity's address carries its tradition's name, as a form's does its group's.
     moved: "Each deity keeps its name and takes its new tradition's address.",
     // A tradition is a people or a religion, never a region (DESIGN.md §5).
     describe: 'The people or religion whose deities it holds',
@@ -214,7 +204,6 @@ const COLORS: GroupColorField[] = [
   },
 ];
 
-/** The strip's choices: each icon by its name, then None last, the generic one. */
 const ICONS: readonly RadioOption<FormGroupIcon | ''>[] = [
   ...FORM_GROUP_ICONS.map((icon) => ({
     value: icon,
@@ -235,7 +224,6 @@ const GroupForm = ({
 }: GroupFormProps): ReactElement => {
   const id = useId();
   const spec = KINDS[kind];
-  // What the group and the rows it holds are called is the lists'.
   const { noun, holds } = GROUP_LIST_KINDS[kind];
   const { noun: one, plural: many } = VALUE_LIST_KINDS[holds];
   const title = capitalise(noun);
@@ -261,7 +249,6 @@ const GroupForm = ({
     formState: { errors, isSubmitting, isDirty },
   } = methods;
   const typedName = useWatch({ control, name: 'name' });
-  // Each colour field's partner, which its Match button sets it from.
   const typedColors = useWatch({ control, name: ['colorDark', 'colorLight'] });
   const typed = { colorDark: typedColors[0], colorLight: typedColors[1] };
   // The partner each colour last filled, so it keeps following only while
@@ -278,11 +265,7 @@ const GroupForm = ({
     setValue(partner, paired, { shouldDirty: true });
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
-  // Cancel, and every other way out of the modal, asks first while the form has changes;
-  // a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
-  // Undo and redo, off while a question is up over the form: the unsaved changes', or a
-  // step of the delete.
   const root = useRef<HTMLFormElement>(null);
   const history = useFormHistory(methods, {
     root,
@@ -307,7 +290,6 @@ const GroupForm = ({
     },
   });
 
-  /** Sends the input; a refusal lands beside its field, or above them all. */
   const send = async (input: GroupValues): Promise<void> => {
     setAlert(undefined);
     try {
@@ -327,8 +309,6 @@ const GroupForm = ({
       await remove.mutateAsync(target);
       onDone();
     } catch (error) {
-      // A refused move goes back to the choice, beside the picker that made
-      // it; anything else is a refusal naming its remedy (DESIGN.md §7).
       const issues = readGraphqlIssues(error);
       const onMove = issues.find(({ path }) => path.length === 1 && path[0] === 'moveTo');
       if (onMove && memberCount > 0) {
@@ -378,10 +358,8 @@ const GroupForm = ({
         </ConfirmOverlay>
       );
     }
-    // A label, so title case: "Move Its 3 Categories To".
     const label = `Move Its ${memberCount} ${capitalise(rowNoun)} To`;
     const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
-    // Named by the picker's label, the question this step asks.
     return (
       <ConfirmOverlay key="choosing" labelledBy={move.labelId} safe={cancelRef}>
         <FieldShell label={label} {...move}>
@@ -397,7 +375,6 @@ const GroupForm = ({
             choices={others.map((each) => ({
               value: each.id,
               label: each.name,
-              // A form group with no icon shows the generic; the other kinds carry none.
               icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
             }))}
             placeholder={`Choose a ${noun}`}
@@ -422,8 +399,6 @@ const GroupForm = ({
 
   const confirming = (target: string | undefined): ReactElement => {
     const destination = others.find((each) => each.id === target);
-    // A refusal is confirmDelete's own to place, back at the choice or in
-    // the alert, so neither question is told it.
     if (!destination) {
       return (
         <ConfirmQuestion

@@ -5,18 +5,12 @@ import { InModal } from '../../../.storybook/in-modal';
 import { submitForm, usePressOnMount, useSteps } from '../../../.storybook/press';
 import GroupForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/GroupForm. The workshop
-// has no API, so a save answers with the generic error. Shown in the admin modal.
-// One Adding and one Editing per kind: colours, an icon, or neither.
 const meta = {
   title: 'Admin / Group Form',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Two of the shared groups, and the one edited here. The first two carry an
-// icon, which a form group's move-to choices draw: the first its own, the
-// second none, so the generic.
 const GROUPS = [
   ...asOptions(GROUP_NAMES.form.slice(0, 2)).map((group, index) => ({
     ...group,
@@ -36,14 +30,12 @@ const WARDS = {
 
 const done = () => {};
 
-// A category group adds its two colours.
 const addingACategoryGroupNode = (
   <InModal title="Add Category Group">
     <GroupForm kind="category" groups={GROUPS} onDone={done} />
   </InModal>
 );
 
-// Press Delete Group to see the move: a group to choose, then the confirmation.
 const EditingACategoryGroupView = () => (
   <InModal eyebrow="Edit Category Group" title={WARDS.name}>
     <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
@@ -52,7 +44,6 @@ const EditingACategoryGroupView = () => (
 
 const editingACategoryGroupNode = <EditingACategoryGroupView />;
 
-// A form group adds its icon: six, and None last for the generic.
 const addingAFormGroupNode = (
   <InModal title="Add Form Group">
     <GroupForm kind="form" groups={GROUPS} onDone={done} />
@@ -61,8 +52,6 @@ const addingAFormGroupNode = (
 
 const TRADITIONS = asOptions(GROUP_NAMES.tradition.slice(0, 2));
 
-// A tradition has neither colour nor icon. Press Delete Tradition to see the
-// move: its two deities to another tradition.
 const editingATraditionNode = (
   <InModal eyebrow="Edit Tradition" title="Fixtural">
     <GroupForm
@@ -82,8 +71,6 @@ const editingATraditionNode = (
   </InModal>
 );
 
-// Delete Group pressed once drawn, as a person would: the first step, where
-// its categories go, asked over the form, which is dimmed and held beneath it.
 export const AskingWhereToMove: Story = {
   render: () => {
     usePressOnMount('Delete Group');
@@ -91,14 +78,12 @@ export const AskingWhereToMove: Story = {
   },
 };
 
-// Saved while empty: the name, the description and both colours say so.
 const SavingEmptyCategoryView = () => {
   useSteps([() => submitForm('form')]);
   return addingACategoryGroupNode;
 };
 const savingEmptyCategoryGroupNode = <SavingEmptyCategoryView />;
 
-// Saved while empty: the icon choice says so too.
 const SavingEmptyFormView = () => {
   useSteps([() => submitForm('form')]);
   return addingAFormGroupNode;

@@ -1,7 +1,5 @@
 @use '../../scss/variables' as *;
 
-// A grimoire tab with no card, laid out as the coven's empty cupboard (CovenCards/index.scss): the empty
-// tab's sentences centred and larger than body copy; a filter matching nothing says what to do, muted.
 .grimoire-list__empty {
   display: flex;
   flex-direction: column;

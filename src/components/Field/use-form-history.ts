@@ -25,7 +25,6 @@ import type { FormHistory, HistoryAction, HistoryStep, UseFormHistoryOptions } f
 // action changed and restores with `setValue`, not `reset`, which would clear errors and the submit count
 // (claude-docs/components/field.md, "Undo and redo").
 
-/** The events that start something new, as far as "the same action" goes. */
 const ACTION_EVENTS = ['pointerdown', 'keydown', 'input', 'change', 'click'] as const;
 
 const fieldNamed = (root: HTMLElement, name: string): HTMLElement | undefined =>
@@ -33,7 +32,6 @@ const fieldNamed = (root: HTMLElement, name: string): HTMLElement | undefined =>
     (element) => element.getAttribute('name') === name,
   );
 
-/** The controls of a list: every field named under the array's own name. */
 const fieldsUnder = (root: HTMLElement, name: string): HTMLElement[] =>
   Array.from(root.querySelectorAll<HTMLElement>('[name]')).filter((element) => {
     const own = element.getAttribute('name') ?? '';
@@ -47,7 +45,6 @@ const lastOf = <T>(items: T[]): T | undefined => items[items.length - 1];
 
 const clean = (text: string | null | undefined): string => (text ?? '').replace(/\*$/, '').trim();
 
-/** What a field is called, read from the page: its label, its aria-label, its fieldset's legend. */
 function labelOf(root: HTMLElement, name: string): string {
   const field = fieldNamed(root, name);
   const control = field ?? fieldsUnder(root, name)[0];
@@ -67,7 +64,6 @@ function labelOf(root: HTMLElement, name: string): string {
   return clean(control?.closest('fieldset')?.querySelector('legend')?.textContent) || 'the form';
 }
 
-/** Whether the text is typed into a box, not picked: the `input` or `change` of a text control. */
 function textBoxName(target: EventTarget | null): string | null {
   if (target instanceof HTMLTextAreaElement) return target.name;
   if (target instanceof HTMLInputElement && !['checkbox', 'radio', 'hidden'].includes(target.type))
@@ -91,8 +87,6 @@ export function useFormHistory<V extends FieldValues>(
   const { subscribe, getValues, setValue, control } = methods;
   const { isSubmitted } = useFormState({ control });
   const [state, dispatch] = useReducer(historyReducer, initialHistory);
-  // The same state, readable between renders: two chords before a render
-  // each find the stack the last one left.
   const stateRef = useRef(state);
   const commit = useCallback((action: HistoryAction) => {
     stateRef.current = historyReducer(stateRef.current, action);
@@ -101,12 +95,9 @@ export function useFormHistory<V extends FieldValues>(
 
   const present = useRef<unknown>(undefined);
   const restoring = useRef(false);
-  // The newest step was recorded in the action still running.
   const tickOpen = useRef(false);
   const tickScheduled = useRef(false);
-  // The text box the running action typed into.
   const typedInto = useRef<string | null>(null);
-  // A pointer is held down, and the hold has already recorded its step.
   const holding = useRef(false);
   const holdRecorded = useRef(false);
   const blurs = useRef(0);
@@ -122,7 +113,6 @@ export function useFormHistory<V extends FieldValues>(
   const redoButton = useRef<HTMLButtonElement | null>(null);
   const pendingFocus = useRef<string[] | null>(null);
 
-  // The recorder: one subscription to the form's values.
   useEffect(() => {
     present.current = cloneValues(getValues());
     const closeAction = () => {
@@ -142,8 +132,6 @@ export function useFormHistory<V extends FieldValues>(
     const noticeBlur = () => {
       blurs.current += 1;
     };
-    // The hold ends on the document, not the form: a drag often leaves the
-    // form's box, and the colour picker follows the pointer on the document too.
     const endHold = () => {
       holding.current = false;
       holdRecorded.current = false;
@@ -205,13 +193,10 @@ export function useFormHistory<V extends FieldValues>(
         }
         sealed.current = false;
         stepBlurs.current = blurs.current;
-        // A change that lands on `click`, after `pointerup`, finds no hold here
-        // and so starts its own step, as a checkbox or a button should.
         if (holding.current) holdRecorded.current = true;
         tickOpen.current = true;
         if (!tickScheduled.current) {
           tickScheduled.current = true;
-          // Anything the action goes on to set in this same turn joins its step.
           queueMicrotask(() => {
             tickScheduled.current = false;
             tickOpen.current = false;
@@ -229,14 +214,12 @@ export function useFormHistory<V extends FieldValues>(
     };
   }, [subscribe, getValues, root, commit, pauseMs, limit, skip]);
 
-  /** Writes a step's values back, `before` newest-first for an undo, `after` oldest-first for a redo. */
   const restore = useCallback(
     (step: HistoryStep, direction: 'undo' | 'redo') => {
       const diffs = direction === 'undo' ? step.diffs.slice().reverse() : step.diffs;
       restoring.current = true;
       try {
         for (const diff of diffs) {
-          // Validated only once a submit has shown errors: before one the form is quiet.
           setValue(
             diff.name as never,
             (prepare
@@ -312,9 +295,6 @@ export function useFormHistory<V extends FieldValues>(
     const own = fieldNamed(element, name);
     let target: HTMLElement | undefined | null = isFocusable(own) ? own : undefined;
     if (!target) {
-      // A control with no `name` attribute — a select's box — is still known
-      // to the form by the ref it registered. `setFocus` reads the same ref
-      // but focuses it on a timer, too late for the fallback below.
       const registered = (get(control._fields, name) as { _f?: { ref?: unknown } } | undefined)?._f
         ?.ref as { focus?: () => void } | undefined;
       registered?.focus?.();

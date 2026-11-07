@@ -21,7 +21,6 @@ const Svg = ({ children }: { children: ReactNode }): ReactElement => (
   </svg>
 );
 
-// A big four-point sparkle and a small one: a thing just made.
 const Sparkle = (): ReactElement => (
   <Svg>
     <path d="M10 3l1.8 5.2L17 10l-5.2 1.8L10 17l-1.8-5.2L3 10l5.2-1.8z" />
@@ -29,7 +28,6 @@ const Sparkle = (): ReactElement => (
   </Svg>
 );
 
-// A wand with a spark at its tip: a thing touched up.
 const Wand = (): ReactElement => (
   <Svg>
     <path d="M4 20L14 10" />

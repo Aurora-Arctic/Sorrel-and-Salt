@@ -11,11 +11,6 @@ import { slugify } from '../../lib/slugify';
 import type { PageNavEntry } from '../PageNav/types';
 import type { DocumentPlaceholders } from './types';
 
-// A document's markdown, drawn on the server. Raw HTML in a body is turned into text before it
-// reaches an element (there is no rehype-raw), a link is kept only for an address the site opens,
-// and each footnote becomes a numbered source in the page's Sources list.
-
-/** A link is drawn only for these addresses: relative, a fragment, `https:` and `mailto:`. */
 const OPENABLE_ADDRESS = /^(\/(?!\/)|#|\?|https:|mailto:)/i;
 
 /**
@@ -26,7 +21,6 @@ const ACCOUNT_ADDRESS = /^\/account(?:[/?#]|$)/;
 
 const FLOW_PARENTS = new Set(['root', 'blockquote', 'listItem', 'footnoteDefinition']);
 
-/** Raw HTML becomes the text it was written as; where a block is expected, a paragraph holds it. */
 function htmlAsText() {
   return (tree: MarkdownRoot): void => {
     const visit = (parent: { type: string; children?: MarkdownContent[] }): void => {
@@ -61,7 +55,6 @@ const PLACEHOLDER_TAG = 'document-placeholder';
 
 const PLACEHOLDER_TEXT = /^\{([^{}\s]+)\}$/;
 
-/** Turns each top-level paragraph that is only `{name}` into a placeholder for a name the page mapped; any other stays a paragraph. */
 function markPlaceholders(
   children: ElementContent[],
   placeholders: DocumentPlaceholders,
@@ -101,7 +94,6 @@ function classes(node: Element, ...added: string[]): void {
   node.properties.className = [...(Array.isArray(existing) ? existing.map(String) : []), ...added];
 }
 
-/** Draws the footnote marks and the Sources list the way the page's styles expect. */
 function shapeFootnotes(node: Element): void {
   if (node.tagName === 'a' && node.properties.dataFootnoteRef !== undefined) {
     const number = textOf(node);
@@ -145,7 +137,6 @@ function shapeFootnotes(node: Element): void {
   }
 }
 
-/** Keeps a link for an address the site opens, `nofollow` into the account pages; any other becomes its words. */
 function openableLinks(children: ElementContent[]): ElementContent[] {
   return children.flatMap((child) => {
     if (!isElement(child)) return [child];
@@ -196,7 +187,6 @@ function visitElements(node: Root | Element, visit: (element: Element) => void):
   }
 }
 
-/** Gives every `h2` and `h3` its anchor and returns the page menu: an `h2` with `h3`s after it is a group label. */
 function sectionsOf(tree: Root): PageNavEntry[] {
   const headings: Element[] = [];
   visitElements(tree, (element) => {
