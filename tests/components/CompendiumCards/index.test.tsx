@@ -17,9 +17,7 @@ import { ADD, HELD as HELD_TEXT } from '../../support/cupboard-wording';
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The public compendium's cards: a plain link per entry, the forms with their icons,
-// the foot each kind of visitor gets, and a filter that offers no Classification and no
-// No Refs (claude-docs/components/compendium-cards.md).
+// claude-docs/components/compendium-cards.md
 
 const client = makeQueryClient();
 const Cards = (props: CompendiumCardsProps): ReactElement => (
@@ -78,7 +76,6 @@ const entry = (
   recency: null,
 });
 
-// Two entries share a label; their formal names tell them apart.
 const ENTRIES = [
   entry('Testwort', 'testwort-fixtura-testalis', 'Fixtura testalis', [
     'Fixture Herb',
@@ -106,7 +103,6 @@ describe('CompendiumCards', () => {
   beforeEach(() => {
     router.push.mockReset();
     router.refresh.mockReset();
-    // The panel opens as it does from the tablet width up.
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: query.includes('min-width'),
       media: query,
@@ -138,12 +134,8 @@ describe('CompendiumCards', () => {
   });
 
   describe('the add icon', () => {
-    /** Any card's plus, and any card's check: each is named by its tip and then its entry. */
     const PLUS = { name: new RegExp(`^${ADD}: `) };
     const HELD = { name: new RegExp(`^${HELD_TEXT}: `) };
-    // Two cards' pluses read alike to a screen reader's list of buttons unless each
-    // carries its entry, as the pencil beside it does; the two Testworts are told apart by their
-    // formal names there too.
     it('holds a plus button on each card not yet held, named Add to My Ingredients and its entry', () => {
       render(<Cards {...props({ action: 'add' })} />);
       const buttons = screen.getAllByRole('button', PLUS);
@@ -156,8 +148,6 @@ describe('CompendiumCards', () => {
       expect(screen.queryByRole('button', HELD)).toBeNull();
     });
 
-    // The check is a status mark, not a link, since the details modal's In Your Cupboards list carries the links to each coven's copy.
-    // It is tipped and named In Every Cupboard and its entry (the one noun for "you hold this"), a button only to carry its tip, as the entry page's shelf is.
     it('swaps the plus for a check named In Every Cupboard and its entry on a card every coven holds, and no link', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
@@ -168,9 +158,7 @@ describe('CompendiumCards', () => {
       expect(screen.queryByRole('link', HELD)).toBeNull();
     });
 
-    // A press opens the check's tip, as a tap does on InfoTip's ⓘ,
-    // so it shows on touch, where there is no hover. A click here focuses nothing, so the
-    // press alone opens it.
+    // A click here focuses nothing, so the press alone opens the tip, as a tap does on InfoTip's ⓘ.
     it('opens the In Every Cupboard tip when the check is pressed', () => {
       const held = ENTRIES.map((one, index) => (index === 0 ? { ...one, held: true } : one));
       render(<Cards {...props({ entries: held, action: 'add' })} />);
@@ -198,7 +186,6 @@ describe('CompendiumCards', () => {
     });
   });
 
-  // A curator's Edit in Compendium, named for the entry, beside Add where the account can add too.
   it('draws Edit in Compendium, named for the entry, on each card the page gives an edit address', () => {
     const editable = ENTRIES.map((one) => ({
       ...one,
@@ -217,12 +204,9 @@ describe('CompendiumCards', () => {
       screen.getByRole('link', { name: 'Edit in Compendium Fixture Salt' }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: new RegExp(`^${ADD}: `) })).toHaveLength(3);
-    // No coven holds any entry here, so no card has the three dots.
     expect(screen.queryByRole('button', { name: /^More for / })).toBeNull();
   });
 
-  // Up to three icons, the plus, Edit in Compendium and the three
-  // dots, each only where the viewer may use it.
   describe('the foot, by viewer', () => {
     const PLACE = {
       workspaceId: WORKSPACE_ID,
@@ -284,7 +268,6 @@ describe('CompendiumCards', () => {
     });
   });
 
-  // The Quick Look eye, at each card's foot, for everyone, a visitor included.
   it('draws Quick Look, named for the entry, on each card the page gives a details address', () => {
     const looked = ENTRIES.map((one) => ({
       ...one,
@@ -313,8 +296,6 @@ describe('CompendiumCards', () => {
     expect(new URLSearchParams(sent(form)).has('withoutReferences')).toBe(false);
   });
 
-  // The viewer's covens, every role, for the In My Covens field, apart from the
-  // writable ones the plus's menu lists; and each card's holding covens, counted on its mark.
   describe('the viewer’s covens', () => {
     const MINE = [
       { id: 'coven-w', name: 'Testhollow', paused: null },
