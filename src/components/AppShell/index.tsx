@@ -23,8 +23,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
   // Curator and Keepers are a verified curator's or admin's alone.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
   const curates = viewer.verified && viewer.canCurate;
-  // Help is public too, so it is everyone's, and a plain member finds it without a curation link.
-  const links: SiteLink[] = [compendium, { label: 'Help', href: '/help', base: '/help' }];
+  const links: SiteLink[] = [compendium];
   if (viewer.verified && (workspaces.length > 0 || viewer.canCurate)) {
     links.push({
       label: workspaces.length > 1 ? 'Your Covens' : 'Your Coven',

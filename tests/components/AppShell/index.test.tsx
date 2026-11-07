@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { longMinuteInZone } from '@/lib/utc';
-import { hrefs } from '../../support/links';
 import { printed } from '../../support/printed-text';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
@@ -188,13 +187,5 @@ describe('AppShell', () => {
     shell(MEMBER);
 
     expect(screen.queryByRole('complementary', { name: 'Site Access' })).not.toBeInTheDocument();
-  });
-
-  it('links any signed-in member to the help pages', () => {
-    shell(MEMBER);
-
-    // Why it means something: a plain member, with no curation link to find help through.
-    expect(MEMBER.canCurate).toBeFalsy();
-    expect(hrefs(screen.getAllByRole('link'))).toContain('/help');
   });
 });

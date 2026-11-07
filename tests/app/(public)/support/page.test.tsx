@@ -38,6 +38,16 @@ beforeEach(() => {
 });
 
 describe('the /support page', () => {
+  it.each([
+    ['a visitor with no session', null],
+    ['a signed-in sender', SESSION],
+  ])('links Search Help to %s, so an answer can be looked for first', async (_who, session) => {
+    getSession.mockResolvedValue(session);
+    await show();
+
+    expect(screen.getByRole('link', { name: 'Search Help' })).toHaveAttribute('href', '/help');
+  });
+
   it('offers Sign In to a visitor with no session', async () => {
     getSession.mockResolvedValue(null);
     await show();

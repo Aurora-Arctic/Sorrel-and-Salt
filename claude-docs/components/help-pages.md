@@ -28,4 +28,4 @@ Only the FAQ entries (`HelpIndex`) and the terms (`HelpGlossary`) carry an id, t
 
 ## Links to help
 
-`Welcome`, `PublicFrame`, `AppShell` (the bar's site links) and the 404 screen link to `/help`.
+`Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. The keepers and curator layouts link `/help/staff` as "Staff Help" in a `nav`.

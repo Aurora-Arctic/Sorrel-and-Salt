@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import PageHeader from '../../../components/PageHeader';
 import SupportPanel from '../../../components/SupportPanel';
@@ -48,6 +49,9 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
         title="Support"
         lede="Tell us about something you cannot use, something broken, or ask a question."
       />
+      <p>
+        <Link href="/help">Search Help</Link> first: the answer may already be there.
+      </p>
       <SupportPanel state={state} path={single(params.from) ?? SUPPORT_PATH} />
     </div>
   );

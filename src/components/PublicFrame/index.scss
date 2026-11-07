@@ -1,5 +1,4 @@
 @use '../../scss/frame-bar' as *;
-@use '../../scss/variables' as *;
 
 // Same measurements as the shell's bar, so a signed-in visitor meets the same bar (claude-docs/components/public-frame.md).
 
@@ -9,11 +8,4 @@
 // does not take: the links stay in the bar (the shell moves them into the account panel).
 .public-frame .app-shell__nav {
   display: block;
-}
-
-// Two links in the bar (Compendium, Help) at the narrowest widths: tighter padding keeps the bar inside the window.
-@media (max-width: $shell-brand-width) {
-  .public-frame .app-shell__nav a {
-    padding: 0 space(1);
-  }
 }

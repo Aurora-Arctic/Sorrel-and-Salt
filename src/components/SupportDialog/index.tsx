@@ -93,7 +93,12 @@ function Dialog(): ReactElement | null {
               <Link href={emailPagePath(undefined)}>Go to Your Email</Link>
             </Notice>
           ) : (
-            <SupportPanel state={panelState} path={path} returnTo={closeHref} onDone={done} />
+            <>
+              <p>
+                <Link href="/help">Search Help</Link> first: the answer may already be there.
+              </p>
+              <SupportPanel state={panelState} path={path} returnTo={closeHref} onDone={done} />
+            </>
           ),
       }}
     />
