@@ -11,8 +11,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The user modal's Site Access section: setting a pause on a user's access, lifting the one that stands, and the
-// earlier ones beneath (claude-docs/components/user-detail.md, "Contracts").
+// claude-docs/components/user-detail.md, "Contracts"
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
