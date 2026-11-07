@@ -1,6 +1,6 @@
 # Component docs
 
-One Markdown file per standalone component, lower-kebab-named after the
+A component doc is a lower-kebab file named after the
 component directory (`theme-toggle.md` ↔ `src/components/ThemeToggle/`).
 
 The component workshop discovers components by their `index.stories.tsx`. A component has a doc only where it holds a binding fact the source cannot say; a sub-part folds into its parent's doc.
