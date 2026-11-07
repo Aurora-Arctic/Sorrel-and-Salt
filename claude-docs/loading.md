@@ -113,14 +113,14 @@ layout and page both read from the database.
    once, with `aria-busy` on the box (`ComboboxSelect`'s `busy` prop).
 2. [`SectionBody`](components/section-body.md) takes the old coven's page away at
    once, with no dimming, so nobody acts on the wrong coven's data. It does
-   this when the site is busy and the destination is a page of the same coven.
+   this when the site is busy and the destination is a page of any coven.
 3. The **destination section's** skeleton takes its place, inside a `<main>`
    of its own, because the pages draw their own `<main>` and the landmark
-   would otherwise vanish during the wait. That `<main>` also holds a visually
-   hidden `<h1>Loading</h1>`, because the skeleton replaced the page's `h1` and
-   axe's page-has-heading-one rule failed during every wait; `MainBody` does
-   the same. The owner decided on 2026-10-19 to keep it, so a screen
-   reader hears both the heading and the skeleton's "Loading" status. The switcher's link goes to the coven's home, or to the same section in the new coven; the registry
+   would otherwise vanish during the wait. That `<main>` holds one visually hidden
+   "Loading" `<output>` and no heading of its own: each skeleton draws its page's
+   own `PageHeader` `h1`, so a wait has exactly one level-one heading. The owner
+   replaced the earlier decision (2026-10-19) to keep a hidden `<h1>Loading</h1>`
+   on 2026-11-07, because the skeletons now draw the page's own heading. The switcher's link goes to the coven's home, or to the same section in the new coven; the registry
    (below) gives the skeleton for that address. Choosing Create Coven goes to `/coven/new`, a
    `main` page, so `MainBody` draws its skeleton.
 4. When the new coven renders, the content fades in, and focus returns to the
@@ -198,11 +198,11 @@ body draws it.
 
 There are three hosts:
 
-| Host    | Body drawn in                                           | Draws when                                                                                     |
-| ------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `main`  | `MainBody` (`.app-shell__main`, shell and public frame) | The registry entry names `main`, or names a section host that is not standing for the address. |
-| `coven` | `SectionBody` in the coven layout                       | The entry names `coven` and the destination is in the same coven slug as the current page.     |
-| `admin` | `SectionBody` in the `/curator` or `/keepers` layout    | The entry names `admin` and the destination is in the same area as the current page.           |
+| Host    | Body drawn in                                           | Draws when                                                                                      |
+| ------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `main`  | `MainBody` (`.app-shell__main`, shell and public frame) | The registry entry names `main`, or names a section host that is not standing for the address.  |
+| `coven` | `SectionBody` in the coven layout                       | The entry names `coven` and both the current page and the destination are in a coven (any two). |
+| `admin` | `SectionBody` in the `/curator` or `/keepers` layout    | The entry names `admin` and the destination is in the same area as the current page.            |
 
 A section host that does not stand (a link from the Compendium into a coven page, or from `/curator`
 into `/keepers`) falls back to `MainBody`, which draws the whole frame, as it did before.

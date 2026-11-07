@@ -29,8 +29,8 @@ section's page.
   mounted at its full height inside the section frame, so its flex column and gap are untouched, and
   the skeleton is laid over it in a copy of that frame, pinned under the bar
   ([`SkeletonFade`](skeleton-fade.md), "The page is held, not swapped"; MB.271). Nobody can act on the
-  wrong coven's data in the wait. A coven body draws only for a destination in the same coven slug,
-  and an admin body only for one in the same area.
+  wrong coven's data in the wait. A coven body draws for a destination in any coven (a switch keeps the
+  header and switcher up and busy), and an admin body only for one in the same area.
 - **The context row is not inside it.** A move between admin pages, or
   between a coven's sections, leaves the row and its nav on screen. Only a
   skeleton the registry gives to `main` (a page outside this section) replaces the row too
@@ -39,10 +39,10 @@ section's page.
 - **The skeleton sits inside a `<main>`.** The pages own their landmark, so
   without one here the page would have none for the length of the wait, and
   axe's one-main rule would fail.
-- **It holds a visually hidden `<h1>Loading</h1>`.** The skeleton replaced the
-  page's own `h1`, and axe's page-has-heading-one rule failed during every
-  wait. The owner decided on 2026-10-19 to keep it, so a screen reader hears
-  both this heading and the skeleton's `<output>` "Loading" status.
+- **It holds one visually hidden `<output>` "Loading" and no heading.** Every
+  skeleton draws its page's own `PageHeader` `h1` (guarded by
+  `tests/guards/skeleton-heading.test.tsx`). The owner replaced the hidden
+  `<h1>Loading</h1>` on 2026-11-07.
 - A `loading.tsx` would be wrong here: a route boundary turns the guards'
   404, 403 and 308 responses into 200s, so the wait is read from the
   navigation provider's state instead (`navigation-bar.md`).

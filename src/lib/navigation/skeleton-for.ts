@@ -17,8 +17,8 @@ const adminAreaOf = (pathname: string): string | null => {
 /** Whether the section body of `host` is mounted for `pathname` and stays mounted for the destination. */
 function hostStands(host: SkeletonHost, pathname: string, destination: string): boolean {
   if (host === 'coven') {
-    const here = covenSlugOf(pathname);
-    return here !== null && here === covenSlugOf(destination);
+    // Any coven to any coven: a switch keeps the header and switcher up, busy, over the new coven's page.
+    return covenSlugOf(pathname) !== null && covenSlugOf(destination) !== null;
   }
   if (host === 'admin') {
     const here = adminAreaOf(pathname);

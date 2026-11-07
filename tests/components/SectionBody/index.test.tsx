@@ -123,14 +123,22 @@ describe('SectionBody for a coven', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
+  // A switch to another coven keeps this host up, so the header and switcher stay usable and busy
+  // while the new coven's page is drawn as its skeleton.
+  it("takes the page away for another coven's page, drawing its skeleton", async () => {
+    renderCoven({ Switch: '/coven/brambleroot-circle/ingredients' });
+
+    await press('Switch');
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(covenPage()).not.toBeInTheDocument();
+    expect(screen.getAllByRole('region')).toHaveLength(1);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
   // Each is on its way to a page the registry knows, or a different address,
   // so only the host rule keeps this section from drawing.
   it.each([
-    [
-      'Switch',
-      '/coven/brambleroot-circle/ingredients',
-      'another coven, whose host is not this one',
-    ],
     ['Leave', '/compendium', "a page drawn in the shell's body"],
     ['Curate', '/curator/forms', "the admin area's page"],
     [

@@ -14,7 +14,7 @@ import {
 } from '../SkeletonFade';
 
 // The shell's body during a navigation: the old page is hidden and the destination's own skeleton
-// stands over it in one `main`, with a hidden heading for the accessibility scan. It draws every
+// stands over it in one `main`, with one hidden status; the skeleton draws the page's own heading. It draws every
 // registered page whose section body is not standing for it (`SectionBody` draws the rest); a
 // client part, as the state is the browser's.
 const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
@@ -22,8 +22,8 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   const pathname = usePathname();
   const Shown = busy ? skeletonFor('main', href, pathname) : null;
   const frame = Shown ? <Shown /> : null;
-  // What stays over the arrived page while it fades: the frame without the
-  // hidden heading, since the page has its own.
+  // What stays over the arrived page while it fades: the frame without the hidden status,
+  // since the page has its own.
   const leaving = useLeavingSkeleton(frame && <main>{frame}</main>);
   // The page is held beneath the skeleton rather than swapped for it, so the scroll
   // position the browser saves for Back is the page's
@@ -34,7 +34,6 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
       {frame && (
         <SkeletonCover>
           <main>
-            <h1 className="visually-hidden">Loading</h1>
             <output className="visually-hidden">Loading</output>
             {frame}
           </main>

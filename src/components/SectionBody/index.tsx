@@ -27,7 +27,7 @@ export default function SectionBody({
   const Shown = busy ? skeletonFor(region, href, pathname) : null;
   const skeleton = Shown ? <Shown /> : null;
   // When the wait ends the skeleton stays over the arrived page and fades
-  // (SkeletonFade); without the hidden heading, since the page has its own.
+  // (SkeletonFade); without the hidden status, since the page has its own.
   const leaving = useLeavingSkeleton(skeleton && <main>{skeleton}</main>);
 
   // The page is held beneath the skeleton rather than swapped for it, so the scroll position
@@ -43,7 +43,6 @@ export default function SectionBody({
       {skeleton && (
         <SkeletonCover className={className}>
           <main>
-            <h1 className="visually-hidden">Loading</h1>
             <output className="visually-hidden">Loading</output>
             {skeleton}
           </main>

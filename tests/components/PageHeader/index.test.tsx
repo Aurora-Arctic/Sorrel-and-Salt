@@ -8,17 +8,15 @@ describe('PageHeader', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Compendium' })).toBeInTheDocument();
   });
 
-  it('draws a placeholder in the heading box, hidden from assistive technology, while the title is pending', () => {
+  it('draws a placeholder in the heading box, named Loading, while the title is pending', () => {
     const { container } = render(
       <PageHeader pendingTitle action={<button type="button">Add</button>} />,
     );
     // Preconditions: the head still draws its action beside the heading.
     expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
-    // The heading is not exposed, and says nothing.
-    expect(screen.queryByRole('heading')).toBeNull();
-    const heading = container.querySelector('h1');
-    expect(heading).not.toBeNull();
-    expect(heading).toHaveAttribute('aria-hidden', 'true');
-    expect(heading).toHaveTextContent('');
+    // The page keeps its one level-one heading while the title is on its way.
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: 'Loading' })).toBeInTheDocument();
+    expect(container.querySelector('h1')).not.toHaveAttribute('aria-hidden');
   });
 });

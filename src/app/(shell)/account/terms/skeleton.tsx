@@ -1,8 +1,13 @@
 import PageFrame from '@/components/PageFrame';
-import { PanelSkeleton } from '@/components/Skeleton/panel';
+import PageHeader from '@/components/PageHeader';
+import Skeleton from '@/components/Skeleton';
 
+// The page's own heading is real text, so a wait shows the one level-one heading the page keeps.
 export const AccountTermsSkeleton = () => (
   <PageFrame as="div" narrow>
-    <PanelSkeleton />
+    <section className="page-frame__section panel">
+      <PageHeader title="Terms of Use" />
+      <Skeleton shape="block" quiet />
+    </section>
   </PageFrame>
 );

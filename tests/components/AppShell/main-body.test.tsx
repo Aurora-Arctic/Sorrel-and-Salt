@@ -117,14 +117,16 @@ describe('MainBody', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 
-  // Another coven's layout is not the one standing: the old coven's goes with its page.
-  it('draws a page of another coven than the one standing', async () => {
+  // A coven layout stands for any coven, so a switch is drawn by the coven's own host, which keeps the
+  // header and switcher up.
+  it("leaves a page of another coven to the coven's own host", async () => {
     renderBody('/coven/testwort-circle/ingredients');
 
     await act(async () => go('/coven/brambleroot-circle'));
 
-    expect(oldPageHeld()).toBe(true);
-    expect(skeleton('Coven home skeleton')).toBeInTheDocument();
+    // Why it could have drawn: the navigation is on its way to a registered page.
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expectNoWait();
   });
 
   it("leaves a page of the standing coven to the coven's own host", async () => {

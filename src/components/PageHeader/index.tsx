@@ -26,9 +26,10 @@ const PageHeader = ({
   // A tag makes the h1 a two-column grid, so it stays beside the title's first line when the title wraps.
   const focus = focusable ? { tabIndex: -1, 'data-view-heading': true } : {};
   // A pending title draws a bar the height of the heading in the same box, so the head keeps its
-  // size; the heading is hidden from assistive technology, the shell's status saying Loading.
+  // size; the heading is named Loading, so a wait keeps its one level-one heading.
   const heading = pendingTitle ? (
-    <h1 id={id} className={headingClassName} aria-hidden="true">
+    <h1 id={id} className={headingClassName}>
+      <span className="visually-hidden">Loading</span>
       <Skeleton shape="line" quiet />
     </h1>
   ) : tag ? (
