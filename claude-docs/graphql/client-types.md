@@ -4,8 +4,9 @@ Pothos types the server's half of the API. The browser's half is the documents
 it sends, and `npm run codegen` types those: graphql-codegen's `client-preset`,
 configured in `codegen.ts`, reads the committed SDL and every `graphql()` call in
 `src/`, and writes `src/gql/`. Its `graphql()` function has one overload per
-document, returning a `TypedDocumentNode` that carries the operation's result and
-variables types, so a response is typed from the schema rather than by hand.
+document, returning the document as its query text, a string object that carries
+the operation's result and variables types, so a response is typed from the schema
+rather than by hand.
 
 ```ts
 import { graphql } from '@/gql';
@@ -15,7 +16,7 @@ const OkQuery = graphql(`
     ok
   }
 `);
-// TypedDocumentNode<{ ok: boolean }, Exact<{ [key: string]: never }>>
+// TypedDocumentString<{ ok: boolean }, Exact<{ [key: string]: never }>>
 ```
 
 - **The chain is Pothos → `schema.graphql` → `src/gql/`.** Codegen reads the
@@ -45,8 +46,18 @@ const OkQuery = graphql(`
   `strictScalars` on, a new scalar without a mapping fails the run instead of
   typing as `any`.
 - **No generated hooks.** `client-preset` generates documents, not hooks.
-  `graphqlQuery` runs a `TypedDocumentNode` through TanStack Query (["The
+  `graphqlQuery` runs a typed document through TanStack Query (["The
   client"](client.md)).
+- **Each document is its query text, once.** `documentMode: 'string'` makes codegen write
+  a `TypedDocumentString` per document, not a parsed syntax tree beside the text, so
+  the browser downloads each document once. A fragment's text is spliced into
+  every document that spreads it. Nothing in the browser parses a document:
+  the fetch helper sends `String(document)` and reads the operation's name off
+  its first line (`operationNameOf`), and anything that needs a parsed tree
+  (the depth guard in `tests/guards/document-depth.test.ts` sends the text through the
+  server's own protections) parses the text itself. Codegen's compiler plugin, which
+  would also have split the documents per page, did not under Turbopack
+  ([record](../design-decisions/m15.8-compiler-plugin-under-turbopack.md)).
 - **Enums are string unions** (`enumsAsTypes`), so no enum object ships to the
   browser.
 - **Excluded from formatting and coverage, not from typechecking.** Prettier
