@@ -533,3 +533,102 @@ describe('a soft-deleted article reaches no writer', () => {
     await expect(deleteHelpArticle(asUser(E), NOWHERE)).rejects.toThrow(NotFound);
   });
 });
+
+describe('the glossary marks in a body', () => {
+  const marked = (term: string) => `A fixture word, [[${term}]], in a body.`;
+
+  it.each([
+    ['an article', { kind: 'article' as const }],
+    ['an FAQ entry', { kind: 'faq' as const, position: 1 }],
+    ['a term', { kind: 'term' as const }],
+  ])(
+    'refuses to create %s that marks a term no glossary row holds, naming it',
+    async (_name, shape) => {
+      const error = await createHelpArticle(asUser(E), {
+        ...shape,
+        title: 'Testwort Marked',
+        body: marked('Testwort Absent'),
+      }).then(
+        () => {
+          throw new Error('accepted a mark of a term that does not exist');
+        },
+        (reason: unknown) => reason,
+      );
+
+      expect(error).toBeInstanceOf(ValidationError);
+      expect((error as ValidationError).message).toContain('Testwort Absent');
+      expect((error as ValidationError).issues.map((issue) => issue.path[0])).toContain('body');
+      expect(await liveCount()).toBe(0);
+    },
+  );
+
+  it('accepts the same body once the term exists, by title in any case or by shown text', async () => {
+    const body = 'A [[testwort absent]] and [[Testwort Absent|absentees]] and [[testwort-absent]].';
+    await expect(
+      createHelpArticle(asUser(E), { ...article, title: 'Testwort Marked', body }),
+    ).rejects.toThrow(ValidationError);
+
+    await insertHelpArticle(
+      sql,
+      { kind: 'term', title: 'Testwort Absent', slug: 'testwort-absent' },
+      E.id,
+    );
+    const created = await createHelpArticle(asUser(E), {
+      ...article,
+      title: 'Testwort Marked',
+      body,
+    });
+
+    expect(created.body).toBe(body);
+  });
+
+  it('names every term that is missing, and none that is there', async () => {
+    await insertHelpArticle(sql, { kind: 'term', title: 'Testwort Present' }, E.id);
+
+    const error = await createHelpArticle(asUser(E), {
+      ...article,
+      title: 'Testwort Marked',
+      body: '[[Testwort Present]] [[Testwort One]] [[Testwort Two|two]]',
+    }).catch((reason: unknown) => reason as ValidationError);
+
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).message).toContain('Testwort One');
+    expect((error as ValidationError).message).toContain('Testwort Two');
+    expect((error as ValidationError).message).not.toContain('Testwort Present');
+  });
+
+  it('refuses an update whose new body marks a missing term, and leaves the row as it was', async () => {
+    const created = await createHelpArticle(asUser(E), { ...article, title: 'Testwort Marked' });
+
+    await expectRefusedAt(
+      updateHelpArticle(asUser(E), created.id, { body: marked('Testwort Absent') }),
+      'body',
+    );
+
+    expect((await rowOf(created.id)).title).toBe('Testwort Marked');
+    const [{ body }] = await sql`select body from help_articles where id = ${created.id}`;
+    expect(body).toBe(article.body);
+  });
+
+  it('does not check a body the update leaves alone', async () => {
+    const id = await insertHelpArticle(
+      sql,
+      { kind: 'article', title: 'Testwort Old', body: marked('Testwort Deleted') },
+      E.id,
+    );
+
+    const updated = await updateHelpArticle(asUser(E), id, { title: 'Testwort Renamed' });
+
+    expect(updated.title).toBe('Testwort Renamed');
+  });
+
+  it('reads a mark in code as written, not as a mark', async () => {
+    const created = await createHelpArticle(asUser(E), {
+      ...article,
+      title: 'Testwort Marked',
+      body: 'Type `[[Testwort Absent]]` to mark it.',
+    });
+
+    expect(created.body).toContain('[[Testwort Absent]]');
+  });
+});

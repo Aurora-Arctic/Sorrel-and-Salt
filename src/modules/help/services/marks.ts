@@ -1,0 +1,31 @@
+import 'server-only';
+import { findHelpGlossaryPage } from '@/db/repository';
+import { fieldRefusal } from '@/lib/errors';
+import { helpTerms, marksInMarkdown } from '@/lib/help-marks';
+
+// Wide enough for every glossary term the help centre will hold.
+const TERMS_LIMIT = 2001;
+
+/**
+ * Refuses a body that marks a term (`[[Term]]`, `[[Term|text]]`) the glossary does not hold, naming each. A term being
+ * saved counts as in the glossary for its own body.
+ *
+ * @throws {ValidationError} refused at `body`.
+ */
+export async function assertMarksExist(
+  body: string,
+  own: { kind: string; title: string; slug: string },
+): Promise<void> {
+  const marked = marksInMarkdown(body);
+  if (marked.length === 0) return;
+  const entries = await findHelpGlossaryPage({ limit: TERMS_LIMIT, inverted: false });
+  const sources = entries.map(({ node }) => ({ slug: node.slug, title: node.title, body: '' }));
+  if (own.kind === 'term') sources.push({ slug: own.slug, title: own.title, body: '' });
+  const terms = helpTerms(sources);
+  const missing = [...new Set(marked.filter((name) => !terms.find(name)))];
+  if (missing.length === 0) return;
+  throw fieldRefusal(
+    'body',
+    `The body marks ${missing.map((name) => `“${name}”`).join(', ')}, which ${missing.length === 1 ? 'is' : 'are'} not in the glossary. Add the term first, or write the word without [[ ]].`,
+  );
+}

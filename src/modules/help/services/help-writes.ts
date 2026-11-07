@@ -24,6 +24,7 @@ import {
   HelpArticleInput as InputSchema,
   HelpArticlePatch as PatchSchema,
 } from '../validation/help';
+import { assertMarksExist } from './marks';
 import { toHelpArticles } from './rows';
 
 // The keeper's writing of the help centre. Every call is a keeper's alone: a curator reads staff help and writes none of it.
@@ -93,7 +94,7 @@ async function checkStructure(row: Merged, selfId: string | null): Promise<void>
 
 /**
  * @throws {Forbidden} the session is not a site keeper.
- * @throws {ValidationError} refused at `slug`, `parentId`, `position` or `audience`, or invalid input.
+ * @throws {ValidationError} refused at `slug`, `parentId`, `position`, `audience` or `body` (a mark naming a term the glossary lacks), or invalid input.
  */
 export async function createHelpArticle(
   session: Session,
@@ -111,6 +112,7 @@ export async function createHelpArticle(
   };
   await checkSlug(merged.kind, slug, null);
   await checkStructure(merged, null);
+  await assertMarksExist(values.body, { kind: merged.kind, title: values.title, slug });
 
   const [row] = await withAudit(session, (write) =>
     write.insert(helpArticles, {
@@ -155,6 +157,12 @@ export async function updateHelpArticle(
   };
   if (slug !== current.slug) await checkSlug(current.kind, slug, id);
   await checkStructure(merged, id);
+  if (values.body != null && values.body !== current.body)
+    await assertMarksExist(values.body, {
+      kind: current.kind,
+      title: values.title ?? current.title,
+      slug,
+    });
 
   const [row] = await withAudit(session, (write) =>
     write.updateById(helpArticles, id, {
