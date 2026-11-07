@@ -71,3 +71,17 @@
   position: sticky;
   top: var(--sticky-top, 0);
 }
+
+// Under a context row (the section's row, above the cover, not drawn by the skeleton), the pin holds
+// below the row's height too: the row scrolls away with the page, but the page arrives at the top with
+// the row above it, so a pin at the bar alone would jump by the row's height on arrival. The negative
+// end margin lets the pin sit that much lower at the end of a page scrolled to its foot.
+.app-shell__main:has(.context-row) .skeleton-cover:not(:has(.context-row)) .skeleton-cover__pin {
+  top: calc(var(--sticky-top, 0px) + #{$context-row-height} + 1px);
+  margin-block-end: calc(-1 * (#{$context-row-height} + 1px));
+
+  @media (max-width: #{$shell-phone-width}) {
+    top: calc(var(--sticky-top, 0px) + #{$context-row-height-phone} + 1px);
+    margin-block-end: calc(-1 * (#{$context-row-height-phone} + 1px));
+  }
+}
