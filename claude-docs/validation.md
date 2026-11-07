@@ -13,16 +13,7 @@ In each module's `validation/` directory, a third public surface beside
 `index.ts` and `schema/*.ts` ([`modules.md`](modules.md), "The public
 surface"):
 
-| File                                                         | Exports                                             |
-| ------------------------------------------------------------ | --------------------------------------------------- |
-| `src/modules/ingredients/validation/ingredient.ts`           | `LocalIngredientInput`, `CompendiumIngredientInput` |
-| `src/modules/ingredients/validation/stock.ts`                | `StockInput`                                        |
-| `src/modules/grimoire/validation/spell.ts`                   | `SpellInput`, `UpdateSpellInput`                    |
-| `src/modules/grimoire/validation/spell-step.ts`              | `SpellStepInput`                                    |
-| `src/modules/vocabulary/validation/category.ts`              | `CategoryInput`                                     |
-| `src/modules/vocabulary/validation/category-group.ts`        | `CategoryGroupInput`                                |
-| `src/modules/vocabulary/validation/ingredient-form-value.ts` | `IngredientFormValueInput`                          |
-| `src/modules/vocabulary/validation/ingredient-form-group.ts` | `IngredientFormGroupInput`                          |
+Each module's `validation/` holds one file per input (`ingredient.ts`, `stock.ts`, `spell.ts`, `spell-step.ts`, `category.ts`, `category-group.ts`, `ingredient-form-value.ts`, `ingredient-form-group.ts`, `reference.ts` and so on); the exports are named `<Thing>Input`.
 
 Each export is both a schema and, under the same name, the type of its parsed
 output. A form sends `z.input<typeof …>`: its values as typed, unparsed, so
@@ -41,12 +32,10 @@ and `schema/quantities.ts`, which the tables are built from too, so a closed
 set or a column's shape is written down once, and these in `src/lib/`: `validation.ts`, the shared
 shapes below; `citation.ts`, for the day pattern and the quotation marks the
 reference formatter shares with the renderer; and `contrast.ts` and
-`group-colors.ts`, the arithmetic `CategoryGroupInput` holds a colour to. A `.oxlintrc.json` override for `src/modules/*/validation/**` and
+`group-colors.ts` (kept apart so the validation schema reaches nothing but zod), the arithmetic `CategoryGroupInput` holds a colour to. A `.oxlintrc.json` override for `src/modules/*/validation/**` and
 `src/lib/validation.ts` fails a runtime import of `server-only`, `postgres`,
 `drizzle-orm`, anything under `src/db` or a service, and `next build` fails a
 client bundle that reaches `server-only` however indirectly.
-
-Near colour: kept apart from group-colors.ts because the validation schema reaches that file and, through it, nothing but zod.
 
 ## Raising the error
 
@@ -169,8 +158,7 @@ Rules both variants enforce:
   creates it first, through `ReferenceInput` below, and sends its id.
 - **Closed sets.** `nomenclature` and the entries of `elements` come from
   the pgEnums' lists, in `schema/ingredient-enums.ts`.
-- **`elements` is a list of that closed set** (DESIGN.md §5, MB.157; built by
-  MB.159, replacing the single `element`): an array of the five, each entry
+- **`elements` is a list of that closed set** (DESIGN.md §5): an array of the five, each entry
   refused at its position (`['elements', i]`) if it is not one of them,
   with "Choose one of the five elements". A repeat is refused at the
   repeat's position, the second occurrence, naming the element — "Fire is
@@ -180,12 +168,8 @@ Rules both variants enforce:
   Nothing is trimmed and no entry is blank, since an enum has neither, so a
   list left with no entries, `[]`, is the only absence, and
   `dropBlankEntries` turns it into `null` as it does an emptied text list.
-  The list keeps the order chosen and is never reordered. Neither schema
-  keeps `element`, so a caller still sending it has it stripped like any
-  unknown key.
-- **`celestialBodies`, `zodiacSigns` and `colors` are lists** (DESIGN.md §5,
-  MB.134; built by MB.136, replacing the single `planet`, `zodiac` and
-  `color`): free text, each entry trimmed, blank entries dropped by
+  The list keeps the order chosen and is never reordered. A caller sending the old single `element` has it stripped like any unknown key.
+- **`celestialBodies`, `zodiacSigns` and `colors` are lists** (DESIGN.md §5): free text, each entry trimmed, blank entries dropped by
   `dropBlankEntries` after the cross-field rules, and a list left with no
   entries `null`. A repeat but for case is refused at the repeat, blanks
   counted, as a folk name's is, though no unique index stands behind
@@ -234,7 +218,7 @@ at the repeat's `id`. A substitute anywhere may carry `substituteVariantId`,
 one form of the ingredient it links: an id, and only beside a link, refused at
 `['substitutes', j, 'substituteVariantId']`. Whether it is that ingredient's
 form reads the database, so it is the service's. **A form's link names a
-form** (MB.115, the owner's call): a form stands in for a form, so a
+form**: a form stands in for a form, so a
 variant's substitute with `ingredientId` and no `substituteVariantId` is
 refused at `['variants', i, 'substitutes', j, 'substituteVariantId']`
 (`formLinkRules`). The ingredient's own list may still link an
@@ -248,7 +232,7 @@ The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's
 default would otherwise overwrite a kind the input merely left out.
 
-**MB.215: both schemas take a list of forms.** "The two ingredient variants" here are the two input schemas, a coven's and the compendium's; the _variants_ DESIGN.md §5 now adds are an ingredient's forms, and MB.219 gives each schema them as a list, `variants`. Each entry is a form, its pick and the fields a form carries, through `requiredText`, `optionalText` and `RowId`: two entries folding to the same form are refused at `['variants', i, 'form']`; a form's substitutes, references and categories take the rules above, pathed beneath it (`['variants', i, 'substitutes', j]`); and a substitute's `substituteVariantId` must belong to its `substituteId`. The compendium's form rule moves with it: each variant's form must be a curated pick, refused at `['variants', i, 'form']` or `['variants', i, 'formId']`. Until MB.222 the top-level `form` and `formId` still parsed, and became one variant when `variants` was absent. MB.222 removed both, and the top-level rule that a picked `formId` stands beside its `form` text, refused at `['formId']` or `['form']`, went with them: every form rule is now per variant ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+**Both schemas take a list of forms.** "The two ingredient variants" here are the two input schemas, a coven's and the compendium's; the _variants_ DESIGN.md §5 adds are an ingredient's forms, which each schema takes as a list, `variants`. Each entry is a form, its pick and the fields a form carries, through `requiredText`, `optionalText` and `RowId`: two entries folding to the same form are refused at `['variants', i, 'form']`; a form's substitutes, references and categories take the rules above, pathed beneath it (`['variants', i, 'substitutes', j]`); and a substitute's `substituteVariantId` must belong to its `substituteId`. The compendium's form rule moves with it: each variant's form must be a curated pick, refused at `['variants', i, 'form']` or `['variants', i, 'formId']`. There is no top-level `form` or `formId`: every form rule is per variant ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Stock
 
@@ -297,8 +281,7 @@ extended where the vocabulary has more: a trimmed, non-blank `name` and
 sent. `CategoryInput` adds a `groupId` as `requiredRowId` takes it,
 refused with "Choose a group", and `DeityInput` a `traditionId`, refused
 with "Choose a tradition". `IngredientFormValueInput` (M5.6a) is its shape for a form, with a
-`groupId` as `CategoryInput` takes it; its `endRedirect` went with MB.220,
-since a form's rename moves no compendium entry's address.
+`groupId` as `CategoryInput` takes it; it has no `endRedirect`, since a form's rename moves no compendium entry's address.
 
 `IngredientFormGroupInput` (M5.6b) is the shape alone, refused with "Give
 the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `color`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
