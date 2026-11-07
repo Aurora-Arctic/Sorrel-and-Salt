@@ -1,5 +1,7 @@
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
+import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
@@ -44,7 +46,7 @@ const HelpIndex = ({
             <ul className="help-index__quick" aria-label="Quick Links">
               {quickLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href}>{link.title}</a>
+                  <PendingLink href={link.href as Route}>{link.title}</PendingLink>
                 </li>
               ))}
             </ul>
@@ -61,7 +63,7 @@ const HelpIndex = ({
               <li key={article.href} className="card--quiet help-index__guide">
                 <p className="eyebrow">{article.kind}</p>
                 <h3>
-                  <a href={article.href}>{article.title}</a>
+                  <PendingLink href={article.href as Route}>{article.title}</PendingLink>
                 </h3>
                 {article.summary && <p>{article.summary}</p>}
               </li>

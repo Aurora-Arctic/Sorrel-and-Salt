@@ -10,6 +10,8 @@ import {
   type PointerEvent,
   type ReactElement,
 } from 'react';
+import type { Route } from 'next';
+import { PendingLink } from '../../lib/navigation';
 import { useTip } from '../InfoTip/use-tip';
 import type { HelpTermProps } from './types';
 import './index.scss';
@@ -80,8 +82,8 @@ const HelpTerm = ({ slug, title, definition, shown }: HelpTermProps): ReactEleme
   return (
     // Hover on the wrapper, which holds the bubble as well as the link, so the pointer can move onto the bubble.
     <span ref={setWrapper} className="help-term" onMouseEnter={showSoon} onMouseLeave={hideSoon}>
-      <a
-        href={href}
+      <PendingLink
+        href={href as Route}
         className="help-term__link"
         aria-describedby={id}
         onPointerDown={onPointerDown}
@@ -90,7 +92,7 @@ const HelpTerm = ({ slug, title, definition, shown }: HelpTermProps): ReactEleme
         onClick={onClick}
       >
         {shown}
-      </a>
+      </PendingLink>
       <span
         ref={bubble}
         id={id}
@@ -100,9 +102,9 @@ const HelpTerm = ({ slug, title, definition, shown }: HelpTermProps): ReactEleme
         style={bubbleStyle}
       >
         <strong>{title}</strong> {definition}{' '}
-        <a href={href} className="help-term__more" onBlur={onBlur}>
+        <PendingLink href={href as Route} className="help-term__more" onBlur={onBlur}>
           See in Glossary
-        </a>
+        </PendingLink>
       </span>
     </span>
   );

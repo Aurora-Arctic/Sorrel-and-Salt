@@ -1,5 +1,7 @@
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
+import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import { HELP_WIDGET_ELEMENTS } from '../HelpWidget';
@@ -44,10 +46,10 @@ const HelpArticleView = ({
         <HelpSearchForm />
         {parent && (
           <p className="help-article__parent">
-            <a className="back-link" href={parent.href}>
+            <PendingLink className="back-link" href={parent.href as Route}>
               <BackChevron />
               Back to {parent.title}
-            </a>
+            </PendingLink>
           </p>
         )}
         <h2>{title}</h2>
@@ -62,7 +64,7 @@ const HelpArticleView = ({
           <ol>
             {subpages.map((page) => (
               <li key={page.href}>
-                <a href={page.href}>{page.title}</a>
+                <PendingLink href={page.href as Route}>{page.title}</PendingLink>
                 {page.summary && <p>{page.summary}</p>}
               </li>
             ))}

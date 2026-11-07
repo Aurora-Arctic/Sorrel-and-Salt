@@ -107,3 +107,5 @@ flock /tmp/sorrel-e2e.lock env E2E_PORT_BASE=8200 E2E_WORKERS=1 \
 ## Links to help
 
 `Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the account menu (`AccountMenu`, a "Help" row before Support), the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. An empty Ingredients list and an empty Grimoire tab each end with a "Learn More" link to their guide, built by `publicGuidePath(slug)` (`src/lib/help-paths.ts`) from the guide's slug, which is its title's. The keepers and curator layouts link `/help/staff` as "Staff Help" in a `nav` (`StaffHelpLink`), drawn before the section body rather than in it, so a page's skeleton, which covers the whole body, leaves it in view.
+
+Every link from a help page to another page, the term marks and their "See in Glossary" link among them, is a `PendingLink`, so a press shows the destination's skeleton at once. A link to an anchor on the same page (the front page's "Back to Top", a glossary term's own "#") stays an `<a>`, since it loads nothing.

@@ -1,4 +1,6 @@
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
+import { PendingLink } from '../../lib/navigation';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
 import { emphasise } from './emphasis';
@@ -30,7 +32,9 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
                   <span className="help-results__audience">Staff</span>
                 )}
               </p>
-              <a href={result.href}>{emphasise(result.title, query)}</a>
+              <PendingLink href={result.href as Route}>
+                {emphasise(result.title, query)}
+              </PendingLink>
               {result.summary && <p>{emphasise(result.summary, query)}</p>}
             </li>
           ))}
@@ -42,12 +46,12 @@ const HelpSearchResults = ({ query, results }: HelpSearchResultsProps): ReactEle
         <div role="status" aria-label="No Matches" className="help-results__no-match">
           <p>Nothing matches “{query}”. Try fewer or different words.</p>
           <p className="help-results__ways">
-            <a className="btn btn--quiet" href="/help">
+            <PendingLink className="btn btn--quiet" href="/help">
               Browse the Guides
-            </a>
-            <a className="btn btn--quiet" href="/help/glossary">
+            </PendingLink>
+            <PendingLink className="btn btn--quiet" href="/help/glossary">
               Read the Glossary
-            </a>
+            </PendingLink>
           </p>
         </div>
       )
