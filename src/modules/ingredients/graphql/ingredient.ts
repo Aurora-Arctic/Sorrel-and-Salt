@@ -209,7 +209,7 @@ IngredientRef.implement({
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
     retired: t.boolean({
       description:
-        'A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).',
+        'A compendium entry the curators have retired, read by a coven whose cupboard still names it.',
       resolve: (row) => isRetired(row),
     }),
     reviewedAt: t.field({

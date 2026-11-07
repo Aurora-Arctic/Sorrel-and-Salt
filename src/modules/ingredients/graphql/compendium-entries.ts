@@ -39,8 +39,7 @@ const CompendiumIngredientUpdateInput = builder.inputType('CompendiumIngredientU
   }),
 });
 
-const END_REDIRECT =
-  "Confirms ending another entry's redirect from the address this write takes (MB.82).";
+const END_REDIRECT = "Confirms ending another entry's redirect from the address this write takes.";
 
 builder.mutationField('createCompendiumIngredient', (t) =>
   t.field({

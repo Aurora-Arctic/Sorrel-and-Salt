@@ -324,7 +324,7 @@ type DeitySuggestion {
   id: ID
 
   """
-  The other name the query matched (M14.23), which the deity's own name does not show; null when its name matched, or it was found another way.
+  The other name the query matched, which the deity's own name does not show; null when its name matched, or it was found another way.
   """
   matchedName: String
   tradition: String
@@ -534,7 +534,7 @@ type Ingredient {
   references: [ReferenceLink!]!
 
   """
-  A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).
+  A compendium entry the curators have retired, read by a coven whose cupboard still names it.
   """
   retired: Boolean!
 
@@ -1058,7 +1058,7 @@ type Mutation {
   createCelestialBody(input: CelestialBodyInput!): CelestialBody!
   createCompendiumIngredient(
     """
-    Confirms ending another entry's redirect from the address this write takes (MB.82).
+    Confirms ending another entry's redirect from the address this write takes.
     """
     endRedirect: Boolean
     input: CompendiumIngredientInput!
@@ -1395,7 +1395,7 @@ type Mutation {
   """Replaces the entry; the slug follows the name."""
   updateCompendiumIngredient(
     """
-    Confirms ending another entry's redirect from the address this write takes (MB.82).
+    Confirms ending another entry's redirect from the address this write takes.
     """
     endRedirect: Boolean
 
@@ -2436,7 +2436,7 @@ input ReferenceLinkInput {
   supports: [String!]
 }
 
-"""A Reviewed setting, and how many entries it would list (M14.8)."""
+"""A Reviewed setting, and how many entries it would list."""
 type ReviewFacetCount {
   """
   How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
@@ -2542,7 +2542,7 @@ type Spell {
   note: String
 
   """
-  Raised by one on every save; a save names the revision it was written against (M13.15).
+  Raised by one on every save; a save names the revision it was written against.
   """
   revision: Int!
   sealWaxColor: String
@@ -2552,7 +2552,7 @@ type Spell {
   steps: [SpellStep!]!
 
   """
-  Null on a draft not yet named: only a complete spell must carry a title (M13.15).
+  Null on a draft not yet named: only a complete spell must carry a title.
   """
   title: String
   visibility: SpellVisibility!

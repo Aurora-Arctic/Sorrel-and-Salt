@@ -93,8 +93,7 @@ export const SpellRef = builder.objectRef<SpellRow>('Spell').implement({
     id: t.exposeID('id'),
     title: t.exposeString('title', {
       nullable: true,
-      description:
-        'Null on a draft not yet named: only a complete spell must carry a title (M13.15).',
+      description: 'Null on a draft not yet named: only a complete spell must carry a title.',
     }),
     intent: t.exposeString('intent', { nullable: true }),
     jarDescription: t.exposeString('jarDescription', { nullable: true }),
@@ -139,8 +138,7 @@ export const SpellRef = builder.objectRef<SpellRow>('Spell').implement({
       resolve: (spell, _args, { loaders }) => loaders.stepsBySpell.load(key(spell)),
     }),
     revision: t.exposeInt('revision', {
-      description:
-        'Raised by one on every save; a save names the revision it was written against (M13.15).',
+      description: 'Raised by one on every save; a save names the revision it was written against.',
     }),
     audit: t.field({ type: AuditInfo, resolve: (spell) => spell }),
   }),
