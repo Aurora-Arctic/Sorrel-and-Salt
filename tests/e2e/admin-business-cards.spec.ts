@@ -71,10 +71,14 @@ test('Generate waits for a name, an email address and a phone number, and builds
   await expect(generate).toBeEnabled();
 
   // Every request from here on: the PDF is built from the fonts and pictures fetched when the page opened, and
-  // writes nothing anywhere, since a write would be a request.
+  // writes nothing anywhere, since a write would be a request. The router's own link prefetches are left out:
+  // they start when a link scrolls into view or the browser is idle, which on a slow machine is after this
+  // point, and Generate does not cause them.
   const requests: string[] = [];
   page.on('request', (request) => {
-    if (/^https?:/.test(request.url())) requests.push(request.url());
+    const headers = request.headers();
+    const prefetch = headers['next-router-prefetch'] || headers['next-router-segment-prefetch'];
+    if (/^https?:/.test(request.url()) && !prefetch) requests.push(request.url());
   });
 
   const frontsOnly = page.waitForEvent('download');
