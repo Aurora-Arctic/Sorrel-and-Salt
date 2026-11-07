@@ -308,7 +308,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         entries={entries}
         filter={filter}
         facets={facets}
-        categories={categories}
+        categories={categories.map(({ description: _description, ...rest }) => rest)}
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
         total={page.totalCount}

@@ -37,3 +37,11 @@ card's own rules live in `IngredientCard/index.scss`.
 ## Testing
 
 `tests/components/IngredientCardList/index.test.tsx`: the named list, one item per card, none for none, the density (regular stated by default, compact when told), and the pending cards state.
+
+## Cards off screen
+
+Inside `@supports (content-visibility: auto)`, each `li` skips layout and paint while it is far from
+the viewport, with `contain-intrinsic-size: auto 16rem` so the scroll length holds until a card has
+been drawn once. A card that is hovered, has focus inside it or has its category panel open opts out,
+because paint containment would clip the tips and turn the panel's fixed position into one inside the
+card. A browser without the property draws every card.

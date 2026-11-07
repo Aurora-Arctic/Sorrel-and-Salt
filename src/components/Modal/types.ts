@@ -79,6 +79,8 @@ export interface RouteModalContent {
   body: (done: () => void) => ReactNode;
   /** A bar under the body, outside its scroll (`ModalProps.foot`). */
   foot?: ReactNode;
+  /** True while part of the window's code is still on its way: the head shows over the loading body, as while its address is. */
+  loading?: boolean;
 }
 
 /** A page's one modal place, opened by its address (`?new`, `?edit=<slug>`) or by a press while that address is on its way. */

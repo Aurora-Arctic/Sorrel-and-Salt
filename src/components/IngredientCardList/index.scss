@@ -18,6 +18,20 @@
     flex-direction: column;
   }
 
+  // A card scrolled well off screen skips its layout and paint until it nears the viewport, which keeps a
+  // long page quick on a slow device. `auto` in the size remembers the card's real height once drawn, so the
+  // scrollbar settles. Paint containment would clip the tips and turn the fixed category panel into one
+  // positioned inside the card, so a card that is hovered, focused or has a panel open opts out. Pure
+  // enhancement: a browser without it draws every card, as before.
+  @supports (content-visibility: auto) {
+    > li:not(:hover, :focus-within, :has(.category-more__panel.is-open)) {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: every card draws where unsupported
+      content-visibility: auto;
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: pairs with content-visibility above
+      contain-intrinsic-size: auto 16rem;
+    }
+  }
+
   // The grimoire lays its spell cards in this grid too, and a spell card's foot sits at its
   // bottom by the specimen's own `margin-top: auto` once the card fills its item.
   .ingredient-card,

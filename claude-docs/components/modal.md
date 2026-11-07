@@ -1083,3 +1083,13 @@ A head with an eyebrow and no top line has the eyebrow for its first line, so th
 The scrim scrolls only if the card is taller than the tallest dialog, the card centred with auto margins so its top is never cut off. The card is at the floating elevation since it sits on a surface itself. The warning in a question (Make It Ours's, that unsaved changes are lost) has `space(5)` (1.5rem) above, where the paragraph before it leaves `space(2)`, and 1.75rem below, where the answers stand `space(4)` off, margins that collapse with theirs; 1.75rem is off the spacing scale, between `space(5)` and `space(6)`. It carries both classes to outrank `.notice`'s zero margin.
 
 **Forced colours.** The dialog and the confirm card were `modal-surface`'s shadow, so each takes a 1px `CanvasText` border. The confirm overlay's flash is a fill, which forced colours drop, so it runs the outline mark of reduced motion instead. The close button takes a 1px inset `Highlight` outline under the pointer.
+
+## Contents that load on first open
+
+Three dialogs keep their contents out of the page's first scripts and fetch them when first opened:
+Quick Look (the entry details), Add Ingredient and, in the Account menu, the panel's rows. They
+share `useLazyModule` (`src/lib/use-lazy-module.ts`), which runs a dynamic `import()` and holds the
+loaded module in state. The dialog's frame draws at once with its accessible name and a `status`
+(`ModalLoading`) in the body, and the contents replace the status when the code arrives. A route
+modal gives the frame through `RouteModalContent`'s `loading` field. Focus, Escape and the close
+button belong to the frame, so they work while the contents are on their way.

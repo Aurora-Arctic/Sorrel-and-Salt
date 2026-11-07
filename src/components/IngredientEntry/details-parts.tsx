@@ -1,0 +1,105 @@
+'use client';
+
+import type { ReactElement } from 'react';
+import { PendingLink } from '../../lib/navigation';
+import { ingredientLinkTarget } from '../AppShell/site-target';
+import LastEdit from '../LastEdit';
+import { CompendiumEditLink, EditLink } from '../IconTip';
+import EntryMarks, { RecencyMark } from '../EntryMarks';
+import type { ModalHeading } from '../Modal/types';
+import { SafetyMark } from '../SafetyNote';
+import PlusMark from './plus-mark';
+import type { IngredientDetailsOpened } from './types';
+
+// The marks, actions and page link of the details modal's head and foot. The dialog loads this file
+// on first open, so a list page does not carry it (claude-docs/components/ingredient-entry.md, "The details modal").
+
+/** The head's marks and actions: the top line's beside Close, and the end of the formal name's line holds the controls of the card the window opened from (claude-docs/components/ingredient-entry.md, "The details modal"). */
+export function headingOf({
+  lastEdit,
+  heading,
+  marks,
+  editAction,
+  actions: controls,
+  more,
+  plus,
+  ingredientId,
+  reviewLine,
+}: IngredientDetailsOpened): ModalHeading {
+  // The top line beside Close, as the entry page's top bar has it: New or Updated, then the one
+  // safety badge; present for every entry so Close has it to itself.
+  const top = (
+    <>
+      {marks && <RecencyMark recency={marks.recency} />}
+      {marks && (
+        <SafetyMark toxic={marks.toxic} safetyNotes={marks.safetyNotes} variants={marks.variants} />
+      )}
+    </>
+  );
+  // The entry's name as the card names it, for Edit and for the plus.
+  const name = editAction?.name ?? heading.title;
+  // The coven card's own controls where the page gave them; else the compendium card's Edit,
+  // named as the card names the entry.
+  const edit = controls ?? (editAction && <EditAction {...editAction} name={name} />);
+  // The plus, or the check once every coven the viewer may add in holds the entry, left of the
+  // pencil, as on the entry page (PlusMark).
+  const add = plus && ingredientId && (
+    <PlusMark plus={plus} ingredientId={ingredientId} name={name} />
+  );
+  // The compendium card's order: the plus, Edit in Compendium, then the three dots.
+  const buttons = (add || edit || more) && (
+    <>
+      {add}
+      {edit}
+      {more}
+    </>
+  );
+  return {
+    ...heading,
+    topEnd: top,
+    ...(lastEdit && { aboveName: <LastEdit by={lastEdit.by} at={lastEdit.at} /> }),
+    ...(buttons && { formalActions: buttons }),
+    ...((marks || reviewLine) && {
+      // The badges, then the review line as the head's last row (it fills a row of its own).
+      under: (
+        <>
+          {marks && (
+            // The row draws the review badge itself, so the marks leave it out beside the row.
+            <EntryMarks
+              {...marks}
+              reviewedAt={reviewLine ? undefined : marks.reviewedAt}
+              safety={false}
+              recency={null}
+            />
+          )}
+          {reviewLine}
+        </>
+      ),
+    }),
+  };
+}
+
+/** The compendium card's Edit: Edit in Compendium on the public list, plain Edit on the keeper's. */
+const EditAction = ({
+  inCompendium,
+  ...link
+}: NonNullable<IngredientDetailsOpened['editAction']> & { name: string }): ReactElement =>
+  inCompendium ? <CompendiumEditLink {...link} /> : <EditLink {...link} />;
+
+/** The link to the entry's page: a bar in the modal's `foot` slot, outside the scrolling body (claude-docs/components/ingredient-entry.md, "The details modal"). */
+export function PageLinkBar({ pageHref }: IngredientDetailsOpened): ReactElement {
+  // Named by where it goes, not by who is looking: the public compendium's page, or the coven's own
+  // page for an entry it holds.
+  const label = pageHref.startsWith('/compendium/') ? 'See in Compendium' : 'See in Your Cupboard';
+  return (
+    <div className="ingredient-details-foot">
+      <PendingLink
+        className="btn"
+        href={pageHref}
+        navigationTarget={ingredientLinkTarget(pageHref)}
+      >
+        {label}
+      </PendingLink>
+    </div>
+  );
+}

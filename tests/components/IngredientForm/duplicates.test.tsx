@@ -898,7 +898,7 @@ describe('NameField, with useDuplicateWarning', () => {
       // list's own Quick Look opens, so nothing jumps when they arrive.
       expect(within(look()).getByText(/^Felis catus/)).toBeInTheDocument();
 
-      expect(await within(look()).findByText("The coven's own note on it.")).toBeInTheDocument();
+      expect(await screen.findByText("The coven's own note on it.")).toBeInTheDocument();
       expect(calls).toEqual([{ id: USED.id, workspaceId: WORKSPACE_ID }]);
       expect(look().querySelector('[aria-busy="true"]')).toBeNull();
       expect(within(look()).getByText('Whiskerroot')).toBeInTheDocument();
@@ -920,7 +920,7 @@ describe('NameField, with useDuplicateWarning', () => {
       await warned();
       press(eye());
 
-      const badge = await within(look()).findByRole('button', { name: 'Reviewed By Curator' });
+      const badge = await screen.findByRole('button', { name: 'Reviewed By Curator' });
       expect(badge).toHaveAccessibleDescription('Reviewed 1 Oct 2026');
       expect(within(look()).queryByText('Needs Review')).toBeNull();
     });
@@ -931,12 +931,12 @@ describe('NameField, with useDuplicateWarning', () => {
       await warned();
       press(eye());
 
-      expect(await within(look()).findByRole('alert')).toHaveTextContent('No such ingredient');
+      expect(await screen.findByRole('alert')).toHaveTextContent('No such ingredient');
 
       offerLook();
       press(within(look()).getByRole('button', { name: 'Try Again' }));
 
-      expect(await within(look()).findByText("The coven's own note on it.")).toBeInTheDocument();
+      expect(await screen.findByText("The coven's own note on it.")).toBeInTheDocument();
       expect(within(look()).queryByRole('alert')).toBeNull();
     });
 
@@ -946,7 +946,7 @@ describe('NameField, with useDuplicateWarning', () => {
       renderName(undefined, { inModal: true });
       await warned();
       press(eye());
-      await within(look()).findByText("The coven's own note on it.");
+      await screen.findByText("The coven's own note on it.");
 
       fireEvent(look(), new Event('cancel', { cancelable: true }));
 

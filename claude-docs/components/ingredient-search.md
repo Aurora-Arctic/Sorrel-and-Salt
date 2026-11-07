@@ -408,3 +408,22 @@ On a phone the row is two lines: the search box on the first, and the Filters bu
 A focus or a jump that scrolls a control into view lands it below the stuck row, not under it. The margin is the bar (the shell's and the public frame's alike), the row's own height, and a step of air. The root is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The first `space(2)` is the gap under the row, a margin when the tray is shut and padding when it is open, so a jump lands in the same place either way. Under the narrow column the row is two controls tall plus the row's gap, so the root leaves one more control and gap of room. That query is the container query's width on the window: the column (`$narrow-column`) plus the page's two gutters.
 
 **Forced colours.** While the row is stuck its shadow is dropped, so the row's full-bleed fill takes a 1px `CanvasText` rule along its foot, which runs the width of the page and moves nothing in the row.
+
+## Low-priority suggestions
+
+The box shows each keystroke at once. The dropdown's rows go through `useDeferredValue`, so React
+draws them after the box on a slow device, and the dropdown shows its pending state until they have
+caught up. Clear, Next Page and Previous Page already navigate in a transition, so their lists draw
+at low priority too. The debounce in `src/lib/debounce.ts` is unchanged.
+
+### What the measurement showed
+
+The task was written as if a keystroke redrew the cards. Measured on the compendium (48 cards), it
+does not: a keystroke makes no DOM change in the card list. The cost per key, at normal speed, was
+browser style, layout and paint (166, 76, 61 and 73 ms over four keys), the dropdown (0, 29, 46 and
+64 DOM changes, 13 to 14 ms of Combobox work) and React's own work. So the deferral sits on the
+dropdown, the one part that changes per key, and the list needed none. The cause of the style and
+layout cost was not isolated. Two selectors are candidates and neither has been tried:
+`html:has(... .ingredient-search)` (the scroll margin, which the browser may re-check on every DOM
+change below the root) and the dropdown's `position: fixed` list changing size per key. Measure
+with a rule removed before changing either.

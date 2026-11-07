@@ -2,7 +2,7 @@
 
 import { type ReactElement, useRef, useState } from 'react';
 import { QuickLookButton } from '../IconTip';
-import { DuplicateQuickLook } from '../IngredientForm/quick-look';
+import { LazyDuplicateQuickLook as DuplicateQuickLook } from '../IngredientForm/lazy-quick-look';
 
 /** The coven a Quick Look reads in, and the URL segment of the entry page it links to. */
 export type QuickLookCoven = { workspaceId: string; covenSlug: string };
