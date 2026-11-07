@@ -446,7 +446,6 @@ Two rules shape the file:
 | `SEED_SCENARIO`                                    | `minimal`, `standard` or `demo` for `npm run db:seed`                           | `minimal`                             |
 | `WORKSHOP_API_PREFIX`                              | The API path prefix the workshop's build sets                                   | blank                                 |
 | `DESTRUCTIVE_DDL_FILES`                            | The files `check:destructive-ddl` scans instead of the branch's changes         | blank                                 |
-| `ASANA_PAT`                                        | The token the Asana migration script reads                                      | blank                                 |
 | `LIGHTHOUSE_CDP_HOST`, `LIGHTHOUSE_CDP_PORT`       | The Chrome the Lighthouse script drives; the devcontainer sets them             | blank                                 |
 | `PLAYWRIGHT_WS_ENDPOINT`                           | The shared Playwright browser server; the devcontainer sets it                  | blank                                 |
 
