@@ -7,7 +7,9 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
+import { MARK, shownText, type HelpTerms } from '../../lib/help-marks';
 import { slugify } from '../../lib/slugify';
+import HelpTerm from '../HelpTerm';
 import type { PageNavEntry } from '../PageNav/types';
 import type { DocumentPlaceholders } from './types';
 
@@ -71,6 +73,56 @@ function markPlaceholders(
   });
 }
 
+/** The tag a glossary mark becomes, so the React step can swap it for the tooltip component. */
+const TERM_TAG = 'help-term';
+
+const TEXT_ONLY = /^(?:h[1-6]|a|code|pre)$/;
+
+function text(value: string): ElementContent {
+  return { type: 'text', value };
+}
+
+/**
+ * Swaps each `[[Term]]` mark in the text for a link to the term, or, where the term is not in the glossary or the
+ * mark sits in a heading or a link, for the text it shows. A code span or block is left as written, so a body can
+ * say how a mark is typed.
+ */
+function markTerms(children: ElementContent[], terms: HelpTerms, plain = false): ElementContent[] {
+  return children.flatMap((child): ElementContent[] => {
+    if (isElement(child)) {
+      if (child.tagName === 'code' || child.tagName === 'pre') return [child];
+      child.children = markTerms(child.children, terms, plain || TEXT_ONLY.test(child.tagName));
+      return [child];
+    }
+    if (child.type !== 'text' || !child.value.includes('[[')) return [child];
+    const parts: ElementContent[] = [];
+    let last = 0;
+    for (const match of child.value.matchAll(MARK)) {
+      const shown = shownText(match[1], match[2]);
+      if (match.index > last) parts.push(text(child.value.slice(last, match.index)));
+      last = match.index + match[0].length;
+      const term = plain ? undefined : terms.find(match[1]);
+      if (!term) parts.push(text(shown));
+      else if (terms.tooltips)
+        parts.push({
+          type: 'element',
+          tagName: TERM_TAG,
+          properties: { slug: term.slug, title: term.title, definition: term.definition, shown },
+          children: [],
+        });
+      else
+        parts.push({
+          type: 'element',
+          tagName: 'a',
+          properties: { href: `#${term.slug}` },
+          children: [text(shown)],
+        });
+    }
+    if (last < child.value.length) parts.push(text(child.value.slice(last)));
+    return parts;
+  });
+}
+
 function reactProcessorFor(placeholders: DocumentPlaceholders) {
   return unified().use(rehypeReact, {
     Fragment: runtime.Fragment,
@@ -78,6 +130,7 @@ function reactProcessorFor(placeholders: DocumentPlaceholders) {
     jsxs: runtime.jsxs,
     components: {
       [PLACEHOLDER_TAG]: ({ name }: { name: string }) => placeholders[name],
+      [TERM_TAG]: HelpTerm,
     },
   });
 }
@@ -224,9 +277,12 @@ export function renderMarkdown(
   reserved: readonly string[] = [],
   // A body drawn beneath a page title of its own: every heading moves down a level (h2 becomes h3).
   lowerHeadings = false,
+  // The glossary a help body marks its terms from; a caller that passes none leaves `[[…]]` as text (site documents).
+  terms?: HelpTerms,
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
+  if (terms) tree.children = markTerms(tree.children as ElementContent[], terms) as RootContent[];
   tree.children = markPlaceholders(
     tree.children as ElementContent[],
     placeholders,
