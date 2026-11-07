@@ -31,7 +31,6 @@ const SECRET = 'JBSWY3DPEHPK3PXP';
 const TOTP_URI = `otpauth://totp/Sorrel%20%26%20Salt:someone%40two-factor.test?secret=${SECRET}&issuer=Sorrel%20%26%20Salt&digits=6&period=30`;
 const BACKUP_CODES = ['aaaaa-11111', 'bbbbb-22222', 'ccccc-33333'];
 
-// The account page wraps the switch in its own section and heading; this is that frame.
 function renderSection(twoFactorEnabled: boolean) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -54,7 +53,6 @@ const field = (label: string) =>
 const type = (label: string, value: string) =>
   fireEvent.change(field(label), { target: { value } });
 const button = (name: string) => within(twoFactorRegion()).getByRole('button', { name });
-// Which way the switch stands, read from the one action it offers.
 const isOn = () =>
   within(twoFactorRegion()).queryByRole('button', { name: 'Turn Off Two-Factor' }) !== null;
 const isOff = () =>
