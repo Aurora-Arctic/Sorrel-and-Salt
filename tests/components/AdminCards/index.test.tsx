@@ -497,7 +497,7 @@ describe('AdminCards', () => {
     });
     pickFirstOfFebruary();
     if (!printBacks) fireEvent.click(within(dialog()).getByRole('switch', { name: 'Print Backs' }));
-    if (beta) fireEvent.click(within(dialog()).getByRole('checkbox', { name: 'Beta Testers' }));
+    if (beta) fireEvent.click(within(dialog()).getByRole('switch', { name: 'Beta Testers' }));
     if (note !== undefined) {
       fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
         target: { value: note },

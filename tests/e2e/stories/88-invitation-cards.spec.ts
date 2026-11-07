@@ -36,7 +36,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
       await dialog.getByRole('textbox', { name: 'Note' }).fill('Harvest fair stall');
-      await dialog.getByRole('checkbox', { name: 'Beta Testers' }).check();
+      await dialog.getByRole('switch', { name: 'Beta Testers' }).check();
       const minted = mintedLinks(page);
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
       await expect(dialog.getByText(/10 cards minted/)).toBeVisible();
@@ -167,7 +167,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
-      await expect(dialog.getByRole('checkbox', { name: 'Beta Testers' })).not.toBeChecked();
+      await expect(dialog.getByRole('switch', { name: 'Beta Testers' })).not.toBeChecked();
       const minted = mintedLinks(page);
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
       const [plain] = await minted;

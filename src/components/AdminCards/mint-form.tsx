@@ -209,25 +209,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             {...dayAria}
           />
         </FieldShell>
-        <SwitchField
-          label="Print Backs"
-          name="backs"
-          value="1"
-          checked={printBacks}
-          disabled={minting}
-          onChange={setPrintBacks}
-        />
       </div>
-      <label className="checkbox">
-        <input
-          type="checkbox"
-          name="beta"
-          checked={beta}
-          disabled={minting}
-          onChange={(event) => setBeta(event.target.checked)}
-        />
-        Beta Testers
-      </label>
       <FieldShell label="Note" hint={NOTE_HINT} {...noteShell}>
         <textarea
           id={noteShell.controlId}
@@ -241,6 +223,24 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={(event) => setNote(event.target.value)}
         />
       </FieldShell>
+      <div className="admin-cards__switches">
+        <SwitchField
+          label="Print Backs"
+          name="backs"
+          value="1"
+          checked={printBacks}
+          disabled={minting}
+          onChange={setPrintBacks}
+        />
+        <SwitchField
+          label="Beta Testers"
+          name="beta"
+          value="1"
+          checked={beta}
+          disabled={minting}
+          onChange={setBeta}
+        />
+      </div>
       <FormActions
         noun="Cards"
         label="Mint Cards"
