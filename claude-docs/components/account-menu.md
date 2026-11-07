@@ -1,6 +1,6 @@
 # AccountMenu
 
-`src/components/AccountMenu/` is the account button in the shell's bar and the panel it opens. It is a client component. Props are in `types.ts`. The props that carry a fact the types cannot:
+`src/components/AccountMenu/` is the account button in the shell's bar and the panel it opens. It is a client component. Facts the props cannot say:
 
 - `verified` is whether the viewer's address is verified. When it is not, the panel offers Sign Out alone.
 - `links` are the bar's site links (Your Coven, Admin), offered in the panel at or under `$shell-tablet-width`, where the bar has no room for them.
@@ -17,15 +17,15 @@
   - The site links name `main` through `siteLinkTarget` (`AppShell/site-target.ts`), the one rule the bar's links share: cards under a title and filter for `/compendium`, a narrow page for `/coven`, a wide page for `/curator` and `/keepers`, and a page for the rest.
 - **The panel lists**, in order: Your Account (a link to `/account`, not for an unverified viewer), the site links at or under `$shell-tablet-width`, then Sign Out. **The theme switch is not in the panel.** It stays in the shell's bar at every width.
 - **Waiting invitations show in three places.**
-  - **A dot on the avatar disc**, at its top right, in the `attention` palette's red and ringed in `$surface-card`. It is `aria-hidden` with the disc.
+  - **A dot on the avatar disc**, `aria-hidden` with the disc.
   - **The button's name gains ", N coven invitations"**, as hidden text (`account-menu__count`) that repeats the name and adds the count. The visible name is then `aria-hidden`, so the button reads "Name, 2 coven invitations" with no stray space. It is not an `aria-label`, because axe's `label-content-name-mismatch` wants a label to repeat every visible word, the avatar's initials among them.
-  - **A count link at the right end of the Your Account row**: a red circle (a pill from two digits), a link of its own to `/account#account-invitations` (`ACCOUNT_INVITATIONS_PATH`), named "N Coven Invitations" ("1 Coven Invitation" for one). It is a sibling of the Your Account link, because a link cannot hold a link: a press on the count opens the invitations, and a press on the rest of the row opens the account page. It wears an `IconTip` (`placement="below"`) reading "You have N Coven Invitations".
+  - **A count link at the right end of the Your Account row**: a link of its own to `/account#account-invitations` (`ACCOUNT_INVITATIONS_PATH`). It is a sibling of the Your Account link, because a link cannot hold a link: a press on the count opens the invitations, and a press on the rest of the row opens the account page.
 - **Support counts.** Either `assignedSupport` or `waitingSupport` above 0 puts one dot on the avatar and adds ", N requests assigned to you" or "waiting on you" to the button's hidden name.
-  - The Keepers row shows `assignedSupport`, and the Support row `waitingSupport`, at the row's right end in the invitations count's red circle (`account-menu__badge`, which shares `account-menu__count-mark`'s badge styles but is not a link). Each circle has an `IconTip` below it naming what it counts, "3 Support Requests Assigned to You" or "Waiting on You".
+  - The Keepers row shows `assignedSupport`, and the Support row `waitingSupport`, at the row's right end in a circle (`account-menu__badge`, which shares `account-menu__count-mark`'s badge styles but is not a link), each with an `IconTip` naming what it counts.
   - The Keepers row links to `/keepers`, and its circle is a link of its own beside it, to `/keepers/support?view=mine`. The row shows at every width while it has a count. The Support row's circle sits inside its link, and the row links to `/account/support`, not to the dialog.
   - A count from 100 reads "99+", and its hidden text reads "more than 99 requests ...".
 - **Support is a `SupportLink`** ([`support-form.md`](support-form.md), "Support link") for a verified account: it opens the Support dialog over the current page.
-- **Sign Out is the panel's last row**, `SignOutButton` (`sign-out-button.tsx`): a client component with no props, drawn nowhere else. It is a plain full-size `.btn`, its label in Title Case.
+- **Sign Out is the panel's last row**, `SignOutButton` (`sign-out-button.tsx`): a client component with no props, drawn nowhere else.
   - **It is Better Auth's own sign-out.** It calls `signOut` from `src/lib/auth-client.ts`, which posts to `/api/auth/sign-out`: the one path outside GraphQL, carrying the session and no application data ([`auth/config.md`](../auth/config.md)), so CLAUDE.md rule 1 holds.
   - **A success is a full load of `/`**, so nothing the signed-in page held survives it, and a protected page asked for next sends the visitor to sign in.
   - **While it runs** the button is `aria-disabled` rather than `disabled`, so the focus stays on it and a second press sends nothing. It is `aria-busy`, with a spinner and "Signing Out": a `BusyButton` ([`busy-button.md`](busy-button.md)).
@@ -34,17 +34,14 @@
 
 ## Styling
 
-- The button has no hover or open wash. The avatar disc answers the pointer and the open state as the theme switch does, darkening to `$accent-hover`.
-- The button is `$control-height` tall: avatar disc (2rem, the theme switch's size, `$accent`, contrast-checked `$text-on-color` initials), name, chevron. At or under `$shell-tablet-width` the name stays in the page visually hidden, the chevron goes, and the button is a `$control-height` square, because with the name an admin's bar ran past the window from 642px up. The button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
-- The panel hangs from the button's right edge at `layer('floating')`, on `$surface-card` with a hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, at least 13rem wide. Rows are a control tall and run edge to edge, with no padding, gap, rounding or list markers. Sign Out alone has padding around it (`.account-menu__signout`), and its `.btn` keeps its outline at the full width of that (`.account-menu__signout-action`).
-- The current link gets a straight accent rule on its left edge and the same weight as the bar's, with no fill, so a hover's wash still shows on it. The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's own edge would cut an outside one.
-- The invitations dot is 0.4167rem across, set 0.0625rem out past the disc's top and right edges, with a 2px `$surface-card` ring.
-- The panel does not clip (no `overflow: hidden`), so the count's tip can hang past its edge. The top row's hover wash takes the panel's rounding itself, inside the 1px edge. The last row is always Sign Out, which has room around it, so no wash meets the bottom corners.
-- The count is the site's badge in the `attention` palette ([`styling.md`](../styling.md), "Badge palettes"): a 1.5rem circle, a pill from two digits, laid over the row's right end so Your Account's wash still runs edge to edge beneath it, with the row's text kept clear. On hover it keeps `$text-on-color` and darkens (`filter: brightness(0.85)`), because the typography's link hover would otherwise recolour the label. It sits one layer up, so its tip hangs over the rows beneath it.
-- In forced-colours mode the disc's `$accent` fill is dropped, so a 1px `CanvasText` border draws the circle, inside the disc's 2rem so the bar does not move. On hover and while the panel is open the circle turns `Highlight`. The invitations dot is drawn by its fill alone, so it does not show in forced-colours mode.
+- At or under `$shell-tablet-width` the name stays in the page visually hidden, the chevron goes, and the button is a `$control-height` square, because with the name an admin's bar ran past the window from 642px up. The button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
+- The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's own edge would cut an outside one.
+- The panel does not clip (no `overflow: hidden`), so the count's tip can hang past its edge. The last row is always Sign Out, which has room around it, so no wash meets the bottom corners.
+- The count is the site's badge in the `attention` palette ([`styling.md`](../styling.md), "Badge palettes"), laid over the row's right end so Your Account's wash still runs edge to edge beneath it. On hover it keeps `$text-on-color` and darkens (`filter: brightness(0.85)`), because the typography's link hover would otherwise recolour the label.
+- In forced-colours mode the disc's `$accent` fill is dropped, so a 1px `CanvasText` border draws the circle. The invitations dot is drawn by its fill alone, so it does not show in forced-colours mode.
 
 ## Not here
 
-Stories: [`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx), "Shell / Account Menu", `States`, with a control choosing among Closed, Open, the invitation states, Open On The Admin Page, Open With A Long Name, Sign Out Failed and Open Unverified. There is no state of the button alone, since the app never draws it elsewhere. The wrapper is tall enough for the open panel, because the workshop's frame clips what overflows it.
+Stories: [`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx). The wrapper is tall enough for the open panel, because the workshop's frame clips what overflows it.
 
 Tests: `tests/components/AccountMenu/index.test.tsx` and `sign-out-button.test.tsx` (Sign Out's busy state, the full load of `/`, and the failure callout for a refusal and for a dropped connection, with the next press clearing it). `tests/db/sign-out.test.ts` signs out through Better Auth's real endpoint. `tests/e2e/shell.spec.ts` routes a refusal of the sign-out call, because whether the served build refuses it depends on the origin the browser reaches it on (Better Auth refuses a plain-http origin for any `/api/auth` POST).
