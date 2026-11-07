@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createElement } from 'react';
+import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CLIENT_MANIFEST } from '../../../../support/client-references.mts';
 
@@ -181,7 +182,7 @@ describe('the card’s props for the browser', () => {
     const notes = 'Fixture caution against testing by mouth';
     const formNotes = 'Fixture caution for the oil alone';
     const card = IngredientCard({
-      href: '/compendium/ingredients/fixturewort',
+      href: '/compendium/ingredients/fixturewort' as Route,
       label: 'Fixturewort',
       kind: 'compendium',
       safetyNotes: notes,
