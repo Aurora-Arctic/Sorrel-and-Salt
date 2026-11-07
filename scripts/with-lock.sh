@@ -15,6 +15,9 @@ while [ "$pid" -gt 1 ]; do
   for holder in $holders; do
     [ "$holder" = "$pid" ] && exec "$@"
   done
-  pid=$(awk '{ print $4 }' "/proc/$pid/stat" 2>/dev/null || echo 0)
+  # The parent pid is the second field after the ')' that closes the command name, which
+  # may itself hold spaces (npm retitles itself "npm sh: …").
+  pid=$(sed 's/.*) //' "/proc/$pid/stat" 2>/dev/null | cut -d' ' -f2 || echo 0)
+  pid=${pid:-0}
 done
 exec flock "$lock" "$@"
