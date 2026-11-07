@@ -77,7 +77,7 @@ account in its body (OWASP Auth; DESIGN.md §8). Two pieces make it so:
   finds the holder, calls `mailExistingHolder`, and answers 200
   `{ status: true }` before Better Auth runs, so no second account is made
   and no 422 names the address as taken. `mailExistingHolder` sends
-  `src/emails/account-exists.tsx` to the held address: someone tried to make
+  `src/emails/account-exists.ts` to the held address: someone tried to make
   an account with it, no second account was made, and how to sign in (with
   the password, the linked providers, or both). It names no one, since
   whoever made the sign-up need not be the holder. It has no cooldown; the
@@ -124,7 +124,7 @@ already holds, in `src/lib/auth.ts`:
   failures spread over days never climb the ladder. The upsert in
   `repository/sign-in-failures.ts` decides it in one statement.
 - **The owner is told.** When a failure starts a lock, `countFailure` mails
-  `src/emails/password-locked.tsx` to the account: how long the lock lasts,
+  `src/emails/password-locked.ts` to the account: how long the lock lasts,
   and a reset link, so the owner can choose a new password at once instead of
   waiting. The link is made as Better Auth makes its own (a `reset-password:`
   verification row, valid 15 minutes, `callbackURL` fixed to
@@ -203,7 +203,7 @@ endpoints, configured in `emailAndPassword` and the hooks in
 - **Asking for a link.** `/forgot-password`, linked as "Forgot Password?"
   from the sign-in form, posts to `/request-password-reset`. Better Auth
   answers every address alike. `mailResetLink` mails
-  `src/emails/reset-password.tsx` to a verified address only, so a reset
+  `src/emails/reset-password.ts` to a verified address only, so a reset
   never reaches an inbox the account has not proved, and never to a
   placeholder address. It sets the link's `callbackURL` to `/reset-password`
   whatever the request asked, so a request cannot point the link anywhere

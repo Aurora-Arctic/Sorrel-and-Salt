@@ -59,24 +59,28 @@ attached at all.
 
 ## Port map
 
-| Port  | What                                                 | Where it's forwarded/published                                                                                            |
-| ----- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| 8000  | `next dev`                                           | devcontainer.json, `app` service (Docker/docker-compose.yaml)                                                             |
-| 8001+ | `next start`, one per e2e worker slot (MB.112)       | devcontainer.json forwards 8001 alone; slot `n` serves on `8001 + n`, reached inside the compose network                  |
-| 8100  | `next start`, e2e configured providers (MB.112)      | none — reached inside the compose network                                                                                 |
-| 4983  | Drizzle Studio (MB.21)                               | devcontainer.json, `studio` service                                                                                       |
-| 9229  | Node inspector — `next dev --inspect`                | devcontainer.json, `app` service                                                                                          |
-| 9230  | Node inspector — `vitest --inspect-brk`              | devcontainer.json only (no long-running compose service serves this)                                                      |
-| 9231  | Node inspector — Playwright runner (manual)          | devcontainer.json only — reserved, nothing listens by default                                                             |
-| 9323  | Playwright trace viewer                              | devcontainer.json only                                                                                                    |
-| 9324  | Playwright UI mode                                   | devcontainer.json only                                                                                                    |
-| 51204 | Vitest UI (`@vitest/ui` default port)                | devcontainer.json only                                                                                                    |
-| 61000 | Storybook workshop                                   | pre-existing (M0.30), `workshop` service                                                                                  |
-| 4444  | `playwright run-server` (remote browser)             | `playwright-server` service (Docker/docker-compose.yaml, profile `e2e`) — dialed by the runner, never opened in a browser |
-| 7900  | Playwright display — codegen, `page.pause()` (MB.23) | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
+| Port  | What                                                                                            | Where it's forwarded/published                                                                                            |
+| ----- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 8000  | `next dev`                                                                                      | devcontainer.json, `app` service (Docker/docker-compose.yaml)                                                             |
+| 8001+ | `next start`, one per e2e worker slot (MB.112)                                                  | devcontainer.json forwards 8001 alone; slot `n` serves on `8001 + n`, reached inside the compose network                  |
+| 8100  | `next start`, e2e configured providers (`FIRST_SLOT_PORT + 99` in `tests/e2e/slots.ts`)         | none — reached inside the compose network                                                                                 |
+| 8101  | `next start`, the one e2e server that keeps its compendium data cache (`FIRST_SLOT_PORT + 100`) | none — reached inside the compose network                                                                                 |
+| 8102  | `next start`, the e2e workshop server (`FIRST_SLOT_PORT + 101`)                                 | none — reached inside the compose network                                                                                 |
+| 5432  | Postgres                                                                                        | `postgres` service (Docker/docker-compose.yaml)                                                                           |
+| 8025  | Mailpit UI and REST API                                                                         | `mailpit` service (Docker/docker-compose.yaml)                                                                            |
+| 3456  | Job viewer (`npm run jobs:web`)                                                                 | job viewer service (Docker/docker-compose.yaml)                                                                           |
+| 4983  | Drizzle Studio (MB.21)                                                                          | devcontainer.json, `studio` service                                                                                       |
+| 9229  | Node inspector — `next dev --inspect`                                                           | devcontainer.json, `app` service                                                                                          |
+| 9230  | Node inspector — `vitest --inspect-brk`                                                         | devcontainer.json only (no long-running compose service serves this)                                                      |
+| 9231  | Node inspector — Playwright runner (manual)                                                     | devcontainer.json only — reserved, nothing listens by default                                                             |
+| 9323  | Playwright trace viewer                                                                         | devcontainer.json only                                                                                                    |
+| 9324  | Playwright UI mode                                                                              | devcontainer.json only                                                                                                    |
+| 51204 | Vitest UI (`@vitest/ui` default port)                                                           | devcontainer.json only                                                                                                    |
+| 61000 | Storybook workshop                                                                              | pre-existing (M0.30), `workshop` service                                                                                  |
+| 4444  | `playwright run-server` (remote browser)                                                        | `playwright-server` service (Docker/docker-compose.yaml, profile `e2e`) — dialed by the runner, never opened in a browser |
+| 7900  | Playwright display — codegen, `page.pause()` (MB.23)                                            | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
 
-Everything in that table except 8000, 8001, 4983, 4444 and 61000 is new to
-MB.22; 7900 is MB.23's, and 8100 and the slot ports past 8001 are MB.112's.
+The 8100 to 8102 rows are derived: `FIRST_SLOT_PORT` is 8001 or `E2E_PORT_BASE`, and a different base moves all three.
 All the
 `devcontainer.json`-only rows are forwarded because the process that opens
 them runs inside the devcontainer and is started from an editor terminal or

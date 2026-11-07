@@ -136,7 +136,7 @@ ingredient's own transaction, which a module above `ingredients` could not be
 called from without a cycle. A vocabulary row's references are read from
 `ingredients`, as `User.memberships` is added from `coven`. The
 compendium-tier rows belong to the tier seam's extraction unit, and MB.153's
-finders are named in `TIER_SEAM`.
+finders are named in the tier seam (claude-docs/db/tier-seam.md, "The tier seam").
 
 ### Reading and writing them (MB.153)
 
@@ -218,8 +218,7 @@ rule (MB.218) a source on one of the entry's live forms sources the entry, so
 the arm also asks that no live variant `cites('ingredientVariantId')`: an
 entry whose only citation is on its oil is not listed.
 
-Every finder here is on the tier seam, named in `TIER_SEAM`
-([`modules.md`](../modules.md#the-tier-seam)).
+Every finder here is on the tier seam (claude-docs/db/tier-seam.md, "The tier seam").
 
 ### Formatting and checks (MB.154)
 

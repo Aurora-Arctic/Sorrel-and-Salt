@@ -59,8 +59,8 @@ run as a test.
   names, the two hard-deleted join tables among them) and
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
-  audit-columns sweep read one list. `APPEND_ONLY_TABLES` names the tables
-  carrying a `forbid_rewrite` trigger (MB.194); the trigger's refusals are
+  audit-columns sweep read one list. The tables
+  carrying a `forbid_rewrite` trigger (MB.194) are not a list in the harness; the trigger's refusals are
   `user-privilege-changes-schema.test.ts`'s and
   `tests/db/privilege-change-trigger.test.ts`'s (MB.225).
 

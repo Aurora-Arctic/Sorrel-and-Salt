@@ -171,7 +171,7 @@ this is the shape.
 - **The mail** is sent through `src/lib/mail.ts` from
   `sendVerificationEmail`, and names the providers linked to the account so
   a reader can tell whether they signed up at all. The template is
-  `src/emails/verify-email.tsx` ([`email.md`](../email.md)).
+  `src/emails/verify-email.ts` ([`email.md`](../email.md)).
 
 ### Linking a second provider (MB.71)
 
@@ -423,7 +423,7 @@ the tests [`tests.md`](tests.md).
   request's own base URL (`resolveBaseURL`, so a preview host links to itself) and the guarded `next`, never an address.
   Its step reads `users.email` and `users.pending_email`, mints `/verify-email`'s change token —
   `createEmailVerificationToken` with `updateTo` set to the pending address and
-  `requestType: 'change-email-verification'` — under the same secret, and sends `verify-email.tsx` with
+  `requestType: 'change-email-verification'` — under the same secret, and sends `verify-email.ts` with
   `purpose: 'change'` to the pending address; one a verified account has come to hold is sent nothing.
   Following it, `/verify-email` swaps `email` and sets `emailVerified` in
   one adapter write, stamped by the update hook, which clears `pending_email` in the same write.

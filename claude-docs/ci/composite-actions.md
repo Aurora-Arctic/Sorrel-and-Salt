@@ -1,6 +1,6 @@
 ## Composite actions
 
-`.github/actions/` — five actions. `duration` is an **optional** input on
+`.github/actions/` — six actions, adding `vercel-secrets-guard`. `duration` is an **optional** input on
 `job-summary` and `pr-comment`, so restoring the timer actions MB.32 deleted
 would need no edit at any call site; nothing passes it today.
 
