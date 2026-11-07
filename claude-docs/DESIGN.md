@@ -517,7 +517,7 @@ Shaped at minting so it is not re-derived (MB.175; [`mb.175-help-articles.md`](d
 
 ## 11. TDD approach
 
-Every story becomes a failing test first: **write test → watch it fail → minimum code → refactor.** Both suites keep the 80% threshold on lines, branches, functions, and statements, with coverage artifacts uploaded. Verification runs the `:coverage` variants, for the reason CLAUDE.md's Commands section gives.
+Every story becomes a failing test first: **write test → watch it fail → minimum code → refactor.** Both suites keep the 80% threshold on lines, branches, functions, and statements, with coverage artifacts uploaded. Verification runs the `:coverage` variants, for the reason CLAUDE.md's Commands section gives. The harness is in `claude-docs/testing/`.
 
 ### Test database: local Postgres, not Neon, not SQLite
 
@@ -531,17 +531,15 @@ Every story becomes a failing test first: **write test → watch it fail → min
 | CI e2e               | Same service container                                                                        |
 | Staging + production | Neon                                                                                          |
 
-**SQLite was considered and rejected.** It cannot run `num_nonnulls` check constraints, `pg_trgm` fuzzy matching, PL/pgSQL triggers, native array columns for `celestial_bodies[]` and `colors[]`, stored generated columns for `identity_key`, or `set_config('app.current_user_id', …)`. The isolation tests are the point: they query every workspace-scoped entity by direct id as a non-member and assert refusal, against the real schema — the same partial unique indexes, generated columns and constraints production runs. Under SQLite that suite tests a different database than the one that ships, and the failure mode it guards against is one user's grimoire visible to another.
+**SQLite was rejected.** It cannot run `num_nonnulls` check constraints, `pg_trgm` fuzzy matching, PL/pgSQL triggers, native array columns for `celestial_bodies[]` and `colors[]`, stored generated columns for `identity_key`, or `set_config('app.current_user_id', …)`. The isolation tests are the point: they query every workspace-scoped entity by direct id as a non-member and assert refusal, against the same partial unique indexes, generated columns and constraints production runs. Under SQLite that suite would test a different database than the one that ships, and the failure it guards against is one user's grimoire visible to another.
 
-**Using local Postgres instead of Neon branches is a net simplification.** It removes the `NEON_API_KEY` secret, `globalSetup` branch creation, the 10-branch-per-project limit, the CU-hour budget, and the branch-reaper workflow. Neon becomes deployment-only infrastructure. Tests get faster too — a local socket beats a network round trip per query.
+**Local Postgres instead of Neon branches** removes the `NEON_API_KEY` secret, `globalSetup` branch creation, the 10-branch-per-project limit, the CU-hour budget and the branch-reaper workflow. Neon is deployment-only infrastructure, and a local socket beats a network round trip per query.
 
-**Isolation.** Each Vitest worker gets `sorrel_test_${VITEST_POOL_ID}` (the pool slot — `VITEST_WORKER_ID` counts test files, not workers, and outruns the clones that exist; MB.14), created from a template database with migrations pre-applied and the `standard` scenario seeded — built once per run at test setup from the image's extensions-only `sorrel_template` (M1.27; not baked into the image, so it can never disagree with the checkout) — so per-worker setup is a fast `CREATE DATABASE ... TEMPLATE` rather than a migration run, and the clone is re-made from the template before every test file. Playwright gives each worker slot `sorrel_e2e_<slot>`, recreated the same way from its own seeded template between spec files, and a `next start` of its own reading it: the code under test runs in the server, which reads its database once at boot, not in the worker (MB.112).
+**Isolation.** Each Vitest worker gets `sorrel_test_${VITEST_POOL_ID}` (the pool slot: `VITEST_WORKER_ID` counts test files, not workers, and outruns the clones that exist; MB.14), created from a template database with migrations pre-applied and the `standard` scenario seeded. The template is built once per run at test setup from the image's extensions-only `sorrel_template`, not baked into the image, so it can never disagree with the checkout. Per-worker setup is then a fast `CREATE DATABASE ... TEMPLATE`, and the clone is re-made from the template before every test file. Playwright gives each worker slot `sorrel_e2e_<slot>`, recreated the same way from its own seeded template between spec files, and a `next start` of its own reading it: the code under test runs in the server, which reads its database once at boot, not in the worker (MB.112).
 
 ### Seed data — one module, three consumers
 
-`src/db/seed/index.ts` exports `seed(db, { scenario })`. A one-shot `db-init` compose container runs it before the app starts; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three.
-
-The Docker side is a Node container rather than a Postgres init script, corrected at M1.24 from "Docker Postgres runs it on first boot": the seed is TypeScript and the Postgres image has no Node, and `Docker/postgres-init/` does not run at container start in any case, since `Dockerfile.postgres` populates PGDATA at image build time and the entrypoint then skips `/docker-entrypoint-initdb.d/`. The outcome the line described — a clean volume comes up seeded — is unchanged.
+`src/db/seed/index.ts` exports `seed(db, { scenario })`. A one-shot `db-init` compose container runs it before the app starts; the Vitest `db` project and Playwright's `globalSetup` call it directly. Identical data everywhere, so a bug reproduces in all three. The Docker side is a Node container rather than a Postgres init script: the seed is TypeScript and the Postgres image has no Node, and `Docker/postgres-init/` does not run at container start, since `Dockerfile.postgres` populates PGDATA at image build time and the entrypoint then skips `/docker-entrypoint-initdb.d/`.
 
 Scenarios: `minimal` (one system user, one user, empty compendium), `standard` (six users, workspaces W and X, populated compendium), `demo` (standard plus spells with ingredients and layer order).
 
@@ -549,171 +547,37 @@ The production compendium is not a scenario. Its starting entries are reference 
 
 The demo coven is reference data too: the seventh reference seed, `db:seed:demo-coven`, run last in `seedReferenceData` and after the compendium seed on staging and production. It inserts the workspace flagged `demo`, a steward seat for the system user and every keeper, and an observer seat for every other live user, and never re-adds a seat that exists, a soft-deleted one included. It joins the `demo` scenario but not `standard`, whose fixture users A–G would otherwise gain a membership (M15.10; `claude-docs/db/demo-scenario.md`).
 
-**Fixture users:**
-
-| User | Role                                  |
-| ---- | ------------------------------------- |
-| A    | Steward of workspace W                |
-| B    | Practitioner in workspace W           |
-| C    | Observer in workspace W               |
-| D    | Practitioner in unrelated workspace X |
-| E    | Site Keeper, member of no workspace   |
-
-`make db-reset` drops, migrates and reseeds local; `SEED_SCENARIO` picks the scenario for it and for `make docker-up`, defaulting to `minimal`.
+The fixture users A–F are in CLAUDE.md's Testing section; `SEED_SCENARIO` picks the scenario for `npm run db:reset` (which drops, migrates and reseeds local) and for `make docker-up`, defaulting to `minimal`.
 
 ### Acceptance tests — story traceability
 
-Every story gets a browser flow that names it. A story is proved by a flow a user could walk, never by a service call or a GraphQL response (M9.1). The suite is written first, red or skipped, and becomes the definition of done.
+Every story gets a browser flow that names it. A story is proved by a flow a user could walk, never by a service call or a GraphQL response (M9.1). The suite is written first, red or skipped, and becomes the definition of done. A test names its story with Playwright's own tag, `{ tag: '@story-12' }`, so a failure points at a requirement rather than an implementation detail. A story whose page does not exist yet is a `test.fixme` whose body is the intended flow; the task that builds the page unskips it.
 
-```
-tests/e2e/stories/
-  01-accounts.spec.ts        # stories 1-3, 8
-  01-members.spec.ts         # stories 9-11
-  01-invitations.spec.ts     # stories 4-7
-  01-viewer.spec.ts          # stories 12-13
-  02-compendium.spec.ts      # stories 14-16
-  03-ingredients.spec.ts     # stories 20-27
-  04-modals.spec.ts          # stories 28-34
-  06-grimoire.spec.ts        # stories 47-57
-  07-admin.spec.ts           # stories 17-19
-  08-email-and-admin.spec.ts # stories 58-62
-```
+`npm run test:stories` runs only this suite and prints a checklist of which stories pass, read from the tags: a live progress report against §10 rather than a coverage percentage. A flaky story (failed, then passed on retry) is listed as flaky and stays unticked: it does not count as passing. The suite runs as the `stories` job of the PR gate, `pr-gate.yml`, on the gate's images and beside its other jobs, and is never a required check. Story coverage is tracked apart from the 80% line threshold, because one asks whether the code is exercised and the other whether the product does what was specified. Service rules keep their own Vitest tests (direct-id refusals with their preconditions); a story test proves the flow, not the rule. Long form: `claude-docs/testing/acceptance.md`.
 
-A test names its story with Playwright's own tag, so a failure points at a requirement rather than an implementation detail:
+### What the tests must prove
 
-```ts
-test(
-  'an observer reads the grimoire and finds nothing to change',
-  { tag: '@story-12' },
-  async ({ page }) => {
-    await signInAs(page, viewerOfW);
-    await page.goto(`/coven/${W.slug}/grimoire`);
-    await expect(page.getByRole('link', { name: 'Hearth blessing' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'New Spell' })).toHaveCount(0);
-  },
-);
-```
+The Vitest layers are `unit` (no DOM, with `src/lib/` carrying the heaviest coverage), `db` (local Postgres: the highest-risk tests in the project) and the component project (React Testing Library, MSW mocking `/api/graphql`). Beside the rules in CLAUDE.md's Testing section:
 
-A story whose page does not exist yet is a `test.fixme` whose body is the intended flow; the task that builds the page unskips it. `npm run test:stories` runs only this suite and prints a checklist of which stories pass, read from the tags — a live progress report against §10 rather than a coverage percentage. A flaky story (failed, then passed on retry) is listed as flaky and stays unticked: it does not count as passing. The suite runs as the `stories` job of the PR gate, `pr-gate.yml`, on the gate's images and beside its other jobs, and is never a required check.
-
-Story coverage is tracked separately from the 80% line threshold, because they measure different things: one asks whether the code is exercised, the other whether the product does what was specified. Service rules keep their own Vitest tests (direct-id refusals with their preconditions); a story test proves the flow, not the rule.
-
-### Unit — Vitest, no DOM
-
-`src/lib/` carries the heaviest coverage:
-
-- There is no `filterIngredients()`: the search is the `compendium` query's, in SQL (M8.5; [`design-decisions/m8.5-compendium-queries.md`](design-decisions/m8.5-compendium-queries.md)), because rule 8 means the browser never holds the whole list
-- `unitConvert()` — lives in the ingredients module, `src/modules/ingredients/units/convert.ts`, built from the unit table in `src/modules/ingredients/units/` and reaching no database code, not in `src/lib/`; within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
-- `summarizeSpellCategories()` — union and dedupe across ingredients
-- `compareSpellCategories()` — intended-not-present and present-not-intended, both directions
-- `resolveSpellVisibility()` — the read decision and every transition, exhaustively; `private → workspace` permitted, `workspace → private` rejected for a complete spell and permitted for a draft
-- Zod schemas for every model
-- `applyAudit()` — correct fields on insert vs update vs soft delete
-
-### Data layer — Vitest, local Postgres
-
-The highest-risk tests in the project.
-
-**Authorization**
-
-- D cannot read W's ingredients or grimoire — including by direct id, not just list queries
-- D's write to W fails with an authorization error, not a silent no-op
-- C (observer) reads W's ingredients and grimoire but cannot write either, and cannot create a spell at any visibility
-- Admin E cannot read W's ingredients or grimoire
-- A non-keeper write to a compendium entry fails; E's succeeds and stamps `updated_by`
-- A user without `canCreateWorkspace` cannot create a workspace, and every keeper and curator holds it (MB.177, M11.20); accepting an invitation sets the flag and audits it
-- A workspace-scoped finder **cannot be called without a `Membership`**, asserted at compile time with `@ts-expect-error` rather than at runtime — the second layer's whole claim is that the omission does not typecheck, so the test has to be a type error rather than a thrown one
-
-**Spell visibility**
-
-- A's `private` spell is invisible to B and C, though they share W, and to stewards
-- A's `workspace` spell is visible to B and C, invisible to D
-- `private → workspace` is permitted; `workspace → private` is rejected with an explaining error, not a bare Forbidden, once the spell is complete (a draft moves either way, M10.20); a complete spell is never saved as a draft again
-- D cannot read W's spell by direct id at either visibility
-- A private spell is excluded in SQL, never fetched then filtered in the resolver
-- Seeded spells migrate to `workspace` visibility
-
-**Audit and soft delete**
-
-- Insert stamps `created_by`/`updated_by` from session, ignoring payload ids
-- Update leaves `created_at`/`created_by` untouched
-- Soft delete sets `deleted_at`/`deleted_by`; row vanishes from finders
-- Update and soft delete leave a soft-deleted row as it was, the same call writing its live twin
-- A deleted ingredient leaves every read but a spell holding it, which keeps reaching it — with its categories — for every member who may read the spell, and nobody else
-- Re-adding a **formal** name after soft delete succeeds — the partial-index test. It must be the formal name, not the display label: display labels are no longer unique in the compendium, so a label-based assertion would pass even with the `WHERE deleted_at IS NULL` stripped off the index, and the test would silently stop testing anything. M5.3 exists to exercise that index and carries the same correction
-
-**Compendium and ingredients**
-
-- A workspace-local ingredient is invisible to every other workspace
-- A compendium insert omitting `nomenclature` is rejected — the column has no database default
-- The coupling holds both ways: `none` carrying a formal name is rejected, any named kind carrying none is rejected, and `unknown` saves with a formal name or without one
-- `identity_key` cannot be written or updated directly; Postgres refuses, and the column is absent from `$inferInsert` so TypeScript refuses first
-- Two compendium entries may share a display label when their formal names differ; two may not share an identity
-- A local may share a label — and an identity — with a compendium entry; two locals in one workspace may share neither
-- The compendium matches an own entry's page offers, one assertion per row of §5's table: an identity match across differing labels, a label match only when the own entry declares no formal name, and nothing for two differently-identified rows sharing a label
-- Promoting a folk name to the display name leaves `identity_key` unchanged on a row carrying a formal name, and changes it on a `none` row
-- A folk name, or a form value in use, present only in unrelated workspace X never surfaces in W's lookup — asserted against the service directly, not merely by its absence from a list
-- Fuzzy match returns near-misses above the explicit 0.4 threshold and nothing below, and each result carries its formal name
-- The fuzzy query plan uses the trigram index rather than a sequential scan — `EXPLAIN` asserted, because a `similarity()` comparison silently cannot use one and the results look identical either way
-
-**Grimoire**
-
-- Every member including observers can read every `workspace`-visible spell
-- A spell's `derivedCategories` is the deduped union across its ingredients
-- `categoryGaps` reports both directions correctly
-- A spell survives soft-deletion of an inventory item for one of its ingredients
-- A spell keeps an ingredient soft-deleted after it went into the jar, and that ingredient's categories still feed `derivedCategories`
-
-**Invitations**
-
-- Token mailed to the invited address, generated with a CSPRNG, stored only as a hash, and present in no response
-- Acceptance requires the signed-in account's verified email to match; the same account unverified is pointed at the email page, a different verified address is refused
-- An invitation with role `owner` is rejected by the check constraint
-- Expired, revoked, and reused tokens all rejected, each with a distinct reason
-- Accepting sets `canCreateWorkspace` on the accepting user
-- Last-steward demotion fails
-
-### GraphQL layer
-
-- Schema snapshot test — the one permitted snapshot besides design tokens, since the schema _is_ a contract and unintended changes should be loud
-- Client types are current — `src/gql/` regenerated in memory from the snapshot and compared, so a document changed without `npm run codegen` fails
-- Depth limit rejects a query nested past 7
-- Cost limit rejects an expensive composed query
-- Introspection disabled in production config
-- DataLoader batches — assert query count, not just correctness, on a 50-ingredient fetch
-- Every mutation delegates to a service; no resolver touches `db`
-- Error mapping — each of the three service error types leaves carrying its own `extensions.code`, a `ValidationError` leaves carrying `fieldErrors` matching its issues and its message verbatim, and a plain `Error` leaves masked with no message and no stack
-
-### Component — Vitest + RTL
-
-`tests/components/<Name>/index.test.tsx`, importing the component as `@/components/<Name>`. Mirrored under `tests/` rather than colocated: MB.41 moved the whole suite out of `src/`, so the directory a component test sits in is the component's own path with the tree swapped, and nothing under `src/` is a test. Queries are by role and label (CLAUDE.md, Testing).
-
-- `IngredientSearch` — filtering, chip toggle, clear, debounce via fake timers
-- `IngredientForm` — fuzzy warning renders and names each match's formal name, a save holds on it until Create Anyway, compendium entries read-only for non-keepers, the formal-name and form fields suggest in scope and accept free text outside the vocabulary
-- The add and edit ingredient modals (`IngredientForm` inside `Modal`) — validation, submit payload, Escape, focus trap, focus restore, pre-population, dirty-discard warning
-- `InviteDialog` — email field validated, role selector offers observer and practitioner only (never steward), a sent confirmation names the address, no link or token in the DOM
-- `MemberList` — role controls hidden from non-stewards
-- `WorkspaceSwitcher` — lists memberships, navigates on select
-- `SpellBuilder` — add/remove/reorder, intent vs derived category comparison, visibility control starting `private` for a new spell and read-only once shared
-- `IngredientCard` — the safety, toxic, local and low-stock badges, each asserted by presence in its state
-
-MSW mocks `/api/graphql`. `tests/support/setup-msw.ts` holds the MSW lifecycle, which the node `unit` project runs too, and `tests/support/setup-dom.ts` the rest. Together they carry over the RTL `afterEach(cleanup)` and the `localStorage` polyfill — Node's native global still shadows the DOM library's — plus MSW server lifecycle.
+- **Pure functions.** `unitConvert()` lives in the ingredients module, `src/modules/ingredients/units/convert.ts`, reaches no database code, and is not in `src/lib/`. `summarizeSpellCategories()` unions and dedupes across ingredients; `compareSpellCategories()` reports intended-not-present and present-not-intended, both directions; `resolveSpellVisibility()` covers the read decision and every transition exhaustively; `applyAudit()` is correct on insert, update and soft delete. There is no `filterIngredients()`: the search is the `compendium` query's, in SQL, because rule 8 means the browser never holds the whole list (`claude-docs/design-decisions/m8.5-compendium-queries.md`).
+- **Authorization.** D cannot read W's ingredients or grimoire, by direct id as well as by list. D's write to W fails with an authorization error, not a silent no-op. C reads W and writes neither ingredients nor a spell at any visibility. Keeper E cannot read W. A non-keeper write to a compendium entry fails, and E's succeeds and stamps `updated_by`. A user without `canCreateWorkspace` cannot create a workspace; every keeper and curator holds it (MB.177, M11.20); accepting an invitation sets and audits it. **A workspace-scoped finder cannot be called without a `Membership`**, asserted at compile time with `@ts-expect-error` rather than at runtime: the second layer's claim is that the omission does not typecheck, so the test has to be a type error rather than a thrown one.
+- **Spell visibility.** A's `private` spell is invisible to B and C, though they share W, and to stewards; a `workspace` spell is visible to B and C and invisible to D; D cannot read either by direct id. A private spell is excluded in SQL, never fetched then filtered in the resolver. The transitions are those of §5's visibility rule.
+- **Audit and soft delete.** Insert stamps `created_by`/`updated_by` from the session, ignoring payload ids; update leaves `created_at`/`created_by` alone; soft delete sets `deleted_at`/`deleted_by` and the row vanishes from finders; update and soft delete leave a soft-deleted row as it was, the same call writing its live twin. A deleted ingredient leaves every read but a spell holding it, which keeps reaching it, with its categories, for every member who may read the spell and nobody else. **Re-adding a formal name after soft delete must succeed, and the test uses the formal name, not the display label**: labels are not unique in the compendium, so a label-based assertion would pass even with `WHERE deleted_at IS NULL` stripped off the index, and the test would stop testing anything.
+- **Compendium and ingredients.** A workspace-local ingredient is invisible to every other workspace. A compendium insert omitting `nomenclature` is rejected (no database default), and the coupling holds both ways: `none` carrying a formal name is rejected, any named kind carrying none is rejected, and `unknown` saves either way. `identity_key` cannot be written directly: Postgres refuses, and the column is absent from `$inferInsert` so TypeScript refuses first. Two compendium entries may share a label when their formal names differ, and may not share an identity; a local may share a label and an identity with a compendium entry, and two locals in one workspace may share neither. The own-entry match offers one assertion per row of §5's table. Promoting a folk name to the display name leaves `identity_key` unchanged on a row carrying a formal name and changes it on a `none` row. A folk name or a form value present only in unrelated workspace X never surfaces in W's lookup, asserted against the service directly. Fuzzy match returns near-misses above the explicit 0.4 threshold and nothing below, each carrying its formal name, and the query plan uses the trigram index (`EXPLAIN` asserted, because a `similarity()` comparison silently cannot use one and the results look identical either way).
+- **Grimoire.** Every member including observers reads every `workspace`-visible spell. `derivedCategories` is the deduped union across the spell's ingredients and `categoryGaps` reports both directions. A spell survives the soft deletion of an inventory item or an ingredient it holds, and that ingredient's categories still feed `derivedCategories`.
+- **Invitations.** The token is mailed to the invited address, generated with a CSPRNG, stored only as a hash and present in no response. Acceptance requires the signed-in account's verified email to match: unverified is pointed at the email page, a different verified address is refused. A role of `owner` is rejected by the check constraint. Expired, revoked and reused tokens are each rejected with a distinct reason. Accepting sets `canCreateWorkspace`. Last-steward demotion fails.
+- **GraphQL.** The schema snapshot is the one permitted snapshot besides design tokens, since the schema is a contract. `src/gql/` regenerated in memory from the snapshot must equal the committed output. The depth limit rejects a query nested past 7, the cost limit rejects an expensive composed query, introspection is disabled in production config, and DataLoader batching is asserted by query count on a 50-ingredient fetch. Every mutation delegates to a service and no resolver touches `db`. Each of the three service error types leaves with its own `extensions.code`; a `ValidationError` leaves carrying `fieldErrors` matching its issues and its message verbatim; a plain `Error` leaves masked with no message and no stack.
+- **Components.** `tests/components/<Name>/index.test.tsx` imports the component as `@/components/<Name>`, with queries by role and label. `InviteDialog` offers observer and practitioner only, never steward, and puts no link or token in the DOM. `SpellBuilder`'s visibility control starts `private` for a new spell and is read-only once shared. `tests/support/setup-msw.ts` holds the MSW lifecycle, which the node `unit` project runs too, and `tests/support/setup-dom.ts` the rest, including the RTL `afterEach(cleanup)` and a `localStorage` polyfill (Node's native global still shadows the DOM library's).
 
 ### E2E — Playwright
 
-Specs: admin adds a compendium entry; A adds it to W's ingredients with a quantity; A builds a spell and checks the category comparison; A invites B by mail; B accepts from the link, signs in, and lands in W seeing everything; C reads but cannot edit; D reaches for W's routes by URL and gets 404 throughout; A soft-deletes an item and confirms it's gone and the name can be reused.
-
 There are two suites. The story suite (`tests/e2e/stories/`, `npm run test:stories`) is the definition of done: each flow carries `@story-N` tags, and the checklist reads them. The gate suite (`tests/e2e/*.spec.ts`, `npm run e2e`) proves what no story walks and only a real server can: the providers server, the compendium cache server, the GraphQL route, the proxy, the smoke test and the axe sweep. A gate spec that a story flow now proves is deleted, not kept as a duplicate.
 
-`@axe-core/playwright` scans each page and each open modal. Accessibility is asserted here, matching the `resume-2026` pattern — no `vitest-axe`.
+`@axe-core/playwright` scans each page and each open modal; accessibility is asserted here and nowhere else, never with `vitest-axe`.
 
-`webServer` runs `npm run build && npm run start` on **8001**, preserving the deliberate separation from the dev server's 8000, and one more `npm run start` over the same build for each further worker slot, on `8001 + slot` — each worker has its own server and database. One last `npm run start` on **8100** has every OAuth provider configured: the sign-in page's two availability states need a server each. Coverage via `monocart-coverage-reports`.
+`webServer` runs `npm run build && npm run start` on **8001**, keeping the separation from the dev server's 8000, and one more `npm run start` over the same build for each further worker slot, on `8001 + slot`: each worker has its own server and database. One last `npm run start` on **8100** has every OAuth provider configured, because the sign-in page's two availability states need a server each. Coverage via `monocart-coverage-reports`.
 
-### Rules
-
-- Bug fixes start with a regression test.
-- Snapshots for design tokens and the GraphQL schema only.
-- `fixtures/` factories, so tests read `makeIngredient({ categories: ['protection'] })`.
+`fixtures/` factories keep tests readable: `makeIngredient({ categories: ['protection'] })`.
 
 ---
 
@@ -721,32 +585,26 @@ There are two suites. The story suite (`tests/e2e/stories/`, `npm run test:stori
 
 ### Tooling files
 
-`.github/workflows/` (`pr-gate.yml`; `checks.yml`, one matrix running `lint`, `format`, `typecheck`, `build` and `audit`; `vitest.yml`, `playwright.yml` and `gitflow.yml`; the shared composite actions; `build-image.yml`), where `claude-docs/ci/README.md` is the inventory; `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, `lint-staged.config.mjs` and the `"pre-commit": ["pre-commit:staged"]` array that runs it (M11.23), and `.claude/skills/`.
+`.github/workflows/` is inventoried in `claude-docs/ci/README.md`. Beside it: `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, `lint-staged.config.mjs` and the `"pre-commit": ["pre-commit:staged"]` array that runs it, and `.claude/skills/`.
 
-### Gitflow — unchanged
+### Gitflow
 
 `feature/*` → `staging`; `staging` promoted to `main` via `release/MAJOR.MINOR.PATCH`; `hotfix/*` to either, with `create-pr` opening both; `main-sync/YYYY-MM-DD-HH-MM-SS` brings `main` back down. Dependabot targets `staging`, exempt by author.
 
-### Changes in the port
+### Workflow and configuration
 
-| File                            | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `package.json`                  | `build`, `start` and `dev` run Next.js; the scripts include `db:generate`, `db:migrate`, `db:seed`, `db:reset`, `codegen`                                                                                                                                                                                                                                                                                                                             |
-| `playwright.config.ts`          | `webServer` → `npm run build && npm run start` on port 8001, one `npm run start` per further worker slot on `8001 + slot`, and the configured-providers server on 8100; local Postgres setup in `globalSetup`                                                                                                                                                                                                                                         |
-| `vitest.config.mts`             | Two projects — `unit` (happy-dom) and `db` (node, local Postgres); keep 80% thresholds                                                                                                                                                                                                                                                                                                                                                                |
-| `.oxlintrc.json`                | Node-globals override swaps `gatsby-*.ts` for `next.config.ts`, `drizzle.config.ts`, `src/db/**`, `src/app/**/route.ts`                                                                                                                                                                                                                                                                                                                               |
-| `docker-compose.yaml`           | Drop the Gatsby LMDB volume; keep `node_modules`; **add `postgres` service**, plus the one-shot `db-init` container that migrates and seeds before `app` starts (M1.24); `devcontainer` depends on it                                                                                                                                                                                                                                                 |
-| `vercel.json`                   | Config only: it disables the Git integration and does not drive deploys (see below)                                                                                                                                                                                                                                                                                                                                                                   |
-| **New** codegen staleness guard | Fails if the generated client types in `src/gql/` are stale relative to the committed SDL — a `checks.yml` leg that runs `npm run codegen` and fails on a changed `src/gql/` (MB.224)                                                                                                                                                                                                                                                                 |
-| **New** `deploy.yml`            | CLI-driven Vercel deploy on push to `main`/`staging`/`hotfix/**` (§4). Not ported — `resume-2026` deployed via Netlify's own Git integration with no workflow file                                                                                                                                                                                                                                                                                    |
-| **New** `migrate.yml`           | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor). Also seeds the demo coven (`db:seed:demo-coven`, after the compendium seed) and the two reference vocabularies — §6's categories (M4.3) and §5's ingredient forms (M4.3a) — in the same job and one step, and only when the push changed one of them |
-| Secrets                         | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, `ADMIN_BOOTSTRAP_EMAIL`, Google, Discord, Facebook and Microsoft OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`, `NEON_API_KEY` / `NEON_PROJECT_ID` for the production snapshot. `claude-docs/secrets.md` is the matrix                                                                                              |
-
-`make docker-up` gives a working local database with no Neon connection at all.
+| File                            | Role                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docker-compose.yaml`           | The `postgres` service, plus the one-shot `db-init` container that migrates and seeds before `app` starts; `devcontainer` depends on it. `make docker-up` gives a working local database with no Neon connection at all                                                                                                                                                                                    |
+| `vercel.json`                   | Config only: it disables the Git integration and does not drive deploys (§4)                                                                                                                                                                                                                                                                                                                               |
+| Codegen staleness guard         | A `checks.yml` leg that runs `npm run codegen` and fails on a changed `src/gql/`: the generated client types must match the committed SDL                                                                                                                                                                                                                                                                  |
+| `deploy.yml`                    | CLI-driven Vercel deploy on push to `main`/`staging` and on a `hotfix/**` pull request (§4)                                                                                                                                                                                                                                                                                                                |
+| `migrate.yml`                   | Applies migrations to staging on merge to `staging`, production on merge to `main`; must complete before `deploy.yml` ships the new deployment (a `needs:` job or a `workflow_run` predecessor). Also seeds the demo coven (`db:seed:demo-coven`, after the compendium seed) and the two reference vocabularies, §6's categories and §5's ingredient forms, in the same job and one step, and only when the push changed one of them |
+| Secrets                         | `DATABASE_URL` per environment, `BETTER_AUTH_SECRET`, `ADMIN_BOOTSTRAP_EMAIL`, Google, Discord, Facebook and Microsoft OAuth client credentials, `VERCEL_DEPLOY_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID` / `VERCEL_SCOPE` for `deploy.yml`, `NEON_API_KEY` / `NEON_PROJECT_ID` for the production snapshot. `claude-docs/secrets.md` is the matrix                                                   |
 
 **Manual setup:** enable "Require merge queue" in Settings → Branches on both `main` and `staging`, or `merge_group` never fires. No workflow handles `merge_group` yet (M7.A.1).
 
-**Docs:** adopt the `claude-docs/` convention — a summary per subsystem, corrected in the PR that stales it, and one doc per component. The append-only transcript and the scheduled compression pass were part of this convention and are retired (MB.31).
+**Docs:** a summary per subsystem, corrected in the PR that stales it, and one doc per component.
 
 ---
 
@@ -985,19 +843,9 @@ Git history holds the old log, a table of questions and answers, for anyone who 
 
 ## 15. Open questions
 
-The post-draft scope changes (notes → v2, no personal workspaces, invite-gating, spell visibility, invitable roles, unit dimensions) are reflected throughout. None remain open. All prior questions are resolved:
+None remain open. Each earlier question is answered where its rule applies; four answers have no other home:
 
-- Framework, database, ORM, auth, API, hosting — §2
-- Sharing model — workspaces with three roles, §5
-- Compendium edit rights — admin only in v1; suggestions, including a suggested change to an existing entry, in v2 (§13)
-- Public reading — the compendium list and every entry are public and search-indexable; everything workspace-scoped stays gated (MB.80), §9
-- Sources — every compendium entry and every curated row drawn from somewhere records its references, Chicago form, two-tiered as ingredients are (MB.151), §5
-- Invitation delivery — by email through MB.65's transport, accepted only by a signed-in account whose verified email matches, observer/practitioner only; no response carries the link (MB.61, M7.3–M7.5); a coven invitation is also accepted by id from the account page, under the same verified-address gate (M10.32), §5
-- Dedupe — fuzzy warn in v1, merge in v2
-- Categories — global keeper-curated, seeded from the files named in §6
-- Granting admin — a keeper grants admin, or invites one by email (story 62, MB.69 and MB.70), every change goes to the one privilege ledger, written by a trigger on `users` ([`mb.194-privilege-ledger-by-trigger.md`](design-decisions/mb.194-privilege-ledger-by-trigger.md)), and the primary keeper set by env var (promoted at a verified Google or Discord sign-in, or on verifying the address by mail) cannot be revoked; §5, [`m2.9-granting-admin.md`](design-decisions/m2.9-granting-admin.md)
-- Email verification — first-party, by Better Auth's mailed link; Resend in production, capture inboxes in every other environment (MB.61), §5, [`mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md)
-- Ingredient **correspondences** — confirmed complete, no additions. Recorded here as "ingredient properties", the question closed the correspondence set: form, element, planet, zodiac, deities, colour, safety notes, substitutes. It stays closed; nothing has been added to it. **Naming is identity, not correspondence** — a separate question, opened and answered separately in §5, which added `canonicalName`, `nomenclature`, the generated `canonicalKey` and folk names as their own table. The one column those two questions share is `form`, which keeps its meaning and its place in the set and only loses its enum
-- Local dev database — Docker Postgres, shared seed, §11
-- Billing — none in v1; scoped by M17.1 (`claude-docs/design-decisions/m17.1-subscription-billing-scope.md`) and built by Wave 21, M21.1 → M21.20; the plugin-or-SDK choice is the proof of concept, M21.1
-- v1 scope — notes deferred; everything else built, not deferred
+- **Ingredient correspondences are a closed set**: form, element, planet, zodiac, deities, colour, safety notes, substitutes. Nothing is added to it. Naming is identity, not correspondence: a separate question, answered in §5 (`canonicalName`, `nomenclature`, the generated `canonicalKey` and folk names as their own table). The one column the two share is `form`, which keeps its meaning and its place in the set and only loses its enum.
+- **Dedupe** is a fuzzy warning in v1; merge is v2 (§13).
+- **Billing** is none in v1. M17.1 scopes it (`claude-docs/design-decisions/m17.1-subscription-billing-scope.md`) and Wave 21, M21.1 → M21.20, builds it; the plugin-or-SDK choice is M21.1's proof of concept.
+- **v1 scope** is everything but the notes subsystem and the other items §13 defers.
