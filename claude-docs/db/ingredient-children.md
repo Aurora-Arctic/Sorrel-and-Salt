@@ -14,10 +14,10 @@
 
 **Nine services and nine loaders over them**, in `ingredients`' `services/ingredient-children.ts`, each through `admit()`:
 
-| Service                                                                                   | Loader                                                                                      |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Service                                                                                   | Loader                                                                                                                                                |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `categoriesOf`, `folkNamesOf`, `substitutesOf`, `deitiesOf`, `referencesOf`, `variantsOf` | `categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`, `referencesByIngredient`, `variantsByIngredient` |
-| `categoriesOfVariants`, `substitutesOfVariants`, `referencesOfVariants`                   | `categoriesByVariant`, `substitutesByVariant`, `referencesByVariant`                        |
+| `categoriesOfVariants`, `substitutesOfVariants`, `referencesOfVariants`                   | `categoriesByVariant`, `substitutesByVariant`, `referencesByVariant`                                                                                  |
 
 The loaders are in the record `clearIngredientChildren` clears ([`graphql/loaders.md`](../graphql/loaders.md), "Loaders"). A key is the parent row's `{ id, workspaceId }`, a variant's `{ id, ingredientId, workspaceId }`, its ingredient's tier carried on the row `variantsOf` answers. The `workspaceId` decides which proof to ask for, one `assertMembership(…, { ingredient: ['read'] })` per coven the batch names, and a coven the caller may not read answers `Forbidden` in its own keys' slots while the rest of the batch stands. It is never the scope. A key that lies about its tier gets zero rows, because the `EXISTS` reads the parent's real one. So a workspace entry's children are refused by three layers, each sufficient alone: the check, the SQL, and the type above. `tests/modules/ingredients/loaders/` asserts the first two by direct id, each with its precondition, and each fails with its layer removed.
 
