@@ -14,4 +14,4 @@
 
 ## Loading
 
-The tab's wait is the [`Skeleton`](skeleton.md) `requests` shape, set by the tab's `shape` in `ACCOUNT_TABS`: the head line (a short muted-line bar and a button box of the small width and the compact height), then three two-line rows at the list's padding and gap, so nothing moves when the list arrives.
+The tab's wait is its own skeleton, carried by the tab's `skeleton` in `ACCOUNT_TABS`: the head line (a short muted-line bar and a button box of the small width and the compact height), then three two-line rows at the list's padding and gap, so nothing moves when the list arrives.

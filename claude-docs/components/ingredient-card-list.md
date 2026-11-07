@@ -17,7 +17,7 @@ The grid every list of cards uses (M8.14), so the compendium page (M8.18), the w
 - A page of cards holds `CARD_PAGE_SIZE` (24) entries, which divides by the one to four columns the two densities draw, so the last row is full. The admin tables keep the default of 25.
 - `density` is written as `data-density` on the `ul`, always (`regular` states the default). The compact value uses a minimum column of `$ingredient-card-min-compact` and a `space(3)` gap, and switches every card inside to the compact look, which keys off the attribute ([`ingredient-card.md`](ingredient-card.md), "Compact"). The attribute, not a card prop, so a page can set it before React runs. A stored Regular choice (the Compact switch, [`card-density-switch.md`](card-density-switch.md)) puts `data-card-density="regular"` on `<html>` before first paint, and the compact selectors carry `:not(:root[data-card-density='regular'] *)`, so compact switches itself off. Only lists that ask for `compact` are touched; a list rendering `regular` never was compact.
 - Each `li` is a flex column and its card stretches, so cards in a row are one height. The grimoire's spell cards (M10.11) stretch the same way, and their foot sits at the bottom by the specimen's `margin-top: auto`.
-- While a page is on its way, `ListBody shape="cards"` draws six card-shaped skeletons in the same grid ([`list-frame.md`](list-frame.md)).
+- While a page is on its way, the list's `ListBody` `skeleton` draws six card-shaped skeletons in the same grid ([`list-frame.md`](list-frame.md)).
 
 ## Styling
 

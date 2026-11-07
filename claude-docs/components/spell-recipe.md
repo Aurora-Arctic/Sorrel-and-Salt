@@ -12,7 +12,7 @@ holds the presentational body; `src/app/(shell)/coven/[slug]/grimoire/[id]/` hol
   indistinguishable from one that does not exist. Visibility is filtered in SQL.
 - Reads steps (`stepsOfSpells`), assigned categories and the last editor's name through
   services, never GraphQL. Nothing is cached.
-- Skeleton shape `page` (`covenTarget` already returns it for this path).
+- The spell page's own skeleton, `SpellRecipeSkeleton` in `src/app/(shell)/coven/[slug]/skeleton.tsx`, registered for this path.
 
 ## The body
 

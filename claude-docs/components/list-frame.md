@@ -76,7 +76,7 @@ parts, and the table passes through them from the server.
 - **While a page is on its way** the body shows the tabs' own skeleton,
   `TabPanelLoading` (a thin user of [`Skeleton`](skeleton.md)) with no filter row,
   since the real filter row stays: a table's heading, six banded rows and a
-  pager (or, with `shape="cards"`, six card shapes in the
+  pager (or, for a list of cards, six card shapes in the
   [`IngredientCardList`](ingredient-card-list.md) grid), cards at a phone's width, one visually hidden `<output>` its one
   status. The filter row greys out and is off
   ([`filter-form.md`](filter-form.md)).

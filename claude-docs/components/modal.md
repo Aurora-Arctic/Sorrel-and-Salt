@@ -6,21 +6,21 @@ surface and a heading that names it. M5.6's category page opens it from the
 address; M8.16, M8.17 and M7.4 are its next stewards. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
-| File                       | What it holds                                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| `modal.tsx`                | `Modal`, the default export                                                                     |
-| `route-modal.tsx`          | `RouteModal`                                                                                    |
-| `modal-button.tsx`         | `ModalButton`: a button that opens a modal, named as where the focus goes back when it closes   |
-| `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once")  |
-| `loading.tsx`              | `ModalLoading`, a thin user of the shared `Skeleton` (`form` shape) a modal shows while loading |
-| `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                      |
-| `close-guard.ts`           | `CloseGuardContext`, the slot a form's guard goes in                                            |
-| `discard.tsx`              | `useDiscardGuard` and `DiscardQuestion` (below)                                                 |
-| `confirm-overlay.tsx`      | `ConfirmOverlay`, the card a form asks a question in, over itself                               |
-| `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                            |
-| `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                               |
-| `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                 |
-| `types.ts`                 | `ModalHeading`, `ModalPhase`, and each prop type: `ModalProps`, `ModalButtonProps`, the rest    |
+| File                       | What it holds                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `modal.tsx`                | `Modal`, the default export                                                                            |
+| `route-modal.tsx`          | `RouteModal`                                                                                           |
+| `modal-button.tsx`         | `ModalButton`: a button that opens a modal, named as where the focus goes back when it closes          |
+| `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once")         |
+| `loading.tsx`              | `ModalLoading`, a thin user of the shared `Skeleton` (four `block` shapes) a modal shows while loading |
+| `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                             |
+| `close-guard.ts`           | `CloseGuardContext`, the slot a form's guard goes in                                                   |
+| `discard.tsx`              | `useDiscardGuard` and `DiscardQuestion` (below)                                                        |
+| `confirm-overlay.tsx`      | `ConfirmOverlay`, the card a form asks a question in, over itself                                      |
+| `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                                   |
+| `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                                      |
+| `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                        |
+| `types.ts`                 | `ModalHeading`, `ModalPhase`, and each prop type: `ModalProps`, `ModalButtonProps`, the rest           |
 
 ## Props
 
@@ -738,7 +738,7 @@ skipped the fade.
 | `size`        | As `Modal`'s                                                                                                                                                                                                   |
 | `readingBody` | As `Modal`'s                                                                                                                                                                                                   |
 | `place`       | Which of the page's modal places this is, where it has two ([Two places on one page](#opening-at-once)); absent on a page with one                                                                             |
-| `loadingBody` | Optional: what the body shows while the address's contents are on its way; absent, `ModalLoading`'s form skeleton. The support page passes the `detail` skeleton                                               |
+| `loadingBody` | Optional: what the body shows while the address's contents are on its way; absent, `ModalLoading`'s four blocks. The support page passes its own detail skeleton                                               |
 | `content`     | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
 | `returnTo`    | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
 
@@ -799,7 +799,7 @@ The form arrives in the same dialog.
   the one `<dialog>` and it fades in once, not twice. The form inside is
   keyed by the row's id, so opening another row starts a fresh form.
 - **The skeleton** (`ModalLoading`, `loading.tsx`) is the shared
-  [`Skeleton`](skeleton.md) in its `form` shape: a visually hidden
+  [`Skeleton`](skeleton.md) as four `block` shapes: a visually hidden
   `<output>Loading</output>` (a status a screen reader announces) and
   placeholder shapes hidden from it: four label-and-box pairs and a row of two
   buttons. While it shows, `Modal`'s `loading` prop marks the body
@@ -903,7 +903,7 @@ owner turned it down: the owner's call, 2026-10-20). The body's own scroll is
 `overscroll-behavior: contain`, and it keeps it, so nothing in it is out of
 reach.
 
-**The skeleton** (M9.18) is the shared `Skeleton` of the `form` shape
+**The skeleton** (M9.18) is the shared `Skeleton` as four `block` shapes
 ([`skeleton.md`](skeleton.md)); `ModalLoading` only renders it.
 
 **On a phone it stays inset**, the same gap on every side, rather than

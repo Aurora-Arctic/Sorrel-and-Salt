@@ -14,7 +14,7 @@ request and draws [`AppShell`](app-shell.md) instead for a signed-in one, so
   styling is `.skip-link` and `.skip-target` from AppShell's stylesheet,
   which the layout always loads.
 - **A bar** with the site name linking to `/` (set in the heading face at `$brand-size`, as the shell's is), a `nav` named "Site" holding the
-  Compendium link (a `PendingLink` carrying `siteLinkTarget('/compendium')`, so a press draws the list's skeleton, M12.47), which carries `aria-current="page"` at or beneath `/compendium` (MB.120), a Sign In link (`/sign-in`, `.btn--solid.btn--medium`, the size the shell's Add Ingredient button takes) and the inline
+  Compendium link (a `PendingLink`, so a press draws the list's skeleton, M12.47), which carries `aria-current="page"` at or beneath `/compendium` (MB.120), a Sign In link (`/sign-in`, `.btn--solid.btn--medium`, the size the shell's Add Ingredient button takes) and the inline
   theme toggle. At or under `$shell-brand-width` the brand reads "S&S" (the full
   name stays for a screen reader), as the shell's does, so the bar holds at 375px.
 - **`.app-shell__main`**, a wrapper `div` round the page, as the shell's is, with the
@@ -31,9 +31,8 @@ Nothing here is workspace-shaped: no coven link, no Admin, no Add Ingredient.
 
 ## The wait
 
-A press of a link that names a `main` target (the frame's Compendium link,
-`cards`; an ingredient card's name or an entry's own links, `page` with its
-jump menu) swaps the page for the destination's skeleton under the frame's
+A press of a link to a registered page (the frame's Compendium link, an ingredient card's name or an
+entry's own links) swaps the page for the destination's skeleton, chosen by its address, under the frame's
 bar, with one `main` and the hidden `<h1>Loading</h1>`, exactly as the shell
 does ([`loading.md`](../loading.md)). The skeleton draws in the destination's
 own frame. There is no `loading.tsx` and no route-level Suspense, so a direct

@@ -37,20 +37,14 @@ Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too, and a vocabular
   `next/link` ([`loading.md`](../loading.md)). A soft navigation does not re-run the
   layout, so the layout's guard does not run on a click either, which is why
   every page under `/curator` and `/keepers` run the guard itself.
-- **Each link names what its page draws on the way** (M12.33). `target.ts`
-  holds `adminTarget(href)`, which gives the `admin` region and the parts of the
-  page that arrives, from one table keyed by the page's first-tab address: `page` for
-  `/keepers`, which draws its own heading; for every other page a heading row
-  (`title`), its Add or other action (`action`) and its filter row (`filter`), over
-  `cards` for `/curator/compendium` or a `table` for the rest. The tab row is not
-  drawn: there is no tab placeholder. `index.tsx` sets it on each section from the page's first tab, and
-  `AdminContents` passes the same function for its links. The Curator and Keepers leads in
-  the context row are each a `PendingLink` to the area's index that names `admin` and `page`
-  directly. The `admin` region is the `/keepers` layout's `SectionBody` (see
-  [`section-body.md`](section-body.md)): it swaps only the page under the
-  context row, so the row and this nav stay while the wait shows. Links into
-  admin from elsewhere (the site bar, the account menu) keep `main`, since
-  there the whole page changes. What a target does is [`loading.md`](../loading.md)'s.
+- **The wait draws the destination's own skeleton** (M12.33, M11.9). A link carries only its address; the
+  registry in `src/app/skeletons.ts` gives the `admin` host's skeleton for it, beside each page as
+  `skeleton.tsx`. The Curator and Keepers leads in the context row are each a `PendingLink` to the area's
+  index. The `admin` host is the area layout's `SectionBody` (see
+  [`section-body.md`](section-body.md)): it swaps only the page under the context row, so the row and
+  this nav stay while the wait shows. Links into admin from elsewhere (the site bar, the account menu)
+  come from outside the area, so `MainBody` draws the whole frame. How the skeleton is chosen is
+  [`loading.md`](../loading.md)'s.
 - **The page you are on is marked.** Its link carries `aria-current="page"`,
   which a screen reader announces, and no other link does. A page is current
   on any of its tabs, so Categories is current on `/curator/category-groups`,
@@ -60,7 +54,7 @@ Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too, and a vocabular
   from marking it. `/curator` and `/keepers` themselves, the indexes, are in no section and marks
   none. `usePathname()` reads the address, which is why the links are a
   client component (MB.115).
-- **The wait draws the tab row** (M12.33). The index is the `contents` shape, drawn in every route into `/keepers` (the lead link, the bar and account menu links, `AdminNav`). `adminTarget` sets `tabs` for the tabbed pages (Categories, Forms, Deities, Celestial Bodies, Users) and not for the Compendium or the index.
+- **The wait draws the tab row** (M12.33, M11.9). The tabbed pages (Categories, Forms, Deities, Celestial Bodies, Users) draw their skeleton inside the real `TabbedPage` with its real `tabs`, so the row is the page's own; the Compendium has one tab and the index none.
 - **A curator sees the Curator nav in full and, under Keepers, Support alone** (M11.20, M15.77). `AdminNav` and `AdminContents` both take `managesPeople`, so the nav and the index leave People and Invitations out together.
 - **Tabs, then More, then a bar** (MB.7, the owner's call at the navigation review). Wider than a tablet every page is a tab along the context row; at or under 48rem the tabs that do not fit go behind More, and at or under 40rem the nav is the bottom bar with the same pages and More. When the current page is behind More, More shows its icon and label. The mechanics, and why nothing is read twice, are [`section-nav.md`](section-nav.md)'s. The widths that decide how many tabs fit were measured for the old seven-tab row and re-measured for the two shorter ones (`tests/e2e/shell.spec.ts`).
 
@@ -87,7 +81,7 @@ component's stylesheet only when it draws the component.
 - **The index** lists each section's pages in a column without bullets, a
   link over its line in the muted ink, the line capped at `$measure`, since
   it is not a `<p>`.
-- **The page is centred** in the admin area: the `/keepers` page's `<main>` carries `.admin-index` (`src/scss/_primitives.scss`), a `$narrow-column` wide block with `margin-inline: auto` inside the layout's `.page-column`. The heading and the text stay left-aligned within it. Its wait (the `contents` shape of `Skeleton`) carries the same class, so the swap is in place; the other admin pages' waits keep the wide column. A curator and a keeper get the same markup; they differ only in which sections `AdminContents` draws.
+- **The page is centred** in the admin area: the `/keepers` page's `<main>` carries `.admin-index` (`src/scss/_primitives.scss`), a `$narrow-column` wide block with `margin-inline: auto` inside the layout's `.page-column`. The heading and the text stay left-aligned within it. Its skeleton (`AdminNav/skeleton.tsx`) carries the same class, so the swap is in place; the other admin pages' waits keep the wide column. A curator and a keeper get the same markup; they differ only in which sections `AdminContents` draws.
 - **Its links are in the body ink (`$text-primary`), followed or not**, with
   the accent on hover as every link has: the list reads as a table of
   contents, and the default link colours would make the admin and coven
@@ -123,4 +117,4 @@ The `/keepers` layout's nav sits in the context row beside the word Admin and, o
 
 ## The wait for an admin page
 
-`target.ts` says what each admin page draws while it is on its way, keyed by the address the nav and the index link it at, its first tab. The admin area has its own body under its context row, so every wait belongs to the `admin` region and the row with its nav stays. The wait is the page that arrives: its heading, the action at the heading's end, its filter row, then the list. The index is sections of links and draws its own heading. A tabbed page draws its tab row between the heading and the action. The Compendium has one tab and so no row.
+Each admin page has a `skeleton.tsx` beside it (`src/app/(shell)/curator/skeleton.tsx`, `src/app/(shell)/keepers/skeleton.tsx`) and an entry in `src/app/skeletons.ts` under the `admin` host. The admin area has its own body under its context row, so the row with its nav stays. The wait is the page that arrives, drawn from the page's own components: its heading, the action at the heading's end, its filter row, then the list. The index is sections of links and draws its own heading. A tabbed page draws its tab row between the heading and the action. The Compendium has one tab and so no row.

@@ -77,8 +77,8 @@ with a Create Coven choice (M9.16). It defaults to false.
   ([`create-workspace-form.md`](create-workspace-form.md)).
 - **A choice is a pending navigation, not a jump** ([`../loading.md`](../loading.md),
   "The coven switch"). The choice goes through `usePendingNavigation`
-  (`src/lib/navigation/`) with a `coven` target whose skeleton shape is the
-  destination section's, so:
+  (`src/lib/navigation/`) to the destination section's address, so the registry's skeleton for it
+  draws:
   - the box shows the picked coven's name with a spinner and `aria-busy`,
     through `ComboboxSelect`'s `busy` prop;
   - the old coven's page goes away at once and the destination section's
@@ -92,7 +92,7 @@ with a Create Coven choice (M9.16). It defaults to false.
     the next switcher to mount elsewhere finds a slug that is not its coven's
     and drops it. That focus
     returns here is a judgement, checked in the design review;
-  - choosing Create Coven aims at the `main` region with a `form` shape, since
+  - choosing Create Coven goes to `/coven/new`, which `MainBody` draws the skeleton for, since
     that page sits outside a coven, and does not set the focus flag.
 - **Only the viewer's own workspaces are listed**, which is the caller's
   concern; the component trusts its list. The destination still asserts
@@ -134,13 +134,11 @@ is outweighed by one more class, so no Combobox variant was needed.
 
 ## While a switch is on its way (M12.33)
 
-The switcher goes through `usePendingNavigation` with the target
-`{ region: 'coven', shape }`, the shape being the destination section's
-(`cards` Ingredients, `table` the people pages, `page` the home); `SectionBody`
-draws that skeleton in place of the old page (`section-body.md`). The pick is
-held in state and shown as the value, and the box is `busy` (`aria-busy`, and
-a spinner after the delay), until the navigation settles. Create Coven targets
-`{ region: 'main', shape: 'form' }`.
+The switcher goes through `usePendingNavigation` to the destination section's address; the registry
+gives the coven host's skeleton for it, and `SectionBody` draws it in place of the old page
+(`section-body.md`). The pick is held in state and shown as the value, and the box is `busy`
+(`aria-busy`, and a spinner after the delay), until the navigation settles. Create Coven goes to
+`/coven/new`, a `main` page.
 
 Focus: the `[slug]` layout remounts on a switch, so the box that held the
 focus is gone. A module-level slug, set when another coven is picked and read

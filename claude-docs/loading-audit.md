@@ -1,6 +1,6 @@
 # Loading Audit
 
-This audit checks every wait in the app against the loading standard in `claude-docs/loading.md` (M12.33), for task M11.9. It changes no code. The fixes it proposes are listed in the Gaps section at the end.
+This audit checks every wait in the app against the loading standard in `claude-docs/loading.md` (M12.33), for task M11.9. It changes no code. The fixes it proposes are listed in the Gaps section at the end, each marked with the commit that closed it. Parts 1 and 2 describe the app as it was when the audit was read; the fixes replaced the target mechanism they name with the registry in `claude-docs/design-decisions/m11.9-skeletons-beside-pages.md`.
 
 ## How to Read This
 
@@ -166,6 +166,8 @@ These are mutations and queries that change data without leaving the page. They 
 
 ## Part 2: Skeleton Layout Against the Real Page
 
+Part 2's measurements are redone in the final verification, once all the fixes are in; the tables below are the before state.
+
 A skeleton is judged on four things: the frame (`wide`, `narrow`, `with-nav`, `entry`), the head (`eyebrow` or `title`, `tabs`, `tabsBelow`), the shape (`table`, `cards`, `form`, `page`, `contents`, `recipe`, `document`) and the column and filter-field counts.
 
 ### Measured in a Browser (Partial)
@@ -253,31 +255,31 @@ Sizes are rough minutes for the change, tests included. Every fix uses only the 
 
 ### Skeleton Mismatches
 
-1. **Users filter shows 2 fields, page has 5 (`target.ts:39`).** Give `/keepers/users` its own `Parts` entry with `fields: 5` and a `columns` count matching `UserList/index.tsx`. 20 minutes.
-2. **Invitations has no `PARTS` entry (`target.ts:41`).** Add `/keepers/invitations` with `tabs`, `action` and `filter` (2 fields). 15 minutes.
-3. **Invitation Cards and Card Sign-Ups tabs draw no filter (`sections.ts:79-81`).** Set `filtered: true` on both `PageTab`s, with `fields: 2` for Cards (Status and search) and 1 for Card Sign-Ups. 15 minutes.
-4. **Group tabs may lack a filter (`sections.ts:19-23`).** Check which kinds pass `filter` to `GroupList`; set `filtered: true` on those tabs with `fields: 1`. 15 minutes.
-5. **Account target draws no tab row (`AccountMenu/index.tsx:23`).** Add `tabs: true` to `ACCOUNT_TARGET`. 10 minutes.
-6. **Account section counts are hand-written (`sign-in.ts:164-165`).** Check the counts against the rendered panels now, and note the pairing in a comment. 15 minutes.
-7. **Coven list frame differs between two links (`site-target.ts` and `coven/page.tsx:48`).** Read what the page draws and make both links name the same target. 15 minutes.
-8. **Tab press passes only `filtered` and `shape` (`tab-switch.tsx:59-60`).** Pass the tab's `columns` and `fields` too where `PageTab` has them, and add the missing fields to `PageTab` if the Users tab needs them. 30 minutes.
-9. **Draft spell path and public entry frame not compared (`coven-path.ts`, public entry page).** Read both pages and correct the target if the frame or shape differs. 20 minutes.
-10. **`requests` shape cannot be named by a link (`site-target.ts`).** Name it for `/account/support` in `siteLinkTarget`, or accept the `page` fallback and record the decision. 10 minutes.
-11. **Email Updates tab not compared with the page (`sections.ts:105`).** Count `DocumentMailingPanel`'s panels and correct `sections`. 10 minutes.
+1. **Users filter shows 2 fields, page has 5 (`target.ts:39`).** Give `/keepers/users` its own `Parts` entry with `fields: 5` and a `columns` count matching `UserList/index.tsx`. 20 minutes. **Status:** Closed by `8c62954bd` (the Users list draws its own skeleton from its own filter and table) and `266f653a7` (registered).
+2. **Invitations has no `PARTS` entry (`target.ts:41`).** Add `/keepers/invitations` with `tabs`, `action` and `filter` (2 fields). 15 minutes. **Status:** Closed by `266f653a7` (the Invitations page has its own registered skeleton) and `8c62954bd`.
+3. **Invitation Cards and Card Sign-Ups tabs draw no filter (`sections.ts:79-81`).** Set `filtered: true` on both `PageTab`s, with `fields: 2` for Cards (Status and search) and 1 for Card Sign-Ups. 15 minutes. **Status:** Closed by `8c62954bd`: each tab carries its own skeleton, built from the filter its page draws.
+4. **Group tabs may lack a filter (`sections.ts:19-23`).** Check which kinds pass `filter` to `GroupList`; set `filtered: true` on those tabs with `fields: 1`. 15 minutes. **Status:** Closed by `8c62954bd`: each group tab draws the group list's own filter.
+5. **Account target draws no tab row (`AccountMenu/index.tsx:23`).** Add `tabs: true` to `ACCOUNT_TARGET`. 10 minutes. **Status:** Closed by `8c62954bd` and `0d2a7add2`: the account's skeleton is drawn in `TabbedPage`, so the tab row is the real one.
+6. **Account section counts are hand-written (`sign-in.ts:164-165`).** Check the counts against the rendered panels now, and note the pairing in a comment. 15 minutes. **Status:** Closed by `8c62954bd`: the tab draws its own panels, so no hand-written count remains.
+7. **Coven list frame differs between two links (`site-target.ts` and `coven/page.tsx:48`).** Read what the page draws and make both links name the same target. 15 minutes. **Status:** Closed by `5c5d461ca` and `e97f5b8a3`: the Coven list has one registered skeleton, whichever link is pressed.
+8. **Tab press passes only `filtered` and `shape` (`tab-switch.tsx:59-60`).** Pass the tab's `columns` and `fields` too where `PageTab` has them, and add the missing fields to `PageTab` if the Users tab needs them. 30 minutes. **Status:** Closed by `2130948e3`: a tab carries its own skeleton, so `columns` and `fields` are no longer passed on.
+9. **Draft spell path and public entry frame not compared (`coven-path.ts`, public entry page).** Read both pages and correct the target if the frame or shape differs. 20 minutes. **Status:** Closed by `0d2a7add2` and `e97f5b8a3`: the draft builder and the public entry page each have their own registered skeleton.
+10. **`requests` shape cannot be named by a link (`site-target.ts`).** Name it for `/account/support` in `siteLinkTarget`, or accept the `page` fallback and record the decision. 10 minutes. **Status:** Closed by `8c62954bd`: the account's Support Requests tab carries its own skeleton.
+11. **Email Updates tab not compared with the page (`sections.ts:105`).** Count `DocumentMailingPanel`'s panels and correct `sections`. 10 minutes. **Status:** Closed by `8c62954bd`: the Email Updates tab carries its own skeleton.
 
 ### Waits That Lack a Part
 
-12. **Spell save, accept invitation, leave, delete, owner exit, entry delete, entry dialogs, annotate, cupboard writes and New Spell name no target.** At each `navigate`, pass `target: covenTarget(href)` (or `adminTarget`), the way `duplicate-spell:41` and `delete-spell:45` already do. About 14 call sites, 5 minutes each: 70 minutes.
-13. **Add Ingredient navigates to `/curator/compendium?new=` and the coven Ingredients with no target (`add-ingredient-button.tsx:175,190`).** Pass `adminTarget('/curator/compendium')` and `covenTarget(...)`. 10 minutes.
-14. **Sort links and sort select show no Control (`DataTable/index.tsx:55`, `sort-select.tsx:27`).** Pass the pending state from `usePendingNavigation` to the select as `aria-busy`, and keep `PendingLink` for the header links (the `LinkHint` dot is already its Control). 20 minutes.
-15. **Recipe link in the look dialog names no target (`look-dialog.tsx:73`).** Pass `covenTarget` on that `PendingLink`. 5 minutes.
-16. **Plain `next/link` for in-app pages (`SiteFooter`, `DisclaimerNotice`, support links, `EmailForm`, paused and auth pages).** Replace with `PendingLink` and a `navigationTarget` (main, document or page) for in-app pages. About 20 sites. 90 minutes.
-17. **Plain `ModalLink` users show nothing between press and modal (`AdminCards/index.tsx:39`, `curator/add-action.tsx:30`, `ReportThis/index.tsx:26`).** Have `ModalLink` call `navigate` through `usePendingNavigation` when a provider exists, so the link shows `LinkHint` and the bar. 30 minutes.
-18. **Full page loads that do not call `reportLeaving()` (`sign-out-button.tsx:33`, `TermsAgreement:50`, `impersonate-button.tsx:27`, `impersonate-action.tsx:55`, `ImpersonationBanner:60`, `CupboardEntryForm:258`, `IngredientForm:869`).** Call `reportLeaving()` before the `assign` or `reload`. 7 sites, 5 minutes each: 35 minutes.
-19. **Card CSV download has no spinner or `aria-busy` (`download-csv.tsx`).** Use `BusyButton` with `busyLabel="Preparing"`. 10 minutes.
-20. **Member pauses list shows nothing while loading (`coven-access-panel.tsx`).** Render `<Skeleton shape="line" count={2} />` while the query is pending. 10 minutes.
-21. **Signed-out request link shows text only (`SupportRequestByLink/index.tsx:139`).** Add `<Skeleton shape="detail" />` beside the status line, keeping `role="status"` on the text. 15 minutes.
-22. **Spell builder category index has no loading state (`SpellBuilder/category-index.tsx`).** Confirm, then add `<Skeleton shape="line" />`. 15 minutes.
+12. **Spell save, accept invitation, leave, delete, owner exit, entry delete, entry dialogs, annotate, cupboard writes and New Spell name no target.** At each `navigate`, pass `target: covenTarget(href)` (or `adminTarget`), the way `duplicate-spell:41` and `delete-spell:45` already do. About 14 call sites, 5 minutes each: 70 minutes. **Status:** Closed by `37102cd32`: the destination's skeleton is chosen by its address, so a `navigate` names no target. The registrations are `0d2a7add2` and `266f653a7`.
+13. **Add Ingredient navigates to `/curator/compendium?new=` and the coven Ingredients with no target (`add-ingredient-button.tsx:175,190`).** Pass `adminTarget('/curator/compendium')` and `covenTarget(...)`. 10 minutes. **Status:** Closed by `37102cd32`, as gap 12.
+14. **Sort links and sort select show no Control (`DataTable/index.tsx:55`, `sort-select.tsx:27`).** Pass the pending state from `usePendingNavigation` to the select as `aria-busy`, and keep `PendingLink` for the header links (the `LinkHint` dot is already its Control). 20 minutes. **Status:** No change in M11.9: the sort select already passes `busy={pending}`, and the header links are `PendingLink`s.
+15. **Recipe link in the look dialog names no target (`look-dialog.tsx:73`).** Pass `covenTarget` on that `PendingLink`. 5 minutes. **Status:** Closed by `2b9cf5053`.
+16. **Plain `next/link` for in-app pages (`SiteFooter`, `DisclaimerNotice`, support links, `EmailForm`, paused and auth pages).** Replace with `PendingLink` and a `navigationTarget` (main, document or page) for in-app pages. About 20 sites. 90 minutes. **Status:** Closed by `2b9cf5053`, with the lint rule `in-app-link-through-pending-link` holding it.
+17. **Plain `ModalLink` users show nothing between press and modal (`AdminCards/index.tsx:39`, `curator/add-action.tsx:30`, `ReportThis/index.tsx:26`).** Have `ModalLink` call `navigate` through `usePendingNavigation` when a provider exists, so the link shows `LinkHint` and the bar. 30 minutes. **Status:** Closed by `2b9cf5053` (`modal-link.tsx`).
+18. **Full page loads that do not call `reportLeaving()` (`sign-out-button.tsx:33`, `TermsAgreement:50`, `impersonate-button.tsx:27`, `impersonate-action.tsx:55`, `ImpersonationBanner:60`, `CupboardEntryForm:258`, `IngredientForm:869`).** Call `reportLeaving()` before the `assign` or `reload`. 7 sites, 5 minutes each: 35 minutes. **Status:** Closed by `2b9cf5053`, with the lint rule `full-page-load-reports-leaving` holding it.
+19. **Card CSV download has no spinner or `aria-busy` (`download-csv.tsx`).** Use `BusyButton` with `busyLabel="Preparing"`. 10 minutes. **Status:** Closed by `f165e95ab`.
+20. **Member pauses list shows nothing while loading (`coven-access-panel.tsx`).** Render `<Skeleton shape="line" count={2} />` while the query is pending. 10 minutes. **Status:** Closed by `f165e95ab`.
+21. **Signed-out request link shows text only (`SupportRequestByLink/index.tsx:139`).** Add `<Skeleton shape="detail" />` beside the status line, keeping `role="status"` on the text. 15 minutes. **Status:** Closed by `f165e95ab`.
+22. **Spell builder category index has no loading state (`SpellBuilder/category-index.tsx`).** Confirm, then add `<Skeleton shape="line" />`. 15 minutes. **Status:** Closed by `f165e95ab` (held category picks).
 
 ### Totals
 

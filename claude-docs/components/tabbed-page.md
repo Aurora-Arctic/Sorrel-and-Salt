@@ -307,9 +307,7 @@ The row is a `nav` named for the page, not a `role="tablist"`. Each tab is a nav
 
 There is no client directive on the page. The links, which must know which tab is open, and the switch they share with the action and the panel are the client parts, and the action and the content pass through them from the server. The open tab is the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match, and the first would mark Spells.
 
-`filtered` on a tab says its list opens with a filter, so its loading skeleton draws a filter row above the table. `cards` is for the grimoire's tabs. `sections` is for the account's tabs, whose content is a jump menu beside stacked panels rather than a list: the skeleton draws the menu and `sections` panels (3 on Account, 4 on Sign-In; the Support Requests tab is a `table`) in the page's own `.page-with-nav` grid, with no head of its own, as the heading above stays put.
-
-A tab's `columns` and `fields` size its table skeleton when the table has more than three columns or the filter more than two controls; the admin Support views set both, and `shape: 'table'`.
+A tab carries its own `skeleton`: the placeholder built from the components its page draws (a heading line, a filter row, then the list), so a tab's wait is the page that arrives. `skeleton` is optional on the type: a tab without one shows an empty panel while it is on its way (`claude-docs/design-decisions/m11.9-skeletons-beside-pages.md`). `as="div"` draws the page inside a body that already has the page's one `main`, which is how a skeleton uses it.
 
 ## Pressing a tab
 
