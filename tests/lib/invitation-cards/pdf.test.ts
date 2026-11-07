@@ -1,15 +1,11 @@
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import * as fontkit from '@pdf-lib/fontkit';
 import {
   decodePDFRawStream,
-  PDFArray,
   PDFDict,
   PDFDocument,
   PDFName,
   PDFNumber,
   PDFRawStream,
-  PDFRef,
 } from 'pdf-lib';
 import { beforeAll, describe, expect, it } from 'vitest';
 import UPNG from '@pdf-lib/upng';
@@ -24,241 +20,28 @@ import {
 } from '@/lib/invitation-cards/inks';
 import { SHADOW_OPACITY } from '@/lib/invitation-cards/layout';
 import { renderCardSheets } from '@/lib/invitation-cards/pdf';
-import type { CardAssets } from '@/lib/invitation-cards/types';
+import {
+  assets,
+  LETTER,
+  BLOCK,
+  CARD,
+  PAPER_CLEARANCE,
+  boxOf,
+  drawn,
+  imageNames,
+  pictures,
+  cell,
+  overlaps,
+  type Box,
+  type Vector,
+} from '../../support/card-sheet-pdf';
 
-const PUBLIC = path.join(process.cwd(), 'public/invitation-cards');
-const read = (file: string) => new Uint8Array(readFileSync(path.join(PUBLIC, file)));
-const assets: CardAssets = {
-  salt: read('salt.png'),
-  sorrel: read('sorrel.png'),
-  cormorant600: read('fonts/cormorant-unicase-600.ttf'),
-  lexend300: read('fonts/lexend-300.ttf'),
-  lexend400: read('fonts/lexend-400.ttf'),
-  lexend500: read('fonts/lexend-500.ttf'),
-};
 const EXPIRES = new Date('2027-04-01T12:00:00Z');
 const links = (n: number) =>
   Array.from(
     { length: n },
     (_, i) => `https://sorrelandsalt.com/i/card${String(i).padStart(12, '0')}`,
   );
-
-// Letter, and the block of ten cards with bleed on the portrait page: 7.25 × 10.25 in, centred, 5/8 in from each side
-// and 3/8 in from the top and the bottom.
-const LETTER = { width: 612, height: 792 };
-const BLOCK = { left: 45, right: 567, bottom: 27, top: 765 };
-// A card's trim on the page: the cards stand upright, so its 3.5 in width runs across the page and its 2 in height up it.
-const CARD = { across: 252, up: 144 };
-// What a print shop's or office printer's unprintable edge may clip: nothing is drawn nearer the paper's edge than this.
-const PAPER_CLEARANCE = 18;
-
-interface Box {
-  left: number;
-  right: number;
-  bottom: number;
-  top: number;
-}
-type Matrix = [number, number, number, number, number, number];
-
-// Just enough of a content-stream reader to follow the transforms and see what each page draws, in page points.
-type Vector = [number, number];
-
-interface Drawn {
-  fills: Box[];
-  clips: Box[];
-  strokes: { from: [number, number]; to: [number, number] }[];
-  // up and right are the directions, on the page, of the image's top and of its right-hand side.
-  // textsBefore and pathsBefore count the text runs and filled paths drawn before the image.
-  images: {
-    name: string;
-    box: Box;
-    up: Vector;
-    right: Vector;
-    textsBefore: number;
-    pathsBefore: number;
-  }[];
-  textRuns: number;
-  /** Every operator the page uses, so a test can see which colour spaces it paints in. */
-  operators: Set<string>;
-  /** The CMYK fill in force at each rectangle in `fills`, at each other filled path, and at each text run. */
-  fillInks: number[][];
-  pathInks: number[][];
-  /** The box of each filled path in `pathInks`, in the same order. */
-  pathBoxes: Box[];
-  textInks: number[][];
-}
-
-function multiply([a, b, c, d, e, f]: Matrix, [A, B, C, D, E, F]: Matrix): Matrix {
-  return [
-    a * A + b * C,
-    a * B + b * D,
-    c * A + d * C,
-    c * B + d * D,
-    e * A + f * C + E,
-    e * B + f * D + F,
-  ];
-}
-const apply = ([a, b, c, d, e, f]: Matrix, x: number, y: number): [number, number] => [
-  a * x + c * y + e,
-  b * x + d * y + f,
-];
-const boxOf = (points: [number, number][]): Box => ({
-  left: Math.min(...points.map((p) => p[0])),
-  right: Math.max(...points.map((p) => p[0])),
-  bottom: Math.min(...points.map((p) => p[1])),
-  top: Math.max(...points.map((p) => p[1])),
-});
-
-function tokens(source: string): string[] {
-  return source.match(/<[0-9a-fA-F]*>|\/[^\s/[\]<>()]+|\[|\]|[^\s/[\]<>()]+/g) ?? [];
-}
-
-function contents(doc: PDFDocument, pageIndex: number): string {
-  const page = doc.getPage(pageIndex);
-  const value = page.node.Contents();
-  const refs = value instanceof PDFArray ? value.asArray() : [value];
-  return refs
-    .map((ref) => {
-      const stream = doc.context.lookup(ref as PDFRef) as PDFRawStream;
-      return Buffer.from(decodePDFRawStream(stream).decode()).toString('latin1');
-    })
-    .join('\n');
-}
-
-function drawn(doc: PDFDocument, pageIndex: number): Drawn {
-  const result: Drawn = {
-    fills: [],
-    clips: [],
-    strokes: [],
-    images: [],
-    textRuns: 0,
-    operators: new Set(),
-    fillInks: [],
-    pathInks: [],
-    pathBoxes: [],
-    textInks: [],
-  };
-  let ink: number[] = [];
-  const inks: number[][] = [];
-  let ctm: Matrix = [1, 0, 0, 1, 0, 0];
-  const saved: Matrix[] = [];
-  let operands: string[] = [];
-  let path: [number, number][][] = [];
-  let pendingClip = false;
-  const num = (i: number) => Number(operands[operands.length - i]);
-  for (const token of tokens(contents(doc, pageIndex))) {
-    if (/^[a-zA-Z*'"]+$/.test(token) && !/^\d/.test(token)) {
-      result.operators.add(token);
-      switch (token) {
-        case 'q':
-          saved.push(ctm);
-          inks.push(ink);
-          break;
-        case 'Q':
-          ctm = saved.pop() ?? ctm;
-          ink = inks.pop() ?? ink;
-          break;
-        case 'k':
-          ink = [num(4), num(3), num(2), num(1)];
-          break;
-        case 'cm':
-          ctm = multiply([num(6), num(5), num(4), num(3), num(2), num(1)], ctm);
-          break;
-        case 're': {
-          const [x, y, w, h] = [num(4), num(3), num(2), num(1)];
-          path.push([
-            apply(ctm, x, y),
-            apply(ctm, x + w, y),
-            apply(ctm, x + w, y + h),
-            apply(ctm, x, y + h),
-          ]);
-          break;
-        }
-        case 'm':
-          path.push([apply(ctm, num(2), num(1))]);
-          break;
-        case 'l':
-          path[path.length - 1]?.push(apply(ctm, num(2), num(1)));
-          break;
-        case 'c':
-          path[path.length - 1]?.push(apply(ctm, num(2), num(1)));
-          break;
-        case 'W':
-          pendingClip = true;
-          break;
-        case 'n':
-          if (pendingClip) result.clips.push(boxOf(path.flat()));
-          pendingClip = false;
-          path = [];
-          break;
-        case 'f':
-        case 'f*':
-          if (path.length === 1 && path[0].length === 4) {
-            result.fills.push(boxOf(path[0]));
-            result.fillInks.push(ink);
-          } else {
-            result.pathInks.push(ink);
-            result.pathBoxes.push(boxOf(path.flat()));
-          }
-          path = [];
-          break;
-        case 'S':
-          for (const sub of path) result.strokes.push({ from: sub[0], to: sub[1] });
-          path = [];
-          break;
-        case 'Do':
-          result.images.push({
-            name: operands[operands.length - 1].slice(1),
-            box: boxOf([apply(ctm, 0, 0), apply(ctm, 1, 0), apply(ctm, 0, 1), apply(ctm, 1, 1)]),
-            up: [Math.sign(ctm[2]) + 0, Math.sign(ctm[3]) + 0],
-            right: [Math.sign(ctm[0]) + 0, Math.sign(ctm[1]) + 0],
-            textsBefore: result.textRuns,
-            pathsBefore: result.pathInks.length,
-          });
-          break;
-        case 'TJ':
-          result.textRuns += 1;
-          result.textInks.push(ink);
-          break;
-      }
-      operands = [];
-    } else {
-      operands.push(token);
-    }
-  }
-  return result;
-}
-
-type ImageKind = 'salt' | 'sorrel' | 'shadow';
-
-/** What each of a page's image names draws, told apart by the pixel widths of the baked pictures. */
-function imageNames(doc: PDFDocument, pageIndex: number): Record<string, ImageKind> {
-  const xObjects = doc.getPage(pageIndex).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
-  const names: Record<string, ImageKind> = {};
-  for (const [name, ref] of xObjects.entries()) {
-    const image = doc.context.lookup(ref) as PDFRawStream;
-    const width = image.dict.lookup(PDFName.of('Width'), PDFNumber).asNumber();
-    names[name.decodeText()] = width === 440 ? 'salt' : width === 330 ? 'sorrel' : 'shadow';
-  }
-  return names;
-}
-
-function pictures(doc: PDFDocument, pageIndex: number, picture: ImageKind): Box[] {
-  const names = imageNames(doc, pageIndex);
-  return drawn(doc, pageIndex)
-    .images.filter((image) => names[image.name] === picture)
-    .map((image) => image.box);
-}
-
-// The cell of the block a picture's centre falls in, counted across and up the portrait page.
-function cell({ left, right, bottom, top }: Box): string {
-  const x = (left + right) / 2;
-  const y = (bottom + top) / 2;
-  return `${Math.floor((x - BLOCK.left - 9) / CARD.across)},${Math.floor((y - BLOCK.bottom - 9) / CARD.up)}`;
-}
-
-const overlaps = (a: Box, b: Box) =>
-  a.left < b.right && b.left < a.right && a.bottom < b.top && b.bottom < a.top;
 
 async function build(n: number) {
   const bytes = await renderCardSheets(
