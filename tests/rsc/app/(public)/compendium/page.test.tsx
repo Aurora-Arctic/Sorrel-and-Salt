@@ -102,6 +102,7 @@ vi.mock('@/app/compendium-reads', () => ({
 Object.assign(globalThis, { AsyncLocalStorage });
 const { renderToReadableStream } = await import('react-server-dom-webpack/server.edge');
 const { default: Page } = await import('@/app/(public)/compendium/page');
+const { default: IngredientCard } = await import('@/components/IngredientCard');
 
 /** The page's Flight payload, as the server streams it to the browser. */
 async function payload(): Promise<string> {
@@ -157,5 +158,53 @@ describe('the public compendium page’s data for the browser', () => {
     // looks the rest up there.
     expect(occurrences(text, CATEGORY.name)).toBe(1);
     expect(occurrences(text, DEITY.name)).toBe(1);
+  });
+
+  it.each([
+    ['signed out', visitor],
+    ['signed in', member],
+  ] as const)('sends each card as its data, not its drawn markup, %s', async (_who, viewer) => {
+    viewerIfSignedIn.mockResolvedValue(viewer);
+
+    const text = await payload();
+
+    // The cards reached the payload: their names are there.
+    expect(occurrences(text, 'Fixturewort')).toBeGreaterThan(0);
+    // The card is a client component's props, so the markup the browser draws from them is not sent.
+    expect(text).not.toContain('"ingredient-card specimen"');
+  });
+});
+
+describe('the card’s props for the browser', () => {
+  // The card shows a Caution badge for notes, never the notes, so their text has no reason to travel.
+  it('hands the client card whether there are notes, never their text', () => {
+    const notes = 'Fixture caution against testing by mouth';
+    const formNotes = 'Fixture caution for the oil alone';
+    const card = IngredientCard({
+      href: '/compendium/ingredients/fixturewort',
+      label: 'Fixturewort',
+      kind: 'compendium',
+      safetyNotes: notes,
+      variants: [
+        { form: 'fixture oil', safetyNotes: formNotes, toxic: false, formChoice: null },
+        { form: 'fixture herb', safetyNotes: '  ', toxic: true, formChoice: null },
+      ],
+    });
+
+    // What the page sends is this element's props: the client card is a reference, not drawn here.
+    expect(card.type).toHaveProperty('$$typeof', Symbol.for('react.client.reference'));
+    const sent = JSON.stringify(card.props);
+    expect(sent).not.toContain(notes);
+    expect(sent).not.toContain(formNotes);
+    // Enough is kept for the badge: which have notes and which are flagged.
+    const props = card.props as {
+      safetyNotes: string | null;
+      variants: { safetyNotes: string | null; toxic: boolean }[];
+    };
+    expect(props.safetyNotes).not.toBeNull();
+    expect(props.variants.map(({ safetyNotes, toxic }) => [safetyNotes !== null, toxic])).toEqual([
+      [true, false],
+      [false, true],
+    ]);
   });
 });
