@@ -12,17 +12,13 @@ import './index.scss';
 // Only the conflict notice may go elsewhere (`conflictInto`), as it asks for a decision. Screen
 // readers hear only a burst's first save (claude-docs/autosave.md).
 
-/** A save more than this long after the last one starts a new burst, and is announced. */
 export const BURST_GAP_MS = 60_000;
 
 type Seen = {
-  /** The last confirmed save this component has shown, in milliseconds. */
   at: number | null;
   /** A failure or conflict since then: the next save is news. */
   interrupted: boolean;
-  /** A failure not yet followed by a save: the alert stays, through a retry. */
   failing: boolean;
-  /** What the live region says. */
   announced: string;
 };
 
@@ -102,7 +98,6 @@ const SaveStatus = ({
           </button>
         </Notice>
       ) : (
-        // Hidden from assistive technology: the live region below says it, once per burst.
         <span className="save-status__text" aria-hidden="true">
           {status === 'saving' ? (
             <>

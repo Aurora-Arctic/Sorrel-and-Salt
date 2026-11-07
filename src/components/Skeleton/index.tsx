@@ -20,7 +20,6 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   document: 1,
 };
 
-// The admin index's two sections: Compendium's five pages and People's one.
 const CONTENTS_ENTRIES = [5, 1];
 
 const Bars = ({
@@ -76,9 +75,6 @@ const PageHead = ({
   </div>
 );
 
-// An ingredient's page below its head, as IngredientEntry lays it: Stock, Details, its side
-// column of headed lists beside them, then Forms with a form's section laid the same way. Bare
-// bars on the page, with no card surface.
 const EntrySide = (): ReactElement => (
   <div className="skeleton__entry-side">
     {Array.from({ length: 4 }, (_, at) => (
@@ -90,8 +86,6 @@ const EntrySide = (): ReactElement => (
   </div>
 );
 
-// `details` is the page's Details section, whose side column stands apart in the body
-// (`EntrySections`); a form's keeps its own inside.
 const EntryPart = ({ details = false }: { details?: boolean }): ReactElement => (
   <div
     className={
@@ -126,7 +120,6 @@ const StockPart = (): ReactElement => (
   </div>
 );
 
-// In the entry's body box, so Details' columns and the forms lay out as the page's do.
 const EntrySections = (): ReactElement => (
   <div className="skeleton__entry-body">
     <StockPart />
@@ -139,9 +132,6 @@ const EntrySections = (): ReactElement => (
   </div>
 );
 
-// The coven home below its head, as the page lays it: Contents, a list of
-// links each with its line beneath, then the membership and delete sections,
-// each a heading and a button. Bare bars on the page, no card surface.
 const CovenSections = (): ReactElement => (
   <>
     <div className="page-frame__section">
@@ -165,8 +155,6 @@ const CovenSections = (): ReactElement => (
   </>
 );
 
-// The account page below its title: four panels as the page draws them, each
-// a heading and a line over a field and its button.
 const AccountPanels = ({ count = 4 }: { count?: number }): ReactElement => (
   <>
     {Array.from({ length: count }, (_, at) => (
@@ -257,7 +245,6 @@ const Skeleton = ({
               />
             ))}
             {shape === 'cards' && density === 'compact' && (
-              // The Compact switch the coven's card lists end their filter row with.
               <div className="skeleton__switch">
                 <span />
                 <span />
@@ -314,7 +301,6 @@ const Skeleton = ({
           </>
         )}
         {shape === 'sections' && (
-          // A tab of the account: the jump menu and the panels, the heading above being the tabbed page's own.
           <div className="page-with-nav page-with-nav--headless">
             <div className="page-nav skeleton__menu">
               <span />
@@ -326,8 +312,6 @@ const Skeleton = ({
           </div>
         )}
         {shape === 'requests' && (
-          // The Support Requests tab: the heading line, a heading-width bar with a small button-sized box at the right, then
-          // rows of a subject line and a meta line, in the tab's headless column.
           <div className="page-with-nav page-with-nav--headless">
             <div className="skeleton__requests">
               <div className="skeleton__requests-bar">
@@ -402,8 +386,6 @@ const Skeleton = ({
           </div>
         )}
         {shape === 'detail' && (
-          // An opened support request in the modal's body, in the `.support-detail` grid the detail draws: the facts, the
-          // Thread and the reply in the main column, and for a keeper the settings in the side column.
           <div className={side ? 'support-detail' : 'support-detail support-detail--single'}>
             <div className="support-detail__main">
               <div className="support-detail__facts">
@@ -443,7 +425,6 @@ const Skeleton = ({
           </div>
         )}
         {shape === 'document' && (
-          // A site document's editor: its title, a lede line, the Save Draft and Publish buttons, then the text box.
           <div className="skeleton__document">
             <span className="skeleton__title" />
             <span className="skeleton__line" />
@@ -457,9 +438,6 @@ const Skeleton = ({
         {shape === 'line' &&
           Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}
         {shape === 'page' && (
-          // The page's own grid when it has a menu (`.page-with-nav`), its
-          // children in the page's order: head, menu, then the sections, so
-          // the menu stands where the real one does at every width.
           <div
             className={
               menu

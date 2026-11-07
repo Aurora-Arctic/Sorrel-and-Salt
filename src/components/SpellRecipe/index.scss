@@ -1,8 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A saved spell's page: the body's column, with the side column beside it past a tablet's width.
-// Tokens only. The print layout is `_print.scss`'s.
 .spell-recipe {
   display: flex;
   flex-direction: column;
@@ -10,15 +8,11 @@
   // box carries its own air, so a wider gap read as a gulf.
   gap: space(2);
 
-  // The article fills the coven column and starts at its left edge, as the ingredient page does;
-  // the text is capped instead, and the jump menu is not.
   > :where(:not(.page-nav)) {
     max-width: $recipe-column;
   }
 }
 
-// The way back stands a clear step off the Edited line and the title. Its look is the back
-// link's own (IngredientEntry/back-link.scss).
 .spell-recipe__bar {
   margin-block-end: space(2);
 }
@@ -35,8 +29,6 @@
   min-width: 0;
 }
 
-// The body's two boxes (body.tsx): the purpose and the chips, then the facts, steps and note,
-// each spaced as the body is. On the page the lead is the article's own item, ahead of the menu.
 .spell-recipe__lead,
 .spell-recipe__rest {
   @include stack(4);
@@ -51,9 +43,6 @@
     max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
   }
 
-  // The main box holds the rest, the side column and Workings, in that order, and dissolves at
-  // every width: below a tablet the three are the columns' stack, the jar standing over Workings
-  // as the menu lists it, and from a tablet up they are the columns' grid items.
   .spell-recipe__main {
     display: contents;
   }
@@ -86,14 +75,9 @@
   }
 }
 
-// The column's two panels, Category Match then In the Cupboard (the builder's order
-// reversed), headed as the entry page's side blocks are: at the h3 size, with no rule under
-// them.
 .spell-recipe__aside {
   @include entry-side;
 
-  // Heading to content as the entry page's side blocks space it (`stack(2)`): the page's `section` rule
-  // (_layout.scss) outweighs the panels' class alone and widened it to space(4).
   > .comparison-panel,
   > .spell-inventory {
     gap: space(2);
@@ -103,7 +87,6 @@
   h2 {
     margin: 0;
     font-size: heading-size(3);
-    // The h3's line, which the entry page's side headings are set in.
     line-height: 1.2;
   }
 }
@@ -115,7 +98,6 @@
   // The title can wrap, so the icon row hangs from its first line rather than its middle.
   align-items: flex-start;
 
-  // The way back and the Edited line each take a row above the title.
   > .spell-recipe__bar,
   > .last-edit {
     flex: 0 0 100%;
@@ -150,8 +132,6 @@
   }
 }
 
-// The head's icons on one line at the heading's end, as the
-// ingredient entry's icons stand (`.ingredient-entry__cupboard--icons`).
 .spell-recipe__actions {
   display: flex;
   flex-wrap: nowrap;
@@ -165,7 +145,6 @@
   white-space: pre-line;
 }
 
-// The intent is a muted lead under the title; the note is read as the recipe is, in the body ink.
 .spell-recipe__intent {
   color: $text-muted;
 }
@@ -180,14 +159,11 @@
 .spell-recipe__steps-section {
   display: contents;
 
-  // An h3 where the body sits under a dialog's or pane's h2.
   > :is(h2, h3) {
     @include visually-hidden;
   }
 }
 
-// The Ingredients summary is for paper and the Preview pane (recipe-columns): on screen the steps
-// carry the amounts and the side column the stock.
 .spell-recipe__summary {
   display: none;
 }
@@ -226,7 +202,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-// The flex row honours `order`: the amount leads the name.
 .spell-recipe__steps .step-row__amount {
   order: -1;
   font-weight: 500;
@@ -309,9 +284,6 @@
   }
 }
 
-// The one-off mark at the size the builder's supply marks take.
-// The marks sit at the row's end, right-aligned, One-Off at the
-// compact default badge size.
 .spell-recipe__marks {
   display: flex;
   gap: space(1);
@@ -334,8 +306,6 @@
 
 .spell-recipe__facts {
   display: grid;
-  // Tracks size from their cells, not equally: each is as wide as its content, shrinking no further than its
-  // widest unbreakable cell (the moon phase), and the wide column gap leaves the moon phase room on its right.
   grid-template-columns: repeat(4, minmax(min-content, max-content));
   justify-content: start;
   gap: space(3) space(6);
@@ -362,7 +332,6 @@
     overflow-wrap: anywhere;
   }
 
-  // The phase name and its drawing stay on one line, and the track grows to hold them.
   .spell-recipe__moon {
     white-space: nowrap;
   }
@@ -375,15 +344,12 @@
   }
 }
 
-// The note, under its own hairline, only where there is one.
 .spell-recipe__note {
-  // Clear of the last step, over the column's own gap.
   margin-block-start: space(2);
   padding-block-start: space(3);
   border-top: 1px solid $hairline;
 }
 
-// The Quick Look body: the recipe body's sections in a column, spaced as the page's.
 .spell-recipe-look {
   @include stack(4);
 }
@@ -399,7 +365,6 @@
     }
   }
 
-  // The article's gap and this margin make the body's `space(4)` between the lead and the facts.
   .spell-recipe:not(.spell-recipe--with-nav) > .spell-recipe__lead {
     margin-block-end: space(2);
   }
@@ -410,7 +375,6 @@
   .spell-recipe--with-nav {
     @include entry-nav-grid;
 
-    // The ingredient page's menu gap, which it gets from its flex `gap`; this page's `gap` is smaller.
     column-gap: space(6);
 
     > .page-nav {
@@ -454,8 +418,6 @@
   }
 }
 
-// A jump from the menu lands clear of the shell's sticky bar, as the entry page's sections do;
-// Workings gets the same from `.page-frame__section`.
 .spell-recipe .spell-recipe__steps,
 .spell-recipe .comparison-panel,
 .spell-recipe .spell-inventory {

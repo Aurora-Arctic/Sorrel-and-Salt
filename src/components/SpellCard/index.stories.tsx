@@ -5,8 +5,6 @@ import SpellCard, { SpellCardFilters } from '.';
 import type { SpellCardProps } from './types';
 import './index.stories.scss';
 
-// Render-only; what shows and when is asserted in tests/components/SpellCard. Recording a
-// working and the More menu's writes are not answered here: their own stories answer them.
 const meta = {
   title: 'Grimoire / Spell Card',
 } satisfies Meta;
@@ -35,9 +33,6 @@ const BASE = {
   categories: CATEGORIES,
 };
 
-// Everything the grimoire's list gives a member who may record, edit and delete: the title
-// link, the made count, the last edit (its tip opens on hover), and the foot's Quick Look eye,
-// Record a Working, the Edit pencil and the More menu, whose items are Duplicate and Delete.
 const LISTED = {
   href: route('/coven/fixture-coven/grimoire/story'),
   lookHref: route('/coven/fixture-coven/grimoire?spell=story'),
@@ -54,8 +49,6 @@ const LISTED = {
   workingCount: 3,
 } satisfies Partial<SpellCardProps>;
 
-// Every state of the card in one grid, in the grimoire's narrowest column. Held is the hovered look drawn with no
-// pointer. The two Compact cells are the look the list's `data-density` attribute turns on.
 export const States: Story = {
   render: () => (
     <>

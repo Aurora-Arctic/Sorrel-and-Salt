@@ -6,16 +6,11 @@
 // `body .panel`, which outranks a lone class, while the workshop scopes them with `:where()`.
 .sign-in-panel.panel {
   box-sizing: border-box;
-  // One column the width of the card's content, `$narrow-column` less the padding, which the email
-  // form fills; the button list inside it keeps its own `max-content` width and sits centred.
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: space(4);
   width: 100%;
 
-  // The narrow frame's whole column, and a step more room than the `.panel` default at the
-  // sides and below, 2rem, with the default 1.5rem above: the card is the one thing on the
-  // page.
   padding: space(5) space(6) space(6);
 }
 
@@ -36,7 +31,6 @@
   display: grid;
   grid-template-columns: max-content;
   justify-content: center;
-  // Room for the last-used badge, which hangs over its button's top edge, and no more.
   gap: space(4);
   margin-top: space(4);
 }
@@ -48,7 +42,6 @@
 // Each roster button carries `.btn` for its shape; this is only where a brand button differs. Compounded with `.btn`
 // so load order does not matter (claude-docs/components/sign-in-panel.md, "Contracts").
 .sign-in-panel__button.btn {
-  // The containing block for the last-used badge.
   position: relative;
   justify-content: flex-start;
   width: 100%;
@@ -56,8 +49,6 @@
   border-color: transparent;
 }
 
-// The passkey button is the plain green-outline `.btn`, centred: it keeps the `.btn` edge the rule
-// above takes off and has no brand icon to leave room for.
 .sign-in-panel__button--passkey.btn {
   justify-content: center;
   border-width: 1.6px;
@@ -123,7 +114,6 @@
     min-width: 100%;
   }
 
-  // The code step's switch reads like the fields around it, label at the start.
   .switch {
     align-items: flex-start;
 
@@ -133,7 +123,6 @@
   }
 }
 
-// A hairline either side of "or", between the providers and the email form.
 .sign-in-panel__divider {
   display: flex;
   gap: space(3);
@@ -150,9 +139,6 @@
   }
 }
 
-// The ingredient page's `.back-link` look (IngredientEntry/back-link.scss) on a button: the reset
-// takes the button's own box away, and the type is one step under the link's. Compounded so load
-// order does not matter.
 .sign-in-panel__back.back-link {
   align-self: flex-start;
   padding: 0;
@@ -167,7 +153,6 @@
   margin: 0;
 }
 
-// Sign In and Create Account fill the form's column.
 .sign-in-panel__password .form__actions > .btn {
   flex: 1 1 100%;
 }
@@ -177,7 +162,6 @@
   text-align: center;
 }
 
-// The code step's two quiet buttons, side by side in one row.
 div.sign-in-panel__switch {
   display: flex;
   flex-wrap: wrap;

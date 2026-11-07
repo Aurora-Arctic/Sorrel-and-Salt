@@ -40,13 +40,11 @@ const RecordWorkingSetupDocument = graphql(`
 /** What the recipe page calls a linked ingredient it cannot read. */
 const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
-/** The spell's ingredient steps as the completion preview reads them; an instruction-only step has none. */
 function workingStepsOf(steps: RecordWorkingSetupQuery['spell']['steps']): WorkingStep[] {
   return steps.flatMap((step): WorkingStep[] => {
     const linked = step.ingredient != null || step.variant != null;
     if (!linked && step.name == null) return [];
     const name = step.name ?? UNAVAILABLE_INGREDIENT;
-    // The form as stored, which picks the jar's shape; the preview raises it where it shows it.
     const form = step.form;
     return [{ id: step.id, name, form, seed: step.ingredient?.id ?? name, oneOff: !linked }];
   });

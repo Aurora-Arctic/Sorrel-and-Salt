@@ -9,12 +9,9 @@
 // stack by markup order, no z-index, and nothing transforms the card or an ancestor, which would contain the chips'
 // `position: fixed` tips (claude-docs/components/spell-card.md, "The burn filter"). Where `filter: url()` does not apply, the burn front is a smooth curve.
 
-// The burn's colours and lengths are tokens (`$burn-*` in _variables.scss), forwarded so
-// SpellPreview reads the same ones through this partial; `$candle` and `$ember` name its two colours.
 $candle: $burn-candle;
 $ember: $burn-ember;
 
-// The glow's light, from the corner (burnt out first) to the front, strongest just behind it.
 @function burn-glow-gradient() {
   @return linear-gradient(
     to right,
@@ -25,7 +22,6 @@ $ember: $burn-ember;
   );
 }
 
-// The embers in the burnt part, brightest at the advancing front, fading towards the corner.
 @function burn-embers-gradient() {
   @return linear-gradient(
     to right,
@@ -36,9 +32,6 @@ $ember: $burn-ember;
   );
 }
 
-// The rim round the burn: from the burnt edge onto the paper, a candle-bright line, the ember
-// red behind it, a soft char rim and a thin black line where the paper is charred but not yet
-// alight. Outward round the hole box; `$inset` turns it inward, for the corner's curve.
 @function ember-rim(
   $inset,
   $candle-blur,
@@ -60,13 +53,10 @@ $ember: $burn-ember;
     ($in 0 0 $burn-char-line-blur $burn-char-line-spread $burn-char-line);
 }
 
-// The rim at rest, the ember's first frame.
 @function ember-rim-at-rest($inset) {
   @return ember-rim($inset, map.get($burn-rim-frames, 0)...);
 }
 
-// The ember along the front, uneven: it brightens, sinks, flares a little, sinks further, and
-// ends where it began.
 @mixin ember-frames($inset) {
   @each $at, $rim in $burn-rim-frames {
     @if $at == 0 {
@@ -108,7 +98,6 @@ $ember: $burn-ember;
   }
 }
 
-// The embers in the burnt part breathing (3.7s), out of step with the glow below.
 @keyframes spell-card-embers {
   0%,
   100% {
@@ -124,10 +113,7 @@ $ember: $burn-ember;
   }
 }
 
-// The resting state: everything hidden, and set to shrink back when it is left.
 @mixin smoulder-base {
-  // The glow on the table: anchored at the corner behind the face (first in the markup, so faces paint over it), it
-  // grows with the hole and runs `$burn-glow-lead` past the ember front.
   .spell-card__glow {
     position: absolute;
     inset: auto (-$burn-glow-overhang) (-$burn-glow-drop) auto;
@@ -195,8 +181,6 @@ $ember: $burn-ember;
       box-shadow $motion-medium ease;
   }
 
-  // Over the content (last in the markup), clipped to the card's rounded box, so nothing
-  // burns outside it.
   .spell-card__burn {
     position: absolute;
     inset: 0;
@@ -213,8 +197,6 @@ $ember: $burn-ember;
     filter: url('#spell-card-burn');
   }
 
-  // A quarter ellipse whose curve is the burn front: empty, over the face's hole, carrying
-  // the ember line and char rim on its edge.
   .spell-card__burn-hole {
     position: absolute;
     right: $burn-hole-inset;
@@ -248,7 +230,6 @@ $ember: $burn-ember;
     inset: 0;
     border-radius: inherit;
     background: burn-embers-gradient();
-    // Only the mask's alpha counts, so any opaque token does.
     mask-image: linear-gradient(to bottom, $text-primary, transparent $burn-embers-fade);
   }
 

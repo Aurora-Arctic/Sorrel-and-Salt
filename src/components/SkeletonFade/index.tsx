@@ -9,10 +9,6 @@ import './index.scss';
 // (claude-docs/components/skeleton.md).
 // (claude-docs/components/skeleton.md, "Skeleton fade").
 
-/**
- * The skeleton to keep over the page for its fade-out, or null. Pass null when no wait is on; a wait that showed no
- * skeleton leaves nothing to fade, and a new wait mid-fade takes it back at once.
- */
 export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | null {
   const [kept, setKept] = useState<ReactElement | null>(null);
   const [wasShown, setWasShown] = useState(false);
@@ -36,7 +32,6 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
   return leaving;
 }
 
-/** The host's class: the box the overlay is placed against, clipped while it fades. */
 export const skeletonFadeHost = (leaving: boolean): string =>
   leaving ? 'skeleton-fade-host skeleton-fade-host--fading' : 'skeleton-fade-host';
 
@@ -73,10 +68,6 @@ export const SkeletonCover = ({
   </div>
 );
 
-/**
- * The skeleton kept over the arrived page, out of layout and out of the
- * accessibility tree (the page carries the one heading and landmark now).
- */
 export const SkeletonOverlay = ({ children }: { children: ReactNode }): ReactElement => (
   <div className="skeleton-fade" aria-hidden="true">
     {children}

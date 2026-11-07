@@ -19,7 +19,6 @@ import type { PasswordFormProps } from './types';
 // the server's, said where it belongs; nothing here judges a password but the meter's advice
 // (claude-docs/components/sign-in-panel.md, "Contracts").
 
-/** Sign-in's one refusal, the same for a wrong password and an unknown address. */
 export const WRONG_CREDENTIALS =
   "That email address and password don't match an account. Please try again.";
 export const SIGN_UP_UNAVAILABLE =
@@ -48,11 +47,9 @@ interface Refusal {
   password?: string;
 }
 
-// Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive here.
 function refusal(mode: Mode, failure: Failure): Refusal {
   const field = failure.code ? FIELD_ERRORS[failure.code] : undefined;
   if (field) return { [field.field]: field.message };
-  // The breached-list refusal carries the server's own sentence, which says why.
   if (failure.code === 'PASSWORD_COMPROMISED') return { password: failure.message };
   if (failure.status === 429) return { alert: TOO_MANY_ATTEMPTS };
   if (mode === 'sign-in') {
@@ -86,9 +83,7 @@ const PasswordForm = ({
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
-  // The address a sign-up was answered for: every sign-up gets the same answer, held or not.
   const [signedUp, setSignedUp] = useState<string>();
-  // The right password was given for an account with two-factor on: the code step replaces this form.
   const [askingForCode, setAskingForCode] = useState(false);
   const { ref, settle } = useResultFocus<HTMLDivElement>();
 
@@ -145,8 +140,6 @@ const PasswordForm = ({
       onCodeStep?.(true);
       return;
     }
-    // A full load of the sign-in page, which sends a signed-in account on: to `next` or its
-    // landing, and an unverified one (every new account) to the email page first.
     reportLeaving();
     window.location.assign(signInPath(next));
   };
@@ -231,7 +224,6 @@ const PasswordForm = ({
           value={password}
           onChange={(value) => {
             setPassword(value);
-            // A refusal belongs to the value it refused.
             setProblem((was) => (was.password ? { ...was, password: undefined } : was));
           }}
           error={problem.password}

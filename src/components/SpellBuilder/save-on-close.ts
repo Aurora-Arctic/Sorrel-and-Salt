@@ -6,11 +6,6 @@ import { CloseGuardContext } from '../Modal/close-guard';
 // The modal's way out: Close, Escape and an outside click save what is unsaved, then close, with no Discard question; a refused save keeps it open
 // (claude-docs/components/spell-builder.md, "Closing the modal").
 
-/**
- * Puts the save-on-close guard in the modal's slot. `unsaved` is whether
- * anything is not yet on the server, and `save` flushes it, answering whether
- * the server has it. The modal closes when it does, and stays open when not.
- */
 export function useSaveOnClose(unsaved: boolean, save: () => Promise<boolean>): void {
   const slot = useContext(CloseGuardContext);
 

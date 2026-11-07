@@ -25,7 +25,6 @@ export function SpellStatusField({
   const { defaultValues } = useFormState({ control });
   const [busy, setBusy] = useState(false);
   const saysId = useId();
-  // The saved spell's status is the last save's, which the form starts from.
   const complete = defaultValues?.status === 'complete';
   // The visibility the form holds, saved or not, is the one completing would lock.
   const shared = useWatch({ control, name: 'visibility' }) === 'workspace';
@@ -45,7 +44,6 @@ export function SpellStatusField({
       await flush();
       duplicate(spellId!);
     } catch {
-      // The refusal is shown beside Save.
     } finally {
       setCopying(false);
     }
@@ -69,7 +67,6 @@ export function SpellStatusField({
         },
       )();
     } catch {
-      // The refusal is shown beside Save and on its field.
       setValue('status', before);
     } finally {
       setBusy(false);
@@ -77,7 +74,6 @@ export function SpellStatusField({
     }
   };
 
-  // A complete spell has no sentence here: its state is carried by the locked Visibility switch.
   if (complete) {
     if (!copiedHrefOf || !spellId) return null;
     const busy = copying || duplicating;
@@ -95,7 +91,6 @@ export function SpellStatusField({
     );
   }
 
-  // The state line is read, not drawn: a button row has no room for a sentence.
   return (
     <>
       <span id={saysId} className="visually-hidden">

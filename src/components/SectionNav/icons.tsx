@@ -74,7 +74,6 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path strokeWidth="2.2" d="M12 15.6h.01" />
     </>
   ),
-  // An envelope closed by a round wax seal where the flap meets, the flap's lines stopping at the seal's edge.
   invitations: (
     <>
       <rect x="3" y="5.5" width="18" height="13" rx="1.5" />
@@ -90,8 +89,6 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <path d="M9 12h6M9 15.5h6" />
     </>
   ),
-  // The More button's mark: three dots, each a zero-length stroke the round
-  // caps swell into a dot.
   more: <path strokeWidth="3" d="M6 12h.01M12 12h.01M18 12h.01" />,
 };
 

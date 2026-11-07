@@ -81,7 +81,6 @@
   gap: space(4);
 }
 
-// What Goes In: the heading with a muted count at the right of its line.
 .spell-steps__head {
   display: flex;
   flex-wrap: wrap;
@@ -105,7 +104,6 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  // The list, then the add row beneath it, space(5) apart.
   gap: space(5) space(3);
 }
 
@@ -122,16 +120,12 @@
 .spell-steps__add-step {
   grid-column: 2;
   grid-row: 2;
-  // Its top edge is level with the top of the box's frame, not the label above it, and stays there as the filter tray
-  // grows the frame downward. Flat: the box beside it has no shadow.
   align-self: start;
   margin-block-start: calc(max(#{type-size('small')} * 1.5, #{$icon-size}) + #{space(2)});
   box-shadow: none;
   white-space: nowrap;
 }
 
-// The picker row's chips are the compact size Category Match uses,
-// still in their group colours.
 .combobox__list .combobox__note--meta .chip {
   @include chip($size: compact);
 }
@@ -186,9 +180,6 @@
   }
 }
 
-// The picker's category filter, the tray under the box inside the frame, separated by a hairline:
-// the caption (and Clear) on one line, its sentence beneath, the chips on the next. Each chip is a
-// toggle.
 .spell-steps__filter {
   @include stack(1);
   padding: space(2);
@@ -201,7 +192,6 @@
   gap: space(2);
 }
 
-// The caption beside the chips, the muted style Category Match's row labels wear.
 .spell-steps__filter-label {
   color: $text-muted;
   font-size: type-size('caption');
@@ -221,8 +211,6 @@
   gap: space(1);
 }
 
-// Clear, quiet, at the right end of the caption line, level with the caption; drawn only while a
-// chip is pressed.
 .spell-steps__filter-clear {
   margin-inline-start: auto;
   padding: 0;
@@ -261,9 +249,6 @@
   block-size: 12px;
 }
 
-// A toggle: at rest a neutral outline with a dot in the group colour; pressed, a solid group fill,
-// card-coloured ink and a check, so colour is not alone. Under .spell-steps__filter to beat .chip's
-// 400ms transition; border width and style stay fixed so colours ease.
 .spell-steps__filter .spell-steps__filter-chip {
   @include chip($state: quiet);
   display: inline-flex;
@@ -301,7 +286,6 @@
   }
 }
 
-// The formal name on a row's second line, italic as botanical names are set.
 .combobox__list .spell-steps__formal {
   font-style: italic;
 }
@@ -316,7 +300,6 @@
     grid-column: 1;
   }
 
-  // The dashed last line of the list, full width, with no number.
   .spell-steps__add-step {
     grid-column: 1;
     grid-row: 3;
@@ -363,8 +346,6 @@
   margin-block: 0;
 }
 
-// The jar details above the step list: the jar at the left of Seal Wax, then Jar
-// Description on its own line.
 .jar-details {
   @include stack(5);
 }

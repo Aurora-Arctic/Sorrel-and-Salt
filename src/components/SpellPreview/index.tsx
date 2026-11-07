@@ -26,7 +26,6 @@ import './index.scss';
 
 const PREVIEW = 'preview';
 
-// The address with `?preview` added or dropped, keeping the other parameters and the fragment.
 function addressWith(preview: boolean): string {
   const { pathname, search, hash } = window.location;
   const rest = new URLSearchParams(search);
@@ -36,7 +35,6 @@ function addressWith(preview: boolean): string {
   return `${pathname}${next ? `?${next}` : ''}${hash}`;
 }
 
-// An ember's place, size and timing, as custom properties its stylesheet reads.
 const emberStyle = (ember: Ember): CSSProperties =>
   ({
     '--x': ember.x === undefined ? undefined : `${ember.x}%`,
@@ -65,8 +63,6 @@ const embers = (list: readonly Ember[], edge: boolean): ReactElement[] =>
     />
   ));
 
-// The background: the page smouldering from its foot corner, a hearth glow and embers. Decoration only: hidden from
-// assistive technology, taking no pointer. The pane carries its own copy of the card's burn filter while open.
 const Scene = (): ReactElement => (
   <>
     <SpellCardFilters />
@@ -102,8 +98,6 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
   // Set once the pane is in full screen, so leaving it (which is Escape's first press there) closes
   // the pane, and a pane that never got full screen is not closed by an unrelated change.
   const inFullscreen = useRef(false);
-  // Set when this page visit pushed the `?preview` entry, so Close can step back over it; a page that
-  // loaded with `?preview` has no earlier entry of ours, and Close replaces the address instead.
   const pushed = useRef(false);
 
   const show = (): void => {
@@ -125,7 +119,6 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
       if (dialog.open) dialog.close();
       return;
     }
-    // Measured before showModal(), while the page's scrollbar is still there to be replaced.
     const release = holdPage();
     if (!dialog.open) dialog.showModal();
     // The page asks, not the dialog: browsers refuse full screen for a `<dialog>` (a TypeError). Past the browser floor

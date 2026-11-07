@@ -11,11 +11,6 @@ import { isInstruction } from './steps/values';
 // The Jar section's details above its step list: the Seal Wax field with the jar drawn beside it, then the Jar
 // Description (claude-docs/components/spell-builder.md, "The jar details").
 
-/**
- * The colour of a layer: the group colour of the step's first category in its listed order
- * (the ingredient's before its form's), skipping any not in a known group. A step with none
- * has none, and its layer stays the muted ink.
- */
 function groupOf(
   categories: readonly { id: string }[],
   colors: ReadonlyMap<string, GroupColors>,
@@ -55,9 +50,7 @@ export function JarDetails({
   waxField,
   descriptionField,
 }: {
-  /** The Seal Wax field, on the first line with the jar drawn at its left. */
   waxField: ReactNode;
-  /** The Jar Description field, on its own full-width line beneath. */
   descriptionField: ReactNode;
 }): ReactElement {
   return (

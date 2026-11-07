@@ -4,7 +4,6 @@ import { type ReactElement, useRef, useState } from 'react';
 import { QuickLookButton } from '../IconTip';
 import { DuplicateQuickLook } from '../IngredientForm/quick-look';
 
-/** The coven a Quick Look reads in, and the URL segment of the entry page it links to. */
 export type QuickLookCoven = { workspaceId: string; covenSlug: string };
 
 // The Quick Look eye on an ingredient step's row, opening `DuplicateQuickLook` over the builder so nothing typed is lost.

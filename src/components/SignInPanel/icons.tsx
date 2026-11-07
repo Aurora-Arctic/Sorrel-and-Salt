@@ -7,8 +7,6 @@ import './icons.scss';
 // (claude-docs/components/sign-in-panel.md, "Contracts"). The fills are the artwork's, and
 // the grounds the marks sit on are the provider's colours from `$brand-palettes`, not our tokens.
 
-// Google's "G" logo, as published for "Sign in with Google" buttons. No chip: the mark is
-// multicolour and reads on any ground.
 export function GoogleIcon(): ReactElement {
   return (
     <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
@@ -32,9 +30,6 @@ export function GoogleIcon(): ReactElement {
   );
 }
 
-// Discord's current "Symbol" mark, traced from the SVG in Discord's brand-asset download
-// (discord.com/branding, Logo, Symbol), not the retired "Clyde" face icon. Drawn in white
-// directly on the blurple button, as Discord's own site does; the mark needs no chip.
 export function DiscordIcon(): ReactElement {
   return (
     <svg viewBox="0 0 126.644 96" width="21" height="15.75" aria-hidden="true">
@@ -46,8 +41,6 @@ export function DiscordIcon(): ReactElement {
   );
 }
 
-// Meta's "Secondary Logo" asset (meta.com/brand/resources/facebook/logo): one path tracing the circle and the "f"
-// together, so filled white over the blue chip below the "f" shows the blue through.
 export function FacebookIcon(): ReactElement {
   return (
     <span className="sign-in-panel__icon-chip sign-in-panel__icon-chip--facebook">
@@ -77,8 +70,6 @@ export function FacebookMark(): ReactElement {
   );
 }
 
-// Microsoft's four-colour square mark, as published for "Sign in with Microsoft" buttons. No
-// chip: it sits directly on the button's own white ground.
 export function MicrosoftIcon(): ReactElement {
   return (
     <svg viewBox="0 0 21 21" width="18" height="18" aria-hidden="true">

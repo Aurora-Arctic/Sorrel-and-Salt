@@ -58,7 +58,6 @@ const SignInMethods = ({
     return () => window.removeEventListener('pageshow', restored);
   }, []);
 
-  // Each answers the failure to say under the row's control, or nothing.
   const handleAdd = async (providerId: ProviderId): Promise<string | undefined> => {
     if (!configured.includes(providerId)) return undefined;
     setAlert(undefined);
@@ -92,8 +91,6 @@ const SignInMethods = ({
   ): Promise<string | undefined> => {
     setAlert(undefined);
     setPending(account.id);
-    // A refusal answers `error` with a code; a dropped connection throws, and
-    // takes the generic sentence.
     const result = await unlinkAccount({ accountId: account.id }).catch(() => ({
       error: { code: undefined },
     }));
@@ -101,14 +98,10 @@ const SignInMethods = ({
     // The row survives a refusal, so the sentence goes under its Remove.
     if (result?.error) return unlinkErrorMessage(result.error.code);
     setAccounts((current) => current.filter((candidate) => candidate.id !== account.id));
-    // Seen as the row turning to Add; said in the page's status region.
     announce(`${label} was removed from your sign-in methods.`);
     return undefined;
   };
 
-  // Sign out, then sign in again landing back here, which makes the session
-  // fresh. The call and its failure are SignOutButton's: a refusal answers
-  // `error` and a dropped connection throws, and either says so.
   const handleSignInAgain = async (): Promise<void> => {
     // `aria-disabled` lets a click through, so a second one is refused here.
     if (signingOut) return;
@@ -125,7 +118,6 @@ const SignInMethods = ({
   };
 
   const removal: ProviderRemoval = accounts.length < 2 ? 'last' : fresh ? 'offered' : 'withheld';
-  // A failure with no provider it belongs to stays at the head of the list.
   const listAlert = alert && alert.providerId === undefined ? alert.message : undefined;
 
   return (

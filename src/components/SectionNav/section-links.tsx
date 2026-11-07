@@ -25,8 +25,6 @@ import type { SectionNavItem, SectionNavProps } from './types';
 // `--extra` class hides the rest, so the number lives here once.
 const VISIBLE = 4;
 
-// Wider than the phone (`$shell-phone-width`; `_variables.scss`) the number of tabs that fit is measured, not fixed.
-// On the phone the bar keeps its fixed four.
 const TABLET_BAND = '(min-width: 40.01rem)';
 const subscribeToBand = (notify: () => void): (() => void) => {
   if (typeof window.matchMedia !== 'function') return () => undefined;
@@ -40,11 +38,8 @@ const inTabletBandNever = (): boolean => false;
 
 const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
-// What is measured of the row with every tab showing: tab widths, the current tab, the gaps, More's width and its
-// chevron's.
 type Natural = {
   widths: number[];
-  // -1 when no tab is the current page's.
   current: number;
   currentWidth: number;
   gap: number;
@@ -124,17 +119,12 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
   const keyboard = useSyncExternalStore(subscribeToKeyboard, keyboardIsUp, keyboardIsNever);
 
   const tablet = useSyncExternalStore(subscribeToBand, inTabletBand, inTabletBandNever);
-  // The count that fits; null while it is not known, when
-  // every tab is shown so they can be measured.
   const [fit, setFit] = useState<number | null>(null);
-  // Each time the band is entered, measure afresh: the count is reset while
-  // rendering, the way React asks a state derived from a prop to be.
   const [wasTablet, setWasTablet] = useState(false);
   if (tablet !== wasTablet) {
     setWasTablet(tablet);
     setFit(null);
   }
-  // And on each navigation: the current tab's weight changes its width.
   const [measuredAt, setMeasuredAt] = useState(pathname);
   if (pathname !== measuredAt) {
     setMeasuredAt(pathname);
@@ -152,8 +142,6 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
     setFit(natural.current ? countThatFit(natural.current, list.current.clientWidth) : VISIBLE);
   }, [tablet, fit]);
 
-  // The row's width changing picks a new count from the widths already
-  // measured; the web fonts arriving changes the widths themselves.
   const refit = useCallback(() => {
     if (list.current && natural.current) {
       setFit(countThatFit(natural.current, list.current.clientWidth));

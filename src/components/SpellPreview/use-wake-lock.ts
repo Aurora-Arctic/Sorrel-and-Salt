@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 type WakeLockStatus = 'idle' | 'held' | 'dropped' | 'off' | 'asking' | 'failed';
 
 export type WakeLock = {
-  // False where there is nothing to show: no API, a refused request, or the pane closed.
   shown: boolean;
   held: boolean;
   toggle: () => void;
@@ -18,7 +17,6 @@ export type WakeLock = {
 export function useWakeLock(active: boolean): WakeLock {
   const [status, setStatus] = useState<WakeLockStatus>('idle');
   const [wanted, setWanted] = useState(true);
-  // A closed pane starts over: the next opening asks again, even after the sign was turned off.
   const [wasActive, setWasActive] = useState(active);
   if (wasActive !== active) {
     setWasActive(active);

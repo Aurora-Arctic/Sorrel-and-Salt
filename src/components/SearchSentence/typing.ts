@@ -10,17 +10,12 @@ export interface Goal {
 }
 
 export interface Line extends Goal {
-  /** Where the caret is: the region last edited. */
   caret: Region;
 }
 
-/** One character a tick; a tick is about a frame. */
 export const TICK_MS = 16;
-/** Backspacing the old line takes at most about this long. */
 export const WIPE_MS = 500;
-/** How long the finished sentence is held before the clauses slide shut. */
 export const HOLD_MS = 1000;
-/** Characters a tick for the clauses still to type when the results land early. */
 export const RUSH_STEP = 4;
 /** What the lead says until the count is known. */
 export const SEARCHING = 'Searching for ingredients';

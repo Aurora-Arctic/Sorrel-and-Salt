@@ -1,30 +1,19 @@
 import type { SearchSentenceFragment } from '../IngredientSearch/types';
 
-/** The words that lead the search term in the closed line, spaces included. */
 export const MATCHING = ' matching ';
 
-/** A run of the clauses' text; a chosen value is `strong`, and a joining word ("or", "and") is `join`. */
 export interface ClausePart {
   text: string;
   strong?: boolean;
   join?: boolean;
 }
 
-/**
- * The sentence cut into the three pieces the closed line and the typed line are made of:
- * the lead ("12 ingredients"), the term (" matching rue", or nothing) and the clauses
- * (the rest, "in the Protection category, as ..."), each ready to join with one space.
- */
 export interface SentenceParts {
   lead: string;
   term: string;
   clauses: ClausePart[];
 }
 
-/**
- * `buildSearchSentence` puts a comma before every clause, the search term's too; the closed line has none. The
- * sentence is taken apart here and the joining commas kept for the tail only.
- */
 export function sentenceParts(
   fragments: readonly SearchSentenceFragment[],
   query: string,

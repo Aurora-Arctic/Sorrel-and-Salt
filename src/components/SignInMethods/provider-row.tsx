@@ -61,9 +61,6 @@ export function ProviderRow({
       <ProviderMark id={provider.id} />
       <span className="sign-in-methods__label">{provider.label}</span>
       {state === 'linked' ? (
-        // Better Auth refuses the last one, and any from a stale session, too;
-        // this only keeps the offer honest. The last says why in its row; a
-        // withheld one is explained once, above the list.
         removal === 'offered' ? (
           // The name stays "Remove Discord" while busy: the aria-label holds it.
           // The pressed one is `aria-disabled` and keeps the focus, refusing a
@@ -107,12 +104,10 @@ export function ProviderRow({
           // Small and quiet, as Remove is: a row's action, not a page's.
           className="btn btn--quiet btn--small"
           aria-label={`Add ${provider.label}`}
-          // Not `disabled`, as on /sign-in: it stays in the tab order.
           aria-disabled={unavailable || undefined}
           aria-describedby={unavailable ? noteId : undefined}
           busy={busy}
           busyLabel="Adding"
-          // Once pressed, the button waits out the hop and a second press does nothing.
           onClick={busy ? undefined : () => void run(onAdd)}
         >
           Add

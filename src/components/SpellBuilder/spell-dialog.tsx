@@ -26,10 +26,6 @@ import type { SpellDialogProps } from './types';
  */
 const withEdit = (closeHref: Route, id: string) => withParam(closeHref, 'edit', id);
 
-/**
- * The dialog's head for a new spell, headed as Add Ingredient's is: the coven it
- * lands in over the title, and the dialog named by the phrase, "New Spell to Whitethorn Coven".
- */
 export const newSpellHeading = (covenName: string): ModalHeading => ({
   title: 'New Spell',
   destination: covenName,
@@ -98,7 +94,6 @@ export default function SpellDialog({
               }
               onCreated={({ id }) => {
                 setCreated(id);
-                // Replaced, so Back goes to the grimoire and not to an empty New Spell.
                 navigate(withEdit(closeHref, id), { replace: true, scroll: false });
               }}
             />

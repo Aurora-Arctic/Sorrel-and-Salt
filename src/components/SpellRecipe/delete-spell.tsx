@@ -40,7 +40,6 @@ export function useDeleteSpell({
   const { navigate } = usePendingNavigation();
   const remove = useMutation({
     mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
-    // The target is read off the path alone: the query carries what was deleted, not where.
     onSuccess: () =>
       navigate(deletedHref, { replace: true, target: covenTarget(deletedHref.split('?')[0]!) }),
     onError: (error) => {
@@ -51,11 +50,6 @@ export function useDeleteSpell({
   return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
 }
 
-/**
- * The question naming the spell in bold, then one sentence on what deleting it does: a shared
- * spell leaves the whole coven's grimoire, a private one only its author's. Asked by the recipe
- * page's More menu and the builder's bin.
- */
 export function DeleteSpellWords({
   name,
   visibility,
@@ -73,7 +67,6 @@ export function DeleteSpellWords({
   );
 }
 
-/** The question naming the spell and its two answers. */
 function DeleteSpellQuestion({
   name,
   visibility,

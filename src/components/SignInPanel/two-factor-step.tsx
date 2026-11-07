@@ -34,7 +34,6 @@ interface Refusal {
 }
 
 function refusal(failure: Failure): Refusal | 'restart' {
-  // The attempt itself is over: its cookie expired, or it spent its own allowance of codes.
   if (failure.code === 'INVALID_TWO_FACTOR_COOKIE') return 'restart';
   if (failure.code === 'TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE') return 'restart';
   if (failure.code === 'ACCOUNT_TEMPORARILY_LOCKED') return { alert: CODE_LOCKED };
@@ -52,7 +51,6 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
 
-  // An app's code is digits, often shown in two groups; a backup code is taken as typed bar its ends.
   const entered = method === 'app' ? code.replace(/\s/g, '') : code.trim();
   const ready = entered !== '' && !pending;
 
@@ -115,7 +113,6 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
             inputMode={method === 'app' ? 'numeric' : 'text'}
             autoComplete={method === 'app' ? 'one-time-code' : 'off'}
             spellCheck={false}
-            // The step replaces the password form, so the field the person was typing in is gone.
             // oxlint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             value={code}

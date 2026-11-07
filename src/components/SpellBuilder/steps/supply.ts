@@ -8,18 +8,12 @@ import type { StepJar, SpellStepValue } from './types';
 // it says so (claude-docs/components/spell-builder.md, "Steps").
 
 export type StepSupply =
-  /** A one-off: nothing in the cupboard could ever answer it. */
   | { kind: 'one-off' }
-  /** The coven keeps no jar of this form: told apart from an empty jar, and not called Out
-   *, as the entry page's shelf draws such a form dashed, not red. */
   | { kind: 'no-jar' }
-  /** The jar is empty: StockBadge's Out of Stock. */
   | { kind: 'out'; jar: StepJar }
-  /** The jar holds less than the step calls for, once both are in one unit. */
   | { kind: 'short'; held: number; unit: Unit }
   /** The step's amount cannot be set against the jar's, so no verdict is given. */
   | { kind: 'units-differ' }
-  /** The jar is at or below its own threshold: StockBadge's Low Stock. */
   | { kind: 'low'; jar: StepJar };
 
 type SupplyInput = Pick<SpellStepValue, 'name' | 'ingredientId' | 'variantId' | 'jar'> & {
@@ -41,7 +35,6 @@ export function supplyOf(
   const jar = step.jar;
   if (jar === null) return { kind: 'no-jar' };
   if (jar.quantity === 0) return { kind: 'out', jar };
-  // Held but not weighed: nothing to compare against.
   if (jar.quantity === null) return null;
 
   // Every step on this form, this one included, summed in the jar's unit. One that cannot be
@@ -61,10 +54,8 @@ export function supplyOf(
   return stockState(jar.quantity, jar.threshold) === 'low' ? { kind: 'low', jar } : null;
 }
 
-/** A step's amount as typed: what `needOf` adds up. */
 type NeedInput = Pick<SupplyInput, 'quantity' | 'unit'>;
 
-// A numeric holds three decimals: a sum is rounded there, so 0.1 + 0.2 reads 0.3.
 const rounded = (value: number): number => Math.round(value * 1000) / 1000;
 
 /**

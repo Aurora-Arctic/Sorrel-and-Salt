@@ -15,8 +15,6 @@ import type { ProviderId } from '../../lib/types';
 import type { SignInAttempt, SignInPanelProps } from './types';
 import './index.scss';
 
-// A cookie announces no change, and only a callback, a full navigation away,
-// writes this one: there is nothing to subscribe to.
 const noSubscription = () => () => {};
 
 // The cookie read returns `''` for present-but-empty and `null` for none, and React warns when a
@@ -27,7 +25,6 @@ const getLastUsedProvider = (): ProviderId | null => {
   return SOCIAL_PROVIDERS.find((provider) => provider.id === value)?.id ?? null;
 };
 
-// The same cookie, for the password form: Better Auth's lastLoginMethod writes `email` for it.
 const getLastUsedPassword = (): boolean => getLastUsedLoginMethod() === 'email';
 // Whether the cookie names a passkey sign-in, which is not a roster provider.
 const getLastUsedPasskey = (): boolean => getLastUsedLoginMethod() === 'passkey';
@@ -80,12 +77,10 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     } else if (window.history.state?.[PUSHED_MARK]) {
       window.history.back();
     } else {
-      // Opened straight on the email view: there is no earlier entry of this page to return to.
       window.history.replaceState(null, '', url);
     }
   };
 
-  // The sign-in under way, a provider's or the passkey's: every other control waits for it.
   const [signingIn, setSigningIn] = useState<SignInAttempt | null>(null);
   useEffect(() => {
     const restored = (event: PageTransitionEvent) => {
