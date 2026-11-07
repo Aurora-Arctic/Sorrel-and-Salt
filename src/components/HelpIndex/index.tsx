@@ -4,6 +4,7 @@ import { helpTerms } from '../../lib/help-marks';
 import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
+import { BackChevron } from '../IngredientEntry/back-chevron';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
@@ -102,8 +103,9 @@ const HelpIndex = ({
               {answers[index]}
             </div>
           ))}
-          <a className="help-index__top" href="#main">
-            <span aria-hidden="true">↑</span> Back to Top
+          <a className="back-link back-link--up help-index__top" href="#main">
+            <BackChevron direction="up" />
+            Back to Top
           </a>
         </section>
       )}

@@ -123,10 +123,11 @@
     }
   }
 
-  &__top {
-    display: inline-flex;
-    gap: space(2);
-    align-items: center;
-    font-size: type-size('small');
+  // The back link's look, on its own line, its chevron as far below the last answer as the parent link's stands below the
+  // search box: the last entry's margin, less a step for the line box above the chevron.
+  & &__top {
+    display: flex;
+    width: fit-content;
+    margin-block-start: calc(-1 * #{space(1)});
   }
 }

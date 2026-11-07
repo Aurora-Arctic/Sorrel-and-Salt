@@ -34,10 +34,20 @@
     @include focus-ring;
   }
 
+  // A link to the top of the page: the chevron points up and steps up, by the same fifth.
+  &--up:hover,
+  &--up:focus-visible {
+    > svg {
+      transform: translateY(-20%) scale(1.25);
+    }
+  }
+
   @include reduced-motion {
     > svg,
     &:hover > svg,
-    &:focus-visible > svg {
+    &:focus-visible > svg,
+    &--up:hover > svg,
+    &--up:focus-visible > svg {
       transition: none;
       transform: none;
     }
