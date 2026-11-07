@@ -10,7 +10,9 @@ import type {
   CategoryFacetChoice,
   CompendiumCategoryChoice,
   CompendiumFacetCounts,
+  CompendiumFacetVocabulary,
   DeityFacetChoice,
+  FacetCountsById,
   FacetChoice,
   FormFacetChoice,
 } from './types';
@@ -103,4 +105,29 @@ export function compendiumFacetCounts(
       })),
     }),
   };
+}
+
+/** The vocabularies a list's props carry, keyed as the counts name them. */
+export function vocabulariesOf(
+  categories: readonly CompendiumCategoryChoice[],
+  vocabulary: CompendiumFacetVocabulary,
+): FacetVocabularies {
+  return {
+    formIcons: new Map(Object.entries(vocabulary.formIcons)),
+    deities: new Map(vocabulary.deities.map(({ id, ...deity }) => [id, deity])),
+    categories: new Map(categories.map((category) => [category.id, category])),
+  };
+}
+
+/**
+ * A list's counts as its filter's choices: a coven's, told by its Source counts, through
+ * `covenFacetCounts`, any other through `compendiumFacetCounts`.
+ */
+export function facetChoices(
+  counts: FacetCountsById,
+  vocabularies: FacetVocabularies,
+): CompendiumFacetCounts {
+  return 'source' in counts
+    ? covenFacetCounts(counts, vocabularies)
+    : compendiumFacetCounts(counts, vocabularies);
 }

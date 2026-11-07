@@ -9,3 +9,7 @@ The grid every list of cards uses, so the compendium page, the workspace ingredi
 - Each `li` is a flex column and its card stretches, so cards in a row are one height. The grimoire's spell cards stretch the same way, and their foot sits at the bottom by the specimen's `margin-top: auto`.
 - While a page is on its way, `ListBody shape="cards"` draws six card-shaped skeletons in the same grid ([`list-frame.md`](list-frame.md)).
 - The compact card's own rules live in `IngredientCard/index.scss`. The grid draws nothing in forced colours; what the cards look like there is [`ingredient-card.md`](ingredient-card.md)'s.
+
+## Cards off screen
+
+Inside `@supports (content-visibility: auto)`, each `li` skips layout and paint while it is far from the viewport, with `contain-intrinsic-size: auto 16rem` so the scroll length holds until a card has been drawn once. A card that is hovered, has focus inside it or has its category panel open opts out, because paint containment would clip the tips and turn the panel's fixed position into one inside the card. A browser without the property draws every card.

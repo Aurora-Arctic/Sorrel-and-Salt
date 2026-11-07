@@ -719,10 +719,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
   min-width: 0;
   border-radius: radius('sharp');
-  @include theme-transition(color);
+  @include state-fade(color);
 
   .combobox__entry-mark {
     color: $accent;
+    @include state-fade(color);
   }
 
   &:hover,

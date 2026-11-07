@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useContext, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { PromoteFolkNameMutation } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { ConfirmQuestion } from '../Modal';

@@ -30,8 +30,7 @@ This doc also covers `JarLine` and `JarLines`, which draw jars in lists.
 - A **Low** or **Out** jar is told by the jar itself, not a boxed badge, from `stockState` ([`stock-badge.md`](stock-badge.md)). The rules come after the base paint so they win by order as well as by the extra class.
   - Out draws a solid outline, never dashed, so it cannot read as the dashed outline of a form with no jar. The wave, mark, cork and cloth are left off, since an empty jar has no surface to ripple.
   - The amount under either is in the same colour, with the badge's drawing before it (`StockIcon`), so the state is told by a symbol as well as colour (WCAG 1.4.1) and a Low jar reads the same here as on the card. There is no extra word ([`grimoire.md`, "Design review of the workspace ingredients page"](../design-decisions/grimoire.md#design-review-of-the-workspace-ingredients-page)).
-- A faceted jar's two bands (`__shade`, `__shine`) are made with `color-mix`, since no token exists. In the dark theme the text colour is the light one, so the bands swap roles.
-  - TODO(owner): say whether the bands should be tokens, one pair for each theme.
+- A faceted jar's two bands (`__shade`, `__shine`) are `$jar-shade` and `$jar-shine`, a solid colour each, set per theme ([`styling.md`](../styling.md), "The faceted jar's bands"). In the dark theme the shade is the lighter of the two, so the bands read as facets and not as light and shade.
 
 **Markup and accessibility**
 

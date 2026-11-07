@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type { WorkingDeductionPreviewQuery } from '../../gql/graphql';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';

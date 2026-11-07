@@ -1,11 +1,17 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadCompendiumEntryForm } from '@/components/CompendiumEntryForm/lazy';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { entryDetail } from '../../../support/entry-detail';
+
+// The form loads on first use; loading it once up front keeps each test off a cold import.
+beforeAll(async () => {
+  await loadCompendiumEntryForm();
+});
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 const redirect = vi.fn((_to: string) => {
@@ -431,7 +437,9 @@ describe("the public compendium page, with an entry's details open", () => {
     expect(readCompendiumDetails.mock.lastCall).toEqual([NODE.id]);
     const dialog = details()!;
     expect(
-      within(within(dialog).getByRole('list', { name: 'Folk Names' })).getByText('Fixture Bane'),
+      within(await within(dialog).findByRole('list', { name: 'Folk Names' })).getByText(
+        'Fixture Bane',
+      ),
     ).toBeInTheDocument();
     expect(within(dialog).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
@@ -451,7 +459,7 @@ describe("the public compendium page, with an entry's details open", () => {
     await renderPage({ ...SEARCH, entry: NODE.id });
 
     expect(covensHoldingEntry).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
-    const covens = within(details()!).getByRole('list', { name: 'In Your Cupboards' });
+    const covens = await within(details()!).findByRole('list', { name: 'In Your Cupboards' });
     expect(within(covens).getByRole('link', { name: 'Fixture Coven' })).toHaveAttribute(
       'href',
       `/coven/fixture-coven/ingredients/${NODE.id}`,
@@ -482,7 +490,9 @@ describe("the public compendium page, with an entry's details open", () => {
       await renderPage({ ...SEARCH, entry: NODE.id });
 
       expect(
-        within(details()!).getByRole('button', { name: 'More for Testwort, Fixtura testalis' }),
+        await within(details()!).findByRole('button', {
+          name: 'More for Testwort, Fixtura testalis',
+        }),
       ).toBeInTheDocument();
     });
 
@@ -499,7 +509,9 @@ describe("the public compendium page, with an entry's details open", () => {
       await renderPage({ ...SEARCH, entry: NODE.id });
 
       fireEvent.click(
-        within(details()!).getByRole('button', { name: 'More for Testwort, Fixtura testalis' }),
+        await within(details()!).findByRole('button', {
+          name: 'More for Testwort, Fixtura testalis',
+        }),
       );
       expect(
         within(screen.getByRole('menu')).getByRole('menuitem', { name: 'Edit Stock' }),
@@ -519,7 +531,7 @@ describe("the public compendium page, with an entry's details open", () => {
       await renderPage({ ...SEARCH, entry: NODE.id });
 
       // Why it could show: the same window is open, with the entry read.
-      expect(details()).not.toBeNull();
+      expect(await contentsOf(details()!)).not.toBeNull();
       expect(within(details()!).queryByRole('button', { name: /^More for / })).toBeNull();
     });
   });
@@ -529,7 +541,7 @@ describe("the public compendium page, with an entry's details open", () => {
     readCompendiumDetails.mockResolvedValue(DETAIL);
     await renderPage({ ...SEARCH, entry: NODE.id });
 
-    const edit = within(details()!).getByRole('link', { name: /^Edit\b/ });
+    const edit = await within(details()!).findByRole('link', { name: /^Edit\b/ });
     expect(paramsOf(edit)).toEqual({ ...SEARCH, entry: NODE.id, edit: NODE.slug });
     const [cardEdit] = screen.getAllByRole('link', { name: /^Edit in Compendium Testwort/ });
     expect(paramsOf(cardEdit)).toEqual({ ...SEARCH, edit: NODE.slug });
@@ -660,6 +672,18 @@ describe('the public compendium page metadata', () => {
   });
 });
 
+/** Waits for a dialog's lazily loaded contents to replace its loading status. */
+const contentsOf = async (dialog: HTMLElement) => {
+  await waitFor(() =>
+    expect(
+      within(dialog)
+        .queryAllByRole('status')
+        .filter((status) => status.textContent === 'Loading'),
+    ).toHaveLength(0),
+  );
+  return dialog;
+};
+
 describe('the public compendium page, with the review switch', () => {
   const DETAIL = entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name });
   const viewerOf = (canCurate: boolean) => ({
@@ -679,7 +703,7 @@ describe('the public compendium page, with the review switch', () => {
     await renderPage({ entry: NODE.id });
 
     expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
-    expect(switchIn(details())).toBeChecked();
+    expect(switchIn(await contentsOf(details()))).toBeChecked();
   });
 
   it('shows a curator the switch above the edit form on ?edit=', async () => {
@@ -699,7 +723,7 @@ describe('the public compendium page, with the review switch', () => {
     readCompendiumDetails.mockResolvedValue(DETAIL);
     viewerIfSignedIn.mockResolvedValue(viewerOf(true));
     await renderPage(address);
-    expect(switchIn(details())).not.toBeNull();
+    expect(switchIn(await contentsOf(details()))).not.toBeNull();
     expect(switchIn(editor())).not.toBeNull();
     document.body.innerHTML = '';
     readCompendiumReview.mockClear();
@@ -707,7 +731,7 @@ describe('the public compendium page, with the review switch', () => {
     viewerIfSignedIn.mockResolvedValue(shell);
     await renderPage(address);
 
-    expect(screen.getByRole('dialog', { name: 'Testwort' })).toBeInTheDocument();
+    expect(await contentsOf(screen.getByRole('dialog', { name: 'Testwort' }))).toBeInTheDocument();
     expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
     expect(readCompendiumReview).not.toHaveBeenCalled();
   });

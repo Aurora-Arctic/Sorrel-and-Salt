@@ -95,14 +95,11 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 }
 
 // It fades in and out, dialog and backdrop together: in is CSS alone from `@starting-style`, out is
-// `.is-closing`, which the component waits on (FADE_LIMIT_MS there outlasts this). The theme's
-// colour transitions are restated beside it (claude-docs/components/modal.md, "The fade's colour transitions").
+// `.is-closing`, which the component waits on (FADE_LIMIT_MS there outlasts this)
+// (claude-docs/components/modal.md, "The fade").
 .modal.modal-dialog {
   opacity: 1;
-  transition:
-    opacity $modal-fade,
-    background-color $theme-transition-duration $theme-transition-easing,
-    color $theme-transition-duration $theme-transition-easing;
+  transition: opacity $modal-fade;
 
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {

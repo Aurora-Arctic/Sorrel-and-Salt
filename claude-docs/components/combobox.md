@@ -52,17 +52,33 @@ Downshift's open callback fires only when the open state differs from the props 
 
 - **As wide as its anchor**: `listAnchor`, else the control.
 - **Never off the screen.** It flips above when there is more room there, sits 8px from the screen's edge, and is no taller than the room it has: `size` sets `--combobox-list-room` and the stylesheet caps the list at `min(20rem, that)`, which holds the eight seeded category groups without a scroll.
-- **Followed only while open** (`autoUpdate`); every box's closed list stays in the page, as Downshift asks.
+- **Followed while open, and through a pending lookup** (`autoUpdate`). Every box's closed list stays in the page, as Downshift asks, and is not followed, except while the box still wants its list and a lookup is in flight (the hook's `follow` option): a list closed only because the new lookup has no rows yet reopens without subscribing again, which would read the page's layout inside the keystroke.
 - **Fixed, not absolute**, so a scrolling ancestor such as a modal cannot clip it.
 - **Shared.** An entry's summary uses it with `matchWidth: false`. MenuButton's menu uses it with `placement: 'bottom-end'`, `gap: 8` (not 4) and `matchWidth: false` ([`menu-button.md`](menu-button.md), "Where it opens").
 
 ### Bottom bar room
 
-The phone's fixed bottom bar (`.section-nav`) sits over the foot of the window, which Floating UI cannot see. `flip`, `shift` and `size` therefore take a `bottom` padding of the edge plus the bar's measured height, read at every placement, so a field near the foot opens above. Without it `size` shrinks the list to the sliver left, which still "fits" below, so `flip` never fires. The height is measured, not restated from tokens, because only the browser knows the device's safe area; the bar is found by its class, not a prop threaded through every box.
+The phone's fixed bottom bar (`.section-nav`) sits over the foot of the window, which Floating UI cannot see. `flip`, `shift` and `size` therefore take a `bottom` padding of the edge plus the bar's measured height, read once per placement by a first middleware (`measureBar`) and shared by the three, so a field near the foot opens above. Without it `size` shrinks the list to the sliver left, which still "fits" below, so `flip` never fires. The height is measured, not restated from tokens, because only the browser knows the device's safe area; the bar is found by its class, not a prop threaded through every box.
 
 ### The popup
 
 `combobox__popup` holds the listbox and, beneath it, the empty message; it is the one element placed, so the two move together. With `empty={false}` the listbox is placed itself. The `<ul>` keeps Downshift's `getMenuProps`, so its `id` and the input's `aria-controls` agree. Downshift counts only the input, the toggle and the listbox as inside, and closes on a press anywhere else. The `<ul>` scrolls, not the popup, because Downshift scrolls the highlighted row into view within the menu element and a scroller outside it is never moved.
+
+## What a keystroke writes
+
+Every write to the page re-checks its `:has()` style rules, so a key writes
+only what it changes ([`ui.md`, "The suggestion field writes only what a keystroke changes"](../design-decisions/ui.md#the-suggestion-field-writes-only-what-a-keystroke-changes)):
+
+- **`aria-busy`** changes only when a lookup starts or settles, since React
+  writes an attribute only when its value changes.
+- **The list's `width` and `--combobox-list-room`** are set only when they
+  differ from what the list already holds.
+- **The input's `name` is rewritten by React on every key**, and on every
+  render of the box, by React DOM's own input update code. The field cannot
+  stop that while React renders the input, so it is left alone.
+
+`tests/components/Combobox/keystroke.test.tsx` watches the box and the list
+for these writes.
 
 ## The empty message
 

@@ -41,7 +41,7 @@
   white-space: nowrap;
   cursor: pointer;
   list-style: none;
-  @include theme-transition(background-color);
+  @include state-fade(background-color);
 
   &::-webkit-details-marker {
     display: none;

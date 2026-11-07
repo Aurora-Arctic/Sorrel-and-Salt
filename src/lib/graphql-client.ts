@@ -1,6 +1,6 @@
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
-import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import { CLIENT_HEADER, CLIENT_HEADER_VALUE } from '../graphql/csrf';
 import { ACCESS_PAUSED_CODE, covenPausedPath, covenSlugOf } from './access-paused';
 import { apiPath } from './api-path';
@@ -29,8 +29,18 @@ function leaveIfCovenPaused(errors: readonly GraphQLFormattedError[] | undefined
   window.location.assign(covenPausedPath(slug));
 }
 
+// Read off the query text, since the parser stays out of the browser's bundle. Codegen writes
+// each document from a parsed operation, so the keyword and name are the first thing in it.
+const OPERATION_NAME = /^\s*(?:query|mutation|subscription)\s+([_A-Za-z][_0-9A-Za-z]*)/;
+
+export function operationNameOf(
+  document: DocumentTypeDecoration<unknown, never>,
+): string | undefined {
+  return OPERATION_NAME.exec(String(document))?.[1];
+}
+
 async function send<TResult, TVariables extends object>(
-  document: TypedDocumentNode<TResult, TVariables>,
+  document: DocumentTypeDecoration<TResult, TVariables>,
   variables: TVariables | undefined,
   signal?: AbortSignal,
 ): Promise<TResult> {
@@ -51,9 +61,9 @@ async function send<TResult, TVariables extends object>(
       accept: 'application/graphql-response+json, application/json',
     },
     body: JSON.stringify({
-      query: print(document),
+      query: String(document),
       // graphql-request sent the name, and the workshop's stories answer by it.
-      operationName: getOperationAST(document)?.name?.value,
+      operationName: operationNameOf(document),
       variables,
     }),
     signal,
@@ -76,15 +86,15 @@ async function send<TResult, TVariables extends object>(
 
 /** Rejects with `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole. */
 export function graphqlRequest<TResult, TVariables extends object>(
-  document: TypedDocumentNode<TResult, TVariables>,
+  document: DocumentTypeDecoration<TResult, TVariables>,
   ...[variables]: VariablesArg<TVariables>
 ): Promise<TResult> {
   return send(document, variables as TVariables | undefined);
 }
 
 export function saveRequest<Input extends object>(
-  create: TypedDocumentNode<unknown, { input: Input }>,
-  update: TypedDocumentNode<unknown, { id: string; input: Input }>,
+  create: DocumentTypeDecoration<unknown, { input: Input }>,
+  update: DocumentTypeDecoration<unknown, { id: string; input: Input }>,
 ): (input: Input, id: string | undefined) => Promise<void> {
   return async (input, id) => {
     if (id) {
@@ -93,17 +103,17 @@ export function saveRequest<Input extends object>(
     }
     // Widened, since `VariablesArg` cannot decide `{ input: Input }` while
     // `Input` is generic; the parameter has already held the document to it.
-    const widened = create as TypedDocumentNode<unknown, { input: object }>;
+    const widened = create as DocumentTypeDecoration<unknown, { input: object }>;
     await graphqlRequest<unknown, { input: object }>(widened, { input });
   };
 }
 
 /** Codegen refuses two operations sharing a name, so the name is a unique key. */
 export function graphqlQuery<TResult, TVariables extends object>(
-  document: TypedDocumentNode<TResult, TVariables>,
+  document: DocumentTypeDecoration<TResult, TVariables>,
   ...[variables]: VariablesArg<TVariables>
 ) {
-  const name = getOperationAST(document)?.name?.value;
+  const name = operationNameOf(document);
   if (name === undefined) {
     throw new Error('A GraphQL query needs an operation name to key its cache entry.');
   }

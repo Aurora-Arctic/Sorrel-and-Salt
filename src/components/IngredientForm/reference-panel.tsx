@@ -19,7 +19,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 
 import IconTip from '../IconTip';
@@ -61,7 +61,13 @@ import { placeServerIssues } from '../../lib/graphql-failure';
 export const CreateReferenceDocument = graphql(`
   mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {
     createReference(workspaceId: $workspaceId, input: $input) {
-      ...ReferenceRow
+      id
+      citation
+      isGlobal
+      kind
+      authors
+      title
+      container
     }
   }
 `);
@@ -69,7 +75,13 @@ export const CreateReferenceDocument = graphql(`
 export const UpdateReferenceDocument = graphql(`
   mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {
     updateReference(workspaceId: $workspaceId, id: $id, input: $input) {
-      ...ReferenceRow
+      id
+      citation
+      isGlobal
+      kind
+      authors
+      title
+      container
     }
   }
 `);

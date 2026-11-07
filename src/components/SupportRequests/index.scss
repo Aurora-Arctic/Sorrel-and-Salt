@@ -143,8 +143,15 @@
   border-block-end: 0;
 }
 
-.support-detail__main h3 {
+.support-detail__main h3,
+.support-detail__thread-title {
   margin-block-end: 0;
+}
+
+// An h2 Thread heading keeps the h3 size it has in a dialog.
+.support-detail__main h2.support-detail__thread-title {
+  font-size: heading-size(3);
+  line-height: 1.2;
 }
 
 .support-detail__issue {

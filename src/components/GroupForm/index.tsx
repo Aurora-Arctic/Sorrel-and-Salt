@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { HEX_COLOR } from '../../lib/contrast';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
 import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';

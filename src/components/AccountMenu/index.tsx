@@ -1,16 +1,9 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import { isAtPath } from '../../lib/at-path';
-import { PendingLink } from '../../lib/navigation';
-import { siteLinkTarget } from '../AppShell/site-target';
-import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
-import IconTip from '../IconTip';
 import { ChevronIcon } from '../IconTip/icons';
-import SupportLink from '../SupportLink';
-import { SUPPORT_LIST_PATH } from '../../lib/support-path';
-import SignOutButton from './sign-out-button';
+import { useLazyModule } from '../../lib/use-lazy-module';
+import { countText } from './counts';
 import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
 import './index.scss';
@@ -19,46 +12,7 @@ import './index.scss';
 // when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
 
-const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
-
-const COUNT_CAP = 99;
-
-const ADMIN_ASSIGNED_PATH = '/keepers/support?view=mine';
-
-function countText(count: number, what: string): string {
-  return count > COUNT_CAP
-    ? `more than ${COUNT_CAP} requests ${what}`
-    : `${count} ${count === 1 ? 'request' : 'requests'} ${what}`;
-}
-
-function supportTip(count: number, tipWhat: string): { shown: number | string; tip: string } {
-  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
-  return { shown, tip: `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}` };
-}
-
-function MenuCount({
-  count,
-  what,
-  tipWhat,
-}: {
-  count: number;
-  what: string;
-  tipWhat: string;
-}): ReactElement {
-  const { shown, tip } = supportTip(count, tipWhat);
-  return (
-    <>
-      <span className="account-menu__badge-tip">
-        <IconTip tip={tip} placement="below">
-          <span className="account-menu__badge" aria-hidden="true">
-            {shown}
-          </span>
-        </IconTip>
-      </span>
-      <span className="visually-hidden">, {countText(count, what)}</span>
-    </>
-  );
-}
+const loadPanel = () => import('./panel');
 
 const AccountMenu = ({
   name,
@@ -69,6 +23,9 @@ const AccountMenu = ({
   waitingSupport = 0,
 }: AccountMenuProps): ReactElement => {
   const [open, setOpen] = useState(false);
+  // The panel's rows load on the first press, which opens it over its empty frame.
+  const panel = useLazyModule(loadPanel, open);
+  const Panel = panel?.default;
   // An unverified account cannot reach the account page the count leads to.
   const pending = verified && pendingInvitations > 0;
   const staffCount = verified ? assignedSupport : 0;
@@ -84,7 +41,6 @@ const AccountMenu = ({
     senderCount > 0 ? countText(senderCount, 'waiting on you') : null,
   ].filter((note) => note !== null);
   const fullName = notes.length > 0 ? `${name}, ${notes.join(', ')}` : undefined;
-  const pathname = usePathname();
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -135,111 +91,16 @@ const AccountMenu = ({
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
       <ul id={panelId} className="account-menu__panel" hidden={!open}>
-        {verified && (
-          <li className="account-menu__account">
-            <PendingLink
-              href={ACCOUNT_PATH}
-              navigationTarget={ACCOUNT_TARGET}
-              className={
-                pending ? 'account-menu__item account-menu__item--counted' : 'account-menu__item'
-              }
-              onClick={close}
-            >
-              Your Account
-            </PendingLink>
-            {/* A link of its own beside Your Account, not inside it: a press on the count
-                opens the invitations, a press on the rest of the row the account page. */}
-            {pending && (
-              <span className="account-menu__count">
-                <IconTip tip={`You Have ${invitations}`} placement="below">
-                  <PendingLink
-                    href={ACCOUNT_INVITATIONS_PATH}
-                    navigationTarget={ACCOUNT_TARGET}
-                    className="account-menu__count-mark"
-                    onClick={close}
-                  >
-                    <span aria-hidden="true">{pendingInvitations}</span>
-                    <span className="visually-hidden">{invitations}</span>
-                  </PendingLink>
-                </IconTip>
-              </span>
-            )}
-          </li>
+        {Panel && (
+          <Panel
+            verified={verified}
+            links={links}
+            pendingInvitations={pendingInvitations}
+            assignedSupport={assignedSupport}
+            waitingSupport={waitingSupport}
+            close={close}
+          />
         )}
-        {verified &&
-          links.map(({ label, href, base }) => {
-            const counted = base === '/keepers' && staffCount > 0;
-            const { shown, tip } = supportTip(staffCount, 'Assigned to You');
-            return (
-              <li
-                key={label}
-                className={
-                  counted ? 'account-menu__link account-menu__link--counted' : 'account-menu__link'
-                }
-              >
-                <PendingLink
-                  href={href}
-                  navigationTarget={siteLinkTarget(base, href)}
-                  className={
-                    counted
-                      ? 'account-menu__item account-menu__item--counted'
-                      : 'account-menu__item'
-                  }
-                  onClick={close}
-                  aria-current={isAtPath(pathname, base) ? 'page' : undefined}
-                >
-                  {label}
-                </PendingLink>
-                {/* A link of its own beside Keepers, as the invitations count is beside Your Account:
-                    a press on the circle opens the requests assigned to the viewer, on the rest of the row /keepers. */}
-                {counted && (
-                  <span className="account-menu__count">
-                    <IconTip tip={tip} placement="below">
-                      <PendingLink
-                        href={ADMIN_ASSIGNED_PATH as typeof href}
-                        navigationTarget={siteLinkTarget(base, ADMIN_ASSIGNED_PATH as typeof href)}
-                        className="account-menu__count-mark"
-                        onClick={close}
-                      >
-                        <span aria-hidden="true">{shown}</span>
-                        <span className="visually-hidden">
-                          {countText(staffCount, 'assigned to you')}
-                        </span>
-                      </PendingLink>
-                    </IconTip>
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        {verified && (
-          <li
-            className={
-              senderCount > 0
-                ? 'account-menu__link account-menu__link--counted'
-                : 'account-menu__link'
-            }
-          >
-            {senderCount > 0 ? (
-              <PendingLink
-                href={SUPPORT_LIST_PATH}
-                navigationTarget={ACCOUNT_TARGET}
-                className="account-menu__item"
-                onClick={close}
-              >
-                Support
-                <MenuCount count={senderCount} what="waiting on you" tipWhat="Waiting on You" />
-              </PendingLink>
-            ) : (
-              <SupportLink className="account-menu__item" onClick={close}>
-                Support
-              </SupportLink>
-            )}
-          </li>
-        )}
-        <li className="account-menu__signout">
-          <SignOutButton />
-        </li>
       </ul>
     </div>
   );

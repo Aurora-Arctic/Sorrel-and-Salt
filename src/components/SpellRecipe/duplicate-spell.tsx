@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { covenTarget } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';

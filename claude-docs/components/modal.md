@@ -136,6 +136,14 @@ The compendium choice `navigate`s to `/curator/compendium?new=ingredient-compend
 - The form creates the ingredient at its first save, once named; the dialog stays open and `replaceState`s from `?new=ingredient-coven-<slug>` to `/coven/<slug>/ingredients?edit=<id>`, so a reload opens the edit modal. Closing after a create goes to `/coven/<slug>/ingredients`. The compendium does the same with `?edit=<slug>` and keeps the form's React key stable so it does not remount.
 - A coven's add also ends when the compendium already bears the typed name: a match's + closes the modal and routes to the entry's coven page ([`ingredient-form.md`](ingredient-form.md), "The duplicate warning").
 
+## Contents that load on first open
+
+Quick Look (the entry details), Add Ingredient and the Account menu's panel rows keep their contents out of the page's first scripts and fetch them when first opened.
+
+- They share `useLazyModule` (`src/lib/use-lazy-module.ts`), which runs a dynamic `import()` and holds the loaded module in state.
+- The frame draws at once with its accessible name and a `status` (`ModalLoading`) in the body, and the contents replace the status when the code arrives. A route modal gives the frame through `RouteModalContent`'s `loading` field.
+- Focus, Escape and the close button belong to the frame, so they work while the contents are on their way.
+
 ## RouteModal
 
 A modal opened by its page's address, `?new` or `?edit=<slug>`, for every admin page and the spell builder (`?new=spell-<slug>`, `?edit=<id>`). A page renders it always at one fixed place; it shows its `content` when the address opens a modal, a skeleton under the pressed row's head while a press is on its way, and nothing otherwise. One wrapper means a save always fades.
@@ -175,9 +183,9 @@ Tokens are in `index.scss`: `$dialog-column` (32rem), `$modal-padding`, `$close-
 
 The dialog's overflow is `clip`. A `hidden` box is still a scroll container, and `.visually-hidden` live regions are placed against the dialog (the body is unpositioned), far below its foot; the reference panel's `scrollIntoView` then scrolled the dialog and lifted the header out of view. `clip` makes the dialog no scroll container (`tests/e2e/admin-compendium.spec.ts`). It is styled when open only, leaving the closed element's `display: none` to the browser.
 
-### The fade's colour transitions
+### The fade
 
-The dialog is compounded with `.modal`, whose primitive sets its own `transition` as `body .modal`, so the theme's colour transitions are restated beside the fade for both to run.
+The dialog fades by opacity alone; a theme change runs no colour transition on it, because the page cross-fades as one ([`theme-toggle.md`](theme-toggle.md), "The theme swap").
 
 ### The × and the toolbar row
 

@@ -592,7 +592,7 @@ $replaces-gap: space(5);
 .ingredient-summary__covens a {
   color: $text-primary;
   @include faded-underline;
-  @include theme-transition(color);
+  @include state-fade(color);
 
   &:hover,
   &:focus-visible {

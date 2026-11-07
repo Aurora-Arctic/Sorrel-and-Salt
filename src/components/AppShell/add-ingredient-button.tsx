@@ -10,12 +10,16 @@ import { sectionsFor } from '../MenuButton/sections';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { joinList } from '@/lib/join-list';
 import type { ShellWorkspace } from '../../lib/types';
-import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
+import ModalLoading from '../Modal/loading';
+import { useLazyModule } from '@/lib/use-lazy-module';
 import { NEW, NEW_COMPENDIUM_ENTRY, askedCoven, closedHref, openHref } from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
+
+// The form's code loads the first time the dialog opens; the dialog's frame draws first.
+const loadForm = () => import('../IngredientForm');
 
 // The bar's one global action: a plain button for one place to add, a split button for two or more. A
 // coven's dialog opens at `?new=ingredient-coven-<slug>` by `pushState`; the compendium's New Entry
@@ -47,17 +51,22 @@ function savedMessage(saved: SavedIngredient): string {
   return `Saved ${saved.name}, with ${joinList(jars, 'and')}`;
 }
 
+/** The form for one coven, or the dialog's loading status while its code is on the way. */
 function AddIngredientBody({
+  form,
   workspace,
   close,
   onSaved,
   onCreated,
 }: {
+  form: typeof import('../IngredientForm') | null;
   workspace: ShellWorkspace;
   close: () => void;
   onSaved: (saved: SavedIngredient) => void;
   onCreated: (saved: SavedIngredient) => void;
 }): ReactElement {
+  if (!form) return <ModalLoading />;
+  const IngredientForm = form.default;
   return (
     <IngredientForm
       workspaceId={workspace.id}
@@ -155,6 +164,7 @@ const AddIngredientButton = ({
           )?.workspace ?? null);
 
   const adding = asking ?? created;
+  const form = useLazyModule(loadForm, adding !== null);
 
   if (!viewer.verified) return null;
   if (!initial) return null;
@@ -206,12 +216,14 @@ const AddIngredientButton = ({
           destination={adding.name}
           title={LABEL}
           onClose={close}
+          loading={!form}
           // Focus returns to the bar's main part: the menu item that opened this goes with the
           // menu.
           returnTo={() => main.current}
         >
           {(done) => (
             <AddIngredientBody
+              form={form}
               workspace={adding}
               close={done}
               onCreated={(ingredient) => {

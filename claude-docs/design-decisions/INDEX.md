@@ -73,6 +73,7 @@ Read [graphql.md](graphql.md).
 - [m10.31-graphql-request-dropped](graphql.md#graphql-request-replaced-by-a-fetch-wrapper) — A small fetch wrapper replaces graphql-request, holding graphql at 16.
 - [mb.180-graphql-transport-half](graphql.md#the-graphql-file-holds-the-transports-half) — The GraphQL file holds the transport's half of the work.
 - [mb.80-public-compendium](graphql.md#the-compendium-is-public-and-search-indexable) — The compendium is public and indexable; nothing workspace-scoped follows it out.
+- [m15.8-compiler-plugin-under-turbopack](graphql.md#each-graphql-document-ships-as-its-callers-text) — Each GraphQL document ships as its caller's text, with no server package in the browser.
 
 ## Ingredients
 
@@ -216,6 +217,8 @@ Read [ui.md](ui.md).
 - [mb.118-design-review-mail](ui.md#mail-design-review-sign-off) — Mail design review sign-off.
 - [mb.119-design-review-coven](ui.md#design-review-the-coven-and-invitations) — Design review of the coven and invitations.
 - [mb.120-design-review-public-compendium](ui.md#design-review-the-public-compendium-and-shared-ingredient-components) — Design review of the public compendium and shared ingredient components.
+- [m15.83-combobox-keystroke-cost](ui.md#the-suggestion-field-writes-only-what-a-keystroke-changes) — The suggestion field writes only what a keystroke changes.
+- [m15.84-compendium-sends-each-thing-once](ui.md#the-compendium-page-sends-each-thing-once) — The compendium page sends each category, deity and card once.
 
 ## Process
 

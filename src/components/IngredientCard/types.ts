@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { CardCategory } from '../CategoryChips/types';
+import type { GroupColors } from '../../lib/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { EntryKind, EntryRecency } from '../EntryMarks/types';
 import type { LastEditProps } from '../LastEdit/types';
@@ -13,7 +14,8 @@ export interface IngredientCardProps {
   label: string;
   formalName?: string | null;
   nomenclature?: NomenclatureKind | null;
-  categories?: readonly CardCategory[];
+  /** Each category with its group, or by id alone where a `CardCategoryVocabulary` above the card holds it. */
+  categories?: readonly (CardCategory | CardCategoryRef)[];
   /**
    * The entry's live forms, read from its variants: each draws its group's icon before its name on
    * the secondary line, and * the notes of those that have any. Structural, so a GraphQL variant
@@ -41,4 +43,17 @@ export interface IngredientCardProps {
    */
   lastEdit?: LastEditProps | null;
   children?: ReactNode;
+}
+
+/** A card's category named by id alone, its name and group read from `CardCategoryVocabulary`. */
+export interface CardCategoryRef {
+  id: string;
+  /** As `CardCategory.forms`: the forms that carry it when the entry itself does not. */
+  forms?: readonly string[];
+}
+
+export interface CardCategoryVocabularyProps {
+  /** Every category the list's cards may name by id, with its group's colours. */
+  categories: readonly { id: string; name: string; group: GroupColors }[];
+  children: ReactNode;
 }

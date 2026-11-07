@@ -124,6 +124,10 @@ An entry's details open in a modal over the list. The eye, **Quick Look**, is on
 - **The reads.** Admin: `ingredientDetailOf` with the curator's session, uncached, nothing for an entry deleted since. Coven list: `readViewedEntry` (`reads.ts`), uncached, with the coven for a retired entry and its annotations for a held compendium entry. `/compendium`: `readCompendiumDetails` (`src/app/compendium-reads.ts`), the id first with no session, then the public cached read, so an id naming a coven's own entry opens nothing.
 - **The foot bar** links to the entry's page: **See in Compendium** (public and admin lists), **See in Your Cupboard** (a coven's list). `DetailsDialog` passes it as Modal's `foot` ([`modal.md`](modal.md), "The foot"), outside the scrolling element, so the body's scrollbar ends above the bar's hairline. `ingredient-details-modal.spec.ts` proves the bar is outside the body, the body scrolls on overflow only, and the bar and last text are both in view at the end of a long entry.
 
+## Loading on first open
+
+The details dialog draws its frame with the entry's heading and a `status` at once; the parts in `details-parts.tsx` load on first open and replace the status. `details-dialog.tsx` holds the frame. The shell's Add Ingredient control loads its form the same way ([`modal.md`](modal.md), "Contents that load on first open").
+
 ## Props in detail
 
 Rules not in `types.ts`: with `cupboard.plus` omitted (own entry, retired, no coven that may add) neither plus nor check is drawn; `CupboardPlus` is shared with the details modal. `heldInCovens` is for any role, false for a visitor. `stock` is omitted public and for an unheld compendium entry. `pageTitleOf` titles both routes: the name, then the formal name in brackets when it differs.

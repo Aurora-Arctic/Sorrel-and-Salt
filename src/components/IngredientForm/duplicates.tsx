@@ -14,7 +14,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { TextField } from '../Field';
@@ -26,7 +26,7 @@ import { cardName } from '../IngredientCard/card-name';
 import DetailsLink from '../IngredientEntry/details-link';
 import Notice from '../Notice';
 import Spinner from '../Spinner';
-import { DuplicateQuickLook } from './quick-look';
+import { LazyDuplicateQuickLook as DuplicateQuickLook } from './lazy-quick-look';
 import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 // The +'s look is the card's plus's, so its stylesheet; not AddIcon itself, which sends its own
 // add where this one hands the entry to the form.

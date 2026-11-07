@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import { formatAgreementVersion } from '../../lib/agreement-version';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';

@@ -2,14 +2,14 @@
 // Service Worker (MSW), so a real Save or Sign In button works without a server. Requests go to
 // `/workshop/api/...` (claude-docs/workshop.md, "Notes the `.storybook/` files cite").
 
-import { type TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { type DocumentNode, getOperationAST } from 'graphql';
+import { type DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import { useLayoutEffect } from 'react';
 import { graphql } from 'msw/graphql';
 import { http, HttpResponse } from 'msw/http';
 import { delay, type RequestHandler } from 'msw';
 import type { SetupWorker } from 'msw/browser';
 import { apiPath } from '@/lib/api-path';
+import { operationNameOf } from '@/lib/graphql-client';
 
 /** The GraphQL endpoint as a story's requests reach it. */
 const graphqlEndpoint = graphql.link(apiPath('/api/graphql'));
@@ -27,8 +27,8 @@ export type MockError = {
   currentRevision?: number;
 };
 
-function operationName(document: DocumentNode): string {
-  const name = getOperationAST(document)?.name?.value;
+function operationName(document: DocumentTypeDecoration<unknown, never>): string {
+  const name = operationNameOf(document);
   if (!name) throw new Error('A mocked document needs a named operation, to be matched by name.');
   return name;
 }
@@ -73,7 +73,7 @@ function body(result: unknown): object {
 
 function answer<Result, Variables extends object>(
   kind: 'query' | 'mutation',
-  document: TypedDocumentNode<Result, Variables>,
+  document: DocumentTypeDecoration<Result, Variables>,
   resolver: Resolver<Result, Variables>,
   { delayMs }: Options,
 ): RequestHandler {
@@ -85,7 +85,7 @@ function answer<Result, Variables extends object>(
 
 /** Answers a query by its name, typed by its generated document. */
 export function answerQuery<Result, Variables extends object>(
-  document: TypedDocumentNode<Result, Variables>,
+  document: DocumentTypeDecoration<Result, Variables>,
   resolver: Resolver<Result, Variables>,
   options: Options = {},
 ): RequestHandler {
@@ -94,7 +94,7 @@ export function answerQuery<Result, Variables extends object>(
 
 /** Answers a mutation by its name, typed by its generated document. */
 export function answerMutation<Result, Variables extends object>(
-  document: TypedDocumentNode<Result, Variables>,
+  document: DocumentTypeDecoration<Result, Variables>,
   resolver: Resolver<Result, Variables>,
   options: Options = {},
 ): RequestHandler {
@@ -129,7 +129,7 @@ export function hangAllOperations(): RequestHandler {
 /** Never answers a query or mutation, for a story that shows its loading or saving state for good. */
 export function hangOperation<Result, Variables extends object>(
   kind: 'query' | 'mutation',
-  document: TypedDocumentNode<Result, Variables>,
+  document: DocumentTypeDecoration<Result, Variables>,
 ): RequestHandler {
   return graphqlEndpoint[kind](operationName(document), () => delay('infinite'));
 }

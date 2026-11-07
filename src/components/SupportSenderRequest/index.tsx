@@ -12,7 +12,11 @@ import '../SupportRequests/index.scss';
 
 // Staff replies are named for the site and tagged "Staff", never by the staff member's name (claude-docs/components/support-sender-request.md).
 
-const SupportSenderRequest = ({ request, reply }: SupportSenderRequestProps): ReactElement => (
+const SupportSenderRequest = ({
+  request,
+  reply,
+  headingLevel,
+}: SupportSenderRequestProps): ReactElement => (
   <div className="support-detail support-detail--single">
     <div className="support-detail__main">
       <SupportFacts
@@ -21,6 +25,7 @@ const SupportSenderRequest = ({ request, reply }: SupportSenderRequestProps): Re
         errorCode={request.errorCode}
       />
       <SupportThread
+        headingLevel={headingLevel}
         entries={[
           {
             id: request.id,

@@ -5,7 +5,7 @@ import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 
 import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
 import { createPortal, flushSync } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
-import { graphql } from '../../gql';
+import { graphql } from '@/lib/graphql-document';
 import type {
   CompendiumIngredientInput,
   CompendiumIngredientUpdateInput,

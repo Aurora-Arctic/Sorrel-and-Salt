@@ -76,15 +76,14 @@
   }
 }
 
-// The app's disclosure chevron, turned over while the tail is open on the app's theme
-// transition; it also fades by opacity when a search starts and ends, so it never pops.
+// The app's disclosure chevron, turned over while the tail is open; it also fades by opacity when a search starts and ends, so it never pops.
 .search-sentence__chevron {
   @include disclosure-chevron('.search-sentence__disclosure.is-tail-open');
 
   margin-inline-start: space(1);
   vertical-align: text-bottom;
   transition:
-    transform $theme-transition-duration $theme-transition-easing,
+    transform $motion-long $motion-easing,
     opacity $motion-short ease-out;
 
   &.is-hidden {

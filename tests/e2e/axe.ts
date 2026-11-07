@@ -1,13 +1,21 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
+/** One failed axe rule on one element, named so a report can say where. */
+export interface AxeFinding {
+  rule: string;
+  impact: string;
+  help: string;
+  selector: string;
+}
+
 // Settles first: a theme switch scanned straight after would read a colour part-way along its ease. The title
 // is waited for too: a soft navigation leaves the document with no <title> for milliseconds, so axe's
 // document-title rule fails. `skipRules` is for the workshop, whose story page has no level-one heading.
-export async function assertNoAccessibilityViolations(
+export async function accessibilityFindings(
   page: Page,
   { skipRules = [] }: { skipRules?: string[] } = {},
-) {
+): Promise<AxeFinding[]> {
   await expect(page).toHaveTitle(/\S/);
   await settleTransitions(page);
   const scan = async () =>
@@ -20,10 +28,25 @@ export async function assertNoAccessibilityViolations(
     await expect(page).toHaveTitle(/\S/);
     violations = await scan();
   }
-  const summary = violations
-    .map((v) => `${v.id}: ${v.help} (${v.nodes.length} node(s))`)
+  return violations.flatMap((violation) =>
+    violation.nodes.map((node) => ({
+      rule: violation.id,
+      impact: violation.impact ?? 'unknown',
+      help: violation.help,
+      selector: node.target.join(' '),
+    })),
+  );
+}
+
+export async function assertNoAccessibilityViolations(
+  page: Page,
+  options: { skipRules?: string[] } = {},
+) {
+  const findings = await accessibilityFindings(page, options);
+  const summary = findings
+    .map(({ rule, help, selector }) => `${rule}: ${help} (${selector})`)
     .join('\n');
-  expect(violations, summary).toEqual([]);
+  expect(findings, summary).toEqual([]);
 }
 
 // A page holds at a phone's width when the document is no wider than the window. Measured in a real

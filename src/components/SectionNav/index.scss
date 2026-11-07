@@ -48,8 +48,7 @@
   font-size: type-size('small');
   text-decoration: none;
   white-space: nowrap;
-
-  @include theme-transition(background-color, color);
+  @include state-fade(background-color, color);
 
   &:hover {
     background-color: $fill-quiet;
@@ -185,16 +184,14 @@
   padding: 0;
   overflow: hidden;
   // The fade, the tip bubble's pattern: `hidden` cannot animate, so `visibility` holds the sheet
-  // until the opacity has faded, over the theme's duration. Said after the panel mixin, whose own
+  // until the opacity has faded, over the long duration. Said after the panel mixin, whose own
   // transition would otherwise replace it.
   display: block;
   visibility: hidden;
   opacity: 0;
   transition:
-    opacity $theme-transition-duration $theme-transition-easing,
-    visibility 0s linear $theme-transition-duration,
-    background-color $theme-transition-duration $theme-transition-easing,
-    color $theme-transition-duration $theme-transition-easing;
+    opacity $motion-long $motion-easing,
+    visibility 0s linear $motion-long;
 
   @include reduced-motion {
     transition: none;
@@ -205,10 +202,8 @@
   visibility: visible;
   opacity: 1;
   transition:
-    opacity $theme-transition-duration $theme-transition-easing,
-    visibility 0s,
-    background-color $theme-transition-duration $theme-transition-easing,
-    color $theme-transition-duration $theme-transition-easing;
+    opacity $motion-long $motion-easing,
+    visibility 0s;
 
   @include reduced-motion {
     transition: none;

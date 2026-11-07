@@ -32,6 +32,10 @@
   - **A failure**, a refusal or a dropped connection, says "That didn't work. Please try again." (`GENERIC_FAILURE`, `src/lib/graphql-failure.ts`) in a click-feedback callout beneath the button, with the focus left on it and a badge on its corner that brings the sentence back once dismissed ([`click-feedback.md`](click-feedback.md)). The next press clears it. The call is Better Auth's, not GraphQL's, but it has no more to say about why than a lost request does, so it takes the same sentence.
   - **SignInMethods' Sign In Again makes the same call** in the same shape, but lands on `/sign-in?next=%2Faccount` rather than `/`, so a stale session comes back to the account page fresh ([`sign-in-methods.md`](sign-in-methods.md), "A stale session signs in again").
 
+## Loading on first press
+
+The button and the panel's frame are in the page's first scripts. The rows inside the panel (`panel.tsx`) load on the first press through `useLazyModule`, and show a `status` until they arrive. The counts the rows need are read by `counts.ts`, not by the button.
+
 ## Styling
 
 - At or under `$shell-tablet-width` the name stays in the page visually hidden, the chevron goes, and the button is a `$control-height` square, because with the name an admin's bar ran past the window from 642px up. The button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.

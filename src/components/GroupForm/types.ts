@@ -1,4 +1,4 @@
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 import type { FieldValues, Resolver } from 'react-hook-form';
 import type { z } from 'zod';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
@@ -29,9 +29,9 @@ export type GroupKindCopy = Omit<GroupFormKind, 'resolver' | 'save' | 'remove'>;
 
 export interface GroupKindSpec<Input extends object> extends GroupKindCopy {
   schema: z.ZodType<object, FieldValues>;
-  create: TypedDocumentNode<unknown, { input: Input }>;
-  update: TypedDocumentNode<unknown, { id: string; input: Input }>;
-  remove: TypedDocumentNode<unknown, { id: string; moveTo?: string | null }>;
+  create: DocumentTypeDecoration<unknown, { input: Input }>;
+  update: DocumentTypeDecoration<unknown, { id: string; input: Input }>;
+  remove: DocumentTypeDecoration<unknown, { id: string; moveTo?: string | null }>;
 }
 
 export interface GroupChoice extends Partial<GroupColors> {

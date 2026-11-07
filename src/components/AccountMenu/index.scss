@@ -56,7 +56,6 @@ $account-menu-avatar: 2rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
-  @include theme-transition(background-color);
 
   // The fill that draws the disc is dropped, so a border draws the circle,
   // inside the disc's size so the bar does not move.
@@ -125,14 +124,14 @@ $account-menu-avatar: 2rem;
   visibility: hidden;
   opacity: 0;
   transition:
-    opacity $theme-transition-duration $theme-transition-easing,
-    visibility 0s linear $theme-transition-duration;
+    opacity $motion-long $motion-easing,
+    visibility 0s linear $motion-long;
 
   &:not([hidden]) {
     visibility: visible;
     opacity: 1;
     transition:
-      opacity $theme-transition-duration $theme-transition-easing,
+      opacity $motion-long $motion-easing,
       visibility 0s;
   }
 
@@ -158,8 +157,7 @@ $account-menu-avatar: 2rem;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  // The wash eases in as the button's does, rather than snapping.
-  @include theme-transition(background-color, color);
+  @include state-fade(background-color, color);
 
   &:hover {
     background-color: $fill-highlight;

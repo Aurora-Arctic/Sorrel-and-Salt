@@ -8,17 +8,12 @@
 // `.spell-card__face` layer (_smoulder.scss), so the smouldering edge can burn through both.
 .spell-card {
   @include smoulder-base;
-  @include theme-transition(color);
 
   // The containing block for the title link's stretched `::after` below.
   position: relative;
   padding: space(4);
   color: $text-primary;
   border-radius: radius('surface');
-
-  @include reduced-motion {
-    transition: none;
-  }
 
   // The content, positioned so it paints over the face and glow in markup order, with no z-index anywhere: one on the
   // card would trap the category chips' tips beneath the next card.
