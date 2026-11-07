@@ -7,7 +7,7 @@ landing — into their workspace, the create form, or the invite-only
 explanation (M2.8) — is its own route, **`/coven`**, protected like every
 other page. A sign-in with no `next` lands there — a keeper's, since MB.113,
 on `/admin` instead, and `safeReturnPath` now has no fallback, since which
-landing applies is the role's ([`auth.md`](../auth.md), "Route protection").
+landing applies is the role's ([`../auth/route-protection.md`](../auth/route-protection.md), "Route protection").
 
 ## The question
 

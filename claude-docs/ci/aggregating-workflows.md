@@ -191,3 +191,7 @@
   `blacksmith-8vcpu-ubuntu-2404` from MB.96 to M11.24, and [Runner
   budget](runner-budget.md) has why it came back. The job runs inside
   `container:`, so the host's Ubuntu is only Docker and the runner agent.
+
+### Which events run the checks
+
+No push to `staging` or `main` runs a check; release and main-sync PRs pass the same gate as any PR (C1, MB.190 retired)

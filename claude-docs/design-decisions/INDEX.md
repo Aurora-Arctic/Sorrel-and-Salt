@@ -6,7 +6,7 @@ Each line below reads: record — title — status — live home.
 
 ## Auth and identity
 
-- `m2.9-granting-admin` — Granting and revoking admin — decided — auth.md
+- `m2.9-granting-admin` — Granting and revoking admin — decided — ../auth/README.md
 - `m5.5-admin-compendium` — The admin compendium page: its size, its modal, its lookups — decided — this record
 - `m5.6a-admin-forms` — The admin forms page: the slug, the redirect, the stale pick — decided (history) — this record
 - `m5.6b-admin-groups` — The admin group pages: where a deleted group's rows go — decided — this record
@@ -111,6 +111,11 @@ Each line below reads: record — title — status — live home.
 - `pr1308-repeat-forms` — PR #1308: a spell may lay one form in several steps — decided (history) — this record
 - `pr1308-step-note-retired` — The step note is retired (PR #1308) — decided (history) — this record
 
+- `mw15-bulk-add-partial-with-report` — Bulk add completes the rows it can and reports the rest — decided — this record
+- `mw15-formal-name-in-the-compendium-only` — A formal name is required in the compendium only — decided — this record
+- `mw15-no-external-taxonomic-identifiers` — No external taxonomic identifiers (POWO, IPNI, GBIF, CAS, IMA) — decided — this record
+- `mw15-slug-expiry-without-a-job` — A slug's expiry is a date comparison; work that must happen on time is a durable job — decided — this record
+
 ## GraphQL and services
 
 - `m3.5-graphql-codegen` — graphql-codegen types the browser's documents — decided. — claude-docs/graphql/client-types.md
@@ -195,5 +200,13 @@ Each line below reads: record — title — status — live home.
 - `mb.175-help-articles` — Help and FAQ articles, and a glossary, as rows a keeper edits — decided — this record
 - `mb.175-plan` — Scope Help and FAQ Articles (plan) — decided — this record
 - `wave-13-review-record` — Wave 13 review — plan — decided and built. — this record
+- `mw15-notes-keep-referential-integrity` — Notes keep referential integrity: no polymorphic subject, no shadow history tables — decided — this record
+- `mw15-rejected-stack-choices` — Stack choices rejected (Gatsby, Vite SPA, Supabase, Render Postgres, SQLite for tests, Neon branches for CI, Netlify, Apollo Client, server functions, trunk-based, Better Auth anonymous plugin) — decided — this record
+- `m5.6-admin-categories` — The admin categories page: the delete, the list query, the modal — decided — this record
+- `m9.3-create-stock-refuses-held-form` — Starting a jar of a form the coven holds is refused — decided — this record
+- `mb.240-compendium-seed` — A researched, sourced compendium seed — decided — this record
+- `m10.31-graphql-request-dropped` — graphql-request dropped for a fetch wrapper — decided — this record
+- `m1.27-template-at-setup-not-in-image` — The seeded test template is built at test-run setup, not baked into the Postgres image — decided — this record
+- `mb.42-no-source-layer` — The CI images carry no source layer — decided — this record
 
 Superseded records are in `archive/design-decisions-history.tar.gz`. List it with `tar -tzf`; git history holds the plain text.

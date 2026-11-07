@@ -18,7 +18,7 @@ Nothing else in the migration is flagged: the `ADD CONSTRAINT` that follows re-c
 
 ## Why this is one PR, not two
 
-CLAUDE.md rule 10 splits a column or index drop across two PRs because the deploy still serving when `migrate.yml` runs must not lose anything it reads. A CHECK is read by nothing, and the deploy still serving writes only rows the old CHECK admitted, which the new one admits. That deploy's Zod refuses an edit to an `unknown` row written with a formal name under MB.161 until the name is cleared or a kind chosen, so a rollback loses no write (`claude-docs/design-decisions/mb.161-plan.md`).
+CLAUDE.md rule 10 splits a column or index drop across two PRs because the deploy still serving when `migrate.yml` runs must not lose anything it reads. A CHECK is read by nothing, and the deploy still serving writes only rows the old CHECK admitted, which the new one admits. That deploy's Zod refuses an edit to an `unknown` row written with a formal name under MB.161 until the name is cleared or a kind chosen, so a rollback loses no write (`claude-docs/design-decisions/mb.161-unknown-may-carry-a-formal-name.md`).
 
 ## What is lost
 

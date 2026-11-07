@@ -545,9 +545,9 @@ The Docker side is a Node container rather than a Postgres init script, correcte
 
 Scenarios: `minimal` (one system user, one user, empty compendium), `standard` (six users, workspaces W and X, populated compendium), `demo` (standard plus spells with ingredients and layer order).
 
-The production compendium is not a scenario. Its starting entries are reference data, as the curated vocabularies are: a sourced seed, one markdown file per entry under `compendium/`, run by `db:seed:compendium` on staging and production after the vocabularies and their sources (MB.240; `claude-docs/db/compendium-seed/README.md`). `standard`'s compendium stays the test fixture it is.
+The production compendium is not a scenario. Its starting entries are reference data, as the curated vocabularies are: a sourced seed, one markdown file per entry under `compendium/`, run by `db:seed:compendium` on staging and production after the vocabularies and their sources (MB.240; `claude-docs/compendium/compendium-seed/README.md`). `standard`'s compendium stays the test fixture it is.
 
-The demo coven is reference data too: the seventh reference seed, `db:seed:demo-coven`, run last in `seedReferenceData` and after the compendium seed on staging and production. It inserts the workspace flagged `demo`, a steward seat for the system user and every keeper, and an observer seat for every other live user, and never re-adds a seat that exists, a soft-deleted one included. It joins the `demo` scenario but not `standard`, whose fixture users A–G would otherwise gain a membership (M15.10; `claude-docs/db/demo-coven-seed.md`).
+The demo coven is reference data too: the seventh reference seed, `db:seed:demo-coven`, run last in `seedReferenceData` and after the compendium seed on staging and production. It inserts the workspace flagged `demo`, a steward seat for the system user and every keeper, and an observer seat for every other live user, and never re-adds a seat that exists, a soft-deleted one included. It joins the `demo` scenario but not `standard`, whose fixture users A–G would otherwise gain a membership (M15.10; `claude-docs/db/demo-scenario.md`).
 
 **Fixture users:**
 
@@ -721,7 +721,7 @@ There are two suites. The story suite (`tests/e2e/stories/`, `npm run test:stori
 
 ### Tooling files
 
-`.github/workflows/` (`pr-gate.yml`; `checks.yml`, one matrix running `lint`, `format`, `typecheck`, `build` and `audit`; `vitest.yml`, `playwright.yml` and `gitflow.yml`; the shared composite actions; `build-image.yml`), where `claude-docs/ci.md` is the inventory; `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, `lint-staged.config.mjs` and the `"pre-commit": ["pre-commit:staged"]` array that runs it (M11.23), and `.claude/skills/`.
+`.github/workflows/` (`pr-gate.yml`; `checks.yml`, one matrix running `lint`, `format`, `typecheck`, `build` and `audit`; `vitest.yml`, `playwright.yml` and `gitflow.yml`; the shared composite actions; `build-image.yml`), where `claude-docs/ci/README.md` is the inventory; `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, `lint-staged.config.mjs` and the `"pre-commit": ["pre-commit:staged"]` array that runs it (M11.23), and `.claude/skills/`.
 
 ### Gitflow — unchanged
 
@@ -833,7 +833,7 @@ Visibility flips on notes land in `changed_keys`, giving a queryable record of e
 
 `spells.revision` is already the v1 counter: M13.15 adds it with the shared `bump_revision()` function and a trigger per table, for the edit-conflict check (story 81). In v2 the same function also inserts the `record_revisions` row from `OLD` and `NEW`, so the two counters cannot disagree, and `record_revisions.revision` for a spell equals `spells.revision` for the same change. v1 builds no history table, snapshots or timeline ([`design-decisions/m13.14-autosave.md`](design-decisions/m13.14-autosave.md)).
 
-**A spell pins what went into it.** In v1 a layer reaches its ingredient's row as the row is now, deleted or not (§5, `spell_steps`). In v2 a layer references the exact revision of its ingredient. When the ingredient has been modified since, the spell says so, and the user can pull that precise modification into the spell — as a new revision of the spell, never a silent change to a recipe that a coven has already worked from. A working (M13.4) is made from a finished recipe that stays editable, so in v2 each working pins the spell revision it was made from, as a layer pins its ingredient's ([`m13.1-plan.md`](design-decisions/m13.1-plan.md)).
+**A spell pins what went into it.** In v1 a layer reaches its ingredient's row as the row is now, deleted or not (§5, `spell_steps`). In v2 a layer references the exact revision of its ingredient. When the ingredient has been modified since, the spell says so, and the user can pull that precise modification into the spell — as a new revision of the spell, never a silent change to a recipe that a coven has already worked from. A working (M13.4) is made from a finished recipe that stays editable, so in v2 each working pins the spell revision it was made from, as a layer pins its ingredient's ([`m13.1-plan.md`](design-decisions/m13.1-spell-steps.md)).
 
 **Stories:** view an ingredient's history as a timeline · field-level diff between revisions · see who made each change · restore a previous revision (as a new revision, never a rewrite) · undo a soft delete from a trash view.
 

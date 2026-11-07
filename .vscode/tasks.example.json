@@ -1,6 +1,6 @@
 {
   // MB.22 — copy this file to .vscode/tasks.json (gitignored, per-developer)
-  // to use it; see claude-docs/debugging.md for the full story.
+  // to use it; see claude-docs/testing/debugging.md for the full story.
   //
   // Each task below runs the corresponding npm script as a background task,
   // so VS Code can start it from the Run Task / Run and Debug UI and know

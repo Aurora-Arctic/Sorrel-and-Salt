@@ -141,7 +141,7 @@ pinned unverified through `mapProfileToUser` at every sign-in, so a true value
 was set by Google, by Discord, or by our own mail. That is what lets the sweep,
 the invitation match and the admin invitation key on the column. Inside an
 explicit link, where every provider vouches, the vouch never reaches the row
-(MB.71, [`auth.md`](../auth.md), "Linking a second provider").
+(MB.71, [`../auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Linking a second provider").
 
 **What stays off** stays off: `user.changeEmail` (the email page replaces it),
 `overrideUserInfoOnSignIn`, `accountLinking.trustedProviders`, and now
@@ -365,7 +365,7 @@ admin list's controls.
   every purpose but one: invitations, the email page and the squat all key on
   the column now.
 - **MB.67** lifts "have the owner sign in before anyone else can sign up with
-  the address" from `secrets.md` and `auth.md`, and closes the squat
+  the address" from `secrets.md` and `../auth/README.md`, and closes the squat
   described under "What is simplified" in
   [`m2.9-granting-admin.md`](m2.9-granting-admin.md).
 - **MB.68** adds a second way to become the primary admin: verifying the

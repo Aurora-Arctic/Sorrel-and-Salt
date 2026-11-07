@@ -4,7 +4,7 @@ The compendium is the public surface, so its reads take no proof and no session.
 Services in `ingredients`' `services/compendium.ts`, `services/ingredient-facets.ts`
 (`compendiumFacets`) and `vocabulary`'s `services/ingredient-form-values.ts` sit
 over finders that read the compendium tier named on
-[the tier seam](../modules.md#the-tier-seam). Each parses its filter through
+[the tier seam](tier-seam.md). Each parses its filter through
 `CompendiumFilter` (Zod, `validation/compendium-filter.ts`).
 
 **`findCompendiumPage(filter, page)`** is one keyset page of the compendium under an
@@ -405,6 +405,8 @@ use a right join from the vocabulary table, with the entries' conditions in the 
 entry lists still comes back at zero. Elements and toxic need no join: one query
 counts every setting at once with `count(*) filter (where …)`.
 
+`compendiumFacets` counts the full list: every form, deity and category some entry carries and every chosen one, most entries first then by value; every live zodiac sign and celestial body by name; every element and both toxic settings, zeros included; and how many entries cite no live reference (No Refs) the same with the switch on or off; parsed as `listCompendium` parses it
+
 ### Vocabulary finders
 
 "Curated" means a live row under a live group or tradition, for the form page
@@ -487,7 +489,7 @@ substitute picker reads, behind `ingredientSuggestions`
 ([`graphql/schema.md`](../graphql/schema.md)) and the `ingredients` service
 `suggestIngredients`. It offers exactly what a coven's substitute may link (DESIGN.md
 §5, `ingredient_substitutes`): live entries of the compendium and of the proof's
-workspace, never another, so it is on [the tier seam](../modules.md#the-tier-seam).
+workspace, never another, so it is on [the tier seam](tier-seam.md).
 
 - **It is `findCompendiumPage` under a wider scope.** It takes the same private
   `compendiumList({ query }, membership)` as the coven's list, so the match is the
@@ -528,6 +530,8 @@ folk name) as a `UNION ALL` under `id IN (...)`, not an `OR` beside the scope:
 Postgres cannot turn a subquery inside an `OR` into a join, so that form walks
 `ingredients` whole, and a `UNION`'s de-duplication walks `ingredients_pkey` whole
 (claude-docs/db/fuzzy-matching.md).
+
+A `form` passed to `findIngredientSuggestions` ranks entries holding that form first, then those holding another form of its curated group, within each group; `categoryIds` (the spell builder narrows its Add to Jar picker by the spell's categories) keeps entries carrying any, none or an empty list is no filter; a blank query offers all, and so does one under `MIN_QUERY_LENGTH`
 
 ## Hidden entries
 

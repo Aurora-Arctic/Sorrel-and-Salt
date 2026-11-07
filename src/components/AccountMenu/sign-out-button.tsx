@@ -7,8 +7,9 @@ import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 
 // Sign Out: Better Auth's own sign-out at `/api/auth/*`, the one path outside GraphQL, carrying the
-// session and no application data (claude-docs/auth/graphql-only-exception.md). A success is a full
-// load of `/`; a failure is a callout under the button (claude-docs/components/account-menu.md).
+// session and no application data (claude-docs/auth/config.md, "The one exception to the
+// GraphQL-only rule"). A success is a full load of `/`; a failure is a callout under the button
+// (claude-docs/components/account-menu.md).
 
 const LANDING = '/';
 

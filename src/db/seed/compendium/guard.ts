@@ -23,7 +23,8 @@ import type {
 
 // The compendium seed's guard: every rule the entry files are written to that a function can check, run by a database-free
 // test and by `seedCompendium` before its transaction opens. `checkCompendium` takes a list of shards (the loader hands it
-// the files as one) and returns every issue, not the first (claude-docs/db/compendium-seed/README.md).
+// the files as one) and returns every issue, not the first
+// (claude-docs/compendium/compendium-seed/README.md).
 
 /**
  * The curated vocabularies an entry may name, each by the slug of a name its
@@ -365,7 +366,11 @@ function checkSubstitutes(
   }
 }
 
-/** A row needs a citation per populated field (claude-docs/compendium/compendium-seed/README.md, "How an entry is sourced"). */
+/**
+ * A row needs a citation per populated field
+ * (claude-docs/compendium/compendium-seed/README.md, "How an entry is
+ * sourced").
+ */
 function checkCitations<Field extends string>(
   citations: readonly SeedCitation<Field>[],
   populated: readonly Field[],
@@ -400,8 +405,9 @@ function checkCitations<Field extends string>(
   }
 }
 
-// The files' rules, over and above `checkCompendium`'s (claude-docs/compendium/compendium-seed/README.md, "An
-// entry, field by field" and "Write-once, and how a correction lands").
+// The files' rules, over and above `checkCompendium`'s
+// (claude-docs/compendium/compendium-seed/README.md, "An entry, field by field"
+// and "Write-once, and how a correction lands").
 
 /** The branches the seed deploys from (DESIGN.md §12): a `draft` file is refused on each. */
 export const RELEASE_BRANCHES: readonly string[] = ['staging', 'main'];

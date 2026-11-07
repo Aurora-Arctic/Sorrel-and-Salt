@@ -252,3 +252,7 @@ anchor keeps its own.
 Every e2e run confirms the route is mounted and responding, independent of
 any provider being configured: `tests/e2e/database.ts` reads `/api/auth/get-session` from the worker's server each
 time a spec recreates its database, and throws unless it answers 200.
+
+### Base URL
+
+Base URL: per request, not a BETTER_AUTH_URL variable, because production spans three origins. Outside production the host is fixed (next dev --hostname 0.0.0.0 would make every redirect_uri 0.0.0.0:8000) and the port is the server's own (Next sets PORT), so a second dev server or e2e slot is not refused as an invalid origin. The e2e servers are production builds that answer the browser at localhost, the one plain-http host that lets it use a passkey, so they take the fixed host too under the gate that keeps every deploy off it.

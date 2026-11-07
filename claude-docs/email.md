@@ -277,7 +277,7 @@ exactly`, which Word applies as written.
   contractions, which some readers misread as their opposite (GOV.UK style
   guide); and "email address" for the address, "email" for the message. The
   sources are listed in
-  [`design-decisions/mb.118-plan.md`](design-decisions/mb.118-plan.md).
+  [`design-decisions/mb.118-design-review-mail.md`](design-decisions/mb.118-design-review-mail.md).
 - **Assets are absolute and public.** A mail has no page to be relative to, so
   images and fonts are addressed from the origin of the link the mail
   carries: production's, staging's, or `localhost:8000` in compose, which is
@@ -313,6 +313,8 @@ preview is the owner's part of the sign-off: the devcontainer has no browser of
 its own and no client account, so the review hands over paste-ready renders and
 the owner reads them in the clients.
 
+Every Storybook email story is render-only with an invented link; images and fonts come from the workshop, which serves public/. Stories hand the preview a module-level message function so it is the same every render, and the preview follows the toolbar's theme control as a mail follows a reader's setting
+
 ## What is sent
 
 | Template                                          | Sent by                                                                                                                                                                                                                                                                                                                             | Carries                                                                                                                                                                                                                                                                                              |
@@ -335,3 +337,7 @@ The verification flow itself is
 and "The email page". MB.70's admin invitation is
 [`auth/admin-users.md`](auth/admin-users.md), "Inviting a keeper"; M7.3's coven
 invitation is [`db/invitations.md`](db/invitations.md), "Inviting into a coven".
+
+### Design and Pictures
+
+email-ornaments and invitation-card-images: each ornament is a Backdrop grey photograph blended onto a theme's page colour at the site's blend and opacity, flattened to opaque PNG; re-run after changing a photograph or the palette. Card pictures fade edges through alpha: 0 to 1 over the top 20% and the outer 14% of each side, the ramps multiplied like the canvas's intersected linear gradients.

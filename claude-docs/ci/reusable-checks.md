@@ -135,7 +135,7 @@
     into the job `env` as `MIGRATION_ORDER_BASE`, and empty means `staging`,
     which is what `act` gets. Its fetch passes `-c safe.directory=*` for
     the reason the git-reading guards do
-    ([`container-jobs.md`](reusable-checks.md)).
+    ([`reusable-checks.md`](reusable-checks.md)).
     ⚠️ The command is CI's alone: its `--depth=1` fetch in a full clone marks
     the base's commit shallow, and `git merge` then refuses the base as
     unrelated history until `git fetch --unshallow`. Locally the check is

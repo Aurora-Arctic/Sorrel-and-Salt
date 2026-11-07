@@ -3,8 +3,11 @@ import { describe, expect, inject, it } from 'vitest';
 
 import { REPO_ROOT } from '../support/paths';
 
-// The compendium seed's lanes read in-copyright books from /app/.library/ (claude-docs/db/compendium-seed/README.md, "The library"). The repo is public, so a book committed even once is published for good.
-// `.gitignore` keeps the folder out; this guard catches a book saved anywhere else, before it is staged, since `repoFiles` holds untracked files git would not ignore as well as the index.
+// The compendium seed's lanes read in-copyright books from /app/.library/
+// (claude-docs/compendium/compendium-seed/README.md, "The library"). The repo is public, so a book
+// committed even once is published for good. `.gitignore` keeps the folder out; this guard catches
+// a book saved anywhere else, before it is staged, since `repoFiles` holds untracked files git
+// would not ignore as well as the index.
 
 const BOOK = /\.(pdf|epub)$/i;
 

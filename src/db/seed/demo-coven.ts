@@ -10,8 +10,9 @@ import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspa
 import type { SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 // The demo coven: the one workspace flagged `demo`, with a steward seat for the system user and every keeper and an observer seat for
-// everyone else. Reference data, seeded on every environment after the compendium (claude-docs/db/demo-coven-seed.md). Additive:
-// a seat that exists, soft-deleted or not, is left as it is, so a person who left stays out.
+// everyone else. Reference data, seeded on every environment after the compendium
+// (claude-docs/db/demo-scenario.md). Additive: a seat that exists, soft-deleted or not, is left as
+// it is, so a person who left stays out.
 
 export const DEMO_COVEN_NAME = 'Sorrel & Salt Demo';
 

@@ -30,6 +30,7 @@ Ingredients and grimoire have a cross-area map: `ingredients.md` and the top of 
 - `site-admin-proof.md`: `assertSiteAdmin`, the same two layers for the site role.
 - `identity-model.md`: users, workspaces, memberships, and the provisional-account delete.
 - `invitations.md`: the invitation table in its two tiers.
+- `tier-seam.md`: every repository function that reads the compendium tier, and the rule for adding one.
 - `migrations-and-scripts.md`: the `db:*` scripts.
 - `expand-contract.md`: forward-only migrations and the destructive-DDL acknowledgement.
 - `snapshot-and-restore.md`: the Neon snapshot taken before a production migration, and the restore runbook.

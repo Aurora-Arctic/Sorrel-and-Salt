@@ -68,7 +68,7 @@ would need no edit at any call site; nothing passes it today.
     access. Exporting there also rewrote layers the push had just uploaded,
     where a registry export finds those blobs and writes a manifest. The
     measurements are
-    [`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md),
+    [`../design-decisions/mb.96-ci-vitest-job.md`](../design-decisions/mb.96-ci-vitest-job.md),
     "Facts the plan rests on".
   - **Cost.** GHCR storage is free for a public repo. Each build moves
     `:buildcache` and leaves the previous cache manifest untagged, the same
@@ -93,3 +93,7 @@ step runs; a composite contributes steps and nothing above them, and the only
 job-level `uses:` is a reusable workflow, which is a whole job rather than a
 piece spliced into one. That repetition is the price of the shape and stays
 where [Container jobs](reusable-checks.md) describes it.
+
+### Image build
+
+mb.96: a manifest-last tag push makes cancelled builds harmless

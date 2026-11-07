@@ -61,7 +61,7 @@ The "did you mean" warning, registered by `ingredients` over `findPossibleDuplic
 
 ### `ingredientSuggestions`
 
-The substitute picker's search, registered by `ingredients` over `suggestIngredients` and `findIngredientSuggestions` ([`db/compendium-read.md`](../db/compendium-read.md), "The ingredient picker's search"). It takes `workspaceId`, `query`, an optional `form`, an optional `categoryIds` and the connection arguments. Picking a node writes a link to it (`ingredient_substitutes`).
+The substitute picker's search, registered by `ingredients` over `suggestIngredients` and `findIngredientSuggestions` ([`db/compendium-read.md`](../db/compendium-read.md), "findIngredientSuggestions"). It takes `workspaceId`, `query`, an optional `form`, an optional `categoryIds` and the connection arguments. Picking a node writes a link to it (`ingredient_substitutes`).
 
 - **A node is an `Ingredient`**, because a pick needs the id that the common-name strings do not carry.
 - **Compendium entries and the named coven's own, and nothing else**, which is exactly what a coven's substitute may link. A compendium entry's substitute may link only the compendium, so the admin form reads `compendium(query)`, which holds nothing else.
@@ -277,7 +277,7 @@ Registered by `vocabulary` over `services/category-groups.ts` and `services/ingr
 
 ### Deities: `deities`, `deityTraditions` and the six writes
 
-Registered by `vocabulary` over `services/deities.ts` and `services/deity-traditions.ts` ([`db/deity-vocabulary.md`](../db/deity-vocabulary.md), "The admin's writes"), the forms' and form groups' shape together. The admin's input is `DeityInput`; an ingredient's pick is `IngredientDeityInput`.
+Registered by `vocabulary` over `services/deities.ts` and `services/deity-traditions.ts` ([`db/deity-vocabulary.md`](../db/deity-vocabulary.md), "The keeper's writes"), the forms' and form groups' shape together. The admin's input is `DeityInput`; an ingredient's pick is `IngredientDeityInput`.
 
 - **`deities` and `deityTraditions` are public.** `deities` counts its pages and lists each deity under its tradition, by the tradition's name and then its own; `query` and `traditionId` narrow it as `categories`' arguments do, a `traditionId` that is not a uuid giving an empty page. `deityTraditions` is the live traditions by name and carries no count.
 - **`DeityInput`** is `name`, `description` and `traditionId`, required, and `otherNames`, optional: the whole list, so a save brings the stored names to the list sent and an absent list clears them. A name the list repeats in any case, or another live deity of the tradition holds, is `VALIDATION` on `['otherNames', index]`, naming the deity that holds it. `Deity.otherNames` is non-null, alphabetical, read through `otherNamesByDeity`. **`DeityTraditionInput`** is `name` and `description`. No slug (a deity's follows its name and its tradition) and no `endRedirect`, since a deity moves no entry's address.

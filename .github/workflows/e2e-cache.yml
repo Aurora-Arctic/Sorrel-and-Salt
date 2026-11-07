@@ -11,7 +11,7 @@ name: E2E Build Cache
 # request's build, by construction, and the same cache key; `build-only` is
 # also what lets its save step run, which a pull request's run skips. The job
 # names differ from pr-gate.yml's, so no check name is published twice
-# (claude-docs/ci/smoke-checks.md).
+# (claude-docs/ci/deploy.md).
 on:
   push:
     branches:

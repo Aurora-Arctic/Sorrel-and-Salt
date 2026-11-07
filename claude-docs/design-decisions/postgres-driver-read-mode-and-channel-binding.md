@@ -33,7 +33,7 @@ Two agents, one after the other, in one new worktree, `/home/node/worktrees/post
    - Opus updates the existing `withoutClientOnlyParams` test so that `channel_binding=require` survives the strip, before Sonnet changes the list.
    - Confirm that `drizzle-kit` resolves the same package (`npm ls postgres`). Otherwise `drizzle.config.ts` would forward the setting to the server again.
 5. **Docs.** Correct every doc this makes wrong, with no version numbers in the text:
-   - [claude-docs/db.md](claude-docs/db.md): the connection options.
+   - [claude-docs/db/README.md](claude-docs/db/README.md): the connection options.
    - `claude-docs/testing/db-harness.md`: the bounded client and why it sets `onread: false`.
    - [claude-docs/secrets.md:285-292](claude-docs/secrets.md#L285): "`channel_binding=require` can stay" becomes "is enforced".
    - [claude-docs/ci/deploy.md:203-216](claude-docs/ci/deploy.md#L203): the strip paragraph, and what the probe's `CHANNEL_BINDING_REQUIRED` error means.

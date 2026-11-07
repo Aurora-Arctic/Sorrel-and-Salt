@@ -65,7 +65,7 @@ than away from it.
 
 ## Setup runs after the servers
 
-This repo's comments and `testing.md` said `globalSetup` ran before
+This repo's comments and `../testing/README.md` said `globalSetup` ran before
 `webServer` started. In Playwright 1.63 it does not: the runner's
 `createGlobalSetupTasks` orders plugin setup — the `webServer` entries —
 ahead of the global setups, and a throwaway config logged its server about

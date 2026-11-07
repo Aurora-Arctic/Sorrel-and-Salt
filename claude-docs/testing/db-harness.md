@@ -190,7 +190,7 @@ what a file does to the worker it runs in.
   a stubbed global stays stubbed, an auth instance built for one file's
   environment is the one the next file imports. This is what broke
   `--no-isolate` on the `unit` project during MB.96
-  ([`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md)).
+  ([`../design-decisions/mb.96-ci-vitest-job.md`](../design-decisions/mb.96-ci-vitest-job.md)).
 
 **The split is a scan, not a list.** `vitest.config.mts` reads each file's
 source when the config loads and tests it against one regular expression,

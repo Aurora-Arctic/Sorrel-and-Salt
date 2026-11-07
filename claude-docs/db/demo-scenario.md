@@ -97,7 +97,7 @@ by tier and identity, so the extra entries make none of them ambiguous.
   compendium's variants (Rosemary's `Herb`, Chamomile's `Flower`). The demo
   seeds its jars on cupboard entries only: a jar on a compendium variant needs
   its entry's row (decision 11 of the plan,
-  [m12.13-cupboard-names-the-compendium-plan.md](../design-decisions/m12.13-cupboard-names-the-compendium-plan.md)).
+  [m12.13-cupboard-names-the-compendium-plan.md](../design-decisions/m12.13-cupboard-names-the-compendium.md)).
 
 - **W's own ingredients**, the coven tier of §5's one table: `Hearth Ash` and
   `Cat's Claw`. A grimoire that only ever reached the compendium would exercise
@@ -287,6 +287,8 @@ An entry the environment's compendium lacks, or lacks a jar's form of, is skippe
 #### Changing the contents
 
 The seed is additive: a row that exists is never updated, so a keeper's hand edit to a live row stands, and a keeper edits the live rows by hand. A new row, or a change every environment should get, is a PR to `demo-coven-content.ts` that adds it; a change to a row already seeded does not reach environments that hold it.
+
+Demo exceptions: the Prosperity Bowl's lavender is one: the compendium lists lavender under neither Prosperity nor Success, so the bowl's derived categories (the union of its ingredients') run wider than the two it intends, which the spell page shows when the two kinds differ.
 
 ### How a keeper gains and loses the seat
 

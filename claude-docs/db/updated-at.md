@@ -91,3 +91,7 @@ has to say they aren't. `tests/db/audit-columns.test.ts` holds that list to
 the catalogue's tables carrying all four audit stamps, and proves Better
 Auth's adapter tables carry an `updated_at` and no audit id (MB.188), so a
 new audited table reddens one file or the other without either being edited.
+
+### Touching a row
+
+A touch must move the stamps an UPDATE that changes nothing keeps (set_updated_at() trigger): it says so for its own statement through app.touch_row, then clears it so no later write in the transaction reads it.

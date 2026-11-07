@@ -66,7 +66,7 @@ created, and only when that sign-in's provider vouches for the address
 - **Every keeper grant also seats the steward of the demo coven**, in the same
   `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
   keeper grant and an accepted admin invitation. See
-  [`db/demo-coven-seed.md`](../db/demo-scenario.md), "How a keeper gains and
+  [`db/demo-scenario.md`](../db/demo-scenario.md), "How a keeper gains and
   loses the seat".
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
@@ -176,7 +176,7 @@ this is the shape.
 A signed-in user adds another provider from `/account`, and from then on
 either one signs in to the same account. Story 1; the scoping, and why
 nothing else works, is
-[`design-decisions/mb.71-plan.md`](../design-decisions/mb.71-plan.md).
+[`../design-decisions/mb.71-link-a-second-sign-in-method.md`](../design-decisions/mb.71-link-a-second-sign-in-method.md).
 
 **Signing in never links a provider that does not vouch.** Better Auth's
 implicit link at sign-in needs the provider to vouch for the address as
@@ -260,6 +260,10 @@ sentence. The link-only codes (`email_does_not_match`,
 `account_already_linked_to_different_user`) land on `/account` and are
 `linkErrorMessage`'s.
 
+Provider vouching: inside an explicit link every provider vouches, the value feeding only Better Auth's link gate; the account signs in by its id from then on; on a sign-in each provider keeps its own answer.
+
+validateUserInfo only records what the provider said, for the hook below; it is not run on an explicit link, whose vouch vouchWhenLinking lent and which must not reach promotion; Better Auth names an implicit link at sign-in link-account too, so the state, not source.action, tells them apart.
+
 ### Provisional accounts
 
 An unverified account cannot hold an address against its owner past one
@@ -326,7 +330,7 @@ verification window, and three hours at most. The argument is
   the owner, since Better Auth looks a user up by address without our
   `deleted_at` filter, and no row survives to carry a stamp. The delete is
   the repository's one named `deleteLapsedProvisionalUser`
-  ([`db/provisional-account-delete.md`](../db/identity-model.md)),
+  ([`db/identity-model.md`](../db/identity-model.md)),
   since `write.delete` rejects a table carrying `deleted_at` by design.
 - **Seeded rows are never removed.** They hold no `accounts` row, so nobody
   can sign in to them. The seeded bootstrap user stays unverified on
@@ -346,7 +350,7 @@ verification window, and three hours at most. The argument is
 `/account/email`, protected, is where an account's address is set and
 changed: prefilled from the provider, editable, and counting only once
 proved. Stories 58 and 59; the plan is
-[`design-decisions/mb.54-plan.md`](../design-decisions/mb.54-plan.md), the
+[`../design-decisions/mb.54-email-page.md`](../design-decisions/mb.54-email-page.md), the
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
@@ -413,7 +417,7 @@ the tests [`tests.md`](tests.md).
   that lands on it sees the countdown from the start rather than a refusal
   on its first submit.
 - **The change link is Better Auth's own, signed when it is sent.** `src/lib/email-verification.ts`
-  starts the secret-link job (`kind: 'change'`, [`email.md`](../email.md), "Secret links") with the account's id, the
+  starts the secret-link job (`kind: 'change'`, [`m15.50-mail-through-a-retried-job.md`](../design-decisions/m15.50-mail-through-a-retried-job.md), "Secret links") with the account's id, the
   request's own base URL (`resolveBaseURL`, so a preview host links to itself) and the guarded `next`, never an address.
   Its step reads `users.email` and `users.pending_email`, mints `/verify-email`'s change token —
   `createEmailVerificationToken` with `updateTo` set to the pending address and
@@ -542,6 +546,10 @@ the tests [`tests.md`](tests.md).
   thrown"). `/api/graphql` is not gated the same way — the context reads
   the session and the services refuse what a provisional account may not
   do, which is everything but `me` and `setEmail`.
+
+Placeholder email: a provider that shared no address (Discord without a verified one, Facebook under narrowed permissions) would end the callback at email_not_found; the placeholder lets the row and session exist so /account/email can ask for one.
+
+Sign-in landing: an unverified account can do nothing else so it lands on the email page, address prefilled, until the address is proven; where the sign-in was going rides along; the endpoint's own redirect is the location already in the response headers and its cookies stay. With no return path the landing is the role's as it stands after any promotion just now; otherwise the endpoint's redirect goes where the sign-in asked, /coven included; a member goes into their first coven (signedInLanding).
 
 ### The terms page
 

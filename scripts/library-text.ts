@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Turns the curator's reference books in /app/.library/ into greppable text
-// (claude-docs/db/compendium-seed/README.md, "The library").
+// (claude-docs/compendium/compendium-seed/README.md, "The library").
 // Usage: npm run library:text [-- --library <dir>]
 
 import { execFileSync } from 'node:child_process';

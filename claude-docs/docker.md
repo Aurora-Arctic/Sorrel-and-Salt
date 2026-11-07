@@ -1,7 +1,6 @@
 # Docker / local stack — summary
 
-This summary is self-contained — M0's transcripts and decision records are
-archived and are not required reading.
+This summary is self-contained.
 
 The local development stack: one image, `docker compose`, a real local Postgres,
 no Neon connection and no host Node-version juggling.
@@ -379,3 +378,5 @@ Alpine. `make docker-up` is unaffected: it names only
     `make docker-rebuild`. Nothing in `.mcp.json` needs one today; the Asana
     server that did was retired in MB.89. `/home/node/worktrees` is not
     preserved either, so commit worktree work before a rebuild.
+
+`make setup` wraps `npm run setup`.

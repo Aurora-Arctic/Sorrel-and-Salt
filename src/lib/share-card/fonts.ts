@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 // The card's three static TrueType faces, read from disk at module scope rather than bundled, since together
 // they pass the image route's 500 KB bundle limit; the renderer cannot read a variable font's axes
-// (claude-docs/share-card.md, "Fonts").
+// (claude-docs/seo/share-card.md, "Fonts").
 const [cormorant700, lexend300, lexend400] = await Promise.all([
   // Each path whole, so the build's file tracing can follow it to the one file.
   readFile(join(process.cwd(), 'src/lib/share-card/fonts/cormorant-unicase-700.ttf')),

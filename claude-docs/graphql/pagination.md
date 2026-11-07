@@ -98,7 +98,7 @@ type QueryCompendiumConnection {
   one; the pages it walks are unchanged.
 - **No numbered jump links.** Jumping to page 7 needs the cursor that opens
   it, which means ranking every match on every request, and it ties the pager
-  to one page size ([`mb.105-plan.md`](../design-decisions/mb.105-plan.md)).
+  to one page size ([`mb.105-plan.md`](../design-decisions/mb.105-pager-counts.md)).
 - **One count per connection, and only when asked for.** The `count` option
   is a resolver of its own, `(parent, args, start, context)`, handed the
   page's first cursor decoded, or none on an empty page. The connection
@@ -129,3 +129,7 @@ The tests: `tests/lib/pagination.test.ts` covers the numbers, the clamp and the
 cursor codec. `tests/graphql/pagination.test.ts` covers the field over the
 transport and its pricing, the count fields included. `tests/db/pagination.test.ts` covers the keyset
 walk.
+
+### line 106, Typeahead (cite the record)
+
+A plain [Ingredient!]! typeahead field was rejected (needs a t.typeahead helper and an exception to rule 8); now recorded in design-decisions/mb.105-pager-counts.md

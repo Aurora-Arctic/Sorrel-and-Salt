@@ -73,6 +73,10 @@ The standard `@graphql-yoga/plugin-csrf-prevention` was not used: it asks for it
 header only on form-style content types and lets a JSON post through, so it would
 not refuse a JSON post that carries neither the header nor an `Origin`.
 
+Refusing a cross-site write: a request that could change data must be JSON and carry an Origin naming this host or the client header (which another site cannot add without a preflight the endpoint never grants).
+
+`SameSite=Strict` alone, and an Origin-only check, were rejected as the cross-site defence (the record is [`mb.282-graphql-refuses-cross-site.md`](../design-decisions/mb.282-graphql-refuses-cross-site.md)).
+
 ### Tests and the two copies of `graphql`
 
 `graphql` ships a CommonJS build and an ESM build, and a schema made by one

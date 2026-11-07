@@ -159,3 +159,11 @@ Without a decline, someone who did not want a seat had no answer to give, and th
 - `role` may not be `owner`, which is granted afterwards on the members page. The email is refused when malformed, unmailable, or a live member's already.
 - Listing pending invitations is for stewards only: the rows carry the addresses of people who have not joined, and members read the roll, so the check is `member: invite`, never `member: read`. A pending invitation outlives its inviter's demotion or removal, as the admin tier's does.
 - Revoking kills the link from now on and keeps the row for the audit. An invitation already revoked or lapsed is no longer pending, so it is answered as not found, as the admin tier's is. An accepted one is refused on `id`: the person is a member and is removed on the members page instead. Two tabs revoking at once, or the link lapsing in between, leave nothing pending to stamp.
+
+### Rotating a token
+
+rotateInvitationToken: gives the pending address invitation a fresh token, storing only its hash; returns null when the invitation is accepted, declined, revoked, expired, a card, or in a deleted coven. Writes as the System account because the mail step holds the id alone; tests/guards/invitation-token-rotation.test.ts holds the only-caller rule.
+
+### Accepting by token
+
+Accepting an invitation by token: stamps accepted_at and accepted_by; no proof because the invitee holds neither membership nor site role yet; the token admits, and the user must hold the invited address, verified; no row comes back for a token naming no pending invitation or a user whose live row holds another address or holds it unverified.

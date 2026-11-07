@@ -6,7 +6,8 @@ import { BODY, DISPLAY } from './fonts';
 import { PALETTE } from './palette';
 import { Shelf } from './shelf';
 
-// The two share cards, 1200 by 630 on the dark theme, as the owner approved them (claude-docs/share-card.md, "The design").
+// The two share cards, 1200 by 630 on the dark theme, as the owner approved
+// them (claude-docs/seo/share-card.md, "The design").
 
 /** The side margin both cards keep. */
 const SIDE = 90;

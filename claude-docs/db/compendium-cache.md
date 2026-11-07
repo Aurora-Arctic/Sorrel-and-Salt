@@ -104,7 +104,7 @@ reads' hour.
 An entry's share card (M12.34) is the same: its `opengraph-image.tsx` reads
 `readCompendiumEntry`, so the card's cached PNG carries the tag and a keeper
 write draws it afresh. `tests/e2e/compendium-cache.spec.ts` shows it
-([`../share-card.md`](../seo/share-card.md), "Caching").
+([`../seo/share-card.md`](../seo/share-card.md), "Caching").
 
 ### Expiring the tag
 

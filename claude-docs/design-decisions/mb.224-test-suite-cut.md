@@ -98,7 +98,7 @@ export default {
 
 **tests/scripts → 0.** Delete all seven files. **tests/scss/chip.test.ts → 2** (the 4.5:1 checks at `:113`; drop `:76` memorial and the padding/edge/class cases). **tests/graphql:** `builder` 9 → 2 (DateTime, AuditInfo sweep `:62`), `context` 4 → 3 (drop `:54`), `pagination` 20 → 18 (drop `:219`, `:257`; `:153` → `[new InvalidCursor().message]`); `errors`, `loaders/index`, `schema-snapshot` keep.
 
-**Docs:** §3's docs; `claude-docs/testing/where-tests-live.md` (guards section rewritten to the six that remain and the lint rules); `claude-docs/testing.md:68`; `claude-docs/modules.md` "Where types live"; every `claude-docs/` and `.claude/rules/` line naming a deleted guard or `tests/scripts` (grep `tests/guards/`, `tests/scripts/`, `tests/support/` and fix each hit).
+**Docs:** §3's docs; `claude-docs/testing/where-tests-live.md` (guards section rewritten to the six that remain and the lint rules); `claude-docs/testing/README.md:68`; `claude-docs/modules.md` "Where types live"; every `claude-docs/` and `.claude/rules/` line naming a deleted guard or `tests/scripts` (grep `tests/guards/`, `tests/scripts/`, `tests/support/` and fix each hit).
 
 _Acceptance criteria:_ the ten rules are in `layer-ownership.md` under the heading above and the six pointer docs name it · `npm run lint` fails on a probe file for each moved rule (shown once in the PR body, then the probe deleted) · `tests/guards/` holds the six files named and nothing else; `tests/scripts/` is gone; `tests/support/` holds one test · `vitest.config.mts`'s `unit` project runs no `globalSetup` nothing reads · every doc that named a deleted guard is corrected · per-file coverage unchanged (these tests cover no `src/`) · `Run vitest` time pasted.
 

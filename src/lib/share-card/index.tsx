@@ -4,7 +4,7 @@ import type { CompendiumShareCard } from '@/modules/ingredients';
 import { EntryCard, SiteCard } from './cards';
 import { SHARE_CARD_FONTS } from './fonts';
 
-// The share card a link preview shows, drawn to a PNG by `next/og` (claude-docs/share-card.md).
+// The share card a link preview shows, drawn to a PNG by `next/og` (claude-docs/seo/share-card.md).
 
 /** The size every card is drawn at, the one link previews ask for. */
 export const SHARE_CARD_SIZE = { width: 1200, height: 630 };

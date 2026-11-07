@@ -69,3 +69,7 @@ Step 2 fails if the route draws per request, and step 3 fails if the tag does no
 - `tests/e2e/share-card.spec.ts`: a shown entry's card is a PNG; a hidden entry's, a coven entry's and an unknown slug's are 404 at the same route that draws a shown entry.
 - `tests/e2e/seo.spec.ts`: `/`, `/compendium` and an entry name their card at an absolute address with width, height and alt, and the card answers.
 - `tests/e2e/compendium-cache.spec.ts`: the caching above.
+
+### Page metadata
+
+Page metadata: description of about 160 characters, and the Open Graph and Twitter tags repeating title and description; pure, so the three compendium pages share one wording and one test; Twitter inherits the share card from Open Graph.

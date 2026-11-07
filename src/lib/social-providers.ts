@@ -1,12 +1,14 @@
 import type { ProviderId, SocialProvider } from './types';
 // The roster src/lib/auth.ts registers providers from and /sign-in greys buttons from, one source so no button is live for an unregistered provider. Id and label only:
 // SignInPanel ('use client') imports it, and a client bundle should not carry the names of the variables behind a secret, which live in social-providers-config.ts.
-// Adding a provider is an id in `ProviderId` and its two entries there; Apple was dropped (claude-docs/auth/social-providers.md, "Social providers").
+// Adding a provider is an id in `ProviderId` and its two entries there; Apple was dropped
+// (claude-docs/auth/config.md, "Social providers").
 
 export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
   { id: 'discord', label: 'Discord' },
   { id: 'google', label: 'Google' },
-  // Hidden from the sign-in screens for now; claude-docs/auth/social-providers.md says why and how it returns.
+  // Hidden from the sign-in screens for now; claude-docs/auth/config.md says
+  // why and how it returns.
   { id: 'facebook', label: 'Facebook', hidden: true },
   { id: 'microsoft', label: 'Microsoft' },
 ];

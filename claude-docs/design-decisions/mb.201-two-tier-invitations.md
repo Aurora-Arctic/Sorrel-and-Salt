@@ -8,7 +8,7 @@ nine columns but for the workspace pair and the note, and nothing writes or
 reads either yet: M7.2 to M7.7 and MB.70 were each about to build a token
 path, an accept, a revoke, a pending list and an acceptance page on its own
 table. The owner asked for one table instead, while the copy is still a copy
-of nothing ([`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md), "The invitations"). DESIGN.md
+of nothing ([`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md)). DESIGN.md
 §5, `invitations`, carries the model; this record carries why.
 
 ## The model

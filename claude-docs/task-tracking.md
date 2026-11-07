@@ -192,6 +192,8 @@ hour.
 
 ## Sync
 
+A closed-wave task entry is its heading line only; its body is in `claude-docs/archive/tasks-closed-waves.tar.gz`. Never run `task-board.mjs sync` on a closed id: it would blank the issue body.
+
 **An issue mirrors its entry, and stays mirrored.** Its title is the entry's
 heading, `<ID> — <title>`, a retired one's struck-through title written
 `<ID> — [RETIRED] <title>` as the title rule has it; its body is the entry's text, from the line after
@@ -244,3 +246,7 @@ and is closed before `reorder` runs.
 GitHub never writes a PR body into git, so a PR that finishes several tasks names them in its title, which `create-pr` writes id-first. This is a convention, not a CI check. `scripts/task-ids.mjs` holds the forms the tally reads.
 
 The tally's hand-kept list of ids stays for work done outside git: dashboard or console work, or a merge made before the title rule.
+
+### scripts/task-board.mjs
+
+task-board REST read: one request per hundred against the core budget; the GraphQL listing carried every issue's labels and two lookups a minute tripped the secondary rate limit. tasks-md range is not a numeric span.

@@ -1,6 +1,6 @@
 ## MW — Wave close-out
 
-Closed tasks keep their heading only; the full text of each is in [`claude-docs/archive/tasks/mw.md`](../archive/tasks/mw.md).
+Closed tasks keep their heading only; the full text of each is in `claude-docs/archive/tasks-closed-waves.tar.gz`.
 
 _2 done, 12 retired, 1 live: MW.15 at 3 hours_
 

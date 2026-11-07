@@ -77,7 +77,7 @@ current workspace only, and since MB.162 every one of those is the
 workspace's. The keeper's read (MB.95) is the compendium tier only — the live
 entries holding a value, which refuse its delete and take its rename
 (MB.162) — since a keeper reaches no workspace's ingredients (M6.6); its finder
-reads across the tier seam ([`modules.md`](../modules.md), "The tier seam"),
+reads across the tier seam ([`tier-seam.md`](tier-seam.md), "The tier seam"),
 as the autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
 

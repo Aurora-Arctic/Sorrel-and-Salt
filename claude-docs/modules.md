@@ -223,7 +223,7 @@ relative spellings a glob cannot judge (no guard scans the import graph on every
   `@/modules/*/graphql`, `@/modules/*/graphql/**`, `@/modules/*/loaders`,
   `@/modules/*/loaders/**` and `@/modules/*/types`. It is restated in every override, because an
   override replaces the top-level rule rather than merging with it
-  ([`db/query-building.md`](db/repository-files.md), "Where queries may be
+  ([`db/repository-files.md`](db/repository-files.md), "Where queries may be
   built"). The bare `@/modules/<name>` index import matches none of the
   patterns, so no negation is needed. The lint sees only the alias spelling.
 - **Plugin rule.** `sorrel/module-boundaries` in `lint/sorrel-lint.js`
@@ -375,7 +375,7 @@ built from — partial unique indexes, the
 `CREATE OR REPLACE TRIGGER` line for `set_updated_at()` in the table's own
 migration, and a transcribed entry in `tests/support/db/table-metadata.ts`,
 which `tests/db/updated-at-trigger.test.ts` compares against the catalogue
-([`db.md`](db/README.md)). `drizzle.config.ts` reads `src/modules/*/schema/*.ts`, so a
+([`db/README.md`](db/README.md)). `drizzle.config.ts` reads `src/modules/*/schema/*.ts`, so a
 new file is picked up by `npm run db:generate` with no registration step. A
 `*.test.ts` file must never sit in `schema/`: the glob would hand it to
 drizzle-kit, which cannot load Vitest.
@@ -449,3 +449,7 @@ reads.
 
 The value is stored as superjson, not left to Next's `JSON.stringify`, which would
 answer a hit's `Date` columns as strings while a miss answered them as dates.
+
+### Page props are promises
+
+Page props are promises in Next 16 (params and searchParams): awaited before use; the Promise<> type already says it

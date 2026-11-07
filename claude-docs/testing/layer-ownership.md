@@ -18,7 +18,7 @@ test at any other layer proves only what that layer adds** — and, since
 MB.224, what any test may assert at all ("What a test may assert", below). The table is what
 the owner column of a consolidation PR cites, and what the ten tasks
 MB.180–MB.189 consolidate toward
-([`mb.180-plan.md`](../design-decisions/mb.180-plan.md)).
+([`mb.180-plan.md`](../design-decisions/mb.180-graphql-transport-half.md)).
 
 ## The owning layer
 
@@ -232,7 +232,7 @@ The doctrine change — "each refusal is asserted as the browser receives it"
 becomes "one refusal per error code per field, with its precondition; the
 service owns the rules" — is recorded in
 [`mb.180-graphql-transport-half.md`](../design-decisions/mb.180-graphql-transport-half.md),
-and the whole scoping in [`mb.180-plan.md`](../design-decisions/mb.180-plan.md).
+and the whole scoping in [`mb.180-plan.md`](../design-decisions/mb.180-graphql-transport-half.md).
 Each later task corrects the doc that names what it changes, in its own PR:
 
 - [`db-harness.md`](db-harness.md)'s line on what a module schema test asserts
@@ -246,7 +246,7 @@ Each later task corrects the doc that names what it changes, in its own PR:
 
 MB.224 adds "What a test may assert" and the four rows after "A guard's
 scan"; MB.225 to MB.230 apply them, one directory set each, scoped together in
-[`mb.224-plan.md`](../design-decisions/mb.224-plan.md).
+[`mb.224-plan.md`](../design-decisions/mb.224-test-suite-cut.md).
 
 M14.27 (the 2026-10-27 test-suite audit,
 [`m14.27-test-audit.md`](../design-decisions/m14.27-test-audit.md)) adds to

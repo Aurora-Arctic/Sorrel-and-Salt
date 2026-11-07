@@ -291,7 +291,7 @@ the same expression, so a relabelled entry sits where its label puts it and
 paging never skips or repeats it. The search matches the label as well as the
 compendium's own name, formal name and folk names, through the sixth arm
 the substitute picker added
-([`compendium-read.md`](compendium-read.md), "The ingredient picker's search"), and ranks by
+([`compendium-read.md`](compendium-read.md), "findIngredientSuggestions"), and ranks by
 the match score alone, as the compendium does. The joined row rides on each
 page entry, so the resolver primes the `cupboardEntryByIngredient` loader from
 it and `Ingredient.cupboardEntry` on a list row costs no second read.
@@ -342,7 +342,7 @@ The condition is shared rather than copied, so a count and the list cannot disag
 rows are the coven's. Unlike the compendium's, it is never cached: what it
 counts differs from coven to coven (CLAUDE.md rule 6).
 
-**A save never moves a jar.** Saving a coven's own entry, whether a create, an update or a folk name promoted to the label, leaves every jar of the coven where it is, even when the save gives the entry a compendium entry's name or formal name. The per-coven advisory lock (`lockCovenStock`) has three callers: `createStock`, `removeCupboardEntry`, which counts jars under it, and `convertCompendiumEntryToLocal`, which moves a held entry's jars and spell layers onto the forms of a new own entry ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Converting a compendium entry into our own"); the convert also calls `lockJarsOfIngredient` and `lockLiveVariants`. The three entry saves take neither the lock nor `inventory: update`. Linking goes one way in v1, from a coven's compendium entry to its own: turning an own entry into the compendium entry it duplicates waits for v2 (DESIGN.md §13). The retired design, in which a save carried jars to a matching own entry, is recorded in [`m12.8-jar-follows-local.md`](../design-decisions/m12.8-jar-follows-local.md).
+**A save never moves a jar.** Saving a coven's own entry, whether a create, an update or a folk name promoted to the label, leaves every jar of the coven where it is, even when the save gives the entry a compendium entry's name or formal name. The per-coven advisory lock (`lockCovenStock`) has three callers: `createStock`, `removeCupboardEntry`, which counts jars under it, and `convertCompendiumEntryToLocal`, which moves a held entry's jars and spell layers onto the forms of a new own entry ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Converting a compendium entry into our own"); the convert also calls `lockJarsOfIngredient` and `lockLiveVariants`. The three entry saves take neither the lock nor `inventory: update`. Linking goes one way in v1, from a coven's compendium entry to its own: turning an own entry into the compendium entry it duplicates waits for v2 (DESIGN.md §13). No save carries a jar to a matching own entry: a jar stays on the entry it was made under.
 
 - **A batch save is one transaction.** `saveStock` is the stock
   dialog's one Save: a `create` list (`{ variantId, input }`), an `update` list

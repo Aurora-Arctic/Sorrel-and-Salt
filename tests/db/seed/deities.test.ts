@@ -9,7 +9,8 @@ import { deitySlug } from '@/lib/slugify';
 import type { DeityRow, DeityTraditionRow } from './types';
 
 // What a re-run of the deity seed leaves of a keeper's edits, and how it finds its own rows by key once a keeper has renamed them.
-// The shape every seed shares is index.test.ts's; the content is the seed doc's to review (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
+// The shape every seed shares is index.test.ts's; the content is the seed doc's to review
+// (claude-docs/compendium/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -125,7 +126,8 @@ describe('seedDeities(db) over a database a keeper has edited', () => {
 });
 
 // The other names a deity answers to, loaded beside it. A keeper's removal is held as the deities are; stamps and a re-run are index.test.ts's sweep,
-// and which names are listed is reviewed in claude-docs/db/deity-vocabulary-seed.md, not tested.
+// and which names are listed is reviewed in claude-docs/compendium/deity-vocabulary-seed.md, not
+// tested.
 describe('seedDeities(db) loads each deity’s other names', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);

@@ -3,7 +3,7 @@
 Every job runs on GitHub's `ubuntu-26.04`, which is free and unlimited on a
 public repo. `vitest.yml` ran on Blacksmith's `blacksmith-8vcpu-ubuntu-2404`
 from MB.96 to M11.24 and came back (see "Why Blacksmith was dropped" below).
-The sizing is [`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md).
+The sizing is [`../design-decisions/mb.96-ci-vitest-job.md`](../design-decisions/mb.96-ci-vitest-job.md).
 
 - **`vitest` runs on GitHub's 4-vCPU public-repo runner, with three
   workers.** The suite is mostly per-file overhead spread over `dbMaxWorkers`
@@ -81,7 +81,7 @@ never a required check (M9.1). In both Playwright jobs the test span is set
 by the longest serial spec file rather than by the work: `shell.spec.ts` is
 34 s of the e2e job's 53 s, and `07-admin.spec.ts` 62 s of the stories
 job's 64 s, each on one worker while the other three wait — M11.18's plan,
-[`design-decisions/m11.18-plan.md`](../design-decisions/m11.18-plan.md),
+[`../design-decisions/m11.18-faster-playwright-runs.md`](../design-decisions/m11.18-faster-playwright-runs.md),
 is what shortens them. Neither job saves a cache since MB.235: Playwright's
 save ran after the tests, on that path, and the build leg's never restored.
 

@@ -17,7 +17,7 @@ Nothing else in the migration is flagged: the new table's `NOT NULL` columns are
 
 ## Why this is one PR, not two
 
-CLAUDE.md rule 10 splits a column or index drop across two PRs because the deploy still serving when `migrate.yml` runs must not lose anything it reads. Nothing here is dropped or narrowed: the column is new, the deploy still serving does not name it, and its inserts succeed because it never could write the column. The identity-key indexes `0062` adds refuse a second live entry of one formal name in a tier, which that deploy could try to write as a second form of an existing entry; that refusal is the model MB.215 records, and until MB.220 maps the index's name it reaches the admin as an unmapped error, a short window on an admin-only write (`claude-docs/design-decisions/mb.215-plan.md`, "Risks"). The precedent for a finding that loses nothing standing in one PR is `0029` and `0038`.
+CLAUDE.md rule 10 splits a column or index drop across two PRs because the deploy still serving when `migrate.yml` runs must not lose anything it reads. Nothing here is dropped or narrowed: the column is new, the deploy still serving does not name it, and its inserts succeed because it never could write the column. The identity-key indexes `0062` adds refuse a second live entry of one formal name in a tier, which that deploy could try to write as a second form of an existing entry; that refusal is the model MB.215 records, and until MB.220 maps the index's name it reaches the admin as an unmapped error, a short window on an admin-only write (`claude-docs/design-decisions/mb.215-ingredient-variants.md`, "Risks"). The precedent for a finding that loses nothing standing in one PR is `0029` and `0038`.
 
 ## What is lost
 

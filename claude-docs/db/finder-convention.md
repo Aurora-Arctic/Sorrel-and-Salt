@@ -54,7 +54,7 @@ The reads of it so far are `findSimilarIngredients` (see
 both tiers as explicitly as this paragraph asks — through `readableInTiers`, or
 `readableIngredientParent` for a child's parent, or `inTiers` for the spell
 hatch's unfiltered one (MB.206) — and each listed on
-[the tier seam](../modules.md#the-tier-seam). The plain compendium read is
+[the tier seam](tier-seam.md). The plain compendium read is
 `findCompendiumPage` (M8.5), with its count `findCompendiumCount` (MB.105),
 each paging through `findPageInTiers` under no proofs, which reads the
 compendium alone as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the

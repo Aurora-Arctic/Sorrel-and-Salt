@@ -103,3 +103,7 @@ The table behind an ingredient's categories: `ingredientId`, `categoryId`, + the
 - **No `deleted_at` predicate, because there is no tombstone to dodge.** The [partial-index convention](soft-delete.md) exists so a soft-deleted row cannot reserve its name forever; this table hard-deletes, so the pair is either there or it is not, and `WHERE deleted_at IS NULL` would not even compile against its columns. The two pair indexes are partial on `variant_id` instead, which `tests/db/partial-unique-indexes.test.ts` sweeps by deleting the holder outright. `write.delete` names the parent's own pair with `variantId: null`.
 
 Its reader is the `categoriesByIngredient` loader, through `findManyOfIngredients` and never a generic finder (see ["Ingredient children"](ingredient-children.md)). §12's assigned-versus-derived distinction reads it from the derived side: a spell's derived categories are the union of what this table holds for its ingredients.
+
+### Category groups
+
+Refusal text "Choose a group to move its N categories to", the moveTo rule, retuned seed hexes #566718 and #85964a, and the contrast warning on a group colour

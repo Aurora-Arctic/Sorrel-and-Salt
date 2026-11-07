@@ -185,3 +185,7 @@ two live rows could differ by case alone, and both would match
 `ADMIN_BOOTSTRAP_EMAIL`, which is compared case-insensitively. Better Auth
 lowercases every address it writes; the constraint catches a row written by
 hand. `tests/modules/identity/schema/users-schema.test.ts` inserts one.
+
+### The cupboard's internal finders
+
+The coven's Ingredients list, its count and its filter counts read through `workspaceListScopeIncludingSoftDeleted`, whose compendium arm skips the entry's tombstone only while the coven's live cupboard row names it; they page through `findPageInScopeIncludingSoftDeleted` and its count; these three are internal to the repository folder and `tests/guards/soft-delete-finder-guard.test.ts` pins each to the finders allowed to call it, as it pins `existsInIncludingSoftDeleted`

@@ -116,3 +116,5 @@ The client half is `passkeyClient()` in `src/lib/auth-client.ts`, which adds
 
 The sign-in page's button, which is the only thing that starts a passkey request, is described in
 [`components/sign-in-panel.md`](../components/sign-in-panel.md), "Passkey".
+
+Passkey removal: removed here rather than in the plugin, refusing the last one when the account has no other way in (no other passkey, no roster-provider account, no password); the repository checks and deletes under one lock so two removals at once cannot each see the other passkey and leave none; the plugin's own delete would run apart from the check.

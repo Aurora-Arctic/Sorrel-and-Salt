@@ -46,6 +46,8 @@ reference formatter shares with the renderer; and `contrast.ts` and
 `drizzle-orm`, anything under `src/db` or a service, and `next build` fails a
 client bundle that reaches `server-only` however indirectly.
 
+Near colour: kept apart from group-colors.ts because the validation schema reaches that file and, through it, nothing but zod.
+
 ## Raising the error
 
 `src/lib/validation.ts` is the Zod half of MB.43's `ValidationError`. A service

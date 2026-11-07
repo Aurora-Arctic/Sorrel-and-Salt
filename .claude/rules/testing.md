@@ -7,7 +7,7 @@ paths:
 
 # Testing rules
 
-The long form of `CLAUDE.md`'s Testing section: each line here adds to one of its bullets rather than restating it. `CLAUDE.md` wins over this file; `claude-docs/testing.md` carries the argument and the harness.
+The long form of `CLAUDE.md`'s Testing section: each line here adds to one of its bullets rather than restating it. `CLAUDE.md` wins over this file; `claude-docs/testing/README.md` carries the argument and the harness.
 
 ## Process
 

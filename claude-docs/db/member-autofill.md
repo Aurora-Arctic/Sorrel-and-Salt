@@ -69,7 +69,7 @@ cut by cursor as a whole.
   entry holds is not deleted (MB.162).
 - **Tier 2 reads both tiers of `ingredients`**, the compendium and the proof's
   workspace and never another — the compendium alone with no proof — so the finder is on
-  [the tier seam](../modules.md#the-tier-seam). The scope is in the statement,
+  [the tier seam](tier-seam.md). The scope is in the statement,
   so a value that only unrelated workspace X holds never reaches the service.
   The compendium half finds nothing since MB.162, which holds every
   compendium entry to the curated rows, so every tier-2 row is the

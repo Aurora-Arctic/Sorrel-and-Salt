@@ -19,7 +19,7 @@ in SQL, and the parent's `deleted_at IS NULL` is the builder's rather than the
 finder's. It takes a _list_ of proofs because one
 page can hold both tiers and, in principle, several covens. An empty list reads
 the compendium alone, which is how a signed-out request reads it. It reads both
-tiers in one statement, so it is on [the tier seam](../modules.md#the-tier-seam).
+tiers in one statement, so it is on [the tier seam](tier-seam.md).
 
 **Substitutes have a finder of their own,
 `findSubstitutesIncludingSoftDeleted(memberships, of, ids)`** (MB.140; `of`,

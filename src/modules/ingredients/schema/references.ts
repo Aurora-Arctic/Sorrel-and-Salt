@@ -54,9 +54,11 @@ export const references = pgTable(
     modified: date('modified'),
     accessed: date('accessed'),
     note: text('note'),
-    // Scholars edited or reviewed the work, in print or online (claude-docs/db/references.md, "Reference links schema details"): a peer-reviewed journal; a university,
-    // its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Never a
-    // trade press, a wiki, a site republishing others' works or an unsigned site. Set by the seed's works and a curator; a coven's source is never marked.
+    // Scholars edited or reviewed the work, in print or online (claude-docs/db/references.md,
+    // "Reference links schema details"): a peer-reviewed journal; a university, its press or its
+    // museum; an academic press; a learned society's edition or series; a reference work edited by
+    // scholars with signed articles. Never a trade press, a wiki, a site republishing others' works
+    // or an unsigned site. Set by the seed's works and a curator; a coven's source is never marked.
     scholarly: boolean('scholarly').notNull().default(false),
     seedKey: seedKeyColumn(),
     ...auditColumns,
@@ -74,7 +76,8 @@ export const references = pgTable(
     ),
 
     // The four that make the renderer total: every row admitted renders
-    // without a branch for a missing required field (claude-docs/design-decisions/mb.151-plan.md, "3. CHECKs").
+    // without a branch for a missing required field
+    // (claude-docs/design-decisions/mb.151-references.md, "3. CHECKs").
     check('references_url_absolute', sql`url is null or url ~ '^https?://'`),
     check('references_accessed_needs_url', sql`accessed is null or url is not null`),
     check(

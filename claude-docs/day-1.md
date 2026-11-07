@@ -166,3 +166,7 @@ You have now read the core once. From here, read by task: open the doc for the a
 When a doc and the code disagree, find out which one is wrong before changing either, and correct the doc in the PR that makes it wrong.
 
 **Read next:** [`README.md`](README.md), "What lives where, and what to read".
+
+### Prerequisites
+
+Node is pinned at 26.6.0 in `Docker/Dockerfile.node`, and npm 10 cannot read the lockfile. This matters only for a run outside the container.

@@ -4,7 +4,7 @@
 
 ## Assessment 1 — the `EXISTS` wrapper and the one-select-builder rule
 
-**What the rule is.** `tests/guards/soft-delete-finder-guard.test.ts` reads every `src/db/repository/*.ts` as text and asserts that the regex `\.select(` matches exactly once across the folder, inside `selectFrom` in `select.ts`. The stated purpose (`db.md`, "Soft-delete filtering"): with one builder, every read goes through the function that applies `deleted_at IS NULL`, so no unfiltered read handle exists.
+**What the rule is.** `tests/guards/soft-delete-finder-guard.test.ts` reads every `src/db/repository/*.ts` as text and asserts that the regex `\.select(` matches exactly once across the folder, inside `selectFrom` in `select.ts`. The stated purpose (`../db/README.md`, "Soft-delete filtering"): with one builder, every read goes through the function that applies `deleted_at IS NULL`, so no unfiltered read handle exists.
 
 **What it costs.** Four correlated subqueries are written as raw strings only because a builder-made one would be a second `.select(` and trip the guard:
 

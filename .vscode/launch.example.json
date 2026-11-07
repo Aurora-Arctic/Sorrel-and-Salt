@@ -1,6 +1,6 @@
 {
   // MB.22 — copy this file to .vscode/launch.json (gitignored, per-developer)
-  // to use it; see claude-docs/debugging.md for the full story.
+  // to use it; see claude-docs/testing/debugging.md for the full story.
   //
   // Every config here is "attach", not "launch". Every debuggable process in
   // this repo is already started from a terminal inside the devcontainer —
@@ -68,7 +68,7 @@
       //
       // then running this config once that terminal prints "Debugger
       // listening on ws://0.0.0.0:9231/...". This is an intentional
-      // simplification (see claude-docs/debugging.md) rather than a missing
+      // simplification (see claude-docs/testing/debugging.md) rather than a missing
       // script — a fixed script would need a hardcoded spec path or extra
       // argument plumbing for one debugging session's worth of value. Port
       // 9231 is still reserved and forwarded (devcontainer.json) for this.

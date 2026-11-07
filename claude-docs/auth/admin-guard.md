@@ -25,7 +25,7 @@ section describes. Both answer in the same three ways, all from the server:
   pretending it does not exist buys no secrecy and only makes the app look
   broken (CLAUDE.md's domain invariants; ["The three errors"](service-session.md)). The page says the account lacks keeper rights and
   offers the way back to `/`. It never names a keeper and offers no way to ask
-  for access ([`components/not-authorized.md`](../components/not-authorized.md)).
+  for access ([`../components/error-page.md`](../components/error-page.md)).
 - **`forbidden()` is Next's, behind `experimental.authInterrupts`** in
   `next.config.ts`. It throws, and Next answers 403 with a `noindex` robots
   tag and `src/app/(shell)/forbidden.tsx` at the same URL. The boundary sits in

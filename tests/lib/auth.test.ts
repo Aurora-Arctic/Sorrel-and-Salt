@@ -35,7 +35,7 @@ describe('auth secret', () => {
 
 // Both id and secret, never an empty string, which Better Auth reads as a configured provider.
 // The roster is Google, Discord, Facebook and Microsoft; Apple is not offered, for a client
-// secret that expires every six months (claude-docs/auth/social-providers.md, "Social providers").
+// secret that expires every six months (claude-docs/auth/config.md, "Social providers").
 describe('social providers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();

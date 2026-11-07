@@ -227,3 +227,7 @@ whose ingredient was deleted since keeps it. `updateSpell` changes the
 visibility under the same one-way rule as `setSpellVisibility`, through the
 same check (`services/visibility-rule.ts`), so a save cannot make a shared
 spell private. [grimoire.md](grimoire.md), "Saving a recipe", has the rest.
+
+### Reading a working
+
+Working reader rule: a working is never wider than its spell, but keeps its own visibility when the spell widens, so the working's column is read beside the spell's.

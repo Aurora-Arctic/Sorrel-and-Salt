@@ -5,7 +5,7 @@ of the answer follows from one fact: the only credential the API accepts is
 Better Auth's session cookie — `better-auth.session_token` locally,
 `__Secure-better-auth.session_token` on https — and it is `httpOnly` and
 `SameSite=Lax`. Sign-in never goes through GraphQL; the endpoint only _reads_
-that cookie (`graphql/request-context.md`, "The request context"). So every way
+that cookie (`endpoint.md`, "The request context"). So every way
 of querying by hand is a way of getting that cookie onto the request.
 
 ## Locally: open the endpoint
@@ -14,7 +14,7 @@ of querying by hand is a way of getting that cookie onto the request.
 2. Open `http://localhost:8000/api/graphql` in the same browser.
 
 That is [Altair](https://altairgraphql.dev/), served by the app itself
-(`graphql/altair.md`, "The IDE"). The page is same-origin, so the browser sends the
+(`endpoint.md`, "The IDE"). The page is same-origin, so the browser sends the
 session cookie it already holds: the IDE is signed in as whoever the tab is,
 with nothing installed and nothing pasted. _Docs_ and autocompletion work because
 introspection is on under `next dev`.

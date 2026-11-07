@@ -177,6 +177,8 @@ I use the same overhead, the same 20% observer share, the same 20% who buy a sol
 
 **Break-even (cash).** **124** paying seats (rows in the tables under Break-Even).
 
+billing-model memberships: a seat is a second-or-later membership with probability (m-1)/m, held by a steward with the steward share = memberships per account / members per coven (stewards are one per coven; independence assumed); R5 discount applies only to a member who is the paying steward of another coven. Model (g) gives each paid group seat a free solo coven, a person with no paid group seat buys a solo coven alone, and observers may add a solo coven paying the difference to the solo price. Model (i): a paying coven charges i_base for 3 practitioners, i_seat per extra, i_obs per observer; an each-member-pays coven charges i_emp per practitioner and i_obs per observer; a practitioner seat includes a solo coven, an observer upgrades by a set add-on (i_upCp or i_upMp above the observer seat), a solo coven alone costs i_personal; the discount i_disc is off a practitioner seat a person pays for themselves beyond the first and the whole observer seat beyond the first, never on another payer's invoice; x scales every price except the observer seat and the discount.
+
 ## Fair Pricing
 
 The test is the Code of Ethics (`documents/code-of-ethics.md`, line 34): "It will charge, fairly: enough to cover its costs and to pay the people who work on it a fair, living wage." The model keeps these things that meet it:

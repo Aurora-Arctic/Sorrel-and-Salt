@@ -147,7 +147,7 @@ is a decision rather than an oversight.
     the identity table, the SQL sketch, and §14's rows on `form`, the group
     keys and the deity vocabulary, with a new row for this decision.
   - `db/identity-model.md`, `db/deity-vocabulary.md`,
-    `db/categories.md`, `db/ingredient-children.md`, `db.md` and
+    `db/categories.md`, `db/ingredient-children.md`, `../db/README.md` and
     `modules.md`.
 - **Code:** the column, the CHECK and the table, with their migration and
   schema tests (MB.165). Nothing reads or writes either yet.

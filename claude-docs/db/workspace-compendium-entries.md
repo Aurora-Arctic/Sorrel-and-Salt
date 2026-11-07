@@ -146,6 +146,8 @@ The identity refusals come from the identity index (`identity_key`, unique per c
 - **Make It Ours.** The copy's name is the cupboard label; the formal name and nomenclature are the compendium's. A substitute naming the entry itself is written against the copy once it exists. The same lock as `createStock` stops a jar appearing between the read and the moves. A jar of a form deleted since has nowhere to go.
 - **Held-in reads.** The set of compendium ids a coven holds is read for the viewer's own coven and never cached (CLAUDE.md rule 6). The multi-coven form takes one proof per coven and refuses the whole read if the caller is not in one; a coven holding none maps to an empty set. Covens are read one after another so a refusal leaves no read running. The covens-holding-this-entry read comes from the viewer's own memberships, so a keeper or curator gets only the covens they belong to (observers count). A coven where the viewer's seat is paused is left out before the read, since its proof would be refused and blank the answer for every coven.
 
+Ingredient detail: a retired compendium entry's children are read on the coven's proof
+
 ## Entry covens
 
 `src/modules/ingredients/services/entry-covens.ts` returns the viewer's own covens an entry's page opens in, by name, for the coven switcher (claude-docs/components/workspace-switcher.md).
@@ -154,3 +156,11 @@ The identity refusals come from the identity index (`identity_key`, unique per c
 - `entry` is the row the page already read, so there is no second read of it: one lookup of the viewer's memberships, plus, for a retired entry only, one held read per coven under that coven's own `Membership` proof (the live held reads skip a retired entry, which is why they cannot answer).
 - The covens come from the viewer's memberships, never from who holds the entry, so a coven they are not in is never named, and a keeper or curator gets only their own. Per viewer, so never cached (rule 6).
 - A coven where the viewer's seat is paused is never named, live entry or retired: the page opens nothing there, and the retired entry's held read would be refused.
+
+### Last edits
+
+Last-edit read: jars are read as `stockOf` reads them (the coven's, live, of a form the coven may read) in one query for every entry, and the newest is picked from them in code, which is not a second filter
+
+### Decisions
+
+m12.13: the stub shows twice, with a nudge; a separate Ingredient type was rejected

@@ -232,7 +232,7 @@ inline; }`, for the HTML rendering section's inline elements.
     above is what fails first if a release changes what the environment
     reports. The measurements, the alternatives ruled out and the stability
     assessment are in
-    [`design-decisions/m11.25-plan.md`](../design-decisions/m11.25-plan.md).
+    [`../design-decisions/m11.25-component-tests-run-on-happy-dom.md`](../design-decisions/m11.25-component-tests-run-on-happy-dom.md).
   - **A test that stubs `location` uses `stubLocationAssign(assign)`**
     (`tests/support/location.ts`), never `{ ...window.location }`. A spread
     copies the fields only where they are own properties, which is jsdom's
@@ -513,6 +513,10 @@ remote browser (MB.22), and `PLAYWRIGHT_WS_ENDPOINT` — the variable that
 selects it — is scoped to the `devcontainer` compose service alone, so
 `make docker-e2e` and CI keep launching Chromium locally. That mechanism,
 its trade-offs, and the full setup including VS Code attach configs:
-`claude-docs/debugging.md`.
+`claude-docs/testing/debugging.md`.
 
 React's "not wrapped in act(...)" warning means a test asserted before an update it caused had landed (M11.24). Under Claude Code Vitest hides a passing test's output, so run `env -u CLAUDECODE npx vitest run --project dom` to see them. The fix is to wait for that update and assert the same state: an action that sends a request is pressed inside `await act(async () => …)`, a native `.focus()` or `.click()` goes through `act` or `fireEvent`, and `waitFor` in `tests/support/ingredient-form.tsx` settles first. Never set `IS_REACT_ACT_ENVIRONMENT` or silence the warning.
+
+### near line 180
+
+linkedom and Vitest browser mode were ruled out for component tests

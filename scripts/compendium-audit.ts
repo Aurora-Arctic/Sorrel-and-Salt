@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Ranks the compendium citations whose source may describe another taxon than the entry's
-// (claude-docs/db/compendium-seed/README.md, "The attribution audit").
-// Usage: npm run compendium:audit -- [--report | --apply | --resolve [--fetch]] (claude-docs/commands.md,
-// "Compendium attribution audit")
+// (claude-docs/compendium/compendium-seed/README.md, "The attribution audit").
+// Usage: npm run compendium:audit -- [--report | --apply | --resolve [--fetch]]
+// (claude-docs/commands.md, "Compendium attribution audit")
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { formatReport } from '../src/db/seed/compendium/audit.ts';

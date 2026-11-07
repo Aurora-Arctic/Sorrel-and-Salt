@@ -4,7 +4,7 @@ The compendium's starting entries are seeded on staging and production, as refer
 
 - [`candidates.md`](candidates.md): the 1,111 candidate entries (a roster of 614 and an addendum of 497), each with its label, formal name, naming system and shard, and the works the list was drawn from.
 - Until M14.10 the entries were TypeScript files, one per shard, each with a doc of its sources here. M14.10 deleted the TypeScript and moved the seven docs to `claude-docs/archive/compendium-seed-shards/`.
-- The plan that scoped the work: [`design-decisions/mb.240-plan.md`](../../design-decisions/mb.240-plan.md). Why it is shaped this way: [`design-decisions/mb.240-compendium-seed.md`](../../design-decisions/mb.240-compendium-seed.md).
+- The plan that scoped the work: [`../../design-decisions/mb.240-compendium-seed.md`](../../design-decisions/mb.240-compendium-seed.md). Why it is shaped this way: [`design-decisions/mb.240-compendium-seed.md`](../../design-decisions/mb.240-compendium-seed.md).
 
 **The owner's rule, which every other rule here serves: "Do not make stuff up. All claims must have sources."** A field holds a value only if a source the lane read during its task says so. A claim with no source is left out, never filled from memory.
 
@@ -112,7 +112,7 @@ What the example shows:
 - **A form adds to its entry and never overrides it** (MB.215). Put a property on the entry when every form has it, and on a form when only that form does. Deities and folk names belong to the entry alone.
 - **Every entry carries at least its primary form as a variant.** A further form is added only where a source the lane read attaches something to that form: a description, a caution, a use.
 - **A work is cited once on an entry or a form.** `reference_links` holds one live link per work per row, so two passages of one book are one citation whose locator names both (`under "Mugwort"; p. 266`). The guard refuses a work cited twice on one row.
-- **A category is the source's own word** (the pilot, MB.242). A power is filed under a category only where the source prints the category's word or a direct form of it: "psychic powers" and "psychic abilities" are Psychic Work, "banish" is Banishing, "divinatory" is Divination, "loyalty/fidelity" is Fidelity. A different word is never mapped, however close: "prophetic dreams" is neither Prophecy nor Dream Work, and has a category of its own. Two mappings are deliberate exceptions, decided by the owner on 2026-10-29: "money" is Wealth, and "exorcism" is Banishing. The other mappings that decision recorded are in `claude-docs/db/category-gaps.md`.
+- **A category is the source's own word** (the pilot, MB.242). A power is filed under a category only where the source prints the category's word or a direct form of it: "psychic powers" and "psychic abilities" are Psychic Work, "banish" is Banishing, "divinatory" is Divination, "loyalty/fidelity" is Fidelity. A different word is never mapped, however close: "prophetic dreams" is neither Prophecy nor Dream Work, and has a category of its own. Two mappings are deliberate exceptions, decided by the owner on 2026-10-29: "money" is Wealth, and "exorcism" is Banishing. The other mappings that decision recorded are in `claude-docs/compendium/category-gaps.md`.
 - **A deity is the curated row the source names** (MB.242). A spelling the curated slug folds to the same row is that row (Kynes's "Manannán Mac Lir" is the curated Manannan mac Lir). So is one of the deity's other names in `src/db/seed/deities.ts` (M14.23): write the source's spelling, and the seed links the deity it names and stores the deity's own name on the link (Kynes's "Woden" is Odin, "Ganesh" is Ganesha). A deity's own name wins over another deity's other name. The guard refuses a name that is no deity's name or other name, an other name of more than one deity, and a deity listed twice under two of its names. Any other name is not the deity until the deity seed gives the deity that name.
 - **A colour is one a source gives the ingredient** (MB.242): a correspondence or, for a stone, the colour its entry lists. Only `src/db/seed/compendium/colours.ts`'s list is written.
 - **Where Cunningham and Kynes disagree** on elements or celestial bodies (Mugwort, Yarrow), the entry holds both books' values, each cited (MB.242).
@@ -415,6 +415,8 @@ The sources seed already holds a citation of the first edition, "Cunningham, Sco
 
 Cunningham's _Magical Herbs_ also prints, under each heading, the formal name the book gives the plant (`(Artemisia vulgaris)` under MUGWORT). That is the book's naming, not necessarily POWO's accepted name, so it is checked against POWO before it becomes an entry's formal name.
 
+library-text: no poppler in the devcontainer, so pdfjs-dist extracts; each PDF page is one <page>.txt so the file name is the locator; an EPUB is unpacked and cited by entry heading; output goes under the gitignored library folder; a PDF with no text layer is reported, not OCRed.
+
 ### The candidate list
 
 [`candidates.md`](candidates.md) lists the 1,111 entries to research (rows 1 to 614 the roster, 615 to 1,111 the addendum). Its rules:
@@ -492,6 +494,8 @@ which have no taxobox to say so.
   variety of the named mineral.
 - Anything less stays a doubt for a person to settle.
 
+Wikipedia lookup (--resolve): the MediaWiki API follows redirects and flags disambiguation pages, which a title alone cannot show; answers are cached in one JSON file outside git so the resolving run reads only local data and a second run asks nothing.
+
 ### Re-slugging a two-tier vocabulary
 
 `reslugItems` in `src/db/seed/two-tier-vocabulary.ts` is the backfill a slug that
@@ -504,3 +508,7 @@ A database seeded before holds `slugify(name)`. A rewrite in SQL would be a seco
 slug rule, so the seed is the backfill, as it was for ingredient slugs
 (claude-docs/db/ingredient-slugs.md). A soft-deleted item keeps its slug, as the
 index reserves none.
+
+### Roster
+
+Roster addendum (1,111 entries) and rejected list (compression, Git LFS, one file per entry, a markdown copy) of the compendium seed

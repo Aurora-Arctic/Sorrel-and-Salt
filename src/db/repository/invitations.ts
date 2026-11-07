@@ -55,7 +55,7 @@ function cardKind(): SQL {
 /**
  * The site tier, an address invitation with `workspace_id IS NULL`, spelled for this table alone: a card has no workspace
  * either, and is not this tier's. Not `inCompendium`: a site-tier invitation is no compendium row, and the tier
- * seam counts the compendium's reads (claude-docs/modules.md, "The tier seam").
+ * seam counts the compendium's reads (claude-docs/db/tier-seam.md, "The tier seam").
  */
 function onSiteTier(): SQL {
   return and(addressKind(), isNull(invitations.workspaceId)) as SQL;

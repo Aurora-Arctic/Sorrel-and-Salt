@@ -191,6 +191,12 @@ already holds, in `src/lib/auth.ts`:
   repository files CLAUDE.md rule 3 names as writing outside it
   ([`design-decisions/m16.4-repository-writes-outside-the-audit.md`](../design-decisions/m16.4-repository-writes-outside-the-audit.md)).
 
+Held password hook: while the account's password lock is on, the hook swaps the password for one no hash can match so the request is refused as a wrong password; a two-factor path refuses with a paused code; /change-password signs out every other session whatever the request asks; /two-factor/disable needs a fresh session so a stolen old cookie and the password cannot turn the second factor off.
+
+Lockout mail: counts one failure and, when it starts the first lock of a series, mails the owner; a later lock in the same series sends nothing so guessing on cannot mail the owner every hour; the mail carries a reset link made the way Better Auth makes its own; goes only to a verified address and runs after the answer so the answer shows nothing.
+
+Held password paths: a wrong password at any listed endpoint is a guess at the same password a sign-in takes, so the auth hooks count it toward the account's lock and hold it while the lock is on.
+
 ### Reset and change
 
 The rules for both are DESIGN.md §8, "Passwords". Both are Better Auth's own
@@ -262,6 +268,8 @@ both paths out of its allow list, and off production `src/proxy.ts` sends
 `X-Robots-Tag: noindex` on every response. The tag covers a crawler that
 fetches either page anyway. The reset link's life stays at 15 minutes, which
 the owner confirmed the same day.
+
+Reset mail: an unverified address gets nothing, so a reset never reaches an inbox the account has not proved; the request answers the same either way; the mail's job reads the token Better Auth just stored when it sends, so the run carries the account id alone; the link always opens the reset page.
 
 ### Setting a first password
 

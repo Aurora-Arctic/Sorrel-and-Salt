@@ -4,7 +4,9 @@ import { seedFlatVocabulary } from './flat-vocabulary';
 import type { SeedAstrologyValue, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 // The celestial body and zodiac vocabularies, a starting set a keeper may edit. Reference data, so it inserts the bootstrap user itself. Names are
-// proper nouns and no slug is written down; a description is search surface, so it carries the words a reader reaches for (claude-docs/db/astrology-vocabulary-seed.md, "The astrology vocabulary seed").
+// proper nouns and no slug is written down; a description is search surface, so it carries the
+// words a reader reaches for (claude-docs/compendium/astrology-vocabulary-seed.md, "The astrology
+// vocabulary seed").
 
 // `position` is where a facet lists the row: the calendar for signs,
 // Ophiuchus after Pisces, and the Sun outward for the bodies. The rest have none,

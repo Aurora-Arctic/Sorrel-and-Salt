@@ -16,9 +16,10 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// Every loading wait looks the same (claude-docs/design-decisions/m12.33-plan.md), held open through a coven
-// switch, a section link and a site link: the pressed control is busy, the old page is gone, one status stands
-// in its place, axe passes and the focus ends where it should. A non-member's 404 is coven.spec.ts's.
+// Every loading wait looks the same (claude-docs/design-decisions/m12.33-loading-standard.md), held
+// open through a coven switch, a section link and a site link: the pressed control is busy, the old
+// page is gone, one status stands in its place, axe passes and the focus ends where it should. A
+// non-member's 404 is coven.spec.ts's.
 
 /** The keyframes every loading mark pulses with under reduced motion. */
 const PULSE = 'loading-pulse';

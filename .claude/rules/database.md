@@ -14,7 +14,7 @@ paths:
 
 # Database rules
 
-The long form of `CLAUDE.md`'s architecture rules 2 to 5 and 10. `CLAUDE.md` carries each rule's binding sentence and wins over this file; `claude-docs/db.md` carries the argument.
+The long form of `CLAUDE.md`'s architecture rules 2 to 5 and 10. `CLAUDE.md` carries each rule's binding sentence and wins over this file; `claude-docs/db/README.md` carries the argument.
 
 ## Rule 2 — only `src/db/repository/` may import the database client
 
@@ -45,7 +45,7 @@ Two repository files write tables with no audit columns (claude-docs/design-deci
 
 **`updated_at` is the database's, not the application's.** One `set_updated_at()` trigger overwrites whatever `applyAudit` sends, while `updated_by` stays the session's: the database owns _when_, rule 3 owns _who_ (claude-docs/db/updated-at.md). A new audited table adds its own `CREATE OR REPLACE TRIGGER` line in its own migration, since `sorrel` may not create the event trigger that would attach one, and `tests/db/updated-at-trigger.test.ts` fails a table that forgets it.
 
-**A revisioned write.** A table carrying `revision` satisfies `Revisioned`. A save that must not overwrite another person's goes through `write.updateRevisioned(membership, table, id, expectedRevision, values)`. The revision check rides in the UPDATE's own WHERE, so two saves racing for one revision cannot both land. A live row of the proof's coven that has moved on throws `StaleWrite` with its revision now; `null` writes regardless; a row the proof cannot reach answers `[]`, never `StaleWrite`, which would tell another coven the row exists (claude-docs/components/autosave.md, "The server's half").
+**A revisioned write.** A table carrying `revision` satisfies `Revisioned`. A save that must not overwrite another person's goes through `write.updateRevisioned(membership, table, id, expectedRevision, values)`. The revision check rides in the UPDATE's own WHERE, so two saves racing for one revision cannot both land. A live row of the proof's coven that has moved on throws `StaleWrite` with its revision now; `null` writes regardless; a row the proof cannot reach answers `[]`, never `StaleWrite`, which would tell another coven the row exists (claude-docs/autosave.md, "The server's half").
 
 ## Rule 4 — soft-delete filtering happens in the repository
 
@@ -68,7 +68,7 @@ The guard pins each internal finder to the finders allowed to call it.
 
 **Where a read is built.** `src/db/repository/select.ts` holds the two places a read query is built: `selectFrom`, and `existsIn` for the correlated subquery a finder scopes by a parent row with, which ANDs the parent's filter itself. The guard pins both: a third `.select(` in the folder, or an `existsIn` without the filter, fails it. DESIGN.md §5's third enforcement rule says how `findMany`/`findOne` decide whether a table takes the filter.
 
-**A `sql` fragment** in the repository means something a builder cannot say, or a rule keeping a whole statement raw, never a way around either builder (claude-docs/db/sql-fragments.md, "What a sql fragment is for"). A function call, an expression, a cast, a row value and `set_config` are raw. The comparison _around_ one is still the builder's: `gt`, `lt`, `ne` and `inArray` take a fragment on either side. Check that a builder exists in `node_modules/drizzle-orm` rather than taking a task's word for it. The schema files' index predicates, `CHECK`s and defaults are DDL, and this list does not govern them.
+**A `sql` fragment** in the repository means something a builder cannot say, or a rule keeping a whole statement raw, never a way around either builder (claude-docs/db/repository-files.md, "What a sql fragment is for"). A function call, an expression, a cast, a row value and `set_config` are raw. The comparison _around_ one is still the builder's: `gt`, `lt`, `ne` and `inArray` take a fragment on either side. Check that a builder exists in `node_modules/drizzle-orm` rather than taking a task's word for it. The schema files' index predicates, `CHECK`s and defaults are DDL, and this list does not govern them.
 
 **Nothing outside the database layer may import `drizzle-orm` at runtime.** A query cannot be built without that import, so the same `no-restricted-imports` entry rule 2 uses makes a call-site query unbuildable rather than merely unreviewed. `import type` stays legal everywhere, which is how the GraphQL layer names Drizzle types (§7).
 

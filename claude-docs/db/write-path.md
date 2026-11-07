@@ -339,7 +339,7 @@ The delete is hard and outside `withAudit` because Better Auth finds a user by
 address without our `deleted_at` filter, so a tombstone would keep blocking the
 owner's sign-in, and there is no session to stamp one with. It is the one users
 delete, pinned by the export list in `soft-delete-finder-guard.test.ts`. See
-claude-docs/db/provisional-account-delete.md and claude-docs/auth/admin-bootstrap.md,
+claude-docs/db/identity-model.md and claude-docs/auth/admin-bootstrap.md,
 "Provisional accounts".
 
 ## Publishing the actor
@@ -372,3 +372,15 @@ them in one statement for the whole batch.
   restore returns it (DESIGN.md §5, "Nothing deletes a reference in v1").
 - The reference is a left join read as an inner one, because the parent's
   correlated subquery compares its tier with the reference's.
+
+### Removing a passkey
+
+Removing a passkey: removePasskeyKeepingAWayIn refuses when it is the account's last way in (no other passkey, no account for a provider in providerIds, no password). It runs outside withAudit like the plugin's own passkey writes (no audit columns). The check and delete hold the account row locked so two racing removals run one after the other and the second sees the first's delete.
+
+### Pausing a user's site access
+
+setUserAccessPause: the live row is closed first, run out or standing, so the one-live index takes the new one; no conflict target, so a pause set for the same user in a transaction alongside wins the slot and this call writes nothing rather than failing. Every session the user holds ends in the same transaction so their next request is signed out; a session row has no audit columns or deleted_at, and Better Auth deletes it the same way at sign-out.
+
+### Rename carries
+
+Cupboard rename carries (carryAstrologyRename/carryFormRename/carryDeityRename): astrology rename is two statements (entries then variants), no slug moves so every holding row takes the same rewrite; a list is rebuilt in its own order with each value folding to `from` replaced and the rest kept as written; variants are reached through the entry's tier and liveness by a correlated EXISTS so a coven's variant is never reached; form rename is one statement over variants (a slug carries no form); deity rename is one statement, deity_id matched as the service read it.

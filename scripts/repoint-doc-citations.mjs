@@ -15,7 +15,7 @@ const DIRECTIVE = /^(?:oxlint-|eslint-|@ts-|prettier-ignore|istanbul |c8 |v8 )/;
 
 /**
  * @param {string} text a citing file
- * @param {string} doc the split summary, `claude-docs/db.md`
+ * @param {string} doc the split summary, `claude-docs/db/README.md`
  * @param {{ text: string, file: string }[]} headings every heading under it, with its file
  */
 export function repointCitations(text, doc, headings) {

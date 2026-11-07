@@ -7,7 +7,7 @@ no use for one. The code is attached on the way out, by `src/graphql/errors.ts`'
 `maskError`, which the route passes to Yoga as `maskedErrors` (MB.43;
 DESIGN.md §7, "Errors"). A fourth, `StaleWrite` (M13.16), is no refusal: a
 revisioned write named a revision the row has since moved past
-(`components/autosave.md`, "The server's half"). `AccessPaused` (M15.55) is a
+(`../autosave.md`, "The server's half"). `AccessPaused` (M15.55) is a
 `Forbidden` with its own code: the member holds a seat in the coven, but an
 owner has paused their access to it, until `pausedUntil` or with no end when it
 is `null`. It also answers a session whose site access is paused (M15.52), on any call

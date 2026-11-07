@@ -6,7 +6,7 @@
 
 - Tests cite the architecture rules by number in comments (`CLAUDE.md rule 4`, 30+ files). The ten rule numbers stay in `CLAUDE.md`.
 - `scripts/tasks-md.mjs` defines a wave range (`M3.3 → M3.10`) by **file order of the `**ID — title** · Nh` headings**, and `tally.mjs` reads the same headings via `git show`. So TASKS.md splits by milestone, read in a declared sequence — not into per-task files.
-- `tests/guards/doc-citation.test.ts` scans code files only (`ts/tsx/mts/mjs/scss/yml/makefile`, never `claude-docs/` or `.claude/`) and resolves a `db.md, "Section"` cite by **heading prefix in the cited file**. So a doc split that leaves the `## ` headings in the original file as an index leaves every code citation resolving, with no guard change.
+- `tests/guards/doc-citation.test.ts` scans code files only (`ts/tsx/mts/mjs/scss/yml/makefile`, never `claude-docs/` or `.claude/`) and resolves a `../db/README.md, "Section"` cite by **heading prefix in the cited file**. So a doc split that leaves the `## ` headings in the original file as an index leaves every code citation resolving, with no guard change.
 - `CLAUDECODE=1` is set in my shell, so test output can be quiet for me and unchanged for a human on the host.
 - Claude Code loads `.claude/rules/*.md` with a `paths:` frontmatter glob **only** when a matching file is read or edited; unmatched rules are absent from context. `@imports` in CLAUDE.md are eager and buy nothing. A project `.claude/settings.json` overrides user scope for `enabledPlugins`.
 

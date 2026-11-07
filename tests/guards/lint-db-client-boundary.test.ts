@@ -9,8 +9,11 @@ import {
 } from '../support/lint-probes/db-client-boundary';
 import { REPO_ROOT } from '../support/paths';
 
-// Both `no-restricted-imports` boundaries in `.oxlintrc.json` fire (only `src/db/repository/` may import the database client, rule 2; only the database layer may import `drizzle-orm` at runtime, rule 4) and the client's exemptions are pinned (claude-docs/db/query-building.md, "Where queries may be built").
-// The probes are linted once by the unit project's setup; this file reads its diagnostics off that run.
+// Both `no-restricted-imports` boundaries in `.oxlintrc.json` fire (only `src/db/repository/` may
+// import the database client, rule 2; only the database layer may import `drizzle-orm` at runtime,
+// rule 4) and the client's exemptions are pinned (claude-docs/db/repository-files.md, "Where
+// queries may be built"). The probes are linted once by the unit project's setup; this file reads
+// its diagnostics off that run.
 
 const RULE = 'eslint(no-restricted-imports)';
 

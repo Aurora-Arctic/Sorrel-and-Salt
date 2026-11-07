@@ -1,7 +1,6 @@
 # Component workshop — summary
 
-This summary is self-contained — M0's transcripts and decision records are
-archived and are not required reading.
+This summary is self-contained.
 
 Where every standalone component renders in isolation, against the real tokens,
 without a page routed to it.
@@ -389,6 +388,8 @@ node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
 - **Untested on purpose**: it is a tool the agents running a review use, not
   a requirement of the app.
 
+review-screenshots: no browser is installed in the devcontainer, hence PLAYWRIGHT_WS_ENDPOINT and http://devcontainer:<port>; untested, a tool for review agents; pages are a JSON list of {path, name} shot as <name>-<width>-<theme>.png; --storage-state holds a signed-in session's cookies; without hasTouch/isMobile a desktop browser at phone width would draw the impersonation banner tucked away until a pointer nears the top; a workshop story's theme comes from Storybook's theme global, and without one the preview sets its default (dark).
+
 ## The fake API
 
 A story whose component asks the server gets an answer from Mock Service Worker (MSW), a library that answers a request in the browser. `.storybook/mock-api.ts` holds the helpers; `preview.tsx` starts the worker with `mswLoader(startMockWorker)`, which also resets the handlers before each story.
@@ -548,6 +549,8 @@ environment. Production and hotfix previews never carry the workshop.
   other powers is v2 (DESIGN.md §13, "A workshop-viewer role"); when it
   lands, `assertWorkshopAccess()` is the one line that changes.
 
+Workshop path: the workshop is Storybook's static build, written to public/workshop/ by the staging deploy alone. Static files have no page to call requireSession(), so this is the one prefix where the proxy asks the database itself. Storybook links its files relative to the page, so the manager must be served from under /workshop/: at bare /workshop, ./iframe.html would be /iframe.html. A redirect, not a rewrite (which keeps the browser's URL), and not to /workshop/, which Next's trailing-slash redirect sends back.
+
 ## The build gate
 
 `scripts/build-workshop.ts` runs `storybook build` and relays its exit code. It
@@ -601,3 +604,13 @@ A story with a `state` control (rule 5 above) draws a whole page or list, too bi
 - **A navigation that never arrives** (`navigating.tsx`). The workshop's router goes nowhere, so a press would end its wait at once. `Navigating` suspends the router call inside the same transition, under an already-shown boundary. That keeps the transition pending, as the App Router does until a page renders, so the page bar's state, the link's `aria-busy` and the body's skeleton stay on screen. `tests/support/navigating.tsx` does the same with a mocked router. "Start Over" remounts the whole thing and is the only way the wait ends.
 - **The page bar needs a transformed box.** It is `position: fixed` against the window, but the shell frame pads the shell in from the window's edge. A transformed box (`translateZ(0)`) becomes the bar's containing block, so the bar lands on the global bar's bottom edge as in the app. The box also becomes the skip link's containing block, whose hiding (lifted above the page's top edge) would leave it in view; the clip hides it again, and it still shows on focus.
 - **Reduced motion on the page bar.** The sweep becomes a slow `loading-pulse`. The story pin (`meta.reducedMotion`) does not reach a CSS media query, so to see it, turn on the OS "reduce motion" setting or emulate `prefers-reduced-motion: reduce` in devtools (Rendering tab).
+
+### The API prefix
+
+API prefix: apiPath adds an optional prefix; empty in the app. The component workshop sets WORKSHOP_API_PREFIX=/workshop at build time so its stories call /workshop/api/... : staging's Content Security Policy lets a workshop page reach only addresses under /workshop/, and a request there is answered by the workshop's mock service worker, never the real API. Read at the call site, not at import, so a test can set it before the module under test loads. The name has no NEXT_PUBLIC_ on purpose: Next builds every NEXT_PUBLIC_ variable into the live site's browser code, so setting one on Vercel would send the real site's requests to the wrong address. Only the workshop's Vite build replaces this name; in the app's browser code it is undefined.
+
+### The workshop's Content Security Policy
+
+Workshop Content Security Policy: scripts may fetch, by fetch, XHR or WebSocket, only files under /workshop/ on the address the browser used. Storybook reads its own index.json and project.json that way, so 'none' would break it. A source with a path ending / matches that prefix alone, so /api/graphql and every other path stay refused though the scripts carry a keeper's cookie. Not 'self', which cannot take a path. Nothing else is restricted: the manager frames its own iframe.html, and no header in the proxy or next.config.ts forbids framing.
+
+Browser host for the policy: not nextUrl.host, which is the address the server was reached on (next start bound to 0.0.0.0, or a container port behind a mapping), and the policy would then refuse Storybook's own files. A forwarding host names the public one in x-forwarded-host, as Next's own Server Actions check reads it. No scheme, so the source takes the page's, http or https, wherever TLS ends. A value that is not a plain host falls back to nextUrl.host.

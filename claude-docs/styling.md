@@ -1,7 +1,6 @@
 # Styling foundation — summary
 
-This summary is self-contained — M0's transcripts and decision records are
-archived and are not required reading.
+This summary is self-contained.
 
 The SCSS foundation every component builds on: the palette, type, spacing,
 radius and the shared primitives, settled by the foundations design review
@@ -373,6 +372,8 @@ same 400ms as every other colour. Decorative, so no contrast table: nothing is
 read against them, and `prefers-contrast: more` removes the ornaments entirely
 ([`components/backdrop.md`](components/backdrop.md)).
 
+Badge contrast: safety tint inks are the wax at +15% saturation, lifted 30% for dark and darkened 4% for light; label on tint 4.94:1 dark, 6.49:1 light; edge on the card 3.68:1 dark, 4.47:1 light. Coven-own tint: light takes the accent's hover ink (sorrel-vivid's label was 4.42:1); label 5.60:1 dark, 6.98:1 light; edge at least 4.01:1. Safety is a solid sealing-wax fill, low stock a muted tint, attention wears safety's fill, last used is solid accent.
+
 ## Category chips
 
 Amended 2026-10-19; this replaced the `selected` and `unselected` states. `chip()` draws a pill in one
@@ -387,6 +388,8 @@ of two emphasis levels. Neither draws a dot: the group colour sits on the full l
   rather than a category: the +N button, its one user. The colour field's preview shows `full` only.
 
 **Size (2026-10-19).** `chip()` takes `$size: regular | compact`, alongside `$state`. Regular is the shape above. **Compact** is for a table cell (the admin Compendium's Categories column): no block padding and 7px inline (was 3px and 11px), and the card's `overline` text size. The wash, the 1px border and the label's colour mix are unchanged, so the contrast figures below hold. A compact chip measures about 18.8px tall in Chromium. The shared chip row takes it as `compact` (`category-chips--compact`: `claude-docs/components/category-chips.md`); a compact +N button keeps a 24px hit area through a transparent pseudo-element (WCAG 2.5.8) without growing its pill.
+
+Chip colours: 8% wash of the group colour, 35% border, label with 30% body ink; pure colour on its wash falls under 4.5:1 for some groups (Mind & Spirit light 3.56), mixed it holds at least 5.37:1 for all eight seeded groups on both surfaces of both themes. `light-dark()` picks the pair off `color-scheme`.
 
 ## Dotted lists
 
@@ -408,6 +411,8 @@ eight seeded pairs on both surfaces of each theme, the lowest ratio in each is:
 A group a keeper adds is held to 4.5:1 for its colour alone (M5.6b), a looser test than the
 eight seeded ones passed; the stirred label is checked against the seeded eight only, so a very
 pale or very dark admin colour is worth a look in the colour field's preview.
+
+Dotted list: the dot is a circle drawn on every item after the first in its left margin, row clipped by that margin (`clip-path`, matching negative margin); screen reader gets a `.spoken-separator` comma at the end of each item but the last, inside the label's inline span.
 
 ## Chips, badges and the solid-fill rule
 
@@ -476,6 +481,8 @@ The 24px floor is the least a badge with a tip may be as a target.
 
 Each size also lowers its label by an **optical drop**, taken from the top padding and given to the bottom so the height holds. Without it every badge's capitals sat above the box's centre: measured in Chromium, the space under the baseline was 1.26px more than the space above the capitals on the card, and up to 1.33px more on the entry page. Chrome rounds a font's ascent and descent to whole pixels, so 12px and 13px Lexend sit differently and each size has its own drop: `default` 0.0125em, `medium` and `small` 0.05em. The card's badges now centre within 0.04px; a `default` badge lands within half a pixel either way, since its baseline snaps to the pixel grid wherever the badge happens to sit. `text-box-trim` would do this from the font's own metrics, but it is past the browser floor. `badge-padding()` and `badge-padding-block()` in `_mixins.scss` apply it; a rule that sets a badge's block padding itself, as Out of Stock's heavier border does, goes through them.
 
+Badge sizes: medium and small hold 24px (1.5rem), optical-drop lowers the label so capitals centre on the box, measured per size because Chrome rounds ascent and descent to whole pixels.
+
 ## Brand colours
 
 A sign-in provider's button wears the provider's colours, not ours:
@@ -517,6 +524,8 @@ clears 3:1 on every ground it is drawn on in both themes ("The focus ring", belo
 may sit under 3:1 on the dark page. Microsoft keeps its white face in both
 themes, with the darker `#808080` edge that clears 3:1 on the light page: the
 owner's call at MB.116's sign-off, over Microsoft's own dark button.
+
+Brand colours: `fill` ground, `ink` label, `edge` the outline a white button needs, `hover` the ground under the pointer; Google's edge is its current light-button grey, the first that clears 3:1 on parchment; Microsoft keeps its white button in both themes with edge #808080.
 
 ## The focus ring
 
@@ -593,6 +602,8 @@ colours it clears 3.53 to 3.91 in dark and 3.17 to 3.31 in light (lowest:
 (`src/lib/contrast.ts`) holds the colour itself at 4.5:1 against its theme's
 harder surface, not this faded mix, so a colour a keeper adds could put the
 ring under 3:1. Noted, not fixed.
+
+`focus-ring($placement: inset)` or `focus-ring($accent, $strength, inset)`: inset draws the ring 2px inside, for a nav link filling the bar, a tab, a menu row; ring colour mixes towards transparent so it softens over any ground.
 
 ## Type
 
@@ -698,6 +709,8 @@ sizes itself to the window, never by what pins or jumps to its top:
   that needs the full height takes the frame rather than restating the rule.
 
 Anything new that pins to the top or jumps to it starts from `0`; only a height that must fit the window less the banner reads the inset.
+
+Spacing: a chip's or badge's inner padding is its own geometry, trimmed by its 1px edge, and stays off the scale.
 
 ## Corner radius
 
@@ -832,6 +845,10 @@ vocabularies' list folded in (MB.115), are on it too. Narrow, a table with the `
 modifier turns each row into a card once its frame is under
 `$table-stack-width` ("Tables at phone width", below); a table without it
 scrolls sideways inside its frame rather than widening the page.
+
+Button-off state is used by the `.btn` disabled state and a modal header's controls while a question holds them (Modal/index.scss); `:hover`/`:focus-visible` restate every property so no colour modifier competes.
+
+Buttons: `.btn` anchors (Add Category, Continue) never underline; colour half is `_typography.scss`'s `:visited`. Disabled `.btn` from `disabled` (may leave tab order) or `aria-disabled` (stays in it); SignInPanel avoids the specificity tie by not applying its brand class to a disabled button. Spinner side padding: left comes in a step while the spinner shows only.
 
 ## Form fields
 
@@ -974,6 +991,10 @@ draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):
 | `.filter-row`       | A list's filter form, a toolbar that applies as it changes: the search, its choices and switches, and Clear while a filter is shown, wrapping, and stacked on a phone. Every width, the busy fade and the type-ahead's width rule are [`components/filter-form.md`](components/filter-form.md#styling)                                      |
 | `.list-frame`       | A list page's root, a `ListFrame` ([`components/list-frame.md`](components/list-frame.md)): its filter, notice or empty state, table and pager, a `space(5)` apart, a paragraph in it with no margin of its own. Its `.list-frame__body`, the list under the filter, is spaced the same, and fades in when a new page replaces the skeleton |
 
+Filter type-ahead width 14rem: the longest seeded name "Anglo-Saxon & Continental Germanic" is 18rem as drawn and runs on inside the box; its option is drawn whole.
+
+Form controls: undo/redo pair uses width 0 not transparent so neither dashed disabled edge nor a held modal's brings a border back; in a modal at the end of the header slot row stretched to row height, elsewhere at the start of the form; compact field size is `$control-height-compact` with caption-size text. Required asterisk was written five times as each form's own `__required` rule. Switch pressed state stretches the thumb towards its end before the switch turns. Radio strip/segmented/cards layouts: arrow keys, checked state and label work as in the list.
+
 ## The page frame
 
 `.page-frame` is the centred, full-height column of a page: Welcome, sign-in,
@@ -1069,6 +1090,10 @@ body ink whether or not they have been followed, so the two overviews read
 the same whatever the browser's history. The admin area's page-header rules
 stay scoped to `.page-column`.
 
+Page-with-nav columns: menu column then content column centred; on a wide screen an empty third column balances the menu so content sits at the window's centre. Entry page menu is 12rem while the article is wide; below that content keeps 60rem and the menu gives way first but never narrower than its longest label; the menu takes the body's row and sticks under the shell bar.
+
+Page column/frame: `.page-column` is wider than `.page-frame` at `$wide-column`, neither full height nor centred; `border-box` so a padded child keeps padding inside the column at 375px; `.page-with-nav` menu spans the three rows after the head so a page has at most three sections beside it while it sticks (the account's fourth runs below). Contents list: links in body ink followed or not so overviews do not differ by browser history.
+
 ## Tables at phone width
 
 A table whose rows turn into cards on a narrow screen, so no column scrolls
@@ -1142,6 +1167,10 @@ column's cell names its column in a `data-label` attribute:
   primitive leaves `position` alone, since a cell may be `relative` to anchor
   a tip.
 
+Table cells: a confirmation opened from a cell wraps as prose; a card, which does not scroll, wraps; a table inside that dialog keeps its own wrapping (child combinators).
+
+Stacking-table action column: opaque ground following its row so scrolled text never shows through; at phone width stands at card's top right (`StackColumn.action: 'corner'`).
+
 ## Provider marks
 
 **`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
@@ -1169,6 +1198,10 @@ banner), `toggle` 12 (the corner theme toggle), `floating` 20 (a list or
 panel opened from the shell: the account panel, the coven switcher's list, the
 skip link) and `dialog` 30. A component inside its own stacking context keeps
 a small local index. No other number is added.
+
+Footer height: row padding 2 x space(4) = 2rem, row 2rem icon button (taller than 1.8rem brand line), gap space(2), tagline 0.8125rem x 1.5 per line; phone stack is brand 1.8rem, gap 0.5rem, button 2rem. Shell width: phone shape is switcher on its own row, section nav along the bottom, account button an avatar alone; Priority+ width: between phone shape and a desktop where all six fit; with the Compendium link a keeper's bar outran an 882px window.
+
+Layers: `floating` popover or list opened from the shell over the bars; `dialog` non-native overlay; `sticky-row` a page's own row under the bar, above cards below the bar; `callout` a click's failure under its control (ClickFeedback), over a popover it may sit beside, under a non-native overlay.
 
 ## Designing a section
 
@@ -1358,3 +1391,35 @@ while it is in the page's flow. It is a size, not a scroll offset.
   inset stays `0px`.
 
 The fallback is `0px`, not `0`, because it is used inside `calc()` and a unitless zero there is invalid.
+
+### Contrast mixes
+
+The faded-underline mixes 55% (resting) and 65% (pointed/focused) are the lowest that hold 3:1 against the page, the card and the `:target` fill in both themes, for a link resting in body ink and pointed at in `$accent-hover` (entry page References and marks, IngredientForm title links, details modal In Your Cupboards). A link resting in another colour needs its own mixes worked out. No token holds a faded underline, so it is a `color-mix`, as `$fill-quiet` is. Chromium draws no underline under 1px and `auto` is already 1px for body text, so a fade, not a thickness, is what lightens an underline.
+
+### List markers
+
+`list-marker`: the ✦ is a drawn four-point star, not the glyph, so its centre is where it is put (a glyph nudged by a fixed offset drifts with size and line height). Centred `$centre` down from the item top, default middle of first line (`lh`), on the gutter of typography-base's 1.25rem indent. Empty, so a screen reader hears no "black star". Forced colours paint backgrounds away, so it is drawn in the text colour. `list-marker-reset` clears the size, clip and shift a drawn marker would leak (a glyph leaked only offsets).
+
+### Whole-card links
+
+Stretched-link card: plain ink, empty `::after` over the card, ring drawn on that overlay so it rounds the card; not an `<a>` around the card, which a screen reader reads whole and cannot hold a button; `$ring: false` for a card whose layers paint over the overlay.
+
+### Loading motion
+
+Loading motion: `loading-appear` moves `visibility` only, so it holds under the reduced-motion pulse, which moves opacity; no piece invents its own fallback.
+
+### Chevrons
+
+Chevron: drawn only so a press reaches the control beneath (turned over it paints above a stretched overlay); `$flip` flips about the horizontal edge (`rotateX`); eased and still under reduced motion; `$props` ease alongside.
+
+### Entry links
+
+Entry link: icon transform from its inline start so nothing around it moves; used by admin compendium list name links and the entry page's link to the compendium.
+
+### Optical corrections
+
+Optical corrections (each in `em`): `$optical-nudge` about half a pixel, by eye, sets a mark level with the text beside it (entry page held shelf gap before the name; recency mark sparkle and label). `$back-chevron-pull` pulls the entry back link's chevron back since the drawing starts inside its 1em box and read as an indent. `$link-hint-drop` sets a 1rem chain icon level with a link's first line. `$cap-middle` is the middle of Lexend's capitals from the top of a body line, what the details modal centres the coven shelf on. `$recency-icon-size` is larger than its small bold label so the thin rays read.
+
+### Token aliases
+
+Placeholder ink 85% into the field ground: 4.68:1 on the light field, 6.71:1 on the dark. Quiet fill used by chip wash, skeleton bars, an entry's targeted section, MenuButton plain item pointed at, hover of every nav link, tab and outlined chip. Highlight used by MenuButton's primary item, account and shell menus, suggestion rows, quiet button field ground. Link ring strength: light needs more since the accent starts lower against the page and the shared strength would fall under 3:1; tab ring is full in light.

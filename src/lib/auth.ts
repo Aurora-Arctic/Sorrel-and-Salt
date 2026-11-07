@@ -20,7 +20,8 @@ import {
 import { BASE_ERROR_CODES } from '@better-auth/core/error';
 import { appendQueryParams } from '@better-auth/core/utils/url';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
-// this cannot go through withAudit — claude-docs/db/client-imports.md, "Who may import the client".
+// this cannot go through withAudit — claude-docs/db/repository-files.md, "Who
+// may import the client".
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../db/connection';
 import { workspaceMembers } from '../modules/coven/schema/workspaces';
@@ -312,7 +313,8 @@ function tokenClaims(token: unknown): { email?: string; updateTo?: string } | un
 
 // The change branch of /verify-email (a token carrying `updateTo`) calls no `beforeEmailVerification` and mints a session
 // for whoever opened the link, so the rule is applied here first: only a session holding the row may follow it, and the
-// address must still be free or the unique index fails the write (claude-docs/auth/admin-bootstrap.md, "The email page").
+// address must still be free or the unique index fails the write
+// (claude-docs/auth/admin-bootstrap.md, "The email page").
 async function gateEmailChange(ctx: HookContext): Promise<void> {
   const claims = tokenClaims(ctx.query?.token);
   if (!claims?.email || !claims.updateTo) return;
@@ -336,7 +338,8 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   await actingUser.set(session.user.id);
 }
 
-// Email and password: the policy is DESIGN.md §8, "Passwords", and the wiring claude-docs/auth/passwords.md.
+// Email and password: the policy is DESIGN.md §8, "Passwords", and the wiring
+// claude-docs/auth/passwords.md.
 
 /** Why a breached password is refused, rather than only that it is. */
 const PASSWORD_BREACHED_MESSAGE =
@@ -364,8 +367,8 @@ function endpointOrigin(): string {
 }
 
 /**
- * Mails a reset link to a verified address only, and answers the same either way (claude-docs/auth/passwords.md, "Reset
- * and change").
+ * Mails a reset link to a verified address only, and answers the same either
+ * way (claude-docs/auth/passwords.md, "Reset and change").
  */
 async function mailResetLink({
   user,
@@ -437,8 +440,8 @@ async function countHeldPassword(ctx: HookContext, field: string) {
 }
 
 /**
- * Counts one failure and mails the owner only when it starts the first lock of a series (claude-docs/auth/passwords.md,
- * "Lockout").
+ * Counts one failure and mails the owner only when it starts the first lock of
+ * a series (claude-docs/auth/passwords.md, "Lockout").
  */
 async function countFailure(ctx: HookContext, userId: string) {
   const lock = await recordFailedPasswordSignIn(userId);
@@ -588,7 +591,8 @@ export const auth = betterAuth({
   // before versions existed (claude-docs/auth/config.md, "Rotating the secret").
   secrets: authSecrets(),
   baseURL: baseURL(),
-  // Empty but on the e2e servers, whose browsers post from localhost or devcontainer (claude-docs/testing/e2e.md).
+  // Empty but on the e2e servers, whose browsers post from localhost or
+  // devcontainer (claude-docs/testing/e2e.md).
   trustedOrigins: e2eTrustedOrigins(),
   socialProviders: socialProviders(),
   database: drizzleAdapter(db, {
@@ -602,13 +606,15 @@ export const auth = betterAuth({
     enabled: process.env.NODE_ENV === 'production',
     storage: 'database',
     // Sign-in's own rule, for the passkey ceremonies, which ship none. A custom rule replaces every other on its paths,
-    // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md, "Rate limiting").
+    // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md,
+    // "Rate limiting").
     customRules: {
       '/passkey/*': { window: 10, max: 3 },
     },
   },
-  // Cookie only: `storeInDatabase` would add a users column nothing reads (claude-docs/auth/plugins.md, "Plugins").
-  // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
+  // Cookie only: `storeInDatabase` would add a users column nothing reads
+  // (claude-docs/auth/plugins.md, "Plugins"). Impersonation is never constructed at production, nor
+  // where the flag is unset, so its endpoints are absent.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
     // Fails closed: an unreachable or silent service refuses the password, never waves it through.
@@ -632,8 +638,9 @@ export const auth = betterAuth({
     twoFactor({ issuer: SITE_NAME }),
   ],
   advanced: {
-    // Absent leaves Better Auth's `__Secure-` rule; only the e2e servers set it false (claude-docs/testing/e2e.md, "A
-    // signed-in browser without a provider").
+    // Absent leaves Better Auth's `__Secure-` rule; only the e2e servers set it
+    // false (claude-docs/testing/e2e.md, "A signed-in browser without a
+    // provider").
     ...(plainSessionCookie() && { useSecureCookies: false }),
     // Matches users.id's uuid type so every FK lines up without a cast.
     database: {

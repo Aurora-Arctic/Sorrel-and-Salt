@@ -6,7 +6,7 @@ developer adds a new wait that follows it. The decision record, with the
 owner's calls, is
 [`design-decisions/m12.33-loading-standard.md`](design-decisions/m12.33-loading-standard.md).
 The plan the work followed is
-[`design-decisions/m12.33-plan.md`](design-decisions/m12.33-plan.md).
+[`design-decisions/m12.33-loading-standard.md`](design-decisions/m12.33-loading-standard.md).
 
 ## The three parts
 
@@ -29,11 +29,11 @@ else does. A press that changes nothing visible feels like a press that did not
 register, so the control moves first.
 
 - A **button** is a [`BusyButton`](components/busy-button.md): it keeps its
-  place, gains a [`Spinner`](components/spinner.md), swaps its label for a
+  place, gains a [`Spinner`](components/busy-button.md), swaps its label for a
   busy one, and carries `aria-busy="true"`.
 - A **link** in the page shows the [`LinkHint`](components/link-hint.md) dot
   after its text. A link that wears the chain icon shows no dot: its icon turns
-  into the [`Spinner`](components/spinner.md) ring in the same space
+  into the [`Spinner`](components/busy-button.md) ring in the same space
   (`LinkIconHint`, the owner's call, 2026-10-19). A link that is a tab moves its pill at once
   ([`TabbedPage`](components/tabbed-page.md)). The site's menu links (the
   global bar's links, the admin pages' lead link and the account menu's items)
@@ -58,10 +58,10 @@ the old content is hidden and put out of reach (`visibility: hidden`, `inert`,
 stands over it. For the shell's two bodies, `MainBody` and `SectionBody`, the
 old page stays mounted at its full height beneath the skeleton rather than
 being swapped out, so the page does not shrink before the browser saves the
-scroll position that Back returns to (MB.271; [`SkeletonFade`](components/skeleton-fade.md),
+scroll position that Back returns to (MB.271; [`SkeletonFade`](components/skeleton.md),
 "The page is held, not swapped"). The skeleton has seven shapes: `table`,
 `cards`, `form`, `page`, `contents` and `recipe` for a whole page, and `line` for one line of text
-that is still being fetched. `recipe` is a spell's own page. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives (a compact `cards` filter row also draws the Compact switch where the loaded row has it, and the filter row sits where the loaded page's does at desktop and phone widths). When the real content arrives, the skeleton does not vanish: the shell's bodies keep the last one over the arrived page, `aria-hidden` and out of layout, and it fades out over 200ms (`$arrive-duration`) while the page shows through ([`SkeletonFade`](components/skeleton-fade.md)). A navigation that drew no skeleton (a refresh) fades nothing, a new wait mid-fade takes the skeleton back at once, and under reduced motion the page shows at once, as `arrived` does.
+that is still being fetched. `recipe` is a spell's own page. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives (a compact `cards` filter row also draws the Compact switch where the loaded row has it, and the filter row sits where the loaded page's does at desktop and phone widths). When the real content arrives, the skeleton does not vanish: the shell's bodies keep the last one over the arrived page, `aria-hidden` and out of layout, and it fades out over 200ms (`$arrive-duration`) while the page shows through ([`SkeletonFade`](components/skeleton.md)). A navigation that drew no skeleton (a refresh) fades nothing, a new wait mid-fade takes the skeleton back at once, and under reduced motion the page shows at once, as `arrived` does.
 
 A skeleton shows **at once**, with no wait, because the press has already
 hidden the old content: holding the skeleton back would leave an empty panel
@@ -74,7 +74,7 @@ and the shapes are `aria-hidden`.
 
 ### Page
 
-The [navigation bar](components/navigation-bar.md) is the page's own signal.
+The [navigation bar](navigation.md) is the page's own signal.
 It is 3px tall, sits under the global bar, and shows only if a navigation is
 still going after 100ms. It is `aria-hidden`: the control and the region have
 already told a screen reader, and a third announcement would repeat them. The
@@ -198,7 +198,7 @@ exported from its `index.ts`.
 | `reportLeaving()`        | For a wait that ends with the browser leaving the page, such as redirecting to a sign-in provider: it keeps the page bar up until the browser unloads.                                                                                                                                                                                               |
 | `NavigationBar`          | The bar. Mounted once in `src/app/providers.tsx`; a developer does not render it again.                                                                                                                                                                                                                                                              |
 | `Skeleton`               | The region. `shape` is `table`, `cards`, `form`, `page`, `contents`, `recipe` or `line`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                                                                                                |
-| `Spinner`                | The control's ring, inside a button or field; see [`spinner.md`](components/spinner.md).                                                                                                                                                                                                                                                             |
+| `Spinner`                | The control's ring, inside a button or field; see [`spinner.md`](components/busy-button.md).                                                                                                                                                                                                                                                         |
 | `loading-motion`         | The Sass mixin for any new piece that moves to say something is loading; it brings the reduced-motion pulse and the optional 100ms wait with it.                                                                                                                                                                                                     |
 
 `navigate(href, options)` takes `{ replace, scroll, target }`:

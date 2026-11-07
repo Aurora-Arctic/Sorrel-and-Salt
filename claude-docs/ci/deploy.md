@@ -226,7 +226,7 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   `npm run db:seed:compendium` the compendium's entries, which pick from
   the vocabularies and may cite a work the sources seed wrote, and
   `npm run db:seed:demo-coven` last the demo coven and a seat in it for every
-  account (`claude-docs/db/demo-coven-seed.md`), when the
+  account (`claude-docs/db/demo-scenario.md`), when the
   `seed-reference` input says so. One step for all seven, sharing a gate, a log
   and a summary: a form vocabulary seeded while the categories failed is not a
   state worth reporting separately. It is how any vocabulary reaches staging
@@ -276,7 +276,7 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   and the sources seed would stop with "which no seed wrote". A real run uses
   the same transaction, so it lands whole or not at all; `migrate.yml` still
   runs the seven apart, each committing on its own. `force` passes `--force` to the
-  compendium seed (claude-docs/db/compendium-seed/README.md, "Refusals").
+  compendium seed (claude-docs/compendium/compendium-seed/README.md, "Refusals").
   The job summary says whether the run was a dry run and whether it was
   forced, and lists every `UPDATED`, `REFUSED`, `ADOPTED`, `RETIRED` and
   `PENDING` line with the counts. It posts no pull request comment, since no
@@ -327,6 +327,8 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   `KEEP_SNAPSHOTS` (3) and deletes the rest. It carries the same inline
   warn-and-skip guard on those two secrets — not the `vercel-secrets-guard`
   action, which checks three others ([Composite actions](composite-actions.md)).
+
+the Neon response body must be logged when a snapshot call fails
 
 ### Smoke checks
 

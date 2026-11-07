@@ -98,7 +98,7 @@ shortcut could take:
   own group. `src/lib` is outside the override because `lib/auth.ts` hands
   Better Auth the schema tables. The override restates the four top-level bans,
   because an override replaces the rule rather than merging with it
-  ([`db/query-building.md`](../db/repository-files.md), "Where queries may be
+  ([`../db/repository-files.md`](../db/repository-files.md), "Where queries may be
   built").
 - **No client component imports a service.** Every file under
   `src/modules/*/services` opens with `import 'server-only'`. Next resolves that marker

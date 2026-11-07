@@ -52,7 +52,7 @@ not from its documentation.
 - **The rate limiter is already on in every deploy.**
   `context/create-context.mjs` defaults `rateLimit.enabled` to
   `NODE_ENV === 'production'`, which every Vercel build is, staging and hotfix
-  previews included (`auth.md`, "Config"). Its storage defaults to `memory`, a
+  previews included (`../auth/README.md`, "Config"). Its storage defaults to `memory`, a
   module-level `Map` in `api/rate-limiter/index.mjs`, so on Fluid Compute each
   function instance counts alone. The built-in rules give sign-in paths 3
   requests per 10 seconds and `/send-verification-email` 3 per 60 seconds,
@@ -139,7 +139,7 @@ plus B's header pin.
 - **What it buys:** one count across every instance.
 
 **Resolved: C.** The table is Better Auth's, like `sessions`, so it carries no
-audit spread and no `set_updated_at` trigger (`auth.md`, "Tables"). It lands
+audit spread and no `set_updated_at` trigger (`../auth/README.md`, "Tables"). It lands
 alone first, as MB.75, under the table-then-behaviour convention, and MB.76
 turns it on.
 

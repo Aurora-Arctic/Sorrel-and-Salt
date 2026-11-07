@@ -23,7 +23,7 @@ carries the alternatives.
 ## What the research changed
 
 MB.156 renders every source in
-[`db/deity-vocabulary-seed.md`](../db/deity-vocabulary-seed.md) to the doc's
+[`../compendium/deity-vocabulary-seed.md`](../compendium/deity-vocabulary-seed.md) to the doc's
 own text, and the task's column list could not reach it. Counted over the
 doc's 334 citation lines:
 
@@ -271,7 +271,7 @@ seed parses it:
     `Ingredient.references`, `referenceSuggestions`, `withoutReferences`,
     `createReference`, `updateReference`), §9 (the locator beside each
     citation) and §14 (four rows).
-  - [`db/references.md`](../db/references.md), new, and its row in `db.md`.
+  - [`db/references.md`](../db/references.md), new, and its row in `../db/README.md`.
   - `modules.md`: the ownership row, the reason, and the seam.
 - **Code:** none. The record is written before the table task transcribes
   it, as MB.138's was.

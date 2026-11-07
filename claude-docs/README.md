@@ -6,7 +6,7 @@ file gets fixed.
 
 **The summaries are the working set** — the current shape of each area, and
 enough to start a task without opening anything else. They are meant to be
-self-sufficient: if you need a transcript or an archived record to understand
+self-sufficient: if you need an archived record to understand
 how the system works today, that is a defect in the summary, not a research step.
 
 **The agent guidance sits beside this directory**, not in it: `CLAUDE.md` at the
@@ -25,12 +25,13 @@ each loaded only once a file in its area is read ([`agent-skills.md`](agent-skil
 | `<subsystem>.md`                    | **A summary per subsystem** — the current shape of one area, kept short. States decisions, not how they were reached. [`modules.md`](modules.md) is the one that says where code lives: the five domain modules, what each owns, and the boundary between them.                                                                                                                                                                                                     |
 | `loading.md`                        | The loading standard (M12.33): the three parts of a wait (control, region, page), the reduced-motion pulse, the coven switch, why there is no `loading.tsx`, how to adopt it, and the sourced research behind it.                                                                                                                                                                                                                                                   |
 | `dependencies.md`                   | What is behind, blocked or unfixable among the direct dependencies, how to rerun the audit, and when to look again.                                                                                                                                                                                                                                                                                                                                                 |
+| `day-1.md`                          | The reading order for a new engineer and the one request-path diagram.                                                                                                                                                                                                                                                                                                                                                                                              |
+| `design/`                           | DESIGN.md's §5, §7 and §9, one file each: `data-model.md`, `graphql/README.md`, `routes.md`.                                                                                                                                                                                                                                                                                                                                                                        |
 | `security-headers.md`               | The headers every page carries (content security policy, referrer policy, `nosniff`), why HSTS is left to Vercel, and how to allow a new third-party source.                                                                                                                                                                                                                                                                                                        |
 | `<summary>/<section>.md`            | **A summary too large to read whole, one `## ` section a file** — `db/`, `auth/`, `ci/`, `testing/` and `graphql/` — moved as is, and a `### ` subsection too when it is large enough to read alone. `<summary>/README.md` is their index: a flat list of the files with a sentence for each. Code cites the file, and a reader opens it, rather than the index. `scripts/split-doc.mjs` makes the split and `scripts/repoint-doc-citations.mjs` points code at it. |
 | `components/<name>.md`              | **One doc per standalone component.** Required by several tasks; a component that ships without its doc is an incomplete task.                                                                                                                                                                                                                                                                                                                                      |
-| `transcripts/<subsystem>.md`        | **Frozen as of MB.31** — how a subsystem reached its shape. No longer appended to; a PR body is the record now.                                                                                                                                                                                                                                                                                                                                                     |
-| `design-decisions/<mN.n>-<slug>.md` | A decision record — what was decided, why, and what it rules out. Live; superseded in place, never archived mid-project.                                                                                                                                                                                                                                                                                                                                            |
-| `archive/m0/`, `archive/wave-<n>/`  | **Frozen.** M0's and waves 1–2's transcripts and decision records, plus text cut from a live doc. Nothing new goes in. Never read.                                                                                                                                                                                                                                                                                                                                  |
+| `design-decisions/<mN.n>-<slug>.md` | A decision record — what was decided, why, and what it rules out. Live; superseded in place. `design-decisions/INDEX.md` lists every record by area.                                                                                                                                                                                                                                                                                                                |
+| `archive/`                          | **Frozen.** Tarred decision records and the bodies of closed-wave task entries (`archive/tasks-closed-waves.tar.gz`), and text cut from a live doc. Nothing new goes in. Never read.                                                                                                                                                                                                                                                                                |
 
 ## What lives where, and what to read
 
@@ -47,12 +48,12 @@ each loaded only once a file in its area is read ([`agent-skills.md`](agent-skil
   comment is the copy that gets pasted into sixteen files and drifts. The rule
   in full is "Comments in code" below. Prose that leaves a comment lands in the
   summary for its subsystem, never in `archive/`.
-- A **transcript** is frozen: the five that exist are not appended to, and a PR
-  body carries what one would have said.
 - A **decision record** captures the reasoning behind one contested choice so it
   does not get re-argued.
 - A summary is corrected in the PR that makes it wrong — "Correcting a doc"
   below.
+
+split-doc and repoint-doc-citations: text moves as is, edits only to links (a ../ on each relative one, intra-doc anchors repointed); the plan gives each section's file and index sentence, ownFile subsections and doc; the citation guard fails a citation named through the index.
 
 ## One home per fact
 
@@ -139,7 +140,7 @@ so a private spell never reaches the resolver.` Not "X was added so that",
   `claude-docs/` path resolves and never points into `archive/`, in code, in
   `CLAUDE.md` and in the markdown under `.claude/`, and a section is cited in
   the file it lives in, not through a split summary's index —
-  `claude-docs/db/keyset-pages.md, "Keyset pages"`, never `db.md`'s heading
+  `claude-docs/db/keyset-pages.md, "Keyset pages"`, never `db/README.md`'s heading
   for it.
 
 ## Correcting a doc
@@ -169,7 +170,6 @@ are superseded in place.
 ## Naming
 
 Lower-kebab-case, matching the component directory names — `theme-toggle.md`,
-not `THEME-TOGGLE.md`. A subsystem summary and its transcript share a filename
-(`styling.md` ↔ `transcripts/styling.md`). A section file is named for its
+not `THEME-TOGGLE.md`. A section file is named for its
 heading, shortened and without the task id — `db/keyset-pages.md` for "Keyset
 pages (M3.6)".

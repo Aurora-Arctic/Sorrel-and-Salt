@@ -26,7 +26,7 @@ The owner's call: types cluttered the files whose job is behaviour. Before this,
 ## What stays, and why
 
 - **A type derived from a value declared in the same file.** Examples are the Zod schema and type pairs, `(typeof UNIT_DIMENSIONS)[number]`, `Loaders` from the private `LOADERS`, and `WorkspacePermission` from the private `statements`. A types file would have to import the value back, and the Zod pairs would lose the one name that carries both schema and type. Exporting a private value to move its type would widen a surface to tidy a file.
-- **The branded proofs, `Membership` and `SiteAdmin`.** The brand's `unique symbol` is unexported so that no other file can name it. CLAUDE.md rule 5 and `db.md` describe it as living beside the one function that mints the proof. Moving the symbol with the type would still compile, but it would turn a one-file mechanism into a two-file one.
+- **The branded proofs, `Membership` and `SiteAdmin`.** The brand's `unique symbol` is unexported so that no other file can name it. CLAUDE.md rule 5 and `../db/README.md` describe it as living beside the one function that mints the proof. Moving the symbol with the type would still compile, but it would turn a one-file mechanism into a two-file one.
 - **`Executor` and `Transaction`**, the repository's two `typeof db` types. Only the pinned set of files may import the client, even type-only, and a types file would be one more exemption.
 
 A type declared inside a function, a `describe` block or a `declare global` block belongs to that code. So the `PothosSchemaTypes` augmentation stays beside the prototype patch it types.

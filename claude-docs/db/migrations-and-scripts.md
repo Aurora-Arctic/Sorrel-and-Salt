@@ -290,7 +290,7 @@ db:migrate && db:seed`, and that first step is what makes it a reset rather
   `sorrel`, migrate and seed that, and clone `sorrel_test_<n>` from it — and,
   by the same route through `sorrel_e2e_template`, each Playwright worker
   slot's `sorrel_e2e_<n>` and the configured-providers server's
-  `sorrel_e2e_providers`. See `testing.md`.
+  `sorrel_e2e_providers`. See `../testing/README.md`.
 - **`npm run db:studio`** (`make db-studio`, MB.21) is `drizzle-kit studio
 --host 0.0.0.0 --port 4983`. It reads the same `drizzle.config.ts` as
   `db:generate`/`db:migrate` — no separate configuration — and needs no
@@ -364,3 +364,7 @@ well, which only `generate` rewrites.
    [rule 10](expand-contract.md) requires while one is in flight.
 5. Run `npm run check:migration-order` and `npm run check:destructive-ddl`; a
    renamed migration carries its `.ack.md` sidecar under its new tag.
+
+### Rules
+
+The three "Rules this sets" lines of the migrations record

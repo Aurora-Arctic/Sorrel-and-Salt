@@ -20,7 +20,7 @@ export function scopedTo<TTable extends PgTable & WorkspaceScoped>(
 
 /**
  * The compendium tier, `workspace_id IS NULL`: what any proof, and no proof, may read. A finder reading both tiers ORs it
- * with `scopedTo` (claude-docs/modules.md, "The tier seam").
+ * with `scopedTo` (claude-docs/db/tier-seam.md, "The tier seam").
  */
 export function inCompendium<TTable extends PgTable & WorkspaceScoped>(table: TTable): SQL {
   return isNull(table.workspaceId);
@@ -41,7 +41,7 @@ export function inTiers<TTable extends PgTable & WorkspaceScoped>(
 /**
  * Live, and in a tier `memberships` may read: a two-tier table's read scope,
  * one spelling for every finder reading the compendium and the proofs' covens
- * together (claude-docs/modules.md, "The tier seam").
+ * together (claude-docs/db/tier-seam.md, "The tier seam").
  */
 export function readableInTiers<TTable extends PgTable & WorkspaceScoped>(
   memberships: readonly Membership[],
@@ -122,7 +122,8 @@ const NOWHERE = 2147483647;
 /**
  * A search for `query` by word similarity: `matches`, `similarity`, `contains` and
  * `position` (the first character of a verbatim hit, or `NOWHERE`), each side folded
- * through `unaccent_immutable` so the expression indexes answer the match. (claude-docs/db/compendium-read.md, "Search ranking")
+ * through `unaccent_immutable` so the expression indexes answer the match.
+ * (claude-docs/db/compendium-read.md, "Search ranking")
  */
 export function foldedWordMatch(query: string): WordMatch {
   const folded = sql`unaccent_immutable(${query})`;

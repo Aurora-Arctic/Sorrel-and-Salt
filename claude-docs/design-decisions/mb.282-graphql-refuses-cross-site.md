@@ -5,7 +5,7 @@
 A small check in `src/graphql/csrf.ts`, called from the route before Yoga, refuses any
 write that is not JSON (415) or that carries neither `x-sorrel-client: web` nor an
 `Origin` matching its own host (403). The site's client sends the header.
-Reads over `GET` are unchanged. Long form: `claude-docs/graphql/no-cors.md`.
+Reads over `GET` are unchanged. Long form: `claude-docs/graphql/endpoint.md`.
 
 ## Alternatives
 

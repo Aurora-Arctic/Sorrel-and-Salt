@@ -25,7 +25,7 @@ answer.
   compendium's pages and the files a crawler reads (MB.80), with the icon and
   manifest files M11.16 will add, listed ahead of it. M12.34 adds `/opengraph-image`, the site's
   share card that a link preview fetches with no cookie; the compendium's own cards sit under
-  `/compendium/*` ([`../share-card.md`](../seo/share-card.md)). The `(public)` route
+  `/compendium/*` ([`../seo/share-card.md`](../seo/share-card.md)). The `(public)` route
   group holds these pages, and its layout draws the chrome without redirecting
   ([`app-shell.md`](../components/app-shell.md), "Why a route group"). Off
   production (`VERCEL_ENV` not `production`) the proxy also sets
@@ -186,6 +186,10 @@ an import error: a service may not import `next/headers`, `better-auth/cookies`,
 `lib/auth` or `lib/request-session`. It may still `import type { Session }`
 and better-auth's `createAccessControl`. The override restates the three
 top-level bans because an override replaces the rule rather than merging
-(`claude-docs/db/query-building.md`).
+(`claude-docs/db/repository-files.md`).
 Lint carries it; each ban was proved by a probe in the PR that added it
 (MB.224 retired the guard that re-ran the probes).
+
+### The matcher
+
+Matcher: everything except what is never a page: Next's own assets, and /api/*, which answers for itself (Better Auth's handshake; GraphQL refusing in its own error shape rather than redirecting a fetch) and the Workflow SDK's generated /.well-known/workflow/ routes, which take its queue calls and fail if the proxy runs first. Nothing else is exempt, so a file dropped into public/ is a protected page to this matcher until it gets its own entry, which is why the backdrop's images are imported by their stylesheet and served under /_next/. A named prefix, never a file-extension pattern: what is public is listed, as in PUBLIC_ROUTES. Must be a literal: Next reads it at build time.

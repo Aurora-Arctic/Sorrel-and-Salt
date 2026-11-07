@@ -94,7 +94,7 @@ environment makes `drizzle(client, { logger: process.env.DEBUG_SQL === '1' })`
 print every statement the repository emits, `withAudit`'s
 `set_config('app.current_user_id', …)` included — off by default, so no test
 output or CI behaviour changes when it's unset. Full setup:
-`claude-docs/debugging.md`.
+`claude-docs/testing/debugging.md`.
 
 ### Where queries may be built (MB.33)
 
@@ -147,11 +147,11 @@ both rules are scoped by path and a file outside the tree matches no
 | Access boundary (M3.9)          | A resolver, page or component reaching the repository, or anything under `src/db`, without passing a service.    |
 
 The access boundary is described in
-[`graphql/access-boundary.md`](../graphql/protections.md), "The access
+[`graphql/protections.md`](../graphql/protections.md), "The access
 boundary". Its second half, `server-only` on every service, stops a client
 component from importing a service at all.
 
-**What a `sql` fragment is for** has a file of its own: [`sql-fragments.md`](repository-files.md).
+**What a `sql` fragment is for** has a file of its own: [`repository-files.md`](repository-files.md).
 
 ### What a `sql` fragment is for (MB.100)
 
@@ -231,3 +231,13 @@ oxlint skips anything matching the config's `ignorePatterns` even when the
 path is passed explicitly — `--no-ignore` does not override it — so a
 committed fixture would have to be lintable by `npm run lint`, and would then
 fail the very check it exists to prove.
+
+### Connection URL parameters
+
+postgres.js's parseOptions deletes sslmode, reads the keys in its own defaults, and sends every other query parameter to the server verbatim as a startup parameter, which the server rejects with 42704. CLIENT_ONLY_PARAMS lists the libpq keys it does not consume; listed not derived because deriving would read node_modules at runtime. Deliberately not listed: sslmode (consumed, mapped to ssl), channel_binding (the driver reads it, enforces require, defaults to prefer), application_name and options (real server parameters), and the keys postgres.js names itself: connect_timeout, target_session_attrs, sslnegotiation, prepare, max, fetch_types.
+
+withoutClientOnlyParams strips rather than rejects because a hotfix's URL is written by Neon's Vercel integration, which rewrites the variable itself, so nobody can delete a parameter by hand. channel_binding is kept (the driver enforces it) and sslmode=require requests TLS. It imports nothing because scripts run directly under Node load it as well as Next. A URL with nothing to remove, or one new URL cannot parse, comes back unchanged so postgres.js reports its own error.
+
+### Why some repository files are apart
+
+Spell file placement: grimoire.ts is apart from spells.ts because finders.ts imports readableSpells from there and this pages through finders.ts; ingredient-parent.ts tier predicates are apart from predicates.ts (select.ts imports it) and select.ts (builds queries for any table, names none).

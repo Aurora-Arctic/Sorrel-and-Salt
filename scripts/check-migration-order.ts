@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Refuses a migration journal that drizzle's migrator would apply out of order
 // (claude-docs/db/migrations-and-scripts.md, "Migration order").
-// Usage: npm run check:migration-order [-- --base <ref>] (claude-docs/commands.md, "Migration order check")
+// Usage: npm run check:migration-order [-- --base <ref>]
+// (claude-docs/commands.md, "Migration order check")
 
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -22,7 +23,7 @@ export function parseJournal(text: string): JournalEntry[] {
 export function readBaseJournal(base: string, cwd: string = REPO_ROOT): JournalEntry[] {
   let text: string;
   try {
-    // CI runs as root over a checkout another user owns (claude-docs/ci/container-jobs.md).
+    // CI runs as root over a checkout another user owns (claude-docs/ci/reusable-checks.md).
     text = execFileSync('git', ['-c', 'safe.directory=*', 'show', `${base}:${JOURNAL_PATH}`], {
       cwd,
       encoding: 'utf8',

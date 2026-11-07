@@ -349,7 +349,7 @@ the email index is unique. To switch back to a user already made,
   `localhost`, because that poll runs in the runner's own process wherever the
   browser lives; making both sides match breaks one of them. Why the browser
   moves at all (Alpine/musl has no Chromium), why the variable must not be set
-  any more broadly, and the full setup: `claude-docs/debugging.md`.
+  any more broadly, and the full setup: `claude-docs/testing/debugging.md`.
 
 `npm run e2e` (`playwright test`) runs the suite; `E2E_WORKERS=<n> npm run e2e`
 runs it on `n` workers, and so `n` slot servers. Browser binaries
@@ -377,6 +377,8 @@ and WebKit and their system libraries, and pulling it was the largest fixed
 cost of every e2e job. The browsers sit in `/ms-playwright`
 (`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
 container job sets `HOME` to a directory the image never saw.
+
+Plain session cookie: plainSessionCookie is true when the e2e flag is set and there is no deploy target at all. A production build forces an https base URL, which makes the __Secure- prefix automatic, and a browser never sends a __Secure- cookie to the plain-http origin an e2e browser reaches the server on. Only the e2e servers (tests/e2e/servers.ts) set the flag; under it baseURL() in src/lib/auth.ts gives them a localhost base URL, the one plain-http host a browser lets use a passkey. Any VERCEL_ENV overrides it, preview and development included, so no deploy can drop the prefix.
 
 #### A password sign-in in the browser
 
@@ -532,7 +534,7 @@ What sets the time, and what each setting does:
 - **Workers.** The default is 6. At 9 the gate suite gained nothing and at 12 it lost about 9 s, because summed test time rises with the worker count: the cores and the browser server that shares them are the limit, not memory. At 12 workers two admin stories timed out at the 30 s limit. The setting changes only the local default; CI sets `E2E_WORKERS` itself.
 - **A soft navigation** leaves the document without a `<title>` for a moment, so an axe scan waits for a title before it runs.
 
-CI's side of this is [`ci/runner-budget.md`](../ci/runner-budget.md), "Where a gate run's time goes". The levers, in order, are in [`design-decisions/m11.18-plan.md`](../design-decisions/m11.18-plan.md).
+CI's side of this is [`ci/runner-budget.md`](../ci/runner-budget.md), "Where a gate run's time goes". The levers, in order, are in [`../design-decisions/m11.18-faster-playwright-runs.md`](../design-decisions/m11.18-faster-playwright-runs.md).
 
 **Measuring it again.** Take the lock first and time the run inside it, so another session's run waits rather than inflating the figure; then read the per-file sums off the HTML report's embedded JSON with `fflate`, already in `node_modules` as a dependency of the Vitest UI. Three runs, the median, and say whether the servers were already up.
 

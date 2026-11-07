@@ -454,6 +454,10 @@ unless a person edited it
 (`tests/db/migrations/0116-print-encyclopedia-entries.test.ts`,
 `tests/db/seed/sources-print-entries.test.ts`).
 
+restateWorks: sets each present source to its work's fields and scholarly mark either way unless a person edited the row; a row's key is its rendered citation so only a field the citation does not print differs, or every field once a migration rewrote a key; a soft-deleted source and one the works do not name are left alone; a source two names cite takes the mark if either gives it.
+
+seedVocabularySources: a reference is known by its seed_key (citation as rendered when seeded) so an edited one is never twinned; a target row by its own seed_key so a renamed deity keeps its sources; nothing present is updated bar a source's fields and scholarly mark; nothing soft-deleted is re-inserted.
+
 ### How the compendium seed cites its sources
 
 `src/db/seed/compendium.ts` writes the compendium's entries with their
@@ -489,6 +493,8 @@ differ from its work, unless a person edited that link or that source: a person'
 kept, and the run prints a `KEPT` line for it without failing
 ([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "Citation
 attributes on a present entry").
+
+WORKS: each work is the edition in the curator's library as its title and copyright pages give it; per-entry pages are files under compendium/sources/; Culpeper is the edition Project Gutenberg transcribes; Grieve is cited page by page as grieve-<heading>. scholarly marks a work scholars edited or reviewed, in print or online: a peer-reviewed journal; a university, its press or museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. A trade press (Llewellyn among them), a wiki, a site republishing others' works (cite the original) and an unsigned site carry none.
 
 ## Reference service details
 

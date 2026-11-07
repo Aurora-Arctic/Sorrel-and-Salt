@@ -37,7 +37,7 @@ That deploy's own writes still succeed after this migration:
 - It writes no stock row.
 - It writes no spell layer outside the `demo` seed, which never runs on a deploy target.
 
-The precedent for replacements in one transaction is `0029` and `0038` (`claude-docs/db/expand-contract.md`). Read CLAUDE.md rule 10 strictly instead, and this task becomes two (`claude-docs/design-decisions/mb.215-plan.md`, "Risks").
+The precedent for replacements in one transaction is `0029` and `0038` (`claude-docs/db/expand-contract.md`). Read CLAUDE.md rule 10 strictly instead, and this task becomes two (`claude-docs/design-decisions/mb.215-ingredient-variants.md`, "Risks").
 
 ## What is lost
 

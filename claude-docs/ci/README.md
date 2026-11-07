@@ -11,3 +11,7 @@
 - `database-image.md`: the Postgres image CI builds and why its password is never a build argument.
 - `runner-budget.md`: the runner choice and the minutes each job spends.
 - `running-ci-locally.md`: running the reusable checks through `act`.
+
+### Changing GitHub settings
+
+Confirm live GitHub settings (rulesets, branch protection) with the owner before changing them, and report a write blocked by permissions as a manual follow-up

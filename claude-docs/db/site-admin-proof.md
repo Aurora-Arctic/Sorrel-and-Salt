@@ -84,3 +84,7 @@ admin-only, on `assertSiteAdmin`. The vocabulary tables carry no
 `workspace_id` and are written through `insert` and `updateById`, so as before
 nothing below their services stops a write, and each service checks the role
 itself.
+
+### The curator check
+
+`@throws {Forbidden}` "neither a curator nor a keeper": `assertCurator` passes either site role, `assertSiteAdmin` a keeper only

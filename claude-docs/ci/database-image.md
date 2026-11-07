@@ -86,3 +86,7 @@
   was scaffolding for, connecting over TCP as the `sorrel` role instead (a
   real, non-discarded password — see
   `Docker/postgres-init/enable-extensions.sql`).
+
+### Testing the entrypoint
+
+To test docker-entrypoint.sh at image-build time, neuter its final `exec "$@"` line with sed so the init returns, then assert the line was restored

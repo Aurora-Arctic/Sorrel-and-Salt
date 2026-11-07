@@ -24,7 +24,7 @@ the policies from applying at all and so the second could not yet bite.
 `DATABASE_URL` (`package.json`), so `sorrel` owns every table its policies would
 filter. Postgres does not apply a table's policies to that table's owner unless
 `ALTER TABLE … FORCE ROW LEVEL SECURITY` is set, and that clause appeared
-nowhere in the repo — not in DESIGN.md, TASKS.md, `db.md` or any migration. Neon
+nowhere in the repo — not in DESIGN.md, TASKS.md, `../db/README.md` or any migration. Neon
 is the same shape: the integration injects a connection string for the
 table-owning role.
 

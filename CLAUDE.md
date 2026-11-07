@@ -2,7 +2,7 @@
 
 Guidance for Claude Code working in this repository.
 
-`claude-docs/DESIGN.md` is the specification. `claude-docs/TASKS.md` is the work breakdown, indexing `claude-docs/tasks/` and `claude-docs/waves/`, and is corrected in place when wrong; "frozen" means not re-scoped. Its **Execution order**, not its milestone numbering, is the schedule. §n points into `DESIGN.md`, M0.1 into `TASKS.md`.
+`claude-docs/DESIGN.md` is the specification. `claude-docs/TASKS.md` is the work breakdown, indexing `claude-docs/tasks/` and `claude-docs/waves/`, and is corrected in place when wrong; "frozen" means not re-scoped. Its **Execution order**, not its milestone numbering, is the schedule. §n points into `DESIGN.md`, M0.1 into `TASKS.md`; §5, §7 and §9 live in `claude-docs/design/data-model.md`, `claude-docs/graphql/README.md` and `routes.md`.
 
 **Precedence: `DESIGN.md`, then this file, then a rule file.** Each `.claude/rules/<area>.md` is the long form of lines here, never a rule of its own, and loads once a file its `paths:` names is read. A read through the shell loads none, so open the one for the area you edit. When two disagree, fix the lower one.
 
@@ -26,18 +26,19 @@ The same split names the coven roles. The screens call them **Steward**, **Pract
 
 The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. claude-docs/commands.md is the full table.
 
-| Command                         | Purpose                                          |
-| ------------------------------- | ------------------------------------------------ |
-| `npm run dev`                   | Dev server on **8000**, Altair at `/api/graphql` |
-| `npm run build` / `start`       | Production build; e2e serves it on **8001**+     |
-| `npm run pre-commit`            | Lint, format, types on changed files (MB.38)     |
-| `npm run test:coverage`         | Vitest's six projects, 80% threshold             |
-| `npm run test:stories`          | Story suite (Playwright), one line per story     |
-| `npm run e2e`                   | Playwright, a database and server per worker     |
-| `npm run codegen`               | `src/gql/` from the SDL; commit the output       |
-| `npm run db:migrate`            | Applies migrations; `db:generate` writes one     |
-| `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops first         |
-| `npm run check:destructive-ddl` | Flags destructive DDL in new migrations          |
+| Command                         | Purpose                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `npm run dev`                   | Dev server on **8000**, Altair at `/api/graphql`                                           |
+| `npm run setup`                 | Copies the example env and editor files to their git-ignored names, keeping any that exist |
+| `npm run build` / `start`       | Production build; e2e serves it on **8001**+                                               |
+| `npm run pre-commit`            | Lint, format, types on changed files (MB.38)                                               |
+| `npm run test:coverage`         | Vitest's six projects, 80% threshold                                                       |
+| `npm run test:stories`          | Story suite (Playwright), one line per story                                               |
+| `npm run e2e`                   | Playwright, a database and server per worker                                               |
+| `npm run codegen`               | `src/gql/` from the SDL; commit the output                                                 |
+| `npm run db:migrate`            | Applies migrations; `db:generate` writes one                                               |
+| `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops first                                                   |
+| `npm run check:destructive-ddl` | Flags destructive DDL in new migrations                                                    |
 
 **While working, run the individual test files and specs a change touches.** `test:coverage`, `test:stories` and the full e2e suite run only when the owner says so. When they do, run `test:coverage`, not `test`: a plain pass can still fail CI on the 80% threshold alone. **Every local Playwright run (`e2e`, `test:stories`, a named spec) sets `BETTER_AUTH_SECRET=local-dev-not-a-real-secret` on its command line**: the runner signs its session cookies with it, and the servers it starts inherit it over `.env.local`, so the real secret is never read for a test run. A worktree copies `/app`'s `.env.local` first, for the server's other settings (claude-docs/commands.md). **Deploys are CI-only**, through `.github/workflows/deploy.yml`.
 
