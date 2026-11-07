@@ -15,8 +15,10 @@ export interface ListBodySkeletonProps {
   headings?: readonly string[];
   /** The headings that are action columns (Edit, Revoke), whose cells carry no bar. */
   actions?: readonly string[];
-  /** Which card the cards are: an ingredient's (the default) or a spell's. */
-  card?: 'ingredient' | 'spell';
+  /** Which card the cards are: a coven's ingredient (the default), a compendium entry's or a spell's. */
+  card?: 'cupboard' | 'compendium' | 'spell';
+  /** With `card="spell"`: the cards are drafts, which stand taller than complete ones. */
+  draft?: boolean;
   /** The cards' density; the coven lists open compact. */
   density?: 'regular' | 'compact';
   /** How many rows or cards. Default 6. */
@@ -29,17 +31,21 @@ export const ListBodySkeleton = ({
   label,
   headings = [],
   actions = [],
-  card = 'ingredient',
+  card = 'cupboard',
+  draft = false,
   density,
   count = 6,
 }: ListBodySkeletonProps): ReactElement => {
-  const Card = card === 'spell' ? SpellCardSkeleton : IngredientCardSkeleton;
+  const cardAt = (at: number) =>
+    card === 'spell' ? (
+      <SpellCardSkeleton key={at} draft={draft} />
+    ) : (
+      <IngredientCardSkeleton key={at} kind={card} />
+    );
   if (!headings.length) {
     return (
       <IngredientCardList label={label} density={density}>
-        {Array.from({ length: count }, (_, at) => (
-          <Card key={at} />
-        ))}
+        {Array.from({ length: count }, (_, at) => cardAt(at))}
       </IngredientCardList>
     );
   }

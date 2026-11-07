@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import './index.scss';
+import type { SpellCardSkeletonKind } from './types';
 
 // The spell card's data-free frame: the face and shadow layers, the content, and the smouldering
 // edge's layers over it. The card and its skeleton both draw it, so the skeleton stands where the
@@ -7,14 +8,14 @@ import './index.scss';
 export const SpellCardFrame = ({
   labelledBy,
   children,
-  skeleton = false,
+  skeleton,
 }: {
   labelledBy?: string;
   children?: ReactNode;
-  skeleton?: boolean;
+  skeleton?: SpellCardSkeletonKind;
 }): ReactElement => (
   <article
-    className={`spell-card specimen${skeleton ? ' spell-card--skeleton' : ''}`}
+    className={`spell-card specimen${skeleton ? ` spell-card--skeleton spell-card--skeleton-${skeleton}` : ''}`}
     aria-labelledby={labelledBy}
   >
     {/* The card's face and shadow, and the warm glow behind them, as layers, so the

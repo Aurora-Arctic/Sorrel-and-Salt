@@ -1175,3 +1175,24 @@ $burn-rim-frames: (
 $burn-char-blur: 1px;
 $burn-char-line-blur: 0.5px;
 $burn-char-line-spread: 4.75px;
+
+// The height a list's card skeleton stands, per kind of card and density: the tallest card of that
+// list (a card with its stock, forms or actions), which is the height the cards of a row stretch to.
+$card-skeleton-heights: (
+  'cupboard': (
+    'regular': 17.95rem,
+    'compact': 16.4rem,
+  ),
+  'compendium': (
+    'regular': 11.86rem,
+    'compact': 10.67rem,
+  ),
+  'spell': (
+    'regular': 16.52rem,
+    'compact': 15.26rem,
+  ),
+  'spell-draft': (
+    'regular': 18.52rem,
+    'compact': 17.01rem,
+  ),
+);

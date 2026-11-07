@@ -25,7 +25,7 @@ export const CompendiumSkeleton = () => (
       </FilterForm>
       <IngredientCardList label="Compendium">
         {Array.from({ length: 6 }, (_, at) => (
-          <IngredientCardSkeleton key={at} />
+          <IngredientCardSkeleton key={at} kind="compendium" />
         ))}
       </IngredientCardList>
     </ListFrame>

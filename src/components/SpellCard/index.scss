@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 @use 'smoulder' as *;
@@ -149,13 +150,20 @@
   @include spell-card-compact;
 }
 
-// The skeleton: the card's frame at the height a typical card stands, the block filling it.
+// The skeleton: the card's frame at the height the grimoire's cards stand (`$card-skeleton-heights`), the
+// block filling it.
 .spell-card--skeleton {
   @include card-skeleton-fill;
   box-sizing: border-box;
-  height: 16.5rem;
 }
 
-[data-density='compact']:not(:root[data-card-density='regular'] *) .spell-card--skeleton {
-  height: 15.1rem;
+@each $kind in ('spell', 'spell-draft') {
+  .spell-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'regular');
+  }
+
+  [data-density='compact']:not(:root[data-card-density='regular'] *)
+    .spell-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'compact');
+  }
 }

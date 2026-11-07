@@ -251,13 +251,20 @@
 
 // The card's More takes its ink from IconTip's `.icon-tip__more`, as every More does.
 
-// The skeleton: the card's frame at the height a typical card stands, the block filling it.
+// The skeleton: the card's frame at the height its list's cards stand (`$card-skeleton-heights`), the
+// block filling it.
 .ingredient-card--skeleton {
   @include card-skeleton-fill;
   box-sizing: border-box;
-  height: 16rem;
 }
 
-[data-density='compact']:not(:root[data-card-density='regular'] *) .ingredient-card--skeleton {
-  height: 13.9rem;
+@each $kind in ('cupboard', 'compendium') {
+  .ingredient-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'regular');
+  }
+
+  [data-density='compact']:not(:root[data-card-density='regular'] *)
+    .ingredient-card--skeleton-#{$kind} {
+    height: map.get($card-skeleton-heights, $kind, 'compact');
+  }
 }

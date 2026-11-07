@@ -111,7 +111,7 @@ const CompendiumCards = ({
   myCovens,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
-    skeleton={<ListBodySkeleton label="Compendium" />}
+    skeleton={<ListBodySkeleton label="Compendium" card="compendium" />}
     search={
       <CompendiumListFilter
         audience="public"

@@ -12,6 +12,7 @@ export const GrimoirePanelSkeleton = ({ drafts }: { drafts?: boolean }) => (
     filter="Filter the Grimoire"
     label={drafts ? 'Drafts' : 'Spells'}
     card="spell"
+    draft={drafts}
     density="compact"
   />
 );
