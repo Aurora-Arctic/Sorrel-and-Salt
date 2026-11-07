@@ -280,6 +280,35 @@ describe('the public help reads', () => {
 
     expect(codeOf(await run(null, ARTICLE, { slug: 'testwort-queue-notes' }))).toBe('NOT_FOUND');
   });
+
+  it('answers the article when a term and an FAQ entry share its slug', async () => {
+    await insertHelpArticle(
+      sql,
+      { kind: 'term', title: 'Testwort Guide', slug: 'testwort-guide' },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { kind: 'faq', title: 'Testwort Guide Question', slug: 'testwort-guide', position: 9 },
+      E.id,
+    );
+    // Rewriting the article moves its tuple behind the other two, so a read that ignores the kind
+    // cannot find the article by luck of heap order.
+    await sql`update help_articles set body = body || '' where id = ${parentId}`;
+
+    const result = await run<{ helpArticle: { id: string; kind: string } }>(null, ARTICLE, {
+      slug: 'testwort-guide',
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.helpArticle).toMatchObject({ id: parentId, kind: 'article' });
+  });
+
+  it('answers NOT_FOUND for a slug only a term or an FAQ entry holds, signed out', async () => {
+    for (const slug of ['testwort-mallow', 'testwort-first-question']) {
+      expect(codeOf(await run(null, ARTICLE, { slug })), slug).toBe('NOT_FOUND');
+    }
+  });
 });
 
 describe('helpSearch', () => {

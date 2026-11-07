@@ -309,3 +309,75 @@ describe('the staff finder', () => {
     await expect(readStaffHelpArticle(asUser(E), 'testwort-gone-guide')).rejects.toThrow(NotFound);
   });
 });
+
+describe('a page read takes articles only, since a slug is unique within its kind', () => {
+  /** A term and an FAQ entry under each article's slug. */
+  async function shareTheArticleSlugs() {
+    for (const slug of ['testwort-guide', 'testwort-staff-guide', 'testwort-keeper-guide']) {
+      await insertHelpArticle(sql, { kind: 'term', title: `Testwort Term ${slug}`, slug }, E.id);
+      await insertHelpArticle(
+        sql,
+        { kind: 'faq', title: `Testwort Question ${slug}`, slug, position: 9 },
+        E.id,
+      );
+    }
+    // Rewriting the articles moves their tuples behind the term and the FAQ entry, so a read that
+    // ignores the kind finds one of those first instead of the article by luck of heap order.
+    await sql`update help_articles set body = body || '' where kind = 'article' and parent_id is null`;
+  }
+
+  beforeEach(async () => {
+    // A slug a term or an FAQ entry holds alone.
+    await insertHelpArticle(
+      sql,
+      { kind: 'term', title: 'Testwort Lone Term', slug: 'testwort-lone-term' },
+      E.id,
+    );
+    await insertHelpArticle(
+      sql,
+      { kind: 'faq', title: 'Testwort Lone Question', slug: 'testwort-lone-question', position: 9 },
+      E.id,
+    );
+  });
+
+  it('reads the public article when a term and an FAQ entry share its slug', async () => {
+    await shareTheArticleSlugs();
+    const [row] =
+      await sql`select count(*)::int as count from help_articles where slug = 'testwort-guide' and deleted_at is null`;
+    expect(row.count).toBe(3);
+
+    expect(await readHelpArticle('testwort-guide')).toMatchObject({
+      id: guideId,
+      kind: 'article',
+      title: 'Testwort Guide',
+    });
+  });
+
+  it.each([
+    ['a curator', 'testwort-staff-guide', F],
+    ['a keeper', 'testwort-staff-guide', E],
+    ['a keeper', 'testwort-keeper-guide', E],
+  ] as const)(
+    'reads %s the %s article when a term and an FAQ entry share its slug',
+    async (_who, slug, user) => {
+      await shareTheArticleSlugs();
+      expect(await readStaffHelpArticle(asUser(user), slug)).toMatchObject({
+        slug,
+        kind: 'article',
+      });
+    },
+  );
+
+  it.each(['testwort-lone-term', 'testwort-lone-question'])(
+    'answers NotFound for %s, which no article holds',
+    async (slug) => {
+      // Precondition: a live public row holds the slug.
+      const [row] =
+        await sql`select count(*)::int as count from help_articles where slug = ${slug} and audience = 'public' and deleted_at is null`;
+      expect(row.count).toBe(1);
+
+      await expect(readHelpArticle(slug)).rejects.toThrow(NotFound);
+      await expect(readStaffHelpArticle(asUser(E), slug)).rejects.toThrow(NotFound);
+    },
+  );
+});

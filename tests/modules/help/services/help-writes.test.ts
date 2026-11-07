@@ -181,7 +181,7 @@ describe('the slug', () => {
     },
   );
 
-  it('refuses a slug a live row holds, on create and on rename, and frees it once that row is deleted', async () => {
+  it('refuses a slug a live row of the same kind holds, on create and on rename, and frees it once that row is deleted', async () => {
     const twin = await insertHelpArticle(
       sql,
       { title: 'Testwort Twin', slug: 'testwort-twin' },
@@ -203,6 +203,84 @@ describe('the slug', () => {
     await sql`update help_articles set deleted_at = now(), deleted_by = ${E.id} where id = ${twin}`;
     const created = await createHelpArticle(asUser(E), { ...article, title: 'Testwort Twin' });
     expect(created.slug).toBe('testwort-twin');
+  });
+
+  it('refuses a second term under a live term’s slug', async () => {
+    await insertHelpArticle(
+      sql,
+      { kind: 'term', title: 'Testwort Twin', slug: 'testwort-twin' },
+      E.id,
+    );
+
+    await expectRefusedAt(
+      createHelpArticle(asUser(E), { kind: 'term', title: 'Testwort Twin', body: 'Twice.' }),
+      'slug',
+    );
+  });
+
+  it.each([
+    ['a term', { kind: 'term' as const }],
+    ['an FAQ entry', { kind: 'faq' as const, position: 1 }],
+  ])(
+    'creates %s under a live article’s slug, since a slug is unique within its kind',
+    async (_kind, shape) => {
+      const twin = await insertHelpArticle(
+        sql,
+        { title: 'Testwort Twin', slug: 'testwort-twin' },
+        E.id,
+      );
+
+      const created = await createHelpArticle(asUser(E), {
+        ...shape,
+        title: 'Testwort Twin',
+        body: 'The same address, another kind.',
+      });
+
+      expect(created.slug).toBe('testwort-twin');
+      expect(created.kind).toBe(shape.kind);
+      // The article still holds the slug alongside it.
+      expect((await rowOf(twin)).slug).toBe('testwort-twin');
+      expect(await liveCount()).toBe(2);
+    },
+  );
+
+  it('creates an article under a live term’s slug', async () => {
+    await insertHelpArticle(
+      sql,
+      { kind: 'term', title: 'Testwort Twin', slug: 'testwort-twin' },
+      E.id,
+    );
+
+    const created = await createHelpArticle(asUser(E), { ...article, title: 'Testwort Twin' });
+
+    expect(created.slug).toBe('testwort-twin');
+  });
+
+  it('renames a term to a live article’s slug', async () => {
+    await insertHelpArticle(sql, { title: 'Testwort Twin', slug: 'testwort-twin' }, E.id);
+    const term = await insertHelpArticle(
+      sql,
+      { kind: 'term', title: 'Testwort Other', slug: 'testwort-other' },
+      E.id,
+    );
+
+    const renamed = await updateHelpArticle(asUser(E), term, { slug: 'testwort-twin' });
+
+    expect(renamed.slug).toBe('testwort-twin');
+    expect((await rowOf(term)).slug).toBe('testwort-twin');
+  });
+
+  it.each([
+    ['a term', { kind: 'term' as const }],
+    ['an FAQ entry', { kind: 'faq' as const, position: 1 }],
+  ])('refuses %s a reserved slug on create', async (_kind, shape) => {
+    for (const title of ['Glossary', 'Staff', 'Search']) {
+      await expectRefusedAt(
+        createHelpArticle(asUser(E), { ...shape, title, body: 'Reserved.' }),
+        'slug',
+      );
+    }
+    expect(await liveCount()).toBe(0);
   });
 });
 
