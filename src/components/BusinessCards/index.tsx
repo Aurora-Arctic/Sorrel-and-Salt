@@ -17,8 +17,7 @@ import './index.scss';
 
 const EMPTY: BusinessCardValues = { name: '', email: '', phone: '' };
 
-// A Letter sheet of ten business cards, built in this browser from the fonts and pictures fetched when the page opens, so
-// Generate asks the server for nothing and nothing is kept (claude-docs/components/business-cards.md).
+// (claude-docs/components/business-cards.md)
 const BusinessCards = (): ReactElement => {
   const [assets, setAssets] = useState<CardAssets | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);

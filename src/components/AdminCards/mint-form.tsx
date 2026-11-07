@@ -20,7 +20,6 @@ import {
 } from '../../lib/invitation-cards/limits';
 import type { MintFieldsProps, MintFormProps } from './types';
 
-// The modal Mint Cards opens at `?mint`: how many sheets of cards, the day they stop working, whether they go to beta testers and a note on the batch, sent as `createInvitationCards`.
 // The answer carries each token once, so the modal then shows the codes and stays until closed; closing re-reads the tab.
 
 const CreateInvitationCardsDocument = graphql(`
@@ -53,13 +52,11 @@ const earliestDay = (): string =>
 const defaultDay = (): string =>
   new Date(Date.now() + DEFAULT_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-/** The sheets a field holds, or undefined while it is not a whole number the field can send. */
 const sheetsOf = (text: string): number | undefined => {
   const sheets = Number(text);
   return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
 };
 
-/** The sentence for a sheet count the service would refuse (the same one it sends), or undefined while the field is empty or in range. */
 const sheetsRefusal = (text: string): string | undefined => {
   if (text.trim() === '') return undefined;
   const sheets = sheetsOf(text);

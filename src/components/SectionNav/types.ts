@@ -17,11 +17,7 @@ export type SectionIconName =
   | 'documents'
   | 'businessCards';
 
-/**
- * One section: a tab on a wide screen, an item in the bottom bar on a phone.
- * The icon is a name, not an element, so the list can stay on the server and
- * cross to the client part as plain data.
- */
+// The icon is a name, not an element, so the list can cross to the client part as plain data.
 export interface SectionNavItem {
   label: string;
   count?: number;

@@ -20,9 +20,7 @@ import MintForm, { MINT_TITLE } from './mint-form';
 import type { AdminCardsProps, CardsFilter, MintCardsProps } from './types';
 import './index.scss';
 
-// The People page's Invitation Cards tab, `/keepers/invitation-cards`: one row per batch (minted, expiry, cards,
-// status, accepted, refused opens with a View dialog, Revoke Batch while any card is pending), the pager, and the mint form `?mint` opens
-// (claude-docs/components/admin-cards.md).
+// (claude-docs/components/admin-cards.md)
 
 const RevokeCardBatchDocument = graphql(`
   mutation RevokeInvitationCardBatch($batchId: ID!) {
@@ -42,7 +40,6 @@ export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
   );
 };
 
-/** The empty list, naming the filters in use so a keeper sees what to change. */
 function emptyText({
   batch,
   status,

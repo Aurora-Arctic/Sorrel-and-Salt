@@ -13,9 +13,7 @@ import type { InvitationAcceptanceProps } from './types';
 import type { PageHeaderProps } from '../PageHeader/types';
 import './index.scss';
 
-// `/invite/[token]` and `/i/[token]` share this one panel: the page reads where the visitor stands and this shows it. Accept
-// sends the mutation, which decides, and a refusal is shown in the service's words
-// (claude-docs/components/invitation-acceptance.md).
+// (claude-docs/components/invitation-acceptance.md)
 
 const AcceptInvitationDocument = graphql(`
   mutation AcceptInvitation($token: String!) {
@@ -70,13 +68,11 @@ const Accept = ({
     report(undefined);
     try {
       await graphqlRequest(AcceptInvitationDocument, { token });
-      // Busy until the landing replaces this page. A success is the landing
-      // itself, so nothing is announced (the decision record's §5, rule 1).
+      // A success is the landing itself, so nothing is announced.
       navigate(landing);
     } catch (error) {
       setSending(false);
-      // No fields of its own, so the reader always answers with an alert;
-      // the fallback only satisfies its type.
+      // The fallback only satisfies the type: the reader always answers with an alert.
       report(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
     }
   }
