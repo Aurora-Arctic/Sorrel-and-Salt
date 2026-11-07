@@ -1,5 +1,4 @@
-// Header the site's own client sends on every request, so a script that is not
-// a browser page can say it is not a cross-site form post.
+// Header the site's own client sends, so a script that is not a browser page can say it is not a cross-site form post.
 export const CLIENT_HEADER = 'x-sorrel-client';
 export const CLIENT_HEADER_VALUE = 'web';
 

@@ -43,8 +43,7 @@ import {
 import type { Session } from '../../lib/session';
 import type { Built, LoaderFactory } from './types';
 
-// Every loader the context builds, by the name a resolver reads it as, each off its module's index
-// (claude-docs/graphql/loaders.md, "Loaders: one set per request, never at module level").
+// Built per request, never at module level (claude-docs/graphql/loaders.md, "Loaders: one set per request, never at module level").
 const LOADERS = {
   memberEmailsByMember,
   membershipsByUser,
@@ -83,7 +82,6 @@ const LOADERS = {
 
 export type Loaders = Built<typeof LOADERS>;
 
-/** One request's instances of `factories`. */
 export function buildLoaders<F extends Record<string, LoaderFactory<never, unknown>>>(
   factories: F,
   session: Session | null,
@@ -93,7 +91,6 @@ export function buildLoaders<F extends Record<string, LoaderFactory<never, unkno
   ) as Built<F>;
 }
 
-/** The request's loaders: a fresh set every call, never shared. */
 export function createLoaders(session: Session | null): Loaders {
   return buildLoaders(LOADERS, session);
 }

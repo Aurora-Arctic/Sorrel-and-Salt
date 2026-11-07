@@ -8,10 +8,7 @@ import type { BuilderTypes, Context, Defined, Suggest } from './types';
 // What a resolver adds to the service it calls (claude-docs/graphql/schema.md, "Resolver helpers"); none of
 // it decides who may.
 
-/**
- * The request's session, or `Forbidden` for a signed-out caller and `AccessPaused` for a paused one. A narrowing for the
- * type, not a gate. `.oxlintrc.json` refuses the inline copy in a resolver.
- */
+/** A narrowing for the type, not a gate. `.oxlintrc.json` refuses the inline copy in a resolver. */
 export function sessionOf({
   session,
   accessPause,
@@ -21,20 +18,14 @@ export function sessionOf({
   return session;
 }
 
-/**
- * The arguments as a service takes them: each null made absent. Pass the fields named,
- * not a connection's whole `args`, so a filter never grows keys the service would read.
- */
+/** Pass the fields named, not a connection's whole `args`, so a filter never grows keys the service would read. */
 export function definedArgs<T extends object>(args: T): Defined<T> {
   return Object.fromEntries(
     Object.entries(args).map(([name, value]) => [name, value ?? undefined]),
   ) as Defined<T>;
 }
 
-/**
- * A picker's suggestion field: a page of `type` matching `query` across the compendium and, with `workspaceId`,
- * a coven the caller may read. The resolver refuses only a missing session; `suggest` checks the coven.
- */
+/** The resolver refuses only a missing session; `suggest` checks the coven. */
 export function suggestionConnection<Node>(
   name: string,
   type: ObjectRef<BuilderTypes, Node>,

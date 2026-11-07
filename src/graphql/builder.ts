@@ -11,9 +11,7 @@ import { curates } from '../lib/site-roles';
 import './pagination';
 import type { SchemaTypes } from './types';
 
-// No ORM plugin, and object types are declared by hand against the row a
-// service returns (DESIGN.md §7, "Four rules follow from dropping the Drizzle
-// plugin").
+// No ORM plugin (DESIGN.md §7, "Four rules follow from dropping the Drizzle plugin").
 
 /** The most a query may cost: 1 a field, and a connection's selection times its page size. */
 export const MAX_COST = 5000;
@@ -30,7 +28,6 @@ export function createBuilder() {
       limit: { complexity: MAX_COST },
     },
     relay: {
-      // Connections only: no `Node` interface, no global ids, no `node` query.
       nodeQueryOptions: false,
       nodesQueryOptions: false,
       edgesFieldOptions: {
@@ -40,8 +37,6 @@ export function createBuilder() {
         complexity: { field: 1, multiplier: 1 },
       },
       nodeFieldOptions: { nullable: false },
-      // Every connection costs the page it will actually fetch: 25 unsized,
-      // never more than 100, whether `first` is a literal or a variable.
       defaultConnectionFieldOptions: {
         complexity: (args) => ({ field: 1, multiplier: pageSize(args) }),
       },
@@ -54,8 +49,6 @@ export function createBuilder() {
         curator: session !== null && !session.emailUnverified && curates(session.role),
         self: (userId) => session?.userId === userId,
       }),
-      // A service's own refusal type, so the transport maps one shape
-      // whichever check said no.
       // A paused session is refused with the pause, which the browser reads as the paused page.
       unauthorizedError: (_parent, context) =>
         context.accessPause

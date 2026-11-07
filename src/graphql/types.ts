@@ -19,24 +19,23 @@ import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
 import type { Loaders } from './loaders';
 
-/** What every resolver receives: who is asking, and this request's loaders and senders. */
 export interface Context {
   /** `null` when signed out: the endpoint answers, and a scope or service refuses. */
   session: Session | null;
   /** Set while a pause stands on the signed-in user: `session` is then `null`, and a refusal says the access is paused. */
   accessPause?: { until: Date | null };
   loaders: Loaders;
-  /** Bound to this request's host and cookie: the email page's mail goes out through it. */
+  /** Bound to this request's host and cookie. */
   emailVerification: EmailVerificationSender;
-  /** Bound to this request's host: an admin invitation's link goes out through it. */
+  /** Bound to this request's host. */
   invitations: InvitationSender;
-  /** Bound to this request's cookie: the account page's first password is set through it. */
+  /** Bound to this request's cookie. */
   passwords: PasswordSetter;
-  /** Bound to this request's host: a reply's notice to the sender goes out through it. */
+  /** Bound to this request's host. */
   support: SupportNotifier;
-  /** Bound to this request's host: the notice of a support time-out, a site access pause or a coven access pause goes out through it. */
+  /** Bound to this request's host. */
   pauses: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier;
-  /** Bound to this request's host: the mailing of a document goes out on links to this site. */
+  /** Bound to this request's host. */
   documents: DocumentMailingNotifier;
   /** The caller's address from the platform's forwarded-for header; `null` when there is none. Only the signed-out support send reads it. */
   clientIp: string | null;
@@ -51,8 +50,6 @@ export interface SchemaTypes {
   DefaultEdgesNullability: { list: false; items: false };
   DefaultNodeNullability: false;
   // The schema's second check, behind the service layer's (DESIGN.md §7).
-  // `self` takes a user id and holds when it is the session's own; `curator`
-  // holds for a curator and an admin, `admin` for an admin alone.
   AuthScopes: {
     signedIn: boolean;
     admin: boolean;
@@ -80,7 +77,6 @@ export interface ErrorExtensions {
   code: ErrorCode;
   fieldErrors?: ValidationIssue[];
   currentRevision?: number;
-  /** Set with `ACCESS_PAUSED`: when the pause ends, as an ISO string, or `null` for a pause with no end. */
   pausedUntil?: string | null;
   /** Set with `RATE_LIMITED`: the HTTP status and the Retry-After header Yoga sends. */
   http?: { status: number; headers: Record<string, string> };
@@ -99,12 +95,8 @@ export interface PagedConnectionOptions<
 > {
   type: ObjectRef<Types, Node>;
   description?: string;
-  /** The field's own arguments, beside the four the connection adds. */
   args?: Args;
-  /**
-   * The field's scope, checked before `resolve` is asked: the second
-   * check in front of a service that refuses again.
-   */
+  /** Checked before `resolve` is asked; a service refuses again. */
   authScopes?: FieldAuthScopes<Types, ParentShape, InputShapeFromFields<Args>>;
   /** One page from a keyset finder. It gets a decoded, clamped `PageRequest`, never the client's `first`/`after`. */
   resolve: (
@@ -113,7 +105,6 @@ export interface PagedConnectionOptions<
     page: PageRequest,
     context: Types['Context'],
   ) => Promise<PageEntry<Node, Edge>[]>;
-  /** Fields of the edge beside `cursor` and `node`, read off what each entry carries. */
   edgeFields?: ObjectFieldsShape<Types, { cursor: string; node: Node } & Edge>;
   /**
    * The list's size under the field's arguments, and how many rows come before `start`.
@@ -127,18 +118,14 @@ export interface PagedConnectionOptions<
   ) => Promise<PageCount>;
 }
 
-/** What a counted connection's two fields read: one count, asked for on first use. */
 export interface Counted {
   count: () => Promise<PageCount>;
 }
 
-/** The builder's own types, as Pothos extends `SchemaTypes`: what a ref is typed under. */
 export type BuilderTypes = PothosSchemaTypes.ExtendDefaultTypes<SchemaTypes>;
 
-/** An argument object with each null made absent: what `definedArgs` answers. */
 export type Defined<T> = { [Name in keyof T]: Exclude<T[Name], null> };
 
-/** A picker's search, as `suggestionConnection` calls it: the caller's, a coven or none, a query. */
 export type Suggest<Node> = (
   session: Session,
   workspaceId: string | null | undefined,

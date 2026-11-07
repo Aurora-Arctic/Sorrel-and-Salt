@@ -21,10 +21,7 @@ declare global {
       ParentShape,
       Kind extends FieldKind = FieldKind,
     > {
-      /**
-       * The one way to declare a list field (CLAUDE.md rule 8): a Relay connection whose resolver is handed a page.
-       * `tests/guards/pagination.test.ts` fails a `.connection(` anywhere else.
-       */
+      /** The one way to declare a list field (CLAUDE.md rule 8); `tests/guards/pagination.test.ts` fails a `.connection(` elsewhere. */
       pagedConnection: <Node, Args extends InputFieldMap = {}, Edge extends object = {}>(
         options: PagedConnectionOptions<Types, ParentShape, Node, Args, Edge>,
       ) => FieldRef<Types, unknown, Kind>;

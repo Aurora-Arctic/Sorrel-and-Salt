@@ -13,13 +13,11 @@ const SUPPORT_FIELDS = new Set([
   'resolveMySupportRequest',
 ]);
 
-/** The parameters Yoga hands its context factory: the document and the operation chosen from it. */
 export interface OperationParams {
   query?: string;
   operationName?: string | null;
 }
 
-/** The operation a request runs: the one it names, or the document's only one. */
 function chosenOperation(
   query: string,
   operationName: string | null | undefined,
@@ -32,10 +30,7 @@ function chosenOperation(
   return operations.length === 1 ? operations[0] : undefined;
 }
 
-/**
- * Whether every root selection of the operation is a support field, written out as a field. A fragment at the root, a
- * document that does not parse, or an operation that cannot be told apart is not, so the pause refuses it.
- */
+/** A fragment at the root, a document that does not parse, or an operation that cannot be told apart is not support, so the pause refuses it. */
 export function isSupportOperation(params: OperationParams | undefined): boolean {
   if (!params?.query) return false;
   let operation: OperationDefinitionNode | undefined;
