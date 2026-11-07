@@ -24,13 +24,14 @@ test('a coven that is not yours is a 404 inside the shell, with a way home', asy
 });
 
 // Report This carries the address the visitor asked for, never the framework's /_not-found.
-for (const path of [
+// Each case signs in as its own address: the fixture account is created once per address.
+for (const [index, path] of [
   '/coven/no-such-coven/nothing-here',
   '/compendium/nothing-here/at-all',
   '/nothing-here',
-]) {
+].entries()) {
   test(`Report This on a 404 at ${path} names that page`, async ({ page }) => {
-    await signInAs(page, 'reporter@error-pages.test');
+    await signInAs(page, `reporter-${index}@error-pages.test`);
     const response = await page.goto(path);
     expect(response?.status()).toBe(404);
 

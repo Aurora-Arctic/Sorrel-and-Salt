@@ -10,6 +10,7 @@ import { ComboboxSelect } from '../Combobox';
 import { FieldError, FieldShell, FormActions, fieldDescription } from '../Field';
 import { BinButton, StockIcon } from '../IconTip';
 import Modal, { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
+import EmptyState from '../EmptyState';
 import Notice from '../Notice';
 import { StockBadge } from '../StockBadge';
 import { amountText } from '../StockBadge/stock-words';
@@ -320,7 +321,7 @@ const StockDialogForm = ({
                   })}
                 </ul>
               ) : (
-                <p className="stock-dialog__empty">There is no stock yet. Add a form to start.</p>
+                <EmptyState size="compact">There is no stock yet. Add a form to start.</EmptyState>
               )}
               {/* Gone once every form has a jar: there is nothing left to add. */}
               {addable.length > 0 && (

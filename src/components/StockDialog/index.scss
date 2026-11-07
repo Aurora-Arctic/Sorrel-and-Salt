@@ -124,11 +124,6 @@
   color: $text-muted;
 }
 
-.stock-dialog__empty {
-  margin: 0;
-  color: $text-muted;
-}
-
 // Add Form and its Add button on one line, under the list.
 .stock-dialog__add {
   @include stack(2);

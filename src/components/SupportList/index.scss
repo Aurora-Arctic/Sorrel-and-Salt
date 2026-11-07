@@ -47,10 +47,6 @@
   list-style: none;
 }
 
-.support-list__empty {
-  margin: 0;
-}
-
 // Two lines: the subject, then the meta row. The subject takes the row's width on one line and ends in an
 // ellipsis when it is longer; `min-inline-size: 0` lets it shrink below its text.
 .support-list__item {
