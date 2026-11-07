@@ -314,7 +314,6 @@ The cost of hired hours is the hired hours at $53.80 plus the Claude Team seats 
 
 At 100 seats the site does not cover its cash costs, so the draw is nothing: the site is $58 short of its cash costs. The salary line becomes affordable at (i)'s cash + job break-even: 9,690 paying seats in the low row and 16,958 in the median row. From 10,000 seats the draw is the full value of the owner's hours. At 100,000 seats hired help is bought first and the owner still does 160 hours.
 
-
 billing-model: the sizes count paying seats (activated accounts in paying covens); every other account is overhead derived from them: trial seats, curator-coven seats, exempt seats and demo-only accounts. Support wage is the average of three MIT Living Wage rows (Washington 1 adult + 1 child 48.00, King County 1 adult + 1 child 56.43, King County 1 adult no children 30.60) minus the MIT Medical line (9,588 / 9,477 / 3,032 a year over 2,080 h); the BLS Washington customer-service median is the market-rate sensitivity.
 
 billing-model payroll loading: Social Security 6.2% to the 184,500 cap; Medicare 1.45%; FUTA 0.6% on 7,000; WA UI 1.0% low or 6.0% high on 78,200; WA EAF 0.02% / 0.03% on 78,200; PFML employer share 0 low or 1.13% x 28.57% high; L&I 5302 low or 4904 high per worker-hour; benefits method A (health 7,344 a year + retirement 5.40% of wages) low, method B (ECEC insurance + retirement + supplemental, 22.90% of wages) high; the base rate is the midpoint of the loaded hourly figures.
