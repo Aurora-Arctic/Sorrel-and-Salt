@@ -5,14 +5,15 @@ import PageHeader from '../PageHeader';
 import Skeleton from '../Skeleton';
 import './index.scss';
 
-/** A guide card's bars: its eyebrow, title and summary. */
+/** A guide card's kind, which nearly every card shares, then bars for its title and summary. */
 const GuideBars = () => (
   <li className="card--quiet help-index__guide">
-    <Skeleton shape="line" count={3} quiet />
+    <p className="eyebrow">Guide</p>
+    <Skeleton shape="line" count={2} quiet />
   </li>
 );
 
-// A help index with its guides still to come: the page's own heading and band (or its unbanded search box), the quick links as bars, and the
+// A help index with its guides still to come: the page's own heading and band (or its unbanded search box), the quick links' shipped titles, and the
 // guide cards as bars. The FAQ beneath is content, so it is left out.
 export const HelpIndexSkeleton = ({
   heading = 'Help',
@@ -28,10 +29,8 @@ export const HelpIndexSkeleton = ({
         <p className="lede">{lede}</p>
         <HelpSearchForm size="hero" />
         <ul className="help-index__quick" aria-label="Quick Links">
-          {HELP_QUICK_LINKS.map((slug) => (
-            <li key={slug}>
-              <Skeleton shape="line" quiet />
-            </li>
+          {HELP_QUICK_LINKS.map((title) => (
+            <li key={title}>{title}</li>
           ))}
         </ul>
       </div>

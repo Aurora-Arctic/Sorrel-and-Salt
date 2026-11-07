@@ -3,25 +3,25 @@ import { linkTo } from './help-pages';
 import type { HelpAddressed } from './help-paths';
 import { slugify } from './slugify';
 
-/** The articles the help front page links beside its search box, by slug; the finder answers each title and address. */
+/** The articles the help front page links beside its search box, by their shipped titles, which its skeleton draws; each is read at its slug, and the finder answers the title and address shown. */
 export const HELP_QUICK_LINKS: readonly string[] = [
   'Accept an Invitation',
   'Steward, Practitioner and Observer',
   'Track Stock',
   'Build a Spell',
   'I Cannot Sign In',
-].map(slugify);
+];
 
 type QuickLinkRow = HelpAddressed & { title: string; summary: string | null };
 
-/** The link to each slug the reader answers as a public article, in order; a slug it no longer holds drops out. */
+/** The link to each title's slug the reader answers as a public article, in order; a slug it no longer holds drops out. */
 export async function quickLinks(
-  slugs: readonly string[],
+  titles: readonly string[],
   read: (slug: string) => Promise<QuickLinkRow>,
 ) {
   const rows = await Promise.all(
-    slugs.map((slug) =>
-      read(slug).catch((error: unknown) => {
+    titles.map((title) =>
+      read(slugify(title)).catch((error: unknown) => {
         if (error instanceof NotFound) return null;
         throw error;
       }),
