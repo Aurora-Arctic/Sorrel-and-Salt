@@ -92,11 +92,11 @@ describe('OwnEntryActions', () => {
     renderOnPage();
 
     askDelete();
-    const ask = screen.getByRole('dialog', { name: 'Delete Ingredient' });
+    const ask = screen.getByRole('alertdialog', { name: 'Delete Ingredient' });
     expect(within(ask).getByText('Testwort')).toBeInTheDocument();
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(dots()).toHaveFocus();
     expect(calls).toEqual([]);
   });
@@ -106,14 +106,14 @@ describe('OwnEntryActions', () => {
     const view = renderOnPage();
 
     askDelete();
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(EDIT.deletedHref));
     expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
     expect(router.push).not.toHaveBeenCalled();
     // Busy until the list arrives, so the focus is not handed to Edit first.
     expect(
-      within(screen.getByRole('dialog')).getByRole('button', { name: /Delet/ }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: /Delet/ }),
     ).toBeDisabled();
 
     view.rerender(
@@ -133,10 +133,10 @@ describe('OwnEntryActions', () => {
     renderOnPage();
 
     askDelete();
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
+    press(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
     expect(dots()).toHaveFocus();
     expect(router.replace).not.toHaveBeenCalled();
   });
@@ -187,7 +187,9 @@ describe('OwnEntryActions', () => {
       renderOnPage(withStock);
       askDelete();
 
-      expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('alertdialog', { name: 'Delete Ingredient' }),
+      ).toBeInTheDocument();
     });
   });
 });

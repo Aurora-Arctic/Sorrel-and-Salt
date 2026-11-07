@@ -248,6 +248,11 @@ export const rules = {
           reason:
             'the Filters panel is a dialog of its own, not a Modal, open beside the page from the tablet width up: it gives the focus back to its button only when the focus was inside it',
         },
+        'src/components/ConfirmDialog/index.tsx': {
+          calls: 1,
+          reason:
+            'an alert dialog of its own, not a Modal: it takes the focus to Cancel, its safe answer, as it opens; Modal has no initial-focus prop',
+        },
         'src/components/Modal/confirm-overlay.tsx': {
           calls: 5,
           reason:

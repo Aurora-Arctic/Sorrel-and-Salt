@@ -154,7 +154,7 @@ test('a member adds the entry from its public page, and the three dots then offe
   await test.step('Remove asks, removes the coven’s entry, and leaves the member on this page', async () => {
     await menu().click();
     await remove().click();
-    const dialog = page.getByRole('dialog', { name: 'Remove from Cupboard' });
+    const dialog = page.getByRole('alertdialog', { name: 'Remove from Cupboard' });
     await expect(dialog).toBeVisible();
     await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
     await expect(dialog).toHaveCount(0);

@@ -190,7 +190,7 @@ describe('SpellCard', () => {
     ]);
     press(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(
-      within(await screen.findByRole('dialog', { name: 'Delete Spell' })).getByText(
+      within(await screen.findByRole('alertdialog', { name: 'Delete Spell' })).getByText(
         'Fixture Working',
       ),
     ).toBeInTheDocument();

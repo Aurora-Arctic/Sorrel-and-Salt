@@ -324,7 +324,7 @@ describe('the spell recipe page', () => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'More for Fixture Working' }));
       fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }));
-      expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
+      expect(screen.getByRole('alertdialog', { name: 'Delete Spell' })).toHaveTextContent(
         'Fixture Working',
       );
     });
