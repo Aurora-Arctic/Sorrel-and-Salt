@@ -12,9 +12,7 @@ export const spellStatus = pgEnum('spell_status', ['draft', 'complete']);
 // does not: `public`.
 export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace']);
 
-// Not a column: the orders a grimoire page takes, kept here so the
-// GraphQL enum and the repository read one list. Last edited first is the
-// default; claude-docs/graphql/schema.md, "The grimoire", says what each does.
+// The orders a grimoire page takes, kept here so the GraphQL enum and the repository read one list (claude-docs/graphql/schema.md, "The grimoire").
 export const GRIMOIRE_ORDERS = ['UPDATED_DESC', 'CREATED_DESC', 'TITLE_ASC'] as const;
 
 // The grimoire: what a workspace makes (claude-docs/db/grimoire.md, "The grimoire").
@@ -25,32 +23,25 @@ export const spells = pgTable(
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id),
-    // Absent on a draft: autosave writes the row on the first keystroke, before
-    // the member may have named it, and a placeholder would read as a real
-    // title. A title is required to complete, by the CHECK below.
+    // Absent on a draft: autosave writes the row on the first keystroke, before the member may have named it, and a placeholder would
+    // read as a real title.
     title: text('title'),
-    // What the spell is *for*, in the member's words; nothing compares it.
     intent: text('intent'),
-    // Free text, member-written: a vocabulary a member writes is text (§5).
     jarDescription: text('jar_description'),
     sealWaxColor: text('seal_wax_color'),
     moonPhase: text('moon_phase'),
     dayOfWeek: text('day_of_week'),
-    // The spell's single free-text note. What to do lives in its steps
-    // (`spell_steps.body`) now, not here.
+    // What to do lives in `spell_steps.body`, not here.
     note: text('note'),
     // Defaulted on the column so a spell written by any path is a draft.
     status: spellStatus('status').notNull().default('draft'),
     // Defaulted on the column, as a spell that fell back to `private` would be invisible to the coven, and widening it back is the
     // author's alone. The author is `created_by`; spells have no author column.
     visibility: spellVisibility('visibility').notNull().default('workspace'),
-    // Raised by one on every UPDATE by the database; a save names it.
     revision: revisionColumn(),
     ...auditColumns,
   },
   (table) => [
-    // "A title is required to complete", said by the table, so no path writes a
-    // finished spell with no name.
     check(
       'spells_complete_has_title',
       sql`${table.status} <> 'complete' OR ${table.title} IS NOT NULL`,

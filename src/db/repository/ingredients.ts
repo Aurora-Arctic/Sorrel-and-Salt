@@ -427,7 +427,6 @@ export async function findIngredientSuggestions(
   const ranked = formRank(form);
   const sort = ranked ? [ranked, ...list.order.sort] : list.order.sort;
   const order = { ...list.order, sort };
-  // The coven holds a live cupboard row for the compendium entry.
   const held = existsIn(
     workspaceCompendiumEntries,
     and(
@@ -596,7 +595,6 @@ export function findWorkspaceIngredientByIdentity(
   );
 }
 
-/** The row's `identity_key` is the one `identity` would key as. */
 function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
   // A parameter's type is otherwise left to `coalesce` to infer.
   const text = (value: string | null | undefined) => sql`${value ?? null}::text`;
@@ -688,14 +686,10 @@ function heldInAnyOf(memberships: readonly Membership[]): SQL {
   return and(inCompendium(ingredients), heldBy(memberships)) as SQL;
 }
 
-/**
- * Its Not In: a compendium entry no live cupboard row of the proofs' covens names. A removed row does not hold the entry, so it stays listed.
- */
 function heldInNoneOf(memberships: readonly Membership[]): SQL {
   return and(inCompendium(ingredients), not(heldBy(memberships))) as SQL;
 }
 
-/** Some live cupboard row of one of the proofs' covens names the entry. */
 function heldBy(memberships: readonly Membership[]): SQL {
   return existsIn(
     workspaceCompendiumEntries,
@@ -911,9 +905,6 @@ export function listOrVariantHolds(
   ) as SQL;
 }
 
-/**
- * `list` holds an entry folding as `value` does, both sides trimmed and lower-cased as the suggestions fold one.
- */
 function listHolds(list: SQLWrapper, value: SQLWrapper | string): SQL {
   return inArray(fold(value), listFolds(list));
 }
@@ -1001,7 +992,6 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
   return toxic === 'toxic' ? flagged : not(flagged);
 }
 
-/** The shown flag: the shown entries unless the filter asks for the hidden ones or both. */
 export function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
   if (listing === 'all') return undefined;
   return eq(ingredients.shown, listing !== 'hidden');

@@ -11,8 +11,7 @@ import { applyCupboardEntry } from '@/modules/ingredients';
 import type { SpellStepView } from '../types';
 
 /**
- * The live steps of each readable spell named, in recipe order, each with its ingredient, as this coven reads it, and the form it lays.
- * Internal to the module. Deleted ingredients and forms are kept and marked `deleted` (claude-docs/db/grimoire.md, "Grimoire service and schema details").
+ * Deleted ingredients and forms are kept and marked `deleted` (claude-docs/db/grimoire.md, "Grimoire service and schema details").
  */
 export async function stepsInSpells(
   membership: Membership,
@@ -43,7 +42,6 @@ export async function stepsInSpells(
       return {
         ...step,
         ingredient: ingredient ? { ...ingredient, deleted: ingredient.deletedAt !== null } : null,
-        // A form carries its ingredient's tier, which the GraphQL type reads.
         variant:
           form && ingredient
             ? { ...form, workspaceId: ingredient.workspaceId, deleted: form.deletedAt !== null }

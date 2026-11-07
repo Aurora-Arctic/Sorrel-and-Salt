@@ -38,16 +38,10 @@ import type {
   WriterContext,
 } from './types';
 
-// The invitation finders and named writes for both tiers: a workspace invitation under its `Membership`, a
-// site-tier one under `SiteAdmin`, and the accept and token read under no proof
-// (claude-docs/db/invitations.md, "Invitations").
-
-/** An address invitation: the kind the lists, the received reads and the address match belong to. A card is the other kind. */
 function addressKind(): SQL {
   return eq(invitations.kind, 'address');
 }
 
-/** A card: bound to no address, coven or site role. */
 function cardKind(): SQL {
   return eq(invitations.kind, 'card');
 }
@@ -61,12 +55,10 @@ function onSiteTier(): SQL {
   return and(addressKind(), isNull(invitations.workspaceId)) as SQL;
 }
 
-/** The workspace tier, `workspace_id IS NOT NULL`: a coven invitation, which the site tier's keeper grant is not. */
 function onWorkspaceTier(): SQL {
   return isNotNull(invitations.workspaceId);
 }
 
-/** The proof's tier: its workspace for a `Membership`, the site tier for a `SiteAdmin`. */
 function inTierOf(proof: Membership | SiteAdmin): SQL {
   return 'workspaceId' in proof ? scopedTo(proof, invitations) : onSiteTier();
 }
@@ -177,7 +169,6 @@ const PENDING_INVITATION_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
 ];
 
-/** The filter's arms over a pending site-tier invitation, each `undefined` when its part is absent. */
 function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL | undefined {
   return pendingInvitation(
     email ? containsText(invitations.email, email) : undefined,
@@ -189,10 +180,6 @@ function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL
   );
 }
 
-/**
- * One page of the site tier's pending invitations, newest first, for `/keepers/invitations`, narrowed in SQL by a
- * `SiteInvitationFilter`. Typed as site-tier rows, since the CHECKs give each one a site role.
- */
 export function findPendingSiteInvitationPage(
   _admin: SiteAdmin,
   filter: SiteInvitationFilter,
@@ -207,11 +194,6 @@ export function findPendingSiteInvitationPage(
   ) as Promise<PageEntry<SiteInvitationRow>[]>;
 }
 
-/**
- * How many invitations `findPendingSiteInvitationPage` pages under `filter`,
- * and how many come before `start`, a page's first row, none on an empty
- * page: the Invitations tab's "Page X of Y".
- */
 export function findPendingSiteInvitationCount(
   _admin: SiteAdmin,
   filter: SiteInvitationFilter,
@@ -246,11 +228,6 @@ export async function findRecentCovenInvitationTimes(
   return rows.map((row) => row.createdAt);
 }
 
-/**
- * One page of the proof's workspace's open invitations, newest first, for
- * the members page: the site tier's pager under the `Membership` proof.
- * Open: pending, or declined and not yet removed.
- */
 export function findPendingWorkspaceInvitationPage(
   membership: Membership,
   page: PageRequest,
@@ -265,10 +242,6 @@ export function findPendingWorkspaceInvitationPage(
   ) as Promise<PageEntry<AddressInvitationRow>[]>;
 }
 
-/**
- * How many invitations `findPendingWorkspaceInvitationPage` pages, and how
- * many come before `start`, a page's first row, none on an empty page.
- */
 export function findPendingWorkspaceInvitationCount(
   membership: Membership,
   start: Cursor | undefined,
@@ -300,11 +273,6 @@ export function findReceivedInvitationPage(
   );
 }
 
-/**
- * How many invitations `findReceivedInvitationPage` pages, and how many come
- * before `start`, a page's first row, none on an empty page. No proof, for the
- * page's reason.
- */
 export function findReceivedInvitationCount(
   session: AuditSession,
   start: Cursor | undefined,
@@ -378,14 +346,10 @@ export async function findReceivedInvitationInviters(
   return rows.map(({ id, name }) => ({ id, name }));
 }
 
-/**
- * The card arrivals' order, newest first: the key is ascending, so the instant is negated, as the pending lists' is.
- */
 const CARD_ARRIVAL_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${invitations.acceptedAt})`, type: 'numeric' },
 ];
 
-// A card some account accepted: the record of an arrival, kept for good.
 function arrivedByCard(): SQL {
   return and(
     cardKind(),
@@ -427,7 +391,6 @@ export function findCardArrivalPage(
   ) as Promise<PageEntry<CardArrivalRow>[]>;
 }
 
-/** How many arrivals `findCardArrivalPage` pages, and how many come before `start`, a page's first row. */
 export function findCardArrivalCount(
   _admin: SiteAdmin,
   filter: CardArrivalFilter,
@@ -442,17 +405,14 @@ export function findCardArrivalCount(
   );
 }
 
-/** Every card, newest first, the key negated as the other lists' are. */
 const CARD_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
 ];
 
-// Every card, in any state; narrowed to one batch where a batch is named.
 function cardsOf(batchId: string | undefined): SQL {
   return and(cardKind(), batchId ? eq(invitations.batchId, batchId) : undefined) as SQL;
 }
 
-/** How many cards there are under `batchId`, any state (every card where none is named), and how many come before `start`. */
 export function findCardCount(
   _admin: SiteAdmin,
   batchId: string | undefined,
@@ -472,7 +432,6 @@ function batchHeads(): SQL {
   ) as SQL;
 }
 
-// A day's first instant in UTC, as a timestamp.
 const dayStart = (day: string): SQL => sql`(${day}::date)::timestamp at time zone 'UTC'`;
 
 // A batch's standing worked out in SQL from its live cards, as the admin table's `batchStatus` does from their counts: a
@@ -529,7 +488,6 @@ export function findCardBatchPage(
   ) as Promise<PageEntry<CardRow>[]>;
 }
 
-/** How many batches `findCardBatchPage` pages, and how many come before `start`, a page's first batch. */
 export function findCardBatchCount(
   _admin: SiteAdmin,
   filter: CardBatchFilter,
@@ -538,7 +496,6 @@ export function findCardBatchCount(
   return findPageCountInScope(invitations, batchHeads(), CARD_ORDER, start, batchesWhere(filter));
 }
 
-/** Each named batch's cards, accepted cards, cards still pending and refused opens, counted in SQL. */
 export function findCardBatchTotals(
   _admin: SiteAdmin,
   batchIds: readonly string[],
@@ -574,7 +531,6 @@ export function findCardPositions(
   ).then((rows) => rows.map((row) => ({ id: row.id, position: row.position })));
 }
 
-/** A batch's attempts, latest first: the key is ascending, so the instant is negated, as the other lists' is. */
 const CARD_ATTEMPT_ORDER: readonly SortPart[] = [
   {
     expression: sql`-extract(epoch from ${cardInvitationAttempts.lastAttemptedAt})`,
@@ -587,7 +543,6 @@ function attemptsOnBatch(batchId: string): SQL {
   return sql`${cardInvitationAttempts.invitationId} in (select ${invitations.id} from ${invitations} where ${invitations.batchId} = ${batchId} and ${invitations.deletedAt} is null)`;
 }
 
-/** One page of the refused opens of a batch's cards, latest first: a row per card, account and reason. A site admin's read. */
 export function findCardAttemptPage(
   _admin: SiteAdmin,
   batchId: string,
@@ -601,7 +556,6 @@ export function findCardAttemptPage(
   ) as Promise<PageEntry<CardAttemptRow>[]>;
 }
 
-/** How many rows `findCardAttemptPage` pages for the batch, and how many come before `start`, a page's first row. */
 export function findCardAttemptCount(
   _admin: SiteAdmin,
   batchId: string,
@@ -615,10 +569,6 @@ export function findCardAttemptCount(
   );
 }
 
-/**
- * The invitation's named writes, beside its finders: the table is marked `namedWrites`, so these are its only
- * writes. Each decides the tier from the proof it is handed, never from `values`.
- */
 export function invitationWrites({
   tx,
   session,

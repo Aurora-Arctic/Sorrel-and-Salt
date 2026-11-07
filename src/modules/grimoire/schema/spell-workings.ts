@@ -8,9 +8,8 @@ import { spells, spellVisibility } from './spells';
 // lifecycles are not the same thing.
 export const workingStatus = pgEnum('working_status', ['draft', 'complete']);
 
-// One time a spell was made, when and with whom (claude-docs/design-decisions/m13.4-spell-workings.md). Soft-deleted. No
-// `workspace_id`: the service reaches it through its parent spell, so a working of a deleted spell is unreachable by the spell's
-// own filter, not by a cascade.
+// No `workspace_id`: the service reaches it through its parent spell, so a working of a deleted spell is unreachable by the spell's
+// own filter, not by a cascade (claude-docs/design-decisions/m13.4-spell-workings.md).
 export const spellWorkings = pgTable(
   'spell_workings',
   {
@@ -20,23 +19,18 @@ export const spellWorkings = pgTable(
       .references(() => spells.id),
     // Defaulted on the column so a working written by any path is a draft.
     status: workingStatus('status').notNull().default('draft'),
-    // The day it was made, a date and not a timestamp: nobody records the
-    // minute, and a timestamp would drag a time zone into "when".
+    // A date, not a timestamp: a timestamp would drag a time zone into "when".
     workedOn: date('worked_on').notNull(),
-    // Null while a draft. A moment, because completion is an event.
     completedAt: timestamp('completed_at', { withTimezone: true }),
     note: text('note'),
-    // The same enum a spell uses; defaulted for the same reason, and a working's
-    // author is `created_by`.
+    // Defaulted for the same reason; a working's author is `created_by`.
     visibility: spellVisibility('visibility').notNull().default('workspace'),
     ...auditColumns,
   },
   (table) => [
-    // The recipe page reads a spell's workings newest first.
     index('spell_workings_spell_id_worked_on_idx')
       .on(table.spellId, sql`${table.workedOn} desc`)
       .where(sql`${table.deletedAt} is null`),
-    // A blank note would say nothing.
     check(
       'spell_workings_note_not_blank',
       sql`${table.note} is null or btrim(${table.note}) <> ''`,

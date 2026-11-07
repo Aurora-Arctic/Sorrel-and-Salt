@@ -4,8 +4,8 @@ import { auditStampColumns, users } from '../../identity/schema/users';
 import { idColumn } from '../../../db/schema-parts';
 import { spellWorkings } from './spell-workings';
 
-// Who made a working: a coven member or a typed name. Rows are replaced wholesale when participants change, so the table has the
-// four stamp columns and no `deleted_at` (claude-docs/design-decisions/m13.4-spell-workings.md).
+// Rows are replaced wholesale when participants change, so the table has the four stamp columns and no `deleted_at`
+// (claude-docs/design-decisions/m13.4-spell-workings.md).
 export const spellWorkingParticipants = pgTable(
   'spell_working_participants',
   {
@@ -13,10 +13,8 @@ export const spellWorkingParticipants = pgTable(
     workingId: uuid('working_id')
       .notNull()
       .references(() => spellWorkings.id),
-    // A member, or null for someone typed in by name.
     userId: uuid('user_id').references(() => users.id),
     name: text('name'),
-    // The order they were entered in, stored and never inferred.
     position: integer('position').notNull(),
     ...auditStampColumns,
   },

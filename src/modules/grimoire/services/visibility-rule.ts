@@ -6,9 +6,8 @@ import type { SpellStatus, SpellVisibility } from '../types';
 // file whole, does not make the rule part of the grimoire's surface.
 
 /**
- * The one-way rule for every write that names a visibility. It binds a **complete** spell only, and reads the status the row
- * holds before the write, so the save that completes a shared draft starts the lock and may itself name any visibility.
- * `subject` names what is narrowed in the refusal.
+ * Binds a **complete** spell only, and reads the status the row holds before the write, so the save that completes a shared draft
+ * starts the lock and may itself name any visibility.
  *
  * @throws {Forbidden} `next` narrows a complete spell the coven can already read.
  */

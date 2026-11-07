@@ -22,34 +22,24 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 export const spellSteps = pgTable(
   'spell_steps',
   {
-    // A surrogate key, because the position cannot be one: a removed step's
-    // tombstone would go on holding its place.
+    // A surrogate key: a removed step's tombstone would go on holding the position.
     id: idColumn(),
     spellId: uuid('spell_id')
       .notNull()
       .references(() => spells.id),
-    // Nullable: a custom row and an instruction-only step have no ingredient.
     // The CHECKs below allow at most one of this and `name`.
     ingredientId: uuid('ingredient_id').references(() => ingredients.id),
-    // The form laid, set exactly when `ingredient_id` is: a jar may
-    // hold Rosemary herb and Rosemary oil, a custom layer neither.
+    // Set exactly when `ingredient_id` is.
     variantId: uuid('variant_id'),
-    // The custom row's label and form. Never becomes an `ingredients` row and
-    // contributes nothing to derived categories; `form` is meaningful only
-    // beside a name, which a CHECK below enforces.
+    // Never becomes an `ingredients` row and contributes nothing to derived categories; `form` is meaningful only beside a name (CHECK below).
     name: text('name'),
     form: text('form'),
-    // A stock amount's shape, matching `inventory_items.quantityOnHand` so the
-    // converter reads both sides. Nullable, with `unit`: "a pinch" names no
-    // measurement, and zero is a quantity where absence is not.
+    // Nullable, with `unit`: "a pinch" names no measurement, and zero is a quantity where absence is not.
     quantity: numeric('quantity', { precision: QUANTITY_PRECISION, scale: QUANTITY_SCALE }),
-    // The same enum a jar is measured in, so the converter can go between them.
     // No `unitDimension` here: nothing groups a spell's layers by dimension.
     unit: inventoryUnit('unit'),
-    // The step's place in the recipe. Stored, never inferred from insertion
-    // order.
+    // Stored, never inferred from insertion order.
     position: integer('position').notNull(),
-    // The instruction: what to do at this step, in the member's words.
     body: text('body'),
     ...auditColumns,
   },
@@ -64,13 +54,9 @@ export const spellSteps = pgTable(
       .on(table.spellId, sql`lower(${table.name})`)
       .where(sql`${table.ingredientId} is null and ${table.deletedAt} is null`),
 
-    // At most one identity, and never an empty step: an instruction, an
-    // ingredient, or both. Enforced in Zod too, so a CHECK is never what a user
-    // sees.
+    // At most one identity, and never an empty step. Enforced in Zod too, so a CHECK is never what a user sees.
     check('spell_steps_one_identity', sql`num_nonnulls(ingredient_id, name) <= 1`),
     check('spell_steps_not_empty', sql`num_nonnulls(ingredient_id, name, body) >= 1`),
-    // An amount describes an ingredient's place in the jar, so an
-    // instruction-only step carries none.
     check(
       'spell_steps_amount_on_ingredient',
       sql`(ingredient_id is not null or name is not null) or (quantity is null and unit is null)`,

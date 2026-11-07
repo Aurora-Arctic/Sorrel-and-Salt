@@ -8,8 +8,7 @@ import { assertMembership } from '@/modules/coven';
 import type { SpellVisibility } from '../types';
 
 /**
- * The one-way rule (DESIGN.md §5): a complete spell may be widened from `private` to `workspace` and never narrowed back; a
- * draft moves either way.
+ * The one-way rule (DESIGN.md §5).
  *
  * **There is no author clause here, and none is missing.** A private spell is readable by its author alone, so `findOneSpell`
  * has already answered `undefined` to anyone else, and the refusal they get says the spell is not there.

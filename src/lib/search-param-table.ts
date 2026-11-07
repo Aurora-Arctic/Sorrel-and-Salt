@@ -17,7 +17,7 @@ export interface SearchParam<Value> {
   read(raw: Raw): Value;
   /** The value as `listHref` writes it; a blank one is left out of the address. */
   write(value: Value): Written;
-/** `lookups` are what the page read to translate with, such as a slug's id; an entry that needs none ignores them. */
+  /** `lookups` are what the page read to translate with, such as a slug's id; an entry that needs none ignores them. */
   toVariable(value: Value, lookups?: SearchLookups): unknown;
 }
 

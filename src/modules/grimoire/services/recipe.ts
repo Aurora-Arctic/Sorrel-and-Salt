@@ -15,7 +15,7 @@ import { UNMEASURABLE_UNIT, measurable } from '../validation/step-unit';
 
 type ParsedStep = z.output<typeof SpellStepInput>;
 
-/** The step row's own columns as a save writes them: every one stated, so a field left out is cleared. */
+/** Every column stated, so a field left out is cleared. */
 function stepColumns(step: ParsedStep, place: number) {
   return {
     body: step.body ?? null,
@@ -30,7 +30,6 @@ function stepColumns(step: ParsedStep, place: number) {
   };
 }
 
-/** Whether writing `columns` would leave `row` as it is. */
 function unchanged(columns: ReturnType<typeof stepColumns>, row: SpellStepRow): boolean {
   return Object.entries(columns).every(([key, value]) => {
     const stored = row[key as keyof typeof columns];
@@ -41,7 +40,6 @@ function unchanged(columns: ReturnType<typeof stepColumns>, row: SpellStepRow): 
   });
 }
 
-/** Whether the step lays a different ingredient, form or custom name than the row. */
 function identityChanged(step: ParsedStep, row: SpellStepRow): boolean {
   return (
     (step.ingredientId ?? null) !== row.ingredientId ||
@@ -51,8 +49,7 @@ function identityChanged(step: ParsedStep, row: SpellStepRow): boolean {
 }
 
 /**
- * Refuses, before anything is written, a step that names a saved step this spell has no live row for, or a link the coven may
- * not lay. A saved step whose link is unchanged is not checked again (claude-docs/db/spell-visibility.md, "What a spell holds").
+ * A saved step whose link is unchanged is not checked again (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
  * @throws {ValidationError} at each offending step's `id` or `ingredientId`.
  */
@@ -94,10 +91,7 @@ export async function checkRecipe(
   if (issues.length > 0) throw new ValidationError(issues);
 }
 
-/**
- * A step laying a form the coven holds a jar of, in a unit that jar cannot be measured in. Which steps are exempt:
- * claude-docs/db/grimoire.md, "Grimoire service and schema details".
- */
+/** Which steps are exempt: claude-docs/db/grimoire.md, "Grimoire service and schema details". */
 async function unmeasurableSteps(
   membership: Membership,
   steps: readonly ParsedStep[],
@@ -125,10 +119,7 @@ async function unmeasurableSteps(
   });
 }
 
-/**
- * Writes the recipe `steps` over the spell's live `existing` steps, inside the caller's transaction. A moving step is first
- * moved aside to a free place and name, because the unique indexes are checked row by row. Call `checkRecipe` first.
- */
+/** A moving step is first moved aside to a free place and name, because the unique indexes are checked row by row. Call `checkRecipe` first. */
 export async function writeRecipe(
   write: AuditWriter,
   spellId: string,

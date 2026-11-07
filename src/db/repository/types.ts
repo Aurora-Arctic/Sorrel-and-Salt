@@ -42,10 +42,6 @@ import type { AuditSession, Generic } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
 import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 
-// The repository's types: the table shapes a finder or writer admits, `selectFrom`'s options,
-// the writer `withAudit` hands out, and the finders' arguments and rows. The index re-exports
-// the writer, `SortPart` and the finders' arguments and rows; the rest stays in the folder.
-
 export type AuditColumnName = keyof typeof auditColumns;
 
 // A table admits the methods its own columns allow: `{ deletedAt?: never }` is
@@ -85,19 +81,15 @@ export type VariantScoped = { variantId: AnyPgColumn };
 // A table written only through its own named calls carries the schema file's `namedWrites` mark, and every
 // generic method below takes `Generic` and so refuses it (claude-docs/db/write-path.md, "Table marks").
 
-/** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
 
-// A table carrying `revisionColumn()`, the counter `bump_revision()` moves on every update and a revisioned write checks.
 export type Revisioned = { revision: AnyPgColumn };
 
-// A table addressed by a slug of its own: the curated vocabularies and their groups.
 export type Slugged = { slug: AnyPgColumn };
 
 /** A table's own columns, with every audit column removed — they come from the session. */
 export type Writable<TTable extends PgTable> = Omit<TTable['$inferInsert'], AuditColumnName>;
 
-/** The same, minus `workspaceId` — it comes from the proof, for the same reason. */
 export type WritableInWorkspace<TTable extends PgTable> = Omit<Writable<TTable>, 'workspaceId'>;
 
 /**
@@ -112,7 +104,6 @@ export type SortColumn = AnyPgColumn<{ notNull: true }>;
  */
 export type SortPart = SortColumn | { expression: SQL; type: string };
 
-/** A list's key, and what reading it joins and is read under: what its pages and its count share. */
 export interface KeyOrder {
   sort: readonly SortPart[];
   id: AnyPgColumn;
@@ -139,7 +130,6 @@ export interface KeyOrder {
   similarityMatch?: boolean;
 }
 
-/** How `selectFrom` orders, bounds and keys a page; the cursor bounds are in its `where`. */
 export interface Keyset<Carried extends object = {}> extends KeyOrder {
   request: PageRequest;
   /**
@@ -155,7 +145,6 @@ export interface Keyset<Carried extends object = {}> extends KeyOrder {
  */
 export type ListOrder<Carried extends object = {}> = Omit<Keyset<Carried>, 'id' | 'request'>;
 
-/** What `findPage` and its kin order by: a sort alone, or a `ListOrder`. */
 export type PageOrder<Carried extends object = {}> = readonly SortPart[] | ListOrder<Carried>;
 
 /**
@@ -182,14 +171,12 @@ export interface SearchField {
   live?: SQL;
 }
 
-/** A best-match search, as `weightedSearch` builds it: the join, and each joined row's rank and position. */
 export interface WeightedSearch {
   join: { source: SQL; on: SQL };
   score: SQL<number>;
   position: SQL<number>;
 }
 
-/** A search's accent-folded word match, as `foldedWordMatch` builds it for one query. */
 export interface WordMatch {
   /** The query is word-similar (`<%`) to `text`. */
   matches: (text: AnyPgColumn) => SQL;
@@ -260,7 +247,6 @@ export interface Locked {
   lockOrder: AnyPgColumn;
 }
 
-/** A row read under a `LeftJoin`, and the row joined to it. */
 export interface JoinedRow<TRow, TJoined> {
   row: TRow;
   joined: TJoined | null;
@@ -306,14 +292,11 @@ export interface WriterContext {
   ): Promise<never>;
 }
 
-/** What `withAudit` hands its callback: every write, stamped from the session. */
 export interface AuditWriter {
-  /** Insert one row, stamping created_* and updated_* from the session. */
   insert<TTable extends PgTable & Unscoped & Generic>(
     table: TTable,
     values: Writable<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
-  /** Insert one row into the workspace the proof names, filling `workspace_id` from it. */
   insertInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
@@ -337,7 +320,6 @@ export interface AuditWriter {
     id: string,
     values: Partial<Writable<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
-  /** The same, with `workspace_id = membership.workspaceId` ANDed onto the `where`. */
   updateInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
@@ -375,13 +357,11 @@ export interface AuditWriter {
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
-  /** The same, scoped by the proof. */
   softDeleteInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
-  /** The same, naming the one row by its own id, for `updateByIdInWorkspace`'s reason. */
   softDeleteByIdInWorkspace<
     TTable extends PgTable & SoftDeletable & WorkspaceScoped & Generic & Identified,
   >(
@@ -452,13 +432,11 @@ export interface AuditWriter {
     table: TTable,
     id: string,
   ): Promise<TTable['$inferSelect'][]>;
-  /** The same, for the one live row of the proof's workspace. */
   touchByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic & Identified>(
     membership: Membership,
     table: TTable,
     id: string,
   ): Promise<TTable['$inferSelect'][]>;
-  /** Soft-delete the one live compendium row with this id, on the same terms. */
   softDeleteByIdInCompendium<
     TTable extends PgTable & TwoTier & SoftDeletable & Generic & Identified,
   >(
@@ -912,12 +890,10 @@ export type ColumnMatch<TTable extends PgTable> = {
     | (null extends Writable<TTable>[K] ? null : never);
 };
 
-/** What a possible duplicate carries onto its edge: its trigram similarity to the name. */
 export interface SimilarityScore {
   score: number;
 }
 
-/** What a list of ingredients is narrowed by. Each part is optional, and absent means no filter. */
 export interface IngredientFilter {
   /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
   query?: string;
@@ -1010,7 +986,6 @@ export interface IngredientFilter {
   notHeldIn?: readonly Membership[];
 }
 
-/** One facet value and how many entries the list would hold with it chosen. */
 export interface FacetCount<TValue extends string = string> {
   value: TValue;
   count: number;
@@ -1054,7 +1029,6 @@ export interface CompendiumFacets extends IngredientFacets {
   reviewed: FacetCount<ReviewFacetValue>[] | null;
 }
 
-/** The Reviewed filter's two settings, as its facet counts them. */
 export type ReviewFacetValue = 'reviewed' | 'needs_review';
 
 /**
@@ -1070,10 +1044,8 @@ export interface CompendiumListEdge extends CompendiumScore {
   sourcingScore?: number;
 }
 
-/** Which of the substitute picker's two groups an entry is listed in. */
 export type SuggestionGroup = 'yours' | 'compendium';
 
-/** What each row of the substitute picker carries beside its entry. */
 export interface SuggestionGroupTag {
   group: SuggestionGroup;
 }
@@ -1108,10 +1080,8 @@ export interface IngredientIdentity {
   canonicalName?: string | null;
 }
 
-/** A vocabulary an admin list pages: every one, filed under a group or under none. */
 export type ListedVocabulary = FlatTable | ItemTable;
 
-/** A vocabulary a member's autofill suggests from: the flat ones, and the two an ingredient picks. */
 export type SuggestingVocabulary = FlatTable | PickedTable;
 
 /**
@@ -1123,7 +1093,6 @@ export type InUseSource =
   | { child: typeof ingredientDeities; value: typeof ingredientDeities.name }
   | { child: typeof ingredientVariants; value: typeof ingredientVariants.form };
 
-/** A curated row, or a value written on an ingredient that matches none. */
 export interface VocabularySuggestion {
   value: string;
   /** The curated row's; a value in use outside the vocabulary has none. */
@@ -1157,14 +1126,12 @@ export interface DeitySuggestion extends VocabularySuggestion {
   matchedName: string | null;
 }
 
-/** An in-scope ingredient already holding a suggested value. */
 export interface Claimant {
   name: string;
   /** Its formal name; an entry whose nomenclature is `none` or `unknown` has none. */
   canonicalName: string | null;
 }
 
-/** One row of a suggestion statement, as `readSuggestionPage` reads it. */
 export interface SuggestionRow {
   /** 0 a curated name match, 1 a curated description match, 2 in use outside the vocabulary. */
   tier: number;
@@ -1183,19 +1150,15 @@ export interface SuggestionRow {
   claimants: Claimant[];
 }
 
-/** A common name already in use, and who answers to it. */
 export interface CommonNameSuggestion {
   value: string;
   claimants: Claimant[];
 }
 
-/** A `references` row, compendium or coven's, as a finder returns it. */
 export type ReferenceRow = typeof references.$inferSelect;
 
-/** A `reference_links` row, as a finder returns it. */
 export type ReferenceLinkRow = typeof referenceLinks.$inferSelect;
 
-/** A live link, and the live reference it cites. */
 export interface CitingLink {
   link: ReferenceLinkRow;
   reference: ReferenceRow;
@@ -1210,11 +1173,6 @@ export type UnreadIngredientColumn = 'curatorReviewedBy';
  */
 export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredientColumn>;
 
-/**
- * A row as the generic finders read it: the table's whole row, less any column `unread-columns.ts` keeps out of reads.
- * Writers' `returning()` still hold the whole row.
- */
-/** One `documents` row. */
 export type DocumentRow = typeof documents.$inferSelect;
 
 /** What a document's title and lede are written with. */
@@ -1223,10 +1181,8 @@ export interface DocumentTextInput {
   lede: string;
 }
 
-/** One `document_versions` row. */
 export type DocumentVersionRow = typeof documentVersions.$inferSelect;
 
-/** One `document_mailings` row. */
 export type DocumentMailingRow = typeof documentMailings.$inferSelect;
 
 /** What a mailing starts with: each version it covers with what changed in it, and how many accounts it will reach. */
@@ -1254,28 +1210,23 @@ export interface DocumentMailingItem {
   summary: string;
 }
 
-/** One `document_mailing_recipients` row. */
 export type DocumentMailingRecipientRow = typeof documentMailingRecipients.$inferSelect;
 
-/** One `user_access_pauses` row. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
 /** What a site access pause is set with: `until` null for no end date, and always a note saying why. */
 export interface UserAccessPauseInput {
   until: Date | null;
   note: string;
-  /** What the user is mailed, or `null`/absent for none. */
   message?: string | null;
 }
 
-/** One `workspace_member_pauses` row. */
 export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 
 /** What a coven pause is set with: `until` null for no end date, and a note or none. */
 export interface WorkspaceMemberPauseInput {
   until: Date | null;
   note: string | null;
-  /** What the member is mailed, or `null`/absent for none. */
   message?: string | null;
 }
 
@@ -1289,27 +1240,21 @@ export interface CompendiumReviewRow {
   reviewedAt: Date | null;
 }
 
-/** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
 export type StockRow = typeof inventoryItems.$inferSelect;
 
-/** A `workspace_compendium_entries` row, a compendium entry's presence in one coven's cupboard, as a finder or a write returns it. */
 export type CupboardEntryRow = typeof workspaceCompendiumEntries.$inferSelect;
 
-/** A form of an ingredient, as a finder or a write returns it. */
 export type VariantRow = typeof ingredientVariants.$inferSelect;
 
-/** One `spell_steps` row, a step of a spell, as the writer reads it. */
 export type SpellStepRow = typeof spellSteps.$inferSelect;
 export type SpellRow = typeof spells.$inferSelect;
 export type WorkingRow = typeof spellWorkings.$inferSelect;
 export type WorkingParticipantRow = typeof spellWorkingParticipants.$inferSelect;
 export type WorkingDeductionRow = typeof spellWorkingDeductions.$inferSelect;
-/** How many workings a spell has. */
 export interface WorkingCount {
   spellId: string;
   count: number;
 }
-/** One participant as a write names them: a coven member, or a typed name. */
 export interface WorkingParticipantValue {
   userId?: string;
   name?: string;
@@ -1321,7 +1266,6 @@ export interface SlugRedirect {
   expiresAt: Date;
 }
 
-/** An `invitations` row, either tier, as a finder or a write returns it. */
 export type InvitationRow = typeof invitations.$inferSelect;
 
 /** An `address` invitation, either tier: `invitations_kind_shape` gives it the address a card lacks. */
@@ -1346,7 +1290,6 @@ export interface ReceivedInvitationInviter {
   name: string;
 }
 
-/** A site role an invitation may grant: `curator` or `admin`, as the CHECK has it. */
 export type InvitableSiteRole = Exclude<NonNullable<InvitationRow['siteRole']>, 'user'>;
 
 /**
@@ -1376,11 +1319,9 @@ export interface CardInvitationValues {
   tokens: string[];
   batchId: string;
   expiresAt: Date;
-  /** Written on every card of the batch; null for none. */
   note: string | null;
 }
 
-/** A card's place in its batch, from 1; null for a card minted before places were kept. */
 export type CardPosition = { id: string; position: number | null };
 
 /** One batch of cards counted: all of them, the accepted ones, those still pending, and the refused opens of its links. */
@@ -1396,7 +1337,6 @@ export type CardBatchTotal = {
 /** Where a batch of cards stands, as the admin Invitation Cards table words it. */
 export type CardBatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
 
-/** What the admin batch list is narrowed by. Each part is optional, and absent means no filter. */
 export interface CardBatchFilter {
   /** The start of the batch number, or text anywhere in its note; case-insensitive. */
   batch?: string;
@@ -1414,7 +1354,6 @@ export interface CardArrivalFilter {
   query?: string;
 }
 
-/** A card in any state: always in a batch. */
 export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
 
 /** Why a card's link was refused to a signed-in account: the reasons a refused open is recorded under. */
@@ -1442,7 +1381,6 @@ export type CardArrivalRow = InvitationRow & {
 /** What a workspace invitation starts with: the same, and the coven role it grants. */
 export type WorkspaceInvitationValues = InvitationValues & { role: InvitableRole };
 
-/** What the admin invitation list is narrowed by. Each part is optional, and absent means no filter. */
 export interface SiteInvitationFilter {
   /** A substring of the invited address, case-insensitive, its `%` and `_` read literally. */
   email?: string;
@@ -1450,10 +1388,8 @@ export interface SiteInvitationFilter {
   expiresWithinHours?: number;
 }
 
-/** How a page of the grimoire is ordered and narrowed. */
 export interface GrimoireQuery {
   order: (typeof GRIMOIRE_ORDERS)[number];
-  /** Only the spells of this status; absent means both. */
   status?: (typeof spells.$inferSelect)['status'];
   /**
    * Only the spells whose title or intent holds this text as a word or part of one, accents and case set aside; absent or blank means no search.
@@ -1462,16 +1398,13 @@ export interface GrimoireQuery {
   query?: string;
   /** Only the spells assigned these categories, by id; absent or empty means no filter. */
   categoryIds?: readonly string[];
-  /** Whether a spell needs every chosen category ('all', the default) or any of them. */
   categoryMode?: CategoryMode;
   /**
    * Only the spells whose moon phase is any of these, trimmed and ignoring case; absent or empty means no filter.
    * Free text: the column has no vocabulary.
    */
   moonPhases?: readonly string[];
-  /** As `moonPhases`, for the day of the week. */
   daysOfWeek?: readonly string[];
-  /** Only the spells with any of these visibilities; absent or empty means no filter. */
   visibilities?: readonly (typeof spells.$inferSelect)['visibility'][];
   /**
    * Only the spells made (`created_by`, never the last editor) by any of
@@ -1481,19 +1414,13 @@ export interface GrimoireQuery {
   makerIds?: readonly string[];
 }
 
-/** The four facets the grimoire adds to Categories, each a list of values with their counts. */
 export interface GrimoireFacetCounts {
-  /** Each moon phase written on a readable spell, as the most-used spelling of it. */
   moonPhases: FacetCount[];
-  /** As `moonPhases`, for the day of the week. */
   daysOfWeek: FacetCount[];
-  /** Each visibility a readable spell holds. */
   visibilities: FacetCount<'private' | 'workspace'>[];
-  /** Each user who made a readable spell, by user id. */
   makers: FacetCount[];
 }
 
-/** What the admin user list is narrowed by. Each part is optional, and absent means no filter. */
 export interface UserFilter {
   /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */
   query?: string;
@@ -1507,17 +1434,13 @@ export interface UserFilter {
   paused?: boolean;
 }
 
-/** What the privilege ledger is narrowed by. Each part is optional, and absent means no filter. */
 export interface PrivilegeChangeFilter {
-  /** Only the changes to this user's privileges. */
   userId?: string;
-  /** Only the changes to this privilege. */
   privilege?: (typeof userPrivilegeChanges.$inferSelect)['privilege'];
   /** A live user's name or email holds this, matched as `SiteInvitationFilter.email` is. */
   query?: string;
 }
 
-/** What the admin category list is narrowed by. Each part is optional, and absent means no filter. */
 export interface CategoryFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
@@ -1525,19 +1448,15 @@ export interface CategoryFilter {
   groupId?: string;
 }
 
-/** An ingredient list a curated astrology vocabulary's values are written to, by its property name. */
 export type AstrologyList = 'celestialBodies' | 'zodiacSigns';
 
-/** One of the two astrology vocabularies, flat and alike. */
 export type AstrologyVocabulary = FlatTable;
 
-/** What a keeper astrology list is narrowed by: a name fragment, as the forms' list is. */
 export interface AstrologyValueFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
 }
 
-/** What the admin form list is narrowed by, as `CategoryFilter` narrows the categories. Each part is optional, and absent means no filter. */
 export interface IngredientFormValueFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
@@ -1566,19 +1485,16 @@ export interface GroupFilter {
   query?: string;
 }
 
-/** A user's display name, without the rest of the row: what a co-member may read. */
 export interface UserName {
   id: string;
   name: string;
 }
 
-/** One provider account linked to a user, without the tokens its row holds. */
 export interface LinkedProvider {
   userId: string;
   providerId: string;
 }
 
-/** One live compendium entry's address, as the sitemap and `llms.txt` list it. */
 export interface CompendiumSlugEntry {
   slug: string;
   name: string;
@@ -1615,7 +1531,6 @@ export interface SupportRequestMove {
   lastStaffActivityAt?: Date;
 }
 
-/** The admin list's narrowing; an absent part is no narrowing. */
 export interface SupportRequestFilter {
   about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
   status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
@@ -1626,7 +1541,6 @@ export interface SupportRequestFilter {
   senderGroup?: SupportSenderGroup;
 }
 
-/** How many requests each view holds. */
 export type SupportViewCounts = Record<SupportView, number>;
 
 /** The end of the time-out standing on a sender: `until` null when it has no end date. */
@@ -1636,13 +1550,10 @@ export interface StandingTimeout {
 
 /** What the account menu counts for one viewer. */
 export interface SupportMenuCounts {
-  /** Open requests assigned to them. */
   assignedOpen: number;
-  /** Their own requests waiting on their answer. */
   waitingOnMe: number;
 }
 
-/** How many of a sender's requests are still open and how many are done. */
 export interface SupportStatusCounts {
   open: number;
   closed: number;
