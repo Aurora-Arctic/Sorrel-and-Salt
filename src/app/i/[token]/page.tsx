@@ -18,14 +18,19 @@ const liveCard = cache(liveCardOf);
 // The card's back says what the site is; the page says it as a sentence with the site's name.
 const LEDE = `${WORDMARK} is ${BACK_LEDE.charAt(0).toLowerCase()}${BACK_LEDE.slice(1)}`;
 
-/** What every card's page says: the site, then what the card gives. */
-const Welcome = (): ReactElement => (
+/** What every card's page says: the site, then what the card gives; an ordinary card adds its one free month. */
+const Welcome = ({ beta }: { beta: boolean }): ReactElement => (
   <section className="card-landing__part" aria-labelledby="card-welcome-text">
     <p id="card-welcome-text">{LEDE}</p>
     <p>
       This card admits one person: it gives you an account and the right to start a coven of your
       own. Once you’re in, invite whoever you like.
     </p>
+    {!beta && (
+      <p>
+        {WORDMARK} is free for now. Once it starts charging, your first coven gets one month free.
+      </p>
+    )}
   </section>
 );
 
@@ -76,7 +81,7 @@ export default async function CardPage({ params }: InvitePageProps) {
           <span className="card-landing__title-greeting">Welcome to</span> <span>{WORDMARK}</span>
         </h1>
         <div className="card-landing__words">
-          <Welcome />
+          <Welcome beta={card.beta} />
           {card.beta && <Early />}
         </div>
         <div className="card-landing__card">
