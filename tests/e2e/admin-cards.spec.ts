@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { mintedLinks } from './cards';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
@@ -141,4 +141,29 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
   await signInAs(page, 'latecomer@admin-cards.test');
   await page.goto(links[0]!);
   await expect(page.getByText(/This card has been withdrawn/)).toBeVisible();
+});
+
+test("a beta card's landing page has no violations, and no sideways scroll on a phone", async ({
+  page,
+  browser,
+}) => {
+  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await page.goto('/keepers/invitation-cards');
+  await page.getByRole('link', { name: 'Mint Cards' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
+  await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
+  await dialog.getByRole('checkbox', { name: 'Beta Testers' }).check();
+  const minted = mintedLinks(page);
+  await dialog.getByRole('button', { name: 'Mint Cards' }).click();
+  const [link] = await minted;
+
+  // A browser of its own, signed out, as the minted dialog still holds the PDF unsaved here.
+  const context = await browser.newContext();
+  const visitor = await context.newPage();
+  await visitor.goto(link!);
+  await expect(visitor.getByRole('heading', { name: "You're a Beta Tester" })).toBeVisible();
+  await assertNoAccessibilityViolations(visitor);
+  await assertNoSidewaysScroll(visitor);
+  await assertNoAccessibilityViolations(visitor);
+  await context.close();
 });
