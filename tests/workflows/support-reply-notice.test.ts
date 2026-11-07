@@ -5,7 +5,6 @@ import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 
-
 const DOMAIN = '@support-reply-notice-run.test';
 const ORIGIN = 'http://localhost:3000';
 const MAILPIT_URL = 'http://mailpit.test';

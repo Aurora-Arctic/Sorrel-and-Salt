@@ -7,7 +7,6 @@ import { accessPauseMail } from '@/modules/identity/jobs/access-pause-mail';
 import { supportTimeoutMail } from '@/modules/support/jobs/support-timeout-mail';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 
-
 const DOMAIN = '@pause-mail-run.test';
 const ORIGIN = 'http://localhost:3000';
 const MAILPIT_URL = 'http://mailpit.test';

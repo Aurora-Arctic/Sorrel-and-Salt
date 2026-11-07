@@ -8,7 +8,6 @@ import { verificationSigningSecret } from '@/lib/auth-secrets';
 import { secretLinkMail } from '@/modules/identity/jobs/secret-link-mail';
 import type { SecretLink } from '@/modules/identity';
 
-
 const DOMAIN = '@secret-link-run.test';
 const AUTH_BASE = 'http://localhost:3000/api/auth';
 const MAILPIT_URL = 'http://mailpit.test';

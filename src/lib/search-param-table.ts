@@ -3,7 +3,6 @@ import { list, oneOf, single, someOf, trimmed } from './search-params';
 import type { ListHrefParams } from './types';
 import type { Route } from 'next';
 
-
 export type SearchLookups = Readonly<Record<string, ReadonlyMap<string, string>>>;
 
 type Raw = string | string[] | undefined;
@@ -124,14 +123,14 @@ export function defineSearchParams<E extends Entries>(entries: E) {
       return listHref(path, { ...written, ...extra });
     },
 
-/** `lookups` go to every entry; only a slug entry reads them. */
+    /** `lookups` go to every entry; only a slug entry reads them. */
     variables(filter: SearchFilter<E>, lookups?: SearchLookups): Record<string, unknown> {
       return Object.fromEntries(
         keys.map((key) => [entry(key).variable, entry(key).toVariable(filter[key], lookups)]),
       );
     },
 
-/** A cursor names a spot in one filter's results, so under another it is a wrong page or an error. */
+    /** A cursor names a spot in one filter's results, so under another it is a wrong page or an error. */
     changed(
       place: Partial<SearchFilter<E>> & SearchCursor,
       change: Partial<SearchFilter<E>>,

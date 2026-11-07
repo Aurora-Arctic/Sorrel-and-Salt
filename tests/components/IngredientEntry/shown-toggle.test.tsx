@@ -15,7 +15,6 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-
 const ID = '00000000-0000-4000-8000-000000000002';
 
 function renderToggle(shown: boolean) {

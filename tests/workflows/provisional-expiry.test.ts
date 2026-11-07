@@ -5,7 +5,6 @@ import { waitForSleep } from '@workflow/vitest';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { provisionalAccountExpiry } from '@/modules/identity/jobs/provisional-expiry';
 
-
 const DOMAIN = '@provisional-expiry-run.test';
 
 let sql: ReturnType<typeof postgres>;

@@ -4,7 +4,6 @@ import { start } from 'workflow/api';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 
-
 const DOMAIN = '@support-status-mail-run.test';
 const ORIGIN = 'http://localhost:3000';
 const MAILPIT_URL = 'http://mailpit.test';

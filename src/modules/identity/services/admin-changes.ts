@@ -6,7 +6,6 @@ import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import type { UserRow } from '../types';
 
-
 /** For a caller answering a batch that refuses slot by slot; otherwise use `assertSiteAdmin`. */
 export function isSiteAdmin(session: Session): boolean {
   return session.role === 'admin';

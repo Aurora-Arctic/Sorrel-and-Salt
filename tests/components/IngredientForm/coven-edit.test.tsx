@@ -19,7 +19,6 @@ import {
   offerNothing,
 } from '../../support/msw/ingredient-lookups';
 
-
 const FOLK_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c03';
 
 const TESTWORT: IngredientFormValues = {
