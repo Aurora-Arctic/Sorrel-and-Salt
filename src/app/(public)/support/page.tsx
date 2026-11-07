@@ -50,7 +50,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
         lede="Tell us about something you cannot use, something broken, or ask a question."
       />
       <p>
-        <Link href="/help">Search Help</Link> first: the answer may already be there.
+        <Link href="/help">Search Help</Link>
       </p>
       <SupportPanel state={state} path={single(params.from) ?? SUPPORT_PATH} />
     </div>

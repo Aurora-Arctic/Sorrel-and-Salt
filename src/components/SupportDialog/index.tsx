@@ -95,7 +95,7 @@ function Dialog(): ReactElement | null {
           ) : (
             <>
               <p>
-                <Link href="/help">Search Help</Link> first: the answer may already be there.
+                <Link href="/help">Search Help</Link>
               </p>
               <SupportPanel state={panelState} path={path} returnTo={closeHref} onDone={done} />
             </>
