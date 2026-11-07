@@ -46,7 +46,7 @@ const queue = article(
   12,
   'Working the Support Queue',
   'How curators and Keepers answer support requests.',
-  `Requests appear under [[Support Request|Support Requests]], which can be filtered by status and by "About". A [[Keeper]] sees every request, and a [[Curator|curator]] only those marked "Shared With Curators" or assigned to them. A curator does not see a signed-out sender's address, though a reply still reaches it.
+  `Requests appear under [[Support Request|Support Requests]], in a tab per status, and can be filtered by "About", by error number and by sender. A [[Keeper]] sees every request, and a [[Curator|curator]] only those marked "Shared With Curators" or assigned to them. A curator does not see a signed-out sender's address, though a reply still reaches it.
 
 A Keeper can reply to any request and a curator only to one assigned to them. Internal notes are seen by staff only, are never mailed, and change no status. A Keeper assigns a request ("Assignee").`,
   'staff',
@@ -127,7 +127,7 @@ const businessCards = article(
   'Printing your own business cards from the Keepers area.',
   `Open Business Cards in the Keepers area. It makes a Letter sheet of ten business cards with your name, email and phone. Fill in "Name", "Email" and "Phone", all required. The switch "Include Backs" adds the backs. Choose "Generate".
 
-The PDF is built in your browser and nothing you type is saved. The file is named \`business-cards-\` and your name, made into a slug, and the page says "Saved as <file>." If it fails, it says "The PDF could not be built. Try again."`,
+The PDF is built in your browser and nothing you type is saved. The file is named \`business-cards-\`, then your name made into a slug, then \`.pdf\`, and the page says "Saved as <file>." If it fails, it says "The PDF could not be built. Try again."`,
   'keeper',
 );
 

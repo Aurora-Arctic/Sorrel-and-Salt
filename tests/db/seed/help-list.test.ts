@@ -26,6 +26,7 @@ const FAQ: string[] = [
   'Who Can See My Spells?',
   "Why Can't a Complete Spell Go Back to Private or Draft?",
   'Does My Spell Save Automatically?',
+  'Can I Undo a Change in a Form?',
   'Why Does My Spell Say a Step Is Short?',
   'Can I Convert Grams to Millilitres?',
   'How Do I Change My Email?',
@@ -33,7 +34,6 @@ const FAQ: string[] = [
   'Why Is My Access Paused?',
   'How Do I Leave a Coven?',
   'How Do I Ask for Help or Report an Accessibility Bug?',
-  'Can I Undo a Change in a Form?',
 ];
 
 /** Each parent with its sub pages, every sub page at its parent's audience unless named. */

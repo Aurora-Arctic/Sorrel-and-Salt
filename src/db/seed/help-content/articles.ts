@@ -4,7 +4,7 @@ const gettingStarted = article(
   1,
   'Getting Started',
   'How to sign in, what the Demo Coven is, and how invitations and printed cards bring you into a coven.',
-  `Sorrel & Salt is invite-gated. Signing in by any method gives you an account and an [[Observer]] seat in the [[Demo Coven]], and nothing else. The [[Compendium]] is the one part anyone can read without an account.
+  `Sorrel & Salt is invite-gated. Signing in by any method gives you an account and an [[Observer]] seat in the [[Demo Coven]], and nothing else. The [[Compendium]] is the one store of entries anyone can read without an account; this help, Support and the site's documents are open too.
 
 The sub pages below cover signing in, the Demo Coven, accepting an invitation, redeeming a printed card and searching this help. If something is not working, the Troubleshooting section lists the usual causes.`,
 );
@@ -89,7 +89,7 @@ const compendiumPages = [
 - Toxic: Any, Toxic or Not Toxic.
 - Source: All, Local or [[Compendium]].
 - In Stock, and Low Stock Only.
-- In My [[Coven|Covens]].
+- "In My Covens", which keeps the entries your [[Coven|covens]] hold.
 - Elements, Celestial Bodies, Zodiac and Deities.
 
 Some filters, such as Reviewed, are for [[Curator|curators]] only.`,
@@ -170,7 +170,7 @@ A paused member who opens the coven sees "Access Paused" with the time it ends, 
     5,
     'Remove a Member or Leave',
     'How a seat ends, by removal or by leaving.',
-    `A [[Steward]] can remove a member: choose "Remove" on the member, then confirm in "Remove Member". The seat is ended, and the member invited back has the same seat revived. The last Steward cannot be removed.
+    `A [[Steward]] can remove a member: choose "Remove" on the member, then confirm in "Remove Member". The seat is ended. If the member is invited back, the same seat is revived with the role on the new invitation. The last Steward cannot be removed.
 
 Any member, a [[Pause|paused]] one too, can choose "Leave Coven" and confirm. The page says: "You lose access to its ingredients and its grimoire until a steward invites you back." Your own entries stay with the [[Coven|coven]].
 
@@ -193,7 +193,7 @@ const ingredients = article(
   "Your coven's own ingredients and stock: what you have.",
   `Ingredients are your [[Coven|coven]]'s own list of what it holds. They come from the [[Compendium]] or are made by you, and each can carry stock.
 
-The sub pages cover adding, forms, stock, finding ingredients, and annotating a Compendium entry.`,
+The sub pages cover adding, forms, stock, finding ingredients, and annotating a Compendium entry. Adding and changing here needs a Practitioner or Steward seat; an Observer reads only.`,
 );
 const ingredientPages = [
   subPage(
@@ -212,7 +212,7 @@ The form saves itself as you work; see "Your Spell Saves Itself" for how that wo
     2,
     'Variants and Forms',
     'How one ingredient comes in several forms.',
-    `An ingredient's identity is its [[Formal Name|formal name]] alone. Each form it comes in, such as dried or fresh, is a [[Variant|variant]] beneath it. A variant adds to its ingredient and never removes anything from it. A form is plain text, not a choice from a list.
+    `An ingredient's identity is its [[Formal Name|formal name]] alone. Each form it comes in, such as dried or fresh, is a [[Variant|variant]] beneath it. A variant adds to its ingredient and never removes anything from it. A form is typed as text. The field suggests from the list curators keep, and from your own coven's forms, but you can type a form that is on neither.
 
 A form can have its own safety notes and toxic mark.
 
@@ -223,9 +223,9 @@ An ingredient can also list folk names. A folk name can replace the displayed na
     3,
     'Track Stock',
     'How quantity, units and the low-stock badge work.',
-    `Each form has one stock jar per [[Coven|coven]]. A jar holds a "Quantity" (which may be blank), a "Unit", a source and an acquired date. Choose "Edit Stock" on an ingredient to change it.
+    `Each form has one stock jar per [[Coven|coven]]. A jar holds a "Quantity" (which may be blank), a "Unit" and a "Low Stock At" level. A Practitioner or Steward chooses "Edit Stock" on an ingredient to change it.
 
-"Low Stock At" sets the amount at or below which the jar is badged Low Stock, and zero turns the badge off. A jar at nothing shows Out of Stock. If you set no threshold, a counted unit defaults to 3, and grams and millilitres to 10 g or 15 ml; a jar without a unit has none.
+"Low Stock At" sets the amount at or below which the jar is badged Low Stock, and zero turns the badge off. A jar at zero shows Out of Stock; a jar with no quantity shows no badge. If you set no threshold, a counted unit defaults to 3, and grams and millilitres to 10 g or 15 ml; a jar without a unit has none.
 
 Units are milligrams, grams, kilograms, ounces and pounds for weight; millilitres, litres, teaspoons, tablespoons, UK and US fluid ounces and cups for volume; and pieces, drops and pinches for counts. Changing the unit keeps the numbers as typed. It does not convert them.`,
   ),
@@ -241,9 +241,9 @@ Units are milligrams, grams, kilograms, ounces and pounds for weight; millilitre
     5,
     'Annotate an Entry or Make It Ours',
     'Changing how your coven sees a Compendium entry.',
-    `A [[Compendium]] entry your [[Coven|coven]] holds has a menu with Edit Stock, Annotate, Make It Ours and Remove.
+    `A [[Compendium]] entry your [[Coven|coven]] holds has a menu with Edit Stock, Annotate, Make It Ours and Remove. Only a Practitioner or Steward sees these; an Observer reads only.
 
-**Annotate** opens a form with seven fields: Label, Description, Safety Notes, Elements, and lists of celestial bodies, zodiac signs and colours. Each field has "Restore Original" to go back to the Compendium's text. The Label stands in for the Compendium's name on your pages, and no two entries in a coven share one. The form saves itself as you work.
+**Annotate** opens a form with seven fields: Label, Description, Safety Notes, Elements, and lists of celestial bodies, zodiac signs and colours. Each field has "Restore Original" to go back to the Compendium's text. The Label stands in for the Compendium's name on your pages, and a label must be unlike every other label and every ingredient name in your coven. The form saves itself as you work.
 
 **Make It Ours** asks "Make <name> your coven's own?" and explains: "You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it." Choose "Make It Ours" to confirm.`,
   ),
@@ -253,7 +253,7 @@ const grimoire = article(
   5,
   'Grimoire',
   "Your coven's spells: what you make.",
-  `The [[Grimoire]] is your [[Coven|coven]]'s list of spells. A spell has a title, an intent, a jar description, seal wax, steps, optional timing and notes, and categories.`,
+  `The [[Grimoire]] is your [[Coven|coven]]'s list of spells. A spell has a title, an intent, a jar description, seal wax, steps, optional timing and notes, and categories. Writing here needs a Practitioner or Steward seat; an Observer reads only.`,
 );
 const grimoirePages = [
   subPage(
@@ -279,7 +279,7 @@ A step that names an ingredient is checked against your jars. There are six resu
 - **One-Off**: "Used in this spell only; not kept in your cupboard."
 - **No jar**: the ingredient has no jar, and the "In the Cupboard" panel says you have no jar.
 
-A form used in several steps is judged on the sum of its steps. Units are converted only within one dimension, so a weight cannot be set against a volume or a count. The marks also show in the quick look.`,
+A form used in several steps is judged on the sum of its steps. Units are converted only within one dimension, so a weight cannot be set against a volume or a count. The marks also show on the spell's recipe page.`,
   ),
   subPage(
     grimoire,
@@ -304,18 +304,18 @@ A complete spell shared with the coven cannot be made private again, and a compl
     5,
     'Duplicate a Spell',
     'Making a private draft copy.',
-    `Choose "Duplicate". The copy's title gets " (Copy)", and it is a private draft. The recipe is copied; workings, the revision count and history stay behind. A category that has been deleted is not carried over.`,
+    `A Practitioner or Steward can choose "Duplicate". The copy's title gets " (Copy)", and it is a private draft. The recipe is copied; workings, the revision count and history stay behind. A category that has been deleted is not carried over.`,
   ),
   subPage(
     grimoire,
     6,
     'Find and Preview Spells',
-    'Filtering the Grimoire, the Drafts list, and the quick look.',
+    'Filtering the Grimoire, the Drafts list, and the spell preview.',
     `The [[Grimoire]] has two tabs, Spells and Drafts. The Drafts tab lists draft spells.
 
-"Filter the Grimoire" narrows the list by "Moon Phases", "Days of the Week", "Coven Members" and visibility. The moon phases are New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent, Dark Moon, Waxing Moon and Waning Moon. Days start on Monday. Orders are recently updated, recently created and title.
+"Filter the Grimoire" narrows the list by "Moon Phases", "Days of the Week", "Coven Members" and visibility. The moon phases are New Moon, Waxing Crescent, First Quarter, Waxing Gibbous, Full Moon, Waning Gibbous, Last Quarter, Waning Crescent, Dark Moon, Waxing Moon and Waning Moon. Days start on Monday. The list shows the most recently updated spells first.
 
-The eye on a list opens a quick look: the details in a window over the list. A spell's preview has a "Screen Awake" toggle, with the tips "Keep the Screen from Sleeping" and "Let the Screen Sleep".`,
+On a spell's page, the preview has a "Screen Awake" toggle, with the tips "Keep the Screen from Sleeping" and "Let the Screen Sleep".`,
   ),
   subPage(
     grimoire,
@@ -336,7 +336,7 @@ const workings = article(
   6,
   'Workings',
   'Recording that a spell was worked, and taking stock out.',
-  `A working is a record that a spell was worked: on a date, by participants, with a note.`,
+  `A working is a record that a spell was worked: on a date, by participants, with a note. Recording and completing one needs a Practitioner or Steward seat; an Observer reads only.`,
 );
 const workingPages = [
   subPage(
@@ -344,14 +344,14 @@ const workingPages = [
     1,
     'Record a Working',
     'How to record that you worked a spell.',
-    `On a spell, choose "Record a Working". Set the Date, name the Participants, who must be members of the [[Coven|coven]], and add a Note. A working of a draft spell is refused, and a working cannot be more widely visible than its spell: a private spell's working cannot be shared until the spell is. Nothing leaves your jars until the working is completed.`,
+    `A Practitioner or Steward chooses "Record a Working" on a spell. Set the Date, name the Participants, who must be members of the [[Coven|coven]], and add a Note. A working of a draft spell is refused, and a working cannot be more widely visible than its spell: a private spell's working cannot be shared until the spell is. Nothing leaves your jars until the working is completed.`,
   ),
   subPage(
     workings,
     2,
     'Complete a Working and Take Stock Out',
     'What completing does to your jars.',
-    `Choose "Complete Working". The dialog lists the Deductions to take from your jars, and its fields (Name, Form, Quantity, Unit and "Add to Jar") let you adjust them. The summary says "Completing takes nothing from the jars for N ingredient(s)." for any ingredient it skips. It skips one when the units differ, the jar has no amount, the step has no amount, the ingredient is not in stock, or it is a one-off ingredient.
+    `A Practitioner or Steward chooses "Complete Working". The dialog lists the Deductions it will take from your jars: for each, how much it takes, how much the jar holds and what is left. To change a jar first, choose its "Edit Stock". The summary says "Completing takes nothing from the jars for N ingredient(s)." for any ingredient it skips. It skips one when the units differ, the jar has no amount, the step has no amount, the ingredient is not in stock, or it is a one-off ingredient.
 
 The recorder or a named participant can complete it. A jar short of stock goes to zero and the shortfall is recorded. If a deduction fails, the working stays a draft and nothing is taken. Deleting a working never puts stock back, and only its recorder can delete it. A completed working's visibility only widens.`,
   ),
@@ -371,7 +371,7 @@ const accountPages = [
     'Password rules, resets and what locks an account.',
     `A password is 15 to 128 characters, and a password known from a data breach is refused. Five wrong passwords lock password sign-in for 1 minute, and each following lock lasts 5, 15 and then 60 minutes, which repeats. A quiet 24 hours restarts the count. While locked, even the right password is refused. Provider and passkey sign-in are never locked.
 
-"Forgot Password?" then "Send Reset Link" mails a link that lasts 15 minutes, to a verified address only. Resetting a password signs out your other sessions.`,
+"Forgot Password?" then "Send Reset Link" mails a link that lasts 15 minutes, to a verified address only. Resetting a password signs out every session, so you sign in again afterwards.`,
   ),
   subPage(
     account,
@@ -468,7 +468,7 @@ const troubleshootingPages = [
     2,
     'My Invitation Link Does Not Work',
     'The reason each refusal gives and what to do.',
-    `The page tells you the reason. In order:
+    `The page tells you the reason. The messages are:
 
 - "This invitation link isn't valid. Check that you opened the whole link from the email."
 - "This invitation has already been accepted."
