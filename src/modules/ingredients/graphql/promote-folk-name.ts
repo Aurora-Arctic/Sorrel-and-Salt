@@ -4,10 +4,9 @@ import { clearIngredientChildren } from '../loaders/ingredient-children';
 import { promoteFolkName } from '../services/promote-folk-name';
 import { IngredientRef } from './ingredient';
 
-// Swaps an ingredient's display name with one of its common names (folk
-// names). One mutation over both tiers, as `createReference` is: a null
-// workspaceId names a compendium entry and takes the admin scope; otherwise
-// any signed-in caller may ask and the membership check in the service decides.
+// Swaps an ingredient's display name with one of its folk names, over both
+// tiers: a null workspaceId names a compendium entry and takes the admin scope,
+// otherwise the service's membership check decides.
 const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
   workspaceId == null ? { curator: true } : { signedIn: true };
 

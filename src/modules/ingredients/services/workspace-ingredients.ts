@@ -55,13 +55,13 @@ export async function createWorkspaceIngredient(
 }
 
 /**
- * Replaces an ingredient of this coven with `input`, the whole ingredient as the form submits it, and its children with the
- * input's in one transaction (claude-docs/db/workspace-ingredients.md, "Workspace ingredient service details").
+ * Replaces an ingredient of this coven with `input`, the whole ingredient and its
+ * children, in one transaction (claude-docs/db/workspace-ingredients.md,
+ * "Workspace ingredient service details"). `expectedRevision` is the revision the
+ * save read; null writes whatever the row holds.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`, or collides, or links outside the compendium and this coven.
- * A save names the revision it read in `expectedRevision`: a newer one refuses it, and null writes whatever the row holds.
- *
  * @throws {StaleWrite} `expectedRevision` is not the ingredient's revision.
  * @throws {NotFound} no such ingredient in this coven, the compendium's and other covens' included.
  */

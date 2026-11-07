@@ -43,19 +43,14 @@ function only<T>([answer]: readonly (T | Error)[]): T {
 }
 
 /**
- * `entry` with everything its page lists beneath it: folk names, categories
- * with their groups, deities with their traditions, substitutes,
- * references, one detail per live form in form order, and the cupboard entry
- * of `workspaceId`, the coven the page is read in, when it holds this
- * compendium entry. No `workspaceId` is the public page, which
- * reads no cupboard. A compendium entry the curators have retired is read
- * only in a coven whose cupboard names it, and marked `retired`; its
- * children are read on that coven's proof.
+ * `entry` with everything its page lists beneath it: folk names, categories,
+ * deities, substitutes, references, one detail per live form, and the cupboard
+ * entry of `workspaceId` when that coven holds this compendium entry. No
+ * `workspaceId` is the public page, which reads no cupboard. A retired
+ * compendium entry is read only in a coven whose cupboard names it, marked `retired`.
  *
- * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven,
- * or `session` is not in `workspaceId`.
- * @throws {NotFound} `entry` is retired and `workspaceId`'s cupboard does not
- * name it, or no coven is named.
+ * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven, or not in `workspaceId`.
+ * @throws {NotFound} `entry` is retired and `workspaceId`'s cupboard does not name it, or no coven is named.
  */
 export async function ingredientDetailOf(
   session: Session | null,

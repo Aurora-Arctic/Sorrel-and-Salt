@@ -11,10 +11,9 @@ import {
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
 
-// The compendium list's filter as the `compendium` query receives it, parsed
-// by the service because the browser is not the only caller. Zod only, like
-// every validation file: the form's side of the search box loads it too
-// (claude-docs/validation.md, "Where the schemas live").
+// The compendium list's filter as the `compendium` query receives it, parsed by
+// the service because the browser is not the only caller. Zod only, so the form
+// side loads it too (claude-docs/validation.md, "Where the schemas live").
 
 /**
  * Optional text as a filter takes it: blank, null or missing is no filter, so
@@ -119,10 +118,9 @@ export const CompendiumFilter = z.object({
 export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;
 export type CompendiumFilter = z.output<typeof CompendiumFilter>;
 
-// The coven's ingredient list takes the compendium's search, categories and
-// facets, but not the keeper's two to-do lists, so it parses
-// them exactly as the compendium does; the two settings that need a coven's
-// own rows and jars are its alone.
+// The coven's list takes the compendium's search, categories and facets but not
+// the keeper's two to-do lists; the two settings that need a coven's own rows
+// and jars are its alone.
 export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   query: true,
   categoryIds: true,

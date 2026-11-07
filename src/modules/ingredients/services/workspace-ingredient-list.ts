@@ -15,16 +15,14 @@ import type { IngredientRow } from '../types';
 import { assertMembership } from '@/modules/coven';
 
 /**
- * One page of a coven's ingredients: its own entries,
- * and every compendium entry its cupboard holds, filtered by search, category
- * and the five facets as the compendium is, over the coven's
- * overrides. Each entry carries its cupboard row, null for the coven's own
- * (claude-docs/db/stock.md, "The workspace ingredient list"). Each entry's
- * jars are `Ingredient.stock`'s, read apart.
+ * One page of a coven's ingredients: its own entries and every compendium entry
+ * its cupboard holds, filtered as the compendium is, over the coven's overrides.
+ * Each entry carries its cupboard row, null for the coven's own
+ * (claude-docs/db/stock.md, "The workspace ingredient list"); its jars are
+ * `Ingredient.stock`'s, read apart.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
- * @throws {ValidationError} the filter names a category or deity by an id that
- * is not one, or a toxic setting that is not one of `TOXIC_FILTERS`.
+ * @throws {ValidationError} a category or deity id is not a uuid, or the toxic setting is not in `TOXIC_FILTERS`.
  */
 export async function listWorkspaceIngredients(
   session: Session,
@@ -41,10 +39,9 @@ export async function listWorkspaceIngredients(
 }
 
 /**
- * How many entries a coven's ingredient list holds under `filter`, and how
- * many come before `start`, the page's first row: the "Page X of Y" of the
- * page `listWorkspaceIngredients` serves. Not cached: the data is the
- * coven's (CLAUDE.md rule 6).
+ * How many entries a coven's ingredient list holds under `filter`, and how many
+ * come before `start`: the "Page X of Y" of `listWorkspaceIngredients`. Not
+ * cached: the data is the coven's (CLAUDE.md rule 6).
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  * @throws {ValidationError} as `listWorkspaceIngredients`.

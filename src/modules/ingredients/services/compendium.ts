@@ -164,13 +164,12 @@ export async function createCompendiumEntry(
 }
 
 /**
- * Replaces a compendium entry with `input`, the whole entry, so a field left out is cleared
- * (claude-docs/db/compendium-writes.md, "Compendium service details").
+ * Replaces a compendium entry with `input`, the whole entry, so a field left out
+ * is cleared (claude-docs/db/compendium-writes.md, "Compendium service details").
+ * `expectedRevision` is the revision the save read; null writes whatever the row holds.
  *
  * @throws {Forbidden} the caller is neither a curator nor a keeper.
  * @throws {ValidationError} as `createCompendiumEntry`.
- * A save names the revision it read in `expectedRevision`: a newer one refuses it, and null writes whatever the row holds.
- *
  * @throws {StaleWrite} `expectedRevision` is not the entry's revision.
  * @throws {NotFound} no live compendium entry has this id.
  */

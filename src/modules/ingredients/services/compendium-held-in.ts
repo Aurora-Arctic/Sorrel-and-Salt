@@ -76,9 +76,9 @@ async function covenScope(
 }
 
 /**
- * One page of the compendium under `filter`, kept to the entries a live
- * cupboard row of any picked coven names, or, under Not In, to the entries
- * none names. With no coven filter in effect, the cached `listCompendium`.
+ * One page of the compendium under `filter`, kept to the entries a live cupboard
+ * row of any picked coven names (under Not In, the entries none names). With no
+ * coven filter in effect, the cached `listCompendium`.
  *
  * @throws {Forbidden} Reviewed is set and `session` does not curate.
  * @throws {ValidationError} as `listCompendium` does.

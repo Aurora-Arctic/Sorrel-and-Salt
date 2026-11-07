@@ -4,10 +4,9 @@ import { IngredientElementEnum, NomenclatureEnum } from './ingredient';
 import { ReferenceLinkInput } from './references';
 import type { Tier } from '../types';
 
-// The fields of the ingredient's four input types — a coven's and the
-// compendium's, each a create and a whole-row update — declared once, so the
-// two tiers' writes cannot take different fields. A child table is one
-// field here, as `variants` is. The types themselves stay beside their mutations.
+// The fields of the four ingredient input types (a coven's and the compendium's,
+// each a create and a whole-row update), declared once so the two tiers cannot
+// take different fields. A child table is one field here, as `variants` is.
 
 /** One substitute: an ingredient to link, or the name of one not entered. Exactly one, held by the shared schema (GraphQL has no one-of input). */
 const SubstituteInput = builder.inputType('SubstituteInput', {

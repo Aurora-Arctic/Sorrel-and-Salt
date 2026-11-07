@@ -25,10 +25,9 @@ export const ingredientDeities = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // One live entry per place, and the parent's index: leading on
-    // `ingredient_id`, it reads the list in order, so no plain parent index
-    // is built beside it. Checked per row, so a reorder moves the live rows
-    // through a scratch offset, as a jar's layers do.
+    // One live entry per place, and the parent's index: leading on `ingredient_id`
+    // it reads the list in order, so no plain parent index. Checked per row, so a
+    // reorder moves the live rows through a scratch offset.
     liveUnique('ingredient_deities_position_unique', table, table.ingredientId, table.position),
     // One live link per deity, and one live unlinked name, case folded. Links
     // to two same-named deities are two deities, so the name index covers
@@ -39,10 +38,9 @@ export const ingredientDeities = pgTable(
     uniqueIndex('ingredient_deities_name_unique')
       .on(table.ingredientId, sql`lower(${table.name})`)
       .where(sql`${table.deityId} is null and ${table.deletedAt} is null`),
-    // The pick read backwards: the live rows linking a deity, which
-    // hold its delete and follow its rename. Partial on live links,
-    // the only rows either reads; the parent's tier is the reader's to join,
-    // and a deity is soft-deleted, so the foreign key's own check never runs.
+    // The pick read backwards: the live rows linking a deity, which hold its delete
+    // and follow its rename. Partial on live links; a deity is soft-deleted, so the
+    // foreign key's own check never runs.
     index('ingredient_deities_deity_id_idx')
       .on(table.deityId)
       .where(sql`${table.deityId} is not null and ${table.deletedAt} is null`),

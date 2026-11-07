@@ -100,10 +100,9 @@ export const ReferenceInput = z
         refuse('issue', 'Give the issue as a number: 2');
       }
     }
-    // A day may be tomorrow, which east of Greenwich is already today. Only
-    // a well-formed day is compared — a malformed one is refused as that
-    // already — and ISO days compare as strings. A day refused as not yet
-    // come is not refused again for its order.
+    // A day may be tomorrow, which east of Greenwich is already today. Only a
+    // well-formed day is compared, as strings; a day refused as not yet come is not
+    // refused again for its order.
     const latest = latestDay();
     const day = (field: 'modified' | 'accessed') => {
       const on = value[field];

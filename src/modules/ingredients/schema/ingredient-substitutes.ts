@@ -26,9 +26,8 @@ export const ingredientSubstitutes = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // The read by parent, which takes links and names alike and so
-    // implies neither unique index's predicate. Nothing reads back from a
-    // linked ingredient to its linkers, so no index leads on `substitute_id`
+    // The read by parent, taking links and names alike. No index leads on
+    // `substitute_id`: nothing reads from a linked ingredient back to its linkers
     // (claude-docs/design-decisions/mb.138-substitute-links.md, "Decided").
     index('ingredient_substitutes_ingredient_id')
       .on(table.ingredientId)
@@ -37,10 +36,9 @@ export const ingredientSubstitutes = pgTable(
     index('ingredient_substitutes_variant_id')
       .on(table.variantId)
       .where(sql`${table.deletedAt} is null`),
-    // One live link and one live name per ingredient, case folded — the shapes
-    // `spell_steps` gives its links and custom names. Partial per rule 4,
-    // and split by `variant_id`: the parent's list and each form's
-    // are kept apart, so a form may repeat a substitute its ingredient lists.
+    // One live link and one live name per ingredient, case folded, split by
+    // `variant_id` so a form may repeat a substitute its ingredient lists. Partial
+    // per rule 4.
     uniqueIndex('ingredient_substitutes_link_unique')
       .on(table.ingredientId, table.substituteId)
       .where(

@@ -5,12 +5,10 @@ import { promoteWorkspaceFolkName } from './workspace-ingredients';
 import type { IngredientRow } from '../types';
 
 /**
- * Swaps an ingredient's display name with one of its folk names. A null
- * `workspaceId` names a compendium entry and needs a site keeper; otherwise the
- * ingredient is the coven's and the caller must be allowed to update its
- * ingredients, which an observer is not. One function over both tiers, as
- * `createReference` is: the tier is the argument, and each tier's own function
- * holds its rules.
+ * Swaps an ingredient's display name with one of its folk names, over both tiers:
+ * a null `workspaceId` names a compendium entry and needs a site keeper;
+ * otherwise the caller must be allowed to update the coven's ingredients, which
+ * an observer is not. Each tier's own function holds its rules.
  *
  * @throws {Forbidden} the caller may not write that tier.
  * @throws {ValidationError} the new display name collides with another entry.

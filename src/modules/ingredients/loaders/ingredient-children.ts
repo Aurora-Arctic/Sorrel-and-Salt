@@ -57,10 +57,9 @@ const CHILD_LOADERS = {
   ),
 };
 
-// A variant's child loaders, keyed by the variant row as the ingredient's are
-// by the ingredient row. A record of their own: an ingredient write
-// knows the ingredient, not which of its variants a request has loaded, so
-// `clearIngredientChildren` empties these whole.
+// A variant's child loaders, keyed by the variant row. Separate from the
+// ingredient's, since an ingredient write cannot know which variants a request
+// loaded, so `clearIngredientChildren` empties these whole.
 const VARIANT_CHILD_LOADERS = {
   /** `IngredientVariant.categories`, batched: the categories each variant adds. */
   categoriesByVariant: defineLoader<VariantKey, CategoryRow[], string>(

@@ -9,18 +9,11 @@ const MATCHES_SHOWN = 3;
 
 /**
  * The compendium entries an own entry of a coven is, or may be, for the entry
- * page to link: the first few by name, and how many there are in all.
- *
- * - An own entry with a formal name is matched on that name: `same` entries are
- *   those sharing its identity, and a compendium entry that merely shares the
- *   label is not one.
- * - An own entry with no formal name is matched on its label, exactly but for
- *   case: `similar` entries, listed for the member to read. Nothing converts the
- *   own entry into one (v1 links one way, DESIGN.md §13).
- * - A compendium entry has none, without a database read.
- *
- * The session is checked against the entry's own coven, with the permission
- * `getIngredient` asks, so an observer reads it and a non-member is refused.
+ * page to link: the first few by name, and how many there are in all. `same`
+ * entries share the own entry's formal name; with no formal name, `similar`
+ * entries match its label but for case, listed for the member to read (v1 links
+ * one way, DESIGN.md §13). A compendium entry has none, with no database read.
+ * The session is checked against the entry's coven with `getIngredient`'s permission.
  *
  * @throws {Forbidden} the session holds no seat in the entry's coven.
  */

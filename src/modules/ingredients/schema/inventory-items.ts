@@ -8,10 +8,9 @@ import { ingredientVariants } from './ingredient-variants';
 import { workspaces } from '../../coven/schema/workspaces';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// Both enums are stocked from `./units.ts`, so a unit added there reaches
-// the database, the converter and the form in one edit; nothing in this file
-// may spell a unit out (inventory-items-schema.test.ts holds the database's enums
-// equal to the module's lists, and the CHECK to every unit's dimension).
+// Both enums are stocked from `./units.ts`, so nothing here spells a unit out;
+// inventory-items-schema.test.ts holds the database's enums and CHECK equal to
+// the module's lists.
 export const inventoryUnit = pgEnum('inventory_unit', UNITS);
 
 export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);

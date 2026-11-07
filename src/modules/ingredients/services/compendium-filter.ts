@@ -22,10 +22,11 @@ const SORT_REFUSAL = 'Only a curator may sort the compendium by its sourcing sco
 const SCORE_REFUSAL = 'Only a curator may read the sourcing scores of compendium entries';
 
 /**
- * `filter` parsed, refused when it sets Reviewed, reads hidden entries, sorts by sourcing score in either direction or reads each
- * entry's sourcing score and `viewer` is not a curator or a keeper, a signed-out visitor included.
+ * `filter` parsed. The curator-only settings (Reviewed, hidden entries, the
+ * sourcing sort or score) are refused unless `viewer` curates, a signed-out
+ * visitor included.
  *
- * @throws {Forbidden} Reviewed, a listing other than shown, the sourcing sort or the sourcing score is set and `viewer` does not curate.
+ * @throws {Forbidden} a curator-only setting is set and `viewer` does not curate.
  * @throws {ValidationError} the filter does not parse.
  */
 export function compendiumFilterFor(

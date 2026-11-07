@@ -13,15 +13,10 @@ import { displayNamesOf } from '@/modules/identity';
 type LastEditEntry = Pick<IngredientRow, 'id' | 'workspaceId' | 'updatedBy' | 'updatedAt'>;
 
 /**
- * The latest edit to each entry in the coven, one answer per entry in the order given: the
- * newest of the coven's live jars of it, for the coven's own entry the entry's row, and for a
- * compendium entry the coven's cupboard row of it (its annotation, counted whatever it holds,
- * since adding the entry is a coven edit too). The compendium entry's own row never counts,
- * so one with no jar and no cupboard row answers null. The editors' names
- * come from `displayNamesOf` in one batch for the whole list, whatever its length.
- *
- * Jars are read as `stockOf` reads them (the coven's, live, of a form the coven may read), in
- * one query for every entry; the newest is picked from them, which is not a second filter.
+ * The latest edit to each entry, in the order given: the newest of the coven's
+ * live jars of it; for the coven's own entry its row; for a compendium entry the
+ * coven's cupboard row, whatever it holds. The compendium entry's own row never
+ * counts, so an entry with none answers null. Editors' names come in one batch.
  *
  * @throws {Forbidden} the caller may not read this coven's stock.
  */

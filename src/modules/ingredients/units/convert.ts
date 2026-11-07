@@ -7,10 +7,9 @@ import {
 } from '../schema/units';
 import type { Decimal, UnitConversion } from './types';
 
-// Converts an amount between two units of one dimension, and refuses every
-// other pair as a result the caller must test (DESIGN.md §11). Built from the
-// two schema files that import nothing, so it reaches no database code
-// (claude-docs/db/stock.md, "Converting between units").
+// Converts between two units of one dimension and refuses every other pair as a
+// result the caller must test (DESIGN.md §11). Built only from import-free
+// schema files, so it reaches no database code (claude-docs/db/stock.md, "Converting between units").
 
 type Convertible = Exclude<UnitDimension, 'count'>;
 
@@ -32,10 +31,9 @@ const SIZE_IN_BASE_UNIT = {
   [D in Convertible]: Record<(typeof UNITS_BY_DIMENSION)[D][number], string>;
 };
 
-// A number's shortest text, which `String` gives: `0.1` reads as the decimal
-// 0.1 the caller meant, not the double nearest it. Large and small values
-// come with an exponent, `1e+21` and `1e-7`. Every finite number at or above
-// zero matches, and `unitConvert` lets no other through.
+// A number's shortest text, as `String` gives it: `0.1` stays the decimal the
+// caller meant, and large or small values carry an exponent (`1e+21`, `1e-7`).
+// Every finite number at or above zero matches.
 const DECIMAL = /^(\d+)(?:\.(\d+))?(?:e([+-]?\d+))?$/;
 
 function decimalOf(text: string): Decimal {
