@@ -68,6 +68,14 @@ describe('help_articles schema', () => {
     expect(byIndexName[SEARCH_INDEX].config.unique).toBe(false);
   });
 
+  it('declares the slug index over the kind and the slug, so a slug is unique within its kind', () => {
+    const columns = byIndexName[SLUG_UNIQUE].config.columns.map((column) =>
+      'name' in column ? column.name : undefined,
+    );
+
+    expect(columns).toEqual(['kind', 'slug']);
+  });
+
   it('declares its four CHECK constraints', () => {
     expect(checks.map((check) => check.name).sort()).toEqual(
       [

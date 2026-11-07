@@ -218,16 +218,48 @@ describe('the help_articles table', () => {
       expect(seedKey?.predicate).toBe('((seed_key IS NOT NULL) AND (deleted_at IS NULL))');
     });
 
-    it('refuse a second live row under one slug, whatever its kind, and take it once the first is deleted', async () => {
-      const first = await insert({ kind: 'article', slug: 'testwort' });
+    it('key the slug index on the kind and the slug together', async () => {
+      const slug = await indexRow(TABLE, SLUG_UNIQUE);
 
-      const article = await failureOf(insert({ kind: 'article', slug: 'testwort' }));
-      const term = await failureOf(insert({ kind: 'term', slug: 'testwort' }));
+      expect(slug?.definition).toMatch(/\(kind, slug\)/);
+    });
 
-      expect([article.code, term.code]).toEqual(['23505', '23505']);
-      expect([article.constraint_name, term.constraint_name]).toEqual([SLUG_UNIQUE, SLUG_UNIQUE]);
-      await softDelete(first);
+    it.each([
+      ['an article and a term', 'article', 'term'],
+      ['an FAQ entry and an article', 'faq', 'article'],
+      ['an FAQ entry and a term', 'faq', 'term'],
+    ] as const)('take %s under one live slug', async (_pair, first, second) => {
+      await insert({ kind: first, slug: 'testwort' });
+      await insert({ kind: second, slug: 'testwort' });
+
+      const [row] =
+        await sql`select count(*)::int as count from help_articles where slug = 'testwort' and deleted_at is null`;
+      expect(row.count).toBe(2);
+    });
+
+    it.each(['faq', 'article', 'term'] as const)(
+      'refuse a second live %s under one slug, and take it once the first is deleted',
+      async (kind) => {
+        const first = await insert({ kind, slug: 'testwort' });
+
+        const second = await failureOf(insert({ kind, slug: 'testwort' }));
+
+        expect(second.code).toBe('23505');
+        expect(second.constraint_name).toBe(SLUG_UNIQUE);
+        await softDelete(first);
+        await insert({ kind, slug: 'testwort' });
+      },
+    );
+
+    it("free a deleted row's slug for its own kind while a live row of another kind holds it", async () => {
       await insert({ kind: 'term', slug: 'testwort' });
+      const article = await insert({ kind: 'article', slug: 'testwort' });
+      await softDelete(article);
+
+      await insert({ kind: 'article', slug: 'testwort' });
+
+      const second = await failureOf(insert({ kind: 'term', slug: 'testwort' }));
+      expect(second.constraint_name).toBe(SLUG_UNIQUE);
     });
 
     it('refuse a second live row under one seed key, and take it once the first is deleted', async () => {
