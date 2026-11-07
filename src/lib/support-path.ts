@@ -106,7 +106,6 @@ export const SUPPORT_ABOUTS = [
 ] as const;
 export type SupportAboutParam = (typeof SUPPORT_ABOUTS)[number]['value'];
 
-/** A bare, missing or unknown value leaves nothing chosen for the sender. */
 export function supportAboutOf(value: string | null): SupportAboutParam | undefined {
   return SUPPORT_ABOUTS.find((about) => about.value === value)?.value;
 }

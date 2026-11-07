@@ -123,8 +123,7 @@ function mapProfile(id: ProviderId) {
   });
 }
 
-// Registered only when id and secret are both present, so `next dev` runs with neither. The roster is in
-// social-providers.ts and what differs per provider in social-providers-config.ts's `PROFILE`; a sign-in earns an account only.
+// Registered only when id and secret are both present, so `next dev` runs with neither.
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
@@ -200,7 +199,6 @@ function refuseVerification(ctx: HookContext, code: string, message: string): AP
   return new APIError('FORBIDDEN', { code, message });
 }
 
-/** A link opened from a session that does not hold the row it names. */
 function refuseWrongAccount(ctx: HookContext): APIError {
   return refuseVerification(
     ctx,
@@ -218,20 +216,12 @@ function refuseSignedOut(ctx: HookContext): APIError {
   return new APIError('FOUND', undefined, { Location: SIGN_IN_TO_VERIFY_PATH });
 }
 
-/**
- * The session the request carries, or `null`. Better Auth's helper is typed
- * for an endpoint's context, which a hook's holds everything of but is not
- * declared as.
- */
+/** Better Auth's helper is typed for an endpoint's context, which a hook's holds everything of. */
 function sessionOf(ctx: HookContext) {
   return getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
 }
 
-/**
- * The roster providers the user's accounts sign in with, for the mail that
- * names them. Better Auth types `providerId` as any string; one outside the
- * roster has no label to name it by, so it is left out.
- */
+/** One outside the roster has no label to name it by, so it is left out. */
 export async function linkedProviderIds(
   context: Pick<AuthContext, 'internalAdapter'>,
   userId: string,
@@ -256,7 +246,6 @@ async function requireOwnResend(ctx: HookContext): Promise<void> {
   }
 }
 
-/** The passkey endpoints that verify a ceremony and act on it. */
 const PASSKEY_VERIFY_PATHS = new Set([
   '/passkey/verify-authentication',
   '/passkey/verify-registration',
@@ -341,15 +330,10 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
 // Email and password: the policy is DESIGN.md §8, "Passwords", and the wiring
 // claude-docs/auth/passwords.md.
 
-/** Why a breached password is refused, rather than only that it is. */
 const PASSWORD_BREACHED_MESSAGE =
   'This password appears in a known data breach, so someone could guess it. Choose another.';
 
-/**
- * Mails the holder of an address a sign-up arrived with, in place of the second account Better Auth does not
- * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken. The job's step reads the
- * address and the ways in from the rows, so the run carries the account id and the origin alone.
- */
+/** Answers as a new sign-up does, so only the mailbox learns the address is taken. */
 async function mailExistingHolder({ user }: { user: { id: string } }) {
   await scheduleAccountNotice({
     kind: 'account-exists',
@@ -361,7 +345,6 @@ async function mailExistingHolder({ user }: { user: { id: string } }) {
 /** How long a reset link lasts. Short, because Better Auth stores the reset token unhashed in `verifications`. */
 const RESET_TOKEN_SECONDS = 15 * 60;
 
-/** This request's site origin, for a link in a mail sent from inside one of Better Auth's endpoints. */
 function endpointOrigin(): string {
   return new URL(getCurrentAuthEndpointContext().context.baseURL).origin;
 }
@@ -391,7 +374,6 @@ const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>
   locked: false,
 }));
 
-/** Whether the signed-in account has a password to guess at: a credential row of its own holding one. */
 async function holdsPassword(ctx: HookContext, userId: string): Promise<boolean> {
   const accounts = await ctx.context.internalAdapter.findAccounts(userId);
   return accounts.some(
@@ -467,7 +449,6 @@ async function mailLockNotice(ctx: HookContext, userId: string, length: number) 
   });
 }
 
-/** Tells the account a change on its account page replaced its password. */
 async function mailChangeNotice(ctx: HookContext) {
   const returned = ctx.context.returned;
   if (isAPIError(returned) || returned instanceof Response) return;
@@ -545,7 +526,6 @@ async function holdLockedSignIn(ctx: HookContext) {
   }
 }
 
-/** Counts a wrong password against an unlocked account, and clears the count on a successful sign-in. */
 async function countPasswordSignIn(ctx: HookContext) {
   const newSession = ctx.context.newSession;
   if (newSession) return clearFailedPasswordSignIns(newSession.user.id);
@@ -565,7 +545,7 @@ async function noticeCompletedChange(userId: string, request: Request | undefine
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
-/** Claims the signed-out requests written from a verified account's address; a failure is logged, as the sign-in stands either way. */
+/** A failure is logged, as the sign-in stands either way. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Better Auth's logger takes any
 async function claimForVerifiedAccount(
   user: { id: string; email: string; emailVerified: boolean },
@@ -804,7 +784,6 @@ export const auth = betterAuth({
 
       const noReturnPath = await asksNoReturnPath();
 
-      // An unverified account lands on the email page, address prefilled, with the sign-in's destination riding along.
       if (!user.emailVerified) {
         const landing = new URL(
           ctx.context.responseHeaders?.get('location') ?? '/',
@@ -827,7 +806,6 @@ export const auth = betterAuth({
     }),
   },
   databaseHooks: {
-    // A sign-in by a verified account claims the signed-out requests written from its address.
     session: {
       create: {
         after: async (session, ctx) => {
@@ -889,7 +867,6 @@ export const auth = betterAuth({
         },
       },
       update: {
-        // The address was just verified: requests written from it are the account's now.
         after: async (user, ctx) => {
           if (!user || !user.emailVerified) return;
           await claimForVerifiedAccount(user, ctx);

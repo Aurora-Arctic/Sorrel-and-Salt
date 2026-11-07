@@ -1,15 +1,12 @@
 import type { Font } from '@pdf-lib/fontkit';
 
-/** A run of text set in one font at one size, measured as a browser measures it. */
 export interface TextStyle {
   font: Font;
-  /** The font size, in the unit every width and position is given in. */
   size: number;
-  /** Extra space after every character, as CSS `letter-spacing` adds it. */
   letterSpacing?: number;
 }
 
-/** A glyph's kerned advance beside its plain one, in font units, so the PDF can put the difference in a TJ array. */
+/** So the PDF can put the difference in a TJ array. */
 export interface GlyphAdvance {
   advance: number;
   kerned: number;
@@ -29,14 +26,12 @@ export function textWidth({ font, size, letterSpacing = 0 }: TextStyle, text: st
   return (units / font.unitsPerEm) * size + letterSpacing * [...text].length;
 }
 
-/** Where the baseline of a line sits below the line box's top, by CSS's half-leading rule. */
 export function baselineOffset(font: Font, size: number, lineHeight: number): number {
   const ascent = (font.ascent / font.unitsPerEm) * size;
   const descent = (-font.descent / font.unitsPerEm) * size;
   return (lineHeight - (ascent + descent)) / 2 + ascent;
 }
 
-/** CSS `line-height: normal`: the font's ascent, descent and line gap. */
 export function normalLineHeight(font: Font, size: number): number {
   return ((font.ascent - font.descent + font.lineGap) / font.unitsPerEm) * size;
 }
@@ -46,7 +41,6 @@ function lineWidth(style: TextStyle, words: string[]): number {
   return textWidth(style, words.join(' '));
 }
 
-/** Breaks text at spaces as a browser does: each line takes every word that still fits. A word wider than the line stands alone. */
 export function wrap(style: TextStyle, text: string, maxWidth: number): string[] {
   const words = text.split(' ').filter((word) => word !== '');
   const lines: string[][] = [];
@@ -58,10 +52,7 @@ export function wrap(style: TextStyle, text: string, maxWidth: number): string[]
   return lines.map((line) => line.join(' '));
 }
 
-/**
- * CSS `text-wrap: balance`: as many lines as the plain wrap, with the breaks that make the widest line narrowest.
- * Tries every set of breaks, which is cheap for a headline of a few words.
- */
+/** CSS `text-wrap: balance`. Tries every set of breaks, which is cheap for a headline of a few words. */
 export function wrapBalanced(style: TextStyle, text: string, maxWidth: number): string[] {
   const greedy = wrap(style, text, maxWidth);
   const words = text.split(' ').filter((word) => word !== '');

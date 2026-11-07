@@ -1,9 +1,6 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
-/**
- * Moves focus to a form submit's answer, as the disabled submit button cannot hold it. Call `settle()` once
- * the answer is set.
- */
+/** The disabled submit button cannot hold focus, so call `settle()` once the answer is set. */
 export function useResultFocus<T extends HTMLElement>(): {
   ref: RefObject<T | null>;
   settle: () => void;

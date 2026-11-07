@@ -15,12 +15,10 @@ function keyed(kind: 'address' | 'client', value: string): string {
   return createHmac('sha256', secret).update(`support-send-count|${kind}|${value}`).digest('hex');
 }
 
-/** The count key for an email address, the same for every spelling `normaliseEmail` treats as one. */
 export function addressCountKey(email: string): string {
   return keyed('address', normaliseEmail(email));
 }
 
-/** The count key for a client address. */
 export function clientCountKey(client: string): string {
   return keyed('client', client.trim().toLowerCase());
 }

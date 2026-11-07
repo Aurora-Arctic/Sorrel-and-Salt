@@ -3,21 +3,15 @@
 
 import { SITE_NAME, siteUrl } from './site';
 
-/** `data` as JSON safe to place inside a script element. */
 export function jsonLd(data: Record<string, unknown>): string {
   return JSON.stringify({ '@context': 'https://schema.org', ...data }).replace(/</g, '\\u003c');
 }
 
 const COMPENDIUM_URL = siteUrl('/compendium');
 
-/** The compendium as a set of terms, which each entry's term names as its home. */
 const TERM_SET = { '@type': 'DefinedTermSet', name: 'Compendium', url: COMPENDIUM_URL };
 
-/**
- * An entry as a defined term in the compendium, with its trail back to the
- * list. Other names (the formal name, folk names) go in `alternateName`; the
- * entry's sources are left out (claude-docs/design-decisions/mb.84-page-metadata.md).
- */
+/** Other names go in `alternateName`; the entry's sources are left out (claude-docs/design-decisions/mb.84-page-metadata.md). */
 export function entryJsonLd(entry: {
   name: string;
   canonicalName: string | null;
@@ -48,16 +42,11 @@ export function entryJsonLd(entry: {
   ]);
 }
 
-/**
- * The home page's `WebSite`, which Google reads to choose the site name it shows
- * in results: only the home page, with `name` and `url` required. No
- * `alternateName`: nothing sourced gives the site another name.
- */
+/** Only the home page, with `name` and `url` required. No `alternateName`: nothing sourced gives the site another name. */
 export function websiteJsonLd(): string {
   return jsonLd({ '@type': 'WebSite', name: SITE_NAME, url: siteUrl('/') });
 }
 
-/** The list page: a collection whose subject is the compendium's term set. */
 export function listJsonLd(): string {
   return jsonLd({
     '@type': 'CollectionPage',

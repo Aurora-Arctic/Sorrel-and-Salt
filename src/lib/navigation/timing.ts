@@ -1,10 +1,8 @@
 // These mirror the Sass tokens `$loading-delay` and `$arrive-duration`: change a value here, change its
 // token. Timed in JavaScript because a CSS delay cannot be cancelled by a navigation that settles first.
 
-/** How long a navigation lasts before the page bar shows, so a quick one never flashes it. */
 export const LOADING_DELAY_MS = 100;
 
-/** How long the bar fades out after the navigation settles. */
 export const BAR_FADE_MS = 150;
 
 /** How long a skeleton stays and fades out over the page that arrives (`$arrive-duration`, the same 200ms `arrived` fades content in). */

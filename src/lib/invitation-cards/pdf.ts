@@ -54,14 +54,12 @@ import { glyphAdvances } from './text';
 import type { RoundedSquare } from '../qr/types';
 import type { CardAssets, CardSheetsInput } from './types';
 
-// Every length below is in points (72 to the inch) on the landscape frame the canvas turns onto the page,
-// measured from the frame's top left with y running down.
+// Lengths are points (72 to the inch) on the landscape frame, from its top left with y running down.
 
 const PT = 72;
 export const PAGE = { width: 8.5 * PT, height: 11 * PT };
 const TRIM = { width: 3.5 * PT, height: 2.625 * PT };
 const BLEED = 0.125 * PT;
-/** The block of nine cards and its bleed: 1/8 in from the page's ends, centred between its sides. */
 export const BLOCK = {
   x: 0.125 * PT,
   y: 0.1875 * PT,
@@ -75,7 +73,6 @@ const MARK = { width: 0.75, endGap: 2.25, endLength: 6, sideGap: 4.5, sideLength
 
 interface Sheet {
   fronts: PDFPage;
-  /** Absent when the backs are left out. */
   backs?: PDFPage;
 }
 
@@ -90,7 +87,6 @@ function rgb(hex: string): [number, number, number] {
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
 }
 
-/** The top left of card i's trim on its sheet: three across the frame's long side, three down. */
 function cardTrim(i: number): { x: number; y: number } {
   return {
     x: BLOCK.x + BLEED + (i % 3) * TRIM.width,
@@ -98,14 +94,14 @@ function cardTrim(i: number): { x: number; y: number } {
   };
 }
 
-/** The position a card's back takes: the backs are mirrored by column, so a long-edge two-sided print puts each back behind its front. */
+/** The backs are mirrored by column, so a long-edge two-sided print puts each back behind its front. */
 export function backPosition(i: number): number {
   return Math.floor(i / 3) * 3 + (2 - (i % 3));
 }
 
 /**
- * Starts a page with the frame's axes, y running down: the fronts' frame turned a quarter clockwise onto the portrait page,
- * the backs' a quarter anticlockwise, so a cut card turned side over side, like a book page, shows its back right way up.
+ * The fronts' frame is turned a quarter clockwise onto the portrait page, the backs' a quarter anticlockwise,
+ * so a cut card turned like a book page shows its back right way up.
  */
 function frameOperators(face: 'front' | 'back'): Operator[] {
   return face === 'front'
@@ -113,7 +109,6 @@ function frameOperators(face: 'front' | 'back'): Operator[] {
     : [concatTransformationMatrix(0, 1, 1, 0, 0, 0)];
 }
 
-/** Moves the origin to card i's artboard, its trim on the card's cut, in the artboard's pixels. */
 function artboardOperators(i: number): Operator[] {
   const trim = cardTrim(i);
   const inset = ARTBOARD.trimInset * ARTBOARD_SCALE;
@@ -238,8 +233,8 @@ function cropMarkOperators(): Operator[] {
 }
 
 /**
- * Draws one page: the soot block, then every picture, then every card's words and code, all clipped to the block's outer edge,
- * so no picture lands over a neighbour's words. A position with no card stays plain soot, so the block prints and cuts as a full one.
+ * Clipped to the block's outer edge so no picture lands over a neighbour's words. A position with no card
+ * stays plain soot, so the block prints and cuts as a full one.
  */
 function drawPage(
   page: PDFPage,
@@ -294,7 +289,6 @@ async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedd
   return { fonts, measure, pictures: { salt, sorrel } };
 }
 
-/** Builds the print PDF: per sheet of nine, a page of fronts, then (unless `backs` is false) a page of their backs. */
 export async function renderCardSheets(
   { links, batch, expiresAt, backs = true }: CardSheetsInput,
   assets: CardAssets,

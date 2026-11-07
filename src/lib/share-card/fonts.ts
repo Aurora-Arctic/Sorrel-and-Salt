@@ -12,9 +12,7 @@ const [cormorant700, lexend300, lexend400] = await Promise.all([
   readFile(join(process.cwd(), 'src/lib/share-card/fonts/lexend-400.ttf')),
 ]);
 
-/** The display face, for the site's name and the entry's. */
 export const DISPLAY = 'Cormorant Unicase';
-/** The body face, for every other line. */
 export const BODY = 'Lexend';
 
 export const SHARE_CARD_FONTS = [

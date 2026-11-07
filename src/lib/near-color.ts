@@ -3,24 +3,16 @@ import { colordx } from '@colordx/core';
 // Whether two groups' colours stand far enough apart in one theme; the picker warns, it never refuses. Apart
 // from group-colors.ts, which the validation schema reaches (claude-docs/validation.md).
 
-/**
- * How far apart two colours look: the distance in OKLab, where equal steps read as equal changes anywhere in the gamut. A nudge of a few hex steps moves a
- * colour about 0.01–0.03, and the seeded groups sit further apart than NEAR_COLOR_DELTA within each theme.
- */
+/** OKLab, where equal steps read as equal changes anywhere in the gamut. A nudge of a few hex steps moves a colour about 0.01–0.03. */
 export function colorDistance(a: string, b: string): number {
   const x = colordx(a).toOklab();
   const y = colordx(b).toOklab();
   return Math.hypot(x.l - y.l, x.a - y.a, x.b - y.b);
 }
 
-/**
- * The distance under which a group's colour is warned as too close to
- * another group's, in the same theme: inside every seeded neighbour, outside
- * any nudge of one.
- */
+/** Inside every seeded neighbour, outside any nudge of one. */
 export const NEAR_COLOR_DELTA = 0.05;
 
-/** The nearest of `others` to `hex` that lies within NEAR_COLOR_DELTA, or none. */
 export function nearColor<T extends { hex: string }>(
   hex: string,
   others: readonly T[],

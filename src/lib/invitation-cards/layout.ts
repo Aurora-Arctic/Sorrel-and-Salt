@@ -21,7 +21,6 @@ export interface TextItem {
   letterSpacing: number;
   colour: string;
   x: number;
-  /** The baseline, measured down from the artboard's top. */
   baseline: number;
   text: string;
 }
@@ -40,7 +39,6 @@ export interface QrItem {
   size: number;
 }
 
-/** The front's text column. */
 export const COLUMN = { left: 72, top: 72, width: 290, height: 408 } as const;
 const BODY_WIDTH = 280;
 const GROUP_GAP = 18;
@@ -62,7 +60,7 @@ export const FRONT_PICTURE: PictureItem = {
   height: SALT.height,
 };
 
-/** The sorrel, already mirrored in its file, clear of every edge at the back's top right. */
+/** Already mirrored in its file. */
 export const BACK_PICTURE: PictureItem = {
   picture: 'sorrel',
   x: 287,
@@ -71,7 +69,6 @@ export const BACK_PICTURE: PictureItem = {
   height: 288,
 };
 
-/** The QR code, centred between the text column and the right trim and on the card's middle. */
 export const FRONT_QR: QrItem = { x: 438, y: 185, size: 182 };
 
 export function headlineStyle(fonts: CardFonts): TextStyle {
@@ -138,7 +135,6 @@ function lexend(fonts: CardFonts, font: FontKey, size: number, letterSpacing = 0
   return { font: fonts[font], size, letterSpacing };
 }
 
-/** The front's words, the canvas's `Main` artboard: the top group, and the foot pushed to the column's bottom. */
 export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string): TextItem[] {
   const tagline = lexend(fonts, 'lexend400', 19.5);
   const rest = lexend(fonts, 'lexend300', 16.5);
@@ -225,7 +221,6 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
   return [...top.items, ...foot.items];
 }
 
-/** The back's words, the canvas's `Back` artboard. */
 export function backText(fonts: CardFonts, batch: string): TextItem[] {
   const lede = lexend(fonts, 'lexend300', 18);
   const words = stack(
@@ -266,7 +261,7 @@ export function backText(fonts: CardFonts, batch: string): TextItem[] {
   return [...words, backBatchText(batch)];
 }
 
-/** The batch's short name, small at the foot of the text column on a back, so a card handed back names the batch to revoke. */
+/** So a card handed back names the batch to revoke. */
 function backBatchText(batch: string): TextItem {
   return {
     font: 'lexend500',
@@ -279,10 +274,7 @@ function backBatchText(batch: string): TextItem {
   };
 }
 
-/**
- * The sheet's label for the page margin below the block, between its first two crop marks, in the page frame's points.
- * It names the batch and the sheet, so a printed sheet can be matched to the batch to revoke.
- */
+/** Names the batch and the sheet, so a printed sheet can be matched to the batch to revoke. */
 export function marginText(
   batch: string,
   sheet: number,

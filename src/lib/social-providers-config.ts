@@ -10,10 +10,7 @@ const ENV_VARS: Record<ProviderId, readonly [clientId: string, clientSecret: str
   microsoft: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET'],
 };
 
-/**
- * What differs between the providers' Better Auth registrations; `mapProfile` in src/lib/auth.ts builds each from it. Facebook and Microsoft never vouch for an
- * address at sign-in (claude-docs/auth/admin-bootstrap.md, "First-party verification"), so a true `emailVerified` means Google, Discord or our own mail.
- */
+/** Facebook and Microsoft never vouch for an address at sign-in (claude-docs/auth/admin-bootstrap.md, "First-party verification"), so a true `emailVerified` means Google, Discord or our own mail. */
 export const PROFILE: ProviderProfiles = {
   google: { accountId: ['sub'], vouches: true },
   discord: { accountId: ['id'], vouches: true },
@@ -39,7 +36,6 @@ export function clientCredentials(
   return { clientId, clientSecret };
 }
 
-/** Providers with both env vars set, in roster order. */
 export function configuredProviders(): ProviderId[] {
   return SOCIAL_PROVIDERS.filter((provider) => clientCredentials(provider.id) !== undefined).map(
     (provider) => provider.id,

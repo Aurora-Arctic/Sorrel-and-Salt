@@ -9,17 +9,14 @@ import { SHARE_CARD_FONTS } from './fonts';
 /** The size every card is drawn at, the one link previews ask for. */
 export const SHARE_CARD_SIZE = { width: 1200, height: 630 };
 
-/** The card's media type. */
 export const SHARE_CARD_TYPE = 'image/png';
 
 const options = { ...SHARE_CARD_SIZE, fonts: [...SHARE_CARD_FONTS] };
 
-/** The site's own card, for `/` and `/compendium`. */
 export function siteCardImage(): ImageResponse {
   return new ImageResponse(<SiteCard />, options);
 }
 
-/** A compendium entry's card. */
 export function entryCardImage(card: CompendiumShareCard): ImageResponse {
   return new ImageResponse(<EntryCard card={card} />, options);
 }

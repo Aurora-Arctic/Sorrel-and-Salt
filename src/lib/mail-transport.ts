@@ -1,7 +1,5 @@
 import type { Message, Outgoing } from './types';
-// One attempt at handing a message to a transport, over HTTP to every target, as SMTP from a Vercel function is unreliable.
-// `deliver` throws a transport failure so the job step that calls it is retried; `send` in ./mail is what callers use
-// (claude-docs/email.md, "Sending").
+// HTTP to every target, as SMTP from a Vercel function is unreliable. `deliver` throws a transport failure so the job step that calls it is retried (claude-docs/email.md, "Sending").
 
 // The log is how a refused or failed send is seen.
 /* oxlint-disable no-console */
@@ -18,7 +16,7 @@ const REQUIRED_TRANSPORT: Record<string, string> = {
 // Resend's comes from MAIL_FROM, which must be on the domain Resend verified.
 const CAPTURE_FROM = { email: 'noreply@sorrelandsalt.com', name: 'Sorrel & Salt' };
 
-/** The request for a transport, or why it cannot be built. Keys are read here, at send time, never at build. */
+/** Keys are read here, at send time, never at build. */
 function outgoing(transport: string, message: Message): Outgoing | string {
   const { to, subject, text, html } = message;
   const env = process.env;
@@ -57,16 +55,12 @@ function outgoing(transport: string, message: Message): Outgoing | string {
   }
 }
 
-/** What a refusing transport said: the HTTP status, and the error name in its JSON body (Resend's `daily_quota_exceeded`). */
 export interface MailNotSentDetails {
   status?: number | null;
   code?: string | null;
 }
 
-/**
- * Thrown by `deliver` when the transport did not take a message, so a job step's retry tries it again. `status` and `code` are
- * null when the transport could not be reached, or its answer named no error.
- */
+/** `status` and `code` are null when the transport could not be reached, or its answer named no error. */
 export class MailNotSent extends Error {
   override name = 'MailNotSent';
   readonly status: number | null;
@@ -79,7 +73,6 @@ export class MailNotSent extends Error {
   }
 }
 
-/** The `name` of a JSON error body, or null when the body is not JSON or names none. */
 function errorName(body: string): string | null {
   try {
     const parsed: unknown = JSON.parse(body);
@@ -92,21 +85,18 @@ function errorName(body: string): string | null {
   return null;
 }
 
-/** True for an address under `.invalid`, which RFC 2606 reserves: no mailbox exists there, so `deliver` refuses it. */
+/** RFC 2606 reserves `.invalid`: no mailbox exists there, so `deliver` refuses it. */
 export function isUndeliverableAddress(address: string): boolean {
   return /\.invalid$/i.test(address);
 }
 
 /**
- * Hands the message to MAIL_TRANSPORT once. True when taken or logged in its place; false when refused before
- * any transport is tried, which no retry would change.
+ * False when refused before any transport is tried, which no retry would change.
  *
  * @throws {MailNotSent} the transport answered with an error, or could not be reached.
  */
 export async function deliver(message: Message): Promise<boolean> {
-  // RFC 2606 reserves `.invalid`: no mailbox exists under it, so the address
-  // is the placeholder a provider that shared none is stored under
-  // (src/modules/identity/services/email.ts), and nothing can receive this.
+  // RFC 2606 reserves `.invalid`; it is the placeholder address of a provider that shared none (src/modules/identity/services/email.ts).
   if (isUndeliverableAddress(message.to)) {
     console.error(`mail: refused a recipient under .invalid; "${message.subject}" not sent`);
     return false;

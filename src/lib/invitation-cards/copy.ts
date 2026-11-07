@@ -1,6 +1,5 @@
 import { dayInUtc, printedDateOf } from '../utc';
 
-/** One card front's words: the headline, the brighter tagline, and the two muted lines beneath it. */
 export interface FrontCopy {
   headline: string;
   tagline: string;
@@ -8,7 +7,6 @@ export interface FrontCopy {
   admits: string;
 }
 
-// Nine texts, one per card on a sheet, so no two cards on a sheet read the same.
 export const FRONT_COPY: readonly FrontCopy[] = [
   {
     headline: 'The Kettle Is On',

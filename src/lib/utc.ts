@@ -1,10 +1,7 @@
 /** The no-break space between a 12-hour time and its am or pm, so a line never breaks between them. */
 export const TIME_PERIOD_SPACE = '\u00a0';
 
-/**
- * An instant as a person reads it, in UTC (`28 August 2026, 00:00 UTC`): how a refusal names when a compendium redirect closes. `expires_at` is midnight UTC,
- * so the server's zone must not move it.
- */
+/** `expires_at` is midnight UTC, so the server's zone must not move it. */
 export function inUtc(at: Date): string {
   const day = at.toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -21,7 +18,7 @@ export function inUtc(at: Date): string {
   return `${day}, ${time} UTC`;
 }
 
-/** An instant's UTC day alone (`28 August 2026`): for a date that is midnight UTC, where the time says nothing. */
+/** For a date that is midnight UTC, where the time says nothing. */
 export function dayInUtc(at: Date): string {
   return at.toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -31,15 +28,12 @@ export function dayInUtc(at: Date): string {
   });
 }
 
-/** An instant's UTC day as `2026-10-30`: for a date that is midnight UTC, where the time says nothing. */
+/** For a date that is midnight UTC, where the time says nothing. */
 export function isoDayInUtc(at: Date): string {
   return at.toISOString().slice(0, 10);
 }
 
-/**
- * An instant to the minute as `2026-10-30 2:05 pm` in a time zone (the viewer's own when none is given),
- * built from parts so it never depends on a locale's separators.
- */
+/** Built from parts so it never depends on a locale's separators. */
 export function minuteInZone(at: Date, timeZone?: string): string {
   const parts = new Intl.DateTimeFormat('en-GB', {
     year: 'numeric',
@@ -55,10 +49,7 @@ export function minuteInZone(at: Date, timeZone?: string): string {
   return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${period}`;
 }
 
-/**
- * An instant to the minute as `28 August 2026, 12:00 am` in a time zone (the viewer's own when none is given), with no zone suffix: the long form
- * beside `minuteInZone`, for invitation expiries and the like.
- */
+/** No zone suffix; the long form beside `minuteInZone`. */
 export function longMinuteInZone(at: Date, timeZone?: string): string {
   const parts = new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
@@ -74,12 +65,12 @@ export function longMinuteInZone(at: Date, timeZone?: string): string {
   return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${period}`;
 }
 
-/** An instant to the minute as `28 August 2026, 12:00 am` in UTC: what the server and hydration print. */
+/** What the server and hydration print. */
 export function longMinuteInUtc(at: Date): string {
   return longMinuteInZone(at, 'UTC');
 }
 
-/** An instant to the minute as `2026-10-30 2:05 pm` in UTC: what the server and hydration print. */
+/** What the server and hydration print. */
 export function minuteInUtc(at: Date): string {
   return minuteInZone(at, 'UTC');
 }
@@ -96,7 +87,6 @@ export function printedDateOf(expiresAt: Date): Date {
   return new Date(expiresAt.getTime() - 36 * 60 * 60 * 1000);
 }
 
-/** The day `expiryOfDay` was given, as `2027-01-29`, read back from the stored instant. */
 export function printedDayOf(expiresAt: Date): string {
   return isoDayInUtc(printedDateOf(expiresAt));
 }

@@ -24,37 +24,25 @@ const EMAIL_PAGE = '/account/email';
 
 const VERIFIED_LANDING = `${EMAIL_PAGE}?verified`;
 
-/**
- * Where a followed verification link lands: the email page in its confirmed
- * view, carrying `next` on to Continue once it has passed `safeReturnPath`.
- * With none, the page's Continue lands the account by its role.
- */
+/** `next` is carried on to Continue only once it has passed `safeReturnPath`. */
 export function verifiedLanding(next: string | undefined): string {
   const path = safeReturnPath(next);
   if (path === undefined) return VERIFIED_LANDING;
   return `${VERIFIED_LANDING}&next=${encodeURIComponent(path)}`;
 }
 
-/**
- * Where a verification link's `callbackURL` says the account was going: a sign-up's is the sign-in's destination; one on the email page carries it as
- * the page's `next`, and the page itself is never the destination.
- */
+/** A sign-up's callback is the sign-in's destination; one on the email page carries it as `next`, and the page itself is never the destination. */
 export function returnPathOf(callbackURL: string | null): string | undefined {
   if (callbackURL === null) return undefined;
   if (!isEmailPage(callbackURL)) return callbackURL;
   return new URL(callbackURL, 'http://relative.invalid').searchParams.get('next') ?? undefined;
 }
 
-/**
- * Whether a request carries the confirmed-view flag. Read by presence: bare it
- * is `''`, and a URL rebuilt through URLSearchParams writes it back as
- * `?verified=`.
- */
+/** Read by presence: bare it is `''`, and a URL rebuilt through URLSearchParams writes it back as `?verified=`. */
 export function hasVerifiedFlag(value: string | string[] | undefined): boolean {
   return value !== undefined;
 }
 
-/** The email page, carrying where to go once the address is proved, if anywhere. */
 export function emailPagePath(
   next: string | undefined,
 ): '/account/email' | `/account/email?next=${string}` {
@@ -62,10 +50,8 @@ export function emailPagePath(
   return `${EMAIL_PAGE}?next=${encodeURIComponent(next)}`;
 }
 
-/** Whether a request path (with or without its query) is the email page itself. */
 export function isEmailPage(path: string | undefined): boolean {
   return path?.split('?')[0] === EMAIL_PAGE;
 }
 
-/** One readable sentence for a `/verify-email` `?error=` code; `undefined` for none. */
 export const verifyErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_VERIFY_ERROR);

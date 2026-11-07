@@ -10,10 +10,7 @@ const LENGTH_REFUSALS: Readonly<Record<string, string>> = {
 export const PASSWORD_CHECK_UNAVAILABLE =
   "We couldn't check your password just now. Please try again later.";
 
-/**
- * The sentence for a refusal of the new password itself, or `undefined` for any other refusal. The
- * breached-list refusal keeps the server's own sentence, which says why.
- */
+/** `undefined` for any other refusal; the breached-list refusal keeps the server's own sentence, which says why. */
 export function newPasswordRefusal(failure: {
   code?: string;
   message?: string;

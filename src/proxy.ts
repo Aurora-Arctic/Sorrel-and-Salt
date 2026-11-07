@@ -7,18 +7,14 @@ import { assertWorkshopAccess } from '@/modules/identity';
 // Route protection's first layer: deny by default, an optimistic cookie check that never touches the
 // database, except under /workshop (claude-docs/auth/route-protection.md, "Route protection").
 
-/**
- * The pages a signed-out visitor may reach. An entry is an exact path, or a
- * path ending `/*` for everything beneath it — so `/sign-in` does not admit
- * `/sign-in-help`, and `/invite/*` does not admit `/invites`.
- */
+/** An entry is an exact path, or a path ending `/*` for everything beneath it, so `/sign-in` does not admit `/sign-in-help`. */
 const PUBLIC_ROUTES = [
-  '/', // the entry page
+  '/',
   '/sign-in',
-  '/forgot-password', // asking for a password reset link
-  '/reset-password', // where the mailed reset link lands
+  '/forgot-password',
+  '/reset-password',
   '/access-paused', // where a paused account's pages send it; the page reads the session itself
-  '/invite/*', // accepting an invitation
+  '/invite/*',
   '/i/*', // a card's short link, accepting like /invite/*
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
   '/compendium', // the one public surface, read by anyone, indexed by search engines
@@ -26,8 +22,8 @@ const PUBLIC_ROUTES = [
   '/support', // offers a signed-out visitor Sign In and holds no data
   '/support/request', // a mailed view link: the token in the fragment is the authority, so it needs no session
   '/support/request/*', // the old path form, left public so it answers 404 rather than sending a visitor to sign in
-  '/privacy', // a public document, holding no application data
-  '/privacy/versions/*', // an earlier version of it
+  '/privacy',
+  '/privacy/versions/*',
   '/disclaimer',
   '/disclaimer/versions/*',
   '/terms',
@@ -74,7 +70,6 @@ function workshopPolicy(request: NextRequest): string {
   return `connect-src ${browserHost(request)}${WORKSHOP}/`;
 }
 
-/** A host, with an optional port: nothing that could end the CSP source. */
 const HOST = /^(?:[a-z0-9.-]+|\[[0-9a-f:.]+\])(?::\d+)?$/i;
 
 /**
@@ -87,7 +82,6 @@ function browserHost(request: NextRequest): string {
   return named && HOST.test(named) ? named : request.nextUrl.host;
 }
 
-/** A refusal for this workshop request, or `null` to let it through. */
 async function refuseWorkshop(request: NextRequest, returnPath: string) {
   // Imported here so every other request keeps a proxy that never loads the
   // database client.
