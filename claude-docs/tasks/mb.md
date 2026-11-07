@@ -80,137 +80,15 @@ Work that was not in the original breakdown. `MB.*` ids exist so a defect or a m
 
 **MB.243 — The compendium seed: plants A to Cn** · 6h
 
-_Story:_ As a reader, I want the plants from A to Cn in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
-
-Minted on 2026-10-11 with MB.240 ([`../design-decisions/mb.240-compendium-seed.md`](../design-decisions/mb.240-compendium-seed.md)), the first of six content shards built side by side by separate research lanes after MB.242. It writes `src/db/seed/compendium/plants-a-cn.ts` and `plants-a-cn.md`, 112 entries, the rows `candidates.md` gives this shard (the plan's `plants-a-c`, renamed when the list moved the plant split points to Co, L and R for balance). **It merges first** of the six, because it switches the `SEED_ENTRIES` sweep from the fixture shard to `COMPENDIUM` and adds the precondition that `COMPENDIUM` is not empty; the others conflict with it on one line of `compendium/index.ts`. The 6 hours are an estimate, from MB.127's rate (216 rows and their sources in 2.5h, about 96 KB an hour): about 270 KB of literal and doc is about 3 hours, doubled for reading before citing and for sourcing every field; the pilot's measured time re-calibrates it before the lane is briefed.
-
-**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "What a source is recorded in").
-
-The lane brief is the README's: every field value traces to a source read during the task, the owner's book by page or a fetched page by URL; a claim with no source is left out; no page, URL, edition or year is invented; `accessed` is the real fetch date; no prose is copied from any source; descriptions are 100 to 250 words, in British spelling, written fresh; shared works are named by their `works.ts` handle; a substitute links only an identity in this shard or an earlier one; every formal name is checked against POWO or Mindat as the entry is written, since the candidate list's are Wikipedia's. Every entry carries at least its primary form; a further form only where a source attaches something to it. An entry that cannot be sourced at depth goes to the doc's "What is left out, and why".
-
-**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
-
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
-
-No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
-
-_Acceptance criteria:_
-
-- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
-- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
-- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
-- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
-- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
-- Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
-- The pull request body states that every cited page or URL was read during the task
-- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
-
 **MB.244 — The compendium seed: plants Co to K** · 6h
-
-_Story:_ As a reader, I want the plants from Co to K in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
-
-Minted on 2026-10-11 with MB.240 ([`../design-decisions/mb.240-compendium-seed.md`](../design-decisions/mb.240-compendium-seed.md)), the second content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-co-k.ts` and `plants-co-k.md`, 116 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
-
-**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "What a source is recorded in").
-
-**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
-
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
-
-No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
-
-_Acceptance criteria:_
-
-- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
-- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
-- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
-- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
-- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
-- Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
-- The pull request body states that every cited page or URL was read during the task
-- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
 **MB.245 — The compendium seed: plants L to Q** · 6h
 
-_Story:_ As a reader, I want the plants from L to Q in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
-
-Minted on 2026-10-11 with MB.240 ([`../design-decisions/mb.240-compendium-seed.md`](../design-decisions/mb.240-compendium-seed.md)), the third content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-l-q.ts` and `plants-l-q.md`, 104 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
-
-**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "What a source is recorded in").
-
-**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
-
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
-
-No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
-
-_Acceptance criteria:_
-
-- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
-- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
-- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
-- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
-- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
-- Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
-- The pull request body states that every cited page or URL was read during the task
-- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
-
 **MB.246 — The compendium seed: plants R to Z** · 6h
-
-_Story:_ As a reader, I want the plants from R to Z in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
-
-Minted on 2026-10-11 with MB.240 ([`../design-decisions/mb.240-compendium-seed.md`](../design-decisions/mb.240-compendium-seed.md)), the fourth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-r-z.ts` and `plants-r-z.md`, 98 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
-
-**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "What a source is recorded in").
-
-**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
-
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
-
-No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
-
-_Acceptance criteria:_
-
-- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
-- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
-- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
-- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
-- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
-- Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
-- The pull request body states that every cited page or URL was read during the task
-- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
 **MB.247 — The compendium seed: resins, woods and other ingredients** · 5h
 
 **MB.248 — The compendium seed: stones and metals** · 8h
-
-_Story:_ As a reader, I want the stones, crystals and metals in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
-
-Minted on 2026-10-11 with MB.240 ([`../design-decisions/mb.240-compendium-seed.md`](../design-decisions/mb.240-compendium-seed.md)), the sixth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/stones-and-metals.ts` and `stones-and-metals.md`, 136 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. A mineral variety is `<Species> var. <variety>` as `standard` writes `Quartz var. amethyst`, with Mindat as the reference for names, and a metal is `chemical`. The 8 hours are an estimate on MB.243's calibration, scaled to the shard's size.
-
-**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../compendium/compendium-seed/README.md), "What a source is recorded in").
-
-**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
-
-**Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
-
-No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
-
-_Acceptance criteria:_
-
-- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
-- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
-- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
-- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
-- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
-- No `safetyNotes` value, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards; where a source says only that, the field is empty, and a note that also names a hazard keeps the hazard and loses the safe clause
-- Every entry or form whose `safetyNotes` value says it is poisonous, toxic or fatal if swallowed is flagged `toxic`, and every flag has a source behind it, so the note and the flag agree
-- The pull request body states that every cited page or URL was read during the task
-- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
 **MB.249 — Close the compendium seed** · 3h
 
@@ -383,32 +261,6 @@ _Acceptance criteria:_
 
 **MB.39 — Settle whether a job-level `if:` really renames a check** · 2h
 
-_Story:_ As a developer, I want to know whether the rule the whole CI filtering design is built on is true, so that every path-filtered-off check stops paying for a container it never uses.
-
-**The claim has never been verified in this repo.** "A job-level `if:` makes GitHub report a differently-named, bare check run" arrived at M0.16 (`1db422a`) as a byte-for-byte copy of `resume-2026`'s `should-run` comments — that task's decision record verified YAML parsing and a `diff` against the originals, and nothing about check-run naming. M0.20 re-cited it as upstream's comments, `ecce1f1` lifted it into `../ci/README.md` as a general rule, and MB.32 extended it to matrix jobs. No commit, decision record or transcript describes the symptom being seen, and none could: no ruleset here has ever required a status check.
-
-**What it costs.** The flag is resolved in the leg's first step, which runs _after_ `Initialize containers` — so a filtered-off leg pulls its image and then does nothing. Measured on run `35301237284`: 20s on `checks / typecheck`, 24s on `checks / lint`, 37s on `vitest`, 46s on `playwright`. A docs-only PR wastes all six.
-
-**Two questions, and they are not the same question.** Every assertion in the workflow files is scoped to _the job that calls a reusable workflow_. Whether an `if:` on an **inner** job — `checks.yml`'s `check`, `vitest.yml`'s `vitest` — renames its check is unanswered, and it is the one that matters, since that is where the container is. A third question, whether a `skipped` conclusion satisfies a required check, needs a ruleset to test against and is scoped out unless the user authorises a scratch one.
-
-Probe on a throwaway branch, PR'd into a `scratch/**` base so `pr-gate.yml` — which triggers only on `main`/`staging`/`release/**` — never fires: a `workflow_call` file with both shapes (a matrix job with `if: matrix.should-run`, and two plain jobs with `if: inputs.run-*`, the `vitest.yml` shape), and a caller triggered on `pull_request: branches: ['scratch/**']`. Whether `matrix` is even available to `jobs.<id>.if` is part of what the run answers — a startup failure naming an unrecognized `matrix` value settles the matrix half on its own.
-
-**Result.** The rule holds for a job that calls a reusable workflow, is false for a job inside one, and a matrix job cannot use `matrix` in its job-level `if:`. A `skipped` check satisfies a required status check, and a required check that never reports blocks the pull request. Evidence: [`mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md).
-
-**Adoption is in this task.** At the owner's decision (2026-10-30) MB.39 adopts the inner-job `if:` for the plain jobs: `vitest.yml`'s four jobs and `playwright.yml`'s job carry `if: inputs.should-run`, and their step-level gating is removed. It also splits `checks.yml`'s matrix into eight plain jobs, each path-filtered leg carrying `if: inputs.run-<leg>`, because a matrix leg cannot skip itself and a leg left out of the matrix would never report. No `pr-gate.yml` job that calls a reusable workflow carries an `if:`.
-
-_Acceptance criteria:_
-
-- The verdict comes from `gh api repos/:owner/:repo/commits/<sha>/check-runs`, quoted verbatim — not read off the UI
-- `claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md` carries the provenance trace, the probe, the raw output and the verdict; `../ci/README.md`'s bullet is rewritten from it
-- Every surviving assertion of the rule in `checks.yml`, `pr-gate.yml`, `vitest.yml`, `playwright.yml` and this file is corrected or given a pointer to the record, in this PR (MB.31)
-- Live GitHub settings are unchanged unless the user authorised a scratch ruleset; a permissions-blocked write is reported, not routed around
-- The scratch branches and workflows are gone, and `gh api repos/:owner/:repo/rulesets` shows the same three rulesets with the same rule types as before
-- If the rule holds, it is recorded as **verified** with the evidence — a negative result is the deliverable just as much as a positive one
-- `vitest-dom`, `vitest-node`, `vitest-db`, the `vitest` merge and `playwright` carry a job-level `if:` on `inputs.should-run`, with no step-level `should-run` gating left in `vitest.yml` or `playwright.yml`; `vitest / vitest` and `playwright / playwright` keep their names, and `e2e-cache.yml`'s call still runs the job
-- `checks.yml` is eight plain jobs whose check names are identical to the matrix's (`lint`, `format`, `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order`, `audit`); `lint`, `typecheck`, `build`, `destructive-ddl` and `migration-order` carry `if: inputs.run-<leg>`, and `pr-gate.yml`'s call is unchanged
-- The record names the ruleset probe: the 403 on ruleset writes, that the owner made the changes in the web UI, and that none of the three real rulesets requires a status check today
-
 **MB.40 — Custom one-off spell ingredients (schema)** · 2h
 
 **MB.41 — Move Vitest tests into `tests/`** · 3h
@@ -428,28 +280,6 @@ _Acceptance criteria:_
 **MB.48 — A destructive-DDL acknowledgement does not survive the release PR** · 3h
 
 **MB.49 — `drizzle-kit` fails silently, so a bad `DATABASE_URL` has no cause** · 1h
-
-##[error]Process completed with exit code 1.
-
-```
-
-No error, no code, no message — `drizzle-kit migrate` catches whatever postgres.js threw and exits 1. Reproduced locally, **an unreachable host, a wrong password, `sslmode=require` against a server with no TLS, and `channel_binding=require` all produce byte-identical output.** Four different fixes, one indistinguishable failure. That is why MB.45, MB.46 and MB.47 each ended on a hypothesis rather than a diagnosis, and it is the actual defect: not any one bad URL, but that a bad URL cannot be told from a bad network.
-
-**A connectivity probe, before the consumer.** `scripts/probe-database.ts` opens the connection itself and runs `select 1`, printing the driver's own error code and message on failure and the role, database and server version on success. `ECONNREFUSED`, `ENOTFOUND`, `28P01`, `3D000` and `42704` are five different problems with five different fixes, and naming which one happened is the whole task. Fatal in `migrate.yml`, where a migration cannot proceed without a connection; advisory in `deploy.yml`, where a build issues no query and failing on a transient blip would trade one outage for another.
-
-**It validates the _resolved_ URL, which is the gap MB.47 reopened.** MB.46's validator only ever saw the file `vercel pull` wrote; MB.47 then took `DATABASE_URL` from a GitHub secret and handed it straight to drizzle-kit, so a malformed secret failed exactly as silently as a malformed pull used to — one task after the gap was closed, by its own successor. `Resolve DATABASE_URL` now writes whichever value won to `$RUNNER_TEMP/resolved.env` under `umask 077`, and the probe reads that. A file path rather than argv or a step `env:`, for MB.46's reasons.
-
-**`channel_binding` is stripped rather than rejected.** It is a libpq _client-side_ option that postgres.js passes through to the server, which answers `42704` ([`ci/deploy.md`](../ci/deploy.md) has the mechanism). The task first rejected it in the validator, but a hotfix's URL is written by Neon's Vercel integration, which adds the parameter and rewrites the variable, so nobody can delete it by hand. `withoutClientOnlyParams` (`src/db/connection-url.ts`) now removes it wherever a connection opens; postgres.js never enforced channel binding, so nothing is lost.
-
-_Acceptance criteria:_
-
-- Tests written first and watched fail — the `channel_binding` rule against `validateDatabaseUrl`, the probe's error-description and scrubbing helpers, and the workflow sweep
-- The probe runs in `migrate.yml` before `Apply pending migrations` and in `deploy.yml` before `Build`, fatal in the first and advisory in the second, asserted apart
-- Its output names the driver's error code and message and **never** the URL — asserted against a realistic connection string rather than intended, including errors that quote the URL, the password and the userinfo back at it. The hostname is deliberately kept: `ENOTFOUND` without the name it failed to resolve is the same silence this task exists to end
-- Client-only parameters are removed from the URL where a connection opens, with a green case for a Neon pooled URL carrying `sslmode=require` alone — postgres.js consumes that one, and removing it would break every working string in the project. (Originally a `validateDatabaseUrl` rejection; see above.)
-- The resolved `DATABASE_URL` is validated whatever its source, secret or pulled `POSTGRES_URL`, pinned by a guard — the point is that the gap cannot reopen a second time
-- Docs corrected: `../ci/README.md` and `../db/README.md` on what a failed migration now tells you, `secrets.md` on `channel_binding` in what the Neon console hands you
-- **Not done when CI is green** — done when a live staging push either migrates, or fails with a named cause somebody can act on
 
 **MB.50 — Make code comments concise; move the arguments into `claude-docs/`** · 6h
 
@@ -713,32 +543,7 @@ _Acceptance criteria:_
 
 **MB.148 — A read inside a write runs on the write's transaction** · 3h
 
-_Story:_ As a steward, I want every statement of one save to run on one connection, so that a save cannot deadlock against a migration, and a read inside a write sees the rows and the actor that write has already put down.
-
-Minted during MB.140, which found the cycle. `withAudit` opens a transaction and hands its callback a writer bound to it, but a finder called inside the callback runs through `selectFrom` on the bare client, on a second pool connection. Three reads do so today, all in `src/modules/ingredients/services/ingredient-rows.ts`: the current rows `replaceFolkNames` and `replaceSubstitutes` diff against, and `refuseUnlinkable`'s link check. With such a read in flight, an `ALTER TABLE` queued behind the open transaction blocks the read, which blocks the commit the `ALTER` waits for — a cycle Postgres cannot detect, since one leg is the application waiting rather than a lock, and nothing here sets a timeout. The same cycle is what hangs a test's `truncate` behind an unfinished write. It is also the failure MB.24 names for the deferred policies: a read on a fresh connection finds `app.current_user_id` unset, so under RLS every read inside a write would answer nothing — the re-audit of write paths that publishing the GUC early (M1.19) was meant to spare.
-
-The fix is the unit-of-work half of rule 3 that was never finished. `withAudit` publishes its transaction through an `AsyncLocalStorage`, and `selectFrom` runs on it when one is present and on the bare client otherwise. No finder's signature changes, `existsIn` needs nothing since it only builds SQL, and the service still holds no handle to the transaction, so no write can skip `applyAudit`. A similarity read inside a write takes a savepoint (`tx.transaction`) for its thresholds rather than a transaction of its own. Context-bound rather than an explicit reader on the writer, because the explicit form either grows every finder by a parameter or duplicates the finder surface on `AuditWriter`, for three call sites; the argument and the alternative go in `claude-docs/design-decisions/mb.148-reads-on-the-write-transaction.md`. The rule's long form is corrected rather than changed: "reads open no transaction" came from MB.29 retiring the read-side `withViewer`, and means a read carries identity in the proof and opens no transaction _of its own_ — DESIGN.md §14's row says "to carry identity" — not that a read never joins one. Reading the current rows before the transaction opens, the repo's convention elsewhere with the unique index arbitrating a race, was the cheaper fix and is not taken: it loses read-your-own-writes and keeps the diff racy.
-
-_Acceptance criteria:_
-
-- A finder called inside a `withAudit` callback runs on the callback's transaction: it sees a row the callback inserted and not yet committed, and `pg_backend_pid()` agrees, asserted in `tests/db/repository/write.test.ts`
-- A finder called outside one still runs on the bare client, and a connection outside any `withAudit` still sees the GUC unset
-- A similarity read inside a write runs under its thresholds in a savepoint, and a write holding one still rolls back whole
-- A guard pins that `selectFrom` consults the store and that nothing but `withAudit` writes to it
-- CLAUDE.md rule 3 reads "Reads open no transaction of their own"; `.claude/rules/database.md`, `claude-docs/db/write-path.md` and `claude-docs/db/soft-delete.md` state where a read inside a write runs and why; the decision record carries the argument and MB.29's row as read
-
 **MB.149 — Migrations give up a lock they cannot take** · 2h
-
-_Story:_ As a steward, I want a migration that meets a busy table to fail and be rerun, so that a deploy can never hold the site's reads behind a queued `ALTER`.
-
-Minted during MB.140, beside MB.148, which removes the one cycle found; this is the general guard, the standard practice for migrating a live database (Rails' `strong_migrations`, GitLab's migration guidelines), and launch prep rather than a fix, since nothing is live to stall. An `ALTER TABLE` queues behind any open transaction on its table, and while it waits every later statement on that table queues behind it — the public compendium read included — so a long transaction of any kind turns a deploy into an outage for as long as it lasts, and nothing in the migrate job, `drizzle-kit migrate` or `src/db/connection.ts` sets `lock_timeout`, `statement_timeout` or `idle_in_transaction_session_timeout`. The migrate job (`.github/workflows/migrate.yml`) runs before the deploy with the old version still serving, which is expand/contract's premise (rule 10). The task sets a `lock_timeout` of a few seconds on the migration's connection — on the URL as a startup option if Neon's endpoint takes one, which likely means the direct rather than the pooled URL, else a line each migration opens with and a guard that none forgets — and retries the job a bounded number of times with backoff, since `drizzle-kit migrate` has none of its own; `deploy` needs `migrate`, so an exhausted retry is a failed deploy to rerun, not a hang. Confirm first that drizzle-kit applies a batch in one transaction, so an abort rolls back whole and a rerun starts clean; a migration that cannot run in one (`CREATE INDEX CONCURRENTLY`, none today) is a case the doc names. Whether the application's own connections take a `statement_timeout` is a separate decision, noted and not taken here. The seed runs inside the migrate job but opens its own connection through `src/db/connection.ts`, so it does not inherit the timeout, which is harmless since a seed takes no lock a read waits for.
-
-_Acceptance criteria:_
-
-- A migration run against a database where another connection holds a conflicting lock fails within the timeout rather than queueing, asserted against local Postgres
-- The migrate job retries a failed migration a bounded number of times with backoff, and a final failure fails the deploy
-- The timeout is set somewhere both the job and `npm run db:migrate` go through, or the doc says why the two differ
-- `claude-docs/db/expand-contract.md` states the timeout, where it is set and why, and the retry
 
 **MB.150 — Combobox's × buttons move as a button does** · 0.5h
 
@@ -816,23 +621,6 @@ _Acceptance criteria:_
 **MB.174 — Stop the list fields offering or adding a repeat** · 3h
 
 **MB.175 — Scope Help and FAQ Articles: the Model, the Glossary, Sub Pages and Their Build Tasks** · 1h
-
-_Story:_ As the owner, I want the help and FAQ articles, the glossary and the sub pages designed, recorded and broken into build tasks, so that visitors and members can later find their way and look up what a word means without asking someone, and the build is transcription.
-
-**Amended 2026-11-03, the owner's call:** the help articles gain a glossary. A glossary entry is a third `kind` of help article, `term`: one row per term, its `title` the term and its `body` a short Markdown definition, so a keeper adds or edits a term as they would an article. `/help/glossary` lists every term from A to Z, each with an anchor from its `slug`, so a page or an article can link to one term (`/help/glossary#steward`). `position` is not used for a term. The slug `glossary` is reserved, so no article can take that address. The `help` seed ships the site's own terms, each defined the way `CLAUDE.md`'s Vocabulary and domain invariants use it: at least Compendium, Ingredients, Grimoire, Coven, Steward, Practitioner, and Observer (M15.79), Keeper (M15.79), Curator, Spell, Working, Variant, and Form.
-
-Minted during MB.154 on the owner's request. **It was v1 scope by the owner's decision of 2026-11-03, in Wave 15, and moved to Wave 17 (Fast follow), before M17.6, on the owner's call of 2026-11-06.** The help pages ship after launch, so the Wave 15 axe sweep does not cover them and the Wave 17 accessibility audit (M17.9) does. The shape was decided at minting so the build is transcription, recorded in DESIGN.md §10 ("Help and FAQ articles"): the articles are rows a keeper edits, not files in the repo, so one changes without a deploy — a `help_articles` table (`id`, `kind` of `faq`, `article` or `term`, `title`, `slug` from `slugify`, `summary`, `body` as Markdown, `position` for the FAQ's order, `seedKey`, a nullable `parent_id`, + audit; `slug` unique among live rows on a partial index), written under `assertSiteAdmin` alone through `withAudit`, read by a finder taking no session and cached under a tag of its own, as the compendium is; `/keepers/help` on M5.6a's page shape with a body field and a preview; `/help`, the FAQ and the article index, and `/help/[slug]`, an article rendered through the standard sanitising Markdown renderer, both public and indexable on MB.83's frame with its signed-in island, in `PUBLIC_ROUTES` and the sitemap as MB.84 has them, linked from `Welcome`, the public frame, `AppShell` and M11.10's 404; the articles themselves shipped as a `help` seed target keyed on `seed_key` (MB.171), in `migrate.yml`'s step and `deploy.yml`'s paths; and a story, numbered next free when it runs (MB.176 took 65), with its acceptance file. Two CLAUDE.md lines widen for it, each an architecture decision to record rather than route around: "Admins curate the compendium … and nothing else" gains the help articles, and "The compendium is the one public surface" gains `/help`, which carries no workspace data. An eighth module `help` (`src/modules/help/`) owns the table (claude-docs/modules.md, "Adding a module"). This task is the scoping record and the minting: the build follows as five PRs, one per task — M17.13 the table, M17.14 the services and GraphQL, M17.15 the keepers' page, M17.16 the public pages with the glossary and sub pages, M17.17 the seed — under the table-then-behaviour rule, and each sits in Wave 17 after this task and before M17.6.
-
-**Amended 2026-11-06, the owner's call (from M17.2):** a help article may have a parent article, for sub pages. A nullable `parent_id` on `help_articles` points at another article of kind `article`, one level deep, and `/help/[slug]` lists its children. M19.8's closed-practice help pages need it: one general page and one per practice, `/help/closed-practices/<practice>`.
-
-_Acceptance criteria:_
-
-- The model is recorded in DESIGN.md §5, §7, §9 and §10, and in a `design-decisions/mb.175-help-articles.md` weighing rows against files in the repo, with the two invariants it widens
-- CLAUDE.md's two lines are amended in the same PR; the out-of-scope list already no longer names it (the owner's decision of 2026-11-03)
-- The glossary is recorded in the same places: the `term` kind, the A-to-Z `/help/glossary` page with an anchor per term, the reserved `glossary` slug, and the seeded list of terms
-- The five build tasks, M17.13 → M17.17, are minted with estimates, placed after this one in Wave 17 and before M17.6, and each names its prerequisite; the public-pages task builds `/help/glossary` and the seed task ships the terms
-- The parent article is recorded in the same places: a nullable `parent_id`, one level deep, a child's address under its parent's, and the five build tasks carry it (the table task the column, the public-pages task the nested route and the children list)
-- Nothing is built in this task
 
 **MB.176 — ~~Bug reports~~** · **RETIRED 2026-10-31, not done**
 
@@ -923,4 +711,3 @@ _Acceptance criteria:_
 **MB.289 — Crawlers Hit Blocked Links and Index Few Compendium Pages** · 6.5h
 
 **MB.290 — Renaming or Deleting a Celestial Body or Zodiac Sign Misses Compendium Variants** · 3h
-```
