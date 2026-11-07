@@ -10,9 +10,7 @@ import type { FilterFormSubject } from '../../support/types';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A group page's table and pager: each group with its description, a
-// category group's name drawn in its own chip, and an Edit link opening it in
-// the page's modal (claude-docs/components/group-list.md).
+// claude-docs/components/group-list.md
 
 const WARDS: GroupListEntry = {
   id: 'g1',
@@ -39,7 +37,6 @@ describe('GroupList', () => {
     );
   });
 
-  // Who last edited each row, and when, as the coven's member list has it.
   it('draws an Updated column', () => {
     render(<GroupList kind="category" groups={[WARDS]} />);
 
@@ -53,8 +50,7 @@ describe('GroupList', () => {
   });
 });
 
-// The traditions' name search: FilterForm's controls are its own to test (CompendiumList's, GroupedValueList's).
-// The shared rows assert the search reaches the address and leaves it; this proves a kind not handed one draws none.
+// FilterForm's controls are tested in CompendiumList and GroupedValueList.
 describe('GroupList, searched by name', () => {
   beforeEach(() => {
     router.push.mockReset();
@@ -107,7 +103,6 @@ describe('groupsHref', () => {
     expect(groupsHref('category', { before: 'c' }, { edit: 'a b' })).toBe(
       '/curator/category-groups?before=c&edit=a+b',
     );
-    // The search goes ahead of the cursor and the modal, and a blank one is none.
     expect(groupsHref('tradition', { query: 'wort', after: 'c' }, 'new')).toBe(
       '/curator/deity-traditions?query=wort&after=c&new',
     );
