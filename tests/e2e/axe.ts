@@ -93,6 +93,7 @@ export async function scanBothThemes(page: Page) {
           requestAnimationFrame(() => requestAnimationFrame(() => done()));
         }),
     );
+    await settleTransitions(page);
     await assertNoAccessibilityViolations(page);
   }
 }

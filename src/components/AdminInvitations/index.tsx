@@ -41,7 +41,7 @@ function emptyText({ email, expiringSoon }: Filter): string {
   const filters = [email && `“${email}”`, expiringSoon && 'Expires in 24 Hrs'].filter(
     (filter): filter is string => Boolean(filter),
   );
-  return noMatchText('invitations', filters, emptyList('admin invitations'));
+  return noMatchText('invitations', filters, emptyList('keeper invitations'));
 }
 
 const RevokeAdminInvitationDocument = graphql(`

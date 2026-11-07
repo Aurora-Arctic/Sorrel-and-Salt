@@ -48,9 +48,13 @@ const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
 const CARD_SIGNED_OUT_GRANT =
   "You've been given a card to join Sorrel & Salt. Sign in with any account, once its email address is verified.";
 
-/** The sentence under the heading, or none for a refusal: its alert says all there is to say. */
+/** What the heading says over a refusal. */
+const REFUSED_GRANT = "This invitation can't be used, and the reason is below.";
+
+/** The sentence under the heading; a refusal says why in its alert below, and here only that it was refused. */
 function grantOf(props: InvitationAcceptanceProps): string | undefined {
   if (props.status === 'signed-out') return props.card ? CARD_SIGNED_OUT_GRANT : SIGNED_OUT_GRANT;
+  if (props.status === 'refused') return REFUSED_GRANT;
   if (props.status !== 'acceptable') return undefined;
   if (props.tier === 'card') return CARD_GRANT;
   if (props.tier === 'site') return SITE_GRANTS[props.siteRole];
@@ -120,7 +124,12 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
   const grant = grantOf(props);
   return (
     <div className="panel invitation-acceptance">
-      <PageHeader title="Your Invitation" lede={grant} />
+      <PageHeader
+        className="card-page-header"
+        headingClassName="auth-title"
+        title="Your Invitation"
+        lede={grant}
+      />
       {props.status === 'signed-out' && (
         <p className="invitation-acceptance__actions">
           <a className="btn btn--solid" href={props.signInHref}>
@@ -139,6 +148,11 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
               </a>
             </p>
           )}
+          <p className="invitation-acceptance__actions">
+            <a className="btn btn--quiet" href="/">
+              Back to Home
+            </a>
+          </p>
           {props.emailHref && (
             <p className="invitation-acceptance__actions">
               <a className="btn btn--solid" href={props.emailHref}>

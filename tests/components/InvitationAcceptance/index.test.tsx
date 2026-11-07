@@ -120,7 +120,8 @@ describe('InvitationAcceptance', () => {
 
     expect(screen.getByText('This invitation has already been accepted.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Accept Invitation' })).toBeNull();
-    expect(screen.queryByRole('link')).toBeNull();
+    // Only the way back to the home page: no sign-in, accept or start link.
+    expect(screen.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual(['/']);
 
     rerender(
       <InvitationAcceptance

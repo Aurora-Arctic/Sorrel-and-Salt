@@ -83,6 +83,11 @@
   box-shadow: $shadow-lifted;
 }
 
+// The row link is stretched over the row, so its ring is drawn on the row.
+.support-list__item:has(:focus-visible) {
+  @include focus-ring;
+}
+
 // The subject is the row's one link, stretched over the whole row.
 .support-list__link {
   @include card-link;
