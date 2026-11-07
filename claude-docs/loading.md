@@ -27,7 +27,7 @@ The spinner and the dot wait **100ms** before they show, so an answer that arriv
 
 ### Region
 
-The region is the part of the page that is about to change. While it changes, the old content is hidden and put out of reach (`visibility: hidden`, `inert`, `aria-hidden`) and the [`Skeleton`](components/skeleton.md) of the new content stands over it. For the shell's two bodies, `MainBody` and `SectionBody`, the old page stays mounted at its full height beneath the skeleton rather than being swapped out, so the page does not shrink before the browser saves the scroll position that Back returns to ([`SkeletonFade`](components/skeleton.md), "The page is held, not swapped").
+The region is the part of the page that is about to change. While it changes, the old content is hidden and put out of reach (`visibility: hidden`, `inert`, `aria-hidden`) and the [`Skeleton`](components/skeleton.md) of the new content stands over it. For the shell's two bodies, `MainBody` and `SectionBody`, the old page stays mounted at its full height beneath the skeleton rather than being swapped out, so the page does not shrink before the browser saves the scroll position that Back returns to ([`SkeletonFade`](components/skeleton.md), the "The page is held, not swapped" item).
 
 The skeleton has seven shapes: `table`, `cards`, `form`, `page`, `contents` and `recipe` for a whole page (`recipe` is a spell's own page), and `line` for one line of text still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. A compact `cards` filter row also draws the Compact switch where the loaded row has it, and the filter row sits where the loaded page's does at desktop and phone widths.
 
