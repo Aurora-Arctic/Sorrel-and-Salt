@@ -58,7 +58,7 @@ export const referenceLinks = pgTable(
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
     // How the citation names the ingredient, and the field names it backs; null when nobody recorded them. Written by the seed and a curator,
-    // never on a coven's link (claude-docs/db/references.md, "Citation attributes").
+    // never on a coven's link (claude-docs/db/references.md, "Reference links schema details").
     nameBasis: nameBasis('name_basis'),
     supports: text('supports').array(),
     ...auditColumns,
