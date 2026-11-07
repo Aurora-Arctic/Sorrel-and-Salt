@@ -43,9 +43,9 @@ export default async function CuratorLayout({ children }: AdminLayoutProps) {
       </ContextRow>
       <SectionBody region="admin" className="page-column">
         {/* The staff and keeper help pages, which only a curator reads. */}
-        <p>
+        <nav aria-label="Staff help">
           <Link href="/help/staff">Staff Help</Link>
-        </p>
+        </nav>
         {children}
       </SectionBody>
     </RouteModalProvider>
