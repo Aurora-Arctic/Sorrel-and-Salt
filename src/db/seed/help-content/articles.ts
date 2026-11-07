@@ -110,7 +110,9 @@ What the [[Compendium]] says, it sources. A source is a [[Reference|reference]]:
     'How toxicity is marked on an ingredient and on each form.',
     `An ingredient and each of its forms carry safety notes and a toxic flag. A form's flag is its own: a form's note reads "This form adds only its Toxic mark to what the ingredient says."
 
-The entry page shows toxic if the ingredient or any of its forms is toxic. The Toxic filter keeps an entry flagged on itself or on any live form.`,
+> **Take Care:** The entry page shows toxic if the ingredient or any of its forms is toxic.
+
+The Toxic filter keeps an entry flagged on itself or on any live form.`,
   ),
 ];
 
@@ -181,9 +183,13 @@ If you are the only Steward and other members remain, leaving opens a choice tit
     6,
     'Delete a Coven',
     'What deleting a coven does and who can do it.',
-    `Only a [[Steward]] can delete a [[Coven|coven]]. Open the coven and find the "Delete Coven" section. Once deleted, the coven becomes inaccessible to every member, Stewards included. The page warns: "Nothing is destroyed, but only an administrator with database access can restore it."
+    `Only a [[Steward]] can delete a [[Coven|coven]]. Open the coven and find the "Delete Coven" section.
 
-The [[Demo Coven]] cannot be deleted. A coven has no rename, so to change its name you create a new one.`,
+> **Take Care:** Once deleted, the coven becomes inaccessible to every member, Stewards included. The page warns: "Nothing is destroyed, but only an administrator with database access can restore it."
+
+The [[Demo Coven]] cannot be deleted.
+
+> **Note:** A coven has no rename, so to change its name you create a new one.`,
   ),
 ];
 
@@ -297,7 +303,9 @@ The "Category Match" panel compares them in three rows: Carried (intended and pr
     'The status and visibility of a spell.',
     `A spell is a draft or complete. It is private, seen by its author alone, or shared with the [[Coven|coven]], seen by every member including [[Observer|Observers]]. A complete spell needs a title.
 
-A complete spell shared with the coven cannot be made private again, and a complete spell cannot go back to a draft. The page says: "Duplicate it to get a private copy you can change, or delete it if it should not be there."`,
+> **Take Care:** A complete spell shared with the coven cannot be made private again, and a complete spell cannot go back to a draft.
+
+The page says: "Duplicate it to get a private copy you can change, or delete it if it should not be there."`,
   ),
   subPage(
     grimoire,
