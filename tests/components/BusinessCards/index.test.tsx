@@ -123,4 +123,19 @@ describe('BusinessCards', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     expect(saveFile).not.toHaveBeenCalled();
   });
+
+  it('asks before the tab closes once a field holds typed input, and not before', async () => {
+    const unload = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    render(<BusinessCards />);
+    await waitFor(() => expect(fetchCardAssets).toHaveBeenCalled());
+    expect(unload()).toBe(false);
+
+    fill('Name', 'Testwort Hollin');
+
+    await waitFor(() => expect(unload()).toBe(true));
+  });
 });

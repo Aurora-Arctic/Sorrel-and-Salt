@@ -9,6 +9,7 @@ import type { CardAssets } from '../../lib/invitation-cards/types';
 import { slugify } from '../../lib/slugify';
 import { saveFile } from '../AdminCards/save-file';
 import { FormActions, SwitchField, TextField } from '../Field';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { BusinessCardSchema } from './schema';
 import type { BusinessCardValues } from './types';
@@ -30,7 +31,8 @@ const BusinessCards = (): ReactElement => {
     mode: 'onTouched',
     resolver: zodResolver(BusinessCardSchema) as Resolver<BusinessCardValues>,
   });
-  const { isValid } = methods.formState;
+  const { isDirty, isValid } = methods.formState;
+  const discard = useDiscardGuard(isDirty);
 
   useEffect(() => {
     let live = true;
@@ -102,6 +104,7 @@ const BusinessCards = (): ReactElement => {
           dirty={isValid && assets !== null}
           submitting={building}
         />
+        {discard.asking && <DiscardQuestion guard={discard} />}
       </form>
     </FormProvider>
   );
