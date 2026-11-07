@@ -720,6 +720,49 @@
     }
   }
 
+  // A block on the quiet button's surface, edge and hover pair, for a card that is a way in rather than a control.
+  // A card holding a whole-card link positions itself, which `card-link` needs.
+  .card--quiet {
+    padding: space(4);
+    border: 1px solid $hairline;
+    border-radius: radius('surface');
+    background-color: $surface-card;
+    @include theme-transition(background-color, border-color);
+
+    &:hover,
+    &:focus-within {
+      border-color: $edge-highlight;
+      background-color: $fill-highlight-field;
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+
+  // One frame for a screenshot or a widget in running text, with its caption beneath (claude-docs/styling.md).
+  .figure {
+    max-width: $measure;
+    margin: space(5) 0;
+    padding: space(3);
+    border: 1px solid $hairline;
+    border-radius: radius('surface');
+    background-color: $surface-card;
+
+    > img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: radius('control');
+    }
+
+    > figcaption {
+      margin-block-start: space(2);
+      color: $text-muted;
+      font-size: type-size('caption');
+    }
+  }
+
   // The help centre's one reading column, public and staff alike, so the two cannot differ: everything on a help
   // page shares the text's edges. A primitive, as a route loads a component's stylesheet only when it draws the
   // component, and the public layout's `.page-column` is the wide box (claude-docs/components/help-pages.md, "Layout").
@@ -728,6 +771,19 @@
     width: 100%;
     max-width: $measure;
     margin-inline: auto;
+  }
+
+  // A callout in any help body (an article, an answer, a definition): a `.notice` named by its label.
+  .help-page .notice[role='note'] {
+    margin-block: space(4);
+
+    > p {
+      margin: 0;
+    }
+
+    > p + p {
+      margin-block-start: space(2);
+    }
   }
 
   // An article with a contents menu takes the document pages' pair instead, which centres on its own.
@@ -1080,6 +1136,22 @@
 
   .notice--success {
     color: $accent-hover;
+  }
+
+  // A help callout's gift: the accent's hover ink as the bar, so it is neither the plain note nor a warning.
+  .notice--tip {
+    --notice-bar: #{$accent-hover};
+  }
+
+  // The word a help callout is named by (Note, Tip, Take Care), so the kind never rests on colour alone.
+  .notice__label {
+    display: block;
+    margin-block-end: space(1);
+    font-size: type-size('overline');
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: $text-muted;
   }
 
   // In the notice's padding rather than a flex row, so a link in the text stays inline.

@@ -123,6 +123,52 @@ function markTerms(children: ElementContent[], terms: HelpTerms, plain = false):
   });
 }
 
+/** A help callout's label and the `.notice` kind it draws (claude-docs/components/help-pages.md, "Callouts"). */
+const CALLOUTS: Readonly<Record<string, string>> = {
+  'Note:': 'notice',
+  'Tip:': 'notice notice--tip',
+  'Take Care:': 'notice notice--warn',
+};
+
+/**
+ * Turns a blockquote whose first paragraph opens with a bold label it knows (`> **Tip:** …`) into a note named by
+ * the label, so the Markdown still reads as a quoted aside where it is not drawn. Any other blockquote stays one.
+ */
+function shapeCallouts(children: ElementContent[]): ElementContent[] {
+  return children.map((child) => {
+    if (!isElement(child)) return child;
+    child.children = shapeCallouts(child.children);
+    if (child.tagName !== 'blockquote') return child;
+    const first = child.children.find(isElement);
+    const label = first?.tagName === 'p' ? first.children[0] : undefined;
+    if (!first || !label || !isElement(label) || label.tagName !== 'strong') return child;
+    const kind = CALLOUTS[textOf(label).trim()];
+    if (kind === undefined) return child;
+    const name = textOf(label).trim().slice(0, -1);
+    first.children.shift();
+    const lead = first.children[0];
+    if (lead?.type === 'text') lead.value = lead.value.replace(/^\s+/, '');
+    const rest = child.children.filter(
+      (node) =>
+        node !== first || first.children.some((part) => part.type !== 'text' || part.value !== ''),
+    );
+    return {
+      type: 'element',
+      tagName: 'div',
+      properties: { role: 'note', ariaLabel: name, className: kind.split(' ') },
+      children: [
+        {
+          type: 'element',
+          tagName: 'span',
+          properties: { className: ['notice__label'], ariaHidden: 'true' },
+          children: [text(name)],
+        },
+        ...rest,
+      ],
+    };
+  });
+}
+
 function reactProcessorFor(placeholders: DocumentPlaceholders) {
   return unified().use(rehypeReact, {
     Fragment: runtime.Fragment,
@@ -277,12 +323,16 @@ export function renderMarkdown(
   reserved: readonly string[] = [],
   // A body drawn beneath a page title of its own: every heading moves down a level (h2 becomes h3).
   lowerHeadings = false,
-  // The glossary a help body marks its terms from; a caller that passes none leaves `[[…]]` as text (site documents).
+  // The glossary a help body marks its terms from. A caller that passes none (site documents) leaves `[[…]]` as text
+  // and a callout as the blockquote it is written as.
   terms?: HelpTerms,
 ): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
-  if (terms) tree.children = markTerms(tree.children as ElementContent[], terms) as RootContent[];
+  if (terms) {
+    tree.children = markTerms(tree.children as ElementContent[], terms) as RootContent[];
+    tree.children = shapeCallouts(tree.children as ElementContent[]) as RootContent[];
+  }
   tree.children = markPlaceholders(
     tree.children as ElementContent[],
     placeholders,
