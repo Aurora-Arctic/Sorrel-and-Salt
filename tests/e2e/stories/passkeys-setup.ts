@@ -2,7 +2,6 @@ import { generateKeyPairSync, randomBytes, randomUUID } from 'node:crypto';
 import { isoCBOR } from '@simplewebauthn/server/helpers';
 import type { CDPSession, Page } from '@playwright/test';
 import { test as base } from '../fixtures';
-import { assertNoAccessibilityViolations, settleTransitions } from '../axe';
 import { serverUrl, slotPort } from '../slots';
 import { withSql } from './accounts-setup';
 import { agreedInForceSql } from '../../support/db/agreement-in-force';
@@ -77,14 +76,6 @@ async function virtualAuthenticator(page: Page): Promise<{ cdp: CDPSession; id: 
     },
   });
   return { cdp, id: authenticatorId };
-}
-
-export async function scanBothThemes(page: Page): Promise<void> {
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
-    await settleTransitions(page);
-    await assertNoAccessibilityViolations(page);
-  }
 }
 
 /**

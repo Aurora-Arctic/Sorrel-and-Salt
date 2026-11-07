@@ -76,3 +76,23 @@ export async function settleTransitions(page: Page) {
     }
   });
 }
+
+// Scans the page in the dark theme and then the light, the site's default last. A transition starts only at the
+// first style change after the switch, so the scheme is read as matching and two frames pass before the settle,
+// or the settle finds nothing running and axe reads a colour part-way along its ease.
+export async function scanBothThemes(page: Page) {
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+    await page.waitForFunction(
+      (scheme) => matchMedia(`(prefers-color-scheme: ${scheme})`).matches,
+      colorScheme,
+    );
+    await page.evaluate(
+      () =>
+        new Promise<void>((done) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => done()));
+        }),
+    );
+    await assertNoAccessibilityViolations(page);
+  }
+}
