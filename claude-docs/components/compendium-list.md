@@ -19,16 +19,16 @@ resolves through, rather than one read per row.
 
 `CompendiumListProps` (`types.ts`):
 
-| Prop           | What it is                                                                                                                                                                                                     |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                                                                                                                 |
-| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, celestialBodies, toxic, reviewed }`, as asked; `reviewed` (M14.8) on the admin list only                |
-| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                                                                                                             |
-| `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)                                                                                               |
-| `vocabulary`   | `{ deities, formIcons }`: every live deity with its id, slug, name and tradition, and each curated form's group icon by folded name. The open panel needs them to turn a live answer back into labelled counts |
-| `previousHref` | The page before this one, absent on the first                                                                                                                                                                  |
-| `nextHref`     | The page after this one, absent on the last                                                                                                                                                                    |
-| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                                                                                                                                                   |
+| Prop           | What it is                                                                                                                                                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                                                                                                                                                          |
+| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, celestialBodies, toxic, reviewed }`, as asked; `reviewed` (M14.8) on the admin list only                                                         |
+| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                                                                                                                                                      |
+| `counts`       | `FacetCountsById`: the service's counts for the filter shown, as it returns them, a category and a deity by id and the rest by text (`CompendiumFacets`, or a coven's `WorkspaceIngredientFacets`). The filter labels them in the browser (`facets.ts`) |
+| `vocabulary`   | `{ deities, formIcons }`: every live deity with its id, slug, name and tradition, and each curated form's group icon by folded name. The open panel needs them to turn a live answer back into labelled counts                                          |
+| `previousHref` | The page before this one, absent on the first                                                                                                                                                                                                           |
+| `nextHref`     | The page after this one, absent on the last                                                                                                                                                                                                             |
+| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                                                                                                                                                                                            |
 
 A `CompendiumListEntry` is the entry's id, name and slug, its
 `canonicalName`, `null` for none, its `forms` (`CompendiumListForm[]`, `{ name, icon }` for each of the entry's live
@@ -37,7 +37,7 @@ filter, `query` is blank for none and `forms`, `zodiac` and `planets` are lists 
 curated text, `[]` for none. `deities` and `categories` hold slugs. The table is
 [`ingredient-search.md`](ingredient-search.md#the-parameter-table)'s.
 
-The page reads the Form box's choices as `facets.forms`, each with its count, from
+The page reads the Form box's choices as `counts.forms`, each with its count, from
 `compendiumFacets`, and each form's icon from the vocabulary module's
 `listIngredientFormValues`, every page of it through `allPages`
 (`src/lib/pagination.ts`), not one page of the maximum as the curated lists
@@ -172,7 +172,7 @@ as variables, built through `COMPENDIUM_PARAMS.variables` from the `categories` 
 `vocabulary.deities` slug-to-id maps. The ask waits for the clicking to settle
 (`DEBOUNCE_MS`), is keyed by the variables so an answer for a filter since replaced is
 never shown, and keeps the previous answer on screen while the next comes. The chips show
-their placeholder while the ask is out. `compendiumFacetCounts` turns the answer into the
+their placeholder while the ask is out. `facetChoices` turns the answer into the
 same labelled counts the page draws, using `vocabulary` for deity names and form icons.
 With covens held, the variables carry `covenIds`, and the service proves each id against the session the request carries, so the counts are of the entries those covens hold; with none, the answer is the cached, public one.
 The ask is off while the held filter equals the applied one, so the page's own counts
@@ -235,9 +235,15 @@ Picking a name in the search box's dropdown opens that entry's Quick Look over t
 
 A coven's list (`audience="coven"`) is the same row on `COVEN_PARAMS`. It adds the Source, In Stock and Low Stock Only choices, reads its live counts from the coven's cupboard, and suggests from it.
 
+## What the page sends for the vocabularies and the cards
+
+React's data for the page (the `self.__next_f.push` payload) carries each category and each deity once. The page passes the service's counts as they come, keyed by id, with `categories` and `vocabulary.deities` beside them; the filter labels them in the browser with `facetChoices(counts, vocabulariesOf(categories, vocabulary))` (`facets.ts`), which is how the panel already labelled a live answer. A labelled list sent from the server would have carried every name a second time. `tests/rsc/app/(public)/compendium/page.test.tsx` counts one category's and one deity's name in the payload, signed in and signed out.
+
+Each card is sent as its data, not its drawn markup: `IngredientCard` hands its props to a client component, so the payload holds them once and the browser draws the card from them ([`ingredient-card.md`](ingredient-card.md), "What the page sends"). A card still names its own categories, as `{ id, name }` beside a reference to the group, since its chips draw them. The measurements and the cost in scripts are in [`../design-decisions/m15.84-compendium-sends-each-thing-once.md`](../design-decisions/m15.84-compendium-sends-each-thing-once.md).
+
 ## Facet choices and their order
 
-`types.ts` carries every filter's choices with their counts, read for the filter the page shows (the compendium's `compendiumFacets`, public like the list). Each list is in the order to offer them. Forms, deities and categories go most entries first, then by label, and hold only the values some entry carries plus the ones chosen, which sit at zero if no entry carries them. Signs, celestial bodies and elements list all of them, zeros included, in the vocabulary's order. Toxic comes as toxic, then not toxic.
+`facetChoices` (`facets.ts`) makes every filter's choices with their counts from the counts the page sends, read for the filter the page shows (the compendium's `compendiumFacets`, public like the list). Each list is in the order to offer them. Forms, deities and categories go most entries first, then by label, and hold only the values some entry carries plus the ones chosen, which sit at zero if no entry carries them. Signs, celestial bodies and elements list all of them, zeros included, in the vocabulary's order. Toxic comes as toxic, then not toxic.
 
 ## The empty list
 

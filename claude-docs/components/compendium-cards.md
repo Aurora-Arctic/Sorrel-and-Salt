@@ -7,7 +7,7 @@
 | Prop                                                    | What it does                                                                                                                                            |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`                                               | One `CompendiumCardEntry` per card: name, slug, formal name, categories, forms, safety notes                                                            |
-| `filter`, `facets`, `categories`, `vocabulary`, `total` | The same filter state the admin list takes; see [`compendium-list.md`](compendium-list.md)                                                              |
+| `filter`, `counts`, `categories`, `vocabulary`, `total` | The same filter state the admin list takes; see [`compendium-list.md`](compendium-list.md)                                                              |
 | `previousHref`, `nextHref`, `position`                  | The pager's links and "Page X of Y"                                                                                                                     |
 | `action`                                                | The foot of each card: `add` or `none`                                                                                                                  |
 | `workspaceId`                                           | The default coven, which the plus adds to; `add` with none draws no plus and no check                                                                   |

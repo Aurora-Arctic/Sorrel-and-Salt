@@ -256,12 +256,21 @@ and a `?nomenclature=` left in an old link is ignored.
 `lookups = { categories, deities }` (slug to id), and gives that same string to
 the cached list read and the cached facet read (`compendiumFacets`). The counts
 beside each facet value are therefore taken under exactly the filter the list is
-under. `compendiumFacetCounts` (`CompendiumList/facets.ts`) turns the counts,
-which are keyed by id for deities and categories and by text for the rest, into
-the props the filter draws: a value, a label and a count, plus a form's icon, a
+under. The page sends those counts as the service returns them, keyed by id for
+deities and categories and by text for the rest, so each category and deity name
+reaches the browser once, in the `categories` and `vocabulary` props. In the
+browser, `facetChoices` (`CompendiumList/facets.ts`) turns them, through
+`compendiumFacetCounts` or a coven's `covenFacetCounts`, into the choices the
+filter draws: a value, a label and a count, plus a form's icon, a
 deity's tradition or a category's group. It drops an id the vocabulary no longer
 holds, and sorts forms, deities and categories by count, highest first, then
 label.
+
+**What the page sends for each card.** Each result card reaches React's data as
+its props, not as drawn markup: `IngredientCard` is a server wrapper around a
+client card face, and passes a card's safety notes on only as a stand-in that
+says there are some, since the card shows a badge and never the text
+([`ingredient-card.md`](ingredient-card.md), "What the page sends").
 
 **The cursor rule.** A cursor names a place in one filter's results, so it
 belongs to the filter it was read under. Any change to the filter opens the
