@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal, { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '@/components/Modal';
 
-// A dialog over the page on the native element's modal mode, which brings the focus trap, Escape and the inert page (claude-docs/components/modal.md).
+// claude-docs/components/modal.md
 // happy-dom's `showModal` and `close` only set and clear `open`, with no focus trap, so both are replaced by spies that do the same and can be asserted on.
 
 const showModal = vi.fn(function (this: HTMLDialogElement) {
@@ -68,8 +68,6 @@ describe('Modal', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
   });
 
-  // An edit dialog: the eyebrow says what it does to what kind, the
-  // title which entry, and a screen reader hears both, the qualifier too.
   it('is named by its eyebrow, then its title and qualifier', () => {
     render(
       <Modal
@@ -87,8 +85,6 @@ describe('Modal', () => {
     ).toBeInTheDocument();
   });
 
-  // An add dialog: where it lands over what it does, and a screen
-  // reader hears the action first, then the destination.
   it('is named by its title, then "to" its destination', () => {
     render(
       <Modal destination="Fixture Coven" title="Add Ingredient" onClose={vi.fn()}>
@@ -148,7 +144,6 @@ describe('Modal', () => {
     await settle();
     const reading = screen.getByText('Fixture reading.').parentElement!;
     expect(reading.tabIndex).toBe(0);
-    // The dialog still takes the focus as it opens, not the body.
     expect(screen.getByRole('dialog', { name: 'Testwort' })).toHaveFocus();
     unmount();
 
@@ -175,7 +170,6 @@ describe('Modal', () => {
     );
     const mark = screen.getByText('Marked');
     const close = screen.getByRole('button', { name: 'Close' });
-    // The marks first, as on screen, and neither is in the dialog's name.
     expect(mark.compareDocumentPosition(close) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.getByRole('dialog', { name: 'Edit Category' })).toBeInTheDocument();
   });
@@ -222,10 +216,8 @@ describe('Modal', () => {
     const field = screen.getByRole('textbox', { name: 'Name' });
     const at = { clientX: 20, clientY: 150 };
 
-    // A press inside released outside: a selection dragged out of a field.
     fireEvent.mouseDown(field, at);
     fireEvent.click(dialog, at);
-    // A click on its contents.
     fireEvent.mouseDown(field, at);
     fireEvent.click(field, at);
     expect(onClose).not.toHaveBeenCalled();
@@ -235,11 +227,8 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  // The focus goes back to what opened the dialog, however it closes, unless
-  // that is gone: then to the place the caller names (claude-docs/components/modal.md,
-  // "Giving the focus back").
+  // claude-docs/components/modal.md, "Giving the focus back"
   describe('giving the focus back', () => {
-    /** A page with an opener button and the modal its state opens. */
     function Page({ returnTo }: { returnTo?: () => HTMLElement | null }): ReactElement {
       const [open, setOpen] = useState(false);
       const [opener, setOpener] = useState(true);
@@ -550,10 +539,8 @@ describe('Modal', () => {
     });
   });
 
-  // The guard over a form's unsaved changes: every way out asks first while the form has changes.
   // Its shape is asserted here on a form of the test's own; each keeper form's test asserts only its wiring.
   describe('guarding unsaved changes', () => {
-    /** A form as the admin forms are: a field, a save that closes, and Cancel, with the question drawn over it while asking and its buttons still beneath. */
     function GuardedForm({ close }: { close: () => void }): ReactElement {
       const [name, setName] = useState('');
       const [note, setNote] = useState('');
@@ -611,9 +598,6 @@ describe('Modal', () => {
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
-    // The question is drawn over the form,
-    // which can be neither pressed nor typed into until it is answered. The
-    // modal's own Close stays live, so a try there flashes the question.
     it('makes the form behind the question inert while asking, and live again once answered', () => {
       renderGuarded();
       change('Name', 'Testwort');
@@ -624,7 +608,6 @@ describe('Modal', () => {
 
       expect(field('Name').closest('[inert]')).not.toBeNull();
       expect(button('Cancel').closest('[inert]')).not.toBeNull();
-      // The question, a group of its own, and the modal's Close are not.
       const question = screen.getByRole('group');
       expect(question).toContainElement(button('Keep Editing'));
       expect(question.closest('[inert]')).toBeNull();
@@ -637,7 +620,6 @@ describe('Modal', () => {
       expect(button('Cancel').closest('[inert]')).toBeNull();
     });
 
-    // A control the form put beside the title is the form's too: held while asking.
     it('makes a control beside the title inert while asking', () => {
       function WithHeaderControl({ close }: { close: () => void }): ReactElement {
         const slot = useModalHeaderSlot();
@@ -738,13 +720,10 @@ describe('Modal', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    // A way out tried again flashes the
-    // question, so the person sees why nothing closed, and each try does.
     it('flashes the question for a way out tried again while asking, the focus back on Keep Editing', () => {
       const onClose = renderGuarded();
       change('Name', 'Testwort');
       fireEvent.click(button('Cancel'));
-      // The question's count of tries, 0 until one.
       const flashes = () =>
         button('Keep Editing').closest('[data-flash]')?.getAttribute('data-flash');
       expect(flashes()).toBe('0');
@@ -778,7 +757,6 @@ describe('Modal', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    // Cancel, the button pressed, stays beneath the question: back to it.
     it('focuses Cancel again on Keep Editing after Cancel', () => {
       renderGuarded();
       change('Note', 'Kept');
@@ -813,7 +791,6 @@ describe('Modal', () => {
   });
 });
 
-// While a modal is open the root's scroll is hidden and the scrollbar's room is given back as padding (Modal/page-hold.ts).
 // The width is published as `--scrollbar-width` only where the page had a scrollbar and only until the last modal closes; the padding itself is presentation, measured by hand.
 describe('Modal holding the page', () => {
   const root = document.documentElement;
