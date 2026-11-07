@@ -40,3 +40,15 @@
 .skeleton__shapes .skeleton__line {
   width: 70%;
 }
+
+// A panel's heading bar holds the height of the section heading it stands for, so the lede beneath
+// it stands where the real one will.
+.panel-skeleton__title {
+  display: flex;
+  align-items: center;
+  min-block-size: 2.5rem;
+
+  > .skeleton {
+    flex: 1;
+  }
+}

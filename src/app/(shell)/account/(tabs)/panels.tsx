@@ -43,6 +43,9 @@ export const AccountSignInPanelSkeleton = () => (
 /** The Support Requests tab's body: the New Request button, then the list's rows. */
 export const AccountSupportPanelSkeleton = () => (
   <PageWithNav as="div" headless>
+    <div className="lede">
+      <Skeleton shape="line" quiet />
+    </div>
     <Skeleton shape="block" quiet />
     <Skeleton shape="line" count={6} quiet />
   </PageWithNav>

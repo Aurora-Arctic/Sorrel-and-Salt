@@ -6,8 +6,12 @@ import Skeleton from '.';
 export const PanelSkeleton = ({ fields = 1 }: { fields?: number }): ReactElement => (
   <section className="page-frame__section panel">
     <div className="header">
-      <Skeleton shape="line" quiet />
-      <Skeleton shape="line" quiet />
+      <div className="panel-skeleton__title">
+        <Skeleton shape="line" quiet />
+      </div>
+      <div className="lede">
+        <Skeleton shape="line" quiet />
+      </div>
     </div>
     <Skeleton shape="block" count={fields} quiet />
   </section>
