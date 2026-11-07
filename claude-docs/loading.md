@@ -362,7 +362,10 @@ destination's skeleton. It runs once per wait, in `useLeavingSkeleton` (`src/com
 which both hosts call. A click made far down the page therefore moves the page once, at the tap, and
 the arrived page has no scroll left to reset. A navigation that draws no host skeleton (a pager, a
 filter, a sort) and a route modal do not scroll. Next's own scroll on arrival is left on and has
-nothing to do. The skeleton cover is pinned under the site bar (`.skeleton-cover__pin`); with the page
+nothing to do. Scrolling before Next pushes the next address means the browser saves 0 as the left
+page's position, so Back alone would open it at the top; the hook saves the position into that page's
+history entry first and restores it on Back or Forward once the page has drawn
+(claude-docs/components/skeleton-fade.md, "Back after a skeleton"). The skeleton cover is pinned under the site bar (`.skeleton-cover__pin`); with the page
 at the top, the context row above the cover needs no extra allowance.
 
 ### A skeleton runs no query
