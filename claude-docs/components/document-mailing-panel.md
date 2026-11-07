@@ -1,7 +1,7 @@
 # Document Mailing Panel
 
 `src/components/DocumentMailingPanel/` — the Email Updates page, `/keepers/documents`, that emails every account one joint email about
-every document changed since the last email (M15.63, made joint in M15.79). The page reads the overview with `readDocumentMailings` and
+every document changed since the last email. The page reads the overview with `readDocumentMailings` and
 hands it over; admin only: the service is the guard.
 
 ## Contracts
@@ -24,5 +24,4 @@ hands it over; admin only: the service is the guard.
 
 ## Tests
 
-`tests/components/DocumentMailingPanel/index.test.tsx` covers each state's controls, the trimmed summaries and the refresh after each
-send. The panel has no story file.
+`tests/components/DocumentMailingPanel/index.test.tsx`. The panel has no story file.

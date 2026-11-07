@@ -3,10 +3,7 @@
 `src/components/LocalTime/` — an instant to the minute, as `2026-10-30 2:05 pm`, in a `<time>` whose
 `datetime` carries the full instant.
 
-## Props
-
-`LocalTimeProps` (`types.ts`): `at` (a `Date`) and `timeZone` (optional; a zone to print in instead of the
-viewer's own, for tests and stories).
+Props are in `types.ts`; `timeZone` prints in a given zone instead of the viewer's own, for tests and stories.
 
 ## How it avoids a hydration mismatch
 

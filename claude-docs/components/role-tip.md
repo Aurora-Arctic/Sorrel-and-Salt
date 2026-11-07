@@ -3,13 +3,9 @@
 `src/components/RoleTip/` — a role's name in a list's Role column with an ⓘ
 beside it that opens a tip (a small note) saying what the role may do.
 
-| Prop          | Meaning                                                                               |
-| ------------- | ------------------------------------------------------------------------------------- |
-| `label`       | The role's word as the column shows it: Admin, Curator, User, Owner, Member, Viewer   |
-| `description` | What the role may do: the sentence the Change Role control shows beside the same role |
-| `emphasis`    | Bold, for the roles a list sets apart: a keeper, a curator, a steward                 |
+Props are in `types.ts`: `label` (the role's word as the column shows it), `description` and `emphasis`.
 
-## Behaviour
+## Contracts
 
 - **The tip is an [`InfoTip`](info-tip.md)**, named "About <label>", so it opens on
   focus, hover and tap, closes on Escape, and is read to a screen reader as the
@@ -37,10 +33,4 @@ beside it that opens a tip (a small note) saying what the role may do.
 
 ## Tests
 
-- `tests/components/RoleTip/index.test.tsx`: the button's name, the tooltip's
-  text and `aria-describedby`, open on focus, and the emphasis.
-- `tests/components/UserList/index.test.tsx` and
-  `tests/components/MemberList/index.test.tsx`: each row's tip holds its role's
-  constant.
-- `tests/e2e/role-tooltips.spec.ts`: one tip opened by keyboard on each page,
-  axe passing with it open.
+`tests/components/RoleTip/`; `tests/components/UserList/index.test.tsx` and `tests/components/MemberList/index.test.tsx` (each row's tip holds its role's constant); `tests/e2e/role-tooltips.spec.ts` (one tip opened by keyboard on each page, axe passing with it open).

@@ -33,16 +33,6 @@ It takes no props.
 ground are the page's `.page-frame--narrow` and `.panel`, as the sign-in page's
 are. Nothing past the tokens.
 
-## Stories
+## Stories and tests
 
-[`index.stories.tsx`](../../src/components/ForgotPasswordForm/index.stories.tsx),
-titled "Sign In / Forgot Password Form": `States`, Default, inside the page's
-own frame, panel and heading. Nothing is mocked: a submit in the workshop
-fails into the alert region.
-
-## Testing
-
-`tests/components/ForgotPasswordForm/index.test.tsx`: the disabled and busy
-submit, the call Better Auth gets, the same notice for every accepted request,
-the 429 and the generic refusal. Story 71 walks it in the browser
-(`tests/e2e/stories/16-password.spec.ts`).
+`src/components/ForgotPasswordForm/index.stories.tsx` (nothing is mocked: a submit in the workshop fails into the alert region); `tests/components/ForgotPasswordForm/index.test.tsx`; story 71 in `tests/e2e/stories/16-password.spec.ts`.
