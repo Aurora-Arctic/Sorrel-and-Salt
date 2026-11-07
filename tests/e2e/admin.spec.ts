@@ -51,6 +51,7 @@ test('an admin sees the curator area and its nav at /curator, and the keepers ar
     ['Invitations', '/keepers/invitations'],
     // The documents open on the terms of use, their first tab.
     ['Documents', '/keepers/documents/terms'],
+    ['Business Cards', '/keepers/business-cards'],
   ];
   await expect(keepersNav.getByRole('link')).toHaveCount(pages.length);
   // A tab with a count is named "Support 0": its label, then its count.
@@ -270,6 +271,7 @@ test('a curator reaches /curator, the curation pages and /keepers with Support a
     '/keepers/card-sign-ups',
     '/keepers/documents/privacy',
     '/keepers/documents/disclaimer',
+    '/keepers/business-cards',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(403);
   }

@@ -1,186 +1,36 @@
-import * as fontkitModule from '@pdf-lib/fontkit';
 import {
   appendBezierCurve,
-  beginText,
-  clip,
   closePath,
   concatTransformationMatrix,
-  drawObject,
-  endPath,
-  endText,
   fill,
   lineTo,
   moveTo,
-  type PDFFont,
   PDFDocument,
-  PDFHexString,
-  PDFNumber,
   PDFOperator,
   PDFRawStream,
   type PDFOperator as Operator,
-  type PDFPage,
-  type PDFRef,
   popGraphicsState,
   pushGraphicsState,
-  rectangle,
-  setCharacterSpacing,
   setFillingCmykColor,
-  setFontAndSize,
-  setLineWidth,
-  setStrokingCmykColor,
-  setTextMatrix,
-  stroke,
 } from 'pdf-lib';
+import { addSheetPage, backPosition, drawSheet, embedAssets, LABEL_AT } from '../card-sheet/sheet';
 import { FRONT_COPY, validUntil } from './copy';
-import { padGlyphs } from './font-padding';
-import { decodePng, GROUND_INK, inkOf, MUTED_INK, tintPicture } from './inks';
+import { GROUND_INK, MUTED_INK } from './inks';
 import {
-  ARTBOARD,
   BACK_PICTURE,
   backText,
   codeColumnText,
   marginText,
-  type CardFonts,
-  type FontKey,
   FRONT_PICTURE,
   frontCode,
   frontText,
-  PX_PER_INCH,
-  type PictureItem,
   type QrItem,
-  type TextItem,
 } from './layout';
 import { CARDS_PER_SHEET } from './limits';
 import { qrShapes } from '../qr';
 import { codeShadows, type CodeShadows } from './shadow';
-import { glyphAdvances } from './text';
 import type { RoundedSquare } from '../qr/types';
 import type { CardAssets, CardSheetsInput } from './types';
-
-// Every length below is in points (72 to the inch) on the portrait page, measured from its top left with y running down.
-
-const PT = 72;
-export const PAGE = { width: 8.5 * PT, height: 11 * PT };
-const TRIM = { width: 3.5 * PT, height: 2 * PT };
-const BLEED = 0.125 * PT;
-/** Two cards across the page and five down, each standing upright. */
-const COLUMNS = 2;
-const ROWS = CARDS_PER_SHEET / COLUMNS;
-const BLOCK_SIZE = {
-  width: COLUMNS * TRIM.width + 2 * BLEED,
-  height: ROWS * TRIM.height + 2 * BLEED,
-};
-/**
- * The block of ten cards and its bleed, 7.25 × 10.25 in, centred: 5/8 in from each side and 3/8 in from the top and the
- * bottom, so a printer's unprintable edge clips neither the bleed nor the crop marks outside it.
- */
-export const BLOCK = {
-  x: (PAGE.width - BLOCK_SIZE.width) / 2,
-  y: (PAGE.height - BLOCK_SIZE.height) / 2,
-  ...BLOCK_SIZE,
-};
-const ARTBOARD_SCALE = PT / PX_PER_INCH;
-
-// Crop marks sit on each cut line's extension, clear of the bleed; at the top and bottom they end 18.75 pt from the paper's
-// edge, outside the 1/4 in a printer may leave unprinted.
-const MARK = { width: 0.75, gap: 2.25, length: 6 };
-/**
- * The sheet label's place: in the margin below the block, 8 pt in from the first trim, its baseline 21 pt from the paper's
- * edge, so its 5 pt letters stand clear of the block above and of the 1/4 in a printer may leave unprinted below.
- */
-const LABEL_AT = { x: BLOCK.x + BLEED + 8, baseline: PAGE.height - 21 };
-
-interface Sheet {
-  fronts: PDFPage;
-  /** Absent when the backs are left out. */
-  backs?: PDFPage;
-}
-
-interface Embedded {
-  fonts: Record<FontKey, PDFFont>;
-  measure: CardFonts;
-  pictures: Record<PictureItem['picture'], PDFRef>;
-}
-
-/** The top left of card i's trim on its sheet: two across the page, five down. */
-function cardTrim(i: number): { x: number; y: number } {
-  return {
-    x: BLOCK.x + BLEED + (i % COLUMNS) * TRIM.width,
-    y: BLOCK.y + BLEED + Math.floor(i / COLUMNS) * TRIM.height,
-  };
-}
-
-/** The position a card's back takes: the backs are mirrored by column, so a long-edge two-sided print puts each back behind its front. */
-export function backPosition(i: number): number {
-  return Math.floor(i / COLUMNS) * COLUMNS + (COLUMNS - 1 - (i % COLUMNS));
-}
-
-/**
- * Starts a page with y running down from its top left. Both faces stand upright: a portrait page turned over its long edge
- * keeps its top at the top, so the backs need no half turn, and a cut card turned side over side, like a book page, shows
- * its back right way up.
- */
-function frameOperators(): Operator[] {
-  return [concatTransformationMatrix(1, 0, 0, -1, 0, PAGE.height)];
-}
-
-/** Moves the origin to card i's artboard, its trim on the card's cut, in the artboard's pixels. */
-function artboardOperators(i: number): Operator[] {
-  const trim = cardTrim(i);
-  const inset = ARTBOARD.trimInset * ARTBOARD_SCALE;
-  return [
-    concatTransformationMatrix(
-      ARTBOARD_SCALE,
-      0,
-      0,
-      ARTBOARD_SCALE,
-      trim.x - inset,
-      trim.y - inset,
-    ),
-  ];
-}
-
-interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-function imageOperators(page: PDFPage, image: PDFRef, item: Rect): Operator[] {
-  const name = page.node.newXObject('Image', image);
-  // The image space runs up from its bottom left, so it is flipped to stand upright in the frame.
-  return [
-    pushGraphicsState(),
-    concatTransformationMatrix(item.width, 0, 0, -item.height, item.x, item.y + item.height),
-    drawObject(name),
-    popGraphicsState(),
-  ];
-}
-
-// The glyphs are written one by one in a TJ array, because pdf-lib's own text drawing leaves out the fonts' kerning.
-function textOperators(page: PDFPage, embedded: Embedded, item: TextItem): Operator[] {
-  const font = embedded.fonts[item.font];
-  const measure = embedded.measure[item.font];
-  const hex = font.encodeText(item.text).asString();
-  const advances = glyphAdvances(measure, item.text);
-  const shown: (PDFHexString | PDFNumber)[] = [];
-  advances.forEach(({ advance, kerned }, g) => {
-    shown.push(PDFHexString.of(hex.slice(g * 4, g * 4 + 4)));
-    const adjust = ((advance - kerned) * 1000) / measure.unitsPerEm;
-    if (adjust !== 0) shown.push(PDFNumber.of(adjust));
-  });
-  const name = page.node.newFontDictionary(font.name, font.ref);
-  return [
-    beginText(),
-    setFillingCmykColor(...inkOf(item.colour)),
-    setFontAndSize(name, item.size),
-    setCharacterSpacing(item.letterSpacing),
-    setTextMatrix(1, 0, 0, -1, item.x, item.baseline),
-    PDFOperator.of('TJ' as never, [page.doc.context.obj(shown)]),
-    endText(),
-  ];
-}
 
 // A circle and a rounded corner are cubic Béziers with the usual 0.5523 handle, which no viewer or RIP draws differently.
 const KAPPA = 0.5522847498;
@@ -237,115 +87,6 @@ function qrOperators(link: string, at: QrItem): Operator[] {
   return ops;
 }
 
-function cropMarkOperators(): Operator[] {
-  const ops: Operator[] = [setStrokingCmykColor(0, 0, 0, 1), setLineWidth(MARK.width)];
-  const top = BLOCK.y;
-  const bottom = BLOCK.y + BLOCK.height;
-  const left = BLOCK.x;
-  const right = BLOCK.x + BLOCK.width;
-  for (let k = 0; k <= COLUMNS; k += 1) {
-    const x = BLOCK.x + BLEED + k * TRIM.width;
-    ops.push(moveTo(x, top - MARK.gap), lineTo(x, top - MARK.gap - MARK.length));
-    ops.push(moveTo(x, bottom + MARK.gap), lineTo(x, bottom + MARK.gap + MARK.length));
-  }
-  for (let k = 0; k <= ROWS; k += 1) {
-    const y = BLOCK.y + BLEED + k * TRIM.height;
-    ops.push(moveTo(left - MARK.gap, y), lineTo(left - MARK.gap - MARK.length, y));
-    ops.push(moveTo(right + MARK.gap, y), lineTo(right + MARK.gap + MARK.length, y));
-  }
-  ops.push(stroke());
-  return ops;
-}
-
-/**
- * Draws one page: the soot block, then every picture, then every shadow, then every card's words and code, all clipped to the block's outer edge,
- * so no picture lands over a neighbour's words. A position with no card stays plain soot, so the block prints and cuts as a full one.
- */
-function drawPage(
-  page: PDFPage,
-  cards: {
-    position: number;
-    picture: PictureItem;
-    text: TextItem[];
-    code?: { link: string; at: QrItem };
-    shadow?: { image: PDFRef; rect: Rect };
-  }[],
-  embedded: Embedded,
-  margin: TextItem,
-) {
-  const ops: Operator[] = [pushGraphicsState(), ...frameOperators(), pushGraphicsState()];
-  ops.push(rectangle(BLOCK.x, BLOCK.y, BLOCK.width, BLOCK.height), clip(), endPath());
-  ops.push(
-    setFillingCmykColor(...GROUND_INK),
-    rectangle(BLOCK.x, BLOCK.y, BLOCK.width, BLOCK.height),
-    fill(),
-  );
-  for (const card of cards) {
-    ops.push(pushGraphicsState(), ...artboardOperators(card.position));
-    ops.push(
-      ...imageOperators(page, embedded.pictures[card.picture.picture], card.picture),
-      popGraphicsState(),
-    );
-  }
-  for (const { position, shadow } of cards)
-    if (shadow)
-      ops.push(
-        pushGraphicsState(),
-        ...artboardOperators(position),
-        ...imageOperators(page, shadow.image, shadow.rect),
-        popGraphicsState(),
-      );
-  for (const card of cards) {
-    ops.push(pushGraphicsState(), ...artboardOperators(card.position));
-    for (const item of card.text) ops.push(...textOperators(page, embedded, item));
-    if (card.code) ops.push(...qrOperators(card.code.link, card.code.at));
-    ops.push(popGraphicsState());
-  }
-  ops.push(popGraphicsState(), ...cropMarkOperators(), ...textOperators(page, embedded, margin));
-  ops.push(popGraphicsState());
-  page.pushOperators(...ops);
-}
-// The browser bundle gives the ES build's API on `default` only; Node's gives it on the namespace.
-const fontkit = (
-  'default' in fontkitModule ? fontkitModule.default : fontkitModule
-) as typeof fontkitModule;
-
-async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedded> {
-  doc.registerFontkit(fontkit);
-  const keys: FontKey[] = ['cormorant600', 'lexend300', 'lexend400', 'lexend500'];
-  const fonts = {} as Record<FontKey, PDFFont>;
-  const measure = {} as CardFonts;
-  for (const key of keys) {
-    const bytes = padGlyphs(assets[key]);
-    fonts[key] = await doc.embedFont(bytes, { subset: true });
-    measure[key] = fontkit.create(bytes);
-  }
-  return {
-    fonts,
-    measure,
-    pictures: { salt: embedPicture(doc, assets.salt), sorrel: embedPicture(doc, assets.sorrel) },
-  };
-}
-
-/** Embeds a picture tinted into the print inks: an 8-bit DeviceCMYK image, its alpha a DeviceGray soft mask. */
-function embedPicture(doc: PDFDocument, png: Uint8Array): PDFRef {
-  const { rgba, width, height } = decodePng(png);
-  const { cmyk, alpha } = tintPicture(rgba, width, height);
-  const image = {
-    Type: 'XObject',
-    Subtype: 'Image',
-    Width: width,
-    Height: height,
-    BitsPerComponent: 8,
-  };
-  const mask = doc.context.register(
-    doc.context.flateStream(alpha, { ...image, ColorSpace: 'DeviceGray' }),
-  );
-  return doc.context.register(
-    doc.context.flateStream(cmyk, { ...image, ColorSpace: 'DeviceCMYK', SMask: mask }),
-  );
-}
-
 /**
  * Embeds a card's shadow: an image of solid ground ink the mask's size, its soft mask the blurred column. Every
  * shadow's ink is the same, so it is compressed once and its bytes shared.
@@ -377,7 +118,7 @@ function shadowEmbedder(doc: PDFDocument, shadows: CodeShadows) {
   };
 }
 
-/** Builds the print PDF: per sheet of twelve, a page of fronts, then (unless `backs` is false) a page of their backs. */
+/** Builds the print PDF: per sheet of ten, a page of fronts, then (unless `backs` is false) a page of their backs. */
 export async function renderCardSheets(
   { links, batch, expiresAt, backs = true }: CardSheetsInput,
   assets: CardAssets,
@@ -397,25 +138,23 @@ export async function renderCardSheets(
   for (let start = 0; start < links.length; start += CARDS_PER_SHEET) {
     const number = start / CARDS_PER_SHEET + 1;
     const sheetLinks = links.slice(start, start + CARDS_PER_SHEET);
-    const sheet: Sheet = {
-      fronts: doc.addPage([PAGE.width, PAGE.height]),
-      backs: backs ? doc.addPage([PAGE.width, PAGE.height]) : undefined,
-    };
-    drawPage(
-      sheet.fronts,
+    const frontPage = addSheetPage(doc);
+    const backPage = backs ? addSheetPage(doc) : undefined;
+    drawSheet(
+      frontPage,
       sheetLinks.map((link, i) => ({
         position: i,
         picture: FRONT_PICTURE,
         text: fronts[(start + i) % fronts.length],
-        code: { link, at: code },
-        shadow: shadowOf(link),
+        overlay: shadowOf(link),
+        extra: qrOperators(link, code),
       })),
       embedded,
       marginText(batch, number, sheets, 'front', LABEL_AT),
     );
-    if (sheet.backs)
-      drawPage(
-        sheet.backs,
+    if (backPage)
+      drawSheet(
+        backPage,
         sheetLinks.map((_, i) => ({
           position: backPosition(i),
           picture: BACK_PICTURE,
