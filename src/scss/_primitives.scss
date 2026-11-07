@@ -2,8 +2,7 @@
 @use './variables' as *;
 @use './mixins' as *;
 
-// The Add as a plus alone on the heading's line; `$header` scopes it, and `$heading-takes-line` is left off
-// where a tabbed page keeps its pills on the line (`TabbedPage/index.scss`).
+// `$heading-takes-line` is left off where a tabbed page keeps its pills on the line (`TabbedPage/index.scss`).
 @mixin add-action-as-plus($header, $heading-takes-line: true) {
   @if $heading-takes-line {
     #{$header}:has(.add-action) > h1 {
@@ -67,9 +66,7 @@
     }
   }
 
-  // A heading with a tag at its top right: the name in the first column and the tag in the second,
-  // at the top of the row. A grid cell rather than an inline badge, so the tag stays beside the
-  // name's first line when the name wraps and adds nothing to the heading's line height.
+  // A grid cell rather than an inline badge, so the tag stays beside the name's first line when the name wraps.
   .page-title--tagged {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -83,7 +80,6 @@
     align-items: center;
   }
 
-  // An ink palette has no box to draw, so it gets no class.
   @each $palette in map.keys($badge-palettes) {
     @if map.get(map.get($badge-palettes, $palette), treatment) != ink {
       .badge--#{$palette} {
@@ -96,8 +92,6 @@
     @include chip;
   }
 
-  // modal-surface() leaves width, padding and position to the caller; this adds only the padding and
-  // heading trim every instance wants.
   .modal {
     @include modal-surface;
     padding: space(5);
@@ -113,9 +107,7 @@
     margin-top: space(4);
   }
 
-  // A confirmed action's refusal inside a dialog is a plain notice after its button, so in a row of
-  // buttons it takes its own full-width line above them rather than squeezing the button. `order`
-  // rather than moving it in the document, as the same notice stands beside a control outside a row too.
+  // `order` rather than moving it in the document, as the same notice stands beside a control outside a row too.
   .modal__actions:has(> .notice) {
     flex-wrap: wrap;
     row-gap: space(4);
@@ -133,14 +125,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    // Between a mark and its label; SignInPanel's column is sized by it.
     gap: 0.625rem;
     font-family: $font-body;
     font-size: type-size('small');
     font-weight: 500;
-    // Level with a field ($control-height), whatever the font's line height:
-    // the padding leaves the label short of it, and the minimum makes up the
-    // rest, centred by the flex box.
+    // Level with a field ($control-height): the padding leaves the label short of it and the minimum makes up the rest.
     box-sizing: border-box;
     min-height: $control-height;
     padding: space(2) space(5);
@@ -179,8 +168,7 @@
     }
   }
 
-  // What destroys something: Delete, Remove. Named for what it does rather
-  // than for its colour token, `$secondary`, which every error wears too.
+  // Named for what it does, not its colour token `$secondary`, which every error wears too.
   .btn--destructive {
     border-color: $secondary;
     color: $secondary;
@@ -191,7 +179,6 @@
   }
 
   // What takes effect for every reader at once and needs care, not undoing: a document's Publish.
-  // In the warning ochre, the step short of the destructive red.
   .btn--caution {
     border-color: $warning;
     color: $warning;
@@ -201,22 +188,15 @@
     }
   }
 
-  // A size, not a colour, so it composes with every variant: for a compact
-  // strip — a banner, a table row — that the full button would make taller.
   .btn--small {
     gap: space(2);
-    // Off the field's height: a small button sits in a strip, not beside a
-    // field, and the control height would make it a full one again.
+    // A small button sits in a strip, not beside a field; the control height would make it full again.
     min-height: 0;
     padding: space(1) space(3);
-    // A field's hairline rather than `.btn`'s 1.6px, which reads heavy at
-    // this size.
     border-width: 1px;
     font-size: type-size('caption');
   }
 
-  // A size between the full button and `.btn--small`, for the shell's bar: the label stays at `.btn`'s
-  // size and the edge at its weight, and only the height comes down, off the field's.
   .btn--medium {
     min-height: 0;
     padding: space(1) space(4);
@@ -235,8 +215,7 @@
     @include btn-disabled;
   }
 
-  // The one filled button in a view: its primary action. Its hover is a
-  // step of its own, larger than a link's, or the fill barely changes.
+  // Its hover is a step larger than a link's, or the fill barely changes.
   .btn--solid {
     background-color: $accent;
     color: $text-on-color;
@@ -248,9 +227,6 @@
     }
   }
 
-  // Cancel, dismiss, go back: an action that changes nothing, its label in the body ink, so it neither
-  // competes with the primary nor reads as destructive or disabled. Set in a field's ground inside a
-  // hairline; pointed at, the ground takes the highlight and the edge goes partway to the accent.
   .btn--quiet {
     border-color: $hairline;
     background-color: $surface-card;
@@ -278,9 +254,7 @@
     }
   }
 
-  // A paged list's Prev and Next, centred under its table: a `nav` of full-size `.btn--quiet` anchors,
-  // quiet because paging changes nothing. The ‹ and › marks are `aria-hidden`, leaving each link named
-  // "Prev" or "Next". One line at every width, closing up on a narrow pager.
+  // Quiet because paging changes nothing; the ‹ and › marks are `aria-hidden`, leaving each link named "Prev" or "Next".
   .pager {
     container: pager / inline-size;
   }
@@ -295,8 +269,7 @@
     @include list-reset;
   }
 
-  // Twice the label, with a line height of 1 so the mark does not make the button taller; a box a label's em
-  // wide, so either guillemet leaves its button the same size.
+  // A line height of 1 so the mark does not make the button taller, in a box a label's em wide so either guillemet leaves the button the same size.
   .pager__mark {
     display: inline-flex;
     align-items: center;
@@ -333,8 +306,7 @@
     }
   }
 
-  // A page's heading with its one primary action on the same line, at the end; the action sits 0.25rem low
-  // because a centred button reads high. A size container keyed off its own width, as `.form` is.
+  // The action sits 0.25rem low because a centred button reads high.
   .page-header {
     display: flex;
     flex-wrap: wrap;
@@ -385,8 +357,6 @@
     height: $glyph-size-large;
   }
 
-  // Under the forms' column, 28rem of its own width, an action goes beneath the heading rather than
-  // squeezing a long heading onto three lines, at the line's start and with no need to be brought down.
   @container page-header (max-width: #{$narrow-column}) {
     .page-header > h1,
     .page-header > .page-header__title {
@@ -394,9 +364,6 @@
     }
   }
 
-  // The plus has a floor as well as a ceiling: at `$add-below-width` and
-  // under the base rules above return the labelled button, beneath the
-  // heading (the primitive's narrow rules, with the auto margin cancelled).
   @container page-header (min-width: calc(#{$add-below-width} + 0.01rem)) and (max-width: #{$narrow-column}) {
     @include add-action-as-plus('.page-header');
   }
@@ -413,8 +380,7 @@
     }
   }
 
-  // A filter form's row, a toolbar that applies as it changes (claude-docs/components/filter-form.md). A size
-  // container as `.page-header` is: under 28rem of its own width every child takes the whole line.
+  // (claude-docs/components/filter-form.md). A size container as `.page-header` is.
   .filter-row {
     display: flex;
     flex-wrap: wrap;
@@ -422,15 +388,13 @@
     gap: space(3) space(5);
     container: filter-row / inline-size;
 
-    // The search, always first, takes the line's spare room; its grow factor dwarfs a choice's, so a choice keeps its
-    // width to the pixel beside it.
+    // Its grow factor dwarfs a choice's, so a choice keeps its width to the pixel beside it.
     > :first-child {
       flex: 9999 1 $filter-search-basis;
       min-width: 0;
     }
 
-    // A choice stands at one width, `$filter-choice-width`, so the server's select and the hydrated type-ahead do not
-    // differ. `FilterSelectField` marks every form of a choice `filter-row__choice`; a bare `.field` holding a select counts too.
+    // One width, so the server's select and the hydrated type-ahead do not differ.
     > :is(.field:has(> .select), .filter-row__choice) {
       flex: 1 1 $filter-choice-width;
       min-width: 0;
@@ -451,16 +415,12 @@
     margin-inline-start: auto;
   }
 
-  // On a phone's narrow row the search takes the whole first line and a choice a line of its own; every other child
-  // keeps its width, Clear at the end. One `:is()` at the choice rule's weight, so it overrides by coming later.
+  // One `:is()` at the choice rule's weight, so it overrides by coming later.
   @container filter-row (max-width: #{$narrow-column}) {
     .filter-row > :is(:first-child, .field:has(> .select), .filter-row__choice) {
       flex-basis: 100%;
     }
 
-    // A switch (the coven list's Compact) is a row here, not a column: label beside its track,
-    // `space(2)` apart, a control's height and centred, so it stands level with the Filters button. It
-    // keeps its own width (`flex: none`); with Clear All showing it wraps beneath, at the line's start.
     .filter-row > .switch {
       flex: none;
       flex-direction: row;
@@ -479,7 +439,6 @@
     }
   }
 
-  // The row while its list is on its way, greyed as a tabbed page's tabs are (claude-docs/components/filter-form.md).
   // Under `body`, so it outweighs the fields' own hover.
   .filter-row[aria-busy='true'] {
     > * {
@@ -496,7 +455,6 @@
     }
   }
 
-  // A paragraph in it takes no margin, as the gap alone spaces the column.
   .list-frame,
   .list-frame__body {
     @include stack;
@@ -506,14 +464,11 @@
     }
   }
 
-  // The new list, faded in as it replaces the skeleton, as a tab's content
-  // is (claude-docs/components/list-frame.md); a list the server drew,
-  // before any press, has no `data-arrived` and shows at once.
+  // A list the server drew, before any press, has no `data-arrived` and shows at once.
   .list-frame__body[data-arrived] {
     @include arrived;
   }
 
-  // The site's one fade in and one fade out, emitted once: a list's arrival, a callout, a mark leaving.
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -576,8 +531,6 @@
     min-height: calc(100dvh - #{$top-inset});
   }
 
-  // The shell's bar takes room above the frame, so the frame is shorter by it
-  // and a centred page still fits the window without a scroll.
   :is(.app-shell, .public-frame) .page-frame {
     min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height} - #{$footer-space});
 
@@ -586,8 +539,6 @@
     }
   }
 
-  // Beside a context row (the create page's), the frame is shorter by the row
-  // and its hairline too.
   .app-shell__main:has(.context-row) .page-frame {
     min-height: calc(
       100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height} - 1px -
@@ -640,8 +591,6 @@
     max-width: $narrow-column;
   }
 
-  // A titled section of a framed page: its head, then its content. Clear of
-  // the top inset when the page's own nav jumps to it.
   .page-frame__section {
     @include stack(3);
     scroll-margin-top: #{space(4)};
@@ -705,8 +654,6 @@
     @include stack;
   }
 
-  // The curator and keepers indexes in the reading column, centred in the admin area's wider one as the account page's sections are in the
-  // page; the text inside stays left-aligned.
   .admin-index {
     box-sizing: border-box;
     width: 100%;
@@ -768,13 +715,11 @@
       width: auto;
     }
 
-    // A page with no head of its own, such as a tab inside `TabbedPage` whose heading stands above: the menu starts on the first row.
     .page-with-nav--headless > .page-nav {
       grid-row: 1 / span 3;
     }
   }
 
-  // A provider's mark on a small circle of its brand's own ground (claude-docs/styling.md, "Provider marks").
   .provider-mark {
     display: inline-flex;
     flex-shrink: 0;
@@ -862,7 +807,6 @@
     opacity: $opacity-disabled;
 
     path {
-      // The chevrons scale to the pair's size without thinning their stroke.
       vector-effect: non-scaling-stroke;
     }
   }
@@ -917,7 +861,6 @@
     }
   }
 
-  // The change eases in only for a visitor who has not asked for less motion, who sees it at once.
   @media (prefers-reduced-motion: no-preference) {
     .data-table__sort-arrow {
       transition:
@@ -977,8 +920,6 @@
         @include stack(3);
       }
 
-      // Every card on the card surface, so the bands give way: each row is already its own box. Room around
-      // and between the cells, a step more than a table row's, as a card of text alone read cramped.
       > tbody > tr {
         display: grid;
         gap: space(3);
@@ -996,8 +937,6 @@
         content: attr(data-label);
         content: attr(data-label) / '';
         display: block;
-        // A step from its value, well inside the gap between cells, so a label sits with its own value: a
-        // row of logos would otherwise touch it.
         margin-bottom: space(1);
         color: $text-muted;
         font-size: type-size('caption');
@@ -1008,8 +947,6 @@
         content: none;
       }
 
-      // A cell with no label is an action: across the card, whatever columns
-      // a component gives the grid.
       > tbody > tr > [data-label=''] {
         grid-column: 1 / -1;
       }
@@ -1084,8 +1021,6 @@
     color: $secondary-hover;
   }
 
-  // Warning: bar, tint and triangle in the ochre, the text in the body ink, for what deserves attention
-  // but does not block, such as a colour too near another group's.
   .notice--warn {
     --notice-bar: #{$warning};
     --notice-icon: #{$warning};
@@ -1131,8 +1066,7 @@
     color: $accent-hover;
   }
 
-  // The warning triangle before an error, a warning or a caution: in the notice's padding rather than a
-  // flex row, so a link in the text stays inline. Drawn by mask in `--notice-icon`.
+  // In the notice's padding rather than a flex row, so a link in the text stays inline.
   .notice--error,
   .notice--warn,
   .notice--caution {
@@ -1153,16 +1087,11 @@
   // A field is its label, an optional hint, the control and its error. The control names the hint and the error
   // in `aria-describedby` and carries `aria-invalid`, which draws the error edge (claude-docs/styling.md, "Form fields").
 
-  // The signed-out Support panel: its notice and form stand a step apart, one gap and no margin of
-  // their own (the notice, the form's first group and its legend all sit at zero).
   .support-panel--signed-out {
     display: grid;
     gap: space(4);
   }
 
-  // The card landing page: the welcome as plain words and the accept panel as a card, two columns on a wide window,
-  // the words at the reading measure and the card beside them, one column on a phone with the card after the words.
-  // The invitation card's width: the second column on the early-tester page, and the card under the words on the other.
   $card-landing-card-width: 22rem;
 
   .card-landing__words {
@@ -1173,8 +1102,6 @@
     }
   }
 
-  // Each part of the welcome, a heading with its paragraphs, its children one gap apart and no margin of their own, so a
-  // heading sits nearer the text it opens than the part before it.
   .card-landing__part {
     @include stack(3);
     max-width: $measure;
@@ -1200,15 +1127,11 @@
     }
   }
 
-  // The heading alone fills the first row, so the card's top is the second row's: the first paragraph's, however many
-  // lines the heading takes. On a phone the card follows the words.
   .card-landing__grid > .card-landing__head,
   .card-landing__grid > .card-landing__words {
     grid-column: 1;
   }
 
-  // The card keeps pace with a long welcome on a wide window; on a phone it simply follows the words, half the row gap
-  // further down than a paragraph would be, so it stands apart from them.
   .card-landing__grid > .card-landing__card {
     position: sticky;
     top: calc(#{$shell-bar-height} + #{space(4)});
@@ -1223,9 +1146,6 @@
     }
   }
 
-  // An ordinary card has no early-tester part, so its words are short: one column at the reading measure, the block
-  // centred on the page and its text still left-aligned. The card below the words keeps the two-column page's card
-  // width, at the words' left edge; on a phone it is the column's width, as there.
   .card-landing--single .card-landing__grid {
     grid-template-columns: minmax(0, 1fr);
     width: 100%;
@@ -1246,8 +1166,6 @@
     }
   }
 
-  // One heading on two lines, the greeting above the name: block spans, so the name reads whole, and the greeting two
-  // steps down the heading scale. The grid's row gap stands in for the heading face's own margin.
   .card-landing__head {
     margin-bottom: 0;
   }
@@ -1263,15 +1181,11 @@
     line-height: 1.2;
   }
 
-  // The free-months list reads at the paragraphs' line height, each item a step apart, where the base list is set tighter
-  // for the short items it serves elsewhere.
   .card-landing__part > ul > li {
     margin-block: space(2);
     line-height: 1.65;
   }
 
-  // The footer's support icon named in a sentence: text-sized, in the text's colour, dropped to sit level with the line as
-  // a link's chain icon is.
   .card-landing__support-mark {
     display: inline-block;
     width: 1em;
@@ -1315,8 +1229,6 @@
       margin-inline: 0;
     }
 
-    // What the aside holds stretches too, a menu's button or a lone button alike, as wide as Save and
-    // Cancel above it.
     .form .form__aside {
       display: flex;
       flex-direction: column;
@@ -1329,9 +1241,6 @@
     gap: space(3);
   }
 
-  // A form's buttons stand a little further from its last field than the fields from each other, 2rem
-  // in all, and as far again from what follows them, so every form reads its actions as their own
-  // group. A `.modal__actions` row's own margin gives way to it here.
   .form > .form__actions,
   .form > .modal__actions {
     margin-block: space(2);
@@ -1381,8 +1290,6 @@
     @include stack(2);
   }
 
-  // A size, not a look, as `.btn--small` is, so it composes with every field. The edge, states and error stay the
-  // field's. A combobox's line inside the box follows in Combobox/index.scss.
   .field--compact {
     gap: space(1);
 
@@ -1390,8 +1297,6 @@
       font-size: type-size('caption');
     }
 
-    // As tall as a hint's ⓘ whether or not the field has one, so fields side
-    // by side in a row start their boxes level.
     .field__label-row {
       min-height: $icon-size;
     }
@@ -1409,8 +1314,6 @@
     font-weight: 400;
   }
 
-  // A label with something beside it on its line, an InfoTip's ⓘ or a required mark. The positioning
-  // context for a tip that opens over the label, so it lines up with the field rather than the page.
   .field__label-row {
     position: relative;
     display: flex;
@@ -1499,8 +1402,6 @@
       @include focus-ring;
     }
 
-    // A second pixel inside the edge, so the error is a change of shape as
-    // well as of colour.
     &[aria-invalid='true'] {
       border-color: $secondary;
       box-shadow: inset 0 0 0 1px $secondary;
@@ -1596,8 +1497,6 @@
     $inset: calc((#{$icon-size} - 2px - #{$glyph-size}) / 2);
     $stretch: space(1);
 
-    // The label and the toggle share a centre line, so the toggle stands
-    // centred under its label, whatever width the row gives the field.
     align-items: center;
 
     .field__label {
@@ -1612,8 +1511,6 @@
       min-height: $control-height;
     }
 
-    // Busy (loading.md, "Control"): the thumb gives way to the spinner's ring, at the thumb's
-    // size and end of the track and in its colour for the state. The track keeps its fill.
     input[aria-busy='true']::before {
       visibility: hidden;
     }
@@ -1651,8 +1548,6 @@
       background-color: $surface-card;
       appearance: none;
       cursor: pointer;
-      // The state's colour keeps pace with the thumb, rather than trailing it
-      // at the theme's 400ms.
       transition:
         background-color $motion-short ease-out,
         border-color $motion-short ease-out;
@@ -1688,9 +1583,6 @@
         @include focus-ring;
       }
 
-      // Dashed and unfilled, as a disabled field is, on or off: the thumb in
-      // the muted ink either way, so it still shows on the unfilled track,
-      // and where it sits still says which.
       &:disabled {
         border-color: $text-muted;
         border-style: dashed;
@@ -1731,11 +1623,8 @@
       }
     }
 
-    // Hover and press, on the toggle or its label, never on a switch that
-    // is off: `disabled`, or `aria-disabled` while a filter row's list is on
-    // its way, which refuses the press itself.
+    // Never on a switch that is off: `disabled`, or `aria-disabled` while a filter row's list is on its way.
     &:not(:has(input:disabled, input[aria-disabled='true'])) {
-      // The edge in the body ink, as a field's; on, the solid button's hover.
       &:has(> .field__label:hover, input:hover) input {
         border-color: $text-primary;
 
@@ -1839,8 +1728,6 @@
     margin-block: space(5);
   }
 
-  // Inside a form the form's gap already spaces every field, so the group
-  // stands like any other and its own margin would add to the gap.
   .form > .fieldset.radio-group {
     margin-block: 0;
   }
@@ -1937,16 +1824,12 @@
     }
   }
 
-  // The cards layout of a radio group (`layout="cards"`): the whole card is the label; the chosen one takes the
-  // accent edge, told by the ring's dot as well (WCAG 1.4.1).
   .radio-cards {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: space(3);
   }
 
-  // The legend stands off the first card by a step more than a label off its input: a bordered card
-  // against the legend reads as one box, an input does not.
   .fieldset.radio-group--cards .fieldset__legend {
     margin-bottom: space(4);
   }
@@ -2004,8 +1887,7 @@
     }
   }
 
-  // The strip layout of a radio group (`layout="strip"`): the native radio stays, visually hidden, so arrow keys and
-  // the label work; the fill carries the state as well as the name (WCAG 1.4.1). Both classes, to outrank `.fieldset`'s column.
+  // The native radio stays, visually hidden, so arrow keys and the label work (WCAG 1.4.1).
   .fieldset.radio-group--strip,
   .fieldset.radio-group--segmented {
     flex-direction: column;
@@ -2021,8 +1903,6 @@
     border-radius: radius('control');
     background-color: $surface-card;
 
-    // Each segment sits in its IconTip's wrapper, so the divider and the
-    // rounded ends are counted on the wrappers.
     > :not(:first-child) .radio--segment {
       border-inline-start: 1px solid $text-muted;
     }
@@ -2057,7 +1937,6 @@
       pointer-events: none;
     }
 
-    // Half the segment: the icons are a line drawing, so they need the room to read.
     .radio__segment-icon {
       display: flex;
       font-size: $form-icon-line;
@@ -2096,8 +1975,6 @@
     font-size: type-size('caption');
   }
 
-  // The segmented layout (`layout="segmented"`): the same bar with text in place of an icon. The segments are the
-  // bar's own children, with no tip wrapper, so the dividers and rounded ends are counted on them.
   .fieldset.radio-group--segmented .fieldset__legend {
     margin-bottom: space(2);
     font-weight: 400;
@@ -2119,8 +1996,6 @@
     }
   }
 
-  // A disabled segmented group reads as settled, not merely dimmed: dashed borders, and hover gives no hint.
-  // Keyed on the fieldset's own disabled state, so a caller-disabled group gets it too.
   .fieldset.radio-group--segmented:disabled .radio-strip--text {
     border-style: dashed;
 
@@ -2199,7 +2074,6 @@
     @include stack(3);
   }
 
-  // The name block and the badges side by side while they fit; otherwise the badges wrap beneath, at the left.
   .specimen__top {
     display: flex;
     flex-wrap: wrap;
@@ -2225,8 +2099,6 @@
   // the group beside it; beside the name it still sits right, since the name block takes the spare room.
   .specimen__badges {
     flex: 0 1 auto;
-    // Air below the group, which only shows when it sits under the name: beside it
-    // the name block is the taller one, so the row is no higher. 12px + this = 16px.
     margin-block-end: space(1);
   }
 
@@ -2234,9 +2106,6 @@
     @include list-reset;
   }
 
-  // The foot holds the jar lines and the actions. `margin-top: auto` takes up spare height when the
-  // card is stretched to a grid row, so the foot lands at the bottom. The padding is the air between
-  // the chips and the rule.
   .specimen__foot {
     margin-top: auto;
     padding-top: $ingredient-card-forms-air;
@@ -2251,14 +2120,11 @@
     color: $text-muted;
   }
 
-  // The jar lines are a list, the stock badge last at the right. The line stops short of the card's edge by half
-  // the difference between the action icon button and the badge, so their centres align.
   .specimen__stock > ul {
     @include list-reset;
 
     display: flex;
     flex-direction: column;
-    // Jar lines with 24px badges nearly touched; a step apart reads as separate lines.
     gap: space(2);
 
     > li {
@@ -2282,8 +2148,6 @@
     }
   }
 
-  // Right-aligned buttons beneath the jar lines, each centred on the row: stretched,
-  // a control whose box is fixed would sit at the top of a row a taller item grew.
   .specimen__actions {
     display: flex;
     flex-wrap: wrap;
@@ -2293,8 +2157,6 @@
     margin-top: space(3);
   }
 
-  // The card actions' addition to the primitive, here because a card's own file loads only where imported. The row
-  // and start group pass the pointer through, so a press in the gaps opens the entry.
   .ingredient-card .specimen__actions,
   .spell-card .specimen__actions {
     position: relative;
@@ -2309,9 +2171,7 @@
     pointer-events: auto;
   }
 
-  // The foot's start: the coven's Quick Look eye at the bottom left, the other actions kept right by
-  // the auto margin. A flex row, not inline: as a line box its line height and `vertical-align: middle`
-  // set the eye on the baseline and could grow the row past the 2rem controls.
+  // A flex row, not inline: as a line box its line height and `vertical-align: middle` could grow the row past the 2rem controls.
   .ingredient-card .specimen__actions-start,
   .spell-card .specimen__actions-start {
     display: flex;
@@ -2320,8 +2180,6 @@
     margin-inline-end: auto;
   }
 
-  // The foot bar of a Quick Look modal, in the Modal's `foot` slot so only the body scrolls. The link is two thirds
-  // of the bar, a fraction so it holds at every width; the bar takes no side padding, so the third is of the bar itself.
   .ingredient-details-foot {
     display: flex;
     justify-content: center;
