@@ -4,28 +4,21 @@ import { covenAccessPausedMessage } from '@/emails/coven-access-paused';
 import { supportTimedOutMessage } from '@/emails/support-timed-out';
 import { longMinuteInZone } from '@/lib/utc';
 
-// What each pause notice carries: its recipient, a subject naming what was set, the end date to the minute in UTC or that there
-// is none, and the message written to the user when there is one. The note is for staff or the coven's owners, and no template
-// shows it. Their wording and design are the stories' (src/emails/support-timed-out.stories.tsx and its two siblings).
-
 const ORIGIN = 'http://localhost:8000';
 const SUPPORT = `${ORIGIN}/support`;
 const UNTIL = new Date('2099-03-14T12:00:00Z');
-// "14 March 2099, 12:00 pm UTC": the end as the mails write it.
 const UNTIL_WORDS = `${longMinuteInZone(UNTIL, 'UTC')} UTC`;
 const MESSAGE = 'Please keep each request to one problem.';
 const NOTE = 'Staff only: a repeat caller.';
 
 type Rendered = { to: string; subject: string; text: string; html: string };
 
-/** The text's lines, blank ones dropped. */
 const linesOf = (message: Rendered) =>
   message.text
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
 
-/** A mail with no message is the mail with one, less the lines the message adds. */
 function expectMessageOnlyWhenWritten(withMessage: Rendered, without: Rendered) {
   expect(withMessage.text).toContain(MESSAGE);
   expect(without.text).not.toContain(MESSAGE);

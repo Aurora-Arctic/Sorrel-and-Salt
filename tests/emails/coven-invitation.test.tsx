@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { covenInvitationMessage } from '@/emails/coven-invitation';
 
-// What the mail carries — its recipient, its coven and role, and its link. Its
-// wording and its design are the story's (src/emails/coven-invitation.stories.tsx).
-
 const URL = 'http://localhost:8000/invite/fixture-token';
 const INPUT = {
   to: 'someone@coven-invitation.test',

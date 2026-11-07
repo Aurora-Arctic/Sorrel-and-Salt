@@ -20,16 +20,11 @@ import { verifyEmailMessage } from '@/emails/verify-email';
 import type { Message } from '@/lib/types';
 import { fromRoot } from '../../support/paths';
 
-// The two rules every mail holds, asserted once for every template: a plain-text part that says
-// everything the HTML does, and a link that is the obvious action, with the address readable as
-// text rather than only behind a button. Each template's wording and look are its story's.
-
 const ORIGIN = 'https://staging.sorrelandsalt.com';
 
 const MAILS: {
   template: string;
   name: string;
-  /** The mail's action address; absent for a mail that deliberately carries none. */
   link?: string;
   message: () => Promise<Message>;
 }[] = [
@@ -257,8 +252,7 @@ const MAILS: {
   },
 ];
 
-// Each mail is rendered once, here, and every test below reads that result:
-// rendering a React Email template is the slow part, and the tests only read it.
+// Rendering a React Email template is the slow part, so each mail renders once and every test reads that result.
 const rendered = new Map<string, Message>();
 
 beforeAll(async () => {
@@ -276,7 +270,6 @@ function decode(value: string): string {
     .replace(/&amp;/g, '&');
 }
 
-/** The text of every heading and paragraph in the HTML, as a reader sees it. */
 function sentences(html: string): string[] {
   return [...html.matchAll(/<(h1|p)\b[^>]*>(.*?)<\/\1>/gs)].map(([, , inner]) =>
     collapse(decode(inner.replace(/<[^>]*>/g, ''))),
@@ -328,7 +321,6 @@ describe('a mail with no action', () => {
 });
 
 // Zoho Mail drops the stylesheet and, in its Night mode, rewrites every inline `color` and `background-color` to an inverted `!important` value, except on an <a> whose background is an image (measured; claude-docs/email.md, "Design").
-// So the page is painted by a gradient as well as a colour, and every run of text sits directly inside an anchor that carries a gradient of its own.
 describe.each(MAILS)('$name, in Zoho Mail', ({ name }) => {
   it('gives every anchor a gradient background and no background colour', () => {
     const { html } = rendered.get(name)!;
@@ -353,13 +345,10 @@ describe.each(MAILS)('$name, in Zoho Mail', ({ name }) => {
   });
 });
 
-/** `value` as a literal inside a RegExp. */
 function escape(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// The rules for the shared layout, which every template wears: asserted on one
-// mail, not on each (rule 5). The first row stands in for them all.
 describe('the shared layout', () => {
   // The layout marks where Outlook's conditional comments go with placeholder
   // elements and renderParts swaps them in: none may survive into either part.
@@ -408,9 +397,7 @@ describe('the shared layout', () => {
     for (const selector of selectors) {
       expect(selector).toMatch(/^(\.ss-page( \.ss-[a-z]+)?|\.ss-body)$/);
     }
-    // No ss- rule lives outside the light block.
     expect(html.replace(light, '')).not.toMatch(/\.ss-[a-z]+[^{]*\{/);
-    // The class is on exactly one element, the cell with the inline dark page.
     expect(html.match(/class="[^"]*ss-page[^"]*"/g)).toEqual(['class="ss-page"']);
   });
 
@@ -433,9 +420,7 @@ describe('the shared layout', () => {
 });
 
 describe('the templates', () => {
-  // A new template cannot ship without a row above.
   it('are all covered by a row', () => {
-    // A template is a file that defines a message.
     const templates = readdirSync(fromRoot('src/emails'))
       .filter((file) => /\.tsx?$/.test(file) && !file.endsWith('.stories.tsx'))
       .filter((file) =>

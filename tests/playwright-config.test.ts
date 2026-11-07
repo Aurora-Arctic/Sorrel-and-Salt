@@ -42,7 +42,6 @@ describe('playwright.config.ts', () => {
       PLAYWRIGHT_AUDIT_WS_ENDPOINT: AUDIT_ENDPOINT,
     });
     expect(names(config.projects)).toEqual(CHROMIUM_PROJECTS);
-    // `E2E_AUDIT` set to anything but '1' is the same as unset.
     const off = await load({ E2E_AUDIT: '0', PLAYWRIGHT_AUDIT_WS_ENDPOINT: AUDIT_ENDPOINT });
     expect(names(off.config.projects)).toEqual(CHROMIUM_PROJECTS);
   });
