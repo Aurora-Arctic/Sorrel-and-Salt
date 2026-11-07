@@ -12,6 +12,7 @@ import { FormActions, SwitchField, TextField } from '../Field';
 import Notice from '../Notice';
 import { BusinessCardSchema } from './schema';
 import type { BusinessCardValues } from './types';
+import './index.scss';
 
 const EMPTY: BusinessCardValues = { name: '', email: '', phone: '' };
 
@@ -24,12 +25,12 @@ const BusinessCards = (): ReactElement => {
   const [building, setBuilding] = useState(false);
   const [buildFailed, setBuildFailed] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
-  const form = useForm<BusinessCardValues>({
+  const methods = useForm<BusinessCardValues>({
     defaultValues: EMPTY,
     mode: 'onTouched',
     resolver: zodResolver(BusinessCardSchema) as Resolver<BusinessCardValues>,
   });
-  const { isValid } = form.formState;
+  const { isValid } = methods.formState;
 
   useEffect(() => {
     let live = true;
@@ -60,8 +61,12 @@ const BusinessCards = (): ReactElement => {
   };
 
   return (
-    <FormProvider {...form}>
-      <form className="form business-cards" noValidate onSubmit={form.handleSubmit(generate)}>
+    <FormProvider {...methods}>
+      <form
+        className="form business-cards admin-index"
+        noValidate
+        onSubmit={methods.handleSubmit(generate)}
+      >
         <p>
           Ten cards to a Letter sheet, with a page of their backs if you want one. The PDF is built
           in this browser, and nothing you type here is saved.

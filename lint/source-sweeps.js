@@ -303,6 +303,8 @@ export const rules = {
       const file = fileOf(context);
       if (!/^src\/.*\.tsx$/.test(file) || isStory(file)) return {};
       const ALLOWED = {
+        'src/components/BusinessCards/index.tsx':
+          'a card is built in this browser and nothing typed is saved: leaving loses only a PDF one click rebuilds',
         'src/components/NameForm/index.tsx': 'one short field, the account name (M13.14)',
         'src/components/EmailForm/index.tsx': 'one short field, the account address (M13.14)',
         'src/components/SignInPanel/password-form.tsx':

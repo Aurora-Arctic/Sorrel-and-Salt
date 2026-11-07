@@ -1,0 +1,6 @@
+// The shared switch centres its track under its label across the whole form; here the control shrinks to its content and
+// sits at the form's left edge, its track under the label's start.
+.business-cards > .switch {
+  align-items: flex-start;
+  align-self: flex-start;
+}
