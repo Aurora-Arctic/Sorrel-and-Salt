@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath } from '@/lib/help-paths';
+import { readGlossaryTerms } from '@/lib/help-glossary';
 import { linkTo, orNotFound } from '@/lib/help-pages';
 import { siteUrl } from '@/lib/site';
 import { readHelpArticle } from '@/modules/help';
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const found = await subPage(slug, child);
   return {
     title: found.title,
-    description: found.summary ?? undefined,
+    description: linkTo(found).summary ?? undefined,
     alternates: { canonical: siteUrl(helpPath(found)) },
   };
 }
@@ -34,6 +35,7 @@ export default async function Page({ params }: Props) {
   const parent = await orNotFound(() => readHelpArticle(slug));
   return (
     <HelpArticleView
+      terms={await readGlossaryTerms()}
       title={found.title}
       body={found.body}
       subpages={found.children.map(linkTo)}

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
+import { readGlossaryTerms } from '@/lib/help-glossary';
 import { linkTo, orNotFound } from '@/lib/help-pages';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
@@ -22,6 +23,7 @@ export default async function Page({
   const parent = await orNotFound(() => readStaffHelpArticle(session, slug));
   return (
     <HelpArticleView
+      terms={await readGlossaryTerms()}
       heading="Staff Help"
       title={found.title}
       body={found.body}

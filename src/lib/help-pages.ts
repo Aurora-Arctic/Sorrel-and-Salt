@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { NotFound } from './errors';
+import { stripMarks } from './help-marks';
 import { helpPath, type HelpAddressed } from './help-paths';
 
 /** A public page reads at most this many rows of a list; the help centre is a few dozen pages. */
@@ -17,5 +18,9 @@ export async function orNotFound<T>(read: () => Promise<T>): Promise<T> {
 
 /** The link a list draws for a row: its title and summary at its address. */
 export function linkTo(row: HelpAddressed & { title: string; summary: string | null }) {
-  return { title: row.title, summary: row.summary, href: helpPath(row) };
+  return {
+    title: row.title,
+    summary: row.summary === null ? null : stripMarks(row.summary),
+    href: helpPath(row),
+  };
 }

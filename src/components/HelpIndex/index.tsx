@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
@@ -15,11 +16,17 @@ const GLOSSARY = {
 // The help front page: the search box, the guides with the glossary among them, and the FAQ. Each FAQ entry is an
 // anchor from its slug; nothing else on the page takes an id, so a slug shared with an article never doubles one
 // (claude-docs/components/help-pages.md).
-const HelpIndex = ({ faq, articles, heading = 'Help' }: HelpIndexProps): ReactElement => {
+const HelpIndex = ({
+  faq,
+  articles,
+  heading = 'Help',
+  terms = [],
+}: HelpIndexProps): ReactElement => {
   // A heading in an answer never takes an entry's id, or another answer's heading id.
   const reserved = faq.map((entry) => entry.slug);
+  const glossary = helpTerms(terms);
   const answers = faq.map((entry) => {
-    const { content, entries } = renderMarkdown(entry.body, {}, reserved);
+    const { content, entries } = renderMarkdown(entry.body, {}, reserved, false, glossary);
     reserved.push(...entries.map(({ href }) => href.slice(1)));
     return content;
   });

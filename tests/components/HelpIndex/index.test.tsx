@@ -104,3 +104,20 @@ describe('HelpIndex', () => {
     expect(anchor).not.toContainElement(article!);
   });
 });
+
+describe('HelpIndex glossary marks', () => {
+  it('draws a mark in an FAQ answer as a link into the glossary', () => {
+    render(
+      <HelpIndex
+        faq={[{ slug: 'who', title: 'Who Runs It?', body: 'A [[Steward]] does.' }]}
+        articles={[]}
+        terms={[{ slug: 'steward', title: 'Steward', body: 'Runs a fixture coven.' }]}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Steward' })).toHaveAttribute(
+      'href',
+      '/help/glossary#steward',
+    );
+  });
+});

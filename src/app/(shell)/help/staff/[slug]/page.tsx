@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import HelpArticleView from '@/components/HelpArticleView';
 import { helpPath } from '@/lib/help-paths';
+import { readGlossaryTerms } from '@/lib/help-glossary';
 import { linkTo, orNotFound } from '@/lib/help-pages';
 import { requireCuratorSession } from '@/lib/request-session';
 import { readStaffHelpArticle } from '@/modules/help';
@@ -17,6 +18,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   if (found.parentSlug) permanentRedirect(helpPath(found) as Route);
   return (
     <HelpArticleView
+      terms={await readGlossaryTerms()}
       heading="Staff Help"
       title={found.title}
       body={found.body}

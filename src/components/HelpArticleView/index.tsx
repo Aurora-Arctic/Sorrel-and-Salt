@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
@@ -17,8 +18,9 @@ const HelpArticleView = ({
   subpages,
   parent,
   heading = 'Help',
+  terms = [],
 }: HelpArticleViewProps): ReactElement => {
-  const { content, entries } = renderMarkdown(body, {}, [], true);
+  const { content, entries } = renderMarkdown(body, {}, [], true, helpTerms(terms));
   // The entries are read before the headings move down, so a top-level entry or a group is one `##` of the body.
   const sections =
     entries.filter((entry) => entry.group === undefined).length +

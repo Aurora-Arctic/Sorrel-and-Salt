@@ -157,3 +157,30 @@ describe('HelpArticleView', () => {
     expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(2);
   });
 });
+
+describe('HelpArticleView glossary marks', () => {
+  it('draws a mark in the body as a link into the glossary when handed the glossary', () => {
+    render(
+      <HelpArticleView
+        title="Testwort Guide"
+        body="Ask a [[Steward]]."
+        subpages={[]}
+        terms={[{ slug: 'steward', title: 'Steward', body: 'Runs a fixture coven.' }]}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Steward' })).toHaveAttribute(
+      'href',
+      '/help/glossary#steward',
+    );
+  });
+
+  it('draws the shown text of a mark with no glossary row, linking nothing', () => {
+    render(
+      <HelpArticleView title="Testwort Guide" body="Ask a [[Steward]]." subpages={[]} terms={[]} />,
+    );
+
+    expect(screen.queryByRole('link', { name: 'Steward' })).not.toBeInTheDocument();
+    expect(screen.getByText('Ask a Steward.')).toBeInTheDocument();
+  });
+});

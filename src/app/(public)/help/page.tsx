@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import HelpIndex from '@/components/HelpIndex';
+import { readGlossaryTerms } from '@/lib/help-glossary';
 import { HELP_PAGE_LIMIT, linkTo } from '@/lib/help-pages';
 import { siteUrl } from '@/lib/site';
 import { readHelpArticleIndex, readHelpFaq } from '@/modules/help';
@@ -13,11 +14,16 @@ export const metadata: Metadata = {
 const PAGE = { limit: HELP_PAGE_LIMIT, inverted: false };
 
 export default async function Page() {
-  const [faq, articles] = await Promise.all([readHelpFaq(PAGE), readHelpArticleIndex(PAGE)]);
+  const [faq, articles, terms] = await Promise.all([
+    readHelpFaq(PAGE),
+    readHelpArticleIndex(PAGE),
+    readGlossaryTerms(),
+  ]);
   return (
     <HelpIndex
       faq={faq.map(({ node }) => node)}
       articles={articles.map(({ node }) => linkTo(node))}
+      terms={terms}
     />
   );
 }

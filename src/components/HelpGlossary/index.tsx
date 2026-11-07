@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
 import PageHeader from '../PageHeader';
@@ -10,8 +11,10 @@ import './index.scss';
 const HelpGlossary = ({ terms }: HelpGlossaryProps): ReactElement => {
   // A heading in a definition never takes a term's id, or another definition's heading id.
   const reserved = terms.map((term) => term.slug);
+  // Every definition is on this page, so a mark links to its anchor and opens no tooltip.
+  const glossary = helpTerms(terms, { tooltips: false });
   const definitions = terms.map((term) => {
-    const { content, entries } = renderMarkdown(term.body, {}, reserved, true);
+    const { content, entries } = renderMarkdown(term.body, {}, reserved, true, glossary);
     reserved.push(...entries.map(({ href }) => href.slice(1)));
     return content;
   });

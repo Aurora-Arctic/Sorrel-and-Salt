@@ -71,3 +71,19 @@ describe('HelpGlossary', () => {
     expect(within(screen.getByRole('search')).getByRole('searchbox')).toHaveAttribute('name', 'q');
   });
 });
+
+describe('HelpGlossary marks', () => {
+  it('links a mark in a definition to its anchor on the page, with no tooltip', () => {
+    render(
+      <HelpGlossary
+        terms={[
+          { slug: 'ashgrove', title: 'Ashgrove', body: 'Kept by a [[Steward|steward]].' },
+          { slug: 'steward', title: 'Steward', body: 'Runs a fixture coven.' },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'steward' })).toHaveAttribute('href', '#steward');
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+});

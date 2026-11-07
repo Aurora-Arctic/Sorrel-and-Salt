@@ -1,3 +1,4 @@
+import type { HelpTermSource } from '../../lib/help-marks';
 import type { HelpSubpageLink } from '../HelpArticleView/types';
 
 export interface HelpFaqEntry {
@@ -12,4 +13,6 @@ export interface HelpIndexProps {
   articles: HelpSubpageLink[];
   /** Shown above the FAQ when the page is the staff index. */
   heading?: string;
+  /** The glossary, which the answers' `[[Term]]` marks are matched against; a mark it lacks is drawn as its text. */
+  terms?: HelpTermSource[];
 }
