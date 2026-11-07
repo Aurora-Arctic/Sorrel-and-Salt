@@ -39,7 +39,7 @@ The id prefix does **not** decide this: an `MB.*` id holds new work, ordinary bu
    - Everything else in that skill runs unchanged, including its step 7, which moves this task to `In Progress`.
 
 6. **Start the work.**
-   - Pull the full issue (`gh issue view <number> --json body,title,milestone,labels`). Read the `DESIGN.md` section it references, the task's entry (from its `**<ID> — ` heading to the next) in `claude-docs/tasks/<milestone>.md`, its wave's `claude-docs/waves/wave-<NN>.md`, and any `claude-docs/design-decisions/` record for a prior task it builds on. Never a whole milestone file: `mb.md` alone is about 975 KB.
+   - Pull the full issue (`gh issue view <number> --json body,title,milestone,labels`). Read the `DESIGN.md` section it references, the task's entry (from its `**<ID> — ` heading to the next) in `claude-docs/tasks/<milestone>.md`, its wave's `claude-docs/waves/wave-<NN>.md`, and any section of the `claude-docs/design-decisions/` area docs for a prior task it builds on (find it in `INDEX.md`). Never a whole milestone file: `mb.md` alone is about 975 KB.
    - Implement it following [`CLAUDE.md`](../../../CLAUDE.md): TDD, **one task per PR**, and document as you go in `claude-docs/`.
    - Comment progress with `node scripts/task-board.mjs comment <ID> "<text>"`, naming things and never carrying values. Do **not** move the status past `In Progress`: `/create-pr` sets `In Review`, and the merge sets `Done`.
    - Stop when every acceptance criterion is demonstrably met and the tests you touched pass. Full suites wait until the owner says so. Tell the user it's ready; opening the PR is a separate, explicit `/create-pr`.

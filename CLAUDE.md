@@ -105,7 +105,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - **Document as you go** in `claude-docs/`, correcting a doc in the PR that makes it wrong (MB.31). A doc holds only what adding a feature needs, each fact once: a binding fact (rule, reason, exception, command, path, env var, number) stays however old; history (what was tried, who decided, when, which task) goes (claude-docs/README.md, "What a doc holds"). Text leaving a live doc moves to another live doc, or is deleted, or goes into a tarball under `claude-docs/archive/`, which is never read. When a doc and the code disagree, establish which is wrong first.
 - **Write plainly**, for developers of every level: say what a thing does before naming it (`.claude/rules/writing.md`).
 - **A comment is only what warns the reader of a nuance the code cannot show**: what this is and, in one present-tense clause, why not the obvious alternative. The detail, the history, task ids and dates live in `claude-docs/`, never in code (claude-docs/README.md, "Comments in code").
-- **Flag an architecture decision that costs more than it buys.** Do not route around it or change it unasked: put it to the user with the code it made harder and the change you recommend. An accepted change corrects `DESIGN.md` or this file and gets a record in `claude-docs/design-decisions/`.
+- **Flag an architecture decision that costs more than it buys.** Do not route around it or change it unasked: put it to the user with the code it made harder and the change you recommend. An accepted change corrects `DESIGN.md` or this file and gets a section in the area doc under `claude-docs/design-decisions/`.
 
 ## GitHub task tracking
 

@@ -39,6 +39,6 @@ Compute has a dollar cost on Vercel, which is what makes an N+1 a billing bug. `
 - **`/llms.txt` and `/.well-known/*.json`**: sessionless public files, serving only the public compendium.
 - **Share-card images**: Next generates them from each `opengraph-image.tsx` for `/`, `/compendium` and a compendium entry. They are sessionless and draw only what the public compendium shows.
 - **`/.well-known/workflow/`**: the durable job routes the SDK generates. They carry no application data and run services as the seeded System account.
-- **`/api/cron/`**: the daily cron routes. Vercel Cron calls them with the `CRON_SECRET` bearer, they refuse any other call, carry no application data and only start a job (claude-docs/design-decisions/m15.46-daily-jobs-from-vercel-cron.md).
+- **`/api/cron/`**: the daily cron routes. Vercel Cron calls them with the `CRON_SECRET` bearer, they refuse any other call, carry no application data and only start a job (claude-docs/design-decisions/support.md, "Daily jobs start from Vercel Cron, and no job sleeps waiting").
 
 Admin is not an exception: it goes through `/api/graphql` like everything else.
