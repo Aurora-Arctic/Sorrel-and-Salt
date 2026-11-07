@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ARRIVE_MS } from '../../lib/navigation/timing';
+import { forgetScroll, listenForTraversals, saveScroll } from './back-scroll';
 import './index.scss';
 
 // The skeleton's way out: the bodies keep the last skeleton over the arrived page and fade it away, as an out-of-layout overlay, not by wrapping the page
@@ -20,6 +21,7 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
   const [wasShown, setWasShown] = useState(false);
   const [leaving, setLeaving] = useState<ReactElement | null>(null);
   const isShown = shown !== null;
+  const savedAt = useRef<string | null>(null);
 
   // Set while rendering, so the first frame after the wait already has the
   // overlay and the page never shows bare for a frame.
@@ -29,10 +31,19 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
     setLeaving(isShown ? null : kept);
   }
 
+  useEffect(() => listenForTraversals(), []);
+
   // The window goes to the top as the skeleton appears, so a click made far down the page moves it once, at the
   // tap, and the arrived page has no scroll left to reset. Instant, so no animation is mid-flight when it is measured.
+  // The page's position is saved first, for Back; a wait that ends on the same page drops it.
   useEffect(() => {
-    if (isShown) window.scrollTo({ top: 0, behavior: 'instant' });
+    if (isShown) {
+      savedAt.current = saveScroll();
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (savedAt.current !== null) {
+      forgetScroll(savedAt.current);
+      savedAt.current = null;
+    }
   }, [isShown]);
 
   useEffect(() => {
