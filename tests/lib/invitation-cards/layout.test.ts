@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as fontkit from '@pdf-lib/fontkit';
 import { describe, expect, it } from 'vitest';
-import { FRONT_COPY, SITE_ADDRESS, WORDMARK } from '@/lib/invitation-cards/copy';
+import { BACK_NOTE, FRONT_COPY, SITE_ADDRESS, WORDMARK } from '@/lib/invitation-cards/copy';
 import {
   ARTBOARD,
   BACK_PICTURE,
@@ -217,9 +217,9 @@ describe('the card layout', () => {
       }
       expect(at.y).toBe(FRONT_QR.y);
       expect(at.size).toBe(FRONT_QR.size);
-      expect(pt(boxOf(address).top - boxOf(wordmark).bottom)).toBeCloseTo(9.07, 1);
-      expect(pt(at.y - boxOf(address).bottom)).toBeCloseTo(18.14, 1);
-      expect(pt(boxOf(valid).top - (at.y + at.size))).toBeCloseTo(18.14, 1);
+      expect(pt(boxOf(address).top - boxOf(wordmark).bottom)).toBeCloseTo(8.96, 1);
+      expect(pt(at.y - boxOf(address).bottom)).toBeCloseTo(17.93, 1);
+      expect(pt(boxOf(valid).top - (at.y + at.size))).toBeCloseTo(17.93, 1);
     },
   );
 
@@ -244,6 +244,17 @@ describe('the card layout', () => {
         sorrelEdge(box.top, box.bottom) - PICTURE_GAP,
       );
       expect(item.x).toBe(COLUMN.left);
+    }
+  });
+
+  it('sets the three smallest lines, the expiry, the back’s note and its batch, at 15 px (5.6 pt)', () => {
+    const valid = columnLine(frontText(fonts, FRONT_COPY[0], VALID, code), VALID.toUpperCase());
+    const back = backText(fonts, 'b4444444');
+    const note = columnLine(back, BACK_NOTE.toUpperCase());
+    const batch = columnLine(back, 'BATCH B4444444');
+    for (const line of [valid, note, batch]) {
+      expect(line.size, line.text).toBe(15);
+      expect(pt(line.size), line.text).toBeCloseTo(5.6, 1);
     }
   });
 

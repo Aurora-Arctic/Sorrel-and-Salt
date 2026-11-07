@@ -92,10 +92,11 @@ export const BACK_PICTURE: PictureItem = {
  * line centred on it. Down, it stands where the column's gaps run 1 : 2 : 2 with the wordmark's top and the expiry's
  * bottom on the safe area's edges. Across, it depends on the batch's expiry date: frontCode places it.
  */
-export const FRONT_QR: Omit<QrItem, 'x'> = { y: 144.231, size: 182 };
+export const FRONT_QR: Omit<QrItem, 'x'> = { y: 143.364, size: 182 };
 
-const EXPIRY_SIZE = 13;
-const EXPIRY_SPACING = EXPIRY_SIZE * 0.12;
+/** The smallest lines, the front's expiry and the back's note and batch, at 15 px (5.6 pt). */
+const SMALL_SIZE = 15;
+const SMALL_SPACING = SMALL_SIZE * 0.12;
 
 /**
  * Places a batch's code across, where its expiry line, centred on the code, ends its ink on the safe area's right edge;
@@ -103,9 +104,9 @@ const EXPIRY_SPACING = EXPIRY_SIZE * 0.12;
  * layout.test.ts measures it.
  */
 export function frontCode(fonts: CardFonts, validUntil: string): QrItem {
-  const style = { font: fonts.lexend500, size: EXPIRY_SIZE, letterSpacing: EXPIRY_SPACING };
+  const style = { font: fonts.lexend500, size: SMALL_SIZE, letterSpacing: SMALL_SPACING };
   const text = validUntil.toUpperCase();
-  const width = textWidth(style, text) - EXPIRY_SPACING;
+  const width = textWidth(style, text) - SMALL_SPACING;
   const centre = SAFE_RIGHT - inkedWidth(style, text) + width / 2;
   return { x: centre - FRONT_QR.size / 2, ...FRONT_QR };
 }
@@ -258,7 +259,7 @@ export function codeColumnText(fonts: CardFonts, validUntil: string, code: QrIte
   };
   const wordmark = line('cormorant600', 22, 22 * 0.04, CHALK, WORDMARK);
   const address = line('lexend500', 13, 13 * 0.12, MUTED, SITE_ADDRESS.toUpperCase());
-  const expiry = line('lexend500', EXPIRY_SIZE, EXPIRY_SPACING, MUTED, validUntil.toUpperCase());
+  const expiry = line('lexend500', SMALL_SIZE, SMALL_SPACING, MUTED, validUntil.toUpperCase());
   // The wordmark's top and the expiry's bottom sit on the safe area's edges; the address takes a third of the room
   // between the wordmark and the code, so the gap above it is half the gap below it.
   const wordmarkBaseline = SAFE_TOP + wordmark.above;
@@ -340,8 +341,8 @@ export function backText(fonts: CardFonts, batch: string): TextItem[] {
       {
         block: {
           font: 'lexend500',
-          size: 13,
-          letterSpacing: 13 * 0.12,
+          size: SMALL_SIZE,
+          letterSpacing: SMALL_SPACING,
           colour: MUTED,
           lines: [BACK_NOTE.toUpperCase()],
         },
@@ -358,8 +359,8 @@ export function backText(fonts: CardFonts, batch: string): TextItem[] {
 function backBatchText(batch: string): TextItem {
   return {
     font: 'lexend500',
-    size: 13,
-    letterSpacing: 13 * 0.12,
+    size: SMALL_SIZE,
+    letterSpacing: SMALL_SPACING,
     colour: MUTED,
     x: COLUMN.left,
     baseline: COLUMN.top + COLUMN.height - 3,
