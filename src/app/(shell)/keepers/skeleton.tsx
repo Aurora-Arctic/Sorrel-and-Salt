@@ -1,4 +1,7 @@
-import { AdminPageSkeleton } from '@/components/AdminNav/skeleton';
+import { AdminPageSkeleton, withSkeletons } from '@/components/AdminNav/skeleton';
+import { ADMIN_PAGES } from '@/components/AdminNav/sections';
+import { BusinessCardsBodySkeleton } from '@/components/BusinessCards/skeleton';
+import TabbedPage from '@/components/TabbedPage';
 import PageHeader from '@/components/PageHeader';
 import Skeleton from '@/components/Skeleton';
 
@@ -35,6 +38,17 @@ export const KeepersDocumentSkeleton = () => (
 export const KeepersEmailUpdatesSkeleton = () => (
   <AdminPageSkeleton page="documents" open="/keepers/documents" tabsBelow />
 );
+// The page draws no action and is one narrow column, centred; its single tab draws no tab row.
 export const BusinessCardsSkeleton = () => (
-  <AdminPageSkeleton page="businessCards" open="/keepers/business-cards" />
+  <div className="admin-index business-cards-skeleton">
+    <TabbedPage
+      as="div"
+      title={ADMIN_PAGES.businessCards.label}
+      tabs={withSkeletons(ADMIN_PAGES.businessCards.tabs)}
+      open="/keepers/business-cards"
+      action={null}
+    >
+      <BusinessCardsBodySkeleton />
+    </TabbedPage>
+  </div>
 );

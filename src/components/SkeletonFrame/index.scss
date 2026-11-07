@@ -14,3 +14,8 @@
 .panel.new-coven-skeleton {
   padding-block-end: 4.25rem;
 }
+
+// A page with one tab draws no tab row, so the forced line break under its heading is not drawn.
+.business-cards-skeleton .page-header::after {
+  display: none;
+}
