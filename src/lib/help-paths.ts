@@ -8,6 +8,10 @@ export interface HelpAddressed {
 
 export const STAFF_HELP = '/help/staff';
 
+/** The address of a top-level public guide, for a screen that points at one by its slug. */
+export const publicGuidePath = (slug: string): string =>
+  helpPath({ kind: 'article', audience: 'public', slug, parentSlug: null });
+
 export function helpPath({ kind, audience, slug, parentSlug }: HelpAddressed): string {
   if (kind === 'term') return `/help/glossary#${slug}`;
   const base = audience === 'public' ? '/help' : STAFF_HELP;

@@ -16,7 +16,7 @@ import type { AccountMenuProps } from './types';
 import './index.scss';
 
 // The account button in the shell's bar and its panel: Your Account, a link to pending invitations
-// when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
+// when there are any, Help, Support and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
 
 const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
@@ -212,6 +212,18 @@ const AccountMenu = ({
               </li>
             );
           })}
+        {verified && (
+          <li className="account-menu__link">
+            <PendingLink
+              href="/help"
+              navigationTarget={siteLinkTarget('/help')}
+              className="account-menu__item"
+              onClick={close}
+            >
+              Help
+            </PendingLink>
+          </li>
+        )}
         {verified && (
           <li
             className={

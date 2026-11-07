@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { helpPath } from '@/lib/help-paths';
+import { helpPath, publicGuidePath } from '@/lib/help-paths';
 
 // Every help row has one address, read from its kind, its audience and its parent's slug: a term is an anchor on the
 // glossary, an FAQ entry an anchor on its index, and an article a page under /help or, for staff and keepers, under
@@ -64,5 +64,11 @@ describe('helpPath', () => {
     ],
   ] as const)('gives %s', (_, row, path) => {
     expect(helpPath(row)).toBe(path);
+  });
+});
+
+describe('publicGuidePath', () => {
+  it('gives a top-level public guide its address from its slug alone', () => {
+    expect(publicGuidePath('testwort-guide')).toBe('/help/testwort-guide');
   });
 });

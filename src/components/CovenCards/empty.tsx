@@ -1,5 +1,7 @@
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { PendingLink } from '../../lib/navigation';
+import { publicGuidePath } from '../../lib/help-paths';
 import { NO_MATCH_HINT } from '../../lib/text';
 import { siteLinkTarget } from '../AppShell/site-target';
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../CompendiumList/href';
@@ -11,6 +13,9 @@ import './index.scss';
 // What a coven's Ingredients list draws with no card, as a status region: No Ingredients (an empty
 // cupboard) or No Matches (a filter matched nothing; `hasFilter` is the search sentence's own test)
 // (claude-docs/components/coven-cards.md, "The empty and no-match states").
+
+// The Ingredients guide's slug is its title's (src/db/seed/help-content/articles.ts).
+const INGREDIENTS_GUIDE = publicGuidePath('ingredients') as Route;
 
 const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): ReactElement => {
   // Normalised as the filter row normalises it for the sentence (CompendiumList/filter.tsx).
@@ -35,6 +40,9 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
         ) : (
           <p>A practitioner or steward of this coven can add them.</p>
         )}
+        <PendingLink href={INGREDIENTS_GUIDE} navigationTarget={siteLinkTarget('/help')}>
+          Learn More
+        </PendingLink>
       </div>
     );
   }
