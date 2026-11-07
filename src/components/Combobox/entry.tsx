@@ -64,7 +64,6 @@ export function ComboboxEntry({
   // A sortable entry's text is its handle, so it opens nothing.
   const summary = sortable ? undefined : summarised;
   const opens = useEntrySummary();
-  // Asked as the tooltip opens: an open summary keeps it shut, saying more.
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(() => {
     const element = text.current;
     return (
@@ -75,7 +74,6 @@ export function ComboboxEntry({
     );
   }, 'top-start');
 
-  // The tooltip runs as wide as its words, past the chip and the control; only being cut off is wrong. `useTip` keeps it on screen.
   const textSpan = (
     <span ref={text} className="combobox__entry-text">
       {value}
@@ -95,7 +93,6 @@ export function ComboboxEntry({
       {icon}
     </span>
   ) : null;
-  // What the x reads after its name, and the handle before how it moves: the error, the qualifier, then the detail.
   const describedBy =
     [errorId, qualifier && qualifierId, detail && detailId].filter(Boolean).join(' ') || undefined;
 
@@ -105,7 +102,6 @@ export function ComboboxEntry({
       className={[
         'combobox__entry',
         colors && 'is-coloured',
-        // A group's fill is its own: outlined chips are the neutral ones.
         outlined && !colors && 'is-outlined',
         errorId && 'is-invalid',
         sortable?.isDragging && 'is-dragging',
@@ -130,8 +126,6 @@ export function ComboboxEntry({
       >
         {iconMark}
         {summary ? (
-          // Named by its text, as the x is, and read as the x is; it says
-          // it opens a dialog, and whether that is open.
           <button
             type="button"
             className="combobox__entry-open"
@@ -151,7 +145,6 @@ export function ComboboxEntry({
             {textSpan}
           </button>
         ) : sortable ? (
-          // Named as the x is, for its entry, and read as the x is.
           <EntryHandle
             value={value}
             sortable={sortable}

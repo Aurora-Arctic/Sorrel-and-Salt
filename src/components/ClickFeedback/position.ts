@@ -7,13 +7,8 @@ import type { CSSProperties } from 'react';
 // callout is fixed, so no ancestor cuts it; the badge is absolute, so it scrolls and clips with its
 // control (claude-docs/components/click-feedback.md, "Placement").
 
-/**
- * The control's bottom edge to the callout's top: room for the arrow, whose tip
- * then stands about 11.5px under the control.
- */
 const GAP_PX = 20;
 
-/** The callout's nearest approach to the edge of its box, as its max-width keeps. */
 const EDGE_PX = 16;
 
 /**
@@ -22,7 +17,6 @@ const EDGE_PX = 16;
  */
 const ARROW_INSET_PX = 14;
 
-/** The callout's widest, as its stylesheet's `max-inline-size` keeps: 20rem. */
 const MAX_REM = 20;
 
 /**
@@ -58,8 +52,6 @@ const narrow: Middleware = {
     const viewport = doc.documentElement.clientWidth;
     const { left, right } = box ? box.getBoundingClientRect() : { left: 0, right: viewport };
     const widest = Math.min(MAX_REM * rem, viewport - 2 * EDGE_PX);
-    // From the page, not `rects`: a fixed callout's rects are measured from
-    // its containing block, which a dialog's containment can make the dialog.
     const control = (elements.reference as Element).getBoundingClientRect();
     const room =
       right - left - 2 * EDGE_PX < widest
@@ -92,7 +84,6 @@ interface Placed {
   placed: boolean;
 }
 
-/** Follows the control while `active`: a closed piece has nothing to follow. */
 function useFollow(
   active: boolean,
   reference: Element | null,
@@ -146,11 +137,6 @@ export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Pla
   };
 }
 
-/**
- * The badge's place: over a bordered control's top right corner, its centre 0.375 of its size in from
- * each edge. `beside`, for a borderless control, sits to its right, touching; the stylesheet's margin
- * (`.click-feedback__badge--beside`) holds it clear.
- */
 export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside: boolean): Placed {
   const { refs, elements, floatingStyles, update, isPositioned } = useFloating({
     open: drawn,

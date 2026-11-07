@@ -5,15 +5,10 @@
 // (claude-docs/components/click-feedback.md). Both are placed by script (position.ts) and out of the
 // flow, so neither moves anything.
 
-// The Dismiss button: 24px, a step in from the corner.
 $dismiss-size: 1.5rem;
-// The badge as drawn, and the mark inside it.
 $badge-size: 1.2rem;
 $badge-mark: 0.75rem;
-// What the badge's press target adds to reach 24px, over its own control only.
 $badge-reach: calc(#{$dismiss-size} - #{$badge-size});
-// The arrow: a square turned 45°, its two bordered sides showing above the
-// callout, its point about 11.5px under the control (position.ts's gap).
 $arrow-size: 12px;
 $arrow-rise: 7px;
 
@@ -44,14 +39,12 @@ $arrow-rise: 7px;
 }
 
 .click-feedback__callout {
-  // Out of the flow at the origin before it is placed, as a tip's bubble is.
   position: fixed;
   inset-block-start: 0;
   inset-inline-start: 0;
   z-index: layer('callout');
   box-sizing: border-box;
   inline-size: max-content;
-  // `--click-feedback-room`: narrower, in a box narrower than this (position.ts).
   max-inline-size: min(20rem, calc(100vw - 2rem), var(--click-feedback-room, 20rem));
   margin: 0;
   padding: space(3) calc(#{space(1)} + #{$dismiss-size} + #{space(2)}) space(3)
@@ -62,7 +55,6 @@ $arrow-rise: 7px;
   color: $text-primary;
   box-shadow: $shadow-floating;
   font-size: type-size('small');
-  // A step over the body weight, as an error notice's text.
   font-weight: 400;
   line-height: 1.4;
   text-align: start;
@@ -70,7 +62,6 @@ $arrow-rise: 7px;
   overflow-wrap: break-word;
   @include fades;
 
-  // The triangle, on the first line as an error notice's is.
   &::before {
     content: '';
     position: absolute;
@@ -81,7 +72,6 @@ $arrow-rise: 7px;
     @include warning-mark($secondary);
   }
 
-  // The arrow, under the middle of the control (position.ts's `pointAt`).
   &::after {
     content: '';
     position: absolute;
@@ -156,8 +146,6 @@ $arrow-rise: 7px;
     @include warning-mark;
   }
 
-  // The disc is CanvasText with the triangle cut out in Canvas, and a Canvas outline stands in for the
-  // ring, as the fill and shadow are dropped.
   @include forced-colors {
     background-color: CanvasText;
     color: Canvas;
@@ -177,7 +165,6 @@ $arrow-rise: 7px;
   &::after {
     content: '';
     position: absolute;
-    // Top, right, bottom, left.
     inset: 0 0 calc(-1 * #{$badge-reach}) calc(-1 * #{$badge-reach});
   }
 
@@ -186,9 +173,6 @@ $arrow-rise: 7px;
   }
 }
 
-// Beside a borderless control, held clear of its text by a margin, which
-// Floating UI's place leaves as it is (position.ts places it touching). The
-// physical side, as its place (`right`) is.
 .click-feedback__badge--beside {
   margin-left: space(2);
 }

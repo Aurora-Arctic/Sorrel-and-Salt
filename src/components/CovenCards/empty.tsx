@@ -13,12 +13,10 @@ import './index.scss';
 // (claude-docs/components/coven-cards.md, "The empty and no-match states").
 
 const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): ReactElement => {
-  // Normalised as the filter row normalises it for the sentence (CompendiumList/filter.tsx).
   const { hasFilter } = buildSearchSentence({
     filter: {
       ...filter,
       toxic: filter.toxic || null,
-      // A coven's list has no review filter.
       reviewed: null,
       source: filter.source || null,
       inStock: filter.inStock ?? false,

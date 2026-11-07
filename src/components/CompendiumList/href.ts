@@ -7,14 +7,8 @@ import type { SearchCursor } from '../../lib/search-param-table';
 import { COMPENDIUM_PARAMS } from './params';
 import type { CompendiumPlace, CovenListDialog, CovenListFilter } from './types';
 
-// The address of `/curator/compendium` under a filter, at a page, with a modal open or not. The filter is
-// written through the parameter table (`./params.ts`), then the cursor, the details modal and the edit
-// modal.
-
-/** The page itself, unfiltered: where the filter submits, and what Clear opens. */
 export const COMPENDIUM_PATH: Route = '/curator/compendium';
 
-/** The public compendium: the same filter and cursor, no modal. */
 export const PUBLIC_COMPENDIUM_PATH: Route = '/compendium';
 
 export function compendiumHref(
@@ -25,7 +19,6 @@ export function compendiumHref(
   return COMPENDIUM_PARAMS.href(path, place, {
     after: place.after,
     before: place.before,
-    // The details modal under any edit modal, so closing the edit goes back to it.
     entry: place.entry,
     ...dialogParams(dialog),
     // New Entry names itself, so the shell's Add Ingredient can tell `?new` apart.
@@ -33,7 +26,6 @@ export function compendiumHref(
   });
 }
 
-/** A coven's Ingredients page, unfiltered: where its filter submits, and what Clear opens. */
 export const covenIngredientsPath = (covenSlug: string): Route =>
   `/coven/${covenSlug}/ingredients` as Route;
 

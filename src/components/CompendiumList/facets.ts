@@ -15,43 +15,26 @@ import type {
   FormFacetChoice,
 } from './types';
 
-/** A live deity as the facets read it: its slug, its name and its tradition's name. */
 export interface DeityVocabulary {
   slug: string;
   name: string;
   tradition: string;
 }
 
-/**
- * What turns the service's counts into choices a filter can show: the
- * counts name a deity or a category by id and a form by its spelling, and
- * the page reads the rest once.
- */
 export interface FacetVocabularies {
-  /** Each curated form's group icon, by the form's name folded to lower case. */
   formIcons: ReadonlyMap<string, FormGroupIcon>;
-  /** Every live deity under a live tradition, by id. */
   deities: ReadonlyMap<string, DeityVocabulary>;
-  /** Every live category, by id. */
   categories: ReadonlyMap<string, CompendiumCategoryChoice>;
 }
 
-/** The Source strip's two values as the facets name them, and what each says. */
 const SOURCE_LABELS = { local: 'Local', compendium: 'Compendium' } as const;
 
-/** The toxic strip's two settings as the facets name them, and what each says. */
 const TOXIC_LABELS = { toxic: 'Toxic', not_toxic: 'Not Toxic' } as const;
 
-/** The Reviewed strip's two settings as the facets name them, and what each says. */
 const REVIEW_LABELS = { reviewed: 'Reviewed', needs_review: 'Needs Review' } as const;
 
-/** Counts that carry no vocabulary of their own: the value is the label. */
 const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: value, count });
 
-/**
- * A coven's counts as the props its panel takes: the compendium's kinds mapped as `compendiumFacetCounts`
- * maps them, plus Source and In Stock. A coven has no No Refs or No Form switch, so those counts read zero.
- */
 export function covenFacetCounts(
   facets: WorkspaceIngredientFacets,
   vocabularies: FacetVocabularies,

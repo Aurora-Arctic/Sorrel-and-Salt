@@ -11,7 +11,6 @@ import './calendar.scss';
 
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-/** A `YYYY-MM-DD` day as a local date, or undefined when it is not one. */
 export function parseDay(day: string): Date | undefined {
   const match = DAY.exec(day);
   if (!match) return undefined;
@@ -19,7 +18,6 @@ export function parseDay(day: string): Date | undefined {
   return date.getMonth() === Number(match[2]) - 1 ? date : undefined;
 }
 
-// The gap between the field and the calendar, and the margin the calendar keeps from the window.
 const GAP = 8;
 const MARGIN = 8;
 
@@ -40,13 +38,10 @@ export function useCalendarPopover({
 }: {
   open: boolean;
   floating: boolean;
-  /** The id of the button that opens the calendar. */
   fieldId: string;
   panel: RefObject<HTMLDivElement | null>;
   close: () => void;
 }): void {
-  // Below the field, or above when the window has more room there, and kept inside the window's
-  // width. It follows the field while the page or a dialog scrolls or resizes.
   useLayoutEffect(() => {
     const el = panel.current;
     if (!open || !floating || !el) return undefined;
@@ -90,9 +85,7 @@ export function useCalendarPopover({
     if (!open) return undefined;
     const onEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      // An open month or year list takes the key and closes alone.
       if ((event.target as HTMLElement).getAttribute?.('aria-expanded') === 'true') return;
-      // Claimed as well as stopped: a modal dialog round the field closes on any unclaimed Escape.
       event.preventDefault();
       event.stopPropagation();
       close();
@@ -118,7 +111,6 @@ export function CaptionDropdown({ options, value, onChange, 'aria-label': label 
         id={id}
         label={label ?? ''}
         value={String(value)}
-        // day-picker reads event.target.value and nothing else from the change.
         onChange={(next) =>
           onChange?.({ target: { value: next } } as ChangeEvent<HTMLSelectElement>)
         }
@@ -132,14 +124,12 @@ export function CaptionDropdown({ options, value, onChange, 'aria-label': label 
   );
 }
 
-/** The Combobox's stroked chevron, turned to point where the step or select does. */
 export const CalendarChevron = ({ orientation = 'down', className }: ChevronProps) => (
   <span className={`${className ?? ''} day-picker__chevron--${orientation}`}>
     <ChevronIcon />
   </span>
 );
 
-/** The day picker's parts, on the app's own classes (`calendar.scss`). */
 export const CALENDAR_CLASS_NAMES: Partial<ClassNames> = {
   root: 'day-picker',
   months: 'day-picker__months',
@@ -165,7 +155,6 @@ export const CALENDAR_CLASS_NAMES: Partial<ClassNames> = {
   disabled: 'day-picker__day--disabled',
 };
 
-/** A calendar drawn as a page: the field's end mark, hidden from assistive technology. */
 export function CalendarIcon() {
   return (
     <svg className="calendar-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">

@@ -31,7 +31,6 @@ import type { CompendiumListFilterProps } from './types';
 
 type Held = CompendiumListFilterProps['filter'];
 
-/** Where a list lives: its path, and the coven's slug for a coven's list. */
 interface Where {
   path: Route;
   covenSlug?: string;
@@ -47,10 +46,6 @@ const whereOf = ({
   return { path: audience === 'admin' ? COMPENDIUM_PATH : PUBLIC_COMPENDIUM_PATH };
 };
 
-/**
- * The facets of a filter, the part the panel shows; a coven's adds its three choices, and the
- * admin's its Reviewed strip.
- */
 const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter => ({
   covens: filter.covens ?? [],
   covensNot: filter.covensNot ?? false,
@@ -72,7 +67,6 @@ const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter
   }),
 });
 
-/** Nothing chosen: what Clear All holds while the unfiltered list is on its way. */
 const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
   covens: [],
   covensNot: false,
@@ -90,7 +84,6 @@ const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
   ...(coven && { source: '', inStock: false, lowStockOnly: false }),
 });
 
-/** The panel's facets as filter values. */
 const changeOf = (panel: FacetPanelFilter) => ({
   covens: [...(panel.covens ?? [])],
   covensNot: panel.covensNot ?? false,
@@ -109,7 +102,6 @@ const changeOf = (panel: FacetPanelFilter) => ({
   categoryMode: panel.categories.length >= 2 ? panel.categoryMode : ('all' as const),
 });
 
-/** The address of the list under the filter shown, the panel's facets and the name typed set over it. */
 const hrefFor = (filter: Held, panel: FacetPanelFilter, query: string, where: Where) => {
   if (where.covenSlug !== undefined) {
     return covenIngredientsHref(
@@ -193,8 +185,6 @@ const PanelFacets = ({
       clearHref={where.path}
       covens={covens}
       onChange={(patch) => onPanel({ ...panel, ...patch })}
-      // Shut any other way than Apply Filters, whose submit applies the name as well: the
-      // facets held, under the name the page shows, and nothing at all when none changed.
       onApply={() => {
         if (changed) apply(hrefFor(filter, panel, filter.query, where));
       }}
@@ -240,8 +230,6 @@ const CompendiumListFilterRow = ({
       className="compendium-list__row"
       searchHref={(query) => hrefFor(filter, panel, query, where)}
       source={coven && workspaceId ? { kind: 'cupboard', workspaceId } : undefined}
-      // The entry's Quick Look over the list as shown, its page kept and the typed text not
-      // applied, keyed as the list's eye keys it: the keeper's by slug, the other two by id.
       pickHref={(match) => {
         const place = { ...filter, ...cursor };
         if (where.covenSlug !== undefined) {
@@ -274,7 +262,6 @@ const CompendiumListFilterRow = ({
   );
 };
 
-/** What each chosen value is called in the sentence: a deity by its name, a category by its name. */
 function labelsOf({
   facets,
   categories,
@@ -282,7 +269,6 @@ function labelsOf({
 }: Pick<CompendiumListFilterProps, 'facets' | 'categories' | 'covens'>): SearchSentenceLabels {
   const named = (rows: readonly { value: string; label: string }[]) =>
     Object.fromEntries(rows.map(({ value, label }) => [value, label]));
-  // Two gods of one name are told apart by their tradition, as the panel's groups do.
   const sameName = (name: string) =>
     facets.deities.filter(({ label }) => label === name).length > 1;
   return {
@@ -294,16 +280,10 @@ function labelsOf({
       ]),
     ),
     elements: named(facets.elements),
-    // Only the viewer's own covens have a name here, so only they are named.
     covens: Object.fromEntries(covens.map(({ id, name }) => [id, name])),
   };
 }
 
-/**
- * The filter an address holds, read as the page reads it from the same parameter table: the
- * term and every facet, a parameter the address lacks being no filter. `shown` supplies what
- * the table does not carry.
- */
 function filterOf(href: string, shown: Held, coven: boolean): Held {
   const params: Record<string, string[]> = {};
   const { searchParams } = new URL(href, 'http://localhost');
@@ -323,8 +303,6 @@ const CompendiumListFilterWithSentence = ({
   cursor,
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
-  // Only a filter's navigation retypes the sentence: a pager press changes the page, not the
-  // search.
   const { searching, target } = useListNavigation();
   // The page still shows the previous search while the new one is read, so the sentence names the
   // term and the facets of the address the navigation is opening, not those of `filter`.

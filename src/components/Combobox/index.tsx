@@ -46,7 +46,6 @@ const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
   return item.key ?? `${item.curated}:${item.heading ?? ''}:${item.label ?? ''}:${item.value}`;
 };
 
-/** The buckets a source names itself, by each row's `heading`, in the order the headings first appear, with the rows that have none in a trailing unheaded bucket. */
 function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
   const headed = new Map<string, O[]>();
   const unheaded: O[] = [];
@@ -222,10 +221,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     value.trim() !== '' &&
     items.length === 0;
   const popupOpen = isOpen || showEmpty;
-  // A lookup in flight: the visible spinner (shown after $loading-delay by its
-  // own stylesheet) and `aria-busy`, beside the status that already says it.
   const busy = suggestions?.pending === true;
-  // With an empty message the listbox is one part of a popup, and the popup is what is placed.
   const wrapped = message !== undefined;
   const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor);
 
@@ -273,7 +269,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // Enter with nothing highlighted is the caller's and never the form's submit; Backspace or Delete in an empty box takes the last entry.
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
-    // A printable key is one character long; a shortcut is not typing.
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
     // Escape on a box with no open list is the dialog's, unless the "no matches" message is showing, which Downshift cannot see and Escape closes alone
     // (claude-docs/components/combobox.md, "Typed box and Escape").
@@ -304,7 +299,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // puts the caret in the text, as pressing a plain input would.
   const focusText = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
-    // The qualifier reads as part of the text, and so does the room where the clear sits hidden: `visibility` passes the press to the indicators' strip.
     if (
       target === event.currentTarget ||
       target.classList.contains('combobox__values') ||
@@ -328,7 +322,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         key={keyOf(item)}
         className={[
           'combobox__option',
-          // The action row is no suggestion either, and reads as the typed row does.
           (isTyped(item) || isAction(item)) && 'combobox__option--typed',
           colors && 'is-coloured',
           !isTyped(item) && !isAction(item) && item.disabled && 'is-disabled',
@@ -406,7 +399,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           <span
             className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
             data-value={value}
-            // Beside chips, room for the placeholder, which prompts for the next entry.
             style={chipsRoom(Boolean(entries), placeholder)}
           >
             <input
@@ -522,21 +514,12 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         open={popupOpen}
         style={listStyle}
         placement={placement}
-        after={
-          <>
-            {showEmpty && (
-              // Not an option, so not in the listbox; a reader hears it through the status.
-              <EmptyMessage>{message}</EmptyMessage>
-            )}
-          </>
-        }
+        after={<>{showEmpty && <EmptyMessage>{message}</EmptyMessage>}</>}
       >
         <ul
           className={['combobox__list', isOpen && 'is-open', wrapped && 'is-inset']
             .filter(Boolean)
             .join(' ')}
-          // Placed beneath or above the box, as there is room (useListPosition);
-          // inside a popup, the popup is.
           style={wrapped ? undefined : listStyle}
           data-placement={wrapped ? undefined : placement}
           {...getMenuProps({
@@ -551,7 +534,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               bucket.heading === null ? (
                 bucket.rows.map(row)
               ) : (
-                // A listbox's group is ARIA's own, on a div inside a presentational li, since ARIA allows no `group` role on an li (axe's aria-allowed-role).
                 // oxlint-disable jsx-a11y/prefer-tag-over-role
                 <li key={bucket.key} role="presentation" className="combobox__group">
                   <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>

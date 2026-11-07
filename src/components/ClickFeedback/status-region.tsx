@@ -16,7 +16,6 @@ const StatusRegionContext = createContext<Announce>(NOTHING);
 
 interface Said {
   text: string;
-  /** Whether the text carries the trailing no-break space this time. */
   marked: boolean;
 }
 
@@ -38,7 +37,6 @@ export function StatusRegionProvider({ children }: { children: ReactNode }): Rea
   );
 }
 
-/** Says a sentence in the page's status region. */
 export function useAnnounce(): Announce {
   return useContext(StatusRegionContext);
 }

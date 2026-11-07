@@ -24,7 +24,6 @@ import type { CompendiumCardMoreProps, CompendiumCardPlace } from './types';
 type Asking = 'stock' | 'annotate' | 'own' | 'remove';
 type Can = 'canAnnotate' | 'canMakeOurs' | 'canRemove';
 
-/** The covens a choice may act in: those that hold the entry (the page's) and let the role do it. */
 const among = (places: readonly CompendiumCardPlace[], can: Can) =>
   places.filter((place) => place[can]);
 
@@ -42,7 +41,6 @@ export default function CompendiumCardMore({
   const back = () => (trigger.current?.isConnected ? trigger.current : null);
   const settle = () => setAsking(undefined);
 
-  // The covens that may update stock carry the stock the page read for them.
   const stockers = places.flatMap(({ workspaceId, name: coven, stock }): StockPlace[] =>
     stock ? [{ workspaceId, name: coven, stock }] : [],
   );
@@ -50,8 +48,6 @@ export default function CompendiumCardMore({
   const owners = among(places, 'canMakeOurs');
   const removers = among(places, 'canRemove');
   const targetPlace = places.find(({ workspaceId }) => workspaceId === target) ?? places[0];
-  // One coven that may annotate: a link to the entry's page with its dialog open, pressed open at
-  // once as the other dialog links are.
   const annotateHref = annotators.length === 1 ? annotators[0].annotateHref : ('' as Route);
   const openAnnotate = useOpenModalClick(annotateHref, ANNOTATE_HEADING);
   const writes = useCupboardWrites({

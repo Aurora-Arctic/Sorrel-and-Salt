@@ -12,7 +12,6 @@
   vertical-align: top;
   row-gap: space(1);
 
-  // A table row stays one line (the table scrolls in its frame); only a card wraps the forms.
   flex-wrap: nowrap;
 
   @container data-table (max-width: #{$table-stack-width}) {
@@ -42,7 +41,6 @@
   position: relative;
 }
 
-// A name linking to its entry's page, drawn by the shared `icon-link` mixin.
 .compendium-list__name {
   @include icon-link;
 }
@@ -53,10 +51,8 @@
 .compendium-list__edit {
   @include sticky-action-column($sticky-column-layer);
 
-  // The pencil and the switch stand side by side with no gap of their own; this one is theirs alone.
   .shown-switch {
     margin-inline-start: space(2);
-    // Level with the pencil: an offset, as the inline boxes' middles differ by a pixel.
     position: relative;
     inset-block-start: 2px;
   }
@@ -68,8 +64,6 @@ $categories-floor: 16.75rem;
 $categories-wide: 75rem;
 
 .compendium-list__categories {
-  // The chips stay on one line while this is a table; a card wraps them (the shared
-  // `.specimen__chips` row wraps).
   .category-chips {
     flex-wrap: nowrap;
 

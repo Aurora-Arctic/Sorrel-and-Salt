@@ -44,7 +44,6 @@ export function baselineOf(compendium: CompendiumValues): CupboardValues {
   };
 }
 
-/** What the form opens with: the coven's override where it has one, else the baseline. */
 export function openingValues(
   baseline: CupboardValues,
   overrides: CupboardOverrides,
@@ -60,17 +59,11 @@ export function openingValues(
   };
 }
 
-/** True when `values` for `field` differ from `other`: text trimmed, lists in order. */
 export function differs(field: CupboardField, a: CupboardValues, b: CupboardValues): boolean {
   if (isText(field)) return a[field].trim() !== b[field].trim();
   return !sameList(a[field], b[field]);
 }
 
-/**
- * True when the coven is saying something of `field` right now: it holds an
- * override that has not been handed back, or the person has typed one that
- * is not the compendium's own. "Restore Original" is offered for these.
- */
 export function isOwn(
   field: CupboardField,
   values: CupboardValues,

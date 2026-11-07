@@ -1,6 +1,3 @@
-// Calendar days as `YYYY-MM-DD`, the form a date input reads and the database stores, and in words.
-
-/** A local date as the day it falls on: "2026-03-04". */
 export function isoDay(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;

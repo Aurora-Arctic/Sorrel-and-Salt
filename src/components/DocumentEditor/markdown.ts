@@ -12,7 +12,6 @@ import {
 import { createSlateEditor, type Value } from 'platejs';
 import remarkGfm from 'remark-gfm';
 
-/** The plugins a document is made of; the editor component adds its own rendering on top of these. */
 export const documentPlugins = [
   BaseBasicBlocksPlugin,
   BaseBasicMarksPlugin,
@@ -27,7 +26,6 @@ export const documentPlugins = [
   MarkdownPlugin.configure({ options: { remarkPlugins: [remarkGfm] } }),
 ];
 
-// Bullets are written as "-", and emphasis as "*", as the shipped documents are.
 const stringifyOptions = {
   bullet: '-',
   emphasis: '_',
@@ -44,7 +42,6 @@ export function markdownToEditorValue(markdown: string): Value {
   return markdownEditor().getApi(MarkdownPlugin).markdown.deserialize(markdown) as Value;
 }
 
-// The serialiser writes an empty table cell or footnote definition as a lone zero-width space; both are written empty.
 const emptyCell = /(\| )\u200B(?= \|)/g;
 const emptyDefinition = /^(\[\^[^\]]+\]:) \u200B$/gm;
 

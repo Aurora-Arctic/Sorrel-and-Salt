@@ -45,7 +45,6 @@ function borderless(node: HTMLElement): boolean {
 
 const PREFIX = 'Last try failed: ';
 
-/** `token` added to or taken from a space-separated attribute, the others kept. */
 function retoken(node: Element, attribute: string, token: string, present: boolean): void {
   const others = (node.getAttribute(attribute) ?? '').split(/\s+/).filter((t) => t && t !== token);
   const next = present ? [...others, token] : others;
@@ -66,10 +65,8 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
 
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const [message, setMessage] = useState<string>();
-  // The last sentence reported, kept while a cleared callout fades out.
   const [said, setSaid] = useState('');
   const [open, setOpen] = useState(false);
-  // Counts the opens: each open draws a new alert, which is then read again.
   const [opens, setOpens] = useState(0);
   const [beside, setBeside] = useState(false);
 
@@ -93,7 +90,6 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
     setAnchor(node);
   }, []);
 
-  /** Whether `target` is the control, the badge, the callout, or inside one. */
   const ours = useCallback(
     // Asked of the target rather than `instanceof Node`, false across an iframe.
     (target: EventTarget | null): boolean =>
@@ -139,7 +135,6 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
     [ours, openFrom],
   );
 
-  // The control described by its last failure, beside any description it has.
   useEffect(() => {
     if (!anchor || message === undefined) return;
     retoken(anchor, 'aria-describedby', describedId, true);

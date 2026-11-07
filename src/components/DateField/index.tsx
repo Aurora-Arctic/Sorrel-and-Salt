@@ -19,9 +19,7 @@ import './index.scss';
 // A day field: a button showing the day in words, opening a calendar in a top-layer popover; where the browser has no
 // popover it opens in flow beneath the button instead (claude-docs/components/date-field.md).
 
-// With no `max` the year list still needs an end: it runs to the end of this many years after the current one.
 const YEARS_AHEAD = 1;
-// The earliest year the calendar lists.
 const FIRST_YEAR = 1900;
 
 // Every month name, every day number and every year from 1900 to 2999 the button can show. The button
@@ -105,7 +103,6 @@ export default function DateField({
           <DayPicker
             mode="single"
             required
-            // Focus moves into the calendar on open so the arrow keys work at once.
             // oxlint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             locale={enGB}

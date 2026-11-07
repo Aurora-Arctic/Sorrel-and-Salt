@@ -16,11 +16,9 @@ const fadesAreOff = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export interface Fade {
-  /** Whether the piece is in the page: shown, or fading out. */
   drawn: boolean;
   /** Fading out: drawn, but no longer shown. */
   closing: boolean;
-  /** Goes on the piece: its fade's end takes it out of the page. */
   onAnimationEnd: (event: AnimationEvent<HTMLElement>) => void;
 }
 
@@ -44,7 +42,6 @@ export function useFade(shown: boolean): Fade {
 
   const onAnimationEnd = useCallback(
     (event: AnimationEvent<HTMLElement>) => {
-      // Its own fade only, not one bubbling from inside it.
       if (event.target === event.currentTarget && !shown) setDrawn(false);
     },
     [shown],

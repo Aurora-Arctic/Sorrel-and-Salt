@@ -10,7 +10,6 @@ import type { ComboboxChoice, ComboboxOption, ComboboxTypeaheadProps } from './t
 // Not the ingredient form's `fold`: this matches what a person types against a label they read, so it folds in their locale.
 const fold = (text: string) => text.trim().toLocaleLowerCase();
 
-/** The choice the text names in full, whatever its case, or none. */
 const choiceNamed = (choices: readonly ComboboxChoice[], text: string) =>
   choices.find((choice) => fold(choice.label) === fold(text));
 
@@ -39,9 +38,7 @@ export function ComboboxTypeahead({
     if (selected && choiceNamed(choices, text) !== selected) setText(selected.label);
   }
 
-  // The text narrows the list once it is not the choice's own label.
   const query = selected && text === selected.label ? '' : fold(text);
-  // A qualified choice's row reads its label with the qualifier in brackets; the text a pick writes and the query match the label alone.
   const suggestions = useMemo(
     () => ({
       options: choices
@@ -57,7 +54,6 @@ export function ComboboxTypeahead({
     [choices, query],
   );
 
-  // Text that names no choice is no value: the field holds none.
   const type = (next: string) => {
     setText(next);
     const named = choiceNamed(choices, next)?.value ?? '';
@@ -78,7 +74,6 @@ export function ComboboxTypeahead({
         onSettle?.(option.key);
       }}
       onBlur={() => {
-        // Left naming a choice in another case, the box reads its label.
         const named = choiceNamed(choices, text);
         if (named && named.label !== text) setText(named.label);
         onSettle?.(named?.value ?? '');
@@ -101,7 +96,6 @@ export function ComboboxTypeahead({
           : undefined
       }
       suggestions={suggestions}
-      // The chosen choice's qualifier and icon, once the box reads its label as written.
       qualifier={selected && text === selected.label ? selected.qualifier : undefined}
       icon={selected && text === selected.label ? selected.icon : undefined}
       offerTyped={false}
