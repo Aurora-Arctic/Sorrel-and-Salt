@@ -9,7 +9,6 @@ const meta = {
 export default meta;
 type Story = StoryObj;
 
-// Module-level, so the story hands the preview the same function every render.
 const message = () =>
   supportReceivedMessage({
     to: 'someone@example.com',
@@ -19,7 +18,6 @@ const message = () =>
     signedOut: true,
   });
 
-// Follows the toolbar's theme control, as the mail follows a reader's setting.
 export const Default: Story = {
   render: () => <EmailPreview message={message} />,
 };

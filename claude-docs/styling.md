@@ -46,7 +46,7 @@ to.
   as the seed edit, because the seed never overwrites a row it finds (M5.6b).
 - **Never wash a chip or badge ground with its own group colour and leave the label in that colour.** The eight
   group hues are tuned to sit just above 4.5:1, so a visible wash drops them
-  under; solid holds, and so does a wash with the body ink stirred into the label ("Category chips").
+  under; solid holds, and so does a wash with the body ink stirred into the label ("Chips, badges and the solid-fill rule").
 - **A badge palette declares `solid`, `tinted` or `ink` and emits only that
   treatment's parts.** `badge-token('safety', 'bg')` failing to compile is deliberate, not
   an oversight. A ninth palette picks its treatment first — solid needs 4.5:1
@@ -113,7 +113,7 @@ to.
   Firefox and Safari have all shipped it for 30 months. `package.json`'s
   `browserslist` holds the one statement, `["baseline widely available"]`, and
   it rolls forward each month with the data the lockfile pins, so a check that
-  passes today still passes tomorrow. On 2026-10-12 it resolved to Chrome and
+  passes today still passes tomorrow. It resolves to Chrome and
   Edge 123, Firefox 124, and Safari and iOS Safari 17.4. Turbopack's Lightning
   CSS reads the same entry and lowers newer syntax to it, as it does
   `light-dark()` (below), and `npm run lint:css` refuses CSS past it
@@ -196,8 +196,8 @@ Three variants exist for one use each:
   rather than only further from the ground. The label on them measures 13.13:1
   and 6.80:1.
 
-**The warning ochre is the one hue picked for a role**, the owner's pick on
-2026-10-19 for a warning that should not read as an error: `$ochre-deep`
+**The warning ochre is the one hue picked for a role**, picked
+for a warning that should not read as an error: `$ochre-deep`
 (`#8a5a00`) on light and `$ochre-bright` (`#d9a441`) on dark, the
 `--warning` token and its `$warning` alias. It draws a warning notice's bar,
 tint and triangle, which need 3:1 as a graphic (WCAG 1.4.11), and one line of
@@ -264,7 +264,7 @@ Nine palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
-(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill. It was drawn as a tint until 2026-10-21, and is now the `ink` treatment, the red alone with no box, so it never reads as a second alarm. As text it measures 6.40:1 on the dark card, 7.04:1 on the dark page, 7.45:1 on the light card and 6.70:1 on the light page. The badge is its drawing alone (the owner's call, 2026-10-20), a slashed ring that Low's double chevron does not share, with the words in its name and tip, so its meaning never rests on colour. Since 2026-10-21 the stock badge has no box and takes the jars' inks (Low `$warning`, Out this palette's `fg`; [`components/stock-badge.md`](components/stock-badge.md)). That keeps
+(M9.8) is a jar at nothing, and takes a muted red of its own: `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill. It was drawn as a tint until 2026-10-21, and is now the `ink` treatment, the red alone with no box, so it never reads as a second alarm. As text it measures 6.40:1 on the dark card, 7.04:1 on the dark page, 7.45:1 on the light card and 6.70:1 on the light page. The badge is its drawing alone, a slashed ring that Low's double chevron does not share, with the words in its name and tip, so its meaning never rests on colour. Since 2026-10-21 the stock badge has no box and takes the jars' inks (Low `$warning`, Out this palette's `fg`; [`components/stock-badge.md`](components/stock-badge.md)). That keeps
 exactly one alarming badge in the app and spends no new hue, which matters because every
 hue not already reserved belongs to one of the eight groups.
 
@@ -317,8 +317,8 @@ treatment decides which parts it emits:
 - **`tinted`** — the ink mixed back into the card surface, so the badge tints the
   surface it actually sits on instead of carrying a hardcoded panel colour.
   Three parts, `fg` / `bg` / `border`.
-- **`ink`** — the ink alone, for a mark that draws no box (Out of Stock, since
-  2026-10-21). One part, `fg`, read as text. It emits no `.badge--<palette>`
+- **`ink`** — the ink alone, for a mark that draws no box (Out of Stock).
+  One part, `fg`, read as text. It emits no `.badge--<palette>`
   class, since `badge()` has no box to draw for it.
 
 **A palette emits only its treatment's parts**, which is not tidiness. The two
@@ -474,7 +474,7 @@ decides, from its own selector, so one badge reads the same wherever it is rende
 
 The 24px floor is the least a badge with a tip may be as a target.
 
-Each size also lowers its label by an **optical drop**, taken from the top padding and given to the bottom so the height holds (the owner's call, 2026-10-20). Without it every badge's capitals sat above the box's centre: measured in Chromium, the space under the baseline was 1.26px more than the space above the capitals on the card, and up to 1.33px more on the entry page. Chrome rounds a font's ascent and descent to whole pixels, so 12px and 13px Lexend sit differently and each size has its own drop: `default` 0.0125em, `medium` and `small` 0.05em. The card's badges now centre within 0.04px; a `default` badge lands within half a pixel either way, since its baseline snaps to the pixel grid wherever the badge happens to sit. `text-box-trim` would do this from the font's own metrics, but it is past the browser floor. `badge-padding()` and `badge-padding-block()` in `_mixins.scss` apply it; a rule that sets a badge's block padding itself, as Out of Stock's heavier border does, goes through them.
+Each size also lowers its label by an **optical drop**, taken from the top padding and given to the bottom so the height holds. Without it every badge's capitals sat above the box's centre: measured in Chromium, the space under the baseline was 1.26px more than the space above the capitals on the card, and up to 1.33px more on the entry page. Chrome rounds a font's ascent and descent to whole pixels, so 12px and 13px Lexend sit differently and each size has its own drop: `default` 0.0125em, `medium` and `small` 0.05em. The card's badges now centre within 0.04px; a `default` badge lands within half a pixel either way, since its baseline snaps to the pixel grid wherever the badge happens to sit. `text-box-trim` would do this from the font's own metrics, but it is past the browser floor. `badge-padding()` and `badge-padding-block()` in `_mixins.scss` apply it; a rule that sets a badge's block padding itself, as Out of Stock's heavier border does, goes through them.
 
 ## Brand colours
 
@@ -532,7 +532,7 @@ so the ring softens over whatever ground it crosses rather than standing at
 the body ink's full 14:1, which read as harsh. The strength is
 `$focus-ring-strength` in `_variables.scss`, 66.6% in both themes: the
 owner compared 100%, 70%, 66.6%, 55% and 40% in both themes and chose 66.6%
-(M12.45, 2026-10-20). The rings that set their own colour use the same
+The rings that set their own colour use the same
 number, so Combobox's rings on a coloured chip fade the chip's own ink
 (`currentcolor`) by it too.
 
@@ -543,14 +543,14 @@ Two rings keep another strength:
   `--focus-ring-link-strength`: the shared 66.6% in dark, and
   `$focus-ring-link-strength-light`, 75%, in light. The light accent starts
   at only 4.65:1 on the page, and 66.6% takes it to 2.61, under the 3:1 floor;
-  75% is the least that clears it, at 3.01 (the owner's call, 2026-10-20).
+  75% is the least that clears it, at 3.01.
   The page row passing by 0.01 is intended: it is the guard on the number.
 - **The tab row's ring** (`TabbedPage/index.scss`) is the accent, drawn
   inside the pill, at `$focus-ring-tab-strength`, which each theme sets as
   `--focus-ring-tab-strength`: the shared 66.6% in dark, and
   `$focus-ring-tab-strength-light`, full strength, in light. On the light
   track and the open pill the accent starts at only 4.05:1, so 66.6% takes it
-  to 2.42 and even 75% leaves it at 2.75 (the owner's call, 2026-10-20).
+  to 2.42 and even 75% leaves it at 2.75.
 
 **Every button draws this ring, never the browser's own.** MB.121's keyboard
 pass found three that drew Chromium's default ring, since nothing set one: the
@@ -744,8 +744,8 @@ Four variants:
   field's ground (`$surface-card`, what an input fills with) inside a
   `$hairline` edge rather than an ink outline, so it stands back beside the
   primary; pointed at or focused, the ground takes `$fill-highlight-field` and
-  the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
-  call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
+  the edge `$edge-highlight`, in place of filling with ink
+  The label on the lit ground holds 4.5:1 in both themes
   (`tests/scss/tokens.test.ts`).
 - **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only four exist: Impersonate (on the row, in the user modal and on its confirm), Pause Keeper Changes (Pause, Resume and its confirm), Revoke Batch (its column on the invitation cards table and its confirm) and Email Every Account (the button and its confirm). The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
@@ -1052,7 +1052,7 @@ components' stories use the class as their frame. Inside it a page header's
 action, and a tab's, goes beneath the heading at phone width at its natural
 width, at the line's start, except the Add, which is a plus beside the
 heading ("Buttons", above). MB.115's review had the action span the line;
-the owner reversed that at MB.7's review, 2026-10-12.
+the action no longer spans the line.
 
 `.coven-layout` is the same frame around every `/coven/[slug]` page, its
 page's children inside it; the section nav (`CovenNav`) is in the context row

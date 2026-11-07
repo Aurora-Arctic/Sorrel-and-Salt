@@ -4,9 +4,7 @@ import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { verifyEmailMessage } from './verify-email';
 import type { ProviderId } from '../lib/types';
 
-// Render-only; content is asserted in tests/emails/verify-email.test.tsx. The
-// link is invented and goes nowhere; the images and fonts come from the
-// workshop, which serves public/.
+// Render-only; content is asserted in tests/emails/verify-email.test.tsx.
 const meta = {
   title: 'Emails / Verify Email',
 } satisfies Meta;
@@ -15,7 +13,6 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const URL = 'https://sorrelandsalt.com/api/auth/verify-email?token=workshop.preview.token';
 
-// Module-level, so each story hands the preview the same function every render.
 const preview = (providers: readonly ProviderId[]) => () =>
   verifyEmailMessage({
     to: 'someone@example.com',
@@ -36,7 +33,6 @@ const change = () =>
     origin: WORKSHOP_ORIGIN,
   });
 
-// Follows the toolbar's theme control, as the mail follows a reader's setting.
 const defaultNode = <EmailPreview message={oneProvider} />;
 
 const twoProvidersNode = <EmailPreview message={twoProviders} />;

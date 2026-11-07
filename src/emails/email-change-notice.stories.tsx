@@ -13,7 +13,6 @@ type Story = StoryObj<{ state?: ReactNode }>;
 
 const AT = new Date('2026-10-30T14:05:00Z');
 
-// Module-level, so each story hands the preview the same function every render.
 const requested = () =>
   emailChangeNoticeMessage({
     to: 'someone@example.com',
@@ -33,7 +32,6 @@ const completed = () =>
     origin: WORKSHOP_ORIGIN,
   });
 
-// Follows the toolbar's theme control, as the mail follows a reader's setting.
 const STATES_STATES: Record<string, ReactNode> = {
   Requested: <EmailPreview message={requested} />,
   Completed: <EmailPreview message={completed} />,

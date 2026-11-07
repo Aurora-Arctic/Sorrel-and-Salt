@@ -28,7 +28,7 @@ it never shows.
 ### A link with the chain icon: `LinkIconHint`
 
 A link that wears the chain icon (`LinkIcon`) has no dot: the icon itself turns
-into the loading ring (the owner's call, 2026-10-19). Use `LinkIconHint` in
+into the loading ring. Use `LinkIconHint` in
 place of `<LinkIcon /><LinkHint />`:
 
 ```tsx
@@ -57,15 +57,12 @@ text link keeps the dot.
 - When pending it appears after a 100ms delay, so a fast navigation never
   flashes it, then fades in and pulses.
 - It is drawn in the accent colour (`$accent`) at full strength and pulses down
-  to 40%, so it reads beside any link colour. At the link's own colour and a
-  third of its strength it was too faint to notice (the owner's call,
-  2026-10-19).
+  to 40%, so it reads beside any link colour; the link's own colour at a third of its strength is too faint to notice.
 - Its delay is the `$loading-delay` token (100ms), the same hold-back the
   spinner and the page bar use.
 - Under `prefers-reduced-motion` it shows after the same delay and pulses,
   through the shared `loading-motion` mixin and `loading-pulse` keyframes, as
-  the spinner and the skeleton do. It has no exception to the loading standard
-  (the owner's call, 2026-10-19; see
+  the spinner and the skeleton do. It has no exception to the loading standard (see
   [`../design-decisions/m12.33-loading-standard.md`](../design-decisions/m12.33-loading-standard.md)).
 
 ## In the loading standard
@@ -88,20 +85,8 @@ The dot is decorative and empty, so it is `aria-hidden` and adds nothing to the
 link's name. A screen reader needs nothing more: the route change itself is
 announced when the new page arrives.
 
-## Stories
+## Stories and tests
 
-`States` is a grid: Idle and Pending draw the markup for each state directly; Icon Idle and
-Icon Pending do the same for a link with the chain icon. The workshop has
-no Next router, so `useLinkStatus` there (the stub in
-`.storybook/UnoptimizedLink.tsx`, next to the `next/link` alias) always answers
-`false`.
-
-## Testing
-
-`tests/components/LinkHint/index.test.tsx` mocks `useLinkStatus` and checks the
-dot is hidden from the accessibility tree in both states and carries
-`is-pending` only when pending. It reads the class because the class is the
-state and the dot has no role. `LinkIconHint` is tested the same way: no dot at
-rest, the ring and `is-pending` while pending, the icon again after.
+`src/components/LinkHint/index.stories.tsx` and `tests/components/LinkHint/index.test.tsx`, which mocks `useLinkStatus` and reads the `is-pending` class because the class is the state and the dot has no role. The workshop has no Next router, so `useLinkStatus` there (the stub in `.storybook/UnoptimizedLink.tsx`, next to the `next/link` alias) always answers `false`.
 
 **Forced colours.** The pending dot is painted `LinkText`, the ink of the link it follows.
