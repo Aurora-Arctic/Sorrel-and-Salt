@@ -36,7 +36,7 @@ describe('HelpTerm', () => {
     const link = renderTerm();
 
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    expect(link).toHaveAccessibleDescription('Steward Runs a fixture coven.');
+    expect(link).toHaveAccessibleDescription('Steward Runs a fixture coven. See in Glossary');
   });
 
   it('opens on hover only after 300ms, and shows the title and definition', () => {
@@ -87,5 +87,64 @@ describe('HelpTerm', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
 
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  describe('on a touch tap', () => {
+    const tap = (link: HTMLElement, pointerType = 'touch') => {
+      fireEvent.pointerDown(link, { pointerType });
+      return fireEvent.click(link);
+    };
+
+    it('opens the tooltip and does not follow the link', () => {
+      const link = renderTerm();
+
+      const followed = tap(link);
+
+      expect(followed).toBe(false);
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+
+    it('offers a link to the term in the glossary inside the tooltip', () => {
+      tap(renderTerm(), 'pen');
+
+      expect(screen.getByRole('link', { name: 'See in Glossary' })).toHaveAttribute(
+        'href',
+        '/help/glossary#steward',
+      );
+    });
+
+    it('closes on a second tap on the term, on a tap outside and on Escape', () => {
+      const link = renderTerm();
+
+      tap(link);
+      tap(link);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      tap(link);
+      fireEvent.pointerDown(document.body, { pointerType: 'touch' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      tap(link);
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('stays open on a tap inside the tooltip', () => {
+      const link = renderTerm();
+      tap(link);
+
+      fireEvent.pointerDown(screen.getByRole('link', { name: 'See in Glossary' }), {
+        pointerType: 'touch',
+      });
+
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+  });
+
+  it('follows the link on a mouse click', () => {
+    const link = renderTerm();
+    fireEvent.pointerDown(link, { pointerType: 'mouse' });
+
+    expect(fireEvent.click(link)).toBe(true);
   });
 });
