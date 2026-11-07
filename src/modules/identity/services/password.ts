@@ -12,10 +12,8 @@ const STALE_SESSION =
   'Adding a password needs a recent sign-in. Sign out and sign in again, then set your password.';
 
 /**
- * Gives the session's own account `newPassword` through `setter`, bound to this
- * request's cookie, so a caller can only name their own account. A provisional
- * account is refused, as by every service but `me` and `setEmail`.
- *
+ Bound to this request's cookie, so a caller can only name their own account.
+  *
  * @throws {Forbidden} the address is unverified, or the session is older than Better Auth's `freshAge`; both checked before the setter is called.
  * @throws {ValidationError} on `newPassword`, from the setter.
  */

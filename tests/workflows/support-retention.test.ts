@@ -7,9 +7,7 @@ import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { supportRetention } from '@/modules/support/jobs/support-retention';
 import { supportRetentionBatch } from '@/modules/support/jobs/support-retention-batch';
 
-// The daily support-retention job, run end to end by the SDK's local world: the coordinator that reads the ids due and starts a
-// batch run per page, and the batch runs that do the work. Mail goes over HTTP to a stand-in Mailpit in this process, which can be
-// told to fail, and which records the request's status as each mail arrives. No run sleeps, so none is woken.
+// The stand-in Mailpit records the request's status as each mail arrives. No run sleeps, so none is woken.
 
 const DOMAIN = '@support-retention-run.test';
 const ORIGIN = 'http://localhost:3000';
@@ -19,8 +17,7 @@ let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string; status: string | undefined }[] = [];
 
-// The stand-in Mailpit answers fetch itself rather than listening on a port: the SDK's local world finds its own queue by the
-// port this process listens on, so a second listener would take its deliveries.
+// The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
 const MAILPIT_URL = 'http://mailpit.test';
 const realFetch = globalThis.fetch;
 async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -69,7 +66,6 @@ beforeEach(async () => {
 });
 
 let made = 0;
-/** A verified account to send requests from. */
 async function sender(): Promise<{ id: string; email: string }> {
   made += 1;
   const email = `sender${made}${DOMAIN}`;
@@ -81,7 +77,6 @@ async function sender(): Promise<{ id: string; email: string }> {
   return { id: id as string, email };
 }
 
-/** A request from `by`, resolved by staff `daysAgo` days ago. */
 async function resolvedRequest(by: string, daysAgo: number): Promise<string> {
   const [{ id }] = await sql`
     insert into support_requests
@@ -93,7 +88,6 @@ async function resolvedRequest(by: string, daysAgo: number): Promise<string> {
   return id as string;
 }
 
-/** A request from `by`, closed `monthsAgo` months ago, with a reply from each side. */
 async function closedRequest(by: string, monthsAgo: number): Promise<string> {
   const [{ id }] = await sql`
     insert into support_requests
@@ -114,7 +108,6 @@ async function closedRequest(by: string, monthsAgo: number): Promise<string> {
 const rowOf = async (id: string) =>
   (await sql`select * from support_requests where id = ${id}`)[0]!;
 
-/** Runs one day's coordinator as of now; how many batch runs it started. */
 async function runDay(): Promise<number> {
   const run = await start(supportRetention, [Date.now(), ORIGIN]);
   return run.returnValue;

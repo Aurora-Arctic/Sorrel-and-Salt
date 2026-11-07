@@ -17,9 +17,6 @@ import { noPauseNotifier } from '../../../support/email-verification';
 
 useRawClient();
 
-// An owner pauses one member's access to their coven, until a time or with no end, and may lift it early. The member keeps
-// the seat; every coven call refuses them with AccessPaused while the pause stands (membership.test.ts proves the refusal).
-
 type Role = 'owner' | 'member' | 'viewer';
 
 const LATER = new Date('2099-01-01T00:00:00Z');
@@ -51,7 +48,6 @@ const roleOf = async (workspaceId: string, userId: string) =>
       select role from workspace_members where workspace_id = ${workspaceId} and user_id = ${userId}`
   )[0]?.role as string | undefined;
 
-/** The issue paths a ValidationError carries, or the error itself when it is something else. */
 async function issuePaths(promise: Promise<unknown>): Promise<unknown> {
   const error = await promise.then(
     () => undefined,
@@ -358,7 +354,6 @@ describe('pauseMemberAccess', () => {
     ).rejects.toMatchObject({ message: 'Keep the note to 500 characters' });
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
 
-    // The limit itself is allowed.
     await expect(
       pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(500), noPauseNotifier),
     ).resolves.toBeDefined();
@@ -458,7 +453,6 @@ describe('standingMemberPauses', () => {
     expect(rows.map(({ userId, until }) => ({ userId, until }))).toEqual([
       { userId: B.id, until: LATER },
     ]);
-    // Only the asked ids: B stands, but is not asked here.
     await expect(standingMemberPauses(asUser(A), covenId, [C.id])).resolves.toEqual([]);
   });
 

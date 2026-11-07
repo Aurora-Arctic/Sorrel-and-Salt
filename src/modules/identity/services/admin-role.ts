@@ -15,7 +15,6 @@ import type { PrimaryAdminOutcome, SignInProfile } from '../types';
  */
 const VOUCHING_PROVIDERS: ReadonlySet<string> = new Set(['google', 'discord']);
 
-/** Promotes the signed-in user to admin when their account is `primaryAdminEmail` and this sign-in's provider vouches for it. */
 export async function promotePrimaryAdmin(
   session: Session,
   {
@@ -41,8 +40,7 @@ export async function promotePrimaryAdmin(
 }
 
 /**
- * Promotes the user who has just verified their address by our own mail, when it is `primaryAdminEmail`. The caller must have checked
- * that the link was honoured from a session holding the row, since that is what makes the mail vouch.
+ The caller must have checked that the link was honoured from a session holding the row, since that is what makes the mail vouch.
  */
 export async function promotePrimaryAdminAtVerification(
   session: Session,
@@ -58,9 +56,7 @@ export async function promotePrimaryAdminAtVerification(
   return 'promoted';
 }
 
-// The primary keeper's role write. A grant sets the creation flag in the same
-// write, since the users CHECK refuses a keeper without it, and the
-// trigger on `users` records both, by the route declared here.
+// A grant sets the creation flag in the same write, since the users CHECK refuses a keeper without it.
 async function grantAdmin(session: Session): Promise<void> {
   await withAudit(session, (write) => writeSiteRoleGrant(write, session.userId, 'admin'), {
     via: 'bootstrap',

@@ -15,8 +15,6 @@ import type { Membership } from '@/modules/coven';
 import { workspaceMemberPauses } from '@/modules/coven/schema/workspace-member-pauses';
 import type { NamedWrites } from '@/db/types';
 
-// A coven owner's pause on one member's access to that coven, one row per pause so each keeps who set it, who lifted it and when.
-
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
@@ -101,7 +99,6 @@ describe('workspace_member_pauses table', () => {
     const noCoven = await failureOf(livePause(PAUSED, crypto.randomUUID()));
     const noUser = await failureOf(livePause(crypto.randomUUID()));
 
-    // 23503 is foreign_key_violation.
     expect([noCoven.code, noUser.code]).toEqual(['23503', '23503']);
   });
 
@@ -134,13 +131,10 @@ describe('workspace_member_pauses table', () => {
 
     const second = await failureOf(livePause());
 
-    // 23505 is unique_violation: the one-live index.
     expect(second.code).toBe('23505');
     expect(second.constraint_name).toBe(ONE_LIVE);
   });
 
-  // The index reaches one user's live pause in one coven alone: the same user in another coven, another user, and any number of
-  // lifted rows beside a live one all pass.
   it('takes a live pause for the same user in another coven, for another user, and lifted ones beside a live one', async () => {
     await liftedPause();
     await liftedPause();
@@ -171,7 +165,6 @@ describe('workspace_member_pauses table', () => {
       values (${WORKSPACE_W_ID}, ${PAUSED}, ${OWNER}, ${OWNER}, ${OWNER})
     `);
 
-    // 23514 is check_violation.
     expect([noBy.code, noAt.code]).toEqual(['23514', '23514']);
     expect([noBy.constraint_name, noAt.constraint_name]).toEqual([
       LIFTED_TOGETHER,
@@ -180,14 +173,9 @@ describe('workspace_member_pauses table', () => {
   });
 });
 
-// The repository's surface: setting and lifting under the `Membership` proof, the standing pause for a member, and the coven's
-// pauses. Every one ANDs the proof's workspace_id. The table is marked `namedWrites`, so every generic write is refused at compile
-// time (workspace-member-pauses-schema.type-check.ts). The permission each proof must carry is the service's to check.
 describe('the repository', () => {
-  // A owns W; D is a member of X alone. The proofs are minted once, from the seeded seats.
   let inW: Membership;
   let inX: Membership;
-  /** The first page of the proof's coven's pauses, narrowed to one user when named, its rows alone. */
   const historyOf = async (membership: Membership, userId?: string) =>
     (await findWorkspaceMemberPausePage(membership, { limit: 25, inverted: false }, userId)).map(
       (entry) => entry.node,

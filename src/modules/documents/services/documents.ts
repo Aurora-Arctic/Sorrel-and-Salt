@@ -63,7 +63,7 @@ async function versionList(
 /** The version of a document the page shows: its highest published one. Throws `NotFound` for a missing or deleted document. */
 export const readDocument = cachedDocumentRead('document-current', currentDocument);
 
-/** A published version by its number. Throws `NotFound` for a draft, a deleted row, a number the document never had, or no number. */
+/** Throws `NotFound` for a draft, a deleted row, a number the document never had, or no number. */
 export const readDocumentVersion = cachedDocumentRead('document-version', numberedDocument);
 
 /** One page of a document's published versions, newest first. Empty for a document that is missing or has none. */

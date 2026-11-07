@@ -8,9 +8,6 @@ import { verificationSigningSecret } from '@/lib/auth-secrets';
 import { secretLinkMail } from '@/modules/identity/jobs/secret-link-mail';
 import type { SecretLink } from '@/modules/identity';
 
-// The run that sends a secret-link mail, end to end in the SDK's local world, against a stand-in Mailpit that can be told to
-// fail. The run carries ids and the auth base alone; its step reads the address, and the reset token or a fresh signature,
-// when it sends.
 
 const DOMAIN = '@secret-link-run.test';
 const AUTH_BASE = 'http://localhost:3000/api/auth';
@@ -21,8 +18,7 @@ let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
 
-// The stand-in answers fetch itself rather than listening on a port: the local world finds its own queue by the port this process
-// listens on, so a second listener would take its deliveries.
+// The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
 const realFetch = globalThis.fetch;
 async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = input instanceof Request ? input.url : String(input);
@@ -63,7 +59,6 @@ beforeEach(async () => {
 });
 
 let made = 0;
-/** An account, verified or not, with an invented address. */
 async function account(verified: boolean): Promise<{ id: string; email: string }> {
   made += 1;
   const email = `holder${made}${DOMAIN}`;
@@ -75,7 +70,6 @@ async function account(verified: boolean): Promise<{ id: string; email: string }
   return { id: id as string, email };
 }
 
-/** A reset link's row, as Better Auth writes one, expiring `minutes` from now. */
 async function resetRow(userId: string, token: string, minutes = 15): Promise<void> {
   await sql`
     insert into verifications (identifier, value, expires_at)
@@ -83,7 +77,6 @@ async function resetRow(userId: string, token: string, minutes = 15): Promise<vo
   `;
 }
 
-/** Records a change to `pending` on the row, as setEmail does: the address in its own column and the row stamped as mailed now. */
 async function askForChange(userId: string, pending: string): Promise<Date> {
   const [{ at }] = await sql`
     update users set pending_email = ${pending}, verification_sent_at = now() where id = ${userId}
@@ -96,7 +89,6 @@ const pendingOf = async (userId: string) =>
   (await sql`select pending_email from users where id = ${userId}`)[0]!.pending_email as
     string | null;
 
-/** Wakes the run's pending sleep, standing in for the link's lifetime passing. */
 async function wake(run: Awaited<ReturnType<typeof start>>): Promise<void> {
   const sleepId = await waitForSleep(run);
   await getRun(run.runId).wakeUp({ correlationIds: [sleepId] });
@@ -139,7 +131,6 @@ describe('the secret-link mail run', () => {
     expect(new URL(url).searchParams.get('callbackURL')).toContain(
       encodeURIComponent('/compendium'),
     );
-    // The run's argument holds neither address nor token.
     expect(JSON.stringify(link)).not.toContain(DOMAIN);
     expect(JSON.stringify(link)).not.toContain(token);
     errors.mockRestore();
@@ -207,9 +198,7 @@ describe('the secret-link mail run', () => {
       start(secretLinkMail, [
         { kind: 'verification', userId: verified.id, authBase: AUTH_BASE, next: null },
       ]),
-      // A reset reaches only a proved inbox, even with a live token.
       start(secretLinkMail, [{ kind: 'reset', userId: unverified.id, authBase: AUTH_BASE }]),
-      // A verified account whose token has expired has no link to send.
       start(secretLinkMail, [{ kind: 'reset', userId: verified.id, authBase: AUTH_BASE }]),
     ]);
 

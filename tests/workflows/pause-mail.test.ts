@@ -7,9 +7,6 @@ import { accessPauseMail } from '@/modules/identity/jobs/access-pause-mail';
 import { supportTimeoutMail } from '@/modules/support/jobs/support-timeout-mail';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 
-// The runs that mail a support time-out, a site access pause and a coven access pause, end to end in the SDK's local world,
-// against a stand-in Mailpit that can be told to fail. Each run carries the row's id, the kind and the origin alone; its step
-// reads the address, the coven and the message when it sends, and sends nothing for a row since lifted.
 
 const DOMAIN = '@pause-mail-run.test';
 const ORIGIN = 'http://localhost:3000';
@@ -22,8 +19,7 @@ let failNext = 0;
 const attempts: string[] = [];
 const received: { to: string; subject: string; text: string }[] = [];
 
-// The stand-in answers fetch itself rather than listening on a port: the local world finds its own queue by the port this process
-// listens on, so a second listener would take its deliveries.
+// The stand-in answers fetch itself, not on a port: the local world finds its queue by this process's port, so a second listener would take its deliveries.
 const realFetch = globalThis.fetch;
 async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = input instanceof Request ? input.url : String(input);
@@ -43,7 +39,6 @@ async function mailpit(input: RequestInfo | URL, init?: RequestInit): Promise<Re
 }
 
 let made = 0;
-/** A verified account to time out or pause. */
 async function account(): Promise<{ id: string; email: string }> {
   made += 1;
   const email = `user${made}${DOMAIN}`;
@@ -55,7 +50,6 @@ async function account(): Promise<{ id: string; email: string }> {
   return { id: id as string, email };
 }
 
-/** A time-out on `userId`, standing or lifted, with the note and the message. */
 async function timeout(userId: string, lifted = false): Promise<string> {
   const [{ id }] = await sql`
     insert into support_timeouts (user_id, until, note, message, lifted_at, created_by, updated_by)
@@ -65,7 +59,6 @@ async function timeout(userId: string, lifted = false): Promise<string> {
   return id as string;
 }
 
-/** A site access pause on `userId`, standing or lifted, with the note and the message. */
 async function accessPause(userId: string, lifted = false): Promise<string> {
   const [{ id }] = await sql`
     insert into user_access_pauses (user_id, until, note, message, lifted_at, lifted_by, created_by, updated_by)
@@ -77,7 +70,6 @@ async function accessPause(userId: string, lifted = false): Promise<string> {
 }
 
 let covensMade = 0;
-/** A coven named `name` holding `userId` as a member, and a pause on them there, standing or lifted. */
 async function memberPause(userId: string, name: string, lifted = false): Promise<string> {
   covensMade += 1;
   const [coven] = await sql`
@@ -166,7 +158,6 @@ describe('the access pause mail run', () => {
     const run = await start(accessPauseMail, [{ kind: 'access-pause', pauseId, origin: ORIGIN }]);
 
     await expect(run.returnValue).resolves.toBe(false);
-    // The first try and the SDK's three retries, each to the address read from the row.
     expect(attempts).toEqual([user.email, user.email, user.email, user.email]);
     expect(received).toEqual([]);
     expect(errors).toHaveBeenCalled();

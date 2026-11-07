@@ -3,23 +3,20 @@ import { describe, expect, it } from 'vitest';
 import { CHIP_GROUNDS, contrastRatio } from '@/lib/contrast';
 import { fromRoot } from '../support/paths';
 
-// A group colour the write check admits stays legible on every surface its theme draws a chip on, in both states (claude-docs/styling.md, "Chips, badges and the solid-fill rule").
-// One assertion per theme, the functional half; how it looks is the workshop story's and the axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert").
+// One assertion per theme; how it looks is the workshop story's and the axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert").
 
 const SCSS_DIR = fromRoot('src/scss');
 
 // The write check tests each column against CHIP_GROUNDS: the harder of its theme's two surfaces,
 // the dark card and the light page. The test below proves the theme mixins still draw those two.
 
-// An invented pair, nowhere in the seed or the Sass map, that clears 4.5:1 against what the write
-// check tests: what a keeper's ninth group might carry.
+// An invented pair, nowhere in the seed or the Sass map, that clears 4.5:1 against what the write check tests.
 const NINTH = { dark: '#5f9a9f', light: '#7a3f10' } as const;
 
 function compile(source: string): string {
   return compileString(source, { style: 'expanded', loadPaths: [SCSS_DIR] }).css;
 }
 
-/** The declarations of the first rule matching `selector`, as property → value. */
 function declarations(css: string, selector: string): Record<string, string> {
   const start = css.indexOf(`${selector} {`);
   if (start === -1) throw new Error(`No rule for ${selector} in:\n${css}`);
@@ -37,7 +34,6 @@ function declarations(css: string, selector: string): Record<string, string> {
 }
 
 describe('a group colour the write check admits is legible on its theme', () => {
-  /** The page and card surfaces a theme mixin sets. */
   function surfaces(theme: 'dark' | 'light'): { page: string; card: string } {
     const tokens = declarations(
       compile(`@use 'mixins' as m; .probe { @include m.theme-${theme}; }`),
