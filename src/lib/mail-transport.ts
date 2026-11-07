@@ -98,9 +98,8 @@ export function isUndeliverableAddress(address: string): boolean {
 }
 
 /**
- * Hands the message to MAIL_TRANSPORT once. True when the transport took it, or when MAIL_TRANSPORT is unset outside a deployment
- * and the message is logged in its place; false when it is refused before any transport is tried (a recipient under `.invalid`, or
- * a transport this environment may not use), which no retry would change. Every outcome but success is logged.
+ * Hands the message to MAIL_TRANSPORT once. True when taken or logged in its place; false when refused before
+ * any transport is tried, which no retry would change.
  *
  * @throws {MailNotSent} the transport answered with an error, or could not be reached.
  */

@@ -1,9 +1,6 @@
 import { messageLookup, safeReturnPath } from './sign-in';
 
-// Pure helpers for /account/email?error=, the page a followed verification
-// link lands on. Every sentence is ours: a code is what Better Auth's
-// /verify-email appends to the link's callbackURL, and the page never shows
-// one raw.
+// Pure helpers for /account/email?error=; a code is Better Auth's, and the page never shows one raw.
 
 // Better Auth's own codes (node_modules/better-auth/dist/api/routes/
 // email-verification.mjs, `redirectOnError`) plus the two src/lib/auth.ts

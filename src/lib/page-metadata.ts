@@ -1,11 +1,8 @@
 import type { Metadata } from 'next';
 import { SITE_NAME, siteUrl, titleTemplate } from './site';
 
-// The search-result text of a public page: a description of about 160
-// characters, and the Open Graph and Twitter tags that repeat the title and
-// description. Pure, so the three compendium pages share one wording and one
-// test. No image tag: each segment's `opengraph-image` file names its share card,
-// and Twitter inherits it from Open Graph.
+// The search-result text of a public page, pure so the three compendium pages share one wording. No image
+// tag: each segment's `opengraph-image` names its share card.
 
 /** The Twitter card that shows the share card full width above the title. */
 export const TWITTER_CARD = 'summary_large_image';

@@ -5,10 +5,9 @@ import { PASSWORD_CHECK_UNAVAILABLE, newPasswordRefusal } from './password-refus
 import { requestOrigin } from './request-origin';
 import { isFreshSession } from './session-fresh';
 
-// Where the account page's Set Password meets Better Auth, whose set-password endpoint answers only on the
-// server. Handed to the service by the GraphQL context, as a service may not import `auth`
-// (claude-docs/auth/passwords.md, "Setting a first password"); imported at call time, for the reason
-// `requestOrigin` gives.
+// Where Set Password meets Better Auth, handed to the service by the GraphQL context since a service may not
+// import `auth` (claude-docs/auth/passwords.md, "Setting a first password"). Imported at call time, as
+// `requestOrigin` explains.
 
 const ALREADY_SET = 'This account already has a password. Change it instead.';
 

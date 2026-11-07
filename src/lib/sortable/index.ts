@@ -29,8 +29,8 @@ export const SORTABLE_INSTRUCTIONS =
 const DRAG_DISTANCE_PX = 4;
 
 // ---------------------------------------------------------------------------
-// TOUCH DRAG DELAY: how long a finger must rest on a handle before a touch drag starts, and how far it may move first.
-// Provisional; every sortable list reads the two numbers.
+// TOUCH DRAG DELAY: how long a finger rests on a handle before a touch drag starts, and how far it may move
+// first. Provisional.
 // ---------------------------------------------------------------------------
 export const TOUCH_DRAG_DELAY_MS = 250;
 /** How far, in pixels, a finger may move during that wait and still drag. */

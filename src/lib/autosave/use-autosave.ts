@@ -160,10 +160,8 @@ function createEngine<TValue>(
     const refused = thrown instanceof GraphQLClientError && isRefusal(thrown);
     const wait = refused ? undefined : RETRY_DELAYS_MS[attempts];
     if (wait !== undefined && attached) {
-      // Still busy: a change or a flush during the wait rides on the retry,
-      // which sends the latest value.
-      // `error` waits for the last attempt: set, it means the save has
-      // failed for good.
+      // Still busy: a change or flush during the wait rides on the retry. `error` is set only after the last
+      // attempt.
       attempts += 1;
       set({ status: 'saving' });
       retryTimer = setTimeout(() => void send(), wait);

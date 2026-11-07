@@ -3,10 +3,8 @@ import type { UserRole } from './session';
 import type { PageTab } from '../components/TabbedPage/types';
 import { SUPPORT_LIST_PATH } from './support-path';
 
-// Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
-// protection (src/proxy.ts, src/lib/request-session.ts) — one rule for which
-// return paths are safe, applied on the way out and on the way back — and the
-// sentences for the account page's own OAuth round trip, the link.
+// Pure helpers for /sign-in?next=&error=, one rule for which return paths are safe, shared by the sign-in
+// page and route protection.
 
 /**
  * Where a sign-in goes when no page asked for the visitor back, for anyone but a curator or an admin: the post-sign-in

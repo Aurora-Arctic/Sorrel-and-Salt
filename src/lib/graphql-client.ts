@@ -8,10 +8,8 @@ import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
 import { reportLeaving } from './navigation/store';
 import type { VariablesArg } from './types';
 
-// The browser's half of the API: a small fetch wrapper sends a codegen document and
-// TanStack Query caches the answer, with no second, normalized cache beside it
-// (DESIGN.md §7). Server components never come through here — they read
-// through services (CLAUDE.md rule 1). claude-docs/graphql/client.md, "The client".
+// The browser's half of the API: a fetch wrapper and TanStack Query, with no second cache. Server components
+// read through services (claude-docs/graphql/client.md, "The client").
 
 const ENDPOINT = '/api/graphql';
 

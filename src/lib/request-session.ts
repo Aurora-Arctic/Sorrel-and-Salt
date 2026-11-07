@@ -17,10 +17,8 @@ import { toUserRole } from './session-role';
 import { isFreshSession } from './session-fresh';
 import type { AccountPasskey, AgreedVersion, LinkedAccount } from './types';
 
-// Where the request becomes a service-level `Session`: server components and
-// the GraphQL context call this, then hand the result to a service. A service
-// never calls it — the import is banned there (claude-docs/auth/route-protection.md, "Route
-// protection").
+// Where the request becomes a service-level `Session`; a service never calls it
+// (claude-docs/auth/route-protection.md, "Route protection").
 
 /**
  * Whether Better Auth would still call a session created at `createdAt` fresh (the `/unlink-account` check), so the account
@@ -151,10 +149,9 @@ async function forwardedReturnPath(): Promise<string | undefined> {
 }
 
 /**
- * The signed-in user or a redirect to `/sign-in` carrying the page's path as `?next=`, or to the paused page while a pause
- * stands on the session's user, from every page but support's: `requireSession()` without its email
- * check, for the shell layout only. The shell is drawn round the email page, and a layout throwing the email redirect there
- * loops the router (claude-docs/auth/route-protection.md, "Where the email redirect is thrown").
+ * The signed-in user or a redirect, without `requireSession()`'s email check, for the shell layout only: a
+ * layout throwing the email redirect loops the router (claude-docs/auth/route-protection.md, "Where the email
+ * redirect is thrown").
  */
 export async function requireSignedIn(): Promise<Session> {
   return signedInFrom(await getSessionState());
@@ -227,10 +224,9 @@ export async function requireCuratorSession(): Promise<Session> {
 const covenOf = cache(async (slug: string) => membershipBySlug(await requireSession(), slug));
 
 /**
- * `requireSession()`, then the workspace the `/coven/[slug]` address names and the proof the user is a member. A refusal is
- * Next's 404, not 403: an unknown slug and a coven the user is not in must look the same (claude-docs/auth/coven-guard.md,
- * "The coven guard"). A member whose access to the coven is paused holds a seat, so is sent to the coven's paused page
- * instead. The layout and every page beneath it call it.
+ * `requireSession()`, then the workspace the slug names and the proof. A refusal is a 404, not a 403
+ * (claude-docs/auth/coven-guard.md, "The coven guard"); a member whose access is paused goes to the coven's
+ * paused page.
  */
 export async function requireCovenMembership(slug: string): Promise<CovenMembership> {
   try {

@@ -3,9 +3,7 @@ import 'server-only';
 import { getHookByToken, start } from 'workflow/api';
 import { assertRunArguments } from './run-arguments';
 
-// The site's one door to the Workflow SDK from server code: a service starts a
-// job here, and the job file (a "use workflow" function) reads its sleeps and
-// errors from ./runtime. Nothing else imports the SDK at runtime
+// The site's one door to the Workflow SDK from server code; nothing else imports it at runtime
 // (tests/guards/lint-job-boundary.test.ts).
 
 /** A job is a workflow function: it takes serialisable arguments and only sleeps and calls steps. */

@@ -4,11 +4,8 @@ import { Forbidden } from './lib/errors';
 import { RETURN_PATH_HEADER, signInPath } from './lib/sign-in';
 import { assertWorkshopAccess } from '@/modules/identity';
 
-// Route protection's first layer: deny by default, so a route nobody thought
-// about is protected rather than open. The check is optimistic — is a session
-// cookie present — and never touches the database; `requireSession()` in the
-// page is the check that does — except under /workshop, below. See
-// claude-docs/auth/route-protection.md, "Route protection".
+// Route protection's first layer: deny by default, an optimistic cookie check that never touches the
+// database, except under /workshop (claude-docs/auth/route-protection.md, "Route protection").
 
 /**
  * The pages a signed-out visitor may reach. An entry is an exact path, or a
@@ -59,10 +56,8 @@ function isPublic(pathname: string): boolean {
 }
 
 /**
- * The staging component workshop: Storybook's static build, written to
- * public/workshop/ by the staging deploy alone. Static files have no page to
- * call `requireSession()`, so this is the one prefix where the proxy asks the
- * database itself. See claude-docs/workshop.md, "On staging".
+ * The staging component workshop's static files have no page to call `requireSession()`, so the proxy asks
+ * the database itself here (claude-docs/workshop.md, "On staging").
  */
 const WORKSHOP = '/workshop';
 
@@ -71,14 +66,9 @@ function isWorkshop(pathname: string): boolean {
 }
 
 /**
- * The workshop's Content Security Policy: its scripts may fetch, by `fetch`,
- * XHR or WebSocket, only files under /workshop/ on the address the browser
- * used. Storybook reads its own `index.json` and `project.json` that way, so
- * `'none'` would break it. A source with a path ending `/` matches that prefix
- * alone, so /api/graphql and every other path stay refused, though the
- * scripts carry a keeper's cookie. Not `'self'`, which cannot take a path.
- * Nothing else is restricted: the manager frames its own `iframe.html`, and
- * no header here or in next.config.ts forbids framing.
+ * The workshop's Content Security Policy: its scripts may fetch only files under /workshop/ on the browser's
+ * address; not `'none'`, which breaks Storybook, and not `'self'`, which cannot take a path
+ * (claude-docs/workshop.md, "The workshop's Content Security Policy").
  */
 function workshopPolicy(request: NextRequest): string {
   return `connect-src ${browserHost(request)}${WORKSHOP}/`;
@@ -88,13 +78,8 @@ function workshopPolicy(request: NextRequest): string {
 const HOST = /^(?:[a-z0-9.-]+|\[[0-9a-f:.]+\])(?::\d+)?$/i;
 
 /**
- * The host in the browser's address bar, for the policy above. Not
- * `nextUrl.host`, which is the address the server was reached on: `next
- * start` bound to 0.0.0.0, or a container port behind a mapping, and the
- * policy then refuses Storybook's own files. A forwarding host names the
- * public one in `x-forwarded-host`, as Next's own Server Actions check reads
- * it. No scheme, so the source takes the page's, http or https, wherever TLS
- * ends. A value that is not a plain host falls back to `nextUrl.host`.
+ * The host in the browser's address bar for the policy above, not `nextUrl.host`, which is where the server
+ * was reached (claude-docs/workshop.md, "The workshop's Content Security Policy").
  */
 function browserHost(request: NextRequest): string {
   const named =
@@ -138,10 +123,8 @@ async function route(request: NextRequest): Promise<NextResponse> {
   headers.set(RETURN_PATH_HEADER, returnPath);
   if (!workshop) return NextResponse.next({ request: { headers } });
 
-  // Storybook links its files relative to the page, so the manager must be
-  // served from under /workshop/: at bare /workshop, ./iframe.html would be
-  // /iframe.html. Not a rewrite, which keeps the browser's URL, and not
-  // /workshop/, which Next's trailing-slash redirect sends back here.
+  // Storybook links its files relative to the page, so the manager is served from under /workshop/ by
+  // redirect, not rewrite (claude-docs/workshop.md, "On staging").
   const response =
     pathname === WORKSHOP
       ? NextResponse.redirect(new URL(`${WORKSHOP}/index.html${search}`, request.url))
@@ -151,20 +134,15 @@ async function route(request: NextRequest): Promise<NextResponse> {
 }
 
 /**
- * Query parameters that make an address a copy of a real page, kept out of
- * search results with their links still followed: `entry` opens Quick Look over
- * the compendium and `support` the support dialog over any page. The list's
- * pager pages (`after`, `before`) are left out: each is its own indexable page.
+ * Query parameters that make an address a copy of a real page, kept out of search results; the pager's
+ * `after` and `before` are left out (claude-docs/seo/ai-discovery.md, "Keeping copies out of search").
  */
 const NOINDEX_PARAMS = ['entry', 'support'];
 
 /**
- * Anything but a production deploy tells search engines to index nothing,
- * because staging is a public URL that would otherwise be indexed as a
- * duplicate of the compendium. `VERCEL_ENV`, not `NODE_ENV`, which is
- * `production` on every deploy, staging included (the test impersonation
- * uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.
- * On production only an address carrying one of NOINDEX_PARAMS is marked.
+ * Anything but a production deploy is noindex, keyed on `VERCEL_ENV`, not `NODE_ENV`; on production only an
+ * address carrying one of NOINDEX_PARAMS is marked (claude-docs/seo/ai-discovery.md, "Keeping copies out of
+ * search").
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const response = await route(request);
@@ -176,14 +154,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 }
 
 export const config = {
-  // Everything except what is never a page: Next's own assets, and `/api/*`,
-  // which answers for itself — Better Auth's handshake, and GraphQL refusing in
-  // its own error shape rather than redirecting a fetch, and the Workflow SDK's generated
-  // `/.well-known/workflow/` routes, which take its queue calls and fail if this runs first. Nothing else is
-  // exempt, so a file dropped into public/ is a protected page to this matcher
-  // until it gets its own entry here — which is why the backdrop's images are
-  // imported by their stylesheet and served under /_next/ instead. A named
-  // prefix, never a file-extension pattern: what is public is listed, as in
-  // PUBLIC_ROUTES. Must be a literal: Next reads it at build time.
+  // Everything except Next's assets, `/api/*` and the Workflow routes is matched, so a file dropped into
+  // public/ is a protected page until listed. A named prefix, never an extension pattern; must be a literal
+  // (claude-docs/auth/route-protection.md, "The matcher").
   matcher: ['/((?!api/|_next/|\\.well-known/workflow/).*)'],
 };

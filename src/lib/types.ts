@@ -1,6 +1,4 @@
-// Imports nothing: `validation.ts` reaches this file through `errors.ts`, and a
-// validation schema may reach no package but zod — so a type that needs a
-// table or a library goes in `session.ts` or its own module's `types.ts`
+// Imports nothing, because `validation.ts` reaches this file and may reach no package but zod
 // (claude-docs/modules.md, "Where types live").
 
 /** A connection field's arguments, as the Relay plugin hands them to a resolver. */

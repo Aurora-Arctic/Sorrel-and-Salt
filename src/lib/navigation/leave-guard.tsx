@@ -38,10 +38,9 @@ export function leaveGuardSlot(): LeaveGuardSlot {
 const RELEASED = 'leave-guard-released';
 
 /**
- * Holds the browser's Back and Forward while a guard has changes, where the Navigation API can
- * cancel them; returns the removal. A traversal is cancelable only inside the top-level document,
- * and one from the browser's own buttons only after the person has used the page (the HTML
- * standard's "history-action activation"), so `event.cancelable` is read and anything else goes through. An enhancement: a browser without the API keeps today's behaviour.
+ * Holds Back and Forward while a guard has changes, where the Navigation API can cancel them; an enhancement,
+ * so a browser without the API keeps today's behaviour. Reads `event.cancelable` and lets anything else
+ * through.
  */
 export function holdTraversals(slot: LeaveGuardSlot): () => void {
   const nav = 'navigation' in window ? window.navigation : undefined;
