@@ -21,6 +21,9 @@
     padding: space(1) space(4);
     border-radius: 0;
     color: $text-muted;
+    // A link takes the global link spacing; the skeleton's span has none of its own, and a bar narrower
+    // than the label it stands for would sit short of the real one.
+    letter-spacing: 0.02em;
     text-align: start;
     text-decoration: none;
     // An entry too long for the column breaks into lines of even length, as the headings do, so no

@@ -32,6 +32,10 @@ Since M11.9 `Skeleton` is only the two smallest pieces, a line of text and a con
 - Every bar is a `span` inside `.skeleton__shapes`, drawn by the `skeleton-shape` mixin (`_mixins.scss`): the quiet fill, the band and the reduced-motion pulse.
 - `.skeleton-frame` is the class `MainBody` adds to a `main` wait, which draws it from the top rather than centred.
 
+## SkeletonText
+
+`text.tsx` draws real text as bars: a `span.skeleton-run` whose text is transparent over the shared bar fill (`skeleton-fill`, `_mixins.scss`). A page skeleton wraps the words of a part it draws from the page's own component ([`coven-home.md`](coven-home.md) does, in `pending`), so the bars take the width and wrapping of the real words and each wrapped line fragment paints its own bar. The text stays in the page's markup, so the host that draws it (the page skeleton) is the one that keeps it from being read aloud and carries the single "Loading" status. It takes no props beyond its children.
+
 ## SwapPanel
 
 `swap-panel.tsx` lives here too: it swaps a panel for the skeleton while a transition runs (`ListFrame`, `TabbedPage`). `panel.tsx` holds `PanelSkeleton`, a panel section with its heading and lede bars and then its fields as blocks.

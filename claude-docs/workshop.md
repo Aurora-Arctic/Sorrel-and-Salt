@@ -13,10 +13,12 @@ without a page routed to it.
   beside `index.tsx`, and mail stories at `src/emails/<name>.stories.tsx`. The
   `stories` globs in `.storybook/main.ts` also pick up `.storybook/*.stories.tsx`,
   for workshop-only pages the app never imports.
-- **A component that renders nothing has no story.** `CovenSwitchTargets` is the
-  one: it only tells the coven switcher which covens a page also opens in, so a
-  story of it would be an empty frame, and the switcher's own story shows the
-  effect. Every other component under `src/components/` needs one.
+- **A component that renders nothing has no story.** Two do. `CovenSwitchTargets`
+  only tells the coven switcher which covens a page also opens in, and the
+  switcher's own story shows the effect. `CovenFacts` only carries the open
+  coven's name and role to the skeletons inside it, and the coven home's story
+  shows the effect. A story of either would be an empty frame. Every other
+  component under `src/components/` needs one.
 - Stories are CSF3 (Storybook's story file format): a default-exported `meta`
   with the title, and one named export per story. They carry no test ids, no
   snapshots and no assertions — behaviour is the test's job, and since MB.41 the
