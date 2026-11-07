@@ -10,16 +10,16 @@
   margin-block-start: space(6);
 
   // The body's own headings, one level down from the seed text: a contents menu jumps to the h3s.
-  // A short hairline above each section heading marks the break without a full rule.
+  // A short hairline beneath each section heading marks the break without a full rule.
   h3 {
     position: relative;
     margin-block: space(8) space(3);
-    padding-block-start: space(3);
+    padding-block-end: space(2);
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 
-    &::before {
+    &::after {
       @include short-hairline;
-      inset-block-start: 0;
+      inset-block-end: 0;
       inset-inline-start: 0;
     }
   }

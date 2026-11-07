@@ -59,7 +59,7 @@ A help body marks a callout as a blockquote whose first words are a bold label: 
 
 ## Look
 
-A section heading in an article body (an h3) has a short hairline above it (`short-hairline`). A screenshot or a widget in the text sits in a `.figure` frame with its caption beneath (`_primitives.scss`).
+A section heading in an article body (an h3) has a short hairline beneath it (`short-hairline`). A screenshot or a widget in the text sits in a `.figure` frame with its caption beneath (`_primitives.scss`).
 
 ## Glossary marks
 
