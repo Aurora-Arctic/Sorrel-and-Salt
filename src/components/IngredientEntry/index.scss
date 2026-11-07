@@ -665,3 +665,45 @@ $replaces-gap: space(5);
   padding-block-end: 0;
   border-block-end: 0;
 }
+
+// The skeleton's eyebrow and action: a skeleton has no width of its own, so each bar stands in a box
+// of the size the real one takes (IngredientEntry/skeleton.tsx).
+.ingredient-entry__pending-formal {
+  display: flex;
+  align-items: center;
+  min-block-size: $formal-line;
+}
+
+.ingredient-entry__pending-eyebrow {
+  display: block;
+  block-size: 1lh;
+  inline-size: 12rem;
+  max-inline-size: 100%;
+}
+
+.ingredient-entry__head .page-header > .ingredient-entry__pending-action {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc((#{$formal-line} - #{$action-icon-size}) / 2);
+  inline-size: $action-icon-size;
+  block-size: $action-icon-size;
+
+  .skeleton,
+  .skeleton__shapes,
+  .skeleton__box {
+    block-size: 100%;
+    inline-size: 100%;
+  }
+}
+
+.ingredient-entry__pending-badge {
+  display: flex;
+  align-items: center;
+  min-block-size: 1.5rem;
+  inline-size: 8rem;
+}
+
+// A pending name is one line of the heading's own size, as the name's first line is.
+.ingredient-entry__head h1 .skeleton__line {
+  height: 1lh;
+}
