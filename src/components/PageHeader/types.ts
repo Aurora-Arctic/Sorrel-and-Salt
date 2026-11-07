@@ -5,6 +5,8 @@ export interface PageHeaderProps {
   title: string;
   /** The heading element, `h1` unless the page already has its `h1` above this head. */
   level?: 'h1' | 'h2';
+  /** A line set above the title inside the heading, so the heading reads as one phrase, as "Welcome to Sorrel & Salt". */
+  greeting?: string;
   /** The `h1`'s id, for a landmark or an article that takes the heading as its name. */
   id?: string;
   /**
