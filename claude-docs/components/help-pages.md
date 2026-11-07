@@ -72,6 +72,38 @@ A body marks a glossary term as `[[Term]]`, or `[[Term|shown text]]` to show oth
 - **Summaries** (search results, index and sub page lists, the page description) show the shown text as plain text.
 - **Saving.** `createHelpArticle` and `updateHelpArticle` refuse a body that marks a term no live glossary row holds, as a `ValidationError` on `body` naming each missing term; an update that leaves the body alone is not checked. A term being saved counts as present in its own body. The seed test asserts every mark in the shipped prose names a seeded term.
 
+## Widgets
+
+A help body places a live widget with a paragraph that is one tag, `::widget[name]`. The names are a fixed list, `HELP_WIDGETS` in `src/lib/help-widgets.ts`:
+
+| Name                    | What it draws                                                                                                    | Where its rule comes from                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `unit-converter`        | An amount and two units; the result, or the refusal for a conversion across dimensions or involving a count unit | `unitConvert` and `UNITS` (`src/modules/ingredients`)                            |
+| `invitation-refusals`   | Every message the accept page can give, for a link and for a printed card                                        | `INVITATION_REFUSAL_MESSAGES` and `CARD_REFUSAL_MESSAGES` (`@/modules/identity`) |
+| `role-permission-table` | A table of each workspace action against Steward, Practitioner and Observer, a check or a cross in each cell     | `rolePermits` and `WORKSPACE_STATEMENTS` (`@/modules/coven`)                     |
+| `autosave-status`       | The real `SaveStatus` in each of its six states, and the retry delays                                            | `AutosaveStatus` and `RETRY_DELAYS_MS` (`src/lib/autosave`)                      |
+
+- **Each widget imports its rule, never a copy**, so a reason, a role or a delay added in the code shows in the widget. The invitation and role widgets are server components, since their modules are server-only; the converter and the autosave widget are client components. All four live in `src/components/HelpWidget/`, and `HELP_WIDGET_ELEMENTS` maps each name to its element.
+- **Where it renders.** `HelpArticleView` hands `HELP_WIDGET_ELEMENTS` to `renderMarkdown` as its last argument; a root paragraph that is one tag naming a handed widget is swapped for it. A tag inside a sentence, a tag for a widget not handed over, and every tag in a site document or the `HelpArticleForm` preview stays text.
+- **Saving.** `createHelpArticle` and `updateHelpArticle` refuse a body that places a name not in the list, as a `ValidationError` on `body` naming it and listing the widgets, the same way as an unknown term mark; an update that leaves the body alone is not checked.
+- **Tests.** `tests/components/HelpWidget/` checks each widget against its rule (a reason added to the invitation tables and missing from the widget fails there); `tests/e2e/help-widgets.spec.ts` reads one article per widget on the built server with axe.
+
+## Screenshots
+
+A help body shows a screenshot with a paragraph that is one image, `![alt text](/help/screens/<name>.png "caption")`. `renderMarkdown` draws it as a `.figure` with the title as its `figcaption`, only in help bodies; an image whose address is not a path on this site becomes its alt text. The pictures live in `public/help/screens/` and are committed; the proxy serves them under the public help article rule.
+
+`npm run help:screenshots` writes them: `tests/e2e/help-screenshots/`, run on `playwright.help-screenshots.config.ts` against the e2e slot server and a slot database it seeds, at 1024 wide in the light theme. `npm run e2e` leaves it out. Run it after a change to a page a screenshot shows, with the e2e lock, ports clear of the dev server and the placeholder secret:
+
+```sh
+flock /tmp/sorrel-e2e.lock env E2E_PORT_BASE=8200 E2E_WORKERS=1 \
+  BETTER_AUTH_SECRET=local-dev-not-a-real-secret npm run help:screenshots
+```
+
+| File                   | What it shows                                                         | Article                       |
+| ---------------------- | --------------------------------------------------------------------- | ----------------------------- |
+| `compendium-entry.png` | The Rosemary entry page, signed out, from the seeded compendium       | Read an Entry and Its Sources |
+| `spell-builder.png`    | The spell builder over a draft, every section open, three steps in it | Build a Spell                 |
+
 ## Links to help
 
 `Welcome`, the footer nav (`SiteFooter`, after Privacy), the 404 screen, the account menu (`AccountMenu`, a "Help" row before Support), the `/support` page and the Support dialog (each a "Search Help" line before the form) link to `/help`. The top bar (`PublicFrame`, `AppShell`) does not. An empty Ingredients list and an empty Grimoire tab each end with a "Learn More" link to their guide, built by `publicGuidePath(slug)` (`src/lib/help-paths.ts`) from the guide's slug, which is its title's. The keepers and curator layouts link `/help/staff` as "Staff Help" in a `nav`.

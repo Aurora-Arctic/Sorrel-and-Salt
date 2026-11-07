@@ -3462,6 +3462,12 @@ A writer marks a term in Markdown; nothing is matched by itself, so a common wor
 
 A help body marks a callout as a blockquote whose first words are one of three bold labels: `> **Note:** …`, `> **Tip:** …` or `> **Take Care:** …`. It is drawn as a notice named by its label, so a reader of the source sees an ordinary blockquote and a reader of the page sees the label above the text. A blockquote opening with any other words stays a blockquote. Word labels rather than icons, so the kind does not rest on a picture or a colour. Only help bodies read callouts: the site documents and the keeper's preview keep their blockquotes, as they do their glossary marks (claude-docs/components/help-pages.md, "Callouts").
 
+### Widgets and screenshots
+
+Some help text describes a rule the code holds: the units that convert, the reasons an invitation is refused, what each role may do, the save line's states. Written as prose, such a list goes stale the day the rule changes. A body therefore places a widget by name, `::widget[name]`, from a fixed list in code, and each widget imports the rule it shows, never a copy, so the page changes with the code. A save naming an unknown widget is refused, as a mark naming an unknown term is, so a broken tag cannot be published. The cost is that a new widget is a code change, not a keeper's edit.
+
+A screenshot is a committed picture in `public/help/screens/`, shown as a figure with alt text and a caption. A Playwright script on demand writes it from a seeded slot database, so a picture can be retaken after a page changes rather than drawn by hand (claude-docs/components/help-pages.md, "Widgets" and "Screenshots").
+
 ### What it rules out
 
 - Help text kept in the repository, for the reasons above.
