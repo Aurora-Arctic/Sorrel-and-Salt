@@ -163,6 +163,9 @@ what it scans — an empty listing satisfies every `toEqual([])`.
   than its own assertions do — `environment` was a third of CI's worker time
   while every unit file paid it. `tests/guards/test-location.test.ts` holds
   every test file to exactly one project (above).
+  - A file's environment is its project's. The CLI's `--environment node` does
+    not override a project that sets `environment` itself, so a test moves to
+    another environment only by moving to another project.
   - `setupFiles: ['@testing-library/jest-dom/vitest']` registers the jest-dom
     matchers (`toBeInTheDocument`, `toHaveClass`, …); `tests/vitest-env.d.ts`
     (`/// <reference types="@testing-library/jest-dom/vitest" />`) gives `tsc`
