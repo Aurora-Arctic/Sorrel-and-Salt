@@ -77,7 +77,9 @@
     border-block-start: 1px solid $hairline;
   }
 
-  a {
+  // A page's link, or its skeleton's stand-in title.
+  a,
+  li > span {
     font-size: $nav-link-size;
   }
 

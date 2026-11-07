@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
+import { HELP_GLOSSARY_CARD as GLOSSARY } from '../../lib/help-pages';
 import { PendingLink } from '../../lib/navigation';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
@@ -10,14 +11,6 @@ import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import type { HelpIndexProps } from './types';
 import './index.scss';
-
-// The glossary is reference, not a guide, but it is read from the same list, described like one.
-const GLOSSARY = {
-  kind: 'Reference',
-  title: 'Glossary',
-  summary: 'The words Sorrel & Salt uses, and what each one means.',
-  href: '/help/glossary',
-};
 
 // The two sections the jump menu names. An answer's heading never takes these ids; a question's slug could only if it
 // were titled "Guides" or "FAQ", which no question is.

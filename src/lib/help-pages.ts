@@ -10,6 +10,14 @@ export const HELP_PAGE_LIMIT = 200;
 export const HELP_LEDE =
   'Guides to the Compendium, your coven, its ingredients and grimoire, and the words we use.';
 
+/** The glossary's card among the guides, which its skeleton draws too: reference, not a guide, but described like one. */
+export const HELP_GLOSSARY_CARD = {
+  kind: 'Reference',
+  title: 'Glossary',
+  summary: 'The words Sorrel & Salt uses, and what each one means.',
+  href: '/help/glossary',
+};
+
 /** A read that finds nothing answers the site's 404. */
 export async function orNotFound<T>(read: () => Promise<T>): Promise<T> {
   try {
