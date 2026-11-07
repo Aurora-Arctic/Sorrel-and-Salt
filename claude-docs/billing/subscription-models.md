@@ -14,7 +14,7 @@ The five wants a subscription has to meet are DESIGN.md §13's. I call them **R1
 - **R4.** A keeper can make a coven free.
 - **R5.** Someone who belongs to several covens pays less. **Owner definition, 2026-11-06:** "'$1 for a discounted seat' - only a person paying for a coven gets a discounted seat on other covens." So the discount is on the second coven's invoice, for a seat held by a person who is themselves the paying steward of another coven. A member who pays for no coven gets no discount.
 
-A price in a model below is mine unless it names a comparable. I anchored each on the comparables, and the doc says so each time. Change them in `scripts/billing-model.mjs` and re-run it. Sources S1 to S52 are Lane C's, listed at the end with the others.
+A price in a model below is mine unless it names a comparable. I anchored each on the comparables, and the doc says so each time. Change them in `scripts/billing-model.mjs` and re-run it. Sources S1 to S52 are the comparables, listed at the end with the others.
 
 ## Owner Decisions
 
@@ -41,7 +41,7 @@ The owner chose model (i) and answered every open question on 2026-11-06. The de
 
 **Structure.** A personal subscription unlocks every coven the person belongs to.
 
-**Price points.** Obsidian Sync is $4 to $5 a month [S13], and every collaborator on a shared vault needs their own plan [S14]. Solo grimoire apps cost $1.58 to $3.33 a month on annual plans (derived, Lane C). Roll20 Plus is $5.99 [S21]. I model **$4.00 a month per person** (assumption).
+**Price points.** Obsidian Sync is $4 to $5 a month [S13], and every collaborator on a shared vault needs their own plan [S14]. Solo grimoire apps cost $1.58 to $3.33 a month on annual plans (derived). Roll20 Plus is $5.99 [S21]. I model **$4.00 a month per person** (assumption).
 
 **R1 to R5.** R1 **dropped**. R2 **altered**: cost scales by itself, since nobody is billed for a count. R3 **altered** to free months per person. R4 **altered**: an exemption per person, or one that waives every member of a flagged coven. R5 kept automatically, because one subscription covers every coven.
 
@@ -233,7 +233,7 @@ The no-free-tier decision departs from §13 in four places. **The owner accepted
 
 ## Processors
 
-### Lane F's Summary
+### Payment Processor Summary
 
 **Rank 1: Stripe Billing plus Stripe Tax, the site as merchant, with a checkout page the site hosts (the owner's choice of 2026-11-06; the research had recommended Stripe-hosted Checkout).** **Rank 2: Stripe Managed Payments, where Link, Stripe's service, is the merchant of record.** A merchant of record is the company legally selling to the customer: it collects and pays the sales tax. Stripe-hosted Checkout loads no Stripe.js on the site [S-js] [S-checkout]; the site-hosted page loads it on that one page, which needs a scoped exception (see "A Site-Hosted Checkout Page").
 
@@ -280,11 +280,11 @@ The owner chose, on 2026-11-06, to host the checkout on the site: "I want to hos
 
 `@better-auth/stripe` lists peer dependency ranges newer than the versions of `stripe` and `better-auth` the repository pins, so using the plugin means a bump [BA-stripe]. DESIGN.md §13 names the plugin's two structural costs: its tables sit outside `withAudit`, and its routes sit outside `/api/graphql`. The alternative is a thin service over the Stripe SDK with audited tables of its own; the spike is meant to settle it. With the site-hosted checkout page, the spike must also test whether the plugin supports that page or whether the SDK route is required.
 
-**Proof-of-concept item: which form on the checkout page.** Choose between Stripe Elements (the site's own form around Stripe's card fields) and embedded Checkout (Stripe's whole form shown inside the site's page). Both load Stripe.js on that one page. No recommendation: Lane F's sources do not give one.
+**Proof-of-concept item: which form on the checkout page.** Choose between Stripe Elements (the site's own form around Stripe's card fields) and embedded Checkout (Stripe's whole form shown inside the site's page). Both load Stripe.js on that one page. No recommendation: the processor sources do not give one.
 
 ## Break-Even
 
-**Method.** Sizes are paying seats: 100, 1,000, 10,000 and 100,000. Revenue = paying units × price × (1 − 6.1%), the single-month churn haircut, a crude stand-in for steady-state churn. Paying units are paying seats for (b), (g), (h) and (i) (whose per-seat revenue is built in their sections), and paying covens (seats × 1.2 memberships ÷ 5.5 members) for (c). Fees are Stripe's option 1 (2.9% + 30¢, 0.7% Billing, 0.5% Tax Basic) on that revenue, and Washington retailing B&O of 0.471% less the $55 a month credit. Sales tax is passed through to the customer, so it is neither revenue nor cost. Trial, curator, exempt and demo-only accounts earn nothing and are in the cost side. The cost lines come from running-costs.md: (i) cash, (ii) cash + all labour hours, with fixed (engineering) hours at the BLS Washington developer median of $80.07, loaded to $100.88, and variable (customer-service) hours at the $41.47 living wage without health cover, loaded to $53.80, (iii) cash + the owner's job as salary structure A (a $250,000 gross salary plus the employer's payroll taxes, so the line reads as a standard employee's cost) with Lane D's benefits, $287,423 a year (low) or $323,826 (high), plus hired hours at the loaded $53.80 for every hour above 160 a month. Support agents use AI assistance (on by default, factor 0.87 on support minutes), and each agent beyond the owner has a Claude Team seat at $25 a month; those seats are inside every labour line. Labour hours grow with paying seats (below), and every labour result is shown for the low contact-rate row (the primary case) and the median row (the stress case). **Net revenue a month**, after churn, fees and B&O:
+**Method.** Sizes are paying seats: 100, 1,000, 10,000 and 100,000. Revenue = paying units × price × (1 − 6.1%), the single-month churn haircut, a crude stand-in for steady-state churn. Paying units are paying seats for (b), (g), (h) and (i) (whose per-seat revenue is built in their sections), and paying covens (seats × 1.2 memberships ÷ 5.5 members) for (c). Fees are Stripe's option 1 (2.9% + 30¢, 0.7% Billing, 0.5% Tax Basic) on that revenue, and Washington retailing B&O of 0.471% less the $55 a month credit. Sales tax is passed through to the customer, so it is neither revenue nor cost. Trial, curator, exempt and demo-only accounts earn nothing and are in the cost side. The cost lines come from running-costs.md: (i) cash, (ii) cash + all labour hours, with fixed (engineering) hours at the BLS Washington developer median of $80.07, loaded to $100.88, and variable (customer-service) hours at the $41.47 living wage without health cover, loaded to $53.80, (iii) cash + the owner's job as salary structure A (a $250,000 gross salary plus the employer's payroll taxes, so the line reads as a standard employee's cost) with the structure benefits (running-costs.md, "Salary Structures"), $287,423 a year (low) or $323,826 (high), plus hired hours at the loaded $53.80 for every hour above 160 a month. Support agents use AI assistance (on by default, factor 0.87 on support minutes), and each agent beyond the owner has a Claude Team seat at $25 a month; those seats are inside every labour line. Labour hours grow with paying seats (below), and every labour result is shown for the low contact-rate row (the primary case) and the median row (the stress case). **Net revenue a month**, after churn, fees and B&O:
 
 | Model                                           | Price per paying unit |  100 |   1000 |   10000 |   100000 |
 | ----------------------------------------------- | --------------------: | ---: | -----: | ------: | -------: |
@@ -352,7 +352,7 @@ The card-required row is `node scripts/billing-model.mjs --card`, an optional fl
 | **0.87 (used)** | **22,241 / 4,341 / 893**                     | **930 / 2,532**                 | **1,943 / 15,123**              | **1,703 / 9,170**               |
 | 1.00            | 19,453 / 3,819 / 793                         | 945 / 2,827                     | 2,008 / 41,631                  | 1,753 / 14,906                  |
 
-**What a labour hour costs.** Support hours cost a loaded **$53.80**: the $41.47 wage plus employer payroll taxes and benefits (low $50.92, high $56.68; the arithmetic is in running-costs.md). Engineering hours cost a loaded **$100.88** ($94.56 to $107.20) on the $80.07 developer wage. Variable labour is **$0.33 a paying seat a month in the low row** (6.08 h ÷ 1,000 × $53.80) and **$1.43 in the median row** (26.6 h ÷ 1,000 × $53.80); at the loaded BLS market rate ($32.27) they would be $0.20 and $0.86. Fixed labour is $2,502 a month in the low row and $4,479 in the median row (at Lane D's $122.50 contractor rate, unloaded: $3,038 and $5,439). Labour alone at 10,000 paying seats is $5,772 (low) or $18,857 (median); cash + labour is $6,098 (low) or $19,182 (median), against $4,789 and $13,448 at the market support rate and $6,634 and $20,142 with contractor engineering. Cash + the structure A job (low benefits) + hired hours is $24,277 (low) or $32,435 (median) at 10,000 seats, and $50,634 (low) or $162,581 (median) at 100,000. The earlier version of this document priced every hour at the $122.50 contractor rate and used the median contact rate, which gave $3.87 a paying seat and a finding that no model could break even on labour. That rate was an engineering rate applied to support work, and the finding is withdrawn.
+**What a labour hour costs.** Support hours cost a loaded **$53.80**: the $41.47 wage plus employer payroll taxes and benefits (low $50.92, high $56.68; the arithmetic is in running-costs.md). Engineering hours cost a loaded **$100.88** ($94.56 to $107.20) on the $80.07 developer wage. Variable labour is **$0.33 a paying seat a month in the low row** (6.08 h ÷ 1,000 × $53.80) and **$1.43 in the median row** (26.6 h ÷ 1,000 × $53.80); at the loaded BLS market rate ($32.27) they would be $0.20 and $0.86. Fixed labour is $2,502 a month in the low row and $4,479 in the median row (at the $122.50 contractor rate, unloaded: $3,038 and $5,439). Labour alone at 10,000 paying seats is $5,772 (low) or $18,857 (median); cash + labour is $6,098 (low) or $19,182 (median), against $4,789 and $13,448 at the market support rate and $6,634 and $20,142 with contractor engineering. Cash + the structure A job (low benefits) + hired hours is $24,277 (low) or $32,435 (median) at 10,000 seats, and $50,634 (low) or $162,581 (median) at 100,000. The earlier version of this document priced every hour at the $122.50 contractor rate and used the median contact rate, which gave $3.87 a paying seat and a finding that no model could break even on labour. That rate was an engineering rate applied to support work, and the finding is withdrawn.
 
 **One-person ceiling.** At **22,241** paying seats in the low row (**4,341** median; **893** high) the work exceeds one person at 160 hours a month. It holds for every model, since hours depend on paying seats, and it does not depend on the hourly rates (it does depend on the AI factor, above). The salary line pays the structure A job plus hired hours above 160 at the loaded $53.80. Fixed engineering hours (at most 70.4) never reach 160 on their own, so the hired hours are the variable, customer-service ones.
 
@@ -392,11 +392,11 @@ What the tables say (the restricted discount and the observer price are in (c) a
 
 The low row is the primary case. Kanka, Pinboard and Plausible fit only the low row, and it holds only if self-service help ships before billing opens. What the site has to do to earn it:
 
-- **A self-service help centre in front of the contact form.** Lane I found knowledge-base deflection of 25 to 35% of tier-1 contacts (the Stealth Agents aggregator, attributed to Zendesk), a FAQ and video in front of the contact form for Pedometer++ (David Smith, Design Notes 30, 2023-03-06), and the same pattern at Kanka, Pinboard and Plausible.
+- **A self-service help centre in front of the contact form.** The labour research found knowledge-base deflection of 25 to 35% of tier-1 contacts (the Stealth Agents aggregator, attributed to Zendesk), a FAQ and video in front of the contact form for Pedometer++ (David Smith, Design Notes 30, 2023-03-06), and the same pattern at Kanka, Pinboard and Plausible.
 - **Answers inside the app**, next to the screen they are about, so a question is answered before it becomes a contact.
 - **Community help in the demo coven**, where practitioners answer each other's questions.
 - **No support promise on trial and observer seats.** Contacts are counted on all active accounts; a promise attached to a seat that pays nothing adds contacts without revenue.
-- **Annual billing**, which cuts disputes. Lane I's figures give roughly twelvefold fewer charges in a year, so roughly twelvefold fewer chances for a dispute (derived).
+- **Annual billing**, which cuts disputes. The labour research's figures give roughly twelvefold fewer charges in a year, so roughly twelvefold fewer chances for a dispute (derived).
 
 A Wave 21 support-reduction task will be minted by M17.1 to build these (no id yet). Until it ships, the median row is the safer planning figure.
 
@@ -420,7 +420,7 @@ There are none open. The owner answered every question on 2026-11-06, and the an
 
 ## Sources
 
-Lane C's sources S1 to S52 are the comparables. Their URLs are:
+Sources S1 to S52 are the comparables. Their URLs are:
 
 - S1 https://slack.com/pricing
 - S2 https://www.notion.com/pricing
@@ -458,7 +458,7 @@ Lane C's sources S1 to S52 are the comparables. Their URLs are:
 - S50 https://ethandoylewhite.blogspot.com/2021/11/an-interview-with-professor-helen-berger.html
 - S51 https://uscpress.com/Solitary-Pagans
 
-Lane F's processor sources (fetched 2026-11-06):
+Payment processor sources:
 
 - S-checkout https://docs.stripe.com/payments/checkout/how-checkout-works
 - S-js https://docs.stripe.com/js/including
