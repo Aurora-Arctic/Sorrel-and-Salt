@@ -16,12 +16,13 @@ The full suites run only when the owner says so. When they do, run
 the 80% threshold (lines, branches, functions, statements) alone.
 
 **`npm run test` and `npm run test:coverage` take the Vitest lock themselves.**
-Each runs under `flock /tmp/sorrel-vitest.lock`, so two runs from different
-sessions wait for each other instead of colliding on the shared Postgres. Do
-not wrap either in `flock` yourself: the outer `flock` holds the lock, the
-inner one waits for it, and the run deadlocks forever. A direct
+Each runs through `scripts/with-lock.sh /tmp/sorrel-vitest.lock`, so two runs
+from different sessions wait for each other instead of colliding on the shared
+Postgres. The wrapper skips the lock when a parent process already holds it, so
+`flock /tmp/sorrel-vitest.lock npm test` runs instead of deadlocking; a plain
+`flock` wrapper does not know that, so never use one in a script. A direct
 `npx vitest run …` takes no lock, so wrap that one by hand:
-`flock /tmp/sorrel-vitest.lock npx vitest run …`. `test:debug` and `test:ui`
+`scripts/with-lock.sh /tmp/sorrel-vitest.lock npx vitest run …`. `test:debug` and `test:ui`
 take no lock. [`testing/e2e.md`](testing/e2e.md) explains the locks.
 
 **Every local Playwright run sets `BETTER_AUTH_SECRET` on its command line, to
