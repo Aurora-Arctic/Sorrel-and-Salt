@@ -21,9 +21,7 @@
 
 ## Styling
 
-`index.scss`, on the `menu-button` block, tokens only. The panel (`.menu-button__menu`) is a floating card at `layer('floating')`, at least `$menu-min-width` wide, with `$shadow-floating`; when the panel itself takes the focus its ring is `focus-ring($placement: inset)`. An item (`.menu-button__item`) has the variants `--primary`, `--destructive` and `[aria-disabled='true']`. `.menu-button__mark` is HeldMark's check at the glyph size; `.menu-button__heading` and `.menu-button__rule` sit in the item's side padding. The chevron turns over while open (`chevron-flip`).
-
-On a phone the panel has no rule of its own: Floating UI hangs it below or above, whichever has room. Under reduced motion it appears and goes without fading. In forced colours the panel keeps its 1px border and the check is `currentColor`; a pointed-at item takes a 1px inset `Highlight` outline (not while it has the focus ring), the chosen item a `Highlight` fill with `HighlightText` ink, and a disabled item `GrayText`.
+Under reduced motion it appears and goes without fading. In forced colours the panel keeps its 1px border and the check is `currentColor`; a pointed-at item takes a 1px inset `Highlight` outline (not while it has the focus ring), the chosen item a `Highlight` fill with `HighlightText` ink, and a disabled item `GrayText`.
 
 ## Used by
 
@@ -31,4 +29,4 @@ The ingredient entry page's three dots, **More** ([`ingredient-entry.md`](ingred
 
 ## Tests and stories
 
-`tests/components/MenuButton/index.test.tsx` covers the keys, the closing, a link choice, the busy state, sections, a disabled item and the end edge (even in the start half of the window). Entry-page choices: `tests/components/IngredientEntry/cupboard-actions.test.tsx`. Browser walks: `tests/e2e/cupboard-screens.spec.ts`, `tests/e2e/make-it-ours.spec.ts`, and `tests/e2e/coven-ingredients.spec.ts` (the Annotate More stays inside the dialog, in its type, full width at 375px; a card's More near the window's foot opens above). Stories: `src/components/MenuButton/index.stories.tsx`, "Forms / Menu Button", `States`.
+`tests/components/MenuButton/index.test.tsx`; browser walks in `tests/e2e/cupboard-screens.spec.ts`, `tests/e2e/make-it-ours.spec.ts` and `tests/e2e/coven-ingredients.spec.ts`; stories in `src/components/MenuButton/index.stories.tsx`.

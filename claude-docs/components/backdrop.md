@@ -35,26 +35,21 @@
 
 The sticky search row on the ingredient lists is filled with the page colour so the cards do not show through. A sticky box paints as its own stacking context, so no `z-index` can put the real sorrel between that fill and the row's controls. The row draws a copy of the sorrel instead.
 
-- **`.filter-sorrel`** is an `aria-hidden` child of the `<search>`, not of the form, whose `container-type` would become the containing block of fixed children. It is `position: absolute`, `inset: 0 -16px`, `z-index: -1`, filled with `$surface-page`, and cut to its own box by a solid `mask-image: linear-gradient(#000, #000)`.
+- **`.filter-sorrel`** is an `aria-hidden` child of the `<search>`, not of the form, whose `container-type` would become the containing block of fixed children. It is filled with `$surface-page` and cut to its own box by a solid `mask-image`.
 - **Its `::before` and `::after` are the `screen` and `multiply` layers**, `position: fixed` like the real ones, so a fixed copy lines up with the real sorrel and the mask shows only the part inside the row. The mask makes the layer a stacking context, which is why it carries the page colour: the blends need something the colour of the page to blend with.
 - **The mask sits on the layer, never on the `<search>`**, which would cut off the stuck shadow and the Filters tray.
 - **The layer is 16px wider either side, the page's gutter.** A card scrolled under the row, above all one raised by hover, casts its shadow up to 20px past its edge. Without the gutter that shows as a dark strip across the real sorrel, cut straight at the row's edge. No wider, since the layer would then widen the page.
 - **The cut is the layer's own box, never a clip past it.** A `clip-path: inset(0 -16px)` reaching past the fill draws the fixed copies over the real sorrel in a strip with no fill beneath, so the screen layer lightens the real one twice.
-- **It is a `mask-image`, not a `clip-path: inset(0)`.** A clip's edge is anti-aliased at a half pixel, and an odd-width window centres the page on one (88.5px at 1457 wide). At device pixel ratio 1 the copies then draw a lighter one-pixel line over the real sorrel along the layer's top and left edges. A mask's edge rounds the way the real sorrel's does. Widening the fill by a pixel does not fix it and makes the page scroll sideways. Unprefixed `mask-image` is in the `masks` feature, Baseline widely available, so it needs no `@supports`. This was checked in Chromium only.
+- **It is a `mask-image`, not a `clip-path: inset(0)`.** A clip's edge is anti-aliased at a half pixel, and an odd-width window centres the page on one (88.5px at 1457 wide). At device pixel ratio 1 the copies then draw a lighter one-pixel line over the real sorrel along the layer's top and left edges. A mask's edge rounds the way the real sorrel's does. Widening the fill by a pixel does not fix it and makes the page scroll sideways. Unprefixed `mask-image` is Baseline widely available, so it needs no `@supports`. This was checked in Chromium only.
 - **The shape, the photograph and the offsets** (the shell bar, the context row, the `sorrel-follow` scroll animation, on the public frame too) are written once, in the mixins of `_sorrel.scss`, and used by `.backdrop--sorrel` and by the copy. The keyframes stay in `index.scss`.
 - **Under `prefers-contrast: more`** the copy's two layers are hidden with the sorrel and the layer keeps its fill, so the row stays opaque.
-- **Fallback.** If a browser fails to clip a fixed copy, use `position: absolute` inside an `overflow: hidden` layer, with `StuckMark` writing the row's left offset.
 
 ## Licence
 
 Both source photographs are used **without a licence**, as stand-ins for the treatment: `salt-spoon-slate.jpg` from the Salt Association's website (`saltassociation.co.uk`, marked "© Salt Association"), and a Feast Magazine editorial image (`feastmagazine.com`). Licensed or in-house photographs of the same subjects replace both before launch, are run through the same script, and the stand-in files are removed. Nothing else should reference the stand-in files.
 
-## The image is tone and shape, not a picture
-
-- backdrop-masks: RGB is the subject's levelled luminance with a chroma floor; alpha is presence, spatial not tonal: the ground is the empty region connected to the border, so a shadow enclosed by the subject keeps full presence instead of reading as the lightest thing on parchment. SPECK_AREA: a present blob this small and dark is a knot or droplet; the tone cut is low because a loose salt grain is small and its shadowed side pulls its mean under the salt's brightness.
-
 ## Not here
 
-Stories: [`index.stories.tsx`](../../src/components/Backdrop/index.stories.tsx) has one story, `States`, with a control that chooses Every Page (the everyday size) or Front Door (inside a `.welcome-page` wrapper). The ornaments are fixed to the viewport, so they appear in the preview's corners. The toolbar's theme switch shows both themes.
+Stories: [`index.stories.tsx`](../../src/components/Backdrop/index.stories.tsx); the ornaments are fixed to the viewport, so they appear in the preview's corners.
 
 Tests: a decoration has no behaviour for a happy-dom test to prove, so it has none. The page frames' `box-sizing` is asserted by the smoke spec's check that `/` does not scroll at the default viewport. `tests/e2e/smoke.spec.ts` also reads each layer's computed `background-image`, asserts it is a hashed `/_next/static/media` URL, and fetches it: served as `image/webp`, not redirected. The look is checked by eye in the workshop and against the script's previews.

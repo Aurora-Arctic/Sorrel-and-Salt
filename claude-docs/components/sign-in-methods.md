@@ -28,7 +28,7 @@ The section's `<h2>` "Sign-In Methods" and its intro are the page's, not the com
   The refusal stays mapped all the same: freshness is read when the page renders, so a page left open past the day can still press a Remove that Better Auth refuses. With one method left nothing changes, since there is nothing to remove.
 
 - **Where a message shows.** A press's failure (Add before the redirect, a refused or unreachable removal, a failed Sign In Again) is a click-feedback callout under the control pressed, the focus left on it, with a badge that brings it back once dismissed; the next press of that control clears it ([`click-feedback.md`](click-feedback.md)). A failed link's callback, which the server seeds from `?error=` and no press here raised, is an error `Notice` inside that provider's row beneath its controls; one with no `?provider=`, or naming a provider not on the roster, is an error `Notice` at the head of the list. Any press here clears it. A removal's success is said in the status region and seen as the row turning to Add; there is no success `Notice`. `Notice` ([`notice.md`](notice.md)) gives a callback error its role, and no `Notice` element exists in the DOM without a message.
-- **Each row draws its provider's mark** (`ProviderMark`, [`provider-mark.md`](provider-mark.md)), the circle the admin user list uses too. The mark is `aria-hidden`: the name beside it is what a screen reader reads.
+- **Each row draws its provider's mark** (`ProviderMark`, [`provider-mark.md`](provider-mark.md)), `aria-hidden`: the name beside it is what a screen reader reads.
 
 ## Used by
 
@@ -38,12 +38,9 @@ The account page (`src/app/(shell)/account/page.tsx`).
 
 The section's frame is the page's: `.page-frame--narrow` gives its width, `.page-frame__section` its column, `.panel` its ground, and `.header` and `.lede` its head ([`../styling.md`](../styling.md), "The page frame"). Each section is on its own panel, so no rule is drawn between them. `index.scss` styles only the list:
 
-- `.sign-in-methods` and `.sign-in-methods__list` are columns `space(3)` apart.
-- `.sign-in-methods__item` is a wrapping row, `space(2)` by `space(3)`: the mark, the name taking the free width, then the control at the end. The rows clear `_typography.scss`'s ✦ marker with a local reset, since this is a column of rows, not a bulleted list.
-- The unavailable note and the only-method line are `.meta` lines, a full row wide and set to the right, beneath where the control is or would be. A row's error `Notice` is a full row wide.
-- An unavailable row's mark fades by the same 0.55 a disabled `.btn` does, so the row reads as off as a whole. Its note keeps the caption size.
-- `.sign-in-methods__fresh`, a stale session's line and Sign In Again, is a column `space(2)` apart, the button at its own width.
+- The rows clear `_typography.scss`'s ✦ marker with a local reset, since this is a column of rows, not a bulleted list.
+- An unavailable row's mark fades by the same 0.55 a disabled `.btn` does, so the row reads as off as a whole.
 
-Stories: `src/components/SignInMethods/index.stories.tsx`, "Sign In / Sign-In Methods", each inside the page's real frame, section, panel and head. `States` chooses Default, Two Linked, Stale Session, Failed and Some Unavailable. `PendingAdd`, `FailedRemove` (the workshop serves no `/api/auth`, so the removal fails into its callout) and `WholePage` (the whole `/account` page composed with fixture props, as `src/app/(shell)/account/page.tsx` composes it, since the page is a server component) are their own stories.
+Stories: `src/components/SignInMethods/index.stories.tsx`, each inside the page's real frame. `FailedRemove` fails because the workshop serves no `/api/auth`; `WholePage` composes `/account` from fixture props, since the page is a server component.
 
 Tests: `tests/components/SignInMethods/index.test.tsx` (role and label queries, `@/lib/auth-client` mocked as in SignInPanel's test), `tests/app/(shell)/account/page.test.tsx`, `tests/e2e/account.spec.ts` (axe in both themes, 375px without sideways scroll, and a callback error in Microsoft's row), and `tests/db/account-linking.test.ts` for the link and unlink flows against Better Auth's endpoints.

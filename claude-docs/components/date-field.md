@@ -27,16 +27,13 @@ The Record a Working form (its Save stays disabled for a date after today) and t
 
 `calendar.scss` draws the calendar on the `calendar-panel` block and the `day-picker` classes handed to the library. `index.scss` draws only the day field's button.
 
-- **The button** is a `.input` box (`.input.date-field__button`), as wide as its hidden sizer, with the calendar mark (`.calendar-icon`, `$glyph-size`, `$text-muted`) at its end.
-- **The panel** (`.calendar-panel`) is a card: `$surface-card`, a 1px `$hairline` border, `radius('surface')` and `space(3)` of padding. `--floating` places it from the two custom properties.
-- **The caption** holds the two month and year boxes (`.day-picker__dropdowns`), with the previous and next steps placed over its end (`.day-picker__nav`).
-- **A step and a day** take `$surface-card-hover` on hover and the `focus-ring` on keyboard focus. Day marks are round. Today is told by a ring, the chosen day by its `$accent` fill, `$text-on-color` ink and weight, so neither rests on colour alone. Outside and disabled days are muted.
-- **A range** marks its two ends as chosen days and lays the days between on a band, `$day-picker-band` (the accent mixed 22% into the card), running on from each end towards the other. A one-day range has no band.
-- **The calendar's sizes and fades are the `$day-picker-*` tokens** in `_variables.scss`: the caption's 2.5rem, the steps' 2rem (`$control-height-compact`, as high as the month and year boxes), the room the caption keeps for them (4.5rem), the pickers' chevron box (1.25rem) and their sizer's end room (1.75rem), the days' 2.25rem, the range band, and the fade of a step past the allowed months and of a day that cannot be chosen, which is `$opacity-disabled` (0.55), as for any control that cannot be used. The chevrons are `$glyph-size`.
+- **Not by colour alone.** Today is told by a ring, the chosen day by its fill, ink and weight.
+- **A range** lays its between-days on a band, `$day-picker-band`, with no band for a one-day range.
+- **The calendar's sizes and fades are the `$day-picker-*` tokens** in `_variables.scss`; a day that cannot be chosen fades to `$opacity-disabled`.
 
 ## Not here
 
-Stories: `src/components/DateField/index.stories.tsx`, "Forms / Date Field", `States`: Default, Disabled, Invalid, Open (the calendar shown) and With Max (open, the days after the 24th faded and refused, and the next-month step faded at October). The workshop's "Grimoire / Record Working" story draws the field inside its dialog.
+Stories: `src/components/DateField/index.stories.tsx`; the workshop's "Grimoire / Record Working" story draws the field inside its dialog.
 
 ## Date range field
 
@@ -58,11 +55,9 @@ Used by: the Invitation Cards filter, for Minted and Expires ([`admin-cards.md`]
 
 `index.scss`, on the `date-range-field` block. The calendar is `DateField/calendar.scss`.
 
-- **The button** is a `.input` box (`.input.date-range-field__button`) as wide as its column, the range's words cut with an ellipsis when they do not fit, and the calendar mark placed at its end. Its end padding keeps room for the clear.
-- **The clear** is placed over the box's end, before the mark: `$text-muted`, `$text-primary` on hover, the `focus-ring` on keyboard focus.
-- **A quick pick** is caption-size text on no fill, `$surface-card-hover` on hover, the `focus-ring` on keyboard focus. A pressed pick takes `$fill-quiet` and weight 600, so it is not told by colour alone.
-- **The hint** under the months is muted caption text.
+- **The button** cuts the range's words with an ellipsis when they do not fit, and its end padding keeps room for the clear.
+- **A pressed quick pick** takes `$fill-quiet` and weight 600, so it is not told by colour alone.
 
 ### Not here
 
-Stories: `src/components/DateRangeField/index.stories.tsx`, "Forms / Date Range Field", `States`: Empty, From Only, Single Day and Open (September and October, the range banded between its ends and Last 30 Days pressed), each under a Minted label as the Invitation Cards drawer draws it. Picking, the quick picks and the keys are asserted in `tests/components/DateRangeField/`.
+Stories: `src/components/DateRangeField/index.stories.tsx`. Picking, the quick picks and the keys are asserted in `tests/components/DateRangeField/`.

@@ -54,25 +54,19 @@ A compendium entry created in the last 30 days reads **New**; one changed in the
 
 ## Styling
 
-`index.scss` takes tokens only: `space()`, `type-size()`, the badge mixins and `badge-token()`, and for the recency mark `$recency-icon-size` and `$optical-nudge` (0.04em). The mark stands `space(1)` from its label. Its label and sparkle each move `$optical-nudge` the other way, because beside the back link the label's small capitals sit about half a pixel low and the sparkle's path half a pixel high; the sparkle's rule is one rule, not two.
+The mark's label and sparkle each move `$optical-nudge` the other way, because beside the back link the label's small capitals sit about half a pixel low and the sparkle's path half a pixel high.
 
 - **The recency mark's contrast.** It is small bold text (12.5px, weight 600) with no ground of its own, so it needs the 4.5:1 text floor on the entry page, a card, and a card pointed at. `tests/scss/tokens.test.ts` ("the recency mark clears the text floor") compiles `index.scss`, reads the colour each of `.recency-mark` and `--updated` is drawn in, and checks it on the three surfaces in both themes.
 
-  | Theme | New's ink | Page | Card | Card pointed at |
-  | ----- | --------- | ---- | ---- | --------------- |
-  | Dark  | `#88b669` | 7.97 | 7.23 | 6.58            |
-  | Light | `#397511` | 4.65 | 5.17 | 5.40            |
-
   Updated's ink is New's in the dark theme and darker in the light one (`#274b0c`), so it clears the floor by more.
 
-- **On a phone** the marks have no rule of their own: they wrap with the line they sit in.
 - **Forced colours** need no rule. A badge keeps its 1px border (a solid badge's is transparent, but forced colours repaints every border in the system's ink), so its shape survives as well as its word. The recency mark is text and a `currentColor` sparkle.
 
 ## Not here
 
-Stories: `index.stories.tsx`. `States` is a grid with one cell per kind and mark (Own, In Cupboard, In Cupboard Annotated, Retired, Retired Alone, Own And Annotated, Compendium Entry In A Coven, Not In Cupboard, Without Provenance), the safety marks (Toxic Ingredient, Toxic With Notes, Toxic In One Form, Not Toxic, Toxic Not Known, Caution From Notes, Caution From A Form, Safety Left Out), and New With Marks and Updated With Marks. `Recency` is separate.
+Stories: `index.stories.tsx`; `Recency` is separate.
 
-Tests: `tests/components/EntryMarks/index.test.tsx` (each kind's marks, Retired and Annotated as tipped buttons, the green-first order, one safety badge, and New or Updated ahead of every badge), and `tests/scss/tokens.test.ts` for the contrast. In a browser it is scanned with the pages that draw it: the entry page (`tests/e2e/compendium-entry.spec.ts`) and the lists' cards.
+Tests: `tests/components/EntryMarks/index.test.tsx`, and `tests/scss/tokens.test.ts` for the contrast. In a browser it is scanned with the pages that draw it: the entry page (`tests/e2e/compendium-entry.spec.ts`) and the lists' cards.
 
 ## Spell marks
 
@@ -81,6 +75,4 @@ Tests: `tests/components/EntryMarks/index.test.tsx` (each kind's marks, Retired 
 - **`status`**: a draft is marked Draft. Complete is the default and has no badge, since a Complete badge would say nothing.
 - **`visibility`**: a private spell or working is marked Private. Shared with the coven is the default and has no badge.
 - **Used by** the recipe page's head, under the title (`SpellRecipe`), and each Workings row, after its date (`SpellWorkings`). The spell card writes the same badges by hand.
-- **Styling** is none of its own: `.specimen__badges`, `.badge--draft` and `.badge--private` are the primitives' (`_primitives.scss`).
-- **Stories**: `src/components/SpellMarks/index.stories.tsx`, "Grimoire / Spell Marks". `States` is a grid of Draft, Private, Draft and Private, and Complete and Shared: Nothing Drawn. The Grimoire / Spell Recipe stories draw the marks in the recipe's head.
-- **Tests** run through its users: `tests/components/SpellRecipe/index.test.tsx` and `tests/components/SpellCard/index.test.tsx` assert each badge shows where it applies and not elsewhere.
+- **Stories**: `src/components/SpellMarks/index.stories.tsx`. **Tests** run through its users: `tests/components/SpellRecipe/index.test.tsx` and `tests/components/SpellCard/index.test.tsx`.

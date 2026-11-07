@@ -20,7 +20,7 @@ It has [`GroupedValueForm`](grouped-value-form.md)'s shape, and that doc's rules
 - **The sample chip carries the name as typed**, or "Sample" before there is one, so the keeper sees the chip they are making.
 - **Save is offered only when there is something to save**, by `isDirty`. From the press to the answer it is a [`BusyButton`](busy-button.md): "Saving Group" or "Saving Tradition". The delete's final button is one too, busy as "Deleting".
 - **Unsaved changes are asked about.** The form hands `formState.isDirty` to the shared guard ([`modal.md`](modal.md#unsaved-changes)). Its question comes ahead of a delete step and replaces it until answered; Discard Changes calls `onDone`.
-- **Buttons are title case**: Save Group, Cancel, Delete Group, Continue, Move and Delete, Back, Delete, Discard Changes, Keep Editing; a tradition's Save Tradition and Delete Tradition. Save and Continue are solid. Cancel, Back and Keep Editing are quiet. Delete Group (Delete Tradition), Move and Delete, Delete and Discard Changes are destructive.
+- **Buttons are title case**; a tradition's are Save Tradition and Delete Tradition. Delete Group (Delete Tradition), Move and Delete, Delete and Discard Changes are destructive.
 - **Undo and redo** ([`field.md`](field.md#undo-and-redo)). The form calls `useFormHistory` on its `<form>` and provides it to `FormHistoryButtons`; the hook listens for its chords on the form itself. It is off while the unsaved-changes question or either delete step is up. Undoing a colour redraws its hex box, picker and sample chip from the restored value, since `ChipColorField` re-derives them from its `value`. A colour and the partner it filled are one step.
 
 ## The pair
@@ -36,15 +36,15 @@ A category group's two colours are one family ([`m5.6b-admin-groups.md`](../desi
 
 `/curator/category-groups`, `/curator/form-groups` and `/curator/deity-traditions` are one page, `GroupPage` in `src/app/(shell)/curator/group-page.tsx`; each route's `page.tsx` names its kind and its tab title. It opens the form in a `RouteModal` ([`modal.md`](modal.md)) from the address, or at once from a press on an Edit or Add ([`modal.md`](modal.md), "Opening at once"), as `/curator/categories` does ([`grouped-value-form.md`](grouped-value-form.md), "On the admin pages").
 
-- `?new` opens an empty form, titled "Add Category Group".
-- `?edit=<slug>` opens the group at that slug, under an eyebrow "Edit Category Group", with the group's saved name as its title ([`modal.md`](modal.md), "An edit dialog's head"). The page reads the group through `getCategoryGroupBySlug`, `getIngredientFormGroupBySlug` or `getDeityTraditionBySlug`, and counts `memberCount` with `countCategories` or `countIngredientFormValues` under `{ groupId }`, or `countDeities` under `{ traditionId }`.
-- An `?edit=` that names no live group opens nothing and says so above the list in the shared `MissingNotice`: "No group has that address. It may have been renamed or deleted, so search for it in the list.", or "No tradition has…".
+- `?new` opens an empty form.
+- `?edit=<slug>` opens the group at that slug, with its saved name as the title ([`modal.md`](modal.md), "An edit dialog's head").
+- An `?edit=` that names no live group opens nothing and says so above the list in the shared `MissingNotice`.
 - `src/app/(shell)/curator/group-dialog.tsx` is the client edge between the server page and the form, since a server component cannot hand `RouteModal` the function its contents take. The page always renders it, with `opened` (`{ heading, group, memberCount }`) only when the address opens a modal, and the form is keyed by the group's id.
 - Closing, saving or deleting fades the modal out, then `router.replace`s the page it opened over, cursor kept (`groupsHref`), and calls `router.refresh()`.
 - Renaming a tradition re-slugs its deities, as renaming a form group re-slugs its forms, so it moves their addresses on `/curator/deities` as well as its own.
 
 ## Not here
 
-The form has no stylesheet of its own: it is built from the shared pieces and the form primitives ([`../styling.md`](../styling.md), "Form fields"). Name and Description are [`TextField`](field.md)s with short placeholders ("Add a name" and the kind's `describe`). Each colour is a `FieldShell` around a `ChipColorField`; the shell is handed no error, since `ChipColorField` draws the refusal itself. The move picker is a `FieldShell` around the `ComboboxSelect`, its error beneath it. The buttons are the shared `FormActions` row, with Delete Group pushed to the far end; the questions are a `ConfirmOverlay` card over the form and the confirming step is the shared `ConfirmQuestion` ([`modal.md`](modal.md), "`ConfirmQuestion`"). Narrow rows stack ([`../styling.md`](../styling.md), "A narrow form stacks its buttons").
+The form has no stylesheet of its own: it is built from the shared pieces and the form primitives ([`../styling.md`](../styling.md), "Form fields"). Each colour's `FieldShell` is handed no error, since `ChipColorField` draws the refusal itself. The confirming step is the shared `ConfirmQuestion` ([`modal.md`](modal.md), "`ConfirmQuestion`").
 
 Stories: `src/components/GroupForm/index.stories.tsx`, `Admin / Group Form`. Tests: `tests/components/GroupForm/index.test.tsx` (the form once open) and `tests/app/(shell)/curator/group-page.test.tsx` (the page's reads, guard, cursor and `?new` / `?edit=` handling).
