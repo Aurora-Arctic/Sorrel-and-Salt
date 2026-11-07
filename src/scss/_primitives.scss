@@ -1298,6 +1298,9 @@
 
   // The card landing page: the welcome as plain words and the accept panel as a card, two columns on a wide window,
   // the words at the reading measure and the card beside them, one column on a phone with the card after the words.
+  // The invitation card's width: the second column on the early-tester page, and the card under the words on the other.
+  $card-landing-card-width: 22rem;
+
   .card-landing__words {
     @include stack(6);
 
@@ -1323,10 +1326,10 @@
 
   .card-landing__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, $card-landing-card-width);
     gap: space(5) space(8);
     align-items: start;
-    max-width: calc(#{$measure} + 22rem + #{space(8)});
+    max-width: calc(#{$measure} + #{$card-landing-card-width} + #{space(8)});
 
     @media (max-width: #{$shell-phone-width}) {
       grid-template-columns: minmax(0, 1fr);
@@ -1354,8 +1357,9 @@
     }
   }
 
-  // An ordinary card has no early-tester part, so its words are short: one column at the reading measure, the card
-  // below the words at the same width, the block centred on the page and its text still left-aligned.
+  // An ordinary card has no early-tester part, so its words are short: one column at the reading measure, the block
+  // centred on the page and its text still left-aligned. The card below the words keeps the two-column page's card
+  // width, at the words' left edge; on a phone it is the column's width, as there.
   .card-landing--single .card-landing__grid {
     grid-template-columns: minmax(0, 1fr);
     width: 100%;
@@ -1367,6 +1371,12 @@
     position: static;
     grid-row: auto;
     grid-column: 1;
+    justify-self: start;
+    max-width: $card-landing-card-width;
+
+    @media (max-width: #{$shell-phone-width}) {
+      max-width: none;
+    }
   }
 
   // One heading on two lines, the greeting above the name: block spans, so the name reads whole, and the greeting two
