@@ -6,7 +6,6 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { RenameFieldsProps } from './types';
 
-/** The Rename dialog's form: one name, saved through the plugin's update, closing the dialog once it is. */
 export function RenameFields({ name, onRename, close }: RenameFieldsProps): ReactElement {
   const [value, setValue] = useState(name);
   const [saving, setSaving] = useState(false);

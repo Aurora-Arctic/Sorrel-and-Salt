@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import SourcingScore from '.';
 
-// Render-only: the curator read hands it the score and its facts.
 const meta = {
   title: 'Admin / Sourcing Score',
   component: SourcingScore,
@@ -9,7 +8,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// One located book with a stated formal name, a bare form, not yet reviewed.
 export const Default: Story = {
   args: {
     sourcing: {
@@ -28,7 +26,6 @@ export const Default: Story = {
   },
 };
 
-// Nothing cited and nothing settled: a negative total, which the list sorts first; the bar draws the cost alone. The bar draws the cost alone.
 export const Negative: Story = {
   args: {
     sourcing: {
@@ -47,7 +44,6 @@ export const Negative: Story = {
   },
 };
 
-// Gains past the bar's 100: the bar stops at its end and the key still states every number.
 export const GainsOverTheMaximum: Story = {
   args: {
     sourcing: {
@@ -62,7 +58,6 @@ export const GainsOverTheMaximum: Story = {
   },
 };
 
-// Costs against near-full gains: the cost takes only what the gains left of the bar.
 export const CostsAgainstFullGains: Story = {
   args: {
     sourcing: {
@@ -77,7 +72,6 @@ export const CostsAgainstFullGains: Story = {
   },
 };
 
-// The entry page's: the same panel under an h3, at the foot of References.
 export const OnTheEntryPage: Story = {
   args: {
     headingLevel: 3,

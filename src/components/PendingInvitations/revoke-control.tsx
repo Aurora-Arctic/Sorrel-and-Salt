@@ -6,8 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { RevokeControlProps } from './types';
 
-// A pending invitation's Revoke: asks first, then sends `revokeInvitation`. The page draws it for stewards only; the
-// service is the guard (claude-docs/components/pending-invitations.md).
+// The page draws it for stewards only; the service is the guard (claude-docs/components/pending-invitations.md).
 
 const RevokeInvitationDocument = graphql(`
   mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {

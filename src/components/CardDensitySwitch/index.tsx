@@ -21,17 +21,12 @@ const subscribe = (onChange: () => void): (() => void) => {
   };
 };
 
-// Compact unless the page says regular, as the CSS reads it.
 const getSnapshot = (): boolean => document.documentElement.getAttribute(ATTRIBUTE) !== 'regular';
 
 // The server cannot know the stored choice, and renders what the CSS shows with nothing stored.
 const getServerSnapshot = (): boolean => true;
 
-/**
- * The Compact switch for a list of ingredient cards: on by default, remembered on this computer. It sets
- * `data-card-density="regular"` on `<html>` while off. Blocked storage costs the memory, not the change
- * (claude-docs/components/card-density-switch.md).
- */
+/** Blocked storage costs the memory, not the change (claude-docs/components/card-density-switch.md). */
 export default function CardDensitySwitch(): ReactElement {
   const compact = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
