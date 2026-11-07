@@ -346,3 +346,78 @@ which was correct and argued at the time.
 
 [pr73]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/73
 [pr126]: https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/126
+
+### A migration gives up a lock it cannot take
+
+The migrate job runs while the previous deploy is still serving, so a
+migration meets live traffic. An `ALTER TABLE` needs the strongest lock on its
+table, and waits for every open transaction that has touched the table to end.
+While it waits, every later statement on that table, a plain read included,
+queues behind it. One long transaction would therefore hold the site's reads
+for as long as it lasted. So every migration statement waits **5 seconds** for
+a lock at most (Postgres's `lock_timeout`), then fails, and the job tries again
+later (MB.149).
+
+**Where it is set.** `drizzle.config.ts` adds `-c lock_timeout=5s` to the
+`options` startup parameter of the database URL, through
+`withMigrationLockTimeout` in `src/db/connection-url.ts`, which keeps any
+options the URL already carries. Every `drizzle-kit` command reads that file,
+so `npm run db:migrate` on a laptop, the migrate job (which runs the same npm
+script) and the test databases all migrate under the same timeout.
+`npm run db:studio` gets it too, which costs nothing there. The value lives in
+`MIGRATION_LOCK_TIMEOUT`. Five seconds is longer than a request's own
+transaction takes, and short enough that the reads queued behind the wait come
+to no harm.
+
+**It needs the direct URL.** Neon's pooled endpoint (a host ending
+`-pooler`) runs PgBouncer, which refuses startup options it cannot track and
+fails the connection with `unsupported startup parameter in options`
+([Neon, "Connection errors"][neon-errors]). Neon recommends the direct
+connection for schema migrations in any case ([Neon, "Connection
+pooling"][neon-pooling]). Each `DATABASE_URL` the migrate job resolves must
+therefore be a direct one: the `DATABASE_URL_PRODUCTION` and
+`DATABASE_URL_STAGING` secrets hold Neon's direct URL, the pooled one with
+`-pooler` taken out of the host. The seed job and the deploy's build step read
+the same two secrets, so they connect directly too; the running app reads
+`DATABASE_URL` from Vercel's own environment and keeps the pooler. A pooled
+URL fails at connect, on every attempt, rather than migrating without the
+timeout.
+
+**A failed attempt leaves nothing behind.** drizzle-kit, with the `postgres`
+driver this repo installs, applies through drizzle-orm's migrator
+(`drizzle-orm/pg-core/dialect.js`, `migrate`), which runs every pending
+migration and its row in `drizzle.__drizzle_migrations` inside one
+transaction. A lock timeout aborts that transaction, so the whole batch rolls
+back and the next attempt starts from the same place.
+`tests/db/migration-lock-timeout.test.ts` asserts this: a probe migration that
+alters `users`, run while another connection holds a read transaction open on
+it, fails within the timeout, leaves no column and no migration row, and
+applies on a rerun once the reader has finished. A statement Postgres refuses
+inside a transaction, such as `CREATE INDEX CONCURRENTLY`, cannot ride this
+migrator; none exists today, and the first one needs its own plan.
+
+**The retry.** `drizzle-kit migrate` has no retry of its own, so the
+"Apply pending migrations" step in `.github/workflows/migrate.yml` makes three
+attempts, waiting 30 seconds after the first failure and 60 after the second.
+The third failure fails the job, and `deploy.yml`'s `deploy` job, which
+`needs: migrate`, does not run: the result is a failed deploy to rerun, not a
+hang. drizzle-kit prints no cause for a failed run, so a migration that fails
+for any other reason is also tried three times, which costs about a minute and
+a half. `tests/github/workflows/migrate.test.ts` runs the step's own script
+with a stub `npm` and asserts the attempts and the waits.
+
+**The seed does not inherit it.** The reference seeds in the same job open
+their own connection through `src/db/connection.ts`, which sets no timeout.
+That is harmless: a seed writes rows, and the row locks and `ROW EXCLUSIVE`
+table lock a write takes do not conflict with the `ACCESS SHARE` lock a read
+takes, so a seed cannot queue the site's reads.
+
+**Not decided here: a `statement_timeout` for the application.** Nothing sets
+`statement_timeout` or `idle_in_transaction_session_timeout` on the
+application's own connections in `src/db/connection.ts`. A request that left a
+transaction open would make every migration fail its lock wait until it ended,
+so those timeouts would bound how long a deploy can be held off. Whether to
+set them is a separate decision, not taken by MB.149.
+
+[neon-errors]: https://neon.com/docs/connect/connection-errors
+[neon-pooling]: https://neon.com/docs/connect/connection-pooling

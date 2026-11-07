@@ -41,7 +41,7 @@
 
 **On a phone** the plus and the check have no rule of their own: each is a `$icon-size-large` (2rem) target, above WCAG 2.5.8's 24px.
 
-**Forced colours.** The glyphs are drawn in `currentColor`, so they take the system's ink. The plus has no border, so the wash under the pointer, a background colour, is all that marks a hover there. The plus is a button, so focus shows the shared ring the `icon-button` mixin gives a button (MB.121), an outline, which forced colours keeps. The forced-colours pass over the compendium section is M14.3, a Wave 14 task (minted from MB.120).
+**Forced colours.** The glyphs are drawn in `currentColor`, so they take the system's ink. The plus has no border, so its hover and open states come from the `icon-button` and `icon-button-edit` mixins: a 1px inset `Highlight` outline under the pointer (not while it has the focus ring), and a `Highlight` fill with `HighlightText` ink while its menu is open. The held check, which has no hover, and the plus while it shows the check (`data-state`), which has neither state, undo those two. Focus is the shared ring, an outline, which forced colours keeps.
 
 ## Stories and tests
 

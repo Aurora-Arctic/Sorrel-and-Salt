@@ -16,6 +16,11 @@
   // Its own stacking context at rest, so the raised actions and tips inside it
   // (z-index 1 above) stay inside the card instead of painting over the next card.
   isolation: isolate;
+
+  // The shadow that was its edge is dropped, so a border draws it.
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
 }
 
 // The whole card is the name's link, so the Low badge's button can sit inside it; the title block,
@@ -129,6 +134,15 @@
 
 .ingredient-card-slot:focus-within {
   @include ingredient-card-lifted;
+}
+
+// The fill and shadow of the lift are dropped, so the hovered card's edge turns Highlight.
+@include forced-colors {
+  @media (hover: hover) {
+    .ingredient-card-slot:hover .ingredient-card {
+      border-color: Highlight;
+    }
+  }
 }
 
 // The colour and shadow change stay; the movement and the fade go.

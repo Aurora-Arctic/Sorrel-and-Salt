@@ -140,6 +140,32 @@
       transition: none;
     }
   }
+
+  // The fills are dropped, so the thumb is CanvasText and a Highlight track holds a HighlightText one.
+  @include forced-colors {
+    .shown-switch__thumb {
+      background-color: CanvasText;
+      color: Canvas;
+    }
+
+    input:checked {
+      border-color: Highlight;
+      background-color: Highlight;
+    }
+
+    input:checked ~ .shown-switch__thumb {
+      background-color: HighlightText;
+      color: Highlight;
+    }
+
+    input:disabled {
+      border-color: GrayText;
+    }
+
+    input:disabled ~ .shown-switch__thumb {
+      background-color: GrayText;
+    }
+  }
 }
 
 .shown-switch__label {

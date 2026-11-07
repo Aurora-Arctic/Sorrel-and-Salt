@@ -1185,3 +1185,5 @@ It is a form group's glyph, decorative, clear of the text, and as tall as the te
 - **`ComboboxTypeaheadProps.onSettle`** is for a filter, which applies a choice rather than each letter typed: it compares the value with the one it shows. The settled value is a pick from the list, the clear (`''`), or leaving the box (the choice its text names in full, or `''`). **`clearable`** is a filter's way back to every group.
 
 - **`ComboboxMultiSelectProps.hideZeros`** is M12.4's.
+
+**Forced colours.** The active option (`is-highlighted`) takes a `Highlight` fill with `HighlightText` ink, its count and note inheriting that ink. A chip takes a 1px `CanvasText` border, and the one being dragged a `Highlight` fill. The error edge is an inset shadow, so an invalid box or chip gets a second 1px `CanvasText` line drawn inside its edge as an outline, which the focus ring replaces while the field has focus. A shut select and a disabled chip action are `GrayText` in ink and border. The chip's action and remove buttons take their hover from the `icon-button` mixin.

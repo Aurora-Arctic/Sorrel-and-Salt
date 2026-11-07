@@ -54,7 +54,10 @@ word threshold to the search's 0.5 (["The compendium read"](compendium-read.md))
 One marked `similarityMatch` first sets the similarity threshold to the same
 0.4 constant, which is how `findSimilarIngredients` pages (below). These are the
 reads that open a transaction: they carry a planner setting, not an identity,
-so they are not the read-side `withAudit` that MB.29 declined to build.
+so they are not the read-side `withAudit` that MB.29 declined to build. Inside a
+`withAudit` callback they open no transaction at all: the thresholds are set in a
+savepoint on the write's own transaction, which ends them with the read
+([`write-path.md`](write-path.md), "Reads inside a write").
 
 **`findSimilarIngredients` (M4.7) is the first finder bound by both halves.**
 It answers story 16's "did you mean": live ingredients in the compendium or

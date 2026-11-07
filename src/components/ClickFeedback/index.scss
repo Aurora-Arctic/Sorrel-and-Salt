@@ -121,6 +121,13 @@ $arrow-rise: 7px;
   &:focus-visible {
     @include focus-ring;
   }
+
+  @include forced-colors {
+    &:hover:not(:focus-visible) {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+  }
 }
 
 .click-feedback__badge {
@@ -147,6 +154,21 @@ $arrow-rise: 7px;
     inline-size: $badge-mark;
     block-size: $badge-mark;
     @include warning-mark;
+  }
+
+  // The disc is CanvasText with the triangle cut out in Canvas, and a Canvas outline stands in for the
+  // ring, as the fill and shadow are dropped.
+  @include forced-colors {
+    background-color: CanvasText;
+    color: Canvas;
+
+    &:not(:focus-visible) {
+      outline: 2px solid Canvas;
+    }
+
+    &::before {
+      background-color: Canvas;
+    }
   }
 
   // The press target: 24px, grown down and back over the control it sits on

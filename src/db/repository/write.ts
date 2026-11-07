@@ -22,6 +22,7 @@ import { userWrites } from './users';
 import { workingWrites } from './workings';
 import { workspaceMemberPauseWrites } from './workspace-member-pauses';
 import { existsIn, selectFrom } from './select';
+import { runInWriteTransaction } from './unit-of-work';
 import { StaleWrite } from '@/lib/errors';
 import { newToken } from '../../lib/invitation-token';
 import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
@@ -307,7 +308,7 @@ export async function withAudit<T>(
       route: privilege?.via,
       note: privilege?.note,
     });
-    return fn(writerFor(tx, session));
+    return runInWriteTransaction(tx, () => fn(writerFor(tx, session)));
   });
 }
 

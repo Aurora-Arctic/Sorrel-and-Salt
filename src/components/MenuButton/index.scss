@@ -157,6 +157,27 @@
   &:focus-visible {
     background-color: $fill-quiet;
   }
+
+  // The ink alone says it, as the fills are dropped.
+  @include forced-colors {
+    color: GrayText;
+  }
+}
+
+// The fills are dropped, so hover takes a Highlight outline and the chosen item a Highlight fill.
+// Last of the item rules, so it follows the destructive and primary ones.
+.menu-button__item {
+  @include forced-colors {
+    &:not([aria-disabled='true']):hover:not(:focus-visible) {
+      outline: 1px solid Highlight;
+      outline-offset: -1px;
+    }
+
+    .is-closing &.is-chosen {
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
 }
 
 // The check after a marked item's label (`mark`): HeldMark's green tick, at the glyph size,

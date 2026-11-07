@@ -62,6 +62,21 @@ $account-menu-avatar: 2rem;
   letter-spacing: 0.02em;
   line-height: 1;
   @include theme-transition(background-color);
+
+  // The fill that draws the disc is dropped, so a border draws the circle,
+  // inside the disc's size so the bar does not move.
+  @include forced-colors {
+    box-sizing: border-box;
+    border: 1px solid CanvasText;
+  }
+}
+
+// The darkened disc of hover and open is dropped, so the circle turns Highlight.
+@include forced-colors {
+  .account-menu__button:hover .account-menu__avatar,
+  .account-menu__button[aria-expanded='true'] .account-menu__avatar {
+    border-color: Highlight;
+  }
 }
 
 // Pending invitations: a wax dot on the disc's top right, ringed in the bar's

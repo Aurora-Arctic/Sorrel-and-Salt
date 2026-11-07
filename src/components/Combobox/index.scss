@@ -39,6 +39,12 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &.is-invalid {
     border-color: $secondary;
     box-shadow: inset 0 0 0 1px $secondary;
+
+    // The inset shadow is dropped, so a second line inside the edge keeps the error's shape.
+    @include forced-colors {
+      outline: 1px solid CanvasText;
+      outline-offset: -3px;
+    }
   }
 }
 
@@ -63,6 +69,14 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   &:hover {
     border-color: $text-muted;
+  }
+
+  @include forced-colors {
+    &,
+    &:hover {
+      color: GrayText;
+      border-color: GrayText;
+    }
   }
 }
 
@@ -384,6 +398,19 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     background-color: $fill-highlight;
   }
 
+  // The fill is dropped, so the active option takes the Highlight fill.
+  @include forced-colors {
+    &.is-highlighted {
+      background-color: Highlight;
+      color: HighlightText;
+
+      // The count and note set their own ink, which would be CanvasText on Highlight.
+      * {
+        color: inherit;
+      }
+    }
+  }
+
   // A category's row marked in its group's colour on the theme's side, as a bar set in from the row's edges, drawn as a background so a hover widening moves nothing.
   &.is-coloured {
     $bar: group-colour();
@@ -526,6 +553,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   font-weight: 400;
   line-height: 1.6;
 
+  // The fill is dropped, so an edge keeps the chip's shape.
+  @include forced-colors {
+    border: 1px solid CanvasText;
+  }
+
   &::before {
     content: none;
   }
@@ -547,6 +579,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // The field's error edge, a shape as well as a colour, on the entry it names.
   &.is-invalid {
     box-shadow: inset 0 0 0 1px $secondary;
+
+    @include forced-colors {
+      outline: 1px solid CanvasText;
+      outline-offset: -3px;
+    }
   }
 
   // A sortable chip's grip stands in for the text's inset on its left.
@@ -566,6 +603,12 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     box-shadow:
       inset 0 0 0 2px $accent,
       $shadow-floating;
+
+    // The fill is dropped, so the chip being moved takes the chosen treatment.
+    @include forced-colors {
+      background-color: Highlight;
+      color: HighlightText;
+    }
   }
 
   // The chips making way for a moved one slide, through dnd-kit's inline
@@ -595,6 +638,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &:disabled {
     cursor: default;
     opacity: 0.5;
+
+    @include forced-colors {
+      color: GrayText;
+      border-color: GrayText;
+    }
   }
 
   // On a coloured chip's fill the muted ink and the accent are unchecked;

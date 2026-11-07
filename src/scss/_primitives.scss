@@ -183,6 +183,13 @@
       @include focus-ring;
     }
 
+    // The fills are dropped, so hover takes a Highlight edge; this outweighs each kind's own hover.
+    @include forced-colors {
+      &:hover:not(:disabled, [aria-disabled='true']) {
+        border-color: Highlight;
+      }
+    }
+
     @include reduced-motion {
       transition: none;
     }
@@ -942,6 +949,13 @@
 
     tbody tr:nth-child(even) {
       background-color: $surface-card;
+    }
+
+    // The banding fill is dropped, so a rule under each row separates them.
+    tbody tr {
+      @include forced-colors {
+        border-block-end: 1px solid CanvasText;
+      }
     }
   }
 

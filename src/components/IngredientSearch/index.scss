@@ -97,6 +97,14 @@ $page-gutter: space(4);
   }
 }
 
+// The stuck row's shadow is dropped, so a rule along the foot of its full-bleed fill marks where it
+// ends; on the fill, not the row, so it runs the page's width and nothing in the row moves.
+.ingredient-search > search[data-stuck] > .filter-sorrel {
+  @include forced-colors {
+    border-block-end: 1px solid CanvasText;
+  }
+}
+
 // The search sentence under the row: the row's margin below is already part of the air, so
 // the sentence takes back the same amount from the stack's gap, and sits a gap from the
 // input as the cards sit a gap from it.
