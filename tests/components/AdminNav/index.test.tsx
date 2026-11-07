@@ -2,8 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentHrefs, hrefs } from '../../support/links';
 
-// The page the test pretends to be on; Next's own hook reads the App
-// Router's state, which a component test does not mount.
+// Next's hook reads the App Router's state, which a component test does not mount.
 const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname(),
@@ -12,15 +11,12 @@ vi.mock('next/navigation', () => ({
 
 const { default: AdminNav, CuratorNav } = await import('@/components/AdminNav');
 
-// Two navs, one per area (claude-docs/components/admin-nav.md): the `/curator` layout's lists the curation pages,
-// the `/keepers` layout's the support and people pages. Each links a page at its first tab and marks the page you are on.
-// Which pages show in the row and which behind More is the stylesheet's, so every page is in the row here.
+// claude-docs/components/admin-nav.md
 
 const curatorNav = () => screen.getByRole('navigation', { name: 'Curator' });
 const keepersNav = () => screen.getByRole('navigation', { name: 'Keepers' });
 const linksIn = (nav: HTMLElement) => within(nav).getAllByRole('link');
 
-// Each curation page linked at its first tab, in the sections' order.
 const CURATION = [
   '/curator/compendium',
   '/curator/categories',
@@ -28,11 +24,9 @@ const CURATION = [
   '/curator/deities',
   '/curator/celestial-bodies',
 ];
-// People and Invitations, each at its first tab: a keeper's alone.
 const PEOPLE = '/keepers/users';
 const INVITATIONS = '/keepers/invitations';
 const SUPPORT = '/keepers/support';
-// The documents, opened at their first tab, the privacy policy: a keeper's alone.
 const DOCUMENTS = '/keepers/documents/terms';
 
 const sorted = (list: (string | null)[]) => [...list].sort();
@@ -49,7 +43,6 @@ describe('CuratorNav', () => {
   });
 
   it.each([
-    // The index marks none; a page marks its own entry, on any of its tabs.
     ['/curator', []],
     ['/curator/categories', ['/curator/categories']],
     ['/curator/category-groups', ['/curator/categories']],
@@ -91,7 +84,6 @@ describe('AdminNav, the Keepers nav', () => {
   });
 
   it.each([
-    // The index marks none; a page marks its own entry on any of its tabs, and each tab marks only its own page.
     ['/keepers', []],
     ['/keepers/users', [PEOPLE]],
     ['/keepers/privilege-changes', [PEOPLE]],
