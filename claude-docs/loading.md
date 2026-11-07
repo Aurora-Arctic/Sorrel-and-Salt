@@ -1,6 +1,6 @@
 # Loading
 
-The standard for every wait on the site: what a person sees between pressing something and the answer arriving, why it looks that way, and how a developer adds a new wait that follows it. The decision record, with the sources and their quotations, is [`design-decisions/m12.33-loading-standard.md`](design-decisions/m12.33-loading-standard.md).
+The standard for every wait on the site: what a person sees between pressing something and the answer arriving, why it looks that way, and how a developer adds a new wait that follows it. The decision record, with the sources and their quotations, is [`ui.md`, "One Loading Standard for the Site"](design-decisions/ui.md#one-loading-standard-for-the-site).
 
 ## The three parts
 

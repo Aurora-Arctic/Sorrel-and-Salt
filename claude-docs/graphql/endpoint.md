@@ -75,7 +75,7 @@ not refuse a JSON post that carries neither the header nor an `Origin`.
 
 Refusing a cross-site write: a request that could change data must be JSON and carry an Origin naming this host or the client header (which another site cannot add without a preflight the endpoint never grants).
 
-`SameSite=Strict` alone, and an Origin-only check, were rejected as the cross-site defence (the record is [`mb.282-graphql-refuses-cross-site.md`](../design-decisions/mb.282-graphql-refuses-cross-site.md)).
+`SameSite=Strict` alone, and an Origin-only check, were rejected as the cross-site defence (the record is [`auth.md`, "The GraphQL endpoint refuses cross-site writes"](../design-decisions/auth.md#the-graphql-endpoint-refuses-cross-site-writes)).
 
 ### Tests and the two copies of `graphql`
 
@@ -94,7 +94,7 @@ the production build.
 accept 17. One package does not: `@escape.tech/graphql-armor`, which depends on `graphql@^16.10.0` as a hard dependency in each of its sub-packages (open issue #885,
 "Support graphql v17"), so installing 17 would put a second copy of 16 under armor. `graphql-request`, the client §7 first chose, accepted only
 `14 - 16` and was dropped for a small `fetch` wrapper (M10.31;
-[`m10.31-graphql-request-dropped.md`](../design-decisions/m10.31-graphql-request-dropped.md)). `msw` 3 declares it as a peer, so the one copy is the app's own. Staying on 16 keeps one copy of `graphql` in the
+[`graphql.md`, "`graphql-request` replaced by a fetch wrapper"](../design-decisions/graphql.md#graphql-request-replaced-by-a-fetch-wrapper)). `msw` 3 declares it as a peer, so the one copy is the app's own. Staying on 16 keeps one copy of `graphql` in the
 tree, and two copies are the classic "Cannot use GraphQLSchema from another
 module or realm" failure. Armor is the only blocker;
 move to 17 when it accepts 17. The catalogue is [`dependencies.md`](../dependencies.md).
@@ -115,7 +115,7 @@ move to 17 when it accepts 17. The catalogue is [`dependencies.md`](../dependenc
   which reads Yoga's `params`); such an operation keeps the session and carries no pause. `session` is then
   `null`, so a public read answers as for anyone signed out, and a refusal from a scope (`unauthorizedError` in
   `src/graphql/builder.ts`) or from `sessionOf` is `AccessPaused`, which leaves as `ACCESS_PAUSED` with
-  `pausedUntil` (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
+  `pausedUntil` (`claude-docs/design-decisions/auth.md`, "What the site access pause closes, and what it decides along the way").
 - **`loaders`**, a fresh set of DataLoader instances for this request.
 - **`emailVerification`**, `src/lib/email-verification.ts`'s sender bound to
   this request's host and cookie, which the `setEmail` resolver passes to its

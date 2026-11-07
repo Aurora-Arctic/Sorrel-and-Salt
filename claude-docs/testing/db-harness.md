@@ -166,7 +166,7 @@ to the worker it runs in.
   registry would hand to the next file: a mocked module stays mocked, a stubbed
   global stays stubbed, an auth instance built for one file's environment is the
   one the next imports
-  ([`../design-decisions/mb.96-ci-vitest-job.md`](../design-decisions/mb.96-ci-vitest-job.md)).
+  ([`ci.md`, "The CI Vitest job: DOM only where needed, GitHub's runner"](../design-decisions/ci.md#the-ci-vitest-job-dom-only-where-needed-githubs-runner)).
 
 **The split is a scan, not a list.** `vitest.config.mts` reads each file's
 source when the config loads and tests it against one regular expression,

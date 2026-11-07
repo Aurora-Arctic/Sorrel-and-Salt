@@ -7,7 +7,7 @@ public surface, an allowed set of modules it may import, and two lint
 mechanisms — a path glob and a plugin rule — that make a boundary crossing fail in the diff that
 adds it. The record behind the shape, and what a later extraction would
 replace, is
-[`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md).
+[`data.md`, "Domain modules with a guarded boundary"](design-decisions/data.md#domain-modules-with-a-guarded-boundary).
 
 ## Layout
 
@@ -83,7 +83,7 @@ a service lands in the module that owns the table it writes.
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
 services, because a module of its own would own no table and import
 everything `ingredients` owns
-([`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md),
+([`data.md`, "Domain modules with a guarded boundary"](design-decisions/data.md#domain-modules-with-a-guarded-boundary),
 "The five modules"; splitting the table is under its "What it rules out").
 The reads that cross the tiers are the seam below.
 
@@ -95,7 +95,7 @@ a module above `ingredients` could not be called from without a cycle. So a
 vocabulary row's references are read from `ingredients`, as `User.memberships`
 is added from `coven`, and the compendium-tier rows belong to the tier seam's
 extraction unit
-([`design-decisions/mb.151-references.md`](design-decisions/mb.151-references.md)).
+([`ingredients.md`, "A reference is one source, kept once, rendered in Chicago form"](design-decisions/ingredients.md#a-reference-is-one-source-kept-once-rendered-in-chicago-form)).
 
 **`invitations` is `coven`'s, both tiers** (MB.201). A row with a null
 workspace and role is a site-tier invitation, which grants admin. The table
@@ -104,7 +104,7 @@ sits with the workspace it mostly names because its foreign key needs
 tier reaches it as admin curation reaches `ingredients`: `identity`'s
 site-tier service calls the repository's named writes and finders under the
 `SiteAdmin` proof, and imports nothing of `coven`'s
-([`design-decisions/mb.201-two-tier-invitations.md`](design-decisions/mb.201-two-tier-invitations.md)).
+([`auth.md`, "Workspace and admin invitations are one two-tier table"](design-decisions/auth.md#workspace-and-admin-invitations-are-one-two-tier-table)).
 The two tables it replaced, `workspace_invitations` and `admin_invitations`,
 were undeclared by MB.202 and dropped by MB.203.
 
@@ -120,7 +120,7 @@ A module offers three things to the rest of the tree, and nothing else:
   without loading a `server-only` service: the seed, the repository,
   drizzle-kit and a cross-module foreign key. Above the database layer a
   table object is inert, so a page importing one leaks nothing
-  ([`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md),
+  ([`data.md`, "Domain modules with a guarded boundary"](design-decisions/data.md#domain-modules-with-a-guarded-boundary),
   "The five modules").
 - **`validation/*.ts`** — the input surface. A Zod schema is run by the
   form before a request is sent and by the service again after, so a client

@@ -14,7 +14,7 @@ The owner approved the design on 2026-10-31. Both cards are 1200 by 630 pixels o
   - its formal name in Lexend Light at 44 px in `$chalk-muted`, left out when the entry has none or when it only repeats the name;
   - up to four of the entry's categories as chips, alphabetical, in Lexend Regular at 24 px, each outlined and lettered in its group's dark-theme colour (`colorDark`), with a `+N` chip in `$chalk-muted` counting the rest.
   - 40 px below that, a 4 px band along the foot of the card in equal segments, one per category group, in the order the groups first appear among the chips' categories. An entry with no categories keeps the band's 4 px, empty.
-- **The ingredient's own categories, else its forms'** (M14.39). The chips and the band draw the ingredient's own categories. When it has none, they draw those of its live forms, each once and alphabetical, with nothing marking them apart: the result cards' outlined form chips are not drawn here. With neither there are no chips and an empty band (`claude-docs/design-decisions/m14.38-form-categories-in-search.md`, decision 4).
+- **The ingredient's own categories, else its forms'** (M14.39). The chips and the band draw the ingredient's own categories. When it has none, they draw those of its live forms, each once and alphabetical, with nothing marking them apart: the result cards' outlined form chips are not drawn here. With neither there are no chips and an empty band (`claude-docs/design-decisions/ingredients.md`, "How search shows and filters on a form's categories", decision 4).
 
 The alt text is the entry's name on an entry's card and the site name on the site card.
 

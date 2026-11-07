@@ -199,7 +199,7 @@ all four writes check `update`; the `ingredient` statement is not used for stock
   passes the coven's proof as `heldBy`, and checks the row again through
   `heldCompendiumEntry` under the stock lock, so a coven may still start a jar of
   a retired entry it holds
-  ([`m12.24-retired-entry-stays-readable.md`](../design-decisions/m12.24-retired-entry-stays-readable.md)).
+  ([`ingredients.md`, "A retired entry stays readable to the covens that use it"](../design-decisions/ingredients.md#a-retired-entry-stays-readable-to-the-covens-that-use-it)).
   A coven's own deleted ingredient's forms stay refused.
 - **A jar of a compendium form lists the entry.** `createStock` also inserts the
   coven's cupboard row for the entry when it has none (never for a retired
@@ -216,7 +216,7 @@ all four writes check `update`; the `ingredient` statement is not used for stock
   it, so two creates racing for one form are refused alike. After a soft delete
   there is no live jar, so the create inserts a new row and the old one stays as
   it was
-  ([`design-decisions/m9.3-create-stock-refuses-held-form.md`](../design-decisions/m9.3-create-stock-refuses-held-form.md)).
+  ([`ingredients.md`, "Starting a jar of a form the coven holds is refused"](../design-decisions/ingredients.md#starting-a-jar-of-a-form-the-coven-holds-is-refused)).
 - **The dimension is never input.** `StockInput` has no `unitDimension` field, so
   one sent anyway is dropped while parsing, and the service writes
   `dimensionOf(unit)` wherever it writes a unit.

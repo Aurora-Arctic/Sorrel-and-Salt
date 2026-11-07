@@ -34,7 +34,7 @@ Builds `target: development` and serves `next dev` on **8000**. It has no `comma
 
 ### mailpit
 
-The local and e2e inbox, from the pinned `axllent/mailpit` image, with no profile. It accepts mail over HTTP (`POST /api/v1/send`) and delivers none of it; its UI and the REST API that `tests/e2e/mailpit.ts` reads share **8025**, and `/mailpit readyz` is its health check. `app`, `e2e` and the `devcontainer` overlay wait on it healthy and set `MAIL_TRANSPORT=mailpit` and `MAILPIT_URL=http://mailpit:8025`, so every message the app sends locally lands at `http://localhost:8025`. It is HTTP rather than SMTP because every deployed target is HTTP too and `src/lib/mail.ts` keeps one shape of transport ([`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md), "Delivery").
+The local and e2e inbox, from the pinned `axllent/mailpit` image, with no profile. It accepts mail over HTTP (`POST /api/v1/send`) and delivers none of it; its UI and the REST API that `tests/e2e/mailpit.ts` reads share **8025**, and `/mailpit readyz` is its health check. `app`, `e2e` and the `devcontainer` overlay wait on it healthy and set `MAIL_TRANSPORT=mailpit` and `MAILPIT_URL=http://mailpit:8025`, so every message the app sends locally lands at `http://localhost:8025`. It is HTTP rather than SMTP because every deployed target is HTTP too and `src/lib/mail.ts` keeps one shape of transport ([`auth.md`, "First-party email verification and email delivery"](design-decisions/auth.md#first-party-email-verification-and-email-delivery), "Delivery").
 
 ### workshop
 

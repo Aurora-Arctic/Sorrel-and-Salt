@@ -2,7 +2,7 @@
 
 Better Auth's limiter covers `/api/auth/*` and nothing else; GraphQL's
 protections are graphql-armor's. MB.74 chose it over leaving the
-shipped defaults ([`design-decisions/mb.74-better-auth-plugins.md`](../design-decisions/mb.74-better-auth-plugins.md)).
+shipped defaults ([`auth.md`, "Better Auth's plugin roster: what lands before launch, what waits"](../design-decisions/auth.md#better-auths-plugin-roster-what-lands-before-launch-what-waits)).
 
 - **On wherever `NODE_ENV` is `production`**, which is every deploy (staging and
   hotfix previews included) and every `next start`, Playwright's server

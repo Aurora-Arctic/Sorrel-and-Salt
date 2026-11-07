@@ -23,4 +23,4 @@ Add `--json` to get the same figures as data. Sizes are paying seats; trial, cur
 
 ## Where Decisions Live
 
-The decision record is `claude-docs/design-decisions/m17.1-subscription-billing-scope.md`. It records the model, the processor, the keeper-exemption schedule and the other choices the questions at the end of `subscription-models.md` leave to the owner.
+The decision record is `claude-docs/design-decisions/ingredients.md`, "Subscription Billing Scope". It records the model, the processor, the keeper-exemption schedule and the other choices the questions at the end of `subscription-models.md` leave to the owner.

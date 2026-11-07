@@ -8,7 +8,7 @@
 - **Facts list every weight, zero-point ones too**, so the curator reads what to fix as well as what is wrong, and the rows always add up to the heading. Rows run gains, then costs, then zeros, each in the order the read returned them. Each shows its sign and number with a true minus sign; the circle glyphs are `aria-hidden`. The list clears its markers (`list-reset`), as the global `ul li::before` ✦ would become a grid cell.
 - **Forced colours.** The track takes a 1px `CanvasText` border, gains are `Highlight` and losses `CanvasText`.
 
-The score and facts come from `sourcingScore` in `src/modules/ingredients/services/sourcing-score.ts`, with every weight in `src/modules/ingredients/schema/sourcing-weights.ts`; the reasoning is in [`../design-decisions/m14.24-plan.md`](../design-decisions/m14.24-plan.md), "The score".
+The score and facts come from `sourcingScore` in `src/modules/ingredients/services/sourcing-score.ts`, with every weight in `src/modules/ingredients/schema/sourcing-weights.ts`; the reasoning is in [`ingredients.md`, "The sourcing score: facts, weights and the data they need (plan)"](../design-decisions/ingredients.md#the-sourcing-score-facts-weights-and-the-data-they-need-plan), "The score".
 
 ## Where it shows
 

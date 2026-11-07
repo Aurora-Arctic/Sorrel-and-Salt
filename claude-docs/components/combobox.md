@@ -1,6 +1,6 @@
 # Combobox
 
-`src/components/Combobox/` is a text box that suggests as it is typed in, built on Downshift's `useCombobox` ([`../design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)). The hook owns the ARIA and the keyboard state; the markup, rows and Sass are ours. The folder also holds the closed-set boxes (select-only, type-ahead, multi-select), the chip a list draws inside its control (`ComboboxEntry`), and a sortable list of chips on dnd-kit. The chevron, plus and × icons are the shared set ([`icon-tip.md`](icon-tip.md)); the folder draws only a sortable chip's grip and a linked entry's chain.
+`src/components/Combobox/` is a text box that suggests as it is typed in, built on Downshift's `useCombobox` ([`ingredients.md`, "A closed set wears the combobox"](../design-decisions/ingredients.md#a-closed-set-wears-the-combobox)). The hook owns the ARIA and the keyboard state; the markup, rows and Sass are ours. The folder also holds the closed-set boxes (select-only, type-ahead, multi-select), the chip a list draws inside its control (`ComboboxEntry`), and a sortable list of chips on dnd-kit. The chevron, plus and × icons are the shared set ([`icon-tip.md`](icon-tip.md)); the folder draws only a sortable chip's grip and a linked entry's chain.
 
 ## Contracts
 
@@ -82,7 +82,7 @@ Users: "See All Results" ends the ingredient search's dropdown when there is ano
 
 ## The select-only box
 
-`ComboboxSelect` (`select.tsx`) is a closed set on the same control and list, for a field nothing is typed into: every closed enum. It replaces the native `<select>` so a form's fields share one look ([`design-decisions/mb.131-closed-sets-on-the-combobox.md`](../design-decisions/mb.131-closed-sets-on-the-combobox.md)). The DateField's month and year pickers are two of these ([`date-field.md`](date-field.md)).
+`ComboboxSelect` (`select.tsx`) is a closed set on the same control and list, for a field nothing is typed into: every closed enum. It replaces the native `<select>` so a form's fields share one look ([`ingredients.md`, "A closed set wears the combobox"](../design-decisions/ingredients.md#a-closed-set-wears-the-combobox)). The DateField's month and year pickers are two of these ([`date-field.md`](date-field.md)).
 
 - **It is Downshift's `useSelect`**, ARIA 1.2's select-only combobox: the control itself is the `role="combobox"` element, a `div` in the tab order, labelled through `aria-labelledby`. Without `labelId`, `label` is its `aria-label`.
 - **A choice with value `''`** clears the set ("None"). `placeholder` shows while the value is none of the choices and is never in the list.

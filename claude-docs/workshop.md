@@ -1,6 +1,6 @@
 # Component workshop
 
-Where every standalone component renders in isolation, against the real tokens, without a page routed to it. It is Storybook (`@storybook/nextjs-vite`); what maps to what in the Claude Design sync, which reads the Storybook, is in [`design-decisions/m12.53-storybook.md`](design-decisions/m12.53-storybook.md).
+Where every standalone component renders in isolation, against the real tokens, without a page routed to it. It is Storybook (`@storybook/nextjs-vite`); what maps to what in the Claude Design sync, which reads the Storybook, is in [`ui.md`, "The component workshop moves from Ladle to Storybook"](design-decisions/ui.md#the-component-workshop-moves-from-ladle-to-storybook).
 
 - **Component stories live at exactly `src/components/<Name>/index.stories.tsx`**, beside `index.tsx`, and mail stories at `src/emails/<name>.stories.tsx`. The `stories` globs in `.storybook/main.ts` also pick up `.storybook/*.stories.tsx`, for workshop-only pages the app never imports.
 - **Every component and every email template has its story**, by review; no test guards it. A component that renders nothing has none: `CovenSwitchTargets` only tells the coven switcher which covens a page also opens in, so its story would be an empty frame.

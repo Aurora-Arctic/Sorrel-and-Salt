@@ -31,7 +31,7 @@
 
 ## Request lifecycle
 
-Server behaviour the component only shows (claude-docs/design-decisions/m15.46-resolved-requests-close-and-anonymise.md).
+Server behaviour the component only shows (claude-docs/design-decisions/support.md, "A resolved request closes on its own, and a closed one is anonymised").
 
 - **Transitions.** open to waiting_on_sender (a staff reply marked waiting, `reply.ts`); open or waiting to resolved (staff, `staff.ts`, or the sender on their own request, `resolveMySupportRequest`); open, waiting or resolved to closed (staff, `closeSupportRequest`); waiting or resolved to open (the sender's public message, which keeps the assignee); resolved to closed (the request's job, seven days after resolving, `retention.ts`); closed to a new request (the sender's message opens one linked to it). Staff replies and internal notes change nothing else. Each move is one guarded update, so a refused move writes nothing.
 - **Retention** runs once a day as the support-retention job, as the System account: a closing-soon notice from day 5, close on day 7, and anonymising on the twelfth month after the close. Anonymising keeps the row, topic, status and dates so counts survive and drops everything the sender wrote or is known by. The job reads due ids per stage a page at a time and hands each page to a batch; each batch re-reads its rows' status and dates before writing, so a batch run twice, two at once, or after a reopen changes nothing.

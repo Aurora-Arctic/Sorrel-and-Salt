@@ -17,7 +17,7 @@ would need no edit at any call site; nothing passes it today.
     job ever sees; `Dockerfile.e2e` is the same. How a baked-in `COPY . .`
     once left every deleted file on disk in every job, and why removing the
     layer beat cleaning up after it, is MB.42's and
-    [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md).
+    [`ci.md`, "The CI images carry no source layer"](../design-decisions/ci.md#the-ci-images-carry-no-source-layer).
   - **Review is what keeps it that way.** Each Dockerfile copies an allowlist
     — the two manifests, plus `Docker/playwright-entrypoint.sh` for
     `Dockerfile.e2e`'s `headed` stage — and `COPY src src` is as much a
@@ -68,7 +68,7 @@ would need no edit at any call site; nothing passes it today.
     access. Exporting there also rewrote layers the push had just uploaded,
     where a registry export finds those blobs and writes a manifest. The
     measurements are
-    [`../design-decisions/mb.96-ci-vitest-job.md`](../design-decisions/mb.96-ci-vitest-job.md),
+    [`ci.md`, "The CI Vitest job: DOM only where needed, GitHub's runner"](../design-decisions/ci.md#the-ci-vitest-job-dom-only-where-needed-githubs-runner),
     "Facts the plan rests on".
   - **Cost.** GHCR storage is free for a public repo. Each build moves
     `:buildcache` and leaves the previous cache manifest untagged, the same

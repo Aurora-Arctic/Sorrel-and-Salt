@@ -23,7 +23,7 @@ introspection is on under `next dev`.
 again, or keep a second browser profile per identity. The fixture users A–E have
 no OAuth account, so they cannot sign in; their cookies would have to be
 minted — a `sessions` row plus the signed cookie
-([`design-decisions/mb.30-organization-plugin.md`](../design-decisions/mb.30-organization-plugin.md),
+([`auth.md`, "Better Auth's organization plugin for workspaces and invitations"](../design-decisions/auth.md#better-auths-organization-plugin-for-workspaces-and-invitations),
 "Test harness") — and pasted into DevTools → Application → Cookies. Nothing does
 that yet; a `dev:session` script is the natural follow-up if it is needed often.
 

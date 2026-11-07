@@ -49,7 +49,7 @@ so after its inserts the seed brings every live form's slug to
 TypeScript, since one in SQL would be a second slug rule. A form's `seed_key`
 stays the slug it was seeded under, `slugify(name)`, as a seed key never
 changes after insert (MB.171), so the seed still keys a form by its name
-([`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md)).
+([`ingredients.md`, "The admin forms page: the slug, the redirect, the stale pick"](../design-decisions/ingredients.md#the-admin-forms-page-the-slug-the-redirect-the-stale-pick)).
 
 **The descriptions are the criterion, not decoration.** §5's argument for the
 non-blank CHECK is that a curated value exists to explain itself, so the
@@ -85,7 +85,7 @@ edits.
 
 ## Form group service details
 
-`src/modules/vocabulary/services/ingredient-form-groups.ts` holds the ingredient form groups: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/m5.6b-admin-groups.md).
+`src/modules/vocabulary/services/ingredient-form-groups.ts` holds the ingredient form groups: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/ingredients.md, "The admin group pages: where a deleted group's rows go").
 
 - A form's slug is its name and its group's. A rename therefore moves every live form's slug under the group, and a delete first moves its live forms to the group the admin names (`moveTo`), each re-slugged there. A group with no live form needs no `moveTo`.
 - The forms stay curated either way, so no compendium entry's pick, nor a coven's, is orphaned, and no ingredient is rewritten: an ingredient holds a form's name, not its slug.

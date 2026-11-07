@@ -57,7 +57,7 @@ re-added afterwards by a different member, whose stamps the new row carries.
 
 **Why not `spell_steps`.** A spell is a recipe that keeps what went into its jar,
 so a layer taken out of it is recoverable like every other delete
-([`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md)).
+([`data.md`, "A spell keeps the ingredients it holds, deleted or not"](../design-decisions/data.md#a-spell-keeps-the-ingredients-it-holds-deleted-or-not)).
 What reads through a layer does so by `existsIn`, so no filter is left for a
 service to remember. The cost is the surrogate key and the partial indexes, under
 ["Position is the identity"](grimoire.md#position-is-the-identity-and-what-that-costs-the-reorder)

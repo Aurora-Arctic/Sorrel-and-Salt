@@ -28,8 +28,8 @@ Soft-deleting a row rewrites none of a coven's, its value moving into the in-use
 bucket instead. A compendium entry's deities are each a pick of a curated row, so
 a deity one picks is not deleted, a tradition's delete moves its deities rather
 than orphaning them, and a rename carries onto it
-([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md),
-[MB.167](../design-decisions/mb.167-read-and-write-the-pick.md)). `tradition_id`
+([MB.162](../design-decisions/ingredients.md#the-compendium-holds-curated-values-alone),
+[MB.167](../design-decisions/ingredients.md#reading-and-writing-the-picked-form-and-deities)). `tradition_id`
 can be a key because only a keeper writes it, as `ingredient_forms.group_id` is.
 
 **Grouped, because the tradition is what a reader needs beside the name.**
@@ -88,7 +88,7 @@ only while its tradition is live too, as a form is only while its group is.
 `/curator/deities` and `/curator/deity-traditions` write the two tables through
 `vocabulary`'s `services/deities.ts` and `services/deity-traditions.ts`, the
 curator's or keeper's alone, on the forms' and form groups' rules
-([`design-decisions/mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)).
+([`ingredients.md`, "The admin deity pages: the slug, the tradition's delete, one form"](../design-decisions/ingredients.md#the-admin-deity-pages-the-slug-the-traditions-delete-one-form)).
 The rules are under "Deity service details" and "Deity tradition service details"
 below. Two further points:
 
@@ -148,7 +148,7 @@ deity, such as Woden for Odin: rows of `deity_other_names` (columns in DESIGN.md
 
 ## Deity tradition service details
 
-`src/modules/vocabulary/services/deity-traditions.ts` holds the deity traditions, in the form groups' shape: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/mb.132-admin-deities.md).
+`src/modules/vocabulary/services/deity-traditions.ts` holds the deity traditions, in the form groups' shape: public reads, and writes for a curator or a keeper alone (claude-docs/design-decisions/ingredients.md, "The admin deity pages: the slug, the tradition's delete, one form").
 
 - A rename moves every live deity's slug under the tradition, and a delete first moves its live deities to the tradition the admin names (`moveTo`), each re-slugged there, then soft-deletes the tradition, in one transaction. A tradition with no live deity needs no `moveTo`; one that has some and names no other live tradition is refused on `moveTo`.
 - The deities stay curated either way, so neither a compendium entry's pick nor a coven's is orphaned, and no ingredient is rewritten: a link holds a deity's name and id, not its slug or its tradition.

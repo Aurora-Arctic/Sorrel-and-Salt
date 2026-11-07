@@ -225,7 +225,7 @@ inline; }`, for the HTML rendering section's inline elements.
     off, and a test's own spy would hide the call from it, which is why a `dom` test declares
     instead of spying. It guards the `dom` project only; MSW's refusal of an unhandled request
     prints through `console.error`, so a missing handler fails its test here.
-  - **Why happy-dom.** The `dom` project runs on happy-dom, not jsdom, because it runs the same tests in much less time; the version is pinned exactly in `package.json` and the setup test above fails first if a release changes what the environment reports ([`../design-decisions/m11.25-component-tests-run-on-happy-dom.md`](../design-decisions/m11.25-component-tests-run-on-happy-dom.md)).
+  - **Why happy-dom.** The `dom` project runs on happy-dom, not jsdom, because it runs the same tests in much less time; the version is pinned exactly in `package.json` and the setup test above fails first if a release changes what the environment reports ([`ci.md`, "Component tests run on happy-dom"](../design-decisions/ci.md#component-tests-run-on-happy-dom)).
   - **A test that stubs `location` uses `stubLocationAssign(assign)`**
     (`tests/support/location.ts`), never `{ ...window.location }`. A spread
     copies the fields only where they are own properties, which is jsdom's
@@ -318,7 +318,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     own password is generated and discarded at image build time and
     so can never authenticate a real connection.
     - **The template is built here, at setup, not baked into the Postgres
-      image.** [`design-decisions/m1.27-template-at-setup-not-in-image.md`](../design-decisions/m1.27-template-at-setup-not-in-image.md)
+      image.** [`ci.md`, "The seeded test template is built at test-run setup, not baked into the Postgres image"](../design-decisions/ci.md#the-seeded-test-template-is-built-at-test-run-setup-not-baked-into-the-postgres-image)
       records the measurement and the argument. The short form: migrate +
       seed cost ~1 s once per run against a 30 ms clone, and a template built
       from the checkout cannot disagree with it, whereas a baked one silently
@@ -374,7 +374,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
       harness error rather than a `sorrel_test_undefined` connection failure.
   - Rejected alternative — wrapping each test in a rolled-back transaction —
     and the reason, is recorded in
-    [`design-decisions/m1.9-test-db-isolation.md`](../design-decisions/m1.9-test-db-isolation.md).
+    [`ci.md`, "Test database isolation: per-worker clone vs. rolled-back transaction"](../design-decisions/ci.md#test-database-isolation-per-worker-clone-vs-rolled-back-transaction).
 - **`rsc`** — `environment: 'node'`, `include`s
   `tests/rsc/**/*.test.{ts,tsx}`, and resolves under the `react-server` export
   condition (`ssr.resolve.conditions` and `externalConditions`, the second for
@@ -397,7 +397,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     still tested in `db`, against the real rows.
 
 **Coverage** (`test.coverage`, provider `istanbul`, which replaced `v8` on
-measurement in MB.191: [`mb.191-coverage-provider.md`](../design-decisions/mb.191-coverage-provider.md)):
+measurement in MB.191: [`ci.md`, "The coverage provider, chosen by measurement"](../design-decisions/ci.md#the-coverage-provider-chosen-by-measurement)):
 thresholds are 80% on lines, branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
 excluding `*.stories.tsx`, `src/db/migrations/**`, and `src/db/seed/**` —
 each a set of files that really exists, for its own stated reason. `include` enumerates the disk, not the repo, so a stale test file left in a CI container's `src/` would count against the figure.

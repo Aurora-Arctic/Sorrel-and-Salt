@@ -27,7 +27,7 @@
 
 ### Pausing access
 
-A steward can pause one member's or viewer's access to the coven, for a span or with no end date, and lift it. The pause itself, and who may set it, is the coven service's (claude-docs/design-decisions/m15.55-coven-access-pause.md). The form, the standing pause and Earlier Pauses are the modal's Coven Access section ([`member-detail.md`](member-detail.md), "Coven Access").
+A steward can pause one member's or viewer's access to the coven, for a span or with no end date, and lift it. The pause itself, and who may set it, is the coven service's (claude-docs/design-decisions/auth.md, "How the coven access pause refuses a member, and what it decides along the way"). The form, the standing pause and Earlier Pauses are the modal's Coven Access section ([`member-detail.md`](member-detail.md), "Coven Access").
 
 - **The page reads the pauses standing on its members in one query**, `standingMemberPauses`, for a steward alone (`member: pause`), and passes each as the entry's `paused`.
 - **A paused member is sent to `/coven-paused/<slug>`** from every page of the coven, by the coven guard `requireCovenMembership`. That page names the coven and when the pause ends, and sends anyone with no pause standing back to the coven; a stranger still gets the 404. A GraphQL answer of `ACCESS_PAUSED` on a coven page sends the browser there too (`src/lib/graphql-client.ts`).

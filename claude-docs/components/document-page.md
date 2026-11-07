@@ -39,7 +39,7 @@ The article is `.page-with-nav` ([`page-nav.md`](page-nav.md), "Where it stands"
 - **A document that cites a source lists it at its end in Chicago form**, as the compendium's references are. A source is a markdown footnote.
   - Its number in the text is a superscript link written `#N` with `aria-label="Source N"`.
   - The list is headed "Sources". Each entry carries one return arrow per place that cites it, labelled "Back to citation 1", "Back to citation 2" when there are several and "Back to the text" when there is one.
-- **The working notes**, which cite the file or `DESIGN.md` section behind every claim, live in `claude-docs/design-decisions/`: `m15.2-privacy-policy-notes.md` for the privacy policy, `m15.3-disclaimer-notes.md` for the disclaimer, `m15.4-code-of-ethics-notes.md` for the code of ethics.
+- **The working notes**, which cite the file or `DESIGN.md` section behind every claim, live in `claude-docs/design-decisions/`: `design-decisions/support.md`, "The privacy policy's working notes" for the privacy policy, `design-decisions/support.md`, "The disclaimer's working notes" for the disclaimer, `design-decisions/support.md`, "The code of ethics' working notes" for the code of ethics.
 
 ## Styling
 

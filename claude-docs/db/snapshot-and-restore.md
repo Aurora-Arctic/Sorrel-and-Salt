@@ -11,7 +11,7 @@ pending migrations against `main`, branches the current `main` Neon branch as
 `snapshot-<short sha>`, the seven-character short SHA of the commit whose
 migrations are about to run. Preview (`staging`, hotfix) migrations never
 snapshot; those databases are already disposable
-([`m1.1-neon-branch-strategy.md`](../design-decisions/m1.1-neon-branch-strategy.md)).
+([`data.md`, "Neon branch strategy: persistent staging vs. ephemeral hotfix branches"](../design-decisions/data.md#neon-branch-strategy-persistent-staging-vs-ephemeral-hotfix-branches)).
 The step is guarded on `NEON_API_KEY`/`NEON_PROJECT_ID` the same way `deploy.yml`
 guards on the Vercel secrets (`claude-docs/secrets.md`). While those two rows are
 unset the step warns and skips rather than failing the job.

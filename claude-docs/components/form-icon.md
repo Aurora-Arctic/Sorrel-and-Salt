@@ -1,6 +1,6 @@
 # FormIcon
 
-`src/components/FormIcon/` draws the small mark beside a form saying what kind of thing it is, so a list of forms scans before it is read. It draws the icon of the form's group, or the generic salt spoon where there is none. The icon sits on the group rather than the form: [`../design-decisions/m12.6-form-icons.md`](../design-decisions/m12.6-form-icons.md). Props (`name`, `className`) are in `types.ts`.
+`src/components/FormIcon/` draws the small mark beside a form saying what kind of thing it is, so a list of forms scans before it is read. It draws the icon of the form's group, or the generic salt spoon where there is none. The icon sits on the group rather than the form: [`ui.md`, "Form icons: on the group, with a generic"](../design-decisions/ui.md#form-icons-on-the-group-with-a-generic). Props (`name`, `className`) are in `types.ts`.
 
 ## Contracts
 

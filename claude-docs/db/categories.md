@@ -36,7 +36,7 @@ A category reaches an ingredient through [`ingredient_categories`](categories.md
 - **A coven's links never block the delete, and the delete removes no link.** The links in `ingredient_categories` and `spell_categories` belong to the covens, and a keeper writes nothing of a coven's. Every read already drops a deleted category: `categoriesOf` reads the link, then the category through `findManyByIds`, which filters it. A coven's ingredient therefore stops showing the chip and keeps the link, which a restore would bring back. A spell's categories must read the same way.
 - **The in-use read happens before the transaction.** An entry filed under the category in the instant between is left holding a deleted one, which every read drops. That is the same race `updateCompendiumEntry` accepts for the slug it reads first.
 
-[`design-decisions/m5.6-admin-categories.md`](../design-decisions/m5.6-admin-categories.md) records the delete rule and the two it was chosen over. Each write expires the `compendium` tag once it has committed ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag").
+[`ingredients.md`, "The admin categories page: delete, list read and modal"](../design-decisions/ingredients.md#the-admin-categories-page-delete-list-read-and-modal) records the delete rule and the two it was chosen over. Each write expires the `compendium` tag once it has committed ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag").
 
 ## Form writes
 
@@ -50,7 +50,7 @@ A category reaches an ingredient through [`ingredient_categories`](categories.md
 - **A coven's ingredient is never written.** One whose variant picked the form keeps its `form_id` and its text through a rename, and through a delete reads its form as no pick, its text moving into that coven's in-use values. A keeper writes nothing of a coven's. A pick whose row was renamed since is the member's to settle in the ingredient modal.
 - **The clash check reads before the transaction**, as the category delete's does; the carry itself matches `form_id` in its one statement, so a variant picking the form in the instant between is renamed with the rest, and one that picked another form since is not.
 
-[`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md) records the calls on the slug, the redirect and the stale pick. Each write expires the `compendium` tag once it has committed ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag").
+[`ingredients.md`, "The admin forms page: the slug, the redirect, the stale pick"](../design-decisions/ingredients.md#the-admin-forms-page-the-slug-the-redirect-the-stale-pick) records the calls on the slug, the redirect and the stale pick. Each write expires the `compendium` tag once it has committed ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag").
 
 ## Group writes
 
@@ -65,7 +65,7 @@ A category reaches an ingredient through [`ingredient_categories`](categories.md
 - **The rows are moved one at a time** through the writer's `updateById`, not a new writer method: each of the writer's methods is a decision argued for in its own PR, and a group holds a handful of rows. A deity tradition's delete moves its deities the same way.
 - **The rows are read before the transaction**, through the vocabularies' own page readers, so "live" means what their lists mean. One added under the group in the instant between is left under the deleted group, which every read drops or reads as uncurated, as a category's delete leaves an entry filed under it.
 
-[`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md) records the calls on the delete. Each write expires the `compendium` tag once it has committed ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag").
+[`ingredients.md`, "The admin group pages: where a deleted group's rows go"](../design-decisions/ingredients.md#the-admin-group-pages-where-a-deleted-groups-rows-go) records the calls on the delete. Each write expires the `compendium` tag once it has committed ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag").
 
 ## Category group service details
 

@@ -19,7 +19,7 @@ three empty — every stamp produced by the shared
 `applyAudit`. The seed cannot hold any other handle — `src/db/seed/` is not
 among the six files allowed to import `connection.ts` — which is what makes
 the handle honest. The reasoning, and the alternatives it rules out, are in
-[`design-decisions/m1.21-seed-writes-through-its-handle.md`](../design-decisions/m1.21-seed-writes-through-its-handle.md).
+[`data.md`, "The seed writes through the handle it is given, not through `withAudit`"](../design-decisions/data.md#the-seed-writes-through-the-handle-it-is-given-not-through-withaudit).
 
 **Import order is not load-bearing anywhere.** There is no cycle between
 `audit.ts` and `users.ts` any more (MB.86): `audit.ts` exports factories that
@@ -94,7 +94,7 @@ row as present by its key, live or soft-deleted, or by a live row's slug, so
 a keeper's own row under a seed name is not met by a second the slug index
 would refuse; each row they insert carries its key; and an item finds its
 group by the group's key, so a renamed group still takes it.
-`ingredients` carries the column too, for the compendium seed to key its entries by; the `standard` fixture writes none. The sources seed keys on it too ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
+`ingredients` carries the column too, for the compendium seed to key its entries by; the `standard` fixture writes none. The sources seed keys on it too ([`data.md`, "A seeded row keeps the key the seed gave it"](../design-decisions/data.md#a-seeded-row-keeps-the-key-the-seed-gave-it)).
 
 **The production compendium is a target, not a scenario** (MB.240). Its starting entries are seeded by `db:seed:compendium` in `scripts/db-seed.ts`, beside `categories`, `forms`, `astrology`, `deities` and `sources`, and which `migrate.yml` runs after them on staging and production. `db:seed:reference` (M14.26) runs all six in one transaction, for the hand-started `seed-environment.yml`, so a dry run of the six rolls back once. It is never folded into `standard`, since `standard` is cloned for every db test (`tests/support/seeded-database.ts`). It writes each entry once, keyed by a `seed_key` on `ingredients` (MB.241), and skips an entry already present together with everything beneath it, so a reseed undoes none of a keeper's edits. The rules its entries are written to are [`compendium-seed/README.md`](../compendium/compendium-seed/README.md).
 
@@ -107,7 +107,7 @@ needs a creator and the category seed runs without `minimal` having gone
 first. It is `role: 'user'`, not a keeper, since MB.58: it has no OAuth
 account and is unverified, so Better Auth refuses to link a sign-in to it and
 nobody can sign in as it (`tests/db/account-linking.test.ts` pins the refusal;
-[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)), so an
+[`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)), so an
 admin role on it would grant nothing to anyone. `/keepers/users` leaves it out
 (MB.52). The file keeps its name, since `deploy.yml` lists it.
 The plain

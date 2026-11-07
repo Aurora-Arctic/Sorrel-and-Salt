@@ -33,7 +33,7 @@ the ingredient page ([`ingredient-entry.md`](ingredient-entry.md)). A plain text
   moves nothing.
 - When pending it appears after the `$loading-delay` (100ms), then fades in and pulses, through the
   shared `loading-motion` mixin, also under `prefers-reduced-motion`. It has no exception to the
-  loading standard (see [`../design-decisions/m12.33-loading-standard.md`](../design-decisions/m12.33-loading-standard.md)).
+  loading standard (see [`ui.md`, "One Loading Standard for the Site"](../design-decisions/ui.md#one-loading-standard-for-the-site)).
 - It is drawn in the accent colour (`$accent`) at full strength and pulses down
   to 40%, so it reads beside any link colour; the link's own colour at a third of its strength is too faint to notice.
 - The dot is decorative and empty (`aria-hidden`): the route change itself is announced when the new

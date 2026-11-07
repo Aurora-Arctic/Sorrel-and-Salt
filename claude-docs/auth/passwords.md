@@ -178,7 +178,7 @@ and every endpoint that checks the password an account already holds, in
 - **Outside `withAudit`.** A failed sign-in has no session to audit; the counter's
   repository file, `src/db/repository/sign-in-failures.ts`, is one of the two
   repository files CLAUDE.md rule 3 names as writing outside it
-  ([`design-decisions/m16.4-repository-writes-outside-the-audit.md`](../design-decisions/m16.4-repository-writes-outside-the-audit.md)).
+  ([`auth.md`, "Two repository files that import the database client and write outside `withAudit`"](../design-decisions/auth.md#two-repository-files-that-import-the-database-client-and-write-outside-withaudit)).
 
 ### Reset and change
 

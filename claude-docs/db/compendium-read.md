@@ -315,7 +315,7 @@ such switches, so `findWorkspaceIngredientFacets` returns plain `IngredientFacet
   each value some entry carries, plus every chosen value at zero if nothing carries
   it, so a choice never vanishes from the panel. They sort alphabetically under the
   natural-language collation `"en-US-x-icu"`, never by count
-  (`claude-docs/design-decisions/m12.52-facet-sort-order.md`): a category by group
+  (`claude-docs/design-decisions/ingredients.md`, "How each search facet sorts its values"): a category by group
   name then name, a deity by tradition name then name, both in the query itself.
   Forms sort by the same rule in JavaScript with `Intl.Collator('en-US')`, since a
   form's spelling is only known after its group is read. Deities and categories are
@@ -483,4 +483,4 @@ screen does (`formLabel`), and the compendium's cards, the admin Compendium tabl
 a coven's cupboard all read through it, so they agree. `CategoryChips` draws a
 form-only chip with a dashed border and a tip naming its forms. `Ingredient.categories`
 in GraphQL stays the ingredient's own rows
-(`claude-docs/design-decisions/m14.38-form-categories-in-search.md`).
+(`claude-docs/design-decisions/ingredients.md`, "How search shows and filters on a form's categories").

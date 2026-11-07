@@ -4,7 +4,7 @@
 
 Facts the props (`NoticeProps`) cannot say: `inRegion` is for a notice inside a live region that is always in the page. `result` gives the notice `tabIndex=-1` and `data-result`, for `useResultFocus` to focus. `id` is for a control that names the notice in its `aria-describedby`. A `className` from the caller is for layout only, never a colour. A link in the children stays in the notice's text colour, underlined.
 
-How a click outside a form says its result and its failure is [`click-feedback.md`](click-feedback.md) ([`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md)). A failure inside a dialog, such as the owner-exit dialog of `LeaveWorkspaceButton`, stays in the dialog as a plain `Notice`.
+How a click outside a form says its result and its failure is [`click-feedback.md`](click-feedback.md) ([`ui.md`, "Feedback from a click outside a form"](../design-decisions/ui.md#feedback-from-a-click-outside-a-form)). A failure inside a dialog, such as the owner-exit dialog of `LeaveWorkspaceButton`, stays in the dialog as a plain `Notice`.
 
 ## Contracts
 

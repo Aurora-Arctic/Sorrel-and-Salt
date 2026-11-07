@@ -2,9 +2,9 @@
 
 Every ingredient carries a URL slug, and a compendium entry's is its public
 address, `/compendium/ingredients/[slug]`. The argument is
-[`mb.80-public-compendium.md`](../design-decisions/mb.80-public-compendium.md),
+[`graphql.md`, "The compendium is public and search-indexable"](../design-decisions/graphql.md#the-compendium-is-public-and-search-indexable),
 superseded in part by
-[`mb.82-slug-takeover.md`](../design-decisions/mb.82-slug-takeover.md); what
+[`data.md`, "A taker ends a retired slug's redirect, once confirmed"](../design-decisions/data.md#a-taker-ends-a-retired-slugs-redirect-once-confirmed); what
 follows is what exists.
 
 - **`slug` is the label and the formal name, always** — never the form: one page shows every form of an entry. `ingredientSlug(name, canonicalName)` in `src/lib/slugify.ts`
@@ -115,4 +115,4 @@ the step — `column "slug" of relation "ingredients" contains null values` —
 and `npm run db:reset` (`make db-reset` from the host) rebuilds it. The test
 and e2e databases are built from an empty schema every run and never meet it.
 
-**A curated form's rename moves no slug**, and the old address of a re-slugged entry redirects for 180 days. `standard` also seeds two retirements as live examples of the entry page's two redirects (see "The compendium is awkward on purpose" in [`standard-scenario.md`](standard-scenario.md); [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**A curated form's rename moves no slug**, and the old address of a re-slugged entry redirects for 180 days. `standard` also seeds two retirements as live examples of the entry page's two redirects (see "The compendium is awkward on purpose" in [`standard-scenario.md`](standard-scenario.md); [`ingredients.md`, "An ingredient and its forms"](../design-decisions/ingredients.md#an-ingredient-and-its-forms)).

@@ -16,7 +16,7 @@
 
 ## Styling
 
-Tokens only. The form-only chip has no fill and a border in the group's own colour through `group-colour()` ([`m14.38-form-categories-in-search.md`](../design-decisions/m14.38-form-categories-in-search.md)).
+Tokens only. The form-only chip has no fill and a border in the group's own colour through `group-colour()` ([`ingredients.md`, "How search shows and filters on a form's categories"](../design-decisions/ingredients.md#how-search-shows-and-filters-on-a-forms-categories)).
 
 - **Forced colours.** The panel's `modal-surface` shadow is not drawn, so it takes a 1px `CanvasText` border. The +N button's hover and open fills are dropped: hover turns its border `Highlight`, and open (`aria-expanded`) fills it `Highlight` with `HighlightText` ink.
 

@@ -141,7 +141,7 @@
   permanently pending, and blocks every PR after it.
 - **A job-level `if:` renames a check only on a job that calls a reusable
   workflow** (probed; the run, the raw check-run output and the YAML are in
-  [`design-decisions/mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md)).
+  [`ci.md`, "A job-level `if:` renames the check only on the job that calls a reusable workflow"](../design-decisions/ci.md#a-job-level-if-renames-the-check-only-on-the-job-that-calls-a-reusable-workflow)).
   - **A calling job with a false `if:`** reports one bare check named after the
     caller (`checks`, not `checks / lint`), `skipped`. No `checks / lint` check
     run exists. That is why `pr-gate.yml` passes the path filter down as

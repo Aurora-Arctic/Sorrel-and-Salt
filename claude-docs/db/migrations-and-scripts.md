@@ -27,7 +27,7 @@ The SQL files state what each migration does. These are the rules they share.
 - **`set_updated_at()` skips a no-op `UPDATE`**, keeping both `updated_at` and `updated_by`; replacing its body touches no trigger and drops nothing (["`updated_at` is the database's"](updated-at.md)).
 - **A refill copies a replaced column's data again** in a data-only `--custom` migration, for whatever the deploy before the switch wrote (`0031`, `0035`, `0058`, `0059` use `ON CONFLICT ("id") DO NOTHING`). Its contract migration may copy once more before the drop (["Expand/contract and the destructive-DDL check"](expand-contract.md)). The ingredient lists, substitutes and deities follow this route (["The ingredient identity model"](identity-model.md)).
 - **A fill is tested until it ships.** While a migration is a branch's, a test may restore what it reads and re-run its SQL, read off disk. Once it is in `src/db/migrations/meta/_journal.json` the SQL never changes, so the test goes and the resulting tables' shape tests stay (["What a test may assert"](../testing/layer-ownership.md)).
-- **Append-only ledgers** (`user_privilege_changes`) refuse `UPDATE` and `DELETE` through `forbid_rewrite()`, one function for every ledger ([`write-path.md`](write-path.md), the privilege-ledger decision `../design-decisions/mb.194-privilege-ledger-by-trigger.md`).
+- **Append-only ledgers** (`user_privilege_changes`) refuse `UPDATE` and `DELETE` through `forbid_rewrite()`, one function for every ledger ([`write-path.md`](write-path.md), the privilege-ledger decision `../design-decisions/auth.md`, "One privilege ledger, written by the database").
 
 ### One snapshot
 

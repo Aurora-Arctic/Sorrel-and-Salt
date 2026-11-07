@@ -1,6 +1,6 @@
 # FacetPanel
 
-`src/components/FacetPanel/` holds the Filters button and the panel of facets it opens. It is a client component. The layout is recorded in [`m12.4-filter-layout`](../design-decisions/m12.4-filter-layout.md). Props are in `src/components/FacetPanel/types.ts`.
+`src/components/FacetPanel/` holds the Filters button and the panel of facets it opens. It is a client component. The layout is recorded in [`design-decisions/ingredients.md`, "How the search filters sit together"](../design-decisions/ingredients.md#how-the-search-filters-sit-together). Props are in `src/components/FacetPanel/types.ts`.
 
 ## Contracts
 
@@ -23,7 +23,7 @@
 
 ### Order, count and sort
 
-- **The panel sorts nothing.** Every facet lists its values in the order the repository read gives, never by count ([`m12.52-facet-sort-order`](../design-decisions/m12.52-facet-sort-order.md)).
+- **The panel sorts nothing.** Every facet lists its values in the order the repository read gives, never by count ([`design-decisions/ingredients.md`, "How each search facet sorts its values"](../design-decisions/ingredients.md#how-each-search-facet-sorts-its-values)).
 - **Count.** `n` is the number of chosen values: each category, form, deity, zodiac sign, celestial body and element counts one, plus one for a Toxic setting other than Any, one each for Hidden, No Refs and No Form when on, one for a chosen Reviewed setting, and one each for the coven's Source, In Stock and Low Stock Only when chosen. Match counts nothing: it is a mode of the categories, not a filter.
 - **Source order is visual order**, with no CSS `order`. The rows are Categories with Match beside it; the small controls on one wrapping row (Toxic, then Source, In Stock and Low Stock Only where offered, then No Refs for the admin); Forms; Celestial Bodies and Zodiac; Deities and Elements; then the foot.
 

@@ -8,7 +8,7 @@
 (["The astrology vocabulary seed"](../compendium/astrology-vocabulary-seed.md)), and read
 by a member's autofill (["The member's autofill"](member-autofill.md)). Files, scripts and functions say _astrology_ rather than _correspondence_, which in §5 names every property an ingredient carries — element and deities too — not these two; the migration keeps the name it shipped under, since its tag is in the journal.
 
-**People read this vocabulary as Celestial Bodies**, since most of its nineteen values are not planets; the table, the code, GraphQL and the lists all say celestial bodies, and no `planet` name remains (["Renaming a table"](expand-contract.md); `design-decisions/mb.251-celestial-bodies.md`).
+**People read this vocabulary as Celestial Bodies**, since most of its nineteen values are not planets; the table, the code, GraphQL and the lists all say celestial bodies, and no `planet` name remains (["Renaming a table"](expand-contract.md); `design-decisions/ingredients.md`, "The planets are Celestial Bodies wherever a person reads them").
 
 - **`celestial_bodies`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
@@ -26,7 +26,7 @@ vocabulary rather than a foreign key: a value off the list stays writable on
 a coven's ingredient, and soft-deleting a row rewrites none of a coven's, its
 value moving into the in-use bucket instead. A compendium entry holds curated
 values alone, so a row one holds is not deleted and a rename carries onto it
-([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md)).
+([MB.162](../design-decisions/ingredients.md#the-compendium-holds-curated-values-alone)).
 `nomenclature` and `element` stay enums — closed
 sets, and `nomenclature` is coupled to `canonicalName` by a CHECK that names
 `none` and `unknown` and could not read a table.

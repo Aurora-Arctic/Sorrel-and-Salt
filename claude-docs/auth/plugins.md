@@ -7,9 +7,9 @@ narrowed to impersonation, outside production only
 can mount routes under `/api/auth/*`, the one path outside `/api/graphql`,
 and write through the adapter, outside `withAudit`, so each has to earn its
 place. MB.74 weighed the whole roster against an OAuth-only, invite-gated site
-([`design-decisions/mb.74-better-auth-plugins.md`](../design-decisions/mb.74-better-auth-plugins.md)).
+([`auth.md`, "Better Auth's plugin roster: what lands before launch, what waits"](../design-decisions/auth.md#better-auths-plugin-roster-what-lands-before-launch-what-waits)).
 The owner then brought email and password, passkeys and two-factor into v1
-(Wave 16; [`design-decisions/m16.1-first-party-sign-in.md`](../design-decisions/m16.1-first-party-sign-in.md)),
+(Wave 16; [`auth.md`, "First-party sign-in comes into v1: a password, a passkey, a second factor"](../design-decisions/auth.md#first-party-sign-in-comes-into-v1-a-password-a-passkey-a-second-factor)),
 and all three are now registered: `passkey` ("Passkeys", below) and
 `twoFactor` ([`two-factor.md`](two-factor.md)).
 

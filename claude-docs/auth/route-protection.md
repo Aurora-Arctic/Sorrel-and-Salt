@@ -111,7 +111,7 @@ anyway, since a layout does not re-run on client-side navigation.
   `/keepers` (`ADMIN_LANDING`), a curator on `/curator` (`CURATOR_LANDING`), and
   everyone else on `/coven` (`POST_SIGN_IN_LANDING`), not `/`: someone who has
   just signed in has been through the front door already
-  ([`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md)).
+  ([`auth.md`, "Where the post-sign-in landing lives"](../design-decisions/auth.md#where-the-post-sign-in-landing-lives)).
   `postSignInLanding(role)` (`src/lib/sign-in.ts`) is the one rule. A return
   path still wins, an explicit `/coven` included, so the sign-in says whether it
   asked for one rather than the callback guessing from the landing path:
@@ -153,7 +153,7 @@ anyway, since a layout does not re-run on client-side navigation.
   session on those pages and on `/` and `/sign-in`, and `null` elsewhere;
   `sessionFromHeaders()` always answers `null`; `getShellSession()` answers the
   session with the pause, for the shell's viewer and its paused notice
-  (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
+  (`claude-docs/design-decisions/auth.md`, "What the site access pause closes, and what it decides along the way").
   `requireSession()` skips its terms redirect for a paused session, which cannot
   agree while paused.
 - **`getSession()` is `cache()`-wrapped**, so a layout and a page asking in the

@@ -18,7 +18,7 @@ A price in a model below is mine unless it names a comparable. I anchored each o
 
 ## Owner Decisions
 
-The owner chose model (i) and answered every open question on 2026-11-06. The decisions are recorded in `claude-docs/design-decisions/m17.1-subscription-billing-scope.md`, "The Earlier Decisions".
+The owner chose model (i) and answered every open question on 2026-11-06. The decisions are recorded in `claude-docs/design-decisions/ingredients.md`, "The Earlier Decisions".
 
 ## How Each Model Meets R1 to R5
 

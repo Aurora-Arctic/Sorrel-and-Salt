@@ -4,16 +4,16 @@ DESIGN.md §5: the account matching `ADMIN_BOOTSTRAP_EMAIL`
 (`claude-docs/secrets.md`) is the **primary keeper**. Everyone else gets the
 column defaults (`role: 'user'`, `canCreateWorkspace: false`) on sign-up.
 This file is the shape; the argument is
-[`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)
+[`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)
 for the admin and
-[`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md)
+[`auth.md`, "First-party email verification and email delivery"](../design-decisions/auth.md#first-party-email-verification-and-email-delivery)
 for verification.
 
 ### Promotion at sign-in, from Google or Discord only
 
 The primary keeper is promoted at a **sign-in**, not when the account is
 created, and only when that sign-in's provider vouches for the address
-([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md),
+([`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin),
 "The primary keeper"):
 
 - **Google and Discord qualify; Microsoft and Facebook never do**, since
@@ -126,7 +126,7 @@ below).
 The site vouches for an address itself by mailing a link, so
 `users.emailVerified` means one thing: **Google, Discord or our own mail
 said so.** The argument is
-[`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md);
+[`auth.md`, "First-party email verification and email delivery"](../design-decisions/auth.md#first-party-email-verification-and-email-delivery);
 this is the shape.
 
 - **Facebook and Microsoft arrive unverified**, whatever they report: their
@@ -176,7 +176,7 @@ this is the shape.
 A signed-in user adds another provider from `/account`, and from then on
 either one signs in to the same account. Story 1; the scoping, and why
 nothing else works, is
-[`../design-decisions/mb.71-link-a-second-sign-in-method.md`](../design-decisions/mb.71-link-a-second-sign-in-method.md).
+[`auth.md`, "Linking a second sign-in method"](../design-decisions/auth.md#linking-a-second-sign-in-method).
 
 **Signing in never links a provider that does not vouch.** Better Auth's
 implicit link at sign-in needs the provider to vouch for the address as
@@ -246,7 +246,7 @@ rule 4, and leaves `users` alone.
 
 An unverified account cannot hold an address against its owner past one
 verification window, and three hours at most. The argument is
-[`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
+[`auth.md`, "First-party email verification and email delivery"](../design-decisions/auth.md#first-party-email-verification-and-email-delivery),
 "Provisional accounts and the sweep"; this is the shape.
 
 - **What is provisional.** A `users` row with `emailVerified` false that
@@ -288,7 +288,7 @@ verification window, and three hours at most. The argument is
   read the table as it is. Two partial indexes,
   `users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
   hold only unverified rows, one for each half of the predicate. The
-  mechanism is [`design-decisions/m15.49-job-mechanism.md`](../design-decisions/m15.49-job-mechanism.md).
+  mechanism is [`support.md`, "The site has a durable job mechanism"](../design-decisions/support.md#the-site-has-a-durable-job-mechanism).
 - **A run that is lost leaves its account in place until the next daily
   cleanup.** A failed start is logged at `error` and the sign-up carries on.
   That account then holds its address until the daily cleanup, which a
@@ -328,7 +328,7 @@ verification window, and three hours at most. The argument is
 `/account/email`, protected, is where an account's address is set and
 changed: prefilled from the provider, editable, and counting only once
 proved. Stories 58 and 59; the plan is
-[`../design-decisions/mb.54-email-page.md`](../design-decisions/mb.54-email-page.md), the
+[`auth.md`, "Set the account's email: prefilled from the provider, editable, verified before it counts"](../design-decisions/auth.md#set-the-accounts-email-prefilled-from-the-provider-editable-verified-before-it-counts), the
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
@@ -395,7 +395,7 @@ the tests [`tests.md`](tests.md).
   that lands on it sees the countdown from the start rather than a refusal
   on its first submit.
 - **The change link is Better Auth's own, signed when it is sent.** `src/lib/email-verification.ts`
-  starts the secret-link job (`kind: 'change'`, [`m15.50-mail-through-a-retried-job.md`](../design-decisions/m15.50-mail-through-a-retried-job.md), "Secret links") with the account's id, the
+  starts the secret-link job (`kind: 'change'`, [`support.md`, "Mail is sent through a retried job"](../design-decisions/support.md#mail-is-sent-through-a-retried-job), "Secret links") with the account's id, the
   request's own base URL (`resolveBaseURL`, so a preview host links to itself) and the guarded `next`, never an address.
   Its step reads `users.email` and `users.pending_email`, mints `/verify-email`'s change token —
   `createEmailVerificationToken` with `updateTo` set to the pending address and
@@ -533,7 +533,7 @@ Continue button.
   `formatAgreementVersion` (`src/lib/agreement-version.ts`). Publishing a new
   version of any of the three sends every account back through the
   acceptance page; publishing the privacy policy does not
-  ([`m15.79-agreement-covers-three-documents.md`](../design-decisions/m15.79-agreement-covers-three-documents.md)).
+  ([`support.md`, "Agreeing to the terms covers the disclaimer and the code of ethics"](../design-decisions/support.md#agreeing-to-the-terms-covers-the-disclaimer-and-the-code-of-ethics)).
 - **The record is four nullable columns on `users`.** `agreed_terms_version`,
   `agreed_disclaimer_version`, `agreed_ethics_version` and
   `terms_accepted_at` are null until an account agrees. `agreeToTerms`
@@ -618,7 +618,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 ### Granting a second keeper
 
 Specified in DESIGN.md §5 and argued in
-[`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
+[`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin).
 A keeper grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/keepers/users`
 ([`admin-users.md`](admin-users.md), "Changing a site role"),
 where the primary keeper cannot be revoked and a demotion that would leave no
@@ -645,7 +645,7 @@ is gone before the update runs. The trigger writes a `manual` row per changed
 privilege, stamped with the row's `updated_by`, so setting it to your own id
 is what names you as the actor. The route is refused rather than defaulted so
 that no write, a hand-run one included, changes a privilege without saying how
-([`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
+([`auth.md`, "One privilege ledger, written by the database"](../design-decisions/auth.md#one-privilege-ledger-written-by-the-database)).
 The same holds for any hand fix to either column, a revoke included, and a
 hand fix checks neither the primary keeper nor the count the service does. The
 rest of the keeper machinery:
@@ -657,7 +657,7 @@ rest of the keeper machinery:
   keeper" and "Revoking").
 - **The pause ledger.** `admin_role_change_pauses` lets the primary keeper
   pause granting and revoking for every other keeper (the record's "Granting",
-  [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
+  [`auth.md`, "The admin-role-change pause is a ledger, not a settings row"](../design-decisions/auth.md#the-admin-role-change-pause-is-a-ledger-not-a-settings-row)).
 - **Inviting a keeper by email** is story 62 (the record's "The admin
   invitation (story 62)"); the table is the site tier of `invitations`
   ([`db/invitations.md`](../db/invitations.md), "Admin invitations").
@@ -668,7 +668,7 @@ rest of the keeper machinery:
 ### Pausing a user's access
 
 Specified in DESIGN.md §8, "An admin can pause a user's access", and argued in
-[`design-decisions/m15.52-site-access-pause.md`](../design-decisions/m15.52-site-access-pause.md).
+[`auth.md`, "What the site access pause closes, and what it decides along the way"](../design-decisions/auth.md#what-the-site-access-pause-closes-and-what-it-decides-along-the-way).
 The table is DESIGN.md §5's `user_access_pauses`.
 
 **Who and whom.** `pauseUserAccess(userId, until, note)` and `liftUserAccessPause(userId)` are admin-only
@@ -714,7 +714,7 @@ pause on every session, an impersonation's included, as `accessPause`. From ther
   account that has not agreed to the current terms would never reach its support pages.
 
 The paused page's address carries nothing: the page reads the pause itself. A keeper impersonating a paused user is shown all of this as the user is
-(`claude-docs/design-decisions/m15.52-site-access-pause.md`, "An impersonation shows what the paused user sees").
+(`claude-docs/design-decisions/auth.md`, "An impersonation shows what the paused user sees").
 
 **The paused page.** `/access-paused` is public in the proxy (`src/proxy.ts`), since the proxy reads a paused session as signed out; it sits outside the app shell and is not indexed. A visitor with no session goes to `/sign-in`, and a session with no standing pause to `/`. A standing support time-out (`getMySupportTimeout`, skipped for an unverified account) replaces the Support link, since the dialog could send nothing, and the page says the requests can still be read at `/account/support`.
 
@@ -796,4 +796,4 @@ The component is described in [`components/admin-cards.md`](../components/admin-
 
 ### Claiming signed-out support requests
 
-A signed-out support send makes no account and no session: the request is written as the seeded signed-out sender account with its `sender_email`. When an account gains a session or verifies its email, every request whose `sender_email` matches the verified address moves to it, with the sender's replies and any time-out bound to that address; an unverified account claims nothing. Record: `design-decisions/m15.48-mailed-link.md`.
+A signed-out support send makes no account and no session: the request is written as the seeded signed-out sender account with its `sender_email`. When an account gains a session or verifies its email, every request whose `sender_email` matches the verified address moves to it, with the sender's replies and any time-out bound to that address; an unverified account claims nothing. Record: `design-decisions/support.md`, "A signed-out sender reaches their request by a mailed link".

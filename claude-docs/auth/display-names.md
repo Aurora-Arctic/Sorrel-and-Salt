@@ -27,7 +27,7 @@ stranger's name by guessing an id.
   editor may have left the coven since, and the viewer saw the name when the
   edit was made. A deleted user keeps the name their row held when it was
   deleted, a value nothing rewrites, so the answer is stable (the owner's
-  call, [`mb.10-co-member-display-names.md`](../design-decisions/mb.10-co-member-display-names.md)).
+  call, [`auth.md`, "A deleted co-member reads under their last name"](../design-decisions/auth.md#a-deleted-co-member-reads-under-their-last-name)).
 - **An inviter's name reaches the invitee**. The account page's
   Invitations section lists the pending coven invitations addressed to the viewer's verified
   email with who sent each, read by `findReceivedInvitationInviters` and not

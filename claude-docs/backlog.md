@@ -29,13 +29,13 @@
       not how many one client sends. Blocked and rate-limited requests are
       not billed.
 - [ ] Add RLS — deferred here by MB.29. The specification is
-      `claude-docs/design-decisions/mb.24-rls-role-split.md`; `withAudit`
+      `claude-docs/design-decisions/auth.md`, "RLS role split, `FORCE`, and identity on the read path"; `withAudit`
       already publishes the `app.current_user_id` GUC the policies read, so
       this is one migration plus its tests, not a re-audit of the write path.
 
 ### V Fast Follow
 
-- [ ] Subscription billing, scoped by M17.1 (`claude-docs/design-decisions/m17.1-subscription-billing-scope.md`)
+- [ ] Subscription billing, scoped by M17.1 (`claude-docs/design-decisions/ingredients.md`, "Subscription Billing Scope")
       and built by Wave 21, M21.1 → M21.20. The requirements and the Stripe
       plugin's fit are in DESIGN.md §13 (MB.79); the plugin-or-SDK choice is
       the proof of concept, M21.1.
@@ -121,7 +121,7 @@ Each item below is out of scope for v1: do not build it, and do not leave hooks 
 
 - [ ] The notes subsystem, stories 35–46 (DESIGN.md §13, "Notes — the three-tier experience log"). Story numbers 35–46 are not reused.
 - [ ] Spell approval for observers (viewer spell approval; DESIGN.md §13, "Spell approval for observers").
-- [ ] Bulk add from the compendium (DESIGN.md §13, "Bulk add from the compendium"; the partial-with-report rule is `claude-docs/design-decisions/mw15-bulk-add-partial-with-report.md`).
+- [ ] Bulk add from the compendium (DESIGN.md §13, "Bulk add from the compendium"; the partial-with-report rule is `claude-docs/design-decisions/data.md`, "Bulk add is partial, with a report").
 - [ ] Duplicate merge tooling (DESIGN.md §13, "Duplicate merge").
 - [ ] GraphQL response caching (DESIGN.md §13, "GraphQL response caching").
 - [ ] A mailed sign-in link or code (DESIGN.md §13, "A mailed sign-in link or code").

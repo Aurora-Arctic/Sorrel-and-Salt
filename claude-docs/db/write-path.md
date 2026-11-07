@@ -97,7 +97,7 @@ are argued for, and `write.test.ts` pins their number.
 **One read sits among them.** `adminRoleWrites` also holds `lockLiveAdmins`, the
 live keeper rows locked `for update` in id order, which the admin revoke counts
 before it writes so two revokes at once cannot leave no keeper
-([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)).
+([`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)).
 It is in the writer only because the lock must be taken in the transaction that
 writes; it is still built by `selectFrom`, whose `Locked` shape runs the read in
 that transaction and appends `FOR UPDATE`, so every read is still built in
@@ -124,7 +124,7 @@ application waiting. A similarity read inside a write sets its thresholds in a
 savepoint (`tx.transaction`) on the same transaction. Only `withAudit` enters the
 store, and no finder's signature carries a transaction, so a service still holds
 no handle to it. The record:
-[`mb.148-reads-on-the-write-transaction.md`](../design-decisions/mb.148-reads-on-the-write-transaction.md).
+[`data.md`, "Reads on the write transaction"](../design-decisions/data.md#reads-on-the-write-transaction).
 
 ### `app.current_user_id`, published per transaction
 
@@ -163,7 +163,7 @@ and declares `bootstrap` around its fixture users' insert
 (`declaringBootstrapPrivileges`, `src/db/seed/idempotent.ts`); a `psql` fix
 declares `manual` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md)). Why
 a declared route rather than a default:
-[`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md).
+[`auth.md`, "One privilege ledger, written by the database"](../design-decisions/auth.md#one-privilege-ledger-written-by-the-database).
 
 All four are set on every transaction, empty included, so a reader never sees a
 value an earlier transaction left on a pooled connection; one statement holds
@@ -182,7 +182,7 @@ protecting anything beyond the ledger's stamp today.
 demands as its first argument so the omission is a compile error rather than a
 missing runtime check ([`membership-proof.md`](membership-proof.md), "The
 Membership proof"). The eventual RLS policies' specification is
-[`mb.24-rls-role-split.md`](../design-decisions/mb.24-rls-role-split.md)
+[`auth.md`, "RLS role split, `FORCE`, and identity on the read path"](../design-decisions/auth.md#rls-role-split-force-and-identity-on-the-read-path)
 (DESIGN.md §8).
 
 **Why `set_config(.., true)` and not `SET LOCAL`**: the same semantics, with the
@@ -196,7 +196,7 @@ with the setting stale or absent.
 This is also why CLAUDE.md forbids wrapping tests in a rolled-back transaction:
 `withAudit`'s `set_config` would be local to that outer wrapper, and one test
 user's identity would survive into the next assertion
-([`m1.9-test-db-isolation.md`](../design-decisions/m1.9-test-db-isolation.md)).
+([`ci.md`, "Test database isolation: per-worker clone vs. rolled-back transaction"](../design-decisions/ci.md#test-database-isolation-per-worker-clone-vs-rolled-back-transaction)).
 
 ### Writer contracts and filter fields
 

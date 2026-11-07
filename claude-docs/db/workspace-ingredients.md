@@ -123,7 +123,7 @@ no formal name). A second form of a plant the coven already holds is a variant o
 that ingredient, not an entry beside it, and the slug drops the form (["Ingredient
 slugs"](ingredient-slugs.md)). Stock names a variant: `addIngredientToWorkspace(variantId)`,
 one live stock row per coven and variant
-([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+([`ingredients.md`, "An ingredient and its forms"](../design-decisions/ingredients.md#an-ingredient-and-its-forms)).
 
 **A save moves no jar.** The three saves assert only `ingredient` permissions and
 take no stock lock (["A save never moves a jar"](stock.md)).

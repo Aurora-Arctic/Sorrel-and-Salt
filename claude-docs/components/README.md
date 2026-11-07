@@ -23,7 +23,7 @@ the PR that made it.
 ## The Navigation Shell
 
 These docs cover the shell's components. The reasoning behind the
-design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md).
+design is in [`ui.md`, "The navigation shell is a slim bar, a context row and a bottom bar on a phone"](../design-decisions/ui.md#the-navigation-shell-is-a-slim-bar-a-context-row-and-a-bottom-bar-on-a-phone).
 
 - [`app-shell.md`](app-shell.md) — The frame around every signed-in page: the slim bar, the context row, the page's content, and the bottom-bar clearance on a phone.
 - [`public-frame.md`](public-frame.md) — The chrome round a public page for a signed-out visitor: skip link, site name, Compendium link, Sign In, and the page body that draws a wait.

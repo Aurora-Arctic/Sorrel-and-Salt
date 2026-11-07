@@ -1,7 +1,7 @@
 ## Acceptance — `npm run test:stories`
 
 A user story is proved by a browser flow a user could walk, never by a service
-call or a GraphQL response (M9.1; `design-decisions/m9.1-stories-are-browser-flows.md`).
+call or a GraphQL response (M9.1; `design-decisions/ci.md`, "Stories are browser flows").
 The story suite lives in `tests/e2e/stories/`, and `npm run test:stories`
 (`make test-stories`) runs it with `playwright.stories.config.ts` and prints a
 checklist of the v1 user stories, one line each:

@@ -98,7 +98,7 @@ type QueryCompendiumConnection {
   one; the pages it walks are unchanged.
 - **No numbered jump links.** Jumping to page 7 needs the cursor that opens
   it, which means ranking every match on every request, and it ties the pager
-  to one page size ([`mb.105-plan.md`](../design-decisions/mb.105-pager-counts.md)).
+  to one page size ([`mb.105-plan.md`](../design-decisions/data.md#the-pager-counts-and-the-typeahead-is-the-first-page-of-a-search)).
 - **One count per connection, and only when asked for.** The `count` option
   is a resolver of its own, `(parent, args, start, context)`, handed the
   page's first cursor decoded, or none on an empty page. The connection
@@ -132,4 +132,4 @@ walk.
 
 ### line 106, Typeahead (cite the record)
 
-A plain [Ingredient!]! typeahead field was rejected (needs a t.typeahead helper and an exception to rule 8); now recorded in design-decisions/mb.105-pager-counts.md
+A plain [Ingredient!]! typeahead field was rejected (needs a t.typeahead helper and an exception to rule 8); now recorded in design-decisions/data.md, "The pager counts, and the typeahead is the first page of a search"

@@ -2,7 +2,7 @@
 
 `src/components/AccessCards/` — the privacy policy's "Who Can See What" section (`/privacy`): who may see each kind of data the site keeps, as one card per kind rather than a table of ten rows by six roles. A card's summary line holds the kind of data and six marks, one per role; opening the card shows every role's full wording. A row of short role labels sits over the cards on the same columns as the marks and stays pinned under the site's bar while the cards scroll. Server rendered with no script: each card is a native `<details>`.
 
-Used by the privacy policy only (`src/app/(public)/privacy/page.tsx`), where `ACCESS_ROWS` and `ROLES` hold the text. The working notes behind each cell are in `claude-docs/design-decisions/m15.2-privacy-policy-notes.md`, "Who can see what".
+Used by the privacy policy only (`src/app/(public)/privacy/page.tsx`), where `ACCESS_ROWS` and `ROLES` hold the text. The working notes behind each cell are in `claude-docs/design-decisions/support.md`, "Who can see what".
 
 ## Props and marks
 

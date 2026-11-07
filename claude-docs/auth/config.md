@@ -145,7 +145,7 @@ than configurable:
   only, as an enumerated list).
 
 The record with the code behind each finding is
-[`design-decisions/mb.30-organization-plugin.md`](../design-decisions/mb.30-organization-plugin.md).
+[`auth.md`, "Better Auth's organization plugin for workspaces and invitations"](../design-decisions/auth.md#better-auths-organization-plugin-for-workspaces-and-invitations).
 `auth.api.*` does work inside the Vitest `db` project given a real `sessions`
 row and an HMAC-signed `better-auth.session_token` cookie
 (`<token>.<base64 HMAC-SHA256(secret, token)>`); the recipe is in the record.

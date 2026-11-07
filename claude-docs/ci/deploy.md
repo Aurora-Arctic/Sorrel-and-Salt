@@ -35,7 +35,7 @@ nothing and this workflow is the only path.
   does**. Vercel resolves a branch-scoped environment variable only when the
   pull names the branch, and `staging`'s `DATABASE_URL` is such a variable — the
   override that keeps staging off the Neon integration's per-preview ephemeral
-  branches (`claude-docs/design-decisions/m1.1-neon-branch-strategy.md`). Drop
+  branches (`claude-docs/design-decisions/data.md`, "Neon branch strategy: persistent staging vs. ephemeral hotfix branches"). Drop
   the flag and nothing fails: the build and the migration quietly address
   whichever database the integration last injected Preview-wide. **Pass it on
   production and everything fails** — branch-scoped overrides are Preview-only,
@@ -265,7 +265,7 @@ no workflow tests the actions.
 file's _contents_ cannot tell a stale copy from a live one. What closes it is
 not a job: the images carry no source layer, so a stale file has nothing to
 survive _as_ (a job would make stale files _absent_, the image makes them
-_impossible_; [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md)).
+_impossible_; [`ci.md`, "The CI images carry no source layer"](../design-decisions/ci.md#the-ci-images-carry-no-source-layer)).
 "Something else would have noticed" is not a guard.
 
 **A workflow must never publish a status-check context `pr-gate.yml` also

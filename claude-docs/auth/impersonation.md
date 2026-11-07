@@ -38,7 +38,7 @@ the session listing and revoking endpoints, the ban endpoints, and
 `has-permission`. Each writes through the adapter, outside `withAudit`.
 `set-role` would be a second way to grant admin, past M2.9's ledger and the
 primary keeper's protection, and `remove-user` could hard-delete the primary
-admin ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)).
+admin ([`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)).
 So `impersonation()` keeps `impersonateUser` and `stopImpersonating` from the
 plugin's endpoints and drops the rest.
 
@@ -77,7 +77,7 @@ a keeper looks.
   under the shell's paused notice, and every other signed-in GraphQL call answers `ACCESS_PAUSED`.
   The banner, drawn by the root layout, stays on every page, so Stop still works. Once the pause is
   lifted or runs out the same impersonation reaches the normal pages
-  (`claude-docs/design-decisions/m15.52-site-access-pause.md`).
+  (`claude-docs/design-decisions/auth.md`, "What the site access pause closes, and what it decides along the way").
 - **An impersonation lasts an hour**, Better Auth's default. The session row
   expires on its own if Stop is never pressed.
 - **No target check beyond the role.** Better Auth looks the target up by id

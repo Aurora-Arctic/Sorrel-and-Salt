@@ -2,7 +2,7 @@
 
 Every job runs on GitHub's `ubuntu-26.04`, which is free and unlimited on a
 public repo. No job runs on Blacksmith (see "Why Blacksmith was dropped").
-The sizing record is [`../design-decisions/mb.96-ci-vitest-job.md`](../design-decisions/mb.96-ci-vitest-job.md).
+The sizing record is [`ci.md`, "The CI Vitest job: DOM only where needed, GitHub's runner"](../design-decisions/ci.md#the-ci-vitest-job-dom-only-where-needed-githubs-runner).
 
 - **The Vitest jobs run on GitHub's 4-vCPU public-repo runner, with three
   workers.** The suite is mostly per-file overhead spread over `dbMaxWorkers`
@@ -54,7 +54,7 @@ seed; the rest is the tests.
 - **In both Playwright jobs the test span is set by the longest serial spec
   file**, not by the work: `shell.spec.ts` is 34 s of the e2e job's 53 s, and
   `07-admin.spec.ts` 62 s of the stories job's 64 s, each on one worker while
-  the other three wait ([`../design-decisions/m11.18-faster-playwright-runs.md`](../design-decisions/m11.18-faster-playwright-runs.md)).
+  the other three wait ([`ci.md`, "Faster Playwright runs on the same CPU and RAM"](../design-decisions/ci.md#faster-playwright-runs-on-the-same-cpu-and-ram)).
   Neither job saves a cache: Playwright's save would run after the tests, on
   the critical path, and the build leg's never restores.
 - **`testTimeout` is 20,000 ms** in `vitest.config.mts`. Three workers sharing

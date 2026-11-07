@@ -2,7 +2,7 @@
 
 What the site mails, how a message is built and styled, and how it is sent.
 The decision record behind delivery and verification is
-[`design-decisions/mb.61-email-verification-and-delivery.md`](design-decisions/mb.61-email-verification-and-delivery.md).
+[`auth.md`, "First-party email verification and email delivery"](design-decisions/auth.md#first-party-email-verification-and-email-delivery).
 
 ## Sending
 
@@ -27,7 +27,7 @@ reads the rows and renders the mail when it sends, then hands it to the
 transport through `deliver` (`src/lib/mail-transport.ts`), which throws when the
 transport answers with an error or cannot be reached, so the Workflow SDK
 retries the step: the first try and three retries
-([`design-decisions/m15.49-job-mechanism.md`](design-decisions/m15.49-job-mechanism.md)).
+([`support.md`, "The site has a durable job mechanism"](design-decisions/support.md#the-site-has-a-durable-job-mechanism)).
 A mail that fails every attempt is logged ("every attempt failed") by ids alone.
 A refusal (`.invalid`, a transport the environment may not use, a missing
 variable) is logged once and not retried, since no retry would change it.
@@ -45,7 +45,7 @@ The mail jobs:
   the newest unexpired reset token Better Auth stored for the account; an
   invitation is given a fresh token by `rotateInvitationToken` on every
   attempt, so only the newest mailed link works
-  ([`design-decisions/m15.50-invitation-token-rotation.md`](design-decisions/m15.50-invitation-token-rotation.md)).
+  ([`auth.md`, "The invitation mail mints its token in the job step"](design-decisions/auth.md#the-invitation-mail-mints-its-token-in-the-job-step)).
   A printed card is never mailed.
 - `accountNoticeMail` (`src/modules/identity/jobs/account-notice-mail.ts`): the
   change-requested and change-completed notices, the account-exists mail and
@@ -66,7 +66,7 @@ The mail jobs:
 **Every mail has a job.** `send` (`src/lib/mail.ts`), which delivers once and
 never throws, is only what a job falls back to when `MAIL_TRANSPORT` is unset or
 its run cannot be started. The record is
-[`design-decisions/m15.50-mail-through-a-retried-job.md`](design-decisions/m15.50-mail-through-a-retried-job.md).
+[`support.md`, "Mail is sent through a retried job"](design-decisions/support.md#mail-is-sent-through-a-retried-job).
 
 **A "sent" marker.** A caller that records a mail as sent does it in its own job
 step, after `deliver` returned true: the support closing-soon notice and its
@@ -277,7 +277,7 @@ exactly`, which Word applies as written.
   contractions, which some readers misread as their opposite (GOV.UK style
   guide); and "email address" for the address, "email" for the message. The
   sources are listed in
-  [`design-decisions/mb.118-design-review-mail.md`](design-decisions/mb.118-design-review-mail.md).
+  [`ui.md`, "Mail design review sign-off"](design-decisions/ui.md#mail-design-review-sign-off).
 - **Assets are absolute and public.** A mail has no page to be relative to, so
   images and fonts are addressed from the origin of the link the mail
   carries: production's, staging's, or `localhost:8000` in compose, which is

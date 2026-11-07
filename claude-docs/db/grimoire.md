@@ -20,11 +20,11 @@ DESIGN.md §5 and §6 are the specification; the detail is below and in `spell-v
 `src/modules/grimoire/schema/spells.ts` and `spell-steps.ts` hold DESIGN.md §5's two grimoire tables: what a workspace _makes_, as against what exists (the compendium) and what it holds (`inventory_items`).
 
 - **`spells`** carries the full six-column audit spread and a `revision` counter ("Revision" below).
-- **`spell_steps`** carries `ingredientId` nullable and the full audit spread, soft-deleted, keyed on a surrogate `id`, with `(spell_id, position)` unique among live rows. A step is an instruction (`body`), an ingredient laid in the jar (a layer), or both, and a layer's ingredient is one the workspace knows or a custom name for this one jar ([`m13.1-spell-steps.md`](../design-decisions/m13.1-spell-steps.md)). Steps are soft-deleted, unlike the other join tables, because a spell keeps what went into its jar and a removed step is a tombstone.
+- **`spell_steps`** carries `ingredientId` nullable and the full audit spread, soft-deleted, keyed on a surrogate `id`, with `(spell_id, position)` unique among live rows. A step is an instruction (`body`), an ingredient laid in the jar (a layer), or both, and a layer's ingredient is one the workspace knows or a custom name for this one jar ([`grimoire.md`, "A spell's recipe is one ordered list of steps"](../design-decisions/grimoire.md#a-spells-recipe-is-one-ordered-list-of-steps)). Steps are soft-deleted, unlike the other join tables, because a spell keeps what went into its jar and a removed step is a tombstone.
 
 ### Workings
 
-A spell is the recipe; a working is the record of one time it was made ([`m13.4-spell-workings.md`](../design-decisions/m13.4-spell-workings.md)). Each table has its own `set_updated_at` trigger.
+A spell is the recipe; a working is the record of one time it was made ([`grimoire.md`, "A working is the record of one making, in three tables"](../design-decisions/grimoire.md#a-working-is-the-record-of-one-making-in-three-tables)). Each table has its own `set_updated_at` trigger.
 
 - **`spell_workings`** spreads `...auditColumns`, is soft-deleted, and its `visibility` reuses `spell_visibility`. CHECKs `spell_workings_note_not_blank` and `spell_workings_completed_at_with_status` (`(status = 'complete') = (completed_at IS NOT NULL)`).
 - **`spell_working_participants`** spreads `...auditStampColumns`. CHECK `spell_working_participants_one_identity` (`num_nonnulls(user_id, name) = 1`): a participant is an account or a typed name. Plain unique indexes on `(working_id, user_id)` and `(working_id, lower(name))`.
@@ -81,7 +81,7 @@ The write, inside one `withAudit` transaction:
 3. Each kept step is then written with its final columns. **A step the save leaves exactly as it was is not written**, so its `updated_by` and `updated_at` go on saying who last changed it.
 4. The new steps are inserted.
 
-`updateSpell` writes the spell row through `updateRevisioned` with the `expectedRevision` the caller sends. Null writes whatever the revision is (the "Keep My Version" path). A revision that is no longer current throws `StaleWrite`, answered on the wire as `STALE_WRITE` with the current revision, and nothing is written. Over GraphQL the field must be sent, even as null: a save that leaves it out is refused as `VALIDATION`, so a client that forgets it cannot overwrite another member's save (claude-docs/design-decisions/m13.14-autosave.md). A visibility in the input follows the one-way rule of [spell-visibility.md](spell-visibility.md).
+`updateSpell` writes the spell row through `updateRevisioned` with the `expectedRevision` the caller sends. Null writes whatever the revision is (the "Keep My Version" path). A revision that is no longer current throws `StaleWrite`, answered on the wire as `STALE_WRITE` with the current revision, and nothing is written. Over GraphQL the field must be sent, even as null: a save that leaves it out is refused as `VALIDATION`, so a client that forgets it cannot overwrite another member's save (claude-docs/design-decisions/grimoire.md, "Long forms autosave, and edits of one row can conflict"). A visibility in the input follows the one-way rule of [spell-visibility.md](spell-visibility.md).
 
 ### Saving its categories
 
@@ -94,7 +94,7 @@ Only the assigned categories are saved, by `createSpell` and `updateSpell` takin
 
 ### Custom ingredients
 
-A step's ingredient is either one the workspace knows (`ingredient_id`) or a name written for this one jar (`name`, with an optional free-text `form`) — at most one of the two, and none on an instruction-only step. The design argument is in DESIGN.md §5 and [`mb.40-custom-spell-ingredients.md`](../design-decisions/mb.40-custom-spell-ingredients.md); this is what holds it in the database.
+A step's ingredient is either one the workspace knows (`ingredient_id`) or a name written for this one jar (`name`, with an optional free-text `form`) — at most one of the two, and none on an instruction-only step. The design argument is in DESIGN.md §5 and [`grimoire.md`, "A custom, one-off spell ingredient is a row in `spell_ingredients`, not a table of its own"](../design-decisions/grimoire.md#a-custom-one-off-spell-ingredient-is-a-row-in-spell_ingredients-not-a-table-of-its-own); this is what holds it in the database.
 
 - **`ingredient_id` is nullable, and the foreign key stays.** Nullability costs nothing in integrity because the first CHECK below forbids the row that would exploit it (the "nullable FKs plus `num_nonnulls`" idiom).
 - **The CHECKs**, each named so a refusal says which rule it broke: `spell_steps_one_identity` (`num_nonnulls(ingredient_id, name) <= 1`), `spell_steps_not_empty` (`num_nonnulls(ingredient_id, name, body) >= 1`), `spell_steps_amount_on_ingredient` (no `quantity` or `unit` on a step with no ingredient), `spell_steps_body_not_blank`, `spell_steps_form_only_on_custom` (`ingredient_id is null or form is null`, because `form` beside an ingredient id would be a second copy of half that ingredient's identity), and `spell_steps_name_not_blank` and `spell_steps_form_not_blank` (a blank name would satisfy `num_nonnulls` and name nothing).
@@ -107,12 +107,12 @@ A step's ingredient is either one the workspace knows (`ingredient_id`) or a nam
 
 ### Revision
 
-`spells.revision` is a whole number that starts at 1 and goes up by exactly one on every UPDATE of the row. Autosave (claude-docs/design-decisions/m13.14-autosave.md) sends the revision it last read with each save, so a save made against a row that someone else has changed since is refused rather than overwriting their work.
+`spells.revision` is a whole number that starts at 1 and goes up by exactly one on every UPDATE of the row. Autosave (claude-docs/design-decisions/grimoire.md, "Long forms autosave, and edits of one row can conflict") sends the revision it last read with each save, so a save made against a row that someone else has changed since is refused rather than overwriting their work.
 
 - **The database moves it, not the service.** A BEFORE UPDATE trigger, `bump_revision`, sets `NEW.revision := OLD.revision + 1` on every row updated, overwriting any value an UPDATE sets. One function serves every table: a table that takes the column adds its own trigger line in its own migration, as each audited table does for `set_updated_at`.
 - **It counts writes, not changes.** An UPDATE that leaves every value as it was still moves it.
 - **`set_updated_at()` leaves it out of its comparison.** Postgres runs a table's BEFORE triggers in name order, so `bump_revision` runs before `set_updated_at`; without the exclusion, every UPDATE would look like a change and an UPDATE changing nothing would stop keeping `updated_at` and `updated_by` (MB.106).
-- **The helper is `revisionColumn()`**, beside `auditColumns` in `src/modules/identity/schema/users.ts`. It is named `revision` rather than `version`, because v2's edit history keeps "version" for a saved snapshot a person can open (claude-docs/design-decisions/m13.14-autosave.md, "`revision`, not `version`").
+- **The helper is `revisionColumn()`**, beside `auditColumns` in `src/modules/identity/schema/users.ts`. It is named `revision` rather than `version`, because v2's edit history keeps "version" for a saved snapshot a person can open (claude-docs/design-decisions/grimoire.md, "`revision`, not `version`").
 - **Guard:** `tests/db/revision-trigger.test.ts` fails a table that carries the column without the trigger.
 
 ### The grimoire search

@@ -13,7 +13,7 @@
 
 ## The three kinds
 
-The reasoning is in [`../design-decisions/m12.13-cupboard-names-the-compendium-plan.md`](../design-decisions/m12.13-cupboard-names-the-compendium-plan.md).
+The reasoning is in [`design-decisions/ingredients.md`, "A coven's cupboard names the compendium's entry, rather than hiding it"](../design-decisions/ingredients.md#a-covens-cupboard-names-the-compendiums-entry-rather-than-hiding-it).
 
 | Kind         | Whose entry                                                  | Shows                                                         |
 | ------------ | ------------------------------------------------------------ | ------------------------------------------------------------- |

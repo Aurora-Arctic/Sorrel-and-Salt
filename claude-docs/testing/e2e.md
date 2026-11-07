@@ -74,7 +74,7 @@ test role can do only through the image's `pg_signal_backend` grant,
 [`ci/database-image.md`](../ci/database-image.md)). A server each, because the
 code under test runs in `next start`, which built its client at boot, so a
 database swapped in the Playwright worker would never reach the page
-([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md)
+([`ci.md`, "Each Playwright worker slot gets a server, not just a database"](../design-decisions/ci.md#each-playwright-worker-slot-gets-a-server-not-just-a-database)
 holds the argument and the two alternatives turned down).
 
 - **The slot is Playwright's `parallelIndex`**: `TEST_PARALLEL_INDEX` inside
@@ -175,7 +175,7 @@ against it, and `chromium` ignores that spec
   have started, since Playwright sets up the `webServer` entries first, and
   still finishes before any test. So nothing may query a database at server
   boot or on the readiness poll's `GET /`, which on a first run would find none
-  ([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md),
+  ([`ci.md`, "Each Playwright worker slot gets a server, not just a database"](../design-decisions/ci.md#each-playwright-worker-slot-gets-a-server-not-just-a-database),
   "Setup runs after the servers"). `global-teardown.ts` drops the template after
   the last spec; the slot and providers databases are left for inspection.
 - **No Neon connection anywhere.** `e2eDatabaseUrl()` and `adminUrl()` only
@@ -362,7 +362,7 @@ authenticator holding one of them refuses to make another.
   `.next-e2e` build, and a cache flushed to disk there would hand one slot's
   compendium to another. It also stops runtime ISR writes and the image
   optimiser's disk cache, and it is off on Vercel anyway
-  ([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md),
+  ([`ci.md`, "Each Playwright worker slot gets a server, not just a database"](../design-decisions/ci.md#each-playwright-worker-slot-gets-a-server-not-just-a-database),
   "The data cache is per server too").
 - **`next.config.ts`'s `cacheMaxMemorySize`** is 0 when `NEXT_DATA_CACHE` is
   `'off'`, which every e2e server but the compendium-cache server sets, so with
@@ -501,7 +501,7 @@ the lock held, three runs, the median.
 
 CI's side of this is [`ci/runner-budget.md`](../ci/runner-budget.md), "Where a
 gate run's time goes". The levers, in order, are in
-[`../design-decisions/m11.18-faster-playwright-runs.md`](../design-decisions/m11.18-faster-playwright-runs.md).
+[`ci.md`, "Faster Playwright runs on the same CPU and RAM"](../design-decisions/ci.md#faster-playwright-runs-on-the-same-cpu-and-ram).
 
 **Measuring it again.** Take the lock first and time the run inside it, so
 another session's run waits rather than inflating the figure; then read the

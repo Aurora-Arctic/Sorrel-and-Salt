@@ -1,6 +1,6 @@
 # Click Feedback
 
-`src/components/ClickFeedback/` is what a click outside a form says when it fails. The service's sentence appears in a callout under the control, read out as an alert. A small warning badge on the control brings the callout back once it has closed. The control's description carries the failure until a later try clears it. The rule, and the research behind it, is [`design-decisions/m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31-click-feedback-outside-forms.md), "Decision: Design F, the floating callout".
+`src/components/ClickFeedback/` is what a click outside a form says when it fails. The service's sentence appears in a callout under the control, read out as an alert. A small warning badge on the control brings the callout back once it has closed. The control's description carries the failure until a later try clears it. The rule, and the research behind it, is [`ui.md`, "Feedback from a click outside a form"](../design-decisions/ui.md#feedback-from-a-click-outside-a-form), "Decision: Design F, the floating callout".
 
 ## Contracts
 

@@ -124,7 +124,7 @@ the spell resolvers need; a custom layer names no ingredient to ask about.
 compendium entry it would be every coven's layers of that entry, private spells
 included. The soft-delete guard pins all three hatches' shape (["Soft-delete
 filtering"](soft-delete.md)); the argument, and v2's revision-pinned layers, are
-[`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md).
+[`data.md`, "A spell keeps the ingredients it holds, deleted or not"](../design-decisions/data.md#a-spell-keeps-the-ingredients-it-holds-deleted-or-not).
 
 ### Writing: the one-way rule
 

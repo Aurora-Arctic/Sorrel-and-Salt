@@ -12,7 +12,7 @@
   data is baked in, and none will be: M1.27 was specified to extend this
   image with the migrated, seeded template and instead builds that template
   at test-run setup (`tests/support/seeded-database.ts`;
-  [`design-decisions/m1.27-template-at-setup-not-in-image.md`](../design-decisions/m1.27-template-at-setup-not-in-image.md)),
+  [`ci.md`, "The seeded test template is built at test-run setup, not baked into the Postgres image"](../design-decisions/ci.md#the-seeded-test-template-is-built-at-test-run-setup-not-baked-into-the-postgres-image)),
   so the image's contents depend on nothing under `src/`. Its `CMD` starts
   the server with `max_connections=200`: the one setting every
   consumer of the image reads, since compose passes no `command:` and a CI

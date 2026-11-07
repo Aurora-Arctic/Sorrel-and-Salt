@@ -25,7 +25,7 @@ resource or an action the statements do not declare is a compile error. Several
 resources in one request are ANDed, and an empty one throws (§8) an `Error` rather
 than a `Forbidden`: a request that would authorize vacuously is a caller's bug, and
 reads as one. Why statements rather than a rank:
-[`m6.3-permission-statements.md`](../design-decisions/m6.3-permission-statements.md).
+[`auth.md`, "Permission statements over a role rank"](../design-decisions/auth.md#permission-statements-over-a-role-rank).
 
 The **site role** is not consulted. `session.role` is `'user' | 'curator' | 'admin'`
 and a curator or site keeper curates the compendium and reaches no workspace at
@@ -65,7 +65,7 @@ the role and any pause standing on it in one query, so a layout and a page askin
 about the same workspace in one server render cost one query, whatever permission
 each asks for. A standing pause is refused with `AccessPaused` before the
 permission is checked
-([`design-decisions/m15.55-coven-access-pause.md`](../design-decisions/m15.55-coven-access-pause.md));
+([`auth.md`, "How the coven access pause refuses a member, and what it decides along the way"](../design-decisions/auth.md#how-the-coven-access-pause-refuses-a-member-and-what-it-decides-along-the-way));
 the permission check under it runs every time and costs nothing. The cache is keyed
 by `(userId, workspaceId)` rather than the session, because `cache()` compares
 object arguments by identity and two callers holding equal sessions would each

@@ -78,7 +78,7 @@ Renaming a table in one step breaks the deploy still serving, as a column rename
 does, because every statement it sends names the old table. Unlike a column, a table
 can leave its old name behind as a **view** over itself (a saved query the database
 treats like a table), so the rename needs no second table and no copying
-([`design-decisions/mb.252-table-rename.md`](../design-decisions/mb.252-table-rename.md)).
+([`data.md`, "A renamed table leaves a view under its old name"](../design-decisions/data.md#a-renamed-table-leaves-a-view-under-its-old-name)).
 `planets` to `celestial_bodies` (`0067`) is the worked case.
 
 - **Expand in one migration.** Rename with `ALTER TABLE … RENAME TO`, then

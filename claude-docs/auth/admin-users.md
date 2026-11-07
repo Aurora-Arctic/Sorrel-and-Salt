@@ -70,7 +70,7 @@ may _change_.
 
 ## The user modal
 
-Pressing a user's name on the list opens a modal over it, so a keeper sees what a person already holds before approving, revoking, changing their role or impersonating them. "Private data" is a workspace's contents; which covens someone belongs to is not among them ([`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
+Pressing a user's name on the list opens a modal over it, so a keeper sees what a person already holds before approving, revoking, changing their role or impersonating them. "Private data" is a workspace's contents; which covens someone belongs to is not among them ([`auth.md`, "A site keeper sees which covens a user belongs to"](../design-decisions/auth.md#a-site-keeper-sees-which-covens-a-user-belongs-to)).
 
 - **The address is `?user=<id>`.** The press opens the modal at once, over a
   skeleton, through `RouteModal`; the list keeps its filter and page
@@ -111,7 +111,7 @@ the second of the flag's routes: the first is accepting a workspace invitation
 touches anything but the flag: it confers no workspace access on the admin,
 creates no workspace, and a revoke leaves every workspace the user already
 created, and their ownership of it
-([`m5.8-revoking-workspace-creation.md`](../design-decisions/m5.8-revoking-workspace-creation.md)).
+([`auth.md`, "Revoking workspace creation, and its ledger"](../design-decisions/auth.md#revoking-workspace-creation-and-its-ledger)).
 
 - **One service, two transports.** `grantWorkspaceCreation(session, userId, note?)`
   and `revokeWorkspaceCreation(session, userId, note?)`
@@ -156,9 +156,9 @@ in `psql`. A curator is between the two: it uses every curation screen a keeper
 can and reaches no people page
 ([`admin-guard.md`](admin-guard.md), "The curator guard"). The rules, and the
 approaches rejected, are
-[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)'s
+[`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)'s
 "The primary keeper", "Granting" and "Revoking", and
-[`m11.20-curator-role.md`](../design-decisions/m11.20-curator-role.md); this is
+[`auth.md`, "A third site role, `curator`"](../design-decisions/auth.md#a-third-site-role-curator); this is
 the shape.
 
 - **One service, two checks.** `setUserRole(session, userId, role, note?)`
@@ -255,9 +255,9 @@ a `users` row must call `isPrimaryAdmin` and refuse, as the role change does.
 The primary keeper can switch role changes off for every other
 admin, so a keeper account gone rogue can neither make more keepers or curators nor remove
 the good ones while it is dealt with, and back on. The argument is
-[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)'s
+[`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin)'s
 "Granting"; the ledger the switch is kept in is MB.62's
-([`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
+([`auth.md`, "The admin-role-change pause is a ledger, not a settings row"](../design-decisions/auth.md#the-admin-role-change-pause-is-a-ledger-not-a-settings-row)).
 
 - **Only the primary keeper may pause or resume.**
   `pauseAdminRoleChanges(session)` and `resumeAdminRoleChanges(session)`
@@ -300,7 +300,7 @@ the good ones while it is dealt with, and back on. The argument is
 
 ## Inviting a keeper
 
-A keeper can make someone a keeper or a curator, the role picked in the invite form, before they have signed in, by inviting their address: option B of [`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md), "The approaches", on the site tier of `invitations` ([`db/invitations.md`](../db/invitations.md)). The link is mailed to the address and accepted only by an account that has proved it holds it, so no one is handed a bearer token for the site's highest privilege. The names in code still say "admin invitation" for both roles: a keeper is who sends one.
+A keeper can make someone a keeper or a curator, the role picked in the invite form, before they have signed in, by inviting their address: option B of [`auth.md`, "Granting and revoking admin"](../design-decisions/auth.md#granting-and-revoking-admin), "The approaches", on the site tier of `invitations` ([`db/invitations.md`](../db/invitations.md)). The link is mailed to the address and accepted only by an account that has proved it holds it, so no one is handed a bearer token for the site's highest privilege. The names in code still say "admin invitation" for both roles: a keeper is who sends one.
 
 - **A repeat invitation replaces the pending one**. Inviting an address
   that already has a pending site-tier invitation, keeper or curator, stamps that
@@ -332,7 +332,7 @@ filter, page)` is one page of the pending list, newest first, and
   for the mail to open with, and mails `src/emails/admin-invitation.ts`
   ([`email.md`](../email.md)). Each retry mints again, so only the newest
   mailed link works
-  ([m15.50-invitation-token-rotation.md](../design-decisions/m15.50-invitation-token-rotation.md)).
+  ([auth.md, "The invitation mail mints its token in the job step"](../design-decisions/auth.md#the-invitation-mail-mints-its-token-in-the-job-step)).
   The row the mutation answers carries neither the token nor its hash, and
   `Invitation` has no field that could. A mail that fails every attempt is
   logged by invitation id, and the invitation stays pending, to be withdrawn

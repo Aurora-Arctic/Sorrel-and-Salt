@@ -33,7 +33,7 @@ visitors four ways, all from the server:
   other coven the viewer can open, and every landing (`/coven`, the Your Coven
   link, `signedInLanding`) passes over a paused coven for the next one. A
   stranger gets the 404 there too, and a member with no pause standing is sent
-  back (claude-docs/design-decisions/m15.55-coven-access-pause.md, "What
+  back (claude-docs/design-decisions/auth.md, "How the coven access pause refuses a member, and what it decides along the way", "What
   M15.56 adds").
 - **The workspace comes from the URL segment only.** Never a cookie or a
   "current workspace" stored on the session: two browser tabs can sit in two
