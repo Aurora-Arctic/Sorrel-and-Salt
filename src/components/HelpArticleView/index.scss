@@ -1,18 +1,27 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The parent link closes the gap to the title beneath it, so the two read as one line of the way in.
 .help-article__parent {
   margin-block: space(6) calc(-1 * #{space(4)});
-  font-size: type-size('small');
 }
 
 .help-article__body {
   margin-block-start: space(6);
 
   // The body's own headings, one level down from the seed text: a contents menu jumps to the h3s.
+  // A short hairline above each section heading marks the break without a full rule.
   h3 {
+    position: relative;
     margin-block: space(8) space(3);
+    padding-block-start: space(3);
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
+
+    &::before {
+      @include short-hairline;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+    }
   }
 
   h4 {
@@ -26,19 +35,55 @@
   }
 }
 
+// A numbered frame of the pages beneath this one, each number in the heading face.
 .help-article__subpages {
+  max-width: $measure;
   margin-block-start: space(8);
+  padding: space(4) space(5);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
 
-  ul {
+  .eyebrow {
+    margin-block-end: space(3);
+  }
+
+  ol {
+    margin: 0;
     padding: 0;
     list-style: none;
+    counter-reset: guide-step;
+  }
+
+  li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0 space(2);
+    padding-block: space(2);
+    counter-increment: guide-step;
+
+    &::before {
+      grid-row: span 2;
+      content: counter(guide-step);
+      font-family: $font-heading;
+      font-size: heading-size(4);
+      font-weight: 700;
+      line-height: 1.25;
+      color: $text-muted;
+    }
   }
 
   li + li {
-    margin-block-start: space(3);
+    border-block-start: 1px solid $hairline;
+  }
+
+  a {
+    font-size: $nav-link-size;
   }
 
   p {
-    margin-block: space(1) 0;
+    grid-column: 2;
+    margin: 0;
+    font-size: type-size('small');
+    color: $text-muted;
   }
 }

@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { helpTerms } from '../../lib/help-marks';
 import { renderMarkdown } from '../DocumentPage/markdown';
 import HelpSearchForm from '../HelpSearchForm';
+import { BackChevron } from '../IngredientEntry/back-link';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { HelpArticleViewProps } from './types';
@@ -35,7 +36,10 @@ const HelpArticleView = ({
         <HelpSearchForm />
         {parent && (
           <p className="help-article__parent">
-            <a href={parent.href}>Back to {parent.title}</a>
+            <a className="back-link" href={parent.href}>
+              <BackChevron />
+              Back to {parent.title}
+            </a>
           </p>
         )}
         <h2>{title}</h2>
@@ -44,14 +48,17 @@ const HelpArticleView = ({
       <div className="help-article__body">{content}</div>
       {subpages.length > 0 && (
         <nav className="help-article__subpages" aria-label="In This Guide">
-          <ul>
+          <p className="eyebrow" aria-hidden="true">
+            In This Guide
+          </p>
+          <ol>
             {subpages.map((page) => (
               <li key={page.href}>
                 <a href={page.href}>{page.title}</a>
                 {page.summary && <p>{page.summary}</p>}
               </li>
             ))}
-          </ul>
+          </ol>
         </nav>
       )}
     </article>
