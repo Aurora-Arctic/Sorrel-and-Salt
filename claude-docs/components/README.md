@@ -3,7 +3,7 @@
 One Markdown file per standalone component, lower-kebab-named after the
 component directory (`theme-toggle.md` ↔ `src/components/ThemeToggle/`).
 
-The component workshop discovers components by their `index.stories.tsx`. A component that ships without its doc is an incomplete task.
+The component workshop discovers components by their `index.stories.tsx`. A component has a doc only where it holds a binding fact the source cannot say; a sub-part folds into its parent's doc.
 
 A component doc records what someone needs to know before changing the
 component that is not obvious from the code:
@@ -25,57 +25,47 @@ the PR that made it.
 These docs cover the shell's components. The reasoning behind the
 design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md).
 
-| Doc                                                          | Component                                                                                                                                    |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`app-shell.md`](app-shell.md)                               | The frame around every signed-in page: the slim bar, the context row, the page's content, and the bottom-bar clearance on a phone            |
-| [`public-frame.md`](public-frame.md)                         | The chrome round a public page for a signed-out visitor: skip link, site name, Compendium link, Sign In, and the page body that draws a wait |
-| [`account-menu.md`](account-menu.md)                         | The disclosure in the bar offering Your Account and Sign Out, with a dot and a count linking to the pending coven invitations                |
-| [`context-row.md`](context-row.md)                           | The row under the bar: the coven switcher or "Admin" at the left, the section nav beside it                                                  |
-| [`section-nav.md`](section-nav.md)                           | The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone                                     |
-| [`page-nav.md`](page-nav.md)                                 | A page's own menu of jump links to its sections, marking the one in view                                                                     |
-| [`link-hint.md`](link-hint.md)                               | A dot inside a link that shows the click took while the next page loads                                                                      |
-| [`support-link.md`](support-form.md#support-link)            | A link that opens the Support dialog over the current page                                                                                   |
-| [`site-footer.md`](site-footer.md)                           | The line under every page in both frames, holding the document links and the Support link                                                    |
-| [`disclaimer-notice.md`](document-page.md#disclaimer-notice) | The line under an ingredient's safety notes saying they are not complete, linking the disclaimer                                             |
-| [`document-page.md`](document-page.md)                       | The page a public document is read on: title, when it last changed, then its sections                                                        |
-| [`document-editor.md`](document-editor.md)                   | The admin editor for one site document: edit as rich text, save a draft, publish a new version                                               |
-| [`access-cards.md`](access-cards.md)                         | The privacy policy's who-can-see-what: one card per kind of data, a mark per role, full wording inside                                       |
+- [`app-shell.md`](app-shell.md) — The frame around every signed-in page: the slim bar, the context row, the page's content, and the bottom-bar clearance on a phone.
+- [`public-frame.md`](public-frame.md) — The chrome round a public page for a signed-out visitor: skip link, site name, Compendium link, Sign In, and the page body that draws a wait.
+- [`account-menu.md`](account-menu.md) — The disclosure in the bar offering Your Account and Sign Out, with a dot and a count linking to the pending coven invitations.
+- [`context-row.md`](context-row.md) — The row under the bar: the coven switcher or "Admin" at the left, the section nav beside it.
+- [`section-nav.md`](section-nav.md) — The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone.
+- [`page-nav.md`](page-nav.md) — A page's own menu of jump links to its sections, marking the one in view.
+- [`link-hint.md`](link-hint.md) — A dot inside a link that shows the click took while the next page loads.
+- [`support-link.md`](support-form.md#support-link) — A link that opens the Support dialog over the current page.
+- [`site-footer.md`](site-footer.md) — The line under every page in both frames, holding the document links and the Support link.
+- [`disclaimer-notice.md`](document-page.md#disclaimer-notice) — The line under an ingredient's safety notes saying they are not complete, linking the disclaimer.
+- [`document-page.md`](document-page.md) — The page a public document is read on: title, when it last changed, then its sections.
+- [`document-editor.md`](document-editor.md) — The admin editor for one site document: edit as rich text, save a draft, publish a new version.
+- [`access-cards.md`](access-cards.md) — The privacy policy's who-can-see-what: one card per kind of data, a mark per role, full wording inside.
 
 ## Lists
 
-| Doc                                                  | Component                                                                                                     |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| [`ingredient-search.md`](ingredient-search.md)       | The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager                  |
-| [`category-chips.md`](category-chips.md)             | The row of category chips with its +N panel, shared by the card and the admin table                           |
-| [`ingredient-card.md`](ingredient-card.md)           | One ingredient in a list: its name as the one link, formal name and forms, marks, caution, a jar-line slot    |
-| [`ingredient-card-list.md`](ingredient-card-list.md) | The grid of ingredient cards every list page shares, with its card skeleton                                   |
-| [`entry-marks.md`](entry-marks.md)                   | The Local, Compendium, Annotated and Retired badges, shared by the card and the entry page                    |
-| [`spell-marks.md`](entry-marks.md#spell-marks)       | A spell's or a working's Draft and Private badges, shared by the spell card, the recipe page and its workings |
-| [`role-tip.md`](role-tip.md)                         | A role's word in a Role column with the ⓘ beside it saying what the role may do, in Change Role's words       |
+- [`ingredient-search.md`](ingredient-search.md) — The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager.
+- [`category-chips.md`](category-chips.md) — The row of category chips with its +N panel, shared by the card and the admin table.
+- [`ingredient-card.md`](ingredient-card.md) — One ingredient in a list: its name as the one link, formal name and forms, marks, caution, a jar-line slot.
+- [`ingredient-card-list.md`](ingredient-card-list.md) — The grid of ingredient cards every list page shares, with its card skeleton.
+- [`entry-marks.md`](entry-marks.md) — The Local, Compendium, Annotated and Retired badges, shared by the card and the entry page.
+- [`spell-marks.md`](entry-marks.md#spell-marks) — A spell's or a working's Draft and Private badges, shared by the spell card, the recipe page and its workings.
+- [`role-tip.md`](role-tip.md) — A role's word in a Role column with the ⓘ beside it saying what the role may do, in Change Role's words.
 
 ## Stock
 
-| Doc                                    | Component                                                                                          |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`stock-badge.md`](stock-badge.md)     | A jar's Low Stock or Out of Stock badge, and the threshold readout beside it on the jar line       |
-| [`stock-fields.md`](stock-fields.md)   | A jar's quantity, unit and low-stock threshold fields, for whichever form holds a jar              |
-| [`stock-dialog.md`](stock-dialog.md)   | The Edit Stock pencil on a coven card and the dialog that edits, adds and removes its jars         |
-| [`jar-shelf.md`](jar-shelf.md)         | The shelf of drawn jars, one per form, on the entry page's Stock section, each opening Edit Stock  |
-| [`jar-line.md`](jar-shelf.md#jar-line) | One line of a jar, name and words, shared by the recipe inventory and the Complete Working preview |
+- [`stock-badge.md`](stock-badge.md) — A jar's Low Stock or Out of Stock badge, and the threshold readout beside it on the jar line.
+- [`stock-fields.md`](stock-fields.md) — A jar's quantity, unit and low-stock threshold fields, for whichever form holds a jar.
+- [`stock-dialog.md`](stock-dialog.md) — The Edit Stock pencil on a coven card and the dialog that edits, adds and removes its jars.
+- [`jar-shelf.md`](jar-shelf.md) — The shelf of drawn jars, one per form, on the entry page's Stock section, each opening Edit Stock.
+- [`jar-line.md`](jar-shelf.md#jar-line) — One line of a jar, name and words, shared by the recipe inventory and the Complete Working preview.
 
 ## Pages
 
-| Doc                                          | Component                                                                                 |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [`ingredient-entry.md`](ingredient-entry.md) | An ingredient's page body on both entry routes: its own fields, then one section per form |
+- [`ingredient-entry.md`](ingredient-entry.md) — An ingredient's page body on both entry routes: its own fields, then one section per form.
 
 ## Support
 
-| Doc                                                      | Component                                                                       |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| [`support-form.md`](support-form.md)                     | The support request form, in the dialog and on `/support`                       |
-| [`support-dialog.md`](support-form.md#support-dialog)    | The dialog opened by `?support=<about>&error=<code>`, drawn once by `AppShell`  |
-| [`support-panel.md`](support-form.md#support-panel)      | The body of `/support`: Sign In, the timeout end, or the form                   |
-| [`support-list.md`](support-list.md)                     | The sender's own requests on `/account/support`, one compact row each           |
-| [`support-sender-request.md`](support-sender-request.md) | The sender's dialog for one request: thread, You and Staff tags, shut reply box |
-| [`report-this.md`](error-page.md#report-this)            | The link on the 404, 500 and global-error screens that opens a prefilled form   |
+- [`support-form.md`](support-form.md) — The support request form, in the dialog and on `/support`.
+- [`support-dialog.md`](support-form.md#support-dialog) — The dialog opened by `?support=<about>&error=<code>`, drawn once by `AppShell`.
+- [`support-panel.md`](support-form.md#support-panel) — The body of `/support`: Sign In, the timeout end, or the form.
+- [`support-list.md`](support-list.md) — The sender's own requests on `/account/support`, one compact row each.
+- [`support-sender-request.md`](support-sender-request.md) — The sender's dialog for one request: thread, You and Staff tags, shut reply box.
+- [`report-this.md`](error-page.md#report-this) — The link on the 404, 500 and global-error screens that opens a prefilled form.
