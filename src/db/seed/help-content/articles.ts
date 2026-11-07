@@ -40,7 +40,7 @@ Keepers hold a Steward seat there. A Keeper has no access to any other coven's i
     'What an invitation or a printed card does when you use it.',
     `An invitation seats you in a coven as an Observer or a Practitioner. To accept it, your account's verified email address must match the address the invitation was sent to. Accepting also lets you create covens of your own.
 
-An invitation never lowers a role you already hold. If the link does not work, the page says why: the invitation is invalid, already accepted, declined, revoked, expired, for a different address, for an unverified address, or the coven is paused.
+An invitation never lowers a role you already hold. If the link does not work, the page says why: the invitation is invalid, already accepted, declined, revoked or expired, it was sent to a different address, your address is not yet confirmed, or the coven has since been deleted.
 
 A printed card seats you nowhere and grants no role. It lets your account create a coven, once per account. A Keeper mints cards; see the Keeper pages.`,
   ),
@@ -64,8 +64,8 @@ const compendiumPages = [
 
 - Categories, with "Match" set to All (an entry must be in every chosen category) or Any (in at least one).
 - Forms.
-- Toxic: Any, Toxic or Not toxic.
-- Source: Local or Compendium.
+- Toxic: Any, Toxic or Not Toxic.
+- Source: All, Local or Compendium.
 - In Stock, and Low Stock Only.
 - In My Covens.
 - Elements, Celestial Bodies, Zodiac and Deities.
@@ -144,7 +144,7 @@ const ingredientPages = [
     1,
     'Adding From the Compendium or Making Your Own',
     'The two ways an ingredient joins your list.',
-    `Choose "Add Ingredient". The form asks for a classification and a formal name, then folk names, a description, safety notes, a toxic mark, an element, celestial bodies, zodiac signs and categories. It is grouped into Identity, Details & Care, and Correspondences.
+    `Choose "Add Ingredient". The form asks for a classification and a formal name, then folk names, a description, safety notes, a toxic mark, an element, celestial bodies, zodiac signs and categories. It is grouped into Identity, Details & Care, Correspondences, Relations and Sources. Correspondences also holds Colours and Deities, and Relations holds Categories and Substitute Ingredients.
 
 If the formal name matches a Compendium entry, the form offers "Add to My Ingredients: <name>" so you can hold the shared entry instead of a duplicate.
 
@@ -274,7 +274,7 @@ const account = article(
   7,
   'Account and Security',
   'Passwords, lockout, passkeys, two-factor sign-in and your email.',
-  `Your account's "Sign-In Methods" tab holds "Password", "Two-Factor Sign-In" and "Passkeys". You cannot remove the last way you have to sign in.`,
+  `Your account's "Sign-In" tab has four sections: "Sign-In Methods", "Password", "Two-Factor Sign-In" and "Passkeys". You cannot remove the last way you have to sign in.`,
 );
 const accountPages = [
   subPage(
@@ -323,7 +323,7 @@ const supportPages = [
     1,
     'Sending a Request and Reading Replies',
     'The request form and where replies arrive.',
-    `The signed-in form asks for the Page, a Subject and a Message. The signed-out form asks "What Is This About?", your email address ("We reply to this address."), a Subject and a Message. Choose "Send Request". The topics are Accessibility, Bug, Account, Compendium, Privacy, Feedback and Question.
+    `Both forms ask "What Is This About?", which is required. The signed-in form then asks for the Page, a Subject and a Message. The signed-out form asks your email address ("We reply to this address."), a Subject and a Message. Choose "Send Request". The topics are Accessibility, Bug, Account & Sign-In, Compendium Entry, Privacy & Data, Feedback and Question.
 
 A reply is read on the support page behind sign-in, and the email only tells you one has arrived. A signed-out sender is mailed the reply whole. Reply with "Your Reply". A reply is at most 4,000 characters. A request you sent while signed out moves to your account once the account has that address verified.`,
   ),

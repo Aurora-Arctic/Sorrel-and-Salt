@@ -89,7 +89,7 @@ const inviteStaff = article(
   13,
   'Inviting a Curator or Keeper',
   'Giving someone a site role.',
-  `A site invitation raises a person's role and nothing else. A pause on Keeper changes blocks it.`,
+  `Accepting a site invitation raises the person's role to curator or Keeper, never lowers it, and turns on their right to create covens. A Keeper also gets a Steward seat in the Demo Coven. While Keeper changes are paused, the invitation cannot be accepted until they are resumed.`,
   'keeper',
 );
 
