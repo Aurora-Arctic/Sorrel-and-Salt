@@ -1,4 +1,4 @@
-## Admin bootstrap and the self-created user (M2.3, MB.60)
+## Admin bootstrap and the self-created user
 
 DESIGN.md §5: the account matching `ADMIN_BOOTSTRAP_EMAIL`
 (`claude-docs/secrets.md`) is the **primary keeper**. Everyone else gets the
@@ -9,7 +9,7 @@ for the admin and
 [`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md)
 for verification.
 
-### Promotion at sign-in, from Google or Discord only (MB.60)
+### Promotion at sign-in, from Google or Discord only
 
 The primary keeper is promoted at a **sign-in**, not when the account is
 created, and only when that sign-in's provider vouches for the address
@@ -62,20 +62,19 @@ created, and only when that sign-in's provider vouches for the address
   authenticated, so this is no identity bootstrap (CLAUDE.md rule 3). The
   trigger on `users` records both grants in `user_privilege_changes`, by that
   route and stamped as the user; the promotion writes no ledger row itself
-  (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
-  revoke make the same kind of write, declared `admin`.
+  ([`db/write-path.md`](../db/write-path.md)). The keeper grant and revoke make the same kind of write, declared `admin`.
 - **Every keeper grant also seats the steward of the demo coven**, in the same
   `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
-  MB.59 grant and an accepted admin invitation. See
+  keeper grant and an accepted admin invitation. See
   [`db/demo-coven-seed.md`](../db/demo-scenario.md), "How a keeper gains and
   loses the seat".
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
   already exists. The previous primary keeper keeps `role: 'admin'` and
-  simply stops being protected (MB.59). It is also how to recover from a
+  simply stops being protected. It is also how to recover from a
   primary keeper who has lost their OAuth account.
 
-### Promotion at first-party verification (MB.68)
+### Promotion at first-party verification
 
 The second way to become the primary admin: **follow the verification link
 our own mail sent to the bootstrap address, from a browser signed in to that
@@ -99,8 +98,7 @@ Microsoft- or Facebook-only steward is promoted too.
   verified and calls no hook, so a row already verified at the bootstrap
   address is promoted at a Google or Discord sign-in, or not at all.
 - **The ledger records it** as the sign-in promotion's is: the trigger on
-  `users` writes both grants by the `bootstrap` route, stamped as the user
-  (MB.195).
+  `users` writes both grants by the `bootstrap` route, stamped as the user.
 
 **Three Better Auth options stay off, pinned by `tests/lib/auth.test.ts`**,
 since each would let the address on an account change and carry the
@@ -113,7 +111,7 @@ primary keeper's protection to whoever holds it then:
 - `account.accountLinking.trustedProviders`: a trusted provider skips the
   verified-email check when linking.
 
-Two linking options are pinned beside them (MB.71):
+Two linking options are pinned beside them:
 `accountLinking.allowDifferentEmails` on and `allowUnlinkingAll` off.
 Neither is read at sign-in; "Linking a second provider" below has why.
 
@@ -123,7 +121,7 @@ sign-in to it (`requireLocalEmailVerified`) until the row lapses, and the
 owner's next sign-in then lands in a fresh account ("Provisional accounts"
 below).
 
-### First-party verification (MB.66)
+### First-party verification
 
 The site vouches for an address itself by mailing a link, so
 `users.emailVerified` means one thing: **Google, Discord or our own mail
@@ -173,7 +171,7 @@ this is the shape.
   a reader can tell whether they signed up at all. The template is
   `src/emails/verify-email.ts` ([`email.md`](../email.md)).
 
-### Linking a second provider (MB.71)
+### Linking a second provider
 
 A signed-in user adds another provider from `/account`, and from then on
 either one signs in to the same account. Story 1; the scoping, and why
@@ -243,7 +241,7 @@ hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
 **The page.** The Sign-In Methods section of the Sign-In tab, `/account/sign-in`
-(["The account page"](#the-account-page-mb88) below), which calls
+(["The account page"](#the-account-page) below), which calls
 `requireSession()`, so an unverified account never reaches it, though
 Better Auth itself would link to an unverified row. The page reads
 `linkedAccounts()` (`src/lib/request-session.ts`, Better Auth's
@@ -262,12 +260,12 @@ sentence. The link-only codes (`email_does_not_match`,
 `account_already_linked_to_different_user`) land on `/account` and are
 `linkErrorMessage`'s.
 
-### Provisional accounts (MB.67)
+### Provisional accounts
 
 An unverified account cannot hold an address against its owner past one
 verification window, and three hours at most. The argument is
 [`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
-"Provisional accounts and the sweep" (written when a callback hook did the removing; a job does it now); this is the shape.
+"Provisional accounts and the sweep"; this is the shape.
 
 - **What is provisional.** A `users` row with `emailVerified` false that
   holds at least one provider `accounts` row. It has lapsed once its
@@ -315,17 +313,15 @@ verification window, and three hours at most. The argument is
   Vercel Cron Job starts once a day, deletes it
   (`src/modules/identity/jobs/provisional-cleanup.ts`). The job runs the delete as its own step with
   retries, so a step that fails is tried again rather than lost.
-- **An account a keeper has vouched for is not removed** (MB.204). Approving
-  an unverified account for coven creation (M5.8) or making it a keeper
-  (MB.59) writes a `user_privilege_changes` row naming it with a plain
+- **An account a keeper has vouched for is not removed**. Approving
+  an unverified account for coven creation (M5.8) or making it a keeper writes a `user_privilege_changes` row naming it with a plain
   foreign key, and the job skips any account holding one. Deleted, it
   would fail on that key, and
   the ledger keeps its history: `forbid_rewrite` refuses deleting the row,
   and letting the rows go with the user would erase what the ledger is for.
   Revoking the privilege adds a row rather than removing one, so the account
   is kept until it verifies, with its sessions and provider accounts, and
-  goes on holding its address; MB.205 is to warn the admin of that before
-  they vouch.
+  goes on holding its address; a warning to the admin before they vouch is not built.
 - **Hard delete, outside `withAudit`.** A tombstone would go on blocking
   the owner, since Better Auth looks a user up by address without our
   `deleted_at` filter, and no row survives to carry a stamp. The delete is
@@ -335,19 +331,17 @@ verification window, and three hours at most. The argument is
 - **Seeded rows are never removed.** They hold no `accounts` row, so nobody
   can sign in to them. The seeded bootstrap user stays unverified on
   purpose: verified, it would take an implicit link from any provider
-  vouching for its address, into a row that is a keeper until MB.58
-  demotes it.
+  vouching for its address, into a row that is a keeper until it is demoted.
 - **The refusal.** `account_not_linked` maps in `src/lib/sign-in.ts` to one
   sentence whatever the cause: _"We couldn't sign you in this way. Use the
   sign-in method you used before, then add this one on your account page."_ A squatted address and a provider that never vouches
-  share the code, and naming either would confirm the address is taken
-  (MB.71).
+  share the code, and naming either would confirm the address is taken.
 - **A change never unverifies a row.** An established account asking for a
   new address keeps its verified row until the new one is proven ("The
   email page" below); marked unverified, an account older than the cap
   would go in the next run.
 
-### The email page (MB.54)
+### The email page
 
 `/account/email`, protected, is where an account's address is set and
 changed: prefilled from the provider, editable, and counting only once
@@ -435,10 +429,10 @@ the tests [`tests.md`](tests.md).
   column: it stays until the next change or the swap, and the link itself has expired by then.
 - **A pending address blocks nobody.** `pending_email` has no unique index, so an address pending on one account is
   still free for another to sign up with or ask for: the unique index on `email` decides only at verification, and the
-  gate refuses `EMAIL_TAKEN` from `users.email` alone, as before (MB.67's provisional sweep reads neither address). `user.changeEmail` stays
+  gate refuses `EMAIL_TAKEN` from `users.email` alone, as before. `user.changeEmail` stays
   off: this replaces it, and nothing on `/api/auth` is added.
 - **Every link lands on the confirmed view, carrying where the account was
-  going** (MB.111). Better Auth would land a sign-up's link where the
+  going**. Better Auth would land a sign-up's link where the
   sign-in asked to go; the `sendVerificationEmail` hook rewrites the link's
   `callbackURL` to `verifiedLanding(next)` (`src/lib/account-email.ts`),
   `/account/email?verified&next=<path>`, and the confirmed view's Continue
@@ -455,7 +449,7 @@ the tests [`tests.md`](tests.md).
   for no return path gives none either: the hook reads `NO_RETURN_PATH` off
   the OAuth state rather than the `callbackURL` standing in for it, so its
   link lands on `/account/email?verified`, and an explicit `/coven` is
-  carried like any other `next` (MB.113).
+  carried like any other `next`.
 - **A refusal keeps the rest of the landing.** `refuseVerification` drops
   the flag before appending `?error=`, so the page never reads a refusal as
   a confirmation, and keeps `next`, so a link sent again from there still
@@ -473,7 +467,7 @@ the tests [`tests.md`](tests.md).
   another live row holds `updateTo` (`?error=EMAIL_TAKEN`, which the unique
   index would otherwise 500 on), and records the acting user so the write
   is stamped and `afterEmailVerification` runs — so a change to the
-  bootstrap address, verified from the owner's session, promotes (MB.68).
+  bootstrap address, verified from the owner's session, promotes.
 - **A link opened signed out goes to the sign-in page.** Both gates send a
   browser with no session at all to `SIGN_IN_TO_VERIFY_PATH`
   (`/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify`), whose
@@ -523,14 +517,13 @@ the tests [`tests.md`](tests.md).
   `signedInLanding` as `landing`, which Continue takes when there is no
   `next`. That is `/keepers` for a keeper, `/curator` for a curator, a primary keeper a followed link
   has just promoted included, since the page reads the role after the
-  link's write; a member's first coven; or `/coven` for someone in none
-  (MB.257). `EmailForm` has two views: `?verified` on a verified row is
+  link's write; a member's first coven; or `/coven` for someone in none. `EmailForm` has two views: `?verified` on a verified row is
   the confirmed one, the address and Continue with nothing to edit;
   otherwise the field, prefilled and always editable, which is how any
   account changes its address later. Its success message names the typed
   address, since the row's is unchanged until the link is followed. Inside
   the card, a verified account gets a quiet button to the account page,
-  reading "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
+  reading "Continue to Account" (["The account page"](#the-account-page) below), where
   the same field changes the address on a visit to the account.
 - **The front page offers it directly.** `/` is public, and for an unverified
   signed-in account its Continue points at `/account/email?next=<landing>`
@@ -545,8 +538,7 @@ the tests [`tests.md`](tests.md).
   app does too. The page throws that redirect, not the shell layout, which
   draws round the email page as well, and asks only that someone is signed
   in. When the shell layout threw it, a link into the shell left the browser
-  refetching the email page without end (MB.256;
-  ["Route protection"](route-protection.md), "Where the email redirect is
+  refetching the email page without end (["Route protection"](route-protection.md), "Where the email redirect is
   thrown"). `/api/graphql` is not gated the same way — the context reads
   the session and the services refuse what a provisional account may not
   do, which is everything but `me` and `setEmail`.
@@ -612,7 +604,7 @@ Continue button.
   `tests/support/db/agreement-in-force.ts`), so a spec lands where it asks;
   pass `termsAgreed: false` to walk the gate.
 
-### The account page (MB.88)
+### The account page
 
 `/account` holds the name the site shows, the address it writes to, and the
 coven invitations waiting for that address; the ways in are the Sign-In tab,
@@ -643,7 +635,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   `ACCOUNT_INVITATIONS_PATH`, are in `src/lib/sign-in.ts`; the `/coven`
   landing's notice and the account menu's count both link to it. Each section stands on its
   own `.panel`, which parts it from the next, so no rule is drawn between
-  them (the owner's call, MB.116; MB.88 ruled them apart with a hairline). A
+  them. A
   section a link lands on stops clear of the top inset. The frame, the
   sections and the panels are primitives
   (`.page-frame--narrow`, `.page-frame__section`, `.panel`;
@@ -654,7 +646,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   provider's row. The heading stands alone; Sign Out is in the shell's account menu
   (`SignOutButton`,
   [`components/account-menu.md`](../components/account-menu.md)):
-  Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
+  Better Auth's own sign-out, then a full load of `/`.
 - **The account tabs.** `/account`, `/account/sign-in` and `/account/support` are one `TabbedPage` titled Account, with the tabs Account, Sign-In and Support Requests (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
 - **Two-Factor Sign-In (M16.10, Story 75).** Its own section; for an account with no password it says so and links to the Password section, since two-factor guards password sign-ins alone. The page writes its heading and intro and hands `TwoFactorSettings` (`components/PasswordSection/two-factor.tsx`) whether it is on ([`components/password-section.md`](../components/password-section.md), "Two-factor").
 - **Sign-In Methods lists the password and the passkeys too.** After the providers come a Password row (Set or Not Set, linking to the Password section) and a Passkeys row (how many, linking to the Passkeys section), so the list matches its sentence ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
@@ -683,8 +675,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   `src/modules/identity/services/name.ts`. It writes the session's own row
   through `withAudit`, so it takes no id and names no other user's. It
   trims the name, and refuses a blank or over-long one
-  (`NAME_MAX_LENGTH`, 100) as a `VALIDATION` error on `name`, which MB.43
-  maps to the field. A provisional account is `FORBIDDEN`, as it is from
+  (`NAME_MAX_LENGTH`, 100) as a `VALIDATION` error on `name`, which maps to the field. A provisional account is `FORBIDDEN`, as it is from
   every service but `me` and `setEmail`, and before the input is read.
 - **Better Auth's `/update-user` is disabled.** It writes `name` and `image`
   outside `withAudit`, so `src/lib/auth.ts` lists it in `disabledPaths`,
@@ -693,26 +684,20 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   `overrideUserInfoOnSignIn` is off, Better Auth's default, which no
   provider in `socialProviders()` changes, so a later sign-in never puts the
   provider's name back.
-- **Tests.** The service is `tests/modules/identity/services/name.test.ts`
-  (the row renamed and stamped, another user's left alone, the refusals) and
-  its mutation `tests/modules/identity/graphql/set-name.test.ts`. The refused
-  endpoint is `tests/db/email-verification.test.ts`, the page
-  `tests/app/account/page.test.tsx`, and the browser, an axe scan of all
-  three sections included, `tests/e2e/account.spec.ts`.
 
-### Granting a second keeper (M2.9, MB.59)
+### Granting a second keeper
 
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
 A keeper grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/keepers/users`
-(MB.59; [`admin-users.md`](admin-users.md), "Changing a site role"),
+([`admin-users.md`](admin-users.md), "Changing a site role"),
 where the primary keeper cannot be revoked and a demotion that would leave no
 admin is refused. Changing who the primary keeper is, is that section's too.
 
 A hand fix in `psql` stays possible, for a database no keeper can sign in to.
-It sets `can_create_workspace` with `role`, since the `users_privileged_can_create_workspace` CHECK (MB.177, M11.20) refuses an
+It sets `can_create_workspace` with `role`, since the `users_privileged_can_create_workspace` CHECK refuses an
 keeper or curator without the flag, and declares itself first, since the trigger on
-`users` refuses a privilege change that names no route (MB.195):
+`users` refuses a privilege change that names no route:
 
 ```sql
 begin;
@@ -733,24 +718,22 @@ that no write, a hand-run one included, changes a privilege without saying how
 ([`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
 The same holds for any hand fix to either column, a revoke included, and a
 hand fix checks neither the primary keeper nor the count the service does. The
-tasks that build the rest:
+rest of the keeper machinery:
 
-- **MB.58 and MB.59** (built): the ledger, `user_privilege_changes` since
-  MB.194, and granting and revoking any other keeper from `/keepers/users`. The
-  primary keeper can be neither revoked nor deleted, and a revoke that would
-  leave zero keepers is refused (the record's "The primary keeper" and
-  "Revoking").
-- **MB.62 and MB.63** (built): the `admin_role_change_pauses` ledger through which
-  the primary keeper pauses granting and revoking for every other keeper (the
-  record's "Granting"; MB.62 built the table,
+- **The ledger and the grant.** `user_privilege_changes` is written by the
+  trigger; granting and revoking any other keeper is done from
+  `/keepers/users`. The primary keeper can be neither revoked nor deleted, and
+  a revoke that would leave zero keepers is refused (the record's "The primary
+  keeper" and "Revoking").
+- **The pause ledger.** `admin_role_change_pauses` lets the primary keeper
+  pause granting and revoking for every other keeper (the record's "Granting",
   [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
-- **MB.69 and MB.70**: inviting a keeper by email, story 62
-  ([`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
-  "The admin invitation (story 62)"; MB.69 built the table, now the site tier of `invitations`,
-  [`db/invitations.md`](../db/invitations.md), "Admin invitations").
-- **MB.53** (built): Better Auth's `admin` plugin, with only its two
-  impersonation endpoints reachable, since the rest would grant admin or
-  delete users outside `withAudit` ([`impersonation.md`](impersonation.md)).
+- **Inviting a keeper by email** is story 62 (the record's "The admin
+  invitation (story 62)"); the table is the site tier of `invitations`
+  ([`db/invitations.md`](../db/invitations.md), "Admin invitations").
+- **Better Auth's `admin` plugin** is on with only its two impersonation
+  endpoints reachable, since the rest would grant admin or delete users outside
+  `withAudit` ([`impersonation.md`](impersonation.md)).
 
 ### Pausing a user's access (M15.52)
 
@@ -765,7 +748,7 @@ The table is DESIGN.md §5's `user_access_pauses` (M15.51).
 - the primary keeper, the live keeper whose email matches `ADMIN_BOOTSTRAP_EMAIL`: `Forbidden`, "The primary keeper’s access cannot be paused";
 - the admin themselves: `Forbidden`, "You cannot pause your own access";
 - the System account or the signed-out sender account (neither is a person; `isStandInAccount` in `src/lib/system-actor.ts`): `Forbidden`, "This account is not a person, so its access cannot be paused". The service refuses; no table constraint does, as for the primary keeper and the admin themselves, and neither account is listed on the Users page;
-- another keeper while keeper changes are paused (MB.62), unless the caller is the primary admin: the same refusal a revoke of admin gets;
+- another keeper while keeper changes are paused, unless the caller is the primary admin: the same refusal a revoke of admin gets;
 - a user already paused: a validation error, "This user is already paused; lift the pause first";
 - an `until` that is not in the future: a validation error on `until`, "Choose a time in the future";
 - a note missing, blank, or over 500 characters: a validation error on `note`, "Write a note saying why" or "Keep the note to 500 characters".
@@ -837,7 +820,7 @@ keyset page newest first, which GraphQL serves as the paged `userAccessPauses` q
     leaving it to Postgres's column default, so `createdBy`/`updatedBy`
     (NOT NULL, no database default) can name the row before it exists: a
     self-created account is its own creator, as the seed's bootstrap row
-    is (MB.5). `forceAllowId` (Better Auth's own `createWithHooks`) is what
+    is. `forceAllowId` (Better Auth's own `createWithHooks`) is what
     lets a hook-supplied id override the adapter's default id generation.
   - It leaves `role` and `canCreateWorkspace` out of the returned data, so
     Postgres's own column defaults apply rather than a second
@@ -859,7 +842,7 @@ keyset page newest first, which GraphQL serves as the paged `userAccessPauses` q
   only path through Better Auth, which is what enforces M2.3's "Nothing in
   the OAuth flow sets the flag" rather than leaving it merely unimplemented,
   and keeps every grant of admin on the paths that record it: the promotions
-  above and MB.59's `setUserRole`. `verificationSentAt`, `createdBy` and `updatedBy`
+  above and `setUserRole`. `verificationSentAt`, `createdBy` and `updatedBy`
   also carry `returned: false`, keeping the mail clock and raw audit ids
   out of session and user responses. `deletedAt`/`deletedBy` are not
   registered: nothing soft-deletes a user through Better Auth.
@@ -893,8 +876,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
 - **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
   expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
   and the service writes one row per card, account and reason, counting repeats
-  ([`db/invitations.md`](../db/invitations.md), "Card attempts"). The mutation takes the token alone;
-  the account comes from the session. A signed-out visitor, an unverified account, an unknown token,
+  ([`db/invitations.md`](../db/invitations.md), "Card attempts"). The mutation takes the token alone. A signed-out visitor, an unverified account, an unknown token,
   a pending card and the account that accepted the card record nothing, and the signed-out page reads
   nothing of the link. `invitationCardAttempts(batchId)` lists a batch's refused opens and
   `InvitationCardBatch.refusedOpens` counts them; both are admin only, like every card field.
