@@ -11,6 +11,10 @@
     border-block-start: 1px solid $hairline;
     scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 
+    &:last-child {
+      border-block-end: 1px solid $hairline;
+    }
+
     @media (min-width: 40rem) {
       display: grid;
       grid-template-columns: 11rem 1fr;
@@ -42,8 +46,8 @@
   &__self {
     margin-inline-start: space(2);
     font-family: $font-body;
-    font-size: type-size('body');
-    font-weight: 400;
+    font-size: type-size('small');
+    font-weight: 300;
     color: $text-muted;
     text-decoration: none;
     opacity: 0;
