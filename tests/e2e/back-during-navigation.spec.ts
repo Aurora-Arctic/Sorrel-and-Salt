@@ -92,3 +92,59 @@ test('a navigation that is redirected on the way still adds exactly one history 
   await expect(page).toHaveURL(/\/compendium\?query=/);
   await expect(rowOf(compendiumList(page), NAME)).toBeVisible();
 });
+
+async function openListAndPressCard(page: import('@playwright/test').Page) {
+  const slug = ingredientSlug(NAME, FORMAL);
+  const coven = await seedCoven(
+    page,
+    `Fixture Coven ${Math.random().toString(36).slice(2, 8)}`,
+    `back-hold-${Math.random().toString(36).slice(2, 8)}.test`,
+    {
+      A: 'owner',
+    },
+  );
+  await signInAgainAs(page, coven.users.A);
+  await page.goto(`/compendium?query=${encodeURIComponent(NAME)}`);
+  await expect(rowOf(compendiumList(page), NAME)).toBeVisible();
+  await page.waitForTimeout(1500);
+  let release: () => void = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  let requested = false;
+  await page.route(`**/compendium/ingredients/${slug}*`, async (route) => {
+    if (route.request().headers()['next-router-prefetch']) return route.continue();
+    requested = true;
+    await held;
+    await route.continue().catch(() => {});
+  });
+  await rowOf(compendiumList(page), NAME).getByRole('link', { name: NAME, exact: true }).click();
+  await expect.poll(() => requested).toBe(true);
+  return { slug, release };
+}
+
+test('a request let go after Back does not carry the page to the entry', async ({ page }) => {
+  const { release } = await openListAndPressCard(page);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/compendium\?query=/);
+  const length = await page.evaluate(() => window.history.length);
+  release();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1000);
+  expect(new URL(page.url()).pathname).toBe('/compendium');
+  await expect(rowOf(compendiumList(page), NAME)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: NAME })).toHaveCount(0);
+  expect(await page.evaluate(() => window.history.length)).toBe(length);
+});
+
+test('Forward after Back during the wait shows the entry itself at its address', async ({
+  page,
+}) => {
+  const { slug, release } = await openListAndPressCard(page);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/compendium\?query=/);
+  release();
+  await page.waitForLoadState('networkidle');
+  await page.goForward();
+  await expect(page).toHaveURL(new RegExp(`/compendium/ingredients/${slug}$`));
+  await expect(page.getByRole('heading', { name: NAME }).first()).toBeVisible();
+  await expect(compendiumList(page)).toHaveCount(0);
+});

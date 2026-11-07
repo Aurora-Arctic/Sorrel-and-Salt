@@ -37,13 +37,45 @@ afterEach(() => {
   pushState.mockRestore();
 });
 
+describe('Forward onto an entry pushed early and never arrived at', () => {
+  it('fetches that address afresh, and the router never restores the tree it carries', async () => {
+    render(
+      <NavigationProvider>
+        <Go href="/there" />
+      </NavigationProvider>,
+    );
+    const router_ = vi.fn();
+    window.addEventListener('popstate', router_);
+    const entry = { __NA: true, earlyEntry: true };
+    await act(async () => {
+      window.dispatchEvent(new PopStateEvent('popstate', { state: entry }));
+    });
+    window.removeEventListener('popstate', router_);
+    expect(router.replace).toHaveBeenCalledWith(
+      `${window.location.pathname}${window.location.search}`,
+    );
+  });
+
+  it('is left to the router when the entry is an ordinary one', async () => {
+    render(
+      <NavigationProvider>
+        <Go href="/there" />
+      </NavigationProvider>,
+    );
+    await act(async () => {
+      window.dispatchEvent(new PopStateEvent('popstate', { state: { __NA: true } }));
+    });
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+});
+
 describe('the history entry of a navigation to another page', () => {
   it('is pushed at once, carrying the router state the current entry holds', async () => {
     const held = { __NA: true, __PRIVATE_NEXTJS_INTERNALS_TREE: { tree: 'here' } };
     vi.spyOn(window.history, 'state', 'get').mockReturnValue(held);
     await press('/there?x=1');
     expect(pushState).toHaveBeenCalledTimes(1);
-    expect(pushState).toHaveBeenCalledWith(held, '', '/there?x=1');
+    expect(pushState).toHaveBeenCalledWith({ ...held, earlyEntry: true }, '', '/there?x=1');
     // The router replaces the entry just pushed, so a redirect on the way leaves one entry, not two.
     expect(router.replace).toHaveBeenCalledWith('/there?x=1');
     expect(router.push).not.toHaveBeenCalled();
