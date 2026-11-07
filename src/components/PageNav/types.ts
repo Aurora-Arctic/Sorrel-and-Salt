@@ -32,7 +32,10 @@ export type PageNavProps = {
    * opens without the script.
    */
   collapsible?: boolean;
-  /** A skeleton's menu: draws bars in place of the entries, at the menu's own width and padding; a number sets how many (six for `true`). */
+  /**
+   * A skeleton's menu, at the menu's own width and padding: with no entries it draws bars, a number setting how many (six
+   * for `true`); with entries it draws their labels as plain text, not links.
+   */
   pending?: boolean | number;
 };
 

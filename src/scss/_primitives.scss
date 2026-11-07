@@ -844,6 +844,17 @@
     }
   }
 
+  // A skeleton's page name, plain text drawn as the link beside it is.
+  .admin-contents__name {
+    color: $text-primary;
+    text-decoration: underline;
+  }
+
+  // A skeleton's name is a bar, not a link, so it draws no underline under the bar.
+  .admin-contents__name--pending {
+    text-decoration: none;
+  }
+
   // Not a `<p>`, so it takes the measure itself (claude-docs/styling.md,
   // "Binding rules").
   .admin-contents__description {
@@ -1195,6 +1206,25 @@
   // block in the card's frame at the height of its list's real row (`$stack-row-skeleton-heights`).
   .data-table--pending > tbody > tr > .card-skeleton__fill {
     display: none;
+  }
+
+  // A pending row's action: a small button's box filled as a bar, so the row is as tall as one with the
+  // real button; the bars for words are as tall as a line (`.skeleton-text`).
+  .data-table__pending-action {
+    @include skeleton-shape;
+
+    display: inline-block;
+    height: auto;
+    min-width: 5rem;
+    border-color: transparent;
+  }
+
+  // A skeleton's button or badge keeps its box and shows none of its colour: no outline, no shadow, only the bar.
+  .badge.badge--pending,
+  .btn.btn--pending {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
   }
 
   @container data-table (max-width: #{$table-stack-width}) {

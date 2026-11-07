@@ -115,7 +115,8 @@ function StackTable<Row>({
         aria-hidden={pending || undefined}
         className={[
           'data-table data-table--stack',
-          pending && `data-table--pending data-table--pending-${pendingKind ?? 'default'}`,
+          pending &&
+            `data-table--pending data-table--pending-${pendingKind ?? 'default'} skeleton-text`,
           className,
         ]
           .filter(Boolean)
@@ -161,7 +162,16 @@ function StackTable<Row>({
                       className={cellClass(column)}
                       {...stackCell(column.action ? '' : column.heading)}
                     >
-                      {!column.action && <Skeleton shape="line" quiet />}
+                      {column.action ? (
+                        <span
+                          className="btn btn--small data-table__pending-action"
+                          aria-hidden="true"
+                        >
+                          &nbsp;
+                        </span>
+                      ) : (
+                        <Skeleton shape="line" quiet />
+                      )}
                     </td>
                   ))}
                 </tr>

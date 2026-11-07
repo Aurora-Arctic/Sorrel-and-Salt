@@ -112,6 +112,7 @@ export type StackRowKind =
   | 'received-invitations'
   | 'groups'
   | 'values'
+  | 'category-values'
   | 'compendium';
 
 export interface GroupChipProps {

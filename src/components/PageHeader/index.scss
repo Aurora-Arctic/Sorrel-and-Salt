@@ -1,9 +1,17 @@
 @use '../../scss/variables' as *;
 
 // A pending title that stands for a title of two lines (a name long enough to wrap): its bar is two
-// lines of the heading's height.
+// lines of the heading's height on a desktop, where the column is narrow beside the menu and a short
+// name already wraps, and one line below it, where a short name fits (a long one is then a few pixels
+// short, never taller than the page).
 [data-pending-lines='2'] .skeleton__line {
-  block-size: 2lh;
+  block-size: 1lh;
+}
+
+@media (min-width: 75rem) {
+  [data-pending-lines='2'] .skeleton__line {
+    block-size: 2lh;
+  }
 }
 
 // A pending lede of lines each as tall as the text they stand for: two lines on a wide screen and

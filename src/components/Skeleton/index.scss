@@ -9,6 +9,7 @@
 // skeleton back would leave the panel blank. A size container, so what a skeleton holds can turn
 // to cards under the width the real table stacks at.
 .skeleton {
+  display: block;
   container: skeleton / inline-size;
   @include arrived($motion-short);
 }
@@ -27,7 +28,7 @@
 }
 
 // Every bar: a rounded bar, the shimmer passing across it.
-.skeleton__shapes span {
+.skeleton__shapes > span {
   @include skeleton-shape;
 }
 
@@ -51,4 +52,45 @@
   > .skeleton {
     flex: 1;
   }
+}
+
+// Bars that stand for words, each as tall as the line of text it replaces, so a section keeps its place
+// when the words arrive; the bar is drawn inside the line, as the lede's is.
+.skeleton-text .skeleton__line {
+  block-size: 1lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
+}
+
+// A section heading's bar fills the heading's own line height, which is far taller than body text.
+.skeleton-text h2 .skeleton__line {
+  block-size: 0.5lh;
+  border-block: 0.25lh solid transparent;
+}
+
+// A contents entry's name and description are each a line of the small text the entry sets, 20px high,
+// with no space between the description's lines.
+.skeleton-text .admin-contents__list {
+  .skeleton__shapes {
+    gap: 0;
+  }
+
+  .skeleton__line {
+    block-size: 1rem;
+    border-block: 0.125rem solid transparent;
+  }
+}
+
+// Real words as bars (SkeletonText): transparent text over the shared fill, which an inline box
+// paints once per wrapped line. No `box-decoration-break`: past the browser floor, and without it a
+// broken line only loses its rounded end.
+.skeleton-run {
+  @include skeleton-fill;
+  color: transparent;
+  // Nothing a link or a focus state would draw shows around the bar.
+  text-decoration: none;
+  text-shadow: none;
+  box-shadow: none;
+  border: 0;
+  outline: 0;
 }

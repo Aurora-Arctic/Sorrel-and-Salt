@@ -6,16 +6,24 @@ import type { SupportRequestsFilter } from '@/components/SupportRequests/types';
 import { SupportListSkeleton } from '@/components/SupportRequests/skeleton';
 import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import { DEFAULT_SUPPORT_VIEW, SUPPORT_VIEWS, type SupportView } from '@/lib/support-path';
+import SkeletonText from '@/components/Skeleton/text';
 import PageHeader from '@/components/PageHeader';
+import { AdminContentsPending } from '@/components/AdminNav/contents';
 import Skeleton from '@/components/Skeleton';
 
+// The curator's lede and sections whatever the role, since the skeleton cannot know it.
 export const KeepersSkeleton = () => (
   <div className="admin-index">
     <PageHeader
-      title="Keepers"
-      lede="Here you answer the help requests people send, and manage who uses the site. Pick a page below, or from the links at the top of any Keepers page."
+      title={<SkeletonText>Keepers</SkeletonText>}
+      lede={
+        <SkeletonText>
+          Here you answer the help requests people send. Pick a page below, or from the links at the
+          top of any Keepers page.
+        </SkeletonText>
+      }
     />
-    <Skeleton shape="line" count={5} quiet />
+    <AdminContentsPending managesPeople={false} />
   </div>
 );
 

@@ -850,9 +850,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 // A skeleton's placeholder shape: a rounded bar of the muted ink a little way into the card
 // surface, so both themes carry it on the page and on a card, with a lighter step passing across
 // it (`skeleton-shimmer`) that becomes the shared pulse under reduced motion (`loading-motion`).
-@mixin skeleton-shape {
-  display: block;
-  height: 1rem;
+@mixin skeleton-fill {
   border-radius: radius('control');
   background-image: linear-gradient(
     90deg,
@@ -862,6 +860,12 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   );
   background-size: 200% 100%;
   @include loading-motion(skeleton-shimmer $shimmer-duration ease-in-out infinite);
+}
+
+@mixin skeleton-shape {
+  display: block;
+  height: 1rem;
+  @include skeleton-fill;
 }
 
 // A card's placeholder: one block filling the whole card, in the card's own frame (its radius, border,

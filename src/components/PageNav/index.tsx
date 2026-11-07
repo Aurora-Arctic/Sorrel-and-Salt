@@ -4,6 +4,7 @@ import { type ReactElement, useEffect, useId, useRef, useState, useSyncExternalS
 import { useHydrated } from '../../lib/hydrated';
 import { useSlide } from '../../lib/use-slide';
 import Skeleton from '../Skeleton';
+import SkeletonText from '../Skeleton/text';
 import { ChevronIcon } from '../IconTip/icons';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
@@ -129,13 +130,21 @@ export default function PageNav({
   // nests a group, its label naming its list.
   const list = pending ? (
     <ul aria-hidden="true">
-      {Array.from({ length: pending === true ? 6 : pending }, (_, at) => (
-        <li key={at}>
-          <span className="page-nav__pending">
-            <Skeleton shape="line" quiet />
-          </span>
-        </li>
-      ))}
+      {entries.length > 0
+        ? entries.map((entry) => (
+            <li key={entry.href}>
+              <span className="page-nav__pending">
+                <SkeletonText>{entry.label}</SkeletonText>
+              </span>
+            </li>
+          ))
+        : Array.from({ length: pending === true ? 6 : pending }, (_, at) => (
+            <li key={at}>
+              <span className="page-nav__pending">
+                <Skeleton shape="line" quiet />
+              </span>
+            </li>
+          ))}
     </ul>
   ) : (
     <ul>

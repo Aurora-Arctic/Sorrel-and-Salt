@@ -14,7 +14,7 @@ export const GroupedValueListBodySkeleton = ({
   return (
     <ListBodySkeleton
       label={title}
-      rowKind="values"
+      rowKind={kind === 'category' ? 'category-values' : 'values'}
       tableClassName={kind === 'category' ? 'data-table--roomy' : undefined}
       headings={['Name', ...(group ? [group.label] : []), 'Description', 'Updated', 'Edit']}
       actions={['Edit']}

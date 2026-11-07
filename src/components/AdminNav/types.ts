@@ -32,4 +32,6 @@ export interface AdminNavProps {
 // What an area's table of contents takes: the sections it lists.
 export interface ContentsProps {
   sections: readonly AdminSection[];
+  /** Draws the words as plain hidden text, for a skeleton: no links, no ids. */
+  pending?: boolean;
 }

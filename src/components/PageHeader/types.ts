@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 export interface PageHeaderProps {
   /** The page's `h1`, title case, and what its tab title says too. */
-  title?: string;
+  title?: ReactNode;
   /** Draws a placeholder bar in the `h1` in place of the title, for a head whose title is not known yet: a skeleton's. `2` stands for a title that wraps to two lines. */
   pendingTitle?: boolean | 2;
   /** The heading element, `h1` unless the page already has its `h1` above this head. */
@@ -16,7 +16,7 @@ export interface PageHeaderProps {
    * the public pages and the screens outside the app's lists carry one; a list
    * page's heading stands alone (claude-docs/styling.md, "Page heads").
    */
-  eyebrow?: string;
+  eyebrow?: ReactNode;
   /**
    * The muted sentence or two under the heading saying what the page is for,
    * drawn in a `p.lede`. The same pages as the eyebrow carry one.

@@ -1,0 +1,45 @@
+@use '../../scss/variables' as *;
+
+// The lede takes three lines in the form's column and four on a phone, where it wraps once more.
+.business-cards-face__lede {
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    .skeleton__line:nth-child(n + 4) {
+      display: none;
+    }
+  }
+}
+
+// The switch is as wide as its own control, not the column; a bar has no width of its own, so it is given one.
+.business-cards-face__switch {
+  align-self: flex-start;
+  inline-size: 6rem;
+}
+
+// The lede, label and control bars take the heights of the real paragraph, label row and input, which are not the text line's.
+.business-cards-face {
+  .business-cards-face__lede {
+    margin-block: 0.5rem;
+
+    .skeleton__shapes {
+      gap: 0;
+    }
+
+    .skeleton__line {
+      block-size: 1rem;
+      border-block: 0.325rem solid transparent;
+    }
+  }
+
+  .field {
+    gap: 0.5rem;
+
+    .skeleton__line {
+      block-size: 1.125rem;
+      border-block: 0;
+    }
+
+    .skeleton__box {
+      block-size: 2.8125rem;
+    }
+  }
+}

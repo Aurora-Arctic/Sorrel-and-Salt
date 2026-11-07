@@ -224,7 +224,8 @@
       }
     }
 
-    a {
+    a,
+    .page-nav__pending {
       justify-content: flex-end;
       text-align: end;
       --page-nav-bar: #{$accent};
@@ -270,7 +271,14 @@
   @include disclosure-chevron('.page-nav__fold:is(.is-open, .page-nav__fold--static[open])');
 }
 
-// A skeleton's pending entry: the bar fills the entry, as a label would.
+// A skeleton's pending entry: the bar fills the entry, as a label would, and is as tall as the line a
+// label takes, so the menu keeps its height.
 .page-nav__pending > .skeleton {
   flex: 1;
+}
+
+.page-nav__pending .skeleton__line {
+  block-size: 0.7lh;
+  border-block: 0.15lh solid transparent;
+  background-clip: padding-box;
 }

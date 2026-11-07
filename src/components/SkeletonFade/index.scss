@@ -33,6 +33,7 @@
   // bars' shimmer and pulse are frozen, since running through the fade they made parts fade at
   // different rates.
   .skeleton,
+  .skeleton-run,
   .skeleton * {
     animation: none;
   }

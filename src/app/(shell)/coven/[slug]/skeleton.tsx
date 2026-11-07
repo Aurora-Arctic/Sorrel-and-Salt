@@ -1,33 +1,34 @@
+'use client';
+
+import { useCovenFactsOfDestination } from '@/components/CovenFacts';
+import CovenHome from '@/components/CovenHome';
+import { covenSlugOf } from '@/lib/coven-path';
+import { useNavigationState } from '@/lib/navigation';
 import { EntrySkeleton } from '@/components/IngredientEntry/skeleton';
 import { SearchListSkeleton, SearchRowSkeleton } from '@/components/IngredientSearch/skeleton';
 import { ListBodySkeleton } from '@/components/ListFrame/skeleton';
 import PageHeader from '@/components/PageHeader';
 import PageNav from '@/components/PageNav';
-import PageWithNav from '@/components/PageWithNav';
 import Skeleton from '@/components/Skeleton';
 
-// The coven's name and the viewer's role are not known yet, so the head is a bar; the menu and sections
-// are the ones every member sees.
-export const CovenHomeSkeleton = () => (
-  <PageWithNav as="div">
-    <PageHeader
-      eyebrow="Coven"
-      pendingTitle={2}
-      lede={
-        <span className="skeleton-lede">
-          <Skeleton shape="line" count={3} quiet />
-        </span>
-      }
+// The coven's home, drawn from the page's own words. Moving within the coven, its name and the viewer's
+// role are known, so the page is drawn whole; otherwise the title and lede are bars and the menu and
+// sections are a steward's, the longest a coven shows.
+export const CovenHomeSkeleton = () => {
+  const facts = useCovenFactsOfDestination();
+  const { href } = useNavigationState();
+  const slug = facts?.slug ?? covenSlugOf(href?.split(/[?#]/)[0] ?? '') ?? '';
+  return (
+    <CovenHome
+      pending
+      slug={slug}
+      name={facts?.name}
+      demo={facts?.demo}
+      role={facts?.role ?? 'owner'}
+      access={facts?.access ?? { canDelete: true, canReadMembers: true, canInvite: true }}
     />
-    <PageNav label="On This Page" entries={[]} pending={3} />
-    <section className="page-frame__section">
-      <Skeleton shape="line" count={4} quiet />
-    </section>
-    <section className="page-frame__section">
-      <Skeleton shape="block" quiet />
-    </section>
-  </PageWithNav>
-);
+  );
+};
 
 // The coven's Ingredients: the page's head, then its filter row and compact cards.
 export const CovenIngredientsSkeleton = () => (
