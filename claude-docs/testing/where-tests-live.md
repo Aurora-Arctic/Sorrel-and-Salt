@@ -477,7 +477,7 @@ helper rejects, proof the scan fails a run instead of passing vacuously.
 serves, each with the people it is scanned as (signed out, an account with no
 seat, each coven role, a curator, a keeper, and the accounts the gates hold
 back), and every modal, each with the file that draws it and who opens it. A
-route §9 (`design/routes.md`) names with no page yet is listed as `unbuilt` and skipped.
+route §9 (`design/routes.md`) names with no page yet is listed as `unbuilt` and skipped, and a page that answers with an error, such as the 404 for an unmatched address, names the status it expects.
 `axe.spec.ts`'s "the accessibility sweep" runs one test per person for the
 pages and one for the modals. Each seeds its own coven, signs in, visits or
 opens every entry in turn, and scans it in the dark theme and then the light.

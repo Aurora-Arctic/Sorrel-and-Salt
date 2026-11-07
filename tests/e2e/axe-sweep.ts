@@ -260,6 +260,7 @@ async function addSignedOutRequest(world: World, email: string): Promise<void> {
 /** The address each listed route is visited at; null for a route with no page yet. */
 export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null> = {
   '/': () => '/',
+  '/[...missing]': () => '/no-page-answers-this',
   '/compendium': () => '/compendium',
   '/compendium/ingredients/[slug]': (w) => `/compendium/ingredients/${w.compendium.slug}`,
   '/privacy': () => '/privacy',
@@ -325,9 +326,9 @@ export const ROUTE_VISITS: Record<ScannedRoute, (world: World) => string | null>
 const dialogNamed = (page: Page, name: string | RegExp) => page.getByRole('dialog', { name });
 
 /** Opens `path` and waits for what it loads to finish showing. */
-export async function visit(page: Page, path: string): Promise<void> {
+export async function visit(page: Page, path: string, status?: number): Promise<void> {
   const response = await page.goto(path);
-  if (response && response.status() >= 400) {
+  if (response && (status ? response.status() !== status : response.status() >= 400)) {
     throw new Error(`${path} answered ${response.status()}`);
   }
   // A redirect means the page meant was not the one scanned.

@@ -10,11 +10,12 @@ import { fromRoot } from '../support/paths';
 const PAGE_FILE = /^src\/app\/(.*\/)?page\.tsx$/;
 const SOURCE_FILE = /^src\/.*\.tsx$/;
 const STORY_FILE = /\.stories\.tsx$/;
-// The modal itself and the two wrappers that pass a caller's title through: each caller is scanned, not these.
+// The modal itself and the wrappers that pass a caller's title through: each caller is scanned, not these.
 const MODAL_PARTS = new Set([
   'src/components/Modal/modal.tsx',
   'src/components/Modal/route-modal.tsx',
   'src/components/Modal/modal-button.tsx',
+  'src/components/ConfirmDialog/index.tsx',
 ]);
 // A file that draws only the loading frame of a modal whose code loads when first asked for, mapped to the file that
 // draws the modal itself: the modal is scanned, and the frame holds a loading skeleton in its place for a moment.
@@ -23,7 +24,7 @@ const LOADING_FRAMES: Record<string, string> = {
     'src/components/IngredientForm/quick-look.tsx',
 };
 /** An element that draws a dialog: the modal components opened as JSX, a native dialog, or the ARIA role. */
-const DRAWS_DIALOG = /<(?:Modal|RouteModal|ModalButton)\s|<dialog\s|role="dialog"/;
+const DRAWS_DIALOG = /<(?:Modal|RouteModal|ModalButton|ConfirmDialog)\s|<dialog\s|role="dialog"/;
 
 /** A page file's address: route groups `(name)` dropped, the root page `/`. */
 function routeOf(file: string): string {

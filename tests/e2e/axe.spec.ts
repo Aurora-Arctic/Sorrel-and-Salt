@@ -239,12 +239,13 @@ test.describe('the accessibility sweep', () => {
       const world = await seedWorld(page);
       await signIn(page, world, persona);
       const result: SweepResult = { persona, findings: [], unreached: [] };
-      for (const { route } of routes) {
+      for (const scan of routes) {
+        const { route } = scan;
         const path = ROUTE_VISITS[route](world);
         if (path === null) continue;
         await test.step(route, async () => {
           try {
-            await visit(page, path);
+            await visit(page, path, 'status' in scan ? scan.status : undefined);
             await collectBothThemes(page, route, result);
           } catch (error) {
             await recordUnreached(page, route, error, result);
