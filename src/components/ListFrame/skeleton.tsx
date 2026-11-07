@@ -1,11 +1,12 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import FilterForm from '../FilterForm';
 import IngredientCardList from '../IngredientCardList';
 import { IngredientCardSkeleton } from '../IngredientCard/skeleton';
 import { SpellCardSkeleton } from '../SpellCard/skeleton';
-import ListFrame from '.';
+import { ListFilterFrame } from './filter-frame';
+
+export { ListFilterFrame };
 
 export interface ListBodySkeletonProps {
   /** The list's name, as the page's own: "Users". */
@@ -58,22 +59,6 @@ export const ListBodySkeleton = ({
     />
   );
 };
-
-// A list page's frame with nothing in it yet: the filter row with its controls disabled over the body.
-export const ListFilterFrame = ({
-  filter,
-  children,
-}: {
-  filter: string;
-  children: ReactNode;
-}): ReactElement => (
-  <ListFrame disabled>
-    <FilterForm label={filter} action="/" searchHref={() => '/'} shown={[]}>
-      <input name="q" type="search" aria-label="Search" />
-    </FilterForm>
-    {children}
-  </ListFrame>
-);
 
 // A whole list page with nothing in it yet.
 export const ListSkeleton = ({
