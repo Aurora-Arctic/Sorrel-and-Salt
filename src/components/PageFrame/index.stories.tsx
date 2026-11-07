@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import PageColumn from '../PageColumn';
 import PageHeader from '../PageHeader';
+import PageNav from '../PageNav';
+import type { PageNavEntry } from '../PageNav/types';
 import PageWithNav from '../PageWithNav';
 import PageFrame from '.';
 
@@ -12,6 +14,12 @@ const meta = {
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;
+
+const MENU: PageNavEntry[] = [
+  { href: '#account', label: 'Account' },
+  { href: '#security', label: 'Security' },
+  { href: '#data', label: 'Data' },
+];
 
 const STATES: Record<string, ReactNode> = {
   'Page Frame': (
@@ -35,11 +43,13 @@ const STATES: Record<string, ReactNode> = {
   'Page With Nav': (
     <PageWithNav as="div">
       <PageHeader title="Settings" />
+      <PageNav label="On This Page" entries={MENU} />
       <p>A page with a jump menu beside its sections.</p>
     </PageWithNav>
   ),
   'Page With Nav Headless': (
     <PageWithNav as="div" headless>
+      <PageNav label="On This Page" entries={MENU} />
       <p>A tab of a tabbed page, with no heading above the menu.</p>
     </PageWithNav>
   ),

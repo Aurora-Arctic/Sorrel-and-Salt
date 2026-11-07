@@ -383,6 +383,13 @@
       margin: 0;
     }
 
+    // A pending title is a bar with no width of its own (its size container), so the heading
+    // takes the row rather than shrink to nothing.
+    > h1:has(> .skeleton),
+    > .page-header__title > h1:has(> .skeleton) {
+      flex: 1 1 10rem;
+    }
+
     // Brought down to the heading's letters; relative, not a translate, which
     // would make the wrapper a stacking context and hold the Add's tip under
     // the shell's bar.
