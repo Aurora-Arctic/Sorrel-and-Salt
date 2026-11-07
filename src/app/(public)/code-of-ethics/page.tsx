@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: siteUrl('/code-of-ethics') },
 };
 
+// Read from the database per request, so the page is never frozen at build time.
 export const dynamic = 'force-dynamic';
 
 export default function Page() {

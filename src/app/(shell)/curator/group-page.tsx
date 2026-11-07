@@ -79,6 +79,7 @@ function readPlace(kind: GroupKind, params: GroupSearchParams) {
   return { query: shown, here: { query: shown, after, before }, editSlug, adding };
 }
 
+// One page of the maximum holds every group: a keeper adds a group rarely.
 const readChoices = (kind: GroupKind) => GROUP_READERS[KINDS[kind].holds]();
 
 async function readGroup(kind: GroupKind, slug: string) {

@@ -15,6 +15,7 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 
 const CARD_LANDING = '/coven/new' satisfies Route;
 
+// A cast, as the built routes know no query.
 const CARD_ACCEPTED_LANDING = `${CARD_LANDING}?card=accepted` as Route;
 
 // The one accept panel for `/invite/[token]` and `/i/[token]`, public in src/proxy.ts. `getSession()`, not
@@ -24,6 +25,7 @@ export default async function InvitationPanel({ token, here }: { token: string; 
 
   let panel: InvitationAcceptanceProps;
   if (!session) {
+    // Nothing of the invitation is read until a session holds the link.
     panel = {
       status: 'signed-out',
       signInHref: signInPath(here),

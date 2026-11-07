@@ -20,6 +20,7 @@ export default function MemberDialog({
         opened && {
           heading: opened.heading,
           body: (done) => (
+            // A fresh body per member: one opened after another starts unasked.
             <MemberDetail
               key={opened.member.userId}
               member={opened.member}

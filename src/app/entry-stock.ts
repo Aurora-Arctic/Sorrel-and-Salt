@@ -11,6 +11,7 @@ import { heldFormsOf, stockOf, variantsOf, type StockKey } from '@/modules/ingre
 export const stockKey = (workspaceId: string, ingredientId: string): string =>
   `${workspaceId}:${ingredientId}`;
 
+/** A pair to read; own marks the coven's own entry, whose forms are read in that coven. */
 export type StockAsk = StockKey & { own?: boolean };
 
 /**
@@ -20,6 +21,7 @@ export type StockAsk = StockKey & { own?: boolean };
 export async function readEntryStock(
   asked: readonly StockAsk[],
 ): Promise<ReadonlyMap<string, StockData>> {
+  // The open entry can be on the page too, so a pair may come twice.
   const pairs = [
     ...new Map(asked.map((pair) => [stockKey(pair.workspaceId, pair.ingredientId), pair])).values(),
   ];

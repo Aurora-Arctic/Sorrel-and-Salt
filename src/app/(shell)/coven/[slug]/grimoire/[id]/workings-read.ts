@@ -19,7 +19,9 @@ export async function readWorkingsOf(
   workspaceId: string,
   spellId: string,
   steps: readonly RecipeStep[],
+  /** The role permits deleting; deleting is still the recorder alone. */
   mayDelete: boolean,
+  /** The role permits changing; changing is the recorder or a named member. */
   mayEdit: boolean,
 ): Promise<WorkingView[]> {
   const reports = await allPages((request) =>

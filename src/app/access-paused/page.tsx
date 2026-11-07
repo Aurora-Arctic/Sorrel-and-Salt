@@ -22,6 +22,7 @@ export default async function AccessPausedPage() {
   if (!shell) redirect('/sign-in');
   const { session, accessPause } = shell;
   if (!accessPause) redirect('/');
+  // An unverified account's support reads refuse it, so it is not asked.
   const timedOut = session.emailUnverified ? null : await getMySupportTimeout(session);
 
   return (

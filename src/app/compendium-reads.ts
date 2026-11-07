@@ -53,6 +53,7 @@ export const readCompendium = cache(
     size: number = DEFAULT_PAGE_SIZE,
     viewer: Session | null = null,
   ) => {
+    // Written by the page from its parameter table, and checked again by the service.
     const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
     const page = await readNumberedPage(
       { after, before },
@@ -108,6 +109,7 @@ async function withForms<Page extends { edges: readonly { node: { id: string } }
     page.edges.map(({ node }) => ({ id: node.id, workspaceId: null })),
   );
   const variants = forms.map((answer) => {
+    // A compendium ref is never refused, so an error answer is a bug.
     if (answer instanceof Error) throw answer;
     return answer;
   });
@@ -206,6 +208,7 @@ export const readFacets = cache(async (variables: string, viewer: Session | null
   return compendiumFacets(filter, viewer);
 });
 
+/** Per viewer, so never data-cached (rule 6). */
 export const readFacetsHeldIn = cache(async (session: Session, variables: string) => {
   const { covens, filter } = heldInOf(variables);
   return compendiumFacetsHeldIn(session, covens, filter);

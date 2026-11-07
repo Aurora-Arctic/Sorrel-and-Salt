@@ -43,6 +43,7 @@ export const readCovenIngredients = cache(
     heldBy: CovenMembership['membership'],
   ): Promise<CovenIngredientPage> => {
     const session = await requireSession();
+    // Written by the page from its parameter table, and checked again by the service.
     const filter: Filter = JSON.parse(variables);
     const page = await readNumberedPage(
       { after, before },
@@ -120,6 +121,7 @@ export async function readViewedEntry(membership: CovenMembership['membership'],
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
     throw error;
   }
+  // A retired entry is read in the coven, whose cupboard entry is its proof.
   const detailOf = () =>
     ingredientDetailOf(session, entry, isRetired(entry) ? membership.workspaceId : undefined);
   const jarsOf = () => covenJarsOf(session, membership.workspaceId, id);

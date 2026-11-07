@@ -39,6 +39,7 @@ export const readGrimoire = cache(
     before: string | undefined,
   ) => {
     const session = await requireSession();
+    // Written by the page from its parameter table, and checked again by the service.
     const query: Query = { order: 'UPDATED_DESC', ...JSON.parse(variables), status };
     const page = await readNumberedPage(
       { after, before },

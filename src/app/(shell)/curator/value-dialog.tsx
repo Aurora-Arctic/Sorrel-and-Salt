@@ -22,6 +22,7 @@ export default function ValueDialog({
           heading: opened.heading,
           body: (done) => (
             <GroupedValueForm
+              // A fresh form per value: one opened after another starts from its own values.
               key={opened.value?.id ?? 'new'}
               kind={kind}
               value={opened.value}

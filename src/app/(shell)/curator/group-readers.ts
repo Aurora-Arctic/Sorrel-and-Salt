@@ -16,6 +16,7 @@ import type { ValueGroupRow } from './types';
 
 const allGroups = <T extends ValueGroupRow>(list: (page: PageRequest) => Promise<PageEntry<T>[]>) =>
   cache(async (): Promise<ValueGroupRow[]> => {
+    // One page of the maximum holds every group, as groups are few.
     const page = await resolvePage({ first: MAX_PAGE_SIZE }, list);
     return page.edges.map(({ node }) => ({
       id: node.id,
