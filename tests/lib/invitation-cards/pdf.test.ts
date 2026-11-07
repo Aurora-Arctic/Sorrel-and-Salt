@@ -80,6 +80,8 @@ interface Drawn {
   /** The CMYK fill in force at each rectangle in `fills`, at each other filled path, and at each text run. */
   fillInks: number[][];
   pathInks: number[][];
+  /** The box of each filled path in `pathInks`, in the same order. */
+  pathBoxes: Box[];
   textInks: number[][];
 }
 
@@ -130,6 +132,7 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
     operators: new Set(),
     fillInks: [],
     pathInks: [],
+    pathBoxes: [],
     textInks: [],
   };
   let ink: number[] = [];
@@ -190,7 +193,10 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
           if (path.length === 1 && path[0].length === 4) {
             result.fills.push(boxOf(path[0]));
             result.fillInks.push(ink);
-          } else result.pathInks.push(ink);
+          } else {
+            result.pathInks.push(ink);
+            result.pathBoxes.push(boxOf(path.flat()));
+          }
           path = [];
           break;
         case 'S':
@@ -594,6 +600,44 @@ describe("the card sheets PDF's inks", () => {
       }
     },
   );
+  it("moves the first front's code and its shadow together, by the batch's expiry date", async () => {
+    // The first front's shadow, and the muted-ink paths inside it: that card's code.
+    const placed = async (expiresAt: Date) => {
+      const doc = await PDFDocument.load(
+        await renderCardSheets(
+          { links: links(1), batch: 'b4444444', expiresAt, backs: false },
+          assets,
+        ),
+      );
+      const names = imageNames(doc, 0);
+      const page = drawn(doc, 0);
+      const shadow = page.images.find((image) => names[image.name] === 'shadow')!.box;
+      const code = boxOf(
+        page.pathBoxes
+          .filter((box, i) => page.pathInks[i].join() === MUTED_INK.join() && overlaps(box, shadow))
+          .flatMap(
+            (box) =>
+              [
+                [box.left, box.bottom],
+                [box.right, box.top],
+              ] as [number, number][],
+          ),
+      );
+      const middle = (box: Box) => [(box.left + box.right) / 2, (box.bottom + box.top) / 2];
+      return { shadow: middle(shadow), code: middle(code) };
+    };
+    const short = await placed(EXPIRES);
+    const long = await placed(new Date('2027-10-01T12:00:00Z'));
+    const codeShift = Math.hypot(long.code[0] - short.code[0], long.code[1] - short.code[1]);
+    expect(codeShift).toBeGreaterThan(2);
+    expect(
+      Math.abs(long.shadow[0] - short.shadow[0] - (long.code[0] - short.code[0])),
+    ).toBeLessThanOrEqual(0.5);
+    expect(
+      Math.abs(long.shadow[1] - short.shadow[1] - (long.code[1] - short.code[1])),
+    ).toBeLessThanOrEqual(0.5);
+  });
+
   it('shades each front behind its code column with solid ground ink through a grey soft mask, over the salt and under the words', () => {
     const names = imageNames(twelve, 0);
     const page = drawn(twelve, 0);

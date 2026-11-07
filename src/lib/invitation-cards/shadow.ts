@@ -1,7 +1,13 @@
 import type { Font } from '@pdf-lib/fontkit';
 import { qrShapes } from '../qr';
 import type { RoundedSquare } from '../qr/types';
-import { type CardFonts, FRONT_QR, SHADOW_OPACITY, SHADOW_RADIUS, type TextItem } from './layout';
+import {
+  type CardFonts,
+  type QrItem,
+  SHADOW_OPACITY,
+  SHADOW_RADIUS,
+  type TextItem,
+} from './layout';
 
 // The mask's pixels per artboard px, 240 to the inch, finer than the salt picture's 234.
 const MASK_SCALE = 1.25;
@@ -40,17 +46,11 @@ export interface CodeShadows {
  * The shadows behind one batch's code column. The words are the same on every card, so they are traced once;
  * each card's code is added to them.
  */
-export function codeShadows(fonts: CardFonts, column: TextItem[]): CodeShadows {
+export function codeShadows(fonts: CardFonts, column: TextItem[], code: QrItem): CodeShadows {
   const sigma = (SHADOW_RADIUS / 2) * MASK_SCALE;
   const pad = Math.ceil(3 * sigma) + 2;
   const words = column.flatMap((item) => textShapes(fonts[item.font], item));
-  const points = [
-    ...words.flat(2),
-    FRONT_QR.x,
-    FRONT_QR.y,
-    FRONT_QR.x + FRONT_QR.size,
-    FRONT_QR.y + FRONT_QR.size,
-  ];
+  const points = [...words.flat(2), code.x, code.y, code.x + code.size, code.y + code.size];
   const xs = points.filter((_, i) => i % 2 === 0);
   const ys = points.filter((_, i) => i % 2 === 1);
   const left = Math.floor(Math.min(...xs) * MASK_SCALE) - pad;
@@ -63,7 +63,7 @@ export function codeShadows(fonts: CardFonts, column: TextItem[]): CodeShadows {
 
   const coverage = (link: string) => {
     const out = wordCoverage.slice();
-    for (const shape of codeShapes(link)) fillShape(out, grid, shape);
+    for (const shape of codeShapes(link, code)) fillShape(out, grid, shape);
     for (let i = 0; i < out.length; i += 1) if (out[i] > 1) out[i] = 1;
     return out;
   };
@@ -147,11 +147,11 @@ function textShapes(font: Font, item: TextItem): Shape[] {
   return shapes;
 }
 
-function codeShapes(link: string): Shape[] {
+function codeShapes(link: string, code: QrItem): Shape[] {
   const { size, dotRadius, dots, finders } = qrShapes(link);
-  const module = FRONT_QR.size / size;
+  const module = code.size / size;
   const toArtboard = (polygon: Polygon) =>
-    polygon.map((v, i) => (i % 2 === 0 ? FRONT_QR.x : FRONT_QR.y) + v * module);
+    polygon.map((v, i) => (i % 2 === 0 ? code.x : code.y) + v * module);
   const shapes: Shape[] = [];
   for (const { outer, inner, centre } of finders) {
     shapes.push([roundedSquare(outer), reversed(roundedSquare(inner))].map(toArtboard));

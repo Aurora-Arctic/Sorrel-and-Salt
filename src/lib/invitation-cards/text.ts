@@ -29,6 +29,16 @@ export function textWidth({ font, size, letterSpacing = 0 }: TextStyle, text: st
   return (units / font.unitsPerEm) * size + letterSpacing * [...text].length;
 }
 
+/** How far a line's ink reaches right of where it starts: its advance up to the last glyph, then that glyph's outline. */
+export function inkedWidth({ font, size, letterSpacing = 0 }: TextStyle, text: string): number {
+  const scale = size / font.unitsPerEm;
+  const { glyphs, positions } = font.layout(text);
+  const before = positions
+    .slice(0, -1)
+    .reduce((sum, position) => sum + position.xAdvance * scale + letterSpacing, 0);
+  return before + glyphs[glyphs.length - 1].bbox.maxX * scale;
+}
+
 /** Where the baseline of a line sits below the line box's top, by CSS's half-leading rule. */
 export function baselineOffset(font: Font, size: number, lineHeight: number): number {
   const ascent = (font.ascent / font.unitsPerEm) * size;

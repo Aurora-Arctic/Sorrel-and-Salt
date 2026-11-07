@@ -7,11 +7,11 @@ import {
   codeColumnText,
   COLUMN,
   FRONT_PICTURE,
-  FRONT_QR,
+  frontCode,
   PX_PER_INCH,
   SHADOW_OPACITY,
 } from '@/lib/invitation-cards/layout';
-import { codeShadows } from '@/lib/invitation-cards/shadow';
+import { type CodeShadows, codeShadows } from '@/lib/invitation-cards/shadow';
 import { decodePng } from '@/lib/invitation-cards/inks';
 import { inkExtent, textWidth } from '@/lib/invitation-cards/text';
 
@@ -25,8 +25,10 @@ const fonts: CardFonts = {
 };
 const PT = PX_PER_INCH / 72;
 const LINK = 'https://sorrelandsalt.com/i/card000000000007';
-const column = codeColumnText(fonts, '1 April 2027');
-const shadows = codeShadows(fonts, column);
+const VALID = 'Valid until 31 March 2027';
+const code = frontCode(fonts, VALID);
+const column = codeColumnText(fonts, VALID, code);
+const shadows = codeShadows(fonts, column, code);
 const mask = shadows.mask(LINK);
 
 function centroid(values: ArrayLike<number>) {
@@ -42,6 +44,21 @@ function centroid(values: ArrayLike<number>) {
     }
   const scale = shadows.width / shadows.columns;
   return { x: shadows.x + (x / sum) * scale, y: shadows.y + (y / sum) * scale };
+}
+
+// The middle of the mask's inked extent across and down, in artboard px.
+function extentMiddle(of: CodeShadows, values: ArrayLike<number>) {
+  const inked = (count: number, value: (i: number, j: number) => number, other: number) => {
+    const hit = Array.from({ length: count }, (_, i) =>
+      Array.from({ length: other }, (_, j) => value(i, j)).some((v) => v > 0),
+    );
+    return (hit.indexOf(true) + hit.lastIndexOf(true) + 1) / 2;
+  };
+  const scale = of.width / of.columns;
+  return {
+    x: of.x + scale * inked(of.columns, (c, r) => values[r * of.columns + c], of.rows),
+    y: of.y + scale * inked(of.rows, (r, c) => values[r * of.columns + c], of.columns),
+  };
 }
 
 // The mask's value under an artboard point.
@@ -64,20 +81,8 @@ describe("the code column's shadow", () => {
 
   // The shapes' own weight leans off the centre line, as letters and dots fall, so the centre is the shadow's extent.
   it("spreads evenly about the code column's centre, with no offset from the shapes it blurs", () => {
-    const inked = (count: number, value: (i: number, j: number) => number, other: number) => {
-      const hit = Array.from({ length: count }, (_, i) =>
-        Array.from({ length: other }, (_, j) => value(i, j)).some((v) => v > 0),
-      );
-      return (hit.indexOf(true) + hit.lastIndexOf(true) + 1) / 2;
-    };
-    const scale = shadows.width / shadows.columns;
-    const middleX =
-      shadows.x +
-      scale * inked(shadows.columns, (c, r) => mask[r * shadows.columns + c], shadows.rows);
-    const middleY =
-      shadows.y +
-      scale * inked(shadows.rows, (r, c) => mask[r * shadows.columns + c], shadows.columns);
-    expect(Math.abs(middleX - (FRONT_QR.x + FRONT_QR.size / 2))).toBeLessThanOrEqual(PT);
+    const { x: middleX, y: middleY } = extentMiddle(shadows, mask);
+    expect(Math.abs(middleX - (code.x + code.size / 2))).toBeLessThanOrEqual(PT);
     expect(Math.abs(middleY - (COLUMN.top + COLUMN.height / 2))).toBeLessThanOrEqual(PT);
     const shadow = centroid(mask);
     const shape = centroid(shadows.coverage(LINK));
@@ -92,13 +97,23 @@ describe("the code column's shadow", () => {
       const middle = item.x + (textWidth(style, item.text) - item.letterSpacing) / 2;
       expect(at(middle, item.baseline - above / 2), item.text).toBeGreaterThan(0);
     }
-    expect(at(FRONT_QR.x + FRONT_QR.size / 2, FRONT_QR.y + FRONT_QR.size / 2)).toBeGreaterThan(0);
+    expect(at(code.x + code.size / 2, code.y + code.size / 2)).toBeGreaterThan(0);
     const edges: number[] = [];
     for (let col = 0; col < shadows.columns; col += 1)
       edges.push(mask[col], mask[(shadows.rows - 1) * shadows.columns + col]);
     for (let row = 0; row < shadows.rows; row += 1)
       edges.push(mask[row * shadows.columns], mask[row * shadows.columns + shadows.columns - 1]);
     expect(Math.max(...edges)).toBe(0);
+  });
+
+  it('moves across with the code when a longer date stands it further left', () => {
+    const long = 'Valid until 30 September 2027';
+    const there = frontCode(fonts, long);
+    expect(code.x - there.x).toBeGreaterThan(5 * PT);
+    const moved = codeShadows(fonts, codeColumnText(fonts, long, there), there);
+    const middle = extentMiddle(moved, moved.mask(LINK));
+    expect(Math.abs(middle.x - (there.x + there.size / 2))).toBeLessThanOrEqual(PT);
+    expect(Math.abs(middle.y - extentMiddle(shadows, mask).y)).toBeLessThanOrEqual(PT);
   });
 
   it("follows each card's own code", () => {

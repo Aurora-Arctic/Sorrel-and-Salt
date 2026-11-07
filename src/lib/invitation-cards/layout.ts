@@ -2,6 +2,7 @@ import type { Font } from '@pdf-lib/fontkit';
 import { BACK_LEDE, BACK_NOTE, type FrontCopy, SITE_ADDRESS, WORDMARK } from './copy';
 import {
   baselineOffset,
+  inkedWidth,
   inkExtent,
   normalLineHeight,
   textWidth,
@@ -57,6 +58,8 @@ const GROUP_GAP = 18;
 // Both front columns run between the safe area's top and bottom, 1/8 in inside the trim, by their inked edges.
 const SAFE_TOP = COLUMN.top;
 const SAFE_BOTTOM = COLUMN.top + COLUMN.height;
+/** The safe area's right edge, 1/8 in inside the trim, where the front's expiry line ends its ink. */
+export const SAFE_RIGHT = ARTBOARD.width - ARTBOARD.trimInset - PX_PER_INCH / 8;
 
 /** The headline size; `tests/lib/invitation-cards/headline.test.ts` holds every headline to two lines at it. */
 export const HEADLINE_SIZE = 52;
@@ -85,12 +88,27 @@ export const BACK_PICTURE: PictureItem = {
 };
 
 /**
- * The QR code, between the wordmark and address above it and the expiry below, each line centred on it. Across, it
- * stands where the widest expiry the date format prints, "VALID UNTIL 30 SEPTEMBER 2044" at 268.19 px, ends on the
- * safe area's right edge. Down, it stands where the column's gaps run 1 : 2 : 2 with the wordmark's top and the
- * expiry's bottom on the safe area's edges. layout.test.ts measures both.
+ * The QR code's height on the front and its size, between the wordmark and address above it and the expiry below, each
+ * line centred on it. Down, it stands where the column's gaps run 1 : 2 : 2 with the wordmark's top and the expiry's
+ * bottom on the safe area's edges. Across, it depends on the batch's expiry date: frontCode places it.
  */
-export const FRONT_QR: QrItem = { x: 446.905, y: 144.231, size: 182 };
+export const FRONT_QR: Omit<QrItem, 'x'> = { y: 144.231, size: 182 };
+
+const EXPIRY_SIZE = 13;
+const EXPIRY_SPACING = EXPIRY_SIZE * 0.12;
+
+/**
+ * Places a batch's code across, where its expiry line, centred on the code, ends its ink on the safe area's right edge;
+ * every card in the batch carries the same date, so a short date stands its column further right than a long one.
+ * layout.test.ts measures it.
+ */
+export function frontCode(fonts: CardFonts, validUntil: string): QrItem {
+  const style = { font: fonts.lexend500, size: EXPIRY_SIZE, letterSpacing: EXPIRY_SPACING };
+  const text = validUntil.toUpperCase();
+  const width = textWidth(style, text) - EXPIRY_SPACING;
+  const centre = SAFE_RIGHT - inkedWidth(style, text) + width / 2;
+  return { x: centre - FRONT_QR.size / 2, ...FRONT_QR };
+}
 
 /**
  * The soft shadow behind the code column, in the ground ink with no offset: its blur radius, 3 pt as artboard px, is
@@ -167,7 +185,12 @@ function lexend(fonts: CardFonts, font: FontKey, size: number, letterSpacing = 0
  * The front's words: the top group in the text column, and beside it a column centred on the QR code, the wordmark
  * and the address above the code and the expiry below it.
  */
-export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string): TextItem[] {
+export function frontText(
+  fonts: CardFonts,
+  copy: FrontCopy,
+  validUntil: string,
+  code: QrItem,
+): TextItem[] {
   const tagline = lexend(fonts, 'lexend400', 19.5);
   const rest = lexend(fonts, 'lexend300', 16.5);
   const top = stack(
@@ -218,11 +241,11 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
     wrap(rest, copy.howTo, BODY_WIDTH).length,
     wrap(rest, copy.admits, BODY_WIDTH).length,
   ];
-  return [...spread(fonts, top.items, paragraphs), ...codeColumnText(fonts, validUntil)];
+  return [...spread(fonts, top.items, paragraphs), ...codeColumnText(fonts, validUntil, code)];
 }
 
 /** The column centred on the QR code: the wordmark and the address above the code, and the expiry below it. */
-export function codeColumnText(fonts: CardFonts, validUntil: string): TextItem[] {
+export function codeColumnText(fonts: CardFonts, validUntil: string, code: QrItem): TextItem[] {
   const line = (
     font: FontKey,
     size: number,
@@ -235,19 +258,19 @@ export function codeColumnText(fonts: CardFonts, validUntil: string): TextItem[]
   };
   const wordmark = line('cormorant600', 22, 22 * 0.04, CHALK, WORDMARK);
   const address = line('lexend500', 13, 13 * 0.12, MUTED, SITE_ADDRESS.toUpperCase());
-  const expiry = line('lexend500', 13, 13 * 0.12, MUTED, validUntil.toUpperCase());
+  const expiry = line('lexend500', EXPIRY_SIZE, EXPIRY_SPACING, MUTED, validUntil.toUpperCase());
   // The wordmark's top and the expiry's bottom sit on the safe area's edges; the address takes a third of the room
   // between the wordmark and the code, so the gap above it is half the gap below it.
   const wordmarkBaseline = SAFE_TOP + wordmark.above;
   const wordmarkBottom = wordmarkBaseline + wordmark.below;
-  const addressGap = (FRONT_QR.y - wordmarkBottom - address.above - address.below) / 3;
+  const addressGap = (code.y - wordmarkBottom - address.above - address.below) / 3;
   const addressBaseline = wordmarkBottom + addressGap + address.above;
   const expiryBaseline = SAFE_BOTTOM - expiry.below;
   return [
     { ...wordmark.item, baseline: wordmarkBaseline },
     { ...address.item, baseline: addressBaseline },
     { ...expiry.item, baseline: expiryBaseline },
-  ].map((item) => centredOnCode(fonts, item));
+  ].map((item) => centredOnCode(fonts, item, code));
 }
 
 /**
@@ -275,13 +298,13 @@ function spread(fonts: CardFonts, items: TextItem[], counts: number[]): TextItem
 }
 
 // The inked width leaves out the letter spacing set after the last letter, so a spaced line centres on what prints.
-function centredOnCode(fonts: CardFonts, item: TextItem): TextItem {
+function centredOnCode(fonts: CardFonts, item: TextItem, code: QrItem): TextItem {
   const width =
     textWidth(
       { font: fonts[item.font], size: item.size, letterSpacing: item.letterSpacing },
       item.text,
     ) - item.letterSpacing;
-  return { ...item, x: FRONT_QR.x + FRONT_QR.size / 2 - width / 2 };
+  return { ...item, x: code.x + code.size / 2 - width / 2 };
 }
 
 // The sorrel's leftmost inked column beside the back's sentence, where it prints 5% of the way from the ground to

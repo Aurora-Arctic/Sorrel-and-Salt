@@ -43,10 +43,11 @@ import {
   type CardFonts,
   type FontKey,
   FRONT_PICTURE,
-  FRONT_QR,
+  frontCode,
   frontText,
   PX_PER_INCH,
   type PictureItem,
+  type QrItem,
   type TextItem,
 } from './layout';
 import { CARDS_PER_SHEET } from './limits';
@@ -208,12 +209,12 @@ function roundedSquareOperators({ x, y, size, radius: r }: RoundedSquare): Opera
   ];
 }
 
-function qrOperators(link: string): Operator[] {
+function qrOperators(link: string, at: QrItem): Operator[] {
   const { size, dotRadius, dots, finders } = qrShapes(link);
-  const module = FRONT_QR.size / size;
+  const module = at.size / size;
   const ops: Operator[] = [
     pushGraphicsState(),
-    concatTransformationMatrix(module, 0, 0, module, FRONT_QR.x, FRONT_QR.y),
+    concatTransformationMatrix(module, 0, 0, module, at.x, at.y),
     setFillingCmykColor(...MUTED_INK),
   ];
   // Each finder's ring is filled even-odd, so the card shows through its middle as it does through the SVG's.
@@ -261,7 +262,7 @@ function drawPage(
     position: number;
     picture: PictureItem;
     text: TextItem[];
-    link?: string;
+    code?: { link: string; at: QrItem };
     shadow?: { image: PDFRef; rect: Rect };
   }[],
   embedded: Embedded,
@@ -292,7 +293,7 @@ function drawPage(
   for (const card of cards) {
     ops.push(pushGraphicsState(), ...artboardOperators(card.position));
     for (const item of card.text) ops.push(...textOperators(page, embedded, item));
-    if (card.link) ops.push(...qrOperators(card.link));
+    if (card.code) ops.push(...qrOperators(card.code.link, card.code.at));
     ops.push(popGraphicsState());
   }
   ops.push(popGraphicsState(), ...cropMarkOperators(), ...textOperators(page, embedded, margin));
@@ -381,10 +382,11 @@ export async function renderCardSheets(
   const embedded = await embedAssets(doc, assets);
   const valid = validUntil(expiresAt);
   const back = backText(embedded.measure, batch);
-  const fronts = FRONT_COPY.map((copy) => frontText(embedded.measure, copy, valid));
+  const code = frontCode(embedded.measure, valid);
+  const fronts = FRONT_COPY.map((copy) => frontText(embedded.measure, copy, valid, code));
   const shadowOf = shadowEmbedder(
     doc,
-    codeShadows(embedded.measure, codeColumnText(embedded.measure, valid)),
+    codeShadows(embedded.measure, codeColumnText(embedded.measure, valid, code), code),
   );
   const sheets = Math.ceil(links.length / CARDS_PER_SHEET);
   for (let start = 0; start < links.length; start += CARDS_PER_SHEET) {
@@ -401,7 +403,7 @@ export async function renderCardSheets(
         position: i,
         picture: FRONT_PICTURE,
         text: fronts[(start + i) % fronts.length],
-        link,
+        code: { link, at: code },
         shadow: shadowOf(link),
       })),
       embedded,

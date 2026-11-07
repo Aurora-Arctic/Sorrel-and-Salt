@@ -10,6 +10,7 @@ import {
   COLUMN,
   type CardFonts,
   FRONT_QR,
+  frontCode,
   frontText,
   PX_PER_INCH,
   type TextItem,
@@ -48,18 +49,15 @@ const safe: Box = {
   bottom: trim.bottom - SAFE_INSET,
 };
 
-// A line's box: its advance across, less the letter spacing after its last letter, which prints nothing, and the inked height of its glyphs about its baseline, since the
-// font's ascent reaches well above any letter and would hold the text further from the trim than it prints.
+// A line's box: from where it starts to where its last glyph stops inking, and the inked height of its glyphs about its
+// baseline, since the font's ascent reaches well above any letter and would hold the text further from the trim than it prints.
 function boxOf(item: TextItem): Box {
   const f = fonts[item.font];
   const scale = item.size / f.unitsPerEm;
   const glyphs = f.layout(item.text).glyphs.map((glyph) => glyph.bbox);
   return {
     left: item.x,
-    right:
-      item.x +
-      textWidth({ font: f, size: item.size, letterSpacing: item.letterSpacing }, item.text) -
-      item.letterSpacing,
+    right: inkedRight(item),
     top: item.baseline - Math.max(...glyphs.map((box) => box.maxY)) * scale,
     bottom: item.baseline - Math.min(...glyphs.map((box) => box.minY)) * scale,
   };
@@ -72,21 +70,33 @@ const inside = (inner: Box, outer: Box) =>
 const overlaps = (a: Box, b: Box) =>
   a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 
-const qr: Box = {
-  left: FRONT_QR.x,
-  top: FRONT_QR.y,
-  right: FRONT_QR.x + FRONT_QR.size,
-  bottom: FRONT_QR.y + FRONT_QR.size,
-};
-// The longest expiry the date format writes.
+// The longest expiry the date format writes, and a short one, which stands its code further right.
 const VALID = 'Valid until 30 September 2027';
-// The widest expiry the date format prints for any day from 2026 to 2099.
-const WIDEST_VALID = 'Valid until 30 September 2044';
+const SHORT_VALID = 'Valid until 31 March 2027';
+const code = frontCode(fonts, VALID);
+const qr: Box = {
+  left: code.x,
+  top: code.y,
+  right: code.x + code.size,
+  bottom: code.y + code.size,
+};
 const pt = (px: number) => (px * 72) / PX_PER_INCH;
 
+// Where a line's last glyph stops inking, which can fall short of or past its advance.
+function inkedRight(item: TextItem): number {
+  const f = fonts[item.font];
+  const scale = item.size / f.unitsPerEm;
+  const { glyphs, positions } = f.layout(item.text);
+  const before = positions
+    .slice(0, -1)
+    .reduce((sum, position) => sum + position.xAdvance * scale + item.letterSpacing, 0);
+  return item.x + before + glyphs[glyphs.length - 1].bbox.maxX * scale;
+}
+
+// The middle of a line's advance, less the letter spacing after its last letter, which prints nothing.
 function middleOf(item: TextItem): number {
-  const box = boxOf(item);
-  return (box.left + box.right) / 2;
+  const style = { font: fonts[item.font], size: item.size, letterSpacing: item.letterSpacing };
+  return item.x + (textWidth(style, item.text) - item.letterSpacing) / 2;
 }
 const columnLine = (items: TextItem[], text: string) => {
   const found = items.find((item) => item.text === text);
@@ -136,7 +146,7 @@ describe('the card layout', () => {
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
     'keeps every line of the "%s" front 1/8 in inside the trim and clear of the code',
     (_, copy) => {
-      const items = frontText(fonts, copy, VALID);
+      const items = frontText(fonts, copy, VALID, code);
       expect(items.length).toBeGreaterThan(5);
       for (const item of items) {
         const box = boxOf(item);
@@ -149,7 +159,7 @@ describe('the card layout', () => {
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
     'stacks the wordmark and the address above the code and the expiry below it on the "%s" front, each centred on the code',
     (_, copy) => {
-      const items = frontText(fonts, copy, VALID);
+      const items = frontText(fonts, copy, VALID, code);
       const wordmark = columnLine(items, WORDMARK);
       const address = columnLine(items, SITE_ADDRESS.toUpperCase());
       const valid = columnLine(items, VALID.toUpperCase());
@@ -157,7 +167,7 @@ describe('the card layout', () => {
       expect(boxOf(address).bottom).toBeLessThan(qr.top);
       expect(boxOf(valid).top).toBeGreaterThan(qr.bottom);
       for (const line of [wordmark, address, valid]) {
-        expect(middleOf(line), line.text).toBeCloseTo(FRONT_QR.x + FRONT_QR.size / 2, 1);
+        expect(middleOf(line), line.text).toBeCloseTo(code.x + code.size / 2, 1);
       }
     },
   );
@@ -165,7 +175,7 @@ describe('the card layout', () => {
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
     'runs the text column on the "%s" front from the top margin to the bottom margin by its inked edges',
     (_, copy) => {
-      const column = frontText(fonts, copy, VALID)
+      const column = frontText(fonts, copy, VALID, code)
         .filter((item) => item.x === COLUMN.left)
         .map(boxOf);
       expect(column.length).toBeGreaterThan(4);
@@ -181,7 +191,7 @@ describe('the card layout', () => {
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
     'runs the code’s column on the "%s" front from the top margin to the bottom margin, its gaps in the ratio 1 : 2 : 2',
     (_, copy) => {
-      const items = frontText(fonts, copy, VALID);
+      const items = frontText(fonts, copy, VALID, code);
       const wordmark = boxOf(columnLine(items, WORDMARK));
       const address = boxOf(columnLine(items, SITE_ADDRESS.toUpperCase()));
       const valid = boxOf(columnLine(items, VALID.toUpperCase()));
@@ -193,16 +203,30 @@ describe('the card layout', () => {
     },
   );
 
-  it('ends the widest expiry the date format prints on the right margin, centred on the code', () => {
-    const items = frontText(fonts, FRONT_COPY[0], WIDEST_VALID);
-    const valid = columnLine(items, WIDEST_VALID.toUpperCase());
-    expect(Math.abs(pt(boxOf(valid).right - safe.right))).toBeLessThanOrEqual(0.25);
-  });
+  it.each([SHORT_VALID, VALID])(
+    'stands the code where "%s" ends its ink on the right margin, the column centred on the code and its gaps unchanged',
+    (validUntil) => {
+      const at = frontCode(fonts, validUntil);
+      const items = frontText(fonts, FRONT_COPY[0], validUntil, at);
+      const wordmark = columnLine(items, WORDMARK);
+      const address = columnLine(items, SITE_ADDRESS.toUpperCase());
+      const valid = columnLine(items, validUntil.toUpperCase());
+      expect(Math.abs(pt(inkedRight(valid) - safe.right))).toBeLessThanOrEqual(0.25);
+      for (const line of [wordmark, address, valid]) {
+        expect(middleOf(line), line.text).toBeCloseTo(at.x + at.size / 2, 1);
+      }
+      expect(at.y).toBe(FRONT_QR.y);
+      expect(at.size).toBe(FRONT_QR.size);
+      expect(pt(boxOf(address).top - boxOf(wordmark).bottom)).toBeCloseTo(9.07, 1);
+      expect(pt(at.y - boxOf(address).bottom)).toBeCloseTo(18.14, 1);
+      expect(pt(boxOf(valid).top - (at.y + at.size))).toBeCloseTo(18.14, 1);
+    },
+  );
 
   it.each(FRONT_COPY.map((copy) => [copy.headline, copy] as const))(
     'sets no line of the "%s" front over another',
     (_, copy) => {
-      const boxes = frontText(fonts, copy, VALID).map(boxOf);
+      const boxes = frontText(fonts, copy, VALID, code).map(boxOf);
       boxes.forEach((a, i) =>
         boxes.slice(i + 1).forEach((b) => expect(overlaps(a, b)).toBe(false)),
       );
@@ -230,6 +254,8 @@ describe('the card layout', () => {
 
   it('prints the code inside the safe area, at least 0.9 in across so a phone reads it at arm’s length', () => {
     expect(inside(qr, safe)).toBe(true);
+    const short = frontCode(fonts, SHORT_VALID);
+    expect(short.x + short.size).toBeLessThanOrEqual(safe.right);
     expect(FRONT_QR.size / PX_PER_INCH).toBeGreaterThanOrEqual(0.9);
   });
 });
