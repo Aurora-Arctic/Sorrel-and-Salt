@@ -30,9 +30,7 @@ limit $limit  -- the page plus one
   alike, so the declared type is the one compared: `length(name)::real / 3` is
   `double precision`, and ordered raw against a `real` cursor it would replay
   rows. A descending part is written negated, so one row comparison serves.
-  The compendium search's `[-score, position, name]` is the first computed key. The
-  duplicate lookup's is the same shape over trigram similarity (MB.11), and
-  M8.14's `(lower(name), identity_key)` is the next.
+  The compendium search's `[-score, position, name]` is one such computed key, the duplicate lookup's (trigram similarity) another.
 - **Each row comes back with its cursor.** The key is selected as an array of
   each part cast to text, and compared by casting each back to its part's
   type (`getSQLType()` for a column), so Postgres compares a `timestamptz` to
@@ -45,24 +43,19 @@ limit $limit  -- the page plus one
   `Keyset.join` is a parenthesised, aliased statement and its `on`, which a
   sort part or the `where` may read; `Keyset.carry` names values selected
   beside the row, which `resolvePage` puts on the edge. The compendium search
-  joins its scored matches and carries the score this way, and the duplicate
-  lookup carries its correlated score (MB.11).
+  joins its scored matches and carries the score this way, and the duplicate lookup carries its correlated score.
 - **A carried value is selected one `sql` layer deeper than it is written.**
   In a select with no join, Drizzle renders a column written directly in a
   selected expression without its table name (`buildSelection`'s
-  `isSingleTable`). So the duplicate score's folk-name subquery,
+  `isSingleTable`). So a folk-name subquery,
   `… where folk.ingredient_id = ingredients.id`, would render as
   `where "ingredient_id" = "id"` and compare the folk-name table with itself.
-  Only an expression's own top-level columns are unqualified, so the wrapper
-  keeps every name, but it also drops a `mapWith`. A carried value is
-  therefore read as the driver returns it. `ORDER BY` and `WHERE` are not
-  built that way, which is why the order was right while the selected score
-  was not.
+  The one `sql` layer of wrapper keeps every name, but it also drops a
+  `mapWith`, so a carried value is read as the driver returns it. `ORDER BY` and
+  `WHERE` are not built that way.
 - **The id breaks ties**, so rows sharing a sort key still sit in one total
   order, and a page boundary between two of them loses neither. Every table
-  these finders take has an `id` (`Identified`), which rules out the two
-  hard-deleted join tables; `spell_ingredients` has one, and its `spell_id`
-  is what refuses it. `workspace_members` has none, being keyed on the pair,
+  these finders take has an `id` (`Identified`), which rules out the hard-deleted join tables. `workspace_members` has none, being keyed on the pair,
   so its one page finder, `findMemberPage` (M6.11), builds its keyset itself
   and breaks ties on `user_id`, which is unique inside the one coven its
   proof names. `selectFrom` reads the tiebreak as text beside the key, from
@@ -108,9 +101,7 @@ from … [join …] where …   -- no order, no limit
   `findPageCountInScopeIncludingSoftDeleted` a `findPageInScopeIncludingSoftDeleted`
   one, the coven Ingredients list's, whose scope admits a retired entry the coven
   still holds (M12.32; [`soft-delete.md`](soft-delete.md)): the three
-  group pages count through it (MB.132), and each vocabulary's own count
-  finder, the compendium's, the ledger's and the user list's
-  (`findUserCount`, MB.115) call one under their own filter (MB.206).
+  group pages count through it, and each vocabulary's own count finder, the compendium's, the ledger's and the user list's (`findUserCount`) call one under their own filter.
 
 A spell's page under the visibility rule is its own finder,
 `findPageInReadableSpells` (M10.9), like the other spell finders.
