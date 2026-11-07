@@ -57,25 +57,25 @@ client and `drizzle-orm`, `dataloader`, deep module imports, `slugify`,
 rejected in the PR that added it.
 
 Seven more were Vitest guards that read the source as text or as a syntax
-tree (M14.27). They are rules in `lint/source-sweeps.js`, spread into the same
+tree. They are rules in `lint/source-sweeps.js`, spread into the same
 plugin, each proved by one passing and one failing case in
 `tests/lint/source-sweeps.test.ts` (oxlint's `RuleTester`, in the `unit`
 project) and by the whole tree passing `npm run lint`:
 
-- `no-bare-router-navigation` — was `navigation.test.ts`: no `router.push`,
+- `no-bare-router-navigation` — no `router.push`,
   `replace` or `refresh` outside `src/lib/navigation/` (M12.33).
-- `form-shown-through-form-label` — was `form-label.test.ts`: a variant's
+- `form-shown-through-form-label` — a variant's
   form is shown through `formLabel`.
-- `spell-visibility-read-in-one-place` — was `readable-spells-guard.test.ts`:
+- `spell-visibility-read-in-one-place` —
   only `readableSpells` compares a spell's visibility to decide a read (rule 7).
-- `compendium-review-mark-switch-only` — was `compendium-review-mark.test.ts`:
+- `compendium-review-mark-switch-only` —
   only `setCompendiumEntryReviewed` sets the review mark (M14.8).
-- `modal-focus-return-through-modal` — was `focus-return.test.ts`: no
+- `modal-focus-return-through-modal` — no
   hand-built `.focus()` return beside a dialog (M8.17).
-- `long-form-guards-leaving` — was `leave-guard.test.ts`: every form calls
+- `long-form-guards-leaving` — every form calls
   `useDiscardGuard` or `useLeaveGuard` (M13.14), or the spell builder's
   `useSaveOnClose`, which calls `useLeaveGuard` (M10.12).
-- `e2e-chained-tests-serial` — was `e2e-serial-chains.test.ts`: a Playwright
+- `e2e-chained-tests-serial` — a Playwright
   spec whose tests chain is serial (M11.18; claude-docs/testing/e2e.md, "E2E").
   `.oxlintrc.json` turns it on for `tests/e2e/**/*.spec.ts` alone.
 
@@ -103,20 +103,12 @@ cannot:
   rules of the two CI scripts that guard production's migrations.
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
   reaches a CI log.
-
-Two guards were deleted in M14.27, under rule 1, because neither proved what
-the app does:
-
-- `story-sections.test.ts` pinned the story reporter's table of site areas
-  (`tests/support/story-sections.ts`) to the list of v1 stories. That list is
-  not written down a second time: `tests/support/stories.ts` parses it out of
-  DESIGN.md §10, so the story count cannot drift from the spec. A story missing
-  from the table is listed under "Other" in the story report, which is where
-  the gap shows.
-- `tasks-md.test.ts` tested `readEntry` in `scripts/tasks-md.mjs`, the
-  parser `task-board.mjs sync` uses. Nothing tests it now, and that is
-  deliberate: task-board tooling is not tested (rule 1), because a fault in it
-  shows at once to whoever runs the command.
+- `daily-job-starts.test.ts` — a daily job starts from its Vercel Cron route alone; the set of callers is pinned.
+- `lint-job-boundary.test.ts` — only the adapter in `src/lib/jobs/` imports the Workflow SDK at runtime, and the ban still fires.
+- `no-admin-addresses.test.ts` — nothing in `src/` names an `/admin` address but Better Auth's own endpoints.
+- `shell-page-guards.test.ts` — every `(shell)` page, or a file it imports from `src/app`, calls a session guard.
+- `stock-decrement-path.test.ts` — only the repository's stock writer lowers `quantityOnHand`, through `decrementStock`.
+- `workflow-run-interpolation.test.ts` — no `${{ }}` of untrusted event data sits inside a `run:` script under `.github/`.
 
 **The guards share one scan** (MB.184). `tests/support/unit-global-setup.ts`,
 the `unit` project's `globalSetup`, runs `git ls-files --cached --others
