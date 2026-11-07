@@ -155,6 +155,9 @@ test.describe('the staff help pages', () => {
       'href',
       `/help/staff/${HELP.curation.slug}`,
     );
+    // A staff FAQ entry's address is /help/staff#slug, so it is on the staff index at its anchor; a public one is not.
+    await expect(page.locator(`[id="${HELP.staffFaq.slug}"]`)).toContainText(HELP.staffFaq.title);
+    await expect(page.locator(`[id="${HELP.faq.slug}"]`)).toHaveCount(0);
     // A curator does not reach a keeper row, and a public row lives under /help.
     await expect(page.getByRole('link', { name: new RegExp(HELP.keeper.title) })).toHaveCount(0);
     await expect(page.locator(`a[href="/help/staff/${HELP.guide.slug}"]`)).toHaveCount(0);
@@ -201,6 +204,18 @@ test.describe('the staff help pages', () => {
 });
 
 test.describe('search', () => {
+  test("a curator's search links a staff FAQ entry to its anchor on the staff index", async ({
+    page,
+  }) => {
+    await signInAs(page, 'f@help-pages-faq.test', ['discord'], 'curator');
+    await page.goto(`/help/search?q=${STAFF_WORD}`);
+
+    await page.locator(`a[href="/help/staff#${HELP.staffFaq.slug}"]`).first().click();
+    await expect(page).toHaveURL(new RegExp(`/help/staff#${HELP.staffFaq.slug}$`));
+    await expect(page.locator(`[id="${HELP.staffFaq.slug}"]`)).toContainText(HELP.staffFaq.title);
+    await expect(page.locator(`[id="${HELP.staffFaq.slug}"]`)).toBeInViewport();
+  });
+
   test('a signed-out search finds no staff row', async ({ page }) => {
     await page.goto(`/help/search?q=${STAFF_WORD}`);
 

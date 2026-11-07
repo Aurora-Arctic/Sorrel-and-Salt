@@ -11,6 +11,7 @@ export const HELP = {
   kindling: { slug: 'testwort-kindling', title: 'Testwort Kindling' },
   staffKindling: { slug: 'testwort-staff-kindling', title: 'Testwort Staff Kindling' },
   faq: { slug: 'testwort-why-the-hearth', title: 'Why Testwort the Hearth?' },
+  staffFaq: { slug: 'testwort-who-curates', title: 'Who Curates Testwort?' },
   term: { slug: 'testwort-hearthstone', title: 'Testwort Hearthstone' },
   curation: { slug: 'testwort-curation-guide', title: 'Testwort Curation Guide' },
   curationForms: { slug: 'testwort-curation-forms', title: 'Testwort Curation Forms' },
@@ -88,6 +89,17 @@ export async function seedHelpArticles(authorEmail: string): Promise<string> {
         kind: 'term',
         audience: 'public',
         body: 'The stone a fixture hearth sits on.',
+      },
+      author,
+    );
+    await insertHelpArticle(
+      sql,
+      {
+        ...HELP.staffFaq,
+        kind: 'faq',
+        audience: 'staff',
+        position: 1,
+        body: `A curator, checking each **${STAFF_WORD}** entry.`,
       },
       author,
     );
