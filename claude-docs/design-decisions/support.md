@@ -6,7 +6,7 @@ The support form and its review, the jobs and mail behind it, and the public doc
 
 **Decision (owner, 2026-10-31).** A request's `path` is stored as the address the visitor was on, for example
 `/coven/whitethorn-coven/grimoire`, never `/coven/[coven]/grimoire`. A support agent needs the coven to triage.
-This reverses the write-time redaction in `m15.1-support-form.md`.
+This reverses the write-time redaction in the section "A support form, reviewed by keepers".
 
 **Who sees the slug (owner, 2026-10-31).** A site keeper and the sender read the page as stored. A curator reads it with the
 segment after `/coven/` replaced by `[coven]`, because a coven's existence is private to its members and a curator is not
@@ -24,7 +24,7 @@ pressed. Existing rows keep `[coven]` until they are deleted.
 ## The support feature, revised after review
 
 The support form, its admin page and the sender's list shipped as M15.26 to
-M15.31 ([`m15.1-support-form.md`](m15.1-support-form.md)). The owner then
+M15.31 (see "A support form, reviewed by keepers"). The owner then
 reviewed them in a browser, as a sender and as a keeper, in both themes and
 at phone width, and chose what to change. This record lists the decisions;
 the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
@@ -32,7 +32,7 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
 
 - Review page: <https://claude.ai/artifact/WRNYpvcfoFNa1uEP4TrLZN>
 - Topic radio layout mock (the chosen layout): <https://claude.ai/artifact/Jr2H8h3oa6gQUwTooeiMAE>
-- Research behind the review: [`m15-support-review-research.md`](m15-support-review-research.md). The browser screenshots are in
+- Research behind the review: (see "Support feature: UX, accessibility and process research"). The browser screenshots are in
   `.reports/support-review/` of the `support-page-field` worktree.
 
 ### The form
@@ -153,7 +153,7 @@ A request can belong to an email address instead of an account, so a signed-out 
 
 **The check.** The entry asks that exactly one of the sender account and `sender_email` is set. Because `created_by` is always set, the check reads "the sender account" as an account other than the signed-out one: `(sender_email IS NOT NULL) = (created_by = <signed-out account id>)`. The id is the fixed constant `SIGNED_OUT_SENDER_ID` in `src/lib/support-sender.ts`, so a CHECK can name it. Every existing row passes, since none is created by that account.
 
-**Not built here.** The migration does not insert the account: a seed does (M15.40). M15.48 later kept the signed-out sender as this stand-in account and added a mailed view link (m15.48-mailed-link.md).
+**Not built here.** The migration does not insert the account: a seed does (M15.40). M15.48 later kept the signed-out sender as this stand-in account and added a mailed view link (the section "A signed-out sender reaches their request by a mailed link").
 
 #### A Signed-Out Request Is Limited, Trapped and Answered by Email (M15.40)
 
@@ -165,7 +165,7 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 - **Mail.** A receipt mail confirms the send. A staff reply to a signed-out request is mailed whole to `sender_email`, since the sender has no account to read it in.
 - **An address that belongs to an account** is still treated as signed out, so a request cannot reveal which addresses are registered.
 - **The sender's id** is one named constant, `SIGNED_OUT_SENDER_ID` in `src/lib/support-sender.ts`. The seed and the schema's CHECK use it, and the CHECK's migration (`0112_support-sender-email`) holds the same literal, since SQL cannot import it. The CHECK tying `created_by` to that id is accepted.
-- **Out of scope.** Better Auth's anonymous plugin: M15.48 considered it and dropped it (m15.48-mailed-link.md).
+- **Out of scope.** Better Auth's anonymous plugin: M15.48 considered it and dropped it (the section "A signed-out sender reaches their request by a mailed link").
 
 ### Decided while building
 
@@ -517,7 +517,7 @@ a keeper works through on the admin section. It answers each decision the
 task listed, with its reason, folds MB.176 (bug reports) into the same design
 and mints the build. The decisions are the owner's, made on 2026-10-31.
 DESIGN.md §3, §5, §7, §9 and §10 carry the result. The approved plan is
-[`m15.1-plan.md`](m15.1-plan.md).
+(see "Scope a support form reviewed by keepers (plan)").
 
 ### Who can submit
 
@@ -575,7 +575,7 @@ account's, not a coven's.
   active time-out is the row with `liftedAt IS NULL` and `until` null or in
   the future. The keeper who set it is `createdBy`. The nullable `until` and the
   required note came later, on the owner's call (M15.64, M15.65;
-  [`m15-support-review.md`](m15-support-review.md), "Open-Ended Time-Outs").
+  (see "The support feature, revised after review"), "Open-Ended Time-Outs").
 
 Why the sender is a signed-in account: that settles the question the task
 asked about a signed-out sender. The sender's session is the `withAudit` actor
@@ -590,7 +590,7 @@ soft-deleted, and a resolved request is the record that a problem was heard.
 
 **The path was stored with the segment after `/coven/` redacted** (MB.176's
 rule); superseded 2026-10-31 by the owner: the slug is stored, and only a curator reads it redacted
-([`m15-support-path-keeps-coven.md`](m15-support-path-keeps-coven.md)).
+(see "A support request keeps the coven in its page").
 
 ### The form
 
@@ -819,7 +819,7 @@ Defaults I will set in the record (stated, not asked): the form is a modal opene
 
 `git worktree add /home/node/worktrees/m15.1 -b feature/m15.1-support-form staging` after `git fetch origin staging`; copy `/app/node_modules` in, delete `node_modules/.cache/tsc/tsconfig.tsbuildinfo`. `node scripts/task-board.mjs status M15.1 "In Progress"`. All edits below in that worktree.
 
-#### 2. Write `claude-docs/design-decisions/m15.1-support-form.md`
+#### 2. Write `claude-docs/design-decisions/support.md`, "A support form, reviewed by keepers"
 
 One heading per decision in the issue's list (Who can submit · Kinds · Data requests · The table · The form · The admin list · The curator view · Abuse · What it is not), each with the answer and its reason, plus "MB.176 folded in" (what it decided, what survives: redacted path, Create Issue, sender's list, two CLAUDE.md lines) and "Build tasks" (the minted list). Table shapes:
 
@@ -1091,7 +1091,7 @@ The values the owner set for it: ethics first, anti-racism, LGBTQIA+ inclusion, 
 
 22. **The demo coven duty fits who writes there.** On your decision (2 November 2026) the For Keepers item now says everyone who signs in can see what a keeper writes in the demo coven, so it stays suitable for them. The old line treated the demo coven as written by its members, but every keeper holds a steward's seat there and everyone else who signs in an observer's (`src/modules/identity/services/user-role.ts`; `CLAUDE.md`, "The site is invite-gated").
 
-23. **A section for developers.** On your decision (2 November 2026) "For Developers" sits before the owner's section, and the opening paragraph and the Terms name developers among the roles the sections bind. Its sources: checking access before fetching, filtering in the database and testing by direct access are `CLAUDE.md` rules 1, 5 and 7 and its Testing section; the record of every change is rule 3 (`withAudit`); the public code and board are `CLAUDE.md`, "GitHub task tracking". The analytics item follows this policy's notes (`m15.2-privacy-policy-notes.md`, "Analytics"): analytics are planned, run on the server and never in the visitor's browser. Updating the Privacy Policy with a change, and reporting a security problem at once, are new commitments, not code facts.
+23. **A section for developers.** On your decision (2 November 2026) "For Developers" sits before the owner's section, and the opening paragraph and the Terms name developers among the roles the sections bind. Its sources: checking access before fetching, filtering in the database and testing by direct access are `CLAUDE.md` rules 1, 5 and 7 and its Testing section; the record of every change is rule 3 (`withAudit`); the public code and board are `CLAUDE.md`, "GitHub task tracking". The analytics item follows this policy's notes (the section "Analytics"): analytics are planned, run on the server and never in the visitor's browser. Updating the Privacy Policy with a change, and reporting a security problem at once, are new commitments, not code facts.
 
 24. **Grouped sections.** On the owner's decision (2 November 2026) the page's sections are grouped under section headings with subsections, and the page menu nests the subsections under each group. "For Everyone", "The Compendium" and "Running the Site" group the sections; Accessibility moved up into "For Everyone", the role sections lost their "For" ("Curators", "Admins", "Developers", "The Owner and Everyone Who Runs the Site"), and the Sources numbers now run in order of first appearance in the text.
 
@@ -1101,7 +1101,7 @@ The values the owner set for it: ethics first, anti-racism, LGBTQIA+ inclusion, 
 
 Work that must happen once a day runs as a job that a Vercel Cron Job starts. The cron entry in `vercel.json` calls one route on the site once a day. The route checks the secret Vercel sends, starts the job and returns. The job does the day's work and ends: it never sleeps, holds no hook token and starts no successor. The owner approved Vercel Cron and set the rule on 2026-11-02: **a job runs only while it has something to process, and never sleeps for days or months waiting.**
 
-There are two such jobs. The support-retention job closes and anonymises support requests (claude-docs/design-decisions/m15.46-resolved-requests-close-and-anonymise.md), from `/api/cron/support-retention` at 03:00 UTC. The provisional cleanup deletes the lapsed unverified accounts that the per-sign-up expiry run missed (M15.68; claude-docs/design-decisions/m15.49-job-mechanism.md, "Second job: the daily cleanup"), from `/api/cron/provisional-cleanup` at 04:00 UTC.
+There are two such jobs. The support-retention job closes and anonymises support requests (claude-docs/design-decisions/support.md, "A resolved request closes on its own, and a closed one is anonymised"), from `/api/cron/support-retention` at 03:00 UTC. The provisional cleanup deletes the lapsed unverified accounts that the per-sign-up expiry run missed (M15.68; claude-docs/design-decisions/support.md, "Second job: the daily cleanup"), from `/api/cron/provisional-cleanup` at 04:00 UTC.
 
 ### Shape
 
@@ -1128,7 +1128,7 @@ Rule 1 allows no bespoke route handlers, so that no third path reaches applicati
 
 ### Decision
 
-A support request that staff or its sender resolve closes on its own seven days later, after a closing-soon notice on day 5, and every closed request is anonymised twelve calendar months after the close. One daily job does all three, started once a day by Vercel Cron (claude-docs/design-decisions/m15.46-daily-jobs-from-vercel-cron.md). Nothing starts a run per request. Readers do not wait for the job: a `resolved` row whose seven days have passed reads as `closed`, closed on its seventh day.
+A support request that staff or its sender resolve closes on its own seven days later, after a closing-soon notice on day 5, and every closed request is anonymised twelve calendar months after the close. One daily job does all three, started once a day by Vercel Cron (claude-docs/design-decisions/support.md, "Daily jobs start from Vercel Cron, and no job sleeps waiting"). Nothing starts a run per request. Readers do not wait for the job: a `resolved` row whose seven days have passed reads as `closed`, closed on its seventh day.
 
 ### Shape
 
@@ -1201,19 +1201,19 @@ Tests: `tests/workflows/secret-link-mail.test.ts` (a verification mail refused t
 **Built afterwards (owner's calls, 2026-11-02).**
 
 - **The change-of-address link.** The address asked for is held in `users.pending_email` (migration and behaviour in [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page"), so the step reads it and signs the change link when it sends. Only the newest change's link is honoured, and the job clears the column once its link has lapsed. Putting the address in the run was turned down because it is personal data in the event log; leaving the mail tried once was turned down because it loses a refused mail.
-- **The admin and coven invitations.** The step gives the invitation a fresh token through `rotateInvitationToken`, a named exception to rule 5 ([`m15.50-invitation-token-rotation.md`](m15.50-invitation-token-rotation.md)).
-- **Every run holds ids alone.** `startJob` refuses a run argument that is not an id, a kind, a site origin, a return path, a number, a boolean or null (`src/lib/jobs/run-arguments.ts`), so an address, subject, body or token cannot enter an event log ([`m15.50-mail-through-a-retried-job.md`](m15.50-mail-through-a-retried-job.md)).
-- **The notice to the address a completed change left.** The swap holds that address in `users.former_email`, and the account-notice job's step mails it and clears it ([`m15.50-mail-through-a-retried-job.md`](m15.50-mail-through-a-retried-job.md), "The notice to the address a change left").
+- **The admin and coven invitations.** The step gives the invitation a fresh token through `rotateInvitationToken`, a named exception to rule 5 ([`auth.md`, "The invitation mail mints its token in the job step"](auth.md#the-invitation-mail-mints-its-token-in-the-job-step)).
+- **Every run holds ids alone.** `startJob` refuses a run argument that is not an id, a kind, a site origin, a return path, a number, a boolean or null (`src/lib/jobs/run-arguments.ts`), so an address, subject, body or token cannot enter an event log (see "Mail is sent through a retried job").
+- **The notice to the address a completed change left.** The swap holds that address in `users.former_email`, and the account-notice job's step mails it and clears it ((see "Mail is sent through a retried job"), "The notice to the address a change left").
 
 ## A signed-out sender reaches their request by a mailed link
 
-Plan: `m15.48-plan.md`. This file records what was decided and what was left.
+Plan: the section "A signed-out sender keeps a provisional session (plan)". This file records what was decided and what was left.
 
 ### Decision
 
 A visitor who sends a support request while signed out gets no account and no session. The request is written as the seeded stand-in account (`SIGNED_OUT_SENDER_ID`) with the address they gave in `support_requests.sender_email`, as before this task. Every mail about the request carries a link, and the link is how the sender reads it and replies.
 
-An earlier version of this task gave the sender an anonymous account through Better Auth's `anonymous` plugin. The owner dropped it on 2026-11-06. The visitor never chose to sign in, so on a shared or public computer the next person could read and reply to their requests through the cookie. The mailed link already gives the sender their requests, and only to whoever holds the mail. The plugin stays out of v1, as `mb.74-better-auth-plugins.md` and MB.80 decided; try-before-sign-up stays in v2.
+An earlier version of this task gave the sender an anonymous account through Better Auth's `anonymous` plugin. The owner dropped it on 2026-11-06. The visitor never chose to sign in, so on a shared or public computer the next person could read and reply to their requests through the cookie. The mailed link already gives the sender their requests, and only to whoever holds the mail. The plugin stays out of v1, as `design-decisions/auth.md`, "Better Auth's plugin roster: what lands before launch, what waits" and MB.80 decided; try-before-sign-up stays in v2.
 
 - A signed-out send sets no cookie and creates no account. `/` and `/compendium` set none either.
 - The sign-up hook, `requireSession()`, the proxy and the GraphQL context are unchanged: nothing treats any session as provisional.
@@ -1253,7 +1253,7 @@ A keeper sees the standing time-outs on a signed-out request's address (read by 
 
 ## A signed-out sender keeps a provisional session (plan)
 
-Approved by the owner on 2026-11-06. The decision record is `m15.48-mailed-link.md` (the anonymous design below was dropped, see the last section); this file is the build plan it was made from.
+Approved by the owner on 2026-11-06. The decision record is the section "A signed-out sender reaches their request by a mailed link" (the anonymous design below was dropped, see the last section); this file is the build plan it was made from.
 
 ### Owner decisions (2026-11-06)
 
@@ -1275,15 +1275,15 @@ Approved by the owner on 2026-11-06. The decision record is `m15.48-mailed-link.
 
 ### Acceptance tests
 
-| Criterion                                                                                                           | Test                                                                                                                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Signed-out send mints an anonymous account, sets its cookie, writes through `withAudit`                             | `tests/modules/support/services/support-signed-out.test.ts` and a Yoga-level test asserting Set-Cookie                                                                                                                              |
-| No demo-coven seat, `canCreateWorkspace` false                                                                      | `tests/lib/auth.test.ts`, "sign-up hook seat"                                                                                                                                                                                       |
-| Refused by `requireSession()` on every protected page but `/account/support`; that page shows only its own requests | `tests/lib/request-session.test.ts`, new `tests/guards/` shell-page guard test, own-request service test                                                                                                                            |
-| Sign-in from an anonymous session links and the requests follow                                                     | new `tests/db/anonymous-link.test.ts`                                                                                                                                                                                               |
-| `/` and `/compendium` set no cookie                                                                                 | new e2e spec                                                                                                                                                                                                                        |
-| Lapsed anonymous account removed with its sessions                                                                  | `tests/modules/identity/services/provisional-cleanup.test.ts`                                                                                                                                                                       |
-| Docs corrected                                                                                                      | review: `DESIGN.md` lines on the anonymous plugin, `mb.74-better-auth-plugins.md`, `claude-docs/auth/plugins.md`, `m15-support-review.md` M15.39/M15.40, CLAUDE.md rule 3 and the `/support` invariant, new `m15.48-mailed-link.md` |
+| Criterion                                                                                                           | Test                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Signed-out send mints an anonymous account, sets its cookie, writes through `withAudit`                             | `tests/modules/support/services/support-signed-out.test.ts` and a Yoga-level test asserting Set-Cookie                                                                                                                                                                                                                                                                                |
+| No demo-coven seat, `canCreateWorkspace` false                                                                      | `tests/lib/auth.test.ts`, "sign-up hook seat"                                                                                                                                                                                                                                                                                                                                         |
+| Refused by `requireSession()` on every protected page but `/account/support`; that page shows only its own requests | `tests/lib/request-session.test.ts`, new `tests/guards/` shell-page guard test, own-request service test                                                                                                                                                                                                                                                                              |
+| Sign-in from an anonymous session links and the requests follow                                                     | new `tests/db/anonymous-link.test.ts`                                                                                                                                                                                                                                                                                                                                                 |
+| `/` and `/compendium` set no cookie                                                                                 | new e2e spec                                                                                                                                                                                                                                                                                                                                                                          |
+| Lapsed anonymous account removed with its sessions                                                                  | `tests/modules/identity/services/provisional-cleanup.test.ts`                                                                                                                                                                                                                                                                                                                         |
+| Docs corrected                                                                                                      | review: `DESIGN.md` lines on the anonymous plugin, `design-decisions/auth.md`, "Better Auth's plugin roster: what lands before launch, what waits", `claude-docs/auth/plugins.md`, the section "The support feature, revised after review" M15.39/M15.40, CLAUDE.md rule 3 and the `/support` invariant, new the section "A signed-out sender reaches their request by a mailed link" |
 
 ### Added 2026-11-06: two ways back after the cookie is gone
 
@@ -1302,7 +1302,7 @@ The owner asked how a visitor whose anonymous session has expired or been cleare
 - The token follows the invitation rules: `crypto.randomBytes()`, only its SHA-256 hash stored, on a new nullable `support_requests` column, minted afresh by the mail job's step on every send, so only the newest mailed link works. It is never returned in any response.
 - The page is a server component calling a support service with the token, no session, `noindex`, never cached (rule 6). It shows nothing once the request is anonymised. It offers Sign In as the way to reply on the site; it has no write of its own, so no third open mutation is added.
 - Amended: a reload in the same tab reopens the request from sessionStorage; a new tab needs the mail link.
-- Amended: the link is `/support/request#<token>`, a client page that reads the fragment and calls an open, rate-limited query; the token lapses after 30 days; the page is `no-store`. See m15.48-mailed-link.md.
+- Amended: the link is `/support/request#<token>`, a client page that reads the fragment and calls an open, rate-limited query; the token lapses after 30 days; the page is `no-store`. See the section "A signed-out sender reaches their request by a mailed link".
 - A wrong, old or used-up token is a 404, the same as a request that does not exist.
 - Docs: this is a second sessionless read of application data beside the public compendium, so CLAUDE.md's public-surface invariant and the invitation-token paragraph name it, and the decision record says why.
 
@@ -1346,7 +1346,7 @@ The owner chose to let a signed-out sender reply from the mailed-link page. It i
 
 **Time-out shape.** `support_timeouts.user_id` becomes nullable, with a CHECK requiring `user_id` or `address_key`. A keeper's time-out on a signed-out request records only the address key; a claim moves it to the claimer.
 
-**Migrations.** The migrations 0136 to 0138 are replaced by one fresh migration: `view_token_hash`, `address_key` with its index, `user_id` nullable, and the CHECK. The decision record is now `m15.48-mailed-link.md`.
+**Migrations.** The migrations 0136 to 0138 are replaced by one fresh migration: `view_token_hash`, `address_key` with its index, `user_id` nullable, and the CHECK. The decision record is now the section "A signed-out sender reaches their request by a mailed link".
 
 ## The site has a durable job mechanism
 
@@ -1375,7 +1375,7 @@ A date comparison at read time (the answer for slug expiry, MB.80) is right wher
 
 `provisionalCleanup` is the fallback for a lost per-sign-up run (the run was never started, or was lost). Once a day it deletes every unverified account whose window has lapsed, one account at a time through the repository's single-row writer (`deleteLapsedProvisionalUser`), so no new writer exists. A reader, `findLapsedProvisionalUserIds`, lists the candidates a page at a time, in id order.
 
-The Workflow SDK has no native schedule. A Vercel Cron Job starts the cleanup: `vercel.json` calls `/api/cron/provisional-cleanup` once a day, the route refuses a call without the `CRON_SECRET` bearer, and `startProvisionalCleanup` starts one coordinator run (claude-docs/design-decisions/m15.46-daily-jobs-from-vercel-cron.md). The coordinator reads the lapsed ids `CLEANUP_PAGE_SIZE` (500) at a time and starts a `provisionalCleanupBatch` run for each page, then ends. Each batch deletes its accounts through the single-row writer, which checks the lapse again, so an account verified since the page was read stays, and an account already deleted is skipped: a re-run, an overlap or a retried batch deletes nothing twice and raises no error. A batch that fails every attempt is logged and its accounts stay lapsed for the next day's run. No run sleeps, holds a hook token or starts a successor, and nothing else starts the job: no sign-up and no page load.
+The Workflow SDK has no native schedule. A Vercel Cron Job starts the cleanup: `vercel.json` calls `/api/cron/provisional-cleanup` once a day, the route refuses a call without the `CRON_SECRET` bearer, and `startProvisionalCleanup` starts one coordinator run (claude-docs/design-decisions/support.md, "Daily jobs start from Vercel Cron, and no job sleeps waiting"). The coordinator reads the lapsed ids `CLEANUP_PAGE_SIZE` (500) at a time and starts a `provisionalCleanupBatch` run for each page, then ends. Each batch deletes its accounts through the single-row writer, which checks the lapse again, so an account verified since the page was read stays, and an account already deleted is skipped: a re-run, an overlap or a retried batch deletes nothing twice and raises no error. A batch that fails every attempt is logged and its accounts stay lapsed for the next day's run. No run sleeps, holds a hook token or starts a successor, and nothing else starts the job: no sign-up and no page load.
 
 Before M15.68 the cleanup was a self-restarting chain: a run swept, slept a day under a hook token held by one run at a time, and started its successor, and the sign-up hook and the admin Users page restarted a lost chain. That was chosen when rule 1 allowed no cron route; the owner replaced it on 2026-11-02, when the cron routes were admitted to rule 1, so that no run is pending between days.
 
@@ -1420,7 +1420,7 @@ A run's arguments are stored in the job's event log for as long as its events ar
 - **The verification link** is re-signed in the step under the secret Better Auth signs with.
 - **The reset and lockout links** carry the newest unexpired reset token Better Auth stored for the account.
 - **The change-of-address link** is signed in the step for the address held in `users.pending_email` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page").
-- **The coven and admin invitations** get a fresh token in the step through `rotateInvitationToken`, so a retry mints again and only the newest mailed link works ([`m15.50-invitation-token-rotation.md`](m15.50-invitation-token-rotation.md)). A printed card is never mailed.
+- **The coven and admin invitations** get a fresh token in the step through `rotateInvitationToken`, so a retry mints again and only the newest mailed link works ([`auth.md`, "The invitation mail mints its token in the job step"](auth.md#the-invitation-mail-mints-its-token-in-the-job-step)). A printed card is never mailed.
 
 ### The notice to the address a change left (owner's call, 2026-11-02)
 
@@ -1469,9 +1469,9 @@ Each item is a decision I took conservatively, or a fact I could not establish. 
 2. **Five clauses for M15.62, every sentence of them: the governing law, the courts, the arbitration with its cost and hardship terms, and the limitation of liability, with the continued-use sentence above.** The courts clause states only the owner's choice of forum; the owner did not say where they live, and the sentence that said so, with its venue-law citation, was removed (2 November 2026). "Which Law Applies" names the State of Washington and, on the owner's answer (2 November 2026), the state courts of Washington in Spokane County, worded as both sides consenting to that court; "What the Site Is Not Liable For" is the limitation of liability the owner asked for, written to be read: what the site is not liable for, a cap of what you paid, and what no limitation can remove. All of it was drafted by Claude, not a lawyer. The questions to put to a lawyer: does the choice-of-law wording do what it says; should the forum clause be exclusive, and does it bind a reader outside Washington; is "what you paid" an enforceable cap, both while the site charges nothing and once it charges (the owner removed "which is nothing" on 2 November 2026, since the site will not stay free); which categories of liability Washington law does not let a site exclude (I could not fetch the gross-negligence case, see the claims table), so the clause can name them; and whether citing RCW 62A.2-719, a rule for sales of goods, as an example of Washington treating unconscionable limitations as invalid is fair or should go. Nothing in the clause claims more than its sources say. On the arbitration's cost: the clause now says whoever asks for arbitration pays the arbitrator, with a hardship exception that lets a person who meets GR 34's indigency guidelines skip arbitration and go to court, checking themselves against the guidelines with no order first. Ask the lawyer whether claimant-pays plus that exception keeps the clause enforceable, given that Washington courts have struck arbitration terms whose costs block a claim. The coordinator named _Adler v. Fred Lind Manor_ (Washington Supreme Court, 2004) from memory as such a case; Justia refused the fetch (403), so it is **unverified** here and cited nowhere, and the lawyer should check it. Also ask whether the "false claim of hardship" sentence needs more than it says, since GR 34 itself is silent on a false declaration. The terms deliberately carry no loser-pays clause: the frivolous-claim sentence states what RCW 4.84.185 already lets a court do, in either direction, and adds nothing to it. A one-sided attorney-fee clause was left out because RCW 4.84.330 would turn it against the owner as readily as for them: "In any action on a contract … where such contract … specifically provides that attorneys' fees and costs … shall be awarded to one of the parties, the prevailing party, whether he or she is the party specified in the contract or lease or not, shall be entitled to reasonable attorneys' fees", the fees "shall not be subject to waiver", and "Any provision in any such contract or lease which provides for a waiver of attorneys' fees is void" (fetched 2 November 2026). Ask the lawyer to confirm that leaving the clause out is the right call for a free service, and that the frivolous-claim sentence, which names a statute on the page, reads as information rather than as a fee clause RCW 4.84.330 would reach.
 3. **Thirteen, from COPPA.** Answered: the United States, Washington state. The age sentence now rests on 15 U.S.C. § 6501(1) and 16 C.F.R. part 312 (the figure, and the parental-consent mechanism), and says the site asks no parent's consent. It makes no claim that COPPA reaches the site: whether it is an "operator" of a "commercial" service is a lawyer's question, and the age is a sensible floor either way. The earlier sentence "the site relies on your consent", a statement about a lawful basis under the GDPR, is gone, and nothing else on the four pages assumed the United Kingdom: I checked `/privacy`, `/disclaimer` and `/code-of-ethics` and their notes, and found no UK law, no "consent" basis and no UK assumption in them. The privacy policy's notes still point the questions of controller, lawful basis and supervisory authority at M15.58, which is right. The owner chose (2 November 2026) to keep the sentence with no age screen: COPPA reaches a general-audience site only once it has "actual knowledge" that a user is under thirteen, and commentary on the FTC's guidance says it does not require a site to ask (https://paulhastings.com/insights/caveat-vendor/blog-ftc-releases-second-set-of-coppa-faqs-here-are-some-highlights, fetched 2 November 2026). If a screen is ever added, it is a neutral date-of-birth field, never an "I am over 13" box, which the FTC does not treat as neutral. An account the site learns belongs to someone under thirteen is erased. A question for a lawyer: is a stated minimum age in the agreed terms enough for COPPA, with no age screen?
 4. **Whether the GDPR applies to EU visitors is not settled here.** The terms say nothing about the GDPR, and these notes do not claim it does or does not apply to a site run from Washington with visitors in the EU. That is M15.58's question (`claude-docs/tasks/m15.md`, M15.58: "Lawful basis and retention"), and the terms should be re-read when it answers.
-5. **Washington's My Health My Data Act (RCW 19.373): no, on its definitions, and a lawyer should confirm.** The Act regulates "consumer health data", defined in RCW 19.373.010(8)(a) as "personal information that is linked or reasonably linkable to a consumer" that identifies the consumer's past, present or future physical or mental health status, with examples in (8)(b) such as health conditions, treatments, medication, reproductive or sexual health, biometric and genetic data, and health-related inferences drawn from non-health data; a "regulated entity" (19.373.010(23)) is one that conducts business in Washington or targets Washington consumers and "alone or jointly with others, determines the purpose and means of collecting, processing, sharing, or selling" such data. The site stores what a person writes about ingredients, stock and spells, their name, address and sign-in details, and support requests holding what the sender chose to write (`m15.2-privacy-policy-notes.md`); none of it identifies a person's health status, and the compendium's safety notes are about the ingredient, not the reader. I did not stretch the Act to the case of a member writing about their own health in a spell or a support request; a lawyer should say whether that edge makes the site a regulated entity. I looked at no other Washington statute, and the terms cite none.
+5. **Washington's My Health My Data Act (RCW 19.373): no, on its definitions, and a lawyer should confirm.** The Act regulates "consumer health data", defined in RCW 19.373.010(8)(a) as "personal information that is linked or reasonably linkable to a consumer" that identifies the consumer's past, present or future physical or mental health status, with examples in (8)(b) such as health conditions, treatments, medication, reproductive or sexual health, biometric and genetic data, and health-related inferences drawn from non-health data; a "regulated entity" (19.373.010(23)) is one that conducts business in Washington or targets Washington consumers and "alone or jointly with others, determines the purpose and means of collecting, processing, sharing, or selling" such data. The site stores what a person writes about ingredients, stock and spells, their name, address and sign-in details, and support requests holding what the sender chose to write (the section "The privacy policy's working notes"); none of it identifies a person's health status, and the compendium's safety notes are about the ingredient, not the reader. I did not stretch the Act to the case of a member writing about their own health in a spell or a support request; a lawyer should say whether that edge makes the site a regulated entity. I looked at no other Washington statute, and the terms cite none.
 6. **Promises.** Answered: "sells nothing about you" and "never used to train anything" are true. On 2 November 2026 the owner asked that the Short Version not make them a permanent promise, so it states them as the present state; "What Is Yours" still says "We promise that …". The owner also removed "Today the site is run by people in their spare time" from the terms and the disclaimer, since it will not always be true, and the claim that the site is free, since it will not stay free. The owner also removed the claim that creating a coven needs an invitation or a keeper's grant, with no way to buy your way in, since that is changing soon. The owner kept "What Is Yours" as a promise (2 November 2026). A question for a lawyer: does the "never sold, never used to train" promise limit what a later version of the terms can do with writing already on the site? The FTC warned on 13 February 2024 that quietly applying a looser rule to data people gave earlier can be unfair or deceptive (summarised at https://www.consumerfinancemonitor.com/2024/02/28/ftc-warns-quietly-changing-privacy-policies-may-be-an-unfair-or-deceptive-practice/, fetched 2 November 2026), so a change would be told to people first, agreed again, and applied only to writing done after it.
-7. **The Disclaimer and the Code of Ethics are "part of these terms".** Answered: kept. The terms state it in their opening paragraph, under the version line; the Disclaimer and the Code of Ethics each open by saying they are part of the terms; and the acceptance page names both beside the Agree button, so the inclusion is stated before anyone agrees. The terms now say which part of the Code of Ethics binds whom: "What Everyone Agrees To" binds every account, and the curator, admin and owner sections bind whoever holds that role. The staff sections are drafts for the owner's review, rule by rule (`m15.4-code-of-ethics-notes.md`, item 10).
+7. **The Disclaimer and the Code of Ethics are "part of these terms".** Answered: kept. The terms state it in their opening paragraph, under the version line; the Disclaimer and the Code of Ethics each open by saying they are part of the terms; and the acceptance page names both beside the Agree button, so the inclusion is stated before anyone agrees. The terms now say which part of the Code of Ethics binds whom: "What Everyone Agrees To" binds every account, and the curator, admin and owner sections bind whoever holds that role. The staff sections are drafts for the owner's review, rule by rule (the section "The code of ethics' working notes", item 10).
 8. **Enforcement is named, not reserved.** "How to Treat Each Other" lists the tools the code has (remove from a coven, pause a member in a coven, support time-out, revoke coven creation, pause an account's site access) and says accounts are never closed. It does not reserve a general right to suspend or ban, because no such mechanism exists and the owner's instruction is not to claim what the code does not do. M15.52 named the site access pause in it, and M15.55 the coven access pause.
 9. **"Agreeing to These Terms" and "Updates to These Terms" now describe the built gate** at `/account/terms`, from the coordinator's statement of it (2 November 2026), and name the route in plain text rather than as a link, since the route lives in the gate's code. Two things still to check against the code before the PR is ready: that the acceptance page shows the terms or links `/terms`, and whether existing accounts are seeded as agreed (if so, "right after you sign up" is true for new accounts and "whenever the version you last agreed to is not the current one" for the rest, which the text already says).
 10. **The version is a date.** `TERMS_VERSION` is `'2026-11-02'`, the day the text was drafted, so a reader can tell versions apart without a counter and so the gate's comparison is a plain string equality. A bump means setting both constants in `src/lib/terms-version.ts` to the day the new text takes effect. If you prefer a counter (`'1'`, `'2'`), it is the one constant. The text was revised on 2 November 2026 before any account agreed to it, so the version was not bumped.
@@ -1485,7 +1485,7 @@ Each item is a decision I took conservatively, or a fact I could not establish. 
 
 Written on 2 November 2026. This is a scope: it says what the law asks, what the site does today, and what is left to build. It builds nothing. It is not legal advice and no lawyer has read it.
 
-"GDPR" here means two texts that are nearly the same: the EU regulation (Regulation (EU) 2016/679) and the UK's copy of it, the UK GDPR, as the Data (Use and Access) Act 2025 changed it. Where they differ, the doc says which one it means. "The plan" is `m15.58-plan.md` beside this file, which the owner approved before the build tasks were minted.
+"GDPR" here means two texts that are nearly the same: the EU regulation (Regulation (EU) 2016/679) and the UK's copy of it, the UK GDPR, as the Data (Use and Access) Act 2025 changed it. Where they differ, the doc says which one it means. "The plan" is the section "Mint the GDPR build tasks now, build nothing (plan)" beside this file, which the owner approved before the build tasks were minted.
 
 ### Decisions for the owner
 
@@ -1572,12 +1572,12 @@ Sign-in providers (Discord, Google, Microsoft, and Facebook, which is hidden tod
 
 Each right below needs the site to act within **one month** of the request. The EU text allows two more months when requests are many or complex, but the person must be told of the delay within the first month (article 12(3)) [EUR-Lex was blocked, so I read the adopted text on legislation.gov.uk]. The request is free unless it is manifestly unfounded or excessive (12(5)). A request may come in any form; it need not mention the GDPR.
 
-| Right                                                                                                      | Source                  | What the site does                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------------------------------------------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Be told what is held, and get a copy (access)                                                              | Article 15              | Today a keeper gathers it by hand. M15.61 scoped a machine-readable copy of everything that names the person, built by M18.3 to M18.6 ([`m15.61-take-your-writing-scope.md`](m15.61-take-your-writing-scope.md)). Article 15(4) says the copy must not harm other people's rights, so rows that name other people (a coven's other members) are left out or reduced to what is the requester's. |
-| Take their own data elsewhere (portability)                                                                | Article 20              | Applies to data the person _provided_, held on the basis of contract or consent, processed automatically. It covers their own writing but not the audit trail or security data. The format must be structured, commonly used and machine-readable. M15.61 scoped it, and M18.3 to M18.6 build it.                                                                                               |
-| Have their data erased                                                                                     | Article 17              | M15.74 builds it (see below). Article 17(3) lists exceptions, among them legal claims and freedom of expression. The site needs none today.                                                                                                                                                                                                                                                     |
-| Correct wrong data (rectification), restrict use, object to use, not be judged by automated decision alone | Articles 16, 18, 21, 22 | **I did not read these articles for this scope.** The site's account page already lets a person change their name and, with verification, their address. Nothing on the site makes automated decisions about people. Whoever writes M15.74's policy text must read articles 16, 18, 21 and 22 first and list them honestly.                                                                     |
+| Right                                                                                                      | Source                  | What the site does                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Be told what is held, and get a copy (access)                                                              | Article 15              | Today a keeper gathers it by hand. M15.61 scoped a machine-readable copy of everything that names the person, built by M18.3 to M18.6 (see "A way for people to take their own writing with them"). Article 15(4) says the copy must not harm other people's rights, so rows that name other people (a coven's other members) are left out or reduced to what is the requester's. |
+| Take their own data elsewhere (portability)                                                                | Article 20              | Applies to data the person _provided_, held on the basis of contract or consent, processed automatically. It covers their own writing but not the audit trail or security data. The format must be structured, commonly used and machine-readable. M15.61 scoped it, and M18.3 to M18.6 build it.                                                                                 |
+| Have their data erased                                                                                     | Article 17              | M15.74 builds it (see below). Article 17(3) lists exceptions, among them legal claims and freedom of expression. The site needs none today.                                                                                                                                                                                                                                       |
+| Correct wrong data (rectification), restrict use, object to use, not be judged by automated decision alone | Articles 16, 18, 21, 22 | **I did not read these articles for this scope.** The site's account page already lets a person change their name and, with verification, their address. Nothing on the site makes automated decisions about people. Whoever writes M15.74's policy text must read articles 16, 18, 21 and 22 first and list them honestly.                                                       |
 
 #### How the site knows who is asking
 
@@ -1596,7 +1596,7 @@ The plan's rule stands: **a request counts as verified when the account sends it
 
 #### Erasure and "an account is never closed"
 
-The owner's rule is that an account is paused, never closed (`DESIGN.md` line 1451; Terms line 117). The rule exists because every audited row has a non-null foreign key to the user, and the privilege ledger is append-only by trigger (`claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md`), so a real user row cannot be deleted. The two fit together like this:
+The owner's rule is that an account is paused, never closed (`DESIGN.md` line 1451; Terms line 117). The rule exists because every audited row has a non-null foreign key to the user, and the privilege ledger is append-only by trigger (`claude-docs/design-decisions/auth.md`, "One privilege ledger, written by the database"), so a real user row cannot be deleted. The two fit together like this:
 
 - **Erasure is the removal of everything that identifies the person, not the removal of the row.** M15.74 blanks name, avatar and address (the address becomes `erased-<id>@invalid`), deletes sessions, provider links, passkeys, two-factor secrets and failed-sign-in counts, anonymises the account's support threads, clears invitation addresses and working names, sets `erased_at` (M15.73), and sets an open-ended pause no one can lift. What is left is an id and the audit trail's credit to that id, which no longer leads to a person.
 - **Whether a blanked row is "erased" in the law's sense** turns on whether the remaining data can still be linked to the person. The ids in audit columns can be linked back only by someone who holds the old name, and the site no longer does. **This is my reading; no regulator has said so.** Recital 26 of the GDPR (which I did not read for this scope) is the place to check.
@@ -1734,16 +1734,16 @@ Access date for every web page: 2 November 2026. "Fetched" means I read the page
 #### Repository
 
 - `DESIGN.md` §4, §5 and line 1451; `claude-docs/auth/README.md`; `claude-docs/auth/two-factor.md`; `claude-docs/auth/impersonation.md`; `claude-docs/db/soft-delete.md`.
-- `claude-docs/design-decisions/`: `mb.194-privilege-ledger-by-trigger.md`, `m15.52-site-access-pause.md`, `m15.55-coven-access-pause.md`, `m15.1-support-form.md`, `m15.2-privacy-policy-notes.md`, `m15.57-terms-of-use-notes.md`, `m15-support-review-research.md`.
+- `claude-docs/design-decisions/`: `design-decisions/auth.md`, "One privilege ledger, written by the database", `design-decisions/auth.md`, "What the site access pause closes, and what it decides along the way", `design-decisions/auth.md`, "How the coven access pause refuses a member, and what it decides along the way", the section "A support form, reviewed by keepers", the section "The privacy policy's working notes", the section "The terms of use's working notes", the section "Support feature: UX, accessibility and process research".
 - `src/app/(public)/privacy/page.tsx`, `src/app/(public)/terms/page.tsx`, `src/lib/breached-password.ts`, `src/lib/security-headers.ts`, `src/lib/social-providers.ts`, `src/modules/identity/schema/`, `src/modules/support/schema/support-requests.ts`.
 
-<!-- The approved plan for M15.58. The scope beside it, m15.58-gdpr-scope.md, is the decision; this plan is not maintained after the PR lands. -->
+<!-- The approved plan for M15.58. The scope beside it, the section "What GDPR asks of Sorrel & Salt", is the decision; this plan is not maintained after the PR lands. -->
 
 ## Mint the GDPR build tasks now, build nothing (plan)
 
 ### Context
 
-The owner's decision of 2 November 2026: the build tasks that came out of the M15.58 research are minted now, and nothing else is done. M15.58 stays `Not Started`, and no branch or worktree is created. The scope document (`m15.58-gdpr-scope.md`) and the privacy-policy changes wait for M15.58 itself, which waits for #1479 to merge. If writing the scope later shows a task here is wrong, that task is corrected in place.
+The owner's decision of 2 November 2026: the build tasks that came out of the M15.58 research are minted now, and nothing else is done. M15.58 stays `Not Started`, and no branch or worktree is created. The scope document (the section "What GDPR asks of Sorrel & Salt") and the privacy-policy changes wait for M15.58 itself, which waits for #1479 to merge. If writing the scope later shows a task here is wrong, that task is corrected in place.
 
 **Ids.** The highest M15 id in any branch's git log is M15.72, so the new tasks are numbered from **M15.73**. I recheck the board and `git log --all` immediately before minting, because other sessions mint ids in parallel.
 
@@ -2005,7 +2005,7 @@ admin route only, so the public pages never ship it.
 **A newly published version of the terms, the disclaimer or the code of
 ethics is part of the version the gate checks.** The terms include the other
 two, so an account agrees to all three at once
-([`m15.79-agreement-covers-three-documents.md`](m15.79-agreement-covers-three-documents.md)).
+(see "Agreeing to the terms covers the disclaimer and the code of ethics").
 `getSessionState()` in `src/lib/request-session.ts` compares the account's
 three agreed numbers with the three published ones, so every account is sent
 to `/account/terms` at its next request after any of the three is published.
@@ -2101,7 +2101,7 @@ way the compendium seed reads `compendium/` (`src/db/seed/compendium/load.ts`,
 M15.63 builds the "Email Every Account" button. It was first built on each
 document's edit page, one mailing per document; M15.79 replaced that with one
 joint email from `/keepers/documents` about every document changed since the
-last email (claude-docs/design-decisions/m15.79-joint-document-mailing.md).
+last email (claude-docs/design-decisions/support.md, "One joint email about every changed document").
 Where this section and that record differ, that record holds. The tables
 came first, in the tables task, so M15.63 itself is behaviour only:
 
@@ -2205,7 +2205,7 @@ accounts. So the four tables live in a `documents` module, which reaches only
 
 The privacy policy, disclaimer, code of ethics and terms of use are written into page code (`src/app/(public)/{privacy,disclaimer,code-of-ethics,terms}/page.tsx`). Each page holds its own `UPDATED_ON` date. The terms also have `TERMS_VERSION = '2026-11-02'` in `src/lib/terms-version.ts`, and that string is what `users.terms_version` stores and what the gate in `src/lib/request-session.ts:67` compares. Changing a document needs a developer, a PR and a deploy.
 
-M15.59 is a scoping task. It writes `claude-docs/design-decisions/m15.59-document-editor-scope.md`, proposes the build tasks, and mints them only once you approve them. It builds nothing, and `DESIGN.md` does not change in this task.
+M15.59 is a scoping task. It writes `claude-docs/design-decisions/support.md`, "A keeper editor for the site's documents", proposes the build tasks, and mints them only once you approve them. It builds nothing, and `DESIGN.md` does not change in this task.
 
 This PR also mints one extra scoping task that you asked for: a better editing experience for ingredients and spells, in Wave 17.
 
@@ -2309,7 +2309,7 @@ The id is the next free M17.x: M17.5, since M17.4 is #1482. I recheck it at mint
 ### Steps
 
 1. **Branch.** In a worktree, since your memory says never to work in /app: run `git fetch origin staging` and the collision checks, then `git worktree add -b feature/m15.59-scope-admin-editor-for-sites-documents --no-track /home/node/worktrees/m15.59 origin/staging`. Comment on #1458 and move it to `In Progress`.
-2. **Write the record.** Write `claude-docs/design-decisions/m15.59-document-editor-scope.md` from the main session, which already holds every fact it needs. It follows `m15.1-support-form.md`'s shape: title, status and date line, an intro, one `##` per decision with its reasons and alternatives, the library research table with sources, `## DESIGN.md sections the builds change`, and `## Build tasks`. Copy this plan to `claude-docs/design-decisions/m15.59-plan.md`.
+2. **Write the record.** Write `claude-docs/design-decisions/support.md`, "A keeper editor for the site's documents" from the main session, which already holds every fact it needs. It follows the section "A support form, reviewed by keepers"'s shape: title, status and date line, an intro, one `##` per decision with its reasons and alternatives, the library research table with sources, `## DESIGN.md sections the builds change`, and `## Build tasks`. Copy this plan to `claude-docs/design-decisions/support.md`, "Scope a keeper editor for the site's documents (plan)".
 3. **Mint the tasks.** Recheck the ids, then mint build tasks A–D and M17.5:
    - add each entry to `claude-docs/tasks/m15.md` or `claude-docs/tasks/m17.md`, after the Done items;
    - place each in `claude-docs/waves/wave-15.md` or `claude-docs/waves/wave-17.md`;
@@ -2336,14 +2336,14 @@ The owner then asked to add M15.63 and build everything in one group PR: this re
 
 The code of ethics promises "a way for people to take their own writing with
 them" and says it "does not exist yet" (`documents/code-of-ethics.md`).
-[M15.58](m15.58-gdpr-scope.md) gave this task two more jobs: a
+(see "What GDPR asks of Sorrel & Salt") gave this task two more jobs: a
 machine-readable copy of every row that names the person (GDPR article 15,
 the right of access) and a copy of the person's own writing in a structured
 format (article 20, portability).
 
 This record says what the copy holds, how it is built, stored and delivered,
 and which tasks build it. It builds nothing. The plan the owner approved is
-[`m15.61-plan.md`](m15.61-plan.md), which is not maintained; this record is.
+(see "Scope a way for people to take their own writing with them (plan)"), which is not maintained; this record is.
 It is not legal advice and no lawyer has read it.
 
 The privacy work moves to a new wave, **Wave 18 — Privacy**, run after launch.
@@ -2752,7 +2752,7 @@ Accessed 3 November 2026.
 #### Repository
 
 - `DESIGN.md` §5, §9, §13; `CLAUDE.md` rules 1, 3, 5 and 10.
-- `claude-docs/design-decisions/`: `m15.58-gdpr-scope.md`, `m15.59-document-editor-scope.md`, `m15.46-daily-jobs-from-vercel-cron.md`, `m15.50-invitation-token-rotation.md`, `m15.52-site-access-pause.md`.
+- `claude-docs/design-decisions/`: the section "What GDPR asks of Sorrel & Salt", the section "A keeper editor for the site's documents", the section "Daily jobs start from Vercel Cron, and no job sleeps waiting", `design-decisions/auth.md`, "The invitation mail mints its token in the job step", `design-decisions/auth.md`, "What the site access pause closes, and what it decides along the way".
 - `vercel.json`, `src/lib/access-paused.ts`, `src/graphql/paused-operations.ts`, `src/lib/cron-request.ts`, `src/modules/identity/services/secret-link-mail.ts`, `src/modules/support/services/signed-out.ts`, `tests/guards/invitation-token-rotation.test.ts`, `tests/guards/pagination.test.ts`.
 
 > This is the plan the owner approved on 3 November 2026. It is not maintained; the decision record beside it is.
@@ -2963,8 +2963,8 @@ The main session coordinates. One Sonnet agent does the edits, briefed with thes
 
    If a source contradicts a decision, the agent stops and I bring it to you.
 
-3. **Write the record**, `claude-docs/design-decisions/m15.61-take-your-writing-scope.md`, in M15.59's shape. It includes "Alternatives weighed" for every decision, the proposed stories, "DESIGN.md sections the builds change", "Text to publish", "Build tasks", "What I could not read" and "Sources".
-4. **Copy the plan** to `claude-docs/design-decisions/m15.61-plan.md`, under a one-line note that it is not maintained.
+3. **Write the record**, `claude-docs/design-decisions/support.md`, "A way for people to take their own writing with them", in M15.59's shape. It includes "Alternatives weighed" for every decision, the proposed stories, "DESIGN.md sections the builds change", "Text to publish", "Build tasks", "What I could not read" and "Sources".
+4. **Copy the plan** to `claude-docs/design-decisions/support.md`, "Scope a way for people to take their own writing with them (plan)", under a one-line note that it is not maintained.
 5. **Set up the wave.** Write `waves/wave-18.md` and add the `TASKS.md` row. Take the moved tasks out of Wave 15. Add the M15.74 criterion and sync it. Create the milestone as `claude-docs/task-tracking.md` sets out.
 6. **Mint the tasks.**
    1. Re-check that M18.1 is free.
@@ -2999,7 +2999,7 @@ account does not agree to it.
 
 Until this decision, an account recorded only the terms version it agreed to,
 and a new disclaimer or code of ethics changed its page and nothing else
-([`m15.59-document-editor-scope.md`](m15.59-document-editor-scope.md),
+((see "A keeper editor for the site's documents"),
 "Publishing the terms", as it was first written).
 
 ### The joint version
@@ -3070,7 +3070,7 @@ The migration test is `tests/db/migrations/0134-agreed-document-versions.test.ts
 
 ### Decision
 
-A keeper emails every account one email that lists every site document changed since the last email, from the Email Updates page at `/keepers/documents`. It replaces the one-mailing-per-document button that M15.63 put on each document's edit page (claude-docs/design-decisions/m15.59-document-editor-scope.md, "M15.63: emailing every account"). The owner approved each point below. It ships in the M15.79 pull request.
+A keeper emails every account one email that lists every site document changed since the last email, from the Email Updates page at `/keepers/documents`. It replaces the one-mailing-per-document button that M15.63 put on each document's edit page (claude-docs/design-decisions/support.md, "M15.63: emailing every account"). The owner approved each point below. It ships in the M15.79 pull request.
 
 ### What is decided, and why
 
@@ -3138,18 +3138,18 @@ The owner answered every question on 2026-11-06 (this session); the answers are 
 
 **The rule.** The compendium holds no entry whose plant, fungus or substance is itself unlawful to grow or possess under United States federal law or Washington State law, and no alcohol, cannabis or tobacco. A plant that is lawful to grow stays, even where a preparation of it would be a controlled substance (the owner's call, 2026-11-06). The governing law is the federal Controlled Substances Act schedules (21 U.S.C. § 812; 21 CFR Part 1308, which names peyote and marihuana in Schedule I and opium poppy and poppy straw and coca leaves in Schedule II: https://www.govinfo.gov/content/pkg/USCODE-2011-title21/html/USCODE-2011-title21-chap13-subchapI-partB-sec812.htm, current text to be checked at law.cornell.edu) and Washington's Uniform Controlled Substances Act (RCW 69.50.204 Schedule I names psilocybin, psilocyn and tetrahydrocannabinols "naturally contained in a plant of the genera Cannabis": https://lawfilesext.leg.wa.gov/Law/RCWPDF/RCW%20%2069%20%20TITLE/RCW%20%2069%20.%2050%20%20CHAPTER/RCW%20%2069%20.%2050%20.204.pdf), with alcohol under RCW Title 66 and cannabis under RCW 69.50 even where Washington licenses adult sale. International control is not the test: the INCB holds that no plant is controlled under the 1971 Convention (E/INCB/2010/1 para. 287, as reported by Tupper and Labate 2012), so a treaty rule would remove only the opium poppy, coca and cannabis. A coven may still add any of these as its own ingredient; the rule is about what the site publishes. **The reason, in the record's words:** the owner's caution about carrying that information on a public site. The record also says, labelled as the lane's understanding and not legal advice, that the Act controls possession, manufacture and supply and not description, so the rule is a choice, not a found requirement.
 
-**The test, per entry:** a source read says the plant, fungus or substance itself is named in 21 CFR 1308 or RCW 69.50 (peyote, marihuana, opium poppy, coca leaves), or that growing or possessing it is unlawful there (a fungus containing psilocybin is treated as the substance), or it is an alcoholic drink, cannabis or tobacco. A plant lawful to grow stays, whatever a preparation of it would be. Its entry says nothing that instructs preparation or dosing, but it errs on the side of safety: where a source says a person without the knowledge could harm themselves with the ingredient, the entry's safety note says what the harm is (the owner's call, 2026-11-06). M19.1 checks every kept candidate for both: it removes any instructing sentence, and adds a sourced `safetyNotes` line (and `toxic` where the source says so) to a kept entry that lacks one, on the pattern yopo's and peyote's already use. Peyote's dosing sentence goes with its entry. Each removal is recorded in an ethics file with the citation, as the endangered removals were (`compendium/ethics/endangered-removals.md`, `claude-docs/design-decisions/m14.29-no-endangered-species.md`), and listed in `compendium/left-out.md`.
+**The test, per entry:** a source read says the plant, fungus or substance itself is named in 21 CFR 1308 or RCW 69.50 (peyote, marihuana, opium poppy, coca leaves), or that growing or possessing it is unlawful there (a fungus containing psilocybin is treated as the substance), or it is an alcoholic drink, cannabis or tobacco. A plant lawful to grow stays, whatever a preparation of it would be. Its entry says nothing that instructs preparation or dosing, but it errs on the side of safety: where a source says a person without the knowledge could harm themselves with the ingredient, the entry's safety note says what the harm is (the owner's call, 2026-11-06). M19.1 checks every kept candidate for both: it removes any instructing sentence, and adds a sourced `safetyNotes` line (and `toxic` where the source says so) to a kept entry that lacks one, on the pattern yopo's and peyote's already use. Peyote's dosing sentence goes with its entry. Each removal is recorded in an ethics file with the citation, as the endangered removals were (`compendium/ethics/endangered-removals.md`, `claude-docs/design-decisions/ingredients.md`, "No endangered species in the compendium"), and listed in `compendium/left-out.md`.
 
 **Candidates today** (from the file names, unverified until the content task reads each entry's sources). Removed under the test: peyote (Schedule I by name), hemp (`botanical/hemp-cannabis-sativa`, cannabis), opium poppy (Schedule II by name; growing it is manufacture under the Act), coca (Schedule II by name), the two Psilocybe entries (`fungal/psilocybe-mushrooms-psilocybe`, `fungal/koae-ea-lekhoaba-psilocybe-maluti`), tobacco (`botanical/tobacco-nicotiana`, the owner's call), and the alcohol entries `whiskey`, `rum` and `palm-wine`. Kept, as plants lawful to grow, pending the check: San Pedro cactus, chacruna, yopo, iboga, ololiuqui and morning glory, Salvia divinorum, ayahuasca vine, Syrian rue, kava, fly agaric, datura, belladonna, henbane, mandrake, nutmeg, areca and betel, ephedra. Iboga is the doubtful one (ibogaine is Schedule I and the plant's status is unsettled): M19.1 decides it from a source and records why.
 
-**Where it lands:** a second record, `claude-docs/design-decisions/m17.2-no-controlled-substances.md`; a "No controlled substances" section in the seed README beside "No endangered species"; the Code of Ethics' sourcing section gains the rule in the content task's PR; two build tasks open Wave 19 (table below). M17.2 itself deletes no entry.
+**Where it lands:** a second record, `claude-docs/design-decisions/ingredients.md`, "No controlled substances in the compendium"; a "No controlled substances" section in the seed README beside "No endangered species"; the Code of Ethics' sourcing section gains the rule in the content task's PR; two build tasks open Wave 19 (table below). M17.2 itself deletes no entry.
 
 **The build is a new wave (the owner's call, 2026-11-06), not Wave 17.** M17.2's entry and issue say "minted as `M17.n` tasks on Wave 17"; that line is corrected in place in `claude-docs/tasks/m17.md`, synced to #1467, and the record says why: the build is eight tasks with its own trigger (M17.2 done), the size of Wave 18, and Wave 17 is a holding wave for scoping and audits. Proposed name **Wave 19 — Compendium ethics**, after Wave 18 (Privacy); the tasks are `M19.1 → M19.10` in a new `claude-docs/tasks/m19.md` and `claude-docs/waves/wave-19.md`, registered in `scripts/tasks-md.mjs` (one added path line, as Wave 18's commit `78a55cc7b` did; the "only Markdown" criterion is amended to allow it, as M17.1's already does). The milestone `Wave 19 — Compendium ethics` is created on GitHub (`gh api -X POST repos/Aurora-Arctic/Sorrel-and-Salt/milestones`) with its first line the id list and the wave-file link, before minting. M17.3's ethical warnings may join this wave when M17.3 runs; that is M17.3's decision, named in the wave file.
 
 ### Deliverables (all Markdown, `compendium/ethics/`, `scripts/tasks-md.mjs`, and the board)
 
-0. **`claude-docs/design-decisions/m17.2-no-controlled-substances.md`**: the rule, jurisdiction, citations, test, candidate list, reason, and the two tasks; plus the seed README section and a line in `compendium/ethics/checked.md`'s heading rules if the format changes (it does not; removals use ethics files as before).
-1. **`claude-docs/design-decisions/m17.2-closed-practice-warning.md`** with sections: the data today (stacte on Wikipedia; after the decisions, peyote and white sage) with file and source per entry; which sources may establish a closed practice and why Wikipedia alone may not (rule above, with the authorities); how an entry records the tradition of each piece of lore (nullable `tradition_id` on `reference_links`, the later pair of tasks); the data model (table below); what the warning shows and who sets it; the owner's answers per file; the build tasks and their order. Written plainly per `.claude/rules/writing.md`, British spelling, no versions.
+0. **`claude-docs/design-decisions/ingredients.md`, "No controlled substances in the compendium"**: the rule, jurisdiction, citations, test, candidate list, reason, and the two tasks; plus the seed README section and a line in `compendium/ethics/checked.md`'s heading rules if the format changes (it does not; removals use ethics files as before).
+1. **`claude-docs/design-decisions/ingredients.md`, "The closed-practice warning"** with sections: the data today (stacte on Wikipedia; after the decisions, peyote and white sage) with file and source per entry; which sources may establish a closed practice and why Wikipedia alone may not (rule above, with the authorities); how an entry records the tradition of each piece of lore (nullable `tradition_id` on `reference_links`, the later pair of tasks); the data model (table below); what the warning shows and who sets it; the owner's answers per file; the build tasks and their order. Written plainly per `.claude/rules/writing.md`, British spelling, no versions.
 2. **`compendium/ethics/` updates:** README table in `claude-docs/compendium/compendium-seed/README.md` gains `closedPractice[].kind` (`closed` | `asked-not-to-use`). White sage and peyote get `closedPractice` rows with new source files under `compendium/ethics/sources/` (`hcn-sage-advice`, `narf-ncnac-2016`, `ict-ncnac-2016`, `ipci-public-statements`, Chicago form, accessed dates) and go `approved`. Stacte loses its row and records the answer; stacte, onycha, yopo, cowrie, lava stone, Strychnos icaja each get "Answered by the owner 2026-11-06: …" under their question (costus's pattern) and go `approved`.
 3. **Task entries** in a new `claude-docs/tasks/m19.md` (header, sequencing paragraph, ten entries with estimates and "Tests are written first" lines), a new `claude-docs/waves/wave-19.md` (why the wave exists, its row, its trigger), a new **TASKS.md** row `| **19 — Compendium ethics** | M19.1 → M19.10 |`; MB.175's entry in `tasks/mb.md` amended so a help article may have a parent article (sub pages), synced to #690; after Wave 18 and the wave count where TASKS.md states it, `claude-docs/tasks/m17.md` M17.2's corrected criterion and wave-17.md's M17.2 paragraph saying the build went to Wave 19, and **`claude-docs/backlog.md`** line 38 naming the tasks.
 4. **Board minting** per `.claude/rules/task-tracking.md`: create the milestone, re-check that no `M19.n` issue exists, `gh issue create --type Task --label tracked --milestone "Wave 19 — Compendium ethics"`, `estimate`, the milestone description's first line, then `reorder` dry-run and `--apply` from the branch holding the row; `sync M17.2` and `sync MB.175` for the corrected entries.
@@ -3239,7 +3239,7 @@ The record lists the entries the data marks **as it stands today**. It also says
 
 ### Steps
 
-1. **Write the record**, `claude-docs/design-decisions/m17.3-ethical-ingredient-warnings.md` (agent). It holds:
+1. **Write the record**, `claude-docs/design-decisions/ingredients.md`, "The ethical warnings on ingredients" (agent). It holds:
    - the threshold and the reason for it;
    - the animal-part display;
    - the exception field;
@@ -3276,7 +3276,7 @@ The record lists the entries the data marks **as it stands today**. It also says
      - new: `claude-docs/waves/wave-20.md` and `claude-docs/tasks/m20.md`;
      - updated: the Execution order row in `claude-docs/TASKS.md`, the "Ethical warnings around ingredients" item in `claude-docs/backlog.md` (it names the tasks), and `claude-docs/tasks/m17.md` and `claude-docs/waves/wave-17.md`, which point to Wave 20.
    - **Board:** create the milestone and the issues as `.claude/rules/task-tracking.md` says, then run `node scripts/task-board.mjs sync` from the worktree.
-3. **Copy this plan** to `claude-docs/design-decisions/m17.3-plan.md`.
+3. **Copy this plan** to `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
 4. **Commit each green step** in the worktree. I do not push or open a PR until you run `/create-pr`. The PR body will name the MB.175 retitle.
 
 ### Verification
@@ -3292,7 +3292,7 @@ The diff is prose only, so the checks are `npm run format:check` and `npm run li
 Visitors and members need somewhere to learn how the site is used and what its
 words mean. This record says what that is, how it is stored, who writes it and
 who reads it. It records the model only: nothing is built here. The approved plan is
-[`mb.175-plan.md`](mb.175-plan.md), and the model itself is written into
+(see "Scope Help and FAQ articles (plan)"), and the model itself is written into
 `DESIGN.md` §5, §7, §9 and §10 ("Help and FAQ articles").
 
 The owner decided on 2026-11-03 to add the glossary, and on 2026-11-06 to add
@@ -3316,7 +3316,7 @@ time, or a row in the database that a keeper edits.
 **Decision: rows.** The point of help text is to answer questions as they arrive. If every
 fix to a sentence needs a deploy, wrong or missing answers stay wrong for
 days. The site documents already took this route for the same reason
-(`m15.59-document-editor-scope.md`), so the admin page, the Markdown renderer
+(the section "A keeper editor for the site's documents"), so the admin page, the Markdown renderer
 and the cache pattern are known. The cost is the five build tasks, and the
 loss of review on a keeper's edit, which the audit columns partly cover. A file
 stays the better choice for text that must change only with the code it
@@ -3453,7 +3453,7 @@ M17.2 is merged (#1554). The `parent_id` amendment it asked for is already in #6
    - **What the move changes, stated in the docs:** the help pages ship after launch, not in v1. Wave 15's axe sweep (M11.16, M11.8) no longer covers them; M17.9 does. "v1 scope" becomes "fast follow" in the mb.md entry, the waves and DESIGN.md.
    - Move the issue's milestone to Wave 17 by the method `claude-docs/task-tracking.md` gives (sync, or the script's milestone command).
 2. **The model**, as #690's body sets it out, recorded in DESIGN.md §5 (the `help_articles` table: `kind` `faq`/`article`/`term`, nullable `parent_id`, one level deep, pointing at an `article`; `slug` unique among live rows; `glossary` reserved), §7 (services: `assertSiteAdmin` writes, a sessionless finder cached under tag `help`), §9 (`/keepers/help`, `/help`, `/help/glossary`, `/help/[slug]`, `/help/[parent]/[slug]`, PUBLIC_ROUTES, sitemap, links) and §10 ("Help and FAQ articles").
-3. **The record:** `claude-docs/design-decisions/mb.175-help-articles.md`. It weighs rows against files in the repo and names the two invariants it widens. **Module: I recommend a sixth module, `help`.** The articles have no tie to identity, and `claude-docs/modules.md` "Adding a module" gives the steps. Copy this plan in as `design-decisions/mb.175-plan.md`.
+3. **The record:** `claude-docs/design-decisions/support.md`, "Help and FAQ articles, and a glossary, as rows a keeper edits". It weighs rows against files in the repo and names the two invariants it widens. **Module: I recommend a sixth module, `help`.** The articles have no tie to identity, and `claude-docs/modules.md` "Adding a module" gives the steps. Copy this plan in as `design-decisions/support.md`, "Scope Help and FAQ articles (plan)".
 4. **CLAUDE.md:** amend the two lines. "Keepers and curators curate …" gains the help articles (writes are admin only). "The compendium is the one public surface" gains `/help`, which carries no workspace data.
 5. **Mint the five build tasks** in `claude-docs/tasks/m17.md`. Ids M17.13–M17.17 are free on every branch and on the board (checked today). Recheck just before minting. Each task gets an estimate and names its prerequisite:
    - M17.13 the table, with `parent_id` (after MB.175)

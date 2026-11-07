@@ -4,7 +4,7 @@ How people sign in and what they may do once in: sign-in methods, site and coven
 
 ## Granting and revoking admin
 
-> **2026-10-10:** The admin role ledger below ("What the audit trail records", built by MB.58) is superseded by `user_privilege_changes`, one ledger for every privilege, written by a trigger on `users` with the route the writer declares, and append-only by the database (MB.194, MB.195; [`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md)). MB.196 removed the code that named the old table and MB.197 drops it. What this record says about the ledger is history.
+> **2026-10-10:** The admin role ledger below ("What the audit trail records", built by MB.58) is superseded by `user_privilege_changes`, one ledger for every privilege, written by a trigger on `users` with the route the writer declares, and append-only by the database (MB.194, MB.195; (see "One privilege ledger, written by the database")). MB.196 removed the code that named the old table and MB.197 drops it. What this record says about the ledger is history.
 
 **Decided 2026-09-24.** Scoping only; nothing here is built. There are two
 kinds of admin, both holding the same `role`:
@@ -244,7 +244,7 @@ nor gets a ledger row. `minimal` becomes one system user and one user.
   This record had it as a one-row `site_settings` table; MB.62 built it as
   `admin_role_change_pauses`, one row per pause, because the one row could
   not be seeded on a fresh database
-  ([`mb.62-pause-ledger.md`](mb.62-pause-ledger.md)). Only the primary keeper
+  (see "The admin-role-change pause is a ledger, not a settings row"). Only the primary keeper
   may pause or resume, each pause records who began and who ended it, and a
   change refused while paused says so and names no one.
   _Amended 2026-10-11:_ Pause now asks first, in a modal saying whom it
@@ -255,7 +255,7 @@ nor gets a ledger row. `minimal` becomes one system user and one user.
   write. The flag is what lets anyone create a workspace, keepers included,
   and a CHECK on `users` refuses a keeper without it, so the gate reads the
   flag alone (MB.177;
-  [`mb.177-admins-hold-workspace-creation.md`](mb.177-admins-hold-workspace-creation.md)).
+  (see "Every admin holds `canCreateWorkspace`")).
   This record had keepers create regardless of the flag, set only so the row
   would state what the person may do. Revoking admin leaves it, as revoking
   the flag itself leaves existing workspaces (M5.8).
@@ -337,7 +337,7 @@ mint; story 4 reworded for email invitations).
   Wave 8. Two tasks because CLAUDE.md puts a table and the service that
   governs it in separate tasks. MB.62 made the table a pause ledger rather
   than this record's `site_settings` row
-  ([`mb.62-pause-ledger.md`](mb.62-pause-ledger.md)). Two rejected shapes: an
+  (see "The admin-role-change pause is a ledger, not a settings row"). Two rejected shapes: an
   `ADMIN_GRANTS_PAUSED` variable, because flipping it would be a redeploy, the
   friction this whole decision exists to remove; and "only the primary keeper
   may grant", which needs no switch but makes the primary keeper the only
@@ -345,7 +345,7 @@ mint; story 4 reworded for email invitations).
 
 ## Revoking workspace creation, and its ledger
 
-> **2026-10-10:** The workspace-creation ledger below (built by MB.193) is superseded by `user_privilege_changes`, one ledger for every privilege, written by a trigger on `users` with the route the writer declares, and append-only by the database (MB.194, MB.195; [`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md)). MB.196 removed the code that named the old table and MB.197 drops it. What this record says about the ledger is history.
+> **2026-10-10:** The workspace-creation ledger below (built by MB.193) is superseded by `user_privilege_changes`, one ledger for every privilege, written by a trigger on `users` with the route the writer declares, and append-only by the database (MB.194, MB.195; (see "One privilege ledger, written by the database")). MB.196 removed the code that named the old table and MB.197 drops it. What this record says about the ledger is history.
 
 **Amends:** DESIGN.md §5 (`users`, "once `true` it stays `true`"), §8 (the
 invite gate) and §17's open sign-up row, and CLAUDE.md's invite-gate bullet.
@@ -363,7 +363,7 @@ for the change to record who made it and when. Two things stood against it:
 - **The row cannot hold the record.** `users.updated_by` and `updated_at` are
   overwritten by the next update to the row: a verified email change, a role
   grant, Better Auth's own writes. M2.9's record named this gap and left it to
-  M5.8 ([`m2.9-granting-admin.md`](m2.9-granting-admin.md), "Out of scope").
+  M5.8 ((see "Granting and revoking admin"), "Out of scope").
 
 ### Decided
 
@@ -623,7 +623,7 @@ The design already ranks the two gates. DESIGN.md §14 says a link "only proves 
 
 What it gives up is the link's proof of receipt. A verified address proves the mailbox was the person's when it was verified (Google or Discord said so, or our own mail was followed, MB.61); the link proves it still is at invitation time, and nothing re-verifies. An address passed on since, a reassigned work mailbox or a lapsed domain, could accept an invitation meant for its new holder.
 
-**The site tier stays mail-only because of that.** [`m2.9-granting-admin.md`](m2.9-granting-admin.md) calls a keeper link "a bearer token for the site's highest privilege" and accepts the risk for covens because "the worst case is one coven's data". The same argument bounds the stale-address case to one coven's seat.
+**The site tier stays mail-only because of that.** (see "Granting and revoking admin") calls a keeper link "a bearer token for the site's highest privilege" and accepts the risk for covens because "the worst case is one coven's data". The same argument bounds the stale-address case to one coven's seat.
 
 ### Where the list lives
 
@@ -688,7 +688,7 @@ make more keepers.
   `users_admin_can_create_workspace` with `users_privileged_can_create_workspace`:
   `role = 'user' or can_create_workspace`. Every curator and keeper holds the
   flag, so the coven-creation gate still reads the flag alone
-  ([`mb.177-admins-hold-workspace-creation.md`](mb.177-admins-hold-workspace-creation.md)).
+  (see "Every admin holds `canCreateWorkspace`").
   The CHECK names `user`, the one role that may lack the flag, rather than
   `admin` and `curator`: Postgres refuses to use an enum value in the same
   transaction that adds it, and naming `user` also means a later role is held
@@ -780,7 +780,7 @@ The owner's call. Today a new account can see only the compendium:
 what a coven is for, and staging has no demo data at all. This record says what
 the demo coven is and where it stops. DESIGN.md §5 (`workspaces`), §5's
 `canCreateWorkspace` paragraph and the seed section carry the result. The
-approved plan is [`m15.9-plan.md`](m15.9-plan.md).
+approved plan is [`process.md`, "The demo coven: every account is seated as an observer at sign-up (plan)"](process.md#the-demo-coven-every-account-is-seated-as-an-observer-at-sign-up-plan).
 
 ### Decision
 
@@ -883,7 +883,7 @@ transaction, so no existing row is unchecked. The sidecar acknowledges that.
 - **The lifecycle is shared.** Pending, accepted, revoked and expired mean the
   same thing for a card, with the same audit columns and the same dead-link
   order, so the accept predicate, the revoke writer and the expiry clock exist
-  once ([`mb.201-two-tier-invitations.md`](mb.201-two-tier-invitations.md)).
+  once (see "Workspace and admin invitations are one two-tier table").
 - **A card's expiry is the end of its printed day in UTC-12.** The stored
   instant is the next day at 12:00 UTC, so the card works through its printed
   day in every zone; the printed day is the stored instant less 36 hours.
@@ -924,7 +924,7 @@ Only the invitation mail calls it: `invitationMessage` in `src/modules/identity/
 
 ### Why
 
-The coven and admin invitation mails go through the secret-link job, whose run holds the invitation's id and the origin and never the token, because a run's arguments stay in the job's event log ([`m15.50-mail-through-a-retried-job.md`](m15.50-mail-through-a-retried-job.md)). Only the token's hash is stored, so the step cannot read the token back: it has to mint one and store its hash. The step holds only the id, so there is no session to prove membership or the site role with. The inviter's proof was checked when the invitation was made, and the rotation changes only the token, on a row that is still pending.
+The coven and admin invitation mails go through the secret-link job, whose run holds the invitation's id and the origin and never the token, because a run's arguments stay in the job's event log ([`support.md`, "Mail is sent through a retried job"](support.md#mail-is-sent-through-a-retried-job)). Only the token's hash is stored, so the step cannot read the token back: it has to mint one and store its hash. The step holds only the id, so there is no session to prove membership or the site role with. The inviter's proof was checked when the invitation was made, and the rotation changes only the token, on a row that is still pending.
 
 Each attempt mints again, so when the transport refuses a mail and the step is retried, the link in the refused mail stops working and only the newest mailed link works. The token minted at insert, whose hash fills the not-null column, is told to nobody.
 
@@ -1095,7 +1095,7 @@ keyset finder `findUserAccessPausePage`, with the admin user modal's controls.
 M15.55 lets a coven's owner pause one member's access to that coven, until a time or with no end date, and lift it early.
 DESIGN.md §8, "A steward can pause one member's access to their coven", carries the rule, and §5, `workspace_member_pauses`,
 the table (M15.54). This record carries the choices the task left open, each with its reason. The owner was away while it
-was built; the choices were made to fit DESIGN.md, the site pause before it ([`m15.52-site-access-pause.md`](m15.52-site-access-pause.md))
+was built; the choices were made to fit DESIGN.md, the site pause before it (see "What the site access pause closes, and what it decides along the way")
 and the existing code.
 
 ### A new steward-only permission, `member: pause`
@@ -1255,7 +1255,7 @@ Until now v1 signed in through four OAuth providers (Google, Discord, Facebook, 
 
 ### Why OAuth only was the v1 rule
 
-A password means the site holds something worth stealing, and with it come a reset flow, a lockout, and a way to recover an account. The v1 design (`DESIGN.md` §2, a section since replaced by "Sign-in methods") argued that without email delivery a reset could only be a link copied by a keeper after checking identity out of band, which is unworkable at fifty users and makes the admin a single point of failure. [`mb.74-better-auth-plugins.md`](mb.74-better-auth-plugins.md) then made passkeys the v2 answer, in place of email and password, and listed two-factor, a CAPTCHA and the breached-password check as guards that exist only for a password sign-in.
+A password means the site holds something worth stealing, and with it come a reset flow, a lockout, and a way to recover an account. The v1 design (`DESIGN.md` §2, a section since replaced by "Sign-in methods") argued that without email delivery a reset could only be a link copied by a keeper after checking identity out of band, which is unworkable at fifty users and makes the admin a single point of failure. (see "Better Auth's plugin roster: what lands before launch, what waits") then made passkeys the v2 answer, in place of email and password, and listed two-factor, a CAPTCHA and the breached-password check as guards that exist only for a password sign-in.
 
 ### Why it changes now
 
@@ -1265,7 +1265,7 @@ The owner's call: someone without a Google, Discord, Facebook or Microsoft accou
 
 - **A column now in use.** `accounts.password` already exists and is null today. It holds a hash from M16.2.
 - **Mail for resets.** A new template, `src/emails/reset-password.tsx` (M16.3), and a second notice mail when a password changes.
-- **A lockout counter.** One table, `sign_in_failures` (M16.4), and a write outside `withAudit` (M16.5), because a failed sign-in has no session to audit. `CLAUDE.md` rule 3 names its repository file as one of two that write outside `withAudit` ([`m16.4-repository-writes-outside-the-audit.md`](m16.4-repository-writes-outside-the-audit.md)).
+- **A lockout counter.** One table, `sign_in_failures` (M16.4), and a write outside `withAudit` (M16.5), because a failed sign-in has no session to audit. `CLAUDE.md` rule 3 names its repository file as one of two that write outside `withAudit` (see "Two repository files that import the database client and write outside `withAudit`").
 - **Two plugins and their tables.** `@better-auth/passkey` with a `passkey` table (M16.6), and `twoFactor` with a `two_factors` table and a `users.two_factor_enabled` column (M16.9).
 - **The Better Auth version.** The installed `better-auth` and `@better-auth/core` already meet the passkey plugin's peer range, so nothing needs bumping. `package.json` is the one statement of the version.
 - **More to defend.** A password can be guessed, reused elsewhere or phished, which an OAuth-only site did not have to answer for. The password policy in `DESIGN.md` §8, "Passwords", is the answer, and each rule in it names its source.
@@ -1907,7 +1907,7 @@ pending coven invitations wait for its verified email and link to the account
 page's Invitations section, where they are listed and accepted; a member is
 still redirected. The first build listed them on the landing itself, and the
 owner moved the list to the account page on 2026-10-13
-([`m10.32-accept-from-the-landing.md`](m10.32-accept-from-the-landing.md),
+((see "A coven invitation is accepted from the account page as well as from the mail"),
 "Where the list lives").
 
 ## First-party email verification and email delivery
@@ -2144,7 +2144,7 @@ mapped in `src/lib/sign-in.ts` to one sentence, the same whatever the cause:
 sign in the way you did before, then add this provider under Account. A
 squatted address and a never-vouching provider over an existing row redirect
 with the same code, and a sentence naming the squat would confirm the address
-is taken (MB.71, [`mb.71-link-a-second-sign-in-method.md`](mb.71-link-a-second-sign-in-method.md)).
+is taken (MB.71, (see "Linking a second sign-in method")).
 
 ### The audit trail, against rules 1 and 3
 
@@ -2219,7 +2219,7 @@ records, and a Mailtrap account with one sandbox. Both go into `secrets.md`'s
 
 ### MB.54: the email page
 
-**Corrected by MB.54's build** ([`mb.54-email-page.md`](mb.54-email-page.md)): a change
+**Corrected by MB.54's build** (see "Set the account's email: prefilled from the provider, editable, verified before it counts"): a change
 never writes `users.email` and never unverifies a row, because an established
 account marked unverified would be older than the cap below and swept; the
 new address is mailed Better Auth's own change link instead. The shape is
@@ -2259,7 +2259,7 @@ mutations M7.5 and M7.6 always needed and the sketch never named.
 
 ### The admin invitation (story 62)
 
-**Superseded in part by MB.201 and MB.202 (2026-10-10):** `admin_invitations` and `workspace_invitations` became one two-tier `invitations` table, a keeper invitation being its site tier, a null workspace and role. One accept service and one route, `/invite/[token]`, serve both tiers, landing by tier, so there is no `/admin-invite/[token]`; MB.70 keeps the pause, the note and its pending list on `/admin/users` ([`mb.201-two-tier-invitations.md`](mb.201-two-tier-invitations.md); [`db/invitations.md`](../db/invitations.md)).
+**Superseded in part by MB.201 and MB.202 (2026-10-10):** `admin_invitations` and `workspace_invitations` became one two-tier `invitations` table, a keeper invitation being its site tier, a null workspace and role. One accept service and one route, `/invite/[token]`, serve both tiers, landing by tier, so there is no `/admin-invite/[token]`; MB.70 keeps the pause, the note and its pending list on `/admin/users` ((see "Workspace and admin invitations are one two-tier table"); [`db/invitations.md`](../db/invitations.md)).
 
 M2.9's option B, now buildable, as a table task and a behaviour task.
 `admin_invitations` (MB.69) is shaped like `workspace_invitations`: only the
@@ -2279,7 +2279,7 @@ admin list's controls.
 - **MB.67** lifts "have the owner sign in before anyone else can sign up with
   the address" from `secrets.md` and `../auth/README.md`, and closes the squat
   described under "What is simplified" in
-  [`m2.9-granting-admin.md`](m2.9-granting-admin.md).
+  (see "Granting and revoking admin").
 - **MB.68** adds a second way to become the primary admin: verifying the
   bootstrap address by mail, from a session that holds the row. A Microsoft-
   or Facebook-only steward can now be promoted. It is safe only because of the
@@ -2342,7 +2342,7 @@ M7.3, M7.4 and M7.5 rewritten in place; MB.54 re-scoped; story 62 added to
 
 M2.9 gave the primary keeper a switch that stops every other keeper granting
 or revoking admin while a rogue admin is dealt with
-([`m2.9-granting-admin.md`](m2.9-granting-admin.md), "Granting"). It
+((see "Granting and revoking admin"), "Granting"). It
 specified the switch as a one-row `site_settings` table, its one row seeded by
 the migration, holding `adminRoleChangesPaused`, and MB.62 was written to
 build that. Building it showed the row could not be seeded, and the owner
@@ -2464,10 +2464,10 @@ Linking by email at sign-in lets a provider that does not verify addresses take 
 about twenty-five plugins. This record says, for each, whether it lands before
 launch, waits for v2, or is never used here. Two had been decided already and
 are unchanged: the `organization` plugin is not used
-([`mb.30-organization-plugin.md`](mb.30-organization-plugin.md)), and the
+(see "Better Auth's organization plugin for workspaces and invitations"), and the
 `admin` plugin is registered outside production for impersonation alone, with
 every other endpoint unreachable (MB.53,
-[`m2.9-granting-admin.md`](m2.9-granting-admin.md)).
+(see "Granting and revoking admin")).
 
 The outcome is four follow-up tasks and one change to §13:
 
@@ -2830,7 +2830,7 @@ admin holds it:
 - **M5.8 cannot revoke a keeper's flag.** The CHECK would refuse it; M5.8's
   service refuses it first with an explaining error, and revoking admin is
   the route. Revoking admin leaves the flag, so a former admin keeps it — the
-  grant was a vouching too ([`m2.9-granting-admin.md`](m2.9-granting-admin.md),
+  grant was a vouching too ((see "Granting and revoking admin"),
   "Revoking").
 - **A hand-promoted admin needs both columns.** The stop-gap `psql` route
   ([`admin-bootstrap.md`](../auth/admin-bootstrap.md), "Granting a second
@@ -2844,7 +2844,7 @@ too. Its migration replaced `users_admin_can_create_workspace` with
 so every keeper and every curator holds the flag and the gate still reads the
 flag alone. The reasoning above stands for both roles; what changed is the
 name the CHECK uses, `user` in place of `admin`
-([`m11.20-curator-role.md`](m11.20-curator-role.md)).
+(see "A third site role, `curator`").
 
 ## One privilege ledger, written by the database
 
@@ -2968,7 +2968,7 @@ nine columns but for the workspace pair and the note, and nothing writes or
 reads either yet: M7.2 to M7.7 and MB.70 were each about to build a token
 path, an accept, a revoke, a pending list and an acceptance page on its own
 table. The owner asked for one table instead, while the copy is still a copy
-of nothing ([`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md)). DESIGN.md
+of nothing (see "One privilege ledger, written by the database"). DESIGN.md
 §5, `invitations`, carries the model; this record carries why.
 
 ### The model
@@ -3049,7 +3049,7 @@ table is.
 
 ### The plan's section, as approved
 
-Copied from [`mb.194-privilege-ledger-by-trigger.md`](mb.194-privilege-ledger-by-trigger.md); the record above is what holds where the two differ.
+Copied from (see "One privilege ledger, written by the database"); the record above is what holds where the two differ.
 
 **`invitations`**, in `src/modules/coven/schema/invitations.ts` — `id`, `workspaceId` (nullable → `workspaces.id`), `email`, `role` (nullable `workspace_role`), `tokenHash`, `expiresAt` (default seven days), `acceptedAt`, `acceptedBy`, `revokedAt`, `note` (nullable), `...auditColumns`.
 
@@ -3075,7 +3075,7 @@ rebase and the same block appended again:
 ```sql
 -- MB.201: `invitations`, workspace and admin invitations in one two-tier
 -- table, the shape `ingredients` has: a null workspace and role is the site
--- tier (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
+-- tier (claude-docs/design-decisions/auth.md, "Workspace and admin invitations are one two-tier table").
 -- Additive: the two old tables stay until MB.203 drops them.
 ```
 

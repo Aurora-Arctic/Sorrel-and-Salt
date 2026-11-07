@@ -99,10 +99,10 @@ A keeper write that hard-deletes links would reach covens' rows, which a keeper 
 ## The admin forms page: the slug, the redirect, the stale pick
 
 M5.6a puts the form vocabulary on M5.6's page shape
-([`m5.6-admin-categories.md`](m5.6-admin-categories.md)) and builds MB.162's
+(see "The admin categories page: delete, list read and modal") and builds MB.162's
 delete and rename rules for forms, on the pick since MB.167
-([`mb.162-compendium-holds-curated-values.md`](mb.162-compendium-holds-curated-values.md),
-[`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
+((see "The compendium holds curated values alone"),
+(see "Reading and writing the picked form and deities")).
 Building it turned up three questions that DESIGN.md and the task entry left
 open. The owner settled each one.
 
@@ -180,12 +180,12 @@ lose a pick they may have wanted to follow the rename.
 
 M5.6b puts the two group vocabularies, `category_groups` and
 `ingredient_form_groups`, on M5.6's page shape
-([`m5.6-admin-categories.md`](m5.6-admin-categories.md)), with the write-time
+(see "The admin categories page: delete, list read and modal"), with the write-time
 contrast check MB.36 set for a category group's two colours. The check needed
 no decision. Deleting a group did: the task entry asked only that the
 categories under one "go somewhere, and the page says where", and MB.162 had
 refused a form group's delete while a live compendium entry picked a form
-under it ([`mb.162-compendium-holds-curated-values.md`](mb.162-compendium-holds-curated-values.md)).
+under it (see "The compendium holds curated values alone").
 The owner settled three questions. [`db/categories.md`](../db/categories.md),
 "Category writes", and [`db/member-autofill.md`](../db/member-autofill.md)
 carry the rules as built.
@@ -227,7 +227,7 @@ Weighed:
 ### A form group with live forms
 
 A form's slug is its name and its group, `formSlug(name, group)`
-([`m5.6a-admin-forms.md`](m5.6a-admin-forms.md)), so a form moved to another
+(see "The admin forms page: the slug, the redirect, the stale pick"), so a form moved to another
 group moves its address too. MB.162 had refused a form group's delete while
 a live compendium entry picked a form under it, because a form under a
 deleted group is no longer curated.
@@ -246,7 +246,7 @@ categories', in forms.
   slug. A coven's pick is the same. So a form group is no longer refused for
   a compendium entry picking a form under it. Deity traditions (MB.132) were
   not part of this decision; MB.132 then chose the same move for them
-  ([`mb.132-admin-deities.md`](mb.132-admin-deities.md)).
+  (see "The admin deity pages: the slug, the tradition's delete, one form").
 - **A rename re-slugs the same way.** Renaming a form group moves the slug of
   every live form under it in the same transaction, as M5.6a's record
   anticipated, and a re-slug onto another live form's address refuses the
@@ -809,7 +809,7 @@ The earlier rule guessed the fact by matching a coven's ingredient to a compendi
 ## A retired entry stays readable to the covens that use it
 
 The cupboard plan's sixth decision
-([`m12.13-cupboard-names-the-compendium.md`](m12.13-cupboard-names-the-compendium.md)),
+(see "A coven's cupboard names the compendium's entry, rather than hiding it"),
 built: when a curator deletes a compendium entry, the covens whose cupboard
 names it go on reading it, marked "No Longer in the Compendium", and everyone
 else loses it at once. The result is in
@@ -999,7 +999,7 @@ Linking a coven's own ingredient to the compendium meant the own entry stopped e
 | M12.38–M12.41 (issues #1138–#1141)                                                                      | Retired, 2026-10-20, closed as not planned; their entries in [`../tasks/m12.md`](../tasks/m12.md) point at the branch |
 | The v2 description                                                                                      | [`../DESIGN.md`](../DESIGN.md) §13, "Link to the Compendium"; the out-of-scope list in `CLAUDE.md`                    |
 
-The records [`m8.17-editing-a-coven-ingredient.md`](m8.17-editing-a-coven-ingredient.md) and [`m12.13-cupboard-names-the-compendium.md`](m12.13-cupboard-names-the-compendium.md) carry a dated note at the top and are otherwise left as approved.
+The records (see "Editing a coven's own ingredient") and (see "A coven's cupboard names the compendium's entry, rather than hiding it") carry a dated note at the top and are otherwise left as approved.
 
 ### Picking v2 back up
 
@@ -1691,9 +1691,9 @@ disclaimer rests on.
 
 ## The compendium seed as markdown files, a formal-name rule and curator review
 
-The compendium seed moves from seven TypeScript shards to one markdown file per entry. A content hash tells the seed when a file changed, and the seed applies the change only when the owner has marked that file for update and no curator or editor has touched the row. Every citation records how its source's name was matched to the entry's formal name. A curator can mark an entry reviewed. The full plan, with every file and table it touches, is [`m14.4-plan.md`](m14.4-plan.md); this record says what was decided and why. The tasks are M14.4 to M14.13 ([`tasks/m14.md`](../tasks/m14.md)).
+The compendium seed moves from seven TypeScript shards to one markdown file per entry. A content hash tells the seed when a file changed, and the seed applies the change only when the owner has marked that file for update and no curator or editor has touched the row. Every citation records how its source's name was matched to the entry's formal name. A curator can mark an entry reviewed. The full plan, with every file and table it touches, is [`process.md`, "Compendium seed as markdown files, with a hash-gated update path, a formal-name rule and curator review (plan)"](process.md#compendium-seed-as-markdown-files-with-a-hash-gated-update-path-a-formal-name-rule-and-curator-review-plan); this record says what was decided and why. The tasks are M14.4 to M14.13 ([`tasks/m14.md`](../tasks/m14.md)).
 
-**It supersedes two rows of [`mb.240-compendium-seed.md`](mb.240-compendium-seed.md)**: "One file per entry" and "The entries repeated in markdown", both rejected there on 2026-10-11. Their reasons were a shard of 100 files in one pull request and about 700 KB of markdown that nothing checked against the literal. Here the markdown file is the source of truth, not a copy, so there is nothing to drift, and the guard reads the files. Pull requests stay small because the shards were already per-lane and lanes still add their own files.
+**It supersedes two rows of (see "A researched, sourced compendium seed")**: "One file per entry" and "The entries repeated in markdown", both rejected there on 2026-10-11. Their reasons were a shard of 100 files in one pull request and about 700 KB of markdown that nothing checked against the literal. Here the markdown file is the source of truth, not a copy, so there is nothing to drift, and the guard reads the files. Pull requests stay small because the shards were already per-lane and lanes still add their own files.
 
 ### The problem
 
@@ -1986,7 +1986,7 @@ A category can be filed on an ingredient or on one of its forms (a form is a var
 
 **What changes.** `readCardCategoriesOf` also reads each form's categories (`categoriesOfVariants`, or a batch read that returns each pair with its form) and merges them. The card chip type gains the names of the forms that carry a form-only category. The card component draws a form-only chip with a dashed border and that tip.
 
-**Not a change to GraphQL.** `Ingredient.categories` stays the ingredient's own rows, as MB.215 ruled (`design-decisions/mb.215-ingredient-variants.md`, line 43: "nothing merges the two"). The cards read services directly (`readCardCategoriesOf` calls `categoriesOf`), not that GraphQL field, so the union is a read for cards and `Ingredient.categories` is untouched.
+**Not a change to GraphQL.** `Ingredient.categories` stays the ingredient's own rows, as MB.215 ruled (`design-decisions/ingredients.md`, "An ingredient and its forms", line 43: "nothing merges the two"). The cards read services directly (`readCardCategoriesOf` calls `categoriesOf`), not that GraphQL field, so the union is a read for cards and `Ingredient.categories` is untouched.
 
 ### 2. The category filter and the facet counts keep matching the union
 
@@ -2074,7 +2074,7 @@ Every coven has a `payer` mode a steward sets: **coven pays** or **each member p
 
 ### The Pause Rule
 
-**Stop collection while paused, using Stripe's `pause_collection`, for both a site pause (a keeper's pause, [`m15.52-site-access-pause.md`](m15.52-site-access-pause.md)) and a coven pause (a steward's pause, [`m15.55-coven-access-pause.md`](m15.55-coven-access-pause.md)).** A pause that lifts mid-period resumes collection, and the tests pin all three cases (site pause, coven pause, lift mid-period). A paused membership still counts toward R5, because the seat still exists.
+**Stop collection while paused, using Stripe's `pause_collection`, for both a site pause (a keeper's pause, [`auth.md`, "What the site access pause closes, and what it decides along the way"](auth.md#what-the-site-access-pause-closes-and-what-it-decides-along-the-way)) and a coven pause (a steward's pause, [`auth.md`, "How the coven access pause refuses a member, and what it decides along the way"](auth.md#how-the-coven-access-pause-refuses-a-member-and-what-it-decides-along-the-way)).** A pause that lifts mid-period resumes collection, and the tests pin all three cases (site pause, coven pause, lift mid-period). A paused membership still counts toward R5, because the seat still exists.
 
 ### The Lapsed-Member Rule
 
@@ -2338,7 +2338,7 @@ Repo facts the inventory established (paths relative to the worktree): Vercel Ho
 1. **`claude-docs/billing/running-costs.md`** — the cost model. Sections: scale assumptions (accounts → covens, members, active fraction, sessions, rows, bytes, mails, invocations; each ratio sourced or measured); platform (Vercel Pro meters and overage, Workflows, image/OG, domains; Neon compute, storage, branches, backups; Resend tiers; domain); CI (public-repo minutes are free: say so with the source; what changes if the repo went private; e2e/story suite growth); development tooling (Claude Max top plan, GitHub plan, devcontainer); operations stack (error tracking, uptime, log drain/retention, alerting/on-call, security monitoring: dependency, secret, code scanning, WAF/bot, backup verification) with the ethics-filtered shortlist and a recommended pick per category; maintenance and incident response (hours per month per size, researched norms; priced at both rates); payment processing (Stripe fees, Stripe Tax, dispute fees); taxes (WA B&O on services, WA sales tax on digital automated services); the 4-column total per size, cash-only and with-time rows; enterprise thresholds per vendor; a "what the repo doesn't say / owner to confirm" list.
 2. **`claude-docs/billing/subscription-models.md`** — the proposals. For each model: structure, price points (from comparables), which of the five §13 requirements it keeps/drops/alters, how the multi-coven discount and the keeper exemption map onto it, Stripe objects it needs (products, prices, coupons, per-seat vs tiered), reception evidence (comparable products' pricing pages, published surveys, community discussion — linked), free-tier recommendation with cost, break-even table per size against (a) cash costs, (b) cash + contractor-rate time, (c) cash + $250k-plus-load. Ends with a recommendation and the questions the owner must answer.
 3. **`claude-docs/billing/README.md`** — what the folder holds and how to re-run the model (the inputs table, dated; prices expire).
-4. **`claude-docs/design-decisions/m17.1-subscription-billing-scope.md`** — the record. Renamed from the criterion's `m17.1-billing-plugin-or-sdk.md` because the plugin-or-SDK choice now belongs to the PoC task; the criterion in `m17.md` is corrected in place. Holds: the chosen model (owner's pick); the PoC's brief (both candidates, the five requirements, what the PoC must show for each, the env var name `STRIPE_SECRET_KEY`, the throwaway-branch rule); the data model (billing reference on `workspaces` or a `workspace_subscriptions` table, `billing_exempt_until_cleared` flag, entitlement service, all through `withAudit` with `auditColumns`); the multi-coven discount definition; the pause rule (site pause M15.52, coven pause M15.55: pauses/keeps running/extends; discount counting); the membership-management section (the four views, who may reach each, which GraphQL fields they need); the minted tasks in order. Also carries this plan verbatim as an appendix ([[feedback_store_plan_beside_design_decisions]]).
+4. **`claude-docs/design-decisions/ingredients.md`, "Subscription Billing Scope"** — the record. Renamed from the criterion's `m17.1-billing-plugin-or-sdk.md` because the plugin-or-SDK choice now belongs to the PoC task; the criterion in `m17.md` is corrected in place. Holds: the chosen model (owner's pick); the PoC's brief (both candidates, the five requirements, what the PoC must show for each, the env var name `STRIPE_SECRET_KEY`, the throwaway-branch rule); the data model (billing reference on `workspaces` or a `workspace_subscriptions` table, `billing_exempt_until_cleared` flag, entitlement service, all through `withAudit` with `auditColumns`); the multi-coven discount definition; the pause rule (site pause M15.52, coven pause M15.55: pauses/keeps running/extends; discount counting); the membership-management section (the four views, who may reach each, which GraphQL fields they need); the minted tasks in order. Also carries this plan verbatim as an appendix ([[feedback_store_plan_beside_design_decisions]]).
 5. **Board and task docs**: `claude-docs/tasks/m17.md` M17.1 entry corrected (story, criteria, estimate) and `claude-docs/waves/wave-17.md` saying the minted tasks live on Wave 21; the new wave's files (`tasks/m21.md`, `waves/wave-21.md`, the `TASKS.md` row, the `tasks-md.mjs` entry, the milestone); `node scripts/task-board.mjs sync` run from the worktree ([[project_task_board_sync_reads_own_checkout]]); DESIGN.md §13 "Subscription billing", §14 row, §15 bullet updated to say the scope is decided and point at the record and tasks; `claude-docs/backlog.md` V2 item moved to V Fast Follow naming the tasks; `documents/privacy.md` is **not** edited here (a build task that adds Stripe as a processor edits it then — say so in the record).
 
 ##### Tasks to mint: a new wave, **Wave 21 — Billing and memberships**
@@ -2420,9 +2420,9 @@ No billing code, no dependency, no `src/` change, no Stripe account work beyond 
 
 ## The closed-practice warning
 
-A closed practice is a people's or a religion's practice that its own people say outsiders should not take up. The compendium will warn on an entry drawn from one. This record sets which sources may establish a closed practice, how an entry records it, what the warning shows and who sets it, and the build tasks. It also records the owner's answer to each closed-practice question left open in `compendium/ethics/` by M14.29. The owner made every decision here on 2026-11-06. The approved plan is `m17.2-plan.md`, beside this file; it is not maintained, and this record is.
+A closed practice is a people's or a religion's practice that its own people say outsiders should not take up. The compendium will warn on an entry drawn from one. This record sets which sources may establish a closed practice, how an entry records it, what the warning shows and who sets it, and the build tasks. It also records the owner's answer to each closed-practice question left open in `compendium/ethics/` by M14.29. The owner made every decision here on 2026-11-06. The approved plan is `design-decisions/support.md`, "Scope the Closed-Practice Warning (plan)", beside this file; it is not maintained, and this record is.
 
-M17.2 is a docs-and-data task. It changes no code under `src/`. A second record from the same task, `m17.2-no-controlled-substances.md`, removes the controlled substances from the compendium.
+M17.2 is a docs-and-data task. It changes no code under `src/`. A second record from the same task, the section "No controlled substances in the compendium", removes the controlled substances from the compendium.
 
 ### The data today
 
@@ -2435,7 +2435,7 @@ M14.29 gathered closed-practice statements into `compendium/ethics/`, a folder t
 
 Stacte (`unknown/stacte`) carried the only row M14.29 recorded, from Wikipedia alone. The owner's answer removes it (below).
 
-Peyote's entry leaves the compendium under M19.1, because peyote is a controlled substance (`m17.2-no-controlled-substances.md`). Its mark is recorded in its ethics file as the finding, and is seeded for no entry.
+Peyote's entry leaves the compendium under M19.1, because peyote is a controlled substance (the section "No controlled substances in the compendium"). Its mark is recorded in its ethics file as the finding, and is seeded for no entry.
 
 Each file's source handles are files in `compendium/ethics/sources/`.
 
@@ -2545,7 +2545,7 @@ Every page below was opened on 2026-11-06 unless the entry says otherwise.
 
 ## No controlled substances in the compendium
 
-The compendium will hold no entry whose plant, fungus or substance is itself unlawful to grow or possess under United States federal law or Washington State law, and no alcohol, cannabis or tobacco. A plant that is lawful to grow stays. The owner set the rule on 2026-11-06, while M17.2 was scoped. M17.2 deletes no entry: M19.1 applies the rule and M19.2 retires what has already been seeded. The approved plan is `m17.2-plan.md`, beside this file; it is not maintained, and this record is.
+The compendium will hold no entry whose plant, fungus or substance is itself unlawful to grow or possess under United States federal law or Washington State law, and no alcohol, cannabis or tobacco. A plant that is lawful to grow stays. The owner set the rule on 2026-11-06, while M17.2 was scoped. M17.2 deletes no entry: M19.1 applies the rule and M19.2 retires what has already been seeded. The approved plan is `design-decisions/support.md`, "Scope the Closed-Practice Warning (plan)", beside this file; it is not maintained, and this record is.
 
 ### The owner's words
 
@@ -2593,7 +2593,7 @@ M19.1 decides each entry from its own sources, not from its file name. An entry 
 
 Otherwise a plant that is lawful to grow stays, whatever a preparation of it would be, under the safety rule above.
 
-Each removal is recorded as the endangered removals were (`m14.29-no-endangered-species.md`; `compendium/ethics/endangered-removals.md`): an ethics file with the citation, the entry file and the sources only it cites deleted, and a line in `compendium/left-out.md`.
+Each removal is recorded as the endangered removals were (the section "No endangered species in the compendium"; `compendium/ethics/endangered-removals.md`): an ethics file with the citation, the entry file and the sources only it cites deleted, and a line in `compendium/left-out.md`.
 
 ### The candidates
 
@@ -2643,7 +2643,7 @@ Opened on 2026-11-06.
 
 ## The ethical warnings on ingredients
 
-The owner decided the five points below on 2026-11-06. This record says which conservation listings and animal parts raise a warning on a compendium entry, what the warning shows, who sets it, which entries the gathered data marks today, which task answers each open question, and the tasks that build it. It is the reasoning behind Wave 20 (`claude-docs/tasks/m20.md`, `claude-docs/waves/wave-20.md`). The plan it was written from is `claude-docs/design-decisions/m17.3-plan.md`.
+The owner decided the five points below on 2026-11-06. This record says which conservation listings and animal parts raise a warning on a compendium entry, what the warning shows, who sets it, which entries the gathered data marks today, which task answers each open question, and the tasks that build it. It is the reasoning behind Wave 20 (`claude-docs/tasks/m20.md`, `claude-docs/waves/wave-20.md`). The plan it was written from is `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)".
 
 Nothing under `src/` or `compendium/` changes in M17.3. The numbers below were counted by script from `compendium/ethics/` on 2026-11-06; the files are the source, and the lists will move as the question tasks run.
 
@@ -2704,11 +2704,11 @@ The warning row has a nullable exception statement, a short quoted line saying w
 
 What the data holds today: no exception. A search of every ethics file and source for "eagle" finds nothing. The one legal exemption in the files is a question in `compendium/ethics/botanical/peyote-lophophora-williamsii.yaml`: US law (the American Indian Religious Freedom Act as amended in 1994, and 21 CFR 1307.31) exempts bona fide Native American Church ceremonial use, and _United States v. Boyll_ extended it to all persons in traditional Indian religious use. Peyote leaves the compendium under M19.1, so it will carry no warning. The only other statement of an exception is in the Code of Ethics (`documents/code-of-ethics.md`, "Ethical and Sustainable Sourcing", "Animal parts"), which names the US National Eagle Repository. The build leaves the field empty on every seeded row; a curator fills it where a source supports it. The seed does not invent one.
 
-An exception is a legal fact. It is never a closed-practice mark (see `m17.2-closed-practice-warning.md`), and the field does not say a practice is closed.
+An exception is a legal fact. It is never a closed-practice mark (see the section "The closed-practice warning"), and the field does not say a practice is closed.
 
 ### The data model
 
-The shape follows `ingredient_closed_practices` in `m17.2-closed-practice-warning.md`: one table, sources through `reference_links` as a further kind of row, and a seed keyed on `seed_key` that never revives a mark someone cleared.
+The shape follows `ingredient_closed_practices` in the section "The closed-practice warning": one table, sources through `reference_links` as a further kind of row, and a seed keyed on `seed_key` that never revives a mark someone cleared.
 
 - **`ingredient_ethical_warnings`** (M20.10): `id`, `ingredient_id`, `kind` (`listing` or `animal-part`), `scheme` (`iucn` or `cites`, for a listing), `category` (`cr`, `en`, `vu`, `ew`, `appendix-i` or `appendix-ii`, for a listing), `scope` (`global` or a place name, for a listing), `statement` (the quoted text), `exception_statement` (nullable), `seed_key`, and the audit columns. Checks tie `scheme`, `category` and `scope` to `kind` (set for a listing, empty for an animal part) and `category` to `scheme`. A partial unique index on `seed_key` stops the seed adding a row twice; a second partial unique index on (`ingredient_id`, `scheme`, `scope`) allows one listing per scheme and place on an entry.
 - **Sources.** `reference_links.ingredient_ethical_warning_id` makes a warning another kind of row a source can support, and the `reference_links_one_row` check widens to count it. The exception has its own sources, so the link also records which part of the warning it supports (`statement` or `exception`). M19.4 widens the same check for the closed-practice table; whichever migration lands second widens the already-widened check, so M20.10 follows M19.4 only if both widen the check.
@@ -2974,8 +2974,8 @@ M20.13 updates the Code of Ethics in the same PR: it replaces the "planned" item
 
 ### Sources
 
-- `claude-docs/design-decisions/m17.3-plan.md`, the owner's decisions of 2026-11-06.
-- `claude-docs/design-decisions/m17.2-closed-practice-warning.md`, the table and `reference_links` model this one follows.
+- `claude-docs/design-decisions/support.md`, "Scope the ethical warnings on ingredients (plan)", the owner's decisions of 2026-11-06.
+- `claude-docs/design-decisions/ingredients.md`, "The closed-practice warning", the table and `reference_links` model this one follows.
 - `claude-docs/compendium/compendium-seed/README.md`, the ethics file fields.
 - `compendium/ethics/`, counted by script on 2026-11-06.
 - `documents/code-of-ethics.md`, "Closed Practices and Where Lore Comes From" and "Ethical and Sustainable Sourcing".
@@ -3135,11 +3135,11 @@ the form field, "obviously not typable".
 ## The admin deity pages: the slug, the tradition's delete, one form
 
 MB.132 puts the deity vocabulary and its traditions on the forms' and form
-groups' page shapes ([`m5.6a-admin-forms.md`](m5.6a-admin-forms.md),
-[`m5.6b-admin-groups.md`](m5.6b-admin-groups.md)) and builds MB.162's delete
+groups' page shapes ((see "The admin forms page: the slug, the redirect, the stale pick"),
+(see "The admin group pages: where a deleted group's rows go")) and builds MB.162's delete
 and rename rules for deities, on the pick since MB.167
-([`mb.162-compendium-holds-curated-values.md`](mb.162-compendium-holds-curated-values.md),
-[`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
+((see "The compendium holds curated values alone"),
+(see "Reading and writing the picked form and deities")).
 The task entry left one question open, and building it raised three more.
 The owner settled all four. [`db/deity-vocabulary.md`](../db/deity-vocabulary.md),
 "The keeper's writes", carries the rules as built.
@@ -3915,7 +3915,7 @@ member must be able to write `rhizome` before anyone has curated it (§5,
   Amended by MB.167: the form and each deity must be a pick of a curated row,
   refused at `['form']`, `['formId']` or `['deities', i]` when typed, and
   planets and signs alone keep this match
-  ([`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
+  (see "Reading and writing the picked form and deities").
 - **Refused beside the field**, as a `ValidationError` from
   `createCompendiumEntry` and `updateCompendiumEntry`: `['form']`, or
   `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry the
@@ -3944,10 +3944,10 @@ deleted group, or a deity under a deleted tradition, is no longer curated.
 Amended by M5.6b for form groups: deleting one first moves its forms to
 another live group the admin picks, so they stay curated and the delete is
 not refused for the compendium
-([`m5.6b-admin-groups.md`](m5.6b-admin-groups.md)). Amended by MB.132 for
+(see "The admin group pages: where a deleted group's rows go"). Amended by MB.132 for
 deity traditions the same way: deleting one first moves its deities to
 another live tradition the admin picks
-([`mb.132-admin-deities.md`](mb.132-admin-deities.md)).
+(see "The admin deity pages: the slug, the tradition's delete, one form").
 Weighed:
 
 - _Strip the value from those entries in the same write._ The rule holds, but
@@ -3967,7 +3967,7 @@ curated while either is live. Deleting or renaming one of a pair leaves the
 entries curated by the other, so neither blocks nor rewrites them. Amended by
 MB.167: a form's or deity's delete and rename follow the link, so this clause
 holds for planets and signs alone
-([`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
+(see "Reading and writing the picked form and deities").
 
 **A coven's rows never block a delete and are never rewritten.** They keep
 what they wrote; a deleted or renamed value moves into that coven's "From
@@ -3989,7 +3989,7 @@ alone.
   background job, after launch: the owner's call, unscheduled by design until a
   measured rewrite time nears the function's time limit, so the in-transaction
   rewrite is v1's behaviour. It picks the mechanism from those the site runs
-  now (m15.49-job-mechanism.md, m15.46-daily-jobs-from-vercel-cron.md), and
+  now (design-decisions/support.md, "The site has a durable job mechanism", design-decisions/support.md, "Daily jobs start from Vercel Cron, and no job sleeps waiting"), and
   decides how the window between the rename and the rewrite keeps the rule.
 - **The check is read before the write.** Until MB.148 puts a read inside
   `withAudit` on the write's transaction, the compendium services read the
@@ -4094,7 +4094,7 @@ reaches no coven's rows (M6.6).
   the compendium entries linking a deity, and adds an index if its plan finds
   it wants one. Amended by MB.167: those reads are M5.6a's and MB.132's, which
   add the reverse indexes, since MB.167 builds no read that wants one
-  ([`mb.167-read-and-write-the-pick.md`](mb.167-read-and-write-the-pick.md)).
+  (see "Reading and writing the picked form and deities").
 
 **The audit shape: the full spread, soft-deleted**, as `ingredient_folk_names`
 and `ingredient_substitutes` are, so the table has its own `set_updated_at`
@@ -4175,7 +4175,7 @@ is a decision rather than an oversight.
 
 MB.165 gave the pick a place: `ingredients.form_id` beside `form`, and
 `ingredient_deities`, a name per row with the curated deity picked beside it
-([`mb.165-record-the-picked-vocabulary-row.md`](mb.165-record-the-picked-vocabulary-row.md)).
+(see "A picked form or deity is recorded beside its text").
 MB.166 filled the table from `ingredients.deities` as unlinked names. This
 task switches every reader and writer to them, and moves MB.162's compendium
 rule for the form and the deities from a spelling onto the pick.
@@ -4295,7 +4295,7 @@ correction to those tasks, made here:
   is deleting a group or tradition with a row under it so linked. Amended by
   M5.6b for form groups, whose delete moves its forms to another live group
   instead, so no link is orphaned
-  ([`m5.6b-admin-groups.md`](m5.6b-admin-groups.md)).
+  (see "The admin group pages: where a deleted group's rows go").
 - A rename rewrites the text of the entries **linking** the row. A form's
   rename re-keys and re-slugs each.
 - The "last live spelling" clause goes for forms and deities: a link names one
@@ -4484,7 +4484,7 @@ Drizzle applies every pending migration in one transaction, so a refused `0062` 
 
 ## A researched, sourced compendium seed
 
-Live home: `claude-docs/compendium/compendium-seed/README.md` (the rules every entry is written to), with the roster in `claude-docs/compendium/compendium-seed/candidates.md`. M14.4 moved the seed to one markdown file per entry (`claude-docs/design-decisions/m14.4-compendium-markdown-files.md`).
+Live home: `claude-docs/compendium/compendium-seed/README.md` (the rules every entry is written to), with the roster in `claude-docs/compendium/compendium-seed/candidates.md`. M14.4 moved the seed to one markdown file per entry (`claude-docs/design-decisions/ingredients.md`, "The compendium seed as markdown files, a formal-name rule and curator review").
 
 ### Decision
 

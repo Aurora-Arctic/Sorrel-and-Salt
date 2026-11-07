@@ -437,7 +437,7 @@ a soft-deleted reference for a restore to return.
 
 `withAudit` opens a transaction and hands its callback a writer bound to it. A finder called inside the callback went through `selectFrom` on the bare client, which takes a second pool connection. With such a read in flight, an `ALTER TABLE` queued behind the open transaction blocks the read, and the read blocks the commit the `ALTER` waits for. Postgres cannot detect the cycle, because one leg is the application waiting rather than a lock, and nothing here sets a timeout. The same cycle hangs a test's `truncate` behind an unfinished write. Three reads did this, all in `src/modules/ingredients/services/ingredient-rows.ts`: the current rows `replaceFolkNames` and `replaceSubstitutes` diff against, and `refuseUnlinkable`'s link check.
 
-A read on a fresh connection also finds `app.current_user_id` unset. Under the deferred row-level security policies ([`mb.24-rls-role-split.md`](mb.24-rls-role-split.md)) every read inside a write would answer nothing, which is the re-audit of write paths that publishing the setting early (M1.19) was meant to spare.
+A read on a fresh connection also finds `app.current_user_id` unset. Under the deferred row-level security policies ([`auth.md`, "RLS role split, `FORCE`, and identity on the read path"](auth.md#rls-role-split-force-and-identity-on-the-read-path)) every read inside a write would answer nothing, which is the re-audit of write paths that publishing the setting early (M1.19) was meant to spare.
 
 ### Why a context-bound store
 
@@ -651,7 +651,7 @@ Two agents, one after the other, in one new worktree, `/home/node/worktrees/post
    - `claude-docs/testing/db-harness.md`: the bounded client and why it sets `onread: false`.
    - [claude-docs/secrets.md:285-292](claude-docs/secrets.md#L285): "`channel_binding=require` can stay" becomes "is enforced".
    - [claude-docs/ci/deploy.md:203-216](claude-docs/ci/deploy.md#L203): the strip paragraph, and what the probe's `CHANNEL_BINDING_REQUIRED` error means.
-   - Copy this approved plan into `claude-docs/design-decisions/postgres-driver-read-mode-and-channel-binding.md`.
+   - Copy this approved plan into `claude-docs/design-decisions/data.md`, "Take the new version (PR #1542): turn off the new read mode, and enforce channel binding".
 
 ### Verification
 
@@ -684,7 +684,7 @@ Two agents, one after the other, in one new worktree, `/home/node/worktrees/post
 
 ## A slug's expiry is a date comparison; work that must happen on time is a durable job
 
-**Status:** decided. The job mechanism is in `m15.46-daily-jobs-from-vercel-cron.md` and `src/lib/jobs/`.
+**Status:** decided. The job mechanism is in `design-decisions/support.md`, "Daily jobs start from Vercel Cron, and no job sleeps waiting" and `src/lib/jobs/`.
 
 **Decided:** a compendium entry's old slug stops answering by a date comparison at read time, with no scheduled job. Work that must happen on time (a mail, a retry, a delete) runs as a durable job.
 
@@ -713,7 +713,7 @@ Skipping an entry that is already present is the expected case on a re-run, not 
 
 ## A taker ends a retired slug's redirect, once confirmed
 
-**Decided:** a compendium entry's old slug redirects to it for 180 days, as MB.80 set, but it is no longer reserved. Another entry may take the slug, which ends the redirect; the admin is asked to confirm that first, and the page now at the address links to the entry that moved while the old window runs. A coven ingredient's slug follows its name and retires nothing. MB.80's pending claims go, with their columns. This supersedes, in part, [`mb.80-public-compendium.md`](mb.80-public-compendium.md).
+**Decided:** a compendium entry's old slug redirects to it for 180 days, as MB.80 set, but it is no longer reserved. Another entry may take the slug, which ends the redirect; the admin is asked to confirm that first, and the page now at the address links to the entry that moved while the old window runs. A coven ingredient's slug follows its name and retires nothing. MB.80's pending claims go, with their columns. This supersedes, in part, [`graphql.md`, "The compendium is public and search-indexable"](graphql.md#the-compendium-is-public-and-search-indexable).
 
 ### Why the reservation stopped paying
 

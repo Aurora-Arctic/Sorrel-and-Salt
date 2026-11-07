@@ -77,7 +77,7 @@ The cost is that a row no longer always names an ingredient. MB.40's CHECK `spel
 
 ### The rename happens now
 
-Nothing above the schema reads the table yet: the repository and the seed are the only code that names it. Renaming it now changes those two and the tests. Renaming it after the services, the GraphQL types and the screens are built would change every one of them too. So the table, its indexes, CHECKs and foreign keys take the new name in `0083`, under MB.252's pattern for a table rename ([`mb.252-table-rename.md`](mb.252-table-rename.md)).
+Nothing above the schema reads the table yet: the repository and the seed are the only code that names it. Renaming it now changes those two and the tests. Renaming it after the services, the GraphQL types and the screens are built would change every one of them too. So the table, its indexes, CHECKs and foreign keys take the new name in `0083`, under MB.252's pattern for a table rename ([`data.md`, "A renamed table leaves a view under its old name"](data.md#a-renamed-table-leaves-a-view-under-its-old-name)).
 
 ### The view comes after the new columns
 
